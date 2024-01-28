@@ -108,8 +108,8 @@ class SeasonSubtitle extends StatelessWidget {
       : date = season.publicationDate == null
             ? ''
             : DateFormat(season.publicationDate!.year == DateTime.now().year
-                    ? 'd MMM'
-                    : 'd MMM yy')
+                    ? 'yyyy.MM'
+                    : 'yyyy.MM.dd')
                 .format(season.publicationDate!),
         length = Duration(seconds: season.duration);
 
@@ -118,25 +118,23 @@ class SeasonSubtitle extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     var timeRemaining = season.timeRemaining;
 
-    String title;
+    final playedEpisodes = season.episodes
+        .where((episode) => episode.played).length;
+    final episodes = '$playedEpisodes/${season.episodes.length} episodes';
 
-    if (length.inSeconds > 0) {
+    String duration = '';
+    if (0 < length.inSeconds) {
       if (length.inSeconds < 60) {
-        title = '$date - ${length.inSeconds} sec';
+        duration = ' - ${length.inSeconds} sec';
+      } else if (length.inMinutes < 120) {
+        duration = ' - ${length.inMinutes} min';
       } else {
-        title = '$date - ${length.inMinutes} min';
+        duration = ' - ${length.inHours} hr ${length.inMinutes.remainder(60)} min';
       }
-    } else {
-      title = date;
     }
 
-    if (timeRemaining.inSeconds > 0) {
-      if (timeRemaining.inSeconds < 60) {
-        title = '$title / ${timeRemaining.inSeconds} sec left';
-      } else {
-        title = '$title / ${timeRemaining.inMinutes} min left';
-      }
-    }
+    final title = '$date - $episodes$duration';
+
 
     return Padding(
       padding: const EdgeInsets.only(top: 4.0),

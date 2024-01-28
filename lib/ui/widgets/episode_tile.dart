@@ -396,8 +396,8 @@ class EpisodeSubtitle extends StatelessWidget {
       : date = episode.publicationDate == null
             ? ''
             : DateFormat(episode.publicationDate!.year == DateTime.now().year
-                    ? 'd MMM'
-                    : 'd MMM yy')
+                    ? 'yyyy.MM'
+                    : 'yyyy.MM.dd')
                 .format(episode.publicationDate!),
         length = Duration(seconds: episode.duration);
 

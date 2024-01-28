@@ -394,7 +394,8 @@ class MobilePodcastService extends PodcastService {
         }
 
         final seasons = map.keys.sorted((a, b) => b - a).map((seasonNum) {
-          final episode = map[seasonNum]!.first;
+          final episodes = sortedSeasonEpisodes(map[seasonNum]!);
+          final episode = episodes.first;
           final guid =
               calcSeasonGuid(podcast: episode.podcast!, seasonNum: seasonNum);
           final id =
@@ -405,7 +406,7 @@ class MobilePodcastService extends PodcastService {
             podcast: episode.podcast!,
             title: _extractSeasonTitle(episode),
             seasonNum: seasonNum,
-            episodes: map[seasonNum]!,
+            episodes: episodes,
           );
         });
         pc.seasons = seasons.toList();
@@ -850,6 +851,6 @@ String? _extractSeasonTitle(Episode episode) {
           .firstMatch(episode.title ?? '');
       return m?.group(1)!.replaceFirst(RegExp(r'\s+編$'), '編');
     default:
-      return null;
+      return episode.title;
   }
 }

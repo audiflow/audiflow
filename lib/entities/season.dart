@@ -44,11 +44,12 @@ class Season {
     required this.seasonNum,
     required List<Episode> episodes,
   })  : guid = calcSeasonGuid(podcast: podcast, seasonNum: seasonNum),
-        _episodes = _sorted(episodes);
+        _episodes = sortedSeasonEpisodes(episodes);
 
   List<Episode> get episodes => _episodes;
 
-  set episodes(List<Episode> newValue) => _episodes = _sorted(newValue);
+  set episodes(List<Episode> newValue) =>
+      _episodes = sortedSeasonEpisodes(newValue);
 
   bool get playedAllEpisodes => _episodes.every((element) => element.played);
 
@@ -133,8 +134,10 @@ class Season {
   }
 }
 
-List<Episode> _sorted(List<Episode> episodes) =>
-    episodes.sorted((a, b) => a.episode - b.episode);
+List<Episode> sortedSeasonEpisodes(List<Episode> episodes) =>
+    0 < (episodes.firstOrNull?.season ?? 0)
+        ? episodes.sorted((a, b) => a.episode - b.episode)
+        : episodes.sorted((a, b) => b.episode - a.episode);
 
 String calcSeasonGuid({required String podcast, required int seasonNum}) {
   final id = md5.convert(utf8.encode(podcast)).toString();
