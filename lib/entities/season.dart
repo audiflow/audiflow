@@ -62,6 +62,43 @@ class Season {
     );
   }
 
+  String get guid {
+    return '${podcast!}-$seasonNum';
+  }
+
+  bool get played {
+    return episodes!.every((element) => element.played);
+  }
+
+  String? get thumbImageUrl {
+    return episodes!.first.thumbImageUrl;
+  }
+
+  String? get imageUrl {
+    return episodes!.first.imageUrl;
+  }
+
+  double get percentagePlayed {
+    return episodes!
+            .fold(0.0, (total, episode) => total + episode.percentagePlayed) /
+        episodes!.length;
+  }
+
+  DateTime? get publicationDate {
+    return episodes!.first.publicationDate;
+  }
+
+  int get duration {
+    return episodes!.fold(0, (total, episode) => total + episode.duration);
+  }
+
+  Duration get timeRemaining {
+    return episodes!.fold(
+        Duration.zero,
+        (total, episode) =>
+            total + Duration(seconds: episode.timeRemaining.inSeconds));
+  }
+
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
