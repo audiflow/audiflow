@@ -35,33 +35,35 @@ class PodcastEpisodeList extends StatelessWidget {
       return StreamBuilder<QueueState>(
           stream: queueBloc.queue,
           builder: (context, snapshot) {
-            return SliverList(
-                delegate: SliverChildBuilderDelegate(
-              (BuildContext context, int index) {
-                var queued = false;
-                var playing = false;
-                var episode = episodes![index]!;
+            return SliverSafeArea(
+              sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                (BuildContext context, int index) {
+                  var queued = false;
+                  var playing = false;
+                  var episode = episodes![index]!;
 
-                if (snapshot.hasData) {
-                  var playingGuid = snapshot.data!.playing?.guid;
+                  if (snapshot.hasData) {
+                    var playingGuid = snapshot.data!.playing?.guid;
 
-                  queued = snapshot.data!.queue
-                      .any((element) => element.guid == episode.guid);
+                    queued = snapshot.data!.queue
+                        .any((element) => element.guid == episode.guid);
 
-                  playing = playingGuid == episode.guid;
-                }
+                    playing = playingGuid == episode.guid;
+                  }
 
-                return EpisodeTile(
-                  episode: episode,
-                  download: download,
-                  play: play,
-                  playing: playing,
-                  queued: queued,
-                );
-              },
-              childCount: episodes!.length,
-              addAutomaticKeepAlives: false,
-            ));
+                  return EpisodeTile(
+                    episode: episode,
+                    download: download,
+                    play: play,
+                    playing: playing,
+                    queued: queued,
+                  );
+                },
+                childCount: episodes!.length,
+                addAutomaticKeepAlives: false,
+              )),
+            );
           });
     } else {
       return SliverFillRemaining(
