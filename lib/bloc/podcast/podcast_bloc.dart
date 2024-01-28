@@ -389,6 +389,9 @@ class PodcastBloc extends Bloc {
 
   Stream<BlocState<void>> get backgroundLoading => _backgroundLoadStream.stream;
 
+  /// Stream containing the current list of Podcast seasons.
+  Stream<List<Season?>?> get seasons => _seasonsStream;
+
   /// Stream containing the current list of Podcast episodes.
   Stream<List<Episode?>?> get episodes => _episodesStream;
 
