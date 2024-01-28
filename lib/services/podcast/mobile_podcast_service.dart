@@ -195,6 +195,8 @@ class MobilePodcastService extends PodcastService {
       final copyright = _format(loadedPodcast.copyright);
       final funding = <Funding>[];
       final persons = <Person>[];
+      final existingSeasons =
+          await repository.findSeasonsByPodcastGuid(loadedPodcast.url!);
       final existingEpisodes =
           await repository.findEpisodesByPodcastGuid(loadedPodcast.url!);
 
@@ -392,15 +394,18 @@ class MobilePodcastService extends PodcastService {
         }
 
         final seasons = map.keys.sorted((a, b) => b - a).map((seasonNum) {
-          final seasonElements =
-          map[seasonNum]!.sorted((a, b) => a.episode - b.episode);
-          final episode = seasonElements.first;
+          final episode = map[seasonNum]!.first;
+          final guid =
+              calcSeasonGuid(podcast: episode.podcast!, seasonNum: seasonNum);
+          final id =
+              existingSeasons.firstWhereOrNull((s) => s.guid == guid)?.id;
           return Season(
+            id: id,
             pguid: episode.pguid,
-            podcast: episode.podcast,
+            podcast: episode.podcast!,
             title: _extractSeasonTitle(episode),
             seasonNum: seasonNum,
-            episodes: seasonElements,
+            episodes: map[seasonNum]!,
           );
         });
         pc.seasons = seasons.toList();
@@ -421,8 +426,14 @@ class MobilePodcastService extends PodcastService {
   }
 
   @override
-  Future<Podcast?> loadPodcastById({required int id}) {
-    return repository.findPodcastById(id);
+  Future<Podcast?> loadPodcastById({required int id}) async {
+    final pc = await repository.findPodcastById(id);
+    for (final season in pc?.seasons ?? []) {
+      season.episodes = pc!.episodes
+          .where((episode) => episode.season == season.seasonNum)
+          .toList();
+    }
+    return pc;
   }
 
   @override
@@ -541,6 +552,11 @@ class MobilePodcastService extends PodcastService {
   @override
   Future<List<Episode>> loadEpisodes() async {
     return repository.findAllEpisodes();
+  }
+
+  @override
+  Future<List<Season>> loadSeasons() async {
+    return repository.findAllSeasons();
   }
 
   @override

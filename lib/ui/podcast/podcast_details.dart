@@ -9,12 +9,14 @@ import 'package:coten_player/bloc/settings/settings_bloc.dart';
 import 'package:coten_player/entities/episode.dart';
 import 'package:coten_player/entities/feed.dart';
 import 'package:coten_player/entities/podcast.dart';
+import 'package:coten_player/entities/season.dart';
 import 'package:coten_player/l10n/L.dart';
 import 'package:coten_player/state/bloc_state.dart';
 import 'package:coten_player/ui/podcast/funding_menu.dart';
 import 'package:coten_player/ui/podcast/playback_error_listener.dart';
 import 'package:coten_player/ui/podcast/podcast_context_menu.dart';
 import 'package:coten_player/ui/podcast/podcast_episode_list.dart';
+import 'package:coten_player/ui/podcast/podcast_season_list.dart';
 import 'package:coten_player/ui/widgets/action_text.dart';
 import 'package:coten_player/ui/widgets/delayed_progress_indicator.dart';
 import 'package:coten_player/ui/widgets/placeholder_builder.dart';
@@ -29,6 +31,7 @@ import 'package:flutter_dialogs/flutter_dialogs.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:logging/logging.dart';
 import 'package:provider/provider.dart';
+import 'package:rxdart/rxdart.dart';
 
 /// This Widget takes a search result and builds a list of currently available podcasts.
 ///
@@ -314,16 +317,27 @@ class _PodcastDetailsState extends State<PodcastDetails> {
                           ),
                         );
                       }),
-                  StreamBuilder<List<Episode?>?>(
-                      stream: podcastBloc.episodes,
+                  StreamBuilder(
+                      stream: Rx.combineLatest2(
+                          podcastBloc.seasons,
+                          podcastBloc.episodes,
+                          (seasons, episodes) => (seasons, episodes)),
                       builder: (context, snapshot) {
-                        return snapshot.hasData && snapshot.data!.isNotEmpty
-                            ? PodcastEpisodeList(
-                                episodes: snapshot.data!,
+                        final List<Season?>? seasons = snapshot.data?.$1;
+                        final List<Episode?>? episodes = snapshot.data?.$2;
+                        return seasons?.isNotEmpty ?? false
+                            ? PodcastSeasonList(
+                                seasons: seasons,
                                 play: true,
                                 download: true,
                               )
-                            : SliverToBoxAdapter(child: Container());
+                            : episodes?.isNotEmpty ?? false
+                                ? PodcastEpisodeList(
+                                    episodes: episodes,
+                                    play: true,
+                                    download: true,
+                                  )
+                                : SliverToBoxAdapter(child: Container());
                       }),
                 ],
               ),
