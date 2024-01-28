@@ -1,5 +1,5 @@
 {
-  "@@last_modified": "2024-01-28T11:28:19.901057",
+  "@@last_modified": "2024-01-28T22:02:00.511313",
   "app_title": "Anytime Podcast Player",
   "@app_title": {
     "description": "Full title for the application",
@@ -639,6 +639,12 @@
   "semantics_podcast_details_header": "Podcast details and episodes page",
   "@semantics_podcast_details_header": {
     "description": "Describes podcast details page",
+    "type": "text",
+    "placeholders": {}
+  },
+  "semantics_season_details_header": "Season episodes page",
+  "@semantics_season_details_header": {
+    "description": "Describes season details page",
     "type": "text",
     "placeholders": {}
   },
