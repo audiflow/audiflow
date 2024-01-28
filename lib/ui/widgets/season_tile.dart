@@ -81,6 +81,7 @@ class _SeasonTileState extends State<SeasonTile> {
           style: textTheme.bodyMedium,
         ),
       ),
+      trailing: const Icon(Icons.chevron_right),
     );
   }
 }
