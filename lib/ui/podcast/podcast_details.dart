@@ -674,7 +674,10 @@ class SeasonSwitch extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      children: [const Text('Season'), Switch(value: true, onChanged: (isOn) {})],
+      children: [
+        const Text('Season'),
+        Switch(value: true, onChanged: (isOn) {})
+      ],
     );
   }
 }

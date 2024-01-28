@@ -5,6 +5,7 @@
 import 'dart:collection';
 import 'dart:io';
 
+import 'package:collection/collection.dart' show IterableExtension;
 import 'package:coten_player/api/podcast/podcast_api.dart';
 import 'package:coten_player/core/utils.dart';
 import 'package:coten_player/entities/chapter.dart';
@@ -13,11 +14,11 @@ import 'package:coten_player/entities/episode.dart';
 import 'package:coten_player/entities/funding.dart';
 import 'package:coten_player/entities/person.dart';
 import 'package:coten_player/entities/podcast.dart';
+import 'package:coten_player/entities/season.dart';
 import 'package:coten_player/entities/transcript.dart';
 import 'package:coten_player/l10n/messages_all.dart';
 import 'package:coten_player/services/podcast/podcast_service.dart';
 import 'package:coten_player/state/episode_state.dart';
-import 'package:collection/collection.dart' show IterableExtension;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
@@ -378,6 +379,31 @@ class MobilePodcastService extends PodcastService {
         } else {
           expired.add(episode!);
         }
+      }
+
+      if (pc.episodes.any((episode) => 0 < episode.season)) {
+        final map = <int, List<Episode>>{};
+        for (final episode in pc.episodes) {
+          if (map.containsKey(episode.season)) {
+            map[episode.season]!.add(episode);
+          } else {
+            map[episode.season] = [episode];
+          }
+        }
+
+        final seasons = map.keys.sorted((a, b) => b - a).map((seasonNum) {
+          final seasonElements =
+          map[seasonNum]!.sorted((a, b) => a.episode - b.episode);
+          final episode = seasonElements.first;
+          return Season(
+            pguid: episode.pguid,
+            podcast: episode.podcast,
+            title: _extractSeasonTitle(episode),
+            seasonNum: seasonNum,
+            episodes: seasonElements,
+          );
+        });
+        pc.seasons = seasons.toList();
       }
 
       // If we are subscribed to this podcast and are simply refreshing we need to save the updated subscription.
@@ -789,4 +815,19 @@ class _TranscriptComputer {
   final TranscriptUrl transcriptUrl;
 
   _TranscriptComputer({required this.api, required this.transcriptUrl});
+}
+
+String? _extractSeasonTitle(Episode episode) {
+  if (episode.season < 1) {
+    return null;
+  }
+
+  switch (episode.pguid) {
+    case 'https://anchor.fm/s/8c2088c/podcast/rss': // COTEN
+      final m = RegExp(r'【COTEN RADIO\S*\s+(.*?)\d+】')
+          .firstMatch(episode.title ?? '');
+      return m?.group(1)!.replaceFirst(RegExp(r'\s+編$'), '編');
+    default:
+      return null;
+  }
 }
