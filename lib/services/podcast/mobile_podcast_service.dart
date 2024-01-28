@@ -392,15 +392,13 @@ class MobilePodcastService extends PodcastService {
         }
 
         final seasons = map.keys.sorted((a, b) => b - a).map((seasonNum) {
-          final seasonElements =
-              map[seasonNum]!.sorted((a, b) => a.episode - b.episode);
-          final episode = seasonElements.first;
+          final episode = map[seasonNum]!.first;
           return Season(
             pguid: episode.pguid,
             podcast: episode.podcast!,
             title: _extractSeasonTitle(episode),
             seasonNum: seasonNum,
-            episodes: seasonElements,
+            episodes: map[seasonNum]!,
           );
         });
         pc.seasons = seasons.toList();
@@ -424,7 +422,9 @@ class MobilePodcastService extends PodcastService {
   Future<Podcast?> loadPodcastById({required int id}) async {
     final pc = await repository.findPodcastById(id);
     for (final season in pc?.seasons ?? []) {
-      season.episodes = pc!.episodes;
+      season.episodes = pc!.episodes
+          .where((episode) => episode.season == season.seasonNum)
+          .toList();
     }
     return pc;
   }
