@@ -26,6 +26,8 @@ abstract class Repository {
   Future<List<Podcast>> subscriptions();
 
   /// Seasons
+  Future<List<Season>> findAllSeasons();
+
   Future<Season?> findSeasonById(int id);
 
   Future<List<Season>> findSeasonsByPodcastGuid(String? pguid);

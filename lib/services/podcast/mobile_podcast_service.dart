@@ -544,6 +544,11 @@ class MobilePodcastService extends PodcastService {
   }
 
   @override
+  Future<List<Season>> loadSeasons() async {
+    return repository.findAllSeasons();
+  }
+
+  @override
   Future<void> deleteDownload(Episode episode) async {
     // If this episode is currently downloading, cancel the download first.
     if (episode.downloadState == DownloadState.downloaded) {

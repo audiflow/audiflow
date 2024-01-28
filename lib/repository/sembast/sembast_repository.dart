@@ -163,6 +163,24 @@ class SembastRepository extends Repository {
   }
 
   @override
+  Future<List<Season>> findAllSeasons() async {
+    final finder = Finder(
+      sortOrders: [SortOrder('title')],
+    );
+
+    final List<RecordSnapshot<int, Map<String, Object?>>> recordSnapshots =
+        await _seasonStore.find(await _db, finder: finder);
+
+    final results = recordSnapshots.map((snapshot) {
+      final season = Season.fromMap(snapshot.key, snapshot.value);
+
+      return season;
+    }).toList();
+
+    return results;
+  }
+
+  @override
   Future<Season?> findSeasonById(int id) async {
     final finder = Finder(filter: Filter.byKey(id));
     final RecordSnapshot<int, Map<String, Object?>> snapshot =
