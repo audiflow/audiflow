@@ -1,4 +1,8 @@
+import 'dart:convert';
+
+import 'package:collection/collection.dart';
 import 'package:coten_player/entities/episode.dart';
+import 'package:crypto/crypto.dart';
 import 'package:logging/logging.dart';
 
 /// An object that represents an individual season of a Podcast.
@@ -13,35 +17,76 @@ class Season {
   /// Database ID
   int? id;
 
+  /// A String GUID for the season.
+  final String guid;
+
   /// The GUID for an associated podcast. If an episode has been downloaded
   /// without subscribing to a podcast this may be null.
   String? pguid;
 
   /// The name of the podcast the season is part of.
-  String? podcast;
+  String podcast;
 
   /// The season title.
   String? title;
 
   /// The season number.
-  int? seasonNum;
+  int seasonNum;
 
   /// More detailed description - optional.
-  List<Episode>? episodes;
+  List<Episode> _episodes;
 
   Season({
-    this.pguid,
+    required this.pguid,
     required this.podcast,
     this.id,
-    this.title,
-    this.seasonNum,
-    this.episodes = const <Episode>[],
-  });
+    required this.title,
+    required this.seasonNum,
+    required List<Episode> episodes,
+  })  : guid = _calcGUID(podcast, seasonNum),
+        _episodes = _sorted(episodes);
 
-  bool get playedAllEpisodes => episodes!.every((element) => element.played);
+  List<Episode> get episodes => _episodes;
+
+  set episodes(List<Episode> newValue) => _episodes = _sorted(newValue);
+
+  bool get playedAllEpisodes => _episodes.every((element) => element.played);
 
   int get totalDuration =>
-      episodes!.fold(0, (ms, episode) => ms + episode.duration);
+      _episodes.fold(0, (ms, episode) => ms + episode.duration);
+
+  bool get played {
+    return _episodes.every((element) => element.played);
+  }
+
+  String? get thumbImageUrl {
+    return _episodes.first.thumbImageUrl;
+  }
+
+  String? get imageUrl {
+    return _episodes.first.imageUrl;
+  }
+
+  double get percentagePlayed {
+    return _episodes.fold(
+            0.0, (total, episode) => total + episode.percentagePlayed) /
+        _episodes.length;
+  }
+
+  DateTime? get publicationDate {
+    return _episodes.first.publicationDate;
+  }
+
+  int get duration {
+    return _episodes.fold(0, (total, episode) => total + episode.duration);
+  }
+
+  Duration get timeRemaining {
+    return _episodes.fold(
+        Duration.zero,
+        (total, episode) =>
+            total + Duration(seconds: episode.timeRemaining.inSeconds));
+  }
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
@@ -52,51 +97,15 @@ class Season {
     };
   }
 
-  static Season fromMap(int? key, Map<String, dynamic> episode) {
+  static Season fromMap(int? key, Map<String, dynamic> season) {
     return Season(
       id: key,
-      pguid: episode['pguid'] as String?,
-      podcast: episode['podcast'] as String?,
-      title: episode['title'] as String?,
-      seasonNum: episode['seasonNum'] as int?,
+      pguid: season['pguid'] as String?,
+      podcast: season['podcast'] as String,
+      title: season['title'] as String?,
+      seasonNum: season['seasonNum'] as int,
+      episodes: [],
     );
-  }
-
-  String get guid {
-    return '${podcast!}-$seasonNum';
-  }
-
-  bool get played {
-    return episodes!.every((element) => element.played);
-  }
-
-  String? get thumbImageUrl {
-    return episodes!.first.thumbImageUrl;
-  }
-
-  String? get imageUrl {
-    return episodes!.first.imageUrl;
-  }
-
-  double get percentagePlayed {
-    return episodes!
-            .fold(0.0, (total, episode) => total + episode.percentagePlayed) /
-        episodes!.length;
-  }
-
-  DateTime? get publicationDate {
-    return episodes!.first.publicationDate;
-  }
-
-  int get duration {
-    return episodes!.fold(0, (total, episode) => total + episode.duration);
-  }
-
-  Duration get timeRemaining {
-    return episodes!.fold(
-        Duration.zero,
-        (total, episode) =>
-            total + Duration(seconds: episode.timeRemaining.inSeconds));
   }
 
   @override
@@ -120,6 +129,14 @@ class Season {
 
   @override
   String toString() {
-    return 'Season{id: $id, pguid: $pguid, podcast: $podcast, title: $title, seasonNum: $seasonNum}';
+    return 'Season{id: $id, pguid: $pguid, podcast: $podcast, seasonNum: $seasonNum, title: $title}';
   }
+}
+
+List<Episode> _sorted(List<Episode> episodes) =>
+    episodes.sorted((a, b) => a.episode - b.episode);
+
+String _calcGUID(String podcast, int seasonNum) {
+  final id = md5.convert(utf8.encode(podcast)).toString();
+  return '${id}_$seasonNum';
 }
