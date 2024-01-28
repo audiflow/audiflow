@@ -72,7 +72,9 @@ class _SeasonTileState extends State<SeasonTile> {
       title: Opacity(
         opacity: widget.season.played ? 0.5 : 1.0,
         child: Text(
-          widget.season.title!,
+          0 < widget.season.seasonNum
+              ? '#${widget.season.seasonNum} ${widget.season.title}'
+              : 'Extra',
           overflow: TextOverflow.ellipsis,
           maxLines: 2,
           softWrap: false,
