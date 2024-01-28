@@ -196,7 +196,8 @@ abstract class PodcastService {
 
   Future<List<Chapter>> loadChaptersByUrl({required String url});
 
-  Future<Transcript> loadTranscriptByUrl({required TranscriptUrl transcriptUrl});
+  Future<Transcript> loadTranscriptByUrl(
+      {required TranscriptUrl transcriptUrl});
 
   Future<void> deleteDownload(Episode episode);
 

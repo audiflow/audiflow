@@ -20,15 +20,18 @@ import 'package:permission_handler/permission_handler.dart';
 /// resolving the various paths correctly depending upon platform.
 Future<String> resolvePath(Episode episode) async {
   if (Platform.isIOS) {
-    return Future.value(join(await getStorageDirectory(), episode.filepath, episode.filename));
+    return Future.value(
+        join(await getStorageDirectory(), episode.filepath, episode.filename));
   }
 
   return Future.value(join(episode.filepath!, episode.filename));
 }
 
-Future<String> resolveDirectory({required Episode episode, bool full = false}) async {
+Future<String> resolveDirectory(
+    {required Episode episode, bool full = false}) async {
   if (full || Platform.isAndroid) {
-    return Future.value(join(await getStorageDirectory(), safePath(episode.podcast!)));
+    return Future.value(
+        join(await getStorageDirectory(), safePath(episode.podcast!)));
   }
 
   return Future.value(safePath(episode.podcast!));
@@ -78,7 +81,8 @@ Future<bool> hasExternalStorage() async {
 }
 
 Future<Directory> _getSDCard() async {
-  final appDocumentDir = (await getExternalStorageDirectories(type: StorageDirectory.podcasts))!;
+  final appDocumentDir =
+      (await getExternalStorageDirectories(type: StorageDirectory.podcasts))!;
 
   Directory? path;
 

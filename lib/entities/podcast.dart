@@ -115,9 +115,14 @@ class Podcast {
       'imageUrl': imageUrl ?? '',
       'thumbImageUrl': thumbImageUrl ?? '',
       'subscribedDate': subscribedDate?.millisecondsSinceEpoch.toString() ?? '',
-      'funding': (funding ?? <Funding>[]).map((funding) => funding.toMap()).toList(growable: false),
-      'person': (persons ?? <Person>[]).map((persons) => persons.toMap()).toList(growable: false),
-      'lastUpdated': _lastUpdated?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
+      'funding': (funding ?? <Funding>[])
+          .map((funding) => funding.toMap())
+          .toList(growable: false),
+      'person': (persons ?? <Person>[])
+          .map((persons) => persons.toMap())
+          .toList(growable: false),
+      'lastUpdated': _lastUpdated?.millisecondsSinceEpoch ??
+          DateTime.now().millisecondsSinceEpoch,
     };
   }
 
@@ -182,7 +187,10 @@ class Podcast {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is Podcast && runtimeType == other.runtimeType && guid == other.guid && url == other.url;
+      other is Podcast &&
+          runtimeType == other.runtimeType &&
+          guid == other.guid &&
+          url == other.url;
 
   @override
   int get hashCode => guid.hashCode ^ url.hashCode;

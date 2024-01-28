@@ -15,12 +15,14 @@ import 'package:logging/logging.dart';
 void main() async {
   List<int> certificateAuthorityBytes = [];
   WidgetsFlutterBinding.ensureInitialized();
-  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(statusBarColor: Colors.transparent));
+  SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(statusBarColor: Colors.transparent));
 
   Logger.root.level = Level.FINE;
 
   Logger.root.onRecord.listen((record) {
-    print('${record.level.name}: - ${record.time}: ${record.loggerName}: ${record.message}');
+    print(
+        '${record.level.name}: - ${record.time}: ${record.loggerName}: ${record.message}');
   });
 
   var mobileSettingsService = (await MobileSettingsService.instance())!;
@@ -45,7 +47,8 @@ Future<List<int>> setupCertificateAuthority() async {
     var major = androidInfo.version.release.split('.');
 
     if ((int.tryParse(major[0]) ?? 100.0) < 8.0) {
-      ByteData data = await PlatformAssetBundle().load('assets/ca/lets-encrypt-r3.pem');
+      ByteData data =
+          await PlatformAssetBundle().load('assets/ca/lets-encrypt-r3.pem');
       ca = data.buffer.asUint8List();
       SecurityContext.defaultContext.setTrustedCertificatesBytes(ca);
     }

@@ -82,7 +82,8 @@ class _MaterialFundingMenu extends StatelessWidget {
                     Icons.payment,
                   ),
                   itemBuilder: (BuildContext context) {
-                    return List<PopupMenuEntry<String>>.generate(funding!.length, (index) {
+                    return List<PopupMenuEntry<String>>.generate(
+                        funding!.length, (index) {
                       return PopupMenuItem<String>(
                         value: funding![index].url,
                         enabled: true,
@@ -124,7 +125,8 @@ class _CupertinoFundingMenu extends StatelessWidget {
                   builder: (BuildContext context) {
                     return CupertinoActionSheet(
                       actions: <Widget>[
-                        ...List<CupertinoActionSheetAction>.generate(funding!.length, (index) {
+                        ...List<CupertinoActionSheetAction>.generate(
+                            funding!.length, (index) {
                           return CupertinoActionSheetAction(
                             onPressed: () {
                               FundingLink.fundingLink(
@@ -160,7 +162,8 @@ class FundingLink {
   /// requested to open a funding link, present the user with and
   /// information dialog first to make clear that the link is provided
   /// by the podcast owner and not AnyTime.
-  static Future<bool> fundingLink(String url, bool consent, BuildContext context) async {
+  static Future<bool> fundingLink(
+      String url, bool consent, BuildContext context) async {
     bool? result = false;
 
     if (consent) {

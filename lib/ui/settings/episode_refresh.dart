@@ -40,34 +40,46 @@ class _EpisodeRefreshWidgetState extends State<EpisodeRefreshWidget> {
                     builder: (BuildContext context) {
                       return AlertDialog(
                           title: Text(
-                            L.of(context)!.settings_auto_update_episodes_heading,
+                            L
+                                .of(context)!
+                                .settings_auto_update_episodes_heading,
                             style: Theme.of(context).textTheme.titleMedium,
                             textAlign: TextAlign.center,
                           ),
                           scrollable: true,
                           content: StatefulBuilder(
-                            builder: (BuildContext context, StateSetter setState) {
+                            builder:
+                                (BuildContext context, StateSetter setState) {
                               return Column(children: <Widget>[
                                 RadioListTile<int>(
-                                  title: Text(L.of(context)!.settings_auto_update_episodes_never),
+                                  title: Text(L
+                                      .of(context)!
+                                      .settings_auto_update_episodes_never),
                                   dense: true,
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 0.0),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 0.0),
                                   value: -1,
-                                  groupValue: snapshot.data!.autoUpdateEpisodePeriod,
+                                  groupValue:
+                                      snapshot.data!.autoUpdateEpisodePeriod,
                                   onChanged: (int? value) {
                                     setState(() {
-                                      settingsBloc.autoUpdatePeriod(value ?? -1);
+                                      settingsBloc
+                                          .autoUpdatePeriod(value ?? -1);
 
                                       Navigator.pop(context);
                                     });
                                   },
                                 ),
                                 RadioListTile<int>(
-                                  title: Text(L.of(context)!.settings_auto_update_episodes_always),
+                                  title: Text(L
+                                      .of(context)!
+                                      .settings_auto_update_episodes_always),
                                   dense: true,
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 0.0),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 0.0),
                                   value: 0,
-                                  groupValue: snapshot.data!.autoUpdateEpisodePeriod,
+                                  groupValue:
+                                      snapshot.data!.autoUpdateEpisodePeriod,
                                   onChanged: (int? value) {
                                     setState(() {
                                       settingsBloc.autoUpdatePeriod(value ?? 0);
@@ -77,70 +89,95 @@ class _EpisodeRefreshWidgetState extends State<EpisodeRefreshWidget> {
                                   },
                                 ),
                                 RadioListTile<int>(
-                                  title: Text(L.of(context)!.settings_auto_update_episodes_30min),
+                                  title: Text(L
+                                      .of(context)!
+                                      .settings_auto_update_episodes_30min),
                                   dense: true,
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 0.0),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 0.0),
                                   value: 30,
-                                  groupValue: snapshot.data!.autoUpdateEpisodePeriod,
+                                  groupValue:
+                                      snapshot.data!.autoUpdateEpisodePeriod,
                                   onChanged: (int? value) {
                                     setState(() {
-                                      settingsBloc.autoUpdatePeriod(value ?? 30);
+                                      settingsBloc
+                                          .autoUpdatePeriod(value ?? 30);
 
                                       Navigator.pop(context);
                                     });
                                   },
                                 ),
                                 RadioListTile<int>(
-                                  title: Text(L.of(context)!.settings_auto_update_episodes_1hour),
+                                  title: Text(L
+                                      .of(context)!
+                                      .settings_auto_update_episodes_1hour),
                                   dense: true,
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 0.0),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 0.0),
                                   value: 60,
-                                  groupValue: snapshot.data!.autoUpdateEpisodePeriod,
+                                  groupValue:
+                                      snapshot.data!.autoUpdateEpisodePeriod,
                                   onChanged: (int? value) {
                                     setState(() {
-                                      settingsBloc.autoUpdatePeriod(value ?? 60);
+                                      settingsBloc
+                                          .autoUpdatePeriod(value ?? 60);
 
                                       Navigator.pop(context);
                                     });
                                   },
                                 ),
                                 RadioListTile<int>(
-                                  title: Text(L.of(context)!.settings_auto_update_episodes_3hour),
+                                  title: Text(L
+                                      .of(context)!
+                                      .settings_auto_update_episodes_3hour),
                                   dense: true,
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 0.0),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 0.0),
                                   value: 180,
-                                  groupValue: snapshot.data!.autoUpdateEpisodePeriod,
+                                  groupValue:
+                                      snapshot.data!.autoUpdateEpisodePeriod,
                                   onChanged: (int? value) {
                                     setState(() {
-                                      settingsBloc.autoUpdatePeriod(value ?? 180);
+                                      settingsBloc
+                                          .autoUpdatePeriod(value ?? 180);
 
                                       Navigator.pop(context);
                                     });
                                   },
                                 ),
                                 RadioListTile<int>(
-                                  title: Text(L.of(context)!.settings_auto_update_episodes_6hour),
+                                  title: Text(L
+                                      .of(context)!
+                                      .settings_auto_update_episodes_6hour),
                                   dense: true,
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 0.0),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 0.0),
                                   value: 360,
-                                  groupValue: snapshot.data!.autoUpdateEpisodePeriod,
+                                  groupValue:
+                                      snapshot.data!.autoUpdateEpisodePeriod,
                                   onChanged: (int? value) {
                                     setState(() {
-                                      settingsBloc.autoUpdatePeriod(value ?? 360);
+                                      settingsBloc
+                                          .autoUpdatePeriod(value ?? 360);
 
                                       Navigator.pop(context);
                                     });
                                   },
                                 ),
                                 RadioListTile<int>(
-                                  title: Text(L.of(context)!.settings_auto_update_episodes_12hour),
+                                  title: Text(L
+                                      .of(context)!
+                                      .settings_auto_update_episodes_12hour),
                                   dense: true,
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 0.0),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 0.0),
                                   value: 720,
-                                  groupValue: snapshot.data!.autoUpdateEpisodePeriod,
+                                  groupValue:
+                                      snapshot.data!.autoUpdateEpisodePeriod,
                                   onChanged: (int? value) {
                                     setState(() {
-                                      settingsBloc.autoUpdatePeriod(value ?? 720);
+                                      settingsBloc
+                                          .autoUpdatePeriod(value ?? 720);
 
                                       Navigator.pop(context);
                                     });

@@ -34,7 +34,8 @@ class AudioBloc extends Bloc {
   final BehaviorSubject<Episode?> _play = BehaviorSubject<Episode?>();
 
   /// Move from one playing state to another such as from paused to play
-  final PublishSubject<TransitionState> _transitionPlayingState = PublishSubject<TransitionState>();
+  final PublishSubject<TransitionState> _transitionPlayingState =
+      PublishSubject<TransitionState>();
 
   /// Sink to update our position
   final PublishSubject<double> _transitionPosition = PublishSubject<double>();
@@ -52,7 +53,8 @@ class AudioBloc extends Bloc {
   final PublishSubject<bool> _volumeBoost = PublishSubject<bool>();
 
   /// Listen for transcript filtering events.
-  final PublishSubject<TranscriptEvent> _transcriptEvent = PublishSubject<TranscriptEvent>();
+  final PublishSubject<TranscriptEvent> _transcriptEvent =
+      PublishSubject<TranscriptEvent>();
 
   final BehaviorSubject<Sleep> _sleepEvent = BehaviorSubject<Sleep>();
 
@@ -91,7 +93,9 @@ class AudioBloc extends Bloc {
   /// on to a queue and execute them sequentially. Each state maps to a call
   /// to the Audio Service plugin.
   void _handlePlayingStateTransitions() {
-    _transitionPlayingState.asyncMap((event) => Future.value(event)).listen((state) async {
+    _transitionPlayingState
+        .asyncMap((event) => Future.value(event))
+        .listen((state) async {
       switch (state) {
         case TransitionState.play:
           await audioPlayerService.play();
@@ -177,7 +181,8 @@ class AudioBloc extends Bloc {
     var ep = await audioPlayerService.resume();
 
     if (ep != null) {
-      log.fine('Resuming with episode ${ep.title} - ${ep.position} - ${ep.played}');
+      log.fine(
+          'Resuming with episode ${ep.title} - ${ep.position} - ${ep.played}');
     } else {
       log.fine('Resuming without an episode');
     }
@@ -187,7 +192,8 @@ class AudioBloc extends Bloc {
   void Function(Episode?) get play => _play.add;
 
   /// Transition the state from connecting, to play, pause, stop etc.
-  void Function(TransitionState) get transitionState => _transitionPlayingState.add;
+  void Function(TransitionState) get transitionState =>
+      _transitionPlayingState.add;
 
   /// Move the play position.
   void Function(double) get transitionPosition => _transitionPosition.sink.add;
@@ -202,7 +208,8 @@ class AudioBloc extends Bloc {
   Stream<Episode?>? get nowPlaying => audioPlayerService.episodeEvent;
 
   /// Get the current transcript (if there is one).
-  Stream<TranscriptState>? get nowPlayingTranscript => audioPlayerService.transcriptEvent;
+  Stream<TranscriptState>? get nowPlayingTranscript =>
+      audioPlayerService.transcriptEvent;
 
   /// Get position and percentage played of playing episode
   Stream<PositionState>? get playPosition => audioPlayerService.playPosition;
@@ -219,7 +226,8 @@ class AudioBloc extends Bloc {
   void Function(bool) get volumeBoost => _volumeBoost.sink.add;
 
   /// Handle filtering & searching of the current transcript.
-  void Function(TranscriptEvent) get filterTranscript => _transcriptEvent.sink.add;
+  void Function(TranscriptEvent) get filterTranscript =>
+      _transcriptEvent.sink.add;
 
   void Function(Sleep) get sleep => _sleepEvent.sink.add;
 

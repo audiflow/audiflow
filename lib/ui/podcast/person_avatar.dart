@@ -35,7 +35,8 @@ class PersonAvatar extends StatelessWidget {
     }
 
     if (person.role.isNotEmpty) {
-      role = person.role.substring(0, 1).toUpperCase() + person.role.substring(1);
+      role =
+          person.role.substring(0, 1).toUpperCase() + person.role.substring(1);
     }
   }
 

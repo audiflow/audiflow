@@ -38,55 +38,71 @@ class _SearchProviderWidgetState extends State<SearchProviderWidget> {
                   children: [
                     ListTile(
                       title: Text(L.of(context)!.search_provider_label),
-                      subtitle: Text(snapshot.data!.searchProvider == 'itunes' ? 'iTunes' : 'PodcastIndex'),
+                      subtitle: Text(snapshot.data!.searchProvider == 'itunes'
+                          ? 'iTunes'
+                          : 'PodcastIndex'),
                       onTap: () {
                         showPlatformDialog<void>(
                           context: context,
                           useRootNavigator: false,
                           builder: (BuildContext context) {
                             return AlertDialog(
-                                title: Text(L.of(context)!.search_provider_label,
-                                    style: Theme.of(context).textTheme.titleMedium, textAlign: TextAlign.center),
+                                title: Text(
+                                    L.of(context)!.search_provider_label,
+                                    style:
+                                        Theme.of(context).textTheme.titleMedium,
+                                    textAlign: TextAlign.center),
                                 content: StatefulBuilder(
-                                  builder: (BuildContext context, StateSetter setState) {
-                                    return Column(mainAxisSize: MainAxisSize.min, children: <Widget>[
-                                      RadioListTile<String>(
-                                        title: const Text('iTunes'),
-                                        value: 'itunes',
-                                        dense: true,
-                                        contentPadding: const EdgeInsets.symmetric(horizontal: 0.0),
-                                        groupValue: snapshot.data!.searchProvider,
-                                        onChanged: (String? value) {
-                                          setState(() {
-                                            settingsBloc.setSearchProvider(value ?? 'itunes');
+                                  builder: (BuildContext context,
+                                      StateSetter setState) {
+                                    return Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: <Widget>[
+                                          RadioListTile<String>(
+                                            title: const Text('iTunes'),
+                                            value: 'itunes',
+                                            dense: true,
+                                            contentPadding:
+                                                const EdgeInsets.symmetric(
+                                                    horizontal: 0.0),
+                                            groupValue:
+                                                snapshot.data!.searchProvider,
+                                            onChanged: (String? value) {
+                                              setState(() {
+                                                settingsBloc.setSearchProvider(
+                                                    value ?? 'itunes');
 
-                                            if (widget.onChanged != null) {
-                                              widget.onChanged!(value);
-                                            }
+                                                if (widget.onChanged != null) {
+                                                  widget.onChanged!(value);
+                                                }
 
-                                            Navigator.pop(context);
-                                          });
-                                        },
-                                      ),
-                                      RadioListTile<String>(
-                                        title: const Text('PodcastIndex'),
-                                        value: 'podcastindex',
-                                        dense: true,
-                                        contentPadding: const EdgeInsets.symmetric(horizontal: 0.0),
-                                        groupValue: snapshot.data!.searchProvider,
-                                        onChanged: (String? value) {
-                                          setState(() {
-                                            settingsBloc.setSearchProvider(value ?? 'podcastindex');
+                                                Navigator.pop(context);
+                                              });
+                                            },
+                                          ),
+                                          RadioListTile<String>(
+                                            title: const Text('PodcastIndex'),
+                                            value: 'podcastindex',
+                                            dense: true,
+                                            contentPadding:
+                                                const EdgeInsets.symmetric(
+                                                    horizontal: 0.0),
+                                            groupValue:
+                                                snapshot.data!.searchProvider,
+                                            onChanged: (String? value) {
+                                              setState(() {
+                                                settingsBloc.setSearchProvider(
+                                                    value ?? 'podcastindex');
 
-                                            if (widget.onChanged != null) {
-                                              widget.onChanged!(value);
-                                            }
+                                                if (widget.onChanged != null) {
+                                                  widget.onChanged!(value);
+                                                }
 
-                                            Navigator.pop(context);
-                                          });
-                                        },
-                                      ),
-                                    ]);
+                                                Navigator.pop(context);
+                                              });
+                                            },
+                                          ),
+                                        ]);
                                   },
                                 ));
                           },

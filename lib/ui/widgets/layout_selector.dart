@@ -80,12 +80,17 @@ class _LayoutSelectorWidgetState extends State<LayoutSelectorWidget> {
                             settingsBloc.layoutMode(0);
                           },
                           style: OutlinedButton.styleFrom(
-                            backgroundColor: mode == 0 ? Theme.of(context).primaryColor : null,
+                            backgroundColor: mode == 0
+                                ? Theme.of(context).primaryColor
+                                : null,
                           ),
                           child: Icon(
                             Icons.list,
-                            semanticLabel: L.of(context)!.semantics_layout_option_list,
-                            color: mode == 0 ? Theme.of(context).canvasColor : Theme.of(context).primaryColor,
+                            semanticLabel:
+                                L.of(context)!.semantics_layout_option_list,
+                            color: mode == 0
+                                ? Theme.of(context).canvasColor
+                                : Theme.of(context).primaryColor,
                           ),
                         ),
                       ),
@@ -98,12 +103,18 @@ class _LayoutSelectorWidgetState extends State<LayoutSelectorWidget> {
                             settingsBloc.layoutMode(1);
                           },
                           style: OutlinedButton.styleFrom(
-                            backgroundColor: mode == 1 ? Theme.of(context).primaryColor : null,
+                            backgroundColor: mode == 1
+                                ? Theme.of(context).primaryColor
+                                : null,
                           ),
                           child: Icon(
                             Icons.grid_on,
-                            semanticLabel: L.of(context)!.semantics_layout_option_compact_grid,
-                            color: mode == 1 ? Theme.of(context).canvasColor : Theme.of(context).primaryColor,
+                            semanticLabel: L
+                                .of(context)!
+                                .semantics_layout_option_compact_grid,
+                            color: mode == 1
+                                ? Theme.of(context).canvasColor
+                                : Theme.of(context).primaryColor,
                           ),
                         ),
                       ),
@@ -116,12 +127,17 @@ class _LayoutSelectorWidgetState extends State<LayoutSelectorWidget> {
                             settingsBloc.layoutMode(2);
                           },
                           style: OutlinedButton.styleFrom(
-                            backgroundColor: mode == 2 ? Theme.of(context).primaryColor : null,
+                            backgroundColor: mode == 2
+                                ? Theme.of(context).primaryColor
+                                : null,
                           ),
                           child: Icon(
                             Icons.grid_view,
-                            semanticLabel: L.of(context)!.semantics_layout_option_grid,
-                            color: mode == 2 ? Theme.of(context).canvasColor : Theme.of(context).primaryColor,
+                            semanticLabel:
+                                L.of(context)!.semantics_layout_option_grid,
+                            color: mode == 2
+                                ? Theme.of(context).canvasColor
+                                : Theme.of(context).primaryColor,
                           ),
                         ),
                       ),

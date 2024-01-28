@@ -259,7 +259,9 @@ class SleepSelectorEntry extends StatelessWidget {
               ),
             if (sleep.type == SleepType.time)
               Text(
-                L.of(context)!.sleep_minute_label(sleep.duration.inMinutes.toString()),
+                L
+                    .of(context)!
+                    .sleep_minute_label(sleep.duration.inMinutes.toString()),
                 style: Theme.of(context).textTheme.bodyLarge,
               ),
             if (sleep.type == SleepType.episode)

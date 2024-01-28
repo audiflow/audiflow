@@ -46,7 +46,8 @@ class _FloatingPlayerBuilder extends StatefulWidget {
   _FloatingPlayerBuilderState createState() => _FloatingPlayerBuilderState();
 }
 
-class _FloatingPlayerBuilderState extends State<_FloatingPlayerBuilder> with SingleTickerProviderStateMixin {
+class _FloatingPlayerBuilderState extends State<_FloatingPlayerBuilder>
+    with SingleTickerProviderStateMixin {
   late AnimationController _playPauseController;
   late StreamSubscription<AudioState> _audioStateSubscription;
 
@@ -54,7 +55,8 @@ class _FloatingPlayerBuilderState extends State<_FloatingPlayerBuilder> with Sin
   void initState() {
     super.initState();
 
-    _playPauseController = AnimationController(vsync: this, duration: const Duration(milliseconds: 300));
+    _playPauseController = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 300));
     _playPauseController.value = 1;
 
     _audioStateListener();
@@ -99,10 +101,14 @@ class _FloatingPlayerBuilderState extends State<_FloatingPlayerBuilder> with Sin
                                 borderRadius: 4.0,
                                 placeholder: placeholderBuilder != null
                                     ? placeholderBuilder.builder()(context)
-                                    : const Image(image: AssetImage('assets/images/anytime-placeholder-logo.png')),
+                                    : const Image(
+                                        image: AssetImage(
+                                            'assets/images/anytime-placeholder-logo.png')),
                                 errorPlaceholder: placeholderBuilder != null
                                     ? placeholderBuilder.errorBuilder()(context)
-                                    : const Image(image: AssetImage('assets/images/anytime-placeholder-logo.png')),
+                                    : const Image(
+                                        image: AssetImage(
+                                            'assets/images/anytime-placeholder-logo.png')),
                               )
                             : Container(),
                       ),
@@ -132,13 +138,19 @@ class _FloatingPlayerBuilderState extends State<_FloatingPlayerBuilder> with Sin
                         width: 52.0,
                         child: TextButton(
                           style: TextButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 0.0),
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 0.0),
                             shape: CircleBorder(
-                                side: BorderSide(color: Theme.of(context).colorScheme.background, width: 0.0)),
+                                side: BorderSide(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .background,
+                                    width: 0.0)),
                           ),
                           onPressed: () {
                             if (playing) {
-                              audioBloc.transitionState(TransitionState.fastforward);
+                              audioBloc
+                                  .transitionState(TransitionState.fastforward);
                             }
                           },
                           child: const Icon(
@@ -152,9 +164,14 @@ class _FloatingPlayerBuilderState extends State<_FloatingPlayerBuilder> with Sin
                         width: 52.0,
                         child: TextButton(
                           style: TextButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 0.0),
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 0.0),
                             shape: CircleBorder(
-                                side: BorderSide(color: Theme.of(context).colorScheme.background, width: 0.0)),
+                                side: BorderSide(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .background,
+                                    width: 0.0)),
                           ),
                           onPressed: () {
                             if (playing) {
@@ -164,8 +181,9 @@ class _FloatingPlayerBuilderState extends State<_FloatingPlayerBuilder> with Sin
                             }
                           },
                           child: AnimatedIcon(
-                            semanticLabel:
-                                playing ? L.of(context)!.pause_button_label : L.of(context)!.play_button_label,
+                            semanticLabel: playing
+                                ? L.of(context)!.pause_button_label
+                                : L.of(context)!.play_button_label,
                             size: 48.0,
                             icon: AnimatedIcons.play_pause,
                             color: Theme.of(context).iconTheme.color,

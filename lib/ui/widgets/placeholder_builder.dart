@@ -20,6 +20,7 @@ class PlaceholderBuilder extends InheritedWidget {
 
   @override
   bool updateShouldNotify(PlaceholderBuilder oldWidget) {
-    return builder != oldWidget.builder || errorBuilder != oldWidget.errorBuilder;
+    return builder != oldWidget.builder ||
+        errorBuilder != oldWidget.errorBuilder;
   }
 }

@@ -41,11 +41,14 @@ class MobileDownloaderManager implements DownloadManager {
     // AnyTime was close or in the background.
     if (tasks != null && tasks.isNotEmpty) {
       for (var t in tasks) {
-        _updateDownloadState(id: t.taskId, progress: t.progress, status: t.status.value);
+        _updateDownloadState(
+            id: t.taskId, progress: t.progress, status: t.status.value);
 
         /// If we are not queued or running we can safely clean up this event
-        if (t.status != DownloadTaskStatus.enqueued && t.status != DownloadTaskStatus.running) {
-          FlutterDownloader.remove(taskId: t.taskId, shouldDeleteContent: false);
+        if (t.status != DownloadTaskStatus.enqueued &&
+            t.status != DownloadTaskStatus.running) {
+          FlutterDownloader.remove(
+              taskId: t.taskId, shouldDeleteContent: false);
         }
       }
     }
@@ -62,7 +65,8 @@ class MobileDownloaderManager implements DownloadManager {
   }
 
   @override
-  Future<String?> enqueueTask(String url, String downloadPath, String fileName) async {
+  Future<String?> enqueueTask(
+      String url, String downloadPath, String fileName) async {
     return await FlutterDownloader.enqueue(
       url: url,
       savedDir: downloadPath,
@@ -81,7 +85,8 @@ class MobileDownloaderManager implements DownloadManager {
     downloadController.close();
   }
 
-  void _updateDownloadState({required String id, required int progress, required int status}) {
+  void _updateDownloadState(
+      {required String id, required int progress, required int status}) {
     var state = DownloadState.none;
     var updateTime = DateTime.now().millisecondsSinceEpoch;
     var downloadStatus = DownloadTaskStatus(status);
@@ -113,7 +118,9 @@ class MobileDownloaderManager implements DownloadManager {
   }
 
   @pragma('vm:entry-point')
-  static void downloadCallback(String id, DownloadTaskStatus status, int progress) {
-    IsolateNameServer.lookupPortByName('downloader_send_port')?.send([id, status.value, progress]);
+  static void downloadCallback(
+      String id, DownloadTaskStatus status, int progress) {
+    IsolateNameServer.lookupPortByName('downloader_send_port')
+        ?.send([id, status.value, progress]);
   }
 }

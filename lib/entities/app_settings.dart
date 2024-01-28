@@ -92,7 +92,8 @@ class AppSettings {
   }) =>
       AppSettings(
         theme: theme ?? this.theme,
-        markDeletedEpisodesAsPlayed: markDeletedEpisodesAsPlayed ?? this.markDeletedEpisodesAsPlayed,
+        markDeletedEpisodesAsPlayed:
+            markDeletedEpisodesAsPlayed ?? this.markDeletedEpisodesAsPlayed,
         storeDownloadsSDCard: storeDownloadsSDCard ?? this.storeDownloadsSDCard,
         playbackSpeed: playbackSpeed ?? this.playbackSpeed,
         searchProvider: searchProvider ?? this.searchProvider,
@@ -100,7 +101,8 @@ class AppSettings {
         externalLinkConsent: externalLinkConsent ?? this.externalLinkConsent,
         autoOpenNowPlaying: autoOpenNowPlaying ?? this.autoOpenNowPlaying,
         showFunding: showFunding ?? this.showFunding,
-        autoUpdateEpisodePeriod: autoUpdateEpisodePeriod ?? this.autoUpdateEpisodePeriod,
+        autoUpdateEpisodePeriod:
+            autoUpdateEpisodePeriod ?? this.autoUpdateEpisodePeriod,
         trimSilence: trimSilence ?? this.trimSilence,
         volumeBoost: volumeBoost ?? this.volumeBoost,
         layout: layout ?? this.layout,

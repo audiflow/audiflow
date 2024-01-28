@@ -195,10 +195,13 @@ class Episode {
       'downloadPercentage': downloadPercentage.toString(),
       'played': played ? 'true' : 'false',
       'chaptersUrl': chaptersUrl,
-      'chapters': (chapters).map((chapter) => chapter.toMap()).toList(growable: false),
+      'chapters':
+          (chapters).map((chapter) => chapter.toMap()).toList(growable: false),
       'tid': transcriptId ?? 0,
-      'transcriptUrls': (transcriptUrls).map((tu) => tu.toMap()).toList(growable: false),
-      'persons': (persons).map((person) => person.toMap()).toList(growable: false),
+      'transcriptUrls':
+          (transcriptUrls).map((tu) => tu.toMap()).toList(growable: false),
+      'persons':
+          (persons).map((person) => person.toMap()).toList(growable: false),
       'lastUpdated': lastUpdated?.millisecondsSinceEpoch.toString() ?? '',
     };
   }
@@ -249,25 +252,30 @@ class Episode {
       link: episode['link'] as String?,
       imageUrl: episode['imageUrl'] as String?,
       thumbImageUrl: episode['thumbImageUrl'] as String?,
-      publicationDate: episode['publicationDate'] == null || episode['publicationDate'] == 'null'
+      publicationDate: episode['publicationDate'] == null ||
+              episode['publicationDate'] == 'null'
           ? DateTime.now()
-          : DateTime.fromMillisecondsSinceEpoch(int.parse(episode['publicationDate'] as String)),
+          : DateTime.fromMillisecondsSinceEpoch(
+              int.parse(episode['publicationDate'] as String)),
       contentUrl: episode['contentUrl'] as String?,
       author: episode['author'] as String?,
       season: int.parse(episode['season'] as String? ?? '0'),
       episode: int.parse(episode['episode'] as String? ?? '0'),
       duration: int.parse(episode['duration'] as String? ?? '0'),
       position: int.parse(episode['position'] as String? ?? '0'),
-      downloadPercentage: int.parse(episode['downloadPercentage'] as String? ?? '0'),
+      downloadPercentage:
+          int.parse(episode['downloadPercentage'] as String? ?? '0'),
       played: episode['played'] == 'true' ? true : false,
       chaptersUrl: episode['chaptersUrl'] as String?,
       chapters: chapters,
       transcriptUrls: transcriptUrls,
       persons: persons,
       transcriptId: episode['tid'] == null ? 0 : episode['tid'] as int?,
-      lastUpdated: episode['lastUpdated'] == null || episode['lastUpdated'] == 'null'
-          ? DateTime.now()
-          : DateTime.fromMillisecondsSinceEpoch(int.parse(episode['lastUpdated'] as String)),
+      lastUpdated:
+          episode['lastUpdated'] == null || episode['lastUpdated'] == 'null'
+              ? DateTime.now()
+              : DateTime.fromMillisecondsSinceEpoch(
+                  int.parse(episode['lastUpdated'] as String)),
     );
   }
 
@@ -310,7 +318,8 @@ class Episode {
             link == other.link &&
             imageUrl == other.imageUrl &&
             thumbImageUrl == other.thumbImageUrl &&
-            publicationDate?.millisecondsSinceEpoch == other.publicationDate?.millisecondsSinceEpoch &&
+            publicationDate?.millisecondsSinceEpoch ==
+                other.publicationDate?.millisecondsSinceEpoch &&
             contentUrl == other.contentUrl &&
             author == other.author &&
             season == other.season &&
@@ -394,7 +403,8 @@ class Episode {
         _descriptionText = '';
       } else {
         // Replace break tags with space character for readability
-        var formattedDescription = description!.replaceAll(RegExp(r'(<br/?>)+'), ' ');
+        var formattedDescription =
+            description!.replaceAll(RegExp(r'(<br/?>)+'), ' ');
         _descriptionText = parseFragment(formattedDescription).text;
       }
     }
@@ -411,7 +421,9 @@ class Episode {
   bool get chaptersAreNotLoaded => chaptersLoading == true && chapters.isEmpty;
 
   String? get positionalImageUrl {
-    if (currentChapter != null && currentChapter!.imageUrl != null && currentChapter!.imageUrl!.isNotEmpty) {
+    if (currentChapter != null &&
+        currentChapter!.imageUrl != null &&
+        currentChapter!.imageUrl!.isNotEmpty) {
       return currentChapter!.imageUrl;
     }
 

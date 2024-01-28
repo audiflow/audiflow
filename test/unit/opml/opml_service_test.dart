@@ -37,7 +37,8 @@ void main() {
       settingsService: MockSettingsService(),
     );
 
-    opmlService = MobileOPMLService(podcastService: podcastService, repository: repository);
+    opmlService = MobileOPMLService(
+        podcastService: podcastService, repository: repository);
   });
 
   tearDown(() async {
@@ -49,7 +50,8 @@ void main() {
   });
 
   test('Load test OPML file. Single Podcast. Single episode.', () async {
-    var stream = opmlService.loadOPMLFile('test_resources/opml_import_test1.opml');
+    var stream =
+        opmlService.loadOPMLFile('test_resources/opml_import_test1.opml');
 
     await expectLater(
         stream,

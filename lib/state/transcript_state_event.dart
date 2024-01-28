@@ -31,5 +31,6 @@ class TranscriptUnavailableState extends TranscriptState {}
 class TranscriptLoadingState extends TranscriptState {}
 
 class TranscriptUpdateState extends TranscriptState {
-  TranscriptUpdateState({required Transcript transcript}) : super(transcript: transcript);
+  TranscriptUpdateState({required Transcript transcript})
+      : super(transcript: transcript);
 }

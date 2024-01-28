@@ -83,7 +83,8 @@ class MobilePodcastApi extends PodcastApi {
   }
 
   @override
-  Future<podcast_search.Transcript> loadTranscript(TranscriptUrl transcriptUrl) async {
+  Future<podcast_search.Transcript> loadTranscript(
+      TranscriptUrl transcriptUrl) async {
     late podcast_search.TranscriptFormat format;
 
     switch (transcriptUrl.type) {
@@ -99,10 +100,12 @@ class MobilePodcastApi extends PodcastApi {
     }
 
     return podcast_search.Podcast.loadTranscriptByUrl(
-        transcriptUrl: podcast_search.TranscriptUrl(url: transcriptUrl.url, type: format));
+        transcriptUrl:
+            podcast_search.TranscriptUrl(url: transcriptUrl.url, type: format));
   }
 
-  static Future<podcast_search.SearchResult> _search(Map<String, String?> searchParams) {
+  static Future<podcast_search.SearchResult> _search(
+      Map<String, String?> searchParams) {
     var term = searchParams['term']!;
     var provider = searchParams['searchProvider'] == 'itunes'
         ? const podcast_search.ITunesProvider()
@@ -117,7 +120,8 @@ class MobilePodcastApi extends PodcastApi {
     ).search(term).timeout(const Duration(seconds: 30));
   }
 
-  static Future<podcast_search.SearchResult> _charts(Map<String, String?> searchParams) {
+  static Future<podcast_search.SearchResult> _charts(
+      Map<String, String?> searchParams) {
     var provider = searchParams['searchProvider'] == 'itunes'
         ? const podcast_search.ITunesProvider()
         : podcast_search.PodcastIndexProvider(
@@ -129,22 +133,28 @@ class MobilePodcastApi extends PodcastApi {
     var country = podcast_search.Country.none;
 
     if (countryCode != null && countryCode.isNotEmpty) {
-      country = podcast_search.Country.values.where((element) => element.code == countryCode).first;
+      country = podcast_search.Country.values
+          .where((element) => element.code == countryCode)
+          .first;
     }
 
-    return podcast_search.Search(userAgent: Environment.userAgent(), searchProvider: provider)
+    return podcast_search.Search(
+            userAgent: Environment.userAgent(), searchProvider: provider)
         .charts(genre: searchParams['genre']!, country: country, limit: 50)
         .timeout(const Duration(seconds: 30));
   }
 
   Future<podcast_search.Podcast> _loadFeed(String url) {
     _setupSecurityContext();
-    return podcast_search.Podcast.loadFeed(url: url, userAgent: Environment.userAgent());
+    return podcast_search.Podcast.loadFeed(
+        url: url, userAgent: Environment.userAgent());
   }
 
   void _setupSecurityContext() {
-    if (_certificateAuthorityBytes.isNotEmpty && _defaultSecurityContext == null) {
-      SecurityContext.defaultContext.setTrustedCertificatesBytes(_certificateAuthorityBytes);
+    if (_certificateAuthorityBytes.isNotEmpty &&
+        _defaultSecurityContext == null) {
+      SecurityContext.defaultContext
+          .setTrustedCertificatesBytes(_certificateAuthorityBytes);
       _defaultSecurityContext = SecurityContext.defaultContext;
     }
   }

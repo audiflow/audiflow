@@ -46,7 +46,9 @@ class Persistable {
       'episodeId': episodeId,
       'position': position,
       'state': state.toString(),
-      'lastUpdated': lastUpdated == null ? DateTime.now().millisecondsSinceEpoch : lastUpdated!.millisecondsSinceEpoch,
+      'lastUpdated': lastUpdated == null
+          ? DateTime.now().millisecondsSinceEpoch
+          : lastUpdated!.millisecondsSinceEpoch,
     };
   }
 
@@ -75,7 +77,9 @@ class Persistable {
       episodeId: persistable['episodeId'] as int,
       position: persistable['position'] as int,
       state: state,
-      lastUpdated: lastUpdated == null ? DateTime.now() : DateTime.fromMillisecondsSinceEpoch(lastUpdated),
+      lastUpdated: lastUpdated == null
+          ? DateTime.now()
+          : DateTime.fromMillisecondsSinceEpoch(lastUpdated),
     );
   }
 }

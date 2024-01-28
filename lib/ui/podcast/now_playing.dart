@@ -61,8 +61,9 @@ class _NowPlayingState extends State<NowPlaying> with WidgetsBindingObserver {
     var popped = false;
 
     // If the episode finishes we can close.
-    playingStateSubscription =
-        audioBloc.playingState!.where((state) => state == AudioState.stopped).listen((playingState) async {
+    playingStateSubscription = audioBloc.playingState!
+        .where((state) => state == AudioState.stopped)
+        .listen((playingState) async {
       // Prevent responding to multiple stop events after we've popped and lost context.
       if (!popped) {
         Navigator.pop(context);
@@ -81,7 +82,8 @@ class _NowPlayingState extends State<NowPlaying> with WidgetsBindingObserver {
 
   bool isMobilePortrait(BuildContext context) {
     final query = MediaQuery.of(context);
-    return (query.orientation == Orientation.portrait || query.size.width <= 1000);
+    return (query.orientation == Orientation.portrait ||
+        query.size.width <= 1000);
   }
 
   @override
@@ -100,14 +102,16 @@ class _NowPlayingState extends State<NowPlaying> with WidgetsBindingObserver {
             }
 
             var duration = snapshot.data == null ? 0 : snapshot.data!.duration;
-            final WidgetBuilder? transportBuilder = playerBuilder?.builder(duration);
+            final WidgetBuilder? transportBuilder =
+                playerBuilder?.builder(duration);
 
             return isMobilePortrait(context)
                 ? NotificationListener<DraggableScrollableNotification>(
                     onNotification: (notification) {
                       setState(() {
                         if (notification.extent > (notification.minExtent)) {
-                          opacity = 1 - (notification.maxExtent - notification.extent);
+                          opacity = 1 -
+                              (notification.maxExtent - notification.extent);
                           scrollPos = 1.0;
                         } else {
                           opacity = 0.0;
@@ -146,7 +150,8 @@ class _NowPlayingState extends State<NowPlaying> with WidgetsBindingObserver {
                                       )
                                     : null,
                               ),
-                              if (MediaQuery.of(context).orientation == Orientation.portrait)
+                              if (MediaQuery.of(context).orientation ==
+                                  Orientation.portrait)
                                 const Expanded(
                                   child: NowPlayingOptionsSelector(),
                                 ),
@@ -161,7 +166,9 @@ class _NowPlayingState extends State<NowPlaying> with WidgetsBindingObserver {
                     children: [
                       Expanded(
                         flex: 1,
-                        child: NowPlayingTabs(episode: snapshot.data!, transportBuilder: transportBuilder),
+                        child: NowPlayingTabs(
+                            episode: snapshot.data!,
+                            transportBuilder: transportBuilder),
                       ),
                       const Expanded(
                         flex: 1,
@@ -200,7 +207,8 @@ class NowPlayingEpisode extends StatelessWidget {
       builder: (context, orientation) {
         return Padding(
           padding: const EdgeInsets.all(8.0),
-          child: MediaQuery.of(context).orientation == Orientation.portrait || MediaQuery.of(context).size.width >= 1000
+          child: MediaQuery.of(context).orientation == Orientation.portrait ||
+                  MediaQuery.of(context).size.width >= 1000
               ? Column(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
@@ -220,7 +228,9 @@ class NowPlayingEpisode extends StatelessWidget {
                               : DelayedCircularProgressIndicator(),
                           errorPlaceholder: placeholderBuilder != null
                               ? placeholderBuilder.errorBuilder()(context)
-                              : const Image(image: AssetImage('assets/images/anytime-placeholder-logo.png')),
+                              : const Image(
+                                  image: AssetImage(
+                                      'assets/images/anytime-placeholder-logo.png')),
                         ),
                       ),
                     ),
@@ -255,7 +265,9 @@ class NowPlayingEpisode extends StatelessWidget {
                               : DelayedCircularProgressIndicator(),
                           errorPlaceholder: placeholderBuilder != null
                               ? placeholderBuilder.errorBuilder()(context)
-                              : const Image(image: AssetImage('assets/images/anytime-placeholder-logo.png')),
+                              : const Image(
+                                  image: AssetImage(
+                                      'assets/images/anytime-placeholder-logo.png')),
                         ),
                       ),
                     ),
@@ -434,7 +446,8 @@ class NowPlayingShowNotes extends StatelessWidget {
                 left: 8.0,
                 right: 8.0,
               ),
-              child: PodcastHtml(content: episode?.content ?? episode?.description ?? ''),
+              child: PodcastHtml(
+                  content: episode?.content ?? episode?.description ?? ''),
             ),
           ],
         ),
@@ -464,10 +477,8 @@ class NowPlayingTabs extends StatelessWidget {
         length: episode.hasChapters ? 3 : 2,
         initialIndex: episode.hasChapters ? 1 : 0,
         child: AnnotatedRegion<SystemUiOverlayStyle>(
-          value: Theme.of(context)
-              .appBarTheme
-              .systemOverlayStyle!
-              .copyWith(systemNavigationBarColor: Theme.of(context).secondaryHeaderColor),
+          value: Theme.of(context).appBarTheme.systemOverlayStyle!.copyWith(
+              systemNavigationBarColor: Theme.of(context).secondaryHeaderColor),
           child: Scaffold(
             appBar: AppBar(
               backgroundColor: Theme.of(context).scaffoldBackgroundColor,

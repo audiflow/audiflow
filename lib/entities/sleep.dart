@@ -23,7 +23,10 @@ final class Sleep {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is Sleep && runtimeType == other.runtimeType && type == other.type && duration == other.duration;
+      other is Sleep &&
+          runtimeType == other.runtimeType &&
+          type == other.type &&
+          duration == other.duration;
 
   @override
   int get hashCode => type.hashCode ^ duration.hashCode;

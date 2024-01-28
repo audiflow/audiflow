@@ -14,7 +14,8 @@ import 'package:flutter/widgets.dart';
 class NavigationRouteObserver extends NavigatorObserver {
   final List<Route<dynamic>?> _routeStack = <Route<dynamic>?>[];
 
-  static final NavigationRouteObserver _instance = NavigationRouteObserver._internal();
+  static final NavigationRouteObserver _instance =
+      NavigationRouteObserver._internal();
 
   NavigationRouteObserver._internal();
 

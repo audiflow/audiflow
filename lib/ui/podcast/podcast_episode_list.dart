@@ -45,7 +45,8 @@ class PodcastEpisodeList extends StatelessWidget {
                 if (snapshot.hasData) {
                   var playingGuid = snapshot.data!.playing?.guid;
 
-                  queued = snapshot.data!.queue.any((element) => element.guid == episode.guid);
+                  queued = snapshot.data!.queue
+                      .any((element) => element.guid == episode.guid);
 
                   playing = playingGuid == episode.guid;
                 }

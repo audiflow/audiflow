@@ -57,7 +57,8 @@ class _SettingsState extends State<Settings> {
         builder: (context, snapshot) {
           return ListView(
             children: [
-              SettingsDividerLabel(label: L.of(context)!.settings_personalisation_divider_label),
+              SettingsDividerLabel(
+                  label: L.of(context)!.settings_personalisation_divider_label),
               ListTile(
                 shape: const RoundedRectangleBorder(side: BorderSide.none),
                 title: Text(L.of(context)!.settings_theme_switch_label),
@@ -67,25 +68,30 @@ class _SettingsState extends State<Settings> {
                       settingsBloc.darkMode(value);
                     }),
               ),
-              SettingsDividerLabel(label: L.of(context)!.settings_episodes_divider_label),
+              SettingsDividerLabel(
+                  label: L.of(context)!.settings_episodes_divider_label),
               ListTile(
                 title: Text(L.of(context)!.settings_mark_deleted_played_label),
                 trailing: Switch.adaptive(
                   value: snapshot.data!.markDeletedEpisodesAsPlayed,
-                  onChanged: (value) => setState(() => settingsBloc.markDeletedAsPlayed(value)),
+                  onChanged: (value) =>
+                      setState(() => settingsBloc.markDeletedAsPlayed(value)),
                 ),
               ),
               sdcard
                   ? ListTile(
-                      title: Text(L.of(context)!.settings_download_sd_card_label),
+                      title:
+                          Text(L.of(context)!.settings_download_sd_card_label),
                       trailing: Switch.adaptive(
                         value: snapshot.data!.storeDownloadsSDCard,
                         onChanged: (value) => sdcard
                             ? setState(() {
                                 if (value) {
-                                  _showStorageDialog(enableExternalStorage: true);
+                                  _showStorageDialog(
+                                      enableExternalStorage: true);
                                 } else {
-                                  _showStorageDialog(enableExternalStorage: false);
+                                  _showStorageDialog(
+                                      enableExternalStorage: false);
                                 }
 
                                 settingsBloc.storeDownloadonSDCard(value);
@@ -97,16 +103,19 @@ class _SettingsState extends State<Settings> {
                       height: 0,
                       width: 0,
                     ),
-              SettingsDividerLabel(label: L.of(context)!.settings_playback_divider_label),
+              SettingsDividerLabel(
+                  label: L.of(context)!.settings_playback_divider_label),
               ListTile(
                 title: Text(L.of(context)!.settings_auto_open_now_playing),
                 trailing: Switch.adaptive(
                   value: snapshot.data!.autoOpenNowPlaying,
-                  onChanged: (value) => setState(() => settingsBloc.setAutoOpenNowPlaying(value)),
+                  onChanged: (value) =>
+                      setState(() => settingsBloc.setAutoOpenNowPlaying(value)),
                 ),
               ),
               const EpisodeRefreshWidget(),
-              SettingsDividerLabel(label: L.of(context)!.settings_data_divider_label),
+              SettingsDividerLabel(
+                  label: L.of(context)!.settings_data_divider_label),
               ListTile(
                 title: Text(L.of(context)!.settings_import_opml),
                 onTap: () async {
@@ -132,7 +141,8 @@ class _SettingsState extends State<Settings> {
                             content: OPMLImport(file: file.path!),
                             actions: <Widget>[
                               BasicDialogAction(
-                                title: ActionText(L.of(context)!.cancel_button_label),
+                                title: ActionText(
+                                    L.of(context)!.cancel_button_label),
                                 onPressed: () {
                                   return Navigator.pop(context, true);
                                 },

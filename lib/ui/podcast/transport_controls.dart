@@ -35,20 +35,25 @@ class PlayControl extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final audioBloc = Provider.of<AudioBloc>(context, listen: false);
-    final settings = Provider.of<SettingsBloc>(context, listen: false).currentSettings;
+    final settings =
+        Provider.of<SettingsBloc>(context, listen: false).currentSettings;
 
     return SizedBox(
       height: 48.0,
       width: 48.0,
       child: StreamBuilder<PlayerControlState>(
-          stream: Rx.combineLatest2(audioBloc.playingState!, audioBloc.nowPlaying!,
-              (AudioState audioState, Episode? episode) => PlayerControlState(audioState, episode)),
+          stream: Rx.combineLatest2(
+              audioBloc.playingState!,
+              audioBloc.nowPlaying!,
+              (AudioState audioState, Episode? episode) =>
+                  PlayerControlState(audioState, episode)),
           builder: (context, snapshot) {
             if (snapshot.hasData) {
               final audioState = snapshot.data!.audioState;
               final nowPlaying = snapshot.data!.episode;
 
-              if (episode.downloadState != DownloadState.downloading && episode.downloadState != DownloadState.queued) {
+              if (episode.downloadState != DownloadState.downloading &&
+                  episode.downloadState != DownloadState.queued) {
                 // If this episode is the one we are playing, allow the user
                 // to toggle between play and pause.
                 if (snapshot.hasData && nowPlaying?.guid == episode.guid) {
@@ -172,15 +177,19 @@ class DownloadControl extends StatelessWidget {
       height: 48.0,
       width: 48.0,
       child: StreamBuilder<PlayerControlState>(
-          stream: Rx.combineLatest2(audioBloc.playingState!, audioBloc.nowPlaying!,
-              (AudioState audioState, Episode? episode) => PlayerControlState(audioState, episode)),
+          stream: Rx.combineLatest2(
+              audioBloc.playingState!,
+              audioBloc.nowPlaying!,
+              (AudioState audioState, Episode? episode) =>
+                  PlayerControlState(audioState, episode)),
           builder: (context, snapshot) {
             if (snapshot.hasData) {
               final audioState = snapshot.data!.audioState;
               final nowPlaying = snapshot.data!.episode;
 
               if (nowPlaying?.guid == episode.guid &&
-                  (audioState == AudioState.playing || audioState == AudioState.buffering)) {
+                  (audioState == AudioState.playing ||
+                      audioState == AudioState.buffering)) {
                 if (episode.downloadState != DownloadState.downloaded) {
                   return Opacity(
                     opacity: 0.2,

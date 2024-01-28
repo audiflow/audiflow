@@ -67,7 +67,8 @@ class UpNextView extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16.0, 0.0, 24.0, 8.0),
                     child: TextButton(
-                      onPressed: snapshot.hasData && snapshot.data!.queue.isEmpty
+                      onPressed: snapshot.hasData &&
+                              snapshot.data!.queue.isEmpty
                           ? null
                           : () {
                               showPlatformDialog<void>(
@@ -77,7 +78,8 @@ class UpNextView extends StatelessWidget {
                                   title: Text(
                                     L.of(context)!.queue_clear_label_title,
                                   ),
-                                  content: Text(L.of(context)!.queue_clear_label),
+                                  content:
+                                      Text(L.of(context)!.queue_clear_label),
                                   actions: <Widget>[
                                     BasicDialogAction(
                                       title: ActionText(
@@ -89,9 +91,15 @@ class UpNextView extends StatelessWidget {
                                     ),
                                     BasicDialogAction(
                                       title: ActionText(
-                                        Theme.of(context).platform == TargetPlatform.iOS
-                                            ? L.of(context)!.queue_clear_button_label.toUpperCase()
-                                            : L.of(context)!.queue_clear_button_label,
+                                        Theme.of(context).platform ==
+                                                TargetPlatform.iOS
+                                            ? L
+                                                .of(context)!
+                                                .queue_clear_button_label
+                                                .toUpperCase()
+                                            : L
+                                                .of(context)!
+                                                .queue_clear_button_label,
                                       ),
                                       iosIsDefaultAction: true,
                                       iosIsDestructiveAction: true,
@@ -107,14 +115,20 @@ class UpNextView extends StatelessWidget {
                       child: snapshot.hasData && snapshot.data!.queue.isEmpty
                           ? Text(
                               L.of(context)!.clear_queue_button_label,
-                              style: Theme.of(context).textTheme.titleSmall!.copyWith(
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleSmall!
+                                  .copyWith(
                                     fontSize: 12.0,
                                     color: Theme.of(context).disabledColor,
                                   ),
                             )
                           : Text(
                               L.of(context)!.clear_queue_button_label,
-                              style: Theme.of(context).textTheme.titleSmall!.copyWith(
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleSmall!
+                                  .copyWith(
                                     fontSize: 12.0,
                                     color: Theme.of(context).primaryColor,
                                   ),
@@ -132,7 +146,8 @@ class UpNextView extends StatelessWidget {
                             border: Border.all(
                               color: Theme.of(context).dividerColor,
                             ),
-                            borderRadius: const BorderRadius.all(Radius.circular(10))),
+                            borderRadius:
+                                const BorderRadius.all(Radius.circular(10))),
                         child: Padding(
                           padding: const EdgeInsets.all(24.0),
                           child: Text(
@@ -147,16 +162,20 @@ class UpNextView extends StatelessWidget {
                         buildDefaultDragHandles: false,
                         shrinkWrap: true,
                         padding: const EdgeInsets.all(8),
-                        itemCount: snapshot.hasData ? snapshot.data!.queue.length : 0,
+                        itemCount:
+                            snapshot.hasData ? snapshot.data!.queue.length : 0,
                         itemBuilder: (BuildContext context, int index) {
                           return Dismissible(
-                            key: ValueKey('disqueue${snapshot.data!.queue[index].guid}'),
+                            key: ValueKey(
+                                'disqueue${snapshot.data!.queue[index].guid}'),
                             direction: DismissDirection.endToStart,
                             onDismissed: (direction) {
-                              queueBloc.queueEvent(QueueRemoveEvent(episode: snapshot.data!.queue[index]));
+                              queueBloc.queueEvent(QueueRemoveEvent(
+                                  episode: snapshot.data!.queue[index]));
                             },
                             child: DraggableEpisodeTile(
-                              key: ValueKey('tilequeue${snapshot.data!.queue[index].guid}'),
+                              key: ValueKey(
+                                  'tilequeue${snapshot.data!.queue[index].guid}'),
                               index: index,
                               episode: snapshot.data!.queue[index],
                               playable: true,

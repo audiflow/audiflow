@@ -68,7 +68,8 @@ class _LibraryState extends State<Library> {
                         return SliverList(
                             delegate: SliverChildBuilderDelegate(
                           (BuildContext context, int index) {
-                            return PodcastTile(podcast: snapshot.data!.elementAt(index));
+                            return PodcastTile(
+                                podcast: snapshot.data!.elementAt(index));
                           },
                           childCount: snapshot.data!.length,
                           addAutomaticKeepAlives: false,
@@ -82,7 +83,8 @@ class _LibraryState extends State<Library> {
                         ),
                         delegate: SliverChildBuilderDelegate(
                           (BuildContext context, int index) {
-                            return PodcastGridTile(podcast: snapshot.data!.elementAt(index));
+                            return PodcastGridTile(
+                                podcast: snapshot.data!.elementAt(index));
                           },
                           childCount: snapshot.data!.length,
                         ),

@@ -39,7 +39,8 @@ class _PlaybackErrorListenerState extends State<PlaybackErrorListener> {
     final audioBloc = Provider.of<AudioBloc>(context, listen: false);
 
     errorSubscription = audioBloc.playbackError!.listen((code) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_codeToMessage(context, code))));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(_codeToMessage(context, code))));
     });
   }
 

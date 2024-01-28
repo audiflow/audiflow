@@ -64,7 +64,10 @@ class Chapter {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is Chapter && runtimeType == other.runtimeType && title == other.title && startTime == other.startTime;
+      other is Chapter &&
+          runtimeType == other.runtimeType &&
+          title == other.title &&
+          startTime == other.startTime;
 
   @override
   int get hashCode => title.hashCode ^ startTime.hashCode;

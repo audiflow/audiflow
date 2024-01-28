@@ -37,10 +37,11 @@ class PodcastHtml extends StatelessWidget {
           fontSize: fontSize ?? FontSize.large,
         )
       },
-      onLinkTap: (url, _, __) => canLaunchUrl(Uri.parse(url!)).then((value) => launchUrl(
-            Uri.parse(url),
-            mode: LaunchMode.externalApplication,
-          )),
+      onLinkTap: (url, _, __) =>
+          canLaunchUrl(Uri.parse(url!)).then((value) => launchUrl(
+                Uri.parse(url),
+                mode: LaunchMode.externalApplication,
+              )),
     );
   }
 }

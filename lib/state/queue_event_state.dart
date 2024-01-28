@@ -54,5 +54,8 @@ class QueueListState extends QueueState {
 
 class QueueEmptyState extends QueueState {
   QueueEmptyState()
-      : super(playing: Episode(guid: '', pguid: '', podcast: '', title: '', description: ''), queue: <Episode>[]);
+      : super(
+            playing: Episode(
+                guid: '', pguid: '', podcast: '', title: '', description: ''),
+            queue: <Episode>[]);
 }

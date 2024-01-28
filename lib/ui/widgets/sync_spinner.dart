@@ -16,7 +16,8 @@ class SyncSpinner extends StatefulWidget {
   State<SyncSpinner> createState() => _SyncSpinnerState();
 }
 
-class _SyncSpinnerState extends State<SyncSpinner> with SingleTickerProviderStateMixin {
+class _SyncSpinnerState extends State<SyncSpinner>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   StreamSubscription<BlocState<void>>? subscription;
   Widget? _child;

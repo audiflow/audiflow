@@ -76,7 +76,8 @@ class TranscriptUrl {
       type: t,
       lastUpdated: transcript['lastUpdated'] == null
           ? DateTime.now()
-          : DateTime.fromMillisecondsSinceEpoch(transcript['lastUpdated'] as int),
+          : DateTime.fromMillisecondsSinceEpoch(
+              transcript['lastUpdated'] as int),
     );
   }
 
@@ -91,7 +92,8 @@ class TranscriptUrl {
           rel == other.rel;
 
   @override
-  int get hashCode => url.hashCode ^ type.hashCode ^ language.hashCode ^ rel.hashCode;
+  int get hashCode =>
+      url.hashCode ^ type.hashCode ^ language.hashCode ^ rel.hashCode;
 }
 
 /// This class represents a Podcasting 2.0 transcript container.
@@ -114,7 +116,9 @@ class Transcript {
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
       'guid': guid,
-      'subtitles': (subtitles).map((subtitle) => subtitle.toMap()).toList(growable: false),
+      'subtitles': (subtitles)
+          .map((subtitle) => subtitle.toMap())
+          .toList(growable: false),
       'lastUpdated': DateTime.now().millisecondsSinceEpoch,
     };
   }
@@ -136,7 +140,8 @@ class Transcript {
       subtitles: subtitles,
       lastUpdated: transcript['lastUpdated'] == null
           ? DateTime.now()
-          : DateTime.fromMillisecondsSinceEpoch(transcript['lastUpdated'] as int),
+          : DateTime.fromMillisecondsSinceEpoch(
+              transcript['lastUpdated'] as int),
     );
   }
 
@@ -202,5 +207,10 @@ class Subtitle {
           speaker == other.speaker;
 
   @override
-  int get hashCode => index.hashCode ^ start.hashCode ^ end.hashCode ^ data.hashCode ^ speaker.hashCode;
+  int get hashCode =>
+      index.hashCode ^
+      start.hashCode ^
+      end.hashCode ^
+      data.hashCode ^
+      speaker.hashCode;
 }

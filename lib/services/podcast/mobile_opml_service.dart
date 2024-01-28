@@ -57,7 +57,8 @@ class MobileOPMLService extends OPMLService {
           log.fine('Importing podcast ${p.xmlUrl}');
 
           var result = await podcastService.loadPodcast(
-            podcast: Podcast(guid: '', link: '', title: p.text!, url: p.xmlUrl!),
+            podcast:
+                Podcast(guid: '', link: '', title: p.text!, url: p.xmlUrl!),
             refresh: true,
           );
 
@@ -103,7 +104,9 @@ class MobileOPMLService extends OPMLService {
 
     final export = builder.buildDocument();
 
-    var output = Platform.isAndroid ? (await getExternalStorageDirectory())! : await getApplicationDocumentsDirectory();
+    var output = Platform.isAndroid
+        ? (await getExternalStorageDirectory())!
+        : await getApplicationDocumentsDirectory();
     var outputFile = '${output.path}/anytime_export.opml';
     var file = File(outputFile);
 

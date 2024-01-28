@@ -68,7 +68,9 @@ class _SpeedSelectorWidgetState extends State<SpeedSelectorWidget> {
                   width: 48.0,
                   child: Center(
                     child: Text(
-                      snapshot.data!.playbackSpeed == 1.0 ? 'x1' : 'x${snapshot.data!.playbackSpeed}',
+                      snapshot.data!.playbackSpeed == 1.0
+                          ? 'x1'
+                          : 'x${snapshot.data!.playbackSpeed}',
                       semanticsLabel: L.of(context)!.playback_speed_label,
                       style: TextStyle(
                         fontSize: 16.0,

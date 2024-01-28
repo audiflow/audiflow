@@ -29,7 +29,8 @@ class MobileSettingsService extends SettingsService {
   }
 
   @override
-  bool get markDeletedEpisodesAsPlayed => _sharedPreferences.getBool('markplayedasdeleted') ?? false;
+  bool get markDeletedEpisodesAsPlayed =>
+      _sharedPreferences.getBool('markplayedasdeleted') ?? false;
 
   @override
   set markDeletedEpisodesAsPlayed(bool value) {
@@ -38,7 +39,8 @@ class MobileSettingsService extends SettingsService {
   }
 
   @override
-  bool get storeDownloadsSDCard => _sharedPreferences.getBool('savesdcard') ?? false;
+  bool get storeDownloadsSDCard =>
+      _sharedPreferences.getBool('savesdcard') ?? false;
 
   @override
   set storeDownloadsSDCard(bool value) {

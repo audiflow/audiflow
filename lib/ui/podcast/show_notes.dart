@@ -26,29 +26,33 @@ class ShowNotes extends StatelessWidget {
 
     return Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        body: CustomScrollView(controller: _sliverScrollController, slivers: <Widget>[
-          SliverAppBar(
-            title: Text(episode.podcast!),
-            floating: false,
-            pinned: true,
-            snap: false,
-          ),
-          SliverToBoxAdapter(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 8.0),
-                  child: Text(episode.title ?? '', style: textTheme.titleLarge),
+        body: CustomScrollView(
+            controller: _sliverScrollController,
+            slivers: <Widget>[
+              SliverAppBar(
+                title: Text(episode.podcast!),
+                floating: false,
+                pinned: true,
+                snap: false,
+              ),
+              SliverToBoxAdapter(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 8.0),
+                      child: Text(episode.title ?? '',
+                          style: textTheme.titleLarge),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(8.0, 0.0, 8.0, 0.0),
+                      child: PodcastHtml(
+                          content: episode.content ?? episode.description!),
+                    ),
+                  ],
                 ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(8.0, 0.0, 8.0, 0.0),
-                  child: PodcastHtml(content: episode.content ?? episode.description!),
-                ),
-              ],
-            ),
-          ),
-        ]));
+              ),
+            ]));
   }
 }

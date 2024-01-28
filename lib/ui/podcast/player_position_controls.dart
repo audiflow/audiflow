@@ -42,8 +42,10 @@ class _PlayerPositionControlsState extends State<PlayerPositionControls> {
     return StreamBuilder<PositionState>(
         stream: audioBloc.playPosition,
         builder: (context, snapshot) {
-          var position = snapshot.hasData ? snapshot.data!.position.inSeconds : 0;
-          episodeLength = snapshot.hasData ? snapshot.data!.length.inSeconds : 0;
+          var position =
+              snapshot.hasData ? snapshot.data!.position.inSeconds : 0;
+          episodeLength =
+              snapshot.hasData ? snapshot.data!.length.inSeconds : 0;
           var divisions = episodeLength == 0 ? 1 : episodeLength;
 
           // If a screen reader is enabled, will make divisions ten seconds each.
@@ -89,7 +91,8 @@ class _PlayerPositionControlsState extends State<PlayerPositionControls> {
                 Expanded(
                   child: snapshot.hasData
                       ? Slider(
-                          label: _formatDuration(Duration(seconds: currentPosition)),
+                          label: _formatDuration(
+                              Duration(seconds: currentPosition)),
                           onChanged: (value) {
                             setState(() {
                               _calculatePositions(value.toInt());
@@ -98,7 +101,9 @@ class _PlayerPositionControlsState extends State<PlayerPositionControls> {
                               // sliding; however, with a screen reader enabled that will never trigger. Instead,
                               // we'll use the 'normal' change event.
                               if (screenReader) {
-                                return snapshot.data!.buffering ? null : audioBloc.transitionPosition(value);
+                                return snapshot.data!.buffering
+                                    ? null
+                                    : audioBloc.transitionPosition(value);
                               }
                             });
                           },
@@ -115,7 +120,9 @@ class _PlayerPositionControlsState extends State<PlayerPositionControls> {
                               dragging = false;
                             });
 
-                            return snapshot.data!.buffering ? null : audioBloc.transitionPosition(value);
+                            return snapshot.data!.buffering
+                                ? null
+                                : audioBloc.transitionPosition(value);
                           },
                           value: currentPosition.toDouble(),
                           min: 0.0,
@@ -123,7 +130,8 @@ class _PlayerPositionControlsState extends State<PlayerPositionControls> {
                           divisions: divisions,
                           activeColor: Theme.of(context).primaryColor,
                           semanticFormatterCallback: (double newValue) {
-                            return _formatDuration(Duration(seconds: currentPosition));
+                            return _formatDuration(
+                                Duration(seconds: currentPosition));
                           })
                       : Slider(
                           onChanged: null,

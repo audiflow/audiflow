@@ -55,7 +55,12 @@ class Person {
           link == other.link;
 
   @override
-  int get hashCode => name.hashCode ^ role.hashCode ^ group.hashCode ^ image.hashCode ^ link.hashCode;
+  int get hashCode =>
+      name.hashCode ^
+      role.hashCode ^
+      group.hashCode ^
+      image.hashCode ^
+      link.hashCode;
 
   @override
   String toString() {

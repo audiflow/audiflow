@@ -20,7 +20,8 @@ class SearchBloc extends Bloc {
   final PodcastService podcastService;
 
   /// Add to the Sink to trigger a search using the [SearchEvent].
-  final BehaviorSubject<SearchEvent> _searchInput = BehaviorSubject<SearchEvent>();
+  final BehaviorSubject<SearchEvent> _searchInput =
+      BehaviorSubject<SearchEvent>();
 
   /// Add to the Sink to fetch the current podcast top x.
   final BehaviorSubject<int> _chartsInput = BehaviorSubject<int>();

@@ -46,7 +46,9 @@ class _SearchBarState extends State<SearchBar> {
         focusNode: _searchFocusNode,
         keyboardType: TextInputType.text,
         textInputAction: TextInputAction.search,
-        decoration: InputDecoration(hintText: L.of(context)!.search_for_podcasts_hint, border: InputBorder.none),
+        decoration: InputDecoration(
+            hintText: L.of(context)!.search_for_podcasts_hint,
+            border: InputBorder.none),
         style: TextStyle(
             color: Theme.of(context).primaryIconTheme.color,
             fontSize: 18.0,
@@ -63,11 +65,22 @@ class _SearchBarState extends State<SearchBar> {
       ),
       trailing: IconButton(
           padding: EdgeInsets.zero,
-          tooltip: _searchFocusNode.hasFocus ? L.of(context)!.clear_search_button_label : null,
-          color: _searchFocusNode.hasFocus ? Theme.of(context).iconTheme.color : null,
-          splashColor: _searchFocusNode.hasFocus ? Theme.of(context).splashColor : Colors.transparent,
-          highlightColor: _searchFocusNode.hasFocus ? Theme.of(context).highlightColor : Colors.transparent,
-          icon: Icon(_searchController.text.isEmpty && !_searchFocusNode.hasFocus ? Icons.search : Icons.clear),
+          tooltip: _searchFocusNode.hasFocus
+              ? L.of(context)!.clear_search_button_label
+              : null,
+          color: _searchFocusNode.hasFocus
+              ? Theme.of(context).iconTheme.color
+              : null,
+          splashColor: _searchFocusNode.hasFocus
+              ? Theme.of(context).splashColor
+              : Colors.transparent,
+          highlightColor: _searchFocusNode.hasFocus
+              ? Theme.of(context).highlightColor
+              : Colors.transparent,
+          icon: Icon(
+              _searchController.text.isEmpty && !_searchFocusNode.hasFocus
+                  ? Icons.search
+                  : Icons.clear),
           onPressed: () {
             _searchController.clear();
             FocusScope.of(context).requestFocus(FocusNode());

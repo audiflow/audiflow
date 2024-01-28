@@ -14,7 +14,8 @@ import 'package:flutter/material.dart';
 /// or process from the cache will result in a [PlatformProgressIndicator] indicator
 /// being displayed.
 class DelayedCircularProgressIndicator extends StatelessWidget {
-  final f = Future.delayed(const Duration(milliseconds: 1000), () => Container());
+  final f =
+      Future.delayed(const Duration(milliseconds: 1000), () => Container());
 
   DelayedCircularProgressIndicator({
     super.key,

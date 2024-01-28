@@ -98,7 +98,8 @@ class _EpisodesState extends State<Episodes> {
                 var episode = episodes[index];
 
                 if (snapshot.hasData) {
-                  queued = snapshot.data!.queue.any((element) => element.guid == episode.guid);
+                  queued = snapshot.data!.queue
+                      .any((element) => element.guid == episode.guid);
                 }
 
                 return EpisodeTile(

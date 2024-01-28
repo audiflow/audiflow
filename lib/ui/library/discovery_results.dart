@@ -35,7 +35,9 @@ class DiscoveryResults extends StatelessWidget {
         final state = snapshot.data;
 
         if (state is DiscoveryPopulatedState) {
-          if (inlineSearch) return PodcastListWithSearchBar(results: state.results as search.SearchResult);
+          if (inlineSearch)
+            return PodcastListWithSearchBar(
+                results: state.results as search.SearchResult);
           return PodcastList(results: state.results as search.SearchResult);
         } else {
           if (state is DiscoveryLoadingState) {
@@ -127,7 +129,8 @@ class _DiscoveryHeaderState extends State<DiscoveryHeader> {
                             // dropdownValue = newValue!;
                           });
                         },
-                        items: snapshot.data!.map<DropdownMenuItem<String>>((String value) {
+                        items: snapshot.data!
+                            .map<DropdownMenuItem<String>>((String value) {
                           return DropdownMenuItem<String>(
                             value: value,
                             child: Text(value),

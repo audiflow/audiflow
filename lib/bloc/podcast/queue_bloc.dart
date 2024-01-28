@@ -36,14 +36,17 @@ class QueueBloc extends Bloc {
       } else if (event is QueueMoveEvent) {
         var e = event.episode;
         if (e != null) {
-          await audioPlayerService.moveUpNextEpisode(e, event.oldIndex, event.newIndex);
+          await audioPlayerService.moveUpNextEpisode(
+              e, event.oldIndex, event.newIndex);
         }
       } else if (event is QueueClearEvent) {
         await audioPlayerService.clearUpNext();
       }
     });
 
-    audioPlayerService.queueState!.debounceTime(const Duration(seconds: 2)).listen((event) {
+    audioPlayerService.queueState!
+        .debounceTime(const Duration(seconds: 2))
+        .listen((event) {
       podcastService.saveQueue(event.queue).then((value) {
         /// Queue saved.
       });

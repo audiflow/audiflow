@@ -107,7 +107,8 @@ class _CupertinoContextMenu extends StatelessWidget {
         stream: bloc.details,
         builder: (context, snapshot) {
           return IconButton(
-            tooltip: L.of(context)!.podcast_options_overflow_menu_semantic_label,
+            tooltip:
+                L.of(context)!.podcast_options_overflow_menu_semantic_label,
             icon: const Icon(CupertinoIcons.ellipsis),
             onPressed: () => showCupertinoModalPopup<void>(
               context: context,
@@ -128,7 +129,8 @@ class _CupertinoContextMenu extends StatelessWidget {
                         bloc.podcastEvent(PodcastEvent.clearAllPlayed);
                         Navigator.pop(context, 'Cancel');
                       },
-                      child: Text(L.of(context)!.mark_episodes_not_played_label),
+                      child:
+                          Text(L.of(context)!.mark_episodes_not_played_label),
                     ),
                   ],
                   cancelButton: CupertinoActionSheetAction(

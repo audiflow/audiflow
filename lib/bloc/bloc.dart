@@ -9,7 +9,8 @@ import 'package:rxdart/rxdart.dart';
 /// lifecycle state of paused, resume or detached.
 abstract class Bloc {
   /// Handle lifecycle events
-  final PublishSubject<LifecycleState> _lifecycleSubject = PublishSubject<LifecycleState>(sync: true);
+  final PublishSubject<LifecycleState> _lifecycleSubject =
+      PublishSubject<LifecycleState>(sync: true);
 
   Bloc() {
     _init();
@@ -39,5 +40,6 @@ abstract class Bloc {
 
   void detach() {}
 
-  void Function(LifecycleState) get transitionLifecycleState => _lifecycleSubject.sink.add;
+  void Function(LifecycleState) get transitionLifecycleState =>
+      _lifecycleSubject.sink.add;
 }

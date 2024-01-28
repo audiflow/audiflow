@@ -42,7 +42,8 @@ ThemeData _buildLightTheme() {
     dialogBackgroundColor: const Color(0xffffffff),
     indicatorColor: Colors.orange,
     hintColor: const Color(0x8a000000),
-    primaryTextTheme: Typography.material2021(platform: TargetPlatform.android).black,
+    primaryTextTheme:
+        Typography.material2021(platform: TargetPlatform.android).black,
     textTheme: Typography.material2021(
       platform: TargetPlatform.android,
     ).black,
@@ -112,7 +113,8 @@ ThemeData _buildDarkTheme() {
     dialogBackgroundColor: const Color(0xff222222),
     indicatorColor: Colors.orange,
     hintColor: const Color(0x80ffffff),
-    primaryTextTheme: Typography.material2021(platform: TargetPlatform.android).white,
+    primaryTextTheme:
+        Typography.material2021(platform: TargetPlatform.android).white,
     textTheme: Typography.material2021(platform: TargetPlatform.android).white,
     primaryIconTheme: const IconThemeData(color: Colors.white),
     iconTheme: base.iconTheme.copyWith(

@@ -84,7 +84,10 @@ class _EpisodeDetailsState extends State<EpisodeDetails> {
                     alignment: Alignment.centerLeft,
                     child: Text(
                       episode.title!,
-                      style: Theme.of(context).textTheme.titleLarge!.copyWith(fontWeight: FontWeight.bold),
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleLarge!
+                          .copyWith(fontWeight: FontWeight.bold),
                     ),
                   ),
                 ),
@@ -104,7 +107,8 @@ class _EpisodeDetailsState extends State<EpisodeDetails> {
                     left: 8.0,
                     right: 8.0,
                   ),
-                  child: PodcastHtml(content: episode.content ?? episode.description!),
+                  child: PodcastHtml(
+                      content: episode.content ?? episode.description!),
                 )
               ],
             ),

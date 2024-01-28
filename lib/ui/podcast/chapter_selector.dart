@@ -56,7 +56,8 @@ class _ChapterSelectorState extends State<ChapterSelector> {
           lastChapter = episode.currentChapter;
 
           if (!episode.chaptersLoading && episode.chapters.isNotEmpty) {
-            var index = widget.chapters.indexWhere((element) => element == lastChapter);
+            var index =
+                widget.chapters.indexWhere((element) => element == lastChapter);
 
             if (index >= 0) {
               if (first) {
@@ -94,18 +95,22 @@ class _ChapterSelectorState extends State<ChapterSelector> {
                   itemBuilder: (context, i) {
                     final index = i < 0 ? 0 : i;
                     final chapter = widget.chapters[index];
-                    final chapterSelected = chapter == snapshot.data!.currentChapter;
-                    final textStyle = Theme.of(context).textTheme.bodyLarge!.copyWith(
-                          fontSize: 14,
-                          fontWeight: FontWeight.normal,
-                        );
+                    final chapterSelected =
+                        chapter == snapshot.data!.currentChapter;
+                    final textStyle =
+                        Theme.of(context).textTheme.bodyLarge!.copyWith(
+                              fontSize: 14,
+                              fontWeight: FontWeight.normal,
+                            );
 
                     /// We should be able to use the selectedTileColor property but, if we do, when
                     /// we scroll the currently selected item out of view, the selected colour is
                     /// still visible behind the transport control. This is a little hack, but fixes
                     /// the issue until I can get ListTile to work correctly.
                     return Container(
-                      color: chapterSelected ? Theme.of(context).colorScheme.onBackground : Colors.transparent,
+                      color: chapterSelected
+                          ? Theme.of(context).colorScheme.onBackground
+                          : Colors.transparent,
                       child: Padding(
                         padding: const EdgeInsets.fromLTRB(4.0, 0.0, 4.0, 0.0),
                         child: ListTile(
@@ -167,7 +172,8 @@ class _ChapterSelectorState extends State<ChapterSelector> {
       result =
           '${time.inHours}:${time.inMinutes.remainder(60).toString().padLeft(2, '0')}:${time.inSeconds.remainder(60).toString().padLeft(2, '0')}';
     } else {
-      result = '${time.inMinutes}:${time.inSeconds.remainder(60).toString().padLeft(2, '0')}';
+      result =
+          '${time.inMinutes}:${time.inSeconds.remainder(60).toString().padLeft(2, '0')}';
     }
 
     return result;

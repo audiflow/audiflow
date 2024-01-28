@@ -42,7 +42,8 @@ class PodcastImage extends StatefulWidget {
   State<PodcastImage> createState() => _PodcastImageState();
 }
 
-class _PodcastImageState extends State<PodcastImage> with TickerProviderStateMixin {
+class _PodcastImageState extends State<PodcastImage>
+    with TickerProviderStateMixin {
   static const cacheWidth = 480;
 
   /// There appears to be a bug in extended image that causes images to
@@ -64,7 +65,8 @@ class _PodcastImageState extends State<PodcastImage> with TickerProviderStateMix
 
         if (state.extendedImageLoadState == LoadState.failed) {
           renderWidget = ClipRRect(
-            borderRadius: BorderRadius.all(Radius.circular(widget.borderRadius)),
+            borderRadius:
+                BorderRadius.all(Radius.circular(widget.borderRadius)),
             child: widget.errorPlaceholder ??
                 SizedBox(
                   width: widget.width,
@@ -73,12 +75,14 @@ class _PodcastImageState extends State<PodcastImage> with TickerProviderStateMix
           );
         } else {
           renderWidget = AnimatedCrossFade(
-            crossFadeState: state.wasSynchronouslyLoaded || state.extendedImageLoadState == LoadState.completed
+            crossFadeState: state.wasSynchronouslyLoaded ||
+                    state.extendedImageLoadState == LoadState.completed
                 ? CrossFadeState.showSecond
                 : CrossFadeState.showFirst,
             duration: const Duration(milliseconds: 500),
             firstChild: ClipRRect(
-              borderRadius: BorderRadius.all(Radius.circular(widget.borderRadius)),
+              borderRadius:
+                  BorderRadius.all(Radius.circular(widget.borderRadius)),
               child: widget.placeholder ??
                   SizedBox(
                     width: widget.width,
@@ -86,7 +90,8 @@ class _PodcastImageState extends State<PodcastImage> with TickerProviderStateMix
                   ),
             ),
             secondChild: ClipRRect(
-              borderRadius: BorderRadius.all(Radius.circular(widget.borderRadius)),
+              borderRadius:
+                  BorderRadius.all(Radius.circular(widget.borderRadius)),
               child: ExtendedRawImage(
                 image: state.extendedImageInfo?.image,
                 fit: widget.fit,
@@ -181,7 +186,8 @@ class PodcastBannerImage extends StatefulWidget {
   State<PodcastBannerImage> createState() => _PodcastBannerImageState();
 }
 
-class _PodcastBannerImageState extends State<PodcastBannerImage> with TickerProviderStateMixin {
+class _PodcastBannerImageState extends State<PodcastBannerImage>
+    with TickerProviderStateMixin {
   static const cacheWidth = 480;
 
   /// There appears to be a bug in extended image that causes images to
@@ -207,7 +213,8 @@ class _PodcastBannerImageState extends State<PodcastBannerImage> with TickerProv
             width: widget.width - 2.0,
             height: widget.height - 2.0,
             child: ClipRRect(
-              borderRadius: BorderRadius.all(Radius.circular(widget.borderRadius)),
+              borderRadius:
+                  BorderRadius.all(Radius.circular(widget.borderRadius)),
               child: widget.errorPlaceholder ??
                   SizedBox(
                     width: widget.width - 2.0,
@@ -217,7 +224,8 @@ class _PodcastBannerImageState extends State<PodcastBannerImage> with TickerProv
           );
         } else {
           renderWidget = AnimatedCrossFade(
-            crossFadeState: state.wasSynchronouslyLoaded || state.extendedImageLoadState == LoadState.completed
+            crossFadeState: state.wasSynchronouslyLoaded ||
+                    state.extendedImageLoadState == LoadState.completed
                 ? CrossFadeState.showSecond
                 : CrossFadeState.showFirst,
             duration: const Duration(seconds: 1),

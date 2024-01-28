@@ -42,7 +42,8 @@ class DiscoveryBloc extends Bloc {
   }
 
   void _init() {
-    _discoveryResults = _discoveryInput.switchMap<DiscoveryState>((DiscoveryEvent event) => _charts(event));
+    _discoveryResults = _discoveryInput
+        .switchMap<DiscoveryState>((DiscoveryEvent event) => _charts(event));
     _selectedGenre.value = SelectedGenre(index: 0, genre: '');
     _genres.onListen = _loadGenres;
   }
@@ -57,12 +58,14 @@ class DiscoveryBloc extends Bloc {
     if (event is DiscoveryChartEvent) {
       if (_resultsCache == null ||
           event.genre != _lastGenre ||
-          DateTime.now().difference(_resultsCache!.processedTime).inMinutes > cacheMinutes) {
+          DateTime.now().difference(_resultsCache!.processedTime).inMinutes >
+              cacheMinutes) {
         _lastGenre = event.genre;
         _lastIndex = podcastService.genres().indexOf(_lastGenre);
 
         if (_lastIndex > 0) {
-          _selectedGenre.add(SelectedGenre(index: _lastIndex, genre: _lastGenre));
+          _selectedGenre
+              .add(SelectedGenre(index: _lastIndex, genre: _lastGenre));
         } else {
           /// Must have changed provider
           _lastGenre = '';

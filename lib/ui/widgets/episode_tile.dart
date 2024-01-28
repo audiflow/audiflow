@@ -55,8 +55,9 @@ class _EpisodeTileState extends State<EpisodeTile> {
 
     return Semantics(
       liveRegion: true,
-      label:
-          expanded ? L.of(context)!.semantics_episode_tile_expanded : L.of(context)!.semantics_episode_tile_collapsed,
+      label: expanded
+          ? L.of(context)!.semantics_episode_tile_expanded
+          : L.of(context)!.semantics_episode_tile_collapsed,
       onTapHint: expanded
           ? L.of(context)!.semantics_episode_tile_expanded_hint
           : L.of(context)!.semantics_episode_tile_collapsed_hint,
@@ -143,7 +144,8 @@ class _EpisodeTileState extends State<EpisodeTile> {
                   child: TextButton(
                     style: TextButton.styleFrom(
                       padding: EdgeInsets.zero,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4.0)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(4.0)),
                     ),
                     onPressed: widget.episode.downloaded
                         ? () {
@@ -154,7 +156,8 @@ class _EpisodeTileState extends State<EpisodeTile> {
                                 title: Text(
                                   L.of(context)!.delete_episode_title,
                                 ),
-                                content: Text(L.of(context)!.delete_episode_confirmation),
+                                content: Text(
+                                    L.of(context)!.delete_episode_confirmation),
                                 actions: <Widget>[
                                   BasicDialogAction(
                                     title: ActionText(
@@ -171,7 +174,8 @@ class _EpisodeTileState extends State<EpisodeTile> {
                                     iosIsDefaultAction: true,
                                     iosIsDestructiveAction: true,
                                     onPressed: () {
-                                      episodeBloc.deleteDownload(widget.episode);
+                                      episodeBloc
+                                          .deleteDownload(widget.episode);
                                       Navigator.pop(context);
                                     },
                                   ),
@@ -184,7 +188,8 @@ class _EpisodeTileState extends State<EpisodeTile> {
                       children: <Widget>[
                         Icon(
                           Icons.delete_outline,
-                          semanticLabel: L.of(context)!.delete_episode_button_label,
+                          semanticLabel:
+                              L.of(context)!.delete_episode_button_label,
                           size: 22,
                         ),
                         const Padding(
@@ -207,21 +212,26 @@ class _EpisodeTileState extends State<EpisodeTile> {
                   child: TextButton(
                     style: TextButton.styleFrom(
                       padding: EdgeInsets.zero,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(0.0)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(0.0)),
                     ),
                     onPressed: widget.playing
                         ? null
                         : () {
                             if (widget.queued) {
-                              queueBloc.queueEvent(QueueRemoveEvent(episode: widget.episode));
+                              queueBloc.queueEvent(
+                                  QueueRemoveEvent(episode: widget.episode));
                             } else {
-                              queueBloc.queueEvent(QueueAddEvent(episode: widget.episode));
+                              queueBloc.queueEvent(
+                                  QueueAddEvent(episode: widget.episode));
                             }
                           },
                     child: Column(
                       children: <Widget>[
                         Icon(
-                          widget.queued ? Icons.playlist_add_check_outlined : Icons.playlist_add_outlined,
+                          widget.queued
+                              ? Icons.playlist_add_check_outlined
+                              : Icons.playlist_add_outlined,
                           semanticLabel: widget.queued
                               ? L.of(context)!.semantics_remove_from_queue
                               : L.of(context)!.semantics_add_to_queue,
@@ -247,7 +257,8 @@ class _EpisodeTileState extends State<EpisodeTile> {
                   child: TextButton(
                     style: TextButton.styleFrom(
                       padding: EdgeInsets.zero,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(0.0)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(0.0)),
                     ),
                     onPressed: () {
                       episodeBloc.togglePlayed(widget.episode);
@@ -257,14 +268,18 @@ class _EpisodeTileState extends State<EpisodeTile> {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: <Widget>[
                         Icon(
-                          widget.episode.played ? Icons.unpublished_outlined : Icons.check_circle_outline,
+                          widget.episode.played
+                              ? Icons.unpublished_outlined
+                              : Icons.check_circle_outline,
                           size: 22,
                         ),
                         const Padding(
                           padding: EdgeInsets.symmetric(vertical: 2.0),
                         ),
                         Text(
-                          widget.episode.played ? L.of(context)!.mark_unplayed_label : L.of(context)!.mark_played_label,
+                          widget.episode.played
+                              ? L.of(context)!.mark_unplayed_label
+                              : L.of(context)!.mark_played_label,
                           textAlign: TextAlign.center,
                           style: const TextStyle(
                             fontWeight: FontWeight.normal,
@@ -278,7 +293,8 @@ class _EpisodeTileState extends State<EpisodeTile> {
                   child: TextButton(
                     style: TextButton.styleFrom(
                       padding: EdgeInsets.zero,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(0.0)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(0.0)),
                     ),
                     onPressed: () {
                       showModalBottomSheet<void>(
@@ -379,7 +395,9 @@ class EpisodeSubtitle extends StatelessWidget {
   EpisodeSubtitle(this.episode, {super.key})
       : date = episode.publicationDate == null
             ? ''
-            : DateFormat(episode.publicationDate!.year == DateTime.now().year ? 'd MMM' : 'd MMM yy')
+            : DateFormat(episode.publicationDate!.year == DateTime.now().year
+                    ? 'd MMM'
+                    : 'd MMM yy')
                 .format(episode.publicationDate!),
         length = Duration(seconds: episode.duration);
 

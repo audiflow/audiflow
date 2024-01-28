@@ -13,7 +13,8 @@ import 'package:rxdart/rxdart.dart';
 class SettingsBloc extends Bloc {
   final log = Logger('SettingsBloc');
   final SettingsService _settingsService;
-  final BehaviorSubject<AppSettings> _settings = BehaviorSubject<AppSettings>.seeded(AppSettings.sensibleDefaults());
+  final BehaviorSubject<AppSettings> _settings =
+      BehaviorSubject<AppSettings>.seeded(AppSettings.sensibleDefaults());
   final BehaviorSubject<bool> _darkMode = BehaviorSubject<bool>();
   final BehaviorSubject<bool> _markDeletedAsPlayed = BehaviorSubject<bool>();
   final BehaviorSubject<bool> _storeDownloadOnSDCard = BehaviorSubject<bool>();
@@ -35,7 +36,9 @@ class SettingsBloc extends Bloc {
   void _init() {
     /// Load all settings
     // Add our available search providers.
-    var providers = <SearchProvider>[SearchProvider(key: 'itunes', name: 'iTunes')];
+    var providers = <SearchProvider>[
+      SearchProvider(key: 'itunes', name: 'iTunes')
+    ];
 
     if (podcastIndexKey.isNotEmpty) {
       providers.add(SearchProvider(key: 'podcastindex', name: 'PodcastIndex'));
@@ -60,19 +63,22 @@ class SettingsBloc extends Bloc {
     _settings.add(_currentSettings);
 
     _darkMode.listen((bool darkMode) {
-      _currentSettings = _currentSettings.copyWith(theme: darkMode ? 'dark' : 'light');
+      _currentSettings =
+          _currentSettings.copyWith(theme: darkMode ? 'dark' : 'light');
       _settings.add(_currentSettings);
       _settingsService.themeDarkMode = darkMode;
     });
 
     _markDeletedAsPlayed.listen((bool mark) {
-      _currentSettings = _currentSettings.copyWith(markDeletedEpisodesAsPlayed: mark);
+      _currentSettings =
+          _currentSettings.copyWith(markDeletedEpisodesAsPlayed: mark);
       _settings.add(_currentSettings);
       _settingsService.markDeletedEpisodesAsPlayed = mark;
     });
 
     _storeDownloadOnSDCard.listen((bool sdcard) {
-      _currentSettings = _currentSettings.copyWith(storeDownloadsSDCard: sdcard);
+      _currentSettings =
+          _currentSettings.copyWith(storeDownloadsSDCard: sdcard);
       _settings.add(_currentSettings);
       _settingsService.storeDownloadsSDCard = sdcard;
     });
@@ -84,7 +90,8 @@ class SettingsBloc extends Bloc {
     });
 
     _autoOpenNowPlaying.listen((bool autoOpen) {
-      _currentSettings = _currentSettings.copyWith(autoOpenNowPlaying: autoOpen);
+      _currentSettings =
+          _currentSettings.copyWith(autoOpenNowPlaying: autoOpen);
       _settings.add(_currentSettings);
       _settingsService.autoOpenNowPlaying = autoOpen;
     });
@@ -108,7 +115,8 @@ class SettingsBloc extends Bloc {
     _externalLinkConsent.listen((consent) {
       // If the setting has not changed, don't bother updating it
       if (consent != _settingsService.externalLinkConsent) {
-        _currentSettings = _currentSettings.copyWith(externalLinkConsent: consent);
+        _currentSettings =
+            _currentSettings.copyWith(externalLinkConsent: consent);
         _settingsService.externalLinkConsent = consent;
       }
 
@@ -116,7 +124,8 @@ class SettingsBloc extends Bloc {
     });
 
     _autoUpdatePeriod.listen((period) {
-      _currentSettings = _currentSettings.copyWith(autoUpdateEpisodePeriod: period);
+      _currentSettings =
+          _currentSettings.copyWith(autoUpdateEpisodePeriod: period);
       _settings.add(_currentSettings);
       _settingsService.autoUpdateEpisodePeriod = period;
     });

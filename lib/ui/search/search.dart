@@ -66,7 +66,8 @@ class _SearchState extends State<Search> {
             leading: IconButton(
               tooltip: L.of(context)!.search_back_button_label,
               icon: Platform.isAndroid
-                  ? Icon(Icons.arrow_back, color: Theme.of(context).appBarTheme.foregroundColor)
+                  ? Icon(Icons.arrow_back,
+                      color: Theme.of(context).appBarTheme.foregroundColor)
                   : const Icon(Icons.arrow_back_ios),
               onPressed: () => Navigator.pop(context),
             ),
@@ -86,9 +87,12 @@ class _SearchState extends State<Search> {
                   style: TextStyle(
                       color: Theme.of(context).primaryIconTheme.color,
                       fontSize: 18.0,
-                      decorationColor: Theme.of(context).scaffoldBackgroundColor),
+                      decorationColor:
+                          Theme.of(context).scaffoldBackgroundColor),
                   onSubmitted: ((value) {
-                    SemanticsService.announce(L.of(context)!.semantic_announce_searching, TextDirection.ltr);
+                    SemanticsService.announce(
+                        L.of(context)!.semantic_announce_searching,
+                        TextDirection.ltr);
                     bloc.search(SearchTermEvent(value));
                   })),
             ),
@@ -102,7 +106,8 @@ class _SearchState extends State<Search> {
                 onPressed: () {
                   _searchController.clear();
                   FocusScope.of(context).requestFocus(_searchFocusNode);
-                  SystemChannels.textInput.invokeMethod<String>('TextInput.show');
+                  SystemChannels.textInput
+                      .invokeMethod<String>('TextInput.show');
                 },
               ),
             ],
