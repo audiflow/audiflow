@@ -2,9 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:anytime/bloc/podcast/opml_bloc.dart';
-import 'package:anytime/l10n/L.dart';
-import 'package:anytime/state/opml_state.dart';
+import 'package:coten_player/bloc/podcast/opml_bloc.dart';
+import 'package:coten_player/l10n/L.dart';
+import 'package:coten_player/state/opml_state.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 

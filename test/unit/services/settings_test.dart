@@ -1,8 +1,8 @@
 // Copyright 2020 Ben Hills and the project contributors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
-import 'package:anytime/services/settings/mobile_settings_service.dart';
-import 'package:anytime/services/settings/settings_service.dart';
+import 'package:coten_player/services/settings/mobile_settings_service.dart';
+import 'package:coten_player/services/settings/settings_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:anytime/bloc/podcast/audio_bloc.dart';
+import 'package:coten_player/bloc/podcast/audio_bloc.dart';
 import 'package:rxdart/rxdart.dart';
 
 /// Base class for all BLoCs to give each a hook into the mobile

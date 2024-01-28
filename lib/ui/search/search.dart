@@ -4,10 +4,10 @@
 
 import 'dart:io';
 
-import 'package:anytime/bloc/search/search_bloc.dart';
-import 'package:anytime/bloc/search/search_state_event.dart';
-import 'package:anytime/l10n/L.dart';
-import 'package:anytime/ui/search/search_results.dart';
+import 'package:coten_player/bloc/search/search_bloc.dart';
+import 'package:coten_player/bloc/search/search_state_event.dart';
+import 'package:coten_player/l10n/L.dart';
+import 'package:coten_player/ui/search/search_results.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';

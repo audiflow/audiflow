@@ -2,14 +2,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:anytime/api/podcast/podcast_api.dart';
-import 'package:anytime/entities/chapter.dart';
-import 'package:anytime/entities/episode.dart';
-import 'package:anytime/entities/podcast.dart';
-import 'package:anytime/entities/transcript.dart';
-import 'package:anytime/repository/repository.dart';
-import 'package:anytime/services/settings/settings_service.dart';
-import 'package:anytime/state/episode_state.dart';
+import 'package:coten_player/api/podcast/podcast_api.dart';
+import 'package:coten_player/entities/chapter.dart';
+import 'package:coten_player/entities/episode.dart';
+import 'package:coten_player/entities/podcast.dart';
+import 'package:coten_player/entities/transcript.dart';
+import 'package:coten_player/repository/repository.dart';
+import 'package:coten_player/services/settings/settings_service.dart';
+import 'package:coten_player/state/episode_state.dart';
 import 'package:podcast_search/podcast_search.dart' as pcast;
 
 abstract class PodcastService {

@@ -2,14 +2,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:anytime/core/extensions.dart';
-import 'package:anytime/entities/episode.dart';
-import 'package:anytime/entities/podcast.dart';
-import 'package:anytime/entities/queue.dart';
-import 'package:anytime/entities/transcript.dart';
-import 'package:anytime/repository/repository.dart';
-import 'package:anytime/repository/sembast/sembast_database_service.dart';
-import 'package:anytime/state/episode_state.dart';
+import 'package:coten_player/core/extensions.dart';
+import 'package:coten_player/entities/episode.dart';
+import 'package:coten_player/entities/podcast.dart';
+import 'package:coten_player/entities/queue.dart';
+import 'package:coten_player/entities/transcript.dart';
+import 'package:coten_player/repository/repository.dart';
+import 'package:coten_player/repository/sembast/sembast_database_service.dart';
+import 'package:coten_player/state/episode_state.dart';
 import 'package:flutter/foundation.dart';
 import 'package:logging/logging.dart';
 import 'package:rxdart/rxdart.dart';

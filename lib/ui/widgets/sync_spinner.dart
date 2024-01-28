@@ -4,8 +4,8 @@
 
 import 'dart:async';
 
-import 'package:anytime/bloc/podcast/podcast_bloc.dart';
-import 'package:anytime/state/bloc_state.dart';
+import 'package:coten_player/bloc/podcast/podcast_bloc.dart';
+import 'package:coten_player/state/bloc_state.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 

@@ -4,7 +4,7 @@
 
 import 'dart:io';
 
-import 'package:anytime/l10n/L.dart';
+import 'package:coten_player/l10n/L.dart';
 import 'package:flutter/material.dart';
 
 /// Simple widget for rendering either the standard Android close or iOS Back button.

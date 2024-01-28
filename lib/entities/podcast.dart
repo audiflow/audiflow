@@ -2,9 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:anytime/core/extensions.dart';
-import 'package:anytime/entities/funding.dart';
-import 'package:anytime/entities/person.dart';
+import 'package:coten_player/core/extensions.dart';
+import 'package:coten_player/entities/funding.dart';
+import 'package:coten_player/entities/person.dart';
 import 'package:podcast_search/podcast_search.dart' as search;
 
 import 'episode.dart';

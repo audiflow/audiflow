@@ -2,10 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:anytime/entities/episode.dart';
-import 'package:anytime/entities/sleep.dart';
-import 'package:anytime/state/queue_event_state.dart';
-import 'package:anytime/state/transcript_state_event.dart';
+import 'package:coten_player/entities/episode.dart';
+import 'package:coten_player/entities/sleep.dart';
+import 'package:coten_player/state/queue_event_state.dart';
+import 'package:coten_player/state/transcript_state_event.dart';
 
 enum AudioState {
   none,

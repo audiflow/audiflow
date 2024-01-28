@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:anytime/entities/app_settings.dart';
+import 'package:coten_player/entities/app_settings.dart';
 
 abstract class SettingsService {
   AppSettings? get settings;

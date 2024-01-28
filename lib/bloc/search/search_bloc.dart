@@ -4,10 +4,10 @@
 
 import 'dart:async';
 
-import 'package:anytime/bloc/bloc.dart';
-import 'package:anytime/bloc/search/search_state_event.dart';
-import 'package:anytime/services/podcast/podcast_service.dart';
-import 'package:anytime/state/bloc_state.dart';
+import 'package:coten_player/bloc/bloc.dart';
+import 'package:coten_player/bloc/search/search_state_event.dart';
+import 'package:coten_player/services/podcast/podcast_service.dart';
+import 'package:coten_player/state/bloc_state.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:logging/logging.dart';
 import 'package:podcast_search/podcast_search.dart' as pcast;

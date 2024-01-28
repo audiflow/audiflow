@@ -2,15 +2,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:anytime/bloc/podcast/episode_bloc.dart';
-import 'package:anytime/bloc/podcast/queue_bloc.dart';
-import 'package:anytime/entities/episode.dart';
-import 'package:anytime/l10n/L.dart';
-import 'package:anytime/state/queue_event_state.dart';
-import 'package:anytime/ui/podcast/episode_details.dart';
-import 'package:anytime/ui/podcast/transport_controls.dart';
-import 'package:anytime/ui/widgets/action_text.dart';
-import 'package:anytime/ui/widgets/tile_image.dart';
+import 'package:coten_player/bloc/podcast/episode_bloc.dart';
+import 'package:coten_player/bloc/podcast/queue_bloc.dart';
+import 'package:coten_player/entities/episode.dart';
+import 'package:coten_player/l10n/L.dart';
+import 'package:coten_player/state/queue_event_state.dart';
+import 'package:coten_player/ui/podcast/episode_details.dart';
+import 'package:coten_player/ui/podcast/transport_controls.dart';
+import 'package:coten_player/ui/widgets/action_text.dart';
+import 'package:coten_player/ui/widgets/tile_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dialogs/flutter_dialogs.dart';
 import 'package:intl/intl.dart' show DateFormat;

@@ -2,17 +2,17 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:anytime/bloc/bloc.dart';
-import 'package:anytime/entities/downloadable.dart';
-import 'package:anytime/entities/episode.dart';
-import 'package:anytime/entities/feed.dart';
-import 'package:anytime/entities/podcast.dart';
-import 'package:anytime/services/audio/audio_player_service.dart';
-import 'package:anytime/services/download/download_service.dart';
-import 'package:anytime/services/download/mobile_download_service.dart';
-import 'package:anytime/services/podcast/podcast_service.dart';
-import 'package:anytime/services/settings/settings_service.dart';
-import 'package:anytime/state/bloc_state.dart';
+import 'package:coten_player/bloc/bloc.dart';
+import 'package:coten_player/entities/downloadable.dart';
+import 'package:coten_player/entities/episode.dart';
+import 'package:coten_player/entities/feed.dart';
+import 'package:coten_player/entities/podcast.dart';
+import 'package:coten_player/services/audio/audio_player_service.dart';
+import 'package:coten_player/services/download/download_service.dart';
+import 'package:coten_player/services/download/mobile_download_service.dart';
+import 'package:coten_player/services/podcast/podcast_service.dart';
+import 'package:coten_player/services/settings/settings_service.dart';
+import 'package:coten_player/state/bloc_state.dart';
 import 'package:collection/collection.dart' show IterableExtension;
 import 'package:logging/logging.dart';
 import 'package:rxdart/rxdart.dart';

@@ -2,10 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:anytime/bloc/bloc.dart';
-import 'package:anytime/services/audio/audio_player_service.dart';
-import 'package:anytime/services/podcast/podcast_service.dart';
-import 'package:anytime/state/queue_event_state.dart';
+import 'package:coten_player/bloc/bloc.dart';
+import 'package:coten_player/services/audio/audio_player_service.dart';
+import 'package:coten_player/services/podcast/podcast_service.dart';
+import 'package:coten_player/state/queue_event_state.dart';
 import 'package:rxdart/rxdart.dart';
 
 /// Handles interaction with the Queue via an [AudioPlayerService].

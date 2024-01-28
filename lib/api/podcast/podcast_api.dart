@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:anytime/entities/transcript.dart';
+import 'package:coten_player/entities/transcript.dart';
 import 'package:podcast_search/podcast_search.dart' as pslib;
 
 /// A simple wrapper class that interacts with the search API via

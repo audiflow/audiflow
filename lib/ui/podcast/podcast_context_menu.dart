@@ -1,10 +1,10 @@
 // Copyright 2020 Ben Hills and the project contributors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
-import 'package:anytime/bloc/podcast/podcast_bloc.dart';
-import 'package:anytime/entities/podcast.dart';
-import 'package:anytime/l10n/L.dart';
-import 'package:anytime/state/bloc_state.dart';
+import 'package:coten_player/bloc/podcast/podcast_bloc.dart';
+import 'package:coten_player/entities/podcast.dart';
+import 'package:coten_player/l10n/L.dart';
+import 'package:coten_player/state/bloc_state.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';

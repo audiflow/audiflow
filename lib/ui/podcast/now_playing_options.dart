@@ -2,12 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:anytime/bloc/podcast/queue_bloc.dart';
-import 'package:anytime/l10n/L.dart';
-import 'package:anytime/state/queue_event_state.dart';
-import 'package:anytime/ui/podcast/transcript_view.dart';
-import 'package:anytime/ui/podcast/up_next_view.dart';
-import 'package:anytime/ui/widgets/slider_handle.dart';
+import 'package:coten_player/bloc/podcast/queue_bloc.dart';
+import 'package:coten_player/l10n/L.dart';
+import 'package:coten_player/state/queue_event_state.dart';
+import 'package:coten_player/ui/podcast/transcript_view.dart';
+import 'package:coten_player/ui/podcast/up_next_view.dart';
+import 'package:coten_player/ui/widgets/slider_handle.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 

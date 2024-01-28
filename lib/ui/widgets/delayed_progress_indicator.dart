@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:anytime/ui/widgets/platform_progress_indicator.dart';
+import 'package:coten_player/ui/widgets/platform_progress_indicator.dart';
 import 'package:flutter/material.dart';
 
 /// This class returns a platform-specific spinning indicator after a time specified

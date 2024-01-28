@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:anytime/state/opml_state.dart';
+import 'package:coten_player/state/opml_state.dart';
 
 /// This service handles the import and export of Podcasts via
 /// the OPML format.

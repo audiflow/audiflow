@@ -2,9 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:anytime/bloc/bloc.dart';
-import 'package:anytime/services/podcast/opml_service.dart';
-import 'package:anytime/state/opml_state.dart';
+import 'package:coten_player/bloc/bloc.dart';
+import 'package:coten_player/services/podcast/opml_service.dart';
+import 'package:coten_player/state/opml_state.dart';
 import 'package:logging/logging.dart';
 import 'package:rxdart/rxdart.dart';
 

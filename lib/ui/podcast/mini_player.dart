@@ -4,13 +4,13 @@
 
 import 'dart:async';
 
-import 'package:anytime/bloc/podcast/audio_bloc.dart';
-import 'package:anytime/entities/episode.dart';
-import 'package:anytime/l10n/L.dart';
-import 'package:anytime/services/audio/audio_player_service.dart';
-import 'package:anytime/ui/podcast/now_playing.dart';
-import 'package:anytime/ui/widgets/placeholder_builder.dart';
-import 'package:anytime/ui/widgets/podcast_image.dart';
+import 'package:coten_player/bloc/podcast/audio_bloc.dart';
+import 'package:coten_player/entities/episode.dart';
+import 'package:coten_player/l10n/L.dart';
+import 'package:coten_player/services/audio/audio_player_service.dart';
+import 'package:coten_player/ui/podcast/now_playing.dart';
+import 'package:coten_player/ui/widgets/placeholder_builder.dart';
+import 'package:coten_player/ui/widgets/podcast_image.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 

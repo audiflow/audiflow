@@ -4,10 +4,10 @@
 
 import 'dart:async';
 
-import 'package:anytime/bloc/podcast/audio_bloc.dart';
-import 'package:anytime/entities/chapter.dart';
-import 'package:anytime/entities/episode.dart';
-import 'package:anytime/ui/widgets/platform_progress_indicator.dart';
+import 'package:coten_player/bloc/podcast/audio_bloc.dart';
+import 'package:coten_player/entities/chapter.dart';
+import 'package:coten_player/entities/episode.dart';
+import 'package:coten_player/ui/widgets/platform_progress_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';

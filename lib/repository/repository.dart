@@ -2,10 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:anytime/entities/episode.dart';
-import 'package:anytime/entities/podcast.dart';
-import 'package:anytime/entities/transcript.dart';
-import 'package:anytime/state/episode_state.dart';
+import 'package:coten_player/entities/episode.dart';
+import 'package:coten_player/entities/podcast.dart';
+import 'package:coten_player/entities/transcript.dart';
+import 'package:coten_player/state/episode_state.dart';
 
 /// An abstract class that represent the actions supported by the chosen
 /// database or storage implementation.

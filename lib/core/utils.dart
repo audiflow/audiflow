@@ -4,9 +4,9 @@
 
 import 'dart:io';
 
-import 'package:anytime/entities/episode.dart';
-import 'package:anytime/services/settings/mobile_settings_service.dart';
-import 'package:anytime/services/settings/settings_service.dart';
+import 'package:coten_player/entities/episode.dart';
+import 'package:coten_player/services/settings/mobile_settings_service.dart';
+import 'package:coten_player/services/settings/settings_service.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';

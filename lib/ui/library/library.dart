@@ -2,14 +2,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:anytime/bloc/podcast/podcast_bloc.dart';
-import 'package:anytime/bloc/settings/settings_bloc.dart';
-import 'package:anytime/entities/app_settings.dart';
-import 'package:anytime/entities/podcast.dart';
-import 'package:anytime/l10n/L.dart';
-import 'package:anytime/ui/widgets/platform_progress_indicator.dart';
-import 'package:anytime/ui/widgets/podcast_grid_tile.dart';
-import 'package:anytime/ui/widgets/podcast_tile.dart';
+import 'package:coten_player/bloc/podcast/podcast_bloc.dart';
+import 'package:coten_player/bloc/settings/settings_bloc.dart';
+import 'package:coten_player/entities/app_settings.dart';
+import 'package:coten_player/entities/podcast.dart';
+import 'package:coten_player/l10n/L.dart';
+import 'package:coten_player/ui/widgets/platform_progress_indicator.dart';
+import 'package:coten_player/ui/widgets/podcast_grid_tile.dart';
+import 'package:coten_player/ui/widgets/podcast_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 

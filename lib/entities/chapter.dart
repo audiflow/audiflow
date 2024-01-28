@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:anytime/core/extensions.dart';
+import 'package:coten_player/core/extensions.dart';
 
 /// A class that represents an individual chapter within an [Episode].
 ///

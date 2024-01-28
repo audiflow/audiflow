@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:anytime/entities/podcast.dart';
+import 'package:coten_player/entities/podcast.dart';
 
 /// This class is used when loading a [Podcast] feed.
 ///

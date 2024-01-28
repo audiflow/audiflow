@@ -2,12 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:anytime/entities/episode.dart';
-import 'package:anytime/ui/podcast/person_avatar.dart';
-import 'package:anytime/ui/podcast/transport_controls.dart';
-import 'package:anytime/ui/widgets/episode_tile.dart';
-import 'package:anytime/ui/widgets/podcast_html.dart';
-import 'package:anytime/ui/widgets/tile_image.dart';
+import 'package:coten_player/entities/episode.dart';
+import 'package:coten_player/ui/podcast/person_avatar.dart';
+import 'package:coten_player/ui/podcast/transport_controls.dart';
+import 'package:coten_player/ui/widgets/episode_tile.dart';
+import 'package:coten_player/ui/widgets/podcast_html.dart';
+import 'package:coten_player/ui/widgets/tile_image.dart';
 import 'package:flutter/material.dart';
 
 /// This class renders the more info widget that is accessed from the 'more'

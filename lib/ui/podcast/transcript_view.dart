@@ -4,15 +4,15 @@
 
 import 'dart:async';
 
-import 'package:anytime/bloc/podcast/audio_bloc.dart';
-import 'package:anytime/bloc/podcast/queue_bloc.dart';
-import 'package:anytime/entities/person.dart';
-import 'package:anytime/entities/transcript.dart';
-import 'package:anytime/l10n/L.dart';
-import 'package:anytime/services/audio/audio_player_service.dart';
-import 'package:anytime/state/queue_event_state.dart';
-import 'package:anytime/state/transcript_state_event.dart';
-import 'package:anytime/ui/widgets/platform_progress_indicator.dart';
+import 'package:coten_player/bloc/podcast/audio_bloc.dart';
+import 'package:coten_player/bloc/podcast/queue_bloc.dart';
+import 'package:coten_player/entities/person.dart';
+import 'package:coten_player/entities/transcript.dart';
+import 'package:coten_player/l10n/L.dart';
+import 'package:coten_player/services/audio/audio_player_service.dart';
+import 'package:coten_player/state/queue_event_state.dart';
+import 'package:coten_player/state/transcript_state_event.dart';
+import 'package:coten_player/ui/widgets/platform_progress_indicator.dart';
 import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
