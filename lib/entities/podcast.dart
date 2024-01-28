@@ -59,6 +59,9 @@ class Podcast {
 
   final List<Person>? persons;
 
+  /// Indicates whether the user wants to see the podcast as a list of seasons
+  bool seasonView;
+
   bool newEpisodes;
   bool updatedEpisodes = false;
 
@@ -76,6 +79,7 @@ class Podcast {
     this.funding,
     this.seasons = const <Season>[],
     this.episodes = const <Episode>[],
+    this.seasonView = false,
     this.newEpisodes = false,
     this.persons,
     DateTime? lastUpdated,
@@ -128,6 +132,7 @@ class Podcast {
           .toList(growable: false),
       'lastUpdated': _lastUpdated?.millisecondsSinceEpoch ??
           DateTime.now().millisecondsSinceEpoch,
+      'seasonView': seasonView ? 'true' : 'false',
     };
   }
 
@@ -178,6 +183,7 @@ class Podcast {
       persons: persons,
       subscribedDate: sd,
       lastUpdated: lastUpdated,
+      seasonView: podcast['seasonView'] == 'true',
     );
   }
 
