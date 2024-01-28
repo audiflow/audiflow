@@ -91,6 +91,8 @@ class PodcastBloc extends Bloc {
     /// When we receive a load podcast request, send back a BlocState.
     _listenPodcastLoad();
 
+    _listenPodcastChange();
+
     /// Listen to an Episode download request
     _listenDownloadRequest();
 
@@ -152,6 +154,14 @@ class PodcastBloc extends Bloc {
           log.fine(e);
         }
       }
+    });
+  }
+
+  void _listenPodcastChange() {
+    podcastService.podcastListener?.listen((podcast) {
+      _podcast = podcast;
+      // _podcastStream.sink.add(BlocLoadingState<Podcast>(podcast));
+      _backgroundLoadStream.sink.add(BlocSuccessfulState<void>());
     });
   }
 
