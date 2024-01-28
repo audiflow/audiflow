@@ -625,6 +625,12 @@ class MobilePodcastService extends PodcastService {
   }
 
   @override
+  Future<void> toggleSeasonView(Podcast podcast) async {
+    podcast.seasonView = !podcast.seasonView;
+    repository.savePodcast(podcast);
+  }
+
+  @override
   Future<Podcast?> subscribe(Podcast? podcast) async {
     // We may already have episodes download for this podcast before the user
     // hit subscribe.

@@ -184,7 +184,7 @@ class SembastRepository extends Repository {
   Future<Season?> findSeasonById(int id) async {
     final finder = Finder(filter: Filter.byKey(id));
     final RecordSnapshot<int, Map<String, Object?>> snapshot =
-        (await _episodeStore.findFirst(await _db, finder: finder))!;
+        (await _seasonStore.findFirst(await _db, finder: finder))!;
 
     return await _loadSeasonSnapshot(snapshot.key, snapshot.value);
   }

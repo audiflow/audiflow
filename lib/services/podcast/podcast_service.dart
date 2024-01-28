@@ -212,6 +212,8 @@ abstract class PodcastService {
 
   Future<void> unsubscribe(Podcast podcast);
 
+  Future<void> toggleSeasonView(Podcast podcast);
+
   Future<Podcast?> save(Podcast podcast);
 
   Future<Episode> saveEpisode(Episode episode);

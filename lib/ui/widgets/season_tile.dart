@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 import 'package:coten_player/entities/season.dart';
+import 'package:coten_player/ui/podcast/season_episodes.dart';
 import 'package:coten_player/ui/widgets/tile_image.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' show DateFormat;
@@ -43,6 +44,14 @@ class _SeasonTileState extends State<SeasonTile> {
 
     return ListTile(
       key: Key('PT${widget.season.guid}'),
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute<void>(
+              settings: const RouteSettings(name: 'podcastdetails'),
+              builder: (context) => SeasonEpisodes(widget.season)),
+        );
+      },
       leading: ExcludeSemantics(
         child: Stack(
           alignment: Alignment.bottomLeft,
@@ -50,9 +59,13 @@ class _SeasonTileState extends State<SeasonTile> {
           children: <Widget>[
             Opacity(
               opacity: widget.season.played ? 0.5 : 1.0,
-              child: TileImage(
-                url: widget.season.thumbImageUrl ?? widget.season.imageUrl!,
-                size: 56.0,
+              child: Hero(
+                key: Key('seasonhero${widget.season.guid}'),
+                tag: widget.season.guid,
+                child: TileImage(
+                  url: widget.season.thumbImageUrl ?? widget.season.imageUrl!,
+                  size: 56.0,
+                ),
               ),
             ),
             SizedBox(
@@ -72,13 +85,16 @@ class _SeasonTileState extends State<SeasonTile> {
       title: Opacity(
         opacity: widget.season.played ? 0.5 : 1.0,
         child: Text(
-          widget.season.title!,
+          0 < widget.season.seasonNum
+              ? '#${widget.season.seasonNum} ${widget.season.title}'
+              : 'Extra',
           overflow: TextOverflow.ellipsis,
           maxLines: 2,
           softWrap: false,
           style: textTheme.bodyMedium,
         ),
       ),
+      trailing: const Icon(Icons.chevron_right),
     );
   }
 }

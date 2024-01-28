@@ -65,6 +65,9 @@ class PodcastBloc extends Bloc {
   final BehaviorSubject<BlocState<void>> _backgroundLoadStream =
       BehaviorSubject<BlocState<void>>();
 
+  /// Add to sink to toggle seasonView status.
+  final PublishSubject<void> _toggleSeasonView = PublishSubject<void>();
+
   Podcast? _podcast;
   List<Season> _seasons = <Season>[];
   List<Episode> _episodes = <Episode>[];
@@ -88,6 +91,8 @@ class PodcastBloc extends Bloc {
     /// When we receive a load podcast request, send back a BlocState.
     _listenPodcastLoad();
 
+    _listenPodcastChange();
+
     /// Listen to an Episode download request
     _listenDownloadRequest();
 
@@ -99,6 +104,8 @@ class PodcastBloc extends Bloc {
 
     /// Listen to Podcast subscription, mark/cleared played events
     _listenPodcastStateEvents();
+
+    _handleToggleSeasonView();
   }
 
   void _loadSubscriptions() async {
@@ -147,6 +154,14 @@ class PodcastBloc extends Bloc {
           log.fine(e);
         }
       }
+    });
+  }
+
+  void _listenPodcastChange() {
+    podcastService.podcastListener?.listen((podcast) {
+      _podcast = podcast;
+      // _podcastStream.sink.add(BlocLoadingState<Podcast>(podcast));
+      _backgroundLoadStream.sink.add(BlocSuccessfulState<void>());
     });
   }
 
@@ -358,6 +373,12 @@ class PodcastBloc extends Bloc {
     });
   }
 
+  void _handleToggleSeasonView() async {
+    _toggleSeasonView.stream.listen((_) async {
+      await podcastService.toggleSeasonView(_podcast!);
+    });
+  }
+
   @override
   void detach() {
     downloadService.dispose();
@@ -397,4 +418,7 @@ class PodcastBloc extends Bloc {
 
   /// Obtain a list of podcast currently subscribed to.
   Stream<List<Podcast>> get subscriptions => _subscriptions.stream;
+
+  // Toggle season view mode.
+  void Function() get toggleSeasonView => () => _toggleSeasonView.add(null);
 }

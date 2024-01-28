@@ -837,6 +837,13 @@
     "placeholders_order": [],
     "placeholders": {}
   },
+  "semantics_season_details_header": "Season episodes page",
+  "@semantics_season_details_header": {
+    "description": "Describes season details page",
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
   "semantic_announce_searching": "Suchen, bitte warten.",
   "@semantic_announce_searching": {
     "description": "Spoken when search in progress.",
