@@ -381,28 +381,30 @@ class MobilePodcastService extends PodcastService {
         }
       }
 
-      final map = <int, List<Episode>>{};
-      for (final episode in pc.episodes) {
-        if (map.containsKey(episode.season)) {
-          map[episode.season]!.add(episode);
-        } else {
-          map[episode.season] = [episode];
+      if (pc.episodes.any((episode) => 0 < episode.season)) {
+        final map = <int, List<Episode>>{};
+        for (final episode in pc.episodes) {
+          if (map.containsKey(episode.season)) {
+            map[episode.season]!.add(episode);
+          } else {
+            map[episode.season] = [episode];
+          }
         }
-      }
 
-      final seasons = map.keys.sorted((a, b) => b - a).map((seasonNum) {
-        final seasonElements =
-            map[seasonNum]!.sorted((a, b) => a.episode - b.episode);
-        final episode = seasonElements.first;
-        return Season(
-          pguid: episode.pguid,
-          podcast: episode.podcast,
-          title: _extractSeasonTitle(episode),
-          seasonNum: seasonNum,
-          episodes: seasonElements,
-        );
-      });
-      pc.seasons = seasons.toList();
+        final seasons = map.keys.sorted((a, b) => b - a).map((seasonNum) {
+          final seasonElements =
+          map[seasonNum]!.sorted((a, b) => a.episode - b.episode);
+          final episode = seasonElements.first;
+          return Season(
+            pguid: episode.pguid,
+            podcast: episode.podcast,
+            title: _extractSeasonTitle(episode),
+            seasonNum: seasonNum,
+            episodes: seasonElements,
+          );
+        });
+        pc.seasons = seasons.toList();
+      }
 
       // If we are subscribed to this podcast and are simply refreshing we need to save the updated subscription.
       // A non-null ID indicates this podcast is subscribed too. We also need to delete any expired episodes.
