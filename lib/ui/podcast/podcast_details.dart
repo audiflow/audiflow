@@ -325,19 +325,21 @@ class _PodcastDetailsState extends State<PodcastDetails> {
                       builder: (context, snapshot) {
                         final List<Season?>? seasons = snapshot.data?.$1;
                         final List<Episode?>? episodes = snapshot.data?.$2;
-                        return seasons?.isNotEmpty ?? false
-                            ? PodcastSeasonList(
-                                seasons: seasons,
-                                play: true,
-                                download: true,
-                              )
-                            : episodes?.isNotEmpty ?? false
-                                ? PodcastEpisodeList(
-                                    episodes: episodes,
+                        final noData = !snapshot.hasData ||
+                            (seasons!.isEmpty && episodes!.isEmpty);
+                        return noData
+                            ? SliverToBoxAdapter(child: Container())
+                            : widget.podcast.seasonView && seasons.isNotEmpty
+                                ? PodcastSeasonList(
+                                    seasons: seasons,
                                     play: true,
                                     download: true,
                                   )
-                                : SliverToBoxAdapter(child: Container());
+                                : PodcastEpisodeList(
+                                    episodes: episodes,
+                                    play: true,
+                                    download: true,
+                                  );
                       }),
                 ],
               ),
@@ -511,7 +513,14 @@ class _PodcastTitleState extends State<PodcastTitle> {
                   alignment: Alignment.centerRight,
                   child: SyncSpinner(),
                 )),
-                const SeasonSwitch(),
+                StreamBuilder(
+                    stream: Provider.of<PodcastBloc>(context).seasons,
+                    builder: (context, snapshot) {
+                      final hasSeasons = snapshot.data?.isNotEmpty ?? false;
+                      return hasSeasons
+                          ? SeasonSwitch(isOn: widget.podcast.seasonView)
+                          : const SizedBox.shrink();
+                    }),
               ],
             ),
           )
@@ -683,14 +692,19 @@ class FollowButton extends StatelessWidget {
 }
 
 class SeasonSwitch extends StatelessWidget {
-  const SeasonSwitch({super.key});
+  const SeasonSwitch({required this.isOn, super.key});
+
+  final bool isOn;
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
         const Text('Season'),
-        Switch(value: true, onChanged: (isOn) {})
+        Switch(value: isOn, onChanged: (isOn) {
+          final podcastBloc = Provider.of<PodcastBloc>(context, listen: false);
+          podcastBloc.toggleSeasonView();
+        })
       ],
     );
   }
