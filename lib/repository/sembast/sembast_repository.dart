@@ -6,6 +6,7 @@ import 'package:coten_player/core/extensions.dart';
 import 'package:coten_player/entities/episode.dart';
 import 'package:coten_player/entities/podcast.dart';
 import 'package:coten_player/entities/queue.dart';
+import 'package:coten_player/entities/season.dart';
 import 'package:coten_player/entities/transcript.dart';
 import 'package:coten_player/repository/repository.dart';
 import 'package:coten_player/repository/sembast/sembast_database_service.dart';
@@ -24,6 +25,7 @@ class SembastRepository extends Repository {
   final _episodeSubject = BehaviorSubject<EpisodeState>();
 
   final _podcastStore = intMapStoreFactory.store('podcast');
+  final _seasonStore = intMapStoreFactory.store('season');
   final _episodeStore = intMapStoreFactory.store('episode');
   final _queueStore = intMapStoreFactory.store('queue');
   final _transcriptStore = intMapStoreFactory.store('transcript');
@@ -72,6 +74,7 @@ class SembastRepository extends Repository {
     }
 
     await _saveEpisodes(podcast.episodes);
+    await _saveSeasons(podcast.seasons);
 
     _podcastSubject.add(podcast);
 
@@ -132,6 +135,7 @@ class SembastRepository extends Repository {
 
       // Now attach all episodes for this podcast
       p.episodes = await findEpisodesByPodcastGuid(p.guid);
+      p.seasons = await findSeasonsByPodcastGuid(p.guid);
 
       return p;
     }
@@ -156,6 +160,75 @@ class SembastRepository extends Repository {
     }
 
     return null;
+  }
+
+  @override
+  Future<List<Season>> findAllSeasons() async {
+    final finder = Finder(
+      sortOrders: [SortOrder('title')],
+    );
+
+    final List<RecordSnapshot<int, Map<String, Object?>>> recordSnapshots =
+        await _seasonStore.find(await _db, finder: finder);
+
+    final results = recordSnapshots.map((snapshot) {
+      final season = Season.fromMap(snapshot.key, snapshot.value);
+
+      return season;
+    }).toList();
+
+    return results;
+  }
+
+  @override
+  Future<Season?> findSeasonById(int id) async {
+    final finder = Finder(filter: Filter.byKey(id));
+    final RecordSnapshot<int, Map<String, Object?>> snapshot =
+        (await _seasonStore.findFirst(await _db, finder: finder))!;
+
+    return await _loadSeasonSnapshot(snapshot.key, snapshot.value);
+  }
+
+  @override
+  Future<List<Season>> findSeasonsByPodcastGuid(String? pguid) async {
+    final finder = Finder(
+      filter: Filter.equals('pguid', pguid),
+      sortOrders: [SortOrder('seasonNum', false)],
+    );
+
+    final List<RecordSnapshot<int, Map<String, Object?>>> recordSnapshots =
+        await _seasonStore.find(await _db, finder: finder);
+
+    final results = recordSnapshots.map((snapshot) async {
+      return await _loadSeasonSnapshot(snapshot.key, snapshot.value);
+    }).toList();
+
+    final seasonList = Future.wait(results);
+
+    return seasonList;
+  }
+
+  @override
+  Future<void> deleteSeasons(List<Season> seasons) async {
+    var d = await _db;
+
+    if (seasons.isNotEmpty) {
+      for (var chunk in seasons.chunk(100)) {
+        await d.transaction((txn) async {
+          var futures = <Future<int>>[];
+
+          for (var season in chunk) {
+            final finder = Finder(filter: Filter.byKey(season.id));
+
+            futures.add(_seasonStore.delete(txn, finder: finder));
+          }
+
+          if (futures.isNotEmpty) {
+            await Future.wait(futures);
+          }
+        });
+      }
+    }
   }
 
   @override
@@ -418,6 +491,80 @@ class SembastRepository extends Repository {
     }
 
     return transcript;
+  }
+
+  Future<void> _cleanupSeasons() async {
+    final threshold = DateTime.now()
+        .subtract(const Duration(days: 60))
+        .millisecondsSinceEpoch;
+
+    /// Find all streamed seasons over the threshold.
+    final filter = Filter.and([
+      Filter.equals('downloadState', 0),
+      Filter.lessThan('lastUpdated', threshold),
+    ]);
+
+    final orphaned = <Season>[];
+    final pguids = <String?>[];
+    final List<RecordSnapshot<int, Map<String, Object?>>> seasons =
+        await _seasonStore.find(await _db, finder: Finder(filter: filter));
+
+    // First, find all podcasts
+    for (var podcast in await _podcastStore.find(await _db)) {
+      pguids.add(podcast.value['guid'] as String?);
+    }
+
+    for (var season in seasons) {
+      final pguid = season.value['pguid'] as String?;
+      final podcast = pguids.contains(pguid);
+
+      if (!podcast) {
+        orphaned.add(Season.fromMap(season.key, season.value));
+      }
+    }
+
+    await deleteSeasons(orphaned);
+  }
+
+  /// Saves a list of seasons to the repository. To improve performance we
+  /// split the seasons into chunks of 100 and save any that have been updated
+  /// in that chunk in a single transaction.
+  Future<void> _saveSeasons(List<Season?>? seasons) async {
+    var d = await _db;
+
+    if (seasons != null && seasons.isNotEmpty) {
+      for (var chunk in seasons.chunk(100)) {
+        await d.transaction((txn) async {
+          var futures = <Future<int>>[];
+
+          for (var season in chunk) {
+            if (season!.id == null) {
+              futures.add(_seasonStore
+                  .add(txn, season.toMap())
+                  .then((id) => season.id = id));
+            } else {
+              final finder = Finder(filter: Filter.byKey(season.id));
+
+              var existingSeason = await findSeasonById(season.id!);
+
+              if (existingSeason == null || existingSeason != season) {
+                futures.add(
+                    _seasonStore.update(txn, season.toMap(), finder: finder));
+              }
+            }
+          }
+
+          if (futures.isNotEmpty) {
+            await Future.wait(futures);
+          }
+        });
+      }
+    }
+  }
+
+  Future<Season> _loadSeasonSnapshot(
+      int key, Map<String, Object?> snapshot) async {
+    return Season.fromMap(key, snapshot);
   }
 
   Future<void> _cleanupEpisodes() async {

@@ -5,6 +5,7 @@
 import 'dart:collection';
 import 'dart:io';
 
+import 'package:collection/collection.dart' show IterableExtension;
 import 'package:coten_player/api/podcast/podcast_api.dart';
 import 'package:coten_player/core/utils.dart';
 import 'package:coten_player/entities/chapter.dart';
@@ -13,11 +14,11 @@ import 'package:coten_player/entities/episode.dart';
 import 'package:coten_player/entities/funding.dart';
 import 'package:coten_player/entities/person.dart';
 import 'package:coten_player/entities/podcast.dart';
+import 'package:coten_player/entities/season.dart';
 import 'package:coten_player/entities/transcript.dart';
 import 'package:coten_player/l10n/messages_all.dart';
 import 'package:coten_player/services/podcast/podcast_service.dart';
 import 'package:coten_player/state/episode_state.dart';
-import 'package:collection/collection.dart' show IterableExtension;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
@@ -194,6 +195,8 @@ class MobilePodcastService extends PodcastService {
       final copyright = _format(loadedPodcast.copyright);
       final funding = <Funding>[];
       final persons = <Person>[];
+      final existingSeasons =
+          await repository.findSeasonsByPodcastGuid(loadedPodcast.url!);
       final existingEpisodes =
           await repository.findEpisodesByPodcastGuid(loadedPodcast.url!);
 
@@ -380,6 +383,35 @@ class MobilePodcastService extends PodcastService {
         }
       }
 
+      if (pc.episodes.any((episode) => 0 < episode.season)) {
+        final map = <int, List<Episode>>{};
+        for (final episode in pc.episodes) {
+          if (map.containsKey(episode.season)) {
+            map[episode.season]!.add(episode);
+          } else {
+            map[episode.season] = [episode];
+          }
+        }
+
+        final seasons = map.keys.sorted((a, b) => b - a).map((seasonNum) {
+          final episodes = sortedSeasonEpisodes(map[seasonNum]!);
+          final episode = episodes.first;
+          final guid =
+              calcSeasonGuid(podcast: episode.podcast!, seasonNum: seasonNum);
+          final id =
+              existingSeasons.firstWhereOrNull((s) => s.guid == guid)?.id;
+          return Season(
+            id: id,
+            pguid: episode.pguid,
+            podcast: episode.podcast!,
+            title: _extractSeasonTitle(episode),
+            seasonNum: seasonNum,
+            episodes: episodes,
+          );
+        });
+        pc.seasons = seasons.toList();
+      }
+
       // If we are subscribed to this podcast and are simply refreshing we need to save the updated subscription.
       // A non-null ID indicates this podcast is subscribed too. We also need to delete any expired episodes.
       if (podcast.id != null && refresh) {
@@ -395,8 +427,14 @@ class MobilePodcastService extends PodcastService {
   }
 
   @override
-  Future<Podcast?> loadPodcastById({required int id}) {
-    return repository.findPodcastById(id);
+  Future<Podcast?> loadPodcastById({required int id}) async {
+    final pc = await repository.findPodcastById(id);
+    for (final season in pc?.seasons ?? []) {
+      season.episodes = pc!.episodes
+          .where((episode) => episode.season == season.seasonNum)
+          .toList();
+    }
+    return pc;
   }
 
   @override
@@ -518,6 +556,11 @@ class MobilePodcastService extends PodcastService {
   }
 
   @override
+  Future<List<Season>> loadSeasons() async {
+    return repository.findAllSeasons();
+  }
+
+  @override
   Future<void> deleteDownload(Episode episode) async {
     // If this episode is currently downloading, cancel the download first.
     if (episode.downloadState == DownloadState.downloaded) {
@@ -580,6 +623,12 @@ class MobilePodcastService extends PodcastService {
     }
 
     return repository.deletePodcast(podcast);
+  }
+
+  @override
+  Future<void> toggleSeasonView(Podcast podcast) async {
+    podcast.seasonView = !podcast.seasonView;
+    repository.savePodcast(podcast);
   }
 
   @override
@@ -789,4 +838,19 @@ class _TranscriptComputer {
   final TranscriptUrl transcriptUrl;
 
   _TranscriptComputer({required this.api, required this.transcriptUrl});
+}
+
+String? _extractSeasonTitle(Episode episode) {
+  if (episode.season < 1) {
+    return null;
+  }
+
+  switch (episode.pguid) {
+    case 'https://anchor.fm/s/8c2088c/podcast/rss': // COTEN
+      final m = RegExp(r'【COTEN RADIO\S*\s+(.*?)\d+】')
+          .firstMatch(episode.title ?? '');
+      return m?.group(1)!.replaceFirst(RegExp(r'\s+編$'), '編');
+    default:
+      return episode.title;
+  }
 }

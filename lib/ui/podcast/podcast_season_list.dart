@@ -3,14 +3,14 @@
 // found in the LICENSE file.
 
 import 'package:coten_player/bloc/podcast/queue_bloc.dart';
-import 'package:coten_player/entities/episode.dart';
+import 'package:coten_player/entities/season.dart';
 import 'package:coten_player/state/queue_event_state.dart';
-import 'package:coten_player/ui/widgets/episode_tile.dart';
+import 'package:coten_player/ui/widgets/season_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-class PodcastEpisodeList extends StatelessWidget {
-  final List<Episode?>? episodes;
+class PodcastSeasonList extends StatelessWidget {
+  final List<Season?>? seasons;
   final IconData icon;
   final String emptyMessage;
   final bool play;
@@ -18,9 +18,9 @@ class PodcastEpisodeList extends StatelessWidget {
 
   static const _defaultIcon = Icons.add_alert;
 
-  const PodcastEpisodeList({
+  const PodcastSeasonList({
     super.key,
-    required this.episodes,
+    required this.seasons,
     required this.play,
     required this.download,
     this.icon = _defaultIcon,
@@ -29,7 +29,7 @@ class PodcastEpisodeList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (episodes != null && episodes!.isNotEmpty) {
+    if (seasons != null && seasons!.isNotEmpty) {
       var queueBloc = Provider.of<QueueBloc>(context);
 
       return StreamBuilder<QueueState>(
@@ -41,26 +41,26 @@ class PodcastEpisodeList extends StatelessWidget {
                 (BuildContext context, int index) {
                   var queued = false;
                   var playing = false;
-                  var episode = episodes![index]!;
+                  var season = seasons![index]!;
 
                   if (snapshot.hasData) {
                     var playingGuid = snapshot.data!.playing?.guid;
 
                     queued = snapshot.data!.queue
-                        .any((element) => element.guid == episode.guid);
+                        .any((element) => element.guid == season.guid);
 
-                    playing = playingGuid == episode.guid;
+                    playing = playingGuid == season.guid;
                   }
 
-                  return EpisodeTile(
-                    episode: episode,
+                  return SeasonTile(
+                    season: season,
                     download: download,
                     play: play,
                     playing: playing,
                     queued: queued,
                   );
                 },
-                childCount: episodes!.length,
+                childCount: seasons!.length,
                 addAutomaticKeepAlives: false,
               )),
             );

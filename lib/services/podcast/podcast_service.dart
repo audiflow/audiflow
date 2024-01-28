@@ -6,6 +6,7 @@ import 'package:coten_player/api/podcast/podcast_api.dart';
 import 'package:coten_player/entities/chapter.dart';
 import 'package:coten_player/entities/episode.dart';
 import 'package:coten_player/entities/podcast.dart';
+import 'package:coten_player/entities/season.dart';
 import 'package:coten_player/entities/transcript.dart';
 import 'package:coten_player/repository/repository.dart';
 import 'package:coten_player/services/settings/settings_service.dart';
@@ -192,6 +193,8 @@ abstract class PodcastService {
 
   Future<List<Episode>> loadDownloads();
 
+  Future<List<Season>> loadSeasons();
+
   Future<List<Episode>> loadEpisodes();
 
   Future<List<Chapter>> loadChaptersByUrl({required String url});
@@ -208,6 +211,8 @@ abstract class PodcastService {
   Future<Podcast?> subscribe(Podcast podcast);
 
   Future<void> unsubscribe(Podcast podcast);
+
+  Future<void> toggleSeasonView(Podcast podcast);
 
   Future<Podcast?> save(Podcast podcast);
 

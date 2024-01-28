@@ -123,6 +123,7 @@ class MessageLookup extends MessageLookupByLibrary {
     'semantics_play_pause_toggle': MessageLookupByLibrary.simpleMessage('Play/pause toggle'),
     'semantics_podcast_details_header': MessageLookupByLibrary.simpleMessage('Podcast details and episodes page'),
     'semantics_remove_from_queue': MessageLookupByLibrary.simpleMessage('Remove episode from queue'),
+    'semantics_season_details_header': MessageLookupByLibrary.simpleMessage('Season episodes page'),
     'settings_auto_open_now_playing': MessageLookupByLibrary.simpleMessage('Full screen player mode on episode start'),
     'settings_auto_update_episodes': MessageLookupByLibrary.simpleMessage('Auto update episodes'),
     'settings_auto_update_episodes_10min': MessageLookupByLibrary.simpleMessage('10 minutes since last update'),

@@ -6,6 +6,19 @@ help: ## Show this help message.
 	@echo 'targets:'
 	@egrep '^(.+)\:\ ##\ (.+)' ${MAKEFILE_LIST} | column -t -c 2 -s ':#'
 
+list-merged: ## List merged branches
+list-merged:
+	git remote prune origin --dry-run
+	git branch --merged | grep -vE '^\*|master$$|main$$|develop$$' || true
+
+rm-merged: ## Remove merged branches
+rm-merged: list-merged confirm
+	git remote prune origin
+	git branch --merged | grep -vE '^\*|master$$|main$$|develop$$' | xargs -I % git branch -d %
+
+confirm:
+	@read -p "Proceed? [y/N] " ans && [ $${ans:-N} = y ]
+
 gen_options = \
 	--build-filter="lib/**/*.freezed.dart lib/**/*.g.dart"
 

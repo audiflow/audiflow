@@ -4,6 +4,7 @@
 
 import 'package:coten_player/entities/episode.dart';
 import 'package:coten_player/entities/podcast.dart';
+import 'package:coten_player/entities/season.dart';
 import 'package:coten_player/entities/transcript.dart';
 import 'package:coten_player/state/episode_state.dart';
 
@@ -23,6 +24,15 @@ abstract class Repository {
   Future<void> deletePodcast(Podcast podcast);
 
   Future<List<Podcast>> subscriptions();
+
+  /// Seasons
+  Future<List<Season>> findAllSeasons();
+
+  Future<Season?> findSeasonById(int id);
+
+  Future<List<Season>> findSeasonsByPodcastGuid(String? pguid);
+
+  Future<void> deleteSeasons(List<Season> seasons);
 
   /// Episodes
   Future<List<Episode>> findAllEpisodes();
