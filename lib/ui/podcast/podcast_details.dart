@@ -497,6 +497,7 @@ class _PodcastTitleState extends State<PodcastTitle> {
                   alignment: Alignment.centerRight,
                   child: SyncSpinner(),
                 )),
+                const SeasonSwitch(),
               ],
             ),
           )
@@ -664,5 +665,16 @@ class FollowButton extends StatelessWidget {
           }
           return Container();
         });
+  }
+}
+
+class SeasonSwitch extends StatelessWidget {
+  const SeasonSwitch({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [const Text('Season'), Switch(value: true, onChanged: (isOn) {})],
+    );
   }
 }
