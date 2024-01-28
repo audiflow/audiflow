@@ -35,33 +35,35 @@ class PodcastSeasonList extends StatelessWidget {
       return StreamBuilder<QueueState>(
           stream: queueBloc.queue,
           builder: (context, snapshot) {
-            return SliverList(
-                delegate: SliverChildBuilderDelegate(
-              (BuildContext context, int index) {
-                var queued = false;
-                var playing = false;
-                var season = seasons![index]!;
+            return SliverSafeArea(
+              sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                (BuildContext context, int index) {
+                  var queued = false;
+                  var playing = false;
+                  var season = seasons![index]!;
 
-                if (snapshot.hasData) {
-                  var playingGuid = snapshot.data!.playing?.guid;
+                  if (snapshot.hasData) {
+                    var playingGuid = snapshot.data!.playing?.guid;
 
-                  queued = snapshot.data!.queue
-                      .any((element) => element.guid == season.guid);
+                    queued = snapshot.data!.queue
+                        .any((element) => element.guid == season.guid);
 
-                  playing = playingGuid == season.guid;
-                }
+                    playing = playingGuid == season.guid;
+                  }
 
-                return SeasonTile(
-                  season: season,
-                  download: download,
-                  play: play,
-                  playing: playing,
-                  queued: queued,
-                );
-              },
-              childCount: seasons!.length,
-              addAutomaticKeepAlives: false,
-            ));
+                  return SeasonTile(
+                    season: season,
+                    download: download,
+                    play: play,
+                    playing: playing,
+                    queued: queued,
+                  );
+                },
+                childCount: seasons!.length,
+                addAutomaticKeepAlives: false,
+              )),
+            );
           });
     } else {
       return SliverFillRemaining(
