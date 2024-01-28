@@ -193,7 +193,7 @@ class SembastRepository extends Repository {
   Future<List<Season>> findSeasonsByPodcastGuid(String? pguid) async {
     final finder = Finder(
       filter: Filter.equals('pguid', pguid),
-      sortOrders: [SortOrder('publicationDate', false)],
+      sortOrders: [SortOrder('seasonNum', false)],
     );
 
     final List<RecordSnapshot<int, Map<String, Object?>>> recordSnapshots =
