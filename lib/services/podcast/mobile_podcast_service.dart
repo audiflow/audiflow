@@ -195,6 +195,8 @@ class MobilePodcastService extends PodcastService {
       final copyright = _format(loadedPodcast.copyright);
       final funding = <Funding>[];
       final persons = <Person>[];
+      final existingSeasons =
+          await repository.findSeasonsByPodcastGuid(loadedPodcast.url!);
       final existingEpisodes =
           await repository.findEpisodesByPodcastGuid(loadedPodcast.url!);
 
@@ -393,7 +395,12 @@ class MobilePodcastService extends PodcastService {
 
         final seasons = map.keys.sorted((a, b) => b - a).map((seasonNum) {
           final episode = map[seasonNum]!.first;
+          final guid =
+              calcSeasonGuid(podcast: episode.podcast!, seasonNum: seasonNum);
+          final id =
+              existingSeasons.firstWhereOrNull((s) => s.guid == guid)?.id;
           return Season(
+            id: id,
             pguid: episode.pguid,
             podcast: episode.podcast!,
             title: _extractSeasonTitle(episode),

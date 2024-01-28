@@ -43,7 +43,7 @@ class Season {
     required this.title,
     required this.seasonNum,
     required List<Episode> episodes,
-  })  : guid = _calcGUID(podcast, seasonNum),
+  })  : guid = calcSeasonGuid(podcast: podcast, seasonNum: seasonNum),
         _episodes = _sorted(episodes);
 
   List<Episode> get episodes => _episodes;
@@ -136,7 +136,7 @@ class Season {
 List<Episode> _sorted(List<Episode> episodes) =>
     episodes.sorted((a, b) => a.episode - b.episode);
 
-String _calcGUID(String podcast, int seasonNum) {
+String calcSeasonGuid({required String podcast, required int seasonNum}) {
   final id = md5.convert(utf8.encode(podcast)).toString();
   return '${id}_$seasonNum';
 }
