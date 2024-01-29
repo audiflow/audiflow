@@ -5,6 +5,7 @@
 import 'package:coten_player/core/extensions.dart';
 import 'package:coten_player/entities/funding.dart';
 import 'package:coten_player/entities/person.dart';
+import 'package:coten_player/entities/season.dart';
 import 'package:podcast_search/podcast_search.dart' as search;
 
 import 'episode.dart';
@@ -50,10 +51,16 @@ class Podcast {
   /// Date and time podcast was last updated/refreshed.
   DateTime? _lastUpdated;
 
+  /// One or more seasons for this podcast.
+  List<Season> seasons;
+
   /// One or more episodes for this podcast.
   List<Episode> episodes;
 
   final List<Person>? persons;
+
+  /// Indicates whether the user wants to see the podcast as a list of seasons
+  bool seasonView;
 
   bool newEpisodes;
   bool updatedEpisodes = false;
@@ -70,7 +77,9 @@ class Podcast {
     this.copyright,
     this.subscribedDate,
     this.funding,
+    this.seasons = const <Season>[],
     this.episodes = const <Episode>[],
+    this.seasonView = false,
     this.newEpisodes = false,
     this.persons,
     DateTime? lastUpdated,
@@ -123,6 +132,7 @@ class Podcast {
           .toList(growable: false),
       'lastUpdated': _lastUpdated?.millisecondsSinceEpoch ??
           DateTime.now().millisecondsSinceEpoch,
+      'seasonView': seasonView ? 'true' : 'false',
     };
   }
 
@@ -173,6 +183,7 @@ class Podcast {
       persons: persons,
       subscribedDate: sd,
       lastUpdated: lastUpdated,
+      seasonView: podcast['seasonView'] == 'true',
     );
   }
 

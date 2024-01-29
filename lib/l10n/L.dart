@@ -1124,6 +1124,16 @@ class L {
         );
   }
 
+  String get semantics_season_details_header {
+    return message('semantics_season_details_header') ??
+        Intl.message(
+          'Season episodes page',
+          name: 'semantics_season_details_header',
+          desc: 'Describes season details page',
+          locale: localeName,
+        );
+  }
+
   String get semantics_layout_option_list {
     return message('semantics_layout_option_list') ??
         Intl.message(

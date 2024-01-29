@@ -665,6 +665,13 @@
     "placeholders_order": [],
     "placeholders": {}
    },
+  "semantics_season_details_header": "Season episodes page",
+  "@semantics_season_details_header": {
+    "description": "Describes season details page",
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
    "semantics_layout_option_list": "List layout",
    "@semantics_layout_option_list": {
      "description": "Describes list layout button",

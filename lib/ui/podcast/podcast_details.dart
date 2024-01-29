@@ -9,12 +9,14 @@ import 'package:coten_player/bloc/settings/settings_bloc.dart';
 import 'package:coten_player/entities/episode.dart';
 import 'package:coten_player/entities/feed.dart';
 import 'package:coten_player/entities/podcast.dart';
+import 'package:coten_player/entities/season.dart';
 import 'package:coten_player/l10n/L.dart';
 import 'package:coten_player/state/bloc_state.dart';
 import 'package:coten_player/ui/podcast/funding_menu.dart';
 import 'package:coten_player/ui/podcast/playback_error_listener.dart';
 import 'package:coten_player/ui/podcast/podcast_context_menu.dart';
 import 'package:coten_player/ui/podcast/podcast_episode_list.dart';
+import 'package:coten_player/ui/podcast/podcast_season_list.dart';
 import 'package:coten_player/ui/widgets/action_text.dart';
 import 'package:coten_player/ui/widgets/delayed_progress_indicator.dart';
 import 'package:coten_player/ui/widgets/placeholder_builder.dart';
@@ -29,6 +31,7 @@ import 'package:flutter_dialogs/flutter_dialogs.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:logging/logging.dart';
 import 'package:provider/provider.dart';
+import 'package:rxdart/rxdart.dart';
 
 /// This Widget takes a search result and builds a list of currently available podcasts.
 ///
@@ -56,12 +59,24 @@ class _PodcastDetailsState extends State<PodcastDetails> {
   bool toolbarCollapsed = false;
   SystemUiOverlayStyle? _systemOverlayStyle;
 
+  late StreamSubscription _podcastSubscription;
+  late Podcast _podcast;
+
   @override
   void initState() {
     super.initState();
 
     // Load the details of the Podcast specified in the URL
     log.fine('initState() - load feed');
+
+    _podcast = widget.podcast;
+
+    _podcastSubscription = widget._podcastBloc.podcastService.podcastListener!
+        .listen((newPodcast) {
+      if (mounted && _podcast.guid == newPodcast?.guid) {
+        setState(() => _podcast = newPodcast!);
+      }
+    });
 
     widget._podcastBloc.load(Feed(
       podcast: widget.podcast,
@@ -134,6 +149,7 @@ class _PodcastDetailsState extends State<PodcastDetails> {
 
   @override
   void dispose() {
+    _podcastSubscription.cancel();
     super.dispose();
   }
 
@@ -141,7 +157,7 @@ class _PodcastDetailsState extends State<PodcastDetails> {
     log.fine('_handleRefresh');
 
     widget._podcastBloc.load(Feed(
-      podcast: widget.podcast,
+      podcast: _podcast,
       refresh: true,
     ));
   }
@@ -202,7 +218,7 @@ class _PodcastDetailsState extends State<PodcastDetails> {
                       title: AnimatedOpacity(
                           opacity: toolbarCollapsed ? 1.0 : 0.0,
                           duration: const Duration(milliseconds: 500),
-                          child: Text(widget.podcast.title)),
+                          child: Text(_podcast.title)),
                       leading: PlatformBackButton(
                         iconColour: toolbarCollapsed &&
                                 Theme.of(context).brightness == Brightness.light
@@ -223,16 +239,15 @@ class _PodcastDetailsState extends State<PodcastDetails> {
                       flexibleSpace: FlexibleSpaceBar(
                         background: Hero(
                           key: Key(
-                              'detailhero${widget.podcast.imageUrl}:${widget.podcast.link}'),
-                          tag:
-                              '${widget.podcast.imageUrl}:${widget.podcast.link}',
+                              'detailhero${_podcast.imageUrl}:${_podcast.link}'),
+                          tag: '${_podcast.imageUrl}:${_podcast.link}',
                           child: ExcludeSemantics(
                             child: StreamBuilder<BlocState<Podcast>>(
                                 initialData: BlocEmptyState<Podcast>(),
                                 stream: podcastBloc.details,
                                 builder: (context, snapshot) {
                                   final state = snapshot.data;
-                                  Podcast? podcast = widget.podcast;
+                                  Podcast? podcast = _podcast;
 
                                   if (state is BlocLoadingState<Podcast>) {
                                     podcast = state.data;
@@ -314,16 +329,29 @@ class _PodcastDetailsState extends State<PodcastDetails> {
                           ),
                         );
                       }),
-                  StreamBuilder<List<Episode?>?>(
-                      stream: podcastBloc.episodes,
+                  StreamBuilder(
+                      stream: Rx.combineLatest2(
+                          podcastBloc.seasons,
+                          podcastBloc.episodes,
+                          (seasons, episodes) => (seasons, episodes)),
                       builder: (context, snapshot) {
-                        return snapshot.hasData && snapshot.data!.isNotEmpty
-                            ? PodcastEpisodeList(
-                                episodes: snapshot.data!,
-                                play: true,
-                                download: true,
-                              )
-                            : SliverToBoxAdapter(child: Container());
+                        final List<Season?>? seasons = snapshot.data?.$1;
+                        final List<Episode?>? episodes = snapshot.data?.$2;
+                        final noData = !snapshot.hasData ||
+                            (seasons!.isEmpty && episodes!.isEmpty);
+                        return noData
+                            ? SliverToBoxAdapter(child: Container())
+                            : _podcast.seasonView && seasons.isNotEmpty
+                                ? PodcastSeasonList(
+                                    seasons: seasons,
+                                    play: true,
+                                    download: true,
+                                  )
+                                : PodcastEpisodeList(
+                                    episodes: episodes,
+                                    play: true,
+                                    download: true,
+                                  );
                       }),
                 ],
               ),
@@ -497,6 +525,14 @@ class _PodcastTitleState extends State<PodcastTitle> {
                   alignment: Alignment.centerRight,
                   child: SyncSpinner(),
                 )),
+                StreamBuilder(
+                    stream: Provider.of<PodcastBloc>(context).seasons,
+                    builder: (context, snapshot) {
+                      final hasSeasons = snapshot.data?.isNotEmpty ?? false;
+                      return hasSeasons
+                          ? SeasonSwitch(isOn: widget.podcast.seasonView)
+                          : const SizedBox.shrink();
+                    }),
               ],
             ),
           )
@@ -664,5 +700,27 @@ class FollowButton extends StatelessWidget {
           }
           return Container();
         });
+  }
+}
+
+class SeasonSwitch extends StatelessWidget {
+  const SeasonSwitch({required this.isOn, super.key});
+
+  final bool isOn;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        const Text('Season'),
+        Switch(
+            value: isOn,
+            onChanged: (isOn) {
+              final podcastBloc =
+                  Provider.of<PodcastBloc>(context, listen: false);
+              podcastBloc.toggleSeasonView();
+            })
+      ],
+    );
   }
 }
