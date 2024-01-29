@@ -195,7 +195,7 @@ class AnytimePodcastAppState extends State<AnytimePodcastApp> {
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         showSemanticsDebugger: false,
-        title: 'Anytime Podcast Player',
+        title: 'Seasoning Podcast Player',
         navigatorObservers: [NavigationRouteObserver()],
         localizationsDelegates: const <LocalizationsDelegate<Object>>[
           AnytimeLocalisationsDelegate(),
@@ -210,7 +210,7 @@ class AnytimePodcastAppState extends State<AnytimePodcastApp> {
         theme: theme,
         // Uncomment builder below to enable accessibility checker tool.
         // builder: (context, child) => AccessibilityTools(child: child),
-        home: const AnytimeHomePage(title: 'Anytime Podcast Player'),
+        home: const AnytimeHomePage(title: 'Seasoning Podcast Player'),
       ),
     );
   }
@@ -557,7 +557,7 @@ class _AnytimeHomePageState extends State<AnytimeHomePage>
       case 'about':
         showAboutDialog(
             context: context,
-            applicationName: 'Anytime Podcast Player',
+            applicationName: 'Seasoning Podcast Player',
             applicationVersion: 'v${Environment.projectVersion}',
             applicationIcon: Image.asset(
               'assets/images/app-logo-s.png',
@@ -709,11 +709,12 @@ class TitleWidget extends StatelessWidget {
       child: Row(
         children: <Widget>[
           Text(
-            'Anytime ',
+            'Seasoning',
             style: _titleTheme1,
           ),
+          const SizedBox(width: 6),
           Text(
-            'Player',
+            'podcast player',
             style: Theme.of(context).brightness == Brightness.light
                 ? _titleTheme2Light
                 : _titleTheme2Dark,
