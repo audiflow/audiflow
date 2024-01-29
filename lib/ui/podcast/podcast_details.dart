@@ -4,6 +4,13 @@
 
 import 'dart:async';
 
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_dialogs/flutter_dialogs.dart';
+import 'package:flutter_html/flutter_html.dart';
+import 'package:logging/logging.dart';
+import 'package:provider/provider.dart';
+import 'package:rxdart/rxdart.dart';
 import 'package:seasoning/bloc/podcast/podcast_bloc.dart';
 import 'package:seasoning/bloc/settings/settings_bloc.dart';
 import 'package:seasoning/entities/episode.dart';
@@ -25,13 +32,6 @@ import 'package:seasoning/ui/widgets/platform_progress_indicator.dart';
 import 'package:seasoning/ui/widgets/podcast_html.dart';
 import 'package:seasoning/ui/widgets/podcast_image.dart';
 import 'package:seasoning/ui/widgets/sync_spinner.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_dialogs/flutter_dialogs.dart';
-import 'package:flutter_html/flutter_html.dart';
-import 'package:logging/logging.dart';
-import 'package:provider/provider.dart';
-import 'package:rxdart/rxdart.dart';
 
 /// This Widget takes a search result and builds a list of currently available podcasts.
 ///
@@ -330,18 +330,21 @@ class _PodcastDetailsState extends State<PodcastDetails> {
                         );
                       }),
                   StreamBuilder(
-                      stream: Rx.combineLatest2(
+                      stream: Rx.combineLatest3(
+                          podcastBloc.podcastService
+                              .podcastListener!,
                           podcastBloc.seasons,
                           podcastBloc.episodes,
-                          (seasons, episodes) => (seasons, episodes)),
+                          (podcast, seasons, episodes) => (podcast, seasons, episodes)),
                       builder: (context, snapshot) {
-                        final List<Season?>? seasons = snapshot.data?.$1;
-                        final List<Episode?>? episodes = snapshot.data?.$2;
+                        final podcast = snapshot.data?.$1;
+                        final  seasons = snapshot.data?.$2;
+                        final  episodes = snapshot.data?.$3;
                         final noData = !snapshot.hasData ||
                             (seasons!.isEmpty && episodes!.isEmpty);
                         return noData
                             ? SliverToBoxAdapter(child: Container())
-                            : _podcast.seasonView && seasons.isNotEmpty
+                            : podcast!.seasonView && seasons.isNotEmpty
                                 ? PodcastSeasonList(
                                     seasons: seasons,
                                     play: true,
@@ -526,11 +529,19 @@ class _PodcastTitleState extends State<PodcastTitle> {
                   child: SyncSpinner(),
                 )),
                 StreamBuilder(
-                    stream: Provider.of<PodcastBloc>(context).seasons,
+                    stream: Rx.combineLatest2(
+                      Provider.of<PodcastBloc>(context)
+                          .podcastService
+                          .podcastListener!,
+                      Provider.of<PodcastBloc>(context).seasons,
+                      (podcast, seasons) => (podcast, seasons),
+                    ),
                     builder: (context, snapshot) {
-                      final hasSeasons = snapshot.data?.isNotEmpty ?? false;
+                      final podcast = snapshot.data?.$1;
+                      final seasons = snapshot.data?.$2;
+                      final hasSeasons = seasons?.isNotEmpty ?? false;
                       return hasSeasons
-                          ? SeasonSwitch(isOn: widget.podcast.seasonView)
+                          ? SeasonSwitch(isOn: podcast!.seasonView)
                           : const SizedBox.shrink();
                     }),
               ],
