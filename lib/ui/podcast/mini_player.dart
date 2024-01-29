@@ -163,7 +163,7 @@ class _MiniPlayerBuilderState extends State<_MiniPlayerBuilder>
                                                         .builder()(context)
                                                     : const Image(
                                                         image: AssetImage(
-                                                            'assets/images/anytime-placeholder-logo.png')),
+                                                            'assets/images/app-placeholder-logo.png')),
                                                 errorPlaceholder:
                                                     placeholderBuilder != null
                                                         ? placeholderBuilder
@@ -171,7 +171,7 @@ class _MiniPlayerBuilderState extends State<_MiniPlayerBuilder>
                                                             context)
                                                         : const Image(
                                                             image: AssetImage(
-                                                                'assets/images/anytime-placeholder-logo.png')),
+                                                                'assets/images/app-placeholder-logo.png')),
                                               )
                                             : Container(),
                                       ),

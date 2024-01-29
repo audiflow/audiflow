@@ -230,7 +230,7 @@ class NowPlayingEpisode extends StatelessWidget {
                               ? placeholderBuilder.errorBuilder()(context)
                               : const Image(
                                   image: AssetImage(
-                                      'assets/images/anytime-placeholder-logo.png')),
+                                      'assets/images/app-placeholder-logo.png')),
                         ),
                       ),
                     ),
@@ -267,7 +267,7 @@ class NowPlayingEpisode extends StatelessWidget {
                               ? placeholderBuilder.errorBuilder()(context)
                               : const Image(
                                   image: AssetImage(
-                                      'assets/images/anytime-placeholder-logo.png')),
+                                      'assets/images/app-placeholder-logo.png')),
                         ),
                       ),
                     ),

@@ -560,7 +560,7 @@ class _AnytimeHomePageState extends State<AnytimeHomePage>
             applicationName: 'Anytime Podcast Player',
             applicationVersion: 'v${Environment.projectVersion}',
             applicationIcon: Image.asset(
-              'assets/images/anytime-logo-s.png',
+              'assets/images/app-logo-s.png',
               width: 52.0,
               height: 52.0,
             ),

@@ -67,8 +67,8 @@ dependency_overrides:
   flutter_layout_grid: ^2.0.5
 
 flutter_icons:
-  image_path_android: "assets/images/anytime-logo.png"
-  image_path_ios: "assets/images/anytime-logo-ios.png"
+  image_path_android: "assets/images/app-logo.png"
+  image_path_ios: "assets/images/app-logo-ios.png"
   remove_alpha_ios: true
   android: true
   ios: true
@@ -77,9 +77,9 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/images/anytime-logo.png
-    - assets/images/anytime-logo-s.png
-    - assets/images/anytime-placeholder-logo.png
+    - assets/images/app-logo.png
+    - assets/images/app-logo-s.png
+    - assets/images/app-placeholder-logo.png
 
     # Certificate authorities
     - assets/ca/lets-encrypt-r3.pem

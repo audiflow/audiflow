@@ -393,7 +393,7 @@ class PodcastHeaderImage extends StatelessWidget {
       errorPlaceholder: placeholderBuilder != null
           ? placeholderBuilder?.errorBuilder()(context)
           : const Image(
-              image: AssetImage('assets/images/anytime-placeholder-logo.png')),
+              image: AssetImage('assets/images/app-placeholder-logo.png')),
     );
   }
 }

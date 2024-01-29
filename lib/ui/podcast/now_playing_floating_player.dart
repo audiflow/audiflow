@@ -103,12 +103,12 @@ class _FloatingPlayerBuilderState extends State<_FloatingPlayerBuilder>
                                     ? placeholderBuilder.builder()(context)
                                     : const Image(
                                         image: AssetImage(
-                                            'assets/images/anytime-placeholder-logo.png')),
+                                            'assets/images/app-placeholder-logo.png')),
                                 errorPlaceholder: placeholderBuilder != null
                                     ? placeholderBuilder.errorBuilder()(context)
                                     : const Image(
                                         image: AssetImage(
-                                            'assets/images/anytime-placeholder-logo.png')),
+                                            'assets/images/app-placeholder-logo.png')),
                               )
                             : Container(),
                       ),
