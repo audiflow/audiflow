@@ -566,18 +566,20 @@ class _AnytimeHomePageState extends State<AnytimeHomePage>
             ),
             children: <Widget>[
               const Text('\u00a9 2020 Ben Hills'),
-              GestureDetector(
-                onTap: () {
-                  _launchEmail();
-                },
-                child: Text(
-                  'hello@anytimeplayer.app',
-                  style: TextStyle(
-                    decoration: TextDecoration.underline,
-                    color: Theme.of(context).indicatorColor,
-                  ),
-                ),
-              ),
+              const Text('\u00a9 2024 Reedom, INC.'),
+              const Text('\u00a9 2024 HANAI, Tohru'),
+              // GestureDetector(
+              //   onTap: () {
+              //     _launchEmail();
+              //   },
+              //   child: Text(
+              //     'hello@anytimeplayer.app',
+              //     style: TextStyle(
+              //       decoration: TextDecoration.underline,
+              //       color: Theme.of(context).indicatorColor,
+              //     ),
+              //   ),
+              // ),
             ]);
         break;
       case 'settings':
