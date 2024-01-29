@@ -2,9 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:coten_player/bloc/bloc.dart';
-import 'package:coten_player/bloc/discovery/discovery_state_event.dart';
-import 'package:coten_player/services/podcast/podcast_service.dart';
+import 'package:seasoning/bloc/bloc.dart';
+import 'package:seasoning/bloc/discovery/discovery_state_event.dart';
+import 'package:seasoning/services/podcast/podcast_service.dart';
 import 'package:logging/logging.dart';
 import 'package:podcast_search/podcast_search.dart' as podcast_search;
 import 'package:rxdart/rxdart.dart';

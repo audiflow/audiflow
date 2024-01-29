@@ -4,8 +4,8 @@
 
 import 'dart:async';
 
-import 'package:coten_player/bloc/podcast/audio_bloc.dart';
-import 'package:coten_player/l10n/L.dart';
+import 'package:seasoning/bloc/podcast/audio_bloc.dart';
+import 'package:seasoning/l10n/L.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 

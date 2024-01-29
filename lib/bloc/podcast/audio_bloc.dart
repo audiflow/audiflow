@@ -4,11 +4,11 @@
 
 import 'dart:async';
 
-import 'package:coten_player/bloc/bloc.dart';
-import 'package:coten_player/entities/episode.dart';
-import 'package:coten_player/entities/sleep.dart';
-import 'package:coten_player/services/audio/audio_player_service.dart';
-import 'package:coten_player/state/transcript_state_event.dart';
+import 'package:seasoning/bloc/bloc.dart';
+import 'package:seasoning/entities/episode.dart';
+import 'package:seasoning/entities/sleep.dart';
+import 'package:seasoning/services/audio/audio_player_service.dart';
+import 'package:seasoning/state/transcript_state_event.dart';
 import 'package:logging/logging.dart';
 import 'package:rxdart/rxdart.dart';
 

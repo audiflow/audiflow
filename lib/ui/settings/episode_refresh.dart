@@ -2,9 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:coten_player/bloc/settings/settings_bloc.dart';
-import 'package:coten_player/entities/app_settings.dart';
-import 'package:coten_player/l10n/L.dart';
+import 'package:seasoning/bloc/settings/settings_bloc.dart';
+import 'package:seasoning/entities/app_settings.dart';
+import 'package:seasoning/l10n/L.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dialogs/flutter_dialogs.dart';
 import 'package:provider/provider.dart';

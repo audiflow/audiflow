@@ -4,12 +4,12 @@
 
 import 'dart:io';
 
-import 'package:coten_player/entities/downloadable.dart';
-import 'package:coten_player/entities/episode.dart';
-import 'package:coten_player/entities/podcast.dart';
-import 'package:coten_player/entities/transcript.dart';
-import 'package:coten_player/repository/repository.dart';
-import 'package:coten_player/repository/sembast/sembast_repository.dart';
+import 'package:seasoning/entities/downloadable.dart';
+import 'package:seasoning/entities/episode.dart';
+import 'package:seasoning/entities/podcast.dart';
+import 'package:seasoning/entities/transcript.dart';
+import 'package:seasoning/repository/repository.dart';
+import 'package:seasoning/repository/sembast/sembast_repository.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';

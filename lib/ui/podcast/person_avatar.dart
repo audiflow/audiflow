@@ -5,7 +5,7 @@
 
 import 'dart:async';
 
-import 'package:coten_player/entities/person.dart';
+import 'package:seasoning/entities/person.dart';
 import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';

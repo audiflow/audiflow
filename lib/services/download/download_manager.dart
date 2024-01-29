@@ -4,7 +4,7 @@
 
 import 'dart:async';
 
-import 'package:coten_player/entities/downloadable.dart';
+import 'package:seasoning/entities/downloadable.dart';
 
 class DownloadProgress {
   final String id;

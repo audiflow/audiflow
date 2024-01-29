@@ -4,9 +4,9 @@
 
 import 'dart:io';
 
-import 'package:coten_player/api/podcast/podcast_api.dart';
-import 'package:coten_player/core/environment.dart';
-import 'package:coten_player/entities/transcript.dart';
+import 'package:seasoning/api/podcast/podcast_api.dart';
+import 'package:seasoning/core/environment.dart';
+import 'package:seasoning/entities/transcript.dart';
 import 'package:flutter/foundation.dart';
 import 'package:podcast_search/podcast_search.dart' as podcast_search;
 

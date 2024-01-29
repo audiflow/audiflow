@@ -2,10 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:coten_player/bloc/podcast/queue_bloc.dart';
-import 'package:coten_player/entities/episode.dart';
-import 'package:coten_player/state/queue_event_state.dart';
-import 'package:coten_player/ui/widgets/episode_tile.dart';
+import 'package:seasoning/bloc/podcast/queue_bloc.dart';
+import 'package:seasoning/entities/episode.dart';
+import 'package:seasoning/state/queue_event_state.dart';
+import 'package:seasoning/ui/widgets/episode_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 

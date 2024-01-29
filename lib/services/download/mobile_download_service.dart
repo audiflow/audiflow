@@ -5,14 +5,14 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:coten_player/core/utils.dart';
-import 'package:coten_player/entities/downloadable.dart';
-import 'package:coten_player/entities/episode.dart';
-import 'package:coten_player/entities/transcript.dart';
-import 'package:coten_player/repository/repository.dart';
-import 'package:coten_player/services/download/download_manager.dart';
-import 'package:coten_player/services/download/download_service.dart';
-import 'package:coten_player/services/podcast/podcast_service.dart';
+import 'package:seasoning/core/utils.dart';
+import 'package:seasoning/entities/downloadable.dart';
+import 'package:seasoning/entities/episode.dart';
+import 'package:seasoning/entities/transcript.dart';
+import 'package:seasoning/repository/repository.dart';
+import 'package:seasoning/services/download/download_manager.dart';
+import 'package:seasoning/services/download/download_service.dart';
+import 'package:seasoning/services/podcast/podcast_service.dart';
 import 'package:collection/collection.dart' show IterableExtension;
 import 'package:logging/logging.dart';
 import 'package:mp3_info/mp3_info.dart';

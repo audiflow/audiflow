@@ -1,8 +1,8 @@
 // Copyright 2020 Ben Hills and the project contributors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
-import 'package:coten_player/entities/app_settings.dart';
-import 'package:coten_player/services/settings/settings_service.dart';
+import 'package:seasoning/entities/app_settings.dart';
+import 'package:seasoning/services/settings/settings_service.dart';
 import 'package:rxdart/rxdart.dart';
 
 class MockSettingsService extends SettingsService {

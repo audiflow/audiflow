@@ -2,10 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:coten_player/core/extensions.dart';
-import 'package:coten_player/entities/funding.dart';
-import 'package:coten_player/entities/person.dart';
-import 'package:coten_player/entities/season.dart';
+import 'package:seasoning/core/extensions.dart';
+import 'package:seasoning/entities/funding.dart';
+import 'package:seasoning/entities/person.dart';
+import 'package:seasoning/entities/season.dart';
 import 'package:podcast_search/podcast_search.dart' as search;
 
 import 'episode.dart';

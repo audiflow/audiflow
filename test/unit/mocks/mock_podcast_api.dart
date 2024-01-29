@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:coten_player/api/podcast/mobile_podcast_api.dart';
+import 'package:seasoning/api/podcast/mobile_podcast_api.dart';
 import 'package:podcast_search/podcast_search.dart';
 
 /// This Mock version of the Podcast API replaces loading via URL

@@ -2,12 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:coten_player/bloc/podcast/episode_bloc.dart';
-import 'package:coten_player/entities/episode.dart';
-import 'package:coten_player/l10n/L.dart';
-import 'package:coten_player/state/bloc_state.dart';
-import 'package:coten_player/ui/podcast/podcast_episode_list.dart';
-import 'package:coten_player/ui/widgets/platform_progress_indicator.dart';
+import 'package:seasoning/bloc/podcast/episode_bloc.dart';
+import 'package:seasoning/entities/episode.dart';
+import 'package:seasoning/l10n/L.dart';
+import 'package:seasoning/state/bloc_state.dart';
+import 'package:seasoning/ui/podcast/podcast_episode_list.dart';
+import 'package:seasoning/ui/widgets/platform_progress_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 

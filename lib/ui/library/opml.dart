@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:coten_player/l10n/L.dart';
-import 'package:coten_player/ui/library/opml_import.dart';
+import 'package:seasoning/l10n/L.dart';
+import 'package:seasoning/ui/library/opml_import.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';

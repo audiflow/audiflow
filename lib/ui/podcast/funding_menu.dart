@@ -4,11 +4,11 @@
 
 import 'dart:async';
 
-import 'package:coten_player/bloc/settings/settings_bloc.dart';
-import 'package:coten_player/entities/app_settings.dart';
-import 'package:coten_player/entities/funding.dart';
-import 'package:coten_player/l10n/L.dart';
-import 'package:coten_player/ui/widgets/action_text.dart';
+import 'package:seasoning/bloc/settings/settings_bloc.dart';
+import 'package:seasoning/entities/app_settings.dart';
+import 'package:seasoning/entities/funding.dart';
+import 'package:seasoning/l10n/L.dart';
+import 'package:seasoning/ui/widgets/action_text.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dialogs/flutter_dialogs.dart';

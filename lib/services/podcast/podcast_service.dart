@@ -2,15 +2,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:coten_player/api/podcast/podcast_api.dart';
-import 'package:coten_player/entities/chapter.dart';
-import 'package:coten_player/entities/episode.dart';
-import 'package:coten_player/entities/podcast.dart';
-import 'package:coten_player/entities/season.dart';
-import 'package:coten_player/entities/transcript.dart';
-import 'package:coten_player/repository/repository.dart';
-import 'package:coten_player/services/settings/settings_service.dart';
-import 'package:coten_player/state/episode_state.dart';
+import 'package:seasoning/api/podcast/podcast_api.dart';
+import 'package:seasoning/entities/chapter.dart';
+import 'package:seasoning/entities/episode.dart';
+import 'package:seasoning/entities/podcast.dart';
+import 'package:seasoning/entities/season.dart';
+import 'package:seasoning/entities/transcript.dart';
+import 'package:seasoning/repository/repository.dart';
+import 'package:seasoning/services/settings/settings_service.dart';
+import 'package:seasoning/state/episode_state.dart';
 import 'package:podcast_search/podcast_search.dart' as pcast;
 
 abstract class PodcastService {

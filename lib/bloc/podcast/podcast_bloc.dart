@@ -3,18 +3,18 @@
 // found in the LICENSE file.
 
 import 'package:collection/collection.dart' show IterableExtension;
-import 'package:coten_player/bloc/bloc.dart';
-import 'package:coten_player/entities/downloadable.dart';
-import 'package:coten_player/entities/episode.dart';
-import 'package:coten_player/entities/feed.dart';
-import 'package:coten_player/entities/podcast.dart';
-import 'package:coten_player/entities/season.dart';
-import 'package:coten_player/services/audio/audio_player_service.dart';
-import 'package:coten_player/services/download/download_service.dart';
-import 'package:coten_player/services/download/mobile_download_service.dart';
-import 'package:coten_player/services/podcast/podcast_service.dart';
-import 'package:coten_player/services/settings/settings_service.dart';
-import 'package:coten_player/state/bloc_state.dart';
+import 'package:seasoning/bloc/bloc.dart';
+import 'package:seasoning/entities/downloadable.dart';
+import 'package:seasoning/entities/episode.dart';
+import 'package:seasoning/entities/feed.dart';
+import 'package:seasoning/entities/podcast.dart';
+import 'package:seasoning/entities/season.dart';
+import 'package:seasoning/services/audio/audio_player_service.dart';
+import 'package:seasoning/services/download/download_service.dart';
+import 'package:seasoning/services/download/mobile_download_service.dart';
+import 'package:seasoning/services/podcast/podcast_service.dart';
+import 'package:seasoning/services/settings/settings_service.dart';
+import 'package:seasoning/state/bloc_state.dart';
 import 'package:logging/logging.dart';
 import 'package:rxdart/rxdart.dart';
 
