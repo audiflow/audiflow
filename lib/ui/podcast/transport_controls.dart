@@ -2,19 +2,19 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:coten_player/bloc/podcast/audio_bloc.dart';
-import 'package:coten_player/bloc/podcast/episode_bloc.dart';
-import 'package:coten_player/bloc/podcast/podcast_bloc.dart';
-import 'package:coten_player/bloc/settings/settings_bloc.dart';
-import 'package:coten_player/entities/app_settings.dart';
-import 'package:coten_player/entities/downloadable.dart';
-import 'package:coten_player/entities/episode.dart';
-import 'package:coten_player/l10n/L.dart';
-import 'package:coten_player/services/audio/audio_player_service.dart';
-import 'package:coten_player/ui/podcast/now_playing.dart';
-import 'package:coten_player/ui/widgets/action_text.dart';
-import 'package:coten_player/ui/widgets/download_button.dart';
-import 'package:coten_player/ui/widgets/play_pause_button.dart';
+import 'package:seasoning/bloc/podcast/audio_bloc.dart';
+import 'package:seasoning/bloc/podcast/episode_bloc.dart';
+import 'package:seasoning/bloc/podcast/podcast_bloc.dart';
+import 'package:seasoning/bloc/settings/settings_bloc.dart';
+import 'package:seasoning/entities/app_settings.dart';
+import 'package:seasoning/entities/downloadable.dart';
+import 'package:seasoning/entities/episode.dart';
+import 'package:seasoning/l10n/L.dart';
+import 'package:seasoning/services/audio/audio_player_service.dart';
+import 'package:seasoning/ui/podcast/now_playing.dart';
+import 'package:seasoning/ui/widgets/action_text.dart';
+import 'package:seasoning/ui/widgets/download_button.dart';
+import 'package:seasoning/ui/widgets/play_pause_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dialogs/flutter_dialogs.dart';
 import 'package:provider/provider.dart';

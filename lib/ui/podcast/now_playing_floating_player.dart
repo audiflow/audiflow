@@ -4,12 +4,12 @@
 
 import 'dart:async';
 
-import 'package:coten_player/bloc/podcast/audio_bloc.dart';
-import 'package:coten_player/entities/episode.dart';
-import 'package:coten_player/l10n/L.dart';
-import 'package:coten_player/services/audio/audio_player_service.dart';
-import 'package:coten_player/ui/widgets/placeholder_builder.dart';
-import 'package:coten_player/ui/widgets/podcast_image.dart';
+import 'package:seasoning/bloc/podcast/audio_bloc.dart';
+import 'package:seasoning/entities/episode.dart';
+import 'package:seasoning/l10n/L.dart';
+import 'package:seasoning/services/audio/audio_player_service.dart';
+import 'package:seasoning/ui/widgets/placeholder_builder.dart';
+import 'package:seasoning/ui/widgets/podcast_image.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -103,12 +103,12 @@ class _FloatingPlayerBuilderState extends State<_FloatingPlayerBuilder>
                                     ? placeholderBuilder.builder()(context)
                                     : const Image(
                                         image: AssetImage(
-                                            'assets/images/anytime-placeholder-logo.png')),
+                                            'assets/images/app-placeholder-logo.png')),
                                 errorPlaceholder: placeholderBuilder != null
                                     ? placeholderBuilder.errorBuilder()(context)
                                     : const Image(
                                         image: AssetImage(
-                                            'assets/images/anytime-placeholder-logo.png')),
+                                            'assets/images/app-placeholder-logo.png')),
                               )
                             : Container(),
                       ),

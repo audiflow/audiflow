@@ -4,15 +4,15 @@
 
 import 'dart:async';
 
-import 'package:coten_player/bloc/podcast/audio_bloc.dart';
-import 'package:coten_player/bloc/podcast/queue_bloc.dart';
-import 'package:coten_player/entities/person.dart';
-import 'package:coten_player/entities/transcript.dart';
-import 'package:coten_player/l10n/L.dart';
-import 'package:coten_player/services/audio/audio_player_service.dart';
-import 'package:coten_player/state/queue_event_state.dart';
-import 'package:coten_player/state/transcript_state_event.dart';
-import 'package:coten_player/ui/widgets/platform_progress_indicator.dart';
+import 'package:seasoning/bloc/podcast/audio_bloc.dart';
+import 'package:seasoning/bloc/podcast/queue_bloc.dart';
+import 'package:seasoning/entities/person.dart';
+import 'package:seasoning/entities/transcript.dart';
+import 'package:seasoning/l10n/L.dart';
+import 'package:seasoning/services/audio/audio_player_service.dart';
+import 'package:seasoning/state/queue_event_state.dart';
+import 'package:seasoning/state/transcript_state_event.dart';
+import 'package:seasoning/ui/widgets/platform_progress_indicator.dart';
 import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';

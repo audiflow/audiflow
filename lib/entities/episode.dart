@@ -2,12 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:coten_player/core/annotations.dart';
-import 'package:coten_player/core/extensions.dart';
-import 'package:coten_player/entities/chapter.dart';
-import 'package:coten_player/entities/downloadable.dart';
-import 'package:coten_player/entities/person.dart';
-import 'package:coten_player/entities/transcript.dart';
+import 'package:seasoning/core/annotations.dart';
+import 'package:seasoning/core/extensions.dart';
+import 'package:seasoning/entities/chapter.dart';
+import 'package:seasoning/entities/downloadable.dart';
+import 'package:seasoning/entities/person.dart';
+import 'package:seasoning/entities/transcript.dart';
 import 'package:flutter/foundation.dart';
 import 'package:html/parser.dart' show parseFragment;
 import 'package:logging/logging.dart';

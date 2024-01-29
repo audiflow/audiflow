@@ -1,10 +1,10 @@
 import 'dart:async';
 
-import 'package:coten_player/bloc/bloc.dart';
-import 'package:coten_player/entities/season.dart';
-import 'package:coten_player/services/audio/audio_player_service.dart';
-import 'package:coten_player/services/podcast/podcast_service.dart';
-import 'package:coten_player/state/bloc_state.dart';
+import 'package:seasoning/bloc/bloc.dart';
+import 'package:seasoning/entities/season.dart';
+import 'package:seasoning/services/audio/audio_player_service.dart';
+import 'package:seasoning/services/podcast/podcast_service.dart';
+import 'package:seasoning/state/bloc_state.dart';
 import 'package:logging/logging.dart';
 import 'package:rxdart/rxdart.dart';
 

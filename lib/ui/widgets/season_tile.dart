@@ -2,9 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:coten_player/entities/season.dart';
-import 'package:coten_player/ui/podcast/season_episodes.dart';
-import 'package:coten_player/ui/widgets/tile_image.dart';
+import 'package:seasoning/entities/season.dart';
+import 'package:seasoning/ui/podcast/season_episodes.dart';
+import 'package:seasoning/ui/widgets/tile_image.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' show DateFormat;
 
@@ -118,8 +118,8 @@ class SeasonSubtitle extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     var timeRemaining = season.timeRemaining;
 
-    final playedEpisodes = season.episodes
-        .where((episode) => episode.played).length;
+    final playedEpisodes =
+        season.episodes.where((episode) => episode.played).length;
     final episodes = '$playedEpisodes/${season.episodes.length} episodes';
 
     String duration = '';
@@ -129,12 +129,12 @@ class SeasonSubtitle extends StatelessWidget {
       } else if (length.inMinutes < 120) {
         duration = ' - ${length.inMinutes} min';
       } else {
-        duration = ' - ${length.inHours} hr ${length.inMinutes.remainder(60)} min';
+        duration =
+            ' - ${length.inHours} hr ${length.inMinutes.remainder(60)} min';
       }
     }
 
     final title = '$date - $episodes$duration';
-
 
     return Padding(
       padding: const EdgeInsets.only(top: 4.0),

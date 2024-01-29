@@ -4,11 +4,11 @@
 
 import 'dart:async';
 
-import 'package:coten_player/bloc/podcast/audio_bloc.dart';
-import 'package:coten_player/l10n/L.dart';
-import 'package:coten_player/services/audio/audio_player_service.dart';
-import 'package:coten_player/ui/widgets/sleep_selector.dart';
-import 'package:coten_player/ui/widgets/speed_selector.dart';
+import 'package:seasoning/bloc/podcast/audio_bloc.dart';
+import 'package:seasoning/l10n/L.dart';
+import 'package:seasoning/services/audio/audio_player_service.dart';
+import 'package:seasoning/ui/widgets/sleep_selector.dart';
+import 'package:seasoning/ui/widgets/speed_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:provider/provider.dart';

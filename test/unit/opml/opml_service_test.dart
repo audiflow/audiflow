@@ -4,13 +4,13 @@
 
 import 'dart:io';
 
-import 'package:coten_player/repository/repository.dart';
-import 'package:coten_player/repository/sembast/sembast_repository.dart';
-import 'package:coten_player/services/podcast/mobile_opml_service.dart';
-import 'package:coten_player/services/podcast/mobile_podcast_service.dart';
-import 'package:coten_player/services/podcast/opml_service.dart';
-import 'package:coten_player/services/podcast/podcast_service.dart';
-import 'package:coten_player/state/opml_state.dart';
+import 'package:seasoning/repository/repository.dart';
+import 'package:seasoning/repository/sembast/sembast_repository.dart';
+import 'package:seasoning/services/podcast/mobile_opml_service.dart';
+import 'package:seasoning/services/podcast/mobile_podcast_service.dart';
+import 'package:seasoning/services/podcast/opml_service.dart';
+import 'package:seasoning/services/podcast/podcast_service.dart';
+import 'package:seasoning/state/opml_state.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 

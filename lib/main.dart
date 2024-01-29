@@ -4,8 +4,8 @@
 
 import 'dart:io';
 
-import 'package:coten_player/services/settings/mobile_settings_service.dart';
-import 'package:coten_player/ui/anytime_podcast_app.dart';
+import 'package:seasoning/services/settings/mobile_settings_service.dart';
+import 'package:seasoning/ui/anytime_podcast_app.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';

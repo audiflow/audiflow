@@ -4,22 +4,22 @@
 
 import 'dart:async';
 
-import 'package:coten_player/bloc/podcast/audio_bloc.dart';
-import 'package:coten_player/entities/episode.dart';
-import 'package:coten_player/l10n/L.dart';
-import 'package:coten_player/services/audio/audio_player_service.dart';
-import 'package:coten_player/ui/podcast/chapter_selector.dart';
-import 'package:coten_player/ui/podcast/dot_decoration.dart';
-import 'package:coten_player/ui/podcast/now_playing_floating_player.dart';
-import 'package:coten_player/ui/podcast/now_playing_options.dart';
-import 'package:coten_player/ui/podcast/person_avatar.dart';
-import 'package:coten_player/ui/podcast/playback_error_listener.dart';
-import 'package:coten_player/ui/podcast/player_position_controls.dart';
-import 'package:coten_player/ui/podcast/player_transport_controls.dart';
-import 'package:coten_player/ui/widgets/delayed_progress_indicator.dart';
-import 'package:coten_player/ui/widgets/placeholder_builder.dart';
-import 'package:coten_player/ui/widgets/podcast_html.dart';
-import 'package:coten_player/ui/widgets/podcast_image.dart';
+import 'package:seasoning/bloc/podcast/audio_bloc.dart';
+import 'package:seasoning/entities/episode.dart';
+import 'package:seasoning/l10n/L.dart';
+import 'package:seasoning/services/audio/audio_player_service.dart';
+import 'package:seasoning/ui/podcast/chapter_selector.dart';
+import 'package:seasoning/ui/podcast/dot_decoration.dart';
+import 'package:seasoning/ui/podcast/now_playing_floating_player.dart';
+import 'package:seasoning/ui/podcast/now_playing_options.dart';
+import 'package:seasoning/ui/podcast/person_avatar.dart';
+import 'package:seasoning/ui/podcast/playback_error_listener.dart';
+import 'package:seasoning/ui/podcast/player_position_controls.dart';
+import 'package:seasoning/ui/podcast/player_transport_controls.dart';
+import 'package:seasoning/ui/widgets/delayed_progress_indicator.dart';
+import 'package:seasoning/ui/widgets/placeholder_builder.dart';
+import 'package:seasoning/ui/widgets/podcast_html.dart';
+import 'package:seasoning/ui/widgets/podcast_image.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -230,7 +230,7 @@ class NowPlayingEpisode extends StatelessWidget {
                               ? placeholderBuilder.errorBuilder()(context)
                               : const Image(
                                   image: AssetImage(
-                                      'assets/images/anytime-placeholder-logo.png')),
+                                      'assets/images/app-placeholder-logo.png')),
                         ),
                       ),
                     ),
@@ -267,7 +267,7 @@ class NowPlayingEpisode extends StatelessWidget {
                               ? placeholderBuilder.errorBuilder()(context)
                               : const Image(
                                   image: AssetImage(
-                                      'assets/images/anytime-placeholder-logo.png')),
+                                      'assets/images/app-placeholder-logo.png')),
                         ),
                       ),
                     ),

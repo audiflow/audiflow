@@ -4,27 +4,27 @@
 
 import 'dart:async';
 
-import 'package:coten_player/bloc/podcast/podcast_bloc.dart';
-import 'package:coten_player/bloc/settings/settings_bloc.dart';
-import 'package:coten_player/entities/episode.dart';
-import 'package:coten_player/entities/feed.dart';
-import 'package:coten_player/entities/podcast.dart';
-import 'package:coten_player/entities/season.dart';
-import 'package:coten_player/l10n/L.dart';
-import 'package:coten_player/state/bloc_state.dart';
-import 'package:coten_player/ui/podcast/funding_menu.dart';
-import 'package:coten_player/ui/podcast/playback_error_listener.dart';
-import 'package:coten_player/ui/podcast/podcast_context_menu.dart';
-import 'package:coten_player/ui/podcast/podcast_episode_list.dart';
-import 'package:coten_player/ui/podcast/podcast_season_list.dart';
-import 'package:coten_player/ui/widgets/action_text.dart';
-import 'package:coten_player/ui/widgets/delayed_progress_indicator.dart';
-import 'package:coten_player/ui/widgets/placeholder_builder.dart';
-import 'package:coten_player/ui/widgets/platform_back_button.dart';
-import 'package:coten_player/ui/widgets/platform_progress_indicator.dart';
-import 'package:coten_player/ui/widgets/podcast_html.dart';
-import 'package:coten_player/ui/widgets/podcast_image.dart';
-import 'package:coten_player/ui/widgets/sync_spinner.dart';
+import 'package:seasoning/bloc/podcast/podcast_bloc.dart';
+import 'package:seasoning/bloc/settings/settings_bloc.dart';
+import 'package:seasoning/entities/episode.dart';
+import 'package:seasoning/entities/feed.dart';
+import 'package:seasoning/entities/podcast.dart';
+import 'package:seasoning/entities/season.dart';
+import 'package:seasoning/l10n/L.dart';
+import 'package:seasoning/state/bloc_state.dart';
+import 'package:seasoning/ui/podcast/funding_menu.dart';
+import 'package:seasoning/ui/podcast/playback_error_listener.dart';
+import 'package:seasoning/ui/podcast/podcast_context_menu.dart';
+import 'package:seasoning/ui/podcast/podcast_episode_list.dart';
+import 'package:seasoning/ui/podcast/podcast_season_list.dart';
+import 'package:seasoning/ui/widgets/action_text.dart';
+import 'package:seasoning/ui/widgets/delayed_progress_indicator.dart';
+import 'package:seasoning/ui/widgets/placeholder_builder.dart';
+import 'package:seasoning/ui/widgets/platform_back_button.dart';
+import 'package:seasoning/ui/widgets/platform_progress_indicator.dart';
+import 'package:seasoning/ui/widgets/podcast_html.dart';
+import 'package:seasoning/ui/widgets/podcast_image.dart';
+import 'package:seasoning/ui/widgets/sync_spinner.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dialogs/flutter_dialogs.dart';
@@ -393,7 +393,7 @@ class PodcastHeaderImage extends StatelessWidget {
       errorPlaceholder: placeholderBuilder != null
           ? placeholderBuilder?.errorBuilder()(context)
           : const Image(
-              image: AssetImage('assets/images/anytime-placeholder-logo.png')),
+              image: AssetImage('assets/images/app-placeholder-logo.png')),
     );
   }
 }

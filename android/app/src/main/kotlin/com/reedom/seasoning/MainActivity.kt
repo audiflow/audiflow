@@ -1,4 +1,4 @@
-package com.reedom.coten_player
+package com.reedom.seasoning
 
 import io.flutter.embedding.android.FlutterActivity
 

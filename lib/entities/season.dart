@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:collection/collection.dart';
-import 'package:coten_player/entities/episode.dart';
+import 'package:seasoning/entities/episode.dart';
 import 'package:crypto/crypto.dart';
 import 'package:logging/logging.dart';
 

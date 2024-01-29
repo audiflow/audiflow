@@ -4,8 +4,8 @@
 
 import 'dart:ui';
 
-import 'package:coten_player/bloc/podcast/audio_bloc.dart';
-import 'package:coten_player/services/audio/audio_player_service.dart';
+import 'package:seasoning/bloc/podcast/audio_bloc.dart';
+import 'package:seasoning/services/audio/audio_player_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 

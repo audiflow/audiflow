@@ -2,11 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:coten_player/entities/episode.dart';
-import 'package:coten_player/entities/podcast.dart';
-import 'package:coten_player/entities/season.dart';
-import 'package:coten_player/entities/transcript.dart';
-import 'package:coten_player/state/episode_state.dart';
+import 'package:seasoning/entities/episode.dart';
+import 'package:seasoning/entities/podcast.dart';
+import 'package:seasoning/entities/season.dart';
+import 'package:seasoning/entities/transcript.dart';
+import 'package:seasoning/state/episode_state.dart';
 
 /// An abstract class that represent the actions supported by the chosen
 /// database or storage implementation.

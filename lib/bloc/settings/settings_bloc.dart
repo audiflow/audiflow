@@ -2,11 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:coten_player/bloc/bloc.dart';
-import 'package:coten_player/core/environment.dart';
-import 'package:coten_player/entities/app_settings.dart';
-import 'package:coten_player/entities/search_providers.dart';
-import 'package:coten_player/services/settings/settings_service.dart';
+import 'package:seasoning/bloc/bloc.dart';
+import 'package:seasoning/core/environment.dart';
+import 'package:seasoning/entities/app_settings.dart';
+import 'package:seasoning/entities/search_providers.dart';
+import 'package:seasoning/services/settings/settings_service.dart';
 import 'package:logging/logging.dart';
 import 'package:rxdart/rxdart.dart';
 

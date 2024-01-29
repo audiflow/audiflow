@@ -4,11 +4,11 @@
 
 import 'dart:io';
 
-import 'package:coten_player/entities/podcast.dart';
-import 'package:coten_player/repository/repository.dart';
-import 'package:coten_player/services/podcast/opml_service.dart';
-import 'package:coten_player/services/podcast/podcast_service.dart';
-import 'package:coten_player/state/opml_state.dart';
+import 'package:seasoning/entities/podcast.dart';
+import 'package:seasoning/repository/repository.dart';
+import 'package:seasoning/services/podcast/opml_service.dart';
+import 'package:seasoning/services/podcast/podcast_service.dart';
+import 'package:seasoning/state/opml_state.dart';
 import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 import 'package:path_provider/path_provider.dart';

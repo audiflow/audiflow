@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:coten_player/entities/episode.dart';
-import 'package:coten_player/ui/widgets/podcast_html.dart';
+import 'package:seasoning/entities/episode.dart';
+import 'package:seasoning/ui/widgets/podcast_html.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 
