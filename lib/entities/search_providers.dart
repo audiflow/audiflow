@@ -4,15 +4,21 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+part 'search_providers.freezed.dart';
+part 'search_providers.g.dart';
+
 /// Anytime can support multiple search providers.
 ///
 /// This class represents a provider.
-class SearchProvider {
-  final String key;
-  final String name;
+@freezed
+class SearchProvider with _$SearchProvider {
+  const factory SearchProvider({
+    required String key,
+    required String name,
+  }) = _SearchProvider;
 
-  SearchProvider({
-    required this.key,
-    required this.name,
-  });
+  factory SearchProvider.fromJson(Map<String, dynamic> json) =>
+      _$SearchProviderFromJson(json);
 }
