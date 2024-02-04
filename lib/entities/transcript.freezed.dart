@@ -259,7 +259,7 @@ Transcript _$TranscriptFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$Transcript {
-  int get id => throw _privateConstructorUsedError;
+  int? get id => throw _privateConstructorUsedError;
   String get guid => throw _privateConstructorUsedError;
   List<Subtitle> get subtitles => throw _privateConstructorUsedError;
   bool get filtered => throw _privateConstructorUsedError;
@@ -278,7 +278,7 @@ abstract class $TranscriptCopyWith<$Res> {
       _$TranscriptCopyWithImpl<$Res, Transcript>;
   @useResult
   $Res call(
-      {int id,
+      {int? id,
       String guid,
       List<Subtitle> subtitles,
       bool filtered,
@@ -298,17 +298,17 @@ class _$TranscriptCopyWithImpl<$Res, $Val extends Transcript>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? id = null,
+    Object? id = freezed,
     Object? guid = null,
     Object? subtitles = null,
     Object? filtered = null,
     Object? lastUpdated = freezed,
   }) {
     return _then(_value.copyWith(
-      id: null == id
+      id: freezed == id
           ? _value.id
           : id // ignore: cast_nullable_to_non_nullable
-              as int,
+              as int?,
       guid: null == guid
           ? _value.guid
           : guid // ignore: cast_nullable_to_non_nullable
@@ -338,7 +338,7 @@ abstract class _$$TranscriptImplCopyWith<$Res>
   @override
   @useResult
   $Res call(
-      {int id,
+      {int? id,
       String guid,
       List<Subtitle> subtitles,
       bool filtered,
@@ -356,17 +356,17 @@ class __$$TranscriptImplCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? id = null,
+    Object? id = freezed,
     Object? guid = null,
     Object? subtitles = null,
     Object? filtered = null,
     Object? lastUpdated = freezed,
   }) {
     return _then(_$TranscriptImpl(
-      id: null == id
+      id: freezed == id
           ? _value.id
           : id // ignore: cast_nullable_to_non_nullable
-              as int,
+              as int?,
       guid: null == guid
           ? _value.guid
           : guid // ignore: cast_nullable_to_non_nullable
@@ -391,7 +391,7 @@ class __$$TranscriptImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$TranscriptImpl with DiagnosticableTreeMixin implements _Transcript {
   const _$TranscriptImpl(
-      {required this.id,
+      {this.id,
       required this.guid,
       final List<Subtitle> subtitles = const <Subtitle>[],
       this.filtered = false,
@@ -402,7 +402,7 @@ class _$TranscriptImpl with DiagnosticableTreeMixin implements _Transcript {
       _$$TranscriptImplFromJson(json);
 
   @override
-  final int id;
+  final int? id;
   @override
   final String guid;
   final List<Subtitle> _subtitles;
@@ -473,7 +473,7 @@ class _$TranscriptImpl with DiagnosticableTreeMixin implements _Transcript {
 
 abstract class _Transcript implements Transcript {
   const factory _Transcript(
-      {required final int id,
+      {final int? id,
       required final String guid,
       final List<Subtitle> subtitles,
       final bool filtered,
@@ -483,7 +483,7 @@ abstract class _Transcript implements Transcript {
       _$TranscriptImpl.fromJson;
 
   @override
-  int get id;
+  int? get id;
   @override
   String get guid;
   @override

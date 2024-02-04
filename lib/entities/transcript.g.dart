@@ -34,7 +34,7 @@ const _$TranscriptFormatEnumMap = {
 
 _$TranscriptImpl _$$TranscriptImplFromJson(Map<String, dynamic> json) =>
     _$TranscriptImpl(
-      id: json['id'] as int,
+      id: json['id'] as int?,
       guid: json['guid'] as String,
       subtitles: (json['subtitles'] as List<dynamic>?)
               ?.map((e) => Subtitle.fromJson(e as Map<String, dynamic>))

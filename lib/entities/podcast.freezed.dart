@@ -55,10 +55,16 @@ mixin _$Podcast {
   List<Funding> get funding => throw _privateConstructorUsedError;
 
   /// One or more seasons for this podcast.
+// ignore: invalid_annotation_target
+  @JsonKey(includeToJson: false, includeFromJson: false)
   List<Season> get seasons => throw _privateConstructorUsedError;
 
   /// One or more episodes for this podcast.
-  List<Episode> get episodes => throw _privateConstructorUsedError;
+// ignore: invalid_annotation_target
+  @JsonKey(includeToJson: false, includeFromJson: false)
+  List<Episode> get episodes =>
+      throw _privateConstructorUsedError; // ignore: invalid_annotation_target
+  @JsonKey(includeToJson: false, includeFromJson: false)
   List<Person> get persons => throw _privateConstructorUsedError;
 
   /// Date and time podcast was last updated/refreshed.
@@ -97,8 +103,11 @@ abstract class $PodcastCopyWith<$Res> {
       String? copyright,
       DateTime? subscribedDate,
       List<Funding> funding,
+      @JsonKey(includeToJson: false, includeFromJson: false)
       List<Season> seasons,
+      @JsonKey(includeToJson: false, includeFromJson: false)
       List<Episode> episodes,
+      @JsonKey(includeToJson: false, includeFromJson: false)
       List<Person> persons,
       DateTime? lastUpdated,
       @JsonKey(includeToJson: false, includeFromJson: false) bool seasonView,
@@ -235,8 +244,11 @@ abstract class _$$PodcastImplCopyWith<$Res> implements $PodcastCopyWith<$Res> {
       String? copyright,
       DateTime? subscribedDate,
       List<Funding> funding,
+      @JsonKey(includeToJson: false, includeFromJson: false)
       List<Season> seasons,
+      @JsonKey(includeToJson: false, includeFromJson: false)
       List<Episode> episodes,
+      @JsonKey(includeToJson: false, includeFromJson: false)
       List<Person> persons,
       DateTime? lastUpdated,
       @JsonKey(includeToJson: false, includeFromJson: false) bool seasonView,
@@ -367,8 +379,11 @@ class _$PodcastImpl implements _Podcast {
       this.copyright,
       this.subscribedDate,
       final List<Funding> funding = const [],
+      @JsonKey(includeToJson: false, includeFromJson: false)
       final List<Season> seasons = const [],
+      @JsonKey(includeToJson: false, includeFromJson: false)
       final List<Episode> episodes = const [],
+      @JsonKey(includeToJson: false, includeFromJson: false)
       final List<Person> persons = const [],
       this.lastUpdated,
       @JsonKey(includeToJson: false, includeFromJson: false)
@@ -439,11 +454,13 @@ class _$PodcastImpl implements _Podcast {
   }
 
   /// One or more seasons for this podcast.
+// ignore: invalid_annotation_target
   final List<Season> _seasons;
 
   /// One or more seasons for this podcast.
+// ignore: invalid_annotation_target
   @override
-  @JsonKey()
+  @JsonKey(includeToJson: false, includeFromJson: false)
   List<Season> get seasons {
     if (_seasons is EqualUnmodifiableListView) return _seasons;
     // ignore: implicit_dynamic_type
@@ -451,20 +468,24 @@ class _$PodcastImpl implements _Podcast {
   }
 
   /// One or more episodes for this podcast.
+// ignore: invalid_annotation_target
   final List<Episode> _episodes;
 
   /// One or more episodes for this podcast.
+// ignore: invalid_annotation_target
   @override
-  @JsonKey()
+  @JsonKey(includeToJson: false, includeFromJson: false)
   List<Episode> get episodes {
     if (_episodes is EqualUnmodifiableListView) return _episodes;
     // ignore: implicit_dynamic_type
     return EqualUnmodifiableListView(_episodes);
   }
 
+// ignore: invalid_annotation_target
   final List<Person> _persons;
+// ignore: invalid_annotation_target
   @override
-  @JsonKey()
+  @JsonKey(includeToJson: false, includeFromJson: false)
   List<Person> get persons {
     if (_persons is EqualUnmodifiableListView) return _persons;
     // ignore: implicit_dynamic_type
@@ -578,8 +599,11 @@ abstract class _Podcast implements Podcast {
       final String? copyright,
       final DateTime? subscribedDate,
       final List<Funding> funding,
+      @JsonKey(includeToJson: false, includeFromJson: false)
       final List<Season> seasons,
+      @JsonKey(includeToJson: false, includeFromJson: false)
       final List<Episode> episodes,
+      @JsonKey(includeToJson: false, includeFromJson: false)
       final List<Person> persons,
       final DateTime? lastUpdated,
       @JsonKey(includeToJson: false, includeFromJson: false)
@@ -639,12 +663,17 @@ abstract class _Podcast implements Podcast {
   @override
 
   /// One or more seasons for this podcast.
+// ignore: invalid_annotation_target
+  @JsonKey(includeToJson: false, includeFromJson: false)
   List<Season> get seasons;
   @override
 
   /// One or more episodes for this podcast.
+// ignore: invalid_annotation_target
+  @JsonKey(includeToJson: false, includeFromJson: false)
   List<Episode> get episodes;
-  @override
+  @override // ignore: invalid_annotation_target
+  @JsonKey(includeToJson: false, includeFromJson: false)
   List<Person> get persons;
   @override
 

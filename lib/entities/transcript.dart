@@ -38,7 +38,7 @@ class TranscriptUrl with _$TranscriptUrl {
 @freezed
 class Transcript with _$Transcript {
   const factory Transcript({
-    required int id,
+    int? id,
     required String guid,
     @Default(<Subtitle>[]) List<Subtitle> subtitles,
     @Default(false) bool filtered,

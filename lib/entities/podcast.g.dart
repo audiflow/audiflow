@@ -24,18 +24,6 @@ _$PodcastImpl _$$PodcastImplFromJson(Map<String, dynamic> json) =>
               ?.map((e) => Funding.fromJson(e as Map<String, dynamic>))
               .toList() ??
           const [],
-      seasons: (json['seasons'] as List<dynamic>?)
-              ?.map((e) => Season.fromJson(e as Map<String, dynamic>))
-              .toList() ??
-          const [],
-      episodes: (json['episodes'] as List<dynamic>?)
-              ?.map((e) => Episode.fromJson(e as Map<String, dynamic>))
-              .toList() ??
-          const [],
-      persons: (json['persons'] as List<dynamic>?)
-              ?.map((e) => Person.fromJson(e as Map<String, dynamic>))
-              .toList() ??
-          const [],
       lastUpdated: json['lastUpdated'] == null
           ? null
           : DateTime.parse(json['lastUpdated'] as String),
@@ -54,8 +42,5 @@ Map<String, dynamic> _$$PodcastImplToJson(_$PodcastImpl instance) =>
       'copyright': instance.copyright,
       'subscribedDate': instance.subscribedDate?.toIso8601String(),
       'funding': instance.funding,
-      'seasons': instance.seasons,
-      'episodes': instance.episodes,
-      'persons': instance.persons,
       'lastUpdated': instance.lastUpdated?.toIso8601String(),
     };

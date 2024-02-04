@@ -56,11 +56,20 @@ class Podcast with _$Podcast {
     @Default([]) List<Funding> funding,
 
     /// One or more seasons for this podcast.
-    @Default([]) List<Season> seasons,
+    // ignore: invalid_annotation_target
+    @JsonKey(includeToJson: false, includeFromJson: false)
+    @Default([])
+    List<Season> seasons,
 
     /// One or more episodes for this podcast.
-    @Default([]) List<Episode> episodes,
-    @Default([]) List<Person> persons,
+    // ignore: invalid_annotation_target
+    @JsonKey(includeToJson: false, includeFromJson: false)
+    @Default([])
+    List<Episode> episodes,
+    // ignore: invalid_annotation_target
+    @JsonKey(includeToJson: false, includeFromJson: false)
+    @Default([])
+    List<Person> persons,
 
     /// Date and time podcast was last updated/refreshed.
     DateTime? lastUpdated,
