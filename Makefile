@@ -19,9 +19,6 @@ rm-merged: list-merged confirm
 confirm:
 	@read -p "Proceed? [y/N] " ans && [ $${ans:-N} = y ]
 
-gen_options = \
-	--build-filter="lib/**/*.freezed.dart lib/**/*.g.dart"
-
 .PHONY: gen
 gen: ## Run Dart's code generator.
 gen:
@@ -30,7 +27,7 @@ gen:
 .PHONY: gen-watch
 gen-watch: ## Watch code to kick Dart's code generator.
 gen-watch:
-	flutter pub run build_runner watch --delete-conflicting-outputs $(gen_options)
+	flutter pub run build_runner watch --delete-conflicting-outputs
 
 .PHONY: gen-test
 gen-test: ## Run Dart's code generator under /test dir.
