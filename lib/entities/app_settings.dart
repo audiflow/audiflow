@@ -4,109 +4,71 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:seasoning/entities/search_providers.dart';
 
-class AppSettings {
-  /// The current theme name.
-  final String theme;
+part 'app_settings.freezed.dart';
+part 'app_settings.g.dart';
 
-  /// True if episodes are marked as played when deleted.
-  final bool markDeletedEpisodesAsPlayed;
+@freezed
+class AppSettings with _$AppSettings {
+  const factory AppSettings({
+    /// The current theme name.
+    required String theme,
 
-  /// True if downloads should be saved to the SD card.
-  final bool storeDownloadsSDCard;
+    /// True if episodes are marked as played when deleted.
+    required bool markDeletedEpisodesAsPlayed,
 
-  /// The default playback speed.
-  final double playbackSpeed;
+    /// True if downloads should be saved to the SD card.
+    required bool storeDownloadsSDCard,
 
-  /// The search provider: itunes or podcastindex.
-  final String? searchProvider;
+    /// The default playback speed.
+    required double playbackSpeed,
 
-  /// List of search providers: currently itunes or podcastindex.
-  final List<SearchProvider> searchProviders;
+    /// The search provider: itunes or podcastindex.
+    required String? searchProvider,
 
-  /// True if the user has confirmed dialog accepting funding links.
-  final bool externalLinkConsent;
+    /// List of search providers: currently itunes or podcastindex.
+    required List<SearchProvider> searchProviders,
 
-  /// If true the main player window will open as soon as an episode starts.
-  final bool autoOpenNowPlaying;
+    /// True if the user has confirmed dialog accepting funding links.
+    required bool externalLinkConsent,
 
-  /// If true the funding link icon will appear (if the podcast supports it).
-  final bool showFunding;
+    /// If true the main player window will open as soon as an episode starts.
+    required bool autoOpenNowPlaying,
 
-  /// If -1 never; 0 always; otherwise time in minutes.
-  final int autoUpdateEpisodePeriod;
+    /// If true the funding link icon will appear (if the podcast supports it).
+    required bool showFunding,
 
-  /// If true, silence in audio playback is trimmed. Currently Android only.
-  final bool trimSilence;
+    /// If -1 never; 0 always; otherwise time in minutes.
+    required int autoUpdateEpisodePeriod,
 
-  /// If true, volume is boosted. Currently Android only.
-  final bool volumeBoost;
+    /// If true, silence in audio playback is trimmed. Currently Android only.
+    required bool trimSilence,
 
-  /// If 0, list view; else grid view
-  final int layout;
+    /// If true, volume is boosted. Currently Android only.
+    required bool volumeBoost,
 
-  AppSettings({
-    required this.theme,
-    required this.markDeletedEpisodesAsPlayed,
-    required this.storeDownloadsSDCard,
-    required this.playbackSpeed,
-    required this.searchProvider,
-    required this.searchProviders,
-    required this.externalLinkConsent,
-    required this.autoOpenNowPlaying,
-    required this.showFunding,
-    required this.autoUpdateEpisodePeriod,
-    required this.trimSilence,
-    required this.volumeBoost,
-    required this.layout,
-  });
+    /// If 0, list view; else grid view
+    required int layout,
+  }) = _AppSettings;
 
-  AppSettings.sensibleDefaults()
-      : theme = 'dark',
-        markDeletedEpisodesAsPlayed = false,
-        storeDownloadsSDCard = false,
-        playbackSpeed = 1.0,
-        searchProvider = 'itunes',
-        searchProviders = <SearchProvider>[],
-        externalLinkConsent = false,
-        autoOpenNowPlaying = false,
-        showFunding = true,
-        autoUpdateEpisodePeriod = -1,
-        trimSilence = false,
-        volumeBoost = false,
-        layout = 0;
+  factory AppSettings.fromJson(Map<String, dynamic> json) =>
+      _$AppSettingsFromJson(json);
 
-  AppSettings copyWith({
-    String? theme,
-    bool? markDeletedEpisodesAsPlayed,
-    bool? storeDownloadsSDCard,
-    double? playbackSpeed,
-    String? searchProvider,
-    List<SearchProvider>? searchProviders,
-    bool? externalLinkConsent,
-    bool? autoOpenNowPlaying,
-    bool? showFunding,
-    int? autoUpdateEpisodePeriod,
-    bool? trimSilence,
-    bool? volumeBoost,
-    int? layout,
-  }) =>
-      AppSettings(
-        theme: theme ?? this.theme,
-        markDeletedEpisodesAsPlayed:
-            markDeletedEpisodesAsPlayed ?? this.markDeletedEpisodesAsPlayed,
-        storeDownloadsSDCard: storeDownloadsSDCard ?? this.storeDownloadsSDCard,
-        playbackSpeed: playbackSpeed ?? this.playbackSpeed,
-        searchProvider: searchProvider ?? this.searchProvider,
-        searchProviders: searchProviders ?? this.searchProviders,
-        externalLinkConsent: externalLinkConsent ?? this.externalLinkConsent,
-        autoOpenNowPlaying: autoOpenNowPlaying ?? this.autoOpenNowPlaying,
-        showFunding: showFunding ?? this.showFunding,
-        autoUpdateEpisodePeriod:
-            autoUpdateEpisodePeriod ?? this.autoUpdateEpisodePeriod,
-        trimSilence: trimSilence ?? this.trimSilence,
-        volumeBoost: volumeBoost ?? this.volumeBoost,
-        layout: layout ?? this.layout,
-      );
+
+// static AppSettings.sensibleDefaults()
+//     : theme = 'dark',
+//       markDeletedEpisodesAsPlayed = false,
+//       storeDownloadsSDCard = false,
+//       playbackSpeed = 1.0,
+//       searchProvider = 'itunes',
+//       searchProviders = <SearchProvider>[],
+//       externalLinkConsent = false,
+//       autoOpenNowPlaying = false,
+//       showFunding = true,
+//       autoUpdateEpisodePeriod = -1,
+//       trimSilence = false,
+//       volumeBoost = false,
+//       layout = 0;
 }
