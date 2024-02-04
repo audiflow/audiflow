@@ -4,34 +4,28 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+part 'sleep.freezed.dart';
+part 'sleep.g.dart';
+
 enum SleepType {
   none,
   time,
   episode,
 }
 
-final class Sleep {
-  final SleepType type;
-  final Duration duration;
-  late DateTime endTime;
+@freezed
+class Sleep with _$Sleep {
+  const factory Sleep({
+    required SleepType type,
+    @Default(Duration.zero) Duration duration,
+  }) = _Sleep;
 
-  Sleep({
-    required this.type,
-    this.duration = const Duration(milliseconds: 0),
-  }) {
-    endTime = DateTime.now().add(duration);
-  }
+  factory Sleep.fromJson(Map<String, dynamic> json) => _$SleepFromJson(json);
+}
 
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is Sleep &&
-          runtimeType == other.runtimeType &&
-          type == other.type &&
-          duration == other.duration;
-
-  @override
-  int get hashCode => type.hashCode ^ duration.hashCode;
-
-  Duration get timeRemaining => endTime.difference(DateTime.now());
+extension SleepExt on Sleep {
+  // Custom getter to calculate endTime based on current time and duration
+  DateTime get endTime => DateTime.now().add(duration);
 }
