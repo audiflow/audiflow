@@ -16,6 +16,7 @@ import 'package:seasoning/entities/transcript.dart';
 import 'package:seasoning/repository/repository.dart';
 import 'package:seasoning/repository/sembast/sembast_database_service.dart';
 import 'package:seasoning/state/episode_state.dart';
+import 'package:seasoning/state/season_state.dart';
 import 'package:sembast/sembast.dart';
 
 /// An implementation of [Repository] that is backed by
@@ -41,6 +42,7 @@ class SembastRepository extends Repository {
   final log = Logger('SembastRepository');
 
   final _podcastSubject = BehaviorSubject<Podcast>();
+  final _seasonSubject = BehaviorSubject<SeasonState>();
   final _episodeSubject = BehaviorSubject<EpisodeState>();
 
   final _podcastStore = intMapStoreFactory.store('podcast');
@@ -180,6 +182,7 @@ class SembastRepository extends Repository {
         for (final season in chunk) {
           final finder = Finder(filter: Filter.byKey(season.id));
           futures.add(_seasonStore.delete(txn, finder: finder));
+          _seasonSubject.add(SeasonDeleteState(season));
         }
         await Future.wait(futures);
       });
@@ -279,9 +282,9 @@ class SembastRepository extends Repository {
 
   @override
   Future<Episode> saveEpisode(
-    Episode episode, [
+    Episode episode, {
     bool updateIfSame = false,
-  ]) async {
+  }) async {
     final e = await _saveEpisode(episode, updateIfSame);
     _episodeSubject.add(EpisodeUpdateState(e));
 
@@ -433,9 +436,11 @@ class SembastRepository extends Repository {
     for (final chunk in seasons.chunk(100)) {
       await d.transaction((txn) async {
         final futures = <Future<int>>[];
+        final newSeasons = <Season>[];
         for (final season in chunk) {
           if (season.id == null) {
             futures.add(_seasonStore.add(txn, season.toJson()));
+            newSeasons.add(season);
           } else {
             final finder = Finder(filter: Filter.byKey(season.id));
             final existingSeason = await findSeasonById(season.id!);
@@ -443,12 +448,17 @@ class SembastRepository extends Repository {
               futures.add(
                 _seasonStore.update(txn, season.toJson(), finder: finder),
               );
+              newSeasons.add(season);
             }
           }
         }
 
         if (futures.isNotEmpty) {
-          await Future.wait(futures);
+          final ids = await Future.wait(futures);
+          for (var i = 0; i < ids.length; i++) {
+            newSeasons[i] = newSeasons[i].copyWith(id: ids[i]);
+            _seasonSubject.add(SeasonUpdateState(newSeasons[i]));
+          }
         }
       });
     }
@@ -644,6 +654,9 @@ class SembastRepository extends Repository {
 
   @override
   Stream<EpisodeState> get episodeListener => _episodeSubject.stream;
+
+  @override
+  Stream<SeasonState> get seasonListener => _seasonSubject.stream;
 
   @override
   Stream<Podcast> get podcastListener => _podcastSubject.stream;

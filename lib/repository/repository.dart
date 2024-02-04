@@ -9,6 +9,7 @@ import 'package:seasoning/entities/podcast.dart';
 import 'package:seasoning/entities/season.dart';
 import 'package:seasoning/entities/transcript.dart';
 import 'package:seasoning/state/episode_state.dart';
+import 'package:seasoning/state/season_state.dart';
 
 /// An abstract class that represent the actions supported by the chosen
 /// database or storage implementation.
@@ -47,7 +48,7 @@ abstract class Repository {
 
   Future<Episode?> findEpisodeByTaskId(String taskId);
 
-  Future<Episode> saveEpisode(Episode episode, [bool updateIfSame = false]);
+  Future<Episode> saveEpisode(Episode episode, {bool updateIfSame = false});
 
   Future<void> deleteEpisode(Episode episode);
 
@@ -71,6 +72,9 @@ abstract class Repository {
   Future<List<Episode>> loadQueue();
 
   /// Event listeners
-  Stream<Podcast>? podcastListener;
-  Stream<EpisodeState>? episodeListener;
+  Stream<Podcast> get podcastListener;
+
+  Stream<SeasonState> get seasonListener;
+
+  Stream<EpisodeState> get episodeListener;
 }
