@@ -4,34 +4,24 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:seasoning/core/extensions.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+part 'funding.freezed.dart';
+part 'funding.g.dart';
 
 /// part of a [Podcast].
 ///
 /// Part of the [podcast namespace](https://github.com/Podcastindex-org/podcast-namespace)
-class Funding {
-  /// The URL to the funding/donation/information page.
-  final String url;
-
-  /// The label for the link which will be presented to the user.
-  final String value;
-
-  Funding({
+@freezed
+class Funding with _$Funding {
+  const factory Funding({
+    /// The URL to the funding/donation/information page.
     required String url,
-    required this.value,
-  }) : url = url.forceHttps;
 
-  Map<String, dynamic> toMap() {
-    return <String, dynamic>{
-      'url': url,
-      'value': value,
-    };
-  }
+    /// The label for the link which will be presented to the user.
+    required String value,
+  }) = _Funding;
 
-  static Funding fromMap(Map<String, dynamic> chapter) {
-    return Funding(
-      url: chapter['url'] as String,
-      value: chapter['value'] as String,
-    );
-  }
+  factory Funding.fromJson(Map<String, dynamic> json) =>
+      _$FundingFromJson(json);
 }
