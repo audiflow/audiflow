@@ -6,15 +6,18 @@
 
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/intl.dart';
+import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
+import 'package:seasoning/entities/chapter.dart';
 import 'package:seasoning/entities/downloadable.dart';
 import 'package:seasoning/entities/episode.dart';
+import 'package:seasoning/entities/person.dart';
 import 'package:seasoning/entities/podcast.dart';
 import 'package:seasoning/entities/transcript.dart';
 import 'package:seasoning/repository/repository.dart';
 import 'package:seasoning/repository/sembast/sembast_repository.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter_test/flutter_test.dart';
-import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 
 import '../mocks/mock_path_provider.dart';
 
@@ -29,28 +32,31 @@ void main() {
   setUp(() async {
     mockPath = MockPathProvder();
     PathProviderPlatform.instance = mockPath;
-    persistenceService = SembastRepository(cleanup: false);
+    persistenceService = SembastRepository(cleanup: true);
 
-    podcast1 = Podcast(
-        title: 'Podcast 1',
-        description: '1st podcast',
-        guid: 'http://p1.com',
-        link: 'http://p1.com',
-        url: 'http://p1.com');
+    podcast1 = const Podcast(
+      title: 'Podcast 1',
+      description: '1st podcast',
+      guid: 'http://p1.com',
+      link: 'http://p1.com',
+      url: 'http://p1.com',
+    );
 
-    podcast2 = Podcast(
-        title: 'Podcast 2',
-        description: '2nd podcast',
-        guid: 'http://p2.com',
-        link: 'http://p2.com',
-        url: 'http://p2.com');
+    podcast2 = const Podcast(
+      title: 'Podcast 2',
+      description: '2nd podcast',
+      guid: 'http://p2.com',
+      link: 'http://p2.com',
+      url: 'http://p2.com',
+    );
 
-    podcast3 = Podcast(
-        title: 'Podcast 3',
-        description: '3rd podcast',
-        guid: 'http://p3.com',
-        link: 'http://p3.com',
-        url: 'http://p3.com');
+    podcast3 = const Podcast(
+      title: 'Podcast 3',
+      description: '3rd podcast',
+      guid: 'http://p3.com',
+      link: 'http://p3.com',
+      url: 'http://p3.com',
+    );
   });
 
   tearDown(() async {
@@ -60,15 +66,89 @@ void main() {
 
     persistenceService = null;
 
-    var f = File('${Directory.systemTemp.path}/anytime.db');
+    final f = File('${Directory.systemTemp.path}/seasoning.db');
 
     if (f.existsSync()) {
       f.deleteSync();
     }
   });
 
+  final numberFormat = NumberFormat('000');
+
+  List<Episode> createEpisodeMocks(Podcast podcast, int count) {
+    return Iterable<int>.generate(count)
+        .map(
+          (i) => Episode(
+        pguid: podcast.guid,
+        podcast: podcast.title,
+        guid: 'EP${numberFormat.format(i + 1)}',
+        title: 'Title ${i + 1}',
+        description: 'desc ${i + 1}',
+        imageUrl: 'http://example.com/image.jpg',
+        thumbImageUrl: 'http://example.com/thumb.jpg',
+        publicationDate: DateTime.now(),
+      ),
+    )
+        .toList();
+  }
+
+  Episode createEpisodeMock(
+      Podcast podcast, {
+        int? id,
+        String? pguid,
+        required String guid,
+        String? filepath,
+        String? filename,
+        required String title,
+        String description = 'desc',
+        String? content,
+        String? link,
+        String imageUrl = 'http://example.com/image.jpg',
+        String thumbImageUrl = 'http://example.com/thumb.jpg',
+        DateTime? publicationDate,
+        String? contentUrl,
+        String? author,
+        int? season,
+        int? episode,
+        int duration = 0,
+        int position = 0,
+        bool played = false,
+        String? chaptersUrl,
+        List<Chapter> chapters = const [],
+        int? chapterIndex,
+        Chapter? currentChapter,
+        List<TranscriptUrl> transcriptUrls = const [],
+        List<Person> persons = const [],
+        Transcript? transcript,
+        int? transcriptId,
+        DateTime? lastUpdated,
+        String? parsedDescriptionText,
+        String? downloadTaskId,
+        DownloadState downloadState = DownloadState.none,
+        int downloadPercentage = 0,
+        bool chaptersLoading = false,
+        bool highlight = false,
+        bool queued = false,
+        bool streaming = true,
+      }) {
+    return Episode(
+      id: id,
+      guid: guid,
+      pguid: pguid ?? podcast.guid,
+      podcast: podcast.title,
+      title: title,
+      description: description,
+      content: content,
+      link: link,
+      imageUrl: imageUrl,
+      thumbImageUrl: thumbImageUrl,
+      publicationDate: publicationDate,
+      contentUrl: contentUrl,
+    );
+  }
+
   test('Fetch podcast with non-existent ID', () async {
-    var result = await persistenceService!.findPodcastById(123);
+    final result = await persistenceService!.findPodcastById(123);
 
     expect(result, null);
   });
@@ -77,65 +157,32 @@ void main() {
   /// episodes. Ensure that data fetched is equal to the data originally
   /// stored.
   group('Podcast creation and retrieval', () {
-    test('Create and save a single Podcast without episodes', () async {
-      await persistenceService!.savePodcast(podcast1);
+    test(
+      'Create and save a single Podcast without episodes',
+      () async {
+        final saved = await persistenceService!.savePodcast(podcast1);
 
-      expect(true, podcast1.id! > 0);
-    }, skip: false);
+        expect(0 < (saved.id ?? 0), true);
+      },
+    );
 
     test('Create and save a single Podcast with episodes', () async {
-      podcast2.episodes = <Episode>[
-        Episode(
-            guid: 'EP001',
-            title: 'Episode 1',
-            pguid: podcast2.guid,
-            podcast: podcast2.title),
-        Episode(
-            guid: 'EP002',
-            title: 'Episode 2',
-            pguid: podcast2.guid,
-            podcast: podcast2.title),
-        Episode(
-            guid: 'EP003',
-            title: 'Episode 3',
-            pguid: podcast2.guid,
-            podcast: podcast2.title),
-      ];
+      podcast2 = podcast2.copyWith(episodes: createEpisodeMocks(podcast2, 3));
 
       podcast2 = await persistenceService!.savePodcast(podcast2);
 
-      var result = (podcast2.id ?? 0) > 0;
-
-      expect(result, true);
-      expect(podcast2.episodes.isNotEmpty, true);
+      expect(0 < (podcast2.id ?? 0), true);
+      expect(podcast2.episodes.length, 3);
     });
 
     test('Create and save a single Podcast & attach episodes later', () async {
       podcast3 = await persistenceService!.savePodcast(podcast3);
-      var result = (podcast3.id ?? 0) > 0;
-      var previousId = podcast3.id;
+      final previousId = podcast3.id;
 
-      expect(result, true);
+      expect(0 < (podcast3.id ?? 0), true);
       expect(podcast3.episodes.isEmpty, true);
 
-      podcast3.episodes = <Episode>[
-        Episode(
-            guid: 'EP001',
-            title: 'Episode 1',
-            pguid: podcast3.guid,
-            podcast: podcast3.title),
-        Episode(
-            guid: 'EP002',
-            title: 'Episode 2',
-            pguid: podcast3.guid,
-            podcast: podcast3.title),
-        Episode(
-            guid: 'EP003',
-            title: 'Episode 3',
-            pguid: podcast3.guid,
-            podcast: podcast3.title),
-      ];
-
+      podcast3 = podcast3.copyWith(episodes: createEpisodeMocks(podcast2, 3));
       await persistenceService!.savePodcast(podcast3);
 
       expect(podcast3.id ?? 0, previousId);
@@ -143,96 +190,77 @@ void main() {
     });
 
     test('Retrieve an existing Podcast without episodes', () async {
-      var podcast1 = Podcast(
-          title: 'Podcast 1B',
-          description: '1st podcast',
-          guid: 'http://p1.com',
-          link: 'http://p1.com',
-          url: 'http://p1.com');
+      const podcast1 = Podcast(
+        title: 'Podcast 1B',
+        description: '1st podcast',
+        guid: 'http://p1.com',
+        link: 'http://p1.com',
+        url: 'http://p1.com',
+      );
 
-      await persistenceService!.savePodcast(podcast1);
+      final saved = await persistenceService!.savePodcast(podcast1);
 
-      expect((podcast1.id! > 0), true);
+      expect(0 < (saved.id ?? 0), true);
 
-      var podcast = await persistenceService!.findPodcastById(podcast1.id!);
+      final loaded = await persistenceService!.findPodcastById(saved.id!);
 
-      expect(podcast == podcast1, true);
+      expect(loaded == saved, true);
     });
 
     test('Retrieve an existing Podcast with episodes', () async {
-      var podcast3 = Podcast(
-          title: 'Podcast 3',
-          description: '3rd podcast',
-          guid: 'http://p3.com',
-          link: 'http://p3.com',
-          url: 'http://p3.com');
-
-      podcast3.episodes = <Episode>[
-        Episode(
-            guid: 'EP001',
-            title: 'Episode 1',
-            pguid: podcast3.guid,
-            podcast: podcast3.title,
-            publicationDate: DateTime.now()),
-        Episode(
-            guid: 'EP002',
-            title: 'Episode 2',
-            pguid: podcast3.guid,
-            podcast: podcast3.title,
-            publicationDate: DateTime.now()),
-        Episode(
-            guid: 'EP003',
-            title: 'Episode 3',
-            pguid: podcast3.guid,
-            podcast: podcast3.title,
-            publicationDate: DateTime.now()),
-      ];
-
-      await persistenceService!.savePodcast(podcast3);
-
-      var podcast = (await persistenceService!.findPodcastById(podcast3.id!))!;
-
-      expect(podcast == podcast3, true);
-
-      expect(listEquals(podcast.episodes, podcast3.episodes), true);
+      var podcast3 = const Podcast(
+        title: 'Podcast 3',
+        description: '3rd podcast',
+        guid: 'http://p3.com',
+        link: 'http://p3.com',
+        url: 'http://p3.com',
+      );
+      podcast3 = podcast3.copyWith(episodes: createEpisodeMocks(podcast3, 3));
+      final saved = await persistenceService!.savePodcast(podcast3);
+      final loaded = (await persistenceService!.findPodcastById(saved.id!))!;
+      expect(loaded == saved, true);
+      expect(listEquals(loaded.episodes, saved.episodes), true);
 
       // Retrieve same Podcast via GUID and test it is still the same.
-      var podcastByGuid =
-          await persistenceService!.findPodcastByGuid(podcast3.guid!);
+      final podcastByGuid =
+          await persistenceService!.findPodcastByGuid(saved.guid);
 
-      expect(podcastByGuid == podcast3, true);
-      expect(listEquals(podcast.episodes, podcast3.episodes), true);
+      expect(podcastByGuid == saved, true);
+      expect(listEquals(loaded.episodes, saved.episodes), true);
     });
 
     test('Retrieve an existing Podcast with episodes and update episodes',
         () async {
-      var podcast4 = Podcast(
-          title: 'Podcast 3',
-          description: '3rd podcast',
-          guid: 'http://p3.com',
-          link: 'http://p3.com',
-          url: 'http://p3.com');
+      var podcast4 = const Podcast(
+        title: 'Podcast 3',
+        description: '3rd podcast',
+        guid: 'http://p3.com',
+        link: 'http://p3.com',
+        url: 'http://p3.com',
+      );
 
-      podcast4.episodes = <Episode>[
-        Episode(
+      podcast4 = podcast4.copyWith(
+        episodes: <Episode>[
+          createEpisodeMock(
+            podcast4,
             guid: 'EP001',
             title: 'Episode 1',
-            pguid: podcast4.guid,
-            podcast: podcast4.title,
-            publicationDate: DateTime.now()),
-        Episode(
+            publicationDate: DateTime.now(),
+          ),
+          createEpisodeMock(
+            podcast4,
             guid: 'EP002',
             title: 'Episode 2',
-            pguid: podcast4.guid,
-            podcast: podcast4.title,
-            publicationDate: DateTime.now()),
-        Episode(
+            publicationDate: DateTime.now(),
+          ),
+          createEpisodeMock(
+            podcast4,
             guid: 'EP003',
             title: 'Episode 3',
-            pguid: podcast4.guid,
-            podcast: podcast4.title,
-            publicationDate: DateTime.now()),
-      ];
+            publicationDate: DateTime.now(),
+          ),
+        ],
+      );
 
       await persistenceService!.savePodcast(podcast4);
 
@@ -245,9 +273,9 @@ void main() {
       expect(true, podcast.episodes.length == 3);
 
       // Mark all as played
-      podcast.episodes[0].played = true;
-      podcast.episodes[1].played = true;
-      podcast.episodes[2].played = true;
+      podcast.episodes[0] = podcast.episodes[0].copyWith(played: true);
+      podcast.episodes[1] = podcast.episodes[1].copyWith(played: true);
+      podcast.episodes[2] = podcast.episodes[2].copyWith(played: true);
 
       await persistenceService!.savePodcast(podcast);
 
@@ -262,23 +290,25 @@ void main() {
 
   group('Multiple Podcast subscription handling', () {
     test('Subscribe to 3 podcasts; one with episodes', () async {
-      podcast2.episodes = <Episode>[
-        Episode(
+      podcast2 = podcast2.copyWith(
+        episodes: <Episode>[
+          createEpisodeMock(
+            podcast2,
             guid: 'EP001',
             title: 'Episode 1',
-            pguid: podcast2.guid,
-            podcast: podcast2.title),
-        Episode(
+          ),
+          createEpisodeMock(
+            podcast2,
             guid: 'EP002',
             title: 'Episode 2',
-            pguid: podcast2.guid,
-            podcast: podcast2.title),
-        Episode(
+          ),
+          createEpisodeMock(
+            podcast2,
             guid: 'EP003',
             title: 'Episode 3',
-            pguid: podcast2.guid,
-            podcast: podcast2.title),
-      ];
+          ),
+        ],
+      );
 
       await persistenceService!.savePodcast(podcast1);
 
@@ -292,29 +322,31 @@ void main() {
       results = await persistenceService!.subscriptions();
 
       expect(
-          listEquals(results, [
-            podcast1,
-            podcast2,
-            podcast3,
-          ]),
-          true);
+        listEquals(results, [
+          podcast1,
+          podcast2,
+          podcast3,
+        ]),
+        true,
+      );
 
       await persistenceService!.deletePodcast(podcast2);
 
       results = await persistenceService!.subscriptions();
 
       expect(
-          listEquals(results, [
-            podcast1,
-            podcast3,
-          ]),
-          true);
+        listEquals(results, [
+          podcast1,
+          podcast3,
+        ]),
+        true,
+      );
     });
 
     test('Podcast stream', () async {
       await persistenceService!.savePodcast(podcast1);
 
-      persistenceService!.podcastListener!.listen(
+      persistenceService!.podcastListener.listen(
         expectAsync1(
           (event) {
             expect(event, podcast1);
@@ -324,16 +356,17 @@ void main() {
     });
 
     test('Episode stream', () async {
-      var episode = Episode(
-          guid: 'EP001',
-          title: 'Episode 1',
-          pguid: podcast2.guid,
-          podcast: podcast2.title,
-          publicationDate: DateTime.now());
+      final episode = createEpisodeMock(
+        podcast2,
+        guid: 'EP001',
+        title: 'Episode 1',
+        publicationDate: DateTime.now(),
+        description: '',
+      );
 
       await persistenceService!.saveEpisode(episode);
 
-      persistenceService!.episodeListener!.listen(
+      persistenceService!.episodeListener.listen(
         expectAsync1(
           (event) {
             expect(event.episode, episode);
@@ -345,28 +378,30 @@ void main() {
 
   group('Saving, updating and retrieving episodes', () {
     test('Subscribe to podcasts and retrieve', () async {
-      podcast2.episodes = <Episode>[
-        Episode(
+      podcast2 = podcast2.copyWith(
+        episodes: <Episode>[
+          createEpisodeMock(
+            podcast2,
             guid: 'EP001',
             title: 'Episode 1',
-            pguid: podcast2.guid,
-            podcast: podcast2.title,
-            publicationDate: DateTime.now()),
-        Episode(
+            publicationDate: DateTime.now(),
+          ),
+          createEpisodeMock(
+            podcast2,
             guid: 'EP002',
             title: 'Episode 2',
-            pguid: podcast2.guid,
-            podcast: podcast2.title,
-            publicationDate: DateTime.now()),
-        Episode(
+            publicationDate: DateTime.now(),
+          ),
+          createEpisodeMock(
+            podcast2,
             guid: 'EP003',
             title: 'Episode 3',
-            pguid: podcast2.guid,
-            podcast: podcast2.title,
-            publicationDate: DateTime.now()),
-      ];
+            publicationDate: DateTime.now(),
+          ),
+        ],
+      );
 
-      var episode2 = podcast2.episodes[1];
+      final episode2 = podcast2.episodes[1];
 
       expect(episode2.id == null, true);
 
@@ -374,17 +409,17 @@ void main() {
       await persistenceService!.savePodcast(podcast2);
       await persistenceService!.savePodcast(podcast3);
 
-      var podcast =
-          (await persistenceService!.findPodcastByGuid(podcast2.guid!))!;
+      final podcast =
+          (await persistenceService!.findPodcastByGuid(podcast2.guid))!;
 
       expect(listEquals(podcast2.episodes, podcast.episodes), true);
 
-      var episode =
+      final episode =
           await persistenceService!.findEpisodeByGuid(podcast.episodes[1].guid);
 
       expect(episode == episode2, true);
 
-      var episodeById =
+      final episodeById =
           await persistenceService!.findEpisodeById(podcast.episodes[1].id!);
 
       expect(episode == episodeById, true);
@@ -393,74 +428,80 @@ void main() {
     });
 
     test('Fetch all episodes for all podcasts', () async {
-      podcast1.episodes = <Episode>[
-        Episode(
+      podcast1 = podcast1.copyWith(
+        episodes: <Episode>[
+          createEpisodeMock(
+            podcast1,
             guid: 'P01EP001',
             title: 'Episode 1',
-            pguid: podcast1.guid,
-            podcast: podcast1.title,
-            publicationDate: DateTime.now()),
-        Episode(
+            publicationDate: DateTime.now(),
+          ),
+          createEpisodeMock(
+            podcast1,
             guid: 'P01EP002',
             title: 'Episode 2',
-            pguid: podcast1.guid,
-            podcast: podcast1.title,
-            publicationDate: DateTime.now()),
-        Episode(
+            publicationDate: DateTime.now(),
+          ),
+          createEpisodeMock(
+            podcast1,
             guid: 'P01EP003',
             title: 'Episode 3',
-            pguid: podcast1.guid,
-            podcast: podcast1.title,
-            publicationDate: DateTime.now()),
-      ];
+            publicationDate: DateTime.now(),
+          ),
+        ],
+      );
 
-      podcast2.episodes = <Episode>[
-        Episode(
+      podcast2 = podcast2.copyWith(
+        episodes: <Episode>[
+          createEpisodeMock(
+            podcast2,
             guid: 'P02EP001',
             title: 'Episode 1',
-            pguid: podcast2.guid,
-            podcast: podcast2.title,
-            publicationDate: DateTime.now()),
-        Episode(
+            publicationDate: DateTime.now(),
+          ),
+          createEpisodeMock(
+            podcast2,
             guid: 'P02EP002',
             title: 'Episode 2',
-            pguid: podcast2.guid,
-            podcast: podcast2.title,
-            publicationDate: DateTime.now()),
-        Episode(
+            publicationDate: DateTime.now(),
+          ),
+          createEpisodeMock(
+            podcast2,
             guid: 'P02EP003',
             title: 'Episode 3',
-            pguid: podcast2.guid,
-            podcast: podcast2.title,
-            publicationDate: DateTime.now()),
-      ];
+            publicationDate: DateTime.now(),
+          ),
+        ],
+      );
 
       await persistenceService!.savePodcast(podcast1);
       await persistenceService!.savePodcast(podcast2);
 
-      var episodes = await persistenceService!.findAllEpisodes();
+      final episodes = await persistenceService!.findAllEpisodes();
 
       expect(episodes.length, 6);
     });
 
     test('Delete all episodes for a podcast', () async {
       /// Save > 100 episodes (to test chunking)
-      var episodes = <Episode>[];
+      final episodes = <Episode>[];
 
       for (var x = 0; x < 150; x++) {
-        episodes.add(Episode(
+        episodes.add(
+          createEpisodeMock(
+            podcast1,
             guid: 'P01EP$x',
             title: 'Episode $x',
-            pguid: podcast1.guid,
-            podcast: podcast1.title,
-            publicationDate: DateTime.now()));
+            publicationDate: DateTime.now(),
+          ),
+        );
       }
 
-      podcast1.episodes = episodes;
+      podcast1.episodes.addAll(episodes);
 
       await persistenceService!.savePodcast(podcast1);
 
-      var e = await persistenceService!.findAllEpisodes();
+      final e = await persistenceService!.findAllEpisodes();
 
       expect(e.length, 150);
 
@@ -468,100 +509,97 @@ void main() {
     });
 
     test('Queue handling - existing episodes', () async {
-      var p1e1 = Episode(
-          guid: 'P01EP01',
-          title: 'Episode 1',
-          pguid: podcast1.guid,
-          podcast: podcast1.title,
-          publicationDate: DateTime.now());
+      final p1e1 = createEpisodeMock(
+        podcast1,
+        guid: 'P01EP01',
+        title: 'Episode 1',
+        publicationDate: DateTime.now(),
+      );
 
-      var p1e2 = Episode(
-          guid: 'P01EP02',
-          title: 'Episode 2',
-          pguid: podcast1.guid,
-          podcast: podcast1.title,
-          publicationDate: DateTime.now());
+      final p1e2 = createEpisodeMock(
+        podcast1,
+        guid: 'P01EP02',
+        title: 'Episode 2',
+        publicationDate: DateTime.now(),
+      );
 
-      var p2e1 = Episode(
-          guid: 'P02EP01',
-          title: 'Episode 1',
-          pguid: podcast1.guid,
-          podcast: podcast1.title,
-          publicationDate: DateTime.now());
+      final p2e1 = createEpisodeMock(
+        podcast1,
+        guid: 'P02EP01',
+        title: 'Episode 1',
+        publicationDate: DateTime.now(),
+      );
 
-      var p2e2 = Episode(
-          guid: 'P02EP02',
-          title: 'Episode 2',
-          pguid: podcast1.guid,
-          podcast: podcast1.title,
-          publicationDate: DateTime.now());
+      final p2e2 = createEpisodeMock(
+        podcast1,
+        guid: 'P02EP02',
+        title: 'Episode 2',
+        publicationDate: DateTime.now(),
+      );
 
-      podcast1.episodes = [p1e1, p1e2];
-      podcast2.episodes = [p2e1, p2e2];
+      podcast1.episodes.addAll([p1e1, p1e2]);
+      podcast2.episodes.addAll([p2e1, p2e2]);
 
       await persistenceService!.savePodcast(podcast1);
       await persistenceService!.savePodcast(podcast2);
 
-      var queue = <Episode>[p1e1, p1e2, p2e1, p2e2];
+      final queue = <Episode>[p1e1, p1e2, p2e1, p2e2];
 
       await persistenceService!.saveQueue(queue);
 
-      var fetchedQueue = await persistenceService!.loadQueue();
+      final fetchedQueue = await persistenceService!.loadQueue();
 
       expect(listEquals(queue, fetchedQueue), true);
     });
 
     test('Queue handling - ad-hoc episodes', () async {
-      var p1e1 = Episode(
+      final p1e1 = createEpisodeMock(
+        podcast1,
         guid: 'P01EP01',
         title: 'Episode 1',
-        pguid: podcast1.guid,
-        podcast: podcast1.title,
         publicationDate: DateTime.now(),
       );
 
-      var p1e2 = Episode(
-          guid: 'P01EP02',
-          title: 'Episode 2',
-          pguid: podcast1.guid,
-          podcast: podcast1.title,
-          publicationDate: DateTime.now());
+      final p1e2 = createEpisodeMock(
+        podcast1,
+        guid: 'P01EP02',
+        title: 'Episode 2',
+        publicationDate: DateTime.now(),
+      );
 
-      var p2e1 = Episode(
+      final p2e1 = createEpisodeMock(
+        podcast1,
         guid: 'P02EP01',
         title: 'Episode 1',
-        pguid: podcast1.guid,
-        podcast: podcast1.title,
         publicationDate: DateTime.now(),
       );
 
-      var p2e2 = Episode(
+      final p2e2 = createEpisodeMock(
+        podcast1,
         guid: 'P02EP02',
         title: 'Episode 2',
-        pguid: podcast1.guid,
-        podcast: podcast1.title,
         publicationDate: DateTime.now(),
       );
 
-      var adhoc = Episode(
+      final adhoc = createEpisodeMock(
+        podcast1,
         pguid: '',
         guid: 'A01EP01',
         title: 'Episode 1',
-        podcast: podcast1.title,
         publicationDate: DateTime.now(),
       );
 
-      podcast1.episodes = [p1e1, p1e2];
-      podcast2.episodes = [p2e1, p2e2];
+      podcast1.episodes.addAll([p1e1, p1e2]);
+      podcast2.episodes.addAll([p2e1, p2e2]);
 
       await persistenceService!.savePodcast(podcast1);
       await persistenceService!.savePodcast(podcast2);
 
-      var queue = <Episode>[p1e1, p1e2, p2e1, p2e2, adhoc];
+      final queue = <Episode>[p1e1, p1e2, p2e1, p2e2, adhoc];
 
       await persistenceService!.saveQueue(queue);
 
-      var fetchedQueue = await persistenceService!.loadQueue();
+      final fetchedQueue = await persistenceService!.loadQueue();
 
       expect(listEquals(queue, fetchedQueue), true);
     });
@@ -569,76 +607,78 @@ void main() {
 
   group('Saving, updating and retrieving downloaded episodes', () {
     test('Episodes ordered by reverse publication-date', () async {
-      var pubDate5 = DateTime.now();
-      var pubDate4 = DateTime.now().subtract(const Duration(days: 1));
-      var pubDate3 = DateTime.now().subtract(const Duration(days: 2));
-      var pubDate2 = DateTime.now().subtract(const Duration(days: 3));
-      var pubDate1 = DateTime.now().subtract(const Duration(days: 4));
+      final pubDate5 = DateTime.now();
+      final pubDate4 = DateTime.now().subtract(const Duration(days: 1));
+      final pubDate3 = DateTime.now().subtract(const Duration(days: 2));
+      final pubDate2 = DateTime.now().subtract(const Duration(days: 3));
+      final pubDate1 = DateTime.now().subtract(const Duration(days: 4));
 
-      podcast1.episodes = <Episode>[
-        Episode(
+      podcast1 = podcast1.copyWith(
+        episodes: <Episode>[
+          createEpisodeMock(
+            podcast1,
             guid: 'EP001',
             title: 'Episode 1',
-            pguid: podcast1.guid,
-            podcast: podcast1.title,
-            publicationDate: pubDate1),
-        Episode(
+            publicationDate: pubDate1,
+          ),
+          createEpisodeMock(
+            podcast1,
             guid: 'EP002',
             title: 'Episode 2',
-            pguid: podcast1.guid,
-            podcast: podcast1.title,
-            publicationDate: pubDate2),
-        Episode(
+            publicationDate: pubDate2,
+          ),
+          createEpisodeMock(
+            podcast1,
             guid: 'EP005',
             title: 'Episode 5',
-            pguid: podcast1.guid,
-            podcast: podcast1.title,
-            publicationDate: pubDate5),
-        Episode(
+            publicationDate: pubDate5,
+          ),
+          createEpisodeMock(
+            podcast1,
             guid: 'EP004',
             title: 'Episode 4',
-            pguid: podcast1.guid,
-            podcast: podcast1.title,
-            publicationDate: pubDate4),
-        Episode(
+            publicationDate: pubDate4,
+          ),
+          createEpisodeMock(
+            podcast1,
             guid: 'EP003',
             title: 'Episode 3',
-            pguid: podcast1.guid,
-            podcast: podcast1.title,
-            publicationDate: pubDate3),
-      ];
+            publicationDate: pubDate3,
+          ),
+        ],
+      );
 
-      var orderedEpisodes = <Episode>[
-        Episode(
-            guid: 'EP005',
-            title: 'Episode 5',
-            pguid: podcast1.guid,
-            podcast: podcast1.title,
-            publicationDate: pubDate5),
-        Episode(
-            guid: 'EP004',
-            title: 'Episode 4',
-            pguid: podcast1.guid,
-            podcast: podcast1.title,
-            publicationDate: pubDate4),
-        Episode(
-            guid: 'EP003',
-            title: 'Episode 3',
-            pguid: podcast1.guid,
-            podcast: podcast1.title,
-            publicationDate: pubDate3),
-        Episode(
-            guid: 'EP002',
-            title: 'Episode 2',
-            pguid: podcast1.guid,
-            podcast: podcast1.title,
-            publicationDate: pubDate2),
-        Episode(
-            guid: 'EP001',
-            title: 'Episode 1',
-            pguid: podcast1.guid,
-            podcast: podcast1.title,
-            publicationDate: pubDate1),
+      final orderedEpisodes = <Episode>[
+        createEpisodeMock(
+          podcast1,
+          guid: 'EP005',
+          title: 'Episode 5',
+          publicationDate: pubDate5,
+        ),
+        createEpisodeMock(
+          podcast1,
+          guid: 'EP004',
+          title: 'Episode 4',
+          publicationDate: pubDate4,
+        ),
+        createEpisodeMock(
+          podcast1,
+          guid: 'EP003',
+          title: 'Episode 3',
+          publicationDate: pubDate3,
+        ),
+        createEpisodeMock(
+          podcast1,
+          guid: 'EP002',
+          title: 'Episode 2',
+          publicationDate: pubDate2,
+        ),
+        createEpisodeMock(
+          podcast1,
+          guid: 'EP001',
+          title: 'Episode 1',
+          publicationDate: pubDate1,
+        ),
       ];
 
       await persistenceService!.savePodcast(podcast1);
@@ -646,58 +686,60 @@ void main() {
       await persistenceService!.savePodcast(podcast3);
 
       // Episodes should be returned in reverse publication-date order.
-      var episodes =
-          await persistenceService!.findEpisodesByPodcastGuid(podcast1.guid!);
+      final episodes =
+          await persistenceService!.findEpisodesByPodcastGuid(podcast1.guid);
 
       expect(listEquals(episodes, orderedEpisodes), true);
     });
 
     test('Fetch downloaded episodes', () async {
-      var pubDate5 = DateTime.now();
-      var pubDate4 = DateTime.now().subtract(const Duration(days: 1));
-      var pubDate3 = DateTime.now().subtract(const Duration(days: 2));
-      var pubDate2 = DateTime.now().subtract(const Duration(days: 3));
-      var pubDate1 = DateTime.now().subtract(const Duration(days: 4));
+      final pubDate5 = DateTime.now();
+      final pubDate4 = DateTime.now().subtract(const Duration(days: 1));
+      final pubDate3 = DateTime.now().subtract(const Duration(days: 2));
+      final pubDate2 = DateTime.now().subtract(const Duration(days: 3));
+      final pubDate1 = DateTime.now().subtract(const Duration(days: 4));
 
-      podcast1.episodes = <Episode>[
-        Episode(
+      podcast1 = podcast1.copyWith(
+        episodes: <Episode>[
+          createEpisodeMock(
+            podcast1,
             guid: 'EP001',
             title: 'Episode 1',
-            pguid: podcast1.guid,
-            podcast: podcast1.title,
-            publicationDate: pubDate1),
-        Episode(
+            publicationDate: pubDate1,
+          ),
+          createEpisodeMock(
+            podcast1,
             guid: 'EP002',
             title: 'Episode 2',
-            pguid: podcast1.guid,
-            podcast: podcast1.title,
-            publicationDate: pubDate2),
-        Episode(
+            publicationDate: pubDate2,
+          ),
+          createEpisodeMock(
+            podcast1,
             guid: 'EP005',
             title: 'Episode 5',
-            pguid: podcast1.guid,
-            podcast: podcast1.title,
-            publicationDate: pubDate5),
-        Episode(
+            publicationDate: pubDate5,
+          ),
+          createEpisodeMock(
+            podcast1,
             guid: 'EP004',
             title: 'Episode 4',
-            pguid: podcast1.guid,
-            podcast: podcast1.title,
-            publicationDate: pubDate4),
-        Episode(
+            publicationDate: pubDate4,
+          ),
+          createEpisodeMock(
+            podcast1,
             guid: 'EP003',
             title: 'Episode 3',
-            pguid: podcast1.guid,
-            podcast: podcast1.title,
-            publicationDate: pubDate3),
-      ];
+            publicationDate: pubDate3,
+          ),
+        ],
+      );
 
       await persistenceService!.savePodcast(podcast1);
       await persistenceService!.savePodcast(podcast2);
       await persistenceService!.savePodcast(podcast3);
 
-      var noDownloads = await persistenceService!.findDownloads();
-      var emptyDownloaded = <Episode>[];
+      final noDownloads = await persistenceService!.findDownloads();
+      final emptyDownloaded = <Episode>[];
 
       expect(noDownloads, emptyDownloaded);
 
@@ -708,17 +750,21 @@ void main() {
       expect(episode2 == podcast1.episodes[1], true);
 
       // Save one episode as downloaded and re-fetch
-      episode1.downloadPercentage = 100;
-      episode1.downloadState = DownloadState.downloaded;
+      episode1 = episode1.copyWith(
+        downloadPercentage: 100,
+        downloadState: DownloadState.downloaded,
+      );
 
-      episode2.downloadPercentage = 95;
-      episode2.downloadState = DownloadState.downloading;
+      episode2 = episode1.copyWith(
+        downloadPercentage: 95,
+        downloadState: DownloadState.downloading,
+      );
 
-      var episode1Comp = await persistenceService!.saveEpisode(episode1);
-      var episode2Comp = await persistenceService!.saveEpisode(episode2);
+      final episode1Comp = await persistenceService!.saveEpisode(episode1);
+      final episode2Comp = await persistenceService!.saveEpisode(episode2);
 
-      var downloaded = <Episode>[episode1];
-      var singleDownload = await persistenceService!.findDownloads();
+      final downloaded = <Episode>[episode1];
+      final singleDownload = await persistenceService!.findDownloads();
 
       expect(listEquals(singleDownload, downloaded), true);
       expect(episode1Comp, episode1);
@@ -726,9 +772,9 @@ void main() {
     });
 
     test('Test download state', () async {
-      var download = Downloadable(
+      const download = Downloadable(
         taskId: 'TEST1',
-        guid: 'downloadguid1',
+        guid: 'downloadGuid1',
         url: 'http://localhost/episode1.mp3',
         directory: 'test1',
         filename: 'episode1.mp3',
@@ -736,78 +782,87 @@ void main() {
         percentage: 0,
       );
 
-      var json = download.toMap();
+      final json = download.toJson();
 
       // Reconstruct from the JSON.
-      var d = Downloadable.fromMap(json);
+      final d = Downloadable.fromJson(json);
 
       // Check they match
       expect(true, download == d);
 
       // Check states
       json['state'] = 0;
-      expect(Downloadable.fromMap(json).state == DownloadState.none, true);
+      expect(Downloadable.fromJson(json).state == DownloadState.none, true);
 
       json['state'] = 1;
-      expect(Downloadable.fromMap(json).state == DownloadState.queued, true);
+      expect(Downloadable.fromJson(json).state == DownloadState.queued, true);
 
       json['state'] = 2;
       expect(
-          Downloadable.fromMap(json).state == DownloadState.downloading, true);
+        Downloadable.fromJson(json).state == DownloadState.downloading,
+        true,
+      );
 
       json['state'] = 3;
-      expect(Downloadable.fromMap(json).state == DownloadState.failed, true);
+      expect(Downloadable.fromJson(json).state == DownloadState.failed, true);
 
       json['state'] = 4;
-      expect(Downloadable.fromMap(json).state == DownloadState.cancelled, true);
+      expect(
+        Downloadable.fromJson(json).state == DownloadState.cancelled,
+        true,
+      );
 
       json['state'] = 5;
-      expect(Downloadable.fromMap(json).state == DownloadState.paused, true);
+      expect(Downloadable.fromJson(json).state == DownloadState.paused, true);
 
       json['state'] = 6;
       expect(
-          Downloadable.fromMap(json).state == DownloadState.downloaded, true);
+        Downloadable.fromJson(json).state == DownloadState.downloaded,
+        true,
+      );
     });
 
     test('Delete downloaded episodes', () async {
-      var pubDate5 = DateTime.now();
-      var pubDate4 = DateTime.now().subtract(const Duration(days: 1));
-      var pubDate3 = DateTime.now().subtract(const Duration(days: 2));
-      var pubDate2 = DateTime.now().subtract(const Duration(days: 3));
-      var pubDate1 = DateTime.now().subtract(const Duration(days: 4));
+      final pubDate5 = DateTime.now();
+      final pubDate4 = DateTime.now().subtract(const Duration(days: 1));
+      final pubDate3 = DateTime.now().subtract(const Duration(days: 2));
+      final pubDate2 = DateTime.now().subtract(const Duration(days: 3));
+      final pubDate1 = DateTime.now().subtract(const Duration(days: 4));
 
-      podcast1.episodes = <Episode>[
-        Episode(
+      podcast1 = podcast1.copyWith(
+        episodes: <Episode>[
+          createEpisodeMock(
+            podcast1,
             guid: 'EP001',
             title: 'Episode 1',
-            pguid: podcast1.guid,
-            podcast: podcast1.title,
-            publicationDate: pubDate1),
-        Episode(
+            publicationDate: pubDate1,
+          ),
+          createEpisodeMock(
+            podcast1,
             guid: 'EP002',
             title: 'Episode 2',
-            pguid: podcast1.guid,
-            podcast: podcast1.title,
-            publicationDate: pubDate2),
-        Episode(
+            publicationDate: pubDate2,
+          ),
+          createEpisodeMock(
+            podcast1,
             guid: 'EP005',
             title: 'Episode 5',
-            pguid: podcast1.guid,
-            podcast: podcast1.title,
-            publicationDate: pubDate5),
-        Episode(
+            publicationDate: pubDate5,
+          ),
+          createEpisodeMock(
+            podcast1,
             guid: 'EP004',
             title: 'Episode 4',
-            pguid: podcast1.guid,
-            podcast: podcast1.title,
-            publicationDate: pubDate4),
-        Episode(
+            publicationDate: pubDate4,
+          ),
+          createEpisodeMock(
+            podcast1,
             guid: 'EP003',
             title: 'Episode 3',
-            pguid: podcast1.guid,
-            podcast: podcast1.title,
-            publicationDate: pubDate3),
-      ];
+            publicationDate: pubDate3,
+          ),
+        ],
+      );
 
       await persistenceService!.savePodcast(podcast1);
       await persistenceService!.savePodcast(podcast2);
@@ -819,11 +874,14 @@ void main() {
       expect(episode1 == podcast1.episodes[0], true);
       expect(episode2 == podcast1.episodes[1], true);
 
-      episode1.downloadPercentage = 100;
-      episode1.downloadState = DownloadState.downloaded;
-
-      episode2.downloadPercentage = 100;
-      episode2.downloadState = DownloadState.downloaded;
+      episode1 = episode1.copyWith(
+        downloadPercentage: 100,
+        downloadState: DownloadState.downloaded,
+      );
+      episode2 = episode2.copyWith(
+        downloadPercentage: 100,
+        downloadState: DownloadState.downloaded,
+      );
 
       await persistenceService!.saveEpisode(episode1);
       await persistenceService!.saveEpisode(episode2);
@@ -840,65 +898,62 @@ void main() {
     });
 
     test('Subscribe after downloading episodes', () async {
-      var pubDate5 = DateTime.now();
-      var pubDate4 = DateTime.now().subtract(const Duration(days: 1));
-      var pubDate3 = DateTime.now().subtract(const Duration(days: 2));
-      var pubDate2 = DateTime.now().subtract(const Duration(days: 3));
-      var pubDate1 = DateTime.now().subtract(const Duration(days: 4));
+      final pubDate5 = DateTime.now();
+      final pubDate4 = DateTime.now().subtract(const Duration(days: 1));
+      final pubDate3 = DateTime.now().subtract(const Duration(days: 2));
+      final pubDate2 = DateTime.now().subtract(const Duration(days: 3));
+      final pubDate1 = DateTime.now().subtract(const Duration(days: 4));
 
-      podcast1.episodes = <Episode>[
-        Episode(
+      podcast1 = podcast1.copyWith(
+        episodes: <Episode>[
+          createEpisodeMock(
+            podcast1,
             guid: 'EP001',
             title: 'Episode 1',
-            pguid: podcast1.guid,
-            podcast: podcast1.title,
             publicationDate: pubDate1,
-            downloadPercentage: 0),
-        Episode(
+          ),
+          createEpisodeMock(
+            podcast1,
             guid: 'EP002',
             title: 'Episode 2',
-            pguid: podcast1.guid,
-            podcast: podcast1.title,
             publicationDate: pubDate2,
-            downloadPercentage: 0),
-        Episode(
+          ),
+          createEpisodeMock(
+            podcast1,
             guid: 'EP005',
             title: 'Episode 5',
-            pguid: podcast1.guid,
-            podcast: podcast1.title,
             publicationDate: pubDate5,
-            downloadPercentage: 0),
-        Episode(
+          ),
+          createEpisodeMock(
+            podcast1,
             guid: 'EP004',
             title: 'Episode 4',
-            pguid: podcast1.guid,
-            podcast: podcast1.title,
             publicationDate: pubDate4,
-            downloadPercentage: 0),
-        Episode(
+          ),
+          createEpisodeMock(
+            podcast1,
             guid: 'EP003',
             title: 'Episode 3',
-            pguid: podcast1.guid,
-            podcast: podcast1.title,
             publicationDate: pubDate3,
-            downloadPercentage: 0),
-      ];
+          ),
+        ],
+      );
 
-      var episode2 = Episode(
-          guid: 'EP002',
-          title: 'Episode 2',
-          pguid: podcast1.guid,
-          podcast: podcast1.title,
-          publicationDate: pubDate2,
-          downloadPercentage: 100);
+      final episode2 = createEpisodeMock(
+        podcast1,
+        guid: 'EP002',
+        title: 'Episode 2',
+        publicationDate: pubDate2,
+        downloadPercentage: 100,
+      );
 
-      var episode5 = Episode(
-          guid: 'EP005',
-          title: 'Episode 5',
-          pguid: podcast1.guid,
-          podcast: podcast1.title,
-          publicationDate: pubDate5,
-          downloadPercentage: 100);
+      final episode5 = createEpisodeMock(
+        podcast1,
+        guid: 'EP005',
+        title: 'Episode 5',
+        publicationDate: pubDate5,
+        downloadPercentage: 100,
+      );
 
       // Save the downloaded episodes
       await persistenceService!.saveEpisode(episode2);
@@ -910,15 +965,15 @@ void main() {
       await persistenceService!.savePodcast(podcast3);
 
       // Fetch podcast1. Episodes should match.
-      var p = (await persistenceService!.findPodcastByGuid(podcast1.guid!))!;
+      final p = (await persistenceService!.findPodcastByGuid(podcast1.guid))!;
 
       // Episodes 2 and 5 will be the saved episodes rather than
       // the blank episodes.
-      var ep1 = p.episodes.firstWhere((e) => e.guid == 'EP001');
-      var ep2 = p.episodes.firstWhere((e) => e.guid == 'EP002');
-      var ep3 = p.episodes.firstWhere((e) => e.guid == 'EP003');
-      var ep4 = p.episodes.firstWhere((e) => e.guid == 'EP004');
-      var ep5 = p.episodes.firstWhere((e) => e.guid == 'EP005');
+      final ep1 = p.episodes.firstWhere((e) => e.guid == 'EP001');
+      final ep2 = p.episodes.firstWhere((e) => e.guid == 'EP002');
+      final ep3 = p.episodes.firstWhere((e) => e.guid == 'EP003');
+      final ep4 = p.episodes.firstWhere((e) => e.guid == 'EP004');
+      final ep5 = p.episodes.firstWhere((e) => e.guid == 'EP005');
 
       expect(ep1.downloadPercentage == 0, true);
       expect(ep2.downloadPercentage == 100, true);
@@ -928,65 +983,62 @@ void main() {
     });
 
     test('Fetch downloads for podcast', () async {
-      var pubDate5 = DateTime.now();
-      var pubDate4 = DateTime.now().subtract(const Duration(days: 1));
-      var pubDate3 = DateTime.now().subtract(const Duration(days: 2));
-      var pubDate2 = DateTime.now().subtract(const Duration(days: 3));
-      var pubDate1 = DateTime.now().subtract(const Duration(days: 4));
+      final pubDate5 = DateTime.now();
+      final pubDate4 = DateTime.now().subtract(const Duration(days: 1));
+      final pubDate3 = DateTime.now().subtract(const Duration(days: 2));
+      final pubDate2 = DateTime.now().subtract(const Duration(days: 3));
+      final pubDate1 = DateTime.now().subtract(const Duration(days: 4));
 
-      podcast1.episodes = <Episode>[
-        Episode(
+      podcast1 = podcast1.copyWith(
+        episodes: <Episode>[
+          createEpisodeMock(
+            podcast1,
             guid: 'EP001',
             title: 'Episode 1',
-            pguid: podcast1.guid,
-            podcast: podcast1.title,
             publicationDate: pubDate1,
-            downloadPercentage: 0),
-        Episode(
+          ),
+          createEpisodeMock(
+            podcast1,
             guid: 'EP002',
             title: 'Episode 2',
-            pguid: podcast1.guid,
-            podcast: podcast1.title,
             publicationDate: pubDate2,
-            downloadPercentage: 0),
-        Episode(
+          ),
+          createEpisodeMock(
+            podcast1,
             guid: 'EP005',
             title: 'Episode 5',
-            pguid: podcast1.guid,
-            podcast: podcast1.title,
             publicationDate: pubDate5,
-            downloadPercentage: 0),
-        Episode(
+          ),
+          createEpisodeMock(
+            podcast1,
             guid: 'EP004',
             title: 'Episode 4',
-            pguid: podcast1.guid,
-            podcast: podcast1.title,
             publicationDate: pubDate4,
-            downloadPercentage: 0),
-        Episode(
+          ),
+          createEpisodeMock(
+            podcast1,
             guid: 'EP003',
             title: 'Episode 3',
-            pguid: podcast1.guid,
-            podcast: podcast1.title,
             publicationDate: pubDate3,
-            downloadPercentage: 0),
-      ];
+          ),
+        ],
+      );
 
-      var episode2 = Episode(
-          guid: 'EP002',
-          title: 'Episode 2',
-          pguid: podcast1.guid,
-          podcast: podcast1.title,
-          publicationDate: pubDate2,
-          downloadPercentage: 100);
+      final episode2 = createEpisodeMock(
+        podcast1,
+        guid: 'EP002',
+        title: 'Episode 2',
+        publicationDate: pubDate2,
+        downloadPercentage: 100,
+      );
 
-      var episode5 = Episode(
-          guid: 'EP005',
-          title: 'Episode 5',
-          pguid: podcast1.guid,
-          podcast: podcast1.title,
-          publicationDate: pubDate5,
-          downloadPercentage: 100);
+      final episode5 = createEpisodeMock(
+        podcast1,
+        guid: 'EP005',
+        title: 'Episode 5',
+        publicationDate: pubDate5,
+        downloadPercentage: 100,
+      );
 
       // Save the downloaded episodes
       await persistenceService!.saveEpisode(episode2);
@@ -997,139 +1049,133 @@ void main() {
       await persistenceService!.savePodcast(podcast2);
       await persistenceService!.savePodcast(podcast3);
 
-      var pd1 =
-          await persistenceService!.findDownloadsByPodcastGuid(podcast1.guid!);
-      var pd2 =
-          await persistenceService!.findDownloadsByPodcastGuid(podcast2.guid!);
+      final pd1 =
+          await persistenceService!.findDownloadsByPodcastGuid(podcast1.guid);
+      final pd2 =
+          await persistenceService!.findDownloadsByPodcastGuid(podcast2.guid);
 
       expect(listEquals(pd1, <Episode>[episode5, episode2]), true);
       expect(listEquals(pd2, <Episode>[]), true);
     });
 
     test('Fetch downloads by task ID', () async {
-      var pubDate5 = DateTime.now();
-      var pubDate4 = DateTime.now().subtract(const Duration(days: 1));
-      var pubDate3 = DateTime.now().subtract(const Duration(days: 2));
-      var pubDate2 = DateTime.now().subtract(const Duration(days: 3));
-      var pubDate1 = DateTime.now().subtract(const Duration(days: 4));
+      final pubDate5 = DateTime.now();
+      final pubDate4 = DateTime.now().subtract(const Duration(days: 1));
+      final pubDate3 = DateTime.now().subtract(const Duration(days: 2));
+      final pubDate2 = DateTime.now().subtract(const Duration(days: 3));
+      final pubDate1 = DateTime.now().subtract(const Duration(days: 4));
 
-      var tid1 = 'AAAA-BBBB-CCCC-DDDD-1000';
-      var tid2 = 'AAAA-BBBB-CCCC-DDDD-2000';
+      const tid1 = 'AAAA-BBBB-CCCC-DDDD-1000';
+      const tid2 = 'AAAA-BBBB-CCCC-DDDD-2000';
 
-      podcast1.episodes = <Episode>[
-        Episode(
+      podcast1 = podcast1.copyWith(
+        episodes: <Episode>[
+          createEpisodeMock(
+            podcast1,
             guid: 'EP001',
             title: 'Episode 1',
-            pguid: podcast1.guid,
-            podcast: podcast1.title,
             publicationDate: pubDate1,
-            downloadState: DownloadState.none,
-            downloadPercentage: 0),
-        Episode(
+          ),
+          createEpisodeMock(
+            podcast1,
             guid: 'EP002',
             title: 'Episode 2',
-            pguid: podcast1.guid,
-            podcast: podcast1.title,
             publicationDate: pubDate2,
             downloadState: DownloadState.downloaded,
-            downloadPercentage: 100),
-        Episode(
+            downloadPercentage: 100,
+          ),
+          createEpisodeMock(
+            podcast1,
             guid: 'EP005',
             title: 'Episode 5',
-            pguid: podcast1.guid,
-            podcast: podcast1.title,
             publicationDate: pubDate5,
             downloadState: DownloadState.downloading,
-            downloadPercentage: 50),
-        Episode(
+            downloadPercentage: 50,
+          ),
+          createEpisodeMock(
+            podcast1,
             guid: 'EP004',
             title: 'Episode 4',
-            pguid: podcast1.guid,
-            podcast: podcast1.title,
             publicationDate: pubDate4,
-            downloadState: DownloadState.none,
-            downloadPercentage: 0),
-        Episode(
+          ),
+          createEpisodeMock(
+            podcast1,
             guid: 'EP003',
             title: 'Episode 3',
-            pguid: podcast1.guid,
-            podcast: podcast1.title,
             publicationDate: pubDate3,
-            downloadState: DownloadState.none,
-            downloadPercentage: 0),
-      ];
+          ),
+        ],
+      );
 
       // Save the podcasts.
       await persistenceService!.savePodcast(podcast1);
 
-      var noDownload = await persistenceService!.findEpisodeByTaskId(tid1);
+      final noDownload = await persistenceService!.findEpisodeByTaskId(tid1);
 
       expect(noDownload, null);
 
       var e1 = podcast1.episodes.firstWhere((e) => e.guid == 'EP002');
       var e2 = podcast1.episodes.firstWhere((e) => e.guid == 'EP005');
 
-      e1.downloadTaskId = tid1;
-      e2.downloadTaskId = tid2;
+      e1 = e1.copyWith(downloadTaskId: tid1);
+      e2 = e2.copyWith(downloadTaskId: tid2);
 
       await persistenceService!.saveEpisode(e1);
       await persistenceService!.saveEpisode(e2);
 
-      var episode1 = (await persistenceService!.findEpisodeByTaskId(tid1))!;
+      final episode1 = (await persistenceService!.findEpisodeByTaskId(tid1))!;
 
       expect(episode1.downloadPercentage, 100);
 
-      var episode2 = (await persistenceService!.findEpisodeByTaskId(tid2))!;
+      final episode2 = (await persistenceService!.findEpisodeByTaskId(tid2))!;
 
       expect(episode2.downloadPercentage, 50);
     });
 
     test('Test episode state', () async {
-      var pubDate5 = DateTime.now();
-      var pubDate4 = DateTime.now().subtract(const Duration(days: 1));
-      var pubDate3 = DateTime.now().subtract(const Duration(days: 2));
-      var pubDate2 = DateTime.now().subtract(const Duration(days: 3));
-      var pubDate1 = DateTime.now().subtract(const Duration(days: 4));
+      final pubDate5 = DateTime.now();
+      final pubDate4 = DateTime.now().subtract(const Duration(days: 1));
+      final pubDate3 = DateTime.now().subtract(const Duration(days: 2));
+      final pubDate2 = DateTime.now().subtract(const Duration(days: 3));
+      final pubDate1 = DateTime.now().subtract(const Duration(days: 4));
 
-      podcast1.episodes = <Episode>[
-        Episode(
+      podcast1 = podcast1.copyWith(
+        episodes: <Episode>[
+          createEpisodeMock(
+            podcast1,
             guid: 'EP001',
             title: 'Episode 1',
             description: 'Episode 1 description',
-            pguid: podcast1.guid,
-            podcast: podcast1.title,
             publicationDate: pubDate1,
-            downloadPercentage: 0),
-        Episode(
+          ),
+          createEpisodeMock(
+            podcast1,
             guid: 'EP002',
             title: 'Episode 2',
-            pguid: podcast1.guid,
-            podcast: podcast1.title,
             publicationDate: pubDate2,
-            downloadPercentage: 0),
-        Episode(
+          ),
+          createEpisodeMock(
+            podcast1,
             guid: 'EP005',
             title: 'Episode 5',
-            pguid: podcast1.guid,
-            podcast: podcast1.title,
             publicationDate: pubDate5,
-            downloadPercentage: 0),
-        Episode(
+          ),
+          createEpisodeMock(
+            podcast1,
             guid: 'EP004',
             title: 'Episode 4',
-            pguid: podcast1.guid,
-            podcast: podcast1.title,
             publicationDate: pubDate4,
-            downloadPercentage: 0),
-        Episode(
+          ),
+          createEpisodeMock(
+            podcast1,
             guid: 'EP003',
             title: 'Episode 3',
             description: '<b>Episode 3</b> description',
-            pguid: podcast1.guid,
-            podcast: podcast1.title,
             publicationDate: pubDate3,
-            downloadPercentage: 100),
-      ];
+            downloadPercentage: 100,
+          ),
+        ],
+      );
 
       // Save the podcasts.
       await persistenceService!.savePodcast(podcast1);
@@ -1138,45 +1184,45 @@ void main() {
       var episode = (await persistenceService!.findEpisodeByGuid('EP001'))!;
 
       expect(episode.downloaded, false);
-      expect(episode.descriptionText == 'Episode 1 description', true);
+      expect(episode.parsedDescriptionText == 'Episode 1 description', true);
 
       episode = (await persistenceService!.findEpisodeByGuid('EP002'))!;
 
-      expect(episode.descriptionText == '', true);
+      expect(episode.parsedDescriptionText == '', true);
 
       episode = (await persistenceService!.findEpisodeByGuid('EP003'))!;
 
       expect(episode.downloaded, true);
-      expect(episode.descriptionText == 'Episode 3 description', true);
+      expect(episode.parsedDescriptionText == 'Episode 3 description', true);
     });
 
     test('Test episode duration', () async {
-      var pubDate1 = DateTime.now().subtract(const Duration(days: 4));
-      var pubDate2 = DateTime.now().subtract(const Duration(days: 3));
+      final pubDate1 = DateTime.now().subtract(const Duration(days: 4));
+      final pubDate2 = DateTime.now().subtract(const Duration(days: 3));
 
-      podcast1.episodes = <Episode>[
-        Episode(
+      podcast1 = podcast1.copyWith(
+        episodes: <Episode>[
+          createEpisodeMock(
+            podcast1,
             guid: 'EP001',
             title: 'Episode 1',
             description: 'Episode 1 description',
-            pguid: podcast1.guid,
-            podcast: podcast1.title,
             publicationDate: pubDate1,
             position: 60000,
             // 1 min in ms
             duration: 120,
             // 2 min in s
-            downloadPercentage: 0),
-        Episode(
+          ),
+          createEpisodeMock(
+            podcast1,
             guid: 'EP002',
             title: 'Episode 2',
-            pguid: podcast1.guid,
-            podcast: podcast1.title,
             publicationDate: pubDate2,
-            position: 0,
             duration: 240,
-            downloadPercentage: 100),
-      ];
+            downloadPercentage: 100,
+          ),
+        ],
+      );
 
       // Save the podcasts.
       await persistenceService!.savePodcast(podcast1);
@@ -1193,111 +1239,131 @@ void main() {
       expect(episode.percentagePlayed == 0.0, true);
 
       // Invalid position
-      episode.position = 500000;
+      episode = episode.copyWith(position: 500000);
       expect(episode.percentagePlayed == 100.0, true);
     });
 
     test('Test episode transcript read/write', () async {
-      var transcript = Transcript(guid: 'GUID1', subtitles: <Subtitle>[
-        Subtitle(
+      const transcript = Transcript(
+        guid: 'GUID1',
+        subtitles: <Subtitle>[
+          Subtitle(
             index: 0,
-            start: const Duration(seconds: 0),
+            start: Duration.zero,
             data: 'This is line 1',
-            end: const Duration(seconds: 10),
-            speaker: 'Speaker 1'),
-        Subtitle(
+            end: Duration(seconds: 10),
+            speaker: 'Speaker 1',
+          ),
+          Subtitle(
             index: 1,
-            start: const Duration(seconds: 10),
+            start: Duration(seconds: 10),
             data: 'This is line 2',
-            end: const Duration(seconds: 20),
-            speaker: 'Speaker 2'),
-      ]);
+            end: Duration(seconds: 20),
+            speaker: 'Speaker 2',
+          ),
+        ],
+      );
 
-      var savedTranscript =
+      final savedTranscript =
           await persistenceService!.saveTranscript(transcript);
-      var fetchedTranscript =
+      final fetchedTranscript =
           await persistenceService!.findTranscriptById(savedTranscript.id!);
 
       expect(savedTranscript == fetchedTranscript, true);
 
       await persistenceService!.deleteTranscriptById(savedTranscript.id!);
 
-      var deletedTranscript =
+      final deletedTranscript =
           await persistenceService!.findTranscriptById(savedTranscript.id!);
 
       expect(deletedTranscript == null, true);
     });
     test('Test episode transcript read/write', () async {
-      var transcript = Transcript(guid: 'GUID1', subtitles: <Subtitle>[
-        Subtitle(
+      const transcript = Transcript(
+        guid: 'GUID1',
+        subtitles: <Subtitle>[
+          Subtitle(
             index: 0,
-            start: const Duration(seconds: 0),
+            start: Duration.zero,
             data: 'This is line 1',
-            end: const Duration(seconds: 10),
-            speaker: 'Speaker 1'),
-        Subtitle(
+            end: Duration(seconds: 10),
+            speaker: 'Speaker 1',
+          ),
+          Subtitle(
             index: 1,
-            start: const Duration(seconds: 10),
+            start: Duration(seconds: 10),
             data: 'This is line 2',
-            end: const Duration(seconds: 20),
-            speaker: 'Speaker 2'),
-      ]);
+            end: Duration(seconds: 20),
+            speaker: 'Speaker 2',
+          ),
+        ],
+      );
 
-      var savedTranscript =
+      final savedTranscript =
           await persistenceService!.saveTranscript(transcript);
-      var fetchedTranscript =
+      final fetchedTranscript =
           await persistenceService!.findTranscriptById(savedTranscript.id!);
 
       expect(savedTranscript == fetchedTranscript, true);
 
       await persistenceService!.deleteTranscriptById(savedTranscript.id!);
 
-      var deletedTranscript =
+      final deletedTranscript =
           await persistenceService!.findTranscriptById(savedTranscript.id!);
 
       expect(deletedTranscript == null, true);
     });
 
     test('Test episode transcript read/write bulk', () async {
-      var transcript1 = Transcript(guid: 'GUID1', subtitles: <Subtitle>[
-        Subtitle(
+      const transcript1 = Transcript(
+        guid: 'GUID1',
+        subtitles: <Subtitle>[
+          Subtitle(
             index: 0,
-            start: const Duration(seconds: 0),
+            start: Duration.zero,
             data: 'This is line 1',
-            end: const Duration(seconds: 10),
-            speaker: 'Speaker 1'),
-        Subtitle(
+            end: Duration(seconds: 10),
+            speaker: 'Speaker 1',
+          ),
+          Subtitle(
             index: 1,
-            start: const Duration(seconds: 10),
+            start: Duration(seconds: 10),
             data: 'This is line 2',
-            end: const Duration(seconds: 20),
-            speaker: 'Speaker 2'),
-      ]);
+            end: Duration(seconds: 20),
+            speaker: 'Speaker 2',
+          ),
+        ],
+      );
 
-      var transcript2 = Transcript(guid: 'GUID1', subtitles: <Subtitle>[
-        Subtitle(
+      const transcript2 = Transcript(
+        guid: 'GUID1',
+        subtitles: <Subtitle>[
+          Subtitle(
             index: 0,
-            start: const Duration(seconds: 0),
+            start: Duration.zero,
             data: 'This is line 1b',
-            end: const Duration(seconds: 100),
-            speaker: 'Speaker 1b'),
-        Subtitle(
+            end: Duration(seconds: 100),
+            speaker: 'Speaker 1b',
+          ),
+          Subtitle(
             index: 1,
-            start: const Duration(seconds: 100),
+            start: Duration(seconds: 100),
             data: 'This is line 2b',
-            end: const Duration(seconds: 200),
-            speaker: 'Speaker 2b'),
-      ]);
+            end: Duration(seconds: 200),
+            speaker: 'Speaker 2b',
+          ),
+        ],
+      );
 
-      var savedTranscript1 =
+      final savedTranscript1 =
           await persistenceService!.saveTranscript(transcript1);
-      var savedTranscript2 =
+      final savedTranscript2 =
           await persistenceService!.saveTranscript(transcript2);
 
       var fetchedTranscript1 =
-          (await persistenceService!.findTranscriptById(savedTranscript1.id!));
+          await persistenceService!.findTranscriptById(savedTranscript1.id!);
       var fetchedTranscript2 =
-          (await persistenceService!.findTranscriptById(savedTranscript2.id!));
+          await persistenceService!.findTranscriptById(savedTranscript2.id!);
 
       expect(fetchedTranscript1?.id != null, true);
       expect(fetchedTranscript2?.id != null, true);
@@ -1305,80 +1371,87 @@ void main() {
       expect(savedTranscript2 == fetchedTranscript2, true);
 
       await persistenceService!.deleteTranscriptsById(
-          <int>[fetchedTranscript1?.id ?? 0, fetchedTranscript2?.id ?? 0]);
+        <int>[fetchedTranscript1?.id ?? 0, fetchedTranscript2?.id ?? 0],
+      );
 
       fetchedTranscript1 =
-          (await persistenceService!.findTranscriptById(savedTranscript1.id!));
+          await persistenceService!.findTranscriptById(savedTranscript1.id!);
       fetchedTranscript2 =
-          (await persistenceService!.findTranscriptById(savedTranscript2.id!));
+          await persistenceService!.findTranscriptById(savedTranscript2.id!);
 
       expect(fetchedTranscript1 == null, true);
       expect(fetchedTranscript2 == null, true);
     });
 
     test('Test episode transcript data', () async {
-      var pubDate1 = DateTime.now().subtract(const Duration(days: 4));
-      var pubDate2 = DateTime.now().subtract(const Duration(days: 3));
+      final pubDate1 = DateTime.now().subtract(const Duration(days: 4));
+      final pubDate2 = DateTime.now().subtract(const Duration(days: 3));
 
-      var transcript = Transcript(guid: 'GUID1', subtitles: <Subtitle>[
-        Subtitle(
+      const transcript = Transcript(
+        guid: 'GUID1',
+        subtitles: <Subtitle>[
+          Subtitle(
             index: 0,
-            start: const Duration(seconds: 0),
+            start: Duration.zero,
             data: 'This is line 1',
-            end: const Duration(seconds: 10),
-            speaker: 'Speaker 1'),
-        Subtitle(
+            end: Duration(seconds: 10),
+            speaker: 'Speaker 1',
+          ),
+          Subtitle(
             index: 1,
-            start: const Duration(seconds: 10),
+            start: Duration(seconds: 10),
             data: 'This is line 2',
-            end: const Duration(seconds: 20),
-            speaker: 'Speaker 2'),
-      ]);
+            end: Duration(seconds: 20),
+            speaker: 'Speaker 2',
+          ),
+        ],
+      );
 
-      var savedTranscript =
+      final savedTranscript =
           await persistenceService!.saveTranscript(transcript);
 
       expect(savedTranscript.id != null, true);
       expect(transcript == savedTranscript, true);
 
-      transcript.subtitles[0].data = 'This is line 1 updated';
+      transcript.subtitles[0] =
+          transcript.subtitles[0].copyWith(data: 'This is line 1 updated');
 
-      var updatedTranscript =
+      final updatedTranscript =
           await persistenceService!.saveTranscript(savedTranscript);
 
       expect(transcript == updatedTranscript, true);
 
-      podcast1.episodes = <Episode>[
-        Episode(
+      podcast1 = podcast1.copyWith(
+        episodes: <Episode>[
+          createEpisodeMock(
+            podcast1,
             guid: 'EP001',
             title: 'Episode 1',
             description: 'Episode 1 description',
-            pguid: podcast1.guid,
-            podcast: podcast1.title,
             publicationDate: pubDate1,
             transcriptId: savedTranscript.id,
             position: 60000,
             // 1 min in ms
             duration: 120,
             // 2 min in s
-            downloadPercentage: 0),
-        Episode(
+          ),
+          createEpisodeMock(
+            podcast1,
             guid: 'EP002',
             title: 'Episode 2',
-            pguid: podcast1.guid,
-            podcast: podcast1.title,
             publicationDate: pubDate2,
-            position: 0,
             duration: 240,
-            downloadPercentage: 100),
-      ];
+            downloadPercentage: 100,
+          ),
+        ],
+      );
 
       // Save the podcasts.
       await persistenceService!.savePodcast(podcast1);
 
       // Fetch the downloaded podcast
-      var episode1 = await persistenceService!.findEpisodeByGuid('EP001');
-      var episode2 = await persistenceService!.findEpisodeByGuid('EP002');
+      final episode1 = await persistenceService!.findEpisodeByGuid('EP001');
+      final episode2 = await persistenceService!.findEpisodeByGuid('EP002');
 
       expect(episode1 == podcast1.episodes[0], true);
       expect(episode2 == podcast1.episodes[1], true);
