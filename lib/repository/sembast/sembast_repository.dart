@@ -126,6 +126,7 @@ class SembastRepository extends Repository {
 
     final p = Podcast.fromJson(snapshot.value);
     return p.copyWith(
+      id: snapshot.key,
       episodes: await findEpisodesByPodcastGuid(p.guid),
       seasons: await findSeasonsByPodcastGuid(p.guid),
     );
@@ -140,7 +141,10 @@ class SembastRepository extends Repository {
     }
 
     final p = Podcast.fromJson(snapshot.value);
-    return p.copyWith(episodes: await findEpisodesByPodcastGuid(p.guid));
+    return p.copyWith(
+      id: snapshot.key,
+      episodes: await findEpisodesByPodcastGuid(p.guid),
+    );
   }
 
   @override
@@ -148,7 +152,7 @@ class SembastRepository extends Repository {
     final finder = Finder(sortOrders: [SortOrder('title')]);
     final recordSnapshots = await _seasonStore.find(await _db, finder: finder);
     return recordSnapshots
-        .map((snapshot) => Season.fromJson(snapshot.value))
+        .map((snapshot) => _loadSeasonSnapshot(snapshot.key, snapshot.value))
         .toList();
   }
 
@@ -156,7 +160,7 @@ class SembastRepository extends Repository {
   Future<Season?> findSeasonById(int id) async {
     final finder = Finder(filter: Filter.byKey(id));
     final snapshot = (await _seasonStore.findFirst(await _db, finder: finder))!;
-    return _loadSeasonSnapshot(snapshot.value);
+    return _loadSeasonSnapshot(snapshot.key, snapshot.value);
   }
 
   @override
@@ -167,9 +171,9 @@ class SembastRepository extends Repository {
     );
 
     final recordSnapshots = await _seasonStore.find(await _db, finder: finder);
-    final results = recordSnapshots
-        .map((snapshot) async => _loadSeasonSnapshot(snapshot.value))
-        .toList();
+    final results = recordSnapshots.map(
+      (snapshot) async => _loadSeasonSnapshot(snapshot.key, snapshot.value),
+    );
     return Future.wait(results);
   }
 
@@ -195,9 +199,10 @@ class SembastRepository extends Repository {
       sortOrders: [SortOrder('publicationDate', false)],
     );
     final recordSnapshots = await _episodeStore.find(await _db, finder: finder);
-    return recordSnapshots
-        .map((snapshot) => Episode.fromJson(snapshot.value))
-        .toList();
+    return recordSnapshots.map((snapshot) {
+      final episode = Episode.fromJson(snapshot.value);
+      return episode.copyWith(id: snapshot.key);
+    }).toList();
   }
 
   @override
@@ -205,14 +210,16 @@ class SembastRepository extends Repository {
     final finder = Finder(filter: Filter.byKey(id));
     final snapshot =
         (await _episodeStore.findFirst(await _db, finder: finder))!;
-    return _loadEpisodeSnapshot(snapshot.value);
+    return _loadEpisodeSnapshot(snapshot.key, snapshot.value);
   }
 
   @override
   Future<Episode?> findEpisodeByGuid(String guid) async {
     final finder = Finder(filter: Filter.equals('guid', guid));
     final snapshot = await _episodeStore.findFirst(await _db, finder: finder);
-    return snapshot == null ? null : _loadEpisodeSnapshot(snapshot.value);
+    return snapshot == null
+        ? null
+        : _loadEpisodeSnapshot(snapshot.key, snapshot.value);
   }
 
   @override
@@ -223,7 +230,10 @@ class SembastRepository extends Repository {
     );
     final recordSnapshots = await _episodeStore.find(await _db, finder: finder);
     final results = recordSnapshots
-        .map((snapshot) async => _loadEpisodeSnapshot(snapshot.value))
+        .map(
+          (snapshot) async =>
+              _loadEpisodeSnapshot(snapshot.key, snapshot.value),
+        )
         .toList();
     return Future.wait(results);
   }
@@ -238,9 +248,10 @@ class SembastRepository extends Repository {
       sortOrders: [SortOrder('publicationDate', false)],
     );
     final recordSnapshots = await _episodeStore.find(await _db, finder: finder);
-    return recordSnapshots
-        .map((snapshot) => Episode.fromJson(snapshot.value))
+    final futures = recordSnapshots
+        .map((snapshot) => _loadEpisodeSnapshot(snapshot.key, snapshot.value))
         .toList();
+    return Future.wait(futures);
   }
 
   @override
@@ -250,9 +261,10 @@ class SembastRepository extends Repository {
       sortOrders: [SortOrder('publicationDate', false)],
     );
     final recordSnapshots = await _episodeStore.find(await _db, finder: finder);
-    return recordSnapshots
-        .map((snapshot) => Episode.fromJson(snapshot.value))
+    final futures = recordSnapshots
+        .map((snapshot) => _loadEpisodeSnapshot(snapshot.key, snapshot.value))
         .toList();
+    return Future.wait(futures);
   }
 
   @override
@@ -304,9 +316,9 @@ class SembastRepository extends Repository {
     final recordSnapshots =
         await _episodeStore.find(await _db, finder: episodeFinder);
 
-    return recordSnapshots
-        .map((snapshot) => Episode.fromJson(snapshot.value))
-        .toList();
+    final futures = recordSnapshots
+        .map((snapshot) => _loadEpisodeSnapshot(snapshot.key, snapshot.value));
+    return Future.wait(futures);
   }
 
   @override
@@ -464,8 +476,12 @@ class SembastRepository extends Repository {
     }
   }
 
-  Future<Season> _loadSeasonSnapshot(Map<String, Object?> snapshot) async {
-    return Season.fromJson(snapshot);
+  Season _loadSeasonSnapshot(
+    int key,
+    Map<String, Object?> snapshot,
+  ) {
+    final season = Season.fromJson(snapshot);
+    return season.copyWith(id: key);
   }
 
   Future<void> _cleanupEpisodes() async {
@@ -565,16 +581,20 @@ class SembastRepository extends Repository {
     final finder = Finder(filter: Filter.equals('downloadTaskId', taskId));
     final snapshot = await _episodeStore.findFirst(await _db, finder: finder);
 
-    return snapshot == null ? null : _loadEpisodeSnapshot(snapshot.value);
+    return snapshot == null
+        ? null
+        : _loadEpisodeSnapshot(snapshot.key, snapshot.value);
   }
 
-  Future<Episode> _loadEpisodeSnapshot(Map<String, Object?> snapshot) async {
+  Future<Episode> _loadEpisodeSnapshot(
+      int key, Map<String, Object?> snapshot) async {
     final episode = Episode.fromJson(snapshot);
-    return 0 < episode.transcriptId!
-        ? episode.copyWith(
-            transcript: await findTranscriptById(episode.transcriptId),
-          )
-        : episode;
+    return episode.copyWith(
+      id: key,
+      transcript: 0 < (episode.transcriptId ?? 0)
+          ? await findTranscriptById(episode.transcriptId)
+          : null,
+    );
   }
 
   @override
