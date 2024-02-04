@@ -4,30 +4,18 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+part 'queue.freezed.dart';
+part 'queue.g.dart';
+
 /// The current persistable queue.
-class Queue {
-  List<String> guids = <String>[];
 
-  Queue({
-    required this.guids,
-  });
+@freezed
+class Queue with _$Queue {
+  const factory Queue({
+    @Default(<String>[]) List<String> guids,
+  }) = _Queue;
 
-  Map<String, dynamic> toMap() {
-    return <String, dynamic>{
-      'q': guids,
-    };
-  }
-
-  static Queue fromMap(int key, Map<String, dynamic> guids) {
-    var g = guids['q'] as List<dynamic>?;
-    var result = <String>[];
-
-    if (g != null) {
-      result = g.map((dynamic e) => e.toString()).toList();
-    }
-
-    return Queue(
-      guids: result,
-    );
-  }
+  factory Queue.fromJson(Map<String, dynamic> json) => _$QueueFromJson(json);
 }
