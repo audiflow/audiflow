@@ -34,6 +34,7 @@ class MobilePodcastService extends PodcastService {
   }) {
     _init();
   }
+
   final descriptionRegExp1 =
       RegExp(r'(</p><br>|</p></br>|<p><br></p>|<p></br></p>)');
   final descriptionRegExp2 = RegExp(r'(<p><br></p>|<p></br></p>)');
@@ -71,7 +72,8 @@ class MobilePodcastService extends PodcastService {
 
     _setupGenres(currentLocale);
 
-    /// Listen for user changes in search provider. If changed, reload the genre list
+    /// Listen for user changes in search provider. If changed, reload the genre
+    /// list
     settingsService.settingsListener
         .where((event) => event == 'search')
         .listen((event) {
@@ -82,7 +84,8 @@ class MobilePodcastService extends PodcastService {
   void _setupGenres(String locale) {
     var categoryList = '';
 
-    /// Fetch the correct categories for the current local and selected provider.
+    /// Fetch the correct categories for the current local and selected
+    /// provider.
     if (settingsService.searchProvider == 'itunes') {
       _categories = PodcastService.itunesGenres;
       categoryList =
@@ -141,10 +144,10 @@ class MobilePodcastService extends PodcastService {
     return _intlCategoriesSorted;
   }
 
-  /// Loads the specified [Podcast]. If the Podcast instance has an ID we'll fetch
-  /// it from storage. If not, we'll check the cache to see if we have seen it
-  /// recently and return that if available. If not, we'll make a call to load
-  /// it from the network.
+  /// Loads the specified [Podcast]. If the Podcast instance has an ID we'll
+  /// fetch it from storage. If not, we'll check the cache to see if we have
+  /// seen it recently and return that if available. If not, we'll make a call
+  /// to load it from the network.
   @override
   Future<Podcast?> loadPodcast({
     required Podcast podcast,
@@ -200,7 +203,8 @@ class MobilePodcastService extends PodcastService {
       final existingEpisodes =
           await repository.findEpisodesByPodcastGuid(loadedPodcast.url!);
 
-      // If imageUrl is null we have not loaded the podcast as a result of a search.
+      // If imageUrl is null we have not loaded the podcast as a result of a
+      // search.
       if (imageUrl == null || imageUrl.isEmpty || refresh) {
         imageUrl = loadedPodcast.image;
         thumbImageUrl = loadedPodcast.image;
@@ -257,8 +261,9 @@ class MobilePodcastService extends PodcastService {
         }
       }
 
-      // Loop through all episodes in the feed and check to see if we already have that episode
-      // stored. If we don't, it's a new episode so add it; if we do update our copy in case it's changed.
+      // Loop through all episodes in the feed and check to see if we already
+      // have that episode stored. If we don't, it's a new episode so add it;
+      // if we do update our copy in case it's changed.
       for (final episode in loadedPodcast.episodes) {
         final existingEpisode =
             existingEpisodes.firstWhereOrNull((ep) => ep!.guid == episode.guid);
@@ -463,9 +468,10 @@ class MobilePodcastService extends PodcastService {
     return chapters;
   }
 
-  /// This method will load either of the supported transcript types. Currently, we do not support
-  /// word level highlighting of transcripts, therefore this routine will also group transcript
-  /// lines together by speaker and/or timeframe.
+  /// This method will load either of the supported transcript types. Currently,
+  /// we do not support word level highlighting of transcripts, therefore this
+  /// routine will also group transcript lines together by speaker and/or
+  /// timeframe.
   @override
   Future<Transcript> loadTranscriptByUrl({
     required TranscriptUrl transcriptUrl,
@@ -487,8 +493,8 @@ class MobilePodcastService extends PodcastService {
                 (subtitle.start.compareTo(groupSubtitle.start + threshold) <
                         0 ||
                     subtitle.data.length == 1)) {
-              /// We need to handle transcripts that have spaces between sentences, and those
-              /// which do not.
+              /// We need to handle transcripts that have spaces between
+              /// sentences, and those which do not.
               if (groupSubtitle.data != null &&
                   (groupSubtitle.data!.endsWith(' ') ||
                       subtitle.data.startsWith(' ') ||
@@ -523,7 +529,8 @@ class MobilePodcastService extends PodcastService {
           );
         }
 
-        /// If we have a complete group, or we're the very last subtitle - add it.
+        /// If we have a complete group, or we're the very last subtitle -
+        /// add it.
         if (completeGroup || index == result.subtitles.length - 1) {
           groupSubtitle.data = groupSubtitle.data?.trim();
 
@@ -684,7 +691,7 @@ class MobilePodcastService extends PodcastService {
 
   @override
   Future<List<Episode>> loadQueue() async {
-    return await repository.loadQueue();
+    return repository.loadQueue();
   }
 
   /// Remove HTML padding from the content. The padding may look fine within
@@ -711,11 +718,11 @@ class MobilePodcastService extends PodcastService {
 
     try {
       result = await c.api.loadChapters(c.url);
+      // ignore: avoid_catches_without_on_clauses
     } catch (e) {
-      final log = Logger('MobilePodcastService');
-
-      log.fine('Failed to download chapters');
-      log.fine(e);
+      Logger('MobilePodcastService')
+        ..fine('Failed to download chapters')
+        ..fine(e);
     }
 
     return result;
@@ -737,11 +744,11 @@ class MobilePodcastService extends PodcastService {
 
     try {
       result = await c.api.loadTranscript(c.transcriptUrl);
+      // ignore: avoid_catches_without_on_clauses
     } catch (e) {
-      final log = Logger('MobilePodcastService');
-
-      log.fine('Failed to download transcript');
-      log.fine(e);
+      Logger('MobilePodcastService')
+        ..fine('Failed to download transcript')
+        ..fine(e);
     }
 
     return result;
@@ -767,8 +774,8 @@ class MobilePodcastService extends PodcastService {
     return c.api.loadFeed(c.url);
   }
 
-  /// The service providers expect the genre to be passed in English. This function takes
-  /// the selected genre and returns the English version.
+  /// The service providers expect the genre to be passed in English.
+  /// This function takes the selected genre and returns the English version.
   String _decodeGenre(String? genre) {
     final index = _intlCategories.indexOf(genre);
     var decodedGenre = '';
@@ -841,12 +848,14 @@ class _CacheItem {
 
 class _FeedComputer {
   _FeedComputer({required this.api, required this.url});
+
   final PodcastApi api;
   final String url;
 }
 
 class _TranscriptComputer {
   _TranscriptComputer({required this.api, required this.transcriptUrl});
+
   final PodcastApi api;
   final TranscriptUrl transcriptUrl;
 }

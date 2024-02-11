@@ -10,10 +10,10 @@ import 'package:seasoning/entities/transcript.dart';
 /// A simple wrapper class that interacts with the search API via
 /// the podcast_search package.
 ///
-/// TODO: Make this more generic so it's not tied to podcast_search
+// TODO(unknown): Make this more generic so it's not tied to podcast_search
 abstract class PodcastApi {
   /// Search for podcasts matching the search criteria. Returns a
-  /// [SearchResult] instance.
+  /// [pslib.SearchResult] instance.
   Future<pslib.SearchResult> search(
     String term, {
     String? country,
