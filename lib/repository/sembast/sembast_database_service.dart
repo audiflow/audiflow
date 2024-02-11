@@ -16,7 +16,6 @@ typedef DatabaseUpgrade = Future<void> Function(Database, int, int);
 /// Provides a database instance to other services and handles the opening
 /// of the Sembast DB.
 class DatabaseService {
-
   DatabaseService(
     this.databaseName, {
     this.version,
