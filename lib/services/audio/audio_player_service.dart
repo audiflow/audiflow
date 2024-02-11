@@ -20,7 +20,6 @@ enum AudioState {
 }
 
 class PositionState {
-
   PositionState({
     required this.position,
     required this.length,

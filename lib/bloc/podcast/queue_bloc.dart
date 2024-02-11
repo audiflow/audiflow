@@ -12,7 +12,6 @@ import 'package:seasoning/services/podcast/podcast_service.dart';
 
 /// Handles interaction with the Queue via an [AudioPlayerService].
 class QueueBloc extends Bloc {
-
   QueueBloc({
     required this.audioPlayerService,
     required this.podcastService,
@@ -28,14 +27,17 @@ class QueueBloc extends Bloc {
       if (event is QueueAddEvent) {
         final e = event.episode;
         await audioPlayerService.addUpNextEpisode(e);
-            } else if (event is QueueRemoveEvent) {
+      } else if (event is QueueRemoveEvent) {
         final e = event.episode;
         await audioPlayerService.removeUpNextEpisode(e);
-            } else if (event is QueueMoveEvent) {
+      } else if (event is QueueMoveEvent) {
         final e = event.episode;
         await audioPlayerService.moveUpNextEpisode(
-            e, event.oldIndex, event.newIndex,);
-            } else if (event is QueueClearEvent) {
+          e,
+          event.oldIndex,
+          event.newIndex,
+        );
+      } else if (event is QueueClearEvent) {
         await audioPlayerService.clearUpNext();
       }
     });

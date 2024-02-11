@@ -42,48 +42,50 @@ class _SpeedSelectorWidgetState extends State<SpeedSelectorWidget> {
     final theme = Theme.of(context);
 
     return StreamBuilder<AppSettings>(
-        stream: settingsBloc.settings,
-        initialData: AppSettings.sensibleDefaults(),
-        builder: (context, snapshot) {
-          return Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              InkWell(
-                onTap: () {
-                  showModalBottomSheet<void>(
-                      context: context,
-                      backgroundColor: theme.secondaryHeaderColor,
-                      shape: const RoundedRectangleBorder(
-                        borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(16),
-                          topRight: Radius.circular(16),
-                        ),
-                      ),
-                      builder: (context) {
-                        return const SpeedSlider();
-                      },);
-                },
-                child: SizedBox(
-                  height: 48,
-                  width: 48,
-                  child: Center(
-                    child: Text(
-                      snapshot.data!.playbackSpeed == 1.0
-                          ? 'x1'
-                          : 'x${snapshot.data!.playbackSpeed}',
-                      semanticsLabel: L.of(context)!.playback_speed_label,
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Theme.of(context).iconTheme.color,
-                      ),
+      stream: settingsBloc.settings,
+      initialData: AppSettings.sensibleDefaults(),
+      builder: (context, snapshot) {
+        return Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            InkWell(
+              onTap: () {
+                showModalBottomSheet<void>(
+                  context: context,
+                  backgroundColor: theme.secondaryHeaderColor,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(16),
+                      topRight: Radius.circular(16),
+                    ),
+                  ),
+                  builder: (context) {
+                    return const SpeedSlider();
+                  },
+                );
+              },
+              child: SizedBox(
+                height: 48,
+                width: 48,
+                child: Center(
+                  child: Text(
+                    snapshot.data!.playbackSpeed == 1.0
+                        ? 'x1'
+                        : 'x${snapshot.data!.playbackSpeed}',
+                    semanticsLabel: L.of(context)!.playback_speed_label,
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Theme.of(context).iconTheme.color,
                     ),
                   ),
                 ),
               ),
-            ],
-          );
-        },);
+            ),
+          ],
+        );
+      },
+    );
   }
 }
 

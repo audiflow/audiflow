@@ -7,7 +7,6 @@
 import 'package:flutter/material.dart';
 
 class SettingsDividerLabel extends StatelessWidget {
-
   const SettingsDividerLabel({
     super.key,
     required this.label,

@@ -14,7 +14,6 @@ import 'package:flutter/widgets.dart';
 /// and determining if we need to display the podcast details or just update the
 /// current screen.
 class NavigationRouteObserver extends NavigatorObserver {
-
   factory NavigationRouteObserver() {
     return _instance;
   }

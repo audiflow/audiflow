@@ -16,7 +16,6 @@ import 'package:seasoning/l10n/L.dart';
 /// We receive a code which we then map to an error message. This needs to be placed
 /// below a [Scaffold].
 class PlaybackErrorListener extends StatefulWidget {
-
   const PlaybackErrorListener({
     super.key,
     required this.child,

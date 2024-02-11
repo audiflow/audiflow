@@ -16,7 +16,6 @@ import 'package:seasoning/services/podcast/podcast_service.dart';
 ///
 /// As charts will not change very frequently the results are cached for [cacheMinutes].
 class DiscoveryBloc extends Bloc {
-
   DiscoveryBloc({required this.podcastService}) {
     _init();
   }
@@ -44,8 +43,7 @@ class DiscoveryBloc extends Bloc {
   int _lastIndex = 0;
 
   void _init() {
-    _discoveryResults = _discoveryInput
-        .switchMap<DiscoveryState>(_charts);
+    _discoveryResults = _discoveryInput.switchMap<DiscoveryState>(_charts);
     _selectedGenre.value = SelectedGenre(index: 0, genre: '');
     _genres.onListen = _loadGenres;
   }
@@ -103,7 +101,6 @@ class DiscoveryBloc extends Bloc {
 }
 
 class SelectedGenre {
-
   SelectedGenre({
     required this.index,
     required this.genre,

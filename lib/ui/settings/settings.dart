@@ -54,128 +54,136 @@ class _SettingsState extends State<Settings> {
     final opmlBloc = Provider.of<OPMLBloc>(context);
 
     return StreamBuilder<AppSettings>(
-        stream: settingsBloc.settings,
-        initialData: settingsBloc.currentSettings,
-        builder: (context, snapshot) {
-          return ListView(
-            children: [
-              SettingsDividerLabel(
-                  label: L.of(context)!.settings_personalisation_divider_label,),
-              ListTile(
-                shape: const RoundedRectangleBorder(),
-                title: Text(L.of(context)!.settings_theme_switch_label),
-                trailing: Switch.adaptive(
-                    value: snapshot.data!.theme == 'dark',
-                    onChanged: (value) {
-                      settingsBloc.darkMode(value);
-                    },),
+      stream: settingsBloc.settings,
+      initialData: settingsBloc.currentSettings,
+      builder: (context, snapshot) {
+        return ListView(
+          children: [
+            SettingsDividerLabel(
+              label: L.of(context)!.settings_personalisation_divider_label,
+            ),
+            ListTile(
+              shape: const RoundedRectangleBorder(),
+              title: Text(L.of(context)!.settings_theme_switch_label),
+              trailing: Switch.adaptive(
+                value: snapshot.data!.theme == 'dark',
+                onChanged: (value) {
+                  settingsBloc.darkMode(value);
+                },
               ),
-              SettingsDividerLabel(
-                  label: L.of(context)!.settings_episodes_divider_label,),
-              ListTile(
-                title: Text(L.of(context)!.settings_mark_deleted_played_label),
-                trailing: Switch.adaptive(
-                  value: snapshot.data!.markDeletedEpisodesAsPlayed,
-                  onChanged: (value) =>
-                      setState(() => settingsBloc.markDeletedAsPlayed(value)),
-                ),
+            ),
+            SettingsDividerLabel(
+              label: L.of(context)!.settings_episodes_divider_label,
+            ),
+            ListTile(
+              title: Text(L.of(context)!.settings_mark_deleted_played_label),
+              trailing: Switch.adaptive(
+                value: snapshot.data!.markDeletedEpisodesAsPlayed,
+                onChanged: (value) =>
+                    setState(() => settingsBloc.markDeletedAsPlayed(value)),
               ),
-              sdcard
-                  ? ListTile(
-                      title:
-                          Text(L.of(context)!.settings_download_sd_card_label),
-                      trailing: Switch.adaptive(
-                        value: snapshot.data!.storeDownloadsSDCard,
-                        onChanged: (value) => sdcard
-                            ? setState(() {
-                                if (value) {
-                                  _showStorageDialog(
-                                      enableExternalStorage: true,);
-                                } else {
-                                  _showStorageDialog(
-                                      enableExternalStorage: false,);
-                                }
+            ),
+            sdcard
+                ? ListTile(
+                    title: Text(L.of(context)!.settings_download_sd_card_label),
+                    trailing: Switch.adaptive(
+                      value: snapshot.data!.storeDownloadsSDCard,
+                      onChanged: (value) => sdcard
+                          ? setState(() {
+                              if (value) {
+                                _showStorageDialog(
+                                  enableExternalStorage: true,
+                                );
+                              } else {
+                                _showStorageDialog(
+                                  enableExternalStorage: false,
+                                );
+                              }
 
-                                settingsBloc.storeDownloadonSDCard(value);
-                              })
-                            : null,
-                      ),
-                    )
-                  : const SizedBox(
-                      height: 0,
-                      width: 0,
+                              settingsBloc.storeDownloadonSDCard(value);
+                            })
+                          : null,
                     ),
-              SettingsDividerLabel(
-                  label: L.of(context)!.settings_playback_divider_label,),
-              ListTile(
-                title: Text(L.of(context)!.settings_auto_open_now_playing),
-                trailing: Switch.adaptive(
-                  value: snapshot.data!.autoOpenNowPlaying,
-                  onChanged: (value) =>
-                      setState(() => settingsBloc.setAutoOpenNowPlaying(value)),
-                ),
+                  )
+                : const SizedBox(
+                    height: 0,
+                    width: 0,
+                  ),
+            SettingsDividerLabel(
+              label: L.of(context)!.settings_playback_divider_label,
+            ),
+            ListTile(
+              title: Text(L.of(context)!.settings_auto_open_now_playing),
+              trailing: Switch.adaptive(
+                value: snapshot.data!.autoOpenNowPlaying,
+                onChanged: (value) =>
+                    setState(() => settingsBloc.setAutoOpenNowPlaying(value)),
               ),
-              const EpisodeRefreshWidget(),
-              SettingsDividerLabel(
-                  label: L.of(context)!.settings_data_divider_label,),
-              ListTile(
-                title: Text(L.of(context)!.settings_import_opml),
-                onTap: () async {
-                  final result = await FilePicker.platform.pickFiles(
-                    type: FileType.custom,
-                    // `podcast.opml` is a UTTypeDeclaration made in iOS setup.
-                    allowedExtensions: ['opml', 'podcast.opml', 'xml'],
-                  );
+            ),
+            const EpisodeRefreshWidget(),
+            SettingsDividerLabel(
+              label: L.of(context)!.settings_data_divider_label,
+            ),
+            ListTile(
+              title: Text(L.of(context)!.settings_import_opml),
+              onTap: () async {
+                final result = await FilePicker.platform.pickFiles(
+                  type: FileType.custom,
+                  // `podcast.opml` is a UTTypeDeclaration made in iOS setup.
+                  allowedExtensions: ['opml', 'podcast.opml', 'xml'],
+                );
 
-                  if (result != null && result.count > 0) {
-                    final file = result.files.first;
+                if (result != null && result.count > 0) {
+                  final file = result.files.first;
 
-                    if (context.mounted) {
-                      final e = await showPlatformDialog<bool>(
-                        useRootNavigator: false,
-                        context: context,
-                        builder: (_) => PopScope(
-                          onPopInvoked: (didPop) async => false,
-                          child: BasicDialogAlert(
-                            title: Text(L.of(context)!.settings_import_opml),
-                            content: OPMLImport(file: file.path!),
-                            actions: <Widget>[
-                              BasicDialogAction(
-                                title: ActionText(
-                                    L.of(context)!.cancel_button_label,),
-                                onPressed: () {
-                                  return Navigator.pop(context, true);
-                                },
+                  if (context.mounted) {
+                    final e = await showPlatformDialog<bool>(
+                      useRootNavigator: false,
+                      context: context,
+                      builder: (_) => PopScope(
+                        onPopInvoked: (didPop) async => false,
+                        child: BasicDialogAlert(
+                          title: Text(L.of(context)!.settings_import_opml),
+                          content: OPMLImport(file: file.path!),
+                          actions: <Widget>[
+                            BasicDialogAction(
+                              title: ActionText(
+                                L.of(context)!.cancel_button_label,
                               ),
-                            ],
-                          ),
+                              onPressed: () {
+                                return Navigator.pop(context, true);
+                              },
+                            ),
+                          ],
                         ),
-                      );
+                      ),
+                    );
 
-                      if (e != null && e) {
-                        opmlBloc.opmlEvent(OPMLCancelEvent());
-                      }
+                    if (e != null && e) {
+                      opmlBloc.opmlEvent(OPMLCancelEvent());
                     }
-                    podcastBloc.podcastEvent(PodcastEvent.reloadSubscriptions);
                   }
-                },
-              ),
-              ListTile(
-                title: Text(L.of(context)!.settings_export_opml),
-                onTap: () async {
-                  await showPlatformDialog<void>(
-                    context: context,
-                    useRootNavigator: false,
-                    builder: (_) => BasicDialogAlert(
-                      content: const OPMLExport(),
-                    ),
-                  );
-                },
-              ),
-              const SearchProviderWidget(),
-            ],
-          );
-        },);
+                  podcastBloc.podcastEvent(PodcastEvent.reloadSubscriptions);
+                }
+              },
+            ),
+            ListTile(
+              title: Text(L.of(context)!.settings_export_opml),
+              onTap: () async {
+                await showPlatformDialog<void>(
+                  context: context,
+                  useRootNavigator: false,
+                  builder: (_) => BasicDialogAlert(
+                    content: const OPMLExport(),
+                  ),
+                );
+              },
+            ),
+            const SearchProviderWidget(),
+          ],
+        );
+      },
+    );
   }
 
   Widget _buildAndroid(BuildContext context) {

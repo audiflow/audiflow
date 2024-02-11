@@ -26,7 +26,6 @@ import 'package:seasoning/ui/widgets/tile_image.dart';
 ///
 /// TODO: Replace [Opacity] with [Container] with a transparent colour.
 class EpisodeTile extends StatefulWidget {
-
   const EpisodeTile({
     super.key,
     required this.episode,
@@ -147,7 +146,8 @@ class _EpisodeTileState extends State<EpisodeTile> {
                     style: TextButton.styleFrom(
                       padding: EdgeInsets.zero,
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(4),),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
                     ),
                     onPressed: widget.episode.downloaded
                         ? () {
@@ -159,7 +159,8 @@ class _EpisodeTileState extends State<EpisodeTile> {
                                   L.of(context)!.delete_episode_title,
                                 ),
                                 content: Text(
-                                    L.of(context)!.delete_episode_confirmation,),
+                                  L.of(context)!.delete_episode_confirmation,
+                                ),
                                 actions: <Widget>[
                                   BasicDialogAction(
                                     title: ActionText(
@@ -215,17 +216,20 @@ class _EpisodeTileState extends State<EpisodeTile> {
                     style: TextButton.styleFrom(
                       padding: EdgeInsets.zero,
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(0),),
+                        borderRadius: BorderRadius.circular(0),
+                      ),
                     ),
                     onPressed: widget.playing
                         ? null
                         : () {
                             if (widget.queued) {
                               queueBloc.queueEvent(
-                                  QueueRemoveEvent(episode: widget.episode),);
+                                QueueRemoveEvent(episode: widget.episode),
+                              );
                             } else {
                               queueBloc.queueEvent(
-                                  QueueAddEvent(episode: widget.episode),);
+                                QueueAddEvent(episode: widget.episode),
+                              );
                             }
                           },
                     child: Column(
@@ -260,7 +264,8 @@ class _EpisodeTileState extends State<EpisodeTile> {
                     style: TextButton.styleFrom(
                       padding: EdgeInsets.zero,
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(0),),
+                        borderRadius: BorderRadius.circular(0),
+                      ),
                     ),
                     onPressed: () {
                       episodeBloc.togglePlayed(widget.episode);
@@ -295,24 +300,26 @@ class _EpisodeTileState extends State<EpisodeTile> {
                     style: TextButton.styleFrom(
                       padding: EdgeInsets.zero,
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(0),),
+                        borderRadius: BorderRadius.circular(0),
+                      ),
                     ),
                     onPressed: () {
                       showModalBottomSheet<void>(
-                          context: context,
-                          backgroundColor: theme.bottomAppBarTheme.color,
-                          isScrollControlled: true,
-                          shape: const RoundedRectangleBorder(
-                            borderRadius: BorderRadius.only(
-                              topLeft: Radius.circular(10),
-                              topRight: Radius.circular(10),
-                            ),
+                        context: context,
+                        backgroundColor: theme.bottomAppBarTheme.color,
+                        isScrollControlled: true,
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.only(
+                            topLeft: Radius.circular(10),
+                            topRight: Radius.circular(10),
                           ),
-                          builder: (context) {
-                            return EpisodeDetails(
-                              episode: widget.episode,
-                            );
-                          },);
+                        ),
+                        builder: (context) {
+                          return EpisodeDetails(
+                            episode: widget.episode,
+                          );
+                        },
+                      );
                     },
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -345,7 +352,6 @@ class _EpisodeTileState extends State<EpisodeTile> {
 }
 
 class EpisodeTransportControls extends StatelessWidget {
-
   const EpisodeTransportControls({
     super.key,
     required this.episode,
@@ -361,21 +367,25 @@ class EpisodeTransportControls extends StatelessWidget {
     final buttons = <Widget>[];
 
     if (download) {
-      buttons.add(Semantics(
-        container: true,
-        child: DownloadControl(
-          episode: episode,
+      buttons.add(
+        Semantics(
+          container: true,
+          child: DownloadControl(
+            episode: episode,
+          ),
         ),
-      ),);
+      );
     }
 
     if (play) {
-      buttons.add(Semantics(
-        container: true,
-        child: PlayControl(
-          episode: episode,
+      buttons.add(
+        Semantics(
+          container: true,
+          child: PlayControl(
+            episode: episode,
+          ),
         ),
-      ),);
+      );
     }
 
     return SizedBox(
@@ -388,14 +398,14 @@ class EpisodeTransportControls extends StatelessWidget {
 }
 
 class EpisodeSubtitle extends StatelessWidget {
-
   EpisodeSubtitle(this.episode, {super.key})
       : date = episode.publicationDate == null
             ? ''
-            : DateFormat(episode.publicationDate!.year == DateTime.now().year
+            : DateFormat(
+                episode.publicationDate!.year == DateTime.now().year
                     ? 'yyyy.MM'
-                    : 'yyyy.MM.dd',)
-                .format(episode.publicationDate!),
+                    : 'yyyy.MM.dd',
+              ).format(episode.publicationDate!),
         length = Duration(seconds: episode.duration);
   final Episode episode;
   final String date;

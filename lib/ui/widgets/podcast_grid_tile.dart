@@ -12,7 +12,6 @@ import 'package:seasoning/ui/podcast/podcast_details.dart';
 import 'package:seasoning/ui/widgets/tile_image.dart';
 
 class PodcastGridTile extends StatelessWidget {
-
   const PodcastGridTile({
     super.key,
     required this.podcast,
@@ -28,8 +27,9 @@ class PodcastGridTile extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute<void>(
-              settings: const RouteSettings(name: 'podcastdetails'),
-              builder: (context) => PodcastDetails(podcast, podcastBloc),),
+            settings: const RouteSettings(name: 'podcastdetails'),
+            builder: (context) => PodcastDetails(podcast, podcastBloc),
+          ),
         );
       },
       child: Semantics(
@@ -50,7 +50,6 @@ class PodcastGridTile extends StatelessWidget {
 }
 
 class PodcastTitledGridTile extends StatelessWidget {
-
   const PodcastTitledGridTile({
     super.key,
     required this.podcast,
@@ -67,8 +66,9 @@ class PodcastTitledGridTile extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute<void>(
-              settings: const RouteSettings(name: 'podcastdetails'),
-              builder: (context) => PodcastDetails(podcast, podcastBloc),),
+            settings: const RouteSettings(name: 'podcastdetails'),
+            builder: (context) => PodcastDetails(podcast, podcastBloc),
+          ),
         );
       },
       child: GridTile(

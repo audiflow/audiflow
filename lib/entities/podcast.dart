@@ -50,9 +50,7 @@ class Podcast with _$Podcast {
 
     /// Zero or more funding links.
     @Default([]) List<Funding> funding,
-
-    @Default([])
-    List<Person> persons,
+    @Default([]) List<Person> persons,
 
     /// Date and time podcast was last updated/refreshed.
     DateTime? lastUpdated,

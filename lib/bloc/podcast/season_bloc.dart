@@ -11,7 +11,6 @@ import 'package:seasoning/services/podcast/podcast_service.dart';
 /// The BLoC provides access to [Season] details outside the direct scope
 /// of a [Podcast].
 class SeasonBloc extends Bloc {
-
   SeasonBloc({
     required this.podcastService,
     required this.audioPlayerService,
@@ -33,7 +32,8 @@ class SeasonBloc extends Bloc {
 
   void _init() {
     _seasonsOutput = _seasonsInput.switchMap<BlocState<List<Season>>>(
-        _loadSeasons,);
+      _loadSeasons,
+    );
   }
 
   Stream<BlocState<List<Season>>> _loadSeasons(bool silent) async* {

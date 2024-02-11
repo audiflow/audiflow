@@ -27,176 +27,184 @@ class UpNextView extends StatelessWidget {
     final queueBloc = Provider.of<QueueBloc>(context, listen: false);
 
     return StreamBuilder<QueueState>(
-        initialData: QueueEmptyState(),
-        stream: queueBloc.queue,
-        builder: (context, snapshot) {
-          return Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 24, 8),
-                    child: Text(
-                      L.of(context)!.now_playing_queue_label,
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
+      initialData: QueueEmptyState(),
+      stream: queueBloc.queue,
+      builder: (context, snapshot) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 24, 8),
+                  child: Text(
+                    L.of(context)!.now_playing_queue_label,
+                    style: Theme.of(context).textTheme.titleLarge,
                   ),
-                ],
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
-                child: DraggableEpisodeTile(
-                  key: const Key('detileplaying'),
-                  episode: snapshot.data!.playing!,
-                  draggable: false,
                 ),
+              ],
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
+              child: DraggableEpisodeTile(
+                key: const Key('detileplaying'),
+                episode: snapshot.data!.playing!,
+                draggable: false,
               ),
-              Row(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 24, 8),
-                    child: Text(
-                      L.of(context)!.up_next_queue_label,
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
+            ),
+            Row(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 24, 8),
+                  child: Text(
+                    L.of(context)!.up_next_queue_label,
+                    style: Theme.of(context).textTheme.titleLarge,
                   ),
-                  const Spacer(),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 24, 8),
-                    child: TextButton(
-                      onPressed: snapshot.hasData &&
-                              snapshot.data!.queue.isEmpty
-                          ? null
-                          : () {
-                              showPlatformDialog<void>(
-                                context: context,
-                                useRootNavigator: false,
-                                builder: (_) => BasicDialogAlert(
-                                  title: Text(
-                                    L.of(context)!.queue_clear_label_title,
-                                  ),
-                                  content:
-                                      Text(L.of(context)!.queue_clear_label),
-                                  actions: <Widget>[
-                                    BasicDialogAction(
-                                      title: ActionText(
-                                        L.of(context)!.cancel_button_label,
-                                      ),
-                                      onPressed: () {
-                                        Navigator.pop(context);
-                                      },
-                                    ),
-                                    BasicDialogAction(
-                                      title: ActionText(
-                                        Theme.of(context).platform ==
-                                                TargetPlatform.iOS
-                                            ? L
-                                                .of(context)!
-                                                .queue_clear_button_label
-                                                .toUpperCase()
-                                            : L
-                                                .of(context)!
-                                                .queue_clear_button_label,
-                                      ),
-                                      iosIsDefaultAction: true,
-                                      iosIsDestructiveAction: true,
-                                      onPressed: () {
-                                        queueBloc.queueEvent(const QueueClearEvent());
-                                        Navigator.pop(context);
-                                      },
-                                    ),
-                                  ],
+                ),
+                const Spacer(),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 24, 8),
+                  child: TextButton(
+                    onPressed: snapshot.hasData && snapshot.data!.queue.isEmpty
+                        ? null
+                        : () {
+                            showPlatformDialog<void>(
+                              context: context,
+                              useRootNavigator: false,
+                              builder: (_) => BasicDialogAlert(
+                                title: Text(
+                                  L.of(context)!.queue_clear_label_title,
                                 ),
-                              );
-                            },
-                      child: snapshot.hasData && snapshot.data!.queue.isEmpty
-                          ? Text(
-                              L.of(context)!.clear_queue_button_label,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleSmall!
-                                  .copyWith(
-                                    fontSize: 12,
-                                    color: Theme.of(context).disabledColor,
+                                content: Text(L.of(context)!.queue_clear_label),
+                                actions: <Widget>[
+                                  BasicDialogAction(
+                                    title: ActionText(
+                                      L.of(context)!.cancel_button_label,
+                                    ),
+                                    onPressed: () {
+                                      Navigator.pop(context);
+                                    },
                                   ),
-                            )
-                          : Text(
-                              L.of(context)!.clear_queue_button_label,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleSmall!
-                                  .copyWith(
-                                    fontSize: 12,
-                                    color: Theme.of(context).primaryColor,
+                                  BasicDialogAction(
+                                    title: ActionText(
+                                      Theme.of(context).platform ==
+                                              TargetPlatform.iOS
+                                          ? L
+                                              .of(context)!
+                                              .queue_clear_button_label
+                                              .toUpperCase()
+                                          : L
+                                              .of(context)!
+                                              .queue_clear_button_label,
+                                    ),
+                                    iosIsDefaultAction: true,
+                                    iosIsDestructiveAction: true,
+                                    onPressed: () {
+                                      queueBloc
+                                          .queueEvent(const QueueClearEvent());
+                                      Navigator.pop(context);
+                                    },
                                   ),
-                            ),
-                    ),
-                  ),
-                ],
-              ),
-              snapshot.hasData && snapshot.data!.queue.isEmpty
-                  ? Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                            color: Theme.of(context).dividerColor,
-                            border: Border.all(
-                              color: Theme.of(context).dividerColor,
-                            ),
-                            borderRadius:
-                                const BorderRadius.all(Radius.circular(10)),),
-                        child: Padding(
-                          padding: const EdgeInsets.all(24),
-                          child: Text(
-                            L.of(context)!.empty_queue_message,
-                            style: Theme.of(context).textTheme.titleMedium,
+                                ],
+                              ),
+                            );
+                          },
+                    child: snapshot.hasData && snapshot.data!.queue.isEmpty
+                        ? Text(
+                            L.of(context)!.clear_queue_button_label,
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleSmall!
+                                .copyWith(
+                                  fontSize: 12,
+                                  color: Theme.of(context).disabledColor,
+                                ),
+                          )
+                        : Text(
+                            L.of(context)!.clear_queue_button_label,
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleSmall!
+                                .copyWith(
+                                  fontSize: 12,
+                                  color: Theme.of(context).primaryColor,
+                                ),
                           ),
+                  ),
+                ),
+              ],
+            ),
+            snapshot.hasData && snapshot.data!.queue.isEmpty
+                ? Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).dividerColor,
+                        border: Border.all(
+                          color: Theme.of(context).dividerColor,
+                        ),
+                        borderRadius:
+                            const BorderRadius.all(Radius.circular(10)),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Text(
+                          L.of(context)!.empty_queue_message,
+                          style: Theme.of(context).textTheme.titleMedium,
                         ),
                       ),
-                    )
-                  : Expanded(
-                      child: ReorderableListView.builder(
-                        buildDefaultDragHandles: false,
-                        shrinkWrap: true,
-                        padding: const EdgeInsets.all(8),
-                        itemCount:
-                            snapshot.hasData ? snapshot.data!.queue.length : 0,
-                        itemBuilder: (BuildContext context, int index) {
-                          return Dismissible(
+                    ),
+                  )
+                : Expanded(
+                    child: ReorderableListView.builder(
+                      buildDefaultDragHandles: false,
+                      shrinkWrap: true,
+                      padding: const EdgeInsets.all(8),
+                      itemCount:
+                          snapshot.hasData ? snapshot.data!.queue.length : 0,
+                      itemBuilder: (BuildContext context, int index) {
+                        return Dismissible(
+                          key: ValueKey(
+                            'disqueue${snapshot.data!.queue[index].guid}',
+                          ),
+                          direction: DismissDirection.endToStart,
+                          onDismissed: (direction) {
+                            queueBloc.queueEvent(
+                              QueueRemoveEvent(
+                                episode: snapshot.data!.queue[index],
+                              ),
+                            );
+                          },
+                          child: DraggableEpisodeTile(
                             key: ValueKey(
-                                'disqueue${snapshot.data!.queue[index].guid}',),
-                            direction: DismissDirection.endToStart,
-                            onDismissed: (direction) {
-                              queueBloc.queueEvent(QueueRemoveEvent(
-                                  episode: snapshot.data!.queue[index],),);
-                            },
-                            child: DraggableEpisodeTile(
-                              key: ValueKey(
-                                  'tilequeue${snapshot.data!.queue[index].guid}',),
-                              index: index,
-                              episode: snapshot.data!.queue[index],
-                              playable: true,
+                              'tilequeue${snapshot.data!.queue[index].guid}',
                             ),
-                          );
-                        },
-                        onReorder: (int oldIndex, int newIndex) {
-                          /// Seems odd to have to do this, but this -1 was taken from
-                          /// the Flutter docs.
-                          if (oldIndex < newIndex) {
-                            newIndex -= 1;
-                          }
+                            index: index,
+                            episode: snapshot.data!.queue[index],
+                            playable: true,
+                          ),
+                        );
+                      },
+                      onReorder: (int oldIndex, int newIndex) {
+                        /// Seems odd to have to do this, but this -1 was taken from
+                        /// the Flutter docs.
+                        if (oldIndex < newIndex) {
+                          newIndex -= 1;
+                        }
 
-                          queueBloc.queueEvent(QueueMoveEvent(
+                        queueBloc.queueEvent(
+                          QueueMoveEvent(
                             episode: snapshot.data!.queue[oldIndex],
                             oldIndex: oldIndex,
                             newIndex: newIndex,
-                          ),);
-                        },
-                      ),
+                          ),
+                        );
+                      },
                     ),
-            ],
-          );
-        },);
+                  ),
+          ],
+        );
+      },
+    );
   }
 }

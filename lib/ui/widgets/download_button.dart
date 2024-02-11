@@ -12,7 +12,6 @@ import 'package:percent_indicator/percent_indicator.dart';
 /// Can be passed a percentage representing the download progress which
 /// the button will then animate to show progress.
 class DownloadButton extends StatelessWidget {
-
   const DownloadButton({
     super.key,
     required this.label,

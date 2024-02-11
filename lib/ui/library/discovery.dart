@@ -17,7 +17,6 @@ import 'package:sliver_tools/sliver_tools.dart';
 ///
 /// This UI can optionally show a list of genres provided by iTunes/PodcastIndex.
 class Discovery extends StatefulWidget {
-
   const Discovery({
     super.key,
     this.categories = false,
@@ -38,12 +37,14 @@ class _DiscoveryState extends State<Discovery> {
 
     final bloc = Provider.of<DiscoveryBloc>(context, listen: false);
 
-    bloc.discover(DiscoveryChartEvent(
-      count: Discovery.fetchSize,
-      genre: bloc.selectedGenre.genre,
-      countryCode:
-          PlatformDispatcher.instance.locale.countryCode?.toLowerCase() ?? '',
-    ),);
+    bloc.discover(
+      DiscoveryChartEvent(
+        count: Discovery.fetchSize,
+        genre: bloc.selectedGenre.genre,
+        countryCode:
+            PlatformDispatcher.instance.locale.countryCode?.toLowerCase() ?? '',
+      ),
+    );
   }
 
   @override
@@ -58,24 +59,30 @@ class _DiscoveryState extends State<Discovery> {
                 pinned: true,
               ),
               DiscoveryResults(
-                  data: bloc.results, inlineSearch: widget.inlineSearch,),
+                data: bloc.results,
+                inlineSearch: widget.inlineSearch,
+              ),
             ],
           )
         : DiscoveryResults(
-            data: bloc.results, inlineSearch: widget.inlineSearch,);
+            data: bloc.results,
+            inlineSearch: widget.inlineSearch,
+          );
   }
 }
 
 /// This delegate is responsible for rendering the horizontal scrolling list of categories
 /// that can optionally be displayed at the top of the Discovery results page.
 class MyHeaderDelegate extends SliverPersistentHeaderDelegate {
-
   MyHeaderDelegate(this.discoveryBloc);
   final DiscoveryBloc discoveryBloc;
 
   @override
   Widget build(
-      BuildContext context, double shrinkOffset, bool overlapsContent,) {
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
     return CategorySelectorWidget(discoveryBloc: discoveryBloc);
   }
 
@@ -91,7 +98,6 @@ class MyHeaderDelegate extends SliverPersistentHeaderDelegate {
 }
 
 class CategorySelectorWidget extends StatefulWidget {
-
   CategorySelectorWidget({
     super.key,
     required this.discoveryBloc,
@@ -113,54 +119,58 @@ class _CategorySelectorWidgetState extends State<CategorySelectorWidget> {
       width: double.infinity,
       color: Theme.of(context).canvasColor,
       child: StreamBuilder<List<String>>(
-          stream: widget.discoveryBloc.genres,
-          initialData: const [],
-          builder: (context, snapshot) {
-            final i = widget.discoveryBloc.selectedGenre.index;
+        stream: widget.discoveryBloc.genres,
+        initialData: const [],
+        builder: (context, snapshot) {
+          final i = widget.discoveryBloc.selectedGenre.index;
 
-            return snapshot.hasData && snapshot.data!.isNotEmpty
-                ? ScrollablePositionedList.builder(
-                    initialScrollIndex: (i > 0) ? i : 0,
-                    itemScrollController: widget.itemScrollController,
-                    itemCount: snapshot.data!.length,
-                    scrollDirection: Axis.horizontal,
-                    itemBuilder: (context, i) {
-                      final item = snapshot.data![i];
-                      final padding = i == 0 ? 14.0 : 2.0;
+          return snapshot.hasData && snapshot.data!.isNotEmpty
+              ? ScrollablePositionedList.builder(
+                  initialScrollIndex: (i > 0) ? i : 0,
+                  itemScrollController: widget.itemScrollController,
+                  itemCount: snapshot.data!.length,
+                  scrollDirection: Axis.horizontal,
+                  itemBuilder: (context, i) {
+                    final item = snapshot.data![i];
+                    final padding = i == 0 ? 14.0 : 2.0;
 
-                      return Container(
-                        margin: EdgeInsets.only(left: padding),
-                        child: Card(
-                          color: item == selectedCategory ||
-                                  (selectedCategory.isEmpty && i == 0)
-                              ? Theme.of(context).cardTheme.shadowColor
-                              : Theme.of(context).cardTheme.color,
-                          child: TextButton(
-                            style: TextButton.styleFrom(
-                              foregroundColor: const Color(0xffffffff),
-                              visualDensity: VisualDensity.compact,
-                            ),
-                            onPressed: () {
-                              setState(() {
-                                selectedCategory = item;
-                              });
+                    return Container(
+                      margin: EdgeInsets.only(left: padding),
+                      child: Card(
+                        color: item == selectedCategory ||
+                                (selectedCategory.isEmpty && i == 0)
+                            ? Theme.of(context).cardTheme.shadowColor
+                            : Theme.of(context).cardTheme.color,
+                        child: TextButton(
+                          style: TextButton.styleFrom(
+                            foregroundColor: const Color(0xffffffff),
+                            visualDensity: VisualDensity.compact,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              selectedCategory = item;
+                            });
 
-                              widget.discoveryBloc.discover(DiscoveryChartEvent(
+                            widget.discoveryBloc.discover(
+                              DiscoveryChartEvent(
                                 count: Discovery.fetchSize,
                                 genre: item,
                                 countryCode: PlatformDispatcher
                                         .instance.locale.countryCode
                                         ?.toLowerCase() ??
                                     '',
-                              ),);
-                            },
-                            child: Text(item),
-                          ),
+                              ),
+                            );
+                          },
+                          child: Text(item),
                         ),
-                      );
-                    },)
-                : Container();
-          },),
+                      ),
+                    );
+                  },
+                )
+              : Container();
+        },
+      ),
     );
   }
 }

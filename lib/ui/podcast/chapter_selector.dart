@@ -18,7 +18,6 @@ import 'package:seasoning/ui/widgets/platform_progress_indicator.dart';
 /// podcasts that support that chapter tag.
 // ignore: must_be_immutable
 class ChapterSelector extends StatefulWidget {
-
   ChapterSelector({
     super.key,
     required this.episode,
@@ -83,66 +82,67 @@ class _ChapterSelectorState extends State<ChapterSelector> {
     final audioBloc = Provider.of<AudioBloc>(context);
 
     return StreamBuilder<Episode?>(
-        stream: audioBloc.nowPlaying,
-        builder: (context, snapshot) {
-          return !snapshot.hasData || snapshot.data!.chaptersLoading
-              ? const Align(
-                  child: PlatformProgressIndicator(),
-                )
-              : ScrollablePositionedList.builder(
-                  initialScrollIndex: _initialIndex(snapshot.data),
-                  itemScrollController: widget.itemScrollController,
-                  itemCount: widget.chapters.length,
-                  itemBuilder: (context, i) {
-                    final index = i < 0 ? 0 : i;
-                    final chapter = widget.chapters[index];
-                    final chapterSelected =
-                        chapter == snapshot.data!.currentChapter;
-                    final textStyle =
-                        Theme.of(context).textTheme.bodyLarge!.copyWith(
-                              fontSize: 14,
-                              fontWeight: FontWeight.normal,
-                            );
+      stream: audioBloc.nowPlaying,
+      builder: (context, snapshot) {
+        return !snapshot.hasData || snapshot.data!.chaptersLoading
+            ? const Align(
+                child: PlatformProgressIndicator(),
+              )
+            : ScrollablePositionedList.builder(
+                initialScrollIndex: _initialIndex(snapshot.data),
+                itemScrollController: widget.itemScrollController,
+                itemCount: widget.chapters.length,
+                itemBuilder: (context, i) {
+                  final index = i < 0 ? 0 : i;
+                  final chapter = widget.chapters[index];
+                  final chapterSelected =
+                      chapter == snapshot.data!.currentChapter;
+                  final textStyle =
+                      Theme.of(context).textTheme.bodyLarge!.copyWith(
+                            fontSize: 14,
+                            fontWeight: FontWeight.normal,
+                          );
 
-                    /// We should be able to use the selectedTileColor property but, if we do, when
-                    /// we scroll the currently selected item out of view, the selected colour is
-                    /// still visible behind the transport control. This is a little hack, but fixes
-                    /// the issue until I can get ListTile to work correctly.
-                    return Container(
-                      color: chapterSelected
-                          ? Theme.of(context).colorScheme.onBackground
-                          : Colors.transparent,
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(4, 0, 4, 0),
-                        child: ListTile(
-                          onTap: () {
-                            audioBloc.transitionPosition(chapter.startTime);
-                          },
-                          selected: chapterSelected,
-                          leading: Padding(
-                            padding: const EdgeInsets.all(4),
-                            child: Text(
-                              '${index + 1}.',
-                              style: textStyle,
-                            ),
-                          ),
-                          title: Text(
-                            widget.chapters[index].title.trim(),
-                            overflow: TextOverflow.ellipsis,
-                            softWrap: false,
-                            maxLines: 3,
-                            style: textStyle,
-                          ),
-                          trailing: Text(
-                            _formatStartTime(widget.chapters[index].startTime),
+                  /// We should be able to use the selectedTileColor property but, if we do, when
+                  /// we scroll the currently selected item out of view, the selected colour is
+                  /// still visible behind the transport control. This is a little hack, but fixes
+                  /// the issue until I can get ListTile to work correctly.
+                  return Container(
+                    color: chapterSelected
+                        ? Theme.of(context).colorScheme.onBackground
+                        : Colors.transparent,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(4, 0, 4, 0),
+                      child: ListTile(
+                        onTap: () {
+                          audioBloc.transitionPosition(chapter.startTime);
+                        },
+                        selected: chapterSelected,
+                        leading: Padding(
+                          padding: const EdgeInsets.all(4),
+                          child: Text(
+                            '${index + 1}.',
                             style: textStyle,
                           ),
                         ),
+                        title: Text(
+                          widget.chapters[index].title.trim(),
+                          overflow: TextOverflow.ellipsis,
+                          softWrap: false,
+                          maxLines: 3,
+                          style: textStyle,
+                        ),
+                        trailing: Text(
+                          _formatStartTime(widget.chapters[index].startTime),
+                          style: textStyle,
+                        ),
                       ),
-                    );
-                  },
-                );
-        },);
+                    ),
+                  );
+                },
+              );
+      },
+    );
   }
 
   @override

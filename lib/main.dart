@@ -18,22 +18,26 @@ void main() async {
   var certificateAuthorityBytes = <int>[];
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setSystemUIOverlayStyle(
-      const SystemUiOverlayStyle(statusBarColor: Colors.transparent),);
+    const SystemUiOverlayStyle(statusBarColor: Colors.transparent),
+  );
 
   Logger.root.level = Level.FINE;
 
   Logger.root.onRecord.listen((record) {
     print(
-        '${record.level.name}: - ${record.time}: ${record.loggerName}: ${record.message}',);
+      '${record.level.name}: - ${record.time}: ${record.loggerName}: ${record.message}',
+    );
   });
 
   final mobileSettingsService = (await MobileSettingsService.instance())!;
   certificateAuthorityBytes = await setupCertificateAuthority();
 
-  runApp(AnytimePodcastApp(
-    mobileSettingsService: mobileSettingsService,
-    certificateAuthorityBytes: certificateAuthorityBytes,
-  ),);
+  runApp(
+    AnytimePodcastApp(
+      mobileSettingsService: mobileSettingsService,
+      certificateAuthorityBytes: certificateAuthorityBytes,
+    ),
+  );
 }
 
 /// The Let's Encrypt certificate authority expired at the end of September 2021. Android devices

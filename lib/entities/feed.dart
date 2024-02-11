@@ -12,7 +12,6 @@ import 'package:seasoning/entities/podcast.dart';
 /// iTunes API also returns large and thumbnail artwork within its search results
 /// this class also contains properties to represent those.
 class Feed {
-
   Feed({
     required this.podcast,
     this.imageUrl,
@@ -21,6 +20,7 @@ class Feed {
     this.backgroundFresh = false,
     this.silently = false,
   });
+
   /// The podcast to load
   final Podcast podcast;
 

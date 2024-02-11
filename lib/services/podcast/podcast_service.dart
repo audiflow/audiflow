@@ -16,7 +16,6 @@ import 'package:seasoning/repository/repository.dart';
 import 'package:seasoning/services/settings/settings_service.dart';
 
 abstract class PodcastService {
-
   PodcastService({
     required this.api,
     required this.repository,
@@ -201,8 +200,9 @@ abstract class PodcastService {
 
   Future<List<Chapter>> loadChaptersByUrl({required String url});
 
-  Future<Transcript> loadTranscriptByUrl(
-      {required TranscriptUrl transcriptUrl,});
+  Future<Transcript> loadTranscriptByUrl({
+    required TranscriptUrl transcriptUrl,
+  });
 
   Future<void> deleteDownload(Episode episode);
 

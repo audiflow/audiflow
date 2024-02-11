@@ -35,7 +35,6 @@ enum PodcastEvent {
 /// handle actions on a podcast such as requesting an episode download, following/unfollowing
 /// a podcast and marking/un-marking all episodes as played.
 class PodcastBloc extends Bloc {
-
   PodcastBloc({
     required this.podcastService,
     required this.audioPlayerService,
@@ -304,8 +303,9 @@ class PodcastBloc extends Bloc {
   void _listenEpisodeRepositoryEvents() {
     podcastService.episodeListener!.listen((state) {
       // Do we have this episode?
-      final eidx = _episodes.indexWhere((e) =>
-          e.guid == state.episode.guid && e.pguid == state.episode.pguid,);
+      final eidx = _episodes.indexWhere(
+        (e) => e.guid == state.episode.guid && e.pguid == state.episode.pguid,
+      );
 
       if (eidx != -1) {
         _episodes[eidx] = state.episode;

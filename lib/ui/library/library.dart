@@ -32,86 +32,91 @@ class _LibraryState extends State<Library> {
     final settingsBloc = Provider.of<SettingsBloc>(context);
 
     return StreamBuilder<List<Podcast>>(
-        stream: podcastBloc.subscriptions,
-        builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            if (snapshot.data!.isEmpty) {
-              return SliverFillRemaining(
-                hasScrollBody: false,
-                child: Padding(
-                  padding: const EdgeInsets.all(32),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      Icon(
-                        Icons.headset,
-                        size: 75,
-                        color: Theme.of(context).primaryColor,
-                      ),
-                      Text(
-                        L.of(context)!.no_subscriptions_message,
-                        style: Theme.of(context).textTheme.titleLarge,
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            } else {
-              return StreamBuilder<AppSettings>(
-                  stream: settingsBloc.settings,
-                  builder: (context, settingsSnapshot) {
-                    if (settingsSnapshot.hasData) {
-                      final mode = settingsSnapshot.data!.layout;
-                      final size = mode == 1 ? 100.0 : 160.0;
-
-                      if (mode == 0) {
-                        return SliverList(
-                            delegate: SliverChildBuilderDelegate(
-                          (BuildContext context, int index) {
-                            return PodcastTile(
-                                podcast: snapshot.data!.elementAt(index),);
-                          },
-                          childCount: snapshot.data!.length,
-                          addAutomaticKeepAlives: false,
-                        ),);
-                      }
-                      return SliverGrid(
-                        gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-                          maxCrossAxisExtent: size,
-                          mainAxisSpacing: 10,
-                          crossAxisSpacing: 10,
-                        ),
-                        delegate: SliverChildBuilderDelegate(
-                          (BuildContext context, int index) {
-                            return PodcastGridTile(
-                                podcast: snapshot.data!.elementAt(index),);
-                          },
-                          childCount: snapshot.data!.length,
-                        ),
-                      );
-                    } else {
-                      return const SliverFillRemaining(
-                        hasScrollBody: false,
-                        child: SizedBox(
-                          height: 0,
-                          width: 0,
-                        ),
-                      );
-                    }
-                  },);
-            }
-          } else {
-            return const SliverFillRemaining(
+      stream: podcastBloc.subscriptions,
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          if (snapshot.data!.isEmpty) {
+            return SliverFillRemaining(
               hasScrollBody: false,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  PlatformProgressIndicator(),
-                ],
+              child: Padding(
+                padding: const EdgeInsets.all(32),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    Icon(
+                      Icons.headset,
+                      size: 75,
+                      color: Theme.of(context).primaryColor,
+                    ),
+                    Text(
+                      L.of(context)!.no_subscriptions_message,
+                      style: Theme.of(context).textTheme.titleLarge,
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
               ),
             );
+          } else {
+            return StreamBuilder<AppSettings>(
+              stream: settingsBloc.settings,
+              builder: (context, settingsSnapshot) {
+                if (settingsSnapshot.hasData) {
+                  final mode = settingsSnapshot.data!.layout;
+                  final size = mode == 1 ? 100.0 : 160.0;
+
+                  if (mode == 0) {
+                    return SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (BuildContext context, int index) {
+                          return PodcastTile(
+                            podcast: snapshot.data!.elementAt(index),
+                          );
+                        },
+                        childCount: snapshot.data!.length,
+                        addAutomaticKeepAlives: false,
+                      ),
+                    );
+                  }
+                  return SliverGrid(
+                    gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                      maxCrossAxisExtent: size,
+                      mainAxisSpacing: 10,
+                      crossAxisSpacing: 10,
+                    ),
+                    delegate: SliverChildBuilderDelegate(
+                      (BuildContext context, int index) {
+                        return PodcastGridTile(
+                          podcast: snapshot.data!.elementAt(index),
+                        );
+                      },
+                      childCount: snapshot.data!.length,
+                    ),
+                  );
+                } else {
+                  return const SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: SizedBox(
+                      height: 0,
+                      width: 0,
+                    ),
+                  );
+                }
+              },
+            );
           }
-        },);
+        } else {
+          return const SliverFillRemaining(
+            hasScrollBody: false,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                PlatformProgressIndicator(),
+              ],
+            ),
+          );
+        }
+      },
+    );
   }
 }

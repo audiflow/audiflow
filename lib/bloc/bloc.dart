@@ -10,10 +10,10 @@ import 'package:seasoning/bloc/podcast/audio_bloc.dart';
 /// Base class for all BLoCs to give each a hook into the mobile
 /// lifecycle state of paused, resume or detached.
 abstract class Bloc {
-
   Bloc() {
     _init();
   }
+
   /// Handle lifecycle events
   final PublishSubject<LifecycleState> _lifecycleSubject =
       PublishSubject<LifecycleState>(sync: true);

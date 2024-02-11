@@ -14,7 +14,6 @@ import 'package:seasoning/ui/widgets/podcast_html.dart';
 /// We make use of [Html] to render the notes and, if in HTML format, display the
 /// correct formatting, links etc.
 class ShowNotes extends StatelessWidget {
-
   ShowNotes({
     super.key,
     required this.episode,
@@ -27,31 +26,36 @@ class ShowNotes extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        body: CustomScrollView(
-            controller: _sliverScrollController,
-            slivers: <Widget>[
-              SliverAppBar(
-                title: Text(episode.podcast),
-                pinned: true,
-              ),
-              SliverToBoxAdapter(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                      child: Text(episode.title ?? '',
-                          style: textTheme.titleLarge,),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
-                      child: PodcastHtml(
-                          content: episode.content ?? episode.description,),
-                    ),
-                  ],
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      body: CustomScrollView(
+        controller: _sliverScrollController,
+        slivers: <Widget>[
+          SliverAppBar(
+            title: Text(episode.podcast),
+            pinned: true,
+          ),
+          SliverToBoxAdapter(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                  child: Text(
+                    episode.title ?? '',
+                    style: textTheme.titleLarge,
+                  ),
                 ),
-              ),
-            ],),);
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
+                  child: PodcastHtml(
+                    content: episode.content ?? episode.description,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

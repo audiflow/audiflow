@@ -18,7 +18,6 @@ import 'package:seasoning/services/podcast/podcast_service.dart';
 /// This BLoC interacts with the [PodcastService] to search for podcasts for
 /// a given term and to fetch the current podcast charts.
 class SearchBloc extends Bloc {
-
   SearchBloc({required this.podcastService}) {
     _init();
   }

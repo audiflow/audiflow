@@ -18,7 +18,6 @@ import 'package:url_launcher/url_launcher.dart';
 ///
 /// https://github.com/Podcastindex-org/podcast-namespace/blob/main/docs/1.0.md#person
 class PersonAvatar extends StatelessWidget {
-
   PersonAvatar({
     super.key,
     required this.person,

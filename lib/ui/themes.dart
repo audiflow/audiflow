@@ -43,11 +43,8 @@ ThemeData _buildLightTheme() {
     dialogBackgroundColor: const Color(0xffffffff),
     indicatorColor: Colors.orange,
     hintColor: const Color(0x8a000000),
-    primaryTextTheme:
-        Typography.material2021().black,
-    textTheme: Typography.material2021(
-      
-    ).black,
+    primaryTextTheme: Typography.material2021().black,
+    textTheme: Typography.material2021().black,
     primaryIconTheme: IconThemeData(color: Colors.grey[800]),
     buttonTheme: base.buttonTheme.copyWith(
       buttonColor: Colors.orange,
@@ -64,13 +61,14 @@ ThemeData _buildLightTheme() {
       ),
     ),
     appBarTheme: base.appBarTheme.copyWith(
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        systemOverlayStyle: SystemUiOverlayStyle.light.copyWith(
-          systemNavigationBarIconBrightness: Brightness.dark,
-          systemNavigationBarColor: Colors.white,
-          statusBarIconBrightness: Brightness.dark,
-        ),),
+      backgroundColor: Colors.white,
+      foregroundColor: Colors.black,
+      systemOverlayStyle: SystemUiOverlayStyle.light.copyWith(
+        systemNavigationBarIconBrightness: Brightness.dark,
+        systemNavigationBarColor: Colors.white,
+        statusBarIconBrightness: Brightness.dark,
+      ),
+    ),
     snackBarTheme: base.snackBarTheme.copyWith(
       actionTextColor: Colors.orange,
     ),
@@ -114,8 +112,7 @@ ThemeData _buildDarkTheme() {
     dialogBackgroundColor: const Color(0xff222222),
     indicatorColor: Colors.orange,
     hintColor: const Color(0x80ffffff),
-    primaryTextTheme:
-        Typography.material2021().white,
+    primaryTextTheme: Typography.material2021().white,
     textTheme: Typography.material2021().white,
     primaryIconTheme: const IconThemeData(color: Colors.white),
     iconTheme: base.iconTheme.copyWith(
@@ -133,15 +130,16 @@ ThemeData _buildDarkTheme() {
       ),
     ),
     appBarTheme: base.appBarTheme.copyWith(
-        backgroundColor: const Color(0xff222222),
-        foregroundColor: Colors.white,
-        shadowColor: const Color(0xff222222),
-        elevation: 1,
-        systemOverlayStyle: SystemUiOverlayStyle.light.copyWith(
-          systemNavigationBarIconBrightness: Brightness.light,
-          systemNavigationBarColor: const Color(0xff222222),
-          statusBarIconBrightness: Brightness.light,
-        ),),
+      backgroundColor: const Color(0xff222222),
+      foregroundColor: Colors.white,
+      shadowColor: const Color(0xff222222),
+      elevation: 1,
+      systemOverlayStyle: SystemUiOverlayStyle.light.copyWith(
+        systemNavigationBarIconBrightness: Brightness.light,
+        systemNavigationBarColor: const Color(0xff222222),
+        statusBarIconBrightness: Brightness.light,
+      ),
+    ),
     snackBarTheme: base.snackBarTheme.copyWith(
       actionTextColor: Colors.orange,
     ),
@@ -157,7 +155,6 @@ ThemeData _buildDarkTheme() {
 }
 
 class Themes {
-
   Themes({required this.themeData});
 
   factory Themes.lightTheme() {

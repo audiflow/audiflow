@@ -13,7 +13,6 @@ import 'package:seasoning/ui/widgets/tile_image.dart';
 
 /// Renders an episode within the queue which can be dragged to re-order the queue.
 class DraggableEpisodeTile extends StatelessWidget {
-
   const DraggableEpisodeTile({
     super.key,
     required this.episode,

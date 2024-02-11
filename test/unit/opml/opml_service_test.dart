@@ -40,7 +40,9 @@ void main() {
     );
 
     opmlService = MobileOPMLService(
-        podcastService: podcastService, repository: repository,);
+      podcastService: podcastService,
+      repository: repository,
+    );
   });
 
   tearDown(() async {
@@ -56,12 +58,13 @@ void main() {
         opmlService.loadOPMLFile('test_resources/opml_import_test1.opml');
 
     await expectLater(
-        stream,
-        emitsInOrder(<Matcher>[
-          emits(isInstanceOf<OPMLParsingEvent>()),
-          emits(isInstanceOf<OPMLLoadingEvent>()),
-          emits(isInstanceOf<OPMLCompletedEvent>()),
-        ]),);
+      stream,
+      emitsInOrder(<Matcher>[
+        emits(isInstanceOf<OPMLParsingEvent>()),
+        emits(isInstanceOf<OPMLLoadingEvent>()),
+        emits(isInstanceOf<OPMLCompletedEvent>()),
+      ]),
+    );
 
     final subs = await podcastService.subscriptions();
 

@@ -15,7 +15,8 @@ AudioPlayerService audioPlayerService(AudioPlayerServiceRef ref) {
   final settingsService = ref.watch(settingsServiceProvider);
   final podcastService = ref.watch(podcastServiceProvider);
   return DefaultAudioPlayerService(
-      repository: repository,
-      settingsService: settingsService,
-      podcastService: podcastService,);
+    repository: repository,
+    settingsService: settingsService,
+    podcastService: podcastService,
+  );
 }

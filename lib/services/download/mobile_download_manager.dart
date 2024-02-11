@@ -16,7 +16,6 @@ import 'package:seasoning/services/download/download_manager.dart';
 
 /// A [DownloadManager] for handling downloading of podcasts on a mobile device.
 class MobileDownloaderManager implements DownloadManager {
-
   MobileDownloaderManager() {
     _init();
   }
@@ -44,13 +43,17 @@ class MobileDownloaderManager implements DownloadManager {
     if (tasks != null && tasks.isNotEmpty) {
       for (final t in tasks) {
         _updateDownloadState(
-            id: t.taskId, progress: t.progress, status: t.status.value,);
+          id: t.taskId,
+          progress: t.progress,
+          status: t.status.value,
+        );
 
         /// If we are not queued or running we can safely clean up this event
         if (t.status != DownloadTaskStatus.enqueued &&
             t.status != DownloadTaskStatus.running) {
           await FlutterDownloader.remove(
-              taskId: t.taskId,);
+            taskId: t.taskId,
+          );
         }
       }
     }
@@ -68,7 +71,10 @@ class MobileDownloaderManager implements DownloadManager {
 
   @override
   Future<String?> enqueueTask(
-      String url, String downloadPath, String fileName,) async {
+    String url,
+    String downloadPath,
+    String fileName,
+  ) async {
     return await FlutterDownloader.enqueue(
       url: url,
       savedDir: downloadPath,
@@ -86,8 +92,11 @@ class MobileDownloaderManager implements DownloadManager {
     downloadController.close();
   }
 
-  void _updateDownloadState(
-      {required String id, required int progress, required int status,}) {
+  void _updateDownloadState({
+    required String id,
+    required int progress,
+    required int status,
+  }) {
     var state = DownloadState.none;
     final updateTime = DateTime.now().millisecondsSinceEpoch;
     final downloadStatus = DownloadTaskStatus(status);
@@ -120,7 +129,10 @@ class MobileDownloaderManager implements DownloadManager {
 
   @pragma('vm:entry-point')
   static void downloadCallback(
-      String id, DownloadTaskStatus status, int progress,) {
+    String id,
+    DownloadTaskStatus status,
+    int progress,
+  ) {
     IsolateNameServer.lookupPortByName('downloader_send_port')
         ?.send([id, status.value, progress]);
   }

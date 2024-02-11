@@ -10,12 +10,10 @@ import 'dart:io';
 const podcastIndexKey = String.fromEnvironment('PINDEX_KEY');
 
 /// The secret required when searching via PodcastIndex.org.
-const podcastIndexSecret =
-    String.fromEnvironment('PINDEX_SECRET');
+const podcastIndexSecret = String.fromEnvironment('PINDEX_SECRET');
 
 /// Allows a user to override the default user agent string.
-const userAgentAppString =
-    String.fromEnvironment('USER_AGENT');
+const userAgentAppString = String.fromEnvironment('USER_AGENT');
 
 /// Link to a feedback form. This will be shown in the main overflow menu if set
 const feedbackUrl = String.fromEnvironment('FEEDBACK_URL');

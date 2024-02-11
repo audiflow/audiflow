@@ -27,7 +27,6 @@ import 'package:seasoning/ui/widgets/play_pause_button.dart';
 /// This currently consists of the [PlayControl] and [DownloadControl]
 /// to handle the play/pause and download control state respectively.
 class PlayControl extends StatelessWidget {
-
   const PlayControl({
     super.key,
     required this.episode,
@@ -44,104 +43,106 @@ class PlayControl extends StatelessWidget {
       height: 48,
       width: 48,
       child: StreamBuilder<PlayerControlState>(
-          stream: Rx.combineLatest2(
-              audioBloc.playingState!,
-              audioBloc.nowPlaying!,
-              PlayerControlState.new,),
-          builder: (context, snapshot) {
-            if (snapshot.hasData) {
-              final audioState = snapshot.data!.audioState;
-              final nowPlaying = snapshot.data!.episode;
+        stream: Rx.combineLatest2(
+          audioBloc.playingState!,
+          audioBloc.nowPlaying!,
+          PlayerControlState.new,
+        ),
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            final audioState = snapshot.data!.audioState;
+            final nowPlaying = snapshot.data!.episode;
 
-              if (episode.downloadState != DownloadState.downloading &&
-                  episode.downloadState != DownloadState.queued) {
-                // If this episode is the one we are playing, allow the user
-                // to toggle between play and pause.
-                if (snapshot.hasData && nowPlaying?.guid == episode.guid) {
-                  if (audioState == AudioState.playing) {
-                    return InkWell(
-                      onTap: () {
-                        audioBloc.transitionState(TransitionState.pause);
-                      },
-                      child: PlayPauseButton(
-                        title: episode.title,
-                        label: L.of(context)!.pause_button_label,
-                        icon: Icons.pause,
-                      ),
-                    );
-                  } else if (audioState == AudioState.buffering) {
-                    return PlayPauseBusyButton(
+            if (episode.downloadState != DownloadState.downloading &&
+                episode.downloadState != DownloadState.queued) {
+              // If this episode is the one we are playing, allow the user
+              // to toggle between play and pause.
+              if (snapshot.hasData && nowPlaying?.guid == episode.guid) {
+                if (audioState == AudioState.playing) {
+                  return InkWell(
+                    onTap: () {
+                      audioBloc.transitionState(TransitionState.pause);
+                    },
+                    child: PlayPauseButton(
                       title: episode.title,
                       label: L.of(context)!.pause_button_label,
                       icon: Icons.pause,
-                    );
-                  } else if (audioState == AudioState.pausing) {
-                    return InkWell(
-                      onTap: () {
-                        audioBloc.transitionState(TransitionState.play);
-                        optionalShowNowPlaying(context, settings);
-                      },
-                      child: PlayPauseButton(
-                        title: episode.title,
-                        label: L.of(context)!.play_button_label,
-                        icon: Icons.play_arrow,
-                      ),
-                    );
-                  }
+                    ),
+                  );
+                } else if (audioState == AudioState.buffering) {
+                  return PlayPauseBusyButton(
+                    title: episode.title,
+                    label: L.of(context)!.pause_button_label,
+                    icon: Icons.pause,
+                  );
+                } else if (audioState == AudioState.pausing) {
+                  return InkWell(
+                    onTap: () {
+                      audioBloc.transitionState(TransitionState.play);
+                      optionalShowNowPlaying(context, settings);
+                    },
+                    child: PlayPauseButton(
+                      title: episode.title,
+                      label: L.of(context)!.play_button_label,
+                      icon: Icons.play_arrow,
+                    ),
+                  );
                 }
+              }
 
-                // If this episode is not the one we are playing, allow the
-                // user to start playing this episode.
-                return InkWell(
-                  onTap: () {
-                    audioBloc.play(episode);
-                    optionalShowNowPlaying(context, settings);
-                  },
-                  child: PlayPauseButton(
-                    title: episode.title,
-                    label: L.of(context)!.play_button_label,
-                    icon: Icons.play_arrow,
-                  ),
-                );
-              } else {
-                // We are currently downloading this episode. Do not allow
-                // the user to play it until the download is complete.
-                return Opacity(
-                  opacity: 0.2,
-                  child: PlayPauseButton(
-                    title: episode.title,
-                    label: L.of(context)!.play_button_label,
-                    icon: Icons.play_arrow,
-                  ),
-                );
-              }
+              // If this episode is not the one we are playing, allow the
+              // user to start playing this episode.
+              return InkWell(
+                onTap: () {
+                  audioBloc.play(episode);
+                  optionalShowNowPlaying(context, settings);
+                },
+                child: PlayPauseButton(
+                  title: episode.title,
+                  label: L.of(context)!.play_button_label,
+                  icon: Icons.play_arrow,
+                ),
+              );
             } else {
-              // We have no playing information at the moment. Show a play button
-              // until the stream wakes up.
-              if (episode.downloadState != DownloadState.downloading) {
-                return InkWell(
-                  onTap: () {
-                    audioBloc.play(episode);
-                    optionalShowNowPlaying(context, settings);
-                  },
-                  child: PlayPauseButton(
-                    title: episode.title,
-                    label: L.of(context)!.play_button_label,
-                    icon: Icons.play_arrow,
-                  ),
-                );
-              } else {
-                return Opacity(
-                  opacity: 0.2,
-                  child: PlayPauseButton(
-                    title: episode.title,
-                    label: L.of(context)!.play_button_label,
-                    icon: Icons.play_arrow,
-                  ),
-                );
-              }
+              // We are currently downloading this episode. Do not allow
+              // the user to play it until the download is complete.
+              return Opacity(
+                opacity: 0.2,
+                child: PlayPauseButton(
+                  title: episode.title,
+                  label: L.of(context)!.play_button_label,
+                  icon: Icons.play_arrow,
+                ),
+              );
             }
-          },),
+          } else {
+            // We have no playing information at the moment. Show a play button
+            // until the stream wakes up.
+            if (episode.downloadState != DownloadState.downloading) {
+              return InkWell(
+                onTap: () {
+                  audioBloc.play(episode);
+                  optionalShowNowPlaying(context, settings);
+                },
+                child: PlayPauseButton(
+                  title: episode.title,
+                  label: L.of(context)!.play_button_label,
+                  icon: Icons.play_arrow,
+                ),
+              );
+            } else {
+              return Opacity(
+                opacity: 0.2,
+                child: PlayPauseButton(
+                  title: episode.title,
+                  label: L.of(context)!.play_button_label,
+                  icon: Icons.play_arrow,
+                ),
+              );
+            }
+          }
+        },
+      ),
     );
   }
 
@@ -161,7 +162,6 @@ class PlayControl extends StatelessWidget {
 }
 
 class DownloadControl extends StatelessWidget {
-
   const DownloadControl({
     super.key,
     required this.episode,
@@ -177,78 +177,80 @@ class DownloadControl extends StatelessWidget {
       height: 48,
       width: 48,
       child: StreamBuilder<PlayerControlState>(
-          stream: Rx.combineLatest2(
-              audioBloc.playingState!,
-              audioBloc.nowPlaying!,
-              PlayerControlState.new,),
-          builder: (context, snapshot) {
-            if (snapshot.hasData) {
-              final audioState = snapshot.data!.audioState;
-              final nowPlaying = snapshot.data!.episode;
+        stream: Rx.combineLatest2(
+          audioBloc.playingState!,
+          audioBloc.nowPlaying!,
+          PlayerControlState.new,
+        ),
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            final audioState = snapshot.data!.audioState;
+            final nowPlaying = snapshot.data!.episode;
 
-              if (nowPlaying?.guid == episode.guid &&
-                  (audioState == AudioState.playing ||
-                      audioState == AudioState.buffering)) {
-                if (episode.downloadState != DownloadState.downloaded) {
-                  return Opacity(
-                    opacity: 0.2,
-                    child: DownloadButton(
-                      onPressed: () {},
-                      title: episode.title,
-                      icon: Icons.save_alt,
-                      percent: 0,
-                      label: L.of(context)!.download_episode_button_label,
-                    ),
-                  );
-                } else {
-                  return Opacity(
-                    opacity: 0.2,
-                    child: DownloadButton(
-                      onPressed: () {},
-                      title: episode.title,
-                      icon: Icons.check,
-                      percent: 0,
-                      label: L.of(context)!.download_episode_button_label,
-                    ),
-                  );
-                }
+            if (nowPlaying?.guid == episode.guid &&
+                (audioState == AudioState.playing ||
+                    audioState == AudioState.buffering)) {
+              if (episode.downloadState != DownloadState.downloaded) {
+                return Opacity(
+                  opacity: 0.2,
+                  child: DownloadButton(
+                    onPressed: () {},
+                    title: episode.title,
+                    icon: Icons.save_alt,
+                    percent: 0,
+                    label: L.of(context)!.download_episode_button_label,
+                  ),
+                );
+              } else {
+                return Opacity(
+                  opacity: 0.2,
+                  child: DownloadButton(
+                    onPressed: () {},
+                    title: episode.title,
+                    icon: Icons.check,
+                    percent: 0,
+                    label: L.of(context)!.download_episode_button_label,
+                  ),
+                );
               }
             }
+          }
 
-            if (episode.downloadState == DownloadState.downloaded) {
-              return DownloadButton(
-                onPressed: () {},
-                title: episode.title,
-                icon: Icons.check,
-                percent: 0,
-                label: L.of(context)!.download_episode_button_label,
-              );
-            } else if (episode.downloadState == DownloadState.queued) {
-              return DownloadButton(
-                onPressed: () => _showCancelDialog(context),
-                title: episode.title,
-                icon: Icons.timer_outlined,
-                percent: 0,
-                label: L.of(context)!.download_episode_button_label,
-              );
-            } else if (episode.downloadState == DownloadState.downloading) {
-              return DownloadButton(
-                onPressed: () => _showCancelDialog(context),
-                title: episode.title,
-                icon: Icons.timer_outlined,
-                percent: episode.downloadPercentage,
-                label: L.of(context)!.download_episode_button_label,
-              );
-            }
-
+          if (episode.downloadState == DownloadState.downloaded) {
             return DownloadButton(
-              onPressed: () => podcastBloc.downloadEpisode(episode),
+              onPressed: () {},
               title: episode.title,
-              icon: Icons.save_alt,
+              icon: Icons.check,
               percent: 0,
               label: L.of(context)!.download_episode_button_label,
             );
-          },),
+          } else if (episode.downloadState == DownloadState.queued) {
+            return DownloadButton(
+              onPressed: () => _showCancelDialog(context),
+              title: episode.title,
+              icon: Icons.timer_outlined,
+              percent: 0,
+              label: L.of(context)!.download_episode_button_label,
+            );
+          } else if (episode.downloadState == DownloadState.downloading) {
+            return DownloadButton(
+              onPressed: () => _showCancelDialog(context),
+              title: episode.title,
+              icon: Icons.timer_outlined,
+              percent: episode.downloadPercentage,
+              label: L.of(context)!.download_episode_button_label,
+            );
+          }
+
+          return DownloadButton(
+            onPressed: () => podcastBloc.downloadEpisode(episode),
+            title: episode.title,
+            icon: Icons.save_alt,
+            percent: 0,
+            label: L.of(context)!.download_episode_button_label,
+          );
+        },
+      ),
     );
   }
 
@@ -291,7 +293,6 @@ class DownloadControl extends StatelessWidget {
 /// This class acts as a wrapper between the current audio state and
 /// downloadables. Saves all that nesting of StreamBuilders.
 class PlayerControlState {
-
   PlayerControlState(this.audioState, this.episode);
   final AudioState audioState;
   final Episode? episode;

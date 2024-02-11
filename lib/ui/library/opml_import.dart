@@ -11,7 +11,6 @@ import 'package:seasoning/events/opml_event.dart';
 import 'package:seasoning/l10n/L.dart';
 
 class OPMLImport extends StatefulWidget {
-
   const OPMLImport({
     super.key,
     required this.file,
@@ -32,56 +31,57 @@ class _OPMLImportState extends State<OPMLImport> {
       child: SizedBox(
         width: width,
         child: StreamBuilder<OPMLActionEvent>(
-            initialData: OPMLNoneEvent(),
-            stream: bloc.opmlState,
-            builder: (context, snapshot) {
-              String? t = '';
-              final d = snapshot.data;
+          initialData: OPMLNoneEvent(),
+          stream: bloc.opmlState,
+          builder: (context, snapshot) {
+            String? t = '';
+            final d = snapshot.data;
 
-              if (d is OPMLCompletedState) {
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  Navigator.pop(context);
-                });
-              } else if (d is OPMLLoadingEvent) {
-                t = d.podcast;
-              }
+            if (d is OPMLCompletedState) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                Navigator.pop(context);
+              });
+            } else if (d is OPMLLoadingEvent) {
+              t = d.podcast;
+            }
 
-              return Row(
-                children: [
-                  const Flexible(
-                    child: CircularProgressIndicator.adaptive(),
-                  ),
-                  Flexible(
-                    flex: 4,
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 16),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          Text(
-                            L.of(context)!.label_opml_importing,
-                            maxLines: 1,
+            return Row(
+              children: [
+                const Flexible(
+                  child: CircularProgressIndicator.adaptive(),
+                ),
+                Flexible(
+                  flex: 4,
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 16),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(
+                          L.of(context)!.label_opml_importing,
+                          maxLines: 1,
+                        ),
+                        const SizedBox(
+                          width: 0,
+                          height: 2,
+                        ),
+                        Text(
+                          t!,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 12,
                           ),
-                          const SizedBox(
-                            width: 0,
-                            height: 2,
-                          ),
-                          Text(
-                            t!,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              );
-            },),
+                ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }

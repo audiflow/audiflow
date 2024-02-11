@@ -9,7 +9,6 @@ import 'package:flutter/widgets.dart';
 /// Custom [Decoration] for the chapters, episode & notes tab selector
 /// shown in the [NowPlaying] page.
 class DotDecoration extends Decoration {
-
   const DotDecoration({required this.colour});
   final Color colour;
 
@@ -20,7 +19,6 @@ class DotDecoration extends Decoration {
 }
 
 class _DotDecorationPainter extends BoxPainter {
-
   _DotDecorationPainter({required this.decoration});
   final DotDecoration decoration;
 
@@ -39,13 +37,14 @@ class _DotDecorationPainter extends BoxPainter {
     paint.style = PaintingStyle.fill;
 
     canvas.drawRRect(
-        RRect.fromLTRBR(
-          newOffset.dx - pillWidth,
-          newOffset.dy - pillHeight,
-          newOffset.dx + pillWidth,
-          newOffset.dy + pillHeight,
-          const Radius.circular(12),
-        ),
-        paint,);
+      RRect.fromLTRBR(
+        newOffset.dx - pillWidth,
+        newOffset.dy - pillHeight,
+        newOffset.dx + pillWidth,
+        newOffset.dy + pillHeight,
+        const Radius.circular(12),
+      ),
+      paint,
+    );
   }
 }

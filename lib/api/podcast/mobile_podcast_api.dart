@@ -86,7 +86,8 @@ class MobilePodcastApi extends PodcastApi {
 
   @override
   Future<podcast_search.Transcript> loadTranscript(
-      TranscriptUrl transcriptUrl,) async {
+    TranscriptUrl transcriptUrl,
+  ) async {
     late podcast_search.TranscriptFormat format;
 
     switch (transcriptUrl.type) {
@@ -99,12 +100,14 @@ class MobilePodcastApi extends PodcastApi {
     }
 
     return podcast_search.Podcast.loadTranscriptByUrl(
-        transcriptUrl:
-            podcast_search.TranscriptUrl(url: transcriptUrl.url, type: format),);
+      transcriptUrl:
+          podcast_search.TranscriptUrl(url: transcriptUrl.url, type: format),
+    );
   }
 
   static Future<podcast_search.SearchResult> _search(
-      Map<String, String?> searchParams,) {
+    Map<String, String?> searchParams,
+  ) {
     final term = searchParams['term']!;
     final provider = searchParams['searchProvider'] == 'itunes'
         ? const podcast_search.ITunesProvider()
@@ -120,7 +123,8 @@ class MobilePodcastApi extends PodcastApi {
   }
 
   static Future<podcast_search.SearchResult> _charts(
-      Map<String, String?> searchParams,) {
+    Map<String, String?> searchParams,
+  ) {
     final provider = searchParams['searchProvider'] == 'itunes'
         ? const podcast_search.ITunesProvider()
         : podcast_search.PodcastIndexProvider(
@@ -138,7 +142,9 @@ class MobilePodcastApi extends PodcastApi {
     }
 
     return podcast_search.Search(
-            userAgent: Environment.userAgent(), searchProvider: provider,)
+      userAgent: Environment.userAgent(),
+      searchProvider: provider,
+    )
         .charts(genre: searchParams['genre']!, country: country, limit: 50)
         .timeout(const Duration(seconds: 30));
   }
@@ -146,7 +152,9 @@ class MobilePodcastApi extends PodcastApi {
   Future<podcast_search.Podcast> _loadFeed(String url) {
     _setupSecurityContext();
     return podcast_search.Podcast.loadFeed(
-        url: url, userAgent: Environment.userAgent(),);
+      url: url,
+      userAgent: Environment.userAgent(),
+    );
   }
 
   void _setupSecurityContext() {

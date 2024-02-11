@@ -11,7 +11,6 @@ import 'package:seasoning/entities/episode.dart';
 import 'package:seasoning/ui/widgets/episode_tile.dart';
 
 class PodcastEpisodeList extends StatelessWidget {
-
   const PodcastEpisodeList({
     super.key,
     required this.episodes,
@@ -34,11 +33,11 @@ class PodcastEpisodeList extends StatelessWidget {
       final queueBloc = Provider.of<QueueBloc>(context);
 
       return StreamBuilder<QueueState>(
-          stream: queueBloc.queue,
-          builder: (context, snapshot) {
-            return SliverSafeArea(
-              sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate(
+        stream: queueBloc.queue,
+        builder: (context, snapshot) {
+          return SliverSafeArea(
+            sliver: SliverList(
+              delegate: SliverChildBuilderDelegate(
                 (BuildContext context, int index) {
                   var queued = false;
                   var playing = false;
@@ -63,9 +62,11 @@ class PodcastEpisodeList extends StatelessWidget {
                 },
                 childCount: episodes!.length,
                 addAutomaticKeepAlives: false,
-              ),),
-            );
-          },);
+              ),
+            ),
+          );
+        },
+      );
     } else {
       return SliverFillRemaining(
         hasScrollBody: false,

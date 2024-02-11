@@ -12,7 +12,6 @@ import 'package:seasoning/ui/podcast/podcast_details.dart';
 import 'package:seasoning/ui/widgets/tile_image.dart';
 
 class PodcastTile extends StatelessWidget {
-
   const PodcastTile({
     super.key,
     required this.podcast,
@@ -28,8 +27,9 @@ class PodcastTile extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute<void>(
-              settings: const RouteSettings(name: 'podcastdetails'),
-              builder: (context) => PodcastDetails(podcast, podcastBloc),),
+            settings: const RouteSettings(name: 'podcastdetails'),
+            builder: (context) => PodcastDetails(podcast, podcastBloc),
+          ),
         );
       },
       minVerticalPadding: 9,

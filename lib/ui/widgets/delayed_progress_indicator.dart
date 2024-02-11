@@ -16,25 +16,24 @@ import 'package:seasoning/ui/widgets/platform_progress_indicator.dart';
 /// or process from the cache will result in a [PlatformProgressIndicator] indicator
 /// being displayed.
 class DelayedCircularProgressIndicator extends StatelessWidget {
-
   DelayedCircularProgressIndicator({
     super.key,
   });
-  final f =
-      Future.delayed(const Duration(milliseconds: 1000), Container.new);
+  final f = Future.delayed(const Duration(milliseconds: 1000), Container.new);
 
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<Widget>(
-        future: f,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.done) {
-            return const Center(
-              child: PlatformProgressIndicator(),
-            );
-          } else {
-            return Container();
-          }
-        },);
+      future: f,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.done) {
+          return const Center(
+            child: PlatformProgressIndicator(),
+          );
+        } else {
+          return Container();
+        }
+      },
+    );
   }
 }

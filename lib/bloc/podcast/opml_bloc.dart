@@ -15,7 +15,6 @@ import 'package:seasoning/services/podcast/opml_service.dart';
 ///
 /// Anytime supports both import and export of OPML.
 class OPMLBloc extends Bloc {
-
   OPMLBloc({required this.opmlService}) {
     _listenOpmlEvents();
   }

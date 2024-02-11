@@ -17,7 +17,6 @@ import 'package:seasoning/ui/search/search_results.dart';
 
 /// This widget renders the search bar and allows the user to search for podcasts.
 class Search extends StatefulWidget {
-
   const Search({
     super.key,
     this.searchTerm,
@@ -68,8 +67,10 @@ class _SearchState extends State<Search> {
             leading: IconButton(
               tooltip: L.of(context)!.search_back_button_label,
               icon: Platform.isAndroid
-                  ? Icon(Icons.arrow_back,
-                      color: Theme.of(context).appBarTheme.foregroundColor,)
+                  ? Icon(
+                      Icons.arrow_back,
+                      color: Theme.of(context).appBarTheme.foregroundColor,
+                    )
                   : const Icon(Icons.arrow_back_ios),
               onPressed: () => Navigator.pop(context),
             ),
@@ -77,26 +78,28 @@ class _SearchState extends State<Search> {
               label: L.of(context)!.search_for_podcasts_hint,
               textField: true,
               child: TextField(
-                  controller: _searchController,
-                  focusNode: _searchFocusNode,
-                  autofocus: widget.searchTerm != null ? false : true,
-                  keyboardType: TextInputType.text,
-                  textInputAction: TextInputAction.search,
-                  decoration: InputDecoration(
-                    hintText: L.of(context)!.search_for_podcasts_hint,
-                    border: InputBorder.none,
-                  ),
-                  style: TextStyle(
-                      color: Theme.of(context).primaryIconTheme.color,
-                      fontSize: 18,
-                      decorationColor:
-                          Theme.of(context).scaffoldBackgroundColor,),
-                  onSubmitted: (value) {
-                    SemanticsService.announce(
-                        L.of(context)!.semantic_announce_searching,
-                        TextDirection.ltr,);
-                    bloc.search(SearchTermEvent(value));
-                  },),
+                controller: _searchController,
+                focusNode: _searchFocusNode,
+                autofocus: widget.searchTerm != null ? false : true,
+                keyboardType: TextInputType.text,
+                textInputAction: TextInputAction.search,
+                decoration: InputDecoration(
+                  hintText: L.of(context)!.search_for_podcasts_hint,
+                  border: InputBorder.none,
+                ),
+                style: TextStyle(
+                  color: Theme.of(context).primaryIconTheme.color,
+                  fontSize: 18,
+                  decorationColor: Theme.of(context).scaffoldBackgroundColor,
+                ),
+                onSubmitted: (value) {
+                  SemanticsService.announce(
+                    L.of(context)!.semantic_announce_searching,
+                    TextDirection.ltr,
+                  );
+                  bloc.search(SearchTermEvent(value));
+                },
+              ),
             ),
             pinned: true,
             actions: <Widget>[

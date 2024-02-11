@@ -18,7 +18,6 @@ import 'package:seasoning/ui/widgets/tile_image.dart';
 ///
 /// TODO: Replace [Opacity] with [Container] with a transparent colour.
 class SeasonTile extends StatefulWidget {
-
   const SeasonTile({
     super.key,
     required this.season,
@@ -50,8 +49,9 @@ class _SeasonTileState extends State<SeasonTile> {
         Navigator.push(
           context,
           MaterialPageRoute<void>(
-              settings: const RouteSettings(name: 'podcastdetails'),
-              builder: (context) => SeasonEpisodes(widget.season),),
+            settings: const RouteSettings(name: 'podcastdetails'),
+            builder: (context) => SeasonEpisodes(widget.season),
+          ),
         );
       },
       leading: ExcludeSemantics(
@@ -102,14 +102,14 @@ class _SeasonTileState extends State<SeasonTile> {
 }
 
 class SeasonSubtitle extends StatelessWidget {
-
   SeasonSubtitle(this.season, {super.key})
       : date = season.publicationDate == null
             ? ''
-            : DateFormat(season.publicationDate!.year == DateTime.now().year
+            : DateFormat(
+                season.publicationDate!.year == DateTime.now().year
                     ? 'yyyy.MM'
-                    : 'yyyy.MM.dd',)
-                .format(season.publicationDate!),
+                    : 'yyyy.MM.dd',
+              ).format(season.publicationDate!),
         length = Duration(seconds: season.duration);
   final Season season;
   final String date;

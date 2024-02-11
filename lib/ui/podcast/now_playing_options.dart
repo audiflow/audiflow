@@ -29,7 +29,6 @@ import 'package:seasoning/ui/widgets/slider_handle.dart';
 /// an overflow error in debug) please raise and issue/submit a PR.
 ///
 class NowPlayingOptionsSelector extends StatefulWidget {
-
   const NowPlayingOptionsSelector({super.key, this.scrollPos});
   final double? scrollPos;
   static const baseSize = 68.0;
@@ -66,74 +65,77 @@ class _NowPlayingOptionsSelectorState extends State<NowPlayingOptionsSelector> {
               : kTabScrollDuration,
           length: 2,
           child: LayoutBuilder(
-              builder: (BuildContext ctx, BoxConstraints constraints) {
-            return SingleChildScrollView(
-              controller: scrollController,
-              child: ConstrainedBox(
-                constraints: BoxConstraints.expand(
-                  height: constraints.maxHeight,
-                ),
-                child: Material(
-                  color: theme.secondaryHeaderColor,
-                  shape: RoundedRectangleBorder(
-                    side: BorderSide(
-                      color: Theme.of(context).highlightColor,
-                      width: 0,
-                    ),
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(18),
-                      topRight: Radius.circular(18),
-                    ),
+            builder: (BuildContext ctx, BoxConstraints constraints) {
+              return SingleChildScrollView(
+                controller: scrollController,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints.expand(
+                    height: constraints.maxHeight,
                   ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: <Widget>[
-                      if (mediaQueryData.accessibleNavigation)
-                        Semantics(
-                          liveRegion: true,
-                          label: optionsSliderOpen()
-                              ? L
-                                  .of(context)!
-                                  .semantic_playing_options_collapse_label
-                              : L
-                                  .of(context)!
-                                  .semantic_playing_options_expand_label,
-                          child: GestureDetector(
-                            onTap: () {
-                              if (draggableController != null) {
-                                if (draggableController!.size < 1.0) {
-                                  draggableController!.animateTo(
-                                    1,
-                                    duration: const Duration(milliseconds: 150),
-                                    curve: Curves.easeInOut,
-                                  );
-                                } else {
-                                  draggableController!.animateTo(
-                                    0,
-                                    duration: const Duration(milliseconds: 150),
-                                    curve: Curves.easeInOut,
-                                  );
+                  child: Material(
+                    color: theme.secondaryHeaderColor,
+                    shape: RoundedRectangleBorder(
+                      side: BorderSide(
+                        color: Theme.of(context).highlightColor,
+                        width: 0,
+                      ),
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(18),
+                        topRight: Radius.circular(18),
+                      ),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        if (mediaQueryData.accessibleNavigation)
+                          Semantics(
+                            liveRegion: true,
+                            label: optionsSliderOpen()
+                                ? L
+                                    .of(context)!
+                                    .semantic_playing_options_collapse_label
+                                : L
+                                    .of(context)!
+                                    .semantic_playing_options_expand_label,
+                            child: GestureDetector(
+                              onTap: () {
+                                if (draggableController != null) {
+                                  if (draggableController!.size < 1.0) {
+                                    draggableController!.animateTo(
+                                      1,
+                                      duration:
+                                          const Duration(milliseconds: 150),
+                                      curve: Curves.easeInOut,
+                                    );
+                                  } else {
+                                    draggableController!.animateTo(
+                                      0,
+                                      duration:
+                                          const Duration(milliseconds: 150),
+                                      curve: Curves.easeInOut,
+                                    );
+                                  }
                                 }
-                              }
-                            },
-                            child: const SliderHandle(),
+                              },
+                              child: const SliderHandle(),
+                            ),
                           ),
-                        ),
-                      if (!mediaQueryData.accessibleNavigation)
-                        const SliderHandle(),
-                      DecoratedBox(
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0),
-                          border: Border(
-                            bottom: draggableController != null &&
-                                    (!draggableController!.isAttached ||
-                                        draggableController!.size <= minSize)
-                                ? BorderSide.none
-                                : BorderSide(
-                                    color: Colors.grey[800]!,),
+                        if (!mediaQueryData.accessibleNavigation)
+                          const SliderHandle(),
+                        DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0),
+                            border: Border(
+                              bottom: draggableController != null &&
+                                      (!draggableController!.isAttached ||
+                                          draggableController!.size <= minSize)
+                                  ? BorderSide.none
+                                  : BorderSide(
+                                      color: Colors.grey[800]!,
+                                    ),
+                            ),
                           ),
-                        ),
-                        child: StreamBuilder<QueueState>(
+                          child: StreamBuilder<QueueState>(
                             initialData: QueueEmptyState(),
                             stream: queueBloc.queue,
                             builder: (context, snapshot) {
@@ -163,7 +165,9 @@ class _NowPlayingOptionsSelectorState extends State<NowPlayingOptionsSelector> {
                                 tabs: [
                                   Padding(
                                     padding: const EdgeInsets.only(
-                                        top: 8, bottom: 8,),
+                                      top: 8,
+                                      bottom: 8,
+                                    ),
                                     child: Text(
                                       L
                                           .of(context)!
@@ -176,7 +180,9 @@ class _NowPlayingOptionsSelectorState extends State<NowPlayingOptionsSelector> {
                                   ),
                                   Padding(
                                     padding: const EdgeInsets.only(
-                                        top: 8, bottom: 8,),
+                                      top: 8,
+                                      bottom: 8,
+                                    ),
                                     // If the episode does not support transcripts, grey out
                                     // the option.
                                     child: snapshot.hasData &&
@@ -201,28 +207,31 @@ class _NowPlayingOptionsSelectorState extends State<NowPlayingOptionsSelector> {
                                                 .textTheme
                                                 .labelLarge!
                                                 .copyWith(
-                                                    color: theme.disabledColor,),
+                                                  color: theme.disabledColor,
+                                                ),
                                           ),
                                   ),
                                 ],
                               );
-                            },),
-                      ),
-                      const Padding(padding: EdgeInsets.only(bottom: 12)),
-                      const Expanded(
-                        child: TabBarView(
-                          children: [
-                            UpNextView(),
-                            TranscriptView(),
-                          ],
+                            },
+                          ),
                         ),
-                      ),
-                    ],
+                        const Padding(padding: EdgeInsets.only(bottom: 12)),
+                        const Expanded(
+                          child: TabBarView(
+                            children: [
+                              UpNextView(),
+                              TranscriptView(),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            );
-          },),
+              );
+            },
+          ),
         );
       },
     );
@@ -257,7 +266,6 @@ class NowPlayingOptionsScaffold extends StatelessWidget {
 ///
 /// Currently these options are Up Next & Transcript.
 class NowPlayingOptionsSelectorWide extends StatefulWidget {
-
   const NowPlayingOptionsSelectorWide({super.key, this.scrollPos});
   final double? scrollPos;
   static const baseSize = 68.0;
@@ -280,27 +288,26 @@ class _NowPlayingOptionsSelectorWideState
     return DefaultTabController(
       length: 2,
       child: LayoutBuilder(
-          builder: (BuildContext ctx, BoxConstraints constraints) {
-        return SingleChildScrollView(
-          controller: scrollController,
-          child: ConstrainedBox(
-            constraints: BoxConstraints.expand(
-              height: constraints.maxHeight,
-            ),
-            child: Material(
-              color: theme.secondaryHeaderColor,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0),
-                      border: Border(
-                        bottom:
-                            BorderSide(color: Colors.grey[800]!),
+        builder: (BuildContext ctx, BoxConstraints constraints) {
+          return SingleChildScrollView(
+            controller: scrollController,
+            child: ConstrainedBox(
+              constraints: BoxConstraints.expand(
+                height: constraints.maxHeight,
+              ),
+              child: Material(
+                color: theme.secondaryHeaderColor,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0),
+                        border: Border(
+                          bottom: BorderSide(color: Colors.grey[800]!),
+                        ),
                       ),
-                    ),
-                    child: StreamBuilder<QueueState>(
+                      child: StreamBuilder<QueueState>(
                         initialData: QueueEmptyState(),
                         stream: queueBloc.queue,
                         builder: (context, snapshot) {
@@ -309,7 +316,9 @@ class _NowPlayingOptionsSelectorWideState
                             tabs: [
                               Padding(
                                 padding: const EdgeInsets.only(
-                                    top: 16, bottom: 16,),
+                                  top: 16,
+                                  bottom: 16,
+                                ),
                                 child: Text(
                                   L
                                       .of(context)!
@@ -320,7 +329,9 @@ class _NowPlayingOptionsSelectorWideState
                               ),
                               Padding(
                                 padding: const EdgeInsets.only(
-                                    top: 16, bottom: 16,),
+                                  top: 16,
+                                  bottom: 16,
+                                ),
                                 child: snapshot.hasData &&
                                         snapshot.data?.playing != null &&
                                         snapshot.data!.playing!.hasTranscripts
@@ -342,27 +353,30 @@ class _NowPlayingOptionsSelectorWideState
                                             .textTheme
                                             .labelLarge!
                                             .copyWith(
-                                                color: theme.disabledColor,),
+                                              color: theme.disabledColor,
+                                            ),
                                       ),
                               ),
                             ],
                           );
-                        },),
-                  ),
-                  const Expanded(
-                    child: TabBarView(
-                      children: [
-                        UpNextView(),
-                        TranscriptView(),
-                      ],
+                        },
+                      ),
                     ),
-                  ),
-                ],
+                    const Expanded(
+                      child: TabBarView(
+                        children: [
+                          UpNextView(),
+                          TranscriptView(),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        );
-      },),
+          );
+        },
+      ),
     );
   }
 }

@@ -19,7 +19,6 @@ import 'package:seasoning/ui/widgets/tile_image.dart';
 /// episode icon and play/pause control, below which the episode title, show
 /// notes and person(s) details (if available).
 class EpisodeDetails extends StatefulWidget {
-
   const EpisodeDetails({
     super.key,
     required this.episode,
@@ -39,80 +38,83 @@ class _EpisodeDetailsState extends State<EpisodeDetails> {
     episode.highlight = false;
 
     return DraggableScrollableSheet(
-        initialChildSize: 0.6,
-        expand: false,
-        builder: (BuildContext context, ScrollController scrollController) {
-          return SingleChildScrollView(
-            controller: scrollController,
-            child: Column(
-              children: [
-                ExpansionTile(
-                    key: const Key('episodemoreinfo'),
-                    trailing: PlayControl(
-                      episode: episode,
+      initialChildSize: 0.6,
+      expand: false,
+      builder: (BuildContext context, ScrollController scrollController) {
+        return SingleChildScrollView(
+          controller: scrollController,
+          child: Column(
+            children: [
+              ExpansionTile(
+                key: const Key('episodemoreinfo'),
+                trailing: PlayControl(
+                  episode: episode,
+                ),
+                leading: Stack(
+                  alignment: Alignment.bottomLeft,
+                  fit: StackFit.passthrough,
+                  children: <Widget>[
+                    TileImage(
+                      url: episode.thumbImageUrl ?? episode.imageUrl,
+                      size: 56,
+                      highlight: episode.highlight,
                     ),
-                    leading: Stack(
-                      alignment: Alignment.bottomLeft,
-                      fit: StackFit.passthrough,
-                      children: <Widget>[
-                        TileImage(
-                          url: episode.thumbImageUrl ?? episode.imageUrl,
-                          size: 56,
-                          highlight: episode.highlight,
-                        ),
-                        SizedBox(
-                          height: 5,
-                          width: 56.0 * (episode.percentagePlayed / 100),
-                          child: Container(
-                            color: Theme.of(context).primaryColor,
-                          ),
-                        ),
-                      ],
+                    SizedBox(
+                      height: 5,
+                      width: 56.0 * (episode.percentagePlayed / 100),
+                      child: Container(
+                        color: Theme.of(context).primaryColor,
+                      ),
                     ),
-                    subtitle: EpisodeSubtitle(episode),
-                    title: Text(
-                      episode.title,
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 2,
-                      softWrap: false,
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),),
-                const Divider(),
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      episode.title,
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleLarge!
-                          .copyWith(fontWeight: FontWeight.bold),
-                    ),
+                  ],
+                ),
+                subtitle: EpisodeSubtitle(episode),
+                title: Text(
+                  episode.title,
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 2,
+                  softWrap: false,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ),
+              const Divider(),
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    episode.title,
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleLarge!
+                        .copyWith(fontWeight: FontWeight.bold),
                   ),
                 ),
-                if (episode.persons.isNotEmpty)
-                  SizedBox(
-                    height: 120,
-                    child: ListView.builder(
-                      itemCount: episode.persons.length,
-                      scrollDirection: Axis.horizontal,
-                      itemBuilder: (BuildContext context, int index) {
-                        return PersonAvatar(person: episode.persons[index]);
-                      },
-                    ),
+              ),
+              if (episode.persons.isNotEmpty)
+                SizedBox(
+                  height: 120,
+                  child: ListView.builder(
+                    itemCount: episode.persons.length,
+                    scrollDirection: Axis.horizontal,
+                    itemBuilder: (BuildContext context, int index) {
+                      return PersonAvatar(person: episode.persons[index]);
+                    },
                   ),
-                Padding(
-                  padding: const EdgeInsets.only(
-                    left: 8,
-                    right: 8,
-                  ),
-                  child: PodcastHtml(
-                      content: episode.content ?? episode.description,),
                 ),
-              ],
-            ),
-          );
-        },);
+              Padding(
+                padding: const EdgeInsets.only(
+                  left: 8,
+                  right: 8,
+                ),
+                child: PodcastHtml(
+                  content: episode.content ?? episode.description,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 }

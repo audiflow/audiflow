@@ -23,17 +23,21 @@ import 'package:seasoning/services/settings/settings_service.dart';
 Future<String> resolvePath(Episode episode) async {
   if (Platform.isIOS) {
     return Future.value(
-        join(await getStorageDirectory(), episode.filepath, episode.filename),);
+      join(await getStorageDirectory(), episode.filepath, episode.filename),
+    );
   }
 
   return Future.value(join(episode.filepath!, episode.filename));
 }
 
-Future<String> resolveDirectory(
-    {required Episode episode, bool full = false,}) async {
+Future<String> resolveDirectory({
+  required Episode episode,
+  bool full = false,
+}) async {
   if (full || Platform.isAndroid) {
     return Future.value(
-        join(await getStorageDirectory(), safePath(episode.podcast)),);
+      join(await getStorageDirectory(), safePath(episode.podcast)),
+    );
   }
 
   return Future.value(safePath(episode.podcast));

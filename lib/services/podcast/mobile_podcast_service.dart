@@ -27,7 +27,6 @@ import 'package:seasoning/l10n/messages_all.dart';
 import 'package:seasoning/services/podcast/podcast_service.dart';
 
 class MobilePodcastService extends PodcastService {
-
   MobilePodcastService({
     required super.api,
     required super.repository,
@@ -130,10 +129,11 @@ class MobilePodcastService extends PodcastService {
     final providerGenre = _decodeGenre(genre);
 
     return api.charts(
-        size: size,
-        searchProvider: settingsService.searchProvider,
-        genre: providerGenre,
-        countryCode: countryCode,);
+      size: size,
+      searchProvider: settingsService.searchProvider,
+      genre: providerGenre,
+      countryCode: countryCode,
+    );
   }
 
   @override
@@ -177,7 +177,8 @@ class MobilePodcastService extends PodcastService {
             if (tries > 0 && url.startsWith('https')) {
               // Try the http only version - flesh out to setting later on
               log.fine(
-                  'Failed to load podcast. Fallback to http and try again',);
+                'Failed to load podcast. Fallback to http and try again',
+              );
 
               url = url.replaceFirst('https', 'http');
             } else {
@@ -212,13 +213,15 @@ class MobilePodcastService extends PodcastService {
       }
 
       for (final p in loadedPodcast.persons) {
-        persons.add(Person(
-          name: p.name,
-          role: p.role,
-          group: p.group,
-          image: p.image,
-          link: p.link,
-        ),);
+        persons.add(
+          Person(
+            name: p.name,
+            role: p.role,
+            group: p.group,
+            image: p.image,
+            link: p.link,
+          ),
+        );
       }
 
       var pc = Podcast(
@@ -249,7 +252,8 @@ class MobilePodcastService extends PodcastService {
         if (loadedPodcast.episodes[0].publicationDate!.millisecondsSinceEpoch <
             loadedPodcast.episodes[1].publicationDate!.millisecondsSinceEpoch) {
           loadedPodcast.episodes.sort(
-              (e1, e2) => e2.publicationDate!.compareTo(e1.publicationDate!),);
+            (e1, e2) => e2.publicationDate!.compareTo(e1.publicationDate!),
+          );
         }
       }
 
@@ -292,13 +296,15 @@ class MobilePodcastService extends PodcastService {
 
         if (episode.persons.isNotEmpty) {
           for (final p in episode.persons) {
-            episodePersons.add(Person(
-              name: p.name,
-              role: p.role!,
-              group: p.group!,
-              image: p.image,
-              link: p.link,
-            ),);
+            episodePersons.add(
+              Person(
+                name: p.name,
+                role: p.role!,
+                group: p.group!,
+                image: p.image,
+                link: p.link,
+              ),
+            );
           }
         } else if (persons.isNotEmpty) {
           episodePersons.addAll(persons);
@@ -307,28 +313,30 @@ class MobilePodcastService extends PodcastService {
         if (existingEpisode == null) {
           pc.newEpisodes = highlightNewEpisodes && pc.id != null;
 
-          pc.episodes.add(Episode(
-            highlight: pc.newEpisodes,
-            pguid: pc.guid,
-            guid: episode.guid,
-            podcast: pc.title,
-            title: title,
-            description: description,
-            content: content,
-            author: author,
-            season: episode.season ?? 0,
-            episode: episode.episode ?? 0,
-            contentUrl: episode.contentUrl,
-            link: episode.link,
-            imageUrl: episodeImage,
-            thumbImageUrl: episodeThumbImage,
-            duration: duration,
-            publicationDate: episode.publicationDate,
-            chaptersUrl: episode.chapters?.url,
-            transcriptUrls: transcriptUrls,
-            persons: episodePersons,
-            chapters: <Chapter>[],
-          ),);
+          pc.episodes.add(
+            Episode(
+              highlight: pc.newEpisodes,
+              pguid: pc.guid,
+              guid: episode.guid,
+              podcast: pc.title,
+              title: title,
+              description: description,
+              content: content,
+              author: author,
+              season: episode.season ?? 0,
+              episode: episode.episode ?? 0,
+              contentUrl: episode.contentUrl,
+              link: episode.link,
+              imageUrl: episodeImage,
+              thumbImageUrl: episodeThumbImage,
+              duration: duration,
+              publicationDate: episode.publicationDate,
+              chaptersUrl: episode.chapters?.url,
+              transcriptUrls: transcriptUrls,
+              persons: episodePersons,
+              chapters: <Chapter>[],
+            ),
+          );
         } else {
           /// Check if the ancillary episode data has changed.
           if (!listEquals(existingEpisode.persons, episodePersons) ||
@@ -439,14 +447,16 @@ class MobilePodcastService extends PodcastService {
 
     if (c != null) {
       for (final chapter in c.chapters) {
-        chapters.add(Chapter(
-          title: chapter.title,
-          url: chapter.url,
-          imageUrl: chapter.imageUrl,
-          startTime: chapter.startTime,
-          endTime: chapter.endTime,
-          toc: chapter.toc,
-        ),);
+        chapters.add(
+          Chapter(
+            title: chapter.title,
+            url: chapter.url,
+            imageUrl: chapter.imageUrl,
+            startTime: chapter.startTime,
+            endTime: chapter.endTime,
+            toc: chapter.toc,
+          ),
+        );
       }
     }
 
@@ -457,8 +467,9 @@ class MobilePodcastService extends PodcastService {
   /// word level highlighting of transcripts, therefore this routine will also group transcript
   /// lines together by speaker and/or timeframe.
   @override
-  Future<Transcript> loadTranscriptByUrl(
-      {required TranscriptUrl transcriptUrl,}) async {
+  Future<Transcript> loadTranscriptByUrl({
+    required TranscriptUrl transcriptUrl,
+  }) async {
     final subtitles = <Subtitle>[];
     final result = await _loadTranscriptByUrl(transcriptUrl);
     const threshold = Duration(seconds: 5);
@@ -688,11 +699,14 @@ class MobilePodcastService extends PodcastService {
 
   Future<podcast_search.Chapters?> _loadChaptersByUrl(String url) {
     return compute<_FeedComputer, podcast_search.Chapters?>(
-        _loadChaptersByUrlCompute, _FeedComputer(api: api, url: url),);
+      _loadChaptersByUrlCompute,
+      _FeedComputer(api: api, url: url),
+    );
   }
 
   static Future<podcast_search.Chapters?> _loadChaptersByUrlCompute(
-      _FeedComputer c,) async {
+    _FeedComputer c,
+  ) async {
     podcast_search.Chapters? result;
 
     try {
@@ -708,14 +722,17 @@ class MobilePodcastService extends PodcastService {
   }
 
   Future<podcast_search.Transcript?> _loadTranscriptByUrl(
-      TranscriptUrl transcriptUrl,) {
+    TranscriptUrl transcriptUrl,
+  ) {
     return compute<_TranscriptComputer, podcast_search.Transcript?>(
-        _loadTranscriptByUrlCompute,
-        _TranscriptComputer(api: api, transcriptUrl: transcriptUrl),);
+      _loadTranscriptByUrlCompute,
+      _TranscriptComputer(api: api, transcriptUrl: transcriptUrl),
+    );
   }
 
   static Future<podcast_search.Transcript?> _loadTranscriptByUrlCompute(
-      _TranscriptComputer c,) async {
+    _TranscriptComputer c,
+  ) async {
     podcast_search.Transcript? result;
 
     try {
@@ -736,14 +753,17 @@ class MobilePodcastService extends PodcastService {
   /// indicator whilst the data is fetched without locking the UI.
   Future<podcast_search.Podcast> _loadPodcastFeed({required String url}) {
     return compute<_FeedComputer, podcast_search.Podcast>(
-        _loadPodcastFeedCompute, _FeedComputer(api: api, url: url),);
+      _loadPodcastFeedCompute,
+      _FeedComputer(api: api, url: url),
+    );
   }
 
   /// We have to separate the process of calling compute as you cannot use
   /// named parameters with compute. The podcast feed load API uses named
   /// parameters so we need to change it to a single, positional parameter.
   static Future<podcast_search.Podcast> _loadPodcastFeedCompute(
-      _FeedComputer c,) {
+    _FeedComputer c,
+  ) {
     return c.api.loadFeed(c.url);
   }
 
@@ -778,7 +798,6 @@ class MobilePodcastService extends PodcastService {
 /// first (and therefore oldest) item from the cache. Cache misses are returned
 /// as null.
 class _PodcastCache {
-
   _PodcastCache({required this.maxItems, required this.expiration})
       : _queue = Queue<_CacheItem>();
   final int maxItems;
@@ -815,21 +834,18 @@ class _PodcastCache {
 /// date and time it was added. This can be used by the cache to
 /// keep a small and up-to-date list of searched for Podcasts.
 class _CacheItem {
-
   _CacheItem(this.podcast) : dateAdded = DateTime.now();
   final podcast_search.Podcast podcast;
   final DateTime dateAdded;
 }
 
 class _FeedComputer {
-
   _FeedComputer({required this.api, required this.url});
   final PodcastApi api;
   final String url;
 }
 
 class _TranscriptComputer {
-
   _TranscriptComputer({required this.api, required this.transcriptUrl});
   final PodcastApi api;
   final TranscriptUrl transcriptUrl;

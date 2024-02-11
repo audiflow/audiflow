@@ -41,9 +41,10 @@ class AudioPlayer extends _$AudioPlayer {
   AudioPlayerState build() {
     final settings = ref.read(settingsServiceProvider);
     return AudioPlayerState.empty(
-        speed: settings.playbackSpeed,
-        trimSilence: settings.trimSilence,
-        volumeBoost: settings.volumeBoost,);
+      speed: settings.playbackSpeed,
+      trimSilence: settings.trimSilence,
+      volumeBoost: settings.volumeBoost,
+    );
   }
 
   void play(Episode episode, {bool resume = true}) {
@@ -72,9 +73,7 @@ class AudioPlayer extends _$AudioPlayer {
       _transitionPlayingState.add;
 
   void _handlePlayingStateTransitions() {
-    _transitionPlayingState
-        .asyncMap(Future.value)
-        .listen((state) async {
+    _transitionPlayingState.asyncMap(Future.value).listen((state) async {
       switch (state) {
         case TransitionState.play:
           await audioPlayerService.play();

@@ -8,7 +8,6 @@
 class DiscoveryEvent {}
 
 class DiscoveryChartEvent extends DiscoveryEvent {
-
   DiscoveryChartEvent({
     required this.count,
     this.genre = '',
@@ -25,7 +24,6 @@ class DiscoveryState {}
 class DiscoveryLoadingState extends DiscoveryState {}
 
 class DiscoveryPopulatedState<T> extends DiscoveryState {
-
   DiscoveryPopulatedState({
     this.genre,
     this.index = 0,

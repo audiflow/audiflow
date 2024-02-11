@@ -15,7 +15,8 @@ DownloadService downloadService(DownloadServiceRef ref) {
   final downloadManager = ref.watch(downloadManagerProvider);
   final podcastService = ref.watch(podcastServiceProvider);
   return MobileDownloadService(
-      repository: repository,
-      downloadManager: downloadManager,
-      podcastService: podcastService,);
+    repository: repository,
+    downloadManager: downloadManager,
+    podcastService: podcastService,
+  );
 }

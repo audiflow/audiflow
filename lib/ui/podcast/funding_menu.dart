@@ -24,7 +24,6 @@ import 'package:url_launcher/url_launcher.dart';
 ///
 /// The target platform is based on the current [Theme]: [ThemeData.platform].
 class FundingMenu extends StatelessWidget {
-
   const FundingMenu(
     this.funding, {
     super.key,
@@ -51,7 +50,6 @@ class FundingMenu extends StatelessWidget {
 /// This is the material design version of the context menu. This will be rendered
 /// for all platforms that are not iOS.
 class _MaterialFundingMenu extends StatelessWidget {
-
   const _MaterialFundingMenu(this.funding);
   final List<Funding>? funding;
 
@@ -94,14 +92,14 @@ class _MaterialFundingMenu extends StatelessWidget {
                   },
                 ),
               );
-            },);
+            },
+          );
   }
 }
 
 /// This is the Cupertino context menu and is rendered only when running on
 /// an iOS device.
 class _CupertinoFundingMenu extends StatelessWidget {
-
   const _CupertinoFundingMenu(this.funding);
   final List<Funding>? funding;
 
@@ -154,7 +152,8 @@ class _CupertinoFundingMenu extends StatelessWidget {
                   },
                 ),
               );
-            },);
+            },
+          );
   }
 }
 
@@ -164,7 +163,10 @@ class FundingLink {
   /// information dialog first to make clear that the link is provided
   /// by the podcast owner and not AnyTime.
   static Future<bool> fundingLink(
-      String url, bool consent, BuildContext context,) async {
+    String url,
+    bool consent,
+    BuildContext context,
+  ) async {
     bool? result = false;
 
     if (consent) {

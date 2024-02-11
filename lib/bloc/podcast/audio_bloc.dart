@@ -30,7 +30,6 @@ enum LifecycleState {
 
 /// A BLoC to handle interactions between the audio service and the client.
 class AudioBloc extends Bloc {
-
   AudioBloc({
     required this.audioPlayerService,
   }) {
@@ -95,9 +94,7 @@ class AudioBloc extends Bloc {
   /// on to a queue and execute them sequentially. Each state maps to a call
   /// to the Audio Service plugin.
   void _handlePlayingStateTransitions() {
-    _transitionPlayingState
-        .asyncMap(Future.value)
-        .listen((state) async {
+    _transitionPlayingState.asyncMap(Future.value).listen((state) async {
       switch (state) {
         case TransitionState.play:
           await audioPlayerService.play();
@@ -177,7 +174,8 @@ class AudioBloc extends Bloc {
 
     if (ep != null) {
       log.fine(
-          'Resuming with episode ${ep.title} - ${ep.position} - ${ep.played}',);
+        'Resuming with episode ${ep.title} - ${ep.position} - ${ep.played}',
+      );
     } else {
       log.fine('Resuming without an episode');
     }

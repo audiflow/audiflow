@@ -13,5 +13,7 @@ OPMLService opmlService(OpmlServiceRef ref) {
   final repository = ref.watch(repositoryProvider);
   final podcastService = ref.watch(podcastServiceProvider);
   return MobileOPMLService(
-      repository: repository, podcastService: podcastService,);
+    repository: repository,
+    podcastService: podcastService,
+  );
 }

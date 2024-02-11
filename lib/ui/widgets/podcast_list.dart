@@ -28,15 +28,15 @@ class PodcastList extends StatelessWidget {
 
     if (results.items.isNotEmpty) {
       return StreamBuilder<AppSettings>(
-          stream: settingsBloc.settings,
-          builder: (context, settingsSnapshot) {
-            if (settingsSnapshot.hasData) {
-              final mode = settingsSnapshot.data!.layout;
-              final size = mode == 1 ? 100.0 : 160.0;
+        stream: settingsBloc.settings,
+        builder: (context, settingsSnapshot) {
+          if (settingsSnapshot.hasData) {
+            final mode = settingsSnapshot.data!.layout;
+            final size = mode == 1 ? 100.0 : 160.0;
 
-              if (mode == 0) {
-                return SliverList(
-                    delegate: SliverChildBuilderDelegate(
+            if (mode == 0) {
+              return SliverList(
+                delegate: SliverChildBuilderDelegate(
                   (BuildContext context, int index) {
                     final i = results.items[index];
                     final p = Podcast.fromSearchResultItem(i);
@@ -45,34 +45,36 @@ class PodcastList extends StatelessWidget {
                   },
                   childCount: results.items.length,
                   addAutomaticKeepAlives: false,
-                ),);
-              }
-              return SliverGrid(
-                gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-                  maxCrossAxisExtent: size,
-                  mainAxisSpacing: 10,
-                  crossAxisSpacing: 10,
-                ),
-                delegate: SliverChildBuilderDelegate(
-                  (BuildContext context, int index) {
-                    final i = results.items[index];
-                    final p = Podcast.fromSearchResultItem(i);
-
-                    return PodcastGridTile(podcast: p);
-                  },
-                  childCount: results.items.length,
-                ),
-              );
-            } else {
-              return const SliverFillRemaining(
-                hasScrollBody: false,
-                child: SizedBox(
-                  height: 0,
-                  width: 0,
                 ),
               );
             }
-          },);
+            return SliverGrid(
+              gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                maxCrossAxisExtent: size,
+                mainAxisSpacing: 10,
+                crossAxisSpacing: 10,
+              ),
+              delegate: SliverChildBuilderDelegate(
+                (BuildContext context, int index) {
+                  final i = results.items[index];
+                  final p = Podcast.fromSearchResultItem(i);
+
+                  return PodcastGridTile(podcast: p);
+                },
+                childCount: results.items.length,
+              ),
+            );
+          } else {
+            return const SliverFillRemaining(
+              hasScrollBody: false,
+              child: SizedBox(
+                height: 0,
+                width: 0,
+              ),
+            );
+          }
+        },
+      );
     } else {
       return SliverFillRemaining(
         hasScrollBody: false,

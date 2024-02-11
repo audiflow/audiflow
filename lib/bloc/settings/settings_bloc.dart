@@ -13,7 +13,6 @@ import 'package:seasoning/entities/search_providers.dart';
 import 'package:seasoning/services/settings/settings_service.dart';
 
 class SettingsBloc extends Bloc {
-
   SettingsBloc(this._settingsService) {
     _init();
   }
@@ -43,7 +42,8 @@ class SettingsBloc extends Bloc {
     ];
 
     if (podcastIndexKey.isNotEmpty) {
-      providers.add(const SearchProvider(key: 'podcastindex', name: 'PodcastIndex'));
+      providers
+          .add(const SearchProvider(key: 'podcastindex', name: 'PodcastIndex'));
     }
 
     _currentSettings = AppSettings(

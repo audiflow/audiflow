@@ -97,46 +97,45 @@ class _NowPlayingState extends State<NowPlaying> with WidgetsBindingObserver {
       header: false,
       label: L.of(context)!.semantics_main_player_header,
       child: StreamBuilder<Episode?>(
-          stream: audioBloc.nowPlaying,
-          builder: (context, snapshot) {
-            if (!snapshot.hasData) {
-              return Container();
-            }
+        stream: audioBloc.nowPlaying,
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return Container();
+          }
 
-            final duration = snapshot.data == null ? 0 : snapshot.data!.duration;
-            final transportBuilder =
-                playerBuilder?.builder(duration);
+          final duration = snapshot.data == null ? 0 : snapshot.data!.duration;
+          final transportBuilder = playerBuilder?.builder(duration);
 
-            return isMobilePortrait(context)
-                ? NotificationListener<DraggableScrollableNotification>(
-                    onNotification: (notification) {
-                      setState(() {
-                        if (notification.extent > (notification.minExtent)) {
-                          opacity = 1 -
-                              (notification.maxExtent - notification.extent);
-                          scrollPos = 1.0;
-                        } else {
-                          opacity = 0.0;
-                          scrollPos = 0.0;
-                        }
-                      });
+          return isMobilePortrait(context)
+              ? NotificationListener<DraggableScrollableNotification>(
+                  onNotification: (notification) {
+                    setState(() {
+                      if (notification.extent > (notification.minExtent)) {
+                        opacity =
+                            1 - (notification.maxExtent - notification.extent);
+                        scrollPos = 1.0;
+                      } else {
+                        opacity = 0.0;
+                        scrollPos = 0.0;
+                      }
+                    });
 
-                      return true;
-                    },
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        // We need to hide the main player when the floating player is visible to prevent
-                        // screen readers from reading both parts of the stack.
-                        Visibility(
-                          visible: opacity < 1,
-                          child: NowPlayingTabs(
-                            episode: snapshot.data!,
-                            transportBuilder: transportBuilder,
-                          ),
+                    return true;
+                  },
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      // We need to hide the main player when the floating player is visible to prevent
+                      // screen readers from reading both parts of the stack.
+                      Visibility(
+                        visible: opacity < 1,
+                        child: NowPlayingTabs(
+                          episode: snapshot.data!,
+                          transportBuilder: transportBuilder,
                         ),
-                        SizedBox.expand(
-                            child: SafeArea(
+                      ),
+                      SizedBox.expand(
+                        child: SafeArea(
                           child: Column(
                             children: [
                               /// Sized boxes without a child are 'invisible' so they do not prevent taps below
@@ -159,23 +158,26 @@ class _NowPlayingState extends State<NowPlaying> with WidgetsBindingObserver {
                                 ),
                             ],
                           ),
-                        ),),
-                      ],
-                    ),
-                  )
-                : Row(
-                    children: [
-                      Expanded(
-                        child: NowPlayingTabs(
-                            episode: snapshot.data!,
-                            transportBuilder: transportBuilder,),
-                      ),
-                      const Expanded(
-                        child: NowPlayingOptionsSelectorWide(),
+                        ),
                       ),
                     ],
-                  );
-          },),
+                  ),
+                )
+              : Row(
+                  children: [
+                    Expanded(
+                      child: NowPlayingTabs(
+                        episode: snapshot.data!,
+                        transportBuilder: transportBuilder,
+                      ),
+                    ),
+                    const Expanded(
+                      child: NowPlayingOptionsSelectorWide(),
+                    ),
+                  ],
+                );
+        },
+      ),
     );
   }
 }
@@ -187,7 +189,6 @@ class _NowPlayingState extends State<NowPlaying> with WidgetsBindingObserver {
 /// landscape this will be in a horizontal format. The actual displaying
 /// of the episode text is handed off to [NowPlayingEpisodeDetails].
 class NowPlayingEpisode extends StatelessWidget {
-
   const NowPlayingEpisode({
     super.key,
     required this.imageUrl,
@@ -228,7 +229,9 @@ class NowPlayingEpisode extends StatelessWidget {
                               ? placeholderBuilder.errorBuilder()(context)
                               : const Image(
                                   image: AssetImage(
-                                      'assets/images/app-placeholder-logo.png',),),
+                                    'assets/images/app-placeholder-logo.png',
+                                  ),
+                                ),
                         ),
                       ),
                     ),
@@ -265,7 +268,9 @@ class NowPlayingEpisode extends StatelessWidget {
                               ? placeholderBuilder.errorBuilder()(context)
                               : const Image(
                                   image: AssetImage(
-                                      'assets/images/app-placeholder-logo.png',),),
+                                    'assets/images/app-placeholder-logo.png',
+                                  ),
+                                ),
                         ),
                       ),
                     ),
@@ -289,7 +294,6 @@ class NowPlayingEpisode extends StatelessWidget {
 /// This displays the current episode title and, if available, the
 /// current chapter title and optional link.
 class NowPlayingEpisodeDetails extends StatelessWidget {
-
   const NowPlayingEpisodeDetails({
     super.key,
     this.episode,
@@ -363,14 +367,15 @@ class NowPlayingEpisodeDetails extends StatelessWidget {
                           label: L.of(context)!.semantic_chapter_link_label,
                           container: true,
                           child: IconButton(
-                              padding: EdgeInsets.zero,
-                              icon: const Icon(
-                                Icons.link,
-                              ),
-                              color: Theme.of(context).primaryIconTheme.color,
-                              onPressed: () {
-                                _chapterLink(chapterUrl);
-                              },),
+                            padding: EdgeInsets.zero,
+                            icon: const Icon(
+                              Icons.link,
+                            ),
+                            color: Theme.of(context).primaryIconTheme.color,
+                            onPressed: () {
+                              _chapterLink(chapterUrl);
+                            },
+                          ),
                         ),
                 ],
               ),
@@ -396,7 +401,6 @@ class NowPlayingEpisodeDetails extends StatelessWidget {
 /// This consists of title, show notes and person details
 /// (where available).
 class NowPlayingShowNotes extends StatelessWidget {
-
   const NowPlayingShowNotes({
     super.key,
     required this.episode,
@@ -443,7 +447,8 @@ class NowPlayingShowNotes extends StatelessWidget {
                 right: 8,
               ),
               child: PodcastHtml(
-                  content: episode?.content ?? episode?.description ?? '',),
+                content: episode?.content ?? episode?.description ?? '',
+              ),
             ),
           ],
         ),
@@ -470,59 +475,61 @@ class NowPlayingTabs extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-        length: episode.hasChapters ? 3 : 2,
-        initialIndex: episode.hasChapters ? 1 : 0,
-        child: AnnotatedRegion<SystemUiOverlayStyle>(
-          value: Theme.of(context).appBarTheme.systemOverlayStyle!.copyWith(
-              systemNavigationBarColor: Theme.of(context).secondaryHeaderColor,),
-          child: Scaffold(
-            appBar: AppBar(
-              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-              elevation: 0,
-              leading: IconButton(
-                tooltip: L.of(context)!.minimise_player_window_button_label,
-                icon: Icon(
-                  Icons.keyboard_arrow_down,
-                  color: Theme.of(context).primaryIconTheme.color,
-                ),
-                onPressed: () => {
-                  Navigator.pop(context),
-                },
-              ),
-              flexibleSpace: PlaybackErrorListener(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: <Widget>[
-                    EpisodeTabBar(
-                      chapters: episode.hasChapters,
-                    ),
-                  ],
-                ),
-              ),
+      length: episode.hasChapters ? 3 : 2,
+      initialIndex: episode.hasChapters ? 1 : 0,
+      child: AnnotatedRegion<SystemUiOverlayStyle>(
+        value: Theme.of(context).appBarTheme.systemOverlayStyle!.copyWith(
+              systemNavigationBarColor: Theme.of(context).secondaryHeaderColor,
             ),
-            body: Column(
-              children: [
-                Expanded(
-                  flex: 5,
-                  child: EpisodeTabBarView(
-                    episode: episode,
+        child: Scaffold(
+          appBar: AppBar(
+            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+            elevation: 0,
+            leading: IconButton(
+              tooltip: L.of(context)!.minimise_player_window_button_label,
+              icon: Icon(
+                Icons.keyboard_arrow_down,
+                color: Theme.of(context).primaryIconTheme.color,
+              ),
+              onPressed: () => {
+                Navigator.pop(context),
+              },
+            ),
+            flexibleSpace: PlaybackErrorListener(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: <Widget>[
+                  EpisodeTabBar(
                     chapters: episode.hasChapters,
                   ),
-                ),
-                transportBuilder != null
-                    ? transportBuilder!(context)
-                    : const SizedBox(
-                        height: 148,
-                        child: NowPlayingTransport(),
-                      ),
-                if (MediaQuery.of(context).orientation == Orientation.portrait)
-                  const Expanded(
-                    child: NowPlayingOptionsScaffold(),
-                  ),
-              ],
+                ],
+              ),
             ),
           ),
-        ),);
+          body: Column(
+            children: [
+              Expanded(
+                flex: 5,
+                child: EpisodeTabBarView(
+                  episode: episode,
+                  chapters: episode.hasChapters,
+                ),
+              ),
+              transportBuilder != null
+                  ? transportBuilder!(context)
+                  : const SizedBox(
+                      height: 148,
+                      child: NowPlayingTransport(),
+                    ),
+              if (MediaQuery.of(context).orientation == Orientation.portrait)
+                const Expanded(
+                  child: NowPlayingOptionsScaffold(),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 
@@ -531,7 +538,6 @@ class NowPlayingTabs extends StatelessWidget {
 /// It displays two or three tabs depending upon whether the current episode supports
 /// (and contains) chapters.
 class EpisodeTabBar extends StatelessWidget {
-
   const EpisodeTabBar({
     super.key,
     this.chapters = false,
@@ -571,7 +577,6 @@ class EpisodeTabBar extends StatelessWidget {
 /// This includes the chapter selection view (if the episode supports chapters),
 /// the episode details (image and description) and the show notes view.
 class EpisodeTabBarView extends StatelessWidget {
-
   const EpisodeTabBarView({
     super.key,
     this.episode,
@@ -593,16 +598,17 @@ class EpisodeTabBarView extends StatelessWidget {
             episode: episode!,
           ),
         StreamBuilder<Episode?>(
-            stream: audioBloc.nowPlaying,
-            builder: (context, snapshot) {
-              final e = snapshot.hasData ? snapshot.data! : episode!;
+          stream: audioBloc.nowPlaying,
+          builder: (context, snapshot) {
+            final e = snapshot.hasData ? snapshot.data! : episode!;
 
-              return NowPlayingEpisode(
-                episode: e,
-                imageUrl: e.positionalImageUrl,
-                textGroup: textGroup,
-              );
-            },),
+            return NowPlayingEpisode(
+              episode: e,
+              imageUrl: e.positionalImageUrl,
+              textGroup: textGroup,
+            );
+          },
+        ),
         NowPlayingShowNotes(episode: episode),
       ],
     );
@@ -635,7 +641,6 @@ class NowPlayingTransport extends StatelessWidget {
 /// is in the tree. If so, it will use the builder rather than its own
 /// transport controls.
 class PlayerControlsBuilder extends InheritedWidget {
-
   const PlayerControlsBuilder({
     super.key,
     required this.builder,

@@ -10,7 +10,6 @@ import 'package:seasoning/ui/search/search_bar.dart' as search;
 import 'package:seasoning/ui/widgets/podcast_list.dart';
 
 class PodcastListWithSearchBar extends StatelessWidget {
-
   const PodcastListWithSearchBar({super.key, required this.results});
   final search.SearchResult results;
 

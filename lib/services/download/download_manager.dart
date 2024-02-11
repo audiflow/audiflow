@@ -9,7 +9,6 @@ import 'dart:async';
 import 'package:seasoning/entities/downloadable.dart';
 
 class DownloadProgress {
-
   DownloadProgress(
     this.id,
     this.percentage,

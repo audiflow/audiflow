@@ -42,116 +42,119 @@ class _PlayerPositionControlsState extends State<PlayerPositionControls> {
     final screenReader = MediaQuery.of(context).accessibleNavigation;
 
     return StreamBuilder<PositionState>(
-        stream: audioBloc.playPosition,
-        builder: (context, snapshot) {
-          final position =
-              snapshot.hasData ? snapshot.data!.position.inSeconds : 0;
-          episodeLength =
-              snapshot.hasData ? snapshot.data!.length.inSeconds : 0;
-          var divisions = episodeLength == 0 ? 1 : episodeLength;
+      stream: audioBloc.playPosition,
+      builder: (context, snapshot) {
+        final position =
+            snapshot.hasData ? snapshot.data!.position.inSeconds : 0;
+        episodeLength = snapshot.hasData ? snapshot.data!.length.inSeconds : 0;
+        var divisions = episodeLength == 0 ? 1 : episodeLength;
 
-          // If a screen reader is enabled, will make divisions ten seconds each.
-          if (screenReader) {
-            divisions = episodeLength ~/ 10;
+        // If a screen reader is enabled, will make divisions ten seconds each.
+        if (screenReader) {
+          divisions = episodeLength ~/ 10;
+        }
+
+        if (!dragging) {
+          currentPosition = position;
+
+          if (currentPosition < 0) {
+            currentPosition = 0;
           }
 
-          if (!dragging) {
-            currentPosition = position;
-
-            if (currentPosition < 0) {
-              currentPosition = 0;
-            }
-
-            if (currentPosition > episodeLength) {
-              currentPosition = episodeLength;
-            }
-
-            timeRemaining = episodeLength - position;
-
-            if (timeRemaining < 0) {
-              timeRemaining = 0;
-            }
+          if (currentPosition > episodeLength) {
+            currentPosition = episodeLength;
           }
 
-          return Padding(
-            padding: const EdgeInsets.only(
-              left: 16,
-              right: 16,
-              bottom: 4,
-            ),
-            child: Row(
-              children: <Widget>[
-                FittedBox(
-                  child: Text(
-                    _formatDuration(Duration(seconds: currentPosition)),
-                    style: const TextStyle(
-                      fontFeatures: [FontFeature.tabularFigures()],
-                    ),
+          timeRemaining = episodeLength - position;
+
+          if (timeRemaining < 0) {
+            timeRemaining = 0;
+          }
+        }
+
+        return Padding(
+          padding: const EdgeInsets.only(
+            left: 16,
+            right: 16,
+            bottom: 4,
+          ),
+          child: Row(
+            children: <Widget>[
+              FittedBox(
+                child: Text(
+                  _formatDuration(Duration(seconds: currentPosition)),
+                  style: const TextStyle(
+                    fontFeatures: [FontFeature.tabularFigures()],
                   ),
                 ),
-                Expanded(
-                  child: snapshot.hasData
-                      ? Slider(
-                          label: _formatDuration(
-                              Duration(seconds: currentPosition),),
-                          onChanged: (value) {
-                            setState(() {
-                              _calculatePositions(value.toInt());
-
-                              // Normally, we only want to trigger a position change when the user has finished
-                              // sliding; however, with a screen reader enabled that will never trigger. Instead,
-                              // we'll use the 'normal' change event.
-                              if (screenReader) {
-                                return snapshot.data!.buffering
-                                    ? null
-                                    : audioBloc.transitionPosition(value);
-                              }
-                            });
-                          },
-                          onChangeStart: (value) {
-                            if (!snapshot.data!.buffering) {
-                              setState(() {
-                                dragging = true;
-                                _calculatePositions(currentPosition);
-                              });
-                            }
-                          },
-                          onChangeEnd: (value) {
-                            setState(() {
-                              dragging = false;
-                            });
-
-                            return snapshot.data!.buffering
-                                ? null
-                                : audioBloc.transitionPosition(value);
-                          },
-                          value: currentPosition.toDouble(),
-                          max: episodeLength.toDouble(),
-                          divisions: divisions,
-                          activeColor: Theme.of(context).primaryColor,
-                          semanticFormatterCallback: (double newValue) {
-                            return _formatDuration(
-                                Duration(seconds: currentPosition),);
-                          },)
-                      : Slider(
-                          onChanged: null,
-                          value: 0,
-                          activeColor: Theme.of(context).primaryColor,
+              ),
+              Expanded(
+                child: snapshot.hasData
+                    ? Slider(
+                        label: _formatDuration(
+                          Duration(seconds: currentPosition),
                         ),
-                ),
-                FittedBox(
-                  child: Text(
-                    _formatDuration(Duration(seconds: timeRemaining)),
-                    textAlign: TextAlign.right,
-                    style: const TextStyle(
-                      fontFeatures: [FontFeature.tabularFigures()],
-                    ),
+                        onChanged: (value) {
+                          setState(() {
+                            _calculatePositions(value.toInt());
+
+                            // Normally, we only want to trigger a position change when the user has finished
+                            // sliding; however, with a screen reader enabled that will never trigger. Instead,
+                            // we'll use the 'normal' change event.
+                            if (screenReader) {
+                              return snapshot.data!.buffering
+                                  ? null
+                                  : audioBloc.transitionPosition(value);
+                            }
+                          });
+                        },
+                        onChangeStart: (value) {
+                          if (!snapshot.data!.buffering) {
+                            setState(() {
+                              dragging = true;
+                              _calculatePositions(currentPosition);
+                            });
+                          }
+                        },
+                        onChangeEnd: (value) {
+                          setState(() {
+                            dragging = false;
+                          });
+
+                          return snapshot.data!.buffering
+                              ? null
+                              : audioBloc.transitionPosition(value);
+                        },
+                        value: currentPosition.toDouble(),
+                        max: episodeLength.toDouble(),
+                        divisions: divisions,
+                        activeColor: Theme.of(context).primaryColor,
+                        semanticFormatterCallback: (double newValue) {
+                          return _formatDuration(
+                            Duration(seconds: currentPosition),
+                          );
+                        },
+                      )
+                    : Slider(
+                        onChanged: null,
+                        value: 0,
+                        activeColor: Theme.of(context).primaryColor,
+                      ),
+              ),
+              FittedBox(
+                child: Text(
+                  _formatDuration(Duration(seconds: timeRemaining)),
+                  textAlign: TextAlign.right,
+                  style: const TextStyle(
+                    fontFeatures: [FontFeature.tabularFigures()],
                   ),
                 ),
-              ],
-            ),
-          );
-        },);
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   void _calculatePositions(int p) {

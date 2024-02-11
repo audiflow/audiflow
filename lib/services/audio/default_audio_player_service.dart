@@ -34,7 +34,6 @@ import 'package:seasoning/services/settings/settings_service.dart';
 /// package to run the audio layer as a service to allow background play, and playback
 /// is handled by the [just_audio](https://pub.dev/packages/just_audio) package.
 class DefaultAudioPlayerService extends AudioPlayerService {
-
   DefaultAudioPlayerService({
     required this.repository,
     required this.settingsService,
@@ -139,7 +138,8 @@ class DefaultAudioPlayerService extends AudioPlayerService {
       final uri = (await _generateEpisodeUri(episode))!;
 
       log.info(
-          'Playing episode ${episode.id} - ${episode.title} from position ${episode.position}',);
+        'Playing episode ${episode.id} - ${episode.title} from position ${episode.position}',
+      );
       log.fine(' - $uri');
 
       _playingState.add(AudioState.buffering);
@@ -152,7 +152,8 @@ class DefaultAudioPlayerService extends AudioPlayerService {
       final currentState = _audioHandler.playbackState.value.processingState;
 
       log.fine(
-          'Current playback state is $currentState. Speed = $_playbackSpeed. Trim = $_trimSilence. Volume Boost = $_volumeBoost}',);
+        'Current playback state is $currentState. Speed = $_playbackSpeed. Trim = $_trimSilence. Volume Boost = $_volumeBoost}',
+      );
 
       if (currentState == AudioProcessingState.ready) {
         await _saveCurrentEpisodePosition();
@@ -228,13 +229,15 @@ class DefaultAudioPlayerService extends AudioPlayerService {
 
     _updateChapter(p.inSeconds, duration.inSeconds);
 
-    _playPosition.add(PositionState(
-      position: p,
-      length: duration,
-      percentage: complete.toInt(),
-      episode: _currentEpisode,
-      buffering: true,
-    ),);
+    _playPosition.add(
+      PositionState(
+        position: p,
+        length: duration,
+        percentage: complete.toInt(),
+        episode: _currentEpisode,
+        buffering: true,
+      ),
+    );
 
     await _audioHandler.seek(Duration(seconds: position));
 
@@ -272,10 +275,14 @@ class DefaultAudioPlayerService extends AudioPlayerService {
 
   @override
   Future<bool> moveUpNextEpisode(
-      Episode episode, int oldIndex, int newIndex,) async {
+    Episode episode,
+    int oldIndex,
+    int newIndex,
+  ) async {
     const moved = false;
     log.fine(
-        'moveUpNextEpisode Moving ${episode.title} - ${episode.guid} from $oldIndex to $newIndex',);
+      'moveUpNextEpisode Moving ${episode.title} - ${episode.guid} from $oldIndex to $newIndex',
+    );
 
     final oldEpisode = _queue.removeAt(oldIndex);
 
@@ -317,12 +324,14 @@ class DefaultAudioPlayerService extends AudioPlayerService {
       final complete =
           e.position > 0 ? (duration.inSeconds / e.position) * 100 : 0;
 
-      _playPosition.add(PositionState(
-        position: Duration(milliseconds: e.position),
-        length: duration,
-        percentage: complete.toInt(),
-        episode: e,
-      ),);
+      _playPosition.add(
+        PositionState(
+          position: Duration(milliseconds: e.position),
+          length: duration,
+          percentage: complete.toInt(),
+          episode: e,
+        ),
+      );
     }
   }
 
@@ -421,12 +430,14 @@ class DefaultAudioPlayerService extends AudioPlayerService {
 
     /// We only need to persist if we are paused.
     if (_playingState.value == AudioState.pausing) {
-      await PersistentState.persistState(Persistable(
-        pguid: '',
-        episodeId: _currentEpisode!.id!,
-        position: currentPosition,
-        state: LastState.paused,
-      ),);
+      await PersistentState.persistState(
+        Persistable(
+          pguid: '',
+          episodeId: _currentEpisode!.id!,
+          position: currentPosition,
+          state: LastState.paused,
+        ),
+      );
     }
   }
 
@@ -574,7 +585,8 @@ class DefaultAudioPlayerService extends AudioPlayerService {
 
       if (_currentEpisode!.chaptersUrl != null) {
         _currentEpisode!.chapters = await podcastService.loadChaptersByUrl(
-            url: _currentEpisode!.chaptersUrl!,);
+          url: _currentEpisode!.chaptersUrl!,
+        );
         _currentEpisode!.chaptersLoading = false;
       }
 
@@ -589,10 +601,12 @@ class DefaultAudioPlayerService extends AudioPlayerService {
 
       if (_currentEpisode!.streaming) {
         var sub = _currentEpisode!.transcriptUrls.firstWhereOrNull(
-            (element) => element.type == TranscriptFormat.json,);
+          (element) => element.type == TranscriptFormat.json,
+        );
 
         sub ??= _currentEpisode!.transcriptUrls.firstWhereOrNull(
-            (element) => element.type == TranscriptFormat.subrip,);
+          (element) => element.type == TranscriptFormat.subrip,
+        );
 
         if (sub != null) {
           _updateTranscriptState(state: const TranscriptLoadingState());
@@ -630,12 +644,14 @@ class DefaultAudioPlayerService extends AudioPlayerService {
       final complete =
           e.position > 0 ? (duration.inSeconds / e.position) * 100 : 0;
 
-      _playPosition.add(PositionState(
-        position: Duration(milliseconds: e.position),
-        length: duration,
-        percentage: complete.toInt(),
-        episode: e,
-      ),);
+      _playPosition.add(
+        PositionState(
+          position: Duration(milliseconds: e.position),
+          length: duration,
+          percentage: complete.toInt(),
+          episode: e,
+        ),
+      );
     }
   }
 
@@ -652,7 +668,8 @@ class DefaultAudioPlayerService extends AudioPlayerService {
           await repository.findEpisodeByGuid(_currentEpisode!.guid);
 
       log.fine(
-          '_saveCurrentEpisodePosition(): Current position is $currentPosition - stored position is ${_currentEpisode!.position} complete is $complete',);
+        '_saveCurrentEpisodePosition(): Current position is $currentPosition - stored position is ${_currentEpisode!.position} complete is $complete',
+      );
 
       if (currentPosition != _currentEpisode!.position) {
         _currentEpisode!.position = complete ? 0 : currentPosition;
@@ -727,13 +744,15 @@ class DefaultAudioPlayerService extends AudioPlayerService {
 
     _updateChapter(position.inSeconds, duration.inSeconds);
 
-    _playPosition.add(PositionState(
-      position: position,
-      length: duration,
-      percentage: complete.toInt(),
-      episode: _currentEpisode,
-      buffering: buffering,
-    ),);
+    _playPosition.add(
+      PositionState(
+        position: position,
+        length: duration,
+        percentage: complete.toInt(),
+        episode: _currentEpisode,
+        buffering: buffering,
+      ),
+    );
   }
 
   /// Calculate our current chapter based on playback position, and if it's different to
@@ -741,7 +760,8 @@ class DefaultAudioPlayerService extends AudioPlayerService {
   void _updateChapter(int seconds, int duration) {
     if (_currentEpisode == null) {
       log.fine(
-          'Warning. Attempting to update chapter information on a null _episode',);
+        'Warning. Attempting to update chapter information on a null _episode',
+      );
     } else if (_currentEpisode!.hasChapters &&
         _currentEpisode!.chaptersAreLoaded) {
       final chapters = _currentEpisode!.chapters
@@ -797,7 +817,6 @@ class DefaultAudioPlayerService extends AudioPlayerService {
 /// This handles the interaction between the service (via the audio service package) and
 /// the underlying player.
 class _DefaultAudioPlayerHandler extends BaseAudioHandler with SeekHandler {
-
   _DefaultAudioPlayerHandler({
     required this.repository,
     required this.settings,
@@ -842,21 +861,20 @@ class _DefaultAudioPlayerHandler extends BaseAudioHandler with SeekHandler {
       );
     } else {
       _player = AudioPlayer(
-          userAgent: Environment.userAgent(),
-          useProxyForRequestHeaders: false,
-          audioLoadConfiguration: const AudioLoadConfiguration(
-            androidLoadControl: AndroidLoadControl(
-              backBufferDuration: Duration(seconds: 45),
-            ),
-            darwinLoadControl: DarwinLoadControl(),
-          ),);
+        userAgent: Environment.userAgent(),
+        useProxyForRequestHeaders: false,
+        audioLoadConfiguration: const AudioLoadConfiguration(
+          androidLoadControl: AndroidLoadControl(
+            backBufferDuration: Duration(seconds: 45),
+          ),
+          darwinLoadControl: DarwinLoadControl(),
+        ),
+      );
     }
 
     /// List to events from the player itself, transform the player event to an audio service one
     /// and hand it off to the playback state stream to inform our client(s).
-    _player.playbackEventStream
-        .map(_transformEvent)
-        .listen((data) {
+    _player.playbackEventStream.map(_transformEvent).listen((data) {
       if (playbackState.isClosed) {
         log.warning('WARN: Playback state is already closed.');
       } else {
@@ -885,7 +903,8 @@ class _DefaultAudioPlayerHandler extends BaseAudioHandler with SeekHandler {
     // var trim = mediaItem.extras['trim'] as bool ?? true;
 
     log.fine(
-        'loading new track ${mediaItem.id} - from position ${start.inSeconds} (${start.inMilliseconds})',);
+      'loading new track ${mediaItem.id} - from position ${start.inSeconds} (${start.inMilliseconds})',
+    );
 
     final source = downloaded
         ? AudioSource.uri(
@@ -993,8 +1012,10 @@ class _DefaultAudioPlayerHandler extends BaseAudioHandler with SeekHandler {
   }
 
   @override
-  Future<dynamic> customAction(String name,
-      [Map<String, dynamic>? extras,]) async {
+  Future<dynamic> customAction(
+    String name, [
+    Map<String, dynamic>? extras,
+  ]) async {
     switch (name) {
       case 'trim':
         final t = extras!['value'] as bool;
@@ -1078,7 +1099,8 @@ class _DefaultAudioPlayerHandler extends BaseAudioHandler with SeekHandler {
           .findEpisodeByGuid(_currentItem!.extras!['eid'] as String))!;
 
       log.fine(
-          '_savePosition(): Current position is $currentPosition - stored position is ${storedEpisode.position} complete is $complete on episode ${storedEpisode.title}',);
+        '_savePosition(): Current position is $currentPosition - stored position is ${storedEpisode.position} complete is $complete on episode ${storedEpisode.title}',
+      );
 
       if (complete) {
         storedEpisode.position = 0;

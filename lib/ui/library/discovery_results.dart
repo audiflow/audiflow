@@ -20,7 +20,6 @@ import 'package:seasoning/ui/widgets/podcast_list_with_search_bar.dart';
 ///
 /// Can optionally display a search bar similar to the main search bar.
 class DiscoveryResults extends StatelessWidget {
-
   const DiscoveryResults({
     super.key,
     required this.data,
@@ -39,7 +38,8 @@ class DiscoveryResults extends StatelessWidget {
         if (state is DiscoveryPopulatedState) {
           if (inlineSearch) {
             return PodcastListWithSearchBar(
-                results: state.results as search.SearchResult,);
+              results: state.results as search.SearchResult,
+            );
           }
           return PodcastList(results: state.results as search.SearchResult);
         } else {
@@ -88,7 +88,6 @@ class DiscoveryResults extends StatelessWidget {
 }
 
 class DiscoveryHeader extends StatefulWidget {
-
   const DiscoveryHeader({
     super.key,
     required this.results,
@@ -109,37 +108,39 @@ class _DiscoveryHeaderState extends State<DiscoveryHeader> {
         offset: ViewportOffset.zero(),
         slivers: [
           SliverToBoxAdapter(
-              child: StreamBuilder<List<String>>(
-                  stream: discoveryBloc.genres,
-                  initialData: const <String>[],
-                  builder: (context, snapshot) {
-                    return Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
-                      child: DropdownButton<String>(
-                        value: 'All',
-                        // icon: const Icon(Icons.arrow_downward),
-                        // iconSize: 16,
-                        // elevation: 16,
-                        style: const TextStyle(color: Colors.white),
-                        underline: Container(
-                          height: 2,
-                          color: Colors.white,
-                        ),
-                        onChanged: (String? newValue) {
-                          setState(() {
-                            // dropdownValue = newValue!;
-                          });
-                        },
-                        items: snapshot.data!
-                            .map<DropdownMenuItem<String>>((String value) {
-                          return DropdownMenuItem<String>(
-                            value: value,
-                            child: Text(value),
-                          );
-                        }).toList(),
-                      ),
-                    );
-                  },),),
+            child: StreamBuilder<List<String>>(
+              stream: discoveryBloc.genres,
+              initialData: const <String>[],
+              builder: (context, snapshot) {
+                return Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+                  child: DropdownButton<String>(
+                    value: 'All',
+                    // icon: const Icon(Icons.arrow_downward),
+                    // iconSize: 16,
+                    // elevation: 16,
+                    style: const TextStyle(color: Colors.white),
+                    underline: Container(
+                      height: 2,
+                      color: Colors.white,
+                    ),
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        // dropdownValue = newValue!;
+                      });
+                    },
+                    items: snapshot.data!
+                        .map<DropdownMenuItem<String>>((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(value),
+                      );
+                    }).toList(),
+                  ),
+                );
+              },
+            ),
+          ),
           PodcastList(results: widget.results),
         ],
       ),

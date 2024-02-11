@@ -12,7 +12,6 @@ import 'package:seasoning/ui/widgets/platform_progress_indicator.dart';
 import 'package:seasoning/ui/widgets/podcast_list.dart';
 
 class SearchResults extends StatelessWidget {
-
   const SearchResults({
     super.key,
     required this.data,

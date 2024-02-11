@@ -19,7 +19,6 @@ import 'package:seasoning/core/environment.dart';
 /// fetching the image several times for differing render sizes.
 // ignore: must_be_immutable
 class PodcastImage extends StatefulWidget {
-
   const PodcastImage({
     super.key,
     required this.url,
@@ -164,7 +163,6 @@ class _PodcastImageState extends State<PodcastImage>
 }
 
 class PodcastBannerImage extends StatefulWidget {
-
   const PodcastBannerImage({
     super.key,
     required this.url,

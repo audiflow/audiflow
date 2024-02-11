@@ -9,7 +9,6 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 
 class PlayPauseButton extends StatelessWidget {
-
   const PlayPauseButton({
     super.key,
     required this.icon,
@@ -41,7 +40,6 @@ class PlayPauseButton extends StatelessWidget {
 }
 
 class PlayPauseBusyButton extends StatelessWidget {
-
   const PlayPauseBusyButton({
     super.key,
     required this.icon,
@@ -55,24 +53,25 @@ class PlayPauseBusyButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Semantics(
-        label: '$label $title',
-        child: Stack(
-          children: <Widget>[
-            SizedBox(
-              height: 48,
-              width: 48,
-              child: Icon(
-                icon,
-                size: 22,
-                color: Theme.of(context).primaryColor,
-              ),
-            ),
-            SpinKitRing(
-              lineWidth: 1.5,
+      label: '$label $title',
+      child: Stack(
+        children: <Widget>[
+          SizedBox(
+            height: 48,
+            width: 48,
+            child: Icon(
+              icon,
+              size: 22,
               color: Theme.of(context).primaryColor,
-              size: 38,
             ),
-          ],
-        ),);
+          ),
+          SpinKitRing(
+            lineWidth: 1.5,
+            color: Theme.of(context).primaryColor,
+            size: 38,
+          ),
+        ],
+      ),
+    );
   }
 }

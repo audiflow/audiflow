@@ -89,10 +89,10 @@ class _EpisodesState extends State<Episodes> {
       final queueBloc = Provider.of<QueueBloc>(context);
 
       return StreamBuilder<QueueState>(
-          stream: queueBloc.queue,
-          builder: (context, snapshot) {
-            return SliverList(
-                delegate: SliverChildBuilderDelegate(
+        stream: queueBloc.queue,
+        builder: (context, snapshot) {
+          return SliverList(
+            delegate: SliverChildBuilderDelegate(
               (BuildContext context, int index) {
                 var queued = false;
                 final episode = episodes[index];
@@ -111,8 +111,10 @@ class _EpisodesState extends State<Episodes> {
               },
               childCount: episodes.length,
               addAutomaticKeepAlives: false,
-            ),);
-          },);
+            ),
+          );
+        },
+      );
     } else {
       return SliverFillRemaining(
         hasScrollBody: false,

@@ -19,7 +19,6 @@ import 'package:seasoning/l10n/L.dart';
 ///
 /// The target platform is based on the current [Theme]: [ThemeData.platform].
 class PodcastContextMenu extends StatelessWidget {
-
   const PodcastContextMenu(
     this.podcast, {
     super.key,
@@ -46,7 +45,6 @@ class PodcastContextMenu extends StatelessWidget {
 /// This is the material design version of the context menu. This will be rendered
 /// for all platforms that are not iOS.
 class _MaterialPodcastMenu extends StatelessWidget {
-
   const _MaterialPodcastMenu(this.podcast);
   final Podcast podcast;
 
@@ -55,31 +53,32 @@ class _MaterialPodcastMenu extends StatelessWidget {
     final bloc = Provider.of<PodcastBloc>(context);
 
     return StreamBuilder<BlocState<Podcast>>(
-        stream: bloc.details,
-        builder: (context, snapshot) {
-          return PopupMenuButton<String>(
-            onSelected: (event) {
-              togglePlayed(value: event, bloc: bloc);
-            },
-            icon: const Icon(
-              Icons.more_vert,
-            ),
-            itemBuilder: (BuildContext context) {
-              return <PopupMenuEntry<String>>[
-                PopupMenuItem<String>(
-                  value: 'ma',
-                  enabled: podcast.subscribed,
-                  child: Text(L.of(context)!.mark_episodes_played_label),
-                ),
-                PopupMenuItem<String>(
-                  value: 'ua',
-                  enabled: podcast.subscribed,
-                  child: Text(L.of(context)!.mark_episodes_not_played_label),
-                ),
-              ];
-            },
-          );
-        },);
+      stream: bloc.details,
+      builder: (context, snapshot) {
+        return PopupMenuButton<String>(
+          onSelected: (event) {
+            togglePlayed(value: event, bloc: bloc);
+          },
+          icon: const Icon(
+            Icons.more_vert,
+          ),
+          itemBuilder: (BuildContext context) {
+            return <PopupMenuEntry<String>>[
+              PopupMenuItem<String>(
+                value: 'ma',
+                enabled: podcast.subscribed,
+                child: Text(L.of(context)!.mark_episodes_played_label),
+              ),
+              PopupMenuItem<String>(
+                value: 'ua',
+                enabled: podcast.subscribed,
+                child: Text(L.of(context)!.mark_episodes_not_played_label),
+              ),
+            ];
+          },
+        );
+      },
+    );
   }
 
   void togglePlayed({
@@ -97,7 +96,6 @@ class _MaterialPodcastMenu extends StatelessWidget {
 /// This is the Cupertino context menu and is rendered only when running on
 /// an iOS device.
 class _CupertinoContextMenu extends StatelessWidget {
-
   const _CupertinoContextMenu(this.podcast);
   final Podcast podcast;
 
@@ -106,46 +104,45 @@ class _CupertinoContextMenu extends StatelessWidget {
     final bloc = Provider.of<PodcastBloc>(context);
 
     return StreamBuilder<BlocState<Podcast>>(
-        stream: bloc.details,
-        builder: (context, snapshot) {
-          return IconButton(
-            tooltip:
-                L.of(context)!.podcast_options_overflow_menu_semantic_label,
-            icon: const Icon(CupertinoIcons.ellipsis),
-            onPressed: () => showCupertinoModalPopup<void>(
-              context: context,
-              builder: (BuildContext context) {
-                return CupertinoActionSheet(
-                  actions: <Widget>[
-                    CupertinoActionSheetAction(
-                      isDefaultAction: true,
-                      onPressed: () {
-                        bloc.podcastEvent(PodcastEvent.markAllPlayed);
-                        Navigator.pop(context, 'Cancel');
-                      },
-                      child: Text(L.of(context)!.mark_episodes_played_label),
-                    ),
-                    CupertinoActionSheetAction(
-                      isDefaultAction: true,
-                      onPressed: () {
-                        bloc.podcastEvent(PodcastEvent.clearAllPlayed);
-                        Navigator.pop(context, 'Cancel');
-                      },
-                      child:
-                          Text(L.of(context)!.mark_episodes_not_played_label),
-                    ),
-                  ],
-                  cancelButton: CupertinoActionSheetAction(
+      stream: bloc.details,
+      builder: (context, snapshot) {
+        return IconButton(
+          tooltip: L.of(context)!.podcast_options_overflow_menu_semantic_label,
+          icon: const Icon(CupertinoIcons.ellipsis),
+          onPressed: () => showCupertinoModalPopup<void>(
+            context: context,
+            builder: (BuildContext context) {
+              return CupertinoActionSheet(
+                actions: <Widget>[
+                  CupertinoActionSheetAction(
                     isDefaultAction: true,
                     onPressed: () {
+                      bloc.podcastEvent(PodcastEvent.markAllPlayed);
                       Navigator.pop(context, 'Cancel');
                     },
-                    child: Text(L.of(context)!.cancel_option_label),
+                    child: Text(L.of(context)!.mark_episodes_played_label),
                   ),
-                );
-              },
-            ),
-          );
-        },);
+                  CupertinoActionSheetAction(
+                    isDefaultAction: true,
+                    onPressed: () {
+                      bloc.podcastEvent(PodcastEvent.clearAllPlayed);
+                      Navigator.pop(context, 'Cancel');
+                    },
+                    child: Text(L.of(context)!.mark_episodes_not_played_label),
+                  ),
+                ],
+                cancelButton: CupertinoActionSheetAction(
+                  isDefaultAction: true,
+                  onPressed: () {
+                    Navigator.pop(context, 'Cancel');
+                  },
+                  child: Text(L.of(context)!.cancel_option_label),
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
   }
 }

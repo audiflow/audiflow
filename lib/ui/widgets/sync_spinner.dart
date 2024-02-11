@@ -57,20 +57,21 @@ class _SyncSpinnerState extends State<SyncSpinner>
     final podcastBloc = Provider.of<PodcastBloc>(context, listen: false);
 
     return StreamBuilder<BlocState<void>>(
-        initialData: BlocEmptyState<void>(),
-        stream: podcastBloc.backgroundLoading,
-        builder: (context, snapshot) {
-          final state = snapshot.data;
+      initialData: BlocEmptyState<void>(),
+      stream: podcastBloc.backgroundLoading,
+      builder: (context, snapshot) {
+        final state = snapshot.data;
 
-          return state is BlocLoadingState<void>
-              ? RotationTransition(
-                  turns: _controller,
-                  child: _child,
-                )
-              : const SizedBox(
-                  width: 0,
-                  height: 0,
-                );
-        },);
+        return state is BlocLoadingState<void>
+            ? RotationTransition(
+                turns: _controller,
+                child: _child,
+              )
+            : const SizedBox(
+                width: 0,
+                height: 0,
+              );
+      },
+    );
   }
 }

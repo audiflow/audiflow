@@ -17,7 +17,6 @@ import 'package:seasoning/services/podcast/podcast_service.dart';
 /// The BLoC provides access to [Episode] details outside the direct scope
 /// of a [Podcast].
 class EpisodeBloc extends Bloc {
-
   EpisodeBloc({
     required this.podcastService,
     required this.audioPlayerService,
@@ -51,9 +50,11 @@ class EpisodeBloc extends Bloc {
 
   void _init() {
     _downloadsOutput = _downloadsInput.switchMap<BlocState<List<Episode>>>(
-        _loadDownloads,);
+      _loadDownloads,
+    );
     _episodesOutput = _episodesInput.switchMap<BlocState<List<Episode>>>(
-        _loadEpisodes,);
+      _loadEpisodes,
+    );
 
     _handleDeleteDownloads();
     _handleMarkAsPlayed();

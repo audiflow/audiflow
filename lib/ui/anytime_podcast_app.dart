@@ -60,7 +60,6 @@ ThemeData theme = Themes.lightTheme().themeData;
 /// download and stream episodes and view the latest podcast charts.
 // ignore: must_be_immutable
 class AnytimePodcastApp extends StatefulWidget {
-
   AnytimePodcastApp({
     super.key,
     required this.mobileSettingsService,
@@ -157,16 +156,18 @@ class AnytimePodcastAppState extends State<AnytimePodcastApp> {
         ),
         Provider<EpisodeBloc>(
           create: (_) => EpisodeBloc(
-              podcastService: widget.podcastService!,
-              audioPlayerService: widget.audioPlayerService,),
+            podcastService: widget.podcastService!,
+            audioPlayerService: widget.audioPlayerService,
+          ),
           dispose: (_, value) => value.dispose(),
         ),
         Provider<PodcastBloc>(
           create: (_) => PodcastBloc(
-              podcastService: widget.podcastService!,
-              audioPlayerService: widget.audioPlayerService,
-              downloadService: widget.downloadService,
-              settingsService: widget.mobileSettingsService,),
+            podcastService: widget.podcastService!,
+            audioPlayerService: widget.audioPlayerService,
+            downloadService: widget.downloadService,
+            settingsService: widget.mobileSettingsService,
+          ),
           dispose: (_, value) => value.dispose(),
         ),
         Provider<PagerBloc>(
@@ -218,7 +219,6 @@ class AnytimePodcastAppState extends State<AnytimePodcastApp> {
 }
 
 class AnytimeHomePage extends StatefulWidget {
-
   const AnytimeHomePage({
     super.key,
     this.title,
@@ -287,9 +287,11 @@ class _AnytimeHomePageState extends State<AnytimeHomePage>
       /// the BLoC) that we load this new URL. If not, we pop the stack until we are
       /// back at root and then load the podcast details page.
       if (routeName != null && routeName == 'podcastdetails') {
-        loadPodcastBloc.load(Feed(
-          podcast: Podcast.fromUrl(url: path),
-        ),);
+        loadPodcastBloc.load(
+          Feed(
+            podcast: Podcast.fromUrl(url: path),
+          ),
+        );
       } else {
         /// Pop back to route.
         Navigator.of(context).popUntil((route) {
@@ -304,10 +306,11 @@ class _AnytimeHomePageState extends State<AnytimeHomePage>
         await Navigator.push(
           context,
           MaterialPageRoute<void>(
-              fullscreenDialog: true,
-              settings: const RouteSettings(name: 'podcastdetails'),
-              builder: (context) =>
-                  PodcastDetails(Podcast.fromUrl(url: path), loadPodcastBloc),),
+            fullscreenDialog: true,
+            settings: const RouteSettings(name: 'podcastdetails'),
+            builder: (context) =>
+                PodcastDetails(Podcast.fromUrl(url: path), loadPodcastBloc),
+          ),
         );
       }
     }
@@ -391,12 +394,14 @@ class _AnytimeHomePageState extends State<AnytimeHomePage>
                                     children: [
                                       const Padding(
                                         padding: EdgeInsets.only(right: 8),
-                                        child: Icon(Icons.feedback_outlined,
-                                            size: 18,),
+                                        child: Icon(
+                                          Icons.feedback_outlined,
+                                          size: 18,
+                                        ),
                                       ),
-                                      Text(L
-                                          .of(context)!
-                                          .feedback_menu_item_label,),
+                                      Text(
+                                        L.of(context)!.feedback_menu_item_label,
+                                      ),
                                     ],
                                   ),
                                 ),
@@ -450,8 +455,7 @@ class _AnytimeHomePageState extends State<AnytimeHomePage>
                                   children: [
                                     const Padding(
                                       padding: EdgeInsets.only(right: 8),
-                                      child:
-                                          Icon(Icons.info_outline, size: 18),
+                                      child: Icon(Icons.info_outline, size: 18),
                                     ),
                                     Text(L.of(context)!.about_label),
                                   ],
@@ -464,11 +468,12 @@ class _AnytimeHomePageState extends State<AnytimeHomePage>
                     ),
                   ),
                   StreamBuilder<int>(
-                      stream: pager.currentPage,
-                      builder:
-                          (BuildContext context, AsyncSnapshot<int> snapshot) {
-                        return _fragment(snapshot.data, searchBloc);
-                      },),
+                    stream: pager.currentPage,
+                    builder:
+                        (BuildContext context, AsyncSnapshot<int> snapshot) {
+                      return _fragment(snapshot.data, searchBloc);
+                    },
+                  ),
                 ],
               ),
             ),
@@ -476,51 +481,51 @@ class _AnytimeHomePageState extends State<AnytimeHomePage>
           ],
         ),
         bottomNavigationBar: StreamBuilder<int>(
-            stream: pager.currentPage,
-            initialData: 0,
-            builder: (BuildContext context, AsyncSnapshot<int> snapshot) {
-              final index = snapshot.data ?? 0;
+          stream: pager.currentPage,
+          initialData: 0,
+          builder: (BuildContext context, AsyncSnapshot<int> snapshot) {
+            final index = snapshot.data ?? 0;
 
-              return BottomNavigationBar(
-                type: BottomNavigationBarType.fixed,
-                backgroundColor: Theme.of(context).bottomAppBarTheme.color,
-                selectedIconTheme: Theme.of(context).iconTheme,
-                selectedItemColor: Theme.of(context).iconTheme.color,
-                selectedFontSize: 11,
-                unselectedFontSize: 11,
-                unselectedItemColor: HSLColor.fromColor(
-                        Theme.of(context).bottomAppBarTheme.color!,)
-                    .withLightness(0.8)
-                    .toColor(),
-                currentIndex: index,
-                onTap: pager.changePage,
-                items: <BottomNavigationBarItem>[
-                  BottomNavigationBarItem(
-                    icon: index == 0
-                        ? const Icon(Icons.library_music)
-                        : const Icon(Icons.library_music_outlined),
-                    label: L.of(context)!.library,
-                  ),
-                  // To be fleshed out later.
-                  // BottomNavigationBarItem(
-                  //   icon: index == 0 ? Icon(Icons.article_rounded) : Icon(Icons.article_outlined),
-                  //   label: 'Episodes',
-                  // ),
-                  BottomNavigationBarItem(
-                    icon: index == 1
-                        ? const Icon(Icons.explore)
-                        : const Icon(Icons.explore_outlined),
-                    label: L.of(context)!.discover,
-                  ),
-                  BottomNavigationBarItem(
-                    icon: index == 2
-                        ? const Icon(Icons.download)
-                        : const Icon(Icons.download_outlined),
-                    label: L.of(context)!.downloads,
-                  ),
-                ],
-              );
-            },),
+            return BottomNavigationBar(
+              type: BottomNavigationBarType.fixed,
+              backgroundColor: Theme.of(context).bottomAppBarTheme.color,
+              selectedIconTheme: Theme.of(context).iconTheme,
+              selectedItemColor: Theme.of(context).iconTheme.color,
+              selectedFontSize: 11,
+              unselectedFontSize: 11,
+              unselectedItemColor: HSLColor.fromColor(
+                Theme.of(context).bottomAppBarTheme.color!,
+              ).withLightness(0.8).toColor(),
+              currentIndex: index,
+              onTap: pager.changePage,
+              items: <BottomNavigationBarItem>[
+                BottomNavigationBarItem(
+                  icon: index == 0
+                      ? const Icon(Icons.library_music)
+                      : const Icon(Icons.library_music_outlined),
+                  label: L.of(context)!.library,
+                ),
+                // To be fleshed out later.
+                // BottomNavigationBarItem(
+                //   icon: index == 0 ? Icon(Icons.article_rounded) : Icon(Icons.article_outlined),
+                //   label: 'Episodes',
+                // ),
+                BottomNavigationBarItem(
+                  icon: index == 1
+                      ? const Icon(Icons.explore)
+                      : const Icon(Icons.explore_outlined),
+                  label: L.of(context)!.discover,
+                ),
+                BottomNavigationBarItem(
+                  icon: index == 2
+                      ? const Icon(Icons.download)
+                      : const Icon(Icons.download_outlined),
+                  label: L.of(context)!.downloads,
+                ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
@@ -547,31 +552,32 @@ class _AnytimeHomePageState extends State<AnytimeHomePage>
     switch (choice) {
       case 'about':
         showAboutDialog(
-            context: context,
-            applicationName: 'Seasoning Podcast Player',
-            applicationVersion: 'v${Environment.projectVersion}',
-            applicationIcon: Image.asset(
-              'assets/images/app-logo-s.png',
-              width: 52,
-              height: 52,
-            ),
-            children: <Widget>[
-              const Text('\u00a9 2020 Ben Hills'),
-              const Text('\u00a9 2024 Reedom, INC.'),
-              const Text('\u00a9 2024 HANAI, Tohru'),
-              // GestureDetector(
-              //   onTap: () {
-              //     _launchEmail();
-              //   },
-              //   child: Text(
-              //     'hello@anytimeplayer.app',
-              //     style: TextStyle(
-              //       decoration: TextDecoration.underline,
-              //       color: Theme.of(context).indicatorColor,
-              //     ),
-              //   ),
-              // ),
-            ],);
+          context: context,
+          applicationName: 'Seasoning Podcast Player',
+          applicationVersion: 'v${Environment.projectVersion}',
+          applicationIcon: Image.asset(
+            'assets/images/app-logo-s.png',
+            width: 52,
+            height: 52,
+          ),
+          children: <Widget>[
+            const Text('\u00a9 2020 Ben Hills'),
+            const Text('\u00a9 2024 Reedom, INC.'),
+            const Text('\u00a9 2024 HANAI, Tohru'),
+            // GestureDetector(
+            //   onTap: () {
+            //     _launchEmail();
+            //   },
+            //   child: Text(
+            //     'hello@anytimeplayer.app',
+            //     style: TextStyle(
+            //       decoration: TextDecoration.underline,
+            //       color: Theme.of(context).indicatorColor,
+            //     ),
+            //   ),
+            // ),
+          ],
+        );
       case 'settings':
         await Navigator.push(
           context,
@@ -630,9 +636,12 @@ class _AnytimeHomePageState extends State<AnytimeHomePage>
                   Navigator.push(
                     context,
                     MaterialPageRoute<void>(
-                        settings: const RouteSettings(name: 'podcastdetails'),
-                        builder: (context) => PodcastDetails(
-                            Podcast.fromUrl(url: url), podcastBloc,),),
+                      settings: const RouteSettings(name: 'podcastdetails'),
+                      builder: (context) => PodcastDetails(
+                        Podcast.fromUrl(url: url),
+                        podcastBloc,
+                      ),
+                    ),
                   ).then((value) => Navigator.pop(context));
                 },
               ),
@@ -665,7 +674,6 @@ class _AnytimeHomePageState extends State<AnytimeHomePage>
 }
 
 class TitleWidget extends StatelessWidget {
-
   TitleWidget({
     super.key,
   });

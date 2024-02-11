@@ -37,7 +37,10 @@ class AudioQueue extends _$AudioQueue {
       } else if (event is QueueMoveEvent) {
         final e = event.episode;
         await _audioPlayerService.moveUpNextEpisode(
-            e, event.oldIndex, event.newIndex,);
+          e,
+          event.oldIndex,
+          event.newIndex,
+        );
       } else if (event is QueueClearEvent) {
         await _audioPlayerService.clearUpNext();
       }

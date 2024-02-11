@@ -35,44 +35,45 @@ class _PlayerTransportControlsState extends State<PlayerTransportControls> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: StreamBuilder<AudioState>(
-          stream: audioBloc.playingState,
-          initialData: AudioState.none,
-          builder: (context, snapshot) {
-            return Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: <Widget>[
-                const SleepSelectorWidget(),
-                IconButton(
-                  onPressed: () {
-                    return snapshot.data == AudioState.buffering
-                        ? null
-                        : _rewind(audioBloc);
-                  },
-                  tooltip: L.of(context)!.rewind_button_label,
-                  padding: const EdgeInsets.all(0),
-                  icon: const Icon(
-                    Icons.replay_10,
-                    size: 48,
-                  ),
+        stream: audioBloc.playingState,
+        initialData: AudioState.none,
+        builder: (context, snapshot) {
+          return Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              const SleepSelectorWidget(),
+              IconButton(
+                onPressed: () {
+                  return snapshot.data == AudioState.buffering
+                      ? null
+                      : _rewind(audioBloc);
+                },
+                tooltip: L.of(context)!.rewind_button_label,
+                padding: const EdgeInsets.all(0),
+                icon: const Icon(
+                  Icons.replay_10,
+                  size: 48,
                 ),
-                AnimatedPlayButton(audioState: snapshot.data!),
-                IconButton(
-                  onPressed: () {
-                    return snapshot.data == AudioState.buffering
-                        ? null
-                        : _fastforward(audioBloc);
-                  },
-                  tooltip: L.of(context)!.fast_forward_button_label,
-                  padding: const EdgeInsets.all(0),
-                  icon: const Icon(
-                    Icons.forward_30,
-                    size: 48,
-                  ),
+              ),
+              AnimatedPlayButton(audioState: snapshot.data!),
+              IconButton(
+                onPressed: () {
+                  return snapshot.data == AudioState.buffering
+                      ? null
+                      : _fastforward(audioBloc);
+                },
+                tooltip: L.of(context)!.fast_forward_button_label,
+                padding: const EdgeInsets.all(0),
+                icon: const Icon(
+                  Icons.forward_30,
+                  size: 48,
                 ),
-                const SpeedSelectorWidget(),
-              ],
-            );
-          },),
+              ),
+              const SpeedSelectorWidget(),
+            ],
+          );
+        },
+      ),
     );
   }
 
@@ -88,7 +89,6 @@ class _PlayerTransportControlsState extends State<PlayerTransportControls> {
 typedef PlayHandler = Function(AudioBloc audioBloc);
 
 class AnimatedPlayButton extends StatefulWidget {
-
   const AnimatedPlayButton({
     super.key,
     required this.audioState,
@@ -124,7 +124,9 @@ class _AnimatedPlayButtonState extends State<AnimatedPlayButton>
     final audioBloc = Provider.of<AudioBloc>(context, listen: false);
 
     _playPauseController = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 300),);
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
 
     /// Seems a little hacky, but when we load the form we want the play/pause
     /// button to be in the correct state. If we are building the first frame,
@@ -185,8 +187,11 @@ class _AnimatedPlayButtonState extends State<AnimatedPlayButton>
           child: TextButton(
             style: TextButton.styleFrom(
               shape: CircleBorder(
-                  side: BorderSide(
-                      color: Theme.of(context).highlightColor, width: 0,),),
+                side: BorderSide(
+                  color: Theme.of(context).highlightColor,
+                  width: 0,
+                ),
+              ),
               backgroundColor: Theme.of(context).brightness == Brightness.light
                   ? Colors.orange
                   : Colors.grey[800],

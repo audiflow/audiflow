@@ -6,7 +6,6 @@
 import 'package:flutter/material.dart';
 
 class PlaceholderBuilder extends InheritedWidget {
-
   const PlaceholderBuilder({
     super.key,
     required this.builder,

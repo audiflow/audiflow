@@ -136,38 +136,40 @@ class _SeasonEpisodesState extends State<SeasonEpisodes> {
               controller: _sliverScrollController,
               slivers: <Widget>[
                 SliverAppBar(
-                    systemOverlayStyle: _systemOverlayStyle,
-                    title: AnimatedOpacity(
-                        opacity: toolbarCollapsed ? 1.0 : 0.0,
-                        duration: const Duration(milliseconds: 500),
-                        child: Text(widget.season.title ?? 'Extra'),),
-                    leading: PlatformBackButton(
-                      iconColour: toolbarCollapsed &&
-                              Theme.of(context).brightness == Brightness.light
-                          ? Theme.of(context).appBarTheme.foregroundColor!
-                          : Colors.white,
-                      decorationColour: toolbarCollapsed
-                          ? const Color(0x00000000)
-                          : const Color(0x22000000),
-                      onPressed: () {
-                        _resetSystemOverlayStyle();
-                        Navigator.pop(context);
-                      },
-                    ),
-                    expandedHeight: 300,
-                    pinned: true,
-                    flexibleSpace: FlexibleSpaceBar(
-                      background: Hero(
-                        key: Key('seasonhero${widget.season.guid}'),
-                        tag: widget.season.guid,
-                        child: ExcludeSemantics(
-                          child: SeasonHeaderImage(
-                            season: widget.season,
-                            placeholderBuilder: placeholderBuilder,
-                          ),
+                  systemOverlayStyle: _systemOverlayStyle,
+                  title: AnimatedOpacity(
+                    opacity: toolbarCollapsed ? 1.0 : 0.0,
+                    duration: const Duration(milliseconds: 500),
+                    child: Text(widget.season.title ?? 'Extra'),
+                  ),
+                  leading: PlatformBackButton(
+                    iconColour: toolbarCollapsed &&
+                            Theme.of(context).brightness == Brightness.light
+                        ? Theme.of(context).appBarTheme.foregroundColor!
+                        : Colors.white,
+                    decorationColour: toolbarCollapsed
+                        ? const Color(0x00000000)
+                        : const Color(0x22000000),
+                    onPressed: () {
+                      _resetSystemOverlayStyle();
+                      Navigator.pop(context);
+                    },
+                  ),
+                  expandedHeight: 300,
+                  pinned: true,
+                  flexibleSpace: FlexibleSpaceBar(
+                    background: Hero(
+                      key: Key('seasonhero${widget.season.guid}'),
+                      tag: widget.season.guid,
+                      child: ExcludeSemantics(
+                        child: SeasonHeaderImage(
+                          season: widget.season,
+                          placeholderBuilder: placeholderBuilder,
                         ),
                       ),
-                    ),),
+                    ),
+                  ),
+                ),
                 // StreamBuilder<BlocState<Podcast>>(
                 //     initialData: BlocEmptyState<Podcast>(),
                 //     stream: podcastBloc.details,
@@ -277,7 +279,8 @@ class SeasonHeaderImage extends StatelessWidget {
       errorPlaceholder: placeholderBuilder != null
           ? placeholderBuilder?.errorBuilder()(context)
           : const Image(
-              image: AssetImage('assets/images/anytime-placeholder-logo.png'),),
+              image: AssetImage('assets/images/anytime-placeholder-logo.png'),
+            ),
     );
   }
 }
@@ -292,7 +295,6 @@ class SeasonHeaderImage extends StatelessWidget {
 /// Description is rendered by [PodcastDescription].
 /// Follow/Unfollow button rendered by [FollowButton].
 class SeasonTitle extends StatefulWidget {
-
   const SeasonTitle(this.season, {super.key});
   final Season season;
 
@@ -321,7 +323,6 @@ class _SeasonTitleState extends State<SeasonTitle> {
 }
 
 class FollowButton extends StatelessWidget {
-
   const FollowButton(this.podcast, {super.key});
   final Podcast podcast;
 
@@ -330,82 +331,85 @@ class FollowButton extends StatelessWidget {
     final bloc = Provider.of<PodcastBloc>(context);
 
     return StreamBuilder<BlocState<Podcast>>(
-        stream: bloc.details,
-        builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            final state = snapshot.data;
+      stream: bloc.details,
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          final state = snapshot.data;
 
-            if (state is BlocPopulatedState<Podcast>) {
-              final p = state.results!;
+          if (state is BlocPopulatedState<Podcast>) {
+            final p = state.results!;
 
-              return Semantics(
-                liveRegion: true,
-                child: p.subscribed
-                    ? OutlinedButton.icon(
-                        style: OutlinedButton.styleFrom(
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),),
+            return Semantics(
+              liveRegion: true,
+              child: p.subscribed
+                  ? OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                        icon: const Icon(
-                          Icons.delete_outline,
-                        ),
-                        label: Text(L.of(context)!.unsubscribe_label),
-                        onPressed: () {
-                          showPlatformDialog<void>(
-                            context: context,
-                            useRootNavigator: false,
-                            builder: (_) => BasicDialogAlert(
-                              title: Text(L.of(context)!.unsubscribe_label),
-                              content: Text(L.of(context)!.unsubscribe_message),
-                              actions: <Widget>[
-                                BasicDialogAction(
-                                  title: ExcludeSemantics(
-                                    child: ActionText(
-                                      L.of(context)!.cancel_button_label,
-                                    ),
-                                  ),
-                                  onPressed: () {
-                                    Navigator.pop(context);
-                                  },
-                                ),
-                                BasicDialogAction(
-                                  title: ExcludeSemantics(
-                                    child: ActionText(
-                                      L.of(context)!.unsubscribe_button_label,
-                                    ),
-                                  ),
-                                  iosIsDefaultAction: true,
-                                  iosIsDestructiveAction: true,
-                                  onPressed: () {
-                                    bloc.podcastEvent(PodcastEvent.unsubscribe);
-
-                                    Navigator.pop(context);
-                                    Navigator.pop(context);
-                                  },
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                      )
-                    : OutlinedButton.icon(
-                        style: OutlinedButton.styleFrom(
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),),
-                        ),
-                        icon: const Icon(
-                          Icons.add,
-                        ),
-                        label: Text(L.of(context)!.subscribe_label),
-                        onPressed: () {
-                          bloc.podcastEvent(PodcastEvent.subscribe);
-                        },
                       ),
-              );
-            }
+                      icon: const Icon(
+                        Icons.delete_outline,
+                      ),
+                      label: Text(L.of(context)!.unsubscribe_label),
+                      onPressed: () {
+                        showPlatformDialog<void>(
+                          context: context,
+                          useRootNavigator: false,
+                          builder: (_) => BasicDialogAlert(
+                            title: Text(L.of(context)!.unsubscribe_label),
+                            content: Text(L.of(context)!.unsubscribe_message),
+                            actions: <Widget>[
+                              BasicDialogAction(
+                                title: ExcludeSemantics(
+                                  child: ActionText(
+                                    L.of(context)!.cancel_button_label,
+                                  ),
+                                ),
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                },
+                              ),
+                              BasicDialogAction(
+                                title: ExcludeSemantics(
+                                  child: ActionText(
+                                    L.of(context)!.unsubscribe_button_label,
+                                  ),
+                                ),
+                                iosIsDefaultAction: true,
+                                iosIsDestructiveAction: true,
+                                onPressed: () {
+                                  bloc.podcastEvent(PodcastEvent.unsubscribe);
+
+                                  Navigator.pop(context);
+                                  Navigator.pop(context);
+                                },
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    )
+                  : OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      icon: const Icon(
+                        Icons.add,
+                      ),
+                      label: Text(L.of(context)!.subscribe_label),
+                      onPressed: () {
+                        bloc.podcastEvent(PodcastEvent.subscribe);
+                      },
+                    ),
+            );
           }
-          return Container();
-        },);
+        }
+        return Container();
+      },
+    );
   }
 }
 
@@ -420,12 +424,13 @@ class SeasonSwitch extends StatelessWidget {
       children: [
         const Text('Season'),
         Switch(
-            value: isOn,
-            onChanged: (isOn) {
-              final podcastBloc =
-                  Provider.of<PodcastBloc>(context, listen: false);
-              podcastBloc.toggleSeasonView();
-            },),
+          value: isOn,
+          onChanged: (isOn) {
+            final podcastBloc =
+                Provider.of<PodcastBloc>(context, listen: false);
+            podcastBloc.toggleSeasonView();
+          },
+        ),
       ],
     );
   }
