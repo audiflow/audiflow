@@ -6,16 +6,16 @@
 
 import 'package:seasoning/entities/season.dart';
 
-abstract class SeasonState {
-  SeasonState(this.season);
+abstract class SeasonEvent {
+  SeasonEvent(this.season);
 
   final Season season;
 }
 
-class SeasonUpdateState extends SeasonState {
-  SeasonUpdateState(super.season);
+class SeasonUpdateEvent extends SeasonEvent {
+  SeasonUpdateEvent(super.season);
 }
 
-class SeasonDeleteState extends SeasonState {
-  SeasonDeleteState(super.season);
+class SeasonDeleteEvent extends SeasonEvent {
+  SeasonDeleteEvent(super.season);
 }

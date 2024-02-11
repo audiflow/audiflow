@@ -4,36 +4,36 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-abstract class OPMLState {}
+abstract class OPMLActionEvent {}
 
-class OPMLNoneState extends OPMLState {}
+class OPMLNoneEvent extends OPMLActionEvent {}
 
-class OPMLParsingState extends OPMLState {}
+class OPMLParsingEvent extends OPMLActionEvent {}
 
-class OPMLLoadingState extends OPMLState {
-  final int? current;
-  final int? total;
-  final String? podcast;
-
-  OPMLLoadingState({
+class OPMLLoadingEvent extends OPMLActionEvent {
+  OPMLLoadingEvent({
     this.current,
     this.total,
     this.podcast,
   });
+
+  final int? current;
+  final int? total;
+  final String? podcast;
 }
 
-class OPMLCompletedState extends OPMLState {}
+class OPMLCompletedEvent extends OPMLActionEvent {}
 
-class OPMLErrorState extends OPMLState {}
+class OPMLErrorEvent extends OPMLActionEvent {}
 
 abstract class OPMLEvent {}
 
 class OPMLImportEvent extends OPMLEvent {
-  final String? file;
-
   OPMLImportEvent({
     this.file,
   });
+
+  final String? file;
 }
 
 class OPMLExportEvent extends OPMLEvent {}

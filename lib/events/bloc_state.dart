@@ -15,15 +15,15 @@ abstract class BlocState<T> {}
 class BlocDefaultState<T> extends BlocState<T> {}
 
 class BlocLoadingState<T> extends BlocState<T> {
-  final T? data;
 
   BlocLoadingState([this.data]);
+  final T? data;
 }
 
 class BlocBackgroundLoadingState<T> extends BlocState<T> {
-  final T? data;
 
   BlocBackgroundLoadingState([this.data]);
+  final T? data;
 }
 
 class BlocSuccessfulState<T> extends BlocState<T> {}
@@ -31,17 +31,17 @@ class BlocSuccessfulState<T> extends BlocState<T> {}
 class BlocEmptyState<T> extends BlocState<T> {}
 
 class BlocErrorState<T> extends BlocState<T> {
-  final BlocErrorType error;
 
   BlocErrorState({
     this.error = BlocErrorType.unknown,
   });
+  final BlocErrorType error;
 }
 
 class BlocNoInputState<T> extends BlocState<T> {}
 
 class BlocPopulatedState<T> extends BlocState<T> {
-  final T? results;
 
   BlocPopulatedState({this.results});
+  final T? results;
 }
