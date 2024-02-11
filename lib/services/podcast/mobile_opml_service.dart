@@ -18,11 +18,11 @@ import 'package:share_plus/share_plus.dart';
 import 'package:xml/xml.dart';
 
 class MobileOPMLService extends OPMLService {
-
   MobileOPMLService({
     required this.podcastService,
     required this.repository,
   });
+
   final log = Logger('MobileOPMLService');
   bool process = false;
 
@@ -73,36 +73,57 @@ class MobileOPMLService extends OPMLService {
       }
     }
 
-    yield OPMLCompletedState();
+    yield OPMLCompletedEvent();
   }
 
   @override
   Stream<OPMLActionEvent> saveOPMLFile() async* {
     final subs = await podcastService.subscriptions();
 
-    final builder = XmlBuilder();
-    builder.processing('xml', 'version="1.0"');
-    builder.element('opml', attributes: {'version': '2.0'}, nest: () {
-      builder.element('head', nest: () {
-        builder.element('title', nest: () {
-          builder.text('Anytime Subscriptions');
-        },);
-        builder.element('dateCreated', nest: () {
-          final n = DateTime.now().toUtc();
-          final f = DateFormat('yyyy-MM-dd\'T\'HH:mm:ss\'Z\'').format(n);
-          builder.text(f);
-        },);
-      },);
-
-      builder.element('body', nest: () {
-        for (final sub in subs) {
-          builder.element('outline', nest: () {
-            builder.attribute('text', sub.title);
-            builder.attribute('xmlUrl', sub.url);
-          },);
-        }
-      },);
-    },);
+    final builder = XmlBuilder()..processing('xml', 'version="1.0"');
+    builder.element(
+      'opml',
+      attributes: {'version': '2.0'},
+      nest: () {
+        builder
+          ..element(
+            'head',
+            nest: () {
+              builder
+                ..element(
+                  'title',
+                  nest: () {
+                    builder.text('Anytime Subscriptions');
+                  },
+                )
+                ..element(
+                  'dateCreated',
+                  nest: () {
+                    final n = DateTime.now().toUtc();
+                    final f =
+                        DateFormat('yyyy-MM-dd\'T\'HH:mm:ss\'Z\'').format(n);
+                    builder.text(f);
+                  },
+                );
+            },
+          )
+          ..element(
+            'body',
+            nest: () {
+              for (final sub in subs) {
+                builder.element(
+                  'outline',
+                  nest: () {
+                    builder
+                      ..attribute('text', sub.title)
+                      ..attribute('xmlUrl', sub.url);
+                  },
+                );
+              }
+            },
+          );
+      },
+    );
 
     final export = builder.buildDocument();
 
@@ -110,16 +131,14 @@ class MobileOPMLService extends OPMLService {
         ? (await getExternalStorageDirectory())!
         : await getApplicationDocumentsDirectory();
     final outputFile = '${output.path}/anytime_export.opml';
-    final file = File(outputFile);
-
-    file.writeAsStringSync(export.toXmlString(pretty: true));
+    File(outputFile).writeAsStringSync(export.toXmlString(pretty: true));
 
     await Share.shareXFiles(
       [XFile(outputFile)],
       text: 'Anytime OPML',
     );
 
-    yield OPMLCompletedState();
+    yield OPMLCompletedEvent();
   }
 
   @override
@@ -129,7 +148,6 @@ class MobileOPMLService extends OPMLService {
 }
 
 class OmplOutlineTag {
-
   OmplOutlineTag({
     this.text,
     this.xmlUrl,
@@ -141,6 +159,7 @@ class OmplOutlineTag {
       xmlUrl: element.getAttribute('xmlUrl')?.trim(),
     );
   }
+
   final String? text;
   final String? xmlUrl;
 }

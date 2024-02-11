@@ -7,7 +7,8 @@
 /// The BLoCs in this application share common states, such as loading, error
 /// or populated.
 ///
-/// Rather than having a separate selection of state classes, we create this generic one.
+/// Rather than having a separate selection of state classes, we create this
+/// generic one.
 enum BlocErrorType { unknown, connectivity, timeout }
 
 abstract class BlocState<T> {}

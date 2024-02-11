@@ -139,14 +139,14 @@ class AudioBloc extends Bloc {
   /// [issue](https://github.com/ryanheise/just_audio/issues/558) is resolved.
   void _handleTrimSilenceTransitions() {
     _trimSilence.listen((bool trim) async {
-      await audioPlayerService.trimSilence(trim);
+      await audioPlayerService.trimSilence(trim: trim);
     });
   }
 
   /// Listen for requests to toggle the volume boost feature. Android only.
   void _handleVolumeBoostTransitions() {
     _volumeBoost.listen((bool boost) async {
-      await audioPlayerService.volumeBoost(boost);
+      await audioPlayerService.volumeBoost(boost: boost);
     });
   }
 
