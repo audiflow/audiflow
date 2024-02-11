@@ -6,6 +6,7 @@
 
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:podcast_search/podcast_search.dart' as search;
+import 'package:seasoning/entities/entities.dart';
 
 part 'podcast.freezed.dart';
 part 'podcast.g.dart';
@@ -46,6 +47,12 @@ class Podcast with _$Podcast {
 
     /// Date and time user subscribed to the podcast.
     DateTime? subscribedDate,
+
+    /// Zero or more funding links.
+    @Default([]) List<Funding> funding,
+
+    @Default([])
+    List<Person> persons,
 
     /// Date and time podcast was last updated/refreshed.
     DateTime? lastUpdated,

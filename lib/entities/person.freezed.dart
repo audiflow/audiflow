@@ -21,10 +21,10 @@ Person _$PersonFromJson(Map<String, dynamic> json) {
 /// @nodoc
 mixin _$Person {
   String get name => throw _privateConstructorUsedError;
-  String get role => throw _privateConstructorUsedError;
-  String get group => throw _privateConstructorUsedError;
-  String get image => throw _privateConstructorUsedError;
-  String get link => throw _privateConstructorUsedError;
+  String? get role => throw _privateConstructorUsedError;
+  String? get group => throw _privateConstructorUsedError;
+  String? get image => throw _privateConstructorUsedError;
+  String? get link => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -37,7 +37,7 @@ abstract class $PersonCopyWith<$Res> {
       _$PersonCopyWithImpl<$Res, Person>;
   @useResult
   $Res call(
-      {String name, String role, String group, String image, String link});
+      {String name, String? role, String? group, String? image, String? link});
 }
 
 /// @nodoc
@@ -54,32 +54,32 @@ class _$PersonCopyWithImpl<$Res, $Val extends Person>
   @override
   $Res call({
     Object? name = null,
-    Object? role = null,
-    Object? group = null,
-    Object? image = null,
-    Object? link = null,
+    Object? role = freezed,
+    Object? group = freezed,
+    Object? image = freezed,
+    Object? link = freezed,
   }) {
     return _then(_value.copyWith(
       name: null == name
           ? _value.name
           : name // ignore: cast_nullable_to_non_nullable
               as String,
-      role: null == role
+      role: freezed == role
           ? _value.role
           : role // ignore: cast_nullable_to_non_nullable
-              as String,
-      group: null == group
+              as String?,
+      group: freezed == group
           ? _value.group
           : group // ignore: cast_nullable_to_non_nullable
-              as String,
-      image: null == image
+              as String?,
+      image: freezed == image
           ? _value.image
           : image // ignore: cast_nullable_to_non_nullable
-              as String,
-      link: null == link
+              as String?,
+      link: freezed == link
           ? _value.link
           : link // ignore: cast_nullable_to_non_nullable
-              as String,
+              as String?,
     ) as $Val);
   }
 }
@@ -92,7 +92,7 @@ abstract class _$$PersonImplCopyWith<$Res> implements $PersonCopyWith<$Res> {
   @override
   @useResult
   $Res call(
-      {String name, String role, String group, String image, String link});
+      {String name, String? role, String? group, String? image, String? link});
 }
 
 /// @nodoc
@@ -107,32 +107,32 @@ class __$$PersonImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? name = null,
-    Object? role = null,
-    Object? group = null,
-    Object? image = null,
-    Object? link = null,
+    Object? role = freezed,
+    Object? group = freezed,
+    Object? image = freezed,
+    Object? link = freezed,
   }) {
     return _then(_$PersonImpl(
       name: null == name
           ? _value.name
           : name // ignore: cast_nullable_to_non_nullable
               as String,
-      role: null == role
+      role: freezed == role
           ? _value.role
           : role // ignore: cast_nullable_to_non_nullable
-              as String,
-      group: null == group
+              as String?,
+      group: freezed == group
           ? _value.group
           : group // ignore: cast_nullable_to_non_nullable
-              as String,
-      image: null == image
+              as String?,
+      image: freezed == image
           ? _value.image
           : image // ignore: cast_nullable_to_non_nullable
-              as String,
-      link: null == link
+              as String?,
+      link: freezed == link
           ? _value.link
           : link // ignore: cast_nullable_to_non_nullable
-              as String,
+              as String?,
     ));
   }
 }
@@ -141,11 +141,7 @@ class __$$PersonImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$PersonImpl implements _Person {
   const _$PersonImpl(
-      {required this.name,
-      this.role = '',
-      this.group = '',
-      this.image = '',
-      this.link = ''});
+      {required this.name, this.role, this.group, this.image, this.link});
 
   factory _$PersonImpl.fromJson(Map<String, dynamic> json) =>
       _$$PersonImplFromJson(json);
@@ -153,17 +149,13 @@ class _$PersonImpl implements _Person {
   @override
   final String name;
   @override
-  @JsonKey()
-  final String role;
+  final String? role;
   @override
-  @JsonKey()
-  final String group;
+  final String? group;
   @override
-  @JsonKey()
-  final String image;
+  final String? image;
   @override
-  @JsonKey()
-  final String link;
+  final String? link;
 
   @override
   String toString() {
@@ -203,23 +195,23 @@ class _$PersonImpl implements _Person {
 abstract class _Person implements Person {
   const factory _Person(
       {required final String name,
-      final String role,
-      final String group,
-      final String image,
-      final String link}) = _$PersonImpl;
+      final String? role,
+      final String? group,
+      final String? image,
+      final String? link}) = _$PersonImpl;
 
   factory _Person.fromJson(Map<String, dynamic> json) = _$PersonImpl.fromJson;
 
   @override
   String get name;
   @override
-  String get role;
+  String? get role;
   @override
-  String get group;
+  String? get group;
   @override
-  String get image;
+  String? get image;
   @override
-  String get link;
+  String? get link;
   @override
   @JsonKey(ignore: true)
   _$$PersonImplCopyWith<_$PersonImpl> get copyWith =>

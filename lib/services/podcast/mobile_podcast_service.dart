@@ -214,15 +214,15 @@ class MobilePodcastService extends PodcastService {
       for (final p in loadedPodcast.persons) {
         persons.add(Person(
           name: p.name,
-          role: p.role ?? '',
-          group: p.group ?? '',
+          role: p.role,
+          group: p.group,
           image: p.image,
           link: p.link,
         ),);
       }
 
       var pc = Podcast(
-        guid: loadedPodcast.url,
+        guid: loadedPodcast.url!,
         url: loadedPodcast.url!,
         link: loadedPodcast.link,
         title: title,
