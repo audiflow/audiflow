@@ -5,6 +5,8 @@ import 'package:seasoning/providers/settings_service_provider.dart';
 import 'package:seasoning/services/audio/audio_player_service.dart';
 import 'package:seasoning/services/audio/default_audio_player_service.dart';
 
+export 'package:seasoning/services/audio/audio_player_service.dart';
+
 part 'audio_player_service_provider.g.dart';
 
 @riverpod

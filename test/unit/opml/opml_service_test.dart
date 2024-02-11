@@ -60,7 +60,7 @@ void main() {
         emitsInOrder(<Matcher>[
           emits(isInstanceOf<OPMLParsingEvent>()),
           emits(isInstanceOf<OPMLLoadingEvent>()),
-          emits(isInstanceOf<OPMLCompletedState>()),
+          emits(isInstanceOf<OPMLCompletedEvent>()),
         ]),);
 
     final subs = await podcastService.subscriptions();

@@ -5,6 +5,8 @@ import 'package:seasoning/providers/settings_service_provider.dart';
 import 'package:seasoning/services/podcast/mobile_podcast_service.dart';
 import 'package:seasoning/services/podcast/podcast_service.dart';
 
+export 'package:seasoning/services/podcast/podcast_service.dart';
+
 part 'podcast_service_provider.g.dart';
 
 @riverpod
@@ -13,5 +15,8 @@ PodcastService podcastService(PodcastServiceRef ref) {
   final repository = ref.watch(repositoryProvider);
   final settingsService = ref.watch(settingsServiceProvider);
   return MobilePodcastService(
-      api: api, repository: repository, settingsService: settingsService,);
+    api: api,
+    repository: repository,
+    settingsService: settingsService,
+  );
 }

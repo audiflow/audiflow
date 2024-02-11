@@ -10,11 +10,11 @@ import 'package:seasoning/entities/app_settings.dart';
 import 'package:seasoning/services/settings/settings_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// An implementation [SettingService] for mobile devices backed by
+/// An implementation [SettingsService] for mobile devices backed by
 /// shared preferences.
 class MobileSettingsService extends SettingsService {
-
   MobileSettingsService._create();
+
   static late SharedPreferences _sharedPreferences;
   static MobileSettingsService? _instance;
 

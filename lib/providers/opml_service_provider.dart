@@ -4,6 +4,8 @@ import 'package:seasoning/providers/repository_provider.dart';
 import 'package:seasoning/services/podcast/mobile_opml_service.dart';
 import 'package:seasoning/services/podcast/opml_service.dart';
 
+export 'package:seasoning/services/podcast/opml_service.dart';
+
 part 'opml_service_provider.g.dart';
 
 @riverpod

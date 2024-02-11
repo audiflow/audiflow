@@ -232,7 +232,6 @@ class MobilePodcastService extends PodcastService {
         copyright: copyright,
         funding: funding,
         persons: persons,
-        episodes: <Episode>[],
       );
 
       /// We could be following this podcast already. Let's check.

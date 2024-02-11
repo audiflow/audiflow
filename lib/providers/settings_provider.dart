@@ -15,6 +15,7 @@ class SettingsController extends _$SettingsController {
 
   SettingsService get _settings => ref.read(settingsServiceProvider);
 
+  // ignore: avoid_positional_boolean_parameters
   void darkMode(bool darkMode) {
     if (_settings.themeDarkMode != darkMode) {
       _settings.themeDarkMode = darkMode;
@@ -22,6 +23,7 @@ class SettingsController extends _$SettingsController {
     }
   }
 
+  // ignore: avoid_positional_boolean_parameters
   void markDeletedAsPlayed(bool mark) {
     if (_settings.markDeletedEpisodesAsPlayed != mark) {
       _settings.markDeletedEpisodesAsPlayed = mark;
@@ -29,6 +31,7 @@ class SettingsController extends _$SettingsController {
     }
   }
 
+  // ignore: avoid_positional_boolean_parameters
   void storeDownloadsOnSDCard(bool store) {
     if (_settings.storeDownloadsSDCard != store) {
       _settings.storeDownloadsSDCard = store;
@@ -50,6 +53,7 @@ class SettingsController extends _$SettingsController {
     }
   }
 
+  // ignore: avoid_positional_boolean_parameters
   void externalLinkConsent(bool consent) {
     if (_settings.externalLinkConsent != consent) {
       _settings.externalLinkConsent = consent;
@@ -57,6 +61,7 @@ class SettingsController extends _$SettingsController {
     }
   }
 
+  // ignore: avoid_positional_boolean_parameters
   void autoOpenNowPlaying(bool autoOpen) {
     if (_settings.autoOpenNowPlaying != autoOpen) {
       _settings.autoOpenNowPlaying = autoOpen;
@@ -64,6 +69,7 @@ class SettingsController extends _$SettingsController {
     }
   }
 
+  // ignore: avoid_positional_boolean_parameters
   void showFunding(bool show) {
     if (_settings.showFunding != show) {
       _settings.showFunding = show;
@@ -71,6 +77,7 @@ class SettingsController extends _$SettingsController {
     }
   }
 
+  // ignore: avoid_positional_boolean_parameters
   void trimSilence(bool trim) {
     if (_settings.trimSilence != trim) {
       _settings.trimSilence = trim;
@@ -78,6 +85,7 @@ class SettingsController extends _$SettingsController {
     }
   }
 
+  // ignore: avoid_positional_boolean_parameters
   void volumeBoost(bool boost) {
     if (_settings.volumeBoost != boost) {
       _settings.volumeBoost = boost;
@@ -108,7 +116,8 @@ AppSettings _appSettingsFromSettings(SettingsService settings) {
   ];
 
   if (podcastIndexKey.isNotEmpty) {
-    providers.add(const SearchProvider(key: 'podcastindex', name: 'PodcastIndex'));
+    providers
+        .add(const SearchProvider(key: 'podcastindex', name: 'PodcastIndex'));
   }
 
   return AppSettings(
