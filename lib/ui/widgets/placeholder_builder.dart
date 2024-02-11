@@ -6,8 +6,6 @@
 import 'package:flutter/material.dart';
 
 class PlaceholderBuilder extends InheritedWidget {
-  final WidgetBuilder Function() builder;
-  final WidgetBuilder Function() errorBuilder;
 
   const PlaceholderBuilder({
     super.key,
@@ -15,6 +13,8 @@ class PlaceholderBuilder extends InheritedWidget {
     required this.errorBuilder,
     required super.child,
   });
+  final WidgetBuilder Function() builder;
+  final WidgetBuilder Function() errorBuilder;
 
   static PlaceholderBuilder? of(BuildContext context) {
     return context.dependOnInheritedWidgetOfExactType<PlaceholderBuilder>();

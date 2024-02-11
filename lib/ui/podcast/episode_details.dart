@@ -4,13 +4,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'package:flutter/material.dart';
 import 'package:seasoning/entities/episode.dart';
 import 'package:seasoning/ui/podcast/person_avatar.dart';
 import 'package:seasoning/ui/podcast/transport_controls.dart';
 import 'package:seasoning/ui/widgets/episode_tile.dart';
 import 'package:seasoning/ui/widgets/podcast_html.dart';
 import 'package:seasoning/ui/widgets/tile_image.dart';
-import 'package:flutter/material.dart';
 
 /// This class renders the more info widget that is accessed from the 'more'
 /// button on an episode.
@@ -19,12 +19,12 @@ import 'package:flutter/material.dart';
 /// episode icon and play/pause control, below which the episode title, show
 /// notes and person(s) details (if available).
 class EpisodeDetails extends StatefulWidget {
-  final Episode episode;
 
   const EpisodeDetails({
     super.key,
     required this.episode,
   });
+  final Episode episode;
 
   @override
   State<EpisodeDetails> createState() => _EpisodeDetailsState();
@@ -45,8 +45,6 @@ class _EpisodeDetailsState extends State<EpisodeDetails> {
           return SingleChildScrollView(
             controller: scrollController,
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 ExpansionTile(
                     key: const Key('episodemoreinfo'),
@@ -58,12 +56,12 @@ class _EpisodeDetailsState extends State<EpisodeDetails> {
                       fit: StackFit.passthrough,
                       children: <Widget>[
                         TileImage(
-                          url: episode.thumbImageUrl ?? episode.imageUrl!,
-                          size: 56.0,
+                          url: episode.thumbImageUrl ?? episode.imageUrl,
+                          size: 56,
                           highlight: episode.highlight,
                         ),
                         SizedBox(
-                          height: 5.0,
+                          height: 5,
                           width: 56.0 * (episode.percentagePlayed / 100),
                           child: Container(
                             color: Theme.of(context).primaryColor,
@@ -73,19 +71,19 @@ class _EpisodeDetailsState extends State<EpisodeDetails> {
                     ),
                     subtitle: EpisodeSubtitle(episode),
                     title: Text(
-                      episode.title!,
+                      episode.title,
                       overflow: TextOverflow.ellipsis,
                       maxLines: 2,
                       softWrap: false,
                       style: Theme.of(context).textTheme.bodyMedium,
-                    )),
+                    ),),
                 const Divider(),
                 Padding(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: const EdgeInsets.all(16),
                   child: Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
-                      episode.title!,
+                      episode.title,
                       style: Theme.of(context)
                           .textTheme
                           .titleLarge!
@@ -95,7 +93,7 @@ class _EpisodeDetailsState extends State<EpisodeDetails> {
                 ),
                 if (episode.persons.isNotEmpty)
                   SizedBox(
-                    height: 120.0,
+                    height: 120,
                     child: ListView.builder(
                       itemCount: episode.persons.length,
                       scrollDirection: Axis.horizontal,
@@ -106,15 +104,15 @@ class _EpisodeDetailsState extends State<EpisodeDetails> {
                   ),
                 Padding(
                   padding: const EdgeInsets.only(
-                    left: 8.0,
-                    right: 8.0,
+                    left: 8,
+                    right: 8,
                   ),
                   child: PodcastHtml(
-                      content: episode.content ?? episode.description!),
-                )
+                      content: episode.content ?? episode.description,),
+                ),
               ],
             ),
           );
-        });
+        },);
   }
 }

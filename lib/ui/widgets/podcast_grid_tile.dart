@@ -4,20 +4,20 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:seasoning/bloc/podcast/podcast_bloc.dart';
 import 'package:seasoning/entities/podcast.dart';
 import 'package:seasoning/ui/podcast/podcast_details.dart';
 import 'package:seasoning/ui/widgets/tile_image.dart';
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 class PodcastGridTile extends StatelessWidget {
-  final Podcast podcast;
 
   const PodcastGridTile({
     super.key,
     required this.podcast,
   });
+  final Podcast podcast;
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +29,7 @@ class PodcastGridTile extends StatelessWidget {
           context,
           MaterialPageRoute<void>(
               settings: const RouteSettings(name: 'podcastdetails'),
-              builder: (context) => PodcastDetails(podcast, podcastBloc)),
+              builder: (context) => PodcastDetails(podcast, podcastBloc),),
         );
       },
       child: Semantics(
@@ -40,7 +40,7 @@ class PodcastGridTile extends StatelessWidget {
             tag: '${podcast.imageUrl}:${podcast.link}',
             child: TileImage(
               url: podcast.imageUrl!,
-              size: 18.0,
+              size: 18,
             ),
           ),
         ),
@@ -50,12 +50,12 @@ class PodcastGridTile extends StatelessWidget {
 }
 
 class PodcastTitledGridTile extends StatelessWidget {
-  final Podcast podcast;
 
   const PodcastTitledGridTile({
     super.key,
     required this.podcast,
   });
+  final Podcast podcast;
 
   @override
   Widget build(BuildContext context) {
@@ -68,7 +68,7 @@ class PodcastTitledGridTile extends StatelessWidget {
           context,
           MaterialPageRoute<void>(
               settings: const RouteSettings(name: 'podcastdetails'),
-              builder: (context) => PodcastDetails(podcast, podcastBloc)),
+              builder: (context) => PodcastDetails(podcast, podcastBloc),),
         );
       },
       child: GridTile(
@@ -79,11 +79,11 @@ class PodcastTitledGridTile extends StatelessWidget {
             children: [
               TileImage(
                 url: podcast.imageUrl!,
-                size: 128.0,
+                size: 128,
               ),
               Padding(
                 padding: const EdgeInsets.only(
-                  top: 4.0,
+                  top: 4,
                 ),
                 child: Text(
                   podcast.title,

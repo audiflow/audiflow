@@ -4,14 +4,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:seasoning/bloc/podcast/queue_bloc.dart';
 import 'package:seasoning/l10n/L.dart';
-import 'package:seasoning/state/queue_event_state.dart';
 import 'package:seasoning/ui/podcast/transcript_view.dart';
 import 'package:seasoning/ui/podcast/up_next_view.dart';
 import 'package:seasoning/ui/widgets/slider_handle.dart';
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 /// This class gives us options that can be dragged up from the bottom of the main player
 /// window.
@@ -30,10 +29,10 @@ import 'package:provider/provider.dart';
 /// an overflow error in debug) please raise and issue/submit a PR.
 ///
 class NowPlayingOptionsSelector extends StatefulWidget {
-  final double? scrollPos;
-  static const baseSize = 68.0;
 
   const NowPlayingOptionsSelector({super.key, this.scrollPos});
+  final double? scrollPos;
+  static const baseSize = 68.0;
 
   @override
   State<NowPlayingOptionsSelector> createState() =>
@@ -55,7 +54,6 @@ class _NowPlayingOptionsSelectorState extends State<NowPlayingOptionsSelector> {
     return DraggableScrollableSheet(
       initialChildSize: minSize,
       minChildSize: minSize,
-      maxChildSize: 1.0,
       controller: draggableController,
       // Snap doesn't work as the sheet and scroll controller just don't get along
       // snap: true,
@@ -64,7 +62,7 @@ class _NowPlayingOptionsSelectorState extends State<NowPlayingOptionsSelector> {
         return DefaultTabController(
           animationDuration: !draggableController!.isAttached ||
                   draggableController!.size <= minSize
-              ? const Duration(seconds: 0)
+              ? const Duration()
               : kTabScrollDuration,
           length: 2,
           child: LayoutBuilder(
@@ -80,17 +78,15 @@ class _NowPlayingOptionsSelectorState extends State<NowPlayingOptionsSelector> {
                   shape: RoundedRectangleBorder(
                     side: BorderSide(
                       color: Theme.of(context).highlightColor,
-                      width: 0.0,
+                      width: 0,
                     ),
                     borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(18.0),
-                      topRight: Radius.circular(18.0),
+                      topLeft: Radius.circular(18),
+                      topRight: Radius.circular(18),
                     ),
                   ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: <Widget>[
                       if (mediaQueryData.accessibleNavigation)
                         Semantics(
@@ -107,13 +103,13 @@ class _NowPlayingOptionsSelectorState extends State<NowPlayingOptionsSelector> {
                               if (draggableController != null) {
                                 if (draggableController!.size < 1.0) {
                                   draggableController!.animateTo(
-                                    1.0,
+                                    1,
                                     duration: const Duration(milliseconds: 150),
                                     curve: Curves.easeInOut,
                                   );
                                 } else {
                                   draggableController!.animateTo(
-                                    0.0,
+                                    0,
                                     duration: const Duration(milliseconds: 150),
                                     curve: Curves.easeInOut,
                                   );
@@ -127,14 +123,14 @@ class _NowPlayingOptionsSelectorState extends State<NowPlayingOptionsSelector> {
                         const SliderHandle(),
                       DecoratedBox(
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.0),
+                          color: Colors.white.withOpacity(0),
                           border: Border(
                             bottom: draggableController != null &&
                                     (!draggableController!.isAttached ||
                                         draggableController!.size <= minSize)
                                 ? BorderSide.none
                                 : BorderSide(
-                                    color: Colors.grey[800]!, width: 1.0),
+                                    color: Colors.grey[800]!,),
                           ),
                         ),
                         child: StreamBuilder<QueueState>(
@@ -148,7 +144,7 @@ class _NowPlayingOptionsSelectorState extends State<NowPlayingOptionsSelector> {
                                   if (draggableController != null &&
                                       draggableController!.size < 1.0) {
                                     draggableController!.animateTo(
-                                      1.0,
+                                      1,
                                       duration:
                                           const Duration(milliseconds: 150),
                                       curve: Curves.easeInOut,
@@ -156,7 +152,6 @@ class _NowPlayingOptionsSelectorState extends State<NowPlayingOptionsSelector> {
                                   }
                                 },
                                 automaticIndicatorColorAdjustment: false,
-                                indicatorPadding: EdgeInsets.zero,
 
                                 /// Little hack to hide the indicator when closed
                                 indicatorColor: draggableController != null &&
@@ -168,7 +163,7 @@ class _NowPlayingOptionsSelectorState extends State<NowPlayingOptionsSelector> {
                                 tabs: [
                                   Padding(
                                     padding: const EdgeInsets.only(
-                                        top: 8.0, bottom: 8.0),
+                                        top: 8, bottom: 8,),
                                     child: Text(
                                       L
                                           .of(context)!
@@ -181,7 +176,7 @@ class _NowPlayingOptionsSelectorState extends State<NowPlayingOptionsSelector> {
                                   ),
                                   Padding(
                                     padding: const EdgeInsets.only(
-                                        top: 8.0, bottom: 8.0),
+                                        top: 8, bottom: 8,),
                                     // If the episode does not support transcripts, grey out
                                     // the option.
                                     child: snapshot.hasData &&
@@ -206,14 +201,14 @@ class _NowPlayingOptionsSelectorState extends State<NowPlayingOptionsSelector> {
                                                 .textTheme
                                                 .labelLarge!
                                                 .copyWith(
-                                                    color: theme.disabledColor),
+                                                    color: theme.disabledColor,),
                                           ),
                                   ),
                                 ],
                               );
-                            }),
+                            },),
                       ),
-                      const Padding(padding: EdgeInsets.only(bottom: 12.0)),
+                      const Padding(padding: EdgeInsets.only(bottom: 12)),
                       const Expanded(
                         child: TabBarView(
                           children: [
@@ -227,16 +222,16 @@ class _NowPlayingOptionsSelectorState extends State<NowPlayingOptionsSelector> {
                 ),
               ),
             );
-          }),
+          },),
         );
       },
     );
   }
 
   bool optionsSliderOpen() {
-    return (draggableController != null &&
+    return draggableController != null &&
         draggableController!.isAttached &&
-        draggableController!.size == 1.0);
+        draggableController!.size == 1.0;
   }
 
   @override
@@ -262,10 +257,10 @@ class NowPlayingOptionsScaffold extends StatelessWidget {
 ///
 /// Currently these options are Up Next & Transcript.
 class NowPlayingOptionsSelectorWide extends StatefulWidget {
-  final double? scrollPos;
-  static const baseSize = 68.0;
 
   const NowPlayingOptionsSelectorWide({super.key, this.scrollPos});
+  final double? scrollPos;
+  static const baseSize = 68.0;
 
   @override
   State<NowPlayingOptionsSelectorWide> createState() =>
@@ -296,15 +291,13 @@ class _NowPlayingOptionsSelectorWideState
               color: theme.secondaryHeaderColor,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.center,
                 children: <Widget>[
                   DecoratedBox(
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.0),
+                      color: Colors.white.withOpacity(0),
                       border: Border(
                         bottom:
-                            BorderSide(color: Colors.grey[800]!, width: 1.0),
+                            BorderSide(color: Colors.grey[800]!),
                       ),
                     ),
                     child: StreamBuilder<QueueState>(
@@ -316,7 +309,7 @@ class _NowPlayingOptionsSelectorWideState
                             tabs: [
                               Padding(
                                 padding: const EdgeInsets.only(
-                                    top: 16.0, bottom: 16.0),
+                                    top: 16, bottom: 16,),
                                 child: Text(
                                   L
                                       .of(context)!
@@ -327,7 +320,7 @@ class _NowPlayingOptionsSelectorWideState
                               ),
                               Padding(
                                 padding: const EdgeInsets.only(
-                                    top: 16.0, bottom: 16.0),
+                                    top: 16, bottom: 16,),
                                 child: snapshot.hasData &&
                                         snapshot.data?.playing != null &&
                                         snapshot.data!.playing!.hasTranscripts
@@ -349,12 +342,12 @@ class _NowPlayingOptionsSelectorWideState
                                             .textTheme
                                             .labelLarge!
                                             .copyWith(
-                                                color: theme.disabledColor),
+                                                color: theme.disabledColor,),
                                       ),
                               ),
                             ],
                           );
-                        }),
+                        },),
                   ),
                   const Expanded(
                     child: TabBarView(
@@ -369,7 +362,7 @@ class _NowPlayingOptionsSelectorWideState
             ),
           ),
         );
-      }),
+      },),
     );
   }
 }

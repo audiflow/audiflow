@@ -14,16 +14,16 @@ import 'package:flutter/widgets.dart';
 /// and determining if we need to display the podcast details or just update the
 /// current screen.
 class NavigationRouteObserver extends NavigatorObserver {
-  final List<Route<dynamic>?> _routeStack = <Route<dynamic>?>[];
-
-  static final NavigationRouteObserver _instance =
-      NavigationRouteObserver._internal();
-
-  NavigationRouteObserver._internal();
 
   factory NavigationRouteObserver() {
     return _instance;
   }
+
+  NavigationRouteObserver._internal();
+  final List<Route<dynamic>?> _routeStack = <Route<dynamic>?>[];
+
+  static final NavigationRouteObserver _instance =
+      NavigationRouteObserver._internal();
 
   @override
   void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
@@ -42,7 +42,7 @@ class NavigationRouteObserver extends NavigatorObserver {
 
   @override
   void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
-    int oldRouteIndex = _routeStack.indexOf(oldRoute);
+    final oldRouteIndex = _routeStack.indexOf(oldRoute);
 
     _routeStack.replaceRange(oldRouteIndex, oldRouteIndex + 1, [newRoute]);
   }

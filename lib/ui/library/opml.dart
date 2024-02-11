@@ -4,12 +4,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:seasoning/l10n/L.dart';
-import 'package:seasoning/ui/library/opml_import.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:seasoning/l10n/L.dart';
+import 'package:seasoning/ui/library/opml_import.dart';
 
 class OPMLSelect extends StatefulWidget {
   const OPMLSelect({super.key});
@@ -35,7 +35,7 @@ class _OPMLSelectState extends State<OPMLSelect> {
   Widget _buildAndroid(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        elevation: 0.0,
+        elevation: 0,
         title: Text(
           L.of(context)!.opml_import_export_label,
         ),
@@ -57,15 +57,14 @@ class _OPMLSelectState extends State<OPMLSelect> {
       children: [
         Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             ElevatedButton(
               onPressed: () async {
                 final navigator = Navigator.of(context);
-                var result = (await FilePicker.platform.pickFiles())!;
+                final result = (await FilePicker.platform.pickFiles())!;
 
                 if (result.count > 0) {
-                  var file = result.files.first;
+                  final file = result.files.first;
 
                   await navigator.push(
                     MaterialPageRoute<void>(

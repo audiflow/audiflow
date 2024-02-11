@@ -4,30 +4,30 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:seasoning/bloc/discovery/discovery_bloc.dart';
-import 'package:seasoning/bloc/discovery/discovery_state_event.dart';
-import 'package:seasoning/l10n/L.dart';
-import 'package:seasoning/state/bloc_state.dart';
-import 'package:seasoning/ui/widgets/platform_progress_indicator.dart';
-import 'package:seasoning/ui/widgets/podcast_list.dart';
-import 'package:seasoning/ui/widgets/podcast_list_with_search_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:podcast_search/podcast_search.dart' as search;
 import 'package:provider/provider.dart';
+import 'package:seasoning/bloc/discovery/discovery_bloc.dart';
+import 'package:seasoning/bloc/discovery/discovery_state_event.dart';
+import 'package:seasoning/events/bloc_state.dart';
+import 'package:seasoning/l10n/L.dart';
+import 'package:seasoning/ui/widgets/platform_progress_indicator.dart';
+import 'package:seasoning/ui/widgets/podcast_list.dart';
+import 'package:seasoning/ui/widgets/podcast_list_with_search_bar.dart';
 
 /// Renders the podcasts returned from a charts/trending query.
 ///
 /// Can optionally display a search bar similar to the main search bar.
 class DiscoveryResults extends StatelessWidget {
-  final Stream<DiscoveryState>? data;
-  final bool inlineSearch;
 
   const DiscoveryResults({
     super.key,
     required this.data,
     this.inlineSearch = false,
   });
+  final Stream<DiscoveryState>? data;
+  final bool inlineSearch;
 
   @override
   Widget build(BuildContext context) {
@@ -37,9 +37,10 @@ class DiscoveryResults extends StatelessWidget {
         final state = snapshot.data;
 
         if (state is DiscoveryPopulatedState) {
-          if (inlineSearch)
+          if (inlineSearch) {
             return PodcastListWithSearchBar(
-                results: state.results as search.SearchResult);
+                results: state.results as search.SearchResult,);
+          }
           return PodcastList(results: state.results as search.SearchResult);
         } else {
           if (state is DiscoveryLoadingState) {
@@ -47,7 +48,6 @@ class DiscoveryResults extends StatelessWidget {
               hasScrollBody: false,
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
                 children: <Widget>[
                   PlatformProgressIndicator(),
                 ],
@@ -57,10 +57,9 @@ class DiscoveryResults extends StatelessWidget {
             return SliverFillRemaining(
               hasScrollBody: false,
               child: Padding(
-                padding: const EdgeInsets.all(32.0),
+                padding: const EdgeInsets.all(32),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: <Widget>[
                     Icon(
                       Icons.search,
@@ -89,12 +88,12 @@ class DiscoveryResults extends StatelessWidget {
 }
 
 class DiscoveryHeader extends StatefulWidget {
-  final search.SearchResult results;
 
   const DiscoveryHeader({
     super.key,
     required this.results,
   });
+  final search.SearchResult results;
 
   @override
   State<DiscoveryHeader> createState() => _DiscoveryHeaderState();
@@ -115,7 +114,7 @@ class _DiscoveryHeaderState extends State<DiscoveryHeader> {
                   initialData: const <String>[],
                   builder: (context, snapshot) {
                     return Padding(
-                      padding: const EdgeInsets.fromLTRB(16.0, 4.0, 16.0, 4.0),
+                      padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
                       child: DropdownButton<String>(
                         value: 'All',
                         // icon: const Icon(Icons.arrow_downward),
@@ -140,7 +139,7 @@ class _DiscoveryHeaderState extends State<DiscoveryHeader> {
                         }).toList(),
                       ),
                     );
-                  })),
+                  },),),
           PodcastList(results: widget.results),
         ],
       ),

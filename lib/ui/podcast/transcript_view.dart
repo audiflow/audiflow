@@ -6,20 +6,19 @@
 
 import 'dart:async';
 
-import 'package:seasoning/bloc/podcast/audio_bloc.dart';
-import 'package:seasoning/bloc/podcast/queue_bloc.dart';
-import 'package:seasoning/entities/person.dart';
-import 'package:seasoning/entities/transcript.dart';
-import 'package:seasoning/l10n/L.dart';
-import 'package:seasoning/services/audio/audio_player_service.dart';
-import 'package:seasoning/state/queue_event_state.dart';
-import 'package:seasoning/state/transcript_state_event.dart';
-import 'package:seasoning/ui/widgets/platform_progress_indicator.dart';
 import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 import 'package:provider/provider.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
+import 'package:seasoning/bloc/podcast/audio_bloc.dart';
+import 'package:seasoning/bloc/podcast/queue_bloc.dart';
+import 'package:seasoning/entities/person.dart';
+import 'package:seasoning/entities/transcript.dart';
+import 'package:seasoning/events/transcript_event.dart';
+import 'package:seasoning/l10n/L.dart';
+import 'package:seasoning/services/audio/audio_player_service.dart';
+import 'package:seasoning/ui/widgets/platform_progress_indicator.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 /// This class handles the rendering of the podcast transcript (where available).
@@ -55,7 +54,7 @@ class _TranscriptViewState extends State<TranscriptView> {
     final audioBloc = Provider.of<AudioBloc>(context, listen: false);
 
     Subtitle? subtitle;
-    int index = 0;
+    var index = 0;
     // If the user initiates scrolling, disable auto scroll.
     _scrollOffsetListener.changes.listen((event) {
       if (!scrolling) {
@@ -69,13 +68,13 @@ class _TranscriptViewState extends State<TranscriptView> {
     // if we have auto scroll enabled.
     _positionSubscription = audioBloc.playPosition!.listen((event) {
       if (_itemScrollController.isAttached) {
-        var transcript = event.episode?.transcript;
+        final transcript = event.episode?.transcript;
 
         if (transcript != null && transcript.subtitles.isNotEmpty) {
           subtitle ??= transcript.subtitles[index];
 
           if (index == 0) {
-            var match = exp.firstMatch(subtitle?.data ?? '');
+            final match = exp.firstMatch(subtitle?.data ?? '');
 
             if (match != null) {
               setState(() {
@@ -101,7 +100,7 @@ class _TranscriptViewState extends State<TranscriptView> {
               if (subtitle != null && subtitle!.speaker.isNotEmpty) {
                 speaker = subtitle!.speaker;
               } else {
-                var match =
+                final match =
                     exp.firstMatch(transcript.subtitles[index].data ?? '');
 
                 if (match != null) {
@@ -111,9 +110,9 @@ class _TranscriptViewState extends State<TranscriptView> {
             } else {
               try {
                 subtitle = transcript.subtitles
-                    .where((a) => (event.position.inMilliseconds >=
+                    .where((a) => event.position.inMilliseconds >=
                             a.start.inMilliseconds &&
-                        event.position.inMilliseconds < a.end!.inMilliseconds))
+                        event.position.inMilliseconds < a.end!.inMilliseconds,)
                     .first;
 
                 index = transcript.subtitles.indexOf(subtitle!);
@@ -129,7 +128,7 @@ class _TranscriptViewState extends State<TranscriptView> {
                   var countIndex = index;
 
                   while (!speakFound && count-- > 0 && countIndex >= 0) {
-                    var match =
+                    final match =
                         exp.firstMatch(transcript.subtitles[countIndex].data!);
 
                     countIndex--;
@@ -165,7 +164,7 @@ class _TranscriptViewState extends State<TranscriptView> {
                 _itemScrollController
                     .scrollTo(
                         index: index,
-                        duration: const Duration(milliseconds: 50))
+                        duration: const Duration(milliseconds: 50),)
                     .then((value) {
                   scrolling = false;
                 });
@@ -198,7 +197,6 @@ class _TranscriptViewState extends State<TranscriptView> {
                 if (transcriptSnapshot.hasData) {
                   if (transcriptSnapshot.data is TranscriptLoadingState) {
                     return const Align(
-                      alignment: Alignment.center,
                       child: PlatformProgressIndicator(),
                     );
                   } else if (transcriptSnapshot.data
@@ -206,12 +204,10 @@ class _TranscriptViewState extends State<TranscriptView> {
                       !transcriptSnapshot
                           .data!.transcript!.transcriptAvailable) {
                     return Padding(
-                      padding: const EdgeInsets.all(16.0),
+                      padding: const EdgeInsets.all(16),
                       child: Align(
-                        alignment: Alignment.center,
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             Text(
                               L.of(context)!.no_transcript_available_label,
@@ -220,11 +216,11 @@ class _TranscriptViewState extends State<TranscriptView> {
                             ),
                             Padding(
                               padding: const EdgeInsets.only(
-                                  top: 32.0, bottom: 32.0),
+                                  top: 32, bottom: 32,),
                               child: OutlinedButton(
                                   onPressed: () {
                                     final uri = Uri.parse(
-                                        L.of(context)!.transcript_why_not_url);
+                                        L.of(context)!.transcript_why_not_url,);
 
                                     unawaited(
                                       canLaunchUrl(uri)
@@ -236,7 +232,7 @@ class _TranscriptViewState extends State<TranscriptView> {
                                     style:
                                         Theme.of(context).textTheme.titleSmall,
                                     textAlign: TextAlign.center,
-                                  )),
+                                  ),),
                             ),
                           ],
                         ),
@@ -251,7 +247,7 @@ class _TranscriptViewState extends State<TranscriptView> {
                       children: [
                         Padding(
                           padding: const EdgeInsets.only(
-                              top: 8.0, left: 16.0, right: 16.0),
+                              top: 8, left: 16, right: 16,),
                           child: TextField(
                             controller: _transcriptSearchController,
                             decoration: InputDecoration(
@@ -261,7 +257,7 @@ class _TranscriptViewState extends State<TranscriptView> {
                                 onPressed: () {
                                   _transcriptSearchController.clear();
                                   audioBloc
-                                      .filterTranscript(TranscriptClearEvent());
+                                      .filterTranscript(const TranscriptClearEvent());
                                   setState(() {
                                     autoScrollEnabled = true;
                                   });
@@ -271,28 +267,27 @@ class _TranscriptViewState extends State<TranscriptView> {
                               filled: true,
                               border: const OutlineInputBorder(
                                 borderRadius:
-                                    BorderRadius.all(Radius.circular(12.0)),
-                                gapPadding: 0.0,
+                                    BorderRadius.all(Radius.circular(12)),
+                                gapPadding: 0,
                               ),
                               hintText: L.of(context)!.search_transcript_label,
                             ),
-                            onSubmitted: ((search) {
+                            onSubmitted: (search) {
                               if (search.isNotEmpty) {
                                 setState(() {
                                   autoScrollEnabled = false;
                                   autoScroll = false;
                                 });
                                 audioBloc.filterTranscript(
-                                    TranscriptFilterEvent(search: search));
+                                    TranscriptFilterEvent(search: search),);
                               }
-                            }),
+                            },
                           ),
                         ),
                         Padding(
-                          padding: const EdgeInsets.only(left: 8.0, right: 8.0),
+                          padding: const EdgeInsets.only(left: 8, right: 8),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.end,
-                            crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               Text(L.of(context)!.auto_scroll_transcript_label),
                               Switch(
@@ -316,15 +311,15 @@ class _TranscriptViewState extends State<TranscriptView> {
                             queueSnapshot.data?.playing != null &&
                             queueSnapshot.data!.playing!.persons.isNotEmpty)
                           Container(
-                            padding: const EdgeInsets.only(left: 16.0),
+                            padding: const EdgeInsets.only(left: 16),
                             width: double.infinity,
-                            height: 72.0,
+                            height: 72,
                             child: ListView.builder(
                                 scrollDirection: Axis.horizontal,
                                 itemCount:
                                     queueSnapshot.data!.playing!.persons.length,
                                 itemBuilder: (BuildContext context, int index) {
-                                  var person = queueSnapshot
+                                  final person = queueSnapshot
                                       .data!.playing!.persons[index];
                                   var selected = false;
 
@@ -339,32 +334,31 @@ class _TranscriptViewState extends State<TranscriptView> {
                                   }
 
                                   return Padding(
-                                    padding: const EdgeInsets.only(right: 8.0),
+                                    padding: const EdgeInsets.only(right: 8),
                                     child: Container(
-                                      padding: const EdgeInsets.all(4.0),
+                                      padding: const EdgeInsets.all(4),
                                       decoration: BoxDecoration(
                                           color: selected
                                               ? Colors.orange
                                               : Colors.transparent,
-                                          shape: BoxShape.circle),
+                                          shape: BoxShape.circle,),
                                       child: CircleAvatar(
                                         radius: 28,
                                         backgroundImage: ExtendedImage.network(
                                           person.image!,
-                                          cache: true,
                                         ).image,
                                         child: const Text(''),
                                       ),
                                     ),
                                   );
-                                }),
+                                },),
                           ),
                         Expanded(
                           /// A simple way to ensure the builder is visible before attempting to use it.
                           child: LayoutBuilder(builder: (context, constraints) {
                             return constraints.minHeight > 60.0
                                 ? Padding(
-                                    padding: const EdgeInsets.only(top: 8.0),
+                                    padding: const EdgeInsets.only(top: 8),
                                     child: ScrollablePositionedList.builder(
                                         itemScrollController:
                                             _itemScrollController,
@@ -373,7 +367,7 @@ class _TranscriptViewState extends State<TranscriptView> {
                                         itemCount: items.length,
                                         itemBuilder:
                                             (BuildContext context, int index) {
-                                          var i = items[index];
+                                          final i = items[index];
                                           return Wrap(
                                             children: [
                                               SubtitleWidget(
@@ -387,10 +381,10 @@ class _TranscriptViewState extends State<TranscriptView> {
                                               ),
                                             ],
                                           );
-                                        }),
+                                        },),
                                   )
                                 : Container();
-                          }),
+                          },),
                         ),
                       ],
                     );
@@ -398,18 +392,14 @@ class _TranscriptViewState extends State<TranscriptView> {
                 } else {
                   return Container();
                 }
-              });
-        });
+              },);
+        },);
   }
 }
 
 /// Each transcript is made up of one or more subtitles. Each [Subtitle] represents one
 /// line of the transcript. This widget handles rendering the passed line.
 class SubtitleWidget extends StatelessWidget {
-  final Subtitle subtitle;
-  final List<Person>? persons;
-  final bool highlight;
-  static const margin = Duration(milliseconds: 1000);
 
   const SubtitleWidget({
     super.key,
@@ -417,6 +407,10 @@ class SubtitleWidget extends StatelessWidget {
     this.persons,
     this.highlight = false,
   });
+  final Subtitle subtitle;
+  final List<Person>? persons;
+  final bool highlight;
+  static const margin = Duration(milliseconds: 1000);
 
   @override
   Widget build(BuildContext context) {
@@ -431,12 +425,11 @@ class SubtitleWidget extends StatelessWidget {
       },
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 0.0),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
         color: highlight
             ? Theme.of(context).colorScheme.onBackground
             : Colors.transparent,
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
@@ -449,7 +442,7 @@ class SubtitleWidget extends StatelessWidget {
               subtitle.data!,
               style: Theme.of(context).textTheme.titleMedium,
             ),
-            const Padding(padding: EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 16.0))
+            const Padding(padding: EdgeInsets.fromLTRB(0, 0, 0, 16)),
           ],
         ),
       ),
@@ -457,7 +450,7 @@ class SubtitleWidget extends StatelessWidget {
   }
 
   String _formatDuration(Duration duration) {
-    final hh = (duration.inHours).toString().padLeft(2, '0');
+    final hh = duration.inHours.toString().padLeft(2, '0');
     final mm = (duration.inMinutes % 60).toString().padLeft(2, '0');
     final ss = (duration.inSeconds % 60).toString().padLeft(2, '0');
 

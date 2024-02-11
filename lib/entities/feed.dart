@@ -12,6 +12,15 @@ import 'package:seasoning/entities/podcast.dart';
 /// iTunes API also returns large and thumbnail artwork within its search results
 /// this class also contains properties to represent those.
 class Feed {
+
+  Feed({
+    required this.podcast,
+    this.imageUrl,
+    this.thumbImageUrl,
+    this.refresh = false,
+    this.backgroundFresh = false,
+    this.silently = false,
+  });
   /// The podcast to load
   final Podcast podcast;
 
@@ -29,13 +38,4 @@ class Feed {
 
   /// If true any error can be ignored.
   bool silently;
-
-  Feed({
-    required this.podcast,
-    this.imageUrl,
-    this.thumbImageUrl,
-    this.refresh = false,
-    this.backgroundFresh = false,
-    this.silently = false,
-  });
 }

@@ -6,23 +6,18 @@
 
 import 'dart:async';
 
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:seasoning/bloc/podcast/audio_bloc.dart';
 import 'package:seasoning/entities/chapter.dart';
 import 'package:seasoning/entities/episode.dart';
 import 'package:seasoning/ui/widgets/platform_progress_indicator.dart';
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 /// A [Widget] for displaying a list of Podcast chapters for those
 /// podcasts that support that chapter tag.
 // ignore: must_be_immutable
 class ChapterSelector extends StatefulWidget {
-  final ItemScrollController itemScrollController = ItemScrollController();
-  Episode episode;
-  Chapter? chapter;
-  StreamSubscription? positionSubscription;
-  var chapters = <Chapter>[];
 
   ChapterSelector({
     super.key,
@@ -30,6 +25,11 @@ class ChapterSelector extends StatefulWidget {
   }) {
     chapters = episode.chapters.where((c) => c.toc).toList(growable: false);
   }
+  final ItemScrollController itemScrollController = ItemScrollController();
+  Episode episode;
+  Chapter? chapter;
+  StreamSubscription? positionSubscription;
+  List<Chapter> chapters = <Chapter>[];
 
   @override
   State<ChapterSelector> createState() => _ChapterSelectorState();
@@ -42,14 +42,14 @@ class _ChapterSelectorState extends State<ChapterSelector> {
 
     final audioBloc = Provider.of<AudioBloc>(context, listen: false);
     Chapter? lastChapter;
-    bool first = true;
+    var first = true;
 
     // Listen for changes in position. If the change in position results in
     // a change in chapter we scroll to it. This ensures that the current
     // chapter is always visible.
     // TODO: Jump only if current chapter is not visible.
     widget.positionSubscription = audioBloc.playPosition!.listen((event) {
-      var episode = event.episode;
+      final episode = event.episode;
 
       if (widget.itemScrollController.isAttached) {
         lastChapter ??= episode!.currentChapter;
@@ -58,7 +58,7 @@ class _ChapterSelectorState extends State<ChapterSelector> {
           lastChapter = episode.currentChapter;
 
           if (!episode.chaptersLoading && episode.chapters.isNotEmpty) {
-            var index =
+            final index =
                 widget.chapters.indexWhere((element) => element == lastChapter);
 
             if (index >= 0) {
@@ -87,7 +87,6 @@ class _ChapterSelectorState extends State<ChapterSelector> {
         builder: (context, snapshot) {
           return !snapshot.hasData || snapshot.data!.chaptersLoading
               ? const Align(
-                  alignment: Alignment.center,
                   child: PlatformProgressIndicator(),
                 )
               : ScrollablePositionedList.builder(
@@ -114,14 +113,14 @@ class _ChapterSelectorState extends State<ChapterSelector> {
                           ? Theme.of(context).colorScheme.onBackground
                           : Colors.transparent,
                       child: Padding(
-                        padding: const EdgeInsets.fromLTRB(4.0, 0.0, 4.0, 0.0),
+                        padding: const EdgeInsets.fromLTRB(4, 0, 4, 0),
                         child: ListTile(
                           onTap: () {
                             audioBloc.transitionPosition(chapter.startTime);
                           },
                           selected: chapterSelected,
                           leading: Padding(
-                            padding: const EdgeInsets.all(4.0),
+                            padding: const EdgeInsets.all(4),
                             child: Text(
                               '${index + 1}.',
                               style: textStyle,
@@ -143,7 +142,7 @@ class _ChapterSelectorState extends State<ChapterSelector> {
                     );
                   },
                 );
-        });
+        },);
   }
 
   @override
@@ -167,7 +166,7 @@ class _ChapterSelectorState extends State<ChapterSelector> {
   }
 
   String _formatStartTime(double startTime) {
-    var time = Duration(seconds: startTime.ceil());
+    final time = Duration(seconds: startTime.ceil());
     var result = '';
 
     if (time.inHours > 0) {

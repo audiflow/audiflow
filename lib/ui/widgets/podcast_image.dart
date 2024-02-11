@@ -4,9 +4,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:seasoning/core/environment.dart';
 import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
+import 'package:seasoning/core/environment.dart';
 
 /// This class handles rendering of podcast images from a url.
 /// Images will be cached for quicker fetching on subsequent requests. An optional placeholder
@@ -19,14 +19,6 @@ import 'package:flutter/material.dart';
 /// fetching the image several times for differing render sizes.
 // ignore: must_be_immutable
 class PodcastImage extends StatefulWidget {
-  final String url;
-  final double height;
-  final double width;
-  final BoxFit fit;
-  final bool highlight;
-  final double borderRadius;
-  final Widget? placeholder;
-  final Widget? errorPlaceholder;
 
   const PodcastImage({
     super.key,
@@ -39,6 +31,14 @@ class PodcastImage extends StatefulWidget {
     this.highlight = false,
     this.borderRadius = 0.0,
   });
+  final String url;
+  final double height;
+  final double width;
+  final BoxFit fit;
+  final bool highlight;
+  final double borderRadius;
+  final Widget? placeholder;
+  final Widget? errorPlaceholder;
 
   @override
   State<PodcastImage> createState() => _PodcastImageState();
@@ -61,7 +61,6 @@ class _PodcastImageState extends State<PodcastImage>
       height: widget.width,
       cacheWidth: cacheWidth,
       fit: widget.fit,
-      cache: true,
       loadStateChanged: (ExtendedImageState state) {
         Widget renderWidget;
 
@@ -131,11 +130,11 @@ class _PodcastImageState extends State<PodcastImage>
                           ),
                         ),
                         Positioned(
-                          top: 0.0,
-                          right: 0.0,
+                          top: 0,
+                          right: 0,
                           child: Container(
-                            width: 10.0,
-                            height: 10.0,
+                            width: 10,
+                            height: 10,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               color: Theme.of(context).indicatorColor,
@@ -165,13 +164,6 @@ class _PodcastImageState extends State<PodcastImage>
 }
 
 class PodcastBannerImage extends StatefulWidget {
-  final String url;
-  final double height;
-  final double width;
-  final BoxFit fit;
-  final double borderRadius;
-  final Widget? placeholder;
-  final Widget? errorPlaceholder;
 
   const PodcastBannerImage({
     super.key,
@@ -183,6 +175,13 @@ class PodcastBannerImage extends StatefulWidget {
     this.errorPlaceholder,
     this.borderRadius = 0.0,
   });
+  final String url;
+  final double height;
+  final double width;
+  final BoxFit fit;
+  final double borderRadius;
+  final Widget? placeholder;
+  final Widget? errorPlaceholder;
 
   @override
   State<PodcastBannerImage> createState() => _PodcastBannerImageState();
@@ -205,7 +204,6 @@ class _PodcastBannerImageState extends State<PodcastBannerImage>
       height: widget.width,
       cacheWidth: cacheWidth,
       fit: widget.fit,
-      cache: true,
       loadStateChanged: (ExtendedImageState state) {
         Widget renderWidget;
 

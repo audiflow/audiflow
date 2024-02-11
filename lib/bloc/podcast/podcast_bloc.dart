@@ -5,20 +5,20 @@
 // found in the LICENSE file.
 
 import 'package:collection/collection.dart' show IterableExtension;
+import 'package:logging/logging.dart';
+import 'package:rxdart/rxdart.dart';
 import 'package:seasoning/bloc/bloc.dart';
 import 'package:seasoning/entities/downloadable.dart';
 import 'package:seasoning/entities/episode.dart';
 import 'package:seasoning/entities/feed.dart';
 import 'package:seasoning/entities/podcast.dart';
 import 'package:seasoning/entities/season.dart';
+import 'package:seasoning/events/bloc_state.dart';
 import 'package:seasoning/services/audio/audio_player_service.dart';
 import 'package:seasoning/services/download/download_service.dart';
 import 'package:seasoning/services/download/mobile_download_service.dart';
 import 'package:seasoning/services/podcast/podcast_service.dart';
 import 'package:seasoning/services/settings/settings_service.dart';
-import 'package:seasoning/state/bloc_state.dart';
-import 'package:logging/logging.dart';
-import 'package:rxdart/rxdart.dart';
 
 enum PodcastEvent {
   subscribe,
@@ -35,6 +35,15 @@ enum PodcastEvent {
 /// handle actions on a podcast such as requesting an episode download, following/unfollowing
 /// a podcast and marking/un-marking all episodes as played.
 class PodcastBloc extends Bloc {
+
+  PodcastBloc({
+    required this.podcastService,
+    required this.audioPlayerService,
+    required this.downloadService,
+    required this.settingsService,
+  }) {
+    _init();
+  }
   final log = Logger('PodcastBloc');
   final PodcastService podcastService;
   final AudioPlayerService audioPlayerService;
@@ -76,15 +85,6 @@ class PodcastBloc extends Bloc {
   late Feed lastFeed;
   bool first = true;
 
-  PodcastBloc({
-    required this.podcastService,
-    required this.audioPlayerService,
-    required this.downloadService,
-    required this.settingsService,
-  }) {
-    _init();
-  }
-
   void _init() {
     /// When someone starts listening for subscriptions, load them.
     _subscriptions =
@@ -110,7 +110,7 @@ class PodcastBloc extends Bloc {
     _handleToggleSeasonView();
   }
 
-  void _loadSubscriptions() async {
+  Future<void> _loadSubscriptions() async {
     _subscriptions.add(await podcastService.subscriptions());
   }
 
@@ -118,7 +118,7 @@ class PodcastBloc extends Bloc {
   /// indicate that the Podcast is being loaded, before calling the [PodcastService] to handle
   /// the loading. Once loaded, we extract the episodes from the Podcast and push them out via
   /// the episode stream before pushing a [BlocPopulatedState] containing the Podcast.
-  void _listenPodcastLoad() async {
+  Future<void> _listenPodcastLoad() async {
     _podcastFeed.listen((feed) async {
       var silent = false;
       lastFeed = feed;
@@ -181,9 +181,9 @@ class PodcastBloc extends Bloc {
         settingsService.autoUpdateEpisodePeriod == 0) {
       return true;
     } else if (_podcast != null && _podcast!.id != null) {
-      var currentTime = DateTime.now()
+      final currentTime = DateTime.now()
           .subtract(Duration(minutes: settingsService.autoUpdateEpisodePeriod));
-      var lastUpdated = _podcast!.lastUpdated;
+      final lastUpdated = _podcast!.lastUpdated;
 
       return currentTime.isAfter(lastUpdated);
     }
@@ -251,7 +251,7 @@ class PodcastBloc extends Bloc {
 
       // To prevent a pause between the user tapping the download icon and
       // the UI showing some sort of progress, set it to queued now.
-      var episode = _episodes.firstWhereOrNull((ep) => ep.guid == e.guid);
+      final episode = _episodes.firstWhereOrNull((ep) => ep.guid == e.guid);
 
       if (episode != null) {
         episode.downloadState = e.downloadState = DownloadState.queued;
@@ -259,7 +259,7 @@ class PodcastBloc extends Bloc {
         _seasonsStream.add(_seasons);
         _episodesStream.add(_episodes);
 
-        var result = await downloadService.downloadEpisode(e);
+        final result = await downloadService.downloadEpisode(e);
 
         // If there was an error downloading the episode, push an error state
         // and then restore to none.
@@ -285,7 +285,7 @@ class PodcastBloc extends Bloc {
           .then((downloadable) {
         if (downloadable != null) {
           // If the download matches a current episode push the update back into the stream.
-          var episode = _episodes
+          final episode = _episodes
               .firstWhereOrNull((e) => e.downloadTaskId == downloadProgress.id);
 
           if (episode != null) {
@@ -304,8 +304,8 @@ class PodcastBloc extends Bloc {
   void _listenEpisodeRepositoryEvents() {
     podcastService.episodeListener!.listen((state) {
       // Do we have this episode?
-      var eidx = _episodes.indexWhere((e) =>
-          e.guid == state.episode.guid && e.pguid == state.episode.pguid);
+      final eidx = _episodes.indexWhere((e) =>
+          e.guid == state.episode.guid && e.pguid == state.episode.pguid,);
 
       if (eidx != -1) {
         _episodes[eidx] = state.episode;
@@ -315,31 +315,29 @@ class PodcastBloc extends Bloc {
     });
   }
 
-  void _listenPodcastStateEvents() async {
+  Future<void> _listenPodcastStateEvents() async {
     _podcastEvent.listen((event) async {
       switch (event) {
         case PodcastEvent.subscribe:
           if (_podcast != null) {
             _podcast = await podcastService.subscribe(_podcast!);
             _podcastStream.add(BlocPopulatedState<Podcast>(results: _podcast));
-            _loadSubscriptions();
+            await _loadSubscriptions();
             _seasonsStream.add(_podcast?.seasons);
             _episodesStream.add(_podcast?.episodes);
           }
-          break;
         case PodcastEvent.unsubscribe:
           if (_podcast != null) {
             await podcastService.unsubscribe(_podcast!);
             _podcast!.id = null;
             _podcastStream.add(BlocPopulatedState<Podcast>(results: _podcast));
-            _loadSubscriptions();
+            await _loadSubscriptions();
             _seasonsStream.add(_podcast?.seasons);
             _episodesStream.add(_podcast!.episodes);
           }
-          break;
         case PodcastEvent.markAllPlayed:
           if (_podcast != null && _podcast?.episodes != null) {
-            for (var e in _podcast!.episodes) {
+            for (final e in _podcast!.episodes) {
               if (!e.played) {
                 e.played = true;
                 e.position = 0;
@@ -350,10 +348,9 @@ class PodcastBloc extends Bloc {
             _seasonsStream.add(_podcast?.seasons);
             _episodesStream.add(_podcast!.episodes);
           }
-          break;
         case PodcastEvent.clearAllPlayed:
           if (_podcast != null && _podcast?.episodes != null) {
-            for (var e in _podcast!.episodes) {
+            for (final e in _podcast!.episodes) {
               if (e.played) {
                 e.played = false;
                 e.position = 0;
@@ -364,18 +361,15 @@ class PodcastBloc extends Bloc {
             _seasonsStream.add(_podcast?.seasons);
             _episodesStream.add(_podcast!.episodes);
           }
-          break;
         case PodcastEvent.reloadSubscriptions:
-          _loadSubscriptions();
-          break;
+          await _loadSubscriptions();
         case PodcastEvent.refresh:
           _refresh();
-          break;
       }
     });
   }
 
-  void _handleToggleSeasonView() async {
+  Future<void> _handleToggleSeasonView() async {
     _toggleSeasonView.stream.listen((_) async {
       await podcastService.toggleSeasonView(_podcast!);
     });

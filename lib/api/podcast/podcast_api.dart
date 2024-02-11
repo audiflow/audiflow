@@ -4,8 +4,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:seasoning/entities/transcript.dart';
 import 'package:podcast_search/podcast_search.dart' as pslib;
+import 'package:seasoning/entities/transcript.dart';
 
 /// A simple wrapper class that interacts with the search API via
 /// the podcast_search package.

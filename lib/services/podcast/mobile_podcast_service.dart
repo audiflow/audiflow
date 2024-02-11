@@ -6,6 +6,12 @@ import 'dart:collection';
 import 'dart:io';
 
 import 'package:collection/collection.dart' show IterableExtension;
+import 'package:flutter/foundation.dart';
+import 'package:flutter_downloader/flutter_downloader.dart';
+import 'package:intl/intl.dart';
+import 'package:logging/logging.dart';
+import 'package:path/path.dart';
+import 'package:podcast_search/podcast_search.dart' as podcast_search;
 import 'package:seasoning/api/podcast/podcast_api.dart';
 import 'package:seasoning/core/utils.dart';
 import 'package:seasoning/entities/chapter.dart';
@@ -16,18 +22,19 @@ import 'package:seasoning/entities/person.dart';
 import 'package:seasoning/entities/podcast.dart';
 import 'package:seasoning/entities/season.dart';
 import 'package:seasoning/entities/transcript.dart';
+import 'package:seasoning/events/episode_event.dart';
 import 'package:seasoning/l10n/messages_all.dart';
 import 'package:seasoning/services/podcast/podcast_service.dart';
-import 'package:seasoning/state/episode_state.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_downloader/flutter_downloader.dart';
-import 'package:intl/intl.dart';
-import 'package:logging/logging.dart';
-import 'package:path/path.dart';
-import 'package:podcast_search/podcast_search.dart' as podcast_search;
 
 class MobilePodcastService extends PodcastService {
+
+  MobilePodcastService({
+    required super.api,
+    required super.repository,
+    required super.settingsService,
+  }) {
+    _init();
+  }
   final descriptionRegExp1 =
       RegExp(r'(</p><br>|</p></br>|<p><br></p>|<p></br></p>)');
   final descriptionRegExp2 = RegExp(r'(<p><br></p>|<p></br></p>)');
@@ -38,16 +45,8 @@ class MobilePodcastService extends PodcastService {
   var _intlCategories = <String?>[];
   var _intlCategoriesSorted = <String>[];
 
-  MobilePodcastService({
-    required super.api,
-    required super.repository,
-    required super.settingsService,
-  }) {
-    _init();
-  }
-
   Future<void> _init() async {
-    final List<Locale> systemLocales = PlatformDispatcher.instance.locales;
+    final systemLocales = PlatformDispatcher.instance.locales;
 
     var currentLocale = Platform.localeName;
     // Attempt to get current locale
@@ -55,7 +54,7 @@ class MobilePodcastService extends PodcastService {
 
     // If we do not support the default, try all supported locales
     if (!supportedLocale) {
-      for (var l in systemLocales) {
+      for (final l in systemLocales) {
         supportedLocale =
             await initializeMessages('${l.languageCode}_${l.countryCode}');
         if (supportedLocale) {
@@ -128,13 +127,13 @@ class MobilePodcastService extends PodcastService {
     String? genre,
     String? countryCode = '',
   }) {
-    var providerGenre = _decodeGenre(genre);
+    final providerGenre = _decodeGenre(genre);
 
     return api.charts(
         size: size,
         searchProvider: settingsService.searchProvider,
         genre: providerGenre,
-        countryCode: countryCode);
+        countryCode: countryCode,);
   }
 
   @override
@@ -178,7 +177,7 @@ class MobilePodcastService extends PodcastService {
             if (tries > 0 && url.startsWith('https')) {
               // Try the http only version - flesh out to setting later on
               log.fine(
-                  'Failed to load podcast. Fallback to http and try again');
+                  'Failed to load podcast. Fallback to http and try again',);
 
               url = url.replaceFirst('https', 'http');
             } else {
@@ -206,23 +205,23 @@ class MobilePodcastService extends PodcastService {
         thumbImageUrl = loadedPodcast.image;
       }
 
-      for (var f in loadedPodcast.funding) {
+      for (final f in loadedPodcast.funding) {
         if (f.url != null) {
           funding.add(Funding(url: f.url!, value: f.value ?? ''));
         }
       }
 
-      for (var p in loadedPodcast.persons) {
+      for (final p in loadedPodcast.persons) {
         persons.add(Person(
           name: p.name,
           role: p.role ?? '',
           group: p.group ?? '',
           image: p.image,
           link: p.link,
-        ));
+        ),);
       }
 
-      Podcast pc = Podcast(
+      var pc = Podcast(
         guid: loadedPodcast.url,
         url: loadedPodcast.url!,
         link: loadedPodcast.link,
@@ -237,7 +236,7 @@ class MobilePodcastService extends PodcastService {
       );
 
       /// We could be following this podcast already. Let's check.
-      var follow = await repository.findPodcastByGuid(loadedPodcast.url!);
+      final follow = await repository.findPodcastByGuid(loadedPodcast.url!);
 
       if (follow != null) {
         // We are, so swap in the stored ID so we update the saved version later.
@@ -251,7 +250,7 @@ class MobilePodcastService extends PodcastService {
         if (loadedPodcast.episodes[0].publicationDate!.millisecondsSinceEpoch <
             loadedPodcast.episodes[1].publicationDate!.millisecondsSinceEpoch) {
           loadedPodcast.episodes.sort(
-              (e1, e2) => e2.publicationDate!.compareTo(e1.publicationDate!));
+              (e1, e2) => e2.publicationDate!.compareTo(e1.publicationDate!),);
         }
       }
 
@@ -277,33 +276,30 @@ class MobilePodcastService extends PodcastService {
         final transcriptUrls = <TranscriptUrl>[];
         final episodePersons = <Person>[];
 
-        for (var t in episode.transcripts) {
+        for (final t in episode.transcripts) {
           late TranscriptFormat type;
 
           switch (t.type) {
             case podcast_search.TranscriptFormat.subrip:
               type = TranscriptFormat.subrip;
-              break;
             case podcast_search.TranscriptFormat.json:
               type = TranscriptFormat.json;
-              break;
             case podcast_search.TranscriptFormat.unsupported:
               type = TranscriptFormat.unsupported;
-              break;
           }
 
           transcriptUrls.add(TranscriptUrl(url: t.url, type: type));
         }
 
         if (episode.persons.isNotEmpty) {
-          for (var p in episode.persons) {
+          for (final p in episode.persons) {
             episodePersons.add(Person(
               name: p.name,
               role: p.role!,
               group: p.group!,
               image: p.image,
               link: p.link,
-            ));
+            ),);
           }
         } else if (persons.isNotEmpty) {
           episodePersons.addAll(persons);
@@ -333,7 +329,7 @@ class MobilePodcastService extends PodcastService {
             transcriptUrls: transcriptUrls,
             persons: episodePersons,
             chapters: <Chapter>[],
-          ));
+          ),);
         } else {
           /// Check if the ancillary episode data has changed.
           if (!listEquals(existingEpisode.persons, episodePersons) ||
@@ -370,10 +366,10 @@ class MobilePodcastService extends PodcastService {
 
       // Add any downloaded episodes that are no longer in the feed - they
       // may have expired but we still want them.
-      var expired = <Episode>[];
+      final expired = <Episode>[];
 
       for (final episode in existingEpisodes) {
-        var feedEpisode = loadedPodcast.episodes
+        final feedEpisode = loadedPodcast.episodes
             .firstWhereOrNull((ep) => ep.guid == episode!.guid);
 
         if (feedEpisode == null && episode!.downloaded) {
@@ -397,13 +393,13 @@ class MobilePodcastService extends PodcastService {
           final episodes = sortedSeasonEpisodes(map[seasonNum]!);
           final episode = episodes.first;
           final guid =
-              calcSeasonGuid(podcast: episode.podcast!, seasonNum: seasonNum);
+              calcSeasonGuid(podcast: episode.podcast, seasonNum: seasonNum);
           final id =
               existingSeasons.firstWhereOrNull((s) => s.guid == guid)?.id;
           return Season(
             id: id,
             pguid: episode.pguid,
-            podcast: episode.podcast!,
+            podcast: episode.podcast,
             title: _extractSeasonTitle(episode),
             seasonNum: seasonNum,
             episodes: episodes,
@@ -439,11 +435,11 @@ class MobilePodcastService extends PodcastService {
 
   @override
   Future<List<Chapter>> loadChaptersByUrl({required String url}) async {
-    var c = await _loadChaptersByUrl(url);
-    var chapters = <Chapter>[];
+    final c = await _loadChaptersByUrl(url);
+    final chapters = <Chapter>[];
 
     if (c != null) {
-      for (var chapter in c.chapters) {
+      for (final chapter in c.chapters) {
         chapters.add(Chapter(
           title: chapter.title,
           url: chapter.url,
@@ -451,7 +447,7 @@ class MobilePodcastService extends PodcastService {
           startTime: chapter.startTime,
           endTime: chapter.endTime,
           toc: chapter.toc,
-        ));
+        ),);
       }
     }
 
@@ -463,15 +459,15 @@ class MobilePodcastService extends PodcastService {
   /// lines together by speaker and/or timeframe.
   @override
   Future<Transcript> loadTranscriptByUrl(
-      {required TranscriptUrl transcriptUrl}) async {
-    var subtitles = <Subtitle>[];
-    var result = await _loadTranscriptByUrl(transcriptUrl);
-    var threshold = const Duration(seconds: 5);
+      {required TranscriptUrl transcriptUrl,}) async {
+    final subtitles = <Subtitle>[];
+    final result = await _loadTranscriptByUrl(transcriptUrl);
+    const threshold = Duration(seconds: 5);
     Subtitle? groupSubtitle;
 
     if (result != null) {
       for (var index = 0; index < result.subtitles.length; index++) {
-        var subtitle = result.subtitles[index];
+        final subtitle = result.subtitles[index];
         var completeGroup = true;
         var data = subtitle.data;
 
@@ -568,7 +564,7 @@ class MobilePodcastService extends PodcastService {
         episode.played = true;
       }
     } else if (episode.downloadState == DownloadState.downloading &&
-        episode.downloadPercentage! < 100) {
+        episode.downloadPercentage < 100) {
       await FlutterDownloader.cancel(taskId: episode.downloadTaskId!);
     }
 
@@ -589,7 +585,7 @@ class MobilePodcastService extends PodcastService {
       log.fine('Deleting file ${f.path}');
 
       if (await f.exists()) {
-        f.delete();
+        await f.delete();
       }
     }
 
@@ -601,7 +597,7 @@ class MobilePodcastService extends PodcastService {
     episode.played = !episode.played;
     episode.position = 0;
 
-    repository.saveEpisode(episode);
+    await repository.saveEpisode(episode);
   }
 
   @override
@@ -628,20 +624,20 @@ class MobilePodcastService extends PodcastService {
   @override
   Future<void> toggleSeasonView(Podcast podcast) async {
     podcast.seasonView = !podcast.seasonView;
-    repository.savePodcast(podcast);
+    await repository.savePodcast(podcast);
   }
 
   @override
   Future<Podcast?> subscribe(Podcast? podcast) async {
     // We may already have episodes download for this podcast before the user
     // hit subscribe.
-    if (podcast != null && podcast.guid != null) {
-      var savedEpisodes =
-          await repository.findEpisodesByPodcastGuid(podcast.guid!);
+    if (podcast != null) {
+      final savedEpisodes =
+          await repository.findEpisodesByPodcastGuid(podcast.guid);
 
       if (podcast.episodes.isNotEmpty) {
-        for (var episode in podcast.episodes) {
-          var savedEpisode =
+        for (final episode in podcast.episodes) {
+          final savedEpisode =
               savedEpisodes.firstWhereOrNull((ep) => ep!.guid == episode.guid);
 
           if (savedEpisode != null) {
@@ -653,7 +649,7 @@ class MobilePodcastService extends PodcastService {
       return repository.savePodcast(podcast);
     }
 
-    return Future.value(null);
+    return Future.value();
   }
 
   @override
@@ -693,11 +689,11 @@ class MobilePodcastService extends PodcastService {
 
   Future<podcast_search.Chapters?> _loadChaptersByUrl(String url) {
     return compute<_FeedComputer, podcast_search.Chapters?>(
-        _loadChaptersByUrlCompute, _FeedComputer(api: api, url: url));
+        _loadChaptersByUrlCompute, _FeedComputer(api: api, url: url),);
   }
 
   static Future<podcast_search.Chapters?> _loadChaptersByUrlCompute(
-      _FeedComputer c) async {
+      _FeedComputer c,) async {
     podcast_search.Chapters? result;
 
     try {
@@ -713,14 +709,14 @@ class MobilePodcastService extends PodcastService {
   }
 
   Future<podcast_search.Transcript?> _loadTranscriptByUrl(
-      TranscriptUrl transcriptUrl) {
+      TranscriptUrl transcriptUrl,) {
     return compute<_TranscriptComputer, podcast_search.Transcript?>(
         _loadTranscriptByUrlCompute,
-        _TranscriptComputer(api: api, transcriptUrl: transcriptUrl));
+        _TranscriptComputer(api: api, transcriptUrl: transcriptUrl),);
   }
 
   static Future<podcast_search.Transcript?> _loadTranscriptByUrlCompute(
-      _TranscriptComputer c) async {
+      _TranscriptComputer c,) async {
     podcast_search.Transcript? result;
 
     try {
@@ -741,21 +737,21 @@ class MobilePodcastService extends PodcastService {
   /// indicator whilst the data is fetched without locking the UI.
   Future<podcast_search.Podcast> _loadPodcastFeed({required String url}) {
     return compute<_FeedComputer, podcast_search.Podcast>(
-        _loadPodcastFeedCompute, _FeedComputer(api: api, url: url));
+        _loadPodcastFeedCompute, _FeedComputer(api: api, url: url),);
   }
 
   /// We have to separate the process of calling compute as you cannot use
   /// named parameters with compute. The podcast feed load API uses named
   /// parameters so we need to change it to a single, positional parameter.
   static Future<podcast_search.Podcast> _loadPodcastFeedCompute(
-      _FeedComputer c) {
+      _FeedComputer c,) {
     return c.api.loadFeed(c.url);
   }
 
   /// The service providers expect the genre to be passed in English. This function takes
   /// the selected genre and returns the English version.
   String _decodeGenre(String? genre) {
-    var index = _intlCategories.indexOf(genre);
+    final index = _intlCategories.indexOf(genre);
     var decodedGenre = '';
 
     if (index >= 0) {
@@ -773,7 +769,7 @@ class MobilePodcastService extends PodcastService {
   Stream<Podcast?>? get podcastListener => repository.podcastListener;
 
   @override
-  Stream<EpisodeState>? get episodeListener => repository.episodeListener;
+  Stream<EpisodeEvent>? get episodeListener => repository.episodeListener;
 }
 
 /// A simple cache to reduce the number of network calls when loading podcast
@@ -783,19 +779,19 @@ class MobilePodcastService extends PodcastService {
 /// first (and therefore oldest) item from the cache. Cache misses are returned
 /// as null.
 class _PodcastCache {
+
+  _PodcastCache({required this.maxItems, required this.expiration})
+      : _queue = Queue<_CacheItem>();
   final int maxItems;
   final Duration expiration;
   final Queue<_CacheItem> _queue;
 
-  _PodcastCache({required this.maxItems, required this.expiration})
-      : _queue = Queue<_CacheItem>();
-
   podcast_search.Podcast? item(String key) {
-    var hit = _queue.firstWhereOrNull((_CacheItem i) => i.podcast.url == key);
+    final hit = _queue.firstWhereOrNull((_CacheItem i) => i.podcast.url == key);
     podcast_search.Podcast? p;
 
     if (hit != null) {
-      var now = DateTime.now();
+      final now = DateTime.now();
 
       if (now.difference(hit.dateAdded) <= expiration) {
         p = hit.podcast;
@@ -820,24 +816,24 @@ class _PodcastCache {
 /// date and time it was added. This can be used by the cache to
 /// keep a small and up-to-date list of searched for Podcasts.
 class _CacheItem {
-  final podcast_search.Podcast podcast;
-  final DateTime dateAdded;
 
   _CacheItem(this.podcast) : dateAdded = DateTime.now();
+  final podcast_search.Podcast podcast;
+  final DateTime dateAdded;
 }
 
 class _FeedComputer {
-  final PodcastApi api;
-  final String url;
 
   _FeedComputer({required this.api, required this.url});
+  final PodcastApi api;
+  final String url;
 }
 
 class _TranscriptComputer {
-  final PodcastApi api;
-  final TranscriptUrl transcriptUrl;
 
   _TranscriptComputer({required this.api, required this.transcriptUrl});
+  final PodcastApi api;
+  final TranscriptUrl transcriptUrl;
 }
 
 String? _extractSeasonTitle(Episode episode) {

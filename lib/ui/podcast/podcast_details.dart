@@ -15,12 +15,10 @@ import 'package:provider/provider.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:seasoning/bloc/podcast/podcast_bloc.dart';
 import 'package:seasoning/bloc/settings/settings_bloc.dart';
-import 'package:seasoning/entities/episode.dart';
 import 'package:seasoning/entities/feed.dart';
 import 'package:seasoning/entities/podcast.dart';
-import 'package:seasoning/entities/season.dart';
+import 'package:seasoning/events/bloc_state.dart';
 import 'package:seasoning/l10n/L.dart';
-import 'package:seasoning/state/bloc_state.dart';
 import 'package:seasoning/ui/podcast/funding_menu.dart';
 import 'package:seasoning/ui/podcast/playback_error_listener.dart';
 import 'package:seasoning/ui/podcast/podcast_context_menu.dart';
@@ -40,14 +38,14 @@ import 'package:seasoning/ui/widgets/sync_spinner.dart';
 /// From here a user can option to subscribe/unsubscribe or play a podcast directly
 /// from a search result.
 class PodcastDetails extends StatefulWidget {
-  final Podcast podcast;
-  final PodcastBloc _podcastBloc;
 
   const PodcastDetails(
     this.podcast,
     this._podcastBloc, {
     super.key,
   });
+  final Podcast podcast;
+  final PodcastBloc _podcastBloc;
 
   @override
   State<PodcastDetails> createState() => _PodcastDetailsState();
@@ -57,7 +55,7 @@ class _PodcastDetailsState extends State<PodcastDetails> {
   final log = Logger('PodcastDetails');
   final scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
   final ScrollController _sliverScrollController = ScrollController();
-  var brightness = Brightness.dark;
+  Brightness brightness = Brightness.dark;
   bool toolbarCollapsed = false;
   SystemUiOverlayStyle? _systemOverlayStyle;
 
@@ -84,7 +82,7 @@ class _PodcastDetailsState extends State<PodcastDetails> {
       podcast: widget.podcast,
       backgroundFresh: true,
       silently: true,
-    ));
+    ),);
 
     // We only want to display the podcast title when the toolbar is in a
     // collapsed state. Add a listener and set toollbarCollapsed variable
@@ -124,12 +122,12 @@ class _PodcastDetailsState extends State<PodcastDetails> {
               onPressed: () {
                 _sliverScrollController.animateTo(100,
                     duration: const Duration(milliseconds: 500),
-                    curve: Curves.easeInOut);
+                    curve: Curves.easeInOut,);
                 widget._podcastBloc.podcastEvent(PodcastEvent.refresh);
               },
             ),
             duration: const Duration(seconds: 5),
-          ));
+          ),);
         }
       }
     });
@@ -161,7 +159,7 @@ class _PodcastDetailsState extends State<PodcastDetails> {
     widget._podcastBloc.load(Feed(
       podcast: _podcast,
       refresh: true,
-    ));
+    ),);
   }
 
   void _resetSystemOverlayStyle() {
@@ -200,7 +198,6 @@ class _PodcastDetailsState extends State<PodcastDetails> {
       header: false,
       label: L.of(context)!.semantics_podcast_details_header,
       child: PopScope(
-        canPop: true,
         onPopInvoked: (didPop) {
           _resetSystemOverlayStyle();
         },
@@ -209,7 +206,7 @@ class _PodcastDetailsState extends State<PodcastDetails> {
           child: Scaffold(
             backgroundColor: Theme.of(context).scaffoldBackgroundColor,
             body: RefreshIndicator(
-              displacement: 60.0,
+              displacement: 60,
               onRefresh: _handleRefresh,
               child: CustomScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
@@ -220,7 +217,7 @@ class _PodcastDetailsState extends State<PodcastDetails> {
                       title: AnimatedOpacity(
                           opacity: toolbarCollapsed ? 1.0 : 0.0,
                           duration: const Duration(milliseconds: 500),
-                          child: Text(_podcast.title)),
+                          child: Text(_podcast.title),),
                       leading: PlatformBackButton(
                         iconColour: toolbarCollapsed &&
                                 Theme.of(context).brightness == Brightness.light
@@ -234,14 +231,12 @@ class _PodcastDetailsState extends State<PodcastDetails> {
                           Navigator.pop(context);
                         },
                       ),
-                      expandedHeight: 300.0,
-                      floating: false,
+                      expandedHeight: 300,
                       pinned: true,
-                      snap: false,
                       flexibleSpace: FlexibleSpaceBar(
                         background: Hero(
                           key: Key(
-                              'detailhero${_podcast.imageUrl}:${_podcast.link}'),
+                              'detailhero${_podcast.imageUrl}:${_podcast.link}',),
                           tag: '${_podcast.imageUrl}:${_podcast.link}',
                           child: ExcludeSemantics(
                             child: StreamBuilder<BlocState<Podcast>>(
@@ -263,10 +258,10 @@ class _PodcastDetailsState extends State<PodcastDetails> {
                                     podcast: podcast!,
                                     placeholderBuilder: placeholderBuilder,
                                   );
-                                }),
+                                },),
                           ),
                         ),
-                      )),
+                      ),),
                   StreamBuilder<BlocState<Podcast>>(
                       initialData: BlocEmptyState<Podcast>(),
                       stream: podcastBloc.details,
@@ -276,7 +271,7 @@ class _PodcastDetailsState extends State<PodcastDetails> {
                         if (state is BlocLoadingState) {
                           return const SliverToBoxAdapter(
                             child: Padding(
-                              padding: EdgeInsets.all(24.0),
+                              padding: EdgeInsets.all(24),
                               child: Column(
                                 children: <Widget>[
                                   PlatformProgressIndicator(),
@@ -290,10 +285,9 @@ class _PodcastDetailsState extends State<PodcastDetails> {
                           return SliverFillRemaining(
                             hasScrollBody: false,
                             child: Padding(
-                              padding: const EdgeInsets.all(32.0),
+                              padding: const EdgeInsets.all(32),
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.center,
                                 children: <Widget>[
                                   const Icon(
                                     Icons.error_outline,
@@ -321,27 +315,27 @@ class _PodcastDetailsState extends State<PodcastDetails> {
                                 const Divider(),
                               ],
                             ),
-                          ));
+                          ),);
                         }
 
                         return const SliverToBoxAdapter(
                           child: SizedBox(
-                            width: 0.0,
-                            height: 0.0,
+                            width: 0,
+                            height: 0,
                           ),
                         );
-                      }),
+                      },),
                   StreamBuilder(
                       stream: Rx.combineLatest3(
-                          podcastBloc.podcastService
-                              .podcastListener!,
+                          podcastBloc.podcastService.podcastListener!,
                           podcastBloc.seasons,
                           podcastBloc.episodes,
-                          (podcast, seasons, episodes) => (podcast, seasons, episodes)),
+                          (podcast, seasons, episodes) =>
+                              (podcast, seasons, episodes),),
                       builder: (context, snapshot) {
                         final podcast = snapshot.data?.$1;
-                        final  seasons = snapshot.data?.$2;
-                        final  episodes = snapshot.data?.$3;
+                        final seasons = snapshot.data?.$2;
+                        final episodes = snapshot.data?.$3;
                         final noData = !snapshot.hasData ||
                             (seasons!.isEmpty && episodes!.isEmpty);
                         return noData
@@ -357,7 +351,7 @@ class _PodcastDetailsState extends State<PodcastDetails> {
                                     play: true,
                                     download: true,
                                   );
-                      }),
+                      },),
                 ],
               ),
             ),
@@ -391,14 +385,13 @@ class PodcastHeaderImage extends StatelessWidget {
     return PodcastBannerImage(
       key: Key('details${podcast.imageUrl}'),
       url: podcast.imageUrl!,
-      fit: BoxFit.cover,
       placeholder: placeholderBuilder != null
           ? placeholderBuilder?.builder()(context)
           : DelayedCircularProgressIndicator(),
       errorPlaceholder: placeholderBuilder != null
           ? placeholderBuilder?.errorBuilder()(context)
           : const Image(
-              image: AssetImage('assets/images/app-placeholder-logo.png')),
+              image: AssetImage('assets/images/app-placeholder-logo.png'),),
     );
   }
 }
@@ -413,9 +406,9 @@ class PodcastHeaderImage extends StatelessWidget {
 /// Description is rendered by [PodcastDescription].
 /// Follow/Unfollow button rendered by [FollowButton].
 class PodcastTitle extends StatefulWidget {
-  final Podcast podcast;
 
   const PodcastTitle(this.podcast, {super.key});
+  final Podcast podcast;
 
   @override
   State<PodcastTitle> createState() => _PodcastTitleState();
@@ -435,30 +428,27 @@ class _PodcastTitleState extends State<PodcastTitle> {
     final settings = Provider.of<SettingsBloc>(context).currentSettings;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(8.0, 8.0, 8.0, 0.0),
+      padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Row(
-            mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
                 child: MergeSemantics(
                   child: Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(8.0, 8.0, 8.0, 2.0),
+                        padding: const EdgeInsets.fromLTRB(8, 8, 8, 2),
                         child: Text(widget.podcast.title,
-                            style: textTheme.titleLarge),
+                            style: textTheme.titleLarge,),
                       ),
                       Padding(
                         padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
                         child: Text(widget.podcast.copyright ?? '',
-                            style: textTheme.bodySmall),
+                            style: textTheme.bodySmall,),
                       ),
                     ],
                   ),
@@ -472,8 +462,8 @@ class _PodcastTitleState extends State<PodcastTitle> {
                     return Visibility(
                       visible: showOverflow,
                       child: SizedBox(
-                        height: 48.0,
-                        width: 48.0,
+                        height: 48,
+                        width: 48,
                         child: expanded
                             ? TextButton(
                                 style: const ButtonStyle(
@@ -491,7 +481,7 @@ class _PodcastTitleState extends State<PodcastTitle> {
                               )
                             : TextButton(
                                 style: const ButtonStyle(
-                                    visualDensity: VisualDensity.compact),
+                                    visualDensity: VisualDensity.compact,),
                                 child: Icon(
                                   Icons.expand_more,
                                   semanticLabel: L
@@ -504,7 +494,7 @@ class _PodcastTitleState extends State<PodcastTitle> {
                               ),
                       ),
                     );
-                  })
+                  },),
             ],
           ),
           PodcastDescription(
@@ -513,23 +503,22 @@ class _PodcastTitleState extends State<PodcastTitle> {
             isDescriptionExpandedStream: isDescriptionExpandedStream,
           ),
           Padding(
-            padding: const EdgeInsets.only(left: 8.0, right: 8.0),
+            padding: const EdgeInsets.only(left: 8, right: 8),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
               children: <Widget>[
                 FollowButton(widget.podcast),
                 PodcastContextMenu(widget.podcast),
                 settings.showFunding
                     ? FundingMenu(widget.podcast.funding)
                     : const SizedBox(
-                        width: 0.0,
-                        height: 0.0,
+                        width: 0,
+                        height: 0,
                       ),
                 const Expanded(
                     child: Align(
                   alignment: Alignment.centerRight,
                   child: SyncSpinner(),
-                )),
+                ),),
                 StreamBuilder(
                     stream: Rx.combineLatest2(
                       Provider.of<PodcastBloc>(context)
@@ -545,10 +534,10 @@ class _PodcastTitleState extends State<PodcastTitle> {
                       return hasSeasons
                           ? SeasonSwitch(isOn: podcast!.seasonView)
                           : const SizedBox.shrink();
-                    }),
+                    },),
               ],
             ),
-          )
+          ),
         ],
       ),
     );
@@ -581,16 +570,16 @@ class _PodcastTitleState extends State<PodcastTitle> {
 ///
 /// TODO: Animate between the two states.
 class PodcastDescription extends StatelessWidget {
-  final PodcastHtml? content;
-  final StreamController<bool>? isDescriptionExpandedStream;
-  static const maxHeight = 100.0;
-  static const padding = 4.0;
 
   const PodcastDescription({
     super.key,
     this.content,
     this.isDescriptionExpandedStream,
   });
+  final PodcastHtml? content;
+  final StreamController<bool>? isDescriptionExpandedStream;
+  static const maxHeight = 100.0;
+  static const padding = 4.0;
 
   @override
   Widget build(BuildContext context) {
@@ -609,7 +598,7 @@ class PodcastDescription extends StatelessWidget {
                 constraints: expanded
                     ? const BoxConstraints()
                     : BoxConstraints.loose(
-                        const Size(double.infinity, maxHeight - padding)),
+                        const Size(double.infinity, maxHeight - padding),),
                 child: expanded
                     ? content
                     : ShaderMask(
@@ -619,18 +608,18 @@ class PodcastDescription extends StatelessWidget {
                           end: Alignment.bottomCenter,
                           stops: const [0.9, 1],
                         ).createShader,
-                        child: content),
+                        child: content,),
               ),
             );
-          }),
+          },),
     );
   }
 }
 
 class FollowButton extends StatelessWidget {
-  final Podcast podcast;
 
   const FollowButton(this.podcast, {super.key});
+  final Podcast podcast;
 
   @override
   Widget build(BuildContext context) {
@@ -643,7 +632,7 @@ class FollowButton extends StatelessWidget {
             final state = snapshot.data;
 
             if (state is BlocPopulatedState<Podcast>) {
-              var p = state.results!;
+              final p = state.results!;
 
               return Semantics(
                 liveRegion: true,
@@ -651,7 +640,7 @@ class FollowButton extends StatelessWidget {
                     ? OutlinedButton.icon(
                         style: OutlinedButton.styleFrom(
                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8.0)),
+                              borderRadius: BorderRadius.circular(8),),
                         ),
                         icon: const Icon(
                           Icons.delete_outline,
@@ -698,7 +687,7 @@ class FollowButton extends StatelessWidget {
                     : OutlinedButton.icon(
                         style: OutlinedButton.styleFrom(
                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8.0)),
+                              borderRadius: BorderRadius.circular(8),),
                         ),
                         icon: const Icon(
                           Icons.add,
@@ -712,7 +701,7 @@ class FollowButton extends StatelessWidget {
             }
           }
           return Container();
-        });
+        },);
   }
 }
 
@@ -732,7 +721,7 @@ class SeasonSwitch extends StatelessWidget {
               final podcastBloc =
                   Provider.of<PodcastBloc>(context, listen: false);
               podcastBloc.toggleSeasonView();
-            })
+            },),
       ],
     );
   }

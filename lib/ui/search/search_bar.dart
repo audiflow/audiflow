@@ -3,10 +3,10 @@
 // All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
-import 'package:seasoning/l10n/L.dart';
-import 'package:seasoning/ui/widgets/search_slide_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:seasoning/l10n/L.dart';
+import 'package:seasoning/ui/widgets/search_slide_route.dart';
 
 import 'search.dart';
 
@@ -50,18 +50,18 @@ class _SearchBarState extends State<SearchBar> {
         textInputAction: TextInputAction.search,
         decoration: InputDecoration(
             hintText: L.of(context)!.search_for_podcasts_hint,
-            border: InputBorder.none),
+            border: InputBorder.none,),
         style: TextStyle(
             color: Theme.of(context).primaryIconTheme.color,
-            fontSize: 18.0,
-            decorationColor: Theme.of(context).scaffoldBackgroundColor),
+            fontSize: 18,
+            decorationColor: Theme.of(context).scaffoldBackgroundColor,),
         onSubmitted: (value) async {
           await Navigator.push(
               context,
               SlideRightRoute(
                 widget: Search(searchTerm: value),
                 settings: const RouteSettings(name: 'search'),
-              ));
+              ),);
           _searchController.clear();
         },
       ),
@@ -82,12 +82,12 @@ class _SearchBarState extends State<SearchBar> {
           icon: Icon(
               _searchController.text.isEmpty && !_searchFocusNode.hasFocus
                   ? Icons.search
-                  : Icons.clear),
+                  : Icons.clear,),
           onPressed: () {
             _searchController.clear();
             FocusScope.of(context).requestFocus(FocusNode());
             SystemChannels.textInput.invokeMethod<String>('TextInput.show');
-          }),
+          },),
     );
   }
 }

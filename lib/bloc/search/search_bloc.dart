@@ -6,18 +6,22 @@
 
 import 'dart:async';
 
-import 'package:seasoning/bloc/bloc.dart';
-import 'package:seasoning/bloc/search/search_state_event.dart';
-import 'package:seasoning/services/podcast/podcast_service.dart';
-import 'package:seasoning/state/bloc_state.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:logging/logging.dart';
 import 'package:podcast_search/podcast_search.dart' as pcast;
 import 'package:rxdart/rxdart.dart';
+import 'package:seasoning/bloc/bloc.dart';
+import 'package:seasoning/bloc/search/search_state_event.dart';
+import 'package:seasoning/events/bloc_state.dart';
+import 'package:seasoning/services/podcast/podcast_service.dart';
 
 /// This BLoC interacts with the [PodcastService] to search for podcasts for
 /// a given term and to fetch the current podcast charts.
 class SearchBloc extends Bloc {
+
+  SearchBloc({required this.podcastService}) {
+    _init();
+  }
   final log = Logger('SearchBloc');
   final PodcastService podcastService;
 
@@ -34,13 +38,9 @@ class SearchBloc extends Bloc {
   /// Cache of last results.
   pcast.SearchResult? _resultsCache;
 
-  SearchBloc({required this.podcastService}) {
-    _init();
-  }
-
   void _init() {
     _searchResults = _searchInput.switchMap<BlocState<pcast.SearchResult>>(
-      (SearchEvent event) => _search(event),
+      _search,
     );
   }
 
@@ -67,7 +67,7 @@ class SearchBloc extends Bloc {
         yield BlocLoadingState();
 
         // Check we have network
-        var connectivityResult = await Connectivity().checkConnectivity();
+        final connectivityResult = await Connectivity().checkConnectivity();
 
         if (connectivityResult == ConnectivityResult.none) {
           yield BlocErrorState(error: BlocErrorType.connectivity);

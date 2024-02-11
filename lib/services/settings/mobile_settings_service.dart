@@ -4,21 +4,21 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'package:rxdart/rxdart.dart';
 import 'package:seasoning/core/environment.dart';
 import 'package:seasoning/entities/app_settings.dart';
 import 'package:seasoning/services/settings/settings_service.dart';
-import 'package:rxdart/rxdart.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// An implementation [SettingService] for mobile devices backed by
 /// shared preferences.
 class MobileSettingsService extends SettingsService {
+
+  MobileSettingsService._create();
   static late SharedPreferences _sharedPreferences;
   static MobileSettingsService? _instance;
 
   final settingsNotifier = PublishSubject<String>();
-
-  MobileSettingsService._create();
 
   static Future<MobileSettingsService?> instance() async {
     if (_instance == null) {
@@ -52,7 +52,7 @@ class MobileSettingsService extends SettingsService {
 
   @override
   bool get themeDarkMode {
-    var theme = _sharedPreferences.getString('theme') ?? 'dark';
+    final theme = _sharedPreferences.getString('theme') ?? 'dark';
 
     return theme == 'dark';
   }

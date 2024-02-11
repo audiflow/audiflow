@@ -7,6 +7,10 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:collection/collection.dart' show IterableExtension;
+import 'package:logging/logging.dart';
+import 'package:mp3_info/mp3_info.dart';
+import 'package:rxdart/rxdart.dart';
 import 'package:seasoning/core/utils.dart';
 import 'package:seasoning/entities/downloadable.dart';
 import 'package:seasoning/entities/episode.dart';
@@ -15,14 +19,18 @@ import 'package:seasoning/repository/repository.dart';
 import 'package:seasoning/services/download/download_manager.dart';
 import 'package:seasoning/services/download/download_service.dart';
 import 'package:seasoning/services/podcast/podcast_service.dart';
-import 'package:collection/collection.dart' show IterableExtension;
-import 'package:logging/logging.dart';
-import 'package:mp3_info/mp3_info.dart';
-import 'package:rxdart/rxdart.dart';
 
 /// An implementation of a [DownloadService] that handles downloading
 /// of episodes on mobile.
 class MobileDownloadService extends DownloadService {
+
+  MobileDownloadService(
+      {required this.repository,
+      required this.downloadManager,
+      required this.podcastService,}) {
+    downloadManager.downloadProgress.pipe(downloadProgress);
+    downloadProgress.listen(_updateDownloadProgress);
+  }
   static BehaviorSubject<DownloadProgress> downloadProgress =
       BehaviorSubject<DownloadProgress>();
 
@@ -30,16 +38,6 @@ class MobileDownloadService extends DownloadService {
   final Repository repository;
   final DownloadManager downloadManager;
   final PodcastService podcastService;
-
-  MobileDownloadService(
-      {required this.repository,
-      required this.downloadManager,
-      required this.podcastService}) {
-    downloadManager.downloadProgress.pipe(downloadProgress);
-    downloadProgress.listen((progress) {
-      _updateDownloadProgress(progress);
-    });
-  }
 
   @override
   void dispose() {
@@ -56,7 +54,7 @@ class MobileDownloadService extends DownloadService {
       if (await hasStoragePermission()) {
         // If this episode contains chapter, fetch them first.
         if (episode.hasChapters && episode.chaptersUrl != null) {
-          var chapters =
+          final chapters =
               await podcastService.loadChaptersByUrl(url: episode.chaptersUrl!);
 
           episode.chapters = chapters;
@@ -67,10 +65,10 @@ class MobileDownloadService extends DownloadService {
         // Next, if the episode supports transcripts download that next
         if (episode.hasTranscripts) {
           var sub = episode.transcriptUrls.firstWhereOrNull(
-              (element) => element.type == TranscriptFormat.json);
+              (element) => element.type == TranscriptFormat.json,);
 
           sub ??= episode.transcriptUrls.firstWhereOrNull(
-              (element) => element.type == TranscriptFormat.subrip);
+              (element) => element.type == TranscriptFormat.subrip,);
 
           if (sub != null) {
             var transcript =
@@ -99,10 +97,10 @@ class MobileDownloadService extends DownloadService {
 
         // Filename should be last segment of URI.
         var filename = safeFile(uri.pathSegments
-            .lastWhereOrNull((e) => e.toLowerCase().endsWith('.mp3')));
+            .lastWhereOrNull((e) => e.toLowerCase().endsWith('.mp3')),);
 
         filename ??= safeFile(uri.pathSegments
-            .lastWhereOrNull((e) => e.toLowerCase().endsWith('.m4a')));
+            .lastWhereOrNull((e) => e.toLowerCase().endsWith('.m4a')),);
 
         if (filename == null) {
           //TODO: Handle unsupported format.
@@ -130,11 +128,11 @@ class MobileDownloadService extends DownloadService {
           filename = '$season$epno$pubDate$filename';
 
           log.fine(
-              'Download episode (${episode.title}) $filename to $downloadPath/$filename');
+              'Download episode (${episode.title}) $filename to $downloadPath/$filename',);
 
           /// If we get a redirect to an http endpoint the download will fail. Let's fully resolve
           /// the URL before calling download and ensure it is https.
-          var url = await resolveUrl(episode.contentUrl!, forceHttps: true);
+          final url = await resolveUrl(episode.contentUrl!, forceHttps: true);
 
           final taskId =
               await downloadManager.enqueueTask(url, downloadPath, filename);
@@ -165,7 +163,7 @@ class MobileDownloadService extends DownloadService {
   }
 
   Future<void> _updateDownloadProgress(DownloadProgress progress) async {
-    var episode = await repository.findEpisodeByTaskId(progress.id);
+    final episode = await repository.findEpisodeByTaskId(progress.id);
 
     if (episode != null) {
       // We might be called during the cleanup routine during startup.
@@ -181,7 +179,7 @@ class MobileDownloadService extends DownloadService {
 
             // If we do not have a duration for this file - let's calculate it
             if (episode.duration == 0) {
-              var mp3Info = MP3Processor.fromFile(File(filename));
+              final mp3Info = MP3Processor.fromFile(File(filename));
 
               episode.duration = mp3Info.duration.inSeconds;
             }

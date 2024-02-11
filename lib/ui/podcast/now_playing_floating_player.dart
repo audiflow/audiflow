@@ -6,14 +6,14 @@
 
 import 'dart:async';
 
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:seasoning/bloc/podcast/audio_bloc.dart';
 import 'package:seasoning/entities/episode.dart';
 import 'package:seasoning/l10n/L.dart';
 import 'package:seasoning/services/audio/audio_player_service.dart';
 import 'package:seasoning/ui/widgets/placeholder_builder.dart';
 import 'package:seasoning/ui/widgets/podcast_image.dart';
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 /// This widget is based upon [MiniPlayer] and provides an additional play/pause control when
 /// the episode queue is expanded.
@@ -37,9 +37,9 @@ class FloatingPlayer extends StatelessWidget {
                       snapshot.data == AudioState.error))
               ? _FloatingPlayerBuilder()
               : const SizedBox(
-                  height: 0.0,
+                  height: 0,
                 );
-        });
+        },);
   }
 }
 
@@ -58,7 +58,7 @@ class _FloatingPlayerBuilderState extends State<_FloatingPlayerBuilder>
     super.initState();
 
     _playPauseController = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 300));
+        vsync: this, duration: const Duration(milliseconds: 300),);
     _playPauseController.value = 1;
 
     _audioStateListener();
@@ -87,35 +87,33 @@ class _FloatingPlayerBuilderState extends State<_FloatingPlayerBuilder>
             return StreamBuilder<AudioState>(
                 stream: audioBloc.playingState,
                 builder: (context, stateSnapshot) {
-                  var playing = stateSnapshot.data == AudioState.playing;
+                  final playing = stateSnapshot.data == AudioState.playing;
                   return Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
                       Padding(
-                        padding: const EdgeInsets.all(8.0),
+                        padding: const EdgeInsets.all(8),
                         child: snapshot.hasData
                             ? PodcastImage(
                                 key: Key('float${snapshot.data!.imageUrl}'),
-                                url: snapshot.data!.imageUrl!,
-                                width: 58.0,
-                                height: 58.0,
-                                borderRadius: 4.0,
+                                url: snapshot.data!.imageUrl,
+                                width: 58,
+                                height: 58,
+                                borderRadius: 4,
                                 placeholder: placeholderBuilder != null
                                     ? placeholderBuilder.builder()(context)
                                     : const Image(
                                         image: AssetImage(
-                                            'assets/images/app-placeholder-logo.png')),
+                                            'assets/images/app-placeholder-logo.png',),),
                                 errorPlaceholder: placeholderBuilder != null
                                     ? placeholderBuilder.errorBuilder()(context)
                                     : const Image(
                                         image: AssetImage(
-                                            'assets/images/app-placeholder-logo.png')),
+                                            'assets/images/app-placeholder-logo.png',),),
                               )
                             : Container(),
                       ),
                       Expanded(
-                          flex: 1,
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -126,7 +124,7 @@ class _FloatingPlayerBuilderState extends State<_FloatingPlayerBuilder>
                                 style: textTheme.bodyMedium,
                               ),
                               Padding(
-                                padding: const EdgeInsets.only(top: 4.0),
+                                padding: const EdgeInsets.only(top: 4),
                                 child: Text(
                                   snapshot.data?.author ?? '',
                                   overflow: TextOverflow.ellipsis,
@@ -134,20 +132,20 @@ class _FloatingPlayerBuilderState extends State<_FloatingPlayerBuilder>
                                 ),
                               ),
                             ],
-                          )),
+                          ),),
                       SizedBox(
-                        height: 52.0,
-                        width: 52.0,
+                        height: 52,
+                        width: 52,
                         child: TextButton(
                           style: TextButton.styleFrom(
                             padding:
-                                const EdgeInsets.symmetric(horizontal: 0.0),
+                                const EdgeInsets.symmetric(),
                             shape: CircleBorder(
                                 side: BorderSide(
                                     color: Theme.of(context)
                                         .colorScheme
                                         .background,
-                                    width: 0.0)),
+                                    width: 0,),),
                           ),
                           onPressed: () {
                             if (playing) {
@@ -157,23 +155,23 @@ class _FloatingPlayerBuilderState extends State<_FloatingPlayerBuilder>
                           },
                           child: const Icon(
                             Icons.forward_30,
-                            size: 36.0,
+                            size: 36,
                           ),
                         ),
                       ),
                       SizedBox(
-                        height: 52.0,
-                        width: 52.0,
+                        height: 52,
+                        width: 52,
                         child: TextButton(
                           style: TextButton.styleFrom(
                             padding:
-                                const EdgeInsets.symmetric(horizontal: 0.0),
+                                const EdgeInsets.symmetric(),
                             shape: CircleBorder(
                                 side: BorderSide(
                                     color: Theme.of(context)
                                         .colorScheme
                                         .background,
-                                    width: 0.0)),
+                                    width: 0,),),
                           ),
                           onPressed: () {
                             if (playing) {
@@ -186,7 +184,7 @@ class _FloatingPlayerBuilderState extends State<_FloatingPlayerBuilder>
                             semanticLabel: playing
                                 ? L.of(context)!.pause_button_label
                                 : L.of(context)!.play_button_label,
-                            size: 48.0,
+                            size: 48,
                             icon: AnimatedIcons.play_pause,
                             color: Theme.of(context).iconTheme.color,
                             progress: _playPauseController,
@@ -195,8 +193,8 @@ class _FloatingPlayerBuilderState extends State<_FloatingPlayerBuilder>
                       ),
                     ],
                   );
-                });
-          }),
+                },);
+          },),
     );
   }
 

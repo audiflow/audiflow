@@ -6,13 +6,13 @@
 
 import 'dart:async';
 
+import 'package:logging/logging.dart';
+import 'package:rxdart/rxdart.dart';
 import 'package:seasoning/bloc/bloc.dart';
 import 'package:seasoning/entities/episode.dart';
 import 'package:seasoning/entities/sleep.dart';
+import 'package:seasoning/events/transcript_event.dart';
 import 'package:seasoning/services/audio/audio_player_service.dart';
-import 'package:seasoning/state/transcript_state_event.dart';
-import 'package:logging/logging.dart';
-import 'package:rxdart/rxdart.dart';
 
 enum TransitionState {
   play,
@@ -30,6 +30,34 @@ enum LifecycleState {
 
 /// A BLoC to handle interactions between the audio service and the client.
 class AudioBloc extends Bloc {
+
+  AudioBloc({
+    required this.audioPlayerService,
+  }) {
+    /// Listen for transition events from the client.
+    _handlePlayingStateTransitions();
+
+    /// Listen for events requesting the start of a new episode.
+    _handleEpisodeRequests();
+
+    /// Listen for requests to move the play position within the episode.
+    _handlePositionTransitions();
+
+    /// Listen for playback speed changes
+    _handlePlaybackSpeedTransitions();
+
+    /// Listen to trim silence requests
+    _handleTrimSilenceTransitions();
+
+    /// Listen to volume boost silence requests
+    _handleVolumeBoostTransitions();
+
+    /// Listen to transcript filtering events
+    _handleTranscriptEvents();
+
+    /// Listen to sleep timer events;
+    _handleSleepTimer();
+  }
   final log = Logger('AudioBloc');
 
   /// Listen for new episode play requests.
@@ -60,34 +88,6 @@ class AudioBloc extends Bloc {
 
   final BehaviorSubject<Sleep> _sleepEvent = BehaviorSubject<Sleep>();
 
-  AudioBloc({
-    required this.audioPlayerService,
-  }) {
-    /// Listen for transition events from the client.
-    _handlePlayingStateTransitions();
-
-    /// Listen for events requesting the start of a new episode.
-    _handleEpisodeRequests();
-
-    /// Listen for requests to move the play position within the episode.
-    _handlePositionTransitions();
-
-    /// Listen for playback speed changes
-    _handlePlaybackSpeedTransitions();
-
-    /// Listen to trim silence requests
-    _handleTrimSilenceTransitions();
-
-    /// Listen to volume boost silence requests
-    _handleVolumeBoostTransitions();
-
-    /// Listen to transcript filtering events
-    _handleTranscriptEvents();
-
-    /// Listen to sleep timer events;
-    _handleSleepTimer();
-  }
-
   /// Listens to events from the UI (or any client) to transition from one
   /// audio state to another. For example, to pause the current playback
   /// a [TransitionState.pause] event should be sent. To ensure the underlying
@@ -96,38 +96,33 @@ class AudioBloc extends Bloc {
   /// to the Audio Service plugin.
   void _handlePlayingStateTransitions() {
     _transitionPlayingState
-        .asyncMap((event) => Future.value(event))
+        .asyncMap(Future.value)
         .listen((state) async {
       switch (state) {
         case TransitionState.play:
           await audioPlayerService.play();
-          break;
         case TransitionState.pause:
           await audioPlayerService.pause();
-          break;
         case TransitionState.fastforward:
           await audioPlayerService.fastForward();
-          break;
         case TransitionState.rewind:
           await audioPlayerService.rewind();
-          break;
         case TransitionState.stop:
           await audioPlayerService.stop();
-          break;
       }
     });
   }
 
   /// Setup a listener for episode requests and then connect to the
   /// underlying audio service.
-  void _handleEpisodeRequests() async {
+  Future<void> _handleEpisodeRequests() async {
     _play.listen((episode) {
-      audioPlayerService.playEpisode(episode: episode!, resume: true);
+      audioPlayerService.playEpisode(episode: episode!);
     });
   }
 
   /// Listen for requests to change the position of the current episode.
-  void _handlePositionTransitions() async {
+  Future<void> _handlePositionTransitions() async {
     _transitionPosition.listen((pos) async {
       await audioPlayerService.seek(position: pos.ceil());
     });
@@ -166,25 +161,23 @@ class AudioBloc extends Bloc {
   }
 
   void _handleSleepTimer() {
-    _sleepEvent.listen((Sleep sleep) {
-      audioPlayerService.sleep(sleep);
-    });
+    _sleepEvent.listen(audioPlayerService.sleep);
   }
 
   @override
-  void pause() async {
+  Future<void> pause() async {
     log.fine('Audio lifecycle pause');
     await audioPlayerService.suspend();
   }
 
   @override
-  void resume() async {
+  Future<void> resume() async {
     log.fine('Audio lifecycle resume');
-    var ep = await audioPlayerService.resume();
+    final ep = await audioPlayerService.resume();
 
     if (ep != null) {
       log.fine(
-          'Resuming with episode ${ep.title} - ${ep.position} - ${ep.played}');
+          'Resuming with episode ${ep.title} - ${ep.position} - ${ep.played}',);
     } else {
       log.fine('Resuming without an episode');
     }

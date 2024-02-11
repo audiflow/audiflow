@@ -4,19 +4,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:seasoning/bloc/podcast/opml_bloc.dart';
-import 'package:seasoning/bloc/podcast/podcast_bloc.dart';
-import 'package:seasoning/bloc/settings/settings_bloc.dart';
-import 'package:seasoning/core/utils.dart';
-import 'package:seasoning/entities/app_settings.dart';
-import 'package:seasoning/l10n/L.dart';
-import 'package:seasoning/state/opml_state.dart';
-import 'package:seasoning/ui/library/opml_export.dart';
-import 'package:seasoning/ui/library/opml_import.dart';
-import 'package:seasoning/ui/settings/episode_refresh.dart';
-import 'package:seasoning/ui/settings/search_provider.dart';
-import 'package:seasoning/ui/settings/settings_section_label.dart';
-import 'package:seasoning/ui/widgets/action_text.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
@@ -24,6 +11,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dialogs/flutter_dialogs.dart';
 import 'package:provider/provider.dart';
+import 'package:seasoning/bloc/podcast/opml_bloc.dart';
+import 'package:seasoning/bloc/podcast/podcast_bloc.dart';
+import 'package:seasoning/bloc/settings/settings_bloc.dart';
+import 'package:seasoning/core/utils.dart';
+import 'package:seasoning/entities/app_settings.dart';
+import 'package:seasoning/events/opml_event.dart';
+import 'package:seasoning/l10n/L.dart';
+import 'package:seasoning/ui/library/opml_export.dart';
+import 'package:seasoning/ui/library/opml_import.dart';
+import 'package:seasoning/ui/settings/episode_refresh.dart';
+import 'package:seasoning/ui/settings/search_provider.dart';
+import 'package:seasoning/ui/settings/settings_section_label.dart';
+import 'package:seasoning/ui/widgets/action_text.dart';
 
 /// This is the settings page and allows the user to select various
 /// options for the app.
@@ -49,9 +49,9 @@ class _SettingsState extends State<Settings> {
   bool sdcard = false;
 
   Widget _buildList(BuildContext context) {
-    var settingsBloc = Provider.of<SettingsBloc>(context);
-    var podcastBloc = Provider.of<PodcastBloc>(context);
-    var opmlBloc = Provider.of<OPMLBloc>(context);
+    final settingsBloc = Provider.of<SettingsBloc>(context);
+    final podcastBloc = Provider.of<PodcastBloc>(context);
+    final opmlBloc = Provider.of<OPMLBloc>(context);
 
     return StreamBuilder<AppSettings>(
         stream: settingsBloc.settings,
@@ -60,18 +60,18 @@ class _SettingsState extends State<Settings> {
           return ListView(
             children: [
               SettingsDividerLabel(
-                  label: L.of(context)!.settings_personalisation_divider_label),
+                  label: L.of(context)!.settings_personalisation_divider_label,),
               ListTile(
-                shape: const RoundedRectangleBorder(side: BorderSide.none),
+                shape: const RoundedRectangleBorder(),
                 title: Text(L.of(context)!.settings_theme_switch_label),
                 trailing: Switch.adaptive(
                     value: snapshot.data!.theme == 'dark',
                     onChanged: (value) {
                       settingsBloc.darkMode(value);
-                    }),
+                    },),
               ),
               SettingsDividerLabel(
-                  label: L.of(context)!.settings_episodes_divider_label),
+                  label: L.of(context)!.settings_episodes_divider_label,),
               ListTile(
                 title: Text(L.of(context)!.settings_mark_deleted_played_label),
                 trailing: Switch.adaptive(
@@ -90,10 +90,10 @@ class _SettingsState extends State<Settings> {
                             ? setState(() {
                                 if (value) {
                                   _showStorageDialog(
-                                      enableExternalStorage: true);
+                                      enableExternalStorage: true,);
                                 } else {
                                   _showStorageDialog(
-                                      enableExternalStorage: false);
+                                      enableExternalStorage: false,);
                                 }
 
                                 settingsBloc.storeDownloadonSDCard(value);
@@ -106,7 +106,7 @@ class _SettingsState extends State<Settings> {
                       width: 0,
                     ),
               SettingsDividerLabel(
-                  label: L.of(context)!.settings_playback_divider_label),
+                  label: L.of(context)!.settings_playback_divider_label,),
               ListTile(
                 title: Text(L.of(context)!.settings_auto_open_now_playing),
                 trailing: Switch.adaptive(
@@ -117,26 +117,24 @@ class _SettingsState extends State<Settings> {
               ),
               const EpisodeRefreshWidget(),
               SettingsDividerLabel(
-                  label: L.of(context)!.settings_data_divider_label),
+                  label: L.of(context)!.settings_data_divider_label,),
               ListTile(
                 title: Text(L.of(context)!.settings_import_opml),
                 onTap: () async {
-                  var result = (await FilePicker.platform.pickFiles(
+                  final result = await FilePicker.platform.pickFiles(
                     type: FileType.custom,
                     // `podcast.opml` is a UTTypeDeclaration made in iOS setup.
                     allowedExtensions: ['opml', 'podcast.opml', 'xml'],
-                  ));
+                  );
 
                   if (result != null && result.count > 0) {
-                    var file = result.files.first;
+                    final file = result.files.first;
 
                     if (context.mounted) {
-                      var e = await showPlatformDialog<bool>(
-                        androidBarrierDismissible: false,
+                      final e = await showPlatformDialog<bool>(
                         useRootNavigator: false,
                         context: context,
                         builder: (_) => PopScope(
-                          canPop: true,
                           onPopInvoked: (didPop) async => false,
                           child: BasicDialogAlert(
                             title: Text(L.of(context)!.settings_import_opml),
@@ -144,7 +142,7 @@ class _SettingsState extends State<Settings> {
                             actions: <Widget>[
                               BasicDialogAction(
                                 title: ActionText(
-                                    L.of(context)!.cancel_button_label),
+                                    L.of(context)!.cancel_button_label,),
                                 onPressed: () {
                                   return Navigator.pop(context, true);
                                 },
@@ -177,7 +175,7 @@ class _SettingsState extends State<Settings> {
               const SearchProviderWidget(),
             ],
           );
-        });
+        },);
   }
 
   Widget _buildAndroid(BuildContext context) {
@@ -185,7 +183,7 @@ class _SettingsState extends State<Settings> {
       value: Theme.of(context).appBarTheme.systemOverlayStyle!,
       child: Scaffold(
         appBar: AppBar(
-          elevation: 0.0,
+          elevation: 0,
           title: Text(
             L.of(context)!.settings_label,
           ),
@@ -230,7 +228,7 @@ class _SettingsState extends State<Settings> {
   }
 
   @override
-  Widget build(context) {
+  Widget build(BuildContext context) {
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
         return _buildAndroid(context);

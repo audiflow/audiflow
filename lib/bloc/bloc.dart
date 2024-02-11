@@ -4,19 +4,19 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:seasoning/bloc/podcast/audio_bloc.dart';
 import 'package:rxdart/rxdart.dart';
+import 'package:seasoning/bloc/podcast/audio_bloc.dart';
 
 /// Base class for all BLoCs to give each a hook into the mobile
 /// lifecycle state of paused, resume or detached.
 abstract class Bloc {
-  /// Handle lifecycle events
-  final PublishSubject<LifecycleState> _lifecycleSubject =
-      PublishSubject<LifecycleState>(sync: true);
 
   Bloc() {
     _init();
   }
+  /// Handle lifecycle events
+  final PublishSubject<LifecycleState> _lifecycleSubject =
+      PublishSubject<LifecycleState>(sync: true);
 
   void _init() {
     _lifecycleSubject.listen((state) async {

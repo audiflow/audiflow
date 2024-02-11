@@ -4,19 +4,19 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:seasoning/bloc/podcast/episode_bloc.dart';
-import 'package:seasoning/bloc/podcast/queue_bloc.dart';
-import 'package:seasoning/entities/episode.dart';
-import 'package:seasoning/l10n/L.dart';
-import 'package:seasoning/state/queue_event_state.dart';
-import 'package:seasoning/ui/podcast/episode_details.dart';
-import 'package:seasoning/ui/podcast/transport_controls.dart';
-import 'package:seasoning/ui/widgets/action_text.dart';
-import 'package:seasoning/ui/widgets/tile_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dialogs/flutter_dialogs.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import 'package:provider/provider.dart';
+import 'package:seasoning/bloc/podcast/episode_bloc.dart';
+import 'package:seasoning/bloc/podcast/queue_bloc.dart';
+import 'package:seasoning/entities/episode.dart';
+import 'package:seasoning/events/queue_event.dart';
+import 'package:seasoning/l10n/L.dart';
+import 'package:seasoning/ui/podcast/episode_details.dart';
+import 'package:seasoning/ui/podcast/transport_controls.dart';
+import 'package:seasoning/ui/widgets/action_text.dart';
+import 'package:seasoning/ui/widgets/tile_image.dart';
 
 /// An EpisodeTitle is built with an [ExpandedTile] widget and displays the episode's
 /// basic details, thumbnail and play button.
@@ -26,11 +26,6 @@ import 'package:provider/provider.dart';
 ///
 /// TODO: Replace [Opacity] with [Container] with a transparent colour.
 class EpisodeTile extends StatefulWidget {
-  final Episode episode;
-  final bool download;
-  final bool play;
-  final bool playing;
-  final bool queued;
 
   const EpisodeTile({
     super.key,
@@ -40,6 +35,11 @@ class EpisodeTile extends StatefulWidget {
     this.playing = false,
     this.queued = false,
   });
+  final Episode episode;
+  final bool download;
+  final bool play;
+  final bool playing;
+  final bool queued;
 
   @override
   State<EpisodeTile> createState() => _EpisodeTileState();
@@ -64,7 +64,7 @@ class _EpisodeTileState extends State<EpisodeTile> {
           ? L.of(context)!.semantics_episode_tile_expanded_hint
           : L.of(context)!.semantics_episode_tile_collapsed_hint,
       child: ExpansionTile(
-        tilePadding: const EdgeInsets.fromLTRB(16.0, 0.0, 8.0, 0.0),
+        tilePadding: const EdgeInsets.fromLTRB(16, 0, 8, 0),
         key: Key('PT${widget.episode.guid}'),
         onExpansionChanged: (isExpanded) {
           setState(() {
@@ -87,13 +87,13 @@ class _EpisodeTileState extends State<EpisodeTile> {
               Opacity(
                 opacity: widget.episode.played ? 0.5 : 1.0,
                 child: TileImage(
-                  url: widget.episode.thumbImageUrl ?? widget.episode.imageUrl!,
-                  size: 56.0,
+                  url: widget.episode.thumbImageUrl ?? widget.episode.imageUrl,
+                  size: 56,
                   highlight: widget.episode.highlight,
                 ),
               ),
               SizedBox(
-                height: 5.0,
+                height: 5,
                 width: 56.0 * (widget.episode.percentagePlayed / 100),
                 child: Container(
                   color: Theme.of(context).primaryColor,
@@ -109,7 +109,7 @@ class _EpisodeTileState extends State<EpisodeTile> {
         title: Opacity(
           opacity: widget.episode.played ? 0.5 : 1.0,
           child: Text(
-            widget.episode.title!,
+            widget.episode.title,
             overflow: TextOverflow.ellipsis,
             maxLines: 2,
             softWrap: false,
@@ -121,8 +121,8 @@ class _EpisodeTileState extends State<EpisodeTile> {
             alignment: Alignment.centerLeft,
             child: Padding(
               padding: const EdgeInsets.symmetric(
-                horizontal: 16.0,
-                vertical: 4.0,
+                horizontal: 16,
+                vertical: 4,
               ),
               child: Text(
                 widget.episode.descriptionText!,
@@ -137,7 +137,7 @@ class _EpisodeTileState extends State<EpisodeTile> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(0.0, 4.0, 0.0, 8.0),
+            padding: const EdgeInsets.fromLTRB(0, 4, 0, 8),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -147,7 +147,7 @@ class _EpisodeTileState extends State<EpisodeTile> {
                     style: TextButton.styleFrom(
                       padding: EdgeInsets.zero,
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(4.0)),
+                          borderRadius: BorderRadius.circular(4),),
                     ),
                     onPressed: widget.episode.downloaded
                         ? () {
@@ -159,7 +159,7 @@ class _EpisodeTileState extends State<EpisodeTile> {
                                   L.of(context)!.delete_episode_title,
                                 ),
                                 content: Text(
-                                    L.of(context)!.delete_episode_confirmation),
+                                    L.of(context)!.delete_episode_confirmation,),
                                 actions: <Widget>[
                                   BasicDialogAction(
                                     title: ActionText(
@@ -195,7 +195,7 @@ class _EpisodeTileState extends State<EpisodeTile> {
                           size: 22,
                         ),
                         const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 2.0),
+                          padding: EdgeInsets.symmetric(vertical: 2),
                         ),
                         ExcludeSemantics(
                           child: Text(
@@ -215,17 +215,17 @@ class _EpisodeTileState extends State<EpisodeTile> {
                     style: TextButton.styleFrom(
                       padding: EdgeInsets.zero,
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(0.0)),
+                          borderRadius: BorderRadius.circular(0),),
                     ),
                     onPressed: widget.playing
                         ? null
                         : () {
                             if (widget.queued) {
                               queueBloc.queueEvent(
-                                  QueueRemoveEvent(episode: widget.episode));
+                                  QueueRemoveEvent(episode: widget.episode),);
                             } else {
                               queueBloc.queueEvent(
-                                  QueueAddEvent(episode: widget.episode));
+                                  QueueAddEvent(episode: widget.episode),);
                             }
                           },
                     child: Column(
@@ -240,7 +240,7 @@ class _EpisodeTileState extends State<EpisodeTile> {
                           size: 22,
                         ),
                         const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 2.0),
+                          padding: EdgeInsets.symmetric(vertical: 2),
                         ),
                         ExcludeSemantics(
                           child: Text(
@@ -260,14 +260,13 @@ class _EpisodeTileState extends State<EpisodeTile> {
                     style: TextButton.styleFrom(
                       padding: EdgeInsets.zero,
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(0.0)),
+                          borderRadius: BorderRadius.circular(0),),
                     ),
                     onPressed: () {
                       episodeBloc.togglePlayed(widget.episode);
                     },
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: <Widget>[
                         Icon(
                           widget.episode.played
@@ -276,7 +275,7 @@ class _EpisodeTileState extends State<EpisodeTile> {
                           size: 22,
                         ),
                         const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 2.0),
+                          padding: EdgeInsets.symmetric(vertical: 2),
                         ),
                         Text(
                           widget.episode.played
@@ -296,7 +295,7 @@ class _EpisodeTileState extends State<EpisodeTile> {
                     style: TextButton.styleFrom(
                       padding: EdgeInsets.zero,
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(0.0)),
+                          borderRadius: BorderRadius.circular(0),),
                     ),
                     onPressed: () {
                       showModalBottomSheet<void>(
@@ -305,26 +304,25 @@ class _EpisodeTileState extends State<EpisodeTile> {
                           isScrollControlled: true,
                           shape: const RoundedRectangleBorder(
                             borderRadius: BorderRadius.only(
-                              topLeft: Radius.circular(10.0),
-                              topRight: Radius.circular(10.0),
+                              topLeft: Radius.circular(10),
+                              topRight: Radius.circular(10),
                             ),
                           ),
                           builder: (context) {
                             return EpisodeDetails(
                               episode: widget.episode,
                             );
-                          });
+                          },);
                     },
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: <Widget>[
                         const Icon(
                           Icons.unfold_more_outlined,
                           size: 22,
                         ),
                         const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 2.0),
+                          padding: EdgeInsets.symmetric(vertical: 2),
                         ),
                         Text(
                           L.of(context)!.more_label,
@@ -347,9 +345,6 @@ class _EpisodeTileState extends State<EpisodeTile> {
 }
 
 class EpisodeTransportControls extends StatelessWidget {
-  final Episode episode;
-  final bool download;
-  final bool play;
 
   const EpisodeTransportControls({
     super.key,
@@ -357,6 +352,9 @@ class EpisodeTransportControls extends StatelessWidget {
     required this.download,
     required this.play,
   });
+  final Episode episode;
+  final bool download;
+  final bool play;
 
   @override
   Widget build(BuildContext context) {
@@ -368,7 +366,7 @@ class EpisodeTransportControls extends StatelessWidget {
         child: DownloadControl(
           episode: episode,
         ),
-      ));
+      ),);
     }
 
     if (play) {
@@ -377,11 +375,11 @@ class EpisodeTransportControls extends StatelessWidget {
         child: PlayControl(
           episode: episode,
         ),
-      ));
+      ),);
     }
 
     return SizedBox(
-      width: (buttons.length * 48.0),
+      width: buttons.length * 48.0,
       child: Row(
         children: <Widget>[...buttons],
       ),
@@ -390,23 +388,23 @@ class EpisodeTransportControls extends StatelessWidget {
 }
 
 class EpisodeSubtitle extends StatelessWidget {
-  final Episode episode;
-  final String date;
-  final Duration length;
 
   EpisodeSubtitle(this.episode, {super.key})
       : date = episode.publicationDate == null
             ? ''
             : DateFormat(episode.publicationDate!.year == DateTime.now().year
                     ? 'yyyy.MM'
-                    : 'yyyy.MM.dd')
+                    : 'yyyy.MM.dd',)
                 .format(episode.publicationDate!),
         length = Duration(seconds: episode.duration);
+  final Episode episode;
+  final String date;
+  final Duration length;
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    var timeRemaining = episode.timeRemaining;
+    final timeRemaining = episode.timeRemaining;
 
     String title;
 
@@ -429,7 +427,7 @@ class EpisodeSubtitle extends StatelessWidget {
     }
 
     return Padding(
-      padding: const EdgeInsets.only(top: 4.0),
+      padding: const EdgeInsets.only(top: 4),
       child: Text(
         title,
         overflow: TextOverflow.ellipsis,

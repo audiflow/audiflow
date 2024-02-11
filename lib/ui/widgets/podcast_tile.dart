@@ -4,20 +4,20 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:seasoning/bloc/podcast/podcast_bloc.dart';
 import 'package:seasoning/entities/podcast.dart';
 import 'package:seasoning/ui/podcast/podcast_details.dart';
 import 'package:seasoning/ui/widgets/tile_image.dart';
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 class PodcastTile extends StatelessWidget {
-  final Podcast podcast;
 
   const PodcastTile({
     super.key,
     required this.podcast,
   });
+  final Podcast podcast;
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +29,7 @@ class PodcastTile extends StatelessWidget {
           context,
           MaterialPageRoute<void>(
               settings: const RouteSettings(name: 'podcastdetails'),
-              builder: (context) => PodcastDetails(podcast, podcastBloc)),
+              builder: (context) => PodcastDetails(podcast, podcastBloc),),
         );
       },
       minVerticalPadding: 9,
@@ -55,7 +55,6 @@ class PodcastTile extends StatelessWidget {
         '${podcast.copyright ?? ''}\n',
         maxLines: 2,
       ),
-      isThreeLine: false,
     );
   }
 }

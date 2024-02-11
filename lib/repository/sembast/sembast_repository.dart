@@ -12,9 +12,9 @@ import 'package:seasoning/entities/episode.dart';
 import 'package:seasoning/entities/podcast.dart';
 import 'package:seasoning/entities/queue.dart';
 import 'package:seasoning/entities/transcript.dart';
+import 'package:seasoning/events/episode_event.dart';
 import 'package:seasoning/repository/repository.dart';
 import 'package:seasoning/repository/sembast/sembast_database_service.dart';
-import 'package:seasoning/state/episode_state.dart';
 import 'package:sembast/sembast.dart';
 
 /// An implementation of [Repository] that is backed by

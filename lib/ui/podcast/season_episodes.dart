@@ -1,11 +1,16 @@
 import 'dart:async';
 
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_dialogs/flutter_dialogs.dart';
+import 'package:logging/logging.dart';
+import 'package:provider/provider.dart';
 import 'package:seasoning/bloc/podcast/podcast_bloc.dart';
 import 'package:seasoning/bloc/settings/settings_bloc.dart';
 import 'package:seasoning/entities/podcast.dart';
 import 'package:seasoning/entities/season.dart';
+import 'package:seasoning/events/bloc_state.dart';
 import 'package:seasoning/l10n/L.dart';
-import 'package:seasoning/state/bloc_state.dart';
 import 'package:seasoning/ui/podcast/podcast_episode_list.dart';
 import 'package:seasoning/ui/widgets/action_text.dart';
 import 'package:seasoning/ui/widgets/delayed_progress_indicator.dart';
@@ -13,11 +18,6 @@ import 'package:seasoning/ui/widgets/placeholder_builder.dart';
 import 'package:seasoning/ui/widgets/platform_back_button.dart';
 import 'package:seasoning/ui/widgets/podcast_html.dart';
 import 'package:seasoning/ui/widgets/podcast_image.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_dialogs/flutter_dialogs.dart';
-import 'package:logging/logging.dart';
-import 'package:provider/provider.dart';
 
 /// This Widget takes podcast and its season and builds a list of episodes under the season.
 class SeasonEpisodes extends StatefulWidget {
@@ -36,7 +36,7 @@ class _SeasonEpisodesState extends State<SeasonEpisodes> {
   final log = Logger('SeasonEpisodes');
   final scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
   final ScrollController _sliverScrollController = ScrollController();
-  var brightness = Brightness.dark;
+  Brightness brightness = Brightness.dark;
   bool toolbarCollapsed = false;
   SystemUiOverlayStyle? _systemOverlayStyle;
 
@@ -124,7 +124,6 @@ class _SeasonEpisodesState extends State<SeasonEpisodes> {
       header: false,
       label: L.of(context)!.semantics_podcast_details_header,
       child: PopScope(
-        canPop: true,
         onPopInvoked: (didPop) {
           _resetSystemOverlayStyle();
         },
@@ -141,7 +140,7 @@ class _SeasonEpisodesState extends State<SeasonEpisodes> {
                     title: AnimatedOpacity(
                         opacity: toolbarCollapsed ? 1.0 : 0.0,
                         duration: const Duration(milliseconds: 500),
-                        child: Text(widget.season.title ?? 'Extra')),
+                        child: Text(widget.season.title ?? 'Extra'),),
                     leading: PlatformBackButton(
                       iconColour: toolbarCollapsed &&
                               Theme.of(context).brightness == Brightness.light
@@ -155,10 +154,8 @@ class _SeasonEpisodesState extends State<SeasonEpisodes> {
                         Navigator.pop(context);
                       },
                     ),
-                    expandedHeight: 300.0,
-                    floating: false,
+                    expandedHeight: 300,
                     pinned: true,
-                    snap: false,
                     flexibleSpace: FlexibleSpaceBar(
                       background: Hero(
                         key: Key('seasonhero${widget.season.guid}'),
@@ -170,7 +167,7 @@ class _SeasonEpisodesState extends State<SeasonEpisodes> {
                           ),
                         ),
                       ),
-                    )),
+                    ),),
                 // StreamBuilder<BlocState<Podcast>>(
                 //     initialData: BlocEmptyState<Podcast>(),
                 //     stream: podcastBloc.details,
@@ -274,14 +271,13 @@ class SeasonHeaderImage extends StatelessWidget {
     return PodcastBannerImage(
       key: Key('details${season.imageUrl}'),
       url: season.imageUrl!,
-      fit: BoxFit.cover,
       placeholder: placeholderBuilder != null
           ? placeholderBuilder?.builder()(context)
           : DelayedCircularProgressIndicator(),
       errorPlaceholder: placeholderBuilder != null
           ? placeholderBuilder?.errorBuilder()(context)
           : const Image(
-              image: AssetImage('assets/images/anytime-placeholder-logo.png')),
+              image: AssetImage('assets/images/anytime-placeholder-logo.png'),),
     );
   }
 }
@@ -296,9 +292,9 @@ class SeasonHeaderImage extends StatelessWidget {
 /// Description is rendered by [PodcastDescription].
 /// Follow/Unfollow button rendered by [FollowButton].
 class SeasonTitle extends StatefulWidget {
-  final Season season;
 
   const SeasonTitle(this.season, {super.key});
+  final Season season;
 
   @override
   State<SeasonTitle> createState() => _SeasonTitleState();
@@ -318,16 +314,16 @@ class _SeasonTitleState extends State<SeasonTitle> {
     final settings = Provider.of<SettingsBloc>(context).currentSettings;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 2.0),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 2),
       child: Text(widget.season.title ?? 'Extra', style: textTheme.titleLarge),
     );
   }
 }
 
 class FollowButton extends StatelessWidget {
-  final Podcast podcast;
 
   const FollowButton(this.podcast, {super.key});
+  final Podcast podcast;
 
   @override
   Widget build(BuildContext context) {
@@ -340,7 +336,7 @@ class FollowButton extends StatelessWidget {
             final state = snapshot.data;
 
             if (state is BlocPopulatedState<Podcast>) {
-              var p = state.results!;
+              final p = state.results!;
 
               return Semantics(
                 liveRegion: true,
@@ -348,7 +344,7 @@ class FollowButton extends StatelessWidget {
                     ? OutlinedButton.icon(
                         style: OutlinedButton.styleFrom(
                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8.0)),
+                              borderRadius: BorderRadius.circular(8),),
                         ),
                         icon: const Icon(
                           Icons.delete_outline,
@@ -395,7 +391,7 @@ class FollowButton extends StatelessWidget {
                     : OutlinedButton.icon(
                         style: OutlinedButton.styleFrom(
                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8.0)),
+                              borderRadius: BorderRadius.circular(8),),
                         ),
                         icon: const Icon(
                           Icons.add,
@@ -409,7 +405,7 @@ class FollowButton extends StatelessWidget {
             }
           }
           return Container();
-        });
+        },);
   }
 }
 
@@ -429,7 +425,7 @@ class SeasonSwitch extends StatelessWidget {
               final podcastBloc =
                   Provider.of<PodcastBloc>(context, listen: false);
               podcastBloc.toggleSeasonView();
-            })
+            },),
       ],
     );
   }

@@ -4,18 +4,24 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'package:podcast_search/podcast_search.dart' as pcast;
 import 'package:seasoning/api/podcast/podcast_api.dart';
 import 'package:seasoning/entities/chapter.dart';
 import 'package:seasoning/entities/episode.dart';
 import 'package:seasoning/entities/podcast.dart';
 import 'package:seasoning/entities/season.dart';
 import 'package:seasoning/entities/transcript.dart';
+import 'package:seasoning/events/episode_event.dart';
 import 'package:seasoning/repository/repository.dart';
 import 'package:seasoning/services/settings/settings_service.dart';
-import 'package:seasoning/state/episode_state.dart';
-import 'package:podcast_search/podcast_search.dart' as pcast;
 
 abstract class PodcastService {
+
+  PodcastService({
+    required this.api,
+    required this.repository,
+    required this.settingsService,
+  });
   final PodcastApi api;
   final Repository repository;
   final SettingsService settingsService;
@@ -159,12 +165,6 @@ abstract class PodcastService {
     'Wrestling',
   ];
 
-  PodcastService({
-    required this.api,
-    required this.repository,
-    required this.settingsService,
-  });
-
   Future<pcast.SearchResult> search({
     required String term,
     String? country,
@@ -202,7 +202,7 @@ abstract class PodcastService {
   Future<List<Chapter>> loadChaptersByUrl({required String url});
 
   Future<Transcript> loadTranscriptByUrl(
-      {required TranscriptUrl transcriptUrl});
+      {required TranscriptUrl transcriptUrl,});
 
   Future<void> deleteDownload(Episode episode);
 
@@ -228,5 +228,5 @@ abstract class PodcastService {
 
   /// Event listeners
   Stream<Podcast?>? podcastListener;
-  Stream<EpisodeState>? episodeListener;
+  Stream<EpisodeEvent>? episodeListener;
 }

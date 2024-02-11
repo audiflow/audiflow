@@ -6,15 +6,15 @@
 
 import 'dart:async';
 
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_dialogs/flutter_dialogs.dart';
+import 'package:provider/provider.dart';
 import 'package:seasoning/bloc/settings/settings_bloc.dart';
 import 'package:seasoning/entities/app_settings.dart';
 import 'package:seasoning/entities/funding.dart';
 import 'package:seasoning/l10n/L.dart';
 import 'package:seasoning/ui/widgets/action_text.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_dialogs/flutter_dialogs.dart';
-import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 /// This class is responsible for rendering the funding menu on the podcast details page.
@@ -24,16 +24,16 @@ import 'package:url_launcher/url_launcher.dart';
 ///
 /// The target platform is based on the current [Theme]: [ThemeData.platform].
 class FundingMenu extends StatelessWidget {
-  final List<Funding>? funding;
 
   const FundingMenu(
     this.funding, {
     super.key,
   });
+  final List<Funding>? funding;
 
   @override
   Widget build(BuildContext context) {
-    var theme = Theme.of(context);
+    final theme = Theme.of(context);
 
     switch (theme.platform) {
       case TargetPlatform.android:
@@ -51,9 +51,9 @@ class FundingMenu extends StatelessWidget {
 /// This is the material design version of the context menu. This will be rendered
 /// for all platforms that are not iOS.
 class _MaterialFundingMenu extends StatelessWidget {
-  final List<Funding>? funding;
 
   const _MaterialFundingMenu(this.funding);
+  final List<Funding>? funding;
 
   @override
   Widget build(BuildContext context) {
@@ -61,8 +61,8 @@ class _MaterialFundingMenu extends StatelessWidget {
 
     return funding == null || funding!.isEmpty
         ? const SizedBox(
-            width: 0.0,
-            height: 0.0,
+            width: 0,
+            height: 0,
           )
         : StreamBuilder<AppSettings>(
             stream: settingsBloc.settings,
@@ -88,23 +88,22 @@ class _MaterialFundingMenu extends StatelessWidget {
                         funding!.length, (index) {
                       return PopupMenuItem<String>(
                         value: funding![index].url,
-                        enabled: true,
                         child: Text(funding![index].value),
                       );
                     });
                   },
                 ),
               );
-            });
+            },);
   }
 }
 
 /// This is the Cupertino context menu and is rendered only when running on
 /// an iOS device.
 class _CupertinoFundingMenu extends StatelessWidget {
-  final List<Funding>? funding;
 
   const _CupertinoFundingMenu(this.funding);
+  final List<Funding>? funding;
 
   @override
   Widget build(BuildContext context) {
@@ -112,8 +111,8 @@ class _CupertinoFundingMenu extends StatelessWidget {
 
     return funding == null || funding!.isEmpty
         ? const SizedBox(
-            width: 0.0,
-            height: 0.0,
+            width: 0,
+            height: 0,
           )
         : StreamBuilder<AppSettings>(
             stream: settingsBloc.settings,
@@ -155,7 +154,7 @@ class _CupertinoFundingMenu extends StatelessWidget {
                   },
                 ),
               );
-            });
+            },);
   }
 }
 
@@ -165,7 +164,7 @@ class FundingLink {
   /// information dialog first to make clear that the link is provided
   /// by the podcast owner and not AnyTime.
   static Future<bool> fundingLink(
-      String url, bool consent, BuildContext context) async {
+      String url, bool consent, BuildContext context,) async {
     bool? result = false;
 
     if (consent) {
@@ -208,7 +207,7 @@ class FundingLink {
       );
 
       if (result!) {
-        var uri = Uri.parse(url);
+        final uri = Uri.parse(url);
 
         unawaited(
           canLaunchUrl(uri).then((value) => launchUrl(uri)),

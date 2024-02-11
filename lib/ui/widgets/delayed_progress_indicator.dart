@@ -4,8 +4,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:seasoning/ui/widgets/platform_progress_indicator.dart';
 import 'package:flutter/material.dart';
+import 'package:seasoning/ui/widgets/platform_progress_indicator.dart';
 
 /// This class returns a platform-specific spinning indicator after a time specified
 /// in milliseconds.
@@ -16,12 +16,12 @@ import 'package:flutter/material.dart';
 /// or process from the cache will result in a [PlatformProgressIndicator] indicator
 /// being displayed.
 class DelayedCircularProgressIndicator extends StatelessWidget {
-  final f =
-      Future.delayed(const Duration(milliseconds: 1000), () => Container());
 
   DelayedCircularProgressIndicator({
     super.key,
   });
+  final f =
+      Future.delayed(const Duration(milliseconds: 1000), Container.new);
 
   @override
   Widget build(BuildContext context) {
@@ -35,6 +35,6 @@ class DelayedCircularProgressIndicator extends StatelessWidget {
           } else {
             return Container();
           }
-        });
+        },);
   }
 }

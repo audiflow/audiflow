@@ -4,19 +4,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:seasoning/bloc/podcast/audio_bloc.dart';
 import 'package:seasoning/entities/episode.dart';
 import 'package:seasoning/ui/widgets/episode_tile.dart';
 import 'package:seasoning/ui/widgets/tile_image.dart';
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 /// Renders an episode within the queue which can be dragged to re-order the queue.
 class DraggableEpisodeTile extends StatelessWidget {
-  final Episode episode;
-  final int index;
-  final bool draggable;
-  final bool playable;
 
   const DraggableEpisodeTile({
     super.key,
@@ -25,6 +21,10 @@ class DraggableEpisodeTile extends StatelessWidget {
     this.draggable = true,
     this.playable = false,
   });
+  final Episode episode;
+  final int index;
+  final bool draggable;
+  final bool playable;
 
   @override
   Widget build(BuildContext context) {
@@ -36,11 +36,11 @@ class DraggableEpisodeTile extends StatelessWidget {
       enabled: playable,
       leading: TileImage(
         url: episode.thumbImageUrl ?? episode.imageUrl ?? '',
-        size: 56.0,
+        size: 56,
         highlight: episode.highlight,
       ),
       title: Text(
-        episode.title!,
+        episode.title,
         overflow: TextOverflow.ellipsis,
         maxLines: 2,
         softWrap: false,
@@ -53,8 +53,8 @@ class DraggableEpisodeTile extends StatelessWidget {
               child: const Icon(Icons.drag_handle),
             )
           : const SizedBox(
-              width: 0.0,
-              height: 0.0,
+              width: 0,
+              height: 0,
             ),
       onTap: () {
         if (playable) {

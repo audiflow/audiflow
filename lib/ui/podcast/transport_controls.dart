@@ -4,6 +4,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'package:flutter/material.dart';
+import 'package:flutter_dialogs/flutter_dialogs.dart';
+import 'package:provider/provider.dart';
+import 'package:rxdart/rxdart.dart';
 import 'package:seasoning/bloc/podcast/audio_bloc.dart';
 import 'package:seasoning/bloc/podcast/episode_bloc.dart';
 import 'package:seasoning/bloc/podcast/podcast_bloc.dart';
@@ -17,22 +21,18 @@ import 'package:seasoning/ui/podcast/now_playing.dart';
 import 'package:seasoning/ui/widgets/action_text.dart';
 import 'package:seasoning/ui/widgets/download_button.dart';
 import 'package:seasoning/ui/widgets/play_pause_button.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_dialogs/flutter_dialogs.dart';
-import 'package:provider/provider.dart';
-import 'package:rxdart/rxdart.dart';
 
 /// Handles the state of the episode transport controls.
 ///
 /// This currently consists of the [PlayControl] and [DownloadControl]
 /// to handle the play/pause and download control state respectively.
 class PlayControl extends StatelessWidget {
-  final Episode episode;
 
   const PlayControl({
     super.key,
     required this.episode,
   });
+  final Episode episode;
 
   @override
   Widget build(BuildContext context) {
@@ -41,14 +41,13 @@ class PlayControl extends StatelessWidget {
         Provider.of<SettingsBloc>(context, listen: false).currentSettings;
 
     return SizedBox(
-      height: 48.0,
-      width: 48.0,
+      height: 48,
+      width: 48,
       child: StreamBuilder<PlayerControlState>(
           stream: Rx.combineLatest2(
               audioBloc.playingState!,
               audioBloc.nowPlaying!,
-              (AudioState audioState, Episode? episode) =>
-                  PlayerControlState(audioState, episode)),
+              PlayerControlState.new,),
           builder: (context, snapshot) {
             if (snapshot.hasData) {
               final audioState = snapshot.data!.audioState;
@@ -65,14 +64,14 @@ class PlayControl extends StatelessWidget {
                         audioBloc.transitionState(TransitionState.pause);
                       },
                       child: PlayPauseButton(
-                        title: episode.title!,
+                        title: episode.title,
                         label: L.of(context)!.pause_button_label,
                         icon: Icons.pause,
                       ),
                     );
                   } else if (audioState == AudioState.buffering) {
                     return PlayPauseBusyButton(
-                      title: episode.title!,
+                      title: episode.title,
                       label: L.of(context)!.pause_button_label,
                       icon: Icons.pause,
                     );
@@ -83,7 +82,7 @@ class PlayControl extends StatelessWidget {
                         optionalShowNowPlaying(context, settings);
                       },
                       child: PlayPauseButton(
-                        title: episode.title!,
+                        title: episode.title,
                         label: L.of(context)!.play_button_label,
                         icon: Icons.play_arrow,
                       ),
@@ -99,7 +98,7 @@ class PlayControl extends StatelessWidget {
                     optionalShowNowPlaying(context, settings);
                   },
                   child: PlayPauseButton(
-                    title: episode.title!,
+                    title: episode.title,
                     label: L.of(context)!.play_button_label,
                     icon: Icons.play_arrow,
                   ),
@@ -110,7 +109,7 @@ class PlayControl extends StatelessWidget {
                 return Opacity(
                   opacity: 0.2,
                   child: PlayPauseButton(
-                    title: episode.title!,
+                    title: episode.title,
                     label: L.of(context)!.play_button_label,
                     icon: Icons.play_arrow,
                   ),
@@ -126,7 +125,7 @@ class PlayControl extends StatelessWidget {
                     optionalShowNowPlaying(context, settings);
                   },
                   child: PlayPauseButton(
-                    title: episode.title!,
+                    title: episode.title,
                     label: L.of(context)!.play_button_label,
                     icon: Icons.play_arrow,
                   ),
@@ -135,14 +134,14 @@ class PlayControl extends StatelessWidget {
                 return Opacity(
                   opacity: 0.2,
                   child: PlayPauseButton(
-                    title: episode.title!,
+                    title: episode.title,
                     label: L.of(context)!.play_button_label,
                     icon: Icons.play_arrow,
                   ),
                 );
               }
             }
-          }),
+          },),
     );
   }
 
@@ -155,7 +154,6 @@ class PlayControl extends StatelessWidget {
         MaterialPageRoute<void>(
           builder: (context) => const NowPlaying(),
           settings: const RouteSettings(name: 'nowplaying'),
-          fullscreenDialog: false,
         ),
       );
     }
@@ -163,12 +161,12 @@ class PlayControl extends StatelessWidget {
 }
 
 class DownloadControl extends StatelessWidget {
-  final Episode episode;
 
   const DownloadControl({
     super.key,
     required this.episode,
   });
+  final Episode episode;
 
   @override
   Widget build(BuildContext context) {
@@ -176,14 +174,13 @@ class DownloadControl extends StatelessWidget {
     final podcastBloc = Provider.of<PodcastBloc>(context);
 
     return SizedBox(
-      height: 48.0,
-      width: 48.0,
+      height: 48,
+      width: 48,
       child: StreamBuilder<PlayerControlState>(
           stream: Rx.combineLatest2(
               audioBloc.playingState!,
               audioBloc.nowPlaying!,
-              (AudioState audioState, Episode? episode) =>
-                  PlayerControlState(audioState, episode)),
+              PlayerControlState.new,),
           builder: (context, snapshot) {
             if (snapshot.hasData) {
               final audioState = snapshot.data!.audioState;
@@ -197,7 +194,7 @@ class DownloadControl extends StatelessWidget {
                     opacity: 0.2,
                     child: DownloadButton(
                       onPressed: () {},
-                      title: episode.title!,
+                      title: episode.title,
                       icon: Icons.save_alt,
                       percent: 0,
                       label: L.of(context)!.download_episode_button_label,
@@ -208,7 +205,7 @@ class DownloadControl extends StatelessWidget {
                     opacity: 0.2,
                     child: DownloadButton(
                       onPressed: () {},
-                      title: episode.title!,
+                      title: episode.title,
                       icon: Icons.check,
                       percent: 0,
                       label: L.of(context)!.download_episode_button_label,
@@ -221,7 +218,7 @@ class DownloadControl extends StatelessWidget {
             if (episode.downloadState == DownloadState.downloaded) {
               return DownloadButton(
                 onPressed: () {},
-                title: episode.title!,
+                title: episode.title,
                 icon: Icons.check,
                 percent: 0,
                 label: L.of(context)!.download_episode_button_label,
@@ -229,7 +226,7 @@ class DownloadControl extends StatelessWidget {
             } else if (episode.downloadState == DownloadState.queued) {
               return DownloadButton(
                 onPressed: () => _showCancelDialog(context),
-                title: episode.title!,
+                title: episode.title,
                 icon: Icons.timer_outlined,
                 percent: 0,
                 label: L.of(context)!.download_episode_button_label,
@@ -237,21 +234,21 @@ class DownloadControl extends StatelessWidget {
             } else if (episode.downloadState == DownloadState.downloading) {
               return DownloadButton(
                 onPressed: () => _showCancelDialog(context),
-                title: episode.title!,
+                title: episode.title,
                 icon: Icons.timer_outlined,
-                percent: episode.downloadPercentage!,
+                percent: episode.downloadPercentage,
                 label: L.of(context)!.download_episode_button_label,
               );
             }
 
             return DownloadButton(
               onPressed: () => podcastBloc.downloadEpisode(episode),
-              title: episode.title!,
+              title: episode.title,
               icon: Icons.save_alt,
               percent: 0,
               label: L.of(context)!.download_episode_button_label,
             );
-          }),
+          },),
     );
   }
 
@@ -294,8 +291,8 @@ class DownloadControl extends StatelessWidget {
 /// This class acts as a wrapper between the current audio state and
 /// downloadables. Saves all that nesting of StreamBuilders.
 class PlayerControlState {
-  final AudioState audioState;
-  final Episode? episode;
 
   PlayerControlState(this.audioState, this.episode);
+  final AudioState audioState;
+  final Episode? episode;
 }

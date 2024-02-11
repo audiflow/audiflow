@@ -9,10 +9,6 @@ import 'package:flutter/material.dart';
 /// A transitioning route that slides the child in from the
 /// right.
 class SlideRightRoute extends PageRouteBuilder<void> {
-  final Widget widget;
-
-  @override
-  final RouteSettings settings;
 
   SlideRightRoute({
     required this.widget,
@@ -35,12 +31,16 @@ class SlideRightRoute extends PageRouteBuilder<void> {
               return SlideTransition(
                 position: Tween<Offset>(
                   begin: const Offset(
-                    1.0,
-                    0.0,
+                    1,
+                    0,
                   ),
                   end: Offset.zero,
                 ).animate(animation),
                 child: child,
               );
-            });
+            },);
+  final Widget widget;
+
+  @override
+  final RouteSettings settings;
 }

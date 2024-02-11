@@ -3,16 +3,16 @@
 // All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
-import 'package:seasoning/ui/search/search_bar.dart' as search;
-import 'package:seasoning/ui/widgets/podcast_list.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:podcast_search/podcast_search.dart' as search;
+import 'package:seasoning/ui/search/search_bar.dart' as search;
+import 'package:seasoning/ui/widgets/podcast_list.dart';
 
 class PodcastListWithSearchBar extends StatelessWidget {
-  final search.SearchResult results;
 
   const PodcastListWithSearchBar({super.key, required this.results});
+  final search.SearchResult results;
 
   @override
   Widget build(BuildContext context) {

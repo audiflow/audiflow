@@ -6,22 +6,22 @@
 
 import 'dart:async';
 
-import 'package:seasoning/bloc/podcast/audio_bloc.dart';
-import 'package:seasoning/l10n/L.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:seasoning/bloc/podcast/audio_bloc.dart';
+import 'package:seasoning/l10n/L.dart';
 
 /// Listens for errors on the audio BLoC.
 ///
 /// We receive a code which we then map to an error message. This needs to be placed
 /// below a [Scaffold].
 class PlaybackErrorListener extends StatefulWidget {
-  final Widget child;
 
   const PlaybackErrorListener({
     super.key,
     required this.child,
   });
+  final Widget child;
 
   @override
   State<PlaybackErrorListener> createState() => _PlaybackErrorListenerState();
@@ -60,10 +60,8 @@ class _PlaybackErrorListenerState extends State<PlaybackErrorListener> {
     switch (code) {
       case 401:
         result = L.of(context)!.error_no_connection;
-        break;
       case 501:
         result = L.of(context)!.error_playback_fail;
-        break;
     }
 
     return result;

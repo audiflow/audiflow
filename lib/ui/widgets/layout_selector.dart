@@ -4,12 +4,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:seasoning/bloc/settings/settings_bloc.dart';
 import 'package:seasoning/entities/app_settings.dart';
 import 'package:seasoning/l10n/L.dart';
 import 'package:seasoning/ui/widgets/slider_handle.dart';
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 /// Allows the user to select the layout for the library and discovery panes.
 /// Can select from a list or different sized grids.
@@ -23,11 +23,11 @@ class LayoutSelectorWidget extends StatefulWidget {
 }
 
 class _LayoutSelectorWidgetState extends State<LayoutSelectorWidget> {
-  var speed = 1.0;
+  double speed = 1;
 
   @override
   void initState() {
-    var settingsBloc = Provider.of<SettingsBloc>(context, listen: false);
+    final settingsBloc = Provider.of<SettingsBloc>(context, listen: false);
 
     speed = settingsBloc.currentSettings.playbackSpeed;
 
@@ -46,21 +46,18 @@ class _LayoutSelectorWidgetState extends State<LayoutSelectorWidget> {
 
           return Column(
             mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
               const SliderHandle(),
               Padding(
-                padding: const EdgeInsets.fromLTRB(8.0, 24.0, 8.0, 24.0),
+                padding: const EdgeInsets.fromLTRB(8, 24, 8, 24),
                 child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Expanded(
                           child: Row(
                         children: [
                           const Padding(
-                            padding: EdgeInsets.only(left: 8.0, right: 8.0),
+                            padding: EdgeInsets.only(left: 8, right: 8),
                             child: Icon(
                               Icons.grid_view,
                               size: 18,
@@ -71,11 +68,11 @@ class _LayoutSelectorWidgetState extends State<LayoutSelectorWidget> {
                             style: Theme.of(context).textTheme.titleMedium,
                           ),
                         ],
-                      )),
+                      ),),
                       Padding(
                         padding: const EdgeInsets.only(
-                          left: 8.0,
-                          right: 8.0,
+                          left: 8,
+                          right: 8,
                         ),
                         child: OutlinedButton(
                           onPressed: () {
@@ -98,7 +95,7 @@ class _LayoutSelectorWidgetState extends State<LayoutSelectorWidget> {
                       ),
                       Padding(
                         padding: const EdgeInsets.only(
-                          right: 8.0,
+                          right: 8,
                         ),
                         child: OutlinedButton(
                           onPressed: () {
@@ -122,7 +119,7 @@ class _LayoutSelectorWidgetState extends State<LayoutSelectorWidget> {
                       ),
                       Padding(
                         padding: const EdgeInsets.only(
-                          right: 8.0,
+                          right: 8,
                         ),
                         child: OutlinedButton(
                           onPressed: () {
@@ -143,13 +140,13 @@ class _LayoutSelectorWidgetState extends State<LayoutSelectorWidget> {
                           ),
                         ),
                       ),
-                    ]),
+                    ],),
               ),
               const SizedBox(
-                height: 8.0,
+                height: 8,
               ),
             ],
           );
-        });
+        },);
   }
 }

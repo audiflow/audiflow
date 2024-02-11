@@ -17,7 +17,6 @@ ThemeData _buildLightTheme() {
     colorScheme: const ColorScheme.light(
       primary: Color(0xffff9800),
       secondary: Color(0xfffb8c00),
-      background: Color(0xffffffff),
       error: Color(0xffd32f2f),
       onBackground: Color(0xffff9800),
     ),
@@ -45,9 +44,9 @@ ThemeData _buildLightTheme() {
     indicatorColor: Colors.orange,
     hintColor: const Color(0x8a000000),
     primaryTextTheme:
-        Typography.material2021(platform: TargetPlatform.android).black,
+        Typography.material2021().black,
     textTheme: Typography.material2021(
-      platform: TargetPlatform.android,
+      
     ).black,
     primaryIconTheme: IconThemeData(color: Colors.grey[800]),
     buttonTheme: base.buttonTheme.copyWith(
@@ -58,10 +57,10 @@ ThemeData _buildLightTheme() {
     ),
     sliderTheme: const SliderThemeData().copyWith(
       valueIndicatorColor: Colors.orange,
-      trackHeight: 2.0,
+      trackHeight: 2,
       thumbShape: const RoundSliderThumbShape(
-        enabledThumbRadius: 6.0,
-        disabledThumbRadius: 6.0,
+        enabledThumbRadius: 6,
+        disabledThumbRadius: 6,
       ),
     ),
     appBarTheme: base.appBarTheme.copyWith(
@@ -71,7 +70,7 @@ ThemeData _buildLightTheme() {
           systemNavigationBarIconBrightness: Brightness.dark,
           systemNavigationBarColor: Colors.white,
           statusBarIconBrightness: Brightness.dark,
-        )),
+        ),),
     snackBarTheme: base.snackBarTheme.copyWith(
       actionTextColor: Colors.orange,
     ),
@@ -116,8 +115,8 @@ ThemeData _buildDarkTheme() {
     indicatorColor: Colors.orange,
     hintColor: const Color(0x80ffffff),
     primaryTextTheme:
-        Typography.material2021(platform: TargetPlatform.android).white,
-    textTheme: Typography.material2021(platform: TargetPlatform.android).white,
+        Typography.material2021().white,
+    textTheme: Typography.material2021().white,
     primaryIconTheme: const IconThemeData(color: Colors.white),
     iconTheme: base.iconTheme.copyWith(
       color: Colors.white,
@@ -127,22 +126,22 @@ ThemeData _buildDarkTheme() {
     ),
     sliderTheme: const SliderThemeData().copyWith(
       valueIndicatorColor: Colors.white,
-      trackHeight: 2.0,
+      trackHeight: 2,
       thumbShape: const RoundSliderThumbShape(
-        enabledThumbRadius: 6.0,
-        disabledThumbRadius: 6.0,
+        enabledThumbRadius: 6,
+        disabledThumbRadius: 6,
       ),
     ),
     appBarTheme: base.appBarTheme.copyWith(
         backgroundColor: const Color(0xff222222),
         foregroundColor: Colors.white,
         shadowColor: const Color(0xff222222),
-        elevation: 1.0,
+        elevation: 1,
         systemOverlayStyle: SystemUiOverlayStyle.light.copyWith(
           systemNavigationBarIconBrightness: Brightness.light,
           systemNavigationBarColor: const Color(0xff222222),
           statusBarIconBrightness: Brightness.light,
-        )),
+        ),),
     snackBarTheme: base.snackBarTheme.copyWith(
       actionTextColor: Colors.orange,
     ),
@@ -151,7 +150,6 @@ ThemeData _buildDarkTheme() {
         foregroundColor: const Color(0xffffffff),
         side: const BorderSide(
           color: Color(0xffffffff),
-          style: BorderStyle.solid,
         ),
       ),
     ),
@@ -159,7 +157,6 @@ ThemeData _buildDarkTheme() {
 }
 
 class Themes {
-  final ThemeData themeData;
 
   Themes({required this.themeData});
 
@@ -170,4 +167,5 @@ class Themes {
   factory Themes.darkTheme() {
     return Themes(themeData: _darkTheme);
   }
+  final ThemeData themeData;
 }

@@ -9,9 +9,6 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 
 class PlayPauseButton extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String title;
 
   const PlayPauseButton({
     super.key,
@@ -19,19 +16,21 @@ class PlayPauseButton extends StatelessWidget {
     required this.label,
     required this.title,
   });
+  final IconData icon;
+  final String label;
+  final String title;
 
   @override
   Widget build(BuildContext context) {
     return Semantics(
       label: '$label $title',
       child: CircularPercentIndicator(
-        radius: 19.0,
+        radius: 19,
         lineWidth: 1.5,
         backgroundColor: Theme.of(context).primaryColor,
-        percent: 0.0,
         center: Icon(
           icon,
-          size: 22.0,
+          size: 22,
 
           /// Why is this not picking up the theme like other widgets?!?!?!
           color: Theme.of(context).primaryColor,
@@ -42,9 +41,6 @@ class PlayPauseButton extends StatelessWidget {
 }
 
 class PlayPauseBusyButton extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String title;
 
   const PlayPauseBusyButton({
     super.key,
@@ -52,6 +48,9 @@ class PlayPauseBusyButton extends StatelessWidget {
     required this.label,
     required this.title,
   });
+  final IconData icon;
+  final String label;
+  final String title;
 
   @override
   Widget build(BuildContext context) {
@@ -60,20 +59,20 @@ class PlayPauseBusyButton extends StatelessWidget {
         child: Stack(
           children: <Widget>[
             SizedBox(
-              height: 48.0,
-              width: 48.0,
+              height: 48,
+              width: 48,
               child: Icon(
                 icon,
-                size: 22.0,
+                size: 22,
                 color: Theme.of(context).primaryColor,
               ),
             ),
             SpinKitRing(
               lineWidth: 1.5,
               color: Theme.of(context).primaryColor,
-              size: 38.0,
+              size: 38,
             ),
           ],
-        ));
+        ),);
   }
 }

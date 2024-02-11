@@ -6,14 +6,14 @@
 
 import 'dart:async';
 
+import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:provider/provider.dart';
 import 'package:seasoning/bloc/podcast/audio_bloc.dart';
 import 'package:seasoning/l10n/L.dart';
 import 'package:seasoning/services/audio/audio_player_service.dart';
 import 'package:seasoning/ui/widgets/sleep_selector.dart';
 import 'package:seasoning/ui/widgets/speed_selector.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:provider/provider.dart';
 
 /// Builds a transport control bar for rewind, play and fast-forward.
 /// See [NowPlaying].
@@ -33,15 +33,13 @@ class _PlayerTransportControlsState extends State<PlayerTransportControls> {
     final audioBloc = Provider.of<AudioBloc>(context, listen: false);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: StreamBuilder<AudioState>(
           stream: audioBloc.playingState,
           initialData: AudioState.none,
           builder: (context, snapshot) {
             return Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              mainAxisSize: MainAxisSize.max,
               children: <Widget>[
                 const SleepSelectorWidget(),
                 IconButton(
@@ -51,10 +49,10 @@ class _PlayerTransportControlsState extends State<PlayerTransportControls> {
                         : _rewind(audioBloc);
                   },
                   tooltip: L.of(context)!.rewind_button_label,
-                  padding: const EdgeInsets.all(0.0),
+                  padding: const EdgeInsets.all(0),
                   icon: const Icon(
                     Icons.replay_10,
-                    size: 48.0,
+                    size: 48,
                   ),
                 ),
                 AnimatedPlayButton(audioState: snapshot.data!),
@@ -65,16 +63,16 @@ class _PlayerTransportControlsState extends State<PlayerTransportControls> {
                         : _fastforward(audioBloc);
                   },
                   tooltip: L.of(context)!.fast_forward_button_label,
-                  padding: const EdgeInsets.all(0.0),
+                  padding: const EdgeInsets.all(0),
                   icon: const Icon(
                     Icons.forward_30,
-                    size: 48.0,
+                    size: 48,
                   ),
                 ),
                 const SpeedSelectorWidget(),
               ],
             );
-          }),
+          },),
     );
   }
 
@@ -90,9 +88,6 @@ class _PlayerTransportControlsState extends State<PlayerTransportControls> {
 typedef PlayHandler = Function(AudioBloc audioBloc);
 
 class AnimatedPlayButton extends StatefulWidget {
-  final AudioState audioState;
-  final PlayHandler onPlay;
-  final PlayHandler onPause;
 
   const AnimatedPlayButton({
     super.key,
@@ -100,6 +95,9 @@ class AnimatedPlayButton extends StatefulWidget {
     this.onPlay = _onPlay,
     this.onPause = _onPause,
   });
+  final AudioState audioState;
+  final PlayHandler onPlay;
+  final PlayHandler onPause;
 
   @override
   State<AnimatedPlayButton> createState() => _AnimatedPlayButtonState();
@@ -126,7 +124,7 @@ class _AnimatedPlayButtonState extends State<AnimatedPlayButton>
     final audioBloc = Provider.of<AudioBloc>(context, listen: false);
 
     _playPauseController = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 300));
+        vsync: this, duration: const Duration(milliseconds: 300),);
 
     /// Seems a little hacky, but when we load the form we want the play/pause
     /// button to be in the correct state. If we are building the first frame,
@@ -171,7 +169,7 @@ class _AnimatedPlayButtonState extends State<AnimatedPlayButton>
       children: [
         if (buffering)
           SpinKitRing(
-            lineWidth: 4.0,
+            lineWidth: 4,
             color: Theme.of(context).primaryColor,
             size: 84,
           ),
@@ -188,14 +186,14 @@ class _AnimatedPlayButtonState extends State<AnimatedPlayButton>
             style: TextButton.styleFrom(
               shape: CircleBorder(
                   side: BorderSide(
-                      color: Theme.of(context).highlightColor, width: 0.0)),
+                      color: Theme.of(context).highlightColor, width: 0,),),
               backgroundColor: Theme.of(context).brightness == Brightness.light
                   ? Colors.orange
                   : Colors.grey[800],
               foregroundColor: Theme.of(context).brightness == Brightness.light
                   ? Colors.orange
                   : Colors.grey[800],
-              padding: const EdgeInsets.all(6.0),
+              padding: const EdgeInsets.all(6),
             ),
             onPressed: () {
               if (playing) {
@@ -205,7 +203,7 @@ class _AnimatedPlayButtonState extends State<AnimatedPlayButton>
               }
             },
             child: AnimatedIcon(
-              size: 60.0,
+              size: 60,
               semanticLabel: playing
                   ? L.of(context)!.pause_button_label
                   : L.of(context)!.play_button_label,

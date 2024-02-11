@@ -4,6 +4,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:seasoning/bloc/podcast/podcast_bloc.dart';
 import 'package:seasoning/bloc/settings/settings_bloc.dart';
 import 'package:seasoning/entities/app_settings.dart';
@@ -12,8 +14,6 @@ import 'package:seasoning/l10n/L.dart';
 import 'package:seasoning/ui/widgets/platform_progress_indicator.dart';
 import 'package:seasoning/ui/widgets/podcast_grid_tile.dart';
 import 'package:seasoning/ui/widgets/podcast_tile.dart';
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 /// This class displays the list of podcasts the user is currently following.
 class Library extends StatefulWidget {
@@ -39,10 +39,9 @@ class _LibraryState extends State<Library> {
               return SliverFillRemaining(
                 hasScrollBody: false,
                 child: Padding(
-                  padding: const EdgeInsets.all(32.0),
+                  padding: const EdgeInsets.all(32),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: <Widget>[
                       Icon(
                         Icons.headset,
@@ -63,30 +62,30 @@ class _LibraryState extends State<Library> {
                   stream: settingsBloc.settings,
                   builder: (context, settingsSnapshot) {
                     if (settingsSnapshot.hasData) {
-                      var mode = settingsSnapshot.data!.layout;
-                      var size = mode == 1 ? 100.0 : 160.0;
+                      final mode = settingsSnapshot.data!.layout;
+                      final size = mode == 1 ? 100.0 : 160.0;
 
                       if (mode == 0) {
                         return SliverList(
                             delegate: SliverChildBuilderDelegate(
                           (BuildContext context, int index) {
                             return PodcastTile(
-                                podcast: snapshot.data!.elementAt(index));
+                                podcast: snapshot.data!.elementAt(index),);
                           },
                           childCount: snapshot.data!.length,
                           addAutomaticKeepAlives: false,
-                        ));
+                        ),);
                       }
                       return SliverGrid(
                         gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
                           maxCrossAxisExtent: size,
-                          mainAxisSpacing: 10.0,
-                          crossAxisSpacing: 10.0,
+                          mainAxisSpacing: 10,
+                          crossAxisSpacing: 10,
                         ),
                         delegate: SliverChildBuilderDelegate(
                           (BuildContext context, int index) {
                             return PodcastGridTile(
-                                podcast: snapshot.data!.elementAt(index));
+                                podcast: snapshot.data!.elementAt(index),);
                           },
                           childCount: snapshot.data!.length,
                         ),
@@ -100,20 +99,19 @@ class _LibraryState extends State<Library> {
                         ),
                       );
                     }
-                  });
+                  },);
             }
           } else {
             return const SliverFillRemaining(
               hasScrollBody: false,
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
                 children: <Widget>[
                   PlatformProgressIndicator(),
                 ],
               ),
             );
           }
-        });
+        },);
   }
 }

@@ -6,11 +6,11 @@
 
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
+import 'package:podcast_search/podcast_search.dart' as podcast_search;
 import 'package:seasoning/api/podcast/podcast_api.dart';
 import 'package:seasoning/core/environment.dart';
 import 'package:seasoning/entities/transcript.dart';
-import 'package:flutter/foundation.dart';
-import 'package:podcast_search/podcast_search.dart' as podcast_search;
 
 /// An implementation of the [PodcastApi].
 ///
@@ -34,7 +34,7 @@ class MobilePodcastApi extends PodcastApi {
     bool explicit = false,
     String? searchProvider,
   }) async {
-    var searchParams = {
+    final searchParams = {
       'term': term,
       'searchProvider': searchProvider,
     };
@@ -49,7 +49,7 @@ class MobilePodcastApi extends PodcastApi {
     String? searchProvider,
     String? countryCode = '',
   }) async {
-    var searchParams = {
+    final searchParams = {
       'size': size.toString(),
       'genre': genre,
       'searchProvider': searchProvider,
@@ -61,7 +61,7 @@ class MobilePodcastApi extends PodcastApi {
 
   @override
   List<String> genres(String searchProvider) {
-    var provider = searchProvider == 'itunes'
+    final provider = searchProvider == 'itunes'
         ? const podcast_search.ITunesProvider()
         : podcast_search.PodcastIndexProvider(
             key: podcastIndexKey,
@@ -86,30 +86,27 @@ class MobilePodcastApi extends PodcastApi {
 
   @override
   Future<podcast_search.Transcript> loadTranscript(
-      TranscriptUrl transcriptUrl) async {
+      TranscriptUrl transcriptUrl,) async {
     late podcast_search.TranscriptFormat format;
 
     switch (transcriptUrl.type) {
       case TranscriptFormat.subrip:
         format = podcast_search.TranscriptFormat.subrip;
-        break;
       case TranscriptFormat.json:
         format = podcast_search.TranscriptFormat.json;
-        break;
       case TranscriptFormat.unsupported:
         format = podcast_search.TranscriptFormat.unsupported;
-        break;
     }
 
     return podcast_search.Podcast.loadTranscriptByUrl(
         transcriptUrl:
-            podcast_search.TranscriptUrl(url: transcriptUrl.url, type: format));
+            podcast_search.TranscriptUrl(url: transcriptUrl.url, type: format),);
   }
 
   static Future<podcast_search.SearchResult> _search(
-      Map<String, String?> searchParams) {
-    var term = searchParams['term']!;
-    var provider = searchParams['searchProvider'] == 'itunes'
+      Map<String, String?> searchParams,) {
+    final term = searchParams['term']!;
+    final provider = searchParams['searchProvider'] == 'itunes'
         ? const podcast_search.ITunesProvider()
         : podcast_search.PodcastIndexProvider(
             key: podcastIndexKey,
@@ -123,15 +120,15 @@ class MobilePodcastApi extends PodcastApi {
   }
 
   static Future<podcast_search.SearchResult> _charts(
-      Map<String, String?> searchParams) {
-    var provider = searchParams['searchProvider'] == 'itunes'
+      Map<String, String?> searchParams,) {
+    final provider = searchParams['searchProvider'] == 'itunes'
         ? const podcast_search.ITunesProvider()
         : podcast_search.PodcastIndexProvider(
             key: podcastIndexKey,
             secret: podcastIndexSecret,
           );
 
-    var countryCode = searchParams['countryCode'];
+    final countryCode = searchParams['countryCode'];
     var country = podcast_search.Country.none;
 
     if (countryCode != null && countryCode.isNotEmpty) {
@@ -141,7 +138,7 @@ class MobilePodcastApi extends PodcastApi {
     }
 
     return podcast_search.Search(
-            userAgent: Environment.userAgent(), searchProvider: provider)
+            userAgent: Environment.userAgent(), searchProvider: provider,)
         .charts(genre: searchParams['genre']!, country: country, limit: 50)
         .timeout(const Duration(seconds: 30));
   }
@@ -149,7 +146,7 @@ class MobilePodcastApi extends PodcastApi {
   Future<podcast_search.Podcast> _loadFeed(String url) {
     _setupSecurityContext();
     return podcast_search.Podcast.loadFeed(
-        url: url, userAgent: Environment.userAgent());
+        url: url, userAgent: Environment.userAgent(),);
   }
 
   void _setupSecurityContext() {

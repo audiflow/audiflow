@@ -4,14 +4,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:seasoning/bloc/podcast/audio_bloc.dart';
 import 'package:seasoning/bloc/settings/settings_bloc.dart';
 import 'package:seasoning/entities/app_settings.dart';
 import 'package:seasoning/entities/sleep.dart';
 import 'package:seasoning/l10n/L.dart';
 import 'package:seasoning/ui/widgets/slider_handle.dart';
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 /// This widget allows the user to change the playback speed and toggle audio effects.
 ///
@@ -28,8 +28,8 @@ class SleepSelectorWidget extends StatefulWidget {
 class _SleepSelectorWidgetState extends State<SleepSelectorWidget> {
   @override
   Widget build(BuildContext context) {
-    var settingsBloc = Provider.of<SettingsBloc>(context);
-    var theme = Theme.of(context);
+    final settingsBloc = Provider.of<SettingsBloc>(context);
+    final theme = Theme.of(context);
 
     return StreamBuilder<AppSettings>(
         stream: settingsBloc.settings,
@@ -37,7 +37,6 @@ class _SleepSelectorWidgetState extends State<SleepSelectorWidget> {
         builder: (context, snapshot) {
           return Column(
             mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
               InkWell(
@@ -48,23 +47,23 @@ class _SleepSelectorWidgetState extends State<SleepSelectorWidget> {
                       backgroundColor: theme.secondaryHeaderColor,
                       shape: const RoundedRectangleBorder(
                         borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(16.0),
-                          topRight: Radius.circular(16.0),
+                          topLeft: Radius.circular(16),
+                          topRight: Radius.circular(16),
                         ),
                       ),
                       builder: (context) {
                         return const SleepSlider();
-                      });
+                      },);
                 },
                 child: SizedBox(
-                  height: 48.0,
-                  width: 48.0,
+                  height: 48,
+                  width: 48,
                   child: Center(
                     child: IconButton(
                       icon: Icon(
                         Icons.bedtime_outlined,
                         semanticLabel: L.of(context)!.sleep_timer_label,
-                        size: 20.0,
+                        size: 20,
                       ),
                       onPressed: () {
                         showModalBottomSheet<void>(
@@ -73,13 +72,13 @@ class _SleepSelectorWidgetState extends State<SleepSelectorWidget> {
                             backgroundColor: theme.secondaryHeaderColor,
                             shape: const RoundedRectangleBorder(
                               borderRadius: BorderRadius.only(
-                                topLeft: Radius.circular(16.0),
-                                topRight: Radius.circular(16.0),
+                                topLeft: Radius.circular(16),
+                                topRight: Radius.circular(16),
                               ),
                             ),
                             builder: (context) {
                               return const SleepSlider();
-                            });
+                            },);
                       },
                     ),
                   ),
@@ -87,7 +86,7 @@ class _SleepSelectorWidgetState extends State<SleepSelectorWidget> {
               ),
             ],
           );
-        });
+        },);
   }
 }
 
@@ -105,18 +104,16 @@ class _SleepSliderState extends State<SleepSlider> {
 
     return StreamBuilder<Sleep>(
         stream: audioBloc.sleepStream,
-        initialData: Sleep(type: SleepType.none),
+        initialData: const Sleep(type: SleepType.none),
         builder: (context, snapshot) {
-          var s = snapshot.data;
+          final s = snapshot.data;
 
           return Column(
               mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.center,
               children: <Widget>[
                 const SliderHandle(),
                 Padding(
-                  padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
+                  padding: const EdgeInsets.only(top: 8, bottom: 8),
                   child: Text(
                     L.of(context)!.sleep_timer_label,
                     style: Theme.of(context).textTheme.titleLarge,
@@ -138,74 +135,74 @@ class _SleepSliderState extends State<SleepSlider> {
                     style: Theme.of(context).textTheme.bodyLarge,
                   ),
                 Padding(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: const EdgeInsets.all(16),
                   child: ListView(
                     shrinkWrap: true,
                     children: [
                       SleepSelectorEntry(
-                        sleep: Sleep(type: SleepType.none),
+                        sleep: const Sleep(type: SleepType.none),
                         current: s,
                       ),
                       const Divider(),
                       SleepSelectorEntry(
-                        sleep: Sleep(
+                        sleep: const Sleep(
                           type: SleepType.time,
-                          duration: const Duration(minutes: 5),
+                          duration: Duration(minutes: 5),
                         ),
                         current: s,
                       ),
                       const Divider(),
                       SleepSelectorEntry(
-                        sleep: Sleep(
+                        sleep: const Sleep(
                           type: SleepType.time,
-                          duration: const Duration(minutes: 10),
+                          duration: Duration(minutes: 10),
                         ),
                         current: s,
                       ),
                       const Divider(),
                       SleepSelectorEntry(
-                        sleep: Sleep(
+                        sleep: const Sleep(
                           type: SleepType.time,
-                          duration: const Duration(minutes: 15),
+                          duration: Duration(minutes: 15),
                         ),
                         current: s,
                       ),
                       const Divider(),
                       SleepSelectorEntry(
-                        sleep: Sleep(
+                        sleep: const Sleep(
                           type: SleepType.time,
-                          duration: const Duration(minutes: 30),
+                          duration: Duration(minutes: 30),
                         ),
                         current: s,
                       ),
                       const Divider(),
                       SleepSelectorEntry(
-                        sleep: Sleep(
+                        sleep: const Sleep(
                           type: SleepType.time,
-                          duration: const Duration(minutes: 45),
+                          duration: Duration(minutes: 45),
                         ),
                         current: s,
                       ),
                       const Divider(),
                       SleepSelectorEntry(
-                        sleep: Sleep(
+                        sleep: const Sleep(
                           type: SleepType.time,
-                          duration: const Duration(minutes: 60),
+                          duration: Duration(minutes: 60),
                         ),
                         current: s,
                       ),
                       const Divider(),
                       SleepSelectorEntry(
-                        sleep: Sleep(
+                        sleep: const Sleep(
                           type: SleepType.episode,
                         ),
                         current: s,
                       ),
                     ],
                   ),
-                )
-              ]);
-        });
+                ),
+              ],);
+        },);
   }
 
   String _formatDuration(Duration duration) {
@@ -214,8 +211,8 @@ class _SleepSliderState extends State<SleepSlider> {
       return '0$n';
     }
 
-    var twoDigitMinutes = twoDigits(duration.inMinutes.remainder(60).toInt());
-    var twoDigitSeconds = twoDigits(duration.inSeconds.remainder(60).toInt());
+    final twoDigitMinutes = twoDigits(duration.inMinutes.remainder(60));
+    final twoDigitSeconds = twoDigits(duration.inSeconds.remainder(60));
 
     return '${twoDigits(duration.inHours)}:$twoDigitMinutes:$twoDigitSeconds';
   }
@@ -241,18 +238,17 @@ class SleepSelectorEntry extends StatelessWidget {
         audioBloc.sleep(Sleep(
           type: sleep.type,
           duration: sleep.duration,
-        ));
+        ),);
 
         Navigator.pop(context);
       },
       child: Padding(
         padding: const EdgeInsets.only(
-          top: 4.0,
-          bottom: 4.0,
+          top: 4,
+          bottom: 4,
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          mainAxisSize: MainAxisSize.max,
           children: [
             if (sleep.type == SleepType.none)
               Text(
@@ -274,7 +270,7 @@ class SleepSelectorEntry extends StatelessWidget {
             if (sleep == current)
               const Icon(
                 Icons.check,
-                size: 18.0,
+                size: 18,
               ),
           ],
         ),

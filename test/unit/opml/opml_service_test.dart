@@ -6,15 +6,15 @@
 
 import 'dart:io';
 
+import 'package:flutter_test/flutter_test.dart';
+import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
+import 'package:seasoning/events/opml_event.dart';
 import 'package:seasoning/repository/repository.dart';
 import 'package:seasoning/repository/sembast/sembast_repository.dart';
 import 'package:seasoning/services/podcast/mobile_opml_service.dart';
 import 'package:seasoning/services/podcast/mobile_podcast_service.dart';
 import 'package:seasoning/services/podcast/opml_service.dart';
 import 'package:seasoning/services/podcast/podcast_service.dart';
-import 'package:seasoning/state/opml_state.dart';
-import 'package:flutter_test/flutter_test.dart';
-import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 
 import '../mocks/mock_path_provider.dart';
 import '../mocks/mock_podcast_api.dart';
@@ -40,11 +40,11 @@ void main() {
     );
 
     opmlService = MobileOPMLService(
-        podcastService: podcastService, repository: repository);
+        podcastService: podcastService, repository: repository,);
   });
 
   tearDown(() async {
-    var f = File('${Directory.systemTemp.path}/$dbName');
+    final f = File('${Directory.systemTemp.path}/$dbName');
 
     if (f.existsSync()) {
       f.deleteSync();
@@ -52,18 +52,18 @@ void main() {
   });
 
   test('Load test OPML file. Single Podcast. Single episode.', () async {
-    var stream =
+    final stream =
         opmlService.loadOPMLFile('test_resources/opml_import_test1.opml');
 
     await expectLater(
         stream,
         emitsInOrder(<Matcher>[
-          emits(isInstanceOf<OPMLParsingState>()),
-          emits(isInstanceOf<OPMLLoadingState>()),
+          emits(isInstanceOf<OPMLParsingEvent>()),
+          emits(isInstanceOf<OPMLLoadingEvent>()),
           emits(isInstanceOf<OPMLCompletedState>()),
-        ]));
+        ]),);
 
-    var subs = await podcastService.subscriptions();
+    final subs = await podcastService.subscriptions();
 
     expect(subs.length, 1);
     expect(subs[0].title, 'Podcast Load Test 1');

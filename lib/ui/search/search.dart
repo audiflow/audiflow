@@ -6,23 +6,23 @@
 
 import 'dart:io';
 
-import 'package:seasoning/bloc/search/search_bloc.dart';
-import 'package:seasoning/bloc/search/search_state_event.dart';
-import 'package:seasoning/l10n/L.dart';
-import 'package:seasoning/ui/search/search_results.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:seasoning/bloc/search/search_bloc.dart';
+import 'package:seasoning/bloc/search/search_state_event.dart';
+import 'package:seasoning/l10n/L.dart';
+import 'package:seasoning/ui/search/search_results.dart';
 
 /// This widget renders the search bar and allows the user to search for podcasts.
 class Search extends StatefulWidget {
-  final String? searchTerm;
 
   const Search({
     super.key,
     this.searchTerm,
   });
+  final String? searchTerm;
 
   @override
   State<Search> createState() => _SearchState();
@@ -69,7 +69,7 @@ class _SearchState extends State<Search> {
               tooltip: L.of(context)!.search_back_button_label,
               icon: Platform.isAndroid
                   ? Icon(Icons.arrow_back,
-                      color: Theme.of(context).appBarTheme.foregroundColor)
+                      color: Theme.of(context).appBarTheme.foregroundColor,)
                   : const Icon(Icons.arrow_back_ios),
               onPressed: () => Navigator.pop(context),
             ),
@@ -88,19 +88,17 @@ class _SearchState extends State<Search> {
                   ),
                   style: TextStyle(
                       color: Theme.of(context).primaryIconTheme.color,
-                      fontSize: 18.0,
+                      fontSize: 18,
                       decorationColor:
-                          Theme.of(context).scaffoldBackgroundColor),
-                  onSubmitted: ((value) {
+                          Theme.of(context).scaffoldBackgroundColor,),
+                  onSubmitted: (value) {
                     SemanticsService.announce(
                         L.of(context)!.semantic_announce_searching,
-                        TextDirection.ltr);
+                        TextDirection.ltr,);
                     bloc.search(SearchTermEvent(value));
-                  })),
+                  },),
             ),
-            floating: false,
             pinned: true,
-            snap: false,
             actions: <Widget>[
               IconButton(
                 tooltip: L.of(context)!.clear_search_button_label,

@@ -4,11 +4,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:seasoning/bloc/podcast/opml_bloc.dart';
-import 'package:seasoning/l10n/L.dart';
-import 'package:seasoning/state/opml_state.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:seasoning/bloc/podcast/opml_bloc.dart';
+import 'package:seasoning/events/opml_event.dart';
+import 'package:seasoning/l10n/L.dart';
 
 class OPMLExport extends StatefulWidget {
   const OPMLExport({
@@ -28,8 +28,8 @@ class _OPMLExportState extends State<OPMLExport> {
     return SizedBox(
       height: 80,
       width: width,
-      child: StreamBuilder<OPMLState>(
-          initialData: OPMLNoneState(),
+      child: StreamBuilder<OPMLActionEvent>(
+          initialData: OPMLNoneEvent(),
           stream: bloc.opmlState,
           builder: (context, snapshot) {
             if (snapshot.data is OPMLCompletedState) {
@@ -39,15 +39,13 @@ class _OPMLExportState extends State<OPMLExport> {
             }
 
             return Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 const Flexible(
                   child: CircularProgressIndicator.adaptive(),
                 ),
                 Flexible(
                   child: Padding(
-                    padding: const EdgeInsets.all(8.0),
+                    padding: const EdgeInsets.all(8),
                     child: Text(
                       L.of(context)!.settings_export_opml,
                       maxLines: 1,
@@ -56,7 +54,7 @@ class _OPMLExportState extends State<OPMLExport> {
                 ),
               ],
             );
-          }),
+          },),
     );
   }
 

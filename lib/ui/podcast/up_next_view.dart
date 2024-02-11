@@ -4,14 +4,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:seasoning/bloc/podcast/queue_bloc.dart';
-import 'package:seasoning/l10n/L.dart';
-import 'package:seasoning/state/queue_event_state.dart';
-import 'package:seasoning/ui/widgets/action_text.dart';
-import 'package:seasoning/ui/widgets/draggable_episode_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dialogs/flutter_dialogs.dart';
 import 'package:provider/provider.dart';
+import 'package:seasoning/bloc/podcast/queue_bloc.dart';
+import 'package:seasoning/events/queue_event.dart';
+import 'package:seasoning/l10n/L.dart';
+import 'package:seasoning/ui/widgets/action_text.dart';
+import 'package:seasoning/ui/widgets/draggable_episode_tile.dart';
 
 /// This class is responsible for rendering the Up Next queue feature.
 ///
@@ -32,13 +32,11 @@ class UpNextView extends StatelessWidget {
         builder: (context, snapshot) {
           return Column(
             mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Row(
                 children: [
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(16.0, 8.0, 24.0, 8.0),
+                    padding: const EdgeInsets.fromLTRB(16, 8, 24, 8),
                     child: Text(
                       L.of(context)!.now_playing_queue_label,
                       style: Theme.of(context).textTheme.titleLarge,
@@ -47,7 +45,7 @@ class UpNextView extends StatelessWidget {
                 ],
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(8.0, 8.0, 8.0, 0.0),
+                padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
                 child: DraggableEpisodeTile(
                   key: const Key('detileplaying'),
                   episode: snapshot.data!.playing!,
@@ -55,11 +53,9 @@ class UpNextView extends StatelessWidget {
                 ),
               ),
               Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(16.0, 0.0, 24.0, 8.0),
+                    padding: const EdgeInsets.fromLTRB(16, 0, 24, 8),
                     child: Text(
                       L.of(context)!.up_next_queue_label,
                       style: Theme.of(context).textTheme.titleLarge,
@@ -67,7 +63,7 @@ class UpNextView extends StatelessWidget {
                   ),
                   const Spacer(),
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(16.0, 0.0, 24.0, 8.0),
+                    padding: const EdgeInsets.fromLTRB(16, 0, 24, 8),
                     child: TextButton(
                       onPressed: snapshot.hasData &&
                               snapshot.data!.queue.isEmpty
@@ -106,7 +102,7 @@ class UpNextView extends StatelessWidget {
                                       iosIsDefaultAction: true,
                                       iosIsDestructiveAction: true,
                                       onPressed: () {
-                                        queueBloc.queueEvent(QueueClearEvent());
+                                        queueBloc.queueEvent(const QueueClearEvent());
                                         Navigator.pop(context);
                                       },
                                     ),
@@ -121,7 +117,7 @@ class UpNextView extends StatelessWidget {
                                   .textTheme
                                   .titleSmall!
                                   .copyWith(
-                                    fontSize: 12.0,
+                                    fontSize: 12,
                                     color: Theme.of(context).disabledColor,
                                   ),
                             )
@@ -131,7 +127,7 @@ class UpNextView extends StatelessWidget {
                                   .textTheme
                                   .titleSmall!
                                   .copyWith(
-                                    fontSize: 12.0,
+                                    fontSize: 12,
                                     color: Theme.of(context).primaryColor,
                                   ),
                             ),
@@ -141,17 +137,17 @@ class UpNextView extends StatelessWidget {
               ),
               snapshot.hasData && snapshot.data!.queue.isEmpty
                   ? Padding(
-                      padding: const EdgeInsets.all(24.0),
-                      child: Container(
+                      padding: const EdgeInsets.all(24),
+                      child: DecoratedBox(
                         decoration: BoxDecoration(
                             color: Theme.of(context).dividerColor,
                             border: Border.all(
                               color: Theme.of(context).dividerColor,
                             ),
                             borderRadius:
-                                const BorderRadius.all(Radius.circular(10))),
+                                const BorderRadius.all(Radius.circular(10)),),
                         child: Padding(
-                          padding: const EdgeInsets.all(24.0),
+                          padding: const EdgeInsets.all(24),
                           child: Text(
                             L.of(context)!.empty_queue_message,
                             style: Theme.of(context).textTheme.titleMedium,
@@ -169,15 +165,15 @@ class UpNextView extends StatelessWidget {
                         itemBuilder: (BuildContext context, int index) {
                           return Dismissible(
                             key: ValueKey(
-                                'disqueue${snapshot.data!.queue[index].guid}'),
+                                'disqueue${snapshot.data!.queue[index].guid}',),
                             direction: DismissDirection.endToStart,
                             onDismissed: (direction) {
                               queueBloc.queueEvent(QueueRemoveEvent(
-                                  episode: snapshot.data!.queue[index]));
+                                  episode: snapshot.data!.queue[index],),);
                             },
                             child: DraggableEpisodeTile(
                               key: ValueKey(
-                                  'tilequeue${snapshot.data!.queue[index].guid}'),
+                                  'tilequeue${snapshot.data!.queue[index].guid}',),
                               index: index,
                               episode: snapshot.data!.queue[index],
                               playable: true,
@@ -195,12 +191,12 @@ class UpNextView extends StatelessWidget {
                             episode: snapshot.data!.queue[oldIndex],
                             oldIndex: oldIndex,
                             newIndex: newIndex,
-                          ));
+                          ),);
                         },
                       ),
                     ),
             ],
           );
-        });
+        },);
   }
 }

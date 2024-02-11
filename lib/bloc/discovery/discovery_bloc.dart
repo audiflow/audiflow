@@ -4,18 +4,22 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:seasoning/bloc/bloc.dart';
-import 'package:seasoning/bloc/discovery/discovery_state_event.dart';
-import 'package:seasoning/services/podcast/podcast_service.dart';
 import 'package:logging/logging.dart';
 import 'package:podcast_search/podcast_search.dart' as podcast_search;
 import 'package:rxdart/rxdart.dart';
+import 'package:seasoning/bloc/bloc.dart';
+import 'package:seasoning/bloc/discovery/discovery_state_event.dart';
+import 'package:seasoning/services/podcast/podcast_service.dart';
 
 /// A BLoC to interact with the Discovery UI page and the [PodcastService] to
 /// fetch the iTunes/PodcastIndex charts.
 ///
 /// As charts will not change very frequently the results are cached for [cacheMinutes].
 class DiscoveryBloc extends Bloc {
+
+  DiscoveryBloc({required this.podcastService}) {
+    _init();
+  }
   static const cacheMinutes = 30;
 
   final log = Logger('DiscoveryBloc');
@@ -39,13 +43,9 @@ class DiscoveryBloc extends Bloc {
   String _lastGenre = '';
   int _lastIndex = 0;
 
-  DiscoveryBloc({required this.podcastService}) {
-    _init();
-  }
-
   void _init() {
     _discoveryResults = _discoveryInput
-        .switchMap<DiscoveryState>((DiscoveryEvent event) => _charts(event));
+        .switchMap<DiscoveryState>(_charts);
     _selectedGenre.value = SelectedGenre(index: 0, genre: '');
     _genres.onListen = _loadGenres;
   }
@@ -103,11 +103,11 @@ class DiscoveryBloc extends Bloc {
 }
 
 class SelectedGenre {
-  final int index;
-  final String genre;
 
   SelectedGenre({
     required this.index,
     required this.genre,
   });
+  final int index;
+  final String genre;
 }

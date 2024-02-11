@@ -6,10 +6,10 @@
 
 import 'dart:ui';
 
-import 'package:seasoning/bloc/podcast/audio_bloc.dart';
-import 'package:seasoning/services/audio/audio_player_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:seasoning/bloc/podcast/audio_bloc.dart';
+import 'package:seasoning/services/audio/audio_player_service.dart';
 
 /// This class handles the rendering of the positional controls: the current playback
 /// time, time remaining and the time [Slider].
@@ -24,17 +24,17 @@ class PlayerPositionControls extends StatefulWidget {
 
 class _PlayerPositionControlsState extends State<PlayerPositionControls> {
   /// Current playback position
-  var currentPosition = 0;
+  int currentPosition = 0;
 
   /// Indicates the user is moving the position slide. We should ignore
   /// position updates until the user releases the slide.
-  var dragging = false;
+  bool dragging = false;
 
   /// Seconds left of this episode.
-  var timeRemaining = 0;
+  int timeRemaining = 0;
 
   /// The length of the episode in seconds.
-  var episodeLength = 0;
+  int episodeLength = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -44,7 +44,7 @@ class _PlayerPositionControlsState extends State<PlayerPositionControls> {
     return StreamBuilder<PositionState>(
         stream: audioBloc.playPosition,
         builder: (context, snapshot) {
-          var position =
+          final position =
               snapshot.hasData ? snapshot.data!.position.inSeconds : 0;
           episodeLength =
               snapshot.hasData ? snapshot.data!.length.inSeconds : 0;
@@ -75,10 +75,9 @@ class _PlayerPositionControlsState extends State<PlayerPositionControls> {
 
           return Padding(
             padding: const EdgeInsets.only(
-              left: 16.0,
-              right: 16.0,
-              top: 0.0,
-              bottom: 4.0,
+              left: 16,
+              right: 16,
+              bottom: 4,
             ),
             child: Row(
               children: <Widget>[
@@ -94,7 +93,7 @@ class _PlayerPositionControlsState extends State<PlayerPositionControls> {
                   child: snapshot.hasData
                       ? Slider(
                           label: _formatDuration(
-                              Duration(seconds: currentPosition)),
+                              Duration(seconds: currentPosition),),
                           onChanged: (value) {
                             setState(() {
                               _calculatePositions(value.toInt());
@@ -127,19 +126,16 @@ class _PlayerPositionControlsState extends State<PlayerPositionControls> {
                                 : audioBloc.transitionPosition(value);
                           },
                           value: currentPosition.toDouble(),
-                          min: 0.0,
                           max: episodeLength.toDouble(),
                           divisions: divisions,
                           activeColor: Theme.of(context).primaryColor,
                           semanticFormatterCallback: (double newValue) {
                             return _formatDuration(
-                                Duration(seconds: currentPosition));
-                          })
+                                Duration(seconds: currentPosition),);
+                          },)
                       : Slider(
                           onChanged: null,
                           value: 0,
-                          min: 0.0,
-                          max: 1.0,
                           activeColor: Theme.of(context).primaryColor,
                         ),
                 ),
@@ -155,7 +151,7 @@ class _PlayerPositionControlsState extends State<PlayerPositionControls> {
               ],
             ),
           );
-        });
+        },);
   }
 
   void _calculatePositions(int p) {
@@ -169,8 +165,8 @@ class _PlayerPositionControlsState extends State<PlayerPositionControls> {
       return '0$n';
     }
 
-    var twoDigitMinutes = twoDigits(duration.inMinutes.remainder(60).toInt());
-    var twoDigitSeconds = twoDigits(duration.inSeconds.remainder(60).toInt());
+    final twoDigitMinutes = twoDigits(duration.inMinutes.remainder(60));
+    final twoDigitSeconds = twoDigits(duration.inSeconds.remainder(60));
 
     return '${twoDigits(duration.inHours)}:$twoDigitMinutes:$twoDigitSeconds';
   }

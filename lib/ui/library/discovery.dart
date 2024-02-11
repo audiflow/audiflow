@@ -4,28 +4,28 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:seasoning/bloc/discovery/discovery_bloc.dart';
-import 'package:seasoning/bloc/discovery/discovery_state_event.dart';
-import 'package:seasoning/ui/library/discovery_results.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
+import 'package:seasoning/bloc/discovery/discovery_bloc.dart';
+import 'package:seasoning/bloc/discovery/discovery_state_event.dart';
+import 'package:seasoning/ui/library/discovery_results.dart';
 import 'package:sliver_tools/sliver_tools.dart';
 
 /// This class is the root class for rendering the Discover tab.
 ///
 /// This UI can optionally show a list of genres provided by iTunes/PodcastIndex.
 class Discovery extends StatefulWidget {
-  static const fetchSize = 20;
-  final bool categories;
-  final bool inlineSearch;
 
   const Discovery({
     super.key,
     this.categories = false,
     this.inlineSearch = false,
   });
+  static const fetchSize = 20;
+  final bool categories;
+  final bool inlineSearch;
 
   @override
   State<StatefulWidget> createState() => _DiscoveryState();
@@ -43,7 +43,7 @@ class _DiscoveryState extends State<Discovery> {
       genre: bloc.selectedGenre.genre,
       countryCode:
           PlatformDispatcher.instance.locale.countryCode?.toLowerCase() ?? '',
-    ));
+    ),);
   }
 
   @override
@@ -56,35 +56,34 @@ class _DiscoveryState extends State<Discovery> {
               SliverPersistentHeader(
                 delegate: MyHeaderDelegate(bloc),
                 pinned: true,
-                floating: false,
               ),
               DiscoveryResults(
-                  data: bloc.results, inlineSearch: widget.inlineSearch),
+                  data: bloc.results, inlineSearch: widget.inlineSearch,),
             ],
           )
         : DiscoveryResults(
-            data: bloc.results, inlineSearch: widget.inlineSearch);
+            data: bloc.results, inlineSearch: widget.inlineSearch,);
   }
 }
 
 /// This delegate is responsible for rendering the horizontal scrolling list of categories
 /// that can optionally be displayed at the top of the Discovery results page.
 class MyHeaderDelegate extends SliverPersistentHeaderDelegate {
-  final DiscoveryBloc discoveryBloc;
 
   MyHeaderDelegate(this.discoveryBloc);
+  final DiscoveryBloc discoveryBloc;
 
   @override
   Widget build(
-      BuildContext context, double shrinkOffset, bool overlapsContent) {
+      BuildContext context, double shrinkOffset, bool overlapsContent,) {
     return CategorySelectorWidget(discoveryBloc: discoveryBloc);
   }
 
   @override
-  double get maxExtent => 56.0;
+  double get maxExtent => 56;
 
   @override
-  double get minExtent => 56.0;
+  double get minExtent => 56;
 
   @override
   bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) =>
@@ -92,12 +91,12 @@ class MyHeaderDelegate extends SliverPersistentHeaderDelegate {
 }
 
 class CategorySelectorWidget extends StatefulWidget {
-  final ItemScrollController itemScrollController = ItemScrollController();
 
   CategorySelectorWidget({
     super.key,
     required this.discoveryBloc,
   });
+  final ItemScrollController itemScrollController = ItemScrollController();
 
   final DiscoveryBloc discoveryBloc;
 
@@ -108,7 +107,7 @@ class CategorySelectorWidget extends StatefulWidget {
 class _CategorySelectorWidgetState extends State<CategorySelectorWidget> {
   @override
   Widget build(BuildContext context) {
-    String selectedCategory = widget.discoveryBloc.selectedGenre.genre;
+    var selectedCategory = widget.discoveryBloc.selectedGenre.genre;
 
     return Container(
       width: double.infinity,
@@ -117,7 +116,7 @@ class _CategorySelectorWidgetState extends State<CategorySelectorWidget> {
           stream: widget.discoveryBloc.genres,
           initialData: const [],
           builder: (context, snapshot) {
-            var i = widget.discoveryBloc.selectedGenre.index;
+            final i = widget.discoveryBloc.selectedGenre.index;
 
             return snapshot.hasData && snapshot.data!.isNotEmpty
                 ? ScrollablePositionedList.builder(
@@ -153,15 +152,15 @@ class _CategorySelectorWidgetState extends State<CategorySelectorWidget> {
                                         .instance.locale.countryCode
                                         ?.toLowerCase() ??
                                     '',
-                              ));
+                              ),);
                             },
                             child: Text(item),
                           ),
                         ),
                       );
-                    })
+                    },)
                 : Container();
-          }),
+          },),
     );
   }
 }

@@ -6,14 +6,11 @@
 
 import 'dart:io';
 
-import 'package:seasoning/l10n/L.dart';
 import 'package:flutter/material.dart';
+import 'package:seasoning/l10n/L.dart';
 
 /// Simple widget for rendering either the standard Android close or iOS Back button.
 class PlatformBackButton extends StatelessWidget {
-  final Color decorationColour;
-  final Color iconColour;
-  final VoidCallback onPressed;
 
   const PlatformBackButton({
     super.key,
@@ -21,6 +18,9 @@ class PlatformBackButton extends StatelessWidget {
     required this.decorationColour,
     required this.onPressed,
   });
+  final Color decorationColour;
+  final Color iconColour;
+  final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -28,14 +28,14 @@ class PlatformBackButton extends StatelessWidget {
       color: Colors.transparent,
       child: Center(
         child: SizedBox(
-          height: 48.0,
-          width: 48.0,
+          height: 48,
+          width: 48,
           child: InkWell(
             onTap: onPressed,
             child: Container(
-              margin: const EdgeInsets.all(6.0),
-              height: 48.0,
-              width: 48.0,
+              margin: const EdgeInsets.all(6),
+              height: 48,
+              width: 48,
               decoration: ShapeDecoration(
                 color: decorationColour,
                 shape: const CircleBorder(),

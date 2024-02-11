@@ -8,14 +8,18 @@ import 'dart:async';
 import 'dart:isolate';
 import 'dart:ui';
 
+import 'package:flutter_downloader/flutter_downloader.dart';
+import 'package:logging/logging.dart';
 import 'package:seasoning/core/environment.dart';
 import 'package:seasoning/entities/downloadable.dart';
 import 'package:seasoning/services/download/download_manager.dart';
-import 'package:flutter_downloader/flutter_downloader.dart';
-import 'package:logging/logging.dart';
 
 /// A [DownloadManager] for handling downloading of podcasts on a mobile device.
 class MobileDownloaderManager implements DownloadManager {
+
+  MobileDownloaderManager() {
+    _init();
+  }
   static const portName = 'downloader_send_port';
   final log = Logger('MobileDownloaderManager');
   final ReceivePort _port = ReceivePort();
@@ -25,10 +29,6 @@ class MobileDownloaderManager implements DownloadManager {
   @override
   Stream<DownloadProgress> get downloadProgress => downloadController.stream;
 
-  MobileDownloaderManager() {
-    _init();
-  }
-
   Future _init() async {
     log.fine('Initialising download manager');
 
@@ -37,20 +37,20 @@ class MobileDownloaderManager implements DownloadManager {
 
     IsolateNameServer.registerPortWithName(_port.sendPort, portName);
 
-    var tasks = await FlutterDownloader.loadTasks();
+    final tasks = await FlutterDownloader.loadTasks();
 
     // Update the status of any tasks that may have been updated whilst
     // AnyTime was close or in the background.
     if (tasks != null && tasks.isNotEmpty) {
-      for (var t in tasks) {
+      for (final t in tasks) {
         _updateDownloadState(
-            id: t.taskId, progress: t.progress, status: t.status.value);
+            id: t.taskId, progress: t.progress, status: t.status.value,);
 
         /// If we are not queued or running we can safely clean up this event
         if (t.status != DownloadTaskStatus.enqueued &&
             t.status != DownloadTaskStatus.running) {
-          FlutterDownloader.remove(
-              taskId: t.taskId, shouldDeleteContent: false);
+          await FlutterDownloader.remove(
+              taskId: t.taskId,);
         }
       }
     }
@@ -63,17 +63,16 @@ class MobileDownloaderManager implements DownloadManager {
       _updateDownloadState(id: id, progress: progress, status: status);
     });
 
-    FlutterDownloader.registerCallback(downloadCallback);
+    await FlutterDownloader.registerCallback(downloadCallback);
   }
 
   @override
   Future<String?> enqueueTask(
-      String url, String downloadPath, String fileName) async {
+      String url, String downloadPath, String fileName,) async {
     return await FlutterDownloader.enqueue(
       url: url,
       savedDir: downloadPath,
       fileName: fileName,
-      showNotification: true,
       openFileFromNotification: false,
       headers: {
         'User-Agent': Environment.userAgent(),
@@ -88,10 +87,10 @@ class MobileDownloaderManager implements DownloadManager {
   }
 
   void _updateDownloadState(
-      {required String id, required int progress, required int status}) {
+      {required String id, required int progress, required int status,}) {
     var state = DownloadState.none;
-    var updateTime = DateTime.now().millisecondsSinceEpoch;
-    var downloadStatus = DownloadTaskStatus(status);
+    final updateTime = DateTime.now().millisecondsSinceEpoch;
+    final downloadStatus = DownloadTaskStatus(status);
 
     if (downloadStatus == DownloadTaskStatus.enqueued) {
       state = DownloadState.queued;
@@ -121,7 +120,7 @@ class MobileDownloaderManager implements DownloadManager {
 
   @pragma('vm:entry-point')
   static void downloadCallback(
-      String id, DownloadTaskStatus status, int progress) {
+      String id, DownloadTaskStatus status, int progress,) {
     IsolateNameServer.lookupPortByName('downloader_send_port')
         ?.send([id, status.value, progress]);
   }

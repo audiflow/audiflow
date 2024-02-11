@@ -6,6 +6,10 @@
 
 import 'dart:async';
 
+import 'package:auto_size_text/auto_size_text.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import 'package:seasoning/bloc/podcast/audio_bloc.dart';
 import 'package:seasoning/entities/episode.dart';
 import 'package:seasoning/l10n/L.dart';
@@ -22,10 +26,6 @@ import 'package:seasoning/ui/widgets/delayed_progress_indicator.dart';
 import 'package:seasoning/ui/widgets/placeholder_builder.dart';
 import 'package:seasoning/ui/widgets/podcast_html.dart';
 import 'package:seasoning/ui/widgets/podcast_image.dart';
-import 'package:auto_size_text/auto_size_text.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 /// This is the full-screen player Widget which is invoked by touching the mini player.
@@ -50,9 +50,9 @@ class NowPlaying extends StatefulWidget {
 
 class _NowPlayingState extends State<NowPlaying> with WidgetsBindingObserver {
   late StreamSubscription<AudioState> playingStateSubscription;
-  var textGroup = AutoSizeGroup();
-  double scrollPos = 0.0;
-  double opacity = 0.0;
+  AutoSizeGroup textGroup = AutoSizeGroup();
+  double scrollPos = 0;
+  double opacity = 0;
 
   @override
   void initState() {
@@ -84,8 +84,8 @@ class _NowPlayingState extends State<NowPlaying> with WidgetsBindingObserver {
 
   bool isMobilePortrait(BuildContext context) {
     final query = MediaQuery.of(context);
-    return (query.orientation == Orientation.portrait ||
-        query.size.width <= 1000);
+    return query.orientation == Orientation.portrait ||
+        query.size.width <= 1000;
   }
 
   @override
@@ -103,8 +103,8 @@ class _NowPlayingState extends State<NowPlaying> with WidgetsBindingObserver {
               return Container();
             }
 
-            var duration = snapshot.data == null ? 0 : snapshot.data!.duration;
-            final WidgetBuilder? transportBuilder =
+            final duration = snapshot.data == null ? 0 : snapshot.data!.duration;
+            final transportBuilder =
                 playerBuilder?.builder(duration);
 
             return isMobilePortrait(context)
@@ -144,7 +144,7 @@ class _NowPlayingState extends State<NowPlaying> with WidgetsBindingObserver {
                               /// the draggable panel from jumping as you start to pull it up. I am really looking
                               /// forward to the Dart team fixing the nested scroll issues with [DraggableScrollableSheet]
                               SizedBox(
-                                height: 64.0,
+                                height: 64,
                                 child: scrollPos == 1
                                     ? Opacity(
                                         opacity: opacity,
@@ -159,26 +159,23 @@ class _NowPlayingState extends State<NowPlaying> with WidgetsBindingObserver {
                                 ),
                             ],
                           ),
-                        )),
+                        ),),
                       ],
                     ),
                   )
                 : Row(
-                    mainAxisSize: MainAxisSize.max,
                     children: [
                       Expanded(
-                        flex: 1,
                         child: NowPlayingTabs(
                             episode: snapshot.data!,
-                            transportBuilder: transportBuilder),
+                            transportBuilder: transportBuilder,),
                       ),
                       const Expanded(
-                        flex: 1,
                         child: NowPlayingOptionsSelectorWide(),
                       ),
                     ],
                   );
-          }),
+          },),
     );
   }
 }
@@ -190,9 +187,6 @@ class _NowPlayingState extends State<NowPlaying> with WidgetsBindingObserver {
 /// landscape this will be in a horizontal format. The actual displaying
 /// of the episode text is handed off to [NowPlayingEpisodeDetails].
 class NowPlayingEpisode extends StatelessWidget {
-  final String? imageUrl;
-  final Episode episode;
-  final AutoSizeGroup? textGroup;
 
   const NowPlayingEpisode({
     super.key,
@@ -200,6 +194,9 @@ class NowPlayingEpisode extends StatelessWidget {
     required this.episode,
     required this.textGroup,
   });
+  final String? imageUrl;
+  final Episode episode;
+  final AutoSizeGroup? textGroup;
 
   @override
   Widget build(BuildContext context) {
@@ -208,11 +205,10 @@ class NowPlayingEpisode extends StatelessWidget {
     return OrientationBuilder(
       builder: (context, orientation) {
         return Padding(
-          padding: const EdgeInsets.all(8.0),
+          padding: const EdgeInsets.all(8),
           child: MediaQuery.of(context).orientation == Orientation.portrait ||
                   MediaQuery.of(context).size.width >= 1000
               ? Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
                   children: [
                     Expanded(
                       flex: 7,
@@ -224,7 +220,7 @@ class NowPlayingEpisode extends StatelessWidget {
                           width: MediaQuery.of(context).size.width * .75,
                           height: MediaQuery.of(context).size.height * .75,
                           fit: BoxFit.contain,
-                          borderRadius: 6.0,
+                          borderRadius: 6,
                           placeholder: placeholderBuilder != null
                               ? placeholderBuilder.builder()(context)
                               : DelayedCircularProgressIndicator(),
@@ -232,7 +228,7 @@ class NowPlayingEpisode extends StatelessWidget {
                               ? placeholderBuilder.errorBuilder()(context)
                               : const Image(
                                   image: AssetImage(
-                                      'assets/images/app-placeholder-logo.png')),
+                                      'assets/images/app-placeholder-logo.png',),),
                         ),
                       ),
                     ),
@@ -252,8 +248,8 @@ class NowPlayingEpisode extends StatelessWidget {
                       flex: 2,
                       child: Padding(
                         padding: const EdgeInsets.only(
-                          left: 8.0,
-                          bottom: 8.0,
+                          left: 8,
+                          bottom: 8,
                         ),
                         child: PodcastImage(
                           key: Key('nowplaying$imageUrl'),
@@ -261,7 +257,7 @@ class NowPlayingEpisode extends StatelessWidget {
                           height: 280,
                           width: 280,
                           fit: BoxFit.contain,
-                          borderRadius: 8.0,
+                          borderRadius: 8,
                           placeholder: placeholderBuilder != null
                               ? placeholderBuilder.builder()(context)
                               : DelayedCircularProgressIndicator(),
@@ -269,7 +265,7 @@ class NowPlayingEpisode extends StatelessWidget {
                               ? placeholderBuilder.errorBuilder()(context)
                               : const Image(
                                   image: AssetImage(
-                                      'assets/images/app-placeholder-logo.png')),
+                                      'assets/images/app-placeholder-logo.png',),),
                         ),
                       ),
                     ),
@@ -293,15 +289,15 @@ class NowPlayingEpisode extends StatelessWidget {
 /// This displays the current episode title and, if available, the
 /// current chapter title and optional link.
 class NowPlayingEpisodeDetails extends StatelessWidget {
-  final Episode? episode;
-  final AutoSizeGroup? textGroup;
-  static const minFontSize = 14.0;
 
   const NowPlayingEpisodeDetails({
     super.key,
     this.episode,
     this.textGroup,
   });
+  final Episode? episode;
+  final AutoSizeGroup? textGroup;
+  static const minFontSize = 14.0;
 
   @override
   Widget build(BuildContext context) {
@@ -313,7 +309,7 @@ class NowPlayingEpisodeDetails extends StatelessWidget {
         Expanded(
           flex: 5,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(8.0, 16.0, 8.0, 0.0),
+            padding: const EdgeInsets.fromLTRB(8, 16, 8, 0),
             child: Semantics(
               container: true,
               child: AutoSizeText(
@@ -324,7 +320,7 @@ class NowPlayingEpisodeDetails extends StatelessWidget {
                 minFontSize: minFontSize,
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
-                  fontSize: 24.0,
+                  fontSize: 24,
                 ),
                 maxLines: episode!.hasChapters ? 3 : 4,
               ),
@@ -335,10 +331,9 @@ class NowPlayingEpisodeDetails extends StatelessWidget {
           Expanded(
             flex: 4,
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(8.0, 0.0, 0.0, 8.0),
+              padding: const EdgeInsets.fromLTRB(8, 0, 0, 8),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Flexible(
                     child: Semantics(
@@ -353,7 +348,7 @@ class NowPlayingEpisodeDetails extends StatelessWidget {
                         style: TextStyle(
                           color: Colors.grey[300],
                           fontWeight: FontWeight.normal,
-                          fontSize: 16.0,
+                          fontSize: 16,
                         ),
                         maxLines: 2,
                       ),
@@ -375,7 +370,7 @@ class NowPlayingEpisodeDetails extends StatelessWidget {
                               color: Theme.of(context).primaryIconTheme.color,
                               onPressed: () {
                                 _chapterLink(chapterUrl);
-                              }),
+                              },),
                         ),
                 ],
               ),
@@ -385,7 +380,7 @@ class NowPlayingEpisodeDetails extends StatelessWidget {
     );
   }
 
-  void _chapterLink(String url) async {
+  Future<void> _chapterLink(String url) async {
     final uri = Uri.parse(url);
 
     if (await canLaunchUrl(uri)) {
@@ -401,30 +396,29 @@ class NowPlayingEpisodeDetails extends StatelessWidget {
 /// This consists of title, show notes and person details
 /// (where available).
 class NowPlayingShowNotes extends StatelessWidget {
-  final Episode? episode;
 
   const NowPlayingShowNotes({
     super.key,
     required this.episode,
   });
+  final Episode? episode;
 
   @override
   Widget build(BuildContext context) {
     return SizedBox.expand(
       child: SingleChildScrollView(
-        scrollDirection: Axis.vertical,
         child: Column(
           children: [
             Align(
               alignment: Alignment.centerLeft,
               child: Padding(
                 padding: const EdgeInsets.only(
-                  left: 16.0,
-                  right: 16.0,
-                  bottom: 16.0,
+                  left: 16,
+                  right: 16,
+                  bottom: 16,
                 ),
                 child: Text(
-                  episode!.title!,
+                  episode!.title,
                   style: Theme.of(context).textTheme.titleLarge!.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -433,7 +427,7 @@ class NowPlayingShowNotes extends StatelessWidget {
             ),
             if (episode!.persons.isNotEmpty)
               SizedBox(
-                height: 120.0,
+                height: 120,
                 child: ListView.builder(
                   itemCount: episode!.persons.length,
                   scrollDirection: Axis.horizontal,
@@ -444,12 +438,12 @@ class NowPlayingShowNotes extends StatelessWidget {
               ),
             Padding(
               padding: const EdgeInsets.only(
-                top: 8.0,
-                left: 8.0,
-                right: 8.0,
+                top: 8,
+                left: 8,
+                right: 8,
               ),
               child: PodcastHtml(
-                  content: episode?.content ?? episode?.description ?? ''),
+                  content: episode?.content ?? episode?.description ?? '',),
             ),
           ],
         ),
@@ -480,11 +474,11 @@ class NowPlayingTabs extends StatelessWidget {
         initialIndex: episode.hasChapters ? 1 : 0,
         child: AnnotatedRegion<SystemUiOverlayStyle>(
           value: Theme.of(context).appBarTheme.systemOverlayStyle!.copyWith(
-              systemNavigationBarColor: Theme.of(context).secondaryHeaderColor),
+              systemNavigationBarColor: Theme.of(context).secondaryHeaderColor,),
           child: Scaffold(
             appBar: AppBar(
               backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-              elevation: 0.0,
+              elevation: 0,
               leading: IconButton(
                 tooltip: L.of(context)!.minimise_player_window_button_label,
                 icon: Icon(
@@ -518,18 +512,17 @@ class NowPlayingTabs extends StatelessWidget {
                 transportBuilder != null
                     ? transportBuilder!(context)
                     : const SizedBox(
-                        height: 148.0,
+                        height: 148,
                         child: NowPlayingTransport(),
                       ),
                 if (MediaQuery.of(context).orientation == Orientation.portrait)
                   const Expanded(
-                    flex: 1,
                     child: NowPlayingOptionsScaffold(),
                   ),
               ],
             ),
           ),
-        ));
+        ),);
   }
 }
 
@@ -538,12 +531,12 @@ class NowPlayingTabs extends StatelessWidget {
 /// It displays two or three tabs depending upon whether the current episode supports
 /// (and contains) chapters.
 class EpisodeTabBar extends StatelessWidget {
-  final bool chapters;
 
   const EpisodeTabBar({
     super.key,
     this.chapters = false,
   });
+  final bool chapters;
 
   @override
   Widget build(BuildContext context) {
@@ -555,19 +548,16 @@ class EpisodeTabBar extends StatelessWidget {
         if (chapters)
           Tab(
             child: Align(
-              alignment: Alignment.center,
               child: Text(L.of(context)!.chapters_label),
             ),
           ),
         Tab(
           child: Align(
-            alignment: Alignment.center,
             child: Text(L.of(context)!.episode_label),
           ),
         ),
         Tab(
           child: Align(
-            alignment: Alignment.center,
             child: Text(L.of(context)!.notes_label),
           ),
         ),
@@ -581,9 +571,6 @@ class EpisodeTabBar extends StatelessWidget {
 /// This includes the chapter selection view (if the episode supports chapters),
 /// the episode details (image and description) and the show notes view.
 class EpisodeTabBarView extends StatelessWidget {
-  final Episode? episode;
-  final AutoSizeGroup? textGroup;
-  final bool chapters;
 
   const EpisodeTabBarView({
     super.key,
@@ -591,6 +578,9 @@ class EpisodeTabBarView extends StatelessWidget {
     this.textGroup,
     this.chapters = false,
   });
+  final Episode? episode;
+  final AutoSizeGroup? textGroup;
+  final bool chapters;
 
   @override
   Widget build(BuildContext context) {
@@ -612,7 +602,7 @@ class EpisodeTabBarView extends StatelessWidget {
                 imageUrl: e.positionalImageUrl,
                 textGroup: textGroup,
               );
-            }),
+            },),
         NowPlayingShowNotes(episode: episode),
       ],
     );
@@ -629,7 +619,7 @@ class NowPlayingTransport extends StatelessWidget {
     return const Column(
       children: <Widget>[
         Divider(
-          height: 0.0,
+          height: 0,
         ),
         PlayerPositionControls(),
         PlayerTransportControls(),
@@ -645,13 +635,13 @@ class NowPlayingTransport extends StatelessWidget {
 /// is in the tree. If so, it will use the builder rather than its own
 /// transport controls.
 class PlayerControlsBuilder extends InheritedWidget {
-  final WidgetBuilder Function(int duration) builder;
 
   const PlayerControlsBuilder({
     super.key,
     required this.builder,
     required super.child,
   });
+  final WidgetBuilder Function(int duration) builder;
 
   static PlayerControlsBuilder? of(BuildContext context) {
     return context.dependOnInheritedWidgetOfExactType<PlayerControlsBuilder>();

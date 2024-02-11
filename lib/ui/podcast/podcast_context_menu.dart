@@ -3,13 +3,13 @@
 // All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
-import 'package:seasoning/bloc/podcast/podcast_bloc.dart';
-import 'package:seasoning/entities/podcast.dart';
-import 'package:seasoning/l10n/L.dart';
-import 'package:seasoning/state/bloc_state.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:seasoning/bloc/podcast/podcast_bloc.dart';
+import 'package:seasoning/entities/podcast.dart';
+import 'package:seasoning/events/bloc_state.dart';
+import 'package:seasoning/l10n/L.dart';
 
 /// This class is responsible for rendering the context menu on the podcast details
 /// page.
@@ -19,16 +19,16 @@ import 'package:provider/provider.dart';
 ///
 /// The target platform is based on the current [Theme]: [ThemeData.platform].
 class PodcastContextMenu extends StatelessWidget {
-  final Podcast podcast;
 
   const PodcastContextMenu(
     this.podcast, {
     super.key,
   });
+  final Podcast podcast;
 
   @override
   Widget build(BuildContext context) {
-    var theme = Theme.of(context);
+    final theme = Theme.of(context);
 
     switch (theme.platform) {
       case TargetPlatform.android:
@@ -46,9 +46,9 @@ class PodcastContextMenu extends StatelessWidget {
 /// This is the material design version of the context menu. This will be rendered
 /// for all platforms that are not iOS.
 class _MaterialPodcastMenu extends StatelessWidget {
-  final Podcast podcast;
 
   const _MaterialPodcastMenu(this.podcast);
+  final Podcast podcast;
 
   @override
   Widget build(BuildContext context) {
@@ -79,7 +79,7 @@ class _MaterialPodcastMenu extends StatelessWidget {
               ];
             },
           );
-        });
+        },);
   }
 
   void togglePlayed({
@@ -97,9 +97,9 @@ class _MaterialPodcastMenu extends StatelessWidget {
 /// This is the Cupertino context menu and is rendered only when running on
 /// an iOS device.
 class _CupertinoContextMenu extends StatelessWidget {
-  final Podcast podcast;
 
   const _CupertinoContextMenu(this.podcast);
+  final Podcast podcast;
 
   @override
   Widget build(BuildContext context) {
@@ -146,6 +146,6 @@ class _CupertinoContextMenu extends StatelessWidget {
               },
             ),
           );
-        });
+        },);
   }
 }

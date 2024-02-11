@@ -6,8 +6,8 @@
 
 import 'package:seasoning/entities/episode.dart';
 import 'package:seasoning/entities/sleep.dart';
-import 'package:seasoning/state/queue_event_state.dart';
-import 'package:seasoning/state/transcript_state_event.dart';
+import 'package:seasoning/events/queue_event.dart';
+import 'package:seasoning/events/transcript_event.dart';
 
 enum AudioState {
   none,
@@ -20,11 +20,6 @@ enum AudioState {
 }
 
 class PositionState {
-  Duration position;
-  late Duration length;
-  late int percentage;
-  Episode? episode;
-  final bool buffering;
 
   PositionState({
     required this.position,
@@ -35,15 +30,21 @@ class PositionState {
   });
 
   PositionState.emptyState()
-      : position = const Duration(seconds: 0),
-        length = const Duration(seconds: 0),
+      : position = Duration.zero,
+        length = Duration.zero,
         percentage = 0,
         buffering = false;
+  Duration position;
+  late Duration length;
+  late int percentage;
+  Episode? episode;
+  final bool buffering;
 }
 
 /// This class defines the audio playback options supported by Anytime.
 ///
-/// The implementing classes will then handle the specifics for the platform we are running on.
+/// The implementing classes will then handle the specifics for the platform we
+/// are running on.
 abstract class AudioPlayerService {
   /// Play a new episode, optionally resume at last save point.
   Future<void> playEpisode({required Episode episode, bool resume = true});
@@ -89,10 +90,10 @@ abstract class AudioPlayerService {
   Future<void> setPlaybackSpeed(double speed);
 
   /// Call to toggle trim silence.
-  Future<void> trimSilence(bool trim);
+  Future<void> trimSilence({required bool trim});
 
   /// Call to toggle trim silence.
-  Future<void> volumeBoost(bool boost);
+  Future<void> volumeBoost({required bool boost});
 
   Future<void> searchTranscript(String search);
 
@@ -108,6 +109,6 @@ abstract class AudioPlayerService {
   Stream<Episode?>? episodeEvent;
   Stream<TranscriptState>? transcriptEvent;
   Stream<int>? playbackError;
-  Stream<QueueListState>? queueState;
+  Stream<QueueListEvent>? queueState;
   Stream<Sleep>? sleepStream;
 }

@@ -7,7 +7,7 @@
 import 'package:seasoning/entities/episode.dart';
 import 'package:seasoning/entities/podcast.dart';
 import 'package:seasoning/entities/transcript.dart';
-import 'package:seasoning/state/episode_state.dart';
+import 'package:seasoning/events/episode_event.dart';
 
 /// An abstract class that represent the actions supported by the chosen
 /// database or storage implementation.

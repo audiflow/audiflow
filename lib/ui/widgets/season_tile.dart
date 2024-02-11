@@ -4,11 +4,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart' show DateFormat;
 import 'package:seasoning/entities/season.dart';
 import 'package:seasoning/ui/podcast/season_episodes.dart';
 import 'package:seasoning/ui/widgets/tile_image.dart';
-import 'package:flutter/material.dart';
-import 'package:intl/intl.dart' show DateFormat;
 
 /// An SeasonTitle is built with an [ExpandedTile] widget and displays the season's
 /// basic details, thumbnail and play button.
@@ -18,11 +18,6 @@ import 'package:intl/intl.dart' show DateFormat;
 ///
 /// TODO: Replace [Opacity] with [Container] with a transparent colour.
 class SeasonTile extends StatefulWidget {
-  final Season season;
-  final bool download;
-  final bool play;
-  final bool playing;
-  final bool queued;
 
   const SeasonTile({
     super.key,
@@ -32,6 +27,11 @@ class SeasonTile extends StatefulWidget {
     this.playing = false,
     this.queued = false,
   });
+  final Season season;
+  final bool download;
+  final bool play;
+  final bool playing;
+  final bool queued;
 
   @override
   State<SeasonTile> createState() => _SeasonTileState();
@@ -51,7 +51,7 @@ class _SeasonTileState extends State<SeasonTile> {
           context,
           MaterialPageRoute<void>(
               settings: const RouteSettings(name: 'podcastdetails'),
-              builder: (context) => SeasonEpisodes(widget.season)),
+              builder: (context) => SeasonEpisodes(widget.season),),
         );
       },
       leading: ExcludeSemantics(
@@ -66,12 +66,12 @@ class _SeasonTileState extends State<SeasonTile> {
                 tag: widget.season.guid,
                 child: TileImage(
                   url: widget.season.thumbImageUrl ?? widget.season.imageUrl!,
-                  size: 56.0,
+                  size: 56,
                 ),
               ),
             ),
             SizedBox(
-              height: 5.0,
+              height: 5,
               width: 56.0 * (widget.season.percentagePlayed / 100),
               child: Container(
                 color: Theme.of(context).primaryColor,
@@ -102,29 +102,29 @@ class _SeasonTileState extends State<SeasonTile> {
 }
 
 class SeasonSubtitle extends StatelessWidget {
-  final Season season;
-  final String date;
-  final Duration length;
 
   SeasonSubtitle(this.season, {super.key})
       : date = season.publicationDate == null
             ? ''
             : DateFormat(season.publicationDate!.year == DateTime.now().year
                     ? 'yyyy.MM'
-                    : 'yyyy.MM.dd')
+                    : 'yyyy.MM.dd',)
                 .format(season.publicationDate!),
         length = Duration(seconds: season.duration);
+  final Season season;
+  final String date;
+  final Duration length;
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    var timeRemaining = season.timeRemaining;
+    final timeRemaining = season.timeRemaining;
 
     final playedEpisodes =
         season.episodes.where((episode) => episode.played).length;
     final episodes = '$playedEpisodes/${season.episodes.length} episodes';
 
-    String duration = '';
+    var duration = '';
     if (0 < length.inSeconds) {
       if (length.inSeconds < 60) {
         duration = ' - ${length.inSeconds} sec';
@@ -139,7 +139,7 @@ class SeasonSubtitle extends StatelessWidget {
     final title = '$date - $episodes$duration';
 
     return Padding(
-      padding: const EdgeInsets.only(top: 4.0),
+      padding: const EdgeInsets.only(top: 4),
       child: Text(
         title,
         overflow: TextOverflow.ellipsis,

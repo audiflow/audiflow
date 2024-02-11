@@ -8,9 +8,9 @@
 class SearchEvent {}
 
 class SearchTermEvent extends SearchEvent {
-  final String term;
 
   SearchTermEvent(this.term);
+  final String term;
 }
 
 class SearchChartsEvent extends SearchEvent {}

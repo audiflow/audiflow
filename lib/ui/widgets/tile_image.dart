@@ -4,9 +4,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'package:flutter/material.dart';
 import 'package:seasoning/ui/widgets/placeholder_builder.dart';
 import 'package:seasoning/ui/widgets/podcast_image.dart';
-import 'package:flutter/material.dart';
 
 class TileImage extends StatelessWidget {
   const TileImage({
@@ -34,7 +34,7 @@ class TileImage extends StatelessWidget {
       url: url,
       height: size,
       width: size,
-      borderRadius: 4.0,
+      borderRadius: 4,
       fit: BoxFit.contain,
       placeholder: placeholderBuilder != null
           ? placeholderBuilder.builder()(context)

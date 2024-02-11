@@ -16,10 +16,10 @@ import 'package:flutter/widgets.dart';
 /// guidelines; otherwise it will be displayed as is to fit in the with iOS
 /// developer guidelines.
 class ActionText extends StatelessWidget {
-  /// The text to display which will be shifted to all upper-case on Android.
-  final String text;
 
   const ActionText(this.text, {super.key});
+  /// The text to display which will be shifted to all upper-case on Android.
+  final String text;
 
   @override
   Widget build(BuildContext context) {

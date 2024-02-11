@@ -6,17 +6,24 @@
 
 import 'dart:async';
 
-import 'package:seasoning/bloc/bloc.dart';
-import 'package:seasoning/entities/episode.dart';
-import 'package:seasoning/services/audio/audio_player_service.dart';
-import 'package:seasoning/services/podcast/podcast_service.dart';
-import 'package:seasoning/state/bloc_state.dart';
 import 'package:logging/logging.dart';
 import 'package:rxdart/rxdart.dart';
+import 'package:seasoning/bloc/bloc.dart';
+import 'package:seasoning/entities/episode.dart';
+import 'package:seasoning/events/bloc_state.dart';
+import 'package:seasoning/services/audio/audio_player_service.dart';
+import 'package:seasoning/services/podcast/podcast_service.dart';
 
 /// The BLoC provides access to [Episode] details outside the direct scope
 /// of a [Podcast].
 class EpisodeBloc extends Bloc {
+
+  EpisodeBloc({
+    required this.podcastService,
+    required this.audioPlayerService,
+  }) {
+    _init();
+  }
   final log = Logger('EpisodeBloc');
   final PodcastService podcastService;
   final AudioPlayerService audioPlayerService;
@@ -42,27 +49,20 @@ class EpisodeBloc extends Bloc {
   /// Cache of our currently downloaded episodes.
   List<Episode>? _episodes;
 
-  EpisodeBloc({
-    required this.podcastService,
-    required this.audioPlayerService,
-  }) {
-    _init();
-  }
-
   void _init() {
     _downloadsOutput = _downloadsInput.switchMap<BlocState<List<Episode>>>(
-        (bool silent) => _loadDownloads(silent));
+        _loadDownloads,);
     _episodesOutput = _episodesInput.switchMap<BlocState<List<Episode>>>(
-        (bool silent) => _loadEpisodes(silent));
+        _loadEpisodes,);
 
     _handleDeleteDownloads();
     _handleMarkAsPlayed();
     _listenEpisodeEvents();
   }
 
-  void _handleDeleteDownloads() async {
+  Future<void> _handleDeleteDownloads() async {
     _deleteDownload.stream.listen((episode) async {
-      var nowPlaying = audioPlayerService.nowPlaying?.guid == episode?.guid;
+      final nowPlaying = audioPlayerService.nowPlaying?.guid == episode?.guid;
 
       /// If we are attempting to delete the episode we are currently playing, we need to stop the audio.
       if (nowPlaying) {
@@ -75,7 +75,7 @@ class EpisodeBloc extends Bloc {
     });
   }
 
-  void _handleMarkAsPlayed() async {
+  Future<void> _handleMarkAsPlayed() async {
     _togglePlayed.stream.listen((episode) async {
       await podcastService.toggleEpisodePlayed(episode!);
 

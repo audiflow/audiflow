@@ -4,12 +4,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:seasoning/bloc/settings/settings_bloc.dart';
-import 'package:seasoning/entities/app_settings.dart';
-import 'package:seasoning/l10n/L.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dialogs/flutter_dialogs.dart';
 import 'package:provider/provider.dart';
+import 'package:seasoning/bloc/settings/settings_bloc.dart';
+import 'package:seasoning/entities/app_settings.dart';
+import 'package:seasoning/l10n/L.dart';
 
 class EpisodeRefreshWidget extends StatefulWidget {
   const EpisodeRefreshWidget({super.key});
@@ -21,14 +21,13 @@ class EpisodeRefreshWidget extends StatefulWidget {
 class _EpisodeRefreshWidgetState extends State<EpisodeRefreshWidget> {
   @override
   Widget build(BuildContext context) {
-    var settingsBloc = Provider.of<SettingsBloc>(context);
+    final settingsBloc = Provider.of<SettingsBloc>(context);
 
     return StreamBuilder<AppSettings>(
         stream: settingsBloc.settings,
         initialData: AppSettings.sensibleDefaults(),
         builder: (context, snapshot) {
           return Column(
-            mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -56,10 +55,10 @@ class _EpisodeRefreshWidgetState extends State<EpisodeRefreshWidget> {
                                 RadioListTile<int>(
                                   title: Text(L
                                       .of(context)!
-                                      .settings_auto_update_episodes_never),
+                                      .settings_auto_update_episodes_never,),
                                   dense: true,
                                   contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 0.0),
+                                      ,),
                                   value: -1,
                                   groupValue:
                                       snapshot.data!.autoUpdateEpisodePeriod,
@@ -75,10 +74,10 @@ class _EpisodeRefreshWidgetState extends State<EpisodeRefreshWidget> {
                                 RadioListTile<int>(
                                   title: Text(L
                                       .of(context)!
-                                      .settings_auto_update_episodes_always),
+                                      .settings_auto_update_episodes_always,),
                                   dense: true,
                                   contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 0.0),
+                                      ,),
                                   value: 0,
                                   groupValue:
                                       snapshot.data!.autoUpdateEpisodePeriod,
@@ -93,10 +92,10 @@ class _EpisodeRefreshWidgetState extends State<EpisodeRefreshWidget> {
                                 RadioListTile<int>(
                                   title: Text(L
                                       .of(context)!
-                                      .settings_auto_update_episodes_30min),
+                                      .settings_auto_update_episodes_30min,),
                                   dense: true,
                                   contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 0.0),
+                                      ,),
                                   value: 30,
                                   groupValue:
                                       snapshot.data!.autoUpdateEpisodePeriod,
@@ -112,10 +111,10 @@ class _EpisodeRefreshWidgetState extends State<EpisodeRefreshWidget> {
                                 RadioListTile<int>(
                                   title: Text(L
                                       .of(context)!
-                                      .settings_auto_update_episodes_1hour),
+                                      .settings_auto_update_episodes_1hour,),
                                   dense: true,
                                   contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 0.0),
+                                      ),
                                   value: 60,
                                   groupValue:
                                       snapshot.data!.autoUpdateEpisodePeriod,
@@ -131,10 +130,10 @@ class _EpisodeRefreshWidgetState extends State<EpisodeRefreshWidget> {
                                 RadioListTile<int>(
                                   title: Text(L
                                       .of(context)!
-                                      .settings_auto_update_episodes_3hour),
+                                      .settings_auto_update_episodes_3hour,),
                                   dense: true,
                                   contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 0.0),
+                                      ,),
                                   value: 180,
                                   groupValue:
                                       snapshot.data!.autoUpdateEpisodePeriod,
@@ -150,10 +149,10 @@ class _EpisodeRefreshWidgetState extends State<EpisodeRefreshWidget> {
                                 RadioListTile<int>(
                                   title: Text(L
                                       .of(context)!
-                                      .settings_auto_update_episodes_6hour),
+                                      .settings_auto_update_episodes_6hour,),
                                   dense: true,
                                   contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 0.0),
+                                      ,),
                                   value: 360,
                                   groupValue:
                                       snapshot.data!.autoUpdateEpisodePeriod,
@@ -169,10 +168,10 @@ class _EpisodeRefreshWidgetState extends State<EpisodeRefreshWidget> {
                                 RadioListTile<int>(
                                   title: Text(L
                                       .of(context)!
-                                      .settings_auto_update_episodes_12hour),
+                                      .settings_auto_update_episodes_12hour,),
                                   dense: true,
                                   contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 0.0),
+                                      ),
                                   value: 720,
                                   groupValue:
                                       snapshot.data!.autoUpdateEpisodePeriod,
@@ -185,16 +184,16 @@ class _EpisodeRefreshWidgetState extends State<EpisodeRefreshWidget> {
                                     });
                                   },
                                 ),
-                              ]);
+                              ],);
                             },
-                          ));
+                          ),);
                     },
                   );
                 },
               ),
             ],
           );
-        });
+        },);
   }
 
   Text updateSubtitle(AppSettings settings) {

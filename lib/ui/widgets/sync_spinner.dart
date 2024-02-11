@@ -6,10 +6,10 @@
 
 import 'dart:async';
 
-import 'package:seasoning/bloc/podcast/podcast_bloc.dart';
-import 'package:seasoning/state/bloc_state.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:seasoning/bloc/podcast/podcast_bloc.dart';
+import 'package:seasoning/events/bloc_state.dart';
 
 class SyncSpinner extends StatefulWidget {
   const SyncSpinner({super.key});
@@ -68,9 +68,9 @@ class _SyncSpinnerState extends State<SyncSpinner>
                   child: _child,
                 )
               : const SizedBox(
-                  width: 0.0,
-                  height: 0.0,
+                  width: 0,
+                  height: 0,
                 );
-        });
+        },);
   }
 }

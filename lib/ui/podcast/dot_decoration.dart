@@ -9,9 +9,9 @@ import 'package:flutter/widgets.dart';
 /// Custom [Decoration] for the chapters, episode & notes tab selector
 /// shown in the [NowPlaying] page.
 class DotDecoration extends Decoration {
-  final Color colour;
 
   const DotDecoration({required this.colour});
+  final Color colour;
 
   @override
   BoxPainter createBoxPainter([void Function()? onChanged]) {
@@ -20,14 +20,14 @@ class DotDecoration extends Decoration {
 }
 
 class _DotDecorationPainter extends BoxPainter {
-  final DotDecoration decoration;
 
   _DotDecorationPainter({required this.decoration});
+  final DotDecoration decoration;
 
   @override
   void paint(Canvas canvas, Offset offset, ImageConfiguration configuration) {
-    const double pillWidth = 8.0;
-    const double pillHeight = 3.0;
+    const pillWidth = 8;
+    const pillHeight = 3;
 
     final center = configuration.size!.center(offset);
     final height = configuration.size!.height;
@@ -44,8 +44,8 @@ class _DotDecorationPainter extends BoxPainter {
           newOffset.dy - pillHeight,
           newOffset.dx + pillWidth,
           newOffset.dy + pillHeight,
-          const Radius.circular(12.0),
+          const Radius.circular(12),
         ),
-        paint);
+        paint,);
   }
 }

@@ -9,15 +9,15 @@ import 'dart:async';
 import 'package:seasoning/entities/downloadable.dart';
 
 class DownloadProgress {
-  final String id;
-  final int percentage;
-  final DownloadState status;
 
   DownloadProgress(
     this.id,
     this.percentage,
     this.status,
   );
+  final String id;
+  final int percentage;
+  final DownloadState status;
 }
 
 abstract class DownloadManager {

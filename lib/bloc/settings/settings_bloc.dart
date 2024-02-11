@@ -4,15 +4,19 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'package:logging/logging.dart';
+import 'package:rxdart/rxdart.dart';
 import 'package:seasoning/bloc/bloc.dart';
 import 'package:seasoning/core/environment.dart';
 import 'package:seasoning/entities/app_settings.dart';
 import 'package:seasoning/entities/search_providers.dart';
 import 'package:seasoning/services/settings/settings_service.dart';
-import 'package:logging/logging.dart';
-import 'package:rxdart/rxdart.dart';
 
 class SettingsBloc extends Bloc {
+
+  SettingsBloc(this._settingsService) {
+    _init();
+  }
   final log = Logger('SettingsBloc');
   final SettingsService _settingsService;
   final BehaviorSubject<AppSettings> _settings =
@@ -31,19 +35,15 @@ class SettingsBloc extends Bloc {
   final BehaviorSubject<int> _layoutMode = BehaviorSubject<int>();
   var _currentSettings = AppSettings.sensibleDefaults();
 
-  SettingsBloc(this._settingsService) {
-    _init();
-  }
-
   void _init() {
     /// Load all settings
     // Add our available search providers.
-    var providers = <SearchProvider>[
-      SearchProvider(key: 'itunes', name: 'iTunes')
+    final providers = <SearchProvider>[
+      const SearchProvider(key: 'itunes', name: 'iTunes'),
     ];
 
     if (podcastIndexKey.isNotEmpty) {
-      providers.add(SearchProvider(key: 'podcastindex', name: 'PodcastIndex'));
+      providers.add(const SearchProvider(key: 'podcastindex', name: 'PodcastIndex'));
     }
 
     _currentSettings = AppSettings(
