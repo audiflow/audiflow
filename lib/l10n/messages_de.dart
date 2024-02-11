@@ -30,7 +30,7 @@ class MessageLookup extends MessageLookupByLibrary {
       'about_label': MessageLookupByLibrary.simpleMessage('Über'),
     'add_rss_feed_option': MessageLookupByLibrary.simpleMessage('RSS-Feed hinzufügen'),
     'app_title': MessageLookupByLibrary.simpleMessage('Seasoning Podcast Player'),
-    'app_title_short': MessageLookupByLibrary.simpleMessage('Seasoning Player'),
+    'app_title_short': MessageLookupByLibrary.simpleMessage('Seasoning'),
     'audio_effect_trim_silence_label': MessageLookupByLibrary.simpleMessage('Stille Trimmen'),
     'audio_effect_volume_boost_label': MessageLookupByLibrary.simpleMessage('Lautstärke-Boost'),
     'audio_settings_playback_speed_label': MessageLookupByLibrary.simpleMessage('Wiedergabe Schnelligkeit'),
