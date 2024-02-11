@@ -128,19 +128,7 @@ mixin _$Episode {
   DownloadState get downloadState => throw _privateConstructorUsedError;
 
   /// Stores the progress of the current download progress if available.
-  int get downloadPercentage =>
-      throw _privateConstructorUsedError; // ignore: invalid_annotation_target
-  @JsonKey(includeToJson: false, includeFromJson: false)
-  bool get chaptersLoading =>
-      throw _privateConstructorUsedError; // ignore: invalid_annotation_target
-  @JsonKey(includeToJson: false, includeFromJson: false)
-  bool get highlight =>
-      throw _privateConstructorUsedError; // ignore: invalid_annotation_target
-  @JsonKey(includeToJson: false, includeFromJson: false)
-  bool get queued =>
-      throw _privateConstructorUsedError; // ignore: invalid_annotation_target
-  @JsonKey(includeToJson: false, includeFromJson: false)
-  bool get streaming => throw _privateConstructorUsedError;
+  int get downloadPercentage => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -187,12 +175,7 @@ abstract class $EpisodeCopyWith<$Res> {
       String? parsedDescriptionText,
       String? downloadTaskId,
       DownloadState downloadState,
-      int downloadPercentage,
-      @JsonKey(includeToJson: false, includeFromJson: false)
-      bool chaptersLoading,
-      @JsonKey(includeToJson: false, includeFromJson: false) bool highlight,
-      @JsonKey(includeToJson: false, includeFromJson: false) bool queued,
-      @JsonKey(includeToJson: false, includeFromJson: false) bool streaming});
+      int downloadPercentage});
 
   $ChapterCopyWith<$Res>? get currentChapter;
   $TranscriptCopyWith<$Res>? get transcript;
@@ -244,10 +227,6 @@ class _$EpisodeCopyWithImpl<$Res, $Val extends Episode>
     Object? downloadTaskId = freezed,
     Object? downloadState = null,
     Object? downloadPercentage = null,
-    Object? chaptersLoading = null,
-    Object? highlight = null,
-    Object? queued = null,
-    Object? streaming = null,
   }) {
     return _then(_value.copyWith(
       id: freezed == id
@@ -382,22 +361,6 @@ class _$EpisodeCopyWithImpl<$Res, $Val extends Episode>
           ? _value.downloadPercentage
           : downloadPercentage // ignore: cast_nullable_to_non_nullable
               as int,
-      chaptersLoading: null == chaptersLoading
-          ? _value.chaptersLoading
-          : chaptersLoading // ignore: cast_nullable_to_non_nullable
-              as bool,
-      highlight: null == highlight
-          ? _value.highlight
-          : highlight // ignore: cast_nullable_to_non_nullable
-              as bool,
-      queued: null == queued
-          ? _value.queued
-          : queued // ignore: cast_nullable_to_non_nullable
-              as bool,
-      streaming: null == streaming
-          ? _value.streaming
-          : streaming // ignore: cast_nullable_to_non_nullable
-              as bool,
     ) as $Val);
   }
 
@@ -468,12 +431,7 @@ abstract class _$$EpisodeImplCopyWith<$Res> implements $EpisodeCopyWith<$Res> {
       String? parsedDescriptionText,
       String? downloadTaskId,
       DownloadState downloadState,
-      int downloadPercentage,
-      @JsonKey(includeToJson: false, includeFromJson: false)
-      bool chaptersLoading,
-      @JsonKey(includeToJson: false, includeFromJson: false) bool highlight,
-      @JsonKey(includeToJson: false, includeFromJson: false) bool queued,
-      @JsonKey(includeToJson: false, includeFromJson: false) bool streaming});
+      int downloadPercentage});
 
   @override
   $ChapterCopyWith<$Res>? get currentChapter;
@@ -525,10 +483,6 @@ class __$$EpisodeImplCopyWithImpl<$Res>
     Object? downloadTaskId = freezed,
     Object? downloadState = null,
     Object? downloadPercentage = null,
-    Object? chaptersLoading = null,
-    Object? highlight = null,
-    Object? queued = null,
-    Object? streaming = null,
   }) {
     return _then(_$EpisodeImpl(
       id: freezed == id
@@ -663,22 +617,6 @@ class __$$EpisodeImplCopyWithImpl<$Res>
           ? _value.downloadPercentage
           : downloadPercentage // ignore: cast_nullable_to_non_nullable
               as int,
-      chaptersLoading: null == chaptersLoading
-          ? _value.chaptersLoading
-          : chaptersLoading // ignore: cast_nullable_to_non_nullable
-              as bool,
-      highlight: null == highlight
-          ? _value.highlight
-          : highlight // ignore: cast_nullable_to_non_nullable
-              as bool,
-      queued: null == queued
-          ? _value.queued
-          : queued // ignore: cast_nullable_to_non_nullable
-              as bool,
-      streaming: null == streaming
-          ? _value.streaming
-          : streaming // ignore: cast_nullable_to_non_nullable
-              as bool,
     ));
   }
 }
@@ -721,15 +659,7 @@ class _$EpisodeImpl with DiagnosticableTreeMixin implements _Episode {
       this.parsedDescriptionText,
       this.downloadTaskId,
       this.downloadState = DownloadState.none,
-      this.downloadPercentage = 0,
-      @JsonKey(includeToJson: false, includeFromJson: false)
-      this.chaptersLoading = false,
-      @JsonKey(includeToJson: false, includeFromJson: false)
-      this.highlight = false,
-      @JsonKey(includeToJson: false, includeFromJson: false)
-      this.queued = false,
-      @JsonKey(includeToJson: false, includeFromJson: false)
-      this.streaming = false})
+      this.downloadPercentage = 0})
       : _chapters = chapters,
         _transcriptUrls = transcriptUrls,
         _persons = persons;
@@ -907,26 +837,10 @@ class _$EpisodeImpl with DiagnosticableTreeMixin implements _Episode {
   @override
   @JsonKey()
   final int downloadPercentage;
-// ignore: invalid_annotation_target
-  @override
-  @JsonKey(includeToJson: false, includeFromJson: false)
-  final bool chaptersLoading;
-// ignore: invalid_annotation_target
-  @override
-  @JsonKey(includeToJson: false, includeFromJson: false)
-  final bool highlight;
-// ignore: invalid_annotation_target
-  @override
-  @JsonKey(includeToJson: false, includeFromJson: false)
-  final bool queued;
-// ignore: invalid_annotation_target
-  @override
-  @JsonKey(includeToJson: false, includeFromJson: false)
-  final bool streaming;
 
   @override
   String toString({DiagnosticLevel minLevel = DiagnosticLevel.info}) {
-    return 'Episode(id: $id, guid: $guid, pguid: $pguid, filepath: $filepath, filename: $filename, podcast: $podcast, title: $title, description: $description, content: $content, link: $link, imageUrl: $imageUrl, thumbImageUrl: $thumbImageUrl, publicationDate: $publicationDate, contentUrl: $contentUrl, author: $author, season: $season, episode: $episode, duration: $duration, position: $position, played: $played, chaptersUrl: $chaptersUrl, chapters: $chapters, chapterIndex: $chapterIndex, currentChapter: $currentChapter, transcriptUrls: $transcriptUrls, persons: $persons, transcript: $transcript, transcriptId: $transcriptId, lastUpdated: $lastUpdated, parsedDescriptionText: $parsedDescriptionText, downloadTaskId: $downloadTaskId, downloadState: $downloadState, downloadPercentage: $downloadPercentage, chaptersLoading: $chaptersLoading, highlight: $highlight, queued: $queued, streaming: $streaming)';
+    return 'Episode(id: $id, guid: $guid, pguid: $pguid, filepath: $filepath, filename: $filename, podcast: $podcast, title: $title, description: $description, content: $content, link: $link, imageUrl: $imageUrl, thumbImageUrl: $thumbImageUrl, publicationDate: $publicationDate, contentUrl: $contentUrl, author: $author, season: $season, episode: $episode, duration: $duration, position: $position, played: $played, chaptersUrl: $chaptersUrl, chapters: $chapters, chapterIndex: $chapterIndex, currentChapter: $currentChapter, transcriptUrls: $transcriptUrls, persons: $persons, transcript: $transcript, transcriptId: $transcriptId, lastUpdated: $lastUpdated, parsedDescriptionText: $parsedDescriptionText, downloadTaskId: $downloadTaskId, downloadState: $downloadState, downloadPercentage: $downloadPercentage)';
   }
 
   @override
@@ -966,11 +880,7 @@ class _$EpisodeImpl with DiagnosticableTreeMixin implements _Episode {
       ..add(DiagnosticsProperty('parsedDescriptionText', parsedDescriptionText))
       ..add(DiagnosticsProperty('downloadTaskId', downloadTaskId))
       ..add(DiagnosticsProperty('downloadState', downloadState))
-      ..add(DiagnosticsProperty('downloadPercentage', downloadPercentage))
-      ..add(DiagnosticsProperty('chaptersLoading', chaptersLoading))
-      ..add(DiagnosticsProperty('highlight', highlight))
-      ..add(DiagnosticsProperty('queued', queued))
-      ..add(DiagnosticsProperty('streaming', streaming));
+      ..add(DiagnosticsProperty('downloadPercentage', downloadPercentage));
   }
 
   @override
@@ -1030,14 +940,7 @@ class _$EpisodeImpl with DiagnosticableTreeMixin implements _Episode {
             (identical(other.downloadState, downloadState) ||
                 other.downloadState == downloadState) &&
             (identical(other.downloadPercentage, downloadPercentage) ||
-                other.downloadPercentage == downloadPercentage) &&
-            (identical(other.chaptersLoading, chaptersLoading) ||
-                other.chaptersLoading == chaptersLoading) &&
-            (identical(other.highlight, highlight) ||
-                other.highlight == highlight) &&
-            (identical(other.queued, queued) || other.queued == queued) &&
-            (identical(other.streaming, streaming) ||
-                other.streaming == streaming));
+                other.downloadPercentage == downloadPercentage));
   }
 
   @JsonKey(ignore: true)
@@ -1076,11 +979,7 @@ class _$EpisodeImpl with DiagnosticableTreeMixin implements _Episode {
         parsedDescriptionText,
         downloadTaskId,
         downloadState,
-        downloadPercentage,
-        chaptersLoading,
-        highlight,
-        queued,
-        streaming
+        downloadPercentage
       ]);
 
   @JsonKey(ignore: true)
@@ -1133,14 +1032,7 @@ abstract class _Episode implements Episode {
       final String? parsedDescriptionText,
       final String? downloadTaskId,
       final DownloadState downloadState,
-      final int downloadPercentage,
-      @JsonKey(includeToJson: false, includeFromJson: false)
-      final bool chaptersLoading,
-      @JsonKey(includeToJson: false, includeFromJson: false)
-      final bool highlight,
-      @JsonKey(includeToJson: false, includeFromJson: false) final bool queued,
-      @JsonKey(includeToJson: false, includeFromJson: false)
-      final bool streaming}) = _$EpisodeImpl;
+      final int downloadPercentage}) = _$EpisodeImpl;
 
   factory _Episode.fromJson(Map<String, dynamic> json) = _$EpisodeImpl.fromJson;
 
@@ -1287,18 +1179,6 @@ abstract class _Episode implements Episode {
 
   /// Stores the progress of the current download progress if available.
   int get downloadPercentage;
-  @override // ignore: invalid_annotation_target
-  @JsonKey(includeToJson: false, includeFromJson: false)
-  bool get chaptersLoading;
-  @override // ignore: invalid_annotation_target
-  @JsonKey(includeToJson: false, includeFromJson: false)
-  bool get highlight;
-  @override // ignore: invalid_annotation_target
-  @JsonKey(includeToJson: false, includeFromJson: false)
-  bool get queued;
-  @override // ignore: invalid_annotation_target
-  @JsonKey(includeToJson: false, includeFromJson: false)
-  bool get streaming;
   @override
   @JsonKey(ignore: true)
   _$$EpisodeImplCopyWith<_$EpisodeImpl> get copyWith =>

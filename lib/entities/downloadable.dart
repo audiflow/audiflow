@@ -8,6 +8,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'downloadable.freezed.dart';
 part 'downloadable.g.dart';
+
 enum DownloadState {
   none,
   queued,
@@ -28,16 +29,22 @@ class Downloadable with _$Downloadable {
   const factory Downloadable({
     /// Database ID
     required String guid,
+
     /// Unique identifier for the download
     required String url,
+
     /// Destination directory
     required String directory,
+
     /// Name of file
     required String filename,
+
     /// Current task ID for the download
     required String taskId,
+
     /// Current state of the download
     required DownloadState state,
+
     /// Percentage of MP3 downloaded
     int? percentage,
   }) = _Downloadable;

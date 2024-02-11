@@ -16,10 +16,10 @@ part 'person.g.dart';
 class Person with _$Person {
   const factory Person({
     required String name,
-    @Default('') String  role,
-    @Default('') String  group ,
-    @Default('') String image ,
-    @Default('') String link ,
+    @Default('') String role,
+    @Default('') String group,
+    @Default('') String image,
+    @Default('') String link,
   }) = _Person;
 
   factory Person.fromJson(Map<String, dynamic> json) => _$PersonFromJson(json);

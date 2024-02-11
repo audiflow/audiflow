@@ -35,55 +35,49 @@ class Season with _$Season {
 
     /// The season number.
     int? seasonNum,
-
-    /// Season episodes.
-    // ignore: invalid_annotation_target
-    @JsonKey(includeToJson: false, includeFromJson: false)
-    @Default(<Episode>[])
-    List<Episode> episodes,
   }) = _Season;
 
   factory Season.fromJson(Map<String, dynamic> json) => _$SeasonFromJson(json);
 }
 
 extension SeasonExt on Season {
-  bool get playedAllEpisodes => episodes.every((element) => element.played);
-
-  int get totalDuration =>
-      episodes.fold(0, (ms, episode) => ms + episode.duration);
-
-  bool get played {
-    return episodes.every((element) => element.played);
-  }
-
-  String? get thumbImageUrl {
-    return episodes.first.thumbImageUrl;
-  }
-
-  String? get imageUrl {
-    return episodes.first.imageUrl;
-  }
-
-  double get percentagePlayed {
-    return episodes.fold(
-            0.0, (total, episode) => total + episode.percentagePlayed) /
-        episodes.length;
-  }
-
-  DateTime? get publicationDate {
-    return episodes.first.publicationDate;
-  }
-
-  int get duration {
-    return episodes.fold(0, (total, episode) => total + episode.duration);
-  }
-
-  Duration get timeRemaining {
-    return episodes.fold(
-        Duration.zero,
-        (total, episode) =>
-            total + Duration(seconds: episode.timeRemaining.inSeconds));
-  }
+  // bool get playedAllEpisodes => episodes.every((element) => element.played);
+  //
+  // int get totalDuration =>
+  //     episodes.fold(0, (ms, episode) => ms + episode.duration);
+  //
+  // bool get played {
+  //   return episodes.every((element) => element.played);
+  // }
+  //
+  // String? get thumbImageUrl {
+  //   return episodes.first.thumbImageUrl;
+  // }
+  //
+  // String? get imageUrl {
+  //   return episodes.first.imageUrl;
+  // }
+  //
+  // double get percentagePlayed {
+  //   return episodes.fold(
+  //           0.0, (total, episode) => total + episode.percentagePlayed) /
+  //       episodes.length;
+  // }
+  //
+  // DateTime? get publicationDate {
+  //   return episodes.first.publicationDate;
+  // }
+  //
+  // int get duration {
+  //   return episodes.fold(0, (total, episode) => total + episode.duration);
+  // }
+  //
+  // Duration get timeRemaining {
+  //   return episodes.fold(
+  //       Duration.zero,
+  //       (total, episode) =>
+  //           total + Duration(seconds: episode.timeRemaining.inSeconds));
+  // }
 }
 
 List<Episode> sortedSeasonEpisodes(List<Episode> episodes) =>

@@ -51,35 +51,8 @@ mixin _$Podcast {
   /// Date and time user subscribed to the podcast.
   DateTime? get subscribedDate => throw _privateConstructorUsedError;
 
-  /// Zero or more funding links.
-  List<Funding> get funding => throw _privateConstructorUsedError;
-
-  /// One or more seasons for this podcast.
-// ignore: invalid_annotation_target
-  @JsonKey(includeToJson: false, includeFromJson: false)
-  List<Season> get seasons => throw _privateConstructorUsedError;
-
-  /// One or more episodes for this podcast.
-// ignore: invalid_annotation_target
-  @JsonKey(includeToJson: false, includeFromJson: false)
-  List<Episode> get episodes =>
-      throw _privateConstructorUsedError; // ignore: invalid_annotation_target
-  @JsonKey(includeToJson: false, includeFromJson: false)
-  List<Person> get persons => throw _privateConstructorUsedError;
-
   /// Date and time podcast was last updated/refreshed.
   DateTime? get lastUpdated => throw _privateConstructorUsedError;
-
-  /// Indicates whether the user wants to see the podcast as a list of seasons
-// ignore: invalid_annotation_target
-  @JsonKey(includeToJson: false, includeFromJson: false)
-  bool get seasonView =>
-      throw _privateConstructorUsedError; // ignore: invalid_annotation_target
-  @JsonKey(includeToJson: false, includeFromJson: false)
-  bool get newEpisodes =>
-      throw _privateConstructorUsedError; // ignore: invalid_annotation_target
-  @JsonKey(includeToJson: false, includeFromJson: false)
-  bool get updatedEpisodes => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -102,18 +75,7 @@ abstract class $PodcastCopyWith<$Res> {
       String? thumbImageUrl,
       String? copyright,
       DateTime? subscribedDate,
-      List<Funding> funding,
-      @JsonKey(includeToJson: false, includeFromJson: false)
-      List<Season> seasons,
-      @JsonKey(includeToJson: false, includeFromJson: false)
-      List<Episode> episodes,
-      @JsonKey(includeToJson: false, includeFromJson: false)
-      List<Person> persons,
-      DateTime? lastUpdated,
-      @JsonKey(includeToJson: false, includeFromJson: false) bool seasonView,
-      @JsonKey(includeToJson: false, includeFromJson: false) bool newEpisodes,
-      @JsonKey(includeToJson: false, includeFromJson: false)
-      bool updatedEpisodes});
+      DateTime? lastUpdated});
 }
 
 /// @nodoc
@@ -139,14 +101,7 @@ class _$PodcastCopyWithImpl<$Res, $Val extends Podcast>
     Object? thumbImageUrl = freezed,
     Object? copyright = freezed,
     Object? subscribedDate = freezed,
-    Object? funding = null,
-    Object? seasons = null,
-    Object? episodes = null,
-    Object? persons = null,
     Object? lastUpdated = freezed,
-    Object? seasonView = null,
-    Object? newEpisodes = null,
-    Object? updatedEpisodes = null,
   }) {
     return _then(_value.copyWith(
       id: freezed == id
@@ -189,38 +144,10 @@ class _$PodcastCopyWithImpl<$Res, $Val extends Podcast>
           ? _value.subscribedDate
           : subscribedDate // ignore: cast_nullable_to_non_nullable
               as DateTime?,
-      funding: null == funding
-          ? _value.funding
-          : funding // ignore: cast_nullable_to_non_nullable
-              as List<Funding>,
-      seasons: null == seasons
-          ? _value.seasons
-          : seasons // ignore: cast_nullable_to_non_nullable
-              as List<Season>,
-      episodes: null == episodes
-          ? _value.episodes
-          : episodes // ignore: cast_nullable_to_non_nullable
-              as List<Episode>,
-      persons: null == persons
-          ? _value.persons
-          : persons // ignore: cast_nullable_to_non_nullable
-              as List<Person>,
       lastUpdated: freezed == lastUpdated
           ? _value.lastUpdated
           : lastUpdated // ignore: cast_nullable_to_non_nullable
               as DateTime?,
-      seasonView: null == seasonView
-          ? _value.seasonView
-          : seasonView // ignore: cast_nullable_to_non_nullable
-              as bool,
-      newEpisodes: null == newEpisodes
-          ? _value.newEpisodes
-          : newEpisodes // ignore: cast_nullable_to_non_nullable
-              as bool,
-      updatedEpisodes: null == updatedEpisodes
-          ? _value.updatedEpisodes
-          : updatedEpisodes // ignore: cast_nullable_to_non_nullable
-              as bool,
     ) as $Val);
   }
 }
@@ -243,18 +170,7 @@ abstract class _$$PodcastImplCopyWith<$Res> implements $PodcastCopyWith<$Res> {
       String? thumbImageUrl,
       String? copyright,
       DateTime? subscribedDate,
-      List<Funding> funding,
-      @JsonKey(includeToJson: false, includeFromJson: false)
-      List<Season> seasons,
-      @JsonKey(includeToJson: false, includeFromJson: false)
-      List<Episode> episodes,
-      @JsonKey(includeToJson: false, includeFromJson: false)
-      List<Person> persons,
-      DateTime? lastUpdated,
-      @JsonKey(includeToJson: false, includeFromJson: false) bool seasonView,
-      @JsonKey(includeToJson: false, includeFromJson: false) bool newEpisodes,
-      @JsonKey(includeToJson: false, includeFromJson: false)
-      bool updatedEpisodes});
+      DateTime? lastUpdated});
 }
 
 /// @nodoc
@@ -278,14 +194,7 @@ class __$$PodcastImplCopyWithImpl<$Res>
     Object? thumbImageUrl = freezed,
     Object? copyright = freezed,
     Object? subscribedDate = freezed,
-    Object? funding = null,
-    Object? seasons = null,
-    Object? episodes = null,
-    Object? persons = null,
     Object? lastUpdated = freezed,
-    Object? seasonView = null,
-    Object? newEpisodes = null,
-    Object? updatedEpisodes = null,
   }) {
     return _then(_$PodcastImpl(
       id: freezed == id
@@ -328,38 +237,10 @@ class __$$PodcastImplCopyWithImpl<$Res>
           ? _value.subscribedDate
           : subscribedDate // ignore: cast_nullable_to_non_nullable
               as DateTime?,
-      funding: null == funding
-          ? _value._funding
-          : funding // ignore: cast_nullable_to_non_nullable
-              as List<Funding>,
-      seasons: null == seasons
-          ? _value._seasons
-          : seasons // ignore: cast_nullable_to_non_nullable
-              as List<Season>,
-      episodes: null == episodes
-          ? _value._episodes
-          : episodes // ignore: cast_nullable_to_non_nullable
-              as List<Episode>,
-      persons: null == persons
-          ? _value._persons
-          : persons // ignore: cast_nullable_to_non_nullable
-              as List<Person>,
       lastUpdated: freezed == lastUpdated
           ? _value.lastUpdated
           : lastUpdated // ignore: cast_nullable_to_non_nullable
               as DateTime?,
-      seasonView: null == seasonView
-          ? _value.seasonView
-          : seasonView // ignore: cast_nullable_to_non_nullable
-              as bool,
-      newEpisodes: null == newEpisodes
-          ? _value.newEpisodes
-          : newEpisodes // ignore: cast_nullable_to_non_nullable
-              as bool,
-      updatedEpisodes: null == updatedEpisodes
-          ? _value.updatedEpisodes
-          : updatedEpisodes // ignore: cast_nullable_to_non_nullable
-              as bool,
     ));
   }
 }
@@ -378,24 +259,7 @@ class _$PodcastImpl implements _Podcast {
       this.thumbImageUrl,
       this.copyright,
       this.subscribedDate,
-      final List<Funding> funding = const [],
-      @JsonKey(includeToJson: false, includeFromJson: false)
-      final List<Season> seasons = const [],
-      @JsonKey(includeToJson: false, includeFromJson: false)
-      final List<Episode> episodes = const [],
-      @JsonKey(includeToJson: false, includeFromJson: false)
-      final List<Person> persons = const [],
-      this.lastUpdated,
-      @JsonKey(includeToJson: false, includeFromJson: false)
-      this.seasonView = false,
-      @JsonKey(includeToJson: false, includeFromJson: false)
-      this.newEpisodes = false,
-      @JsonKey(includeToJson: false, includeFromJson: false)
-      this.updatedEpisodes = false})
-      : _funding = funding,
-        _seasons = seasons,
-        _episodes = episodes,
-        _persons = persons;
+      this.lastUpdated});
 
   factory _$PodcastImpl.fromJson(Map<String, dynamic> json) =>
       _$$PodcastImplFromJson(json);
@@ -441,78 +305,13 @@ class _$PodcastImpl implements _Podcast {
   @override
   final DateTime? subscribedDate;
 
-  /// Zero or more funding links.
-  final List<Funding> _funding;
-
-  /// Zero or more funding links.
-  @override
-  @JsonKey()
-  List<Funding> get funding {
-    if (_funding is EqualUnmodifiableListView) return _funding;
-    // ignore: implicit_dynamic_type
-    return EqualUnmodifiableListView(_funding);
-  }
-
-  /// One or more seasons for this podcast.
-// ignore: invalid_annotation_target
-  final List<Season> _seasons;
-
-  /// One or more seasons for this podcast.
-// ignore: invalid_annotation_target
-  @override
-  @JsonKey(includeToJson: false, includeFromJson: false)
-  List<Season> get seasons {
-    if (_seasons is EqualUnmodifiableListView) return _seasons;
-    // ignore: implicit_dynamic_type
-    return EqualUnmodifiableListView(_seasons);
-  }
-
-  /// One or more episodes for this podcast.
-// ignore: invalid_annotation_target
-  final List<Episode> _episodes;
-
-  /// One or more episodes for this podcast.
-// ignore: invalid_annotation_target
-  @override
-  @JsonKey(includeToJson: false, includeFromJson: false)
-  List<Episode> get episodes {
-    if (_episodes is EqualUnmodifiableListView) return _episodes;
-    // ignore: implicit_dynamic_type
-    return EqualUnmodifiableListView(_episodes);
-  }
-
-// ignore: invalid_annotation_target
-  final List<Person> _persons;
-// ignore: invalid_annotation_target
-  @override
-  @JsonKey(includeToJson: false, includeFromJson: false)
-  List<Person> get persons {
-    if (_persons is EqualUnmodifiableListView) return _persons;
-    // ignore: implicit_dynamic_type
-    return EqualUnmodifiableListView(_persons);
-  }
-
   /// Date and time podcast was last updated/refreshed.
   @override
   final DateTime? lastUpdated;
 
-  /// Indicates whether the user wants to see the podcast as a list of seasons
-// ignore: invalid_annotation_target
-  @override
-  @JsonKey(includeToJson: false, includeFromJson: false)
-  final bool seasonView;
-// ignore: invalid_annotation_target
-  @override
-  @JsonKey(includeToJson: false, includeFromJson: false)
-  final bool newEpisodes;
-// ignore: invalid_annotation_target
-  @override
-  @JsonKey(includeToJson: false, includeFromJson: false)
-  final bool updatedEpisodes;
-
   @override
   String toString() {
-    return 'Podcast(id: $id, guid: $guid, url: $url, link: $link, title: $title, description: $description, imageUrl: $imageUrl, thumbImageUrl: $thumbImageUrl, copyright: $copyright, subscribedDate: $subscribedDate, funding: $funding, seasons: $seasons, episodes: $episodes, persons: $persons, lastUpdated: $lastUpdated, seasonView: $seasonView, newEpisodes: $newEpisodes, updatedEpisodes: $updatedEpisodes)';
+    return 'Podcast(id: $id, guid: $guid, url: $url, link: $link, title: $title, description: $description, imageUrl: $imageUrl, thumbImageUrl: $thumbImageUrl, copyright: $copyright, subscribedDate: $subscribedDate, lastUpdated: $lastUpdated)';
   }
 
   @override
@@ -535,18 +334,8 @@ class _$PodcastImpl implements _Podcast {
                 other.copyright == copyright) &&
             (identical(other.subscribedDate, subscribedDate) ||
                 other.subscribedDate == subscribedDate) &&
-            const DeepCollectionEquality().equals(other._funding, _funding) &&
-            const DeepCollectionEquality().equals(other._seasons, _seasons) &&
-            const DeepCollectionEquality().equals(other._episodes, _episodes) &&
-            const DeepCollectionEquality().equals(other._persons, _persons) &&
             (identical(other.lastUpdated, lastUpdated) ||
-                other.lastUpdated == lastUpdated) &&
-            (identical(other.seasonView, seasonView) ||
-                other.seasonView == seasonView) &&
-            (identical(other.newEpisodes, newEpisodes) ||
-                other.newEpisodes == newEpisodes) &&
-            (identical(other.updatedEpisodes, updatedEpisodes) ||
-                other.updatedEpisodes == updatedEpisodes));
+                other.lastUpdated == lastUpdated));
   }
 
   @JsonKey(ignore: true)
@@ -563,14 +352,7 @@ class _$PodcastImpl implements _Podcast {
       thumbImageUrl,
       copyright,
       subscribedDate,
-      const DeepCollectionEquality().hash(_funding),
-      const DeepCollectionEquality().hash(_seasons),
-      const DeepCollectionEquality().hash(_episodes),
-      const DeepCollectionEquality().hash(_persons),
-      lastUpdated,
-      seasonView,
-      newEpisodes,
-      updatedEpisodes);
+      lastUpdated);
 
   @JsonKey(ignore: true)
   @override
@@ -598,20 +380,7 @@ abstract class _Podcast implements Podcast {
       final String? thumbImageUrl,
       final String? copyright,
       final DateTime? subscribedDate,
-      final List<Funding> funding,
-      @JsonKey(includeToJson: false, includeFromJson: false)
-      final List<Season> seasons,
-      @JsonKey(includeToJson: false, includeFromJson: false)
-      final List<Episode> episodes,
-      @JsonKey(includeToJson: false, includeFromJson: false)
-      final List<Person> persons,
-      final DateTime? lastUpdated,
-      @JsonKey(includeToJson: false, includeFromJson: false)
-      final bool seasonView,
-      @JsonKey(includeToJson: false, includeFromJson: false)
-      final bool newEpisodes,
-      @JsonKey(includeToJson: false, includeFromJson: false)
-      final bool updatedEpisodes}) = _$PodcastImpl;
+      final DateTime? lastUpdated}) = _$PodcastImpl;
 
   factory _Podcast.fromJson(Map<String, dynamic> json) = _$PodcastImpl.fromJson;
 
@@ -658,39 +427,8 @@ abstract class _Podcast implements Podcast {
   DateTime? get subscribedDate;
   @override
 
-  /// Zero or more funding links.
-  List<Funding> get funding;
-  @override
-
-  /// One or more seasons for this podcast.
-// ignore: invalid_annotation_target
-  @JsonKey(includeToJson: false, includeFromJson: false)
-  List<Season> get seasons;
-  @override
-
-  /// One or more episodes for this podcast.
-// ignore: invalid_annotation_target
-  @JsonKey(includeToJson: false, includeFromJson: false)
-  List<Episode> get episodes;
-  @override // ignore: invalid_annotation_target
-  @JsonKey(includeToJson: false, includeFromJson: false)
-  List<Person> get persons;
-  @override
-
   /// Date and time podcast was last updated/refreshed.
   DateTime? get lastUpdated;
-  @override
-
-  /// Indicates whether the user wants to see the podcast as a list of seasons
-// ignore: invalid_annotation_target
-  @JsonKey(includeToJson: false, includeFromJson: false)
-  bool get seasonView;
-  @override // ignore: invalid_annotation_target
-  @JsonKey(includeToJson: false, includeFromJson: false)
-  bool get newEpisodes;
-  @override // ignore: invalid_annotation_target
-  @JsonKey(includeToJson: false, includeFromJson: false)
-  bool get updatedEpisodes;
   @override
   @JsonKey(ignore: true)
   _$$PodcastImplCopyWith<_$PodcastImpl> get copyWith =>

@@ -39,11 +39,6 @@ mixin _$Season {
   /// The season number.
   int? get seasonNum => throw _privateConstructorUsedError;
 
-  /// Season episodes.
-// ignore: invalid_annotation_target
-  @JsonKey(includeToJson: false, includeFromJson: false)
-  List<Episode> get episodes => throw _privateConstructorUsedError;
-
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
   $SeasonCopyWith<Season> get copyWith => throw _privateConstructorUsedError;
@@ -60,9 +55,7 @@ abstract class $SeasonCopyWith<$Res> {
       String pguid,
       String podcast,
       String? title,
-      int? seasonNum,
-      @JsonKey(includeToJson: false, includeFromJson: false)
-      List<Episode> episodes});
+      int? seasonNum});
 }
 
 /// @nodoc
@@ -84,7 +77,6 @@ class _$SeasonCopyWithImpl<$Res, $Val extends Season>
     Object? podcast = null,
     Object? title = freezed,
     Object? seasonNum = freezed,
-    Object? episodes = null,
   }) {
     return _then(_value.copyWith(
       id: freezed == id
@@ -111,10 +103,6 @@ class _$SeasonCopyWithImpl<$Res, $Val extends Season>
           ? _value.seasonNum
           : seasonNum // ignore: cast_nullable_to_non_nullable
               as int?,
-      episodes: null == episodes
-          ? _value.episodes
-          : episodes // ignore: cast_nullable_to_non_nullable
-              as List<Episode>,
     ) as $Val);
   }
 }
@@ -132,9 +120,7 @@ abstract class _$$SeasonImplCopyWith<$Res> implements $SeasonCopyWith<$Res> {
       String pguid,
       String podcast,
       String? title,
-      int? seasonNum,
-      @JsonKey(includeToJson: false, includeFromJson: false)
-      List<Episode> episodes});
+      int? seasonNum});
 }
 
 /// @nodoc
@@ -154,7 +140,6 @@ class __$$SeasonImplCopyWithImpl<$Res>
     Object? podcast = null,
     Object? title = freezed,
     Object? seasonNum = freezed,
-    Object? episodes = null,
   }) {
     return _then(_$SeasonImpl(
       id: freezed == id
@@ -181,10 +166,6 @@ class __$$SeasonImplCopyWithImpl<$Res>
           ? _value.seasonNum
           : seasonNum // ignore: cast_nullable_to_non_nullable
               as int?,
-      episodes: null == episodes
-          ? _value._episodes
-          : episodes // ignore: cast_nullable_to_non_nullable
-              as List<Episode>,
     ));
   }
 }
@@ -198,10 +179,7 @@ class _$SeasonImpl implements _Season {
       required this.pguid,
       required this.podcast,
       this.title,
-      this.seasonNum,
-      @JsonKey(includeToJson: false, includeFromJson: false)
-      final List<Episode> episodes = const <Episode>[]})
-      : _episodes = episodes;
+      this.seasonNum});
 
   factory _$SeasonImpl.fromJson(Map<String, dynamic> json) =>
       _$$SeasonImplFromJson(json);
@@ -231,23 +209,9 @@ class _$SeasonImpl implements _Season {
   @override
   final int? seasonNum;
 
-  /// Season episodes.
-// ignore: invalid_annotation_target
-  final List<Episode> _episodes;
-
-  /// Season episodes.
-// ignore: invalid_annotation_target
-  @override
-  @JsonKey(includeToJson: false, includeFromJson: false)
-  List<Episode> get episodes {
-    if (_episodes is EqualUnmodifiableListView) return _episodes;
-    // ignore: implicit_dynamic_type
-    return EqualUnmodifiableListView(_episodes);
-  }
-
   @override
   String toString() {
-    return 'Season(id: $id, guid: $guid, pguid: $pguid, podcast: $podcast, title: $title, seasonNum: $seasonNum, episodes: $episodes)';
+    return 'Season(id: $id, guid: $guid, pguid: $pguid, podcast: $podcast, title: $title, seasonNum: $seasonNum)';
   }
 
   @override
@@ -261,14 +225,13 @@ class _$SeasonImpl implements _Season {
             (identical(other.podcast, podcast) || other.podcast == podcast) &&
             (identical(other.title, title) || other.title == title) &&
             (identical(other.seasonNum, seasonNum) ||
-                other.seasonNum == seasonNum) &&
-            const DeepCollectionEquality().equals(other._episodes, _episodes));
+                other.seasonNum == seasonNum));
   }
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode => Object.hash(runtimeType, id, guid, pguid, podcast, title,
-      seasonNum, const DeepCollectionEquality().hash(_episodes));
+  int get hashCode =>
+      Object.hash(runtimeType, id, guid, pguid, podcast, title, seasonNum);
 
   @JsonKey(ignore: true)
   @override
@@ -291,9 +254,7 @@ abstract class _Season implements Season {
       required final String pguid,
       required final String podcast,
       final String? title,
-      final int? seasonNum,
-      @JsonKey(includeToJson: false, includeFromJson: false)
-      final List<Episode> episodes}) = _$SeasonImpl;
+      final int? seasonNum}) = _$SeasonImpl;
 
   factory _Season.fromJson(Map<String, dynamic> json) = _$SeasonImpl.fromJson;
 
@@ -322,12 +283,6 @@ abstract class _Season implements Season {
 
   /// The season number.
   int? get seasonNum;
-  @override
-
-  /// Season episodes.
-// ignore: invalid_annotation_target
-  @JsonKey(includeToJson: false, includeFromJson: false)
-  List<Episode> get episodes;
   @override
   @JsonKey(ignore: true)
   _$$SeasonImplCopyWith<_$SeasonImpl> get copyWith =>

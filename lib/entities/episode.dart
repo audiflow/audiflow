@@ -131,23 +131,6 @@ class Episode with _$Episode {
 
     /// Stores the progress of the current download progress if available.
     @Default(0) int downloadPercentage,
-
-    // ignore: invalid_annotation_target
-    @JsonKey(includeToJson: false, includeFromJson: false)
-    @Default(false)
-    bool chaptersLoading,
-    // ignore: invalid_annotation_target
-    @JsonKey(includeToJson: false, includeFromJson: false)
-    @Default(false)
-    bool highlight,
-    // ignore: invalid_annotation_target
-    @JsonKey(includeToJson: false, includeFromJson: false)
-    @Default(false)
-    bool queued,
-    // ignore: invalid_annotation_target
-    @JsonKey(includeToJson: false, includeFromJson: false)
-    @Default(false)
-    bool streaming,
   }) = _Episode;
 
   factory Episode.fromJson(Map<String, dynamic> json) =>
@@ -201,10 +184,6 @@ extension EpisodeExtension on Episode {
   bool get hasChapters => chaptersUrl != null && chaptersUrl!.isNotEmpty;
 
   bool get hasTranscripts => transcriptUrls.isNotEmpty;
-
-  bool get chaptersAreLoaded => !chaptersLoading && chapters.isNotEmpty;
-
-  bool get chaptersAreNotLoaded => chaptersLoading && chapters.isEmpty;
 
   String? get positionalImageUrl {
     if (currentChapter != null &&

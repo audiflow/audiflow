@@ -6,11 +6,6 @@
 
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:podcast_search/podcast_search.dart' as search;
-import 'package:seasoning/entities/funding.dart';
-import 'package:seasoning/entities/person.dart';
-import 'package:seasoning/entities/season.dart';
-
-import 'episode.dart';
 
 part 'podcast.freezed.dart';
 part 'podcast.g.dart';
@@ -52,42 +47,8 @@ class Podcast with _$Podcast {
     /// Date and time user subscribed to the podcast.
     DateTime? subscribedDate,
 
-    /// Zero or more funding links.
-    @Default([]) List<Funding> funding,
-
-    /// One or more seasons for this podcast.
-    // ignore: invalid_annotation_target
-    @JsonKey(includeToJson: false, includeFromJson: false)
-    @Default([])
-    List<Season> seasons,
-
-    /// One or more episodes for this podcast.
-    // ignore: invalid_annotation_target
-    @JsonKey(includeToJson: false, includeFromJson: false)
-    @Default([])
-    List<Episode> episodes,
-    // ignore: invalid_annotation_target
-    @JsonKey(includeToJson: false, includeFromJson: false)
-    @Default([])
-    List<Person> persons,
-
     /// Date and time podcast was last updated/refreshed.
     DateTime? lastUpdated,
-
-    /// Indicates whether the user wants to see the podcast as a list of seasons
-    // ignore: invalid_annotation_target
-    @JsonKey(includeToJson: false, includeFromJson: false)
-    @Default(false)
-    bool seasonView,
-
-    // ignore: invalid_annotation_target
-    @JsonKey(includeToJson: false, includeFromJson: false)
-    @Default(false)
-    bool newEpisodes,
-    // ignore: invalid_annotation_target
-    @JsonKey(includeToJson: false, includeFromJson: false)
-    @Default(false)
-    bool updatedEpisodes,
   }) = _Podcast;
 
   factory Podcast.fromJson(Map<String, dynamic> json) =>
