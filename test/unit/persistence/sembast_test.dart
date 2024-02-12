@@ -287,8 +287,15 @@ void main() {
 
     test('findDownloadByTaskId', () async {
       final loaded =
-      await persistenceService!.findDownloadByTaskId(saved[1].taskId);
+          await persistenceService!.findDownloadByTaskId(saved[1].taskId);
       expect(loaded, saved[1]);
+    });
+
+    test('deleteDownload', () async {
+      await persistenceService!.deleteDownload(saved[1]);
+      final loaded =
+          await persistenceService!.findDownloadByGuid(saved[1].guid);
+      expect(loaded, isNull);
     });
   });
 

@@ -263,26 +263,28 @@ class SembastRepository extends Repository {
   }
 
   @override
-  Future<Downloadable> saveDownload(Downloadable downloadable) async {
-    final finder = Finder(
-      filter: Filter.and([
-        Filter.equals('guid', downloadable.guid),
-      ]),
-    );
+  Future<Downloadable> saveDownload(Downloadable download) async {
+    final finder = Finder(filter: Filter.equals('guid', download.guid));
 
     final client = await _db;
     final snapshot = await _downloadableStore.findFirst(client, finder: finder);
     if (snapshot == null) {
-      final id = await _downloadableStore.add(client, downloadable.toJson());
-      return downloadable.copyWith(id: id);
+      final id = await _downloadableStore.add(client, download.toJson());
+      return download.copyWith(id: id);
     } else {
       await _downloadableStore.update(
         client,
-        downloadable.toJson(),
+        download.toJson(),
         finder: finder,
       );
-      return downloadable;
+      return download;
     }
+  }
+
+  @override
+  Future<void> deleteDownload(Downloadable download) async {
+    final finder = Finder(filter: Filter.byKey(download.id));
+    await _downloadableStore.delete(await _db, finder: finder);
   }
 
   @override

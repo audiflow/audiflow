@@ -52,7 +52,9 @@ abstract class Repository {
 
   Future<Downloadable?> findDownloadByTaskId(String taskId);
 
-  Future<Downloadable> saveDownload(Downloadable downloadable);
+  Future<Downloadable> saveDownload(Downloadable download);
+
+  Future<void> deleteDownload(Downloadable download);
 
   Future<Transcript?> findTranscriptById(int id);
 
