@@ -48,119 +48,111 @@ class MobileDownloadService extends DownloadService {
   @override
   Future<bool> downloadEpisode(Episode episode) async {
     try {
-      final season = episode.season != null ? episode.season.toString() : '';
-      final epno = episode.episode != null ? episode.episode.toString() : '';
+      if (!await hasStoragePermission()) {
+        return false;
+      }
 
       var newEpisode = episode;
-      if (await hasStoragePermission()) {
-        // If this episode contains chapter, fetch them first.
-        if (episode.hasChapters && episode.chaptersUrl != null) {
-          final chapters =
-              await podcastService.loadChaptersByUrl(url: episode.chaptersUrl!);
 
-          newEpisode = newEpisode.copyWith(chapters: chapters);
-        }
+      // If this episode contains chapter, fetch them first.
+      if (episode.hasChapters) {
+        final chapters =
+            await podcastService.loadChaptersByUrl(url: episode.chaptersUrl!);
 
-        // Next, if the episode supports transcripts download that next
-        if (episode.hasTranscripts) {
-          var sub = episode.transcriptUrls.firstWhereOrNull(
-            (element) => element.type == TranscriptFormat.json,
-          );
+        newEpisode = newEpisode.copyWith(chapters: chapters);
+      }
 
-          sub ??= episode.transcriptUrls.firstWhereOrNull(
-            (element) => element.type == TranscriptFormat.subrip,
-          );
-
-          if (sub != null) {
-            var transcript =
-                await podcastService.loadTranscriptByUrl(transcriptUrl: sub);
-
-            transcript = await podcastService.saveTranscript(transcript);
-
-            newEpisode = newEpisode.copyWith(
-              transcript: transcript,
-              transcriptId: transcript.id,
-            );
-          }
-        }
-
-        if (episode != newEpisode) {
-          await podcastService.saveEpisode(newEpisode);
-        }
-
-        final episodePath = await resolveDirectory(episode: newEpisode);
-        final downloadPath =
-            await resolveDirectory(episode: newEpisode, full: true);
-        var uri = Uri.parse(newEpisode.contentUrl!);
-
-        // Ensure the download directory exists
-        await createDownloadDirectory(newEpisode);
-
-        // Filename should be last segment of URI.
-        var filename = safeFile(
-          uri.pathSegments
-              .lastWhereOrNull((e) => e.toLowerCase().endsWith('.mp3')),
+      // Next, if the episode supports transcripts download that next
+      if (episode.hasTranscripts) {
+        var sub = episode.transcriptUrls.firstWhereOrNull(
+          (element) => element.type == TranscriptFormat.json,
         );
 
-        filename ??= safeFile(
-          uri.pathSegments
-              .lastWhereOrNull((e) => e.toLowerCase().endsWith('.m4a')),
+        sub ??= episode.transcriptUrls.firstWhereOrNull(
+          (element) => element.type == TranscriptFormat.subrip,
         );
 
-        if (filename == null) {
-          // TODO(unknown): Handle unsupported format.
-        } else {
-          // The last segment could also be a full URL. Take a second pass.
-          if (filename.contains('/')) {
-            try {
-              uri = Uri.parse(filename);
-              filename = uri.pathSegments.last;
-            } on FormatException {
-              // It wasn't a URL...
-            }
-          }
-
-          // Some podcasts use the same file name for each episode. If we have a
-          // season and/or episode number provided by iTunes we can use that. We
-          // will also append the filename with the publication date if
-          // available.
-          var pubDate = '';
-
-          if (episode.publicationDate != null) {
-            pubDate =
-                '${episode.publicationDate!.millisecondsSinceEpoch ~/ 1000}-';
-          }
-
-          filename = '$season$epno$pubDate$filename';
-
-          log.fine(
-            'Download episode (${episode.title}) $filename to $downloadPath/$filename',
+        if (sub != null) {
+          final transcript = await podcastService.loadTranscriptByUrl(
+            episode: episode,
+            transcriptUrl: sub,
           );
-
-          /// If we get a redirect to an http endpoint the download will fail.
-          /// Let's fully resolve the URL before calling download and ensure it
-          /// is https.
-          final url = await resolveUrl(episode.contentUrl!, forceHttps: true);
-
-          final taskId =
-              await downloadManager.enqueueTask(url, downloadPath, filename);
-
-          // Update the episode with download data
-          newEpisode = newEpisode.copyWith(
-            filepath: episodePath,
-            filename: filename,
-            downloadTaskId: taskId,
-            downloadState: DownloadState.downloading,
-            downloadPercentage: 0,
-          );
-
-          await repository.saveEpisode(newEpisode);
-
-          return true;
+          await podcastService.saveTranscript(transcript);
         }
       }
 
-      return false;
+      if (episode != newEpisode) {
+        await podcastService.saveEpisode(newEpisode);
+      }
+
+      // Ensure the download directory exists
+      final directory = await createDownloadDirectory(newEpisode);
+      var uri = Uri.parse(newEpisode.contentUrl!);
+
+      // Filename should be last segment of URI.
+      var filename = uri.pathSegments
+              .lastWhereOrNull((e) => e.toLowerCase().endsWith('.mp3')) ??
+          uri.pathSegments
+              .lastWhereOrNull((e) => e.toLowerCase().endsWith('.m4a'));
+
+      if (filename == null) {
+        // TODO(unknown): Handle unsupported format.
+        return false;
+      }
+
+      filename = safeFile(filename);
+
+      // The last segment could also be a full URL. Take a second pass.
+      if (filename.contains('/')) {
+        try {
+          uri = Uri.parse(filename);
+          filename = uri.pathSegments.last;
+        } on FormatException {
+          // It wasn't a URL...
+        }
+      }
+
+      // Some podcasts use the same file name for each episode. If we have a
+      // season and/or episode number provided by iTunes we can use that. We
+      // will also append the filename with the publication date if
+      // available.
+      final prefix = [
+        if (episode.season != null) episode.season.toString(),
+        if (episode.episode != null) episode.episode.toString(),
+        if (episode.publicationDate != null)
+          '${episode.publicationDate!.millisecondsSinceEpoch ~/ 1000}',
+      ].join('-');
+      filename = '$prefix$filename';
+
+      log.fine(
+        'Download episode (${episode.title}) $filename to $directory/$filename',
+      );
+
+      /// If we get a redirect to an http endpoint the download will fail.
+      /// Let's fully resolve the URL before calling download and ensure it
+      /// is https.
+      final url = await resolveUrl(episode.contentUrl!, forceHttps: true);
+
+      final taskId =
+          await downloadManager.enqueueTask(url, directory, filename);
+      if (taskId == null) {
+        return false;
+      }
+
+      // Update the episode with download data
+      final download = Downloadable(
+        pguid: episode.pguid,
+        guid: episode.guid,
+        url: url,
+        directory: await directoryToRecord(episode: newEpisode),
+        filename: filename,
+        taskId: taskId,
+        state: DownloadState.downloading,
+      );
+
+      await repository.saveDownload(download);
+
+      return true;
       // ignore: avoid_catches_without_on_clauses
     } catch (e, stack) {
       log.warning('Episode download failed (${episode.title})', e, stack);
@@ -169,43 +161,38 @@ class MobileDownloadService extends DownloadService {
   }
 
   @override
-  Future<Episode?> findEpisodeByTaskId(String taskId) {
-    return repository.findEpisodeByTaskId(taskId);
+  Future<Downloadable?> findDownloadByTaskId(String taskId) {
+    return repository.findDownloadByTaskId(taskId);
   }
 
   Future<void> _updateDownloadProgress(DownloadProgress progress) async {
-    final episode = await repository.findEpisodeByTaskId(progress.id);
-
-    if (episode == null) {
+    var download = await repository.findDownloadByTaskId(progress.id);
+    if (download == null) {
       return;
     }
 
     // We might be called during the cleanup routine during startup.
     // Do not bother updating if nothing has changed.
-    if (episode.downloadPercentage == progress.percentage &&
-        episode.downloadState == progress.status) {
+    if (download.percentage == progress.percentage &&
+        download.state == progress.status) {
       return;
     }
 
-    var newEpisode = episode.copyWith(
-      downloadPercentage: progress.percentage,
-      downloadState: progress.status,
+    download = download.copyWith(
+      percentage: progress.percentage,
+      state: progress.status,
     );
+    await repository.saveDownload(download);
 
-    if (progress.percentage == 100) {
-      if (await hasStoragePermission()) {
-        final filename = await resolvePath(episode);
-
-        // If we do not have a duration for this file - let's calculate it
-        if (episode.duration == 0) {
-          final mp3Info = MP3Processor.fromFile(File(filename));
-
-          newEpisode =
-              newEpisode.copyWith(duration: mp3Info.duration.inSeconds);
-        }
+    if (progress.percentage == 100 && await hasStoragePermission()) {
+      // If we do not have a duration for this file - let's calculate it
+      var episode = await repository.findEpisodeByGuid(download.guid);
+      if (episode?.duration == 0) {
+        final path = await resolvePath(download);
+        final mp3Info = MP3Processor.fromFile(File(path));
+        episode = episode!.copyWith(duration: mp3Info.duration.inSeconds);
+        await repository.saveEpisode(episode);
       }
     }
-
-    await repository.saveEpisode(newEpisode);
   }
 }

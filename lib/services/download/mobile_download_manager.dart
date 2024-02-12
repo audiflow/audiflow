@@ -75,7 +75,7 @@ class MobileDownloaderManager implements DownloadManager {
     String downloadPath,
     String fileName,
   ) async {
-    return await FlutterDownloader.enqueue(
+    return FlutterDownloader.enqueue(
       url: url,
       savedDir: downloadPath,
       fileName: fileName,

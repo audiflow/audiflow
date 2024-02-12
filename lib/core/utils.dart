@@ -23,32 +23,27 @@ import 'package:seasoning/services/settings/settings_service.dart';
 /// functions to help with resolving the various paths correctly depending upon
 /// platform.
 Future<String> resolvePath(Downloadable download) async {
-  if (Platform.isIOS) {
-    return Future.value(
-      join(await getStorageDirectory(), download.directory, download.filename),
-    );
-  }
-
-  return Future.value(join(download.directory, download.filename));
+  return Platform.isAndroid
+      ? join(download.directory, download.filename)
+      : join(
+          await getStorageDirectory(),
+          download.directory,
+          download.filename,
+        );
 }
 
-Future<String> resolveDirectory({
+Future<String> directoryToRecord({
   required Episode episode,
-  bool full = false,
 }) async {
-  if (full || Platform.isAndroid) {
-    return Future.value(
-      join(await getStorageDirectory(), safePath(episode.podcast)),
-    );
-  }
-
-  return Future.value(safePath(episode.podcast));
+  return Platform.isAndroid
+      ? join(await getStorageDirectory(), safePath(episode.guid))
+      : safePath(episode.guid);
 }
 
-Future<void> createDownloadDirectory(Episode episode) async {
-  final path = join(await getStorageDirectory(), safePath(episode.podcast));
-
+Future<String> createDownloadDirectory(Episode episode) async {
+  final path = join(await getStorageDirectory(), safePath(episode.guid));
   Directory(path).createSync(recursive: true);
+  return path;
 }
 
 Future<bool> hasStoragePermission() async {
@@ -116,12 +111,12 @@ Future<Directory> _getSDCard() async {
 }
 
 /// Strips characters that are invalid for file and directory names.
-String? safePath(String? s) {
-  return s?.replaceAll(RegExp(r'[^\w\s]+'), '').trim();
+String safePath(String s) {
+  return s.replaceAll(RegExp(r'[^\w\s]+'), '').trim();
 }
 
-String? safeFile(String? s) {
-  return s?.replaceAll(RegExp(r'[^\w\s.]+'), '').trim();
+String safeFile(String s) {
+  return s.replaceAll(RegExp(r'[^\w\s.]+'), '').trim();
 }
 
 Future<String> resolveUrl(String url, {bool forceHttps = false}) async {
@@ -160,8 +155,8 @@ final descriptionRegExp2 = RegExp(r'(<p><br></p>|<p></br></p>)');
 /// the context of a browser, but can look out of place on a mobile screen.
 String removeHtmlPadding(String? input) {
   return input
-      ?.trim()
-      .replaceAll(descriptionRegExp2, '')
-      .replaceAll(descriptionRegExp1, '</p>') ??
+          ?.trim()
+          .replaceAll(descriptionRegExp2, '')
+          .replaceAll(descriptionRegExp1, '</p>') ??
       '';
 }
