@@ -4,6 +4,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'package:seasoning/entities/downloadable.dart';
 import 'package:seasoning/entities/episode.dart';
 import 'package:seasoning/entities/podcast.dart';
 import 'package:seasoning/entities/transcript.dart';
@@ -33,21 +34,23 @@ abstract class Repository {
 
   Future<Episode?> findEpisodeByGuid(String guid);
 
-  Future<List<Episode?>> findEpisodesByPodcastGuid(String pguid);
-
-  Future<Episode?> findEpisodeByTaskId(String taskId);
+  Future<List<Episode>> findEpisodesByPodcastGuid(String pguid);
 
   Future<List<Episode>> saveEpisodes(List<Episode> episodes);
 
-  Future<Episode> saveEpisode(Episode episode, {bool updateIfSame = false});
+  Future<Episode> saveEpisode(Episode episode);
 
   Future<void> deleteEpisode(Episode episode);
 
   Future<void> deleteEpisodes(List<Episode> episodes);
 
-  Future<List<Episode>> findDownloadsByPodcastGuid(String pguid);
+  Future<List<Downloadable>> findDownloadsByPodcastGuid(String pguid);
 
-  Future<List<Episode>> findDownloads();
+  Future<List<Downloadable>> findDownloads();
+
+  Future<Downloadable?> findDownloadByTaskId(String taskId);
+
+  Future<Downloadable> saveDownload(Downloadable downloadable);
 
   Future<Transcript?> findTranscriptById(int id);
 

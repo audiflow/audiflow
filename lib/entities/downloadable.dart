@@ -19,15 +19,21 @@ enum DownloadState {
   downloaded
 }
 
-/// A Downloadble is an object that holds information about a podcast episode
+/// A Downloadable is an object that holds information about a podcast episode
 /// and its download status.
 ///
-/// Downloadables can be used to determine if a download has been successful and
+/// Downloadable can be used to determine if a download has been successful and
 /// if an episode can be played from the filesystem.
 @freezed
 class Downloadable with _$Downloadable {
   const factory Downloadable({
     /// Database ID
+    int? id,
+
+    /// The GUID for an associated podcast.
+    required String pguid,
+
+    /// Unique identifier for the episode.
     required String guid,
 
     /// Unique identifier for the download
@@ -46,7 +52,7 @@ class Downloadable with _$Downloadable {
     required DownloadState state,
 
     /// Percentage of MP3 downloaded
-    int? percentage,
+    @Default(0) int percentage,
   }) = _Downloadable;
 
   factory Downloadable.fromJson(Map<String, dynamic> json) =>

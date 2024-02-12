@@ -8,6 +8,7 @@ import 'package:flutter/foundation.dart';
 import 'package:logging/logging.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:seasoning/core/extensions.dart';
+import 'package:seasoning/entities/downloadable.dart';
 import 'package:seasoning/entities/episode.dart';
 import 'package:seasoning/entities/podcast.dart';
 import 'package:seasoning/entities/queue.dart';
@@ -40,6 +41,7 @@ class SembastRepository extends Repository {
 
   final _podcastStore = intMapStoreFactory.store('podcast');
   final _episodeStore = intMapStoreFactory.store('episode');
+  final _downloadableStore = intMapStoreFactory.store('downloadable');
   final _queueStore = intMapStoreFactory.store('queue');
   final _transcriptStore = intMapStoreFactory.store('transcript');
 
@@ -57,27 +59,28 @@ class SembastRepository extends Repository {
   Future<Podcast> savePodcast(Podcast podcast) async {
     log.fine('Saving podcast (${podcast.id ?? -1}) ${podcast.url}');
 
-    final finder = podcast.id == null
-        ? Finder(filter: Filter.equals('guid', podcast.guid))
-        : Finder(filter: Filter.byKey(podcast.id));
-    final snapshot = await _podcastStore.findFirst(await _db, finder: finder);
+    final saved = podcast.id != null
+        ? await findPodcastById(podcast.id!)
+        : await findPodcastByGuid(podcast.guid);
+    if (saved == podcast) {
+      return podcast;
+    }
 
-    var newPodcast = podcast.copyWith(lastUpdated: DateTime.now());
-
-    if (snapshot == null) {
-      newPodcast = newPodcast.copyWith(subscribedDate: DateTime.now());
-      final id = await _podcastStore.add(await _db, newPodcast.toJson());
-      newPodcast = newPodcast.copyWith(id: id);
-    } else {
+    late Podcast newPodcast;
+    if (saved != null) {
+      newPodcast = podcast;
       await _podcastStore.update(
         await _db,
-        newPodcast.toJson(),
-        finder: finder,
+        podcast.toJson(),
+        finder: Finder(filter: Filter.byKey(podcast.id)),
       );
+    } else {
+      newPodcast = podcast.copyWith(subscribedDate: DateTime.now());
+      final id = await _podcastStore.add(await _db, newPodcast.toJson());
+      newPodcast = newPodcast.copyWith(id: id);
     }
 
     _podcastSubject.add(newPodcast);
-
     return newPodcast;
   }
 
@@ -136,8 +139,7 @@ class SembastRepository extends Repository {
       sortOrders: [SortOrder('publicationDate', false)],
     );
     final recordSnapshots = await _episodeStore.find(await _db, finder: finder);
-    final futures = recordSnapshots.map(_loadEpisodeSnapshot);
-    return Future.wait(futures);
+    return recordSnapshots.map(_loadEpisodeSnapshot).toList();
   }
 
   @override
@@ -162,33 +164,7 @@ class SembastRepository extends Repository {
       sortOrders: [SortOrder('publicationDate', false)],
     );
     final recordSnapshots = await _episodeStore.find(await _db, finder: finder);
-    final results = recordSnapshots.map(_loadEpisodeSnapshot);
-    return Future.wait(results);
-  }
-
-  @override
-  Future<List<Episode>> findDownloadsByPodcastGuid(String pguid) async {
-    final finder = Finder(
-      filter: Filter.and([
-        Filter.equals('pguid', pguid),
-        Filter.equals('downloadPercentage', 100),
-      ]),
-      sortOrders: [SortOrder('publicationDate', false)],
-    );
-    final recordSnapshots = await _episodeStore.find(await _db, finder: finder);
-    final futures = recordSnapshots.map(_loadEpisodeSnapshot);
-    return Future.wait(futures);
-  }
-
-  @override
-  Future<List<Episode>> findDownloads() async {
-    final finder = Finder(
-      filter: Filter.equals('downloadPercentage', 100),
-      sortOrders: [SortOrder('publicationDate', false)],
-    );
-    final recordSnapshots = await _episodeStore.find(await _db, finder: finder);
-    final futures = recordSnapshots.map(_loadEpisodeSnapshot);
-    return Future.wait(futures);
+    return recordSnapshots.map(_loadEpisodeSnapshot).toList();
   }
 
   @override
@@ -217,14 +193,82 @@ class SembastRepository extends Repository {
   }
 
   @override
-  Future<Episode> saveEpisode(
-    Episode episode, {
-    bool updateIfSame = false,
-  }) async {
-    final e = await _saveEpisode(episode, updateIfSame);
+  Future<Episode> saveEpisode(Episode episode) async {
+    final e = await _saveEpisode(episode);
     _episodeSubject.add(EpisodeUpdateEvent(episode: e));
 
     return e;
+  }
+
+  @override
+  Future<List<Downloadable>> findDownloadsByPodcastGuid(String pguid) async {
+    final finder = Finder(
+      filter: Filter.and([
+        Filter.equals('pguid', pguid),
+      ]),
+      sortOrders: [SortOrder('publicationDate', false)],
+    );
+    final recordSnapshots =
+        await _downloadableStore.find(await _db, finder: finder);
+    return recordSnapshots.map(
+      (snapshot) {
+        return Downloadable.fromJson(snapshot.value).copyWith(id: snapshot.key);
+      },
+    ).toList();
+  }
+
+  @override
+  Future<List<Downloadable>> findDownloads() async {
+    final finder = Finder(
+      sortOrders: [SortOrder('publicationDate', false)],
+    );
+    final recordSnapshots =
+        await _downloadableStore.find(await _db, finder: finder);
+    return recordSnapshots.map(
+      (snapshot) {
+        return Downloadable.fromJson(snapshot.value).copyWith(id: snapshot.key);
+      },
+    ).toList();
+  }
+
+  @override
+  Future<Downloadable?> findDownloadByTaskId(String taskId) async {
+    final finder = Finder(filter: Filter.equals('taskId', taskId));
+    final snapshot =
+        await _downloadableStore.findFirst(await _db, finder: finder);
+
+    return snapshot == null
+        ? null
+        : Downloadable.fromJson(snapshot.value).copyWith(id: snapshot.key);
+  }
+
+  Episode _loadEpisodeSnapshot(
+    RecordSnapshot<int, Map<String, Object?>> snapshot,
+  ) {
+    return Episode.fromJson(snapshot.value).copyWith(id: snapshot.key);
+  }
+
+  @override
+  Future<Downloadable> saveDownload(Downloadable downloadable) async {
+    final finder = Finder(
+      filter: Filter.and([
+        Filter.equals('guid', downloadable.guid),
+      ]),
+    );
+
+    final client = await _db;
+    final snapshot = await _downloadableStore.findFirst(client, finder: finder);
+    if (snapshot == null) {
+      final id = await _downloadableStore.add(client, downloadable.toJson());
+      return downloadable.copyWith(id: id);
+    } else {
+      await _downloadableStore.update(
+        client,
+        downloadable.toJson(),
+        finder: finder,
+      );
+      return downloadable;
+    }
   }
 
   @override
@@ -240,8 +284,7 @@ class SembastRepository extends Repository {
     final recordSnapshots =
         await _episodeStore.find(await _db, finder: episodeFinder);
 
-    final futures = recordSnapshots.map(_loadEpisodeSnapshot);
-    return Future.wait(futures);
+    return recordSnapshots.map(_loadEpisodeSnapshot).toList();
   }
 
   @override
@@ -250,7 +293,7 @@ class SembastRepository extends Repository {
     final futures = <Future<Episode>>[];
     for (final e in episodes) {
       futures.add(
-        e.pguid.isEmpty ? _saveEpisode(e, false) : Future.value(e),
+        e.pguid.isEmpty ? _saveEpisode(e) : Future.value(e),
       );
     }
     final updatedEpisodes = await Future.wait(futures);
@@ -371,91 +414,39 @@ class SembastRepository extends Repository {
     }
 
     final newEpisodes = <Episode>[];
-    final dateStamp = DateTime.now();
     for (final chunk in episodes.chunk(100)) {
       await d.transaction((txn) async {
-        final futures = <Future<int>>[];
-        final newIdMap = <String, int>{};
-
+        final futures = <Future<Episode>>[];
         for (final episode in chunk) {
-          final newEpisode = episode.copyWith(lastUpdated: dateStamp);
-          if (newEpisode.id == null) {
-            newIdMap[newEpisode.guid] = futures.length;
-            newEpisodes.add(newEpisode);
-            futures.add(_episodeStore.add(txn, newEpisode.toJson()));
-          } else {
-            final finder = Finder(filter: Filter.byKey(newEpisode.id));
-            final existingEpisode = await findEpisodeById(newEpisode.id);
-            if (existingEpisode == null || existingEpisode != episode) {
-              futures.add(
-                _episodeStore.update(txn, newEpisode.toJson(), finder: finder),
-              );
-              newEpisodes.add(newEpisode);
-            } else {
-              newEpisodes.add(episode);
-            }
-          }
+          futures.add(_saveEpisode(episode, db: txn));
         }
-
-        if (futures.isEmpty) {
-          return;
-        }
-
-        final ids = await Future.wait(futures);
-        for (var iEpisode = 0; iEpisode < newEpisodes.length; ++iEpisode) {
-          final idx = newIdMap[newEpisodes[iEpisode].guid];
-          if (idx != null) {
-            newEpisodes[iEpisode] =
-                newEpisodes[iEpisode].copyWith(id: ids[idx]);
-          }
-        }
+        newEpisodes.addAll(await Future.wait(futures));
       });
     }
 
     return newEpisodes;
   }
 
-  Future<Episode> _saveEpisode(Episode episode, bool updateIfSame) async {
+  Future<Episode> _saveEpisode(
+    Episode episode, {
+    DatabaseClient? db,
+  }) async {
     final finder = Finder(filter: Filter.byKey(episode.id));
 
-    final snapshot = await _episodeStore.findFirst(await _db, finder: finder);
+    final client = db ?? await _db;
+    final snapshot = await _episodeStore.findFirst(client, finder: finder);
 
-    var newEpisode = episode.copyWith(lastUpdated: DateTime.now());
     if (snapshot == null) {
-      final id = await _episodeStore.add(await _db, newEpisode.toJson());
-      newEpisode = newEpisode.copyWith(id: id);
+      final id = await _episodeStore.add(client, episode.toJson());
+      return episode.copyWith(id: id);
     } else {
-      final e = await _loadEpisodeSnapshot(snapshot);
-      if (updateIfSame || episode != e) {
-        await _episodeStore.update(
-          await _db,
-          newEpisode.toJson(),
-          finder: finder,
-        );
+      final e = _loadEpisodeSnapshot(snapshot);
+      if (episode != e) {
+        await _episodeStore.update(client, episode.toJson(), finder: finder);
       }
     }
 
     return episode;
-  }
-
-  @override
-  Future<Episode?> findEpisodeByTaskId(String taskId) async {
-    final finder = Finder(filter: Filter.equals('downloadTaskId', taskId));
-    final snapshot = await _episodeStore.findFirst(await _db, finder: finder);
-
-    return snapshot == null ? null : _loadEpisodeSnapshot(snapshot);
-  }
-
-  Future<Episode> _loadEpisodeSnapshot(
-    RecordSnapshot<int, Map<String, Object?>> snapshot,
-  ) async {
-    final episode = Episode.fromJson(snapshot.value);
-    return episode.copyWith(
-      id: snapshot.key,
-      transcript: 0 < (episode.transcriptId ?? 0)
-          ? await findTranscriptById(episode.transcriptId)
-          : null,
-    );
   }
 
   @override

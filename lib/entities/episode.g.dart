@@ -18,8 +18,8 @@ _$EpisodeImpl _$$EpisodeImplFromJson(Map<String, dynamic> json) =>
       description: json['description'] as String,
       content: json['content'] as String?,
       link: json['link'] as String?,
-      imageUrl: json['imageUrl'] as String,
-      thumbImageUrl: json['thumbImageUrl'] as String,
+      imageUrl: json['imageUrl'] as String?,
+      thumbImageUrl: json['thumbImageUrl'] as String?,
       publicationDate: json['publicationDate'] == null
           ? null
           : DateTime.parse(json['publicationDate'] as String),
@@ -44,18 +44,6 @@ _$EpisodeImpl _$$EpisodeImplFromJson(Map<String, dynamic> json) =>
               ?.map((e) => Person.fromJson(e as Map<String, dynamic>))
               .toList() ??
           const [],
-      transcript: json['transcript'] == null
-          ? null
-          : Transcript.fromJson(json['transcript'] as Map<String, dynamic>),
-      transcriptId: json['transcriptId'] as int?,
-      lastUpdated: json['lastUpdated'] == null
-          ? null
-          : DateTime.parse(json['lastUpdated'] as String),
-      downloadTaskId: json['downloadTaskId'] as String?,
-      downloadState:
-          $enumDecodeNullable(_$DownloadStateEnumMap, json['downloadState']) ??
-              DownloadState.none,
-      downloadPercentage: json['downloadPercentage'] as int? ?? 0,
     );
 
 Map<String, dynamic> _$$EpisodeImplToJson(_$EpisodeImpl instance) =>
@@ -85,20 +73,4 @@ Map<String, dynamic> _$$EpisodeImplToJson(_$EpisodeImpl instance) =>
       'chapterIndex': instance.chapterIndex,
       'transcriptUrls': instance.transcriptUrls,
       'persons': instance.persons,
-      'transcript': instance.transcript,
-      'transcriptId': instance.transcriptId,
-      'lastUpdated': instance.lastUpdated?.toIso8601String(),
-      'downloadTaskId': instance.downloadTaskId,
-      'downloadState': _$DownloadStateEnumMap[instance.downloadState]!,
-      'downloadPercentage': instance.downloadPercentage,
     };
-
-const _$DownloadStateEnumMap = {
-  DownloadState.none: 'none',
-  DownloadState.queued: 'queued',
-  DownloadState.downloading: 'downloading',
-  DownloadState.failed: 'failed',
-  DownloadState.cancelled: 'cancelled',
-  DownloadState.paused: 'paused',
-  DownloadState.downloaded: 'downloaded',
-};

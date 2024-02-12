@@ -13,7 +13,7 @@ import 'package:seasoning/entities/podcast.dart';
 /// this class also contains properties to represent those.
 class Feed {
   Feed({
-    required this.podcast,
+    required this.podcastUrl,
     this.imageUrl,
     this.thumbImageUrl,
     this.refresh = false,
@@ -22,7 +22,7 @@ class Feed {
   });
 
   /// The podcast to load
-  final Podcast podcast;
+  final String podcastUrl;
 
   /// The full-size artwork for the podcast.
   String? imageUrl;

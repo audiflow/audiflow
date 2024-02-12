@@ -53,10 +53,10 @@ mixin _$Episode {
   String? get link => throw _privateConstructorUsedError;
 
   /// URL to the episode artwork image.
-  String get imageUrl => throw _privateConstructorUsedError;
+  String? get imageUrl => throw _privateConstructorUsedError;
 
   /// URL to a thumbnail version of the episode artwork image.
-  String get thumbImageUrl => throw _privateConstructorUsedError;
+  String? get thumbImageUrl => throw _privateConstructorUsedError;
 
   /// The date the episode was published (if known).
   DateTime? get publicationDate => throw _privateConstructorUsedError;
@@ -103,32 +103,10 @@ mixin _$Episode {
   List<TranscriptUrl> get transcriptUrls => throw _privateConstructorUsedError;
   List<Person> get persons => throw _privateConstructorUsedError;
 
-  /// Currently downloaded or in use transcript for the episode.To minimise
-  /// memory
-  /// use, this is cleared when an episode download is deleted, or a streamed
-  /// episode stopped.
-  Transcript? get transcript => throw _privateConstructorUsedError;
-
-  /// Link to a currently stored transcript for this episode.
-  int? get transcriptId => throw _privateConstructorUsedError;
-
-  /// Date and time episode was last updated and persisted.
-  DateTime? get lastUpdated => throw _privateConstructorUsedError;
-
   /// Processed version of episode description.
 // ignore: invalid_annotation_target
   @JsonKey(includeToJson: false, includeFromJson: false)
   String? get parsedDescriptionText => throw _privateConstructorUsedError;
-
-  /// If the episode is currently being downloaded, this contains the unique
-  /// ID supplied by the download manager for the episode.
-  String? get downloadTaskId => throw _privateConstructorUsedError;
-
-  /// The current downloading state of the episode.
-  DownloadState get downloadState => throw _privateConstructorUsedError;
-
-  /// Stores the progress of the current download progress if available.
-  int get downloadPercentage => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -151,8 +129,8 @@ abstract class $EpisodeCopyWith<$Res> {
       String description,
       String? content,
       String? link,
-      String imageUrl,
-      String thumbImageUrl,
+      String? imageUrl,
+      String? thumbImageUrl,
       DateTime? publicationDate,
       String? contentUrl,
       String? author,
@@ -168,17 +146,10 @@ abstract class $EpisodeCopyWith<$Res> {
       Chapter? currentChapter,
       List<TranscriptUrl> transcriptUrls,
       List<Person> persons,
-      Transcript? transcript,
-      int? transcriptId,
-      DateTime? lastUpdated,
       @JsonKey(includeToJson: false, includeFromJson: false)
-      String? parsedDescriptionText,
-      String? downloadTaskId,
-      DownloadState downloadState,
-      int downloadPercentage});
+      String? parsedDescriptionText});
 
   $ChapterCopyWith<$Res>? get currentChapter;
-  $TranscriptCopyWith<$Res>? get transcript;
 }
 
 /// @nodoc
@@ -204,8 +175,8 @@ class _$EpisodeCopyWithImpl<$Res, $Val extends Episode>
     Object? description = null,
     Object? content = freezed,
     Object? link = freezed,
-    Object? imageUrl = null,
-    Object? thumbImageUrl = null,
+    Object? imageUrl = freezed,
+    Object? thumbImageUrl = freezed,
     Object? publicationDate = freezed,
     Object? contentUrl = freezed,
     Object? author = freezed,
@@ -220,13 +191,7 @@ class _$EpisodeCopyWithImpl<$Res, $Val extends Episode>
     Object? currentChapter = freezed,
     Object? transcriptUrls = null,
     Object? persons = null,
-    Object? transcript = freezed,
-    Object? transcriptId = freezed,
-    Object? lastUpdated = freezed,
     Object? parsedDescriptionText = freezed,
-    Object? downloadTaskId = freezed,
-    Object? downloadState = null,
-    Object? downloadPercentage = null,
   }) {
     return _then(_value.copyWith(
       id: freezed == id
@@ -269,14 +234,14 @@ class _$EpisodeCopyWithImpl<$Res, $Val extends Episode>
           ? _value.link
           : link // ignore: cast_nullable_to_non_nullable
               as String?,
-      imageUrl: null == imageUrl
+      imageUrl: freezed == imageUrl
           ? _value.imageUrl
           : imageUrl // ignore: cast_nullable_to_non_nullable
-              as String,
-      thumbImageUrl: null == thumbImageUrl
+              as String?,
+      thumbImageUrl: freezed == thumbImageUrl
           ? _value.thumbImageUrl
           : thumbImageUrl // ignore: cast_nullable_to_non_nullable
-              as String,
+              as String?,
       publicationDate: freezed == publicationDate
           ? _value.publicationDate
           : publicationDate // ignore: cast_nullable_to_non_nullable
@@ -333,34 +298,10 @@ class _$EpisodeCopyWithImpl<$Res, $Val extends Episode>
           ? _value.persons
           : persons // ignore: cast_nullable_to_non_nullable
               as List<Person>,
-      transcript: freezed == transcript
-          ? _value.transcript
-          : transcript // ignore: cast_nullable_to_non_nullable
-              as Transcript?,
-      transcriptId: freezed == transcriptId
-          ? _value.transcriptId
-          : transcriptId // ignore: cast_nullable_to_non_nullable
-              as int?,
-      lastUpdated: freezed == lastUpdated
-          ? _value.lastUpdated
-          : lastUpdated // ignore: cast_nullable_to_non_nullable
-              as DateTime?,
       parsedDescriptionText: freezed == parsedDescriptionText
           ? _value.parsedDescriptionText
           : parsedDescriptionText // ignore: cast_nullable_to_non_nullable
               as String?,
-      downloadTaskId: freezed == downloadTaskId
-          ? _value.downloadTaskId
-          : downloadTaskId // ignore: cast_nullable_to_non_nullable
-              as String?,
-      downloadState: null == downloadState
-          ? _value.downloadState
-          : downloadState // ignore: cast_nullable_to_non_nullable
-              as DownloadState,
-      downloadPercentage: null == downloadPercentage
-          ? _value.downloadPercentage
-          : downloadPercentage // ignore: cast_nullable_to_non_nullable
-              as int,
     ) as $Val);
   }
 
@@ -373,18 +314,6 @@ class _$EpisodeCopyWithImpl<$Res, $Val extends Episode>
 
     return $ChapterCopyWith<$Res>(_value.currentChapter!, (value) {
       return _then(_value.copyWith(currentChapter: value) as $Val);
-    });
-  }
-
-  @override
-  @pragma('vm:prefer-inline')
-  $TranscriptCopyWith<$Res>? get transcript {
-    if (_value.transcript == null) {
-      return null;
-    }
-
-    return $TranscriptCopyWith<$Res>(_value.transcript!, (value) {
-      return _then(_value.copyWith(transcript: value) as $Val);
     });
   }
 }
@@ -407,8 +336,8 @@ abstract class _$$EpisodeImplCopyWith<$Res> implements $EpisodeCopyWith<$Res> {
       String description,
       String? content,
       String? link,
-      String imageUrl,
-      String thumbImageUrl,
+      String? imageUrl,
+      String? thumbImageUrl,
       DateTime? publicationDate,
       String? contentUrl,
       String? author,
@@ -424,19 +353,11 @@ abstract class _$$EpisodeImplCopyWith<$Res> implements $EpisodeCopyWith<$Res> {
       Chapter? currentChapter,
       List<TranscriptUrl> transcriptUrls,
       List<Person> persons,
-      Transcript? transcript,
-      int? transcriptId,
-      DateTime? lastUpdated,
       @JsonKey(includeToJson: false, includeFromJson: false)
-      String? parsedDescriptionText,
-      String? downloadTaskId,
-      DownloadState downloadState,
-      int downloadPercentage});
+      String? parsedDescriptionText});
 
   @override
   $ChapterCopyWith<$Res>? get currentChapter;
-  @override
-  $TranscriptCopyWith<$Res>? get transcript;
 }
 
 /// @nodoc
@@ -460,8 +381,8 @@ class __$$EpisodeImplCopyWithImpl<$Res>
     Object? description = null,
     Object? content = freezed,
     Object? link = freezed,
-    Object? imageUrl = null,
-    Object? thumbImageUrl = null,
+    Object? imageUrl = freezed,
+    Object? thumbImageUrl = freezed,
     Object? publicationDate = freezed,
     Object? contentUrl = freezed,
     Object? author = freezed,
@@ -476,13 +397,7 @@ class __$$EpisodeImplCopyWithImpl<$Res>
     Object? currentChapter = freezed,
     Object? transcriptUrls = null,
     Object? persons = null,
-    Object? transcript = freezed,
-    Object? transcriptId = freezed,
-    Object? lastUpdated = freezed,
     Object? parsedDescriptionText = freezed,
-    Object? downloadTaskId = freezed,
-    Object? downloadState = null,
-    Object? downloadPercentage = null,
   }) {
     return _then(_$EpisodeImpl(
       id: freezed == id
@@ -525,14 +440,14 @@ class __$$EpisodeImplCopyWithImpl<$Res>
           ? _value.link
           : link // ignore: cast_nullable_to_non_nullable
               as String?,
-      imageUrl: null == imageUrl
+      imageUrl: freezed == imageUrl
           ? _value.imageUrl
           : imageUrl // ignore: cast_nullable_to_non_nullable
-              as String,
-      thumbImageUrl: null == thumbImageUrl
+              as String?,
+      thumbImageUrl: freezed == thumbImageUrl
           ? _value.thumbImageUrl
           : thumbImageUrl // ignore: cast_nullable_to_non_nullable
-              as String,
+              as String?,
       publicationDate: freezed == publicationDate
           ? _value.publicationDate
           : publicationDate // ignore: cast_nullable_to_non_nullable
@@ -589,34 +504,10 @@ class __$$EpisodeImplCopyWithImpl<$Res>
           ? _value._persons
           : persons // ignore: cast_nullable_to_non_nullable
               as List<Person>,
-      transcript: freezed == transcript
-          ? _value.transcript
-          : transcript // ignore: cast_nullable_to_non_nullable
-              as Transcript?,
-      transcriptId: freezed == transcriptId
-          ? _value.transcriptId
-          : transcriptId // ignore: cast_nullable_to_non_nullable
-              as int?,
-      lastUpdated: freezed == lastUpdated
-          ? _value.lastUpdated
-          : lastUpdated // ignore: cast_nullable_to_non_nullable
-              as DateTime?,
       parsedDescriptionText: freezed == parsedDescriptionText
           ? _value.parsedDescriptionText
           : parsedDescriptionText // ignore: cast_nullable_to_non_nullable
               as String?,
-      downloadTaskId: freezed == downloadTaskId
-          ? _value.downloadTaskId
-          : downloadTaskId // ignore: cast_nullable_to_non_nullable
-              as String?,
-      downloadState: null == downloadState
-          ? _value.downloadState
-          : downloadState // ignore: cast_nullable_to_non_nullable
-              as DownloadState,
-      downloadPercentage: null == downloadPercentage
-          ? _value.downloadPercentage
-          : downloadPercentage // ignore: cast_nullable_to_non_nullable
-              as int,
     ));
   }
 }
@@ -652,14 +543,8 @@ class _$EpisodeImpl with DiagnosticableTreeMixin implements _Episode {
       this.currentChapter,
       final List<TranscriptUrl> transcriptUrls = const [],
       final List<Person> persons = const [],
-      this.transcript,
-      this.transcriptId,
-      this.lastUpdated,
       @JsonKey(includeToJson: false, includeFromJson: false)
-      this.parsedDescriptionText,
-      this.downloadTaskId,
-      this.downloadState = DownloadState.none,
-      this.downloadPercentage = 0})
+      this.parsedDescriptionText})
       : _chapters = chapters,
         _transcriptUrls = transcriptUrls,
         _persons = persons;
@@ -711,11 +596,11 @@ class _$EpisodeImpl with DiagnosticableTreeMixin implements _Episode {
 
   /// URL to the episode artwork image.
   @override
-  final String imageUrl;
+  final String? imageUrl;
 
   /// URL to a thumbnail version of the episode artwork image.
   @override
-  final String thumbImageUrl;
+  final String? thumbImageUrl;
 
   /// The date the episode was published (if known).
   @override
@@ -802,45 +687,15 @@ class _$EpisodeImpl with DiagnosticableTreeMixin implements _Episode {
     return EqualUnmodifiableListView(_persons);
   }
 
-  /// Currently downloaded or in use transcript for the episode.To minimise
-  /// memory
-  /// use, this is cleared when an episode download is deleted, or a streamed
-  /// episode stopped.
-  @override
-  final Transcript? transcript;
-
-  /// Link to a currently stored transcript for this episode.
-  @override
-  final int? transcriptId;
-
-  /// Date and time episode was last updated and persisted.
-  @override
-  final DateTime? lastUpdated;
-
   /// Processed version of episode description.
 // ignore: invalid_annotation_target
   @override
   @JsonKey(includeToJson: false, includeFromJson: false)
   final String? parsedDescriptionText;
 
-  /// If the episode is currently being downloaded, this contains the unique
-  /// ID supplied by the download manager for the episode.
-  @override
-  final String? downloadTaskId;
-
-  /// The current downloading state of the episode.
-  @override
-  @JsonKey()
-  final DownloadState downloadState;
-
-  /// Stores the progress of the current download progress if available.
-  @override
-  @JsonKey()
-  final int downloadPercentage;
-
   @override
   String toString({DiagnosticLevel minLevel = DiagnosticLevel.info}) {
-    return 'Episode(id: $id, guid: $guid, pguid: $pguid, filepath: $filepath, filename: $filename, podcast: $podcast, title: $title, description: $description, content: $content, link: $link, imageUrl: $imageUrl, thumbImageUrl: $thumbImageUrl, publicationDate: $publicationDate, contentUrl: $contentUrl, author: $author, season: $season, episode: $episode, duration: $duration, position: $position, played: $played, chaptersUrl: $chaptersUrl, chapters: $chapters, chapterIndex: $chapterIndex, currentChapter: $currentChapter, transcriptUrls: $transcriptUrls, persons: $persons, transcript: $transcript, transcriptId: $transcriptId, lastUpdated: $lastUpdated, parsedDescriptionText: $parsedDescriptionText, downloadTaskId: $downloadTaskId, downloadState: $downloadState, downloadPercentage: $downloadPercentage)';
+    return 'Episode(id: $id, guid: $guid, pguid: $pguid, filepath: $filepath, filename: $filename, podcast: $podcast, title: $title, description: $description, content: $content, link: $link, imageUrl: $imageUrl, thumbImageUrl: $thumbImageUrl, publicationDate: $publicationDate, contentUrl: $contentUrl, author: $author, season: $season, episode: $episode, duration: $duration, position: $position, played: $played, chaptersUrl: $chaptersUrl, chapters: $chapters, chapterIndex: $chapterIndex, currentChapter: $currentChapter, transcriptUrls: $transcriptUrls, persons: $persons, parsedDescriptionText: $parsedDescriptionText)';
   }
 
   @override
@@ -874,13 +729,8 @@ class _$EpisodeImpl with DiagnosticableTreeMixin implements _Episode {
       ..add(DiagnosticsProperty('currentChapter', currentChapter))
       ..add(DiagnosticsProperty('transcriptUrls', transcriptUrls))
       ..add(DiagnosticsProperty('persons', persons))
-      ..add(DiagnosticsProperty('transcript', transcript))
-      ..add(DiagnosticsProperty('transcriptId', transcriptId))
-      ..add(DiagnosticsProperty('lastUpdated', lastUpdated))
-      ..add(DiagnosticsProperty('parsedDescriptionText', parsedDescriptionText))
-      ..add(DiagnosticsProperty('downloadTaskId', downloadTaskId))
-      ..add(DiagnosticsProperty('downloadState', downloadState))
-      ..add(DiagnosticsProperty('downloadPercentage', downloadPercentage));
+      ..add(
+          DiagnosticsProperty('parsedDescriptionText', parsedDescriptionText));
   }
 
   @override
@@ -927,20 +777,8 @@ class _$EpisodeImpl with DiagnosticableTreeMixin implements _Episode {
             const DeepCollectionEquality()
                 .equals(other._transcriptUrls, _transcriptUrls) &&
             const DeepCollectionEquality().equals(other._persons, _persons) &&
-            (identical(other.transcript, transcript) ||
-                other.transcript == transcript) &&
-            (identical(other.transcriptId, transcriptId) ||
-                other.transcriptId == transcriptId) &&
-            (identical(other.lastUpdated, lastUpdated) ||
-                other.lastUpdated == lastUpdated) &&
             (identical(other.parsedDescriptionText, parsedDescriptionText) ||
-                other.parsedDescriptionText == parsedDescriptionText) &&
-            (identical(other.downloadTaskId, downloadTaskId) ||
-                other.downloadTaskId == downloadTaskId) &&
-            (identical(other.downloadState, downloadState) ||
-                other.downloadState == downloadState) &&
-            (identical(other.downloadPercentage, downloadPercentage) ||
-                other.downloadPercentage == downloadPercentage));
+                other.parsedDescriptionText == parsedDescriptionText));
   }
 
   @JsonKey(ignore: true)
@@ -973,13 +811,7 @@ class _$EpisodeImpl with DiagnosticableTreeMixin implements _Episode {
         currentChapter,
         const DeepCollectionEquality().hash(_transcriptUrls),
         const DeepCollectionEquality().hash(_persons),
-        transcript,
-        transcriptId,
-        lastUpdated,
-        parsedDescriptionText,
-        downloadTaskId,
-        downloadState,
-        downloadPercentage
+        parsedDescriptionText
       ]);
 
   @JsonKey(ignore: true)
@@ -1008,8 +840,8 @@ abstract class _Episode implements Episode {
       required final String description,
       final String? content,
       final String? link,
-      required final String imageUrl,
-      required final String thumbImageUrl,
+      required final String? imageUrl,
+      required final String? thumbImageUrl,
       final DateTime? publicationDate,
       final String? contentUrl,
       final String? author,
@@ -1025,14 +857,8 @@ abstract class _Episode implements Episode {
       final Chapter? currentChapter,
       final List<TranscriptUrl> transcriptUrls,
       final List<Person> persons,
-      final Transcript? transcript,
-      final int? transcriptId,
-      final DateTime? lastUpdated,
       @JsonKey(includeToJson: false, includeFromJson: false)
-      final String? parsedDescriptionText,
-      final String? downloadTaskId,
-      final DownloadState downloadState,
-      final int downloadPercentage}) = _$EpisodeImpl;
+      final String? parsedDescriptionText}) = _$EpisodeImpl;
 
   factory _Episode.fromJson(Map<String, dynamic> json) = _$EpisodeImpl.fromJson;
 
@@ -1081,11 +907,11 @@ abstract class _Episode implements Episode {
   @override
 
   /// URL to the episode artwork image.
-  String get imageUrl;
+  String? get imageUrl;
   @override
 
   /// URL to a thumbnail version of the episode artwork image.
-  String get thumbImageUrl;
+  String? get thumbImageUrl;
   @override
 
   /// The date the episode was published (if known).
@@ -1147,38 +973,10 @@ abstract class _Episode implements Episode {
   List<Person> get persons;
   @override
 
-  /// Currently downloaded or in use transcript for the episode.To minimise
-  /// memory
-  /// use, this is cleared when an episode download is deleted, or a streamed
-  /// episode stopped.
-  Transcript? get transcript;
-  @override
-
-  /// Link to a currently stored transcript for this episode.
-  int? get transcriptId;
-  @override
-
-  /// Date and time episode was last updated and persisted.
-  DateTime? get lastUpdated;
-  @override
-
   /// Processed version of episode description.
 // ignore: invalid_annotation_target
   @JsonKey(includeToJson: false, includeFromJson: false)
   String? get parsedDescriptionText;
-  @override
-
-  /// If the episode is currently being downloaded, this contains the unique
-  /// ID supplied by the download manager for the episode.
-  String? get downloadTaskId;
-  @override
-
-  /// The current downloading state of the episode.
-  DownloadState get downloadState;
-  @override
-
-  /// Stores the progress of the current download progress if available.
-  int get downloadPercentage;
   @override
   @JsonKey(ignore: true)
   _$$EpisodeImplCopyWith<_$EpisodeImpl> get copyWith =>

@@ -21,6 +21,12 @@ Downloadable _$DownloadableFromJson(Map<String, dynamic> json) {
 /// @nodoc
 mixin _$Downloadable {
   /// Database ID
+  int? get id => throw _privateConstructorUsedError;
+
+  /// The GUID for an associated podcast.
+  String get pguid => throw _privateConstructorUsedError;
+
+  /// Unique identifier for the episode.
   String get guid => throw _privateConstructorUsedError;
 
   /// Unique identifier for the download
@@ -39,7 +45,7 @@ mixin _$Downloadable {
   DownloadState get state => throw _privateConstructorUsedError;
 
   /// Percentage of MP3 downloaded
-  int? get percentage => throw _privateConstructorUsedError;
+  int get percentage => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -54,13 +60,15 @@ abstract class $DownloadableCopyWith<$Res> {
       _$DownloadableCopyWithImpl<$Res, Downloadable>;
   @useResult
   $Res call(
-      {String guid,
+      {int? id,
+      String pguid,
+      String guid,
       String url,
       String directory,
       String filename,
       String taskId,
       DownloadState state,
-      int? percentage});
+      int percentage});
 }
 
 /// @nodoc
@@ -76,15 +84,25 @@ class _$DownloadableCopyWithImpl<$Res, $Val extends Downloadable>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
+    Object? id = freezed,
+    Object? pguid = null,
     Object? guid = null,
     Object? url = null,
     Object? directory = null,
     Object? filename = null,
     Object? taskId = null,
     Object? state = null,
-    Object? percentage = freezed,
+    Object? percentage = null,
   }) {
     return _then(_value.copyWith(
+      id: freezed == id
+          ? _value.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as int?,
+      pguid: null == pguid
+          ? _value.pguid
+          : pguid // ignore: cast_nullable_to_non_nullable
+              as String,
       guid: null == guid
           ? _value.guid
           : guid // ignore: cast_nullable_to_non_nullable
@@ -109,10 +127,10 @@ class _$DownloadableCopyWithImpl<$Res, $Val extends Downloadable>
           ? _value.state
           : state // ignore: cast_nullable_to_non_nullable
               as DownloadState,
-      percentage: freezed == percentage
+      percentage: null == percentage
           ? _value.percentage
           : percentage // ignore: cast_nullable_to_non_nullable
-              as int?,
+              as int,
     ) as $Val);
   }
 }
@@ -126,13 +144,15 @@ abstract class _$$DownloadableImplCopyWith<$Res>
   @override
   @useResult
   $Res call(
-      {String guid,
+      {int? id,
+      String pguid,
+      String guid,
       String url,
       String directory,
       String filename,
       String taskId,
       DownloadState state,
-      int? percentage});
+      int percentage});
 }
 
 /// @nodoc
@@ -146,15 +166,25 @@ class __$$DownloadableImplCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
+    Object? id = freezed,
+    Object? pguid = null,
     Object? guid = null,
     Object? url = null,
     Object? directory = null,
     Object? filename = null,
     Object? taskId = null,
     Object? state = null,
-    Object? percentage = freezed,
+    Object? percentage = null,
   }) {
     return _then(_$DownloadableImpl(
+      id: freezed == id
+          ? _value.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as int?,
+      pguid: null == pguid
+          ? _value.pguid
+          : pguid // ignore: cast_nullable_to_non_nullable
+              as String,
       guid: null == guid
           ? _value.guid
           : guid // ignore: cast_nullable_to_non_nullable
@@ -179,10 +209,10 @@ class __$$DownloadableImplCopyWithImpl<$Res>
           ? _value.state
           : state // ignore: cast_nullable_to_non_nullable
               as DownloadState,
-      percentage: freezed == percentage
+      percentage: null == percentage
           ? _value.percentage
           : percentage // ignore: cast_nullable_to_non_nullable
-              as int?,
+              as int,
     ));
   }
 }
@@ -191,18 +221,28 @@ class __$$DownloadableImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$DownloadableImpl implements _Downloadable {
   const _$DownloadableImpl(
-      {required this.guid,
+      {this.id,
+      required this.pguid,
+      required this.guid,
       required this.url,
       required this.directory,
       required this.filename,
       required this.taskId,
       required this.state,
-      this.percentage});
+      this.percentage = 0});
 
   factory _$DownloadableImpl.fromJson(Map<String, dynamic> json) =>
       _$$DownloadableImplFromJson(json);
 
   /// Database ID
+  @override
+  final int? id;
+
+  /// The GUID for an associated podcast.
+  @override
+  final String pguid;
+
+  /// Unique identifier for the episode.
   @override
   final String guid;
 
@@ -228,11 +268,12 @@ class _$DownloadableImpl implements _Downloadable {
 
   /// Percentage of MP3 downloaded
   @override
-  final int? percentage;
+  @JsonKey()
+  final int percentage;
 
   @override
   String toString() {
-    return 'Downloadable(guid: $guid, url: $url, directory: $directory, filename: $filename, taskId: $taskId, state: $state, percentage: $percentage)';
+    return 'Downloadable(id: $id, pguid: $pguid, guid: $guid, url: $url, directory: $directory, filename: $filename, taskId: $taskId, state: $state, percentage: $percentage)';
   }
 
   @override
@@ -240,6 +281,8 @@ class _$DownloadableImpl implements _Downloadable {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$DownloadableImpl &&
+            (identical(other.id, id) || other.id == id) &&
+            (identical(other.pguid, pguid) || other.pguid == pguid) &&
             (identical(other.guid, guid) || other.guid == guid) &&
             (identical(other.url, url) || other.url == url) &&
             (identical(other.directory, directory) ||
@@ -254,8 +297,8 @@ class _$DownloadableImpl implements _Downloadable {
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode => Object.hash(
-      runtimeType, guid, url, directory, filename, taskId, state, percentage);
+  int get hashCode => Object.hash(runtimeType, id, pguid, guid, url, directory,
+      filename, taskId, state, percentage);
 
   @JsonKey(ignore: true)
   @override
@@ -273,13 +316,15 @@ class _$DownloadableImpl implements _Downloadable {
 
 abstract class _Downloadable implements Downloadable {
   const factory _Downloadable(
-      {required final String guid,
+      {final int? id,
+      required final String pguid,
+      required final String guid,
       required final String url,
       required final String directory,
       required final String filename,
       required final String taskId,
       required final DownloadState state,
-      final int? percentage}) = _$DownloadableImpl;
+      final int percentage}) = _$DownloadableImpl;
 
   factory _Downloadable.fromJson(Map<String, dynamic> json) =
       _$DownloadableImpl.fromJson;
@@ -287,6 +332,14 @@ abstract class _Downloadable implements Downloadable {
   @override
 
   /// Database ID
+  int? get id;
+  @override
+
+  /// The GUID for an associated podcast.
+  String get pguid;
+  @override
+
+  /// Unique identifier for the episode.
   String get guid;
   @override
 
@@ -311,7 +364,7 @@ abstract class _Downloadable implements Downloadable {
   @override
 
   /// Percentage of MP3 downloaded
-  int? get percentage;
+  int get percentage;
   @override
   @JsonKey(ignore: true)
   _$$DownloadableImplCopyWith<_$DownloadableImpl> get copyWith =>

@@ -8,17 +8,21 @@ part of 'downloadable.dart';
 
 _$DownloadableImpl _$$DownloadableImplFromJson(Map<String, dynamic> json) =>
     _$DownloadableImpl(
+      id: json['id'] as int?,
+      pguid: json['pguid'] as String,
       guid: json['guid'] as String,
       url: json['url'] as String,
       directory: json['directory'] as String,
       filename: json['filename'] as String,
       taskId: json['taskId'] as String,
       state: $enumDecode(_$DownloadStateEnumMap, json['state']),
-      percentage: json['percentage'] as int?,
+      percentage: json['percentage'] as int? ?? 0,
     );
 
 Map<String, dynamic> _$$DownloadableImplToJson(_$DownloadableImpl instance) =>
     <String, dynamic>{
+      'id': instance.id,
+      'pguid': instance.pguid,
       'guid': instance.guid,
       'url': instance.url,
       'directory': instance.directory,

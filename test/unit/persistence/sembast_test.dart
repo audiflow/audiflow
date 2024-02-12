@@ -48,6 +48,7 @@ void main() {
             guid: 'EP${numberFormat.format(i + 1)}',
             title: 'Title ${i + 1}',
             description: 'desc ${i + 1}',
+            contentUrl: 'http://example.com/episode${i + 1}.mp3',
             imageUrl: 'http://example.com/image.jpg',
             thumbImageUrl: 'http://example.com/thumb.jpg',
             publicationDate: DateTime.now().add(Duration(days: -i)),
@@ -88,7 +89,6 @@ void main() {
       saved = await persistenceService!.savePodcast(podcast1);
       expect(saved.id, isNotNull);
       expect(saved.guid, isNotNull);
-      expect(saved.lastUpdated, isNotNull);
       expect(saved.subscribedDate, isNotNull);
       expect(saved.subscribed, isTrue);
     });
@@ -97,7 +97,6 @@ void main() {
       final loaded = await persistenceService!.findPodcastById(saved.id!);
       expect(loaded, saved);
       expect(loaded!.guid, isNotNull);
-      expect(loaded.lastUpdated, isNotNull);
       expect(loaded.subscribedDate, isNotNull);
       expect(loaded.subscribed, isTrue);
     });
@@ -117,13 +116,12 @@ void main() {
     test('Update', () async {
       final updated = saved.copyWith(title: '${saved.title} updated');
       final saved2 = await persistenceService!.savePodcast(updated);
-      expect(updated == saved2, isFalse);
+      expect(updated == saved2, isTrue);
 
       final loaded = await persistenceService!.findPodcastById(saved.id!);
       expect(loaded, saved2);
-      expect(saved.lastUpdated!.isBefore(loaded!.lastUpdated!), isTrue);
       expect(
-        loaded.subscribedDate!.isAtSameMomentAs(loaded.subscribedDate!),
+        loaded!.subscribedDate!.isAtSameMomentAs(saved2.subscribedDate!),
         isTrue,
       );
     });
@@ -160,7 +158,7 @@ void main() {
       final loaded =
           await persistenceService!.findEpisodesByPodcastGuid(podcast1.guid);
       expect(loaded.length, saved.length);
-      expect(loaded[0]!.title, saved[0].title);
+      expect(loaded[0].title, saved[0].title);
     });
 
     test('Update all episodes', () async {
@@ -173,16 +171,7 @@ void main() {
       expect(loaded.length, saved.length);
       expect(listEquals(loaded, saved2), isTrue);
 
-      expect(loaded[1]!.title == saved[1].title, isFalse);
-      expect(
-        saved[1].lastUpdated!.isBefore(loaded[1]!.lastUpdated!),
-        isTrue,
-      );
-
-      expect(
-        saved[0].lastUpdated!.isAtSameMomentAs(loaded[0]!.lastUpdated!),
-        isTrue,
-      );
+      expect(loaded[1].title == saved[1].title, isFalse);
     });
 
     test('Update single episode', () async {
@@ -193,16 +182,7 @@ void main() {
 
       final loaded =
           await persistenceService!.findEpisodesByPodcastGuid(podcast1.guid);
-      expect(loaded[2]!.title == saved[2].title, isFalse);
-      expect(
-        saved[2].lastUpdated!.isBefore(loaded[2]!.lastUpdated!),
-        isTrue,
-      );
-
-      expect(
-        saved[0].lastUpdated!.isAtSameMomentAs(loaded[0]!.lastUpdated!),
-        isTrue,
-      );
+      expect(loaded[2].title == saved[2].title, isFalse);
     });
 
     test('Delete', () async {
@@ -211,8 +191,8 @@ void main() {
       final loaded =
           await persistenceService!.findEpisodesByPodcastGuid(podcast1.guid);
       expect(loaded, hasLength(2));
-      expect(loaded[0]!.id, saved[0].id);
-      expect(loaded[1]!.id, saved[2].id);
+      expect(loaded[0].id, saved[0].id);
+      expect(loaded[1].id, saved[2].id);
     });
   });
 
@@ -246,7 +226,7 @@ void main() {
     setUpAll(createRepository);
     tearDownAll(cleanUpRepository);
 
-    late List<Episode> saved;
+    late List<Downloadable> saved;
 
     test('findDownloads but empty', () async {
       final loaded = await persistenceService!.findDownloads();
@@ -261,33 +241,40 @@ void main() {
 
     test('Create and save', () async {
       final episodes = createEpisodeMocks(podcast1, 3);
-      episodes[0] = episodes[0].copyWith(
-        downloadPercentage: 50,
-        downloadState: DownloadState.downloading,
-        downloadTaskId: 'TASK1',
+      final list = episodes.map(
+        (e) => Downloadable(
+          pguid: e.pguid,
+          guid: e.guid,
+          url: e.contentUrl!,
+          directory: 'dir',
+          filename: '${e.guid}.mp3',
+          taskId: 'TASK${e.guid}',
+          state: e == episodes[0]
+              ? DownloadState.none
+              : e == episodes[1]
+                  ? DownloadState.downloading
+                  : DownloadState.downloaded,
+          percentage: e == episodes[0]
+              ? 0
+              : e == episodes[1]
+                  ? 99
+                  : 100,
+        ),
       );
-      episodes[1] = episodes[1].copyWith(
-        downloadPercentage: 99,
-        downloadState: DownloadState.downloading,
-        downloadTaskId: 'TASK2',
+      saved = await Future.wait(
+        list.map((d) => persistenceService!.saveDownload(d)),
       );
-      episodes[2] = episodes[2].copyWith(
-        downloadPercentage: 100,
-        downloadState: DownloadState.downloaded,
-        downloadTaskId: 'TASK3',
-      );
-      saved = await persistenceService!.saveEpisodes(episodes);
     });
 
     test('findDownloads', () async {
       final loaded = await persistenceService!.findDownloads();
-      expect(loaded, hasLength(1));
+      expect(loaded, hasLength(3));
     });
 
     test('findDownloads', () async {
       var loaded =
           await persistenceService!.findDownloadsByPodcastGuid(podcast1.guid);
-      expect(loaded, hasLength(1));
+      expect(loaded, hasLength(3));
 
       loaded =
           await persistenceService!.findDownloadsByPodcastGuid(podcast2.guid);
@@ -296,7 +283,7 @@ void main() {
 
     test('findDownloads', () async {
       final loaded = await persistenceService!
-          .findEpisodeByTaskId(saved[1].downloadTaskId!);
+          .findDownloadByTaskId(saved[1].taskId);
       expect(loaded, saved[1]);
     });
   });

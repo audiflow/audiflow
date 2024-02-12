@@ -6,6 +6,7 @@
 
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:podcast_search/podcast_search.dart' as search;
+import 'package:seasoning/core/utils.dart';
 import 'package:seasoning/entities/entities.dart';
 
 part 'podcast.freezed.dart';
@@ -51,9 +52,6 @@ class Podcast with _$Podcast {
 
     /// Date and time user subscribed to the podcast.
     DateTime? subscribedDate,
-
-    /// Date and time podcast was last updated/refreshed.
-    DateTime? lastUpdated,
   }) = _Podcast;
 
   factory Podcast.fromJson(Map<String, dynamic> json) =>
@@ -91,11 +89,11 @@ class Podcast with _$Podcast {
       guid: loadedPodcast.url!,
       url: loadedPodcast.url!,
       link: loadedPodcast.link,
-      title: _format(loadedPodcast.title),
-      description: _format(loadedPodcast.description),
+      title: removeHtmlPadding(loadedPodcast.title),
+      description: removeHtmlPadding(loadedPodcast.description),
       imageUrl: loadedPodcast.image,
       thumbImageUrl: loadedPodcast.image,
-      copyright: _format(loadedPodcast.copyright),
+      copyright: removeHtmlPadding(loadedPodcast.copyright),
       funding: funding,
       persons: persons,
     );
@@ -104,18 +102,4 @@ class Podcast with _$Podcast {
 
 extension PodcastExt on Podcast {
   bool get subscribed => subscribedDate != null;
-}
-
-final descriptionRegExp1 =
-    RegExp(r'(</p><br>|</p></br>|<p><br></p>|<p></br></p>)');
-final descriptionRegExp2 = RegExp(r'(<p><br></p>|<p></br></p>)');
-
-/// Remove HTML padding from the content. The padding may look fine within
-/// the context of a browser, but can look out of place on a mobile screen.
-String _format(String? input) {
-  return input
-          ?.trim()
-          .replaceAll(descriptionRegExp2, '')
-          .replaceAll(descriptionRegExp1, '</p>') ??
-      '';
 }

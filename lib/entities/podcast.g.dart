@@ -28,9 +28,6 @@ _$PodcastImpl _$$PodcastImplFromJson(Map<String, dynamic> json) =>
       subscribedDate: json['subscribedDate'] == null
           ? null
           : DateTime.parse(json['subscribedDate'] as String),
-      lastUpdated: json['lastUpdated'] == null
-          ? null
-          : DateTime.parse(json['lastUpdated'] as String),
     );
 
 Map<String, dynamic> _$$PodcastImplToJson(_$PodcastImpl instance) =>
@@ -47,5 +44,4 @@ Map<String, dynamic> _$$PodcastImplToJson(_$PodcastImpl instance) =>
       'funding': instance.funding,
       'persons': instance.persons,
       'subscribedDate': instance.subscribedDate?.toIso8601String(),
-      'lastUpdated': instance.lastUpdated?.toIso8601String(),
     };
