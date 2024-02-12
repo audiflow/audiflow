@@ -104,10 +104,11 @@ class SembastRepository extends Repository {
 
     await db.transaction((txn) async {
       final podcastFinder = Finder(filter: Filter.byKey(podcast.id));
-      final episodeFinder =
-          Finder(filter: Filter.equals('pguid', podcast.guid));
+      final pguidFinder = Finder(filter: Filter.equals('pguid', podcast.guid));
       await _podcastStore.delete(txn, finder: podcastFinder);
-      await _episodeStore.delete(txn, finder: episodeFinder);
+      await _episodeStore.delete(txn, finder: pguidFinder);
+      await _downloadableStore.delete(txn, finder: pguidFinder);
+      await _transcriptStore.delete(txn, finder: pguidFinder);
     });
   }
 
@@ -145,9 +146,8 @@ class SembastRepository extends Repository {
   @override
   Future<Episode?> findEpisodeById(int? id) async {
     final finder = Finder(filter: Filter.byKey(id));
-    final snapshot =
-        (await _episodeStore.findFirst(await _db, finder: finder))!;
-    return _loadEpisodeSnapshot(snapshot);
+    final snapshot = await _episodeStore.findFirst(await _db, finder: finder);
+    return snapshot == null ? null : _loadEpisodeSnapshot(snapshot);
   }
 
   @override
@@ -169,27 +169,30 @@ class SembastRepository extends Repository {
 
   @override
   Future<void> deleteEpisode(Episode episode) async {
-    final finder = Finder(filter: Filter.byKey(episode.id));
-    final snapshot = await _episodeStore.findFirst(await _db, finder: finder);
-    if (snapshot != null) {
-      await _episodeStore.delete(await _db, finder: finder);
-      _episodeSubject.add(EpisodeDeleteEvent(episode: episode));
-    }
+    await _deleteEpisode(episode);
   }
 
   @override
   Future<void> deleteEpisodes(List<Episode> episodes) async {
     final d = await _db;
-    for (final chunk in episodes.chunk(100)) {
+    for (final chunk in episodes.chunk(30)) {
       await d.transaction((txn) async {
-        final futures = <Future<int>>[];
-        for (final episode in chunk) {
-          final finder = Finder(filter: Filter.byKey(episode.id));
-          futures.add(_episodeStore.delete(txn, finder: finder));
-        }
+        final futures = chunk.map((e) => _deleteEpisode(e, db: txn));
         await Future.wait(futures);
       });
     }
+  }
+
+  Future<void> _deleteEpisode(
+      Episode episode, {
+        DatabaseClient? db,
+      }) async {
+    final client = db ?? await _db;
+    final finder = Finder(filter: Filter.byKey(episode.id));
+    final guidFinder = Finder(filter: Filter.equals('guid', episode.guid));
+    await _episodeStore.delete(client, finder: finder);
+    await _downloadableStore.delete(client, finder: guidFinder);
+    await _transcriptStore.delete(client, finder: guidFinder);
   }
 
   @override
@@ -354,20 +357,17 @@ class SembastRepository extends Repository {
     final snapshot =
         await _transcriptStore.findFirst(await _db, finder: finder);
 
-    var newTranscript = transcript.copyWith(lastUpdated: DateTime.now());
-
     if (snapshot == null) {
       final id = await _transcriptStore.add(await _db, transcript.toJson());
-      newTranscript = newTranscript.copyWith(id: id);
+      return transcript.copyWith(id: id);
     } else {
       await _transcriptStore.update(
         await _db,
         transcript.toJson(),
         finder: finder,
       );
+      return transcript;
     }
-
-    return newTranscript;
   }
 
   Future<void> _cleanupEpisodes() async {

@@ -12,9 +12,6 @@ _$TranscriptUrlImpl _$$TranscriptUrlImplFromJson(Map<String, dynamic> json) =>
       type: $enumDecode(_$TranscriptFormatEnumMap, json['type']),
       language: json['language'] as String? ?? '',
       rel: json['rel'] as String? ?? '',
-      lastUpdated: json['lastUpdated'] == null
-          ? null
-          : DateTime.parse(json['lastUpdated'] as String),
     );
 
 Map<String, dynamic> _$$TranscriptUrlImplToJson(_$TranscriptUrlImpl instance) =>
@@ -23,7 +20,6 @@ Map<String, dynamic> _$$TranscriptUrlImplToJson(_$TranscriptUrlImpl instance) =>
       'type': _$TranscriptFormatEnumMap[instance.type]!,
       'language': instance.language,
       'rel': instance.rel,
-      'lastUpdated': instance.lastUpdated?.toIso8601String(),
     };
 
 const _$TranscriptFormatEnumMap = {
@@ -35,24 +31,22 @@ const _$TranscriptFormatEnumMap = {
 _$TranscriptImpl _$$TranscriptImplFromJson(Map<String, dynamic> json) =>
     _$TranscriptImpl(
       id: json['id'] as int?,
+      pguid: json['pguid'] as String,
       guid: json['guid'] as String,
       subtitles: (json['subtitles'] as List<dynamic>?)
               ?.map((e) => Subtitle.fromJson(e as Map<String, dynamic>))
               .toList() ??
           const <Subtitle>[],
       filtered: json['filtered'] as bool? ?? false,
-      lastUpdated: json['lastUpdated'] == null
-          ? null
-          : DateTime.parse(json['lastUpdated'] as String),
     );
 
 Map<String, dynamic> _$$TranscriptImplToJson(_$TranscriptImpl instance) =>
     <String, dynamic>{
       'id': instance.id,
+      'pguid': instance.pguid,
       'guid': instance.guid,
       'subtitles': instance.subtitles,
       'filtered': instance.filtered,
-      'lastUpdated': instance.lastUpdated?.toIso8601String(),
     };
 
 _$SubtitleImpl _$$SubtitleImplFromJson(Map<String, dynamic> json) =>

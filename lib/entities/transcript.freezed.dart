@@ -24,7 +24,6 @@ mixin _$TranscriptUrl {
   TranscriptFormat get type => throw _privateConstructorUsedError;
   String get language => throw _privateConstructorUsedError;
   String get rel => throw _privateConstructorUsedError;
-  DateTime? get lastUpdated => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -38,12 +37,7 @@ abstract class $TranscriptUrlCopyWith<$Res> {
           TranscriptUrl value, $Res Function(TranscriptUrl) then) =
       _$TranscriptUrlCopyWithImpl<$Res, TranscriptUrl>;
   @useResult
-  $Res call(
-      {String url,
-      TranscriptFormat type,
-      String language,
-      String rel,
-      DateTime? lastUpdated});
+  $Res call({String url, TranscriptFormat type, String language, String rel});
 }
 
 /// @nodoc
@@ -63,7 +57,6 @@ class _$TranscriptUrlCopyWithImpl<$Res, $Val extends TranscriptUrl>
     Object? type = null,
     Object? language = null,
     Object? rel = null,
-    Object? lastUpdated = freezed,
   }) {
     return _then(_value.copyWith(
       url: null == url
@@ -82,10 +75,6 @@ class _$TranscriptUrlCopyWithImpl<$Res, $Val extends TranscriptUrl>
           ? _value.rel
           : rel // ignore: cast_nullable_to_non_nullable
               as String,
-      lastUpdated: freezed == lastUpdated
-          ? _value.lastUpdated
-          : lastUpdated // ignore: cast_nullable_to_non_nullable
-              as DateTime?,
     ) as $Val);
   }
 }
@@ -98,12 +87,7 @@ abstract class _$$TranscriptUrlImplCopyWith<$Res>
       __$$TranscriptUrlImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call(
-      {String url,
-      TranscriptFormat type,
-      String language,
-      String rel,
-      DateTime? lastUpdated});
+  $Res call({String url, TranscriptFormat type, String language, String rel});
 }
 
 /// @nodoc
@@ -121,7 +105,6 @@ class __$$TranscriptUrlImplCopyWithImpl<$Res>
     Object? type = null,
     Object? language = null,
     Object? rel = null,
-    Object? lastUpdated = freezed,
   }) {
     return _then(_$TranscriptUrlImpl(
       url: null == url
@@ -140,10 +123,6 @@ class __$$TranscriptUrlImplCopyWithImpl<$Res>
           ? _value.rel
           : rel // ignore: cast_nullable_to_non_nullable
               as String,
-      lastUpdated: freezed == lastUpdated
-          ? _value.lastUpdated
-          : lastUpdated // ignore: cast_nullable_to_non_nullable
-              as DateTime?,
     ));
   }
 }
@@ -157,8 +136,7 @@ class _$TranscriptUrlImpl
       {required this.url,
       required this.type,
       this.language = '',
-      this.rel = '',
-      this.lastUpdated});
+      this.rel = ''});
 
   factory _$TranscriptUrlImpl.fromJson(Map<String, dynamic> json) =>
       _$$TranscriptUrlImplFromJson(json);
@@ -173,12 +151,10 @@ class _$TranscriptUrlImpl
   @override
   @JsonKey()
   final String rel;
-  @override
-  final DateTime? lastUpdated;
 
   @override
   String toString({DiagnosticLevel minLevel = DiagnosticLevel.info}) {
-    return 'TranscriptUrl(url: $url, type: $type, language: $language, rel: $rel, lastUpdated: $lastUpdated)';
+    return 'TranscriptUrl(url: $url, type: $type, language: $language, rel: $rel)';
   }
 
   @override
@@ -189,8 +165,7 @@ class _$TranscriptUrlImpl
       ..add(DiagnosticsProperty('url', url))
       ..add(DiagnosticsProperty('type', type))
       ..add(DiagnosticsProperty('language', language))
-      ..add(DiagnosticsProperty('rel', rel))
-      ..add(DiagnosticsProperty('lastUpdated', lastUpdated));
+      ..add(DiagnosticsProperty('rel', rel));
   }
 
   @override
@@ -202,15 +177,12 @@ class _$TranscriptUrlImpl
             (identical(other.type, type) || other.type == type) &&
             (identical(other.language, language) ||
                 other.language == language) &&
-            (identical(other.rel, rel) || other.rel == rel) &&
-            (identical(other.lastUpdated, lastUpdated) ||
-                other.lastUpdated == lastUpdated));
+            (identical(other.rel, rel) || other.rel == rel));
   }
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode =>
-      Object.hash(runtimeType, url, type, language, rel, lastUpdated);
+  int get hashCode => Object.hash(runtimeType, url, type, language, rel);
 
   @JsonKey(ignore: true)
   @override
@@ -231,8 +203,7 @@ abstract class _TranscriptUrl implements TranscriptUrl {
       {required final String url,
       required final TranscriptFormat type,
       final String language,
-      final String rel,
-      final DateTime? lastUpdated}) = _$TranscriptUrlImpl;
+      final String rel}) = _$TranscriptUrlImpl;
 
   factory _TranscriptUrl.fromJson(Map<String, dynamic> json) =
       _$TranscriptUrlImpl.fromJson;
@@ -246,8 +217,6 @@ abstract class _TranscriptUrl implements TranscriptUrl {
   @override
   String get rel;
   @override
-  DateTime? get lastUpdated;
-  @override
   @JsonKey(ignore: true)
   _$$TranscriptUrlImplCopyWith<_$TranscriptUrlImpl> get copyWith =>
       throw _privateConstructorUsedError;
@@ -260,10 +229,10 @@ Transcript _$TranscriptFromJson(Map<String, dynamic> json) {
 /// @nodoc
 mixin _$Transcript {
   int? get id => throw _privateConstructorUsedError;
+  String get pguid => throw _privateConstructorUsedError;
   String get guid => throw _privateConstructorUsedError;
   List<Subtitle> get subtitles => throw _privateConstructorUsedError;
   bool get filtered => throw _privateConstructorUsedError;
-  DateTime? get lastUpdated => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -279,10 +248,10 @@ abstract class $TranscriptCopyWith<$Res> {
   @useResult
   $Res call(
       {int? id,
+      String pguid,
       String guid,
       List<Subtitle> subtitles,
-      bool filtered,
-      DateTime? lastUpdated});
+      bool filtered});
 }
 
 /// @nodoc
@@ -299,16 +268,20 @@ class _$TranscriptCopyWithImpl<$Res, $Val extends Transcript>
   @override
   $Res call({
     Object? id = freezed,
+    Object? pguid = null,
     Object? guid = null,
     Object? subtitles = null,
     Object? filtered = null,
-    Object? lastUpdated = freezed,
   }) {
     return _then(_value.copyWith(
       id: freezed == id
           ? _value.id
           : id // ignore: cast_nullable_to_non_nullable
               as int?,
+      pguid: null == pguid
+          ? _value.pguid
+          : pguid // ignore: cast_nullable_to_non_nullable
+              as String,
       guid: null == guid
           ? _value.guid
           : guid // ignore: cast_nullable_to_non_nullable
@@ -321,10 +294,6 @@ class _$TranscriptCopyWithImpl<$Res, $Val extends Transcript>
           ? _value.filtered
           : filtered // ignore: cast_nullable_to_non_nullable
               as bool,
-      lastUpdated: freezed == lastUpdated
-          ? _value.lastUpdated
-          : lastUpdated // ignore: cast_nullable_to_non_nullable
-              as DateTime?,
     ) as $Val);
   }
 }
@@ -339,10 +308,10 @@ abstract class _$$TranscriptImplCopyWith<$Res>
   @useResult
   $Res call(
       {int? id,
+      String pguid,
       String guid,
       List<Subtitle> subtitles,
-      bool filtered,
-      DateTime? lastUpdated});
+      bool filtered});
 }
 
 /// @nodoc
@@ -357,16 +326,20 @@ class __$$TranscriptImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? id = freezed,
+    Object? pguid = null,
     Object? guid = null,
     Object? subtitles = null,
     Object? filtered = null,
-    Object? lastUpdated = freezed,
   }) {
     return _then(_$TranscriptImpl(
       id: freezed == id
           ? _value.id
           : id // ignore: cast_nullable_to_non_nullable
               as int?,
+      pguid: null == pguid
+          ? _value.pguid
+          : pguid // ignore: cast_nullable_to_non_nullable
+              as String,
       guid: null == guid
           ? _value.guid
           : guid // ignore: cast_nullable_to_non_nullable
@@ -379,10 +352,6 @@ class __$$TranscriptImplCopyWithImpl<$Res>
           ? _value.filtered
           : filtered // ignore: cast_nullable_to_non_nullable
               as bool,
-      lastUpdated: freezed == lastUpdated
-          ? _value.lastUpdated
-          : lastUpdated // ignore: cast_nullable_to_non_nullable
-              as DateTime?,
     ));
   }
 }
@@ -392,10 +361,10 @@ class __$$TranscriptImplCopyWithImpl<$Res>
 class _$TranscriptImpl with DiagnosticableTreeMixin implements _Transcript {
   const _$TranscriptImpl(
       {this.id,
+      required this.pguid,
       required this.guid,
       final List<Subtitle> subtitles = const <Subtitle>[],
-      this.filtered = false,
-      this.lastUpdated})
+      this.filtered = false})
       : _subtitles = subtitles;
 
   factory _$TranscriptImpl.fromJson(Map<String, dynamic> json) =>
@@ -403,6 +372,8 @@ class _$TranscriptImpl with DiagnosticableTreeMixin implements _Transcript {
 
   @override
   final int? id;
+  @override
+  final String pguid;
   @override
   final String guid;
   final List<Subtitle> _subtitles;
@@ -417,12 +388,10 @@ class _$TranscriptImpl with DiagnosticableTreeMixin implements _Transcript {
   @override
   @JsonKey()
   final bool filtered;
-  @override
-  final DateTime? lastUpdated;
 
   @override
   String toString({DiagnosticLevel minLevel = DiagnosticLevel.info}) {
-    return 'Transcript(id: $id, guid: $guid, subtitles: $subtitles, filtered: $filtered, lastUpdated: $lastUpdated)';
+    return 'Transcript(id: $id, pguid: $pguid, guid: $guid, subtitles: $subtitles, filtered: $filtered)';
   }
 
   @override
@@ -431,10 +400,10 @@ class _$TranscriptImpl with DiagnosticableTreeMixin implements _Transcript {
     properties
       ..add(DiagnosticsProperty('type', 'Transcript'))
       ..add(DiagnosticsProperty('id', id))
+      ..add(DiagnosticsProperty('pguid', pguid))
       ..add(DiagnosticsProperty('guid', guid))
       ..add(DiagnosticsProperty('subtitles', subtitles))
-      ..add(DiagnosticsProperty('filtered', filtered))
-      ..add(DiagnosticsProperty('lastUpdated', lastUpdated));
+      ..add(DiagnosticsProperty('filtered', filtered));
   }
 
   @override
@@ -443,19 +412,18 @@ class _$TranscriptImpl with DiagnosticableTreeMixin implements _Transcript {
         (other.runtimeType == runtimeType &&
             other is _$TranscriptImpl &&
             (identical(other.id, id) || other.id == id) &&
+            (identical(other.pguid, pguid) || other.pguid == pguid) &&
             (identical(other.guid, guid) || other.guid == guid) &&
             const DeepCollectionEquality()
                 .equals(other._subtitles, _subtitles) &&
             (identical(other.filtered, filtered) ||
-                other.filtered == filtered) &&
-            (identical(other.lastUpdated, lastUpdated) ||
-                other.lastUpdated == lastUpdated));
+                other.filtered == filtered));
   }
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode => Object.hash(runtimeType, id, guid,
-      const DeepCollectionEquality().hash(_subtitles), filtered, lastUpdated);
+  int get hashCode => Object.hash(runtimeType, id, pguid, guid,
+      const DeepCollectionEquality().hash(_subtitles), filtered);
 
   @JsonKey(ignore: true)
   @override
@@ -474,10 +442,10 @@ class _$TranscriptImpl with DiagnosticableTreeMixin implements _Transcript {
 abstract class _Transcript implements Transcript {
   const factory _Transcript(
       {final int? id,
+      required final String pguid,
       required final String guid,
       final List<Subtitle> subtitles,
-      final bool filtered,
-      final DateTime? lastUpdated}) = _$TranscriptImpl;
+      final bool filtered}) = _$TranscriptImpl;
 
   factory _Transcript.fromJson(Map<String, dynamic> json) =
       _$TranscriptImpl.fromJson;
@@ -485,13 +453,13 @@ abstract class _Transcript implements Transcript {
   @override
   int? get id;
   @override
+  String get pguid;
+  @override
   String get guid;
   @override
   List<Subtitle> get subtitles;
   @override
   bool get filtered;
-  @override
-  DateTime? get lastUpdated;
   @override
   @JsonKey(ignore: true)
   _$$TranscriptImplCopyWith<_$TranscriptImpl> get copyWith =>

@@ -26,7 +26,6 @@ class TranscriptUrl with _$TranscriptUrl {
     required TranscriptFormat type,
     @Default('') String language,
     @Default('') String rel,
-    DateTime? lastUpdated,
   }) = _TranscriptUrl;
 
   factory TranscriptUrl.fromJson(Map<String, dynamic> json) =>
@@ -39,10 +38,10 @@ class TranscriptUrl with _$TranscriptUrl {
 class Transcript with _$Transcript {
   const factory Transcript({
     int? id,
+    required String pguid,
     required String guid,
     @Default(<Subtitle>[]) List<Subtitle> subtitles,
     @Default(false) bool filtered,
-    DateTime? lastUpdated,
   }) = _Transcript;
 
   factory Transcript.fromJson(Map<String, dynamic> json) =>

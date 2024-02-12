@@ -58,3 +58,7 @@ class Downloadable with _$Downloadable {
   factory Downloadable.fromJson(Map<String, dynamic> json) =>
       _$DownloadableFromJson(json);
 }
+
+extension DownloadableExt on Downloadable {
+  bool get downloaded => state == DownloadState.downloaded;
+}

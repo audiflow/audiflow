@@ -4,9 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
-import 'package:seasoning/entities/downloadable.dart';
-import 'package:seasoning/entities/episode.dart';
-import 'package:seasoning/entities/podcast.dart';
+import 'package:seasoning/entities/entities.dart';
 import 'package:seasoning/repository/repository.dart';
 import 'package:seasoning/repository/sembast/sembast_repository.dart';
 
@@ -282,9 +280,94 @@ void main() {
     });
 
     test('findDownloads', () async {
-      final loaded = await persistenceService!
-          .findDownloadByTaskId(saved[1].taskId);
+      final loaded =
+          await persistenceService!.findDownloadByTaskId(saved[1].taskId);
       expect(loaded, saved[1]);
+    });
+  });
+
+  group('Deletion', () {
+    setUpAll(createRepository);
+    tearDownAll(cleanUpRepository);
+
+    late Podcast podcast;
+    late List<Episode> episodes;
+    late List<Downloadable> downloads;
+    late List<Transcript> transcripts;
+
+    test('Create 110 episodes, their downloads and transcripts', () async {
+      podcast = await persistenceService!.savePodcast(podcast1);
+      episodes = await persistenceService!.saveEpisodes(
+        createEpisodeMocks(podcast1, 110),
+      );
+      downloads = await Future.wait(
+        episodes.map(
+          (e) => persistenceService!.saveDownload(
+            Downloadable(
+              pguid: e.pguid,
+              guid: e.guid,
+              url: e.contentUrl!,
+              directory: 'dir',
+              filename: '${e.guid}.mp3',
+              taskId: 'TASK${e.guid}',
+              state: DownloadState.downloaded,
+              percentage: 100,
+            ),
+          ),
+        ),
+      );
+      transcripts = await Future.wait(
+        episodes.map(
+          (e) => persistenceService!.saveTranscript(
+            Transcript(
+              pguid: e.pguid,
+              guid: e.guid,
+            ),
+          ),
+        ),
+      );
+    });
+
+    test('Delete episode', () async {
+      await persistenceService!.deleteEpisode(episodes[1]);
+    });
+
+    test('Check existence of episode related objects', () async {
+      final loaded = await persistenceService!.findPodcastById(podcast.id!);
+      expect(loaded, podcast);
+
+      final episode =
+          await persistenceService!.findEpisodeById(episodes[1].id!);
+      expect(episode, isNull);
+
+      final download =
+          await persistenceService!.findDownloadByTaskId(downloads[1].taskId);
+      expect(download, isNull);
+
+      final transcript =
+          await persistenceService!.findTranscriptById(transcripts[1].id!);
+      expect(transcript, isNull);
+    });
+
+    test('Delete podcast', () async {
+      await persistenceService!.deletePodcast(podcast);
+    });
+
+    test('Check existence of related objects', () async {
+      final loaded = await persistenceService!.findPodcastById(podcast.id!);
+      expect(loaded, isNull);
+
+      final episode =
+          await persistenceService!.findEpisodeById(episodes[0].id!);
+      expect(episode, isNull);
+
+      final download =
+          await persistenceService!.findDownloadByTaskId(downloads[0].taskId);
+      expect(download, isNull);
+
+      final transcript =
+          await persistenceService!.findTranscriptById(transcripts[0].id!);
+      expect(transcript, isNull);
     });
   });
 }

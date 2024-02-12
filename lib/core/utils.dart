@@ -15,11 +15,12 @@ import 'package:seasoning/services/settings/settings_service.dart';
 
 /// Returns the storage directory for the current platform.
 ///
-/// On iOS, the directory that the app has available to it for storing episodes may
-/// change between updates, whereas on Android we are able to save the full path. To
-/// ensure we can handle the directory name change on iOS without breaking existing
-/// Android installations we have created the following three functions to help with
-/// resolving the various paths correctly depending upon platform.
+/// On iOS, the directory that the app has available to it for storing episodes
+/// may change between updates, whereas on Android we are able to save the full
+/// path. To ensure we can handle the directory name change on iOS without
+/// breaking existing Android installations we have created the following three
+/// functions to help with resolving the various paths correctly depending upon
+/// platform.
 Future<String> resolvePath(Episode episode) async {
   if (Platform.isIOS) {
     return Future.value(
@@ -81,6 +82,7 @@ Future<bool> hasExternalStorage() async {
     await _getSDCard();
 
     return Future.value(true);
+    // ignore: avoid_catches_without_on_clauses
   } catch (e) {
     return Future.value(false);
   }
@@ -106,7 +108,7 @@ Future<Directory> _getSDCard() async {
   }
 
   if (path == null) {
-    throw 'No SD card found';
+    throw Exception('No SD card found');
   }
 
   return path;
@@ -118,7 +120,7 @@ String? safePath(String? s) {
 }
 
 String? safeFile(String? s) {
-  return s?.replaceAll(RegExp(r'[^\w\s\.]+'), '').trim();
+  return s?.replaceAll(RegExp(r'[^\w\s.]+'), '').trim();
 }
 
 Future<String> resolveUrl(String url, {bool forceHttps = false}) async {
@@ -135,9 +137,9 @@ Future<String> resolveUrl(String url, {bool forceHttps = false}) async {
     final location = response.headers.value(HttpHeaders.locationHeader);
     if (location != null) {
       uri = uri.resolve(location);
-      request = await client.getUrl(uri);
-      // Set the body or headers as desired.
-      request.followRedirects = false;
+      request = await client.getUrl(uri)
+        // Set the body or headers as desired.
+        ..followRedirects = false;
       response = await request.close();
     }
   }
@@ -147,4 +149,18 @@ Future<String> resolveUrl(String url, {bool forceHttps = false}) async {
   }
 
   return uri.toString();
+}
+
+final descriptionRegExp1 =
+    RegExp(r'(</p><br>|</p></br>|<p><br></p>|<p></br></p>)');
+final descriptionRegExp2 = RegExp(r'(<p><br></p>|<p></br></p>)');
+
+/// Remove HTML padding from the content. The padding may look fine within
+/// the context of a browser, but can look out of place on a mobile screen.
+String removeHtmlPadding(String? input) {
+  return input
+      ?.trim()
+      .replaceAll(descriptionRegExp2, '')
+      .replaceAll(descriptionRegExp1, '</p>') ??
+      '';
 }
