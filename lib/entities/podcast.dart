@@ -68,8 +68,54 @@ class Podcast with _$Podcast {
         thumbImageUrl: item.thumbnailArtworkUrl,
         copyright: item.artistName,
       );
+
+  factory Podcast.fromSearch(search.Podcast loadedPodcast) {
+    final funding = loadedPodcast.funding
+        .where((f) => f.url?.isNotEmpty == true)
+        .map((f) => Funding(url: f.url!, value: f.value ?? ''))
+        .toList(growable: false);
+
+    final persons = loadedPodcast.persons
+        .map(
+          (p) => Person(
+            name: p.name,
+            role: p.role,
+            group: p.group,
+            image: p.image,
+            link: p.link,
+          ),
+        )
+        .toList(growable: false);
+
+    return Podcast(
+      guid: loadedPodcast.url!,
+      url: loadedPodcast.url!,
+      link: loadedPodcast.link,
+      title: _format(loadedPodcast.title),
+      description: _format(loadedPodcast.description),
+      imageUrl: loadedPodcast.image,
+      thumbImageUrl: loadedPodcast.image,
+      copyright: _format(loadedPodcast.copyright),
+      funding: funding,
+      persons: persons,
+    );
+  }
 }
 
 extension PodcastExt on Podcast {
   bool get subscribed => subscribedDate != null;
+}
+
+final descriptionRegExp1 =
+    RegExp(r'(</p><br>|</p></br>|<p><br></p>|<p></br></p>)');
+final descriptionRegExp2 = RegExp(r'(<p><br></p>|<p></br></p>)');
+
+/// Remove HTML padding from the content. The padding may look fine within
+/// the context of a browser, but can look out of place on a mobile screen.
+String _format(String? input) {
+  return input
+          ?.trim()
+          .replaceAll(descriptionRegExp2, '')
+          .replaceAll(descriptionRegExp1, '</p>') ??
+      '';
 }
