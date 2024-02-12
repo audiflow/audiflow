@@ -17,10 +17,7 @@ import 'package:seasoning/core/utils.dart';
 import 'package:seasoning/entities/chapter.dart';
 import 'package:seasoning/entities/downloadable.dart';
 import 'package:seasoning/entities/episode.dart';
-import 'package:seasoning/entities/funding.dart';
-import 'package:seasoning/entities/person.dart';
 import 'package:seasoning/entities/podcast.dart';
-import 'package:seasoning/entities/season.dart';
 import 'package:seasoning/entities/transcript.dart';
 import 'package:seasoning/events/episode_event.dart';
 import 'package:seasoning/l10n/messages_all.dart';
@@ -35,9 +32,6 @@ class MobilePodcastService extends PodcastService {
     _init();
   }
 
-  final descriptionRegExp1 =
-      RegExp(r'(</p><br>|</p></br>|<p><br></p>|<p></br></p>)');
-  final descriptionRegExp2 = RegExp(r'(<p><br></p>|<p></br></p>)');
   final log = Logger('MobilePodcastService');
   final _cache =
       _PodcastCache(maxItems: 10, expiration: const Duration(minutes: 30));
@@ -156,289 +150,98 @@ class MobilePodcastService extends PodcastService {
   }) async {
     log.fine('loadPodcast. ID ${podcast.id} (refresh $refresh)');
 
-    if (podcast.id != null && !refresh) {
-      return loadPodcastById(id: podcast.id ?? 0);
+    return refresh
+        ? loadPodcastByUrl(url: podcast.url, ignoreCache: true)
+        : podcast.id != null
+            ? loadPodcastById(id: podcast.id ?? 0)
+            : loadPodcastByGuid(guid: podcast.guid);
+  }
+
+  @override
+  Future<Podcast?> loadPodcastByUrl({
+    required String url,
+    bool highlightNewEpisodes = false,
+    bool ignoreCache = false,
+  }) async {
+    final feedPodcast =
+        await _lookupPodcast(url: url, ignoreCache: ignoreCache);
+    var podcast = Podcast.fromSearch(feedPodcast);
+
+    // We could be subscribing this podcast already. Let's check.
+    final saved = await repository.findPodcastByGuid(podcast.guid);
+    if (saved != null) {
+      podcast = podcast.copyWith(id: saved.id);
     }
 
-    podcast_search.Podcast? loadedPodcast;
-    var imageUrl = podcast.imageUrl;
-    var thumbImageUrl = podcast.thumbImageUrl;
-
-    if (!refresh) {
-      log.fine('Not a refresh so try to fetch from cache');
-      loadedPodcast = _cache.item(podcast.url);
-    }
-
-    // If we didn't get a cache hit load the podcast feed.
-    if (loadedPodcast == null) {
-      var tries = 2;
-      var url = podcast.url;
-
-      while (0 < tries--) {
-        try {
-          log.fine('Loading podcast from feed $url');
-          loadedPodcast = await _loadPodcastFeed(url: url);
-          tries = 0;
-        } on Exception {
-          if (tries <= 0 || !url.startsWith('https')) {
-            rethrow;
-          }
-          // Try the http only version - flesh out to setting later on
-          log.fine(
-            'Failed to load podcast. Fallback to http and try again',
-          );
-          url = url.replaceFirst('https', 'http');
-        }
-      }
-
-      _cache.store(loadedPodcast!);
-    }
-
-    final title = _format(loadedPodcast.title);
-    final description = _format(loadedPodcast.description);
-    final copyright = _format(loadedPodcast.copyright);
-    final funding = <Funding>[];
-    final persons = <Person>[];
-    final existingSeasons =
-        await repository.findSeasonsByPodcastGuid(loadedPodcast.url!);
-    final existingEpisodes =
-        await repository.findEpisodesByPodcastGuid(loadedPodcast.url!);
-
-    // If imageUrl is null we have not loaded the podcast as a result of a
-    // search.
-    if (imageUrl == null || imageUrl.isEmpty || refresh) {
-      imageUrl = loadedPodcast.image;
-      thumbImageUrl = loadedPodcast.image;
-    }
-
-    for (final f in loadedPodcast.funding) {
-      if (f.url != null) {
-        funding.add(Funding(url: f.url!, value: f.value ?? ''));
-      }
-    }
-
-    for (final p in loadedPodcast.persons) {
-      persons.add(
-        Person(
-          name: p.name,
-          role: p.role,
-          group: p.group,
-          image: p.image,
-          link: p.link,
-        ),
-      );
-    }
-
-    var pc = Podcast(
-      guid: loadedPodcast.url!,
-      url: loadedPodcast.url!,
-      link: loadedPodcast.link,
-      title: title,
-      description: description,
-      imageUrl: imageUrl,
-      thumbImageUrl: thumbImageUrl,
-      copyright: copyright,
-      funding: funding,
-      persons: persons,
-    );
-
-    /// We could be following this podcast already. Let's check.
-    final follow = await repository.findPodcastByGuid(loadedPodcast.url!);
-
-    if (follow != null) {
-      // We are, so swap in the stored ID so we update the saved version later.
-      pc.id = follow.id;
-    }
-
-    // Usually, episodes are order by reverse publication date - but not always.
-    // Enforce that ordering. To prevent unnecessary sorting, we'll sample the
-    // first two episodes to see what order they are in.
-    if (loadedPodcast.episodes.length > 1) {
-      if (loadedPodcast.episodes[0].publicationDate!.millisecondsSinceEpoch <
-          loadedPodcast.episodes[1].publicationDate!.millisecondsSinceEpoch) {
-        loadedPodcast.episodes.sort(
-          (e1, e2) => e2.publicationDate!.compareTo(e1.publicationDate!),
-        );
-      }
-    }
-
-    // Loop through all episodes in the feed and check to see if we already
-    // have that episode stored. If we don't, it's a new episode so add it;
-    // if we do update our copy in case it's changed.
-    for (final episode in loadedPodcast.episodes) {
+    final existingEpisodes = await repository.findEpisodesByPodcastGuid(url);
+    final episodes = feedPodcast.episodes
+        .map((e) => Episode.fromSearch(e, podcast))
+        .map((episode) {
       final existingEpisode =
-          existingEpisodes.firstWhereOrNull((ep) => ep!.guid == episode.guid);
-      final author = episode.author?.replaceAll('\n', '').trim() ?? '';
-      final title = _format(episode.title);
-      final description = _format(episode.description);
-      final content = episode.content;
-
-      final episodeImage = episode.imageUrl == null || episode.imageUrl!.isEmpty
-          ? pc.imageUrl
-          : episode.imageUrl;
-      final episodeThumbImage =
-          episode.imageUrl == null || episode.imageUrl!.isEmpty
-              ? pc.thumbImageUrl
-              : episode.imageUrl;
-      final duration = episode.duration?.inSeconds ?? 0;
-      final transcriptUrls = <TranscriptUrl>[];
-      final episodePersons = <Person>[];
-
-      for (final t in episode.transcripts) {
-        late TranscriptFormat type;
-
-        switch (t.type) {
-          case podcast_search.TranscriptFormat.subrip:
-            type = TranscriptFormat.subrip;
-          case podcast_search.TranscriptFormat.json:
-            type = TranscriptFormat.json;
-          case podcast_search.TranscriptFormat.unsupported:
-            type = TranscriptFormat.unsupported;
-        }
-
-        transcriptUrls.add(TranscriptUrl(url: t.url, type: type));
-      }
-
-      if (episode.persons.isNotEmpty) {
-        for (final p in episode.persons) {
-          episodePersons.add(
-            Person(
-              name: p.name,
-              role: p.role!,
-              group: p.group!,
-              image: p.image,
-              link: p.link,
-            ),
-          );
-        }
-      } else if (persons.isNotEmpty) {
-        episodePersons.addAll(persons);
-      }
-
-      if (existingEpisode == null) {
-        pc.newEpisodes = highlightNewEpisodes && pc.id != null;
-
-        pc.episodes.add(
-          Episode(
-            highlight: pc.newEpisodes,
-            pguid: pc.guid,
-            guid: episode.guid,
-            podcast: pc.title,
-            title: title,
-            description: description,
-            content: content,
-            author: author,
-            season: episode.season ?? 0,
-            episode: episode.episode ?? 0,
-            contentUrl: episode.contentUrl,
-            link: episode.link,
-            imageUrl: episodeImage,
-            thumbImageUrl: episodeThumbImage,
-            duration: duration,
-            publicationDate: episode.publicationDate,
-            chaptersUrl: episode.chapters?.url,
-            transcriptUrls: transcriptUrls,
-            persons: episodePersons,
-            chapters: <Chapter>[],
-          ),
-        );
-      } else {
-        /// Check if the ancillary episode data has changed.
-        if (!listEquals(existingEpisode.persons, episodePersons) ||
-            !listEquals(existingEpisode.transcriptUrls, transcriptUrls)) {
-          pc.updatedEpisodes = true;
-        }
-
-        existingEpisode.title = title;
-        existingEpisode.description = description;
-        existingEpisode.content = content;
-        existingEpisode.author = author;
-        existingEpisode.season = episode.season ?? 0;
-        existingEpisode.episode = episode.episode ?? 0;
-        existingEpisode.contentUrl = episode.contentUrl;
-        existingEpisode.link = episode.link;
-        existingEpisode.imageUrl = episodeImage;
-        existingEpisode.thumbImageUrl = episodeThumbImage;
-        existingEpisode.publicationDate = episode.publicationDate;
-        existingEpisode.chaptersUrl = episode.chapters?.url;
-        existingEpisode.transcriptUrls = transcriptUrls;
-        existingEpisode.persons = episodePersons;
-
-        // If the source duration is 0 do not update any saved, calculated duration.
-        if (duration > 0) {
-          existingEpisode.duration = duration;
-        }
-
-        pc.episodes.add(existingEpisode);
-
-        // Clear this episode from our existing list
+          existingEpisodes.firstWhereOrNull((ep) => ep.guid == episode.guid);
+      if (existingEpisode != null) {
         existingEpisodes.remove(existingEpisode);
+
+        return existingEpisode.copyWith(
+          podcast: episode.title,
+          title: episode.title,
+          description: episode.description,
+          content: episode.content,
+          author: episode.author,
+          season: episode.season,
+          episode: episode.episode,
+          contentUrl: episode.contentUrl,
+          link: episode.link,
+          imageUrl: episode.imageUrl,
+          thumbImageUrl: episode.thumbImageUrl,
+          duration: 0 < episode.duration
+              ? episode.duration
+              : existingEpisode.duration,
+          publicationDate: episode.publicationDate,
+          chaptersUrl: episode.chaptersUrl,
+          transcriptUrls: episode.transcriptUrls,
+          persons: episode.persons,
+        );
       }
-    }
+
+      return episode;
+    }).toList();
+
+    final downloads = await repository.findDownloadsByPodcastGuid(podcast.guid);
 
     // Add any downloaded episodes that are no longer in the feed - they
     // may have expired but we still want them.
     final expired = <Episode>[];
-
-    for (final episode in existingEpisodes) {
-      final feedEpisode = loadedPodcast.episodes
-          .firstWhereOrNull((ep) => ep.guid == episode!.guid);
-
-      if (feedEpisode == null && episode!.downloaded) {
-        pc.episodes.add(episode);
-      } else {
-        expired.add(episode!);
-      }
-    }
-
-    if (pc.episodes.any((episode) => 0 < episode.season)) {
-      final map = <int, List<Episode>>{};
-      for (final episode in pc.episodes) {
-        if (map.containsKey(episode.season)) {
-          map[episode.season]!.add(episode);
+    for (final existingEpisode in existingEpisodes) {
+      final episode =
+          episodes.firstWhereOrNull((e) => e.guid == existingEpisode.guid);
+      if (episode == null) {
+        final download =
+            downloads.firstWhereOrNull((d) => d.guid == existingEpisode.guid);
+        if (download?.downloaded == true) {
+          episodes.add(existingEpisode);
         } else {
-          map[episode.season] = [episode];
+          expired.add(existingEpisode);
         }
       }
-
-      final seasons = map.keys.sorted((a, b) => b - a).map((seasonNum) {
-        final episodes = sortedSeasonEpisodes(map[seasonNum]!);
-        final episode = episodes.first;
-        final guid =
-            calcSeasonGuid(podcast: episode.podcast, seasonNum: seasonNum);
-        final id = existingSeasons.firstWhereOrNull((s) => s.guid == guid)?.id;
-        return Season(
-          id: id,
-          pguid: episode.pguid,
-          podcast: episode.podcast,
-          title: _extractSeasonTitle(episode),
-          seasonNum: seasonNum,
-          episodes: episodes,
-        );
-      });
-      pc.seasons = seasons.toList();
     }
+    episodes.sort((a, b) => b.publicationDate!.compareTo(a.publicationDate!));
 
-    // If we are subscribed to this podcast and are simply refreshing we need to save the updated subscription.
-    // A non-null ID indicates this podcast is subscribed too. We also need to delete any expired episodes.
-    if (podcast.id != null && refresh) {
+    if (saved != null && expired.isNotEmpty) {
       await repository.deleteEpisodes(expired);
-
-      pc = await repository.savePodcast(pc);
     }
-
-    return pc;
+    await repository.saveEpisodes(episodes);
+    return repository.savePodcast(podcast);
   }
 
   @override
   Future<Podcast?> loadPodcastById({required int id}) async {
-    final pc = await repository.findPodcastById(id);
-    for (final season in pc?.seasons ?? []) {
-      season.episodes = pc!.episodes
-          .where((episode) => episode.season == season.seasonNum)
-          .toList();
-    }
-    return pc;
+    return repository.findPodcastById(id);
+  }
+
+  @override
+  Future<Podcast?> loadPodcastByGuid({required String guid}) async {
+    return repository.findPodcastByGuid(guid);
   }
 
   @override
@@ -470,92 +273,103 @@ class MobilePodcastService extends PodcastService {
   /// timeframe.
   @override
   Future<Transcript> loadTranscriptByUrl({
+    required Episode episode,
     required TranscriptUrl transcriptUrl,
   }) async {
     final subtitles = <Subtitle>[];
     final result = await _loadTranscriptByUrl(transcriptUrl);
+    if (result == null) {
+      return Transcript(
+        pguid: episode.pguid,
+        guid: episode.guid,
+        subtitles: [],
+      );
+    }
+
     const threshold = Duration(seconds: 5);
     Subtitle? groupSubtitle;
 
-    if (result != null) {
-      for (var index = 0; index < result.subtitles.length; index++) {
-        final subtitle = result.subtitles[index];
-        var completeGroup = true;
-        var data = subtitle.data;
+    for (var index = 0; index < result.subtitles.length; index++) {
+      final subtitle = result.subtitles[index];
+      var completeGroup = true;
+      var data = subtitle.data;
 
-        if (groupSubtitle != null) {
-          if (transcriptUrl.type == TranscriptFormat.json) {
-            if (groupSubtitle.speaker == subtitle.speaker &&
-                (subtitle.start.compareTo(groupSubtitle.start + threshold) <
-                        0 ||
+      if (groupSubtitle != null) {
+        if (transcriptUrl.type == TranscriptFormat.json) {
+          if (groupSubtitle.speaker == subtitle.speaker &&
+              (subtitle.start.compareTo(groupSubtitle.start + threshold) < 0 ||
+                  subtitle.data.length == 1)) {
+            /// We need to handle transcripts that have spaces between
+            /// sentences, and those which do not.
+            if (groupSubtitle.data != null &&
+                (groupSubtitle.data!.endsWith(' ') ||
+                    subtitle.data.startsWith(' ') ||
                     subtitle.data.length == 1)) {
-              /// We need to handle transcripts that have spaces between
-              /// sentences, and those which do not.
-              if (groupSubtitle.data != null &&
-                  (groupSubtitle.data!.endsWith(' ') ||
-                      subtitle.data.startsWith(' ') ||
-                      subtitle.data.length == 1)) {
-                data = '${groupSubtitle.data}${subtitle.data}';
-              } else {
-                data = '${groupSubtitle.data} ${subtitle.data.trim()}';
-              }
-              completeGroup = false;
+              data = '${groupSubtitle.data}${subtitle.data}';
+            } else {
+              data = '${groupSubtitle.data} ${subtitle.data.trim()}';
             }
-          } else {
-            if (groupSubtitle.start == subtitle.start) {
-              if (groupSubtitle.data != null &&
-                  (groupSubtitle.data!.endsWith(' ') ||
-                      subtitle.data.startsWith(' ') ||
-                      subtitle.data.length == 1)) {
-                data = '${groupSubtitle.data}${subtitle.data}';
-              } else {
-                data = '${groupSubtitle.data} ${subtitle.data.trim()}';
-              }
-              completeGroup = false;
-            }
+            completeGroup = false;
           }
         } else {
-          completeGroup = false;
-          groupSubtitle = Subtitle(
-            data: subtitle.data,
-            speaker: subtitle.speaker,
-            start: subtitle.start,
-            end: subtitle.end,
-            index: subtitle.index,
-          );
+          if (groupSubtitle.start == subtitle.start) {
+            if (groupSubtitle.data != null &&
+                (groupSubtitle.data!.endsWith(' ') ||
+                    subtitle.data.startsWith(' ') ||
+                    subtitle.data.length == 1)) {
+              data = '${groupSubtitle.data}${subtitle.data}';
+            } else {
+              data = '${groupSubtitle.data} ${subtitle.data.trim()}';
+            }
+            completeGroup = false;
+          }
         }
+      } else {
+        completeGroup = false;
+        groupSubtitle = Subtitle(
+          data: subtitle.data,
+          speaker: subtitle.speaker,
+          start: subtitle.start,
+          end: subtitle.end,
+          index: subtitle.index,
+        );
+      }
 
-        /// If we have a complete group, or we're the very last subtitle -
-        /// add it.
-        if (completeGroup || index == result.subtitles.length - 1) {
-          groupSubtitle.data = groupSubtitle.data?.trim();
+      /// If we have a complete group, or we're the very last subtitle -
+      /// add it.
+      if (completeGroup || index == result.subtitles.length - 1) {
+        groupSubtitle =
+            groupSubtitle.copyWith(data: groupSubtitle.data?.trim());
 
-          subtitles.add(groupSubtitle);
+        subtitles.add(groupSubtitle);
 
-          groupSubtitle = Subtitle(
-            data: subtitle.data,
-            speaker: subtitle.speaker,
-            start: subtitle.start,
-            end: subtitle.end,
-            index: subtitle.index,
-          );
-        } else {
-          groupSubtitle = Subtitle(
-            data: data,
-            speaker: subtitle.speaker,
-            start: groupSubtitle.start,
-            end: subtitle.end,
-            index: groupSubtitle.index,
-          );
-        }
+        groupSubtitle = Subtitle(
+          data: subtitle.data,
+          speaker: subtitle.speaker,
+          start: subtitle.start,
+          end: subtitle.end,
+          index: subtitle.index,
+        );
+      } else {
+        groupSubtitle = Subtitle(
+          data: data,
+          speaker: subtitle.speaker,
+          start: groupSubtitle.start,
+          end: subtitle.end,
+          index: groupSubtitle.index,
+        );
       }
     }
 
-    return Transcript(subtitles: subtitles);
+    return Transcript(
+      pguid: episode.pguid,
+      guid: episode.guid,
+      subtitles: subtitles,
+    );
   }
 
   @override
-  Future<List<Episode>> loadDownloads() async {
+  Future<List<Downloadable>> loadDownloads() async {
     return repository.findDownloads();
   }
 
@@ -565,39 +379,28 @@ class MobilePodcastService extends PodcastService {
   }
 
   @override
-  Future<List<Season>> loadSeasons() async {
-    return repository.findAllSeasons();
-  }
-
-  @override
   Future<void> deleteDownload(Episode episode) async {
+    final download = await repository.findDownloadByGuid(episode.guid);
+    if (download == null) {
+      return;
+    }
+
     // If this episode is currently downloading, cancel the download first.
-    if (episode.downloadState == DownloadState.downloaded) {
+    if (download.state == DownloadState.downloaded) {
       if (settingsService.markDeletedEpisodesAsPlayed) {
-        episode.played = true;
+        // episode.played = true;
       }
-    } else if (episode.downloadState == DownloadState.downloading &&
-        episode.downloadPercentage < 100) {
-      await FlutterDownloader.cancel(taskId: episode.downloadTaskId!);
+    } else if (download.state == DownloadState.downloading &&
+        download.percentage < 100) {
+      await FlutterDownloader.cancel(taskId: download.taskId);
     }
 
-    episode.downloadTaskId = null;
-    episode.downloadPercentage = 0;
-    episode.position = 0;
-    episode.downloadState = DownloadState.none;
-
-    if (episode.transcriptId != null && episode.transcriptId! > 0) {
-      await repository.deleteTranscriptById(episode.transcriptId!);
-    }
-
-    await repository.saveEpisode(episode);
+    await repository.deleteDownload(download);
 
     if (await hasStoragePermission()) {
-      final f = File.fromUri(Uri.file(await resolvePath(episode)));
-
-      log.fine('Deleting file ${f.path}');
-
-      if (await f.exists()) {
+      final f = File.fromUri(Uri.file(await resolvePath(download)));
+      if (f.existsSync()) {
+        log.fine('Deleting file ${f.path}');
         await f.delete();
       }
     }
@@ -607,10 +410,10 @@ class MobilePodcastService extends PodcastService {
 
   @override
   Future<void> toggleEpisodePlayed(Episode episode) async {
-    episode.played = !episode.played;
-    episode.position = 0;
-
-    await repository.saveEpisode(episode);
+    // episode.played = !episode.played;
+    // episode.position = 0;
+    //
+    // await repository.saveEpisode(episode);
   }
 
   @override
@@ -626,7 +429,7 @@ class MobilePodcastService extends PodcastService {
 
       final d = Directory.fromUri(Uri.file(filename));
 
-      if (await d.exists()) {
+      if (d.existsSync()) {
         await d.delete(recursive: true);
       }
     }
@@ -636,37 +439,12 @@ class MobilePodcastService extends PodcastService {
 
   @override
   Future<void> toggleSeasonView(Podcast podcast) async {
-    podcast.seasonView = !podcast.seasonView;
+    // podcast.seasonView = !podcast.seasonView;
     await repository.savePodcast(podcast);
   }
 
   @override
-  Future<Podcast?> subscribe(Podcast? podcast) async {
-    // We may already have episodes download for this podcast before the user
-    // hit subscribe.
-    if (podcast != null) {
-      final savedEpisodes =
-          await repository.findEpisodesByPodcastGuid(podcast.guid);
-
-      if (podcast.episodes.isNotEmpty) {
-        for (final episode in podcast.episodes) {
-          final savedEpisode =
-              savedEpisodes.firstWhereOrNull((ep) => ep!.guid == episode.guid);
-
-          if (savedEpisode != null) {
-            episode.pguid = podcast.guid;
-          }
-        }
-      }
-
-      return repository.savePodcast(podcast);
-    }
-
-    return Future.value();
-  }
-
-  @override
-  Future<Podcast?> save(Podcast podcast) async {
+  Future<Podcast> subscribe(Podcast podcast) async {
     return repository.savePodcast(podcast);
   }
 
@@ -690,14 +468,41 @@ class MobilePodcastService extends PodcastService {
     return repository.loadQueue();
   }
 
-  /// Remove HTML padding from the content. The padding may look fine within
-  /// the context of a browser, but can look out of place on a mobile screen.
-  String _format(String? input) {
-    return input
-            ?.trim()
-            .replaceAll(descriptionRegExp2, '')
-            .replaceAll(descriptionRegExp1, '</p>') ??
-        '';
+  Future<podcast_search.Podcast> _lookupPodcast({
+    required String url,
+    bool ignoreCache = false,
+  }) async {
+    podcast_search.Podcast? loadedPodcast;
+
+    if (!ignoreCache) {
+      log.fine('Not a refresh so try to fetch from cache');
+      loadedPodcast = _cache.item(url);
+      if (loadedPodcast != null) {
+        return loadedPodcast;
+      }
+    }
+
+    // If we didn't get a cache hit load the podcast feed.
+    var tries = 2;
+    while (0 < tries--) {
+      try {
+        log.fine('Loading podcast from feed $url');
+        loadedPodcast = await _loadPodcastFeed(url: url);
+        _cache.store(loadedPodcast);
+        return loadedPodcast;
+      } on Exception {
+        if (tries <= 0 || !url.startsWith('https')) {
+          rethrow;
+        }
+        // Try the http only version - flesh out to setting later on
+        log.fine(
+          'Failed to load podcast. Fallback to http and try again',
+        );
+        url = url.replaceFirst('https', 'http');
+      }
+    }
+
+    throw UnimplementedError();
   }
 
   Future<podcast_search.Chapters?> _loadChaptersByUrl(String url) {
@@ -856,17 +661,17 @@ class _TranscriptComputer {
   final TranscriptUrl transcriptUrl;
 }
 
-String? _extractSeasonTitle(Episode episode) {
-  if (episode.season < 1) {
-    return null;
-  }
-
-  switch (episode.pguid) {
-    case 'https://anchor.fm/s/8c2088c/podcast/rss': // COTEN
-      final m = RegExp(r'【COTEN RADIO\S*\s+(.*?)\d+】')
-          .firstMatch(episode.title ?? '');
-      return m?.group(1)!.replaceFirst(RegExp(r'\s+編$'), '編');
-    default:
-      return episode.title;
-  }
-}
+// String? _extractSeasonTitle(Episode episode) {
+//   if (episode.season < 1) {
+//     return null;
+//   }
+//
+//   switch (episode.pguid) {
+//     case 'https://anchor.fm/s/8c2088c/podcast/rss': // COTEN
+//       final m = RegExp(r'【COTEN RADIO\S*\s+(.*?)\d+】')
+//           .firstMatch(episode.title ?? '');
+//       return m?.group(1)!.replaceFirst(RegExp(r'\s+編$'), '編');
+//     default:
+//       return episode.title;
+//   }
+// }

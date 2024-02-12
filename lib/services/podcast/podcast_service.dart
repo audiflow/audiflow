@@ -6,11 +6,7 @@
 
 import 'package:podcast_search/podcast_search.dart' as pcast;
 import 'package:seasoning/api/podcast/podcast_api.dart';
-import 'package:seasoning/entities/chapter.dart';
-import 'package:seasoning/entities/episode.dart';
-import 'package:seasoning/entities/podcast.dart';
-import 'package:seasoning/entities/season.dart';
-import 'package:seasoning/entities/transcript.dart';
+import 'package:seasoning/entities/entities.dart';
 import 'package:seasoning/events/episode_event.dart';
 import 'package:seasoning/repository/repository.dart';
 import 'package:seasoning/services/settings/settings_service.dart';
@@ -21,6 +17,7 @@ abstract class PodcastService {
     required this.repository,
     required this.settingsService,
   });
+
   final PodcastApi api;
   final Repository repository;
   final SettingsService settingsService;
@@ -188,19 +185,24 @@ abstract class PodcastService {
     bool refresh = false,
   });
 
-  Future<Podcast?> loadPodcastById({
-    required int id,
+  Future<Podcast?> loadPodcastByUrl({
+    required String url,
+    bool highlightNewEpisodes = false,
+    bool ignoreCache = false,
   });
 
-  Future<List<Episode>> loadDownloads();
+  Future<Podcast?> loadPodcastById({required int id});
 
-  Future<List<Season>> loadSeasons();
+  Future<Podcast?> loadPodcastByGuid({required String guid});
+
+  Future<List<Downloadable>> loadDownloads();
 
   Future<List<Episode>> loadEpisodes();
 
   Future<List<Chapter>> loadChaptersByUrl({required String url});
 
   Future<Transcript> loadTranscriptByUrl({
+    required Episode episode,
     required TranscriptUrl transcriptUrl,
   });
 
@@ -210,13 +212,11 @@ abstract class PodcastService {
 
   Future<List<Podcast>> subscriptions();
 
-  Future<Podcast?> subscribe(Podcast podcast);
+  Future<Podcast> subscribe(Podcast podcast);
 
   Future<void> unsubscribe(Podcast podcast);
 
   Future<void> toggleSeasonView(Podcast podcast);
-
-  Future<Podcast?> save(Podcast podcast);
 
   Future<Episode> saveEpisode(Episode episode);
 
