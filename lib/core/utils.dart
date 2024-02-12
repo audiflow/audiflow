@@ -9,6 +9,7 @@ import 'dart:io';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:seasoning/entities/downloadable.dart';
 import 'package:seasoning/entities/episode.dart';
 import 'package:seasoning/services/settings/mobile_settings_service.dart';
 import 'package:seasoning/services/settings/settings_service.dart';
@@ -29,6 +30,16 @@ Future<String> resolvePath(Episode episode) async {
   }
 
   return Future.value(join(episode.filepath!, episode.filename));
+}
+
+Future<String> resolveDownloadedPath(Downloadable download) async {
+  if (Platform.isIOS) {
+    return Future.value(
+      join(await getStorageDirectory(), download.directory, download.filename),
+    );
+  }
+
+  return Future.value(join(download.directory, download.filename));
 }
 
 Future<String> resolveDirectory({
