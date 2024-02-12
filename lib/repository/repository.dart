@@ -48,6 +48,8 @@ abstract class Repository {
 
   Future<List<Downloadable>> findDownloads();
 
+  Future<Downloadable?> findDownloadByGuid(String guid);
+
   Future<Downloadable?> findDownloadByTaskId(String taskId);
 
   Future<Downloadable> saveDownload(Downloadable downloadable);

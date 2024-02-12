@@ -184,9 +184,9 @@ class SembastRepository extends Repository {
   }
 
   Future<void> _deleteEpisode(
-      Episode episode, {
-        DatabaseClient? db,
-      }) async {
+    Episode episode, {
+    DatabaseClient? db,
+  }) async {
     final client = db ?? await _db;
     final finder = Finder(filter: Filter.byKey(episode.id));
     final guidFinder = Finder(filter: Filter.equals('guid', episode.guid));
@@ -232,6 +232,17 @@ class SembastRepository extends Repository {
         return Downloadable.fromJson(snapshot.value).copyWith(id: snapshot.key);
       },
     ).toList();
+  }
+
+  @override
+  Future<Downloadable?> findDownloadByGuid(String guid) async {
+    final finder = Finder(filter: Filter.equals('guid', guid));
+    final snapshot =
+        await _downloadableStore.findFirst(await _db, finder: finder);
+
+    return snapshot == null
+        ? null
+        : Downloadable.fromJson(snapshot.value).copyWith(id: snapshot.key);
   }
 
   @override

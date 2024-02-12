@@ -279,9 +279,15 @@ void main() {
       expect(loaded, isEmpty);
     });
 
-    test('findDownloads', () async {
+    test('findDownloadByGuid', () async {
       final loaded =
-          await persistenceService!.findDownloadByTaskId(saved[1].taskId);
+          await persistenceService!.findDownloadByGuid(saved[1].guid);
+      expect(loaded, saved[1]);
+    });
+
+    test('findDownloadByTaskId', () async {
+      final loaded =
+      await persistenceService!.findDownloadByTaskId(saved[1].taskId);
       expect(loaded, saved[1]);
     });
   });
@@ -362,7 +368,7 @@ void main() {
       expect(episode, isNull);
 
       final download =
-          await persistenceService!.findDownloadByTaskId(downloads[0].taskId);
+          await persistenceService!.findDownloadByGuid(downloads[0].guid);
       expect(download, isNull);
 
       final transcript =
