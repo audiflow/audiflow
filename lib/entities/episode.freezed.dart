@@ -30,13 +30,6 @@ mixin _$Episode {
   /// without subscribing to a podcast this may be null.
   String get pguid => throw _privateConstructorUsedError;
 
-  /// The path to the directory containing the download for this episode;
-  /// or null.
-  String? get filepath => throw _privateConstructorUsedError;
-
-  /// The filename of the downloaded episode; or null.
-  String? get filename => throw _privateConstructorUsedError;
-
   /// The name of the podcast the episode is part of.
   String get podcast => throw _privateConstructorUsedError;
 
@@ -122,8 +115,6 @@ abstract class $EpisodeCopyWith<$Res> {
       {int? id,
       String guid,
       String pguid,
-      String? filepath,
-      String? filename,
       String podcast,
       String title,
       String description,
@@ -168,8 +159,6 @@ class _$EpisodeCopyWithImpl<$Res, $Val extends Episode>
     Object? id = freezed,
     Object? guid = null,
     Object? pguid = null,
-    Object? filepath = freezed,
-    Object? filename = freezed,
     Object? podcast = null,
     Object? title = null,
     Object? description = null,
@@ -206,14 +195,6 @@ class _$EpisodeCopyWithImpl<$Res, $Val extends Episode>
           ? _value.pguid
           : pguid // ignore: cast_nullable_to_non_nullable
               as String,
-      filepath: freezed == filepath
-          ? _value.filepath
-          : filepath // ignore: cast_nullable_to_non_nullable
-              as String?,
-      filename: freezed == filename
-          ? _value.filename
-          : filename // ignore: cast_nullable_to_non_nullable
-              as String?,
       podcast: null == podcast
           ? _value.podcast
           : podcast // ignore: cast_nullable_to_non_nullable
@@ -329,8 +310,6 @@ abstract class _$$EpisodeImplCopyWith<$Res> implements $EpisodeCopyWith<$Res> {
       {int? id,
       String guid,
       String pguid,
-      String? filepath,
-      String? filename,
       String podcast,
       String title,
       String description,
@@ -374,8 +353,6 @@ class __$$EpisodeImplCopyWithImpl<$Res>
     Object? id = freezed,
     Object? guid = null,
     Object? pguid = null,
-    Object? filepath = freezed,
-    Object? filename = freezed,
     Object? podcast = null,
     Object? title = null,
     Object? description = null,
@@ -412,14 +389,6 @@ class __$$EpisodeImplCopyWithImpl<$Res>
           ? _value.pguid
           : pguid // ignore: cast_nullable_to_non_nullable
               as String,
-      filepath: freezed == filepath
-          ? _value.filepath
-          : filepath // ignore: cast_nullable_to_non_nullable
-              as String?,
-      filename: freezed == filename
-          ? _value.filename
-          : filename // ignore: cast_nullable_to_non_nullable
-              as String?,
       podcast: null == podcast
           ? _value.podcast
           : podcast // ignore: cast_nullable_to_non_nullable
@@ -519,8 +488,6 @@ class _$EpisodeImpl with DiagnosticableTreeMixin implements _Episode {
       {this.id,
       required this.guid,
       required this.pguid,
-      this.filepath,
-      this.filename,
       required this.podcast,
       required this.title,
       required this.description,
@@ -564,15 +531,6 @@ class _$EpisodeImpl with DiagnosticableTreeMixin implements _Episode {
   /// without subscribing to a podcast this may be null.
   @override
   final String pguid;
-
-  /// The path to the directory containing the download for this episode;
-  /// or null.
-  @override
-  final String? filepath;
-
-  /// The filename of the downloaded episode; or null.
-  @override
-  final String? filename;
 
   /// The name of the podcast the episode is part of.
   @override
@@ -695,7 +653,7 @@ class _$EpisodeImpl with DiagnosticableTreeMixin implements _Episode {
 
   @override
   String toString({DiagnosticLevel minLevel = DiagnosticLevel.info}) {
-    return 'Episode(id: $id, guid: $guid, pguid: $pguid, filepath: $filepath, filename: $filename, podcast: $podcast, title: $title, description: $description, content: $content, link: $link, imageUrl: $imageUrl, thumbImageUrl: $thumbImageUrl, publicationDate: $publicationDate, contentUrl: $contentUrl, author: $author, season: $season, episode: $episode, duration: $duration, position: $position, played: $played, chaptersUrl: $chaptersUrl, chapters: $chapters, chapterIndex: $chapterIndex, currentChapter: $currentChapter, transcriptUrls: $transcriptUrls, persons: $persons, parsedDescriptionText: $parsedDescriptionText)';
+    return 'Episode(id: $id, guid: $guid, pguid: $pguid, podcast: $podcast, title: $title, description: $description, content: $content, link: $link, imageUrl: $imageUrl, thumbImageUrl: $thumbImageUrl, publicationDate: $publicationDate, contentUrl: $contentUrl, author: $author, season: $season, episode: $episode, duration: $duration, position: $position, played: $played, chaptersUrl: $chaptersUrl, chapters: $chapters, chapterIndex: $chapterIndex, currentChapter: $currentChapter, transcriptUrls: $transcriptUrls, persons: $persons, parsedDescriptionText: $parsedDescriptionText)';
   }
 
   @override
@@ -706,8 +664,6 @@ class _$EpisodeImpl with DiagnosticableTreeMixin implements _Episode {
       ..add(DiagnosticsProperty('id', id))
       ..add(DiagnosticsProperty('guid', guid))
       ..add(DiagnosticsProperty('pguid', pguid))
-      ..add(DiagnosticsProperty('filepath', filepath))
-      ..add(DiagnosticsProperty('filename', filename))
       ..add(DiagnosticsProperty('podcast', podcast))
       ..add(DiagnosticsProperty('title', title))
       ..add(DiagnosticsProperty('description', description))
@@ -741,10 +697,6 @@ class _$EpisodeImpl with DiagnosticableTreeMixin implements _Episode {
             (identical(other.id, id) || other.id == id) &&
             (identical(other.guid, guid) || other.guid == guid) &&
             (identical(other.pguid, pguid) || other.pguid == pguid) &&
-            (identical(other.filepath, filepath) ||
-                other.filepath == filepath) &&
-            (identical(other.filename, filename) ||
-                other.filename == filename) &&
             (identical(other.podcast, podcast) || other.podcast == podcast) &&
             (identical(other.title, title) || other.title == title) &&
             (identical(other.description, description) ||
@@ -788,8 +740,6 @@ class _$EpisodeImpl with DiagnosticableTreeMixin implements _Episode {
         id,
         guid,
         pguid,
-        filepath,
-        filename,
         podcast,
         title,
         description,
@@ -833,8 +783,6 @@ abstract class _Episode implements Episode {
       {final int? id,
       required final String guid,
       required final String pguid,
-      final String? filepath,
-      final String? filename,
       required final String podcast,
       required final String title,
       required final String description,
@@ -875,15 +823,6 @@ abstract class _Episode implements Episode {
   /// The GUID for an associated podcast. If an episode has been downloaded
   /// without subscribing to a podcast this may be null.
   String get pguid;
-  @override
-
-  /// The path to the directory containing the download for this episode;
-  /// or null.
-  String? get filepath;
-  @override
-
-  /// The filename of the downloaded episode; or null.
-  String? get filename;
   @override
 
   /// The name of the podcast the episode is part of.

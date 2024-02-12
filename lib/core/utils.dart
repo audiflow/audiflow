@@ -22,17 +22,7 @@ import 'package:seasoning/services/settings/settings_service.dart';
 /// breaking existing Android installations we have created the following three
 /// functions to help with resolving the various paths correctly depending upon
 /// platform.
-Future<String> resolvePath(Episode episode) async {
-  if (Platform.isIOS) {
-    return Future.value(
-      join(await getStorageDirectory(), episode.filepath, episode.filename),
-    );
-  }
-
-  return Future.value(join(episode.filepath!, episode.filename));
-}
-
-Future<String> resolveDownloadedPath(Downloadable download) async {
+Future<String> resolvePath(Downloadable download) async {
   if (Platform.isIOS) {
     return Future.value(
       join(await getStorageDirectory(), download.directory, download.filename),

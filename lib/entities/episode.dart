@@ -35,13 +35,6 @@ class Episode with _$Episode {
     /// without subscribing to a podcast this may be null.
     required String pguid,
 
-    /// The path to the directory containing the download for this episode;
-    /// or null.
-    String? filepath,
-
-    /// The filename of the downloaded episode; or null.
-    String? filename,
-
     /// The name of the podcast the episode is part of.
     required String podcast,
 
