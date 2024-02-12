@@ -48,12 +48,12 @@ mixin _$Podcast {
   /// Copyright owner of the podcast.
   String? get copyright => throw _privateConstructorUsedError;
 
-  /// Date and time user subscribed to the podcast.
-  DateTime? get subscribedDate => throw _privateConstructorUsedError;
-
   /// Zero or more funding links.
   List<Funding> get funding => throw _privateConstructorUsedError;
   List<Person> get persons => throw _privateConstructorUsedError;
+
+  /// Date and time user subscribed to the podcast.
+  DateTime? get subscribedDate => throw _privateConstructorUsedError;
 
   /// Date and time podcast was last updated/refreshed.
   DateTime? get lastUpdated => throw _privateConstructorUsedError;
@@ -78,9 +78,9 @@ abstract class $PodcastCopyWith<$Res> {
       String? imageUrl,
       String? thumbImageUrl,
       String? copyright,
-      DateTime? subscribedDate,
       List<Funding> funding,
       List<Person> persons,
+      DateTime? subscribedDate,
       DateTime? lastUpdated});
 }
 
@@ -106,9 +106,9 @@ class _$PodcastCopyWithImpl<$Res, $Val extends Podcast>
     Object? imageUrl = freezed,
     Object? thumbImageUrl = freezed,
     Object? copyright = freezed,
-    Object? subscribedDate = freezed,
     Object? funding = null,
     Object? persons = null,
+    Object? subscribedDate = freezed,
     Object? lastUpdated = freezed,
   }) {
     return _then(_value.copyWith(
@@ -148,10 +148,6 @@ class _$PodcastCopyWithImpl<$Res, $Val extends Podcast>
           ? _value.copyright
           : copyright // ignore: cast_nullable_to_non_nullable
               as String?,
-      subscribedDate: freezed == subscribedDate
-          ? _value.subscribedDate
-          : subscribedDate // ignore: cast_nullable_to_non_nullable
-              as DateTime?,
       funding: null == funding
           ? _value.funding
           : funding // ignore: cast_nullable_to_non_nullable
@@ -160,6 +156,10 @@ class _$PodcastCopyWithImpl<$Res, $Val extends Podcast>
           ? _value.persons
           : persons // ignore: cast_nullable_to_non_nullable
               as List<Person>,
+      subscribedDate: freezed == subscribedDate
+          ? _value.subscribedDate
+          : subscribedDate // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
       lastUpdated: freezed == lastUpdated
           ? _value.lastUpdated
           : lastUpdated // ignore: cast_nullable_to_non_nullable
@@ -185,9 +185,9 @@ abstract class _$$PodcastImplCopyWith<$Res> implements $PodcastCopyWith<$Res> {
       String? imageUrl,
       String? thumbImageUrl,
       String? copyright,
-      DateTime? subscribedDate,
       List<Funding> funding,
       List<Person> persons,
+      DateTime? subscribedDate,
       DateTime? lastUpdated});
 }
 
@@ -211,9 +211,9 @@ class __$$PodcastImplCopyWithImpl<$Res>
     Object? imageUrl = freezed,
     Object? thumbImageUrl = freezed,
     Object? copyright = freezed,
-    Object? subscribedDate = freezed,
     Object? funding = null,
     Object? persons = null,
+    Object? subscribedDate = freezed,
     Object? lastUpdated = freezed,
   }) {
     return _then(_$PodcastImpl(
@@ -253,10 +253,6 @@ class __$$PodcastImplCopyWithImpl<$Res>
           ? _value.copyright
           : copyright // ignore: cast_nullable_to_non_nullable
               as String?,
-      subscribedDate: freezed == subscribedDate
-          ? _value.subscribedDate
-          : subscribedDate // ignore: cast_nullable_to_non_nullable
-              as DateTime?,
       funding: null == funding
           ? _value._funding
           : funding // ignore: cast_nullable_to_non_nullable
@@ -265,6 +261,10 @@ class __$$PodcastImplCopyWithImpl<$Res>
           ? _value._persons
           : persons // ignore: cast_nullable_to_non_nullable
               as List<Person>,
+      subscribedDate: freezed == subscribedDate
+          ? _value.subscribedDate
+          : subscribedDate // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
       lastUpdated: freezed == lastUpdated
           ? _value.lastUpdated
           : lastUpdated // ignore: cast_nullable_to_non_nullable
@@ -286,9 +286,9 @@ class _$PodcastImpl implements _Podcast {
       this.imageUrl,
       this.thumbImageUrl,
       this.copyright,
-      this.subscribedDate,
       final List<Funding> funding = const [],
       final List<Person> persons = const [],
+      this.subscribedDate,
       this.lastUpdated})
       : _funding = funding,
         _persons = persons;
@@ -333,10 +333,6 @@ class _$PodcastImpl implements _Podcast {
   @override
   final String? copyright;
 
-  /// Date and time user subscribed to the podcast.
-  @override
-  final DateTime? subscribedDate;
-
   /// Zero or more funding links.
   final List<Funding> _funding;
 
@@ -358,13 +354,17 @@ class _$PodcastImpl implements _Podcast {
     return EqualUnmodifiableListView(_persons);
   }
 
+  /// Date and time user subscribed to the podcast.
+  @override
+  final DateTime? subscribedDate;
+
   /// Date and time podcast was last updated/refreshed.
   @override
   final DateTime? lastUpdated;
 
   @override
   String toString() {
-    return 'Podcast(id: $id, guid: $guid, url: $url, link: $link, title: $title, description: $description, imageUrl: $imageUrl, thumbImageUrl: $thumbImageUrl, copyright: $copyright, subscribedDate: $subscribedDate, funding: $funding, persons: $persons, lastUpdated: $lastUpdated)';
+    return 'Podcast(id: $id, guid: $guid, url: $url, link: $link, title: $title, description: $description, imageUrl: $imageUrl, thumbImageUrl: $thumbImageUrl, copyright: $copyright, funding: $funding, persons: $persons, subscribedDate: $subscribedDate, lastUpdated: $lastUpdated)';
   }
 
   @override
@@ -385,10 +385,10 @@ class _$PodcastImpl implements _Podcast {
                 other.thumbImageUrl == thumbImageUrl) &&
             (identical(other.copyright, copyright) ||
                 other.copyright == copyright) &&
-            (identical(other.subscribedDate, subscribedDate) ||
-                other.subscribedDate == subscribedDate) &&
             const DeepCollectionEquality().equals(other._funding, _funding) &&
             const DeepCollectionEquality().equals(other._persons, _persons) &&
+            (identical(other.subscribedDate, subscribedDate) ||
+                other.subscribedDate == subscribedDate) &&
             (identical(other.lastUpdated, lastUpdated) ||
                 other.lastUpdated == lastUpdated));
   }
@@ -406,9 +406,9 @@ class _$PodcastImpl implements _Podcast {
       imageUrl,
       thumbImageUrl,
       copyright,
-      subscribedDate,
       const DeepCollectionEquality().hash(_funding),
       const DeepCollectionEquality().hash(_persons),
+      subscribedDate,
       lastUpdated);
 
   @JsonKey(ignore: true)
@@ -436,9 +436,9 @@ abstract class _Podcast implements Podcast {
       final String? imageUrl,
       final String? thumbImageUrl,
       final String? copyright,
-      final DateTime? subscribedDate,
       final List<Funding> funding,
       final List<Person> persons,
+      final DateTime? subscribedDate,
       final DateTime? lastUpdated}) = _$PodcastImpl;
 
   factory _Podcast.fromJson(Map<String, dynamic> json) = _$PodcastImpl.fromJson;
@@ -482,14 +482,14 @@ abstract class _Podcast implements Podcast {
   String? get copyright;
   @override
 
-  /// Date and time user subscribed to the podcast.
-  DateTime? get subscribedDate;
-  @override
-
   /// Zero or more funding links.
   List<Funding> get funding;
   @override
   List<Person> get persons;
+  @override
+
+  /// Date and time user subscribed to the podcast.
+  DateTime? get subscribedDate;
   @override
 
   /// Date and time podcast was last updated/refreshed.

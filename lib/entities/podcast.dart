@@ -45,12 +45,12 @@ class Podcast with _$Podcast {
     /// Copyright owner of the podcast.
     String? copyright,
 
-    /// Date and time user subscribed to the podcast.
-    DateTime? subscribedDate,
-
     /// Zero or more funding links.
     @Default([]) List<Funding> funding,
     @Default([]) List<Person> persons,
+
+    /// Date and time user subscribed to the podcast.
+    DateTime? subscribedDate,
 
     /// Date and time podcast was last updated/refreshed.
     DateTime? lastUpdated,
@@ -59,19 +59,11 @@ class Podcast with _$Podcast {
   factory Podcast.fromJson(Map<String, dynamic> json) =>
       _$PodcastFromJson(json);
 
-// ignore: prefer_constructors_over_static_methods
-  static Podcast fromUrl({required String url}) => Podcast(
-        url: url,
-        guid: '',
-        title: '',
-      );
-
-// ignore: prefer_constructors_over_static_methods
-  static Podcast fromSearchResultItem(search.Item item) => Podcast(
-        guid: item.guid ?? '',
-        url: item.feedUrl ?? '',
+  factory Podcast.fromSearchResultItem(search.Item item) => Podcast(
+        guid: item.feedUrl!,
+        url: item.feedUrl!,
         link: item.feedUrl,
-        title: item.trackName!,
+        title: item.trackName ?? item.collectionName!,
         imageUrl: item.bestArtworkUrl ?? item.artworkUrl,
         thumbImageUrl: item.thumbnailArtworkUrl,
         copyright: item.artistName,
@@ -79,5 +71,5 @@ class Podcast with _$Podcast {
 }
 
 extension PodcastExt on Podcast {
-  bool get subscribed => id != null;
+  bool get subscribed => subscribedDate != null;
 }
