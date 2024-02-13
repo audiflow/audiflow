@@ -13,6 +13,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// An implementation [SettingsService] for mobile devices backed by
 /// shared preferences.
 class MobileSettingsService extends SettingsService {
+  factory MobileSettingsService.instance() {
+    _instance ??= MobileSettingsService._create();
+    return _instance!;
+  }
+
   MobileSettingsService._create();
 
   static late SharedPreferences _sharedPreferences;
@@ -20,14 +25,12 @@ class MobileSettingsService extends SettingsService {
 
   final settingsNotifier = PublishSubject<String>();
 
-  static Future<MobileSettingsService?> instance() async {
-    if (_instance == null) {
-      _instance = MobileSettingsService._create();
+  void dispose() {
+    settingsNotifier.close();
+  }
 
-      _sharedPreferences = await SharedPreferences.getInstance();
-    }
-
-    return _instance;
+  static Future<void> setup() async {
+    _sharedPreferences = await SharedPreferences.getInstance();
   }
 
   @override

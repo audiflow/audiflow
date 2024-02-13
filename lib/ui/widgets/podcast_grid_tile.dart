@@ -5,8 +5,6 @@
 // found in the LICENSE file.
 
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:seasoning/bloc/podcast/podcast_bloc.dart';
 import 'package:seasoning/entities/podcast.dart';
 import 'package:seasoning/ui/podcast/podcast_details.dart';
 import 'package:seasoning/ui/widgets/tile_image.dart';
@@ -16,19 +14,18 @@ class PodcastGridTile extends StatelessWidget {
     super.key,
     required this.podcast,
   });
+
   final Podcast podcast;
 
   @override
   Widget build(BuildContext context) {
-    final podcastBloc = Provider.of<PodcastBloc>(context);
-
     return GestureDetector(
       onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute<void>(
             settings: const RouteSettings(name: 'podcastdetails'),
-            builder: (context) => PodcastDetails(podcast, podcastBloc),
+            builder: (context) => PodcastDetails(podcast),
           ),
         );
       },
@@ -54,11 +51,11 @@ class PodcastTitledGridTile extends StatelessWidget {
     super.key,
     required this.podcast,
   });
+
   final Podcast podcast;
 
   @override
   Widget build(BuildContext context) {
-    final podcastBloc = Provider.of<PodcastBloc>(context);
     final theme = Theme.of(context);
 
     return GestureDetector(
@@ -67,7 +64,7 @@ class PodcastTitledGridTile extends StatelessWidget {
           context,
           MaterialPageRoute<void>(
             settings: const RouteSettings(name: 'podcastdetails'),
-            builder: (context) => PodcastDetails(podcast, podcastBloc),
+            builder: (context) => PodcastDetails(podcast),
           ),
         );
       },

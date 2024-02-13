@@ -5,8 +5,6 @@
 // found in the LICENSE file.
 
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:seasoning/bloc/podcast/podcast_bloc.dart';
 import 'package:seasoning/entities/podcast.dart';
 import 'package:seasoning/ui/podcast/podcast_details.dart';
 import 'package:seasoning/ui/widgets/tile_image.dart';
@@ -16,19 +14,18 @@ class PodcastTile extends StatelessWidget {
     super.key,
     required this.podcast,
   });
+
   final Podcast podcast;
 
   @override
   Widget build(BuildContext context) {
-    final podcastBloc = Provider.of<PodcastBloc>(context);
-
     return ListTile(
       onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute<void>(
             settings: const RouteSettings(name: 'podcastdetails'),
-            builder: (context) => PodcastDetails(podcast, podcastBloc),
+            builder: (context) => PodcastDetails(podcast),
           ),
         );
       },
@@ -48,9 +45,10 @@ class PodcastTile extends StatelessWidget {
         maxLines: 1,
       ),
 
-      /// A ListTile's density changes depending upon whether we have 2 or more lines of text. We
-      /// manually add a newline character here to ensure the density is consistent whether the
-      /// podcast subtitle spans 1 or more lines. Bit of a hack, but a simple solution.
+      /// A ListTile's density changes depending upon whether we have 2 or more
+      /// lines of text. We manually add a newline character here to ensure the
+      /// density is consistent whether the podcast subtitle spans 1 or more
+      /// lines. Bit of a hack, but a simple solution.
       subtitle: Text(
         '${podcast.copyright ?? ''}\n',
         maxLines: 2,

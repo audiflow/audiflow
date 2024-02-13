@@ -9,56 +9,39 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
-import 'package:seasoning/bloc/search/search_bloc.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:seasoning/bloc/search/search_state_event.dart';
 import 'package:seasoning/l10n/L.dart';
+import 'package:seasoning/providers/podcast_search_provider.dart';
 import 'package:seasoning/ui/search/search_results.dart';
 
-/// This widget renders the search bar and allows the user to search for podcasts.
-class Search extends StatefulWidget {
-  const Search({
+/// This widget renders the search bar and allows the user to search for
+/// podcasts.
+class SearchPage extends HookConsumerWidget {
+  const SearchPage({
     super.key,
     this.searchTerm,
   });
+
   final String? searchTerm;
 
   @override
-  State<Search> createState() => _SearchState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final searchController = useTextEditingController();
+    final searchFocusNode = useFocusNode();
 
-class _SearchState extends State<Search> {
-  late TextEditingController _searchController;
-  late FocusNode _searchFocusNode;
-
-  @override
-  void initState() {
-    super.initState();
-
-    final bloc = Provider.of<SearchBloc>(context, listen: false);
-
-    bloc.search(SearchClearEvent());
-
-    _searchFocusNode = FocusNode();
-    _searchController = TextEditingController();
-
-    if (widget.searchTerm != null) {
-      bloc.search(SearchTermEvent(widget.searchTerm!));
-      _searchController.text = widget.searchTerm!;
-    }
-  }
-
-  @override
-  void dispose() {
-    _searchFocusNode.dispose();
-    _searchController.dispose();
-
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final bloc = Provider.of<SearchBloc>(context);
+    useEffect(
+      () {
+        if (searchTerm?.isNotEmpty == true) {
+          ref
+              .read(podcastSearchProvider.notifier)
+              .search(SearchTermEvent(searchTerm!));
+        }
+        return null;
+      },
+      [searchTerm],
+    );
 
     return Scaffold(
       body: CustomScrollView(
@@ -78,9 +61,9 @@ class _SearchState extends State<Search> {
               label: L.of(context)!.search_for_podcasts_hint,
               textField: true,
               child: TextField(
-                controller: _searchController,
-                focusNode: _searchFocusNode,
-                autofocus: widget.searchTerm != null ? false : true,
+                controller: searchController,
+                focusNode: searchFocusNode,
+                autofocus: searchTerm != null,
                 keyboardType: TextInputType.text,
                 textInputAction: TextInputAction.search,
                 decoration: InputDecoration(
@@ -97,7 +80,9 @@ class _SearchState extends State<Search> {
                     L.of(context)!.semantic_announce_searching,
                     TextDirection.ltr,
                   );
-                  bloc.search(SearchTermEvent(value));
+                  ref
+                      .read(podcastSearchProvider.notifier)
+                      .search(SearchTermEvent(value));
                 },
               ),
             ),
@@ -107,15 +92,15 @@ class _SearchState extends State<Search> {
                 tooltip: L.of(context)!.clear_search_button_label,
                 icon: const Icon(Icons.clear),
                 onPressed: () {
-                  _searchController.clear();
-                  FocusScope.of(context).requestFocus(_searchFocusNode);
+                  searchController.clear();
+                  FocusScope.of(context).requestFocus(searchFocusNode);
                   SystemChannels.textInput
                       .invokeMethod<String>('TextInput.show');
                 },
               ),
             ],
           ),
-          SearchResults(data: bloc.results!),
+          const SearchResults(),
         ],
       ),
     );

@@ -9,9 +9,11 @@ import 'dart:io';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:logging/logging.dart';
+import 'package:seasoning/navigation/navigation_helper.dart';
 import 'package:seasoning/services/settings/mobile_settings_service.dart';
-import 'package:seasoning/ui/anytime_podcast_app.dart';
+import 'package:seasoning/ui/seasoning_app.dart';
 
 // ignore_for_file: avoid_print
 void main() async {
@@ -25,25 +27,32 @@ void main() async {
 
   Logger.root.onRecord.listen((record) {
     print(
-      '${record.level.name}: - ${record.time}: ${record.loggerName}: ${record.message}',
+      '${record.level.name}: - ${record.time}: ${record.loggerName}: '
+      '${record.message}',
     );
   });
 
-  final mobileSettingsService = (await MobileSettingsService.instance())!;
   certificateAuthorityBytes = await setupCertificateAuthority();
 
+  NavigationHelper.setup();
+  await MobileSettingsService.setup();
+
   runApp(
-    AnytimePodcastApp(
-      mobileSettingsService: mobileSettingsService,
-      certificateAuthorityBytes: certificateAuthorityBytes,
+    const ProviderScope(
+      child: SeasoningApp(
+          // mobileSettingsService: mobileSettingsService,
+          // certificateAuthorityBytes: certificateAuthorityBytes,
+          ),
     ),
   );
 }
 
-/// The Let's Encrypt certificate authority expired at the end of September 2021. Android devices
-/// running v7.1.1 or earlier will no longer trust their root certificate which will cause issues
-/// when trying to fetch feeds and images from sites secured with LE. This routine is called to
-/// add the new CA to the trusted list at app start.
+/// The Let's Encrypt certificate authority expired at the end of September
+/// 2021.
+/// Android devices running v7.1.1 or earlier will no longer trust their root
+/// certificate which will cause issues when trying to fetch feeds and images
+/// from sites secured with LE. This routine is called to add the new CA to the
+/// trusted list at app start.
 Future<List<int>> setupCertificateAuthority() async {
   var ca = <int>[];
 

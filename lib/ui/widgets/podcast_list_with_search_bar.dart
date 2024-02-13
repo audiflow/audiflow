@@ -5,13 +5,14 @@
 // found in the LICENSE file.
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:podcast_search/podcast_search.dart' as search;
-import 'package:seasoning/ui/search/search_bar.dart' as search;
+import 'package:seasoning/entities/entities.dart';
+import 'package:seasoning/ui/search/podcast_search_bar.dart';
 import 'package:seasoning/ui/widgets/podcast_list.dart';
 
 class PodcastListWithSearchBar extends StatelessWidget {
-  const PodcastListWithSearchBar({super.key, required this.results});
-  final search.SearchResult results;
+  const PodcastListWithSearchBar({super.key, this.results = const []});
+
+  final List<Podcast> results;
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +20,7 @@ class PodcastListWithSearchBar extends StatelessWidget {
       child: ShrinkWrappingViewport(
         offset: ViewportOffset.zero(),
         slivers: [
-          const SliverToBoxAdapter(child: search.SearchBar()),
+          const SliverToBoxAdapter(child: PodcastSearchBar()),
           PodcastList(results: results),
         ],
       ),

@@ -5,77 +5,24 @@
 // found in the LICENSE file.
 
 import 'package:flutter/material.dart';
-import 'package:podcast_search/podcast_search.dart' as search;
-import 'package:provider/provider.dart';
-import 'package:seasoning/bloc/settings/settings_bloc.dart';
-import 'package:seasoning/entities/app_settings.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:seasoning/entities/podcast.dart';
 import 'package:seasoning/l10n/L.dart';
+import 'package:seasoning/providers/settings_service_provider.dart';
 import 'package:seasoning/ui/widgets/podcast_grid_tile.dart';
 import 'package:seasoning/ui/widgets/podcast_tile.dart';
 
-class PodcastList extends StatelessWidget {
+class PodcastList extends ConsumerWidget {
   const PodcastList({
     super.key,
     required this.results,
   });
 
-  final search.SearchResult results;
+  final List<Podcast> results;
 
   @override
-  Widget build(BuildContext context) {
-    final settingsBloc = Provider.of<SettingsBloc>(context);
-
-    if (results.items.isNotEmpty) {
-      return StreamBuilder<AppSettings>(
-        stream: settingsBloc.settings,
-        builder: (context, settingsSnapshot) {
-          if (settingsSnapshot.hasData) {
-            final mode = settingsSnapshot.data!.layout;
-            final size = mode == 1 ? 100.0 : 160.0;
-
-            if (mode == 0) {
-              return SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (BuildContext context, int index) {
-                    final i = results.items[index];
-                    final p = Podcast.fromSearchResultItem(i);
-
-                    return PodcastTile(podcast: p);
-                  },
-                  childCount: results.items.length,
-                  addAutomaticKeepAlives: false,
-                ),
-              );
-            }
-            return SliverGrid(
-              gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-                maxCrossAxisExtent: size,
-                mainAxisSpacing: 10,
-                crossAxisSpacing: 10,
-              ),
-              delegate: SliverChildBuilderDelegate(
-                (BuildContext context, int index) {
-                  final i = results.items[index];
-                  final p = Podcast.fromSearchResultItem(i);
-
-                  return PodcastGridTile(podcast: p);
-                },
-                childCount: results.items.length,
-              ),
-            );
-          } else {
-            return const SliverFillRemaining(
-              hasScrollBody: false,
-              child: SizedBox(
-                height: 0,
-                width: 0,
-              ),
-            );
-          }
-        },
-      );
-    } else {
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (results.isEmpty) {
       return SliverFillRemaining(
         hasScrollBody: false,
         child: Padding(
@@ -98,5 +45,33 @@ class PodcastList extends StatelessWidget {
         ),
       );
     }
+
+    final settings = ref.watch(settingsServiceProvider);
+    final mode = settings.layoutMode;
+    final size = mode == 1 ? 100.0 : 160.0;
+
+    return mode == 0
+        ? SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (BuildContext context, int index) {
+                return PodcastTile(podcast: results[index]);
+              },
+              childCount: results.length,
+              addAutomaticKeepAlives: false,
+            ),
+          )
+        : SliverGrid(
+            gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+              maxCrossAxisExtent: size,
+              mainAxisSpacing: 10,
+              crossAxisSpacing: 10,
+            ),
+            delegate: SliverChildBuilderDelegate(
+              (BuildContext context, int index) {
+                return PodcastGridTile(podcast: results[index]);
+              },
+              childCount: results.length,
+            ),
+          );
   }
 }
