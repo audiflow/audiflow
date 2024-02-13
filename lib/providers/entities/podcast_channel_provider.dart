@@ -12,7 +12,7 @@ class PodcastChannel extends _$PodcastChannel {
   Future<void> load(Feed feed) async {
     final podcast = await ref
         .read(podcastServiceProvider)
-        .loadPodcast(podcast: feed.podcast);
+        .loadPodcastByUrl(url: feed.podcastUrl);
     state = podcast;
   }
 }
