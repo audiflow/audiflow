@@ -5,11 +5,12 @@ import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:seasoning/l10n/L.dart';
 import 'package:seasoning/navigation/navigation_helper.dart';
-import 'package:seasoning/providers/podcast_search_provider.dart';
+import 'package:seasoning/providers/theme_provider.dart';
 import 'package:seasoning/ui/search/podcast_search_bar.dart';
 import 'package:seasoning/ui/widgets/podcast_list.dart';
-import 'package:seasoning/ui/widgets/podcast_list_with_search_bar.dart';
 import 'package:sliver_tools/sliver_tools.dart';
+
+ThemeData theme = Themes.lightTheme().themeData;
 
 class SeasoningApp extends StatelessWidget {
   const SeasoningApp({super.key});
@@ -29,6 +30,7 @@ class SeasoningApp extends StatelessWidget {
         Locale('en', ''),
         Locale('de', ''),
       ],
+      theme: theme,
     );
   }
 }
