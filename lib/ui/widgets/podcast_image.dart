@@ -30,6 +30,7 @@ class PodcastImage extends StatefulWidget {
     this.highlight = false,
     this.borderRadius = 0.0,
   });
+
   final String url;
   final double height;
   final double width;
@@ -173,6 +174,7 @@ class PodcastBannerImage extends StatefulWidget {
     this.errorPlaceholder,
     this.borderRadius = 0.0,
   });
+
   final String url;
   final double height;
   final double width;
