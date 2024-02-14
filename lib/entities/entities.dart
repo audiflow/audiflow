@@ -8,6 +8,7 @@ export './funding.dart';
 export './persistable.dart';
 export './person.dart';
 export './podcast.dart';
+export './podcast_summary.dart';
 export './queue.dart';
 export './search_providers.dart';
 export './season.dart';
