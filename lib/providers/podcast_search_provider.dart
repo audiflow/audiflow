@@ -22,6 +22,7 @@ class PodcastSearch extends _$PodcastSearch {
   final BehaviorSubject<SearchEvent> _searchInput =
       BehaviorSubject<SearchEvent>();
 
+  // ignore: avoid_public_notifier_properties
   void Function(SearchEvent) get search => _searchInput.add;
 
   @override
@@ -78,15 +79,18 @@ class PodcastSearch extends _$PodcastSearch {
     }
   }
 
-  Future<List<Podcast>> _toPodcasts(List<pcast.Item> items) async {
+  Future<List<PodcastSummary>> _toPodcasts(List<pcast.Item> items) async {
     final repository = ref.read(repositoryProvider);
-    final podcasts = items.map(Podcast.fromSearchResultItem).toList();
+    final podcasts = items.map(PodcastSummary.fromSearchResultItem).toList();
     final results = await Future.wait(
       podcasts.map((p) => repository.findPodcastByGuid(p.guid)),
     );
     for (var i = 0; i < podcasts.length; i++) {
       if (results[i] != null) {
-        podcasts[i] = results[i]!;
+        podcasts[i] = podcasts[i].copyWith(
+          id: results[i]!.id,
+          subscribedDate: results[i]!.subscribedDate,
+        );
       }
     }
     return podcasts;
@@ -97,7 +101,7 @@ class PodcastSearch extends _$PodcastSearch {
 class PodcastSearchState with _$PodcastSearchState {
   const factory PodcastSearchState({
     @Default('') String term,
-    @Default([]) List<Podcast> results,
+    @Default([]) List<PodcastSummary> results,
     pcast.SearchResult? chartResults,
   }) = _PodcastSearchState;
 }
