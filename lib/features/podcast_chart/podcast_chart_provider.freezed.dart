@@ -1,0 +1,206 @@
+// coverage:ignore-file
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint
+// ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
+
+part of 'podcast_chart_provider.dart';
+
+// **************************************************************************
+// FreezedGenerator
+// **************************************************************************
+
+T _$identity<T>(T value) => value;
+
+final _privateConstructorUsedError = UnsupportedError(
+    'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
+
+/// @nodoc
+mixin _$PodcastChartState {
+  int? get size => throw _privateConstructorUsedError;
+  String? get genre => throw _privateConstructorUsedError;
+  String? get countryCode => throw _privateConstructorUsedError;
+  List<PodcastSummary> get podcasts => throw _privateConstructorUsedError;
+
+  @JsonKey(ignore: true)
+  $PodcastChartStateCopyWith<PodcastChartState> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $PodcastChartStateCopyWith<$Res> {
+  factory $PodcastChartStateCopyWith(
+          PodcastChartState value, $Res Function(PodcastChartState) then) =
+      _$PodcastChartStateCopyWithImpl<$Res, PodcastChartState>;
+  @useResult
+  $Res call(
+      {int? size,
+      String? genre,
+      String? countryCode,
+      List<PodcastSummary> podcasts});
+}
+
+/// @nodoc
+class _$PodcastChartStateCopyWithImpl<$Res, $Val extends PodcastChartState>
+    implements $PodcastChartStateCopyWith<$Res> {
+  _$PodcastChartStateCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? size = freezed,
+    Object? genre = freezed,
+    Object? countryCode = freezed,
+    Object? podcasts = null,
+  }) {
+    return _then(_value.copyWith(
+      size: freezed == size
+          ? _value.size
+          : size // ignore: cast_nullable_to_non_nullable
+              as int?,
+      genre: freezed == genre
+          ? _value.genre
+          : genre // ignore: cast_nullable_to_non_nullable
+              as String?,
+      countryCode: freezed == countryCode
+          ? _value.countryCode
+          : countryCode // ignore: cast_nullable_to_non_nullable
+              as String?,
+      podcasts: null == podcasts
+          ? _value.podcasts
+          : podcasts // ignore: cast_nullable_to_non_nullable
+              as List<PodcastSummary>,
+    ) as $Val);
+  }
+}
+
+/// @nodoc
+abstract class _$$PodcastChartStateImplCopyWith<$Res>
+    implements $PodcastChartStateCopyWith<$Res> {
+  factory _$$PodcastChartStateImplCopyWith(_$PodcastChartStateImpl value,
+          $Res Function(_$PodcastChartStateImpl) then) =
+      __$$PodcastChartStateImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call(
+      {int? size,
+      String? genre,
+      String? countryCode,
+      List<PodcastSummary> podcasts});
+}
+
+/// @nodoc
+class __$$PodcastChartStateImplCopyWithImpl<$Res>
+    extends _$PodcastChartStateCopyWithImpl<$Res, _$PodcastChartStateImpl>
+    implements _$$PodcastChartStateImplCopyWith<$Res> {
+  __$$PodcastChartStateImplCopyWithImpl(_$PodcastChartStateImpl _value,
+      $Res Function(_$PodcastChartStateImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? size = freezed,
+    Object? genre = freezed,
+    Object? countryCode = freezed,
+    Object? podcasts = null,
+  }) {
+    return _then(_$PodcastChartStateImpl(
+      size: freezed == size
+          ? _value.size
+          : size // ignore: cast_nullable_to_non_nullable
+              as int?,
+      genre: freezed == genre
+          ? _value.genre
+          : genre // ignore: cast_nullable_to_non_nullable
+              as String?,
+      countryCode: freezed == countryCode
+          ? _value.countryCode
+          : countryCode // ignore: cast_nullable_to_non_nullable
+              as String?,
+      podcasts: null == podcasts
+          ? _value._podcasts
+          : podcasts // ignore: cast_nullable_to_non_nullable
+              as List<PodcastSummary>,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$PodcastChartStateImpl implements _PodcastChartState {
+  const _$PodcastChartStateImpl(
+      {this.size,
+      this.genre,
+      this.countryCode,
+      final List<PodcastSummary> podcasts = const []})
+      : _podcasts = podcasts;
+
+  @override
+  final int? size;
+  @override
+  final String? genre;
+  @override
+  final String? countryCode;
+  final List<PodcastSummary> _podcasts;
+  @override
+  @JsonKey()
+  List<PodcastSummary> get podcasts {
+    if (_podcasts is EqualUnmodifiableListView) return _podcasts;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_podcasts);
+  }
+
+  @override
+  String toString() {
+    return 'PodcastChartState(size: $size, genre: $genre, countryCode: $countryCode, podcasts: $podcasts)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$PodcastChartStateImpl &&
+            (identical(other.size, size) || other.size == size) &&
+            (identical(other.genre, genre) || other.genre == genre) &&
+            (identical(other.countryCode, countryCode) ||
+                other.countryCode == countryCode) &&
+            const DeepCollectionEquality().equals(other._podcasts, _podcasts));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, size, genre, countryCode,
+      const DeepCollectionEquality().hash(_podcasts));
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$PodcastChartStateImplCopyWith<_$PodcastChartStateImpl> get copyWith =>
+      __$$PodcastChartStateImplCopyWithImpl<_$PodcastChartStateImpl>(
+          this, _$identity);
+}
+
+abstract class _PodcastChartState implements PodcastChartState {
+  const factory _PodcastChartState(
+      {final int? size,
+      final String? genre,
+      final String? countryCode,
+      final List<PodcastSummary> podcasts}) = _$PodcastChartStateImpl;
+
+  @override
+  int? get size;
+  @override
+  String? get genre;
+  @override
+  String? get countryCode;
+  @override
+  List<PodcastSummary> get podcasts;
+  @override
+  @JsonKey(ignore: true)
+  _$$PodcastChartStateImplCopyWith<_$PodcastChartStateImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
