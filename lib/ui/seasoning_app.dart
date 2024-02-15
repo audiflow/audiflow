@@ -3,12 +3,10 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:seasoning/features/podcast_chart/ui/podcast_chart_page.dart';
 import 'package:seasoning/l10n/L.dart';
 import 'package:seasoning/navigation/navigation_helper.dart';
 import 'package:seasoning/providers/theme_provider.dart';
-import 'package:seasoning/ui/search/podcast_search_bar.dart';
-import 'package:seasoning/ui/widgets/podcast_list.dart';
-import 'package:sliver_tools/sliver_tools.dart';
 
 ThemeData theme = Themes.lightTheme().themeData;
 
@@ -43,14 +41,14 @@ class HomePage extends HookConsumerWidget {
     final scrollController = useScrollController();
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Home"),
+        title: const Text('Home'),
       ),
       body: CustomScrollView(
         shrinkWrap: true,
         controller: scrollController,
         slivers: [
-          SliverPinnedHeader(child: PodcastSearchBar()),
-          PodcastList(results: []),
+//          SliverPinnedHeader(child: PodcastSearchBar()),
+          const PodcastChartPage(),
         ],
       ),
     );

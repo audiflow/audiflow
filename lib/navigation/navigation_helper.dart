@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:seasoning/ui/search/search_page.dart';
+import 'package:seasoning/features/podcast_chart/ui/podcast_chart_page.dart';
 import 'package:seasoning/ui/seasoning_app.dart';
 
 class NavigationHelper {
@@ -15,25 +15,26 @@ class NavigationHelper {
             navigatorKey: homeTabNavigatorKey,
             routes: [
               GoRoute(
-                  path: homePath,
-                  pageBuilder: (context, state) {
-                    return NoTransitionPage(
-                      key: state.pageKey,
-                      child: const HomePage(),
-                    );
-                  },
-                  routes: [
-                    GoRoute(
-                      path: 'detail',
-                      parentNavigatorKey: homeTabNavigatorKey,
-                      pageBuilder: (context, state) {
-                        return _getPage(
-                          child: const DetailPage(),
-                          state: state,
-                        );
-                      },
-                    ),
-                  ]),
+                path: homePath,
+                pageBuilder: (context, state) {
+                  return NoTransitionPage(
+                    key: state.pageKey,
+                    child: const PodcastChartPage(),
+                  );
+                },
+                routes: [
+                  GoRoute(
+                    path: 'detail',
+                    parentNavigatorKey: homeTabNavigatorKey,
+                    pageBuilder: (context, state) {
+                      return _getPage(
+                        child: const DetailPage(),
+                        state: state,
+                      );
+                    },
+                  ),
+                ],
+              ),
             ],
           ),
           StatefulShellBranch(
@@ -43,10 +44,23 @@ class NavigationHelper {
                 path: searchPath,
                 pageBuilder: (context, state) {
                   return _getPage(
-                    child: const SearchPage(),
+                    child: const SizedBox.shrink(),
                     state: state,
                   );
                 },
+                // routes: [
+                //   GoRoute(
+                //     path: 'detail',
+                //     parentNavigatorKey: searchTabNavigatorKey,
+                //     pageBuilder: (context, state) {
+                //       final url = state.extra! as String;
+                //       return _getPage(
+                //         child: PodcastDetails(podcast),
+                //         state: state,
+                //       );
+                //     },
+                //   ),
+                // ]
               ),
             ],
           ),
@@ -139,6 +153,7 @@ class NavigationHelper {
   static const String detailPath = '/home/detail';
   static const String settingsPath = '/settings';
   static const String searchPath = '/search';
+  static const String searchDetailPath = '/search';
 
   static Page<Widget> _getPage({
     required Widget child,
