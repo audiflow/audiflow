@@ -8,10 +8,8 @@ part of 'episode.dart';
 
 _$EpisodeImpl _$$EpisodeImplFromJson(Map<String, dynamic> json) =>
     _$EpisodeImpl(
-      id: json['id'] as int?,
       guid: json['guid'] as String,
       pguid: json['pguid'] as String,
-      podcast: json['podcast'] as String,
       title: json['title'] as String,
       description: json['description'] as String,
       content: json['content'] as String?,
@@ -25,15 +23,12 @@ _$EpisodeImpl _$$EpisodeImplFromJson(Map<String, dynamic> json) =>
       author: json['author'] as String?,
       season: json['season'] as int?,
       episode: json['episode'] as int?,
-      duration: json['duration'] as int? ?? 0,
-      position: json['position'] as int? ?? 0,
-      played: json['played'] as bool? ?? false,
+      duration: Duration(microseconds: json['duration'] as int),
       chaptersUrl: json['chaptersUrl'] as String?,
       chapters: (json['chapters'] as List<dynamic>?)
               ?.map((e) => Chapter.fromJson(e as Map<String, dynamic>))
               .toList() ??
           const [],
-      chapterIndex: json['chapterIndex'] as int?,
       transcriptUrls: (json['transcriptUrls'] as List<dynamic>?)
               ?.map((e) => TranscriptUrl.fromJson(e as Map<String, dynamic>))
               .toList() ??
@@ -46,10 +41,8 @@ _$EpisodeImpl _$$EpisodeImplFromJson(Map<String, dynamic> json) =>
 
 Map<String, dynamic> _$$EpisodeImplToJson(_$EpisodeImpl instance) =>
     <String, dynamic>{
-      'id': instance.id,
       'guid': instance.guid,
       'pguid': instance.pguid,
-      'podcast': instance.podcast,
       'title': instance.title,
       'description': instance.description,
       'content': instance.content,
@@ -61,12 +54,9 @@ Map<String, dynamic> _$$EpisodeImplToJson(_$EpisodeImpl instance) =>
       'author': instance.author,
       'season': instance.season,
       'episode': instance.episode,
-      'duration': instance.duration,
-      'position': instance.position,
-      'played': instance.played,
+      'duration': instance.duration.inMicroseconds,
       'chaptersUrl': instance.chaptersUrl,
       'chapters': instance.chapters,
-      'chapterIndex': instance.chapterIndex,
       'transcriptUrls': instance.transcriptUrls,
       'persons': instance.persons,
     };

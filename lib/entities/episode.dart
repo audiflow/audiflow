@@ -6,12 +6,12 @@
 
 import 'package:flutter/foundation.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:html/parser.dart' show parseFragment;
 import 'package:podcast_search/podcast_search.dart' as search;
 import 'package:seasoning/core/utils.dart';
 import 'package:seasoning/entities/chapter.dart';
 import 'package:seasoning/entities/downloadable.dart';
 import 'package:seasoning/entities/person.dart';
-import 'package:seasoning/entities/podcast.dart';
 import 'package:seasoning/entities/transcript.dart';
 
 part 'episode.freezed.dart';
@@ -25,18 +25,12 @@ part 'episode.g.dart';
 @freezed
 class Episode with _$Episode {
   const factory Episode({
-    /// Database ID
-    int? id,
-
     /// A String GUID for the episode.
     required String guid,
 
     /// The GUID for an associated podcast. If an episode has been downloaded
     /// without subscribing to a podcast this may be null.
     required String pguid,
-
-    /// The name of the podcast the episode is part of.
-    required String podcast,
 
     /// The name of the podcast the episode is part of.
     required String title,
@@ -74,14 +68,7 @@ class Episode with _$Episode {
     /// The duration of the episode in milliseconds. This can be populated
     /// either from the RSS if available, or determined from the MP3 file at
     /// stream/download time.
-    @Default(0) int duration,
-
-    /// Stores the current position within the episode in milliseconds.
-    /// Used for resuming.
-    @Default(0) int position,
-
-    /// True if this episode is 'marked as played'.
-    @Default(false) bool played,
+    required Duration duration,
 
     /// URL pointing to a JSON file containing chapter information if available.
     String? chaptersUrl,
@@ -89,77 +76,36 @@ class Episode with _$Episode {
     /// List of chapters for the episode if available.
     @Default([]) List<Chapter> chapters,
 
-    /// Index of the currently playing chapter it available. Transient.
-    int? chapterIndex,
-
-    /// Current chapter we are listening to if this episode has chapters.
-    // ignore: invalid_annotation_target
-    @JsonKey(includeToJson: false, includeFromJson: false)
-    Chapter? currentChapter,
-
     /// List of transcript URLs for the episode if available.
     @Default([]) List<TranscriptUrl> transcriptUrls,
-    @Default([]) List<Person> persons,
 
-    /// Processed version of episode description.
-    // ignore: invalid_annotation_target
-    @JsonKey(includeToJson: false, includeFromJson: false)
-    String? parsedDescriptionText,
+    /// List of people of interest to the podcast.
+    @Default([]) List<Person> persons,
   }) = _Episode;
 
   factory Episode.fromJson(Map<String, dynamic> json) =>
       _$EpisodeFromJson(json);
 
-  factory Episode.fromSearch(search.Episode episode, Podcast pc) {
+  factory Episode.fromSearch(
+    search.Episode episode, {
+    required String pguid,
+    String? imageUrl,
+    String? thumbImageUrl,
+  }) {
     final author = episode.author?.replaceAll('\n', '').trim() ?? '';
     final title = removeHtmlPadding(episode.title);
     final description = removeHtmlPadding(episode.description);
     final content = episode.content;
 
     final episodeImage =
-        episode.imageUrl?.isNotEmpty == true ? episode.imageUrl : pc.imageUrl;
-    final episodeThumbImage = episode.imageUrl?.isNotEmpty == true
-        ? episode.imageUrl
-        : pc.thumbImageUrl;
-    final duration = episode.duration?.inSeconds ?? 0;
-    final transcriptUrls = <TranscriptUrl>[];
-    final episodePersons = <Person>[];
-
-    for (final t in episode.transcripts) {
-      late TranscriptFormat type;
-
-      switch (t.type) {
-        case search.TranscriptFormat.subrip:
-          type = TranscriptFormat.subrip;
-        case search.TranscriptFormat.json:
-          type = TranscriptFormat.json;
-        case search.TranscriptFormat.unsupported:
-          type = TranscriptFormat.unsupported;
-      }
-
-      transcriptUrls.add(TranscriptUrl(url: t.url, type: type));
-    }
-
-    if (episode.persons.isNotEmpty) {
-      for (final p in episode.persons) {
-        episodePersons.add(
-          Person(
-            name: p.name,
-            role: p.role,
-            group: p.group,
-            image: p.image,
-            link: p.link,
-          ),
-        );
-      }
-    } else if (pc.persons.isNotEmpty) {
-      episodePersons.addAll(pc.persons);
-    }
+        episode.imageUrl?.isNotEmpty == true ? episode.imageUrl : imageUrl;
+    final episodeThumbImage =
+        episode.imageUrl?.isNotEmpty == true ? episode.imageUrl : thumbImageUrl;
+    final duration = episode.duration ?? Duration.zero;
 
     return Episode(
-      pguid: pc.guid,
+      pguid: pguid,
       guid: episode.guid,
-      podcast: pc.title,
       title: title,
       description: description,
       content: content,
@@ -173,65 +119,37 @@ class Episode with _$Episode {
       duration: duration,
       publicationDate: episode.publicationDate,
       chaptersUrl: episode.chapters?.url,
-      persons: episodePersons,
+      persons: episode.persons.map(Person.fromSearch).toList(),
       chapters: <Chapter>[],
+      transcriptUrls:
+          episode.transcripts.map(TranscriptUrl.fromSearch).toList(),
     );
   }
 }
 
 extension EpisodeExtension on Episode {
-  Duration get timeRemaining {
-    if (position > 0 && duration > 0) {
-      final currentPosition = Duration(milliseconds: position);
-
-      final tr = duration - currentPosition.inSeconds;
-
-      return Duration(seconds: tr);
+  String get descriptionText {
+    if (description.isEmpty) {
+      return '';
+    } else {
+      final stripped = description.replaceAll(RegExp(r'(<br/?>)+'), ' ');
+      return parseFragment(stripped).text ?? '';
     }
-
-    return Duration.zero;
   }
-
-  double get percentagePlayed {
-    if (position > 0 && duration > 0) {
-      var pc = (position / (duration * 1000)) * 100;
-
-      if (pc > 100.0) {
-        pc = 100.0;
-      }
-
-      return pc;
-    }
-
-    return 0;
-  }
-
-  // String? get descriptionText {
-  //   if (parsedDescriptionText == null || parsedDescriptionText!.isEmpty) {
-  //     if (description.isEmpty) {
-  //       parsedDescriptionText = '';
-  //     } else {
-  //       // Replace break tags with space character for readability
-  //       var formattedDescription =
-  //           description!.replaceAll(RegExp(r'(<br/?>)+'), ' ');
-  //       parsedDescriptionText = parseFragment(formattedDescription).text;
-  //     }
-  //   }
-  //
-  //   return parsedDescriptionText;
-  // }
 
   bool get hasChapters => chaptersUrl != null && chaptersUrl!.isNotEmpty;
 
   bool get hasTranscripts => transcriptUrls.isNotEmpty;
+}
 
-  String? get positionalImageUrl {
-    if (currentChapter != null &&
-        currentChapter!.imageUrl != null &&
-        currentChapter!.imageUrl!.isNotEmpty) {
-      return currentChapter!.imageUrl;
-    }
-
-    return imageUrl;
-  }
+@freezed
+class EpisodeStats with _$EpisodeStats {
+  const factory EpisodeStats({
+    required int id,
+    required String guid,
+    @Default(Duration.zero) Duration position,
+    @Default(false) bool played,
+    @Default(0) int playCount,
+    @Default(Duration.zero) Duration playTotal,
+  }) = _EpisodeStats;
 }

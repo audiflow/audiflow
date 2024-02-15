@@ -20,18 +20,12 @@ Episode _$EpisodeFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$Episode {
-  /// Database ID
-  int? get id => throw _privateConstructorUsedError;
-
   /// A String GUID for the episode.
   String get guid => throw _privateConstructorUsedError;
 
   /// The GUID for an associated podcast. If an episode has been downloaded
   /// without subscribing to a podcast this may be null.
   String get pguid => throw _privateConstructorUsedError;
-
-  /// The name of the podcast the episode is part of.
-  String get podcast => throw _privateConstructorUsedError;
 
   /// The name of the podcast the episode is part of.
   String get title => throw _privateConstructorUsedError;
@@ -69,14 +63,7 @@ mixin _$Episode {
   /// The duration of the episode in milliseconds. This can be populated
   /// either from the RSS if available, or determined from the MP3 file at
   /// stream/download time.
-  int get duration => throw _privateConstructorUsedError;
-
-  /// Stores the current position within the episode in milliseconds.
-  /// Used for resuming.
-  int get position => throw _privateConstructorUsedError;
-
-  /// True if this episode is 'marked as played'.
-  bool get played => throw _privateConstructorUsedError;
+  Duration get duration => throw _privateConstructorUsedError;
 
   /// URL pointing to a JSON file containing chapter information if available.
   String? get chaptersUrl => throw _privateConstructorUsedError;
@@ -84,22 +71,11 @@ mixin _$Episode {
   /// List of chapters for the episode if available.
   List<Chapter> get chapters => throw _privateConstructorUsedError;
 
-  /// Index of the currently playing chapter it available. Transient.
-  int? get chapterIndex => throw _privateConstructorUsedError;
-
-  /// Current chapter we are listening to if this episode has chapters.
-// ignore: invalid_annotation_target
-  @JsonKey(includeToJson: false, includeFromJson: false)
-  Chapter? get currentChapter => throw _privateConstructorUsedError;
-
   /// List of transcript URLs for the episode if available.
   List<TranscriptUrl> get transcriptUrls => throw _privateConstructorUsedError;
-  List<Person> get persons => throw _privateConstructorUsedError;
 
-  /// Processed version of episode description.
-// ignore: invalid_annotation_target
-  @JsonKey(includeToJson: false, includeFromJson: false)
-  String? get parsedDescriptionText => throw _privateConstructorUsedError;
+  /// List of people of interest to the podcast.
+  List<Person> get persons => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -112,10 +88,8 @@ abstract class $EpisodeCopyWith<$Res> {
       _$EpisodeCopyWithImpl<$Res, Episode>;
   @useResult
   $Res call(
-      {int? id,
-      String guid,
+      {String guid,
       String pguid,
-      String podcast,
       String title,
       String description,
       String? content,
@@ -127,20 +101,11 @@ abstract class $EpisodeCopyWith<$Res> {
       String? author,
       int? season,
       int? episode,
-      int duration,
-      int position,
-      bool played,
+      Duration duration,
       String? chaptersUrl,
       List<Chapter> chapters,
-      int? chapterIndex,
-      @JsonKey(includeToJson: false, includeFromJson: false)
-      Chapter? currentChapter,
       List<TranscriptUrl> transcriptUrls,
-      List<Person> persons,
-      @JsonKey(includeToJson: false, includeFromJson: false)
-      String? parsedDescriptionText});
-
-  $ChapterCopyWith<$Res>? get currentChapter;
+      List<Person> persons});
 }
 
 /// @nodoc
@@ -156,10 +121,8 @@ class _$EpisodeCopyWithImpl<$Res, $Val extends Episode>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? id = freezed,
     Object? guid = null,
     Object? pguid = null,
-    Object? podcast = null,
     Object? title = null,
     Object? description = null,
     Object? content = freezed,
@@ -172,21 +135,12 @@ class _$EpisodeCopyWithImpl<$Res, $Val extends Episode>
     Object? season = freezed,
     Object? episode = freezed,
     Object? duration = null,
-    Object? position = null,
-    Object? played = null,
     Object? chaptersUrl = freezed,
     Object? chapters = null,
-    Object? chapterIndex = freezed,
-    Object? currentChapter = freezed,
     Object? transcriptUrls = null,
     Object? persons = null,
-    Object? parsedDescriptionText = freezed,
   }) {
     return _then(_value.copyWith(
-      id: freezed == id
-          ? _value.id
-          : id // ignore: cast_nullable_to_non_nullable
-              as int?,
       guid: null == guid
           ? _value.guid
           : guid // ignore: cast_nullable_to_non_nullable
@@ -194,10 +148,6 @@ class _$EpisodeCopyWithImpl<$Res, $Val extends Episode>
       pguid: null == pguid
           ? _value.pguid
           : pguid // ignore: cast_nullable_to_non_nullable
-              as String,
-      podcast: null == podcast
-          ? _value.podcast
-          : podcast // ignore: cast_nullable_to_non_nullable
               as String,
       title: null == title
           ? _value.title
@@ -246,15 +196,7 @@ class _$EpisodeCopyWithImpl<$Res, $Val extends Episode>
       duration: null == duration
           ? _value.duration
           : duration // ignore: cast_nullable_to_non_nullable
-              as int,
-      position: null == position
-          ? _value.position
-          : position // ignore: cast_nullable_to_non_nullable
-              as int,
-      played: null == played
-          ? _value.played
-          : played // ignore: cast_nullable_to_non_nullable
-              as bool,
+              as Duration,
       chaptersUrl: freezed == chaptersUrl
           ? _value.chaptersUrl
           : chaptersUrl // ignore: cast_nullable_to_non_nullable
@@ -263,14 +205,6 @@ class _$EpisodeCopyWithImpl<$Res, $Val extends Episode>
           ? _value.chapters
           : chapters // ignore: cast_nullable_to_non_nullable
               as List<Chapter>,
-      chapterIndex: freezed == chapterIndex
-          ? _value.chapterIndex
-          : chapterIndex // ignore: cast_nullable_to_non_nullable
-              as int?,
-      currentChapter: freezed == currentChapter
-          ? _value.currentChapter
-          : currentChapter // ignore: cast_nullable_to_non_nullable
-              as Chapter?,
       transcriptUrls: null == transcriptUrls
           ? _value.transcriptUrls
           : transcriptUrls // ignore: cast_nullable_to_non_nullable
@@ -279,23 +213,7 @@ class _$EpisodeCopyWithImpl<$Res, $Val extends Episode>
           ? _value.persons
           : persons // ignore: cast_nullable_to_non_nullable
               as List<Person>,
-      parsedDescriptionText: freezed == parsedDescriptionText
-          ? _value.parsedDescriptionText
-          : parsedDescriptionText // ignore: cast_nullable_to_non_nullable
-              as String?,
     ) as $Val);
-  }
-
-  @override
-  @pragma('vm:prefer-inline')
-  $ChapterCopyWith<$Res>? get currentChapter {
-    if (_value.currentChapter == null) {
-      return null;
-    }
-
-    return $ChapterCopyWith<$Res>(_value.currentChapter!, (value) {
-      return _then(_value.copyWith(currentChapter: value) as $Val);
-    });
   }
 }
 
@@ -307,10 +225,8 @@ abstract class _$$EpisodeImplCopyWith<$Res> implements $EpisodeCopyWith<$Res> {
   @override
   @useResult
   $Res call(
-      {int? id,
-      String guid,
+      {String guid,
       String pguid,
-      String podcast,
       String title,
       String description,
       String? content,
@@ -322,21 +238,11 @@ abstract class _$$EpisodeImplCopyWith<$Res> implements $EpisodeCopyWith<$Res> {
       String? author,
       int? season,
       int? episode,
-      int duration,
-      int position,
-      bool played,
+      Duration duration,
       String? chaptersUrl,
       List<Chapter> chapters,
-      int? chapterIndex,
-      @JsonKey(includeToJson: false, includeFromJson: false)
-      Chapter? currentChapter,
       List<TranscriptUrl> transcriptUrls,
-      List<Person> persons,
-      @JsonKey(includeToJson: false, includeFromJson: false)
-      String? parsedDescriptionText});
-
-  @override
-  $ChapterCopyWith<$Res>? get currentChapter;
+      List<Person> persons});
 }
 
 /// @nodoc
@@ -350,10 +256,8 @@ class __$$EpisodeImplCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? id = freezed,
     Object? guid = null,
     Object? pguid = null,
-    Object? podcast = null,
     Object? title = null,
     Object? description = null,
     Object? content = freezed,
@@ -366,21 +270,12 @@ class __$$EpisodeImplCopyWithImpl<$Res>
     Object? season = freezed,
     Object? episode = freezed,
     Object? duration = null,
-    Object? position = null,
-    Object? played = null,
     Object? chaptersUrl = freezed,
     Object? chapters = null,
-    Object? chapterIndex = freezed,
-    Object? currentChapter = freezed,
     Object? transcriptUrls = null,
     Object? persons = null,
-    Object? parsedDescriptionText = freezed,
   }) {
     return _then(_$EpisodeImpl(
-      id: freezed == id
-          ? _value.id
-          : id // ignore: cast_nullable_to_non_nullable
-              as int?,
       guid: null == guid
           ? _value.guid
           : guid // ignore: cast_nullable_to_non_nullable
@@ -388,10 +283,6 @@ class __$$EpisodeImplCopyWithImpl<$Res>
       pguid: null == pguid
           ? _value.pguid
           : pguid // ignore: cast_nullable_to_non_nullable
-              as String,
-      podcast: null == podcast
-          ? _value.podcast
-          : podcast // ignore: cast_nullable_to_non_nullable
               as String,
       title: null == title
           ? _value.title
@@ -440,15 +331,7 @@ class __$$EpisodeImplCopyWithImpl<$Res>
       duration: null == duration
           ? _value.duration
           : duration // ignore: cast_nullable_to_non_nullable
-              as int,
-      position: null == position
-          ? _value.position
-          : position // ignore: cast_nullable_to_non_nullable
-              as int,
-      played: null == played
-          ? _value.played
-          : played // ignore: cast_nullable_to_non_nullable
-              as bool,
+              as Duration,
       chaptersUrl: freezed == chaptersUrl
           ? _value.chaptersUrl
           : chaptersUrl // ignore: cast_nullable_to_non_nullable
@@ -457,14 +340,6 @@ class __$$EpisodeImplCopyWithImpl<$Res>
           ? _value._chapters
           : chapters // ignore: cast_nullable_to_non_nullable
               as List<Chapter>,
-      chapterIndex: freezed == chapterIndex
-          ? _value.chapterIndex
-          : chapterIndex // ignore: cast_nullable_to_non_nullable
-              as int?,
-      currentChapter: freezed == currentChapter
-          ? _value.currentChapter
-          : currentChapter // ignore: cast_nullable_to_non_nullable
-              as Chapter?,
       transcriptUrls: null == transcriptUrls
           ? _value._transcriptUrls
           : transcriptUrls // ignore: cast_nullable_to_non_nullable
@@ -473,10 +348,6 @@ class __$$EpisodeImplCopyWithImpl<$Res>
           ? _value._persons
           : persons // ignore: cast_nullable_to_non_nullable
               as List<Person>,
-      parsedDescriptionText: freezed == parsedDescriptionText
-          ? _value.parsedDescriptionText
-          : parsedDescriptionText // ignore: cast_nullable_to_non_nullable
-              as String?,
     ));
   }
 }
@@ -485,10 +356,8 @@ class __$$EpisodeImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$EpisodeImpl with DiagnosticableTreeMixin implements _Episode {
   const _$EpisodeImpl(
-      {this.id,
-      required this.guid,
+      {required this.guid,
       required this.pguid,
-      required this.podcast,
       required this.title,
       required this.description,
       this.content,
@@ -500,28 +369,17 @@ class _$EpisodeImpl with DiagnosticableTreeMixin implements _Episode {
       this.author,
       this.season,
       this.episode,
-      this.duration = 0,
-      this.position = 0,
-      this.played = false,
+      required this.duration,
       this.chaptersUrl,
       final List<Chapter> chapters = const [],
-      this.chapterIndex,
-      @JsonKey(includeToJson: false, includeFromJson: false)
-      this.currentChapter,
       final List<TranscriptUrl> transcriptUrls = const [],
-      final List<Person> persons = const [],
-      @JsonKey(includeToJson: false, includeFromJson: false)
-      this.parsedDescriptionText})
+      final List<Person> persons = const []})
       : _chapters = chapters,
         _transcriptUrls = transcriptUrls,
         _persons = persons;
 
   factory _$EpisodeImpl.fromJson(Map<String, dynamic> json) =>
       _$$EpisodeImplFromJson(json);
-
-  /// Database ID
-  @override
-  final int? id;
 
   /// A String GUID for the episode.
   @override
@@ -531,10 +389,6 @@ class _$EpisodeImpl with DiagnosticableTreeMixin implements _Episode {
   /// without subscribing to a podcast this may be null.
   @override
   final String pguid;
-
-  /// The name of the podcast the episode is part of.
-  @override
-  final String podcast;
 
   /// The name of the podcast the episode is part of.
   @override
@@ -584,19 +438,7 @@ class _$EpisodeImpl with DiagnosticableTreeMixin implements _Episode {
   /// either from the RSS if available, or determined from the MP3 file at
   /// stream/download time.
   @override
-  @JsonKey()
-  final int duration;
-
-  /// Stores the current position within the episode in milliseconds.
-  /// Used for resuming.
-  @override
-  @JsonKey()
-  final int position;
-
-  /// True if this episode is 'marked as played'.
-  @override
-  @JsonKey()
-  final bool played;
+  final Duration duration;
 
   /// URL pointing to a JSON file containing chapter information if available.
   @override
@@ -614,16 +456,6 @@ class _$EpisodeImpl with DiagnosticableTreeMixin implements _Episode {
     return EqualUnmodifiableListView(_chapters);
   }
 
-  /// Index of the currently playing chapter it available. Transient.
-  @override
-  final int? chapterIndex;
-
-  /// Current chapter we are listening to if this episode has chapters.
-// ignore: invalid_annotation_target
-  @override
-  @JsonKey(includeToJson: false, includeFromJson: false)
-  final Chapter? currentChapter;
-
   /// List of transcript URLs for the episode if available.
   final List<TranscriptUrl> _transcriptUrls;
 
@@ -636,7 +468,10 @@ class _$EpisodeImpl with DiagnosticableTreeMixin implements _Episode {
     return EqualUnmodifiableListView(_transcriptUrls);
   }
 
+  /// List of people of interest to the podcast.
   final List<Person> _persons;
+
+  /// List of people of interest to the podcast.
   @override
   @JsonKey()
   List<Person> get persons {
@@ -645,15 +480,9 @@ class _$EpisodeImpl with DiagnosticableTreeMixin implements _Episode {
     return EqualUnmodifiableListView(_persons);
   }
 
-  /// Processed version of episode description.
-// ignore: invalid_annotation_target
-  @override
-  @JsonKey(includeToJson: false, includeFromJson: false)
-  final String? parsedDescriptionText;
-
   @override
   String toString({DiagnosticLevel minLevel = DiagnosticLevel.info}) {
-    return 'Episode(id: $id, guid: $guid, pguid: $pguid, podcast: $podcast, title: $title, description: $description, content: $content, link: $link, imageUrl: $imageUrl, thumbImageUrl: $thumbImageUrl, publicationDate: $publicationDate, contentUrl: $contentUrl, author: $author, season: $season, episode: $episode, duration: $duration, position: $position, played: $played, chaptersUrl: $chaptersUrl, chapters: $chapters, chapterIndex: $chapterIndex, currentChapter: $currentChapter, transcriptUrls: $transcriptUrls, persons: $persons, parsedDescriptionText: $parsedDescriptionText)';
+    return 'Episode(guid: $guid, pguid: $pguid, title: $title, description: $description, content: $content, link: $link, imageUrl: $imageUrl, thumbImageUrl: $thumbImageUrl, publicationDate: $publicationDate, contentUrl: $contentUrl, author: $author, season: $season, episode: $episode, duration: $duration, chaptersUrl: $chaptersUrl, chapters: $chapters, transcriptUrls: $transcriptUrls, persons: $persons)';
   }
 
   @override
@@ -661,10 +490,8 @@ class _$EpisodeImpl with DiagnosticableTreeMixin implements _Episode {
     super.debugFillProperties(properties);
     properties
       ..add(DiagnosticsProperty('type', 'Episode'))
-      ..add(DiagnosticsProperty('id', id))
       ..add(DiagnosticsProperty('guid', guid))
       ..add(DiagnosticsProperty('pguid', pguid))
-      ..add(DiagnosticsProperty('podcast', podcast))
       ..add(DiagnosticsProperty('title', title))
       ..add(DiagnosticsProperty('description', description))
       ..add(DiagnosticsProperty('content', content))
@@ -677,16 +504,10 @@ class _$EpisodeImpl with DiagnosticableTreeMixin implements _Episode {
       ..add(DiagnosticsProperty('season', season))
       ..add(DiagnosticsProperty('episode', episode))
       ..add(DiagnosticsProperty('duration', duration))
-      ..add(DiagnosticsProperty('position', position))
-      ..add(DiagnosticsProperty('played', played))
       ..add(DiagnosticsProperty('chaptersUrl', chaptersUrl))
       ..add(DiagnosticsProperty('chapters', chapters))
-      ..add(DiagnosticsProperty('chapterIndex', chapterIndex))
-      ..add(DiagnosticsProperty('currentChapter', currentChapter))
       ..add(DiagnosticsProperty('transcriptUrls', transcriptUrls))
-      ..add(DiagnosticsProperty('persons', persons))
-      ..add(
-          DiagnosticsProperty('parsedDescriptionText', parsedDescriptionText));
+      ..add(DiagnosticsProperty('persons', persons));
   }
 
   @override
@@ -694,10 +515,8 @@ class _$EpisodeImpl with DiagnosticableTreeMixin implements _Episode {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$EpisodeImpl &&
-            (identical(other.id, id) || other.id == id) &&
             (identical(other.guid, guid) || other.guid == guid) &&
             (identical(other.pguid, pguid) || other.pguid == pguid) &&
-            (identical(other.podcast, podcast) || other.podcast == podcast) &&
             (identical(other.title, title) || other.title == title) &&
             (identical(other.description, description) ||
                 other.description == description) &&
@@ -716,53 +535,36 @@ class _$EpisodeImpl with DiagnosticableTreeMixin implements _Episode {
             (identical(other.episode, episode) || other.episode == episode) &&
             (identical(other.duration, duration) ||
                 other.duration == duration) &&
-            (identical(other.position, position) ||
-                other.position == position) &&
-            (identical(other.played, played) || other.played == played) &&
             (identical(other.chaptersUrl, chaptersUrl) ||
                 other.chaptersUrl == chaptersUrl) &&
             const DeepCollectionEquality().equals(other._chapters, _chapters) &&
-            (identical(other.chapterIndex, chapterIndex) ||
-                other.chapterIndex == chapterIndex) &&
-            (identical(other.currentChapter, currentChapter) ||
-                other.currentChapter == currentChapter) &&
             const DeepCollectionEquality()
                 .equals(other._transcriptUrls, _transcriptUrls) &&
-            const DeepCollectionEquality().equals(other._persons, _persons) &&
-            (identical(other.parsedDescriptionText, parsedDescriptionText) ||
-                other.parsedDescriptionText == parsedDescriptionText));
+            const DeepCollectionEquality().equals(other._persons, _persons));
   }
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode => Object.hashAll([
-        runtimeType,
-        id,
-        guid,
-        pguid,
-        podcast,
-        title,
-        description,
-        content,
-        link,
-        imageUrl,
-        thumbImageUrl,
-        publicationDate,
-        contentUrl,
-        author,
-        season,
-        episode,
-        duration,
-        position,
-        played,
-        chaptersUrl,
-        const DeepCollectionEquality().hash(_chapters),
-        chapterIndex,
-        currentChapter,
-        const DeepCollectionEquality().hash(_transcriptUrls),
-        const DeepCollectionEquality().hash(_persons),
-        parsedDescriptionText
-      ]);
+  int get hashCode => Object.hash(
+      runtimeType,
+      guid,
+      pguid,
+      title,
+      description,
+      content,
+      link,
+      imageUrl,
+      thumbImageUrl,
+      publicationDate,
+      contentUrl,
+      author,
+      season,
+      episode,
+      duration,
+      chaptersUrl,
+      const DeepCollectionEquality().hash(_chapters),
+      const DeepCollectionEquality().hash(_transcriptUrls),
+      const DeepCollectionEquality().hash(_persons));
 
   @JsonKey(ignore: true)
   @override
@@ -780,10 +582,8 @@ class _$EpisodeImpl with DiagnosticableTreeMixin implements _Episode {
 
 abstract class _Episode implements Episode {
   const factory _Episode(
-      {final int? id,
-      required final String guid,
+      {required final String guid,
       required final String pguid,
-      required final String podcast,
       required final String title,
       required final String description,
       final String? content,
@@ -795,25 +595,14 @@ abstract class _Episode implements Episode {
       final String? author,
       final int? season,
       final int? episode,
-      final int duration,
-      final int position,
-      final bool played,
+      required final Duration duration,
       final String? chaptersUrl,
       final List<Chapter> chapters,
-      final int? chapterIndex,
-      @JsonKey(includeToJson: false, includeFromJson: false)
-      final Chapter? currentChapter,
       final List<TranscriptUrl> transcriptUrls,
-      final List<Person> persons,
-      @JsonKey(includeToJson: false, includeFromJson: false)
-      final String? parsedDescriptionText}) = _$EpisodeImpl;
+      final List<Person> persons}) = _$EpisodeImpl;
 
   factory _Episode.fromJson(Map<String, dynamic> json) = _$EpisodeImpl.fromJson;
 
-  @override
-
-  /// Database ID
-  int? get id;
   @override
 
   /// A String GUID for the episode.
@@ -823,10 +612,6 @@ abstract class _Episode implements Episode {
   /// The GUID for an associated podcast. If an episode has been downloaded
   /// without subscribing to a podcast this may be null.
   String get pguid;
-  @override
-
-  /// The name of the podcast the episode is part of.
-  String get podcast;
   @override
 
   /// The name of the podcast the episode is part of.
@@ -876,16 +661,7 @@ abstract class _Episode implements Episode {
   /// The duration of the episode in milliseconds. This can be populated
   /// either from the RSS if available, or determined from the MP3 file at
   /// stream/download time.
-  int get duration;
-  @override
-
-  /// Stores the current position within the episode in milliseconds.
-  /// Used for resuming.
-  int get position;
-  @override
-
-  /// True if this episode is 'marked as played'.
-  bool get played;
+  Duration get duration;
   @override
 
   /// URL pointing to a JSON file containing chapter information if available.
@@ -896,28 +672,256 @@ abstract class _Episode implements Episode {
   List<Chapter> get chapters;
   @override
 
-  /// Index of the currently playing chapter it available. Transient.
-  int? get chapterIndex;
-  @override
-
-  /// Current chapter we are listening to if this episode has chapters.
-// ignore: invalid_annotation_target
-  @JsonKey(includeToJson: false, includeFromJson: false)
-  Chapter? get currentChapter;
-  @override
-
   /// List of transcript URLs for the episode if available.
   List<TranscriptUrl> get transcriptUrls;
   @override
-  List<Person> get persons;
-  @override
 
-  /// Processed version of episode description.
-// ignore: invalid_annotation_target
-  @JsonKey(includeToJson: false, includeFromJson: false)
-  String? get parsedDescriptionText;
+  /// List of people of interest to the podcast.
+  List<Person> get persons;
   @override
   @JsonKey(ignore: true)
   _$$EpisodeImplCopyWith<_$EpisodeImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+mixin _$EpisodeStats {
+  int get id => throw _privateConstructorUsedError;
+  String get guid => throw _privateConstructorUsedError;
+  Duration get position => throw _privateConstructorUsedError;
+  bool get played => throw _privateConstructorUsedError;
+  int get playCount => throw _privateConstructorUsedError;
+  Duration get playTotal => throw _privateConstructorUsedError;
+
+  @JsonKey(ignore: true)
+  $EpisodeStatsCopyWith<EpisodeStats> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $EpisodeStatsCopyWith<$Res> {
+  factory $EpisodeStatsCopyWith(
+          EpisodeStats value, $Res Function(EpisodeStats) then) =
+      _$EpisodeStatsCopyWithImpl<$Res, EpisodeStats>;
+  @useResult
+  $Res call(
+      {int id,
+      String guid,
+      Duration position,
+      bool played,
+      int playCount,
+      Duration playTotal});
+}
+
+/// @nodoc
+class _$EpisodeStatsCopyWithImpl<$Res, $Val extends EpisodeStats>
+    implements $EpisodeStatsCopyWith<$Res> {
+  _$EpisodeStatsCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? id = null,
+    Object? guid = null,
+    Object? position = null,
+    Object? played = null,
+    Object? playCount = null,
+    Object? playTotal = null,
+  }) {
+    return _then(_value.copyWith(
+      id: null == id
+          ? _value.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as int,
+      guid: null == guid
+          ? _value.guid
+          : guid // ignore: cast_nullable_to_non_nullable
+              as String,
+      position: null == position
+          ? _value.position
+          : position // ignore: cast_nullable_to_non_nullable
+              as Duration,
+      played: null == played
+          ? _value.played
+          : played // ignore: cast_nullable_to_non_nullable
+              as bool,
+      playCount: null == playCount
+          ? _value.playCount
+          : playCount // ignore: cast_nullable_to_non_nullable
+              as int,
+      playTotal: null == playTotal
+          ? _value.playTotal
+          : playTotal // ignore: cast_nullable_to_non_nullable
+              as Duration,
+    ) as $Val);
+  }
+}
+
+/// @nodoc
+abstract class _$$EpisodeStatsImplCopyWith<$Res>
+    implements $EpisodeStatsCopyWith<$Res> {
+  factory _$$EpisodeStatsImplCopyWith(
+          _$EpisodeStatsImpl value, $Res Function(_$EpisodeStatsImpl) then) =
+      __$$EpisodeStatsImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call(
+      {int id,
+      String guid,
+      Duration position,
+      bool played,
+      int playCount,
+      Duration playTotal});
+}
+
+/// @nodoc
+class __$$EpisodeStatsImplCopyWithImpl<$Res>
+    extends _$EpisodeStatsCopyWithImpl<$Res, _$EpisodeStatsImpl>
+    implements _$$EpisodeStatsImplCopyWith<$Res> {
+  __$$EpisodeStatsImplCopyWithImpl(
+      _$EpisodeStatsImpl _value, $Res Function(_$EpisodeStatsImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? id = null,
+    Object? guid = null,
+    Object? position = null,
+    Object? played = null,
+    Object? playCount = null,
+    Object? playTotal = null,
+  }) {
+    return _then(_$EpisodeStatsImpl(
+      id: null == id
+          ? _value.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as int,
+      guid: null == guid
+          ? _value.guid
+          : guid // ignore: cast_nullable_to_non_nullable
+              as String,
+      position: null == position
+          ? _value.position
+          : position // ignore: cast_nullable_to_non_nullable
+              as Duration,
+      played: null == played
+          ? _value.played
+          : played // ignore: cast_nullable_to_non_nullable
+              as bool,
+      playCount: null == playCount
+          ? _value.playCount
+          : playCount // ignore: cast_nullable_to_non_nullable
+              as int,
+      playTotal: null == playTotal
+          ? _value.playTotal
+          : playTotal // ignore: cast_nullable_to_non_nullable
+              as Duration,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$EpisodeStatsImpl with DiagnosticableTreeMixin implements _EpisodeStats {
+  const _$EpisodeStatsImpl(
+      {required this.id,
+      required this.guid,
+      this.position = Duration.zero,
+      this.played = false,
+      this.playCount = 0,
+      this.playTotal = Duration.zero});
+
+  @override
+  final int id;
+  @override
+  final String guid;
+  @override
+  @JsonKey()
+  final Duration position;
+  @override
+  @JsonKey()
+  final bool played;
+  @override
+  @JsonKey()
+  final int playCount;
+  @override
+  @JsonKey()
+  final Duration playTotal;
+
+  @override
+  String toString({DiagnosticLevel minLevel = DiagnosticLevel.info}) {
+    return 'EpisodeStats(id: $id, guid: $guid, position: $position, played: $played, playCount: $playCount, playTotal: $playTotal)';
+  }
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DiagnosticsProperty('type', 'EpisodeStats'))
+      ..add(DiagnosticsProperty('id', id))
+      ..add(DiagnosticsProperty('guid', guid))
+      ..add(DiagnosticsProperty('position', position))
+      ..add(DiagnosticsProperty('played', played))
+      ..add(DiagnosticsProperty('playCount', playCount))
+      ..add(DiagnosticsProperty('playTotal', playTotal));
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$EpisodeStatsImpl &&
+            (identical(other.id, id) || other.id == id) &&
+            (identical(other.guid, guid) || other.guid == guid) &&
+            (identical(other.position, position) ||
+                other.position == position) &&
+            (identical(other.played, played) || other.played == played) &&
+            (identical(other.playCount, playCount) ||
+                other.playCount == playCount) &&
+            (identical(other.playTotal, playTotal) ||
+                other.playTotal == playTotal));
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      runtimeType, id, guid, position, played, playCount, playTotal);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$EpisodeStatsImplCopyWith<_$EpisodeStatsImpl> get copyWith =>
+      __$$EpisodeStatsImplCopyWithImpl<_$EpisodeStatsImpl>(this, _$identity);
+}
+
+abstract class _EpisodeStats implements EpisodeStats {
+  const factory _EpisodeStats(
+      {required final int id,
+      required final String guid,
+      final Duration position,
+      final bool played,
+      final int playCount,
+      final Duration playTotal}) = _$EpisodeStatsImpl;
+
+  @override
+  int get id;
+  @override
+  String get guid;
+  @override
+  Duration get position;
+  @override
+  bool get played;
+  @override
+  int get playCount;
+  @override
+  Duration get playTotal;
+  @override
+  @JsonKey(ignore: true)
+  _$$EpisodeStatsImplCopyWith<_$EpisodeStatsImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
