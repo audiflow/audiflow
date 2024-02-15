@@ -278,6 +278,17 @@ class SembastRepository extends Repository {
     await _saveEpisode(episode);
   }
 
+  @override
+  Future<void> deleteEpisodes(List<Episode> episodes) async {
+    return _deleteEpisodes(episodes);
+  }
+
+  @override
+  Future<void> deleteEpisode(Episode episode) async {
+    return _deleteEpisode(episode);
+  }
+
+
   Future<void> _saveEpisodes(
     List<Episode> episodes, {
     DatabaseClient? db,

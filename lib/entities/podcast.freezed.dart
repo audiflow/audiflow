@@ -535,6 +535,9 @@ mixin _$PodcastSummary {
   /// Unique identifier for podcast.
   String get guid => throw _privateConstructorUsedError;
 
+  /// The collection ID(iTunesID).
+  int get collectionId => throw _privateConstructorUsedError;
+
   /// The link to the podcast RSS feed.
   String get feedUrl => throw _privateConstructorUsedError;
 
@@ -543,6 +546,9 @@ mixin _$PodcastSummary {
 
   /// URL for thumbnail version of artwork image.
   String get thumbImageUrl => throw _privateConstructorUsedError;
+
+  /// URL to the full size artwork image.
+  String get imageUrl => throw _privateConstructorUsedError;
 
   /// Copyright owner of the podcast.
   String get copyright => throw _privateConstructorUsedError;
@@ -564,9 +570,11 @@ abstract class $PodcastSummaryCopyWith<$Res> {
   @useResult
   $Res call(
       {String guid,
+      int collectionId,
       String feedUrl,
       String title,
       String thumbImageUrl,
+      String imageUrl,
       String copyright,
       DateTime releaseDate});
 }
@@ -585,9 +593,11 @@ class _$PodcastSummaryCopyWithImpl<$Res, $Val extends PodcastSummary>
   @override
   $Res call({
     Object? guid = null,
+    Object? collectionId = null,
     Object? feedUrl = null,
     Object? title = null,
     Object? thumbImageUrl = null,
+    Object? imageUrl = null,
     Object? copyright = null,
     Object? releaseDate = null,
   }) {
@@ -596,6 +606,10 @@ class _$PodcastSummaryCopyWithImpl<$Res, $Val extends PodcastSummary>
           ? _value.guid
           : guid // ignore: cast_nullable_to_non_nullable
               as String,
+      collectionId: null == collectionId
+          ? _value.collectionId
+          : collectionId // ignore: cast_nullable_to_non_nullable
+              as int,
       feedUrl: null == feedUrl
           ? _value.feedUrl
           : feedUrl // ignore: cast_nullable_to_non_nullable
@@ -607,6 +621,10 @@ class _$PodcastSummaryCopyWithImpl<$Res, $Val extends PodcastSummary>
       thumbImageUrl: null == thumbImageUrl
           ? _value.thumbImageUrl
           : thumbImageUrl // ignore: cast_nullable_to_non_nullable
+              as String,
+      imageUrl: null == imageUrl
+          ? _value.imageUrl
+          : imageUrl // ignore: cast_nullable_to_non_nullable
               as String,
       copyright: null == copyright
           ? _value.copyright
@@ -630,9 +648,11 @@ abstract class _$$PodcastSummaryImplCopyWith<$Res>
   @useResult
   $Res call(
       {String guid,
+      int collectionId,
       String feedUrl,
       String title,
       String thumbImageUrl,
+      String imageUrl,
       String copyright,
       DateTime releaseDate});
 }
@@ -649,9 +669,11 @@ class __$$PodcastSummaryImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? guid = null,
+    Object? collectionId = null,
     Object? feedUrl = null,
     Object? title = null,
     Object? thumbImageUrl = null,
+    Object? imageUrl = null,
     Object? copyright = null,
     Object? releaseDate = null,
   }) {
@@ -660,6 +682,10 @@ class __$$PodcastSummaryImplCopyWithImpl<$Res>
           ? _value.guid
           : guid // ignore: cast_nullable_to_non_nullable
               as String,
+      collectionId: null == collectionId
+          ? _value.collectionId
+          : collectionId // ignore: cast_nullable_to_non_nullable
+              as int,
       feedUrl: null == feedUrl
           ? _value.feedUrl
           : feedUrl // ignore: cast_nullable_to_non_nullable
@@ -671,6 +697,10 @@ class __$$PodcastSummaryImplCopyWithImpl<$Res>
       thumbImageUrl: null == thumbImageUrl
           ? _value.thumbImageUrl
           : thumbImageUrl // ignore: cast_nullable_to_non_nullable
+              as String,
+      imageUrl: null == imageUrl
+          ? _value.imageUrl
+          : imageUrl // ignore: cast_nullable_to_non_nullable
               as String,
       copyright: null == copyright
           ? _value.copyright
@@ -689,9 +719,11 @@ class __$$PodcastSummaryImplCopyWithImpl<$Res>
 class _$PodcastSummaryImpl implements _PodcastSummary {
   const _$PodcastSummaryImpl(
       {required this.guid,
+      required this.collectionId,
       required this.feedUrl,
       required this.title,
       required this.thumbImageUrl,
+      required this.imageUrl,
       required this.copyright,
       required this.releaseDate});
 
@@ -701,6 +733,10 @@ class _$PodcastSummaryImpl implements _PodcastSummary {
   /// Unique identifier for podcast.
   @override
   final String guid;
+
+  /// The collection ID(iTunesID).
+  @override
+  final int collectionId;
 
   /// The link to the podcast RSS feed.
   @override
@@ -714,6 +750,10 @@ class _$PodcastSummaryImpl implements _PodcastSummary {
   @override
   final String thumbImageUrl;
 
+  /// URL to the full size artwork image.
+  @override
+  final String imageUrl;
+
   /// Copyright owner of the podcast.
   @override
   final String copyright;
@@ -724,7 +764,7 @@ class _$PodcastSummaryImpl implements _PodcastSummary {
 
   @override
   String toString() {
-    return 'PodcastSummary(guid: $guid, feedUrl: $feedUrl, title: $title, thumbImageUrl: $thumbImageUrl, copyright: $copyright, releaseDate: $releaseDate)';
+    return 'PodcastSummary(guid: $guid, collectionId: $collectionId, feedUrl: $feedUrl, title: $title, thumbImageUrl: $thumbImageUrl, imageUrl: $imageUrl, copyright: $copyright, releaseDate: $releaseDate)';
   }
 
   @override
@@ -733,10 +773,14 @@ class _$PodcastSummaryImpl implements _PodcastSummary {
         (other.runtimeType == runtimeType &&
             other is _$PodcastSummaryImpl &&
             (identical(other.guid, guid) || other.guid == guid) &&
+            (identical(other.collectionId, collectionId) ||
+                other.collectionId == collectionId) &&
             (identical(other.feedUrl, feedUrl) || other.feedUrl == feedUrl) &&
             (identical(other.title, title) || other.title == title) &&
             (identical(other.thumbImageUrl, thumbImageUrl) ||
                 other.thumbImageUrl == thumbImageUrl) &&
+            (identical(other.imageUrl, imageUrl) ||
+                other.imageUrl == imageUrl) &&
             (identical(other.copyright, copyright) ||
                 other.copyright == copyright) &&
             (identical(other.releaseDate, releaseDate) ||
@@ -745,8 +789,8 @@ class _$PodcastSummaryImpl implements _PodcastSummary {
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode => Object.hash(
-      runtimeType, guid, feedUrl, title, thumbImageUrl, copyright, releaseDate);
+  int get hashCode => Object.hash(runtimeType, guid, collectionId, feedUrl,
+      title, thumbImageUrl, imageUrl, copyright, releaseDate);
 
   @JsonKey(ignore: true)
   @override
@@ -766,9 +810,11 @@ class _$PodcastSummaryImpl implements _PodcastSummary {
 abstract class _PodcastSummary implements PodcastSummary {
   const factory _PodcastSummary(
       {required final String guid,
+      required final int collectionId,
       required final String feedUrl,
       required final String title,
       required final String thumbImageUrl,
+      required final String imageUrl,
       required final String copyright,
       required final DateTime releaseDate}) = _$PodcastSummaryImpl;
 
@@ -781,6 +827,10 @@ abstract class _PodcastSummary implements PodcastSummary {
   String get guid;
   @override
 
+  /// The collection ID(iTunesID).
+  int get collectionId;
+  @override
+
   /// The link to the podcast RSS feed.
   String get feedUrl;
   @override
@@ -791,6 +841,10 @@ abstract class _PodcastSummary implements PodcastSummary {
 
   /// URL for thumbnail version of artwork image.
   String get thumbImageUrl;
+  @override
+
+  /// URL to the full size artwork image.
+  String get imageUrl;
   @override
 
   /// Copyright owner of the podcast.

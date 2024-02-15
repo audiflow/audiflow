@@ -47,9 +47,11 @@ Map<String, dynamic> _$$PodcastImplToJson(_$PodcastImpl instance) =>
 _$PodcastSummaryImpl _$$PodcastSummaryImplFromJson(Map<String, dynamic> json) =>
     _$PodcastSummaryImpl(
       guid: json['guid'] as String,
+      collectionId: json['collectionId'] as int,
       feedUrl: json['feedUrl'] as String,
       title: json['title'] as String,
       thumbImageUrl: json['thumbImageUrl'] as String,
+      imageUrl: json['imageUrl'] as String,
       copyright: json['copyright'] as String,
       releaseDate: DateTime.parse(json['releaseDate'] as String),
     );
@@ -58,9 +60,11 @@ Map<String, dynamic> _$$PodcastSummaryImplToJson(
         _$PodcastSummaryImpl instance) =>
     <String, dynamic>{
       'guid': instance.guid,
+      'collectionId': instance.collectionId,
       'feedUrl': instance.feedUrl,
       'title': instance.title,
       'thumbImageUrl': instance.thumbImageUrl,
+      'imageUrl': instance.imageUrl,
       'copyright': instance.copyright,
       'releaseDate': instance.releaseDate.toIso8601String(),
     };

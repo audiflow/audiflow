@@ -57,6 +57,10 @@ abstract class Repository {
 
   Future<void> saveEpisode(Episode episode);
 
+  Future<void> deleteEpisodes(List<Episode> episodes);
+
+  Future<void> deleteEpisode(Episode episode);
+
   Future<Episode?> findEpisodeById(int id);
 
   Future<(int?, Episode?)> findEpisodeByGuid(String guid);

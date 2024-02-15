@@ -8,6 +8,7 @@ import 'package:podcast_search/podcast_search.dart' as pcast;
 import 'package:seasoning/api/podcast/podcast_api.dart';
 import 'package:seasoning/entities/entities.dart';
 import 'package:seasoning/events/episode_event.dart';
+import 'package:seasoning/events/podcast_event.dart';
 import 'package:seasoning/repository/repository.dart';
 import 'package:seasoning/services/settings/settings_service.dart';
 
@@ -179,27 +180,21 @@ abstract class PodcastService {
 
   List<String> genres();
 
-  Future<Podcast?> loadPodcast({
-    required Podcast podcast,
-    bool highlightNewEpisodes = false,
+  Future<Podcast?> loadPodcast(
+    PodcastSummary summary, {
+    int? id,
     bool refresh = false,
   });
 
-  Future<Podcast?> loadPodcastByUrl({
-    required String url,
-    bool highlightNewEpisodes = false,
-    bool ignoreCache = false,
-  });
+  Future<Podcast?> loadPodcastById(int id);
 
-  Future<Podcast?> loadPodcastById({required int id});
-
-  Future<Podcast?> loadPodcastByGuid({required String guid});
+  Future<Podcast?> loadPodcastByGuid(String guid);
 
   Future<List<Downloadable>> loadDownloads();
 
-  Future<List<Episode>> loadEpisodes();
+  Future<List<Episode>> loadEpisodesByPodcastGuid(String pguid);
 
-  Future<List<Chapter>> loadChaptersByUrl({required String url});
+  Future<List<Chapter>> loadChaptersByUrl(String url);
 
   Future<Transcript> loadTranscriptByUrl({
     required Episode episode,
@@ -210,15 +205,15 @@ abstract class PodcastService {
 
   Future<void> toggleEpisodePlayed(Episode episode);
 
-  Future<List<Podcast>> subscriptions();
+  Future<List<(PodcastStats, PodcastSummary)>> subscriptions();
 
-  Future<Podcast> subscribe(Podcast podcast);
+  Future<PodcastStats> subscribe(Podcast podcast);
 
   Future<void> unsubscribe(Podcast podcast);
 
   Future<void> toggleSeasonView(Podcast podcast);
 
-  Future<Episode> saveEpisode(Episode episode);
+  Future<void> saveEpisode(Episode episode);
 
   Future<Transcript> saveTranscript(Transcript transcript);
 
@@ -227,6 +222,7 @@ abstract class PodcastService {
   Future<List<Episode>> loadQueue();
 
   /// Event listeners
-  Stream<Podcast?>? podcastListener;
-  Stream<EpisodeEvent>? episodeListener;
+  Stream<PodcastEvent> get podcastListener;
+
+  Stream<EpisodeEvent> get episodeListener;
 }

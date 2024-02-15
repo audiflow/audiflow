@@ -65,17 +65,14 @@ class Podcast with _$Podcast {
   factory Podcast.fromJson(Map<String, dynamic> json) =>
       _$PodcastFromJson(json);
 
-  factory Podcast.fromSearch(search.Item item, search.Podcast podcast) {
-    final guid = '${item.collectionId ?? item.feedUrl}';
-    final imageUrl = item.bestArtworkUrl;
-    final thumbImageUrl = item.thumbnailArtworkUrl;
+  factory Podcast.fromSearch(search.Podcast podcast, PodcastSummary summary) {
     final episodes = podcast.episodes
         .map(
           (e) => Episode.fromSearch(
             e,
-            pguid: guid,
-            imageUrl: imageUrl,
-            thumbImageUrl: thumbImageUrl,
+            pguid: summary.guid,
+            thumbImageUrl: summary.thumbImageUrl,
+            imageUrl: summary.imageUrl,
           ),
         )
         .toList();
@@ -86,16 +83,16 @@ class Podcast with _$Podcast {
     final persons = podcast.persons.map(Person.fromSearch).toList();
 
     return Podcast(
-      guid: guid,
-      collectionId: item.collectionId ?? 0,
+      guid: summary.guid,
+      collectionId: summary.collectionId,
       feedUrl: podcast.url!,
       linkUrl: podcast.link ?? '',
-      title: item.collectionName!,
+      title: summary.title,
       description: removeHtmlPadding(podcast.description),
-      copyright: item.artistName ?? '',
-      thumbImageUrl: thumbImageUrl,
-      imageUrl: imageUrl,
-      releaseDate: item.releaseDate!,
+      copyright: summary.copyright,
+      thumbImageUrl: summary.thumbImageUrl,
+      imageUrl: summary.imageUrl,
+      releaseDate: summary.releaseDate,
       episodes: episodes,
       funding: funding,
       persons: persons,
@@ -126,6 +123,9 @@ class PodcastSummary with _$PodcastSummary {
     /// Unique identifier for podcast.
     required String guid,
 
+    /// The collection ID(iTunesID).
+    required int collectionId,
+
     /// The link to the podcast RSS feed.
     required String feedUrl,
 
@@ -134,6 +134,9 @@ class PodcastSummary with _$PodcastSummary {
 
     /// URL for thumbnail version of artwork image.
     required String thumbImageUrl,
+
+    /// URL to the full size artwork image.
+    required String imageUrl,
 
     /// Copyright owner of the podcast.
     required String copyright,
@@ -148,14 +151,30 @@ class PodcastSummary with _$PodcastSummary {
   factory PodcastSummary.fromSearchResultItem(search.Item item) {
     final guid = '${item.collectionId ?? item.feedUrl}';
     final thumbImageUrl = item.thumbnailArtworkUrl;
+    final imageUrl = item.bestArtworkUrl;
 
     return PodcastSummary(
       guid: guid,
       feedUrl: item.feedUrl ?? '',
+      collectionId: item.collectionId ?? 0,
       title: item.collectionName!,
       thumbImageUrl: thumbImageUrl,
+      imageUrl: imageUrl,
       copyright: item.artistName ?? '',
       releaseDate: item.releaseDate!,
+    );
+  }
+
+  factory PodcastSummary.fromPodcast(Podcast podcast) {
+    return PodcastSummary(
+      guid: podcast.guid,
+      feedUrl: podcast.feedUrl,
+      collectionId: podcast.collectionId,
+      title: podcast.title,
+      thumbImageUrl: podcast.thumbImageUrl,
+      imageUrl: podcast.imageUrl,
+      copyright: podcast.copyright,
+      releaseDate: podcast.releaseDate,
     );
   }
 }

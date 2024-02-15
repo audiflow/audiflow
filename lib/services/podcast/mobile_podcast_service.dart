@@ -2,10 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'dart:collection';
 import 'dart:io';
 
-import 'package:collection/collection.dart' show IterableExtension;
 import 'package:flutter/foundation.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:intl/intl.dart';
@@ -20,6 +18,7 @@ import 'package:seasoning/entities/episode.dart';
 import 'package:seasoning/entities/podcast.dart';
 import 'package:seasoning/entities/transcript.dart';
 import 'package:seasoning/events/episode_event.dart';
+import 'package:seasoning/events/podcast_event.dart';
 import 'package:seasoning/l10n/messages_all.dart';
 import 'package:seasoning/services/podcast/podcast_service.dart';
 
@@ -33,8 +32,6 @@ class MobilePodcastService extends PodcastService {
   }
 
   final log = Logger('MobilePodcastService');
-  final _cache =
-      _PodcastCache(maxItems: 10, expiration: const Duration(minutes: 30));
   var _categories = <String>[];
   var _intlCategories = <String?>[];
   var _intlCategoriesSorted = <String>[];
@@ -143,109 +140,61 @@ class MobilePodcastService extends PodcastService {
   /// seen it recently and return that if available. If not, we'll make a call
   /// to load it from the network.
   @override
-  Future<Podcast?> loadPodcast({
-    required Podcast podcast,
-    bool highlightNewEpisodes = false,
+  Future<Podcast?> loadPodcast(
+    PodcastSummary summary, {
+    int? id,
     bool refresh = false,
   }) async {
-    log.fine('loadPodcast. ID ${podcast.id} (refresh $refresh)');
-
     return refresh
-        ? loadPodcastByUrl(url: podcast.url, ignoreCache: true)
-        : podcast.id != null
-            ? loadPodcastById(id: podcast.id ?? 0)
-            : loadPodcastByGuid(guid: podcast.guid);
+        ? _reloadPodcast(summary)
+        : id != null
+            ? loadPodcastById(id)
+            : loadPodcastByGuid(summary.guid);
   }
 
   @override
-  Future<Podcast?> loadPodcastByUrl({
-    required String url,
-    bool highlightNewEpisodes = false,
-    bool ignoreCache = false,
-  }) async {
-    final feedPodcast =
-        await _lookupPodcast(url: url, ignoreCache: ignoreCache);
-    var podcast = Podcast.fromSearch(feedPodcast);
-
-    // We could be subscribing this podcast already. Let's check.
-    final saved = await repository.findPodcastByGuid(podcast.guid);
-    if (saved != null) {
-      podcast = podcast.copyWith(id: saved.id);
-    }
-
-    final existingEpisodes = await repository.findEpisodesByPodcastGuid(url);
-    final episodes = feedPodcast.episodes
-        .map((e) => Episode.fromSearch(e, podcast))
-        .map((episode) {
-      final existingEpisode =
-          existingEpisodes.firstWhereOrNull((ep) => ep.guid == episode.guid);
-      if (existingEpisode != null) {
-        existingEpisodes.remove(existingEpisode);
-
-        return existingEpisode.copyWith(
-          podcast: episode.title,
-          title: episode.title,
-          description: episode.description,
-          content: episode.content,
-          author: episode.author,
-          season: episode.season,
-          episode: episode.episode,
-          contentUrl: episode.contentUrl,
-          link: episode.link,
-          imageUrl: episode.imageUrl,
-          thumbImageUrl: episode.thumbImageUrl,
-          duration: 0 < episode.duration
-              ? episode.duration
-              : existingEpisode.duration,
-          publicationDate: episode.publicationDate,
-          chaptersUrl: episode.chaptersUrl,
-          transcriptUrls: episode.transcriptUrls,
-          persons: episode.persons,
-        );
-      }
-
-      return episode;
-    }).toList();
-
-    final downloads = await repository.findDownloadsByPodcastGuid(podcast.guid);
-
-    // Add any downloaded episodes that are no longer in the feed - they
-    // may have expired but we still want them.
-    final expired = <Episode>[];
-    for (final existingEpisode in existingEpisodes) {
-      final episode =
-          episodes.firstWhereOrNull((e) => e.guid == existingEpisode.guid);
-      if (episode == null) {
-        final download =
-            downloads.firstWhereOrNull((d) => d.guid == existingEpisode.guid);
-        if (download?.downloaded == true) {
-          episodes.add(existingEpisode);
-        } else {
-          expired.add(existingEpisode);
-        }
-      }
-    }
-    episodes.sort((a, b) => b.publicationDate!.compareTo(a.publicationDate!));
-
-    if (saved != null && expired.isNotEmpty) {
-      await repository.deleteEpisodes(expired);
-    }
-    await repository.saveEpisodes(episodes);
-    return repository.savePodcast(podcast);
-  }
-
-  @override
-  Future<Podcast?> loadPodcastById({required int id}) async {
+  Future<Podcast?> loadPodcastById(int id) async {
     return repository.findPodcastById(id);
   }
 
   @override
-  Future<Podcast?> loadPodcastByGuid({required String guid}) async {
-    return repository.findPodcastByGuid(guid);
+  Future<Podcast?> loadPodcastByGuid(String guid) async {
+    final (_, podcast) = await repository.findPodcastByGuid(guid);
+    return podcast;
+  }
+
+  Future<Podcast> _reloadPodcast(PodcastSummary summary) async {
+    final feedPodcast = await _lookupPodcast(url: summary.feedUrl);
+    final podcast = Podcast.fromSearch(feedPodcast, summary);
+    final (id, saved) = await repository.findPodcastByGuid(podcast.guid);
+    if (saved != null) {
+      await repository.savePodcast(id!, podcast);
+    }
+
+    final savedEpisodes =
+        await repository.findEpisodesByPodcastGuid(podcast.guid);
+    if (savedEpisodes.isEmpty) {
+      return podcast;
+    }
+
+    final downloads = await repository.findDownloadsByPodcastGuid(podcast.guid);
+    final guids = <String>{
+      ...[
+        ...savedEpisodes.map((e) => e.guid),
+        ...downloads.map((d) => d.guid),
+      ],
+    };
+    final deletedEpisodes =
+        podcast.episodes.where((e) => !guids.contains(e.guid)).toList();
+    if (deletedEpisodes.isNotEmpty) {
+      await repository.deleteEpisodes(deletedEpisodes);
+    }
+
+    return podcast;
   }
 
   @override
-  Future<List<Chapter>> loadChaptersByUrl({required String url}) async {
+  Future<List<Chapter>> loadChaptersByUrl(String url) async {
     final c = await _loadChaptersByUrl(url);
     final chapters = <Chapter>[];
 
@@ -374,8 +323,8 @@ class MobilePodcastService extends PodcastService {
   }
 
   @override
-  Future<List<Episode>> loadEpisodes() async {
-    return repository.findAllEpisodes();
+  Future<List<Episode>> loadEpisodesByPodcastGuid(String pguid) async {
+    return repository.findEpisodesByPodcastGuid(pguid);
   }
 
   @override
@@ -417,8 +366,13 @@ class MobilePodcastService extends PodcastService {
   }
 
   @override
-  Future<List<Podcast>> subscriptions() {
+  Future<List<(PodcastStats, PodcastSummary)>> subscriptions() async {
     return repository.subscriptions();
+  }
+
+  @override
+  Future<PodcastStats> subscribe(Podcast podcast) async {
+    return repository.subscribePodcast(podcast);
   }
 
   @override
@@ -434,23 +388,21 @@ class MobilePodcastService extends PodcastService {
       }
     }
 
-    return repository.deletePodcast(podcast);
+    final stats = await repository.findPodcastStatsByGuid(podcast.guid);
+    if (stats != null) {
+      return repository.unsubscribePodcast(stats);
+    }
   }
 
   @override
   Future<void> toggleSeasonView(Podcast podcast) async {
     // podcast.seasonView = !podcast.seasonView;
-    await repository.savePodcast(podcast);
+    // await repository.savePodcast(podcast);
   }
 
   @override
-  Future<Podcast> subscribe(Podcast podcast) async {
-    return repository.savePodcast(podcast);
-  }
-
-  @override
-  Future<Episode> saveEpisode(Episode episode) async {
-    return repository.saveEpisode(episode);
+  Future<void> saveEpisode(Episode episode) async {
+    await repository.saveEpisode(episode);
   }
 
   @override
@@ -470,26 +422,13 @@ class MobilePodcastService extends PodcastService {
 
   Future<podcast_search.Podcast> _lookupPodcast({
     required String url,
-    bool ignoreCache = false,
   }) async {
-    podcast_search.Podcast? loadedPodcast;
-
-    if (!ignoreCache) {
-      log.fine('Not a refresh so try to fetch from cache');
-      loadedPodcast = _cache.item(url);
-      if (loadedPodcast != null) {
-        return loadedPodcast;
-      }
-    }
-
     // If we didn't get a cache hit load the podcast feed.
     var tries = 2;
     while (0 < tries--) {
       try {
         log.fine('Loading podcast from feed $url');
-        loadedPodcast = await _loadPodcastFeed(url: url);
-        _cache.store(loadedPodcast);
-        return loadedPodcast;
+        return _loadPodcastFeed(url: url);
       } on Exception {
         if (tries <= 0 || !url.startsWith('https')) {
           rethrow;
@@ -593,58 +532,10 @@ class MobilePodcastService extends PodcastService {
   }
 
   @override
-  Stream<Podcast?>? get podcastListener => repository.podcastListener;
+  Stream<PodcastEvent> get podcastListener => repository.podcastListener;
 
   @override
-  Stream<EpisodeEvent>? get episodeListener => repository.episodeListener;
-}
-
-/// A simple cache to reduce the number of network calls when loading podcast
-/// feeds. We can cache up to [maxItems] items with each item having an
-/// expiration time of [expiration]. The cache works as a FIFO queue, so if we
-/// attempt to store a new item in the cache and it is full we remove the
-/// first (and therefore oldest) item from the cache. Cache misses are returned
-/// as null.
-class _PodcastCache {
-  _PodcastCache({required this.maxItems, required this.expiration})
-      : _queue = Queue<_CacheItem>();
-  final int maxItems;
-  final Duration expiration;
-  final Queue<_CacheItem> _queue;
-
-  podcast_search.Podcast? item(String key) {
-    final hit = _queue.firstWhereOrNull((_CacheItem i) => i.podcast.url == key);
-    podcast_search.Podcast? p;
-
-    if (hit != null) {
-      final now = DateTime.now();
-
-      if (now.difference(hit.dateAdded) <= expiration) {
-        p = hit.podcast;
-      } else {
-        _queue.remove(hit);
-      }
-    }
-
-    return p;
-  }
-
-  void store(podcast_search.Podcast podcast) {
-    if (_queue.length == maxItems) {
-      _queue.removeFirst();
-    }
-
-    _queue.addLast(_CacheItem(podcast));
-  }
-}
-
-/// A simple class that stores an instance of a Podcast and the
-/// date and time it was added. This can be used by the cache to
-/// keep a small and up-to-date list of searched for Podcasts.
-class _CacheItem {
-  _CacheItem(this.podcast) : dateAdded = DateTime.now();
-  final podcast_search.Podcast podcast;
-  final DateTime dateAdded;
+  Stream<EpisodeEvent> get episodeListener => repository.episodeListener;
 }
 
 class _FeedComputer {
