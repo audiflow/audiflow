@@ -4,18 +4,24 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:seasoning/entities/episode.dart';
 
-part 'episode_event.freezed.dart';
+sealed class EpisodeEvent {}
 
-@freezed
-class EpisodeEvent with _$EpisodeEvent {
-  const factory EpisodeEvent.update({
-    required Episode episode,
-  }) = EpisodeUpdateEvent;
+class EpisodeInsertedEvent implements EpisodeEvent {
+  const EpisodeInsertedEvent(this.episode);
 
-  const factory EpisodeEvent.delete({
-    required Episode episode,
-  }) = EpisodeDeleteEvent;
+  final Episode episode;
+}
+
+class EpisodeUpdatedEvent implements EpisodeEvent {
+  const EpisodeUpdatedEvent(this.episode);
+
+  final Episode episode;
+}
+
+class EpisodeDeletedEvent implements EpisodeEvent {
+  const EpisodeDeletedEvent(this.episode);
+
+  final Episode episode;
 }

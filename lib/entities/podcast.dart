@@ -105,18 +105,18 @@ class Podcast with _$Podcast {
 
 extension PodcastExtension on Podcast {
   int get contentHash => Object.hash(
-    guid,
-    collectionId,
-    feedUrl,
-    linkUrl,
-    title,
-    description,
-    thumbImageUrl,
-    imageUrl,
-    releaseDate,
-    funding,
-    persons,
-  );
+        guid,
+        collectionId,
+        feedUrl,
+        linkUrl,
+        title,
+        description,
+        thumbImageUrl,
+        imageUrl,
+        releaseDate,
+        funding,
+        persons,
+      );
 }
 
 /// A class that represents an instance of a podcast search result item.
@@ -127,7 +127,7 @@ class PodcastSummary with _$PodcastSummary {
     required String guid,
 
     /// The link to the podcast RSS feed.
-    required String url,
+    required String feedUrl,
 
     /// Podcast title.
     required String title,
@@ -139,21 +139,25 @@ class PodcastSummary with _$PodcastSummary {
     required String copyright,
 
     /// Release date of the latest episode.
-    required DateTime? releaseDate,
+    required DateTime releaseDate,
   }) = _PodcastSummary;
 
   factory PodcastSummary.fromJson(Map<String, dynamic> json) =>
       _$PodcastSummaryFromJson(json);
 
-  factory PodcastSummary.fromSearchResultItem(search.Item item) =>
-      PodcastSummary(
-        guid: item.feedUrl ?? '',
-        url: item.feedUrl ?? '',
-        title: item.trackName ?? item.collectionName ?? '',
-        thumbImageUrl: item.thumbnailArtworkUrl ?? '',
-        copyright: item.artistName ?? '',
-        releaseDate: item.releaseDate,
-      );
+  factory PodcastSummary.fromSearchResultItem(search.Item item) {
+    final guid = '${item.collectionId ?? item.feedUrl}';
+    final thumbImageUrl = item.thumbnailArtworkUrl;
+
+    return PodcastSummary(
+      guid: guid,
+      feedUrl: item.feedUrl ?? '',
+      title: item.collectionName!,
+      thumbImageUrl: thumbImageUrl,
+      copyright: item.artistName ?? '',
+      releaseDate: item.releaseDate!,
+    );
+  }
 }
 
 @freezed
@@ -164,4 +168,7 @@ class PodcastStats with _$PodcastStats {
     DateTime? subscribedDate,
     @Default(Duration.zero) Duration playTotal,
   }) = _PodcastStats;
+
+  factory PodcastStats.fromJson(Map<String, dynamic> json) =>
+      _$PodcastStatsFromJson(json);
 }

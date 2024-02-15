@@ -536,7 +536,7 @@ mixin _$PodcastSummary {
   String get guid => throw _privateConstructorUsedError;
 
   /// The link to the podcast RSS feed.
-  String get url => throw _privateConstructorUsedError;
+  String get feedUrl => throw _privateConstructorUsedError;
 
   /// Podcast title.
   String get title => throw _privateConstructorUsedError;
@@ -548,7 +548,7 @@ mixin _$PodcastSummary {
   String get copyright => throw _privateConstructorUsedError;
 
   /// Release date of the latest episode.
-  DateTime? get releaseDate => throw _privateConstructorUsedError;
+  DateTime get releaseDate => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -564,11 +564,11 @@ abstract class $PodcastSummaryCopyWith<$Res> {
   @useResult
   $Res call(
       {String guid,
-      String url,
+      String feedUrl,
       String title,
       String thumbImageUrl,
       String copyright,
-      DateTime? releaseDate});
+      DateTime releaseDate});
 }
 
 /// @nodoc
@@ -585,20 +585,20 @@ class _$PodcastSummaryCopyWithImpl<$Res, $Val extends PodcastSummary>
   @override
   $Res call({
     Object? guid = null,
-    Object? url = null,
+    Object? feedUrl = null,
     Object? title = null,
     Object? thumbImageUrl = null,
     Object? copyright = null,
-    Object? releaseDate = freezed,
+    Object? releaseDate = null,
   }) {
     return _then(_value.copyWith(
       guid: null == guid
           ? _value.guid
           : guid // ignore: cast_nullable_to_non_nullable
               as String,
-      url: null == url
-          ? _value.url
-          : url // ignore: cast_nullable_to_non_nullable
+      feedUrl: null == feedUrl
+          ? _value.feedUrl
+          : feedUrl // ignore: cast_nullable_to_non_nullable
               as String,
       title: null == title
           ? _value.title
@@ -612,10 +612,10 @@ class _$PodcastSummaryCopyWithImpl<$Res, $Val extends PodcastSummary>
           ? _value.copyright
           : copyright // ignore: cast_nullable_to_non_nullable
               as String,
-      releaseDate: freezed == releaseDate
+      releaseDate: null == releaseDate
           ? _value.releaseDate
           : releaseDate // ignore: cast_nullable_to_non_nullable
-              as DateTime?,
+              as DateTime,
     ) as $Val);
   }
 }
@@ -630,11 +630,11 @@ abstract class _$$PodcastSummaryImplCopyWith<$Res>
   @useResult
   $Res call(
       {String guid,
-      String url,
+      String feedUrl,
       String title,
       String thumbImageUrl,
       String copyright,
-      DateTime? releaseDate});
+      DateTime releaseDate});
 }
 
 /// @nodoc
@@ -649,20 +649,20 @@ class __$$PodcastSummaryImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? guid = null,
-    Object? url = null,
+    Object? feedUrl = null,
     Object? title = null,
     Object? thumbImageUrl = null,
     Object? copyright = null,
-    Object? releaseDate = freezed,
+    Object? releaseDate = null,
   }) {
     return _then(_$PodcastSummaryImpl(
       guid: null == guid
           ? _value.guid
           : guid // ignore: cast_nullable_to_non_nullable
               as String,
-      url: null == url
-          ? _value.url
-          : url // ignore: cast_nullable_to_non_nullable
+      feedUrl: null == feedUrl
+          ? _value.feedUrl
+          : feedUrl // ignore: cast_nullable_to_non_nullable
               as String,
       title: null == title
           ? _value.title
@@ -676,10 +676,10 @@ class __$$PodcastSummaryImplCopyWithImpl<$Res>
           ? _value.copyright
           : copyright // ignore: cast_nullable_to_non_nullable
               as String,
-      releaseDate: freezed == releaseDate
+      releaseDate: null == releaseDate
           ? _value.releaseDate
           : releaseDate // ignore: cast_nullable_to_non_nullable
-              as DateTime?,
+              as DateTime,
     ));
   }
 }
@@ -689,7 +689,7 @@ class __$$PodcastSummaryImplCopyWithImpl<$Res>
 class _$PodcastSummaryImpl implements _PodcastSummary {
   const _$PodcastSummaryImpl(
       {required this.guid,
-      required this.url,
+      required this.feedUrl,
       required this.title,
       required this.thumbImageUrl,
       required this.copyright,
@@ -704,7 +704,7 @@ class _$PodcastSummaryImpl implements _PodcastSummary {
 
   /// The link to the podcast RSS feed.
   @override
-  final String url;
+  final String feedUrl;
 
   /// Podcast title.
   @override
@@ -720,11 +720,11 @@ class _$PodcastSummaryImpl implements _PodcastSummary {
 
   /// Release date of the latest episode.
   @override
-  final DateTime? releaseDate;
+  final DateTime releaseDate;
 
   @override
   String toString() {
-    return 'PodcastSummary(guid: $guid, url: $url, title: $title, thumbImageUrl: $thumbImageUrl, copyright: $copyright, releaseDate: $releaseDate)';
+    return 'PodcastSummary(guid: $guid, feedUrl: $feedUrl, title: $title, thumbImageUrl: $thumbImageUrl, copyright: $copyright, releaseDate: $releaseDate)';
   }
 
   @override
@@ -733,7 +733,7 @@ class _$PodcastSummaryImpl implements _PodcastSummary {
         (other.runtimeType == runtimeType &&
             other is _$PodcastSummaryImpl &&
             (identical(other.guid, guid) || other.guid == guid) &&
-            (identical(other.url, url) || other.url == url) &&
+            (identical(other.feedUrl, feedUrl) || other.feedUrl == feedUrl) &&
             (identical(other.title, title) || other.title == title) &&
             (identical(other.thumbImageUrl, thumbImageUrl) ||
                 other.thumbImageUrl == thumbImageUrl) &&
@@ -746,7 +746,7 @@ class _$PodcastSummaryImpl implements _PodcastSummary {
   @JsonKey(ignore: true)
   @override
   int get hashCode => Object.hash(
-      runtimeType, guid, url, title, thumbImageUrl, copyright, releaseDate);
+      runtimeType, guid, feedUrl, title, thumbImageUrl, copyright, releaseDate);
 
   @JsonKey(ignore: true)
   @override
@@ -766,11 +766,11 @@ class _$PodcastSummaryImpl implements _PodcastSummary {
 abstract class _PodcastSummary implements PodcastSummary {
   const factory _PodcastSummary(
       {required final String guid,
-      required final String url,
+      required final String feedUrl,
       required final String title,
       required final String thumbImageUrl,
       required final String copyright,
-      required final DateTime? releaseDate}) = _$PodcastSummaryImpl;
+      required final DateTime releaseDate}) = _$PodcastSummaryImpl;
 
   factory _PodcastSummary.fromJson(Map<String, dynamic> json) =
       _$PodcastSummaryImpl.fromJson;
@@ -782,7 +782,7 @@ abstract class _PodcastSummary implements PodcastSummary {
   @override
 
   /// The link to the podcast RSS feed.
-  String get url;
+  String get feedUrl;
   @override
 
   /// Podcast title.
@@ -798,11 +798,15 @@ abstract class _PodcastSummary implements PodcastSummary {
   @override
 
   /// Release date of the latest episode.
-  DateTime? get releaseDate;
+  DateTime get releaseDate;
   @override
   @JsonKey(ignore: true)
   _$$PodcastSummaryImplCopyWith<_$PodcastSummaryImpl> get copyWith =>
       throw _privateConstructorUsedError;
+}
+
+PodcastStats _$PodcastStatsFromJson(Map<String, dynamic> json) {
+  return _PodcastStats.fromJson(json);
 }
 
 /// @nodoc
@@ -812,6 +816,7 @@ mixin _$PodcastStats {
   DateTime? get subscribedDate => throw _privateConstructorUsedError;
   Duration get playTotal => throw _privateConstructorUsedError;
 
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
   $PodcastStatsCopyWith<PodcastStats> get copyWith =>
       throw _privateConstructorUsedError;
@@ -916,13 +921,16 @@ class __$$PodcastStatsImplCopyWithImpl<$Res>
 }
 
 /// @nodoc
-
+@JsonSerializable()
 class _$PodcastStatsImpl implements _PodcastStats {
   const _$PodcastStatsImpl(
       {required this.id,
       required this.guid,
       this.subscribedDate,
       this.playTotal = Duration.zero});
+
+  factory _$PodcastStatsImpl.fromJson(Map<String, dynamic> json) =>
+      _$$PodcastStatsImplFromJson(json);
 
   @override
   final int id;
@@ -952,6 +960,7 @@ class _$PodcastStatsImpl implements _PodcastStats {
                 other.playTotal == playTotal));
   }
 
+  @JsonKey(ignore: true)
   @override
   int get hashCode =>
       Object.hash(runtimeType, id, guid, subscribedDate, playTotal);
@@ -961,6 +970,13 @@ class _$PodcastStatsImpl implements _PodcastStats {
   @pragma('vm:prefer-inline')
   _$$PodcastStatsImplCopyWith<_$PodcastStatsImpl> get copyWith =>
       __$$PodcastStatsImplCopyWithImpl<_$PodcastStatsImpl>(this, _$identity);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$PodcastStatsImplToJson(
+      this,
+    );
+  }
 }
 
 abstract class _PodcastStats implements PodcastStats {
@@ -969,6 +985,9 @@ abstract class _PodcastStats implements PodcastStats {
       required final String guid,
       final DateTime? subscribedDate,
       final Duration playTotal}) = _$PodcastStatsImpl;
+
+  factory _PodcastStats.fromJson(Map<String, dynamic> json) =
+      _$PodcastStatsImpl.fromJson;
 
   @override
   int get id;

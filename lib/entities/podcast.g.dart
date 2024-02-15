@@ -47,22 +47,40 @@ Map<String, dynamic> _$$PodcastImplToJson(_$PodcastImpl instance) =>
 _$PodcastSummaryImpl _$$PodcastSummaryImplFromJson(Map<String, dynamic> json) =>
     _$PodcastSummaryImpl(
       guid: json['guid'] as String,
-      url: json['url'] as String,
+      feedUrl: json['feedUrl'] as String,
       title: json['title'] as String,
       thumbImageUrl: json['thumbImageUrl'] as String,
       copyright: json['copyright'] as String,
-      releaseDate: json['releaseDate'] == null
-          ? null
-          : DateTime.parse(json['releaseDate'] as String),
+      releaseDate: DateTime.parse(json['releaseDate'] as String),
     );
 
 Map<String, dynamic> _$$PodcastSummaryImplToJson(
         _$PodcastSummaryImpl instance) =>
     <String, dynamic>{
       'guid': instance.guid,
-      'url': instance.url,
+      'feedUrl': instance.feedUrl,
       'title': instance.title,
       'thumbImageUrl': instance.thumbImageUrl,
       'copyright': instance.copyright,
-      'releaseDate': instance.releaseDate?.toIso8601String(),
+      'releaseDate': instance.releaseDate.toIso8601String(),
+    };
+
+_$PodcastStatsImpl _$$PodcastStatsImplFromJson(Map<String, dynamic> json) =>
+    _$PodcastStatsImpl(
+      id: json['id'] as int,
+      guid: json['guid'] as String,
+      subscribedDate: json['subscribedDate'] == null
+          ? null
+          : DateTime.parse(json['subscribedDate'] as String),
+      playTotal: json['playTotal'] == null
+          ? Duration.zero
+          : Duration(microseconds: json['playTotal'] as int),
+    );
+
+Map<String, dynamic> _$$PodcastStatsImplToJson(_$PodcastStatsImpl instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'guid': instance.guid,
+      'subscribedDate': instance.subscribedDate?.toIso8601String(),
+      'playTotal': instance.playTotal.inMicroseconds,
     };

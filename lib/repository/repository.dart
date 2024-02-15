@@ -8,27 +8,57 @@ import 'package:seasoning/entities/downloadable.dart';
 import 'package:seasoning/entities/episode.dart';
 import 'package:seasoning/entities/podcast.dart';
 import 'package:seasoning/entities/transcript.dart';
+import 'package:seasoning/events/download_event.dart';
 import 'package:seasoning/events/episode_event.dart';
+import 'package:seasoning/events/podcast_event.dart';
 
 /// An abstract class that represent the actions supported by the chosen
 /// database or storage implementation.
 abstract class Repository {
-  /// General
+  // Event listeners
+  Stream<PodcastEvent> get podcastListener;
+
+  Stream<EpisodeEvent> get episodeListener;
+
+  Stream<DownloadEvent> get downloadListener;
+
+  // --- General
   Future<void> close();
 
-  /// Podcasts
-  Future<Podcast?> findPodcastById(num id);
+  // --- Podcast
+  Future<void> savePodcast(int id, Podcast podcast);
 
-  Future<Podcast?> findPodcastByGuid(String guid);
+  Future<Podcast?> findPodcastById(int id);
 
-  Future<Podcast> savePodcast(Podcast podcast);
+  Future<(int?, Podcast?)> findPodcastByGuid(String guid);
 
-  Future<void> deletePodcast(Podcast podcast);
+  // -- PodcastStats
+  Future<PodcastStats> subscribePodcast(Podcast podcast);
 
-  Future<List<Podcast>> subscriptions();
+  Future<void> unsubscribePodcast(PodcastStats stats);
 
-  /// Episodes
-  Future<List<Episode>> findAllEpisodes();
+  Future<void> savePodcastStats(PodcastStats stats);
+
+  Future<PodcastStats?> findPodcastStatsById(int id);
+
+  Future<PodcastStats?> findPodcastStatsByGuid(String guid);
+
+  // --- PodcastSummary
+  Future<PodcastSummary?> findPodcastSummaryById(int id);
+
+  Future<(int?, PodcastSummary?)> findPodcastSummaryByGuid(String guid);
+
+  Future<List<(PodcastStats, PodcastSummary)>> subscriptions();
+
+  // --- Episodes
+
+  Future<void> saveEpisodes(List<Episode> episodes);
+
+  Future<void> saveEpisode(Episode episode);
+
+  Future<void> deleteEpisodes(List<Episode> episodes);
+
+  Future<void> deleteEpisode(Episode episode);
 
   Future<Episode?> findEpisodeById(int id);
 
@@ -36,13 +66,11 @@ abstract class Repository {
 
   Future<List<Episode>> findEpisodesByPodcastGuid(String pguid);
 
-  Future<List<Episode>> saveEpisodes(List<Episode> episodes);
+  // --- Downloads
 
-  Future<Episode> saveEpisode(Episode episode);
+  Future<Downloadable> saveDownload(Downloadable download);
 
-  Future<void> deleteEpisode(Episode episode);
-
-  Future<void> deleteEpisodes(List<Episode> episodes);
+  Future<void> deleteDownload(Downloadable download);
 
   Future<List<Downloadable>> findDownloadsByPodcastGuid(String pguid);
 
@@ -52,11 +80,7 @@ abstract class Repository {
 
   Future<Downloadable?> findDownloadByTaskId(String taskId);
 
-  Future<Downloadable> saveDownload(Downloadable download);
-
-  Future<void> deleteDownload(Downloadable download);
-
-  Future<Transcript?> findTranscriptById(int id);
+  // --- Transcript
 
   Future<Transcript> saveTranscript(Transcript transcript);
 
@@ -64,13 +88,11 @@ abstract class Repository {
 
   Future<void> deleteTranscriptsById(List<int> id);
 
-  /// Queue
+  Future<Transcript?> findTranscriptById(int id);
+
+  // --- Queue
+
   Future<void> saveQueue(List<Episode> episodes);
 
   Future<List<Episode>> loadQueue();
-
-  /// Event listeners
-  Stream<Podcast> get podcastListener;
-
-  Stream<EpisodeEvent> get episodeListener;
 }
