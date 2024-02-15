@@ -18,88 +18,150 @@ part 'podcast.g.dart';
 @freezed
 class Podcast with _$Podcast {
   const factory Podcast({
-    /// Database ID
-    int? id,
-
     /// Unique identifier for podcast.
     required String guid,
 
+    /// The collection ID(iTunesID).
+    required int collectionId,
+
     /// The link to the podcast RSS feed.
-    required String url,
+    required String feedUrl,
 
     /// RSS link URL.
-    String? link,
+    required String linkUrl,
 
     /// Podcast title.
     required String title,
 
     /// Podcast description. Can be either plain text or HTML.
-    String? description,
+    required String description,
 
-    /// URL to the full size artwork image.
-    String? imageUrl,
+    /// Copyright owner of the podcast.
+    required String copyright,
 
     /// URL for thumbnail version of artwork image. Not contained within
     /// the RSS but may be calculated or provided within search results.
-    String? thumbImageUrl,
+    required String thumbImageUrl,
 
-    /// Copyright owner of the podcast.
-    String? copyright,
+    /// URL to the full size artwork image.
+    required String imageUrl,
 
-    /// Zero or more funding links.
+    /// Release date of the latest episode.
+    required DateTime releaseDate,
+
+    /// List of episodes.
+    // ignore: invalid_annotation_target
+    @JsonKey(includeToJson: false, includeFromJson: false)
+    @Default([])
+    List<Episode> episodes,
+
+    /// List of  funding links.
     @Default([]) List<Funding> funding,
-    @Default([]) List<Person> persons,
 
-    /// Date and time user subscribed to the podcast.
-    DateTime? subscribedDate,
+    /// List of people of interest to the podcast.
+    @Default([]) List<Person> persons,
   }) = _Podcast;
 
   factory Podcast.fromJson(Map<String, dynamic> json) =>
       _$PodcastFromJson(json);
 
-  factory Podcast.fromSearchResultItem(search.Item item) => Podcast(
-        guid: item.feedUrl!,
-        url: item.feedUrl!,
-        link: item.feedUrl,
-        title: item.trackName ?? item.collectionName!,
-        imageUrl: item.bestArtworkUrl ?? item.artworkUrl,
-        thumbImageUrl: item.thumbnailArtworkUrl,
-        copyright: item.artistName,
-      );
-
-  factory Podcast.fromSearch(search.Podcast loadedPodcast) {
-    final funding = loadedPodcast.funding
-        .where((f) => f.url?.isNotEmpty == true)
-        .map((f) => Funding(url: f.url!, value: f.value ?? ''))
-        .toList(growable: false);
-
-    final persons = loadedPodcast.persons
+  factory Podcast.fromSearch(search.Item item, search.Podcast podcast) {
+    final guid = '${item.collectionId ?? item.feedUrl}';
+    final imageUrl = item.bestArtworkUrl;
+    final thumbImageUrl = item.thumbnailArtworkUrl;
+    final episodes = podcast.episodes
         .map(
-          (p) => Person(
-            name: p.name,
-            role: p.role,
-            group: p.group,
-            image: p.image,
-            link: p.link,
+          (e) => Episode.fromSearch(
+            e,
+            pguid: guid,
+            imageUrl: imageUrl,
+            thumbImageUrl: thumbImageUrl,
           ),
         )
-        .toList(growable: false);
+        .toList();
+    final funding = podcast.funding
+        .where((f) => f.url?.isNotEmpty == true)
+        .map(Funding.fromSearch)
+        .toList();
+    final persons = podcast.persons.map(Person.fromSearch).toList();
 
     return Podcast(
-      guid: loadedPodcast.url!,
-      url: loadedPodcast.url!,
-      link: loadedPodcast.link,
-      title: removeHtmlPadding(loadedPodcast.title),
-      description: removeHtmlPadding(loadedPodcast.description),
-      imageUrl: loadedPodcast.image,
-      thumbImageUrl: loadedPodcast.image,
-      copyright: removeHtmlPadding(loadedPodcast.copyright),
+      guid: guid,
+      collectionId: item.collectionId ?? 0,
+      feedUrl: podcast.url!,
+      linkUrl: podcast.link ?? '',
+      title: item.collectionName!,
+      description: removeHtmlPadding(podcast.description),
+      copyright: item.artistName ?? '',
+      thumbImageUrl: thumbImageUrl,
+      imageUrl: imageUrl,
+      releaseDate: item.releaseDate!,
+      episodes: episodes,
       funding: funding,
       persons: persons,
     );
   }
 }
 
-extension PodcastExt on Podcast {
-  bool get subscribed => subscribedDate != null;
+extension PodcastExtension on Podcast {
+  int get contentHash => Object.hash(
+    guid,
+    collectionId,
+    feedUrl,
+    linkUrl,
+    title,
+    description,
+    thumbImageUrl,
+    imageUrl,
+    releaseDate,
+    funding,
+    persons,
+  );
+}
+
+/// A class that represents an instance of a podcast search result item.
+@freezed
+class PodcastSummary with _$PodcastSummary {
+  const factory PodcastSummary({
+    /// Unique identifier for podcast.
+    required String guid,
+
+    /// The link to the podcast RSS feed.
+    required String url,
+
+    /// Podcast title.
+    required String title,
+
+    /// URL for thumbnail version of artwork image.
+    required String thumbImageUrl,
+
+    /// Copyright owner of the podcast.
+    required String copyright,
+
+    /// Release date of the latest episode.
+    required DateTime? releaseDate,
+  }) = _PodcastSummary;
+
+  factory PodcastSummary.fromJson(Map<String, dynamic> json) =>
+      _$PodcastSummaryFromJson(json);
+
+  factory PodcastSummary.fromSearchResultItem(search.Item item) =>
+      PodcastSummary(
+        guid: item.feedUrl ?? '',
+        url: item.feedUrl ?? '',
+        title: item.trackName ?? item.collectionName ?? '',
+        thumbImageUrl: item.thumbnailArtworkUrl ?? '',
+        copyright: item.artistName ?? '',
+        releaseDate: item.releaseDate,
+      );
+}
+
+@freezed
+class PodcastStats with _$PodcastStats {
+  const factory PodcastStats({
+    required int id,
+    required String guid,
+    DateTime? subscribedDate,
+    @Default(Duration.zero) Duration playTotal,
+  }) = _PodcastStats;
 }

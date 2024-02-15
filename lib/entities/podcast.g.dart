@@ -8,15 +8,16 @@ part of 'podcast.dart';
 
 _$PodcastImpl _$$PodcastImplFromJson(Map<String, dynamic> json) =>
     _$PodcastImpl(
-      id: json['id'] as int?,
       guid: json['guid'] as String,
-      url: json['url'] as String,
-      link: json['link'] as String?,
+      collectionId: json['collectionId'] as int,
+      feedUrl: json['feedUrl'] as String,
+      linkUrl: json['linkUrl'] as String,
       title: json['title'] as String,
-      description: json['description'] as String?,
-      imageUrl: json['imageUrl'] as String?,
-      thumbImageUrl: json['thumbImageUrl'] as String?,
-      copyright: json['copyright'] as String?,
+      description: json['description'] as String,
+      copyright: json['copyright'] as String,
+      thumbImageUrl: json['thumbImageUrl'] as String,
+      imageUrl: json['imageUrl'] as String,
+      releaseDate: DateTime.parse(json['releaseDate'] as String),
       funding: (json['funding'] as List<dynamic>?)
               ?.map((e) => Funding.fromJson(e as Map<String, dynamic>))
               .toList() ??
@@ -25,23 +26,43 @@ _$PodcastImpl _$$PodcastImplFromJson(Map<String, dynamic> json) =>
               ?.map((e) => Person.fromJson(e as Map<String, dynamic>))
               .toList() ??
           const [],
-      subscribedDate: json['subscribedDate'] == null
-          ? null
-          : DateTime.parse(json['subscribedDate'] as String),
     );
 
 Map<String, dynamic> _$$PodcastImplToJson(_$PodcastImpl instance) =>
     <String, dynamic>{
-      'id': instance.id,
       'guid': instance.guid,
-      'url': instance.url,
-      'link': instance.link,
+      'collectionId': instance.collectionId,
+      'feedUrl': instance.feedUrl,
+      'linkUrl': instance.linkUrl,
       'title': instance.title,
       'description': instance.description,
-      'imageUrl': instance.imageUrl,
-      'thumbImageUrl': instance.thumbImageUrl,
       'copyright': instance.copyright,
+      'thumbImageUrl': instance.thumbImageUrl,
+      'imageUrl': instance.imageUrl,
+      'releaseDate': instance.releaseDate.toIso8601String(),
       'funding': instance.funding,
       'persons': instance.persons,
-      'subscribedDate': instance.subscribedDate?.toIso8601String(),
+    };
+
+_$PodcastSummaryImpl _$$PodcastSummaryImplFromJson(Map<String, dynamic> json) =>
+    _$PodcastSummaryImpl(
+      guid: json['guid'] as String,
+      url: json['url'] as String,
+      title: json['title'] as String,
+      thumbImageUrl: json['thumbImageUrl'] as String,
+      copyright: json['copyright'] as String,
+      releaseDate: json['releaseDate'] == null
+          ? null
+          : DateTime.parse(json['releaseDate'] as String),
+    );
+
+Map<String, dynamic> _$$PodcastSummaryImplToJson(
+        _$PodcastSummaryImpl instance) =>
+    <String, dynamic>{
+      'guid': instance.guid,
+      'url': instance.url,
+      'title': instance.title,
+      'thumbImageUrl': instance.thumbImageUrl,
+      'copyright': instance.copyright,
+      'releaseDate': instance.releaseDate?.toIso8601String(),
     };
