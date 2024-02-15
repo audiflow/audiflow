@@ -924,7 +924,7 @@ class __$$PodcastStatsImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$PodcastStatsImpl implements _PodcastStats {
   const _$PodcastStatsImpl(
-      {required this.id,
+      {this.id = 0,
       required this.guid,
       this.subscribedDate,
       this.playTotal = Duration.zero});
@@ -933,6 +933,7 @@ class _$PodcastStatsImpl implements _PodcastStats {
       _$$PodcastStatsImplFromJson(json);
 
   @override
+  @JsonKey()
   final int id;
   @override
   final String guid;
@@ -981,7 +982,7 @@ class _$PodcastStatsImpl implements _PodcastStats {
 
 abstract class _PodcastStats implements PodcastStats {
   const factory _PodcastStats(
-      {required final int id,
+      {final int id,
       required final String guid,
       final DateTime? subscribedDate,
       final Duration playTotal}) = _$PodcastStatsImpl;

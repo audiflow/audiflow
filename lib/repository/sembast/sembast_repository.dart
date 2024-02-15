@@ -46,6 +46,7 @@ class SembastRepository extends Repository {
   final _podcastStatsStore = intMapStoreFactory.store('podcastStats');
 
   final _episodeStore = intMapStoreFactory.store('episode');
+  final _episodeStatsStore = intMapStoreFactory.store('episodeStats');
   final _downloadableStore = intMapStoreFactory.store('downloadable');
   final _queueStore = intMapStoreFactory.store('queue');
   final _transcriptStore = intMapStoreFactory.store('transcript');
@@ -62,7 +63,6 @@ class SembastRepository extends Repository {
     _downloadSubject.close();
   }
 
-
   @override
   Stream<PodcastEvent> get podcastListener => _podcastSubject.stream;
 
@@ -78,7 +78,6 @@ class SembastRepository extends Repository {
   Future<void> savePodcast(int id, Podcast podcast) async {
     log.fine('Update Podcast: ${podcast.feedUrl}');
     await _podcastStore.record(id).put(await _db, podcast.toJson());
-
     _podcastSubject.add(PodcastUpdatedEvent(id, podcast));
   }
 
@@ -119,26 +118,34 @@ class SembastRepository extends Repository {
       }
     }
 
-    log.fine('Insert PodcastStats: ${podcast.guid}');
+    log.fine('subscribePodcast: ${podcast.guid}');
 
-    PodcastStats stats;
-    if (saved != null) {
-      stats = saved.copyWith(subscribedDate: DateTime.now());
-      await _podcastStatsStore.record(stats.id).put(await _db, stats.toJson());
-      _podcastSubject.add(PodcastStatsUpdatedEvent(stats));
-    } else {
-      stats = PodcastStats(
-        id: 0,
-        guid: podcast.guid,
-        subscribedDate: DateTime.now(),
-      );
+    final db = await _db;
+    final stats = await db.transaction((txn) async {
+      PodcastStats stats;
 
-      final id = await _podcastStatsStore.add(await _db, stats.toJson());
-      stats = stats.copyWith(id: id);
-    }
+      if (saved != null) {
+        stats = saved.copyWith(subscribedDate: DateTime.now());
+        await _podcastStatsStore.record(saved.id).put(txn, stats.toJson());
+      } else {
+        stats = PodcastStats(
+          guid: podcast.guid,
+          subscribedDate: DateTime.now(),
+        );
+        final id = await _podcastStatsStore.add(txn, stats.toJson());
+        stats = stats.copyWith(id: id);
+      }
 
-    await saveEpisodes(podcast.episodes);
-    _podcastSubject.add(PodcastSubscribedEvent(podcast, stats));
+      await Future.wait([
+        _podcastStore.record(stats.id).put(txn, podcast.toJson()),
+        _saveEpisodes(podcast.episodes, db: txn),
+      ]);
+      return stats;
+    });
+
+    _podcastSubject
+      ..add(PodcastStatsUpdatedEvent(stats))
+      ..add(PodcastSubscribedEvent(podcast, stats));
     return stats;
   }
 
@@ -161,7 +168,7 @@ class SembastRepository extends Repository {
     if (downloads.isEmpty) {
       await db.transaction((txn) async {
         final finder = Finder(filter: Filter.equals('pguid', stats.guid));
-        await _podcastStore.record(stats.id).delete(db);
+        await _podcastStore.record(stats.id).delete(txn);
         await _episodeStore.delete(txn, finder: finder);
         await _downloadableStore.delete(txn, finder: finder);
         await _transcriptStore.delete(txn, finder: finder);
@@ -171,10 +178,10 @@ class SembastRepository extends Repository {
       return;
     }
 
-    final tasks = podcast.episodes
+    final episodes = podcast.episodes
         .where((e) => downloads.any((d) => d.guid == e.guid))
-        .map(_deleteEpisode);
-    await Future.wait(tasks);
+        .toList();
+    await _deleteEpisodes(episodes);
 
     _podcastSubject.add(PodcastUnsubscribedEvent(podcast, stats));
   }
@@ -182,22 +189,29 @@ class SembastRepository extends Repository {
   @override
   Future<void> savePodcastStats(PodcastStats stats) async {
     log.fine('Update PodcastStats: ${stats.guid}');
-    await _podcastStatsStore.record(stats.id).put(await _db, stats.toJson());
 
+    if (stats.id == 0) {
+      throw ArgumentError('PodcastStats.id must not be 0');
+    }
+
+    await _podcastStatsStore.record(stats.id).put(await _db, stats.toJson());
     _podcastSubject.add(PodcastStatsUpdatedEvent(stats));
   }
 
   @override
   Future<PodcastStats?> findPodcastStatsById(int id) async {
     final value = await _podcastStatsStore.record(id).get(await _db);
-    return value == null ? null : PodcastStats.fromJson(value);
+    return value == null ? null : PodcastStats.fromJson(value).copyWith(id: id);
   }
 
   @override
   Future<PodcastStats?> findPodcastStatsByGuid(String guid) async {
     final finder = Finder(filter: Filter.equals('guid', guid));
-    final snapshot = await _podcastStore.findFirst(await _db, finder: finder);
-    return snapshot == null ? null : PodcastStats.fromJson(snapshot.value);
+    final snapshot =
+        await _podcastStatsStore.findFirst(await _db, finder: finder);
+    return snapshot == null
+        ? null
+        : PodcastStats.fromJson(snapshot.value).copyWith(id: snapshot.key);
   }
 
   // --- PodcastSummary
@@ -244,7 +258,7 @@ class SembastRepository extends Repository {
                 (ss) => ss.key == snapshot.key,
               )
               .value,
-        );
+        ).copyWith(id: snapshot.key);
         final summary = PodcastSummary.fromJson(snapshot.value);
         return (stats, summary);
       },
@@ -256,17 +270,23 @@ class SembastRepository extends Repository {
   @override
   Future<void> saveEpisodes(List<Episode> episodes) async {
     final db = await _db;
-    for (final chunk in episodes.chunk(100)) {
-      await db.transaction((txn) async {
-        final futures = chunk.map((e) => _saveEpisode(e, db: txn));
-        await Future.wait(futures);
-      });
-    }
+    await db.transaction((txn) async => _saveEpisodes(episodes, db: txn));
   }
 
   @override
   Future<void> saveEpisode(Episode episode) async {
     await _saveEpisode(episode);
+  }
+
+  Future<void> _saveEpisodes(
+    List<Episode> episodes, {
+    DatabaseClient? db,
+  }) async {
+    final client = db ?? await _db;
+    for (final chunk in episodes.chunk(100)) {
+      final futures = chunk.map((e) => _saveEpisode(e, db: client));
+      await Future.wait(futures);
+    }
   }
 
   Future<void> _saveEpisode(
@@ -276,22 +296,29 @@ class SembastRepository extends Repository {
     final finder = Finder(filter: Filter.equals('guid', episode.guid));
 
     final client = db ?? await _db;
-    final snapshot = await _episodeStore.findFirst(client, finder: finder);
+    final snapshots = await Future.wait([
+      _episodeStore.findFirst(client, finder: finder),
+      _episodeStatsStore.findFirst(client, finder: finder),
+    ]);
+    final snapshot = snapshots[0];
+    final statsSnapshot = snapshots[1];
 
-    if (snapshot == null) {
-      await _episodeStore.add(client, episode.toJson());
-      _episodeSubject.add(EpisodeInsertedEvent(episode));
-    } else {
+    if (snapshot != null) {
       final e = _loadEpisodeSnapshot(snapshot);
       if (episode != e) {
         await _episodeStore.update(client, episode.toJson(), finder: finder);
         _episodeSubject.add(EpisodeUpdatedEvent(episode));
       }
+    } else if (statsSnapshot != null) {
+      final id = statsSnapshot.key;
+      await _episodeStore.record(id).put(client, episode.toJson());
+    } else {
+      await _episodeStore.add(client, episode.toJson());
+      _episodeSubject.add(EpisodeInsertedEvent(episode));
     }
   }
 
-  @override
-  Future<void> deleteEpisodes(List<Episode> episodes) async {
+  Future<void> _deleteEpisodes(List<Episode> episodes) async {
     final d = await _db;
     for (final chunk in episodes.chunk(30)) {
       await d.transaction((txn) async {
@@ -299,11 +326,6 @@ class SembastRepository extends Repository {
         await Future.wait(futures);
       });
     }
-  }
-
-  @override
-  Future<void> deleteEpisode(Episode episode) async {
-    await _deleteEpisode(episode);
   }
 
   Future<void> _deleteEpisode(
@@ -325,10 +347,13 @@ class SembastRepository extends Repository {
   }
 
   @override
-  Future<Episode?> findEpisodeByGuid(String guid) async {
+  Future<(int?, Episode?)> findEpisodeByGuid(String guid) async {
     final finder = Finder(filter: Filter.equals('guid', guid));
     final snapshot = await _episodeStore.findFirst(await _db, finder: finder);
-    return snapshot == null ? null : _loadEpisodeSnapshot(snapshot);
+    if (snapshot == null) {
+      return (null, null);
+    }
+    return (snapshot.key, _loadEpisodeSnapshot(snapshot));
   }
 
   @override
@@ -345,6 +370,65 @@ class SembastRepository extends Repository {
     RecordSnapshot<int, Map<String, Object?>> snapshot,
   ) {
     return Episode.fromJson(snapshot.value);
+  }
+
+  // --- EpisodeStats
+
+  @override
+  Future<EpisodeStats> createEpisodeStats(Episode episode) async {
+    log.fine('Create EpisodeStats: ${episode.guid}');
+
+    final loaded = await findEpisodeStatsByGuid(episode.guid);
+    if (loaded != null) {
+      return loaded;
+    }
+
+    final db = await _db;
+    final stats = await db.transaction((txn) async {
+      var stats = EpisodeStats.fromEpisode(episode);
+
+      final finder = Finder(filter: Filter.equals('guid', episode.guid));
+      final snapshot = await _episodeStore.findFirst(txn, finder: finder);
+      if (snapshot != null) {
+        stats = stats.copyWith(id: snapshot.key);
+        await _episodeStatsStore.record(stats.id).put(txn, stats.toJson());
+      } else {
+        final id = await _episodeStatsStore.add(txn, stats.toJson());
+        stats = stats.copyWith(id: id);
+      }
+      return stats;
+    });
+
+    _episodeSubject.add(EpisodeStatsUpdatedEvent(stats));
+    return stats;
+  }
+
+  @override
+  Future<void> saveEpisodeStats(EpisodeStats stats) async {
+    log.fine('Update EpisodeStats: ${stats.guid}');
+
+    if (stats.id == 0) {
+      throw ArgumentError('EpisodeStats.id must not be 0');
+    }
+
+    await _episodeStatsStore.record(stats.id).put(await _db, stats.toJson());
+    _episodeSubject.add(EpisodeStatsUpdatedEvent(stats));
+  }
+
+  @override
+  Future<EpisodeStats?> findEpisodeStatsById(int id) async {
+    final value = await _episodeStatsStore.record(id).get(await _db);
+    return value == null ? null : EpisodeStats.fromJson(value).copyWith(id: id);
+  }
+
+  @override
+  Future<EpisodeStats?> findEpisodeStatsByGuid(String guid) async {
+    final finder = Finder(filter: Filter.equals('guid', guid));
+    final snapshot =
+        await _episodeStatsStore.findFirst(await _db, finder: finder);
+    return snapshot == null
+        ? null
+        : EpisodeStats.fromJson(snapshot.value).copyWith(id: snapshot.key);
   }
 
   // --- Downloads
@@ -546,7 +630,7 @@ class SembastRepository extends Repository {
       }
     }
 
-    await deleteEpisodes(orphaned);
+    await _deleteEpisodes(orphaned);
   }
 
   @override

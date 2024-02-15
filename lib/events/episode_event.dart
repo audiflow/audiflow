@@ -25,3 +25,9 @@ class EpisodeDeletedEvent implements EpisodeEvent {
 
   final Episode episode;
 }
+
+class EpisodeStatsUpdatedEvent implements EpisodeEvent {
+  const EpisodeStatsUpdatedEvent(this.stats);
+
+  final EpisodeStats stats;
+}

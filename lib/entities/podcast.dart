@@ -163,7 +163,7 @@ class PodcastSummary with _$PodcastSummary {
 @freezed
 class PodcastStats with _$PodcastStats {
   const factory PodcastStats({
-    required int id,
+    @Default(0) int id,
     required String guid,
     DateTime? subscribedDate,
     @Default(Duration.zero) Duration playTotal,
@@ -171,4 +171,8 @@ class PodcastStats with _$PodcastStats {
 
   factory PodcastStats.fromJson(Map<String, dynamic> json) =>
       _$PodcastStatsFromJson(json);
+
+  factory PodcastStats.fromPodcast(Podcast podcast) => PodcastStats(
+        guid: podcast.guid,
+      );
 }

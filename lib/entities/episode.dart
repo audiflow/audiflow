@@ -145,11 +145,18 @@ extension EpisodeExtension on Episode {
 @freezed
 class EpisodeStats with _$EpisodeStats {
   const factory EpisodeStats({
-    required int id,
+    @Default(0) int id,
     required String guid,
     @Default(Duration.zero) Duration position,
     @Default(false) bool played,
     @Default(0) int playCount,
     @Default(Duration.zero) Duration playTotal,
   }) = _EpisodeStats;
+
+  factory EpisodeStats.fromJson(Map<String, dynamic> json) =>
+      _$EpisodeStatsFromJson(json);
+
+  factory EpisodeStats.fromEpisode(Episode episode) {
+    return EpisodeStats(guid: episode.guid);
+  }
 }

@@ -67,7 +67,7 @@ Map<String, dynamic> _$$PodcastSummaryImplToJson(
 
 _$PodcastStatsImpl _$$PodcastStatsImplFromJson(Map<String, dynamic> json) =>
     _$PodcastStatsImpl(
-      id: json['id'] as int,
+      id: json['id'] as int? ?? 0,
       guid: json['guid'] as String,
       subscribedDate: json['subscribedDate'] == null
           ? null

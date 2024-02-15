@@ -684,6 +684,10 @@ abstract class _Episode implements Episode {
       throw _privateConstructorUsedError;
 }
 
+EpisodeStats _$EpisodeStatsFromJson(Map<String, dynamic> json) {
+  return _EpisodeStats.fromJson(json);
+}
+
 /// @nodoc
 mixin _$EpisodeStats {
   int get id => throw _privateConstructorUsedError;
@@ -693,6 +697,7 @@ mixin _$EpisodeStats {
   int get playCount => throw _privateConstructorUsedError;
   Duration get playTotal => throw _privateConstructorUsedError;
 
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
   $EpisodeStatsCopyWith<EpisodeStats> get copyWith =>
       throw _privateConstructorUsedError;
@@ -827,17 +832,21 @@ class __$$EpisodeStatsImplCopyWithImpl<$Res>
 }
 
 /// @nodoc
-
+@JsonSerializable()
 class _$EpisodeStatsImpl with DiagnosticableTreeMixin implements _EpisodeStats {
   const _$EpisodeStatsImpl(
-      {required this.id,
+      {this.id = 0,
       required this.guid,
       this.position = Duration.zero,
       this.played = false,
       this.playCount = 0,
       this.playTotal = Duration.zero});
 
+  factory _$EpisodeStatsImpl.fromJson(Map<String, dynamic> json) =>
+      _$$EpisodeStatsImplFromJson(json);
+
   @override
+  @JsonKey()
   final int id;
   @override
   final String guid;
@@ -888,6 +897,7 @@ class _$EpisodeStatsImpl with DiagnosticableTreeMixin implements _EpisodeStats {
                 other.playTotal == playTotal));
   }
 
+  @JsonKey(ignore: true)
   @override
   int get hashCode => Object.hash(
       runtimeType, id, guid, position, played, playCount, playTotal);
@@ -897,16 +907,26 @@ class _$EpisodeStatsImpl with DiagnosticableTreeMixin implements _EpisodeStats {
   @pragma('vm:prefer-inline')
   _$$EpisodeStatsImplCopyWith<_$EpisodeStatsImpl> get copyWith =>
       __$$EpisodeStatsImplCopyWithImpl<_$EpisodeStatsImpl>(this, _$identity);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$EpisodeStatsImplToJson(
+      this,
+    );
+  }
 }
 
 abstract class _EpisodeStats implements EpisodeStats {
   const factory _EpisodeStats(
-      {required final int id,
+      {final int id,
       required final String guid,
       final Duration position,
       final bool played,
       final int playCount,
       final Duration playTotal}) = _$EpisodeStatsImpl;
+
+  factory _EpisodeStats.fromJson(Map<String, dynamic> json) =
+      _$EpisodeStatsImpl.fromJson;
 
   @override
   int get id;

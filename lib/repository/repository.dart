@@ -33,6 +33,7 @@ abstract class Repository {
   Future<(int?, Podcast?)> findPodcastByGuid(String guid);
 
   // -- PodcastStats
+
   Future<PodcastStats> subscribePodcast(Podcast podcast);
 
   Future<void> unsubscribePodcast(PodcastStats stats);
@@ -50,21 +51,27 @@ abstract class Repository {
 
   Future<List<(PodcastStats, PodcastSummary)>> subscriptions();
 
-  // --- Episodes
+  // --- Episode
 
   Future<void> saveEpisodes(List<Episode> episodes);
 
   Future<void> saveEpisode(Episode episode);
 
-  Future<void> deleteEpisodes(List<Episode> episodes);
-
-  Future<void> deleteEpisode(Episode episode);
-
   Future<Episode?> findEpisodeById(int id);
 
-  Future<Episode?> findEpisodeByGuid(String guid);
+  Future<(int?, Episode?)> findEpisodeByGuid(String guid);
 
   Future<List<Episode>> findEpisodesByPodcastGuid(String pguid);
+
+  // --- EpisodeStats
+
+  Future<EpisodeStats> createEpisodeStats(Episode episode);
+
+  Future<void> saveEpisodeStats(EpisodeStats stats);
+
+  Future<EpisodeStats?> findEpisodeStatsById(int id);
+
+  Future<EpisodeStats?> findEpisodeStatsByGuid(String guid);
 
   // --- Downloads
 
