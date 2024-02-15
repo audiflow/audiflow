@@ -6,6 +6,7 @@
 
 import 'package:flutter/foundation.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:podcast_search/podcast_search.dart' as search;
 
 part 'transcript.freezed.dart';
 part 'transcript.g.dart';
@@ -30,6 +31,19 @@ class TranscriptUrl with _$TranscriptUrl {
 
   factory TranscriptUrl.fromJson(Map<String, dynamic> json) =>
       _$TranscriptUrlFromJson(json);
+
+  factory TranscriptUrl.fromSearch(search.TranscriptUrl t) {
+    TranscriptFormat type;
+    switch (t.type) {
+      case search.TranscriptFormat.subrip:
+        type = TranscriptFormat.subrip;
+      case search.TranscriptFormat.json:
+        type = TranscriptFormat.json;
+      case search.TranscriptFormat.unsupported:
+        type = TranscriptFormat.unsupported;
+    }
+    return TranscriptUrl(url: t.url, type: type);
+  }
 }
 
 /// This class represents a Podcasting 2.0 transcript container.

@@ -5,6 +5,7 @@
 // found in the LICENSE file.
 
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:podcast_search/podcast_search.dart' as search;
 
 part 'person.freezed.dart';
 part 'person.g.dart';
@@ -23,4 +24,12 @@ class Person with _$Person {
   }) = _Person;
 
   factory Person.fromJson(Map<String, dynamic> json) => _$PersonFromJson(json);
+
+  factory Person.fromSearch(search.Person person) => Person(
+        name: person.name,
+        role: person.role,
+        group: person.group,
+        image: person.image,
+        link: person.link,
+      );
 }

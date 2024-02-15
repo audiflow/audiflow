@@ -5,6 +5,8 @@
 // found in the LICENSE file.
 
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:podcast_search/podcast_search.dart' as search;
+import 'package:seasoning/entities/entities.dart';
 
 part 'funding.freezed.dart';
 part 'funding.g.dart';
@@ -24,4 +26,11 @@ class Funding with _$Funding {
 
   factory Funding.fromJson(Map<String, dynamic> json) =>
       _$FundingFromJson(json);
+
+  factory Funding.fromSearch(search.Funding funding) {
+    return Funding(
+      url: funding.url!,
+      value: funding.value ?? '',
+    );
+  }
 }
