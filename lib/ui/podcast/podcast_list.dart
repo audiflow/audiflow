@@ -33,7 +33,7 @@ class PodcastList extends ConsumerWidget {
         ? SliverList(
             delegate: SliverChildBuilderDelegate(
               (BuildContext context, int index) {
-                return PodcastTile(podcast: results[index]);
+                return PodcastTile(baseInfo: results[index]);
               },
               childCount: results.length,
               addAutomaticKeepAlives: false,
@@ -42,7 +42,7 @@ class PodcastList extends ConsumerWidget {
         : SliverList(
             delegate: SliverChildBuilderDelegate(
               (BuildContext context, int index) {
-                return PodcastTile(podcast: results[index]);
+                return PodcastTile(baseInfo: results[index]);
               },
               childCount: results.length,
               addAutomaticKeepAlives: false,

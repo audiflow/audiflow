@@ -6,7 +6,7 @@ part of 'podcast_details_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$podcastDetailHash() => r'2e207ba457ba2a18b6120c1d157e1815602e79cb';
+String _$podcastDetailHash() => r'b91b0ff077bcca2560cbfc2d8c762bac6e94ae90';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -31,10 +31,10 @@ class _SystemHash {
 
 abstract class _$PodcastDetail
     extends BuildlessAutoDisposeAsyncNotifier<PodcastDetailsState> {
-  late final String guid;
+  late final PodcastBaseInfo baseInfo;
 
   FutureOr<PodcastDetailsState> build(
-    String guid,
+    PodcastBaseInfo baseInfo,
   );
 }
 
@@ -49,10 +49,10 @@ class PodcastDetailFamily extends Family<AsyncValue<PodcastDetailsState>> {
 
   /// See also [PodcastDetail].
   PodcastDetailProvider call(
-    String guid,
+    PodcastBaseInfo baseInfo,
   ) {
     return PodcastDetailProvider(
-      guid,
+      baseInfo,
     );
   }
 
@@ -61,7 +61,7 @@ class PodcastDetailFamily extends Family<AsyncValue<PodcastDetailsState>> {
     covariant PodcastDetailProvider provider,
   ) {
     return call(
-      provider.guid,
+      provider.baseInfo,
     );
   }
 
@@ -85,9 +85,9 @@ class PodcastDetailProvider extends AutoDisposeAsyncNotifierProviderImpl<
     PodcastDetail, PodcastDetailsState> {
   /// See also [PodcastDetail].
   PodcastDetailProvider(
-    String guid,
+    PodcastBaseInfo baseInfo,
   ) : this._internal(
-          () => PodcastDetail()..guid = guid,
+          () => PodcastDetail()..baseInfo = baseInfo,
           from: podcastDetailProvider,
           name: r'podcastDetailProvider',
           debugGetCreateSourceHash:
@@ -97,7 +97,7 @@ class PodcastDetailProvider extends AutoDisposeAsyncNotifierProviderImpl<
           dependencies: PodcastDetailFamily._dependencies,
           allTransitiveDependencies:
               PodcastDetailFamily._allTransitiveDependencies,
-          guid: guid,
+          baseInfo: baseInfo,
         );
 
   PodcastDetailProvider._internal(
@@ -107,17 +107,17 @@ class PodcastDetailProvider extends AutoDisposeAsyncNotifierProviderImpl<
     required super.allTransitiveDependencies,
     required super.debugGetCreateSourceHash,
     required super.from,
-    required this.guid,
+    required this.baseInfo,
   }) : super.internal();
 
-  final String guid;
+  final PodcastBaseInfo baseInfo;
 
   @override
   FutureOr<PodcastDetailsState> runNotifierBuild(
     covariant PodcastDetail notifier,
   ) {
     return notifier.build(
-      guid,
+      baseInfo,
     );
   }
 
@@ -126,13 +126,13 @@ class PodcastDetailProvider extends AutoDisposeAsyncNotifierProviderImpl<
     return ProviderOverride(
       origin: this,
       override: PodcastDetailProvider._internal(
-        () => create()..guid = guid,
+        () => create()..baseInfo = baseInfo,
         from: from,
         name: null,
         dependencies: null,
         allTransitiveDependencies: null,
         debugGetCreateSourceHash: null,
-        guid: guid,
+        baseInfo: baseInfo,
       ),
     );
   }
@@ -145,13 +145,13 @@ class PodcastDetailProvider extends AutoDisposeAsyncNotifierProviderImpl<
 
   @override
   bool operator ==(Object other) {
-    return other is PodcastDetailProvider && other.guid == guid;
+    return other is PodcastDetailProvider && other.baseInfo == baseInfo;
   }
 
   @override
   int get hashCode {
     var hash = _SystemHash.combine(0, runtimeType.hashCode);
-    hash = _SystemHash.combine(hash, guid.hashCode);
+    hash = _SystemHash.combine(hash, baseInfo.hashCode);
 
     return _SystemHash.finish(hash);
   }
@@ -159,8 +159,8 @@ class PodcastDetailProvider extends AutoDisposeAsyncNotifierProviderImpl<
 
 mixin PodcastDetailRef
     on AutoDisposeAsyncNotifierProviderRef<PodcastDetailsState> {
-  /// The parameter `guid` of this provider.
-  String get guid;
+  /// The parameter `baseInfo` of this provider.
+  PodcastBaseInfo get baseInfo;
 }
 
 class _PodcastDetailProviderElement
@@ -169,7 +169,7 @@ class _PodcastDetailProviderElement
   _PodcastDetailProviderElement(super.provider);
 
   @override
-  String get guid => (origin as PodcastDetailProvider).guid;
+  PodcastBaseInfo get baseInfo => (origin as PodcastDetailProvider).baseInfo;
 }
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

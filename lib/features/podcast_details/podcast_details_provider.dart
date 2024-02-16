@@ -12,22 +12,24 @@ part 'podcast_details_provider.g.dart';
 @riverpod
 class PodcastDetail extends _$PodcastDetail {
   @override
-  Future<PodcastDetailsState> build(String guid) async {
+  Future<PodcastDetailsState> build(PodcastBaseInfo baseInfo) async {
     _listen();
 
     final podcastService = ref.read(podcastServiceProvider);
     final repository = ref.read(repositoryProvider);
 
     final list = await Future.wait([
-      podcastService.loadPodcastByGuid(guid),
-      repository.findPodcastStatsByGuid(guid),
+      podcastService.loadPodcast(baseInfo),
+      repository.findPodcastStatsByGuid(baseInfo.guid),
     ]);
     final podcast = list[0] as Podcast?;
     final podcastStats = list[1] as PodcastStats?;
     if (podcast == null) {
+      print('!!! no podcast');
       throw NotFoundError();
     }
 
+    print('!!! podcast found');
     return PodcastDetailsState(
       podcast: podcast,
       stats: podcastStats,

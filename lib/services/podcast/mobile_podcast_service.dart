@@ -141,15 +141,21 @@ class MobilePodcastService extends PodcastService {
   /// to load it from the network.
   @override
   Future<Podcast?> loadPodcast(
-    PodcastSummary summary, {
+    PodcastBaseInfo baseInfo, {
     int? id,
     bool refresh = false,
   }) async {
-    return refresh
-        ? _reloadPodcast(summary)
-        : id != null
-            ? loadPodcastById(id)
-            : loadPodcastByGuid(summary.guid);
+    if (refresh) {
+      return _reloadPodcast(baseInfo);
+    }
+    final podcast = id != null
+        ? await loadPodcastById(id)
+        : await loadPodcastByGuid(baseInfo.guid);
+    if (podcast == null) {
+      return _reloadPodcast(baseInfo);
+    } else {
+      return podcast;
+    }
   }
 
   @override
@@ -163,9 +169,9 @@ class MobilePodcastService extends PodcastService {
     return podcast;
   }
 
-  Future<Podcast> _reloadPodcast(PodcastSummary summary) async {
-    final feedPodcast = await _lookupPodcast(url: summary.feedUrl);
-    final podcast = Podcast.fromSearch(feedPodcast, summary);
+  Future<Podcast> _reloadPodcast(PodcastBaseInfo baseInfo) async {
+    final feedPodcast = await _lookupPodcast(url: baseInfo.feedUrl);
+    final podcast = Podcast.fromSearch(feedPodcast, baseInfo);
     final (id, saved) = await repository.findPodcastByGuid(podcast.guid);
     if (saved != null) {
       await repository.savePodcast(id!, podcast);

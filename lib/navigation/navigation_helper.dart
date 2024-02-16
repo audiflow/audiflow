@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:seasoning/entities/entities.dart';
 import 'package:seasoning/features/podcast_chart/ui/podcast_chart_page.dart';
+import 'package:seasoning/features/podcast_details/ui/podcast_details.dart';
 import 'package:seasoning/ui/seasoning_app.dart';
 
 class NavigationHelper {
@@ -27,8 +29,9 @@ class NavigationHelper {
                     path: 'detail',
                     parentNavigatorKey: homeTabNavigatorKey,
                     pageBuilder: (context, state) {
+                      final baseInfo = state.extra as PodcastBaseInfo?;
                       return _getPage(
-                        child: const DetailPage(),
+                        child: PodcastDetails(baseInfo!),
                         state: state,
                       );
                     },

@@ -181,7 +181,7 @@ abstract class PodcastService {
   List<String> genres();
 
   Future<Podcast?> loadPodcast(
-    PodcastSummary summary, {
+    PodcastBaseInfo baseInfo, {
     int? id,
     bool refresh = false,
   });

@@ -12,30 +12,30 @@ import 'package:seasoning/ui/widgets/tile_image.dart';
 class PodcastTile extends StatelessWidget {
   const PodcastTile({
     super.key,
-    required this.podcast,
+    required this.baseInfo,
   });
 
-  final PodcastSummary podcast;
+  final PodcastBaseInfo baseInfo;
 
   @override
   Widget build(BuildContext context) {
     return ListTile(
       onTap: () {
-        NavigationHelper.router.push('/search/detail', extra: podcast.guid);
+        NavigationHelper.router.push('/home/detail', extra: baseInfo);
       },
       minVerticalPadding: 9,
       leading: ExcludeSemantics(
         child: Hero(
-          key: Key('tileHero:${podcast.guid}'),
-          tag: 'tileHero:${podcast.guid}',
+          key: Key('tileHero:${baseInfo.imageUrl}:${baseInfo.guid}'),
+          tag: '${baseInfo.imageUrl}:${baseInfo.guid}',
           child: TileImage(
-            url: podcast.thumbImageUrl,
+            url: baseInfo.thumbImageUrl,
             size: 60,
           ),
         ),
       ),
       title: Text(
-        podcast.title,
+        baseInfo.title,
         maxLines: 1,
       ),
 
@@ -44,7 +44,7 @@ class PodcastTile extends StatelessWidget {
       /// density is consistent whether the podcast subtitle spans 1 or more
       /// lines. Bit of a hack, but a simple solution.
       subtitle: Text(
-        '${podcast.copyright}\n',
+        '${baseInfo.copyright}\n',
         maxLines: 2,
       ),
     );
