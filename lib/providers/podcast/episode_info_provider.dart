@@ -10,11 +10,11 @@ part 'episode_info_provider.g.dart';
 @riverpod
 class EpisodeInfo extends _$EpisodeInfo {
   @override
-  Future<EpisodeState> build(
+  Future<EpisodeInfoState> build(
     Episode episode, {
     EpisodeStats? stats,
   }) async {
-    final initial = EpisodeState(
+    final initial = EpisodeInfoState(
       episode: episode,
       stats: stats ??
           await ref.read(podcastServiceProvider).loadEpisodeStats(episode),
@@ -41,8 +41,8 @@ class EpisodeInfo extends _$EpisodeInfo {
 }
 
 @freezed
-class EpisodeState with _$EpisodeState {
-  const factory EpisodeState({
+class EpisodeInfoState with _$EpisodeInfoState {
+  const factory EpisodeInfoState({
     required Episode episode,
     EpisodeStats? stats,
   }) = _EpisodeState;

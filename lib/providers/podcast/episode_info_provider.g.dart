@@ -6,7 +6,7 @@ part of 'episode_info_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$episodeInfoHash() => r'2c47ec583a3b7104c7f446b4b5b7207d56d37016';
+String _$episodeInfoHash() => r'd9d7ee496149a11212bd83f0994e2a87c899ed7a';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -30,11 +30,11 @@ class _SystemHash {
 }
 
 abstract class _$EpisodeInfo
-    extends BuildlessAutoDisposeAsyncNotifier<EpisodeState> {
+    extends BuildlessAutoDisposeAsyncNotifier<EpisodeInfoState> {
   late final Episode episode;
   late final EpisodeStats? stats;
 
-  FutureOr<EpisodeState> build(
+  FutureOr<EpisodeInfoState> build(
     Episode episode, {
     EpisodeStats? stats,
   });
@@ -45,7 +45,7 @@ abstract class _$EpisodeInfo
 const episodeInfoProvider = EpisodeInfoFamily();
 
 /// See also [EpisodeInfo].
-class EpisodeInfoFamily extends Family<AsyncValue<EpisodeState>> {
+class EpisodeInfoFamily extends Family<AsyncValue<EpisodeInfoState>> {
   /// See also [EpisodeInfo].
   const EpisodeInfoFamily();
 
@@ -86,8 +86,8 @@ class EpisodeInfoFamily extends Family<AsyncValue<EpisodeState>> {
 }
 
 /// See also [EpisodeInfo].
-class EpisodeInfoProvider
-    extends AutoDisposeAsyncNotifierProviderImpl<EpisodeInfo, EpisodeState> {
+class EpisodeInfoProvider extends AutoDisposeAsyncNotifierProviderImpl<
+    EpisodeInfo, EpisodeInfoState> {
   /// See also [EpisodeInfo].
   EpisodeInfoProvider(
     Episode episode, {
@@ -124,7 +124,7 @@ class EpisodeInfoProvider
   final EpisodeStats? stats;
 
   @override
-  FutureOr<EpisodeState> runNotifierBuild(
+  FutureOr<EpisodeInfoState> runNotifierBuild(
     covariant EpisodeInfo notifier,
   ) {
     return notifier.build(
@@ -153,7 +153,7 @@ class EpisodeInfoProvider
   }
 
   @override
-  AutoDisposeAsyncNotifierProviderElement<EpisodeInfo, EpisodeState>
+  AutoDisposeAsyncNotifierProviderElement<EpisodeInfo, EpisodeInfoState>
       createElement() {
     return _EpisodeInfoProviderElement(this);
   }
@@ -175,7 +175,7 @@ class EpisodeInfoProvider
   }
 }
 
-mixin EpisodeInfoRef on AutoDisposeAsyncNotifierProviderRef<EpisodeState> {
+mixin EpisodeInfoRef on AutoDisposeAsyncNotifierProviderRef<EpisodeInfoState> {
   /// The parameter `episode` of this provider.
   Episode get episode;
 
@@ -184,8 +184,8 @@ mixin EpisodeInfoRef on AutoDisposeAsyncNotifierProviderRef<EpisodeState> {
 }
 
 class _EpisodeInfoProviderElement
-    extends AutoDisposeAsyncNotifierProviderElement<EpisodeInfo, EpisodeState>
-    with EpisodeInfoRef {
+    extends AutoDisposeAsyncNotifierProviderElement<EpisodeInfo,
+        EpisodeInfoState> with EpisodeInfoRef {
   _EpisodeInfoProviderElement(super.provider);
 
   @override

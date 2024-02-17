@@ -15,20 +15,20 @@ final _privateConstructorUsedError = UnsupportedError(
     'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
 
 /// @nodoc
-mixin _$EpisodeState {
+mixin _$EpisodeInfoState {
   Episode get episode => throw _privateConstructorUsedError;
   EpisodeStats? get stats => throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
-  $EpisodeStateCopyWith<EpisodeState> get copyWith =>
+  $EpisodeInfoStateCopyWith<EpisodeInfoState> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class $EpisodeStateCopyWith<$Res> {
-  factory $EpisodeStateCopyWith(
-          EpisodeState value, $Res Function(EpisodeState) then) =
-      _$EpisodeStateCopyWithImpl<$Res, EpisodeState>;
+abstract class $EpisodeInfoStateCopyWith<$Res> {
+  factory $EpisodeInfoStateCopyWith(
+          EpisodeInfoState value, $Res Function(EpisodeInfoState) then) =
+      _$EpisodeInfoStateCopyWithImpl<$Res, EpisodeInfoState>;
   @useResult
   $Res call({Episode episode, EpisodeStats? stats});
 
@@ -37,9 +37,9 @@ abstract class $EpisodeStateCopyWith<$Res> {
 }
 
 /// @nodoc
-class _$EpisodeStateCopyWithImpl<$Res, $Val extends EpisodeState>
-    implements $EpisodeStateCopyWith<$Res> {
-  _$EpisodeStateCopyWithImpl(this._value, this._then);
+class _$EpisodeInfoStateCopyWithImpl<$Res, $Val extends EpisodeInfoState>
+    implements $EpisodeInfoStateCopyWith<$Res> {
+  _$EpisodeInfoStateCopyWithImpl(this._value, this._then);
 
   // ignore: unused_field
   final $Val _value;
@@ -87,7 +87,7 @@ class _$EpisodeStateCopyWithImpl<$Res, $Val extends EpisodeState>
 
 /// @nodoc
 abstract class _$$EpisodeStateImplCopyWith<$Res>
-    implements $EpisodeStateCopyWith<$Res> {
+    implements $EpisodeInfoStateCopyWith<$Res> {
   factory _$$EpisodeStateImplCopyWith(
           _$EpisodeStateImpl value, $Res Function(_$EpisodeStateImpl) then) =
       __$$EpisodeStateImplCopyWithImpl<$Res>;
@@ -103,7 +103,7 @@ abstract class _$$EpisodeStateImplCopyWith<$Res>
 
 /// @nodoc
 class __$$EpisodeStateImplCopyWithImpl<$Res>
-    extends _$EpisodeStateCopyWithImpl<$Res, _$EpisodeStateImpl>
+    extends _$EpisodeInfoStateCopyWithImpl<$Res, _$EpisodeStateImpl>
     implements _$$EpisodeStateImplCopyWith<$Res> {
   __$$EpisodeStateImplCopyWithImpl(
       _$EpisodeStateImpl _value, $Res Function(_$EpisodeStateImpl) _then)
@@ -140,7 +140,7 @@ class _$EpisodeStateImpl implements _EpisodeState {
 
   @override
   String toString() {
-    return 'EpisodeState(episode: $episode, stats: $stats)';
+    return 'EpisodeInfoState(episode: $episode, stats: $stats)';
   }
 
   @override
@@ -162,7 +162,7 @@ class _$EpisodeStateImpl implements _EpisodeState {
       __$$EpisodeStateImplCopyWithImpl<_$EpisodeStateImpl>(this, _$identity);
 }
 
-abstract class _EpisodeState implements EpisodeState {
+abstract class _EpisodeState implements EpisodeInfoState {
   const factory _EpisodeState(
       {required final Episode episode,
       final EpisodeStats? stats}) = _$EpisodeStateImpl;
