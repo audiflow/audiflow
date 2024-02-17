@@ -19,7 +19,8 @@ mixin _$PodcastChartState {
   int? get size => throw _privateConstructorUsedError;
   String? get genre => throw _privateConstructorUsedError;
   String? get countryCode => throw _privateConstructorUsedError;
-  List<PodcastSummary> get podcasts => throw _privateConstructorUsedError;
+  List<PodcastSearchResultItem> get podcasts =>
+      throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
   $PodcastChartStateCopyWith<PodcastChartState> get copyWith =>
@@ -36,7 +37,7 @@ abstract class $PodcastChartStateCopyWith<$Res> {
       {int? size,
       String? genre,
       String? countryCode,
-      List<PodcastSummary> podcasts});
+      List<PodcastSearchResultItem> podcasts});
 }
 
 /// @nodoc
@@ -73,7 +74,7 @@ class _$PodcastChartStateCopyWithImpl<$Res, $Val extends PodcastChartState>
       podcasts: null == podcasts
           ? _value.podcasts
           : podcasts // ignore: cast_nullable_to_non_nullable
-              as List<PodcastSummary>,
+              as List<PodcastSearchResultItem>,
     ) as $Val);
   }
 }
@@ -90,7 +91,7 @@ abstract class _$$PodcastChartStateImplCopyWith<$Res>
       {int? size,
       String? genre,
       String? countryCode,
-      List<PodcastSummary> podcasts});
+      List<PodcastSearchResultItem> podcasts});
 }
 
 /// @nodoc
@@ -125,7 +126,7 @@ class __$$PodcastChartStateImplCopyWithImpl<$Res>
       podcasts: null == podcasts
           ? _value._podcasts
           : podcasts // ignore: cast_nullable_to_non_nullable
-              as List<PodcastSummary>,
+              as List<PodcastSearchResultItem>,
     ));
   }
 }
@@ -137,7 +138,7 @@ class _$PodcastChartStateImpl implements _PodcastChartState {
       {this.size,
       this.genre,
       this.countryCode,
-      final List<PodcastSummary> podcasts = const []})
+      final List<PodcastSearchResultItem> podcasts = const []})
       : _podcasts = podcasts;
 
   @override
@@ -146,10 +147,10 @@ class _$PodcastChartStateImpl implements _PodcastChartState {
   final String? genre;
   @override
   final String? countryCode;
-  final List<PodcastSummary> _podcasts;
+  final List<PodcastSearchResultItem> _podcasts;
   @override
   @JsonKey()
-  List<PodcastSummary> get podcasts {
+  List<PodcastSearchResultItem> get podcasts {
     if (_podcasts is EqualUnmodifiableListView) return _podcasts;
     // ignore: implicit_dynamic_type
     return EqualUnmodifiableListView(_podcasts);
@@ -189,7 +190,7 @@ abstract class _PodcastChartState implements PodcastChartState {
       {final int? size,
       final String? genre,
       final String? countryCode,
-      final List<PodcastSummary> podcasts}) = _$PodcastChartStateImpl;
+      final List<PodcastSearchResultItem> podcasts}) = _$PodcastChartStateImpl;
 
   @override
   int? get size;
@@ -198,7 +199,7 @@ abstract class _PodcastChartState implements PodcastChartState {
   @override
   String? get countryCode;
   @override
-  List<PodcastSummary> get podcasts;
+  List<PodcastSearchResultItem> get podcasts;
   @override
   @JsonKey(ignore: true)
   _$$PodcastChartStateImplCopyWith<_$PodcastChartStateImpl> get copyWith =>

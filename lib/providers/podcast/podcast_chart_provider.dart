@@ -47,7 +47,7 @@ class PodcastChart extends _$PodcastChart {
         );
 
     if (result.successful) {
-      final podcasts = result.items.map(PodcastSummary.fromSearchResultItem);
+      final podcasts = result.items.map(PodcastSearchResultItem.fromSearchResultItem);
       state = AsyncData(
         PodcastChartState(
           size: event.size,
@@ -69,6 +69,6 @@ class PodcastChartState with _$PodcastChartState {
     int? size,
     String? genre,
     String? countryCode,
-    @Default([]) List<PodcastSummary> podcasts,
+    @Default([]) List<PodcastSearchResultItem> podcasts,
   }) = _PodcastChartState;
 }

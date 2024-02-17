@@ -6,7 +6,7 @@ part of 'podcast_chart_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$podcastChartHash() => r'3befb85fe28e1cffc649fcefd975e788c1dfb04e';
+String _$podcastChartHash() => r'39d0516e0cf95ab15bbba67e14a55cca39221f37';
 
 /// See also [PodcastChart].
 @ProviderFor(PodcastChart)
