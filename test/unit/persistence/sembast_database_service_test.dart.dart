@@ -121,18 +121,6 @@ void main() {
       expect(loaded, stats);
     });
 
-    test('findPodcastSummaryById', () async {
-      final loaded = await persistenceService!.findPodcastSummaryById(stats.id);
-      expect(loaded?.guid, stats.guid);
-    });
-
-    test('findPodcastSummaryByGuid', () async {
-      final loaded =
-          await persistenceService!.findPodcastSummaryByGuid(stats.guid);
-      expect(loaded.$1, stats.id);
-      expect(loaded.$2?.guid, stats.guid);
-    });
-
     test('subscriptions', () async {
       final loaded = await persistenceService!.subscriptions();
       expect(loaded, hasLength(1));

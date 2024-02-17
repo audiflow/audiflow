@@ -181,7 +181,7 @@ abstract class PodcastService {
   List<String> genres();
 
   Future<Podcast?> loadPodcast(
-    PodcastBaseInfo baseInfo, {
+    PodcastSummary baseInfo, {
     int? id,
     bool refresh = false,
   });
@@ -205,7 +205,7 @@ abstract class PodcastService {
 
   Future<void> toggleEpisodePlayed(Episode episode);
 
-  Future<List<(PodcastStats, PodcastSummary)>> subscriptions();
+  Future<List<(PodcastStats, PodcastSearchResultItem)>> subscriptions();
 
   Future<PodcastStats> subscribe(Podcast podcast);
 

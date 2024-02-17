@@ -12,11 +12,37 @@ import 'package:seasoning/entities/entities.dart';
 part 'podcast.freezed.dart';
 part 'podcast.g.dart';
 
+abstract class PodcastSummary {
+  /// Unique identifier for podcast.
+  String get guid;
+
+  /// The collection ID(iTunesID).
+  int get collectionId;
+
+  /// The link to the podcast RSS feed.
+  String get feedUrl;
+
+  /// Podcast title.
+  String get title;
+
+  /// URL for thumbnail version of artwork image.
+  String get thumbImageUrl;
+
+  /// URL to the full size artwork image.
+  String get imageUrl;
+
+  /// Copyright owner of the podcast.
+  String get copyright;
+
+  /// Release date of the latest episode.
+  DateTime get releaseDate;
+}
+
 /// A class that represents an instance of a podcast.
 ///
 /// When persisted to disk this represents a podcast that is being followed.
 @freezed
-class Podcast with _$Podcast {
+class Podcast with _$Podcast implements PodcastSummary {
   const factory Podcast({
     /// Unique identifier for podcast.
     required String guid,
@@ -65,14 +91,14 @@ class Podcast with _$Podcast {
   factory Podcast.fromJson(Map<String, dynamic> json) =>
       _$PodcastFromJson(json);
 
-  factory Podcast.fromSearch(search.Podcast podcast, PodcastSummary summary) {
+  factory Podcast.fromSearch(search.Podcast podcast, PodcastSummary baseInfo) {
     final episodes = podcast.episodes
         .map(
           (e) => Episode.fromSearch(
             e,
-            pguid: summary.guid,
-            thumbImageUrl: summary.thumbImageUrl,
-            imageUrl: summary.imageUrl,
+            pguid: baseInfo.guid,
+            thumbImageUrl: baseInfo.thumbImageUrl,
+            imageUrl: baseInfo.imageUrl,
           ),
         )
         .toList();
@@ -83,16 +109,16 @@ class Podcast with _$Podcast {
     final persons = podcast.persons.map(Person.fromSearch).toList();
 
     return Podcast(
-      guid: summary.guid,
-      collectionId: summary.collectionId,
+      guid: baseInfo.guid,
+      collectionId: baseInfo.collectionId,
       feedUrl: podcast.url!,
       linkUrl: podcast.link ?? '',
-      title: summary.title,
+      title: baseInfo.title,
       description: removeHtmlPadding(podcast.description),
-      copyright: summary.copyright,
-      thumbImageUrl: summary.thumbImageUrl,
-      imageUrl: summary.imageUrl,
-      releaseDate: summary.releaseDate,
+      copyright: baseInfo.copyright,
+      thumbImageUrl: baseInfo.thumbImageUrl,
+      imageUrl: baseInfo.imageUrl,
+      releaseDate: baseInfo.releaseDate,
       episodes: episodes,
       funding: funding,
       persons: persons,
@@ -118,8 +144,10 @@ extension PodcastExtension on Podcast {
 
 /// A class that represents an instance of a podcast search result item.
 @freezed
-class PodcastSummary with _$PodcastSummary {
-  const factory PodcastSummary({
+class PodcastSearchResultItem
+    with _$PodcastSearchResultItem
+    implements PodcastSummary {
+  const factory PodcastSearchResultItem({
     /// Unique identifier for podcast.
     required String guid,
 
@@ -143,17 +171,17 @@ class PodcastSummary with _$PodcastSummary {
 
     /// Release date of the latest episode.
     required DateTime releaseDate,
-  }) = _PodcastSummary;
+  }) = _PodcastSearchResultItem;
 
-  factory PodcastSummary.fromJson(Map<String, dynamic> json) =>
-      _$PodcastSummaryFromJson(json);
+  factory PodcastSearchResultItem.fromJson(Map<String, dynamic> json) =>
+      _$PodcastSearchResultItemFromJson(json);
 
-  factory PodcastSummary.fromSearchResultItem(search.Item item) {
+  factory PodcastSearchResultItem.fromSearchResultItem(search.Item item) {
     final guid = '${item.collectionId ?? item.feedUrl}';
     final thumbImageUrl = item.thumbnailArtworkUrl;
     final imageUrl = item.bestArtworkUrl;
 
-    return PodcastSummary(
+    return PodcastSearchResultItem(
       guid: guid,
       feedUrl: item.feedUrl ?? '',
       collectionId: item.collectionId ?? 0,
@@ -165,8 +193,8 @@ class PodcastSummary with _$PodcastSummary {
     );
   }
 
-  factory PodcastSummary.fromPodcast(Podcast podcast) {
-    return PodcastSummary(
+  factory PodcastSearchResultItem.fromPodcast(Podcast podcast) {
+    return PodcastSearchResultItem(
       guid: podcast.guid,
       feedUrl: podcast.feedUrl,
       collectionId: podcast.collectionId,

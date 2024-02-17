@@ -79,9 +79,9 @@ class PodcastSearch extends _$PodcastSearch {
     }
   }
 
-  Future<List<PodcastSummary>> _toPodcasts(List<pcast.Item> items) async {
+  Future<List<PodcastSearchResultItem>> _toPodcasts(List<pcast.Item> items) async {
     final repository = ref.read(repositoryProvider);
-    final podcasts = items.map(PodcastSummary.fromSearchResultItem).toList();
+    final podcasts = items.map(PodcastSearchResultItem.fromSearchResultItem).toList();
     final results = await Future.wait(
       podcasts.map((p) => repository.findPodcastByGuid(p.guid)),
     );
@@ -101,7 +101,7 @@ class PodcastSearch extends _$PodcastSearch {
 class PodcastSearchState with _$PodcastSearchState {
   const factory PodcastSearchState({
     @Default('') String term,
-    @Default([]) List<PodcastSummary> results,
+    @Default([]) List<PodcastSearchResultItem> results,
     pcast.SearchResult? chartResults,
   }) = _PodcastSearchState;
 }

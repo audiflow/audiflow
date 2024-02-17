@@ -106,6 +106,39 @@ class SembastRepository extends Repository {
     return (snapshot.key, podcast.copyWith(episodes: episodes));
   }
 
+  @override
+  Future<List<(PodcastStats, PodcastSummary)>> subscriptions() async {
+    final statsFinder = Finder(filter: Filter.notNull('subscribedDate'));
+    final snapshots = await _podcastStatsStore.find(
+      await _db,
+      finder: statsFinder,
+    );
+
+    final podcastFinder = Finder(
+      filter: Filter.or(snapshots.map((ss) => Filter.byKey(ss.key)).toList()),
+      sortOrders: [SortOrder('title')],
+    );
+
+    final podcastSnapshots = await _podcastStore.find(
+      await _db,
+      finder: podcastFinder,
+    );
+
+    return podcastSnapshots.map(
+          (snapshot) {
+        final stats = PodcastStats.fromJson(
+          snapshots
+              .firstWhere(
+                (ss) => ss.key == snapshot.key,
+          )
+              .value,
+        ).copyWith(id: snapshot.key);
+        final summary = PodcastSearchResultItem.fromJson(snapshot.value);
+        return (stats, summary);
+      },
+    ).toList();
+  }
+
   // -- PodcastStats
 
   @override
@@ -212,57 +245,6 @@ class SembastRepository extends Repository {
     return snapshot == null
         ? null
         : PodcastStats.fromJson(snapshot.value).copyWith(id: snapshot.key);
-  }
-
-  // --- PodcastSummary
-
-  @override
-  Future<PodcastSummary?> findPodcastSummaryById(int id) async {
-    final finder = Finder(filter: Filter.byKey(id));
-    final snapshot = await _podcastStore.findFirst(await _db, finder: finder);
-    return snapshot == null ? null : PodcastSummary.fromJson(snapshot.value);
-  }
-
-  @override
-  Future<(int?, PodcastSummary?)> findPodcastSummaryByGuid(String guid) async {
-    final finder = Finder(filter: Filter.equals('guid', guid));
-    final snapshot = await _podcastStore.findFirst(await _db, finder: finder);
-    return snapshot == null
-        ? (null, null)
-        : (snapshot.key, PodcastSummary.fromJson(snapshot.value));
-  }
-
-  @override
-  Future<List<(PodcastStats, PodcastSummary)>> subscriptions() async {
-    final statsFinder = Finder(filter: Filter.notNull('subscribedDate'));
-    final snapshots = await _podcastStatsStore.find(
-      await _db,
-      finder: statsFinder,
-    );
-
-    final podcastFinder = Finder(
-      filter: Filter.or(snapshots.map((ss) => Filter.byKey(ss.key)).toList()),
-      sortOrders: [SortOrder('title')],
-    );
-
-    final podcastSnapshots = await _podcastStore.find(
-      await _db,
-      finder: podcastFinder,
-    );
-
-    return podcastSnapshots.map(
-      (snapshot) {
-        final stats = PodcastStats.fromJson(
-          snapshots
-              .firstWhere(
-                (ss) => ss.key == snapshot.key,
-              )
-              .value,
-        ).copyWith(id: snapshot.key);
-        final summary = PodcastSummary.fromJson(snapshot.value);
-        return (stats, summary);
-      },
-    ).toList();
   }
 
   // --- Episodes

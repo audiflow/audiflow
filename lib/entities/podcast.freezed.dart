@@ -526,12 +526,13 @@ abstract class _Podcast implements Podcast {
       throw _privateConstructorUsedError;
 }
 
-PodcastSummary _$PodcastSummaryFromJson(Map<String, dynamic> json) {
-  return _PodcastSummary.fromJson(json);
+PodcastSearchResultItem _$PodcastSearchResultItemFromJson(
+    Map<String, dynamic> json) {
+  return _PodcastSearchResultItem.fromJson(json);
 }
 
 /// @nodoc
-mixin _$PodcastSummary {
+mixin _$PodcastSearchResultItem {
   /// Unique identifier for podcast.
   String get guid => throw _privateConstructorUsedError;
 
@@ -558,15 +559,15 @@ mixin _$PodcastSummary {
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
-  $PodcastSummaryCopyWith<PodcastSummary> get copyWith =>
+  $PodcastSearchResultItemCopyWith<PodcastSearchResultItem> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class $PodcastSummaryCopyWith<$Res> {
-  factory $PodcastSummaryCopyWith(
-          PodcastSummary value, $Res Function(PodcastSummary) then) =
-      _$PodcastSummaryCopyWithImpl<$Res, PodcastSummary>;
+abstract class $PodcastSearchResultItemCopyWith<$Res> {
+  factory $PodcastSearchResultItemCopyWith(PodcastSearchResultItem value,
+          $Res Function(PodcastSearchResultItem) then) =
+      _$PodcastSearchResultItemCopyWithImpl<$Res, PodcastSearchResultItem>;
   @useResult
   $Res call(
       {String guid,
@@ -580,9 +581,10 @@ abstract class $PodcastSummaryCopyWith<$Res> {
 }
 
 /// @nodoc
-class _$PodcastSummaryCopyWithImpl<$Res, $Val extends PodcastSummary>
-    implements $PodcastSummaryCopyWith<$Res> {
-  _$PodcastSummaryCopyWithImpl(this._value, this._then);
+class _$PodcastSearchResultItemCopyWithImpl<$Res,
+        $Val extends PodcastSearchResultItem>
+    implements $PodcastSearchResultItemCopyWith<$Res> {
+  _$PodcastSearchResultItemCopyWithImpl(this._value, this._then);
 
   // ignore: unused_field
   final $Val _value;
@@ -639,11 +641,12 @@ class _$PodcastSummaryCopyWithImpl<$Res, $Val extends PodcastSummary>
 }
 
 /// @nodoc
-abstract class _$$PodcastSummaryImplCopyWith<$Res>
-    implements $PodcastSummaryCopyWith<$Res> {
-  factory _$$PodcastSummaryImplCopyWith(_$PodcastSummaryImpl value,
-          $Res Function(_$PodcastSummaryImpl) then) =
-      __$$PodcastSummaryImplCopyWithImpl<$Res>;
+abstract class _$$PodcastSearchResultItemImplCopyWith<$Res>
+    implements $PodcastSearchResultItemCopyWith<$Res> {
+  factory _$$PodcastSearchResultItemImplCopyWith(
+          _$PodcastSearchResultItemImpl value,
+          $Res Function(_$PodcastSearchResultItemImpl) then) =
+      __$$PodcastSearchResultItemImplCopyWithImpl<$Res>;
   @override
   @useResult
   $Res call(
@@ -658,11 +661,13 @@ abstract class _$$PodcastSummaryImplCopyWith<$Res>
 }
 
 /// @nodoc
-class __$$PodcastSummaryImplCopyWithImpl<$Res>
-    extends _$PodcastSummaryCopyWithImpl<$Res, _$PodcastSummaryImpl>
-    implements _$$PodcastSummaryImplCopyWith<$Res> {
-  __$$PodcastSummaryImplCopyWithImpl(
-      _$PodcastSummaryImpl _value, $Res Function(_$PodcastSummaryImpl) _then)
+class __$$PodcastSearchResultItemImplCopyWithImpl<$Res>
+    extends _$PodcastSearchResultItemCopyWithImpl<$Res,
+        _$PodcastSearchResultItemImpl>
+    implements _$$PodcastSearchResultItemImplCopyWith<$Res> {
+  __$$PodcastSearchResultItemImplCopyWithImpl(
+      _$PodcastSearchResultItemImpl _value,
+      $Res Function(_$PodcastSearchResultItemImpl) _then)
       : super(_value, _then);
 
   @pragma('vm:prefer-inline')
@@ -677,7 +682,7 @@ class __$$PodcastSummaryImplCopyWithImpl<$Res>
     Object? copyright = null,
     Object? releaseDate = null,
   }) {
-    return _then(_$PodcastSummaryImpl(
+    return _then(_$PodcastSearchResultItemImpl(
       guid: null == guid
           ? _value.guid
           : guid // ignore: cast_nullable_to_non_nullable
@@ -716,8 +721,8 @@ class __$$PodcastSummaryImplCopyWithImpl<$Res>
 
 /// @nodoc
 @JsonSerializable()
-class _$PodcastSummaryImpl implements _PodcastSummary {
-  const _$PodcastSummaryImpl(
+class _$PodcastSearchResultItemImpl implements _PodcastSearchResultItem {
+  const _$PodcastSearchResultItemImpl(
       {required this.guid,
       required this.collectionId,
       required this.feedUrl,
@@ -727,8 +732,8 @@ class _$PodcastSummaryImpl implements _PodcastSummary {
       required this.copyright,
       required this.releaseDate});
 
-  factory _$PodcastSummaryImpl.fromJson(Map<String, dynamic> json) =>
-      _$$PodcastSummaryImplFromJson(json);
+  factory _$PodcastSearchResultItemImpl.fromJson(Map<String, dynamic> json) =>
+      _$$PodcastSearchResultItemImplFromJson(json);
 
   /// Unique identifier for podcast.
   @override
@@ -764,14 +769,14 @@ class _$PodcastSummaryImpl implements _PodcastSummary {
 
   @override
   String toString() {
-    return 'PodcastSummary(guid: $guid, collectionId: $collectionId, feedUrl: $feedUrl, title: $title, thumbImageUrl: $thumbImageUrl, imageUrl: $imageUrl, copyright: $copyright, releaseDate: $releaseDate)';
+    return 'PodcastSearchResultItem(guid: $guid, collectionId: $collectionId, feedUrl: $feedUrl, title: $title, thumbImageUrl: $thumbImageUrl, imageUrl: $imageUrl, copyright: $copyright, releaseDate: $releaseDate)';
   }
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$PodcastSummaryImpl &&
+            other is _$PodcastSearchResultItemImpl &&
             (identical(other.guid, guid) || other.guid == guid) &&
             (identical(other.collectionId, collectionId) ||
                 other.collectionId == collectionId) &&
@@ -795,20 +800,20 @@ class _$PodcastSummaryImpl implements _PodcastSummary {
   @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
-  _$$PodcastSummaryImplCopyWith<_$PodcastSummaryImpl> get copyWith =>
-      __$$PodcastSummaryImplCopyWithImpl<_$PodcastSummaryImpl>(
-          this, _$identity);
+  _$$PodcastSearchResultItemImplCopyWith<_$PodcastSearchResultItemImpl>
+      get copyWith => __$$PodcastSearchResultItemImplCopyWithImpl<
+          _$PodcastSearchResultItemImpl>(this, _$identity);
 
   @override
   Map<String, dynamic> toJson() {
-    return _$$PodcastSummaryImplToJson(
+    return _$$PodcastSearchResultItemImplToJson(
       this,
     );
   }
 }
 
-abstract class _PodcastSummary implements PodcastSummary {
-  const factory _PodcastSummary(
+abstract class _PodcastSearchResultItem implements PodcastSearchResultItem {
+  const factory _PodcastSearchResultItem(
       {required final String guid,
       required final int collectionId,
       required final String feedUrl,
@@ -816,10 +821,10 @@ abstract class _PodcastSummary implements PodcastSummary {
       required final String thumbImageUrl,
       required final String imageUrl,
       required final String copyright,
-      required final DateTime releaseDate}) = _$PodcastSummaryImpl;
+      required final DateTime releaseDate}) = _$PodcastSearchResultItemImpl;
 
-  factory _PodcastSummary.fromJson(Map<String, dynamic> json) =
-      _$PodcastSummaryImpl.fromJson;
+  factory _PodcastSearchResultItem.fromJson(Map<String, dynamic> json) =
+      _$PodcastSearchResultItemImpl.fromJson;
 
   @override
 
@@ -855,8 +860,8 @@ abstract class _PodcastSummary implements PodcastSummary {
   DateTime get releaseDate;
   @override
   @JsonKey(ignore: true)
-  _$$PodcastSummaryImplCopyWith<_$PodcastSummaryImpl> get copyWith =>
-      throw _privateConstructorUsedError;
+  _$$PodcastSearchResultItemImplCopyWith<_$PodcastSearchResultItemImpl>
+      get copyWith => throw _privateConstructorUsedError;
 }
 
 PodcastStats _$PodcastStatsFromJson(Map<String, dynamic> json) {
