@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import 'package:seasoning/entities/entities.dart';
-import 'package:seasoning/providers/podcast/episode_info_provider.dart';
 import 'package:seasoning/ui/widgets/tile_image.dart';
 
 /// An EpisodeTitle is built with an ExpandedTile widget and displays the
@@ -33,31 +32,26 @@ class EpisodeTile extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final textTheme = Theme.of(context).textTheme;
-    const descriptionText = '(description)';
-
-    final state = ref.watch(EpisodeInfoProvider(episode));
-    final stats = state.value?.stats;
-    final played = stats?.played ?? false;
-    final percentagePlayed = stats?.percentagePlayed ?? 0.0;
-    final downloaded = state.value?.download?.downloaded ?? false;
+    final thumbImageUrl = episode.thumbImageUrl ?? episode.imageUrl;
+    final showsThumbnail = thumbImageUrl?.isNotEmpty == true &&
+        thumbImageUrl != summary.thumbImageUrl;
 
     return Material(
       child: InkWell(
         child: Container(
-          padding: const EdgeInsets.fromLTRB(20, 8, 10, 8),
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
           height: 110,
           child: Column(
             children: [
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(child:  _Content(episode)),
-                  TileImage(
-                    url: episode.thumbImageUrl ?? episode.imageUrl ?? '',
-                    size: 86,
-                  ),
+                  Expanded(child: _Content(episode)),
+                  if (showsThumbnail)
+                    TileImage(
+                      url: thumbImageUrl!,
+                      size: 86,
+                    ),
                 ],
               ),
               // const _Controls(),
