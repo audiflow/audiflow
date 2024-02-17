@@ -29,7 +29,7 @@ class NavigationHelper {
                     path: 'detail',
                     parentNavigatorKey: homeTabNavigatorKey,
                     pageBuilder: (context, state) {
-                      final baseInfo = state.extra as PodcastBaseInfo?;
+                      final baseInfo = state.extra as PodcastSummary?;
                       return _getPage(
                         child: PodcastDetails(baseInfo!),
                         state: state,

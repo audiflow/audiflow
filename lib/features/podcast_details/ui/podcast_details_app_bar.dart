@@ -16,7 +16,7 @@ class PodcastDetailsAppBar extends StatelessWidget {
     required this.basicInfo,
   });
 
-  final PodcastBaseInfo basicInfo;
+  final PodcastSummary basicInfo;
 
   @override
   Widget build(BuildContext context) {
@@ -52,7 +52,7 @@ class _PodcastHeaderImage extends StatelessWidget {
     required this.placeholderBuilder,
   });
 
-  final PodcastBaseInfo basicInfo;
+  final PodcastSummary basicInfo;
   final PlaceholderBuilder? placeholderBuilder;
 
   @override

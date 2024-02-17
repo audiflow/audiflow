@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:seasoning/features/podcast_chart/podcast_chart_event.dart';
-import 'package:seasoning/features/podcast_chart/podcast_chart_provider.dart';
+import 'package:seasoning/providers/podcast/podcast_chart_provider.dart';
 import 'package:seasoning/ui/podcast/podcast_list.dart';
 import 'package:seasoning/ui/widgets/basic_app_bar.dart';
 import 'package:seasoning/ui/widgets/fill_remaining_error.dart';

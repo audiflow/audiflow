@@ -15,7 +15,7 @@ class PodcastTile extends StatelessWidget {
     required this.baseInfo,
   });
 
-  final PodcastBaseInfo baseInfo;
+  final PodcastSummary baseInfo;
 
   @override
   Widget build(BuildContext context) {

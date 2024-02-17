@@ -4,15 +4,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:flutter_html/flutter_html.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:seasoning/entities/podcast.dart';
-import 'package:seasoning/features/podcast_details/podcast_details_provider.dart';
 import 'package:seasoning/features/podcast_details/ui/podcast_details_app_bar.dart';
+import 'package:seasoning/features/podcast_details/ui/podcast_episode_list.dart';
 import 'package:seasoning/l10n/L.dart';
+import 'package:seasoning/providers/podcast/podcast_details_provider.dart';
 import 'package:seasoning/providers/settings_service_provider.dart';
 import 'package:seasoning/ui/podcast/funding_menu.dart';
 import 'package:seasoning/ui/widgets/fill_remaining_error.dart';
@@ -30,7 +30,7 @@ class PodcastDetails extends HookConsumerWidget {
     super.key,
   });
 
-  final PodcastBaseInfo baseInfo;
+  final PodcastSummary baseInfo;
 
   // widget._podcastBloc.backgroundLoading
   //     .where((event) => event is BlocPopulatedState<void>)
@@ -68,7 +68,8 @@ class PodcastDetails extends HookConsumerWidget {
     final scaffoldMessengerKey =
         useState(GlobalKey<ScaffoldMessengerState>()).value;
     final podcastDetailsState =
-        ref.watch(podcastDetailProvider.call(baseInfo));
+        ref.watch(podcastDetailsProvider.call(baseInfo));
+    final podcast = podcastDetailsState.value?.podcast;
 
     return Semantics(
       header: false,
@@ -86,12 +87,17 @@ class PodcastDetails extends HookConsumerWidget {
                 PodcastDetailsAppBar(basicInfo: baseInfo),
                 if (podcastDetailsState.isLoading)
                   const FillRemainingLoading()
-                else if (podcastDetailsState.hasError)
+                else if (podcastDetailsState.hasError || podcast == null)
                   FillRemainingError.podcastNoResults()
                 else ...[
-                  _PodcastTitle(podcastDetailsState.requireValue.podcast),
+                  _PodcastTitle(podcast),
+                  PodcastEpisodeList(
+                    summary: podcast,
+                    episodes: podcast.episodes,
+                    play: true,
+                    download: true,
+                  ),
                 ],
-                // _List(),
               ],
             ),
           ),
@@ -100,28 +106,6 @@ class PodcastDetails extends HookConsumerWidget {
     );
   }
 }
-
-// class _List extends StatelessWidget {
-//   @override
-//   Widget build(BuildContext context) {
-//     const noData = false;
-//     // !snapshot.hasData || (seasons!.isEmpty && episodes!.isEmpty);
-//     return noData
-//         ? SliverToBoxAdapter(child: Container())
-//         // : podcast!.seasonView && seasons.isNotEmpty
-//         //     ? PodcastSeasonList(
-//         //         seasons: seasons,
-//         //         play: true,
-//         //         download: true,
-//         //       )
-//         //     :
-//         : PodcastEpisodeList(
-//             episodes: episodes,
-//             play: true,
-//             download: true,
-//           );
-//   }
-// }
 
 /// Renders the podcast or episode image.
 
@@ -135,21 +119,19 @@ class PodcastDetails extends HookConsumerWidget {
 /// Description is rendered by [_PodcastDescription].
 /// Follow/Unfollow button rendered by [FollowButton].
 class _PodcastTitle extends HookConsumerWidget {
-  _PodcastTitle(this.podcast);
+  const _PodcastTitle(this.podcast);
 
   final Podcast podcast;
 
-  final GlobalKey descriptionKey = GlobalKey();
-  final maxHeight = 100.0;
-  final StreamController<bool> isDescriptionExpandedStream =
-      StreamController<bool>.broadcast();
+  static const maxHeight = 100.0;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final textTheme = Theme.of(context).textTheme;
     final settings = ref.watch(settingsServiceProvider);
-    PodcastHtml? description;
     final showOverflowState = useState(false);
+    final descriptionKey = useState(GlobalKey()).value;
+    final expandedState = useState(false);
 
     return SliverPadding(
       padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
@@ -182,56 +164,51 @@ class _PodcastTitle extends HookConsumerWidget {
                     ),
                   ),
                 ),
-                StreamBuilder<bool>(
-                  stream: isDescriptionExpandedStream.stream,
-                  initialData: false,
-                  builder: (context, snapshot) {
-                    final expanded = snapshot.data!;
-                    return Visibility(
-                      visible: showOverflowState.value,
-                      child: SizedBox(
-                        height: 48,
-                        width: 48,
-                        child: expanded
-                            ? TextButton(
-                                style: const ButtonStyle(
-                                  visualDensity: VisualDensity.compact,
-                                ),
-                                child: Icon(
-                                  Icons.expand_less,
-                                  semanticLabel: L
-                                      .of(context)!
-                                      .semantics_collapse_podcast_description,
-                                ),
-                                onPressed: () {
-                                  isDescriptionExpandedStream.add(false);
-                                },
-                              )
-                            : TextButton(
-                                style: const ButtonStyle(
-                                  visualDensity: VisualDensity.compact,
-                                ),
-                                child: Icon(
-                                  Icons.expand_more,
-                                  semanticLabel: L
-                                      .of(context)!
-                                      .semantics_expand_podcast_description,
-                                ),
-                                onPressed: () {
-                                  isDescriptionExpandedStream.add(true);
-                                },
-                              ),
-                      ),
-                    );
-                  },
+                Visibility(
+                  visible: showOverflowState.value,
+                  child: SizedBox(
+                    height: 48,
+                    width: 48,
+                    child: expandedState.value
+                        ? TextButton(
+                            style: const ButtonStyle(
+                              visualDensity: VisualDensity.compact,
+                            ),
+                            child: Icon(
+                              Icons.expand_less,
+                              semanticLabel: L
+                                  .of(context)!
+                                  .semantics_collapse_podcast_description,
+                            ),
+                            onPressed: () {
+                              expandedState.value = false;
+                            },
+                          )
+                        : TextButton(
+                            style: const ButtonStyle(
+                              visualDensity: VisualDensity.compact,
+                            ),
+                            child: Icon(
+                              Icons.expand_more,
+                              semanticLabel: L
+                                  .of(context)!
+                                  .semantics_expand_podcast_description,
+                            ),
+                            onPressed: () {
+                              expandedState.value = true;
+                            },
+                          ),
+                  ),
                 ),
               ],
             ),
             _PodcastDescription(
-              key: descriptionKey,
-              content: description,
-              isDescriptionExpandedStream: isDescriptionExpandedStream,
-            ),
+                key: descriptionKey,
+                content: PodcastHtml(
+                  content: podcast.description!,
+                  fontSize: FontSize.medium,
+                ),
+                isExpanded: expandedState.value),
             Padding(
               padding: const EdgeInsets.only(left: 8, right: 8),
               child: Row(
@@ -263,10 +240,6 @@ class _PodcastTitle extends HookConsumerWidget {
 // void initState() {
 //   super.initState();
 //
-//   description = PodcastHtml(
-//     content: widget.podcast.description!,
-//     fontSize: FontSize.medium,
-//   );
 //
 //   WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
 //     if (descriptionKey.currentContext!.size!.height == maxHeight) {
@@ -288,12 +261,12 @@ class _PodcastTitle extends HookConsumerWidget {
 class _PodcastDescription extends StatelessWidget {
   const _PodcastDescription({
     super.key,
-    this.content,
-    this.isDescriptionExpandedStream,
+    required this.content,
+    required this.isExpanded,
   });
 
-  final PodcastHtml? content;
-  final StreamController<bool>? isDescriptionExpandedStream;
+  final PodcastHtml content;
+  final bool isExpanded;
   static const maxHeight = 100.0;
   static const padding = 4.0;
 
@@ -301,35 +274,28 @@ class _PodcastDescription extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: _PodcastDescription.padding),
-      child: StreamBuilder<bool>(
-        stream: isDescriptionExpandedStream!.stream,
-        initialData: false,
-        builder: (context, snapshot) {
-          final expanded = snapshot.data!;
-          return AnimatedSize(
-            duration: const Duration(milliseconds: 150),
-            curve: Curves.fastOutSlowIn,
-            alignment: Alignment.topCenter,
-            child: Container(
-              constraints: expanded
-                  ? const BoxConstraints()
-                  : BoxConstraints.loose(
-                      const Size(double.infinity, maxHeight - padding),
-                    ),
-              child: expanded
-                  ? content
-                  : ShaderMask(
-                      shaderCallback: LinearGradient(
-                        colors: [Colors.white, Colors.white.withAlpha(0)],
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        stops: const [0.9, 1],
-                      ).createShader,
-                      child: content,
-                    ),
-            ),
-          );
-        },
+      child: AnimatedSize(
+        duration: const Duration(milliseconds: 150),
+        curve: Curves.fastOutSlowIn,
+        alignment: Alignment.topCenter,
+        child: Container(
+          constraints: isExpanded
+              ? const BoxConstraints()
+              : BoxConstraints.loose(
+                  const Size(double.infinity, maxHeight - padding),
+                ),
+          child: isExpanded
+              ? content
+              : ShaderMask(
+                  shaderCallback: LinearGradient(
+                    colors: [Colors.white, Colors.white.withAlpha(0)],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    stops: const [0.9, 1],
+                  ).createShader,
+                  child: content,
+                ),
+        ),
       ),
     );
   }
