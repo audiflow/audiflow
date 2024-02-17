@@ -10,6 +10,7 @@ import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 import 'package:path/path.dart';
 import 'package:podcast_search/podcast_search.dart' as podcast_search;
+import 'package:rxdart/rxdart.dart';
 import 'package:seasoning/api/podcast/podcast_api.dart';
 import 'package:seasoning/core/utils.dart';
 import 'package:seasoning/entities/chapter.dart';
@@ -32,9 +33,20 @@ class MobilePodcastService extends PodcastService {
   }
 
   final log = Logger('MobilePodcastService');
-  var _categories = <String>[];
-  var _intlCategories = <String?>[];
-  var _intlCategoriesSorted = <String>[];
+  late var _categories = <String>[];
+  late var _intlCategories = <String>[];
+  late var _intlCategoriesSorted = <String>[];
+
+  final _podcastSubject = BehaviorSubject<PodcastEvent>();
+  final _episodeSubject = BehaviorSubject<EpisodeEvent>();
+
+  @override
+  Stream<PodcastEvent> get podcastStream =>
+      Rx.merge([repository.podcastStream, _podcastSubject.stream]);
+
+  @override
+  Stream<EpisodeEvent> get episodeStream =>
+      Rx.merge([repository.episodeStream, _episodeSubject.stream]);
 
   Future<void> _init() async {
     final systemLocales = PlatformDispatcher.instance.locales;
@@ -70,6 +82,8 @@ class MobilePodcastService extends PodcastService {
         .listen((event) {
       _setupGenres(currentLocale);
     });
+
+    repository.podcastStream.pipe(_podcastSubject);
   }
 
   void _setupGenres(String locale) {
@@ -91,6 +105,11 @@ class MobilePodcastService extends PodcastService {
     _intlCategoriesSorted = categoryList.split(',');
     _intlCategoriesSorted
         .sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+  }
+
+  void dispose() {
+    _podcastSubject.close();
+    _episodeSubject.close();
   }
 
   @override
@@ -120,12 +139,10 @@ class MobilePodcastService extends PodcastService {
     String? genre,
     String? countryCode = '',
   }) {
-    final providerGenre = _decodeGenre(genre);
-
     return api.charts(
       size: size,
       searchProvider: settingsService.searchProvider,
-      genre: providerGenre,
+      genre: _decodeGenre(genre),
       countryCode: countryCode,
     );
   }
@@ -141,18 +158,18 @@ class MobilePodcastService extends PodcastService {
   /// to load it from the network.
   @override
   Future<Podcast?> loadPodcast(
-    PodcastSummary baseInfo, {
+    PodcastSummary summary, {
     int? id,
     bool refresh = false,
   }) async {
     if (refresh) {
-      return _reloadPodcast(baseInfo);
+      return _reloadPodcast(summary);
     }
     final podcast = id != null
         ? await loadPodcastById(id)
-        : await loadPodcastByGuid(baseInfo.guid);
+        : await loadPodcastByGuid(summary.guid);
     if (podcast == null) {
-      return _reloadPodcast(baseInfo);
+      return _reloadPodcast(summary);
     } else {
       return podcast;
     }
@@ -169,9 +186,9 @@ class MobilePodcastService extends PodcastService {
     return podcast;
   }
 
-  Future<Podcast> _reloadPodcast(PodcastSummary baseInfo) async {
-    final feedPodcast = await _lookupPodcast(url: baseInfo.feedUrl);
-    final podcast = Podcast.fromSearch(feedPodcast, baseInfo);
+  Future<Podcast> _reloadPodcast(PodcastSummary summary) async {
+    final feedPodcast = await _lookupPodcast(url: summary.feedUrl);
+    final podcast = Podcast.fromSearch(feedPodcast, summary);
     final (id, saved) = await repository.findPodcastByGuid(podcast.guid);
     if (saved != null) {
       await repository.savePodcast(id!, podcast);
@@ -334,6 +351,11 @@ class MobilePodcastService extends PodcastService {
   }
 
   @override
+  Future<EpisodeStats?> loadEpisodeStats(Episode episode) async {
+    return repository.findEpisodeStatsByGuid(episode.guid);
+  }
+
+  @override
   Future<void> deleteDownload(Episode episode) async {
     final download = await repository.findDownloadByGuid(episode.guid);
     if (download == null) {
@@ -372,7 +394,7 @@ class MobilePodcastService extends PodcastService {
   }
 
   @override
-  Future<List<(PodcastStats, PodcastSearchResultItem)>> subscriptions() async {
+  Future<List<(PodcastStats, PodcastSummary)>> subscriptions() async {
     return repository.subscriptions();
   }
 
@@ -523,25 +545,13 @@ class MobilePodcastService extends PodcastService {
   /// The service providers expect the genre to be passed in English.
   /// This function takes the selected genre and returns the English version.
   String _decodeGenre(String? genre) {
-    final index = _intlCategories.indexOf(genre);
-    var decodedGenre = '';
-
-    if (index >= 0) {
-      decodedGenre = _categories[index];
-
-      if (decodedGenre == '<All>') {
-        decodedGenre = '';
-      }
-    }
-
-    return decodedGenre;
+    final index = _intlCategories.indexOf(genre ?? '');
+    return index < 0
+        ? ''
+        : _categories[index] == '<All>'
+            ? ''
+            : _categories[index];
   }
-
-  @override
-  Stream<PodcastEvent> get podcastListener => repository.podcastListener;
-
-  @override
-  Stream<EpisodeEvent> get episodeListener => repository.episodeListener;
 }
 
 class _FeedComputer {

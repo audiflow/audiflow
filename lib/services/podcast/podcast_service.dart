@@ -181,7 +181,7 @@ abstract class PodcastService {
   List<String> genres();
 
   Future<Podcast?> loadPodcast(
-    PodcastSummary baseInfo, {
+    PodcastSummary summary, {
     int? id,
     bool refresh = false,
   });
@@ -194,6 +194,8 @@ abstract class PodcastService {
 
   Future<List<Episode>> loadEpisodesByPodcastGuid(String pguid);
 
+  Future<EpisodeStats?> loadEpisodeStats(Episode episode);
+
   Future<List<Chapter>> loadChaptersByUrl(String url);
 
   Future<Transcript> loadTranscriptByUrl({
@@ -205,7 +207,7 @@ abstract class PodcastService {
 
   Future<void> toggleEpisodePlayed(Episode episode);
 
-  Future<List<(PodcastStats, PodcastSearchResultItem)>> subscriptions();
+  Future<List<(PodcastStats, PodcastSummary)>> subscriptions();
 
   Future<PodcastStats> subscribe(Podcast podcast);
 
@@ -222,7 +224,7 @@ abstract class PodcastService {
   Future<List<Episode>> loadQueue();
 
   /// Event listeners
-  Stream<PodcastEvent> get podcastListener;
+  Stream<PodcastEvent> get podcastStream;
 
-  Stream<EpisodeEvent> get episodeListener;
+  Stream<EpisodeEvent> get episodeStream;
 }
