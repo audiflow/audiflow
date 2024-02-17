@@ -6,13 +6,13 @@ import 'package:seasoning/events/podcast_event.dart';
 import 'package:seasoning/providers/podcast_service_provider.dart';
 import 'package:seasoning/providers/repository_provider.dart';
 
-part 'podcast_details_provider.freezed.dart';
-part 'podcast_details_provider.g.dart';
+part 'podcast_info_provider.freezed.dart';
+part 'podcast_info_provider.g.dart';
 
 @riverpod
-class PodcastDetail extends _$PodcastDetail {
+class PodcastInfo extends _$PodcastInfo {
   @override
-  Future<PodcastDetailsState> build(PodcastBaseInfo baseInfo) async {
+  Future<PodcastInfoState> build(PodcastSummary baseInfo) async {
     _listen();
 
     final podcastService = ref.read(podcastServiceProvider);
@@ -25,12 +25,10 @@ class PodcastDetail extends _$PodcastDetail {
     final podcast = list[0] as Podcast?;
     final podcastStats = list[1] as PodcastStats?;
     if (podcast == null) {
-      print('!!! no podcast');
       throw NotFoundError();
     }
 
-    print('!!! podcast found');
-    return PodcastDetailsState(
+    return PodcastInfoState(
       podcast: podcast,
       stats: podcastStats,
     );
@@ -51,7 +49,7 @@ class PodcastDetail extends _$PodcastDetail {
                 stats: final stats
               ):
           state = AsyncData(
-            PodcastDetailsState(
+            PodcastInfoState(
               podcast: podcast,
               stats: stats,
             ),
@@ -67,9 +65,9 @@ class PodcastDetail extends _$PodcastDetail {
 }
 
 @freezed
-class PodcastDetailsState with _$PodcastDetailsState {
-  const factory PodcastDetailsState({
+class PodcastInfoState with _$PodcastInfoState {
+  const factory PodcastInfoState({
     required Podcast podcast,
     PodcastStats? stats,
-  }) = _PodcastDetailsState;
+  }) = _PodcastInfoState;
 }
