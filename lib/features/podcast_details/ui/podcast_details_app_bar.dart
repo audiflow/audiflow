@@ -13,32 +13,48 @@ import 'package:seasoning/ui/widgets/podcast_image.dart';
 class PodcastDetailsAppBar extends StatelessWidget {
   const PodcastDetailsAppBar({
     super.key,
-    required this.basicInfo,
+    required this.summary,
   });
 
-  final PodcastSummary basicInfo;
+  final PodcastSummary summary;
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
     final placeholderBuilder = PlaceholderBuilder.of(context);
     return SliverLayoutBuilder(
         builder: (BuildContext context, SliverConstraints constraints) {
       return SliverAppBar(
-        expandedHeight: 300,
-        title: 100 < constraints.scrollOffset ? Text(basicInfo.title) : null,
+        expandedHeight: 350,
+        pinned: true,
+        title: AnimatedOpacity(
+          opacity: 300 < constraints.scrollOffset ? 1.0 : 0.0,
+          duration: const Duration(milliseconds: 200),
+          child: Text(summary.title),
+        ),
         flexibleSpace: FlexibleSpaceBar(
           collapseMode: CollapseMode.pin,
-          background: Hero(
-            key: Key(
-              'detailHero:${basicInfo.imageUrl}:${basicInfo.guid}',
-            ),
-            tag: '${basicInfo.imageUrl}:${basicInfo.guid}',
-            child: ExcludeSemantics(
-              child: _PodcastHeaderImage(
-                basicInfo: basicInfo,
-                placeholderBuilder: placeholderBuilder,
+          background: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Expanded(
+                child: Hero(
+                  key: Key(
+                    'detailHero:${summary.imageUrl}:${summary.guid}',
+                  ),
+                  tag: '${summary.imageUrl}:${summary.guid}',
+                  child: ExcludeSemantics(
+                    child: _PodcastHeaderImage(
+                      basicInfo: summary,
+                      placeholderBuilder: placeholderBuilder,
+                    ),
+                  ),
+                ),
               ),
-            ),
+              const SizedBox(height: 8),
+              Text(summary.title, style: textTheme.titleMedium),
+              Text(summary.copyright, style: textTheme.bodySmall),
+            ],
           ),
         ),
       );

@@ -84,7 +84,7 @@ class PodcastDetails extends HookConsumerWidget {
             child: CustomScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: <Widget>[
-                PodcastDetailsAppBar(basicInfo: baseInfo),
+                PodcastDetailsAppBar(summary: baseInfo),
                 if (podcastDetailsState.isLoading)
                   const FillRemainingLoading()
                 else if (podcastDetailsState.hasError || podcast == null)
@@ -141,29 +141,6 @@ class _PodcastTitle extends HookConsumerWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: MergeSemantics(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(8, 8, 8, 2),
-                          child: Text(
-                            podcast.title,
-                            style: textTheme.titleLarge,
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-                          child: Text(
-                            podcast.copyright,
-                            style: textTheme.bodySmall,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
                 Visibility(
                   visible: showOverflowState.value,
                   child: SizedBox(

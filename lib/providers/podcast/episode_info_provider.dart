@@ -26,7 +26,7 @@ class EpisodeInfo extends _$EpisodeInfo {
 
   void _listen() {
     final sub =
-        ref.read(podcastServiceProvider).episodeListener.listen((event) {
+        ref.read(podcastServiceProvider).episodeStream.listen((event) {
       switch (event) {
         case EpisodeInsertedEvent(episode: final episode) ||
               EpisodeUpdatedEvent(episode: final episode) ||
@@ -45,5 +45,7 @@ class EpisodeInfoState with _$EpisodeInfoState {
   const factory EpisodeInfoState({
     required Episode episode,
     EpisodeStats? stats,
+    Downloadable? download,
+    Queue? queue,
   }) = _EpisodeState;
 }
