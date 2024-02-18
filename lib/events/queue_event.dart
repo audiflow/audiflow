@@ -4,37 +4,50 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:seasoning/entities/episode.dart';
 
-part 'queue_event.freezed.dart';
+sealed class QueueEvent {}
 
-@freezed
-class QueueEvent with _$QueueEvent {
-  const factory QueueEvent.add({
-    required Episode episode,
-    int? position,
-  }) = QueueAddEvent;
+class QueueAddEvent implements QueueEvent {
+  const QueueAddEvent({
+    required this.episode,
+    this.position,
+  });
 
-  const factory QueueEvent.remove({
-    required Episode episode,
-  }) = QueueRemoveEvent;
-
-  const factory QueueEvent.move({
-    required Episode episode,
-    required int oldIndex,
-    required int newIndex,
-  }) = QueueMoveEvent;
-
-  const factory QueueEvent.clear() = QueueClearEvent;
+  final Episode episode;
+  final int? position;
 }
 
-@freezed
-class QueueListEvent with _$QueueListEvent {
-  const factory QueueListEvent.empty() = EmptyQueueListEvent;
+class QueueRemoveEvent implements QueueEvent {
+  const QueueRemoveEvent({
+    required this.episode,
+  });
 
-  const factory QueueListEvent.list({
-    required Episode playing,
-    required List<Episode> queue,
-  }) = ReadyQueueListEvent;
+  final Episode episode;
+}
+
+class QueueMoveEvent implements QueueEvent {
+  QueueMoveEvent({
+    required this.episode,
+    required this.oldIndex,
+    required this.newIndex,
+  });
+
+  final Episode episode;
+  final int oldIndex;
+  final int newIndex;
+}
+
+class QueueClearEvent implements QueueEvent {
+  const QueueClearEvent();
+}
+
+class QueueConsumeEvent implements QueueEvent {
+  const QueueConsumeEvent({
+    required this.playing,
+    required this.queue,
+  });
+
+  final Episode playing;
+  final List<Episode> queue;
 }
