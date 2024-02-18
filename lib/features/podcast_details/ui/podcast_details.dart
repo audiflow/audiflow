@@ -13,7 +13,7 @@ import 'package:seasoning/features/podcast_details/ui/podcast_details_app_bar.da
 import 'package:seasoning/features/podcast_details/ui/podcast_episode_list.dart';
 import 'package:seasoning/l10n/L.dart';
 import 'package:seasoning/providers/podcast/podcast_details_provider.dart';
-import 'package:seasoning/providers/settings_service_provider.dart';
+import 'package:seasoning/services/settings/settings_service.dart';
 import 'package:seasoning/ui/podcast/funding_menu.dart';
 import 'package:seasoning/ui/widgets/fill_remaining_error.dart';
 import 'package:seasoning/ui/widgets/fill_remaining_loading.dart';

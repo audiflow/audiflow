@@ -4,17 +4,30 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'dart:ui';
+
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:seasoning/core/environment.dart';
 import 'package:seasoning/entities/search_providers.dart';
 
 part 'app_settings.freezed.dart';
 part 'app_settings.g.dart';
 
+enum BrightnessMode {
+  system('system'),
+  light('light'),
+  dark('dark');
+
+  const BrightnessMode(this.name);
+
+  final String name;
+}
+
 @freezed
 class AppSettings with _$AppSettings {
   const factory AppSettings({
     /// The current theme name.
-    required String theme,
+    required BrightnessMode theme,
 
     /// True if episodes are marked as played when deleted.
     required bool markDeletedEpisodesAsPlayed,
@@ -56,18 +69,24 @@ class AppSettings with _$AppSettings {
   factory AppSettings.fromJson(Map<String, dynamic> json) =>
       _$AppSettingsFromJson(json);
 
-// static AppSettings.sensibleDefaults()
-//     : theme = 'dark',
-//       markDeletedEpisodesAsPlayed = false,
-//       storeDownloadsSDCard = false,
-//       playbackSpeed = 1.0,
-//       searchProvider = 'itunes',
-//       searchProviders = <SearchProvider>[],
-//       externalLinkConsent = false,
-//       autoOpenNowPlaying = false,
-//       showFunding = true,
-//       autoUpdateEpisodePeriod = -1,
-//       trimSilence = false,
-//       volumeBoost = false,
-//       layout = 0;
+  factory AppSettings.sensibleDefaults() {
+    return AppSettings(
+      theme: BrightnessMode.system,
+      markDeletedEpisodesAsPlayed: false,
+      storeDownloadsSDCard: false,
+      playbackSpeed: 1,
+      searchProvider: 'itunes',
+      searchProviders: <SearchProvider>[
+        SearchProvider.itunes(),
+        if (podcastIndexKey.isNotEmpty) SearchProvider.podcastindex(),
+      ],
+      externalLinkConsent: false,
+      autoOpenNowPlaying: false,
+      showFunding: true,
+      autoUpdateEpisodePeriod: -1,
+      trimSilence: false,
+      volumeBoost: false,
+      layout: 0,
+    );
+  }
 }

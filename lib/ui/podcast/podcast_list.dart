@@ -7,7 +7,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:seasoning/entities/entities.dart';
-import 'package:seasoning/providers/settings_service_provider.dart';
+import 'package:seasoning/services/settings/settings_service.dart';
 import 'package:seasoning/ui/podcast/podcast_tile.dart';
 import 'package:seasoning/ui/widgets/fill_remaining_error.dart';
 
@@ -26,7 +26,7 @@ class PodcastList extends ConsumerWidget {
     }
 
     final settings = ref.watch(settingsServiceProvider);
-    final mode = settings.layoutMode;
+    final mode = settings.layout;
     final size = mode == 1 ? 100.0 : 160.0;
 
     return mode == 0

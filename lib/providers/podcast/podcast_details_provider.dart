@@ -3,8 +3,8 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:seasoning/entities/entities.dart';
 import 'package:seasoning/errors/errors.dart';
 import 'package:seasoning/events/podcast_event.dart';
-import 'package:seasoning/providers/podcast_service_provider.dart';
 import 'package:seasoning/providers/repository_provider.dart';
+import 'package:seasoning/services/podcast/mobile_podcast_service.dart';
 
 part 'podcast_details_provider.freezed.dart';
 part 'podcast_details_provider.g.dart';

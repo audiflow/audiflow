@@ -8,7 +8,7 @@ part of 'app_settings.dart';
 
 _$AppSettingsImpl _$$AppSettingsImplFromJson(Map<String, dynamic> json) =>
     _$AppSettingsImpl(
-      theme: json['theme'] as String,
+      theme: $enumDecode(_$BrightnessModeEnumMap, json['theme']),
       markDeletedEpisodesAsPlayed: json['markDeletedEpisodesAsPlayed'] as bool,
       storeDownloadsSDCard: json['storeDownloadsSDCard'] as bool,
       playbackSpeed: (json['playbackSpeed'] as num).toDouble(),
@@ -27,7 +27,7 @@ _$AppSettingsImpl _$$AppSettingsImplFromJson(Map<String, dynamic> json) =>
 
 Map<String, dynamic> _$$AppSettingsImplToJson(_$AppSettingsImpl instance) =>
     <String, dynamic>{
-      'theme': instance.theme,
+      'theme': _$BrightnessModeEnumMap[instance.theme]!,
       'markDeletedEpisodesAsPlayed': instance.markDeletedEpisodesAsPlayed,
       'storeDownloadsSDCard': instance.storeDownloadsSDCard,
       'playbackSpeed': instance.playbackSpeed,
@@ -41,3 +41,9 @@ Map<String, dynamic> _$$AppSettingsImplToJson(_$AppSettingsImpl instance) =>
       'volumeBoost': instance.volumeBoost,
       'layout': instance.layout,
     };
+
+const _$BrightnessModeEnumMap = {
+  BrightnessMode.system: 'system',
+  BrightnessMode.light: 'light',
+  BrightnessMode.dark: 'dark',
+};

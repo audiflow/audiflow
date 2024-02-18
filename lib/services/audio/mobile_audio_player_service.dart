@@ -16,11 +16,12 @@ import 'package:seasoning/core/environment.dart';
 import 'package:seasoning/core/utils.dart';
 import 'package:seasoning/entities/entities.dart';
 import 'package:seasoning/events/episode_event.dart';
-import 'package:seasoning/providers/podcast_service_provider.dart';
 import 'package:seasoning/providers/repository_provider.dart';
 import 'package:seasoning/services/audio/audio_player_event.dart';
 import 'package:seasoning/services/audio/audio_player_service.dart';
 import 'package:seasoning/services/audio/audio_player_state.dart';
+import 'package:seasoning/services/podcast/mobile_podcast_service.dart';
+import 'package:seasoning/services/podcast/podcast_service.dart';
 import 'package:seasoning/services/settings/settings_service.dart';
 
 part 'mobile_audio_player_service.g.dart';
@@ -342,7 +343,7 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
       artUri: Uri.parse(episode.imageUrl ?? episode.thumbImageUrl ?? ''),
       duration: episode.duration,
       extras: <String, dynamic>{
-        'position': position,
+        'position': position.inMilliseconds,
         // 'downloaded': episode.downloaded,
         'speed': _audioPlayerSettings.speed,
         'trim': _audioPlayerSettings.trimSilence,
@@ -574,7 +575,7 @@ class _DefaultAudioPlayerHandler extends BaseAudioHandler with SeekHandler {
   Future<void> playMediaItem(MediaItem mediaItem) async {
     _currentItem = mediaItem;
 
-    final downloaded = mediaItem.extras!['downloaded'] as bool? ?? true;
+    final downloaded = mediaItem.extras!['downloaded'] as bool? ?? false;
     final startPosition = mediaItem.extras!['position'] as int? ?? 0;
     final playbackSpeed = mediaItem.extras!['speed'] as double? ?? 0.0;
     final start = startPosition > 0
@@ -586,7 +587,7 @@ class _DefaultAudioPlayerHandler extends BaseAudioHandler with SeekHandler {
 
     log.fine(
       'loading new track ${mediaItem.id} - from position ${start.inSeconds}'
-      ' (${start.inMilliseconds})',
+      ' ($start)',
     );
 
     final source = downloaded
@@ -596,6 +597,7 @@ class _DefaultAudioPlayerHandler extends BaseAudioHandler with SeekHandler {
           )
         : AudioSource.uri(Uri.parse(mediaItem.id), tag: mediaItem.id);
 
+    log.fine('url: ${source.uri}');
     try {
       final duration =
           await _player.setAudioSource(source, initialPosition: start);

@@ -8,7 +8,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:seasoning/entities/entities.dart';
 import 'package:seasoning/features/podcast_chart/podcast_chart_event.dart';
-import 'package:seasoning/providers/podcast_service_provider.dart';
+import 'package:seasoning/services/podcast/mobile_podcast_service.dart';
 
 part 'podcast_chart_provider.freezed.dart';
 part 'podcast_chart_provider.g.dart';
@@ -47,7 +47,8 @@ class PodcastChart extends _$PodcastChart {
         );
 
     if (result.successful) {
-      final podcasts = result.items.map(PodcastSearchResultItem.fromSearchResultItem);
+      final podcasts =
+          result.items.map(PodcastSearchResultItem.fromSearchResultItem);
       state = AsyncData(
         PodcastChartState(
           size: event.size,

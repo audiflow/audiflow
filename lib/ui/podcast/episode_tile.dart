@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import 'package:seasoning/entities/entities.dart';
+import 'package:seasoning/ui/widgets/animated_play_button.dart';
 import 'package:seasoning/ui/widgets/tile_image.dart';
 
 /// An EpisodeTitle is built with an ExpandedTile widget and displays the
@@ -40,7 +41,7 @@ class EpisodeTile extends HookConsumerWidget {
       child: InkWell(
         child: Container(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
-          height: 110,
+          height: 160,
           child: Column(
             children: [
               Row(
@@ -54,7 +55,10 @@ class EpisodeTile extends HookConsumerWidget {
                     ),
                 ],
               ),
-              // const _Controls(),
+              SizedBox(
+                height: 40,
+                child: _Controls(episode),
+              ),
             ],
           ),
         ),
@@ -384,11 +388,13 @@ class _Content extends StatelessWidget {
 }
 
 class _Controls extends StatelessWidget {
-  const _Controls();
+  const _Controls(this.episode);
+
+  final Episode episode;
 
   @override
   Widget build(BuildContext context) {
-    return const SizedBox(height: 60);
+    return AnimatedPlayButton(episode);
   }
 }
 

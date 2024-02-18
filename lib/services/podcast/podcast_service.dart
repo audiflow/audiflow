@@ -5,24 +5,11 @@
 // found in the LICENSE file.
 
 import 'package:podcast_search/podcast_search.dart' as pcast;
-import 'package:seasoning/api/podcast/podcast_api.dart';
 import 'package:seasoning/entities/entities.dart';
 import 'package:seasoning/events/episode_event.dart';
 import 'package:seasoning/events/podcast_event.dart';
-import 'package:seasoning/repository/repository.dart';
-import 'package:seasoning/services/settings/settings_service.dart';
 
 abstract class PodcastService {
-  PodcastService({
-    required this.api,
-    required this.repository,
-    required this.settingsService,
-  });
-
-  final PodcastApi api;
-  final Repository repository;
-  final SettingsService settingsService;
-
   static const itunesGenres = [
     '<All>',
     'Arts',

@@ -1,106 +1,113 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:seasoning/core/environment.dart';
 import 'package:seasoning/entities/entities.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 part 'settings_service.g.dart';
 
-abstract class SettingsService {
-  // ignore: avoid_setters_without_getters
-  set settings(AppSettings settings);
-
-  // ignore: avoid_setters_without_getters
-  set theme(BrightnessMode mode);
-
-  // ignore: avoid_setters_without_getters
-  set markDeletedEpisodesAsPlayed(bool value);
-
-  // ignore: avoid_setters_without_getters
-  set storeDownloadsSDCard(bool value);
-
-  // ignore: avoid_setters_without_getters
-  set playbackSpeed(double playbackSpeed);
-
-  // ignore: avoid_setters_without_getters
-  set searchProvider(String provider);
-
-  // ignore: avoid_setters_without_getters
-  set externalLinkConsent(bool consent);
-
-  // ignore: avoid_setters_without_getters
-  set autoOpenNowPlaying(bool autoOpenNowPlaying);
-
-  // ignore: avoid_setters_without_getters
-  set showFunding(bool show);
-
-  // ignore: avoid_setters_without_getters
-  set autoUpdateEpisodePeriod(int period);
-
-  // ignore: avoid_setters_without_getters
-  set trimSilence(bool trim);
-
-  // ignore: avoid_setters_without_getters
-  set volumeBoost(bool boost);
-
-  // ignore: avoid_setters_without_getters
-  set layoutMode(int mode);
-}
-
-@riverpod
-class EmptySettingsService extends _$EmptySettingsService
-    implements SettingsService {
+@Riverpod(keepAlive: true)
+class SettingsService extends _$SettingsService {
   @override
   AppSettings build() {
-    return AppSettings.sensibleDefaults();
+    return AppSettings(
+      markDeletedEpisodesAsPlayed:
+          _sharedPreferences.getBool('markPlayedAsDeleted') ?? false,
+      storeDownloadsSDCard:
+          _sharedPreferences.getBool('storeDownloadsSDCard') ?? false,
+      theme: BrightnessMode.values
+          .byName(_sharedPreferences.getString('theme') ?? 'system'),
+      playbackSpeed: _sharedPreferences.getDouble('speed') ?? 1.0,
+      searchProvider: podcastIndexKey.isEmpty
+          ? 'itunes'
+          : (_sharedPreferences.getString('search') ?? 'itunes'),
+      searchProviders: [
+        SearchProvider.itunes(),
+        if (podcastIndexKey.isNotEmpty) SearchProvider.podcastindex(),
+      ],
+      externalLinkConsent:
+          _sharedPreferences.getBool('externalLinkConsent') ?? false,
+      autoOpenNowPlaying:
+          _sharedPreferences.getBool('autoOpenNowPlaying') ?? false,
+      showFunding: _sharedPreferences.getBool('showFunding') ?? true,
+      autoUpdateEpisodePeriod:
+          _sharedPreferences.getInt('autoUpdateEpisodePeriod') ?? 180,
+      trimSilence: _sharedPreferences.getBool('trimSilence') ?? false,
+      volumeBoost: _sharedPreferences.getBool('volumeBoost') ?? false,
+      layout: _sharedPreferences.getInt('layout') ?? 0,
+    );
   }
 
-  @override
-  // ignore: avoid_setters_without_getters
-  set markDeletedEpisodesAsPlayed(bool value) {}
+  static late SharedPreferences _sharedPreferences;
 
-  @override
-  // ignore: avoid_setters_without_getters
-  set storeDownloadsSDCard(bool value) {}
+  static Future<void> setup() async {
+    _sharedPreferences = await SharedPreferences.getInstance();
+  }
 
-  @override
   // ignore: avoid_setters_without_getters
-  set theme(BrightnessMode mode) {}
+  set markDeletedEpisodesAsPlayed(bool value) {
+    _sharedPreferences.setBool('markPlayedAsDeleted', value);
+    state = state.copyWith(markDeletedEpisodesAsPlayed: value);
+  }
 
-  @override
   // ignore: avoid_setters_without_getters
-  set playbackSpeed(double playbackSpeed) {}
+  set storeDownloadsSDCard(bool value) {
+    _sharedPreferences.setBool('storeDownloadsSDCard', value);
+    state = state.copyWith(storeDownloadsSDCard: value);
+  }
 
-  @override
   // ignore: avoid_setters_without_getters
-  set searchProvider(String provider) {}
+  set theme(BrightnessMode mode) {
+    _sharedPreferences.setString('theme', mode.name);
+    state = state.copyWith(theme: mode);
+  }
 
-  @override
   // ignore: avoid_setters_without_getters
-  set externalLinkConsent(bool consent) {}
+  set playbackSpeed(double playbackSpeed) {
+    _sharedPreferences.setDouble('speed', playbackSpeed);
+  }
 
-  @override
   // ignore: avoid_setters_without_getters
-  set autoOpenNowPlaying(bool autoOpenNowPlaying) {}
+  set searchProvider(String provider) {
+    _sharedPreferences.setString('search', provider);
+  }
 
-  @override
   // ignore: avoid_setters_without_getters
-  set showFunding(bool show) {}
+  set externalLinkConsent(bool consent) {
+    _sharedPreferences.setBool('externalLinkConsent', consent);
+  }
 
-  @override
   // ignore: avoid_setters_without_getters
-  set autoUpdateEpisodePeriod(int period) {}
+  set autoOpenNowPlaying(bool autoOpenNowPlaying) {
+    _sharedPreferences.setBool('autoOpenNowPlaying', autoOpenNowPlaying);
+  }
 
-  @override
   // ignore: avoid_setters_without_getters
-  set trimSilence(bool trim) {}
+  set showFunding(bool show) {
+    _sharedPreferences.setBool('showFunding', show);
+  }
 
-  @override
   // ignore: avoid_setters_without_getters
-  set volumeBoost(bool boost) {}
+  set autoUpdateEpisodePeriod(int period) {
+    _sharedPreferences.setInt('autoUpdateEpisodePeriod', period);
+  }
 
-  @override
   // ignore: avoid_setters_without_getters
-  set layoutMode(int mode) {}
+  set trimSilence(bool trim) {
+    _sharedPreferences.setBool('trimSilence', trim);
+  }
 
-  @override
   // ignore: avoid_setters_without_getters
-  set settings(AppSettings settings) {}
+  set volumeBoost(bool boost) {
+    _sharedPreferences.setBool('volumeBoost', boost);
+  }
+
+  // ignore: avoid_setters_without_getters
+  set layoutMode(int mode) {
+    _sharedPreferences.setInt('layout', mode);
+  }
+
+  // ignore: avoid_setters_without_getters
+  set settings(AppSettings settings) {
+    state = settings;
+  }
 }

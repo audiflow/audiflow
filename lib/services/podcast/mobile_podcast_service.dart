@@ -6,31 +6,52 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 import 'package:path/path.dart';
 import 'package:podcast_search/podcast_search.dart' as podcast_search;
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:rxdart/rxdart.dart';
-import 'package:seasoning/api/podcast/podcast_api.dart';
 import 'package:seasoning/core/utils.dart';
-import 'package:seasoning/entities/chapter.dart';
-import 'package:seasoning/entities/downloadable.dart';
-import 'package:seasoning/entities/episode.dart';
-import 'package:seasoning/entities/podcast.dart';
-import 'package:seasoning/entities/transcript.dart';
+import 'package:seasoning/entities/entities.dart';
 import 'package:seasoning/events/episode_event.dart';
 import 'package:seasoning/events/podcast_event.dart';
 import 'package:seasoning/l10n/messages_all.dart';
+import 'package:seasoning/providers/podcast_api_provider.dart';
+import 'package:seasoning/providers/repository_provider.dart';
 import 'package:seasoning/services/podcast/podcast_service.dart';
+import 'package:seasoning/services/settings/settings_service.dart';
 
-class MobilePodcastService extends PodcastService {
+part 'mobile_podcast_service.g.dart';
+
+@Riverpod(keepAlive: true)
+PodcastService podcastService(PodcastServiceRef ref) {
+  final api = ref.read(podcastApiProvider);
+  final repository = ref.read(repositoryProvider);
+  final appSettings = ref.read(settingsServiceProvider);
+  return MobilePodcastService(
+    ref: ref,
+    api: api,
+    repository: repository,
+    appSettings: appSettings,
+  );
+}
+
+class MobilePodcastService implements PodcastService {
   MobilePodcastService({
-    required super.api,
-    required super.repository,
-    required super.settingsService,
+    required this.ref,
+    required this.api,
+    required this.repository,
+    required this.appSettings,
   }) {
     _init();
   }
+
+  final Ref ref;
+  final PodcastApi api;
+  final Repository repository;
+  final AppSettings appSettings;
 
   final log = Logger('MobilePodcastService');
   late var _categories = <String>[];
@@ -77,13 +98,13 @@ class MobilePodcastService extends PodcastService {
 
     /// Listen for user changes in search provider. If changed, reload the genre
     /// list
-    settingsService.settingsListener
-        .where((event) => event == 'search')
-        .listen((event) {
+    ref.listen(
+        settingsServiceProvider.select((settings) => settings.searchProvider),
+        (_, next) {
       _setupGenres(currentLocale);
     });
 
-    repository.podcastStream.pipe(_podcastSubject);
+    await repository.podcastStream.pipe(_podcastSubject);
   }
 
   void _setupGenres(String locale) {
@@ -91,7 +112,7 @@ class MobilePodcastService extends PodcastService {
 
     /// Fetch the correct categories for the current local and selected
     /// provider.
-    if (settingsService.searchProvider == 'itunes') {
+    if (appSettings.searchProvider == 'itunes') {
       _categories = PodcastService.itunesGenres;
       categoryList =
           Intl.message('discovery_categories_itunes', locale: locale);
@@ -129,7 +150,7 @@ class MobilePodcastService extends PodcastService {
       limit: limit,
       language: language,
       explicit: explicit,
-      searchProvider: settingsService.searchProvider,
+      searchProvider: appSettings.searchProvider,
     );
   }
 
@@ -141,7 +162,7 @@ class MobilePodcastService extends PodcastService {
   }) {
     return api.charts(
       size: size,
-      searchProvider: settingsService.searchProvider,
+      searchProvider: appSettings.searchProvider,
       genre: _decodeGenre(genre),
       countryCode: countryCode,
     );
@@ -364,7 +385,7 @@ class MobilePodcastService extends PodcastService {
 
     // If this episode is currently downloading, cancel the download first.
     if (download.state == DownloadState.downloaded) {
-      if (settingsService.markDeletedEpisodesAsPlayed) {
+      if (appSettings.markDeletedEpisodesAsPlayed) {
         // episode.played = true;
       }
     } else if (download.state == DownloadState.downloading &&
@@ -374,8 +395,9 @@ class MobilePodcastService extends PodcastService {
 
     await repository.deleteDownload(download);
 
-    if (await hasStoragePermission()) {
-      final f = File.fromUri(Uri.file(await resolvePath(download)));
+    if (await hasStoragePermission(appSettings)) {
+      final f =
+          File.fromUri(Uri.file(await resolvePath(appSettings, download)));
       if (f.existsSync()) {
         log.fine('Deleting file ${f.path}');
         await f.delete();
@@ -405,9 +427,9 @@ class MobilePodcastService extends PodcastService {
 
   @override
   Future<void> unsubscribe(Podcast podcast) async {
-    if (await hasStoragePermission()) {
+    if (await hasStoragePermission(appSettings)) {
       final filename =
-          join(await getStorageDirectory(), safeFile(podcast.title));
+          join(await getStorageDirectory(appSettings), safeFile(podcast.title));
 
       final d = Directory.fromUri(Uri.file(filename));
 

@@ -2,7 +2,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:seasoning/entities/entities.dart';
 import 'package:seasoning/events/episode_event.dart';
-import 'package:seasoning/providers/podcast_service_provider.dart';
+import 'package:seasoning/services/podcast/mobile_podcast_service.dart';
 
 part 'episode_info_provider.freezed.dart';
 part 'episode_info_provider.g.dart';
@@ -25,8 +25,7 @@ class EpisodeInfo extends _$EpisodeInfo {
   }
 
   void _listen() {
-    final sub =
-        ref.read(podcastServiceProvider).episodeStream.listen((event) {
+    final sub = ref.read(podcastServiceProvider).episodeStream.listen((event) {
       switch (event) {
         case EpisodeInsertedEvent(episode: final episode) ||
               EpisodeUpdatedEvent(episode: final episode) ||

@@ -9,10 +9,9 @@ import 'dart:io';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:seasoning/entities/app_settings.dart';
 import 'package:seasoning/entities/downloadable.dart';
 import 'package:seasoning/entities/episode.dart';
-import 'package:seasoning/services/settings/mobile_settings_service.dart';
-import 'package:seasoning/services/settings/settings_service.dart';
 
 /// Returns the storage directory for the current platform.
 ///
@@ -22,34 +21,40 @@ import 'package:seasoning/services/settings/settings_service.dart';
 /// breaking existing Android installations we have created the following three
 /// functions to help with resolving the various paths correctly depending upon
 /// platform.
-Future<String> resolvePath(Downloadable download) async {
+Future<String> resolvePath(
+  AppSettings settings,
+  Downloadable download,
+) async {
   return Platform.isAndroid
       ? join(download.directory, download.filename)
       : join(
-          await getStorageDirectory(),
+          await getStorageDirectory(settings),
           download.directory,
           download.filename,
         );
 }
 
-Future<String> directoryToRecord({
-  required Episode episode,
-}) async {
+Future<String> directoryToRecord(
+  AppSettings settings,
+  Episode episode,
+) async {
   return Platform.isAndroid
-      ? join(await getStorageDirectory(), safePath(episode.guid))
+      ? join(await getStorageDirectory(settings), safePath(episode.guid))
       : safePath(episode.guid);
 }
 
-Future<String> createDownloadDirectory(Episode episode) async {
-  final path = join(await getStorageDirectory(), safePath(episode.guid));
+Future<String> createDownloadDirectory(
+  AppSettings settings,
+  Episode episode,
+) async {
+  final path =
+      join(await getStorageDirectory(settings), safePath(episode.guid));
   Directory(path).createSync(recursive: true);
   return path;
 }
 
-Future<bool> hasStoragePermission() async {
-  final SettingsService? settings = await MobileSettingsService.instance();
-
-  if (Platform.isIOS || !settings!.storeDownloadsSDCard) {
+Future<bool> hasStoragePermission(AppSettings settings) async {
+  if (Platform.isIOS || !settings.storeDownloadsSDCard) {
     return Future.value(true);
   } else {
     final permissionStatus = await Permission.storage.request();
@@ -58,13 +63,12 @@ Future<bool> hasStoragePermission() async {
   }
 }
 
-Future<String> getStorageDirectory() async {
-  final SettingsService? settings = await MobileSettingsService.instance();
+Future<String> getStorageDirectory(AppSettings settings) async {
   Directory directory;
 
   if (Platform.isIOS) {
     directory = await getApplicationDocumentsDirectory();
-  } else if (settings!.storeDownloadsSDCard) {
+  } else if (settings.storeDownloadsSDCard) {
     directory = await _getSDCard();
   } else {
     directory = await getApplicationSupportDirectory();

@@ -21,7 +21,7 @@ AppSettings _$AppSettingsFromJson(Map<String, dynamic> json) {
 /// @nodoc
 mixin _$AppSettings {
   /// The current theme name.
-  String get theme => throw _privateConstructorUsedError;
+  BrightnessMode get theme => throw _privateConstructorUsedError;
 
   /// True if episodes are marked as played when deleted.
   bool get markDeletedEpisodesAsPlayed => throw _privateConstructorUsedError;
@@ -73,7 +73,7 @@ abstract class $AppSettingsCopyWith<$Res> {
       _$AppSettingsCopyWithImpl<$Res, AppSettings>;
   @useResult
   $Res call(
-      {String theme,
+      {BrightnessMode theme,
       bool markDeletedEpisodesAsPlayed,
       bool storeDownloadsSDCard,
       double playbackSpeed,
@@ -119,7 +119,7 @@ class _$AppSettingsCopyWithImpl<$Res, $Val extends AppSettings>
       theme: null == theme
           ? _value.theme
           : theme // ignore: cast_nullable_to_non_nullable
-              as String,
+              as BrightnessMode,
       markDeletedEpisodesAsPlayed: null == markDeletedEpisodesAsPlayed
           ? _value.markDeletedEpisodesAsPlayed
           : markDeletedEpisodesAsPlayed // ignore: cast_nullable_to_non_nullable
@@ -181,7 +181,7 @@ abstract class _$$AppSettingsImplCopyWith<$Res>
   @override
   @useResult
   $Res call(
-      {String theme,
+      {BrightnessMode theme,
       bool markDeletedEpisodesAsPlayed,
       bool storeDownloadsSDCard,
       double playbackSpeed,
@@ -225,7 +225,7 @@ class __$$AppSettingsImplCopyWithImpl<$Res>
       theme: null == theme
           ? _value.theme
           : theme // ignore: cast_nullable_to_non_nullable
-              as String,
+              as BrightnessMode,
       markDeletedEpisodesAsPlayed: null == markDeletedEpisodesAsPlayed
           ? _value.markDeletedEpisodesAsPlayed
           : markDeletedEpisodesAsPlayed // ignore: cast_nullable_to_non_nullable
@@ -302,7 +302,7 @@ class _$AppSettingsImpl implements _AppSettings {
 
   /// The current theme name.
   @override
-  final String theme;
+  final BrightnessMode theme;
 
   /// True if episodes are marked as played when deleted.
   @override
@@ -432,7 +432,7 @@ class _$AppSettingsImpl implements _AppSettings {
 
 abstract class _AppSettings implements AppSettings {
   const factory _AppSettings(
-      {required final String theme,
+      {required final BrightnessMode theme,
       required final bool markDeletedEpisodesAsPlayed,
       required final bool storeDownloadsSDCard,
       required final double playbackSpeed,
@@ -452,7 +452,7 @@ abstract class _AppSettings implements AppSettings {
   @override
 
   /// The current theme name.
-  String get theme;
+  BrightnessMode get theme;
   @override
 
   /// True if episodes are marked as played when deleted.

@@ -12,7 +12,7 @@ import 'package:flutter_dialogs/flutter_dialogs.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:seasoning/entities/funding.dart';
 import 'package:seasoning/l10n/L.dart';
-import 'package:seasoning/providers/settings_service_provider.dart';
+import 'package:seasoning/services/settings/settings_service.dart';
 import 'package:seasoning/ui/widgets/action_text.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -67,7 +67,9 @@ class _MaterialFundingMenu extends ConsumerWidget {
                   context,
                   consent: settings.externalLinkConsent,
                 ).then((value) {
-                  settings.externalLinkConsent = value;
+                  ref
+                      .read(settingsServiceProvider.notifier)
+                      .externalLinkConsent = value;
                 });
               },
               icon: const Icon(
@@ -117,7 +119,9 @@ class _CupertinoFundingMenu extends ConsumerWidget {
                             context,
                             consent: settings.externalLinkConsent,
                           ).then((value) {
-                            settings.externalLinkConsent = value;
+                            ref
+                                .read(settingsServiceProvider.notifier)
+                                .externalLinkConsent = value;
                             Navigator.pop(context, 'Cancel');
                           });
                         },

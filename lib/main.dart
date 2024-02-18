@@ -12,7 +12,8 @@ import 'package:flutter/services.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:logging/logging.dart';
 import 'package:seasoning/navigation/navigation_helper.dart';
-import 'package:seasoning/services/settings/mobile_settings_service.dart';
+import 'package:seasoning/services/audio/mobile_audio_player_service.dart';
+import 'package:seasoning/services/settings/settings_service.dart';
 import 'package:seasoning/ui/seasoning_app.dart';
 
 // ignore_for_file: avoid_print
@@ -35,14 +36,15 @@ void main() async {
   certificateAuthorityBytes = await setupCertificateAuthority();
 
   NavigationHelper.setup();
-  await MobileSettingsService.setup();
+  await SettingsService.setup();
 
   runApp(
     const ProviderScope(
-      child: SeasoningApp(
-          // mobileSettingsService: mobileSettingsService,
-          // certificateAuthorityBytes: certificateAuthorityBytes,
-          ),
+      child: _GlobalProviders(
+        child: SeasoningApp(
+            // certificateAuthorityBytes: certificateAuthorityBytes,
+            ),
+      ),
     ),
   );
 }
@@ -70,4 +72,24 @@ Future<List<int>> setupCertificateAuthority() async {
   }
 
   return ca;
+}
+
+class _GlobalProviders extends ConsumerWidget {
+  const _GlobalProviders({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final future = ref.read(mobileAudioPlayerServiceProvider.notifier).setup();
+    return FutureBuilder(
+      future: future,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.done) {
+          return child;
+        }
+        return const SizedBox();
+      },
+    );
+  }
 }
