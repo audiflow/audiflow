@@ -1,63 +1,106 @@
-// Copyright 2024 HANAI Tohru, Reedom, INC.
-// Copyright 2020 Ben Hills and the project contributors.
-// All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:seasoning/entities/entities.dart';
 
-import 'package:seasoning/entities/app_settings.dart';
+part 'settings_service.g.dart';
 
 abstract class SettingsService {
-  AppSettings? get settings;
+  // ignore: avoid_setters_without_getters
+  set settings(AppSettings settings);
 
-  set settings(AppSettings? settings);
+  // ignore: avoid_setters_without_getters
+  set theme(BrightnessMode mode);
 
-  bool get themeDarkMode;
-
-  set themeDarkMode(bool value);
-
-  bool get markDeletedEpisodesAsPlayed;
-
+  // ignore: avoid_setters_without_getters
   set markDeletedEpisodesAsPlayed(bool value);
 
-  bool get storeDownloadsSDCard;
-
+  // ignore: avoid_setters_without_getters
   set storeDownloadsSDCard(bool value);
 
+  // ignore: avoid_setters_without_getters
   set playbackSpeed(double playbackSpeed);
 
-  double get playbackSpeed;
-
+  // ignore: avoid_setters_without_getters
   set searchProvider(String provider);
 
-  String get searchProvider;
-
+  // ignore: avoid_setters_without_getters
   set externalLinkConsent(bool consent);
 
-  bool get externalLinkConsent;
-
+  // ignore: avoid_setters_without_getters
   set autoOpenNowPlaying(bool autoOpenNowPlaying);
 
-  bool get autoOpenNowPlaying;
-
+  // ignore: avoid_setters_without_getters
   set showFunding(bool show);
 
-  bool get showFunding;
-
+  // ignore: avoid_setters_without_getters
   set autoUpdateEpisodePeriod(int period);
 
-  int get autoUpdateEpisodePeriod;
-
+  // ignore: avoid_setters_without_getters
   set trimSilence(bool trim);
 
-  bool get trimSilence;
-
+  // ignore: avoid_setters_without_getters
   set volumeBoost(bool boost);
 
-  bool get volumeBoost;
-
+  // ignore: avoid_setters_without_getters
   set layoutMode(int mode);
+}
 
-  int get layoutMode;
+@riverpod
+class EmptySettingsService extends _$EmptySettingsService
+    implements SettingsService {
+  @override
+  AppSettings build() {
+    return AppSettings.sensibleDefaults();
+  }
 
-  Stream<String> get settingsListener;
+  @override
+  // ignore: avoid_setters_without_getters
+  set markDeletedEpisodesAsPlayed(bool value) {}
+
+  @override
+  // ignore: avoid_setters_without_getters
+  set storeDownloadsSDCard(bool value) {}
+
+  @override
+  // ignore: avoid_setters_without_getters
+  set theme(BrightnessMode mode) {}
+
+  @override
+  // ignore: avoid_setters_without_getters
+  set playbackSpeed(double playbackSpeed) {}
+
+  @override
+  // ignore: avoid_setters_without_getters
+  set searchProvider(String provider) {}
+
+  @override
+  // ignore: avoid_setters_without_getters
+  set externalLinkConsent(bool consent) {}
+
+  @override
+  // ignore: avoid_setters_without_getters
+  set autoOpenNowPlaying(bool autoOpenNowPlaying) {}
+
+  @override
+  // ignore: avoid_setters_without_getters
+  set showFunding(bool show) {}
+
+  @override
+  // ignore: avoid_setters_without_getters
+  set autoUpdateEpisodePeriod(int period) {}
+
+  @override
+  // ignore: avoid_setters_without_getters
+  set trimSilence(bool trim) {}
+
+  @override
+  // ignore: avoid_setters_without_getters
+  set volumeBoost(bool boost) {}
+
+  @override
+  // ignore: avoid_setters_without_getters
+  set layoutMode(int mode) {}
+
+  @override
+  // ignore: avoid_setters_without_getters
+  set settings(AppSettings settings) {}
 }
