@@ -19,6 +19,12 @@ class SearchProvider with _$SearchProvider {
     required String name,
   }) = _SearchProvider;
 
+  factory SearchProvider.itunes() =>
+      const SearchProvider(key: 'itunes', name: 'iTunes');
+
+  factory SearchProvider.podcastindex() =>
+      const SearchProvider(key: 'podcastindex', name: 'Podcastindex');
+
   factory SearchProvider.fromJson(Map<String, dynamic> json) =>
       _$SearchProviderFromJson(json);
 }
