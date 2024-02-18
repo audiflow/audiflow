@@ -16,11 +16,11 @@ import 'package:seasoning/events/podcast_event.dart';
 /// database or storage implementation.
 abstract class Repository {
   // Event listeners
-  Stream<PodcastEvent> get podcastListener;
+  Stream<PodcastEvent> get podcastStream;
 
-  Stream<EpisodeEvent> get episodeListener;
+  Stream<EpisodeEvent> get episodeStream;
 
-  Stream<DownloadEvent> get downloadListener;
+  Stream<DownloadEvent> get downloadStream;
 
   // --- General
   Future<void> close();
@@ -101,4 +101,10 @@ abstract class Repository {
   Future<void> saveQueue(List<Episode> episodes);
 
   Future<List<Episode>> loadQueue();
+
+  // --- Player
+
+  Future<void> savePlayingEpisodeGuid(String guid);
+
+  Future<String?> playingEpisodeGuid();
 }

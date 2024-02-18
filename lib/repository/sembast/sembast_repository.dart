@@ -44,11 +44,11 @@ class SembastRepository extends Repository {
 
   final _podcastStore = intMapStoreFactory.store('podcast');
   final _podcastStatsStore = intMapStoreFactory.store('podcastStats');
-
   final _episodeStore = intMapStoreFactory.store('episode');
   final _episodeStatsStore = intMapStoreFactory.store('episodeStats');
   final _downloadableStore = intMapStoreFactory.store('downloadable');
   final _queueStore = intMapStoreFactory.store('queue');
+  final _playerStore = intMapStoreFactory.store('player');
   final _transcriptStore = intMapStoreFactory.store('transcript');
 
   final _queueGuids = <String>[];
@@ -64,13 +64,13 @@ class SembastRepository extends Repository {
   }
 
   @override
-  Stream<PodcastEvent> get podcastListener => _podcastSubject.stream;
+  Stream<PodcastEvent> get podcastStream => _podcastSubject.stream;
 
   @override
-  Stream<EpisodeEvent> get episodeListener => _episodeSubject.stream;
+  Stream<EpisodeEvent> get episodeStream => _episodeSubject.stream;
 
   @override
-  Stream<DownloadEvent> get downloadListener => _downloadSubject.stream;
+  Stream<DownloadEvent> get downloadStream => _downloadSubject.stream;
 
   // --- Podcast
 
@@ -125,12 +125,12 @@ class SembastRepository extends Repository {
     );
 
     return podcastSnapshots.map(
-          (snapshot) {
+      (snapshot) {
         final stats = PodcastStats.fromJson(
           snapshots
               .firstWhere(
                 (ss) => ss.key == snapshot.key,
-          )
+              )
               .value,
         ).copyWith(id: snapshot.key);
         final summary = PodcastSearchResultItem.fromJson(snapshot.value);
@@ -269,7 +269,6 @@ class SembastRepository extends Repository {
   Future<void> deleteEpisode(Episode episode) async {
     return _deleteEpisode(episode);
   }
-
 
   Future<void> _saveEpisodes(
     List<Episode> episodes, {
@@ -591,6 +590,19 @@ class SembastRepository extends Repository {
         ..clear()
         ..addAll(guids);
     }
+  }
+
+  // --- Player
+
+  @override
+  Future<void> savePlayingEpisodeGuid(String guid) async {
+    await _playerStore.record(1).put(await _db, {'guid': guid});
+  }
+
+  @override
+  Future<String?> playingEpisodeGuid() async {
+    final value = await _playerStore.record(1).get(await _db);
+    return value?['guid'] as String?;
   }
 
   Future<void> _cleanupEpisodes() async {

@@ -148,9 +148,12 @@ class EpisodeStats with _$EpisodeStats {
     @Default(0) int id,
     required String guid,
     @Default(Duration.zero) Duration position,
+    @Default(Duration.zero) Duration duration,
     @Default(false) bool played,
     @Default(0) int playCount,
     @Default(Duration.zero) Duration playTotal,
+    @Default(false) bool queued,
+    @Default(false) bool downloaded,
   }) = _EpisodeStats;
 
   factory EpisodeStats.fromJson(Map<String, dynamic> json) =>
@@ -159,4 +162,13 @@ class EpisodeStats with _$EpisodeStats {
   factory EpisodeStats.fromEpisode(Episode episode) {
     return EpisodeStats(guid: episode.guid);
   }
+}
+
+extension EpisodeStatsExt on EpisodeStats {
+  double get percentagePlayed => duration == Duration.zero
+      ? 0.0
+      : position.inMilliseconds / duration.inMilliseconds;
+
+  Duration get timeRemaining =>
+      duration == Duration.zero ? Duration.zero : duration - position;
 }

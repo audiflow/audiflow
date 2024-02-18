@@ -2,7 +2,6 @@ export './app_settings.dart';
 export './chapter.dart';
 export './downloadable.dart';
 export './episode.dart';
-export './episode_state.dart';
 export './feed.dart';
 export './funding.dart';
 export './persistable.dart';

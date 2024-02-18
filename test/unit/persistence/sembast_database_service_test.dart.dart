@@ -267,6 +267,22 @@ void main() {
     });
   });
 
+  group('Player', () {
+    setUpAll(createRepository);
+    tearDownAll(cleanUpRepository);
+
+    test('playingEpisodeGuid initial value', () async {
+      final guid = await persistenceService!.playingEpisodeGuid();
+      expect(guid, isNull);
+    });
+
+    test('savePlayingEpisodeGuid', () async {
+      await persistenceService!.savePlayingEpisodeGuid('abc');
+      final guid = await persistenceService!.playingEpisodeGuid();
+      expect(guid, 'abd');
+    });
+  });
+
   // group('Queue', () {
   //   setUpAll(createRepository);
   //   tearDownAll(cleanUpRepository);

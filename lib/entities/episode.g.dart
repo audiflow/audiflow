@@ -68,11 +68,16 @@ _$EpisodeStatsImpl _$$EpisodeStatsImplFromJson(Map<String, dynamic> json) =>
       position: json['position'] == null
           ? Duration.zero
           : Duration(microseconds: json['position'] as int),
+      duration: json['duration'] == null
+          ? Duration.zero
+          : Duration(microseconds: json['duration'] as int),
       played: json['played'] as bool? ?? false,
       playCount: json['playCount'] as int? ?? 0,
       playTotal: json['playTotal'] == null
           ? Duration.zero
           : Duration(microseconds: json['playTotal'] as int),
+      queued: json['queued'] as bool? ?? false,
+      downloaded: json['downloaded'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$$EpisodeStatsImplToJson(_$EpisodeStatsImpl instance) =>
@@ -80,7 +85,10 @@ Map<String, dynamic> _$$EpisodeStatsImplToJson(_$EpisodeStatsImpl instance) =>
       'id': instance.id,
       'guid': instance.guid,
       'position': instance.position.inMicroseconds,
+      'duration': instance.duration.inMicroseconds,
       'played': instance.played,
       'playCount': instance.playCount,
       'playTotal': instance.playTotal.inMicroseconds,
+      'queued': instance.queued,
+      'downloaded': instance.downloaded,
     };
