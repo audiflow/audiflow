@@ -4,40 +4,45 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'package:audio_service/audio_service.dart';
 import 'package:seasoning/entities/episode.dart';
 import 'package:seasoning/entities/sleep.dart';
-import 'package:seasoning/events/queue_event.dart';
-import 'package:seasoning/events/transcript_event.dart';
 
 enum AudioState {
-  none,
+  /// There hasn't been any resource loaded yet.
+  idle,
+
+  /// Resource is being loaded.
+  loading,
+
+  /// Resource is being buffered.
   buffering,
-  starting,
-  playing,
-  pausing,
-  stopped,
-  error,
-}
 
-class PositionState {
-  PositionState({
-    required this.position,
-    required this.length,
-    required this.percentage,
-    this.episode,
-    this.buffering = false,
-  });
+  /// Resource is buffered enough and available for playback.
+  ready,
 
-  PositionState.emptyState()
-      : position = Duration.zero,
-        length = Duration.zero,
-        percentage = 0,
-        buffering = false;
-  Duration position;
-  late Duration length;
-  late int percentage;
-  Episode? episode;
-  final bool buffering;
+  /// The end of resource was reached.
+  completed,
+
+  /// There was an error loading resource.
+  error;
+
+  static AudioState from(AudioProcessingState state) {
+    switch (state) {
+      case AudioProcessingState.idle:
+        return AudioState.idle;
+      case AudioProcessingState.loading:
+        return AudioState.loading;
+      case AudioProcessingState.buffering:
+        return AudioState.buffering;
+      case AudioProcessingState.ready:
+        return AudioState.ready;
+      case AudioProcessingState.completed:
+        return AudioState.completed;
+      case AudioProcessingState.error:
+        return AudioState.error;
+    }
+  }
 }
 
 /// This class defines the audio playback options supported by Anytime.
@@ -45,8 +50,15 @@ class PositionState {
 /// The implementing classes will then handle the specifics for the platform we
 /// are running on.
 abstract class AudioPlayerService {
+  /// Initialize the service.
+  Future<void> setup();
+
   /// Play a new episode, optionally resume at last save point.
-  Future<void> playEpisode({required Episode episode, bool resume = true});
+  Future<void> playEpisode({
+    required Episode episode,
+    required Duration position,
+    bool resume = true,
+  });
 
   /// Resume playing of current episode
   Future<void> play();
@@ -65,25 +77,7 @@ abstract class AudioPlayerService {
   Future<void> fastForward();
 
   /// Seek to the specified position within the current episode.
-  Future<void> seek({required int position});
-
-  /// Call when the app is resumed to re-establish the audio service.
-  Future<Episode?> resume();
-
-  /// Add an episode to the playback queue
-  Future<void> addUpNextEpisode(Episode episode);
-
-  /// Remove an episode from the playback queue if it exists
-  Future<bool> removeUpNextEpisode(Episode episode);
-
-  /// Remove an episode from the playback queue if it exists
-  Future<bool> moveUpNextEpisode(Episode episode, int oldIndex, int newIndex);
-
-  /// Empty the up next queue
-  Future<void> clearUpNext();
-
-  /// Call when the app is about to be suspended.
-  Future<void> suspend();
+  Future<void> seek({required Duration position});
 
   /// Call to set the playback speed.
   Future<void> setPlaybackSpeed(double speed);
@@ -94,20 +88,11 @@ abstract class AudioPlayerService {
   /// Call to toggle trim silence.
   Future<void> volumeBoost({required bool boost});
 
-  Future<void> searchTranscript(String search);
+  /// Call when the app is about to be suspended.
+  Future<void> suspend();
 
-  Future<void> clearTranscript();
+  /// Call when the app is resumed to re-establish the audio service.
+  Future<void> resume();
 
   void sleep(Sleep sleep);
-
-  Episode? nowPlaying;
-
-  /// Event listeners
-  Stream<AudioState>? playingState;
-  Stream<PositionState>? playPosition;
-  Stream<Episode?>? episodeEvent;
-  Stream<TranscriptState>? transcriptEvent;
-  Stream<int>? playbackError;
-  Stream<QueueListEvent>? queueState;
-  Stream<Sleep>? sleepStream;
 }

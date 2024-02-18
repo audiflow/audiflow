@@ -19,7 +19,7 @@ class AudioPlayerState with _$AudioPlayerState {
     required Episode episode,
     required Duration position,
     required bool playing,
-    required AudioState playingState,
+    required AudioState audioState,
     @Default(0) int playbackError,
   }) = _AudioPlayerState;
 }

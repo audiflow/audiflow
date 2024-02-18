@@ -178,7 +178,7 @@ mixin _$AudioPlayerState {
   Episode get episode => throw _privateConstructorUsedError;
   Duration get position => throw _privateConstructorUsedError;
   bool get playing => throw _privateConstructorUsedError;
-  AudioState get playingState => throw _privateConstructorUsedError;
+  AudioState get audioState => throw _privateConstructorUsedError;
   int get playbackError => throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
@@ -196,7 +196,7 @@ abstract class $AudioPlayerStateCopyWith<$Res> {
       {Episode episode,
       Duration position,
       bool playing,
-      AudioState playingState,
+      AudioState audioState,
       int playbackError});
 
   $EpisodeCopyWith<$Res> get episode;
@@ -218,7 +218,7 @@ class _$AudioPlayerStateCopyWithImpl<$Res, $Val extends AudioPlayerState>
     Object? episode = null,
     Object? position = null,
     Object? playing = null,
-    Object? playingState = null,
+    Object? audioState = null,
     Object? playbackError = null,
   }) {
     return _then(_value.copyWith(
@@ -234,9 +234,9 @@ class _$AudioPlayerStateCopyWithImpl<$Res, $Val extends AudioPlayerState>
           ? _value.playing
           : playing // ignore: cast_nullable_to_non_nullable
               as bool,
-      playingState: null == playingState
-          ? _value.playingState
-          : playingState // ignore: cast_nullable_to_non_nullable
+      audioState: null == audioState
+          ? _value.audioState
+          : audioState // ignore: cast_nullable_to_non_nullable
               as AudioState,
       playbackError: null == playbackError
           ? _value.playbackError
@@ -266,7 +266,7 @@ abstract class _$$AudioPlayerStateImplCopyWith<$Res>
       {Episode episode,
       Duration position,
       bool playing,
-      AudioState playingState,
+      AudioState audioState,
       int playbackError});
 
   @override
@@ -287,7 +287,7 @@ class __$$AudioPlayerStateImplCopyWithImpl<$Res>
     Object? episode = null,
     Object? position = null,
     Object? playing = null,
-    Object? playingState = null,
+    Object? audioState = null,
     Object? playbackError = null,
   }) {
     return _then(_$AudioPlayerStateImpl(
@@ -303,9 +303,9 @@ class __$$AudioPlayerStateImplCopyWithImpl<$Res>
           ? _value.playing
           : playing // ignore: cast_nullable_to_non_nullable
               as bool,
-      playingState: null == playingState
-          ? _value.playingState
-          : playingState // ignore: cast_nullable_to_non_nullable
+      audioState: null == audioState
+          ? _value.audioState
+          : audioState // ignore: cast_nullable_to_non_nullable
               as AudioState,
       playbackError: null == playbackError
           ? _value.playbackError
@@ -322,7 +322,7 @@ class _$AudioPlayerStateImpl implements _AudioPlayerState {
       {required this.episode,
       required this.position,
       required this.playing,
-      required this.playingState,
+      required this.audioState,
       this.playbackError = 0});
 
   @override
@@ -332,14 +332,14 @@ class _$AudioPlayerStateImpl implements _AudioPlayerState {
   @override
   final bool playing;
   @override
-  final AudioState playingState;
+  final AudioState audioState;
   @override
   @JsonKey()
   final int playbackError;
 
   @override
   String toString() {
-    return 'AudioPlayerState(episode: $episode, position: $position, playing: $playing, playingState: $playingState, playbackError: $playbackError)';
+    return 'AudioPlayerState(episode: $episode, position: $position, playing: $playing, audioState: $audioState, playbackError: $playbackError)';
   }
 
   @override
@@ -351,15 +351,15 @@ class _$AudioPlayerStateImpl implements _AudioPlayerState {
             (identical(other.position, position) ||
                 other.position == position) &&
             (identical(other.playing, playing) || other.playing == playing) &&
-            (identical(other.playingState, playingState) ||
-                other.playingState == playingState) &&
+            (identical(other.audioState, audioState) ||
+                other.audioState == audioState) &&
             (identical(other.playbackError, playbackError) ||
                 other.playbackError == playbackError));
   }
 
   @override
   int get hashCode => Object.hash(
-      runtimeType, episode, position, playing, playingState, playbackError);
+      runtimeType, episode, position, playing, audioState, playbackError);
 
   @JsonKey(ignore: true)
   @override
@@ -374,7 +374,7 @@ abstract class _AudioPlayerState implements AudioPlayerState {
       {required final Episode episode,
       required final Duration position,
       required final bool playing,
-      required final AudioState playingState,
+      required final AudioState audioState,
       final int playbackError}) = _$AudioPlayerStateImpl;
 
   @override
@@ -384,7 +384,7 @@ abstract class _AudioPlayerState implements AudioPlayerState {
   @override
   bool get playing;
   @override
-  AudioState get playingState;
+  AudioState get audioState;
   @override
   int get playbackError;
   @override
