@@ -359,15 +359,22 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
           previous.processingState == current.processingState;
     }).listen((PlaybackState playbackState) {
       final audioState = AudioState.from(playbackState.processingState);
+      var playing = state?.playing ?? false;
+      log.fine(
+        'Audio state is $audioState - playing is ${playbackState.playing}',
+      );
       if (audioState == AudioState.ready) {
         if (playbackState.playing) {
           _startPositionTicker();
+          playing = true;
         } else {
+          playing = false;
           _stopPositionTicker();
         }
       }
       state = state?.copyWith(
         position: playbackState.position,
+        playing: playing,
         audioState: audioState,
       );
       if (audioState == AudioState.completed) {
