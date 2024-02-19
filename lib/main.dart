@@ -11,10 +11,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:logging/logging.dart';
-import 'package:seasoning/navigation/navigation_helper.dart';
+import 'package:seasoning/ui/app/navigation_helper.dart';
 import 'package:seasoning/services/audio/mobile_audio_player_service.dart';
 import 'package:seasoning/services/settings/settings_service.dart';
-import 'package:seasoning/ui/seasoning_app.dart';
+import 'package:seasoning/ui/app/seasoning_app.dart';
 
 // ignore_for_file: avoid_print
 void main() async {

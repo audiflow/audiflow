@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:seasoning/features/podcast_chart/ui/podcast_chart_page.dart';
 import 'package:seasoning/l10n/L.dart';
-import 'package:seasoning/navigation/navigation_helper.dart';
+import 'package:seasoning/ui/app/navigation_helper.dart';
 import 'package:seasoning/providers/theme_provider.dart';
 
 ThemeData theme = Themes.lightTheme().themeData;
@@ -262,48 +262,6 @@ class SettingsPage extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class AppBottomNavigationBar extends StatelessWidget {
-  const AppBottomNavigationBar({
-    super.key,
-    required this.navigationShell,
-  });
-
-  final StatefulNavigationShell navigationShell;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: navigationShell,
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        currentIndex: navigationShell.currentIndex,
-        onTap: (index) {
-          navigationShell.goBranch(
-            index,
-            initialLocation: index == navigationShell.currentIndex,
-          );
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.search),
-            label: 'search',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: 'settings',
-          ),
-        ],
       ),
     );
   }

@@ -167,15 +167,11 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
           return Stack(
             alignment: Alignment.bottomCenter,
             children: [
-              if (percentage > 0)
+              if (0 < percentage)
                 GestureDetector(
                   onTap: () => _animateToHeight(widget.minHeight),
                   child: Opacity(
-                    opacity: borderDouble(
-                      minRange: 0,
-                      maxRange: 1,
-                      value: percentage,
-                    ),
+                    opacity: borderDouble(percentage),
                     child: Container(color: widget.backgroundColor),
                   ),
                 ),
@@ -189,11 +185,7 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
                       builder:
                           (BuildContext context, double value, Widget? child) {
                         return Opacity(
-                          opacity: borderDouble(
-                            minRange: 0,
-                            maxRange: 1,
-                            value: 1 - value * 0.8,
-                          ),
+                          opacity: borderDouble(1 - value * 0.8),
                           child: Transform.translate(
                             offset: Offset(0, widget.minHeight * value * 0.5),
                             child: child,
@@ -311,12 +303,12 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
   /// Determines whether the panel should be updated in height or discarded
   void _handleHeightChange({bool animation = false}) {
     // Drag above minHeight
-    if (_dragHeight >= widget.minHeight) {
+    if (widget.minHeight <= _dragHeight) {
       if (dragDownPercentage.value != 0) {
         dragDownPercentage.value = 0;
       }
 
-      if (_dragHeight > widget.maxHeight) {
+      if (widget.maxHeight < _dragHeight) {
         return;
       }
 
@@ -326,9 +318,7 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
     // Drag below minHeight
     else if (onDismissed != null) {
       final percentageDown = borderDouble(
-        minRange: 0,
-        maxRange: 1,
-        value: percentageFromValueInRange(
+        percentageFromValueInRange(
           min: widget.minHeight,
           max: 0,
           value: _dragHeight,

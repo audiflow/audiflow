@@ -6,7 +6,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:seasoning/entities/entities.dart';
-import 'package:seasoning/navigation/navigation_helper.dart';
+import 'package:seasoning/ui/app/navigation_helper.dart';
 import 'package:seasoning/ui/widgets/tile_image.dart';
 
 class PodcastTile extends StatelessWidget {

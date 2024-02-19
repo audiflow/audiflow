@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:seasoning/ui/mini_player/mini_player.dart';
 
 extension SelectedColorExtension on PanelState {
@@ -22,16 +24,4 @@ double percentageFromValueInRange({
   return (value - min) / (max - min);
 }
 
-double borderDouble({
-  required double minRange,
-  required double maxRange,
-  required double value,
-}) {
-  if (maxRange < value) {
-    return maxRange;
-  }
-  if (value < minRange) {
-    return minRange;
-  }
-  return value;
-}
+double borderDouble(double value) => math.max(0, math.min(1, value));

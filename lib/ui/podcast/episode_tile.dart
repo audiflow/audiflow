@@ -452,14 +452,6 @@ class _EpisodeDate extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final date = episode.publicationDate == null
-        ? ''
-        : DateFormat(
-            episode.publicationDate!.year == DateTime.now().year
-                ? 'yyyy.MM'
-                : 'yyyy.MM.dd',
-          ).format(episode.publicationDate!);
-
     return Text(
       dateString,
       overflow: TextOverflow.ellipsis,
@@ -488,7 +480,8 @@ class _EpisodeDate extends StatelessWidget {
     } else if (1 <= elapsed.inHours) {
       return '${elapsed.inHours} HOUR${1 < elapsed.inHours ? 'S' : ''} AGO';
     } else {
-      return '${elapsed.inMinutes} MINUTE${1 < elapsed.inMinutes ? 'S' : ''} AGO';
+      return '${elapsed.inMinutes} MINUTE${1 < elapsed.inMinutes ? 'S' : ''}'
+          ' AGO';
     }
   }
 }
