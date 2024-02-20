@@ -139,6 +139,17 @@ class _PodcastTitle extends HookConsumerWidget {
       sliver: SliverList(
         delegate: SliverChildListDelegate.fixed(
           <Widget>[
+            const SizedBox(height: 8),
+            Text(
+              podcast.title,
+              style: textTheme.titleMedium,
+              textAlign: TextAlign.center,
+            ),
+            Text(
+              podcast.copyright,
+              style: textTheme.bodySmall,
+              textAlign: TextAlign.center,
+            ),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

@@ -67,7 +67,6 @@ class PodcastDetailsAppBar extends ConsumerWidget {
           ),
         ],
         flexibleSpace: FlexibleSpaceBar(
-          collapseMode: CollapseMode.pin,
           background: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -77,7 +76,7 @@ class PodcastDetailsAppBar extends ConsumerWidget {
                   key: Key(
                     'detailHero:${summary.imageUrl}:${summary.guid}',
                   ),
-                  tag: '${heroPrefix}:${summary.guid}',
+                  tag: '$heroPrefix:${summary.guid}',
                   child: ExcludeSemantics(
                     child: _PodcastHeaderImage(
                       basicInfo: summary,
@@ -86,9 +85,6 @@ class PodcastDetailsAppBar extends ConsumerWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: 8),
-              Text(summary.title, style: textTheme.titleMedium),
-              Text(summary.copyright, style: textTheme.bodySmall),
             ],
           ),
         ),
