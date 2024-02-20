@@ -3,7 +3,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:seasoning/entities/entities.dart';
 import 'package:seasoning/providers/entities/podcast_episodes_provider.dart';
 
-part 'podcast_seasons_provider.g.dart';
+part '../entities/podcast_seasons_provider.g.dart';
 
 @riverpod
 List<Season> podcastSeasons(PodcastSeasonsRef ref) {
