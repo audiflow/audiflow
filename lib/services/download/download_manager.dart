@@ -14,12 +14,15 @@ class DownloadProgress {
     this.percentage,
     this.status,
   );
+
   final String id;
   final int percentage;
   final DownloadState status;
 }
 
 abstract class DownloadManager {
+  Future<void> setup();
+
   Future<String?> enqueueTask(String url, String downloadPath, String fileName);
 
   Stream<DownloadProgress> get downloadProgress;

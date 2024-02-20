@@ -5,58 +5,49 @@
 // found in the LICENSE file.
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:percent_indicator/percent_indicator.dart';
+import 'package:seasoning/entities/entities.dart';
+import 'package:seasoning/providers/download_progress_provider.dart';
+import 'package:seasoning/providers/download_service_provider.dart';
 
 /// Displays a download button for an episode.
 ///
 /// Can be passed a percentage representing the download progress which
 /// the button will then animate to show progress.
-class DownloadButton extends StatelessWidget {
-  const DownloadButton({
+class DownloadButton extends ConsumerWidget {
+  const DownloadButton(
+    this.episode, {
     super.key,
-    required this.label,
-    required this.title,
-    required this.icon,
-    required this.percent,
-    required this.onPressed,
   });
-  final String label;
-  final String title;
-  final IconData icon;
-  final int percent;
-  final VoidCallback onPressed;
+
+  final Episode episode;
 
   @override
-  Widget build(BuildContext context) {
-    final progress = percent.toDouble() / 100;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final downloadState = ref.watch(downloadProgressProvider(episode));
+    final downloads = downloadState.valueOrNull != null;
+    final downloaded = downloads && downloadState.valueOrNull!.downloaded;
+    final percent = downloadState.valueOrNull?.percentage ?? 100;
 
-    return Semantics(
-      label: '$label $title',
-      child: InkWell(
-        onTap: onPressed,
-        child: CircularPercentIndicator(
-          radius: 19,
-          lineWidth: 1.5,
-          backgroundColor: Theme.of(context).primaryColor,
-          progressColor: Theme.of(context).indicatorColor,
-          animation: true,
-          animateFromLastPercent: true,
-          percent: progress,
-          center: percent > 0
-              ? Text(
-                  '$percent%',
-                  style: const TextStyle(
-                    fontSize: 12,
-                  ),
-                )
-              : Icon(
-                  icon,
-                  size: 22,
-
-                  /// Why is this not picking up the theme like other widgets?!?!?!
-                  color: Theme.of(context).primaryColor,
-                ),
-        ),
+    return InkWell(
+      onTap: () => downloads
+          ? ref.read(downloadServiceProvider).deleteDownload(episode)
+          : ref.read(downloadServiceProvider).downloadEpisode(episode),
+      child: CircularPercentIndicator(
+        key: ValueKey(downloads),
+        radius: 19,
+        lineWidth: 1.5,
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        progressColor: Theme.of(context).indicatorColor,
+        animation: downloads && !downloaded,
+        animateFromLastPercent: true,
+        percent: percent / 100,
+        center: downloaded
+            ? const Icon(Icons.download_done, size: 22)
+            : downloads
+                ? Text('$percent%', style: const TextStyle(fontSize: 12))
+                : const Icon(Icons.download, size: 22),
       ),
     );
   }

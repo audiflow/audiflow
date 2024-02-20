@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:logging/logging.dart';
+import 'package:seasoning/providers/download_manager_provider.dart';
 import 'package:seasoning/providers/repository_provider.dart';
 import 'package:seasoning/services/audio/mobile_audio_player_service.dart';
 import 'package:seasoning/services/podcast/mobile_podcast_service.dart';
@@ -87,7 +88,10 @@ class _GlobalProviders extends ConsumerWidget {
       ..watch(repositoryProvider)
       ..watch(settingsServiceProvider)
       ..watch(podcastServiceProvider);
-    final future = ref.watch(mobileAudioPlayerServiceProvider.notifier).setup();
+    final future = Future.wait([
+      ref.watch(mobileAudioPlayerServiceProvider.notifier).setup(),
+      ref.watch(downloadManagerProvider).setup(),
+    ]);
     return FutureBuilder(
       future: future,
       builder: (context, snapshot) {

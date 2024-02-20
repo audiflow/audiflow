@@ -8,6 +8,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import 'package:seasoning/entities/entities.dart';
 import 'package:seasoning/ui/widgets/animated_play_button.dart';
+import 'package:seasoning/ui/widgets/download_button.dart';
 import 'package:seasoning/ui/widgets/tile_image.dart';
 
 /// An EpisodeTitle is built with an ExpandedTile widget and displays the
@@ -392,7 +393,13 @@ class _Controls extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedPlayButton(episode);
+    return Row(
+      children: [
+        AnimatedPlayButton(episode),
+        DownloadButton(episode),
+        IconButton(onPressed: () {}, icon: Icon(Icons.playlist_add)),
+      ],
+    );
   }
 }
 

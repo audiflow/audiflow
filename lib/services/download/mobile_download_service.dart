@@ -53,6 +53,14 @@ class MobileDownloadService extends DownloadService {
   }
 
   @override
+  Future<void> deleteDownload(Episode episode) async {
+    final download = await _repository.findDownloadByGuid(episode.guid);
+    if (download != null) {
+      await _repository.deleteDownload(download);
+    }
+  }
+
+  @override
   Future<bool> downloadEpisode(Episode episode) async {
     try {
       if (!await hasStoragePermission(_appSettings)) {
@@ -92,10 +100,9 @@ class MobileDownloadService extends DownloadService {
         await _podcastService.saveEpisode(newEpisode);
       }
 
-      var stats = await _repository.findEpisodeStatsByGuid(episode.guid);
+      final stats = await _repository.findEpisodeStatsByGuid(episode.guid);
       if (stats == null) {
-        stats = EpisodeStats.fromEpisode(episode);
-        await _repository.saveEpisodeStats(stats);
+        await _repository.createEpisodeStats(episode);
       }
 
       // Ensure the download directory exists
@@ -197,7 +204,7 @@ class MobileDownloadService extends DownloadService {
     );
     await _repository.saveDownload(download);
 
-    if (progress.percentage < 100 ||
+    if (progress.status != DownloadState.downloaded ||
         !await hasStoragePermission(_appSettings)) {
       return;
     }
