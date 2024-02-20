@@ -6,7 +6,6 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:seasoning/entities/episode.dart';
 
 part 'season.freezed.dart';
-part 'season.g.dart';
 
 /// An object that represents an individual season of a Podcast.
 ///
@@ -17,9 +16,6 @@ part 'season.g.dart';
 @freezed
 class Season with _$Season {
   const factory Season({
-    /// Database ID
-    int? id,
-
     /// A String GUID for the season.
     required String guid,
 
@@ -27,8 +23,8 @@ class Season with _$Season {
     /// without subscribing to a podcast this may be null.
     required String pguid,
 
-    /// The name of the podcast the season is part of.
-    required String podcast,
+    /// Episodes under the season.
+    required List<(Episode, EpisodeStats?)> episodes,
 
     /// The season title.
     String? title,
@@ -36,48 +32,46 @@ class Season with _$Season {
     /// The season number.
     int? seasonNum,
   }) = _Season;
-
-  factory Season.fromJson(Map<String, dynamic> json) => _$SeasonFromJson(json);
 }
 
 extension SeasonExt on Season {
-  // bool get playedAllEpisodes => episodes.every((element) => element.played);
-  //
-  // int get totalDuration =>
-  //     episodes.fold(0, (ms, episode) => ms + episode.duration);
-  //
-  // bool get played {
-  //   return episodes.every((element) => element.played);
-  // }
-  //
-  // String? get thumbImageUrl {
-  //   return episodes.first.thumbImageUrl;
-  // }
-  //
-  // String? get imageUrl {
-  //   return episodes.first.imageUrl;
-  // }
-  //
-  // double get percentagePlayed {
-  //   return episodes.fold(
-  //           0.0, (total, episode) => total + episode.percentagePlayed) /
-  //       episodes.length;
-  // }
-  //
-  // DateTime? get publicationDate {
-  //   return episodes.first.publicationDate;
-  // }
-  //
-  // int get duration {
-  //   return episodes.fold(0, (total, episode) => total + episode.duration);
-  // }
-  //
-  // Duration get timeRemaining {
-  //   return episodes.fold(
-  //       Duration.zero,
-  //       (total, episode) =>
-  //           total + Duration(seconds: episode.timeRemaining.inSeconds));
-  // }
+  bool get playedAll =>
+      episodes.map((e) => e.$2).every((stats) => stats?.played == true);
+
+  Duration get totalDuration => episodes
+      .map((e) => e.$1)
+      .fold(Duration.zero, (ms, episode) => ms + episode.duration);
+
+  String? get thumbImageUrl {
+    return episodes.first.$1.thumbImageUrl;
+  }
+
+  String? get imageUrl {
+    return episodes.first.$1.imageUrl;
+  }
+
+  DateTime? get publicationDate {
+    return episodes.first.$1.publicationDate;
+  }
+
+  Duration get duration {
+    return episodes
+        .map((e) => e.$1)
+        .fold(Duration.zero, (total, episode) => total + episode.duration);
+  }
+
+  Duration get timeRemaining {
+    final playedTotal =
+        episodes.map((e) => e.$2).fold(Duration.zero, (total, stats) {
+      final maxPosition = stats == null
+          ? Duration.zero
+          : stats.played
+              ? stats.duration
+              : stats.position;
+      return total + maxPosition;
+    });
+    return totalDuration - playedTotal;
+  }
 }
 
 List<Episode> sortedSeasonEpisodes(List<Episode> episodes) =>

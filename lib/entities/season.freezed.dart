@@ -14,15 +14,8 @@ T _$identity<T>(T value) => value;
 final _privateConstructorUsedError = UnsupportedError(
     'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
 
-Season _$SeasonFromJson(Map<String, dynamic> json) {
-  return _Season.fromJson(json);
-}
-
 /// @nodoc
 mixin _$Season {
-  /// Database ID
-  int? get id => throw _privateConstructorUsedError;
-
   /// A String GUID for the season.
   String get guid => throw _privateConstructorUsedError;
 
@@ -30,8 +23,9 @@ mixin _$Season {
   /// without subscribing to a podcast this may be null.
   String get pguid => throw _privateConstructorUsedError;
 
-  /// The name of the podcast the season is part of.
-  String get podcast => throw _privateConstructorUsedError;
+  /// Episodes under the season.
+  List<(Episode, EpisodeStats?)> get episodes =>
+      throw _privateConstructorUsedError;
 
   /// The season title.
   String? get title => throw _privateConstructorUsedError;
@@ -39,7 +33,6 @@ mixin _$Season {
   /// The season number.
   int? get seasonNum => throw _privateConstructorUsedError;
 
-  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
   $SeasonCopyWith<Season> get copyWith => throw _privateConstructorUsedError;
 }
@@ -50,10 +43,9 @@ abstract class $SeasonCopyWith<$Res> {
       _$SeasonCopyWithImpl<$Res, Season>;
   @useResult
   $Res call(
-      {int? id,
-      String guid,
+      {String guid,
       String pguid,
-      String podcast,
+      List<(Episode, EpisodeStats?)> episodes,
       String? title,
       int? seasonNum});
 }
@@ -71,18 +63,13 @@ class _$SeasonCopyWithImpl<$Res, $Val extends Season>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? id = freezed,
     Object? guid = null,
     Object? pguid = null,
-    Object? podcast = null,
+    Object? episodes = null,
     Object? title = freezed,
     Object? seasonNum = freezed,
   }) {
     return _then(_value.copyWith(
-      id: freezed == id
-          ? _value.id
-          : id // ignore: cast_nullable_to_non_nullable
-              as int?,
       guid: null == guid
           ? _value.guid
           : guid // ignore: cast_nullable_to_non_nullable
@@ -91,10 +78,10 @@ class _$SeasonCopyWithImpl<$Res, $Val extends Season>
           ? _value.pguid
           : pguid // ignore: cast_nullable_to_non_nullable
               as String,
-      podcast: null == podcast
-          ? _value.podcast
-          : podcast // ignore: cast_nullable_to_non_nullable
-              as String,
+      episodes: null == episodes
+          ? _value.episodes
+          : episodes // ignore: cast_nullable_to_non_nullable
+              as List<(Episode, EpisodeStats?)>,
       title: freezed == title
           ? _value.title
           : title // ignore: cast_nullable_to_non_nullable
@@ -115,10 +102,9 @@ abstract class _$$SeasonImplCopyWith<$Res> implements $SeasonCopyWith<$Res> {
   @override
   @useResult
   $Res call(
-      {int? id,
-      String guid,
+      {String guid,
       String pguid,
-      String podcast,
+      List<(Episode, EpisodeStats?)> episodes,
       String? title,
       int? seasonNum});
 }
@@ -134,18 +120,13 @@ class __$$SeasonImplCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? id = freezed,
     Object? guid = null,
     Object? pguid = null,
-    Object? podcast = null,
+    Object? episodes = null,
     Object? title = freezed,
     Object? seasonNum = freezed,
   }) {
     return _then(_$SeasonImpl(
-      id: freezed == id
-          ? _value.id
-          : id // ignore: cast_nullable_to_non_nullable
-              as int?,
       guid: null == guid
           ? _value.guid
           : guid // ignore: cast_nullable_to_non_nullable
@@ -154,10 +135,10 @@ class __$$SeasonImplCopyWithImpl<$Res>
           ? _value.pguid
           : pguid // ignore: cast_nullable_to_non_nullable
               as String,
-      podcast: null == podcast
-          ? _value.podcast
-          : podcast // ignore: cast_nullable_to_non_nullable
-              as String,
+      episodes: null == episodes
+          ? _value._episodes
+          : episodes // ignore: cast_nullable_to_non_nullable
+              as List<(Episode, EpisodeStats?)>,
       title: freezed == title
           ? _value.title
           : title // ignore: cast_nullable_to_non_nullable
@@ -171,22 +152,15 @@ class __$$SeasonImplCopyWithImpl<$Res>
 }
 
 /// @nodoc
-@JsonSerializable()
+
 class _$SeasonImpl implements _Season {
   const _$SeasonImpl(
-      {this.id,
-      required this.guid,
+      {required this.guid,
       required this.pguid,
-      required this.podcast,
+      required final List<(Episode, EpisodeStats?)> episodes,
       this.title,
-      this.seasonNum});
-
-  factory _$SeasonImpl.fromJson(Map<String, dynamic> json) =>
-      _$$SeasonImplFromJson(json);
-
-  /// Database ID
-  @override
-  final int? id;
+      this.seasonNum})
+      : _episodes = episodes;
 
   /// A String GUID for the season.
   @override
@@ -197,9 +171,16 @@ class _$SeasonImpl implements _Season {
   @override
   final String pguid;
 
-  /// The name of the podcast the season is part of.
+  /// Episodes under the season.
+  final List<(Episode, EpisodeStats?)> _episodes;
+
+  /// Episodes under the season.
   @override
-  final String podcast;
+  List<(Episode, EpisodeStats?)> get episodes {
+    if (_episodes is EqualUnmodifiableListView) return _episodes;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_episodes);
+  }
 
   /// The season title.
   @override
@@ -211,7 +192,7 @@ class _$SeasonImpl implements _Season {
 
   @override
   String toString() {
-    return 'Season(id: $id, guid: $guid, pguid: $pguid, podcast: $podcast, title: $title, seasonNum: $seasonNum)';
+    return 'Season(guid: $guid, pguid: $pguid, episodes: $episodes, title: $title, seasonNum: $seasonNum)';
   }
 
   @override
@@ -219,49 +200,33 @@ class _$SeasonImpl implements _Season {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$SeasonImpl &&
-            (identical(other.id, id) || other.id == id) &&
             (identical(other.guid, guid) || other.guid == guid) &&
             (identical(other.pguid, pguid) || other.pguid == pguid) &&
-            (identical(other.podcast, podcast) || other.podcast == podcast) &&
+            const DeepCollectionEquality().equals(other._episodes, _episodes) &&
             (identical(other.title, title) || other.title == title) &&
             (identical(other.seasonNum, seasonNum) ||
                 other.seasonNum == seasonNum));
   }
 
-  @JsonKey(ignore: true)
   @override
-  int get hashCode =>
-      Object.hash(runtimeType, id, guid, pguid, podcast, title, seasonNum);
+  int get hashCode => Object.hash(runtimeType, guid, pguid,
+      const DeepCollectionEquality().hash(_episodes), title, seasonNum);
 
   @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
   _$$SeasonImplCopyWith<_$SeasonImpl> get copyWith =>
       __$$SeasonImplCopyWithImpl<_$SeasonImpl>(this, _$identity);
-
-  @override
-  Map<String, dynamic> toJson() {
-    return _$$SeasonImplToJson(
-      this,
-    );
-  }
 }
 
 abstract class _Season implements Season {
   const factory _Season(
-      {final int? id,
-      required final String guid,
+      {required final String guid,
       required final String pguid,
-      required final String podcast,
+      required final List<(Episode, EpisodeStats?)> episodes,
       final String? title,
       final int? seasonNum}) = _$SeasonImpl;
 
-  factory _Season.fromJson(Map<String, dynamic> json) = _$SeasonImpl.fromJson;
-
-  @override
-
-  /// Database ID
-  int? get id;
   @override
 
   /// A String GUID for the season.
@@ -273,8 +238,8 @@ abstract class _Season implements Season {
   String get pguid;
   @override
 
-  /// The name of the podcast the season is part of.
-  String get podcast;
+  /// Episodes under the season.
+  List<(Episode, EpisodeStats?)> get episodes;
   @override
 
   /// The season title.
