@@ -24,7 +24,7 @@ class Season with _$Season {
     required String pguid,
 
     /// Episodes under the season.
-    required List<(Episode, EpisodeStats?)> episodes,
+    required List<Episode> episodes,
 
     /// The season title.
     String? title,
@@ -35,43 +35,41 @@ class Season with _$Season {
 }
 
 extension SeasonExt on Season {
-  bool get playedAll =>
-      episodes.map((e) => e.$2).every((stats) => stats?.played == true);
+  // bool get playedAll =>
+  //     episodes.map((e) => e.$2).every((stats) => stats?.played == true);
 
   Duration get totalDuration => episodes
-      .map((e) => e.$1)
       .fold(Duration.zero, (ms, episode) => ms + episode.duration);
 
   String? get thumbImageUrl {
-    return episodes.first.$1.thumbImageUrl;
+    return episodes.first.thumbImageUrl;
   }
 
   String? get imageUrl {
-    return episodes.first.$1.imageUrl;
+    return episodes.first.imageUrl;
   }
 
   DateTime? get publicationDate {
-    return episodes.first.$1.publicationDate;
+    return episodes.first.publicationDate;
   }
 
   Duration get duration {
     return episodes
-        .map((e) => e.$1)
         .fold(Duration.zero, (total, episode) => total + episode.duration);
   }
 
-  Duration get timeRemaining {
-    final playedTotal =
-        episodes.map((e) => e.$2).fold(Duration.zero, (total, stats) {
-      final maxPosition = stats == null
-          ? Duration.zero
-          : stats.played
-              ? stats.duration
-              : stats.position;
-      return total + maxPosition;
-    });
-    return totalDuration - playedTotal;
-  }
+  // Duration get timeRemaining {
+  //   final playedTotal =
+  //       episodes.map((e) => e.$2).fold(Duration.zero, (total, stats) {
+  //     final maxPosition = stats == null
+  //         ? Duration.zero
+  //         : stats.played
+  //             ? stats.duration
+  //             : stats.position;
+  //     return total + maxPosition;
+  //   });
+  //   return totalDuration - playedTotal;
+  // }
 }
 
 List<Episode> sortedSeasonEpisodes(List<Episode> episodes) =>

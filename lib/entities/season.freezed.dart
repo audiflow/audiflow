@@ -24,8 +24,7 @@ mixin _$Season {
   String get pguid => throw _privateConstructorUsedError;
 
   /// Episodes under the season.
-  List<(Episode, EpisodeStats?)> get episodes =>
-      throw _privateConstructorUsedError;
+  List<Episode> get episodes => throw _privateConstructorUsedError;
 
   /// The season title.
   String? get title => throw _privateConstructorUsedError;
@@ -45,7 +44,7 @@ abstract class $SeasonCopyWith<$Res> {
   $Res call(
       {String guid,
       String pguid,
-      List<(Episode, EpisodeStats?)> episodes,
+      List<Episode> episodes,
       String? title,
       int? seasonNum});
 }
@@ -81,7 +80,7 @@ class _$SeasonCopyWithImpl<$Res, $Val extends Season>
       episodes: null == episodes
           ? _value.episodes
           : episodes // ignore: cast_nullable_to_non_nullable
-              as List<(Episode, EpisodeStats?)>,
+              as List<Episode>,
       title: freezed == title
           ? _value.title
           : title // ignore: cast_nullable_to_non_nullable
@@ -104,7 +103,7 @@ abstract class _$$SeasonImplCopyWith<$Res> implements $SeasonCopyWith<$Res> {
   $Res call(
       {String guid,
       String pguid,
-      List<(Episode, EpisodeStats?)> episodes,
+      List<Episode> episodes,
       String? title,
       int? seasonNum});
 }
@@ -138,7 +137,7 @@ class __$$SeasonImplCopyWithImpl<$Res>
       episodes: null == episodes
           ? _value._episodes
           : episodes // ignore: cast_nullable_to_non_nullable
-              as List<(Episode, EpisodeStats?)>,
+              as List<Episode>,
       title: freezed == title
           ? _value.title
           : title // ignore: cast_nullable_to_non_nullable
@@ -157,7 +156,7 @@ class _$SeasonImpl implements _Season {
   const _$SeasonImpl(
       {required this.guid,
       required this.pguid,
-      required final List<(Episode, EpisodeStats?)> episodes,
+      required final List<Episode> episodes,
       this.title,
       this.seasonNum})
       : _episodes = episodes;
@@ -172,11 +171,11 @@ class _$SeasonImpl implements _Season {
   final String pguid;
 
   /// Episodes under the season.
-  final List<(Episode, EpisodeStats?)> _episodes;
+  final List<Episode> _episodes;
 
   /// Episodes under the season.
   @override
-  List<(Episode, EpisodeStats?)> get episodes {
+  List<Episode> get episodes {
     if (_episodes is EqualUnmodifiableListView) return _episodes;
     // ignore: implicit_dynamic_type
     return EqualUnmodifiableListView(_episodes);
@@ -223,7 +222,7 @@ abstract class _Season implements Season {
   const factory _Season(
       {required final String guid,
       required final String pguid,
-      required final List<(Episode, EpisodeStats?)> episodes,
+      required final List<Episode> episodes,
       final String? title,
       final int? seasonNum}) = _$SeasonImpl;
 
@@ -239,7 +238,7 @@ abstract class _Season implements Season {
   @override
 
   /// Episodes under the season.
-  List<(Episode, EpisodeStats?)> get episodes;
+  List<Episode> get episodes;
   @override
 
   /// The season title.

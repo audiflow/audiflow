@@ -1,8 +1,9 @@
+import 'dart:async';
+
 import 'package:collection/collection.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:seasoning/entities/entities.dart';
 import 'package:seasoning/providers/podcast/podcast_details_provider.dart';
-import 'package:seasoning/services/podcast/mobile_podcast_service.dart';
 
 part 'podcast_seasons_provider.g.dart';
 
@@ -11,13 +12,12 @@ Future<List<Season>> podcastSeasons(
   PodcastSeasonsRef ref,
   PodcastSummary summary,
 ) async {
-  final podcastState = ref.watch(podcastDetailsProvider(summary));
-  if (!podcastState.hasValue) {
-    return [];
-  }
+  final podcast = await ref.watch(
+    podcastDetailsProvider(summary).selectAsync((state) => state.podcast),
+  );
 
   final map = <int?, List<Episode>>{};
-  for (final episode in podcastState.value!.podcast.episodes) {
+  for (final episode in podcast.episodes) {
     if (map.containsKey(episode.season)) {
       map[episode.season]!.add(episode);
     } else {
@@ -29,30 +29,19 @@ Future<List<Season>> podcastSeasons(
     return [];
   }
 
-  final podcastService = ref.read(podcastServiceProvider);
-  final seasons = map.keys.sorted((a, b) => (b ?? 0) - (a ?? 0));
-  final tasks = seasons.map((season) async {
-    final tasks = map[season]!
+  return map.keys.sorted((a, b) => (b ?? 0) - (a ?? 0)).map((seasonKey) {
+    final seasonEpisodes = map[seasonKey]!
         .sorted((a, b) => (a.episode ?? 0) - (b.episode ?? 0))
-        .map((episode) async {
-      final stats = await podcastService.loadEpisodeStats(episode);
-      return (episode, stats);
-    });
-    return (season, await Future.wait(tasks));
-  });
-
-  final results = await Future.wait(tasks);
-  return results.map((result) {
-    final (season, seasonEpisodes) = result;
-    final firstEpisode = seasonEpisodes.first.$1;
+        .toList();
+    final firstEpisode = seasonEpisodes.first;
     return Season(
-      guid: 'season-${firstEpisode.pguid}-${season ?? 0}',
+      guid: 'season-${firstEpisode.pguid}-${seasonKey ?? 0}',
       pguid: firstEpisode.pguid,
       title: _extractSeasonTitle(firstEpisode),
-      seasonNum: season,
+      seasonNum: seasonKey,
       episodes: seasonEpisodes.toList(),
     );
-  }).toList(growable: false);
+  }).toList();
 }
 
 String? _extractSeasonTitle(Episode episode) {
