@@ -6,6 +6,6 @@ export 'package:seasoning/services/download/download_manager.dart';
 
 part 'download_manager_provider.g.dart';
 
-@riverpod
+@Riverpod(keepAlive: true)
 DownloadManager downloadManager(DownloadManagerRef ref) =>
-    MobileDownloaderManager();
+    MobileDownloaderManager(ref);

@@ -9,7 +9,7 @@ import 'package:seasoning/entities/entities.dart';
 abstract class DownloadService {
   Future<bool> downloadEpisode(Episode episode);
 
-  Future<Downloadable?> findDownloadByTaskId(String taskId);
+  Future<Downloadable?> findDownloadByGuid(String guid);
 
   void dispose();
 }

@@ -9,16 +9,18 @@ import 'dart:isolate';
 import 'dart:ui';
 
 import 'package:flutter_downloader/flutter_downloader.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
 import 'package:seasoning/core/environment.dart';
 import 'package:seasoning/entities/downloadable.dart';
+import 'package:seasoning/providers/download_manager_provider.dart';
 import 'package:seasoning/services/download/download_manager.dart';
 
 /// A [DownloadManager] for handling downloading of podcasts on a mobile device.
 class MobileDownloaderManager implements DownloadManager {
-  MobileDownloaderManager() {
-    _init();
-  }
+  MobileDownloaderManager(this.ref);
+
+  final Ref ref;
   static const portName = 'downloader_send_port';
   final log = Logger('MobileDownloaderManager');
   final ReceivePort _port = ReceivePort();
@@ -28,12 +30,11 @@ class MobileDownloaderManager implements DownloadManager {
   @override
   Stream<DownloadProgress> get downloadProgress => downloadController.stream;
 
-  Future _init() async {
+  Future<void> setup() async {
     log.fine('Initialising download manager');
 
     await FlutterDownloader.initialize();
     IsolateNameServer.removePortNameMapping(portName);
-
     IsolateNameServer.registerPortWithName(_port.sendPort, portName);
 
     final tasks = await FlutterDownloader.loadTasks();
@@ -45,7 +46,7 @@ class MobileDownloaderManager implements DownloadManager {
         _updateDownloadState(
           id: t.taskId,
           progress: t.progress,
-          status: t.status.value,
+          status: t.status,
         );
 
         /// If we are not queued or running we can safely clean up this event
@@ -59,8 +60,11 @@ class MobileDownloaderManager implements DownloadManager {
     }
 
     _port.listen((dynamic data) {
+      // ignore: avoid_dynamic_calls
       final id = data[0] as String;
-      final status = data[1] as int;
+      // ignore: avoid_dynamic_calls
+      final status = DownloadTaskStatus.values[data[1] as int];
+      // ignore: avoid_dynamic_calls
       final progress = data[2] as int;
 
       _updateDownloadState(id: id, progress: progress, status: status);
@@ -95,30 +99,29 @@ class MobileDownloaderManager implements DownloadManager {
   void _updateDownloadState({
     required String id,
     required int progress,
-    required int status,
+    required DownloadTaskStatus status,
   }) {
     var state = DownloadState.none;
     final updateTime = DateTime.now().millisecondsSinceEpoch;
-    final downloadStatus = DownloadTaskStatus(status);
 
-    if (downloadStatus == DownloadTaskStatus.enqueued) {
+    if (status == DownloadTaskStatus.enqueued) {
       state = DownloadState.queued;
-    } else if (downloadStatus == DownloadTaskStatus.canceled) {
+    } else if (status == DownloadTaskStatus.canceled) {
       state = DownloadState.cancelled;
-    } else if (downloadStatus == DownloadTaskStatus.complete) {
+    } else if (status == DownloadTaskStatus.complete) {
       state = DownloadState.downloaded;
-    } else if (downloadStatus == DownloadTaskStatus.running) {
+    } else if (status == DownloadTaskStatus.running) {
       state = DownloadState.downloading;
-    } else if (downloadStatus == DownloadTaskStatus.failed) {
+    } else if (status == DownloadTaskStatus.failed) {
       state = DownloadState.failed;
-    } else if (downloadStatus == DownloadTaskStatus.paused) {
+    } else if (status == DownloadTaskStatus.paused) {
       state = DownloadState.paused;
     }
 
     /// If we are running, we want to limit notifications to 1 per second. Otherwise,
     /// small downloads can cause a flood of events. Any other status we always want
     /// to push through.
-    if (downloadStatus != DownloadTaskStatus.running ||
+    if (status != DownloadTaskStatus.running ||
         progress == 0 ||
         progress == 100 ||
         updateTime > _lastUpdateTime + 1000) {
@@ -130,10 +133,10 @@ class MobileDownloaderManager implements DownloadManager {
   @pragma('vm:entry-point')
   static void downloadCallback(
     String id,
-    DownloadTaskStatus status,
+    int status,
     int progress,
   ) {
     IsolateNameServer.lookupPortByName('downloader_send_port')
-        ?.send([id, status.value, progress]);
+        ?.send([id, status, progress]);
   }
 }

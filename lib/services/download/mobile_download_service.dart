@@ -8,47 +8,54 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:collection/collection.dart' show IterableExtension;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
 import 'package:mp3_info/mp3_info.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:seasoning/core/utils.dart';
+import 'package:seasoning/entities/app_settings.dart';
 import 'package:seasoning/entities/downloadable.dart';
 import 'package:seasoning/entities/episode.dart';
 import 'package:seasoning/entities/transcript.dart';
-import 'package:seasoning/repository/repository.dart';
-import 'package:seasoning/services/download/download_manager.dart';
+import 'package:seasoning/providers/download_manager_provider.dart';
+import 'package:seasoning/providers/repository_provider.dart';
 import 'package:seasoning/services/download/download_service.dart';
+import 'package:seasoning/services/podcast/mobile_podcast_service.dart';
 import 'package:seasoning/services/podcast/podcast_service.dart';
+import 'package:seasoning/services/settings/settings_service.dart';
 
 /// An implementation of a [DownloadService] that handles downloading
 /// of episodes on mobile.
 class MobileDownloadService extends DownloadService {
-  MobileDownloadService({
-    required this.repository,
-    required this.downloadManager,
-    required this.podcastService,
-  }) {
-    downloadManager.downloadProgress.pipe(downloadProgress);
+  MobileDownloadService(this._ref) {
+    _downloadManager.downloadProgress.pipe(downloadProgress);
     downloadProgress.listen(_updateDownloadProgress);
   }
 
-  static BehaviorSubject<DownloadProgress> downloadProgress =
+  final Ref _ref;
+
+  Repository get _repository => _ref.watch(repositoryProvider);
+
+  DownloadManager get _downloadManager => _ref.watch(downloadManagerProvider);
+
+  PodcastService get _podcastService => _ref.watch(podcastServiceProvider);
+
+  AppSettings get _appSettings => _ref.watch(settingsServiceProvider);
+
+  BehaviorSubject<DownloadProgress> downloadProgress =
       BehaviorSubject<DownloadProgress>();
 
-  final log = Logger('MobileDownloadService');
-  final Repository repository;
-  final DownloadManager downloadManager;
-  final PodcastService podcastService;
+  final _log = Logger('MobileDownloadService');
 
   @override
   void dispose() {
-    downloadManager.dispose();
+    _downloadManager.dispose();
   }
 
   @override
   Future<bool> downloadEpisode(Episode episode) async {
     try {
-      if (!await hasStoragePermission()) {
+      if (!await hasStoragePermission(_appSettings)) {
         return false;
       }
 
@@ -57,7 +64,7 @@ class MobileDownloadService extends DownloadService {
       // If this episode contains chapter, fetch them first.
       if (episode.hasChapters) {
         final chapters =
-            await podcastService.loadChaptersByUrl(url: episode.chaptersUrl!);
+            await _podcastService.loadChaptersByUrl(episode.chaptersUrl!);
 
         newEpisode = newEpisode.copyWith(chapters: chapters);
       }
@@ -73,20 +80,26 @@ class MobileDownloadService extends DownloadService {
         );
 
         if (sub != null) {
-          final transcript = await podcastService.loadTranscriptByUrl(
+          final transcript = await _podcastService.loadTranscriptByUrl(
             episode: episode,
             transcriptUrl: sub,
           );
-          await podcastService.saveTranscript(transcript);
+          await _podcastService.saveTranscript(transcript);
         }
       }
 
       if (episode != newEpisode) {
-        await podcastService.saveEpisode(newEpisode);
+        await _podcastService.saveEpisode(newEpisode);
+      }
+
+      var stats = await _repository.findEpisodeStatsByGuid(episode.guid);
+      if (stats == null) {
+        stats = EpisodeStats.fromEpisode(episode);
+        await _repository.saveEpisodeStats(stats);
       }
 
       // Ensure the download directory exists
-      final directory = await createDownloadDirectory(newEpisode);
+      final directory = await createDownloadDirectory(_appSettings, newEpisode);
       var uri = Uri.parse(newEpisode.contentUrl!);
 
       // Filename should be last segment of URI.
@@ -124,7 +137,7 @@ class MobileDownloadService extends DownloadService {
       ].join('-');
       filename = '$prefix$filename';
 
-      log.fine(
+      _log.fine(
         'Download episode (${episode.title}) $filename to $directory/$filename',
       );
 
@@ -134,7 +147,7 @@ class MobileDownloadService extends DownloadService {
       final url = await resolveUrl(episode.contentUrl!, forceHttps: true);
 
       final taskId =
-          await downloadManager.enqueueTask(url, directory, filename);
+          await _downloadManager.enqueueTask(url, directory, filename);
       if (taskId == null) {
         return false;
       }
@@ -144,29 +157,29 @@ class MobileDownloadService extends DownloadService {
         pguid: episode.pguid,
         guid: episode.guid,
         url: url,
-        directory: await directoryToRecord(episode: newEpisode),
+        directory: await directoryToRecord(_appSettings, newEpisode),
         filename: filename,
         taskId: taskId,
         state: DownloadState.downloading,
       );
 
-      await repository.saveDownload(download);
+      await _repository.saveDownload(download);
 
       return true;
       // ignore: avoid_catches_without_on_clauses
     } catch (e, stack) {
-      log.warning('Episode download failed (${episode.title})', e, stack);
+      _log.warning('Episode download failed (${episode.title})', e, stack);
       return false;
     }
   }
 
   @override
-  Future<Downloadable?> findDownloadByTaskId(String taskId) {
-    return repository.findDownloadByTaskId(taskId);
+  Future<Downloadable?> findDownloadByGuid(String guid) {
+    return _repository.findDownloadByGuid(guid);
   }
 
   Future<void> _updateDownloadProgress(DownloadProgress progress) async {
-    var download = await repository.findDownloadByTaskId(progress.id);
+    var download = await _repository.findDownloadByTaskId(progress.id);
     if (download == null) {
       return;
     }
@@ -182,16 +195,27 @@ class MobileDownloadService extends DownloadService {
       percentage: progress.percentage,
       state: progress.status,
     );
-    await repository.saveDownload(download);
+    await _repository.saveDownload(download);
 
-    if (progress.percentage == 100 && await hasStoragePermission()) {
-      // If we do not have a duration for this file - let's calculate it
-      var episode = await repository.findEpisodeByGuid(download.guid);
-      if (episode?.duration == 0) {
-        final path = await resolvePath(download);
-        final mp3Info = MP3Processor.fromFile(File(path));
-        episode = episode!.copyWith(duration: mp3Info.duration.inSeconds);
-        await repository.saveEpisode(episode);
+    if (progress.percentage < 100 ||
+        !await hasStoragePermission(_appSettings)) {
+      return;
+    }
+
+    var stats = await _repository.findEpisodeStatsByGuid(download.guid);
+    stats = stats?.copyWith(downloaded: true);
+
+    if (stats?.duration == Duration.zero) {
+      final path = await resolvePath(_appSettings, download);
+      final mp3Info = MP3Processor.fromFile(File(path));
+      stats = stats!.copyWith(duration: mp3Info.duration);
+      await _repository.saveEpisodeStats(stats);
+
+      var (_, episode) = await _repository.findEpisodeByGuid(download.guid);
+      if (episode != null) {
+        // If we do not have a duration for this file - let's calculate it
+        episode = episode.copyWith(duration: mp3Info.duration);
+        await _repository.saveEpisode(episode);
       }
     }
   }
