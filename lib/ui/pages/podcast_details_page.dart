@@ -9,11 +9,11 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:seasoning/entities/podcast.dart';
-import 'package:seasoning/features/podcast_details/ui/podcast_details_app_bar.dart';
-import 'package:seasoning/features/podcast_details/ui/podcast_episode_list.dart';
 import 'package:seasoning/l10n/L.dart';
 import 'package:seasoning/providers/podcast/podcast_details_provider.dart';
 import 'package:seasoning/services/settings/settings_service.dart';
+import 'package:seasoning/ui/pages/app_bars/podcast_details_app_bar.dart';
+import 'package:seasoning/ui/podcast/episode_list.dart';
 import 'package:seasoning/ui/podcast/funding_menu.dart';
 import 'package:seasoning/ui/widgets/fill_remaining_error.dart';
 import 'package:seasoning/ui/widgets/fill_remaining_loading.dart';
@@ -24,8 +24,8 @@ import 'package:seasoning/ui/widgets/podcast_html.dart';
 ///
 /// From here a user can option to subscribe/unsubscribe or play a podcast
 /// directly from a search result.
-class PodcastDetails extends HookConsumerWidget {
-  const PodcastDetails(
+class PodcastDetailsPage extends HookConsumerWidget {
+  const PodcastDetailsPage(
     this.baseInfo, {
     super.key,
   });
@@ -91,7 +91,7 @@ class PodcastDetails extends HookConsumerWidget {
                   FillRemainingError.podcastNoResults()
                 else ...[
                   _PodcastTitle(podcast),
-                  PodcastEpisodeList(
+                  EpisodeList(
                     summary: podcast,
                     episodes: podcast.episodes,
                     play: true,

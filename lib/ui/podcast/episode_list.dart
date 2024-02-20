@@ -8,8 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:seasoning/entities/entities.dart';
 import 'package:seasoning/ui/podcast/episode_tile.dart';
 
-class PodcastEpisodeList extends StatelessWidget {
-  const PodcastEpisodeList({
+class EpisodeList extends StatelessWidget {
+  const EpisodeList({
     super.key,
     required this.summary,
     required this.episodes,

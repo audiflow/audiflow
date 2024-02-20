@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:seasoning/entities/entities.dart';
-import 'package:seasoning/features/podcast_chart/ui/podcast_chart_page.dart';
-import 'package:seasoning/features/podcast_details/ui/podcast_details.dart';
 import 'package:seasoning/ui/app/app_bottom_navigation_bar.dart';
 import 'package:seasoning/ui/app/seasoning_app.dart';
+import 'package:seasoning/ui/pages/podcast_chart_page.dart';
+import 'package:seasoning/ui/pages/podcast_details_page.dart';
 
 class NavigationHelper {
   factory NavigationHelper.setup() => _instance;
@@ -32,7 +32,7 @@ class NavigationHelper {
                     pageBuilder: (context, state) {
                       final baseInfo = state.extra as PodcastSummary?;
                       return _getPage(
-                        child: PodcastDetails(baseInfo!),
+                        child: PodcastDetailsPage(baseInfo!),
                         state: state,
                       );
                     },

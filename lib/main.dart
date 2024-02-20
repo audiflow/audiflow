@@ -11,9 +11,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:logging/logging.dart';
-import 'package:seasoning/ui/app/navigation_helper.dart';
+import 'package:seasoning/providers/repository_provider.dart';
 import 'package:seasoning/services/audio/mobile_audio_player_service.dart';
+import 'package:seasoning/services/podcast/mobile_podcast_service.dart';
 import 'package:seasoning/services/settings/settings_service.dart';
+import 'package:seasoning/ui/app/navigation_helper.dart';
 import 'package:seasoning/ui/app/seasoning_app.dart';
 
 // ignore_for_file: avoid_print
@@ -81,7 +83,11 @@ class _GlobalProviders extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final future = ref.read(mobileAudioPlayerServiceProvider.notifier).setup();
+    ref
+      ..watch(repositoryProvider)
+      ..watch(settingsServiceProvider)
+      ..watch(podcastServiceProvider);
+    final future = ref.watch(mobileAudioPlayerServiceProvider.notifier).setup();
     return FutureBuilder(
       future: future,
       builder: (context, snapshot) {

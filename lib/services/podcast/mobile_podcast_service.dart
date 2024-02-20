@@ -440,7 +440,7 @@ class MobilePodcastService implements PodcastService {
 
     final stats = await repository.findPodcastStatsByGuid(podcast.guid);
     if (stats != null) {
-      return repository.unsubscribePodcast(stats);
+      return repository.unsubscribePodcast(podcast);
     }
   }
 
