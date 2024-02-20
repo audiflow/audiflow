@@ -16,6 +16,7 @@ import 'package:seasoning/services/settings/settings_service.dart';
 import 'package:seasoning/ui/pages/app_bars/podcast_details_app_bar.dart';
 import 'package:seasoning/ui/podcast/episode_list.dart';
 import 'package:seasoning/ui/podcast/funding_menu.dart';
+import 'package:seasoning/ui/podcast/season_list.dart';
 import 'package:seasoning/ui/widgets/fill_remaining_error.dart';
 import 'package:seasoning/ui/widgets/fill_remaining_loading.dart';
 import 'package:seasoning/ui/widgets/podcast_html.dart';
@@ -72,6 +73,8 @@ class PodcastDetailsPage extends HookConsumerWidget {
         useState(GlobalKey<ScaffoldMessengerState>()).value;
     final podcastDetailsState = ref.watch(podcastDetailsProvider.call(summary));
     final podcast = podcastDetailsState.value?.podcast;
+    final viewMode = podcastDetailsState.value?.stats?.viewMode ??
+        PodcastDetailViewMode.episodes;
     final seasonsState = podcast == null
         ? const AsyncLoading<List<Season>>()
         : ref.watch(podcastSeasonsProvider(podcast));
@@ -100,12 +103,14 @@ class PodcastDetailsPage extends HookConsumerWidget {
                     podcast: podcast,
                     seasons: seasonsState.value!,
                   ),
-                  EpisodeList(
-                    summary: podcast,
-                    episodes: podcast.episodes,
-                    play: true,
-                    download: true,
-                  ),
+                  viewMode == PodcastDetailViewMode.seasons
+                      ? SeasonList(podcast: podcast)
+                      : EpisodeList(
+                          summary: podcast,
+                          episodes: podcast.episodes,
+                          play: true,
+                          download: true,
+                        ),
                 ],
               ],
             ),

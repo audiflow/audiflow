@@ -46,7 +46,7 @@ Future<List<Season>> podcastSeasons(
 
 String? _extractSeasonTitle(Episode episode) {
   switch (episode.pguid) {
-    case 'https://anchor.fm/s/8c2088c/podcast/rss': // COTEN
+    case '1450522865': // COTEN
       final m =
           RegExp(r'【COTEN RADIO\S*\s+(.*?)\d+】').firstMatch(episode.title);
       return m?.group(1)!.replaceFirst(RegExp(r'\s+編$'), '編') ?? '番外編';

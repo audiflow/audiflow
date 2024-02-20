@@ -1,0 +1,53 @@
+// Copyright 2024 HANAI Tohru, Reedom, INC.
+// Copyright 2020 Ben Hills and the project contributors.
+// All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:seasoning/entities/entities.dart';
+import 'package:seasoning/providers/podcast/podcast_seasons_provider.dart';
+import 'package:seasoning/ui/podcast/season_tile.dart';
+import 'package:seasoning/ui/widgets/fill_remaining_error.dart';
+import 'package:seasoning/ui/widgets/fill_remaining_loading.dart';
+
+class SeasonList extends ConsumerWidget {
+  const SeasonList({
+    super.key,
+    required this.podcast,
+    this.icon = _defaultIcon,
+    this.emptyMessage = '',
+  });
+
+  final Podcast podcast;
+  final IconData icon;
+  final String emptyMessage;
+
+  static const _defaultIcon = Icons.add_alert;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final seasonsState = ref.watch(podcastSeasonsProvider(podcast));
+    if (seasonsState.isLoading) {
+      return const FillRemainingLoading();
+    } else if (seasonsState.hasError || seasonsState.value!.isEmpty) {
+      return FillRemainingError.podcastNoResults();
+    }
+
+    final seasons = seasonsState.value!;
+    return SliverSafeArea(
+      sliver: SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (BuildContext context, int index) {
+            return SeasonTile(
+              season: seasons[index],
+            );
+          },
+          childCount: seasons.length,
+          addAutomaticKeepAlives: false,
+        ),
+      ),
+    );
+  }
+}

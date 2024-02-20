@@ -39,7 +39,7 @@ extension SeasonExt on Season {
   //     episodes.map((e) => e.$2).every((stats) => stats?.played == true);
 
   Duration get totalDuration => episodes
-      .fold(Duration.zero, (ms, episode) => ms + episode.duration);
+      .fold(Duration.zero, (total, episode) => total + episode.duration);
 
   String? get thumbImageUrl {
     return episodes.first.thumbImageUrl;
@@ -51,11 +51,6 @@ extension SeasonExt on Season {
 
   DateTime? get publicationDate {
     return episodes.first.publicationDate;
-  }
-
-  Duration get duration {
-    return episodes
-        .fold(Duration.zero, (total, episode) => total + episode.duration);
   }
 
   // Duration get timeRemaining {
