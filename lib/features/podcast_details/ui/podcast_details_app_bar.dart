@@ -5,12 +5,15 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:seasoning/entities/podcast.dart';
+import 'package:seasoning/providers/podcast/podcast_details_provider.dart';
+import 'package:seasoning/services/podcast/mobile_podcast_service.dart';
 import 'package:seasoning/ui/widgets/delayed_progress_indicator.dart';
 import 'package:seasoning/ui/widgets/placeholder_builder.dart';
 import 'package:seasoning/ui/widgets/podcast_image.dart';
 
-class PodcastDetailsAppBar extends StatelessWidget {
+class PodcastDetailsAppBar extends ConsumerWidget {
   const PodcastDetailsAppBar({
     super.key,
     required this.summary,
@@ -19,9 +22,12 @@ class PodcastDetailsAppBar extends StatelessWidget {
   final PodcastSummary summary;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final textTheme = Theme.of(context).textTheme;
     final placeholderBuilder = PlaceholderBuilder.of(context);
+    final podcastState = ref.watch(podcastDetailsProvider(summary));
+    final subscribed = podcastState.value?.stats?.subscribed;
+
     return SliverLayoutBuilder(
         builder: (BuildContext context, SliverConstraints constraints) {
       return SliverAppBar(
@@ -32,11 +38,38 @@ class PodcastDetailsAppBar extends StatelessWidget {
           duration: const Duration(milliseconds: 200),
           child: Text(summary.title),
         ),
+        actions: [
+          Opacity(
+            opacity: podcastState.hasValue ? 1.0 : 0.0,
+            child: subscribed == true
+                ? IconButton(
+                    icon: const Icon(Icons.check),
+                    onPressed: () {
+                      ref
+                          .read(podcastServiceProvider)
+                          .unsubscribe(podcastState.value!.podcast);
+                    },
+                  )
+                : IconButton(
+                    icon: const Icon(Icons.bookmark_add),
+                    onPressed: () {
+                      ref
+                          .read(podcastServiceProvider)
+                          .subscribe(podcastState.value!.podcast);
+                    },
+                  ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.menu),
+            onPressed: () {},
+          ),
+        ],
         flexibleSpace: FlexibleSpaceBar(
           collapseMode: CollapseMode.pin,
           background: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              const SizedBox(height: 46),
               Expanded(
                 child: Hero(
                   key: Key(

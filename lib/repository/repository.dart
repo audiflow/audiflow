@@ -38,7 +38,7 @@ abstract class Repository {
 
   Future<PodcastStats> subscribePodcast(Podcast podcast);
 
-  Future<void> unsubscribePodcast(PodcastStats stats);
+  Future<void> unsubscribePodcast(Podcast podcast);
 
   Future<void> savePodcastStats(PodcastStats stats);
 

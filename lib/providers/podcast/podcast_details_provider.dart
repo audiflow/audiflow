@@ -37,8 +37,7 @@ class PodcastDetails extends _$PodcastDetails {
   void _listen() {
     final repository = ref.read(repositoryProvider);
 
-    final sub =
-        repository.podcastStream.where((event) => false).listen((event) {
+    final sub = repository.podcastStream.listen((event) {
       switch (event) {
         case PodcastSubscribedEvent(
                 podcast: final podcast,

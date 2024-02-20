@@ -223,3 +223,7 @@ class PodcastStats with _$PodcastStats {
         guid: podcast.guid,
       );
 }
+
+extension PodcastStatsExt on PodcastStats {
+  bool get subscribed => subscribedDate != null;
+}

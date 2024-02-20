@@ -145,7 +145,7 @@ class SembastRepository extends Repository {
   Future<PodcastStats> subscribePodcast(Podcast podcast) async {
     final saved = await findPodcastStatsByGuid(podcast.guid);
     if (saved != null) {
-      if (saved.subscribedDate != null) {
+      if (saved.subscribed) {
         log.warning('subscribePodcast: already subscribed: ${podcast.guid}');
         return saved;
       }
@@ -183,40 +183,43 @@ class SembastRepository extends Repository {
   }
 
   @override
-  Future<void> unsubscribePodcast(PodcastStats stats) async {
+  Future<void> unsubscribePodcast(Podcast podcast) async {
     final db = await _db;
 
     final results = await Future.wait([
-      findPodcastById(stats.id),
-      findDownloadsByPodcastGuid(stats.guid),
+      findPodcastStatsByGuid(podcast.guid),
+      findDownloadsByPodcastGuid(podcast.guid),
     ]);
 
-    final podcast = results[0] as Podcast?;
+    final stats = results[0] as PodcastStats?;
     final downloads = results[1]! as List<Downloadable>;
-    if (podcast == null) {
-      log.warning('unsubscribePodcast: already unsubscribed: ${stats.guid}');
+    if (stats?.subscribed != true) {
+      log.warning('unsubscribePodcast: already unsubscribed: ${podcast.guid}');
       return;
     }
 
+    // TODO(reedom): Let sweeper manages these entities.
+
+    final newStats = stats!.copyWith(subscribedDate: null);
     if (downloads.isEmpty) {
       await db.transaction((txn) async {
         final finder = Finder(filter: Filter.equals('pguid', stats.guid));
+        await _podcastStatsStore.record(stats.id).put(txn, newStats.toJson());
         await _podcastStore.record(stats.id).delete(txn);
         await _episodeStore.delete(txn, finder: finder);
         await _downloadableStore.delete(txn, finder: finder);
         await _transcriptStore.delete(txn, finder: finder);
       });
-      log.warning('unsubscribed: ${stats.guid}');
-      _podcastSubject.add(PodcastUnsubscribedEvent(podcast, stats));
-      return;
+    } else {
+      final episodes = podcast.episodes
+          .where((e) => downloads.any((d) => d.guid == e.guid))
+          .toList();
+      await _deleteEpisodes(episodes);
+      await _podcastStatsStore.record(stats.id).put(db, newStats.toJson());
     }
 
-    final episodes = podcast.episodes
-        .where((e) => downloads.any((d) => d.guid == e.guid))
-        .toList();
-    await _deleteEpisodes(episodes);
-
-    _podcastSubject.add(PodcastUnsubscribedEvent(podcast, stats));
+    log.warning('unsubscribed: ${stats.guid}');
+    _podcastSubject.add(PodcastUnsubscribedEvent(podcast, newStats));
   }
 
   @override
