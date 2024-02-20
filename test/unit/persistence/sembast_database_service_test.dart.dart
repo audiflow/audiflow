@@ -145,16 +145,17 @@ void main() {
     });
 
     test('unsubscribePodcast', () async {
-      await persistenceService!.unsubscribePodcast(stats);
+      await persistenceService!.unsubscribePodcast(podcast1);
       final podcast = await persistenceService!.findPodcastById(stats.id);
       expect(podcast, isNull);
 
       // PodcastStats should still exist.
       final loaded = await persistenceService!.findPodcastStatsById(stats.id);
-      expect(loaded, stats);
+      expect(loaded?.guid, stats.guid);
+      expect(loaded?.subscribed, isFalse);
 
       // deletePodcast twice should do nothing.
-      await persistenceService!.unsubscribePodcast(stats);
+      await persistenceService!.unsubscribePodcast(podcast1);
     });
   });
 
@@ -255,7 +256,7 @@ void main() {
     });
 
     test('unsubscribePodcast', () async {
-      await persistenceService!.unsubscribePodcast(podcastStats);
+      await persistenceService!.unsubscribePodcast(podcast1);
       final episodes = await persistenceService!
           .findEpisodesByPodcastGuid(podcastStats.guid);
       expect(episodes, isEmpty);
@@ -279,7 +280,7 @@ void main() {
     test('savePlayingEpisodeGuid', () async {
       await persistenceService!.savePlayingEpisodeGuid('abc');
       final guid = await persistenceService!.playingEpisodeGuid();
-      expect(guid, 'abd');
+      expect(guid, 'abc');
     });
   });
 
