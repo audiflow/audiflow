@@ -5,6 +5,7 @@ import 'package:seasoning/ui/app/app_bottom_navigation_bar.dart';
 import 'package:seasoning/ui/app/seasoning_app.dart';
 import 'package:seasoning/ui/pages/podcast_chart_page.dart';
 import 'package:seasoning/ui/pages/podcast_details_page.dart';
+import 'package:seasoning/ui/pages/podcast_season_page.dart';
 
 class NavigationHelper {
   factory NavigationHelper.setup() => _instance;
@@ -27,19 +28,37 @@ class NavigationHelper {
                 },
                 routes: [
                   GoRoute(
-                    path: 'detail',
+                    path: 'season',
+                    name: 'season',
                     parentNavigatorKey: homeTabNavigatorKey,
                     pageBuilder: (context, state) {
-                      final (summary, heroPrefix) =
-                          state.extra! as (PodcastSummary, String);
+                      final (podcast, season, heroPrefix) =
+                      state.extra! as (Podcast, Season, String);
                       return _getPage(
-                        child: PodcastDetailsPage(
-                          summary: summary,
+                        child: PodcastSeasonPage(
+                          podcast: podcast,
+                          season: season,
                           heroPrefix: heroPrefix,
                         ),
                         state: state,
                       );
                     },
+                  ),
+                  GoRoute(
+                      path: 'detail',
+                      name: 'detail',
+                      parentNavigatorKey: homeTabNavigatorKey,
+                      pageBuilder: (context, state) {
+                        final (summary, heroPrefix) =
+                            state.extra! as (PodcastSummary, String);
+                        return _getPage(
+                          child: PodcastDetailsPage(
+                            summary: summary,
+                            heroPrefix: heroPrefix,
+                          ),
+                          state: state,
+                        );
+                      },
                   ),
                 ],
               ),

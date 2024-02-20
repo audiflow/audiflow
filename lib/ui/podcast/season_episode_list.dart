@@ -9,13 +9,11 @@ import 'package:seasoning/entities/entities.dart';
 import 'package:seasoning/ui/podcast/episode_tile.dart';
 import 'package:seasoning/ui/podcast/types.dart';
 
-class EpisodeList extends StatelessWidget {
-  const EpisodeList({
+class SeasonEpisodeList extends StatelessWidget {
+  const SeasonEpisodeList({
     super.key,
     required this.summary,
     required this.episodes,
-    required this.play,
-    required this.download,
     this.thumbnailVisibility = ThumbnailVisibility.auto,
     this.icon = _defaultIcon,
     this.emptyMessage = '',
@@ -26,20 +24,11 @@ class EpisodeList extends StatelessWidget {
   final ThumbnailVisibility thumbnailVisibility;
   final IconData icon;
   final String emptyMessage;
-  final bool play;
-  final bool download;
 
   static const _defaultIcon = Icons.add_alert;
 
   @override
   Widget build(BuildContext context) {
-    if (episodes.isEmpty) {
-      return _EmptyEpisodeList(
-        icon: icon,
-        message: emptyMessage,
-      );
-    }
-
     return SliverSafeArea(
       sliver: SliverList(
         delegate: SliverChildBuilderDelegate(
@@ -49,7 +38,8 @@ class EpisodeList extends StatelessWidget {
             final bool showsThumbnail;
             switch (thumbnailVisibility) {
               case ThumbnailVisibility.auto:
-                showsThumbnail = episode.thumbImageUrl != summary.thumbImageUrl;
+                showsThumbnail =
+                    episode.thumbImageUrl != episodes.first.thumbImageUrl;
               case ThumbnailVisibility.visible:
                 showsThumbnail = true;
               case ThumbnailVisibility.hidden:
@@ -59,47 +49,12 @@ class EpisodeList extends StatelessWidget {
             return EpisodeTile(
               showsThumbnail: showsThumbnail,
               episode: episode,
-              download: download,
-              play: play,
+              download: true,
+              play: true,
             );
           },
           childCount: episodes.length,
           addAutomaticKeepAlives: false,
-        ),
-      ),
-    );
-  }
-}
-
-class _EmptyEpisodeList extends StatelessWidget {
-  const _EmptyEpisodeList({
-    required this.icon,
-    required this.message,
-  });
-
-  final IconData icon;
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    return SliverFillRemaining(
-      hasScrollBody: false,
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Icon(
-              icon,
-              size: 75,
-              color: Theme.of(context).primaryColor,
-            ),
-            Text(
-              message,
-              style: Theme.of(context).textTheme.titleLarge,
-              textAlign: TextAlign.center,
-            ),
-          ],
         ),
       ),
     );

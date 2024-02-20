@@ -20,13 +20,13 @@ import 'package:seasoning/ui/widgets/tile_image.dart';
 class EpisodeTile extends HookConsumerWidget {
   const EpisodeTile({
     super.key,
-    required this.summary,
+    required this.showsThumbnail,
     required this.episode,
     required this.download,
     required this.play,
   });
 
-  final PodcastSummary summary;
+  final bool showsThumbnail;
   final Episode episode;
   final bool download;
   final bool play;
@@ -34,8 +34,6 @@ class EpisodeTile extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final thumbImageUrl = episode.thumbImageUrl ?? episode.imageUrl;
-    final showsThumbnail = thumbImageUrl?.isNotEmpty == true &&
-        thumbImageUrl != summary.thumbImageUrl;
 
     return Material(
       child: InkWell(
@@ -48,7 +46,7 @@ class EpisodeTile extends HookConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(child: _Content(episode)),
-                  if (showsThumbnail)
+                  if (showsThumbnail && thumbImageUrl?.isNotEmpty == true)
                     TileImage(
                       url: thumbImageUrl!,
                       size: 86,
@@ -470,8 +468,8 @@ class _EpisodeDate extends StatelessWidget {
     if (7 <= elapsed.inDays) {
       return DateFormat(
         episode.publicationDate!.year == DateTime.now().year
-            ? 'yyyy.MM'
-            : 'yyyy.MM.dd',
+            ? 'yyyy.MM.dd'
+            : 'yyyy.MM',
       ).format(episode.publicationDate!);
     }
 
@@ -490,11 +488,7 @@ class EpisodeSubtitle extends StatelessWidget {
   EpisodeSubtitle(this.episode, this.stats, {super.key})
       : date = episode.publicationDate == null
             ? ''
-            : DateFormat(
-                episode.publicationDate!.year == DateTime.now().year
-                    ? 'yyyy.MM'
-                    : 'yyyy.MM.dd',
-              ).format(episode.publicationDate!);
+            : DateFormat('yyyy.MM.dd').format(episode.publicationDate!);
   final Episode episode;
   final EpisodeStats? stats;
   final String date;

@@ -41,6 +41,7 @@ class SeasonList extends ConsumerWidget {
         delegate: SliverChildBuilderDelegate(
           (BuildContext context, int index) {
             return SeasonTile(
+              podcast: podcast,
               season: seasons[index],
             );
           },

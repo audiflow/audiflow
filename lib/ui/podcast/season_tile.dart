@@ -5,39 +5,29 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' show DateFormat;
-import 'package:seasoning/entities/season.dart';
-// import 'package:seasoning/ui/podcast/season_episodes.dart';
+import 'package:seasoning/entities/entities.dart';
+import 'package:seasoning/ui/app/navigation_helper.dart';
 import 'package:seasoning/ui/widgets/tile_image.dart';
 
-class SeasonTile extends StatefulWidget {
+class SeasonTile extends StatelessWidget {
   const SeasonTile({
     super.key,
+    required this.podcast,
     required this.season,
   });
 
+  final Podcast podcast;
   final Season season;
-
-  @override
-  State<SeasonTile> createState() => _SeasonTileState();
-}
-
-class _SeasonTileState extends State<SeasonTile> {
-  bool expanded = false;
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
     return ListTile(
-      key: Key('PT${widget.season.guid}'),
+      key: Key('PT${season.guid}'),
       onTap: () {
-        // Navigator.push(
-        //   context,
-        //   MaterialPageRoute<void>(
-        //     settings: const RouteSettings(name: 'podcastdetails'),
-        //     builder: (context) => SeasonEpisodes(widget.season),
-        //   ),
-        // );
+        NavigationHelper.router
+            .pushNamed('season', extra: (podcast, season, 'season'));
       },
       leading: ExcludeSemantics(
         child: Stack(
@@ -45,19 +35,19 @@ class _SeasonTileState extends State<SeasonTile> {
           fit: StackFit.passthrough,
           children: <Widget>[
             Opacity(
-              opacity: 1, // widget.season.played ? 0.5 : 1.0,
+              opacity: 1, // season.played ? 0.5 : 1.0,
               child: Hero(
-                key: Key('seasonhero${widget.season.guid}'),
-                tag: widget.season.guid,
+                key: Key('seasonhero${season.guid}'),
+                tag: season.guid,
                 child: TileImage(
-                  url: widget.season.thumbImageUrl ?? widget.season.imageUrl!,
+                  url: season.thumbImageUrl ?? season.imageUrl!,
                   size: 56,
                 ),
               ),
             ),
             SizedBox(
               height: 5,
-              width: 56.0 * 0, // (widget.season.percentagePlayed / 100),
+              width: 56.0 * 0, // (season.percentagePlayed / 100),
               child: Container(
                 color: Theme.of(context).primaryColor,
               ),
@@ -66,14 +56,14 @@ class _SeasonTileState extends State<SeasonTile> {
         ),
       ),
       subtitle: Opacity(
-        opacity: 1, // widget.season.played ? 0.5 : 1.0,
-        child: SeasonSubtitle(widget.season),
+        opacity: 1, // season.played ? 0.5 : 1.0,
+        child: SeasonSubtitle(season),
       ),
       title: Opacity(
-        opacity: 1, // widget.season.played ? 0.5 : 1.0,
+        opacity: 1, // season.played ? 0.5 : 1.0,
         child: Text(
-          widget.season.seasonNum != null
-              ? '#${widget.season.seasonNum} ${widget.season.title}'
+          season.seasonNum != null
+              ? '#${season.seasonNum} ${season.title}'
               : 'Extra',
           overflow: TextOverflow.ellipsis,
           maxLines: 2,
@@ -90,11 +80,7 @@ class SeasonSubtitle extends StatelessWidget {
   SeasonSubtitle(this.season, {super.key})
       : date = season.publicationDate == null
             ? ''
-            : DateFormat(
-                season.publicationDate!.year == DateTime.now().year
-                    ? 'yyyy.MM'
-                    : 'yyyy.MM.dd',
-              ).format(season.publicationDate!),
+            : DateFormat('yyyy.MM.dd').format(season.publicationDate!),
         length = season.totalDuration;
   final Season season;
   final String date;
@@ -105,8 +91,7 @@ class SeasonSubtitle extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     final timeRemaining = season.totalDuration; //season.timeRemaining;
 
-    final playedEpisodes =
-        season.episodes.where((episode) => false).length;
+    final playedEpisodes = season.episodes.where((episode) => false).length;
     final episodes = '$playedEpisodes/${season.episodes.length} episodes';
 
     var duration = '';

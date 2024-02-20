@@ -23,7 +23,7 @@ class PodcastTile extends StatelessWidget {
     return ListTile(
       onTap: () {
         NavigationHelper.router
-            .push('/home/detail', extra: (summary, heroPrefix));
+            .pushNamed('detail', extra: (summary, heroPrefix));
       },
       minVerticalPadding: 9,
       leading: ExcludeSemantics(
