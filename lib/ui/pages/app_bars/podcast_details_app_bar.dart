@@ -17,9 +17,11 @@ class PodcastDetailsAppBar extends ConsumerWidget {
   const PodcastDetailsAppBar({
     super.key,
     required this.summary,
+    required this.heroPrefix,
   });
 
   final PodcastSummary summary;
+  final String heroPrefix;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -75,7 +77,7 @@ class PodcastDetailsAppBar extends ConsumerWidget {
                   key: Key(
                     'detailHero:${summary.imageUrl}:${summary.guid}',
                   ),
-                  tag: '${summary.imageUrl}:${summary.guid}',
+                  tag: '${heroPrefix}:${summary.guid}',
                   child: ExcludeSemantics(
                     child: _PodcastHeaderImage(
                       basicInfo: summary,

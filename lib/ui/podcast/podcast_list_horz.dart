@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:seasoning/entities/entities.dart';
 import 'package:seasoning/providers/podcast/podcast_details_provider.dart';
+import 'package:seasoning/ui/app/navigation_helper.dart';
 import 'package:seasoning/ui/widgets/tile_image.dart';
 
 class PodcastListHorz extends ConsumerWidget {
@@ -56,6 +57,7 @@ class _ListTile extends ConsumerWidget {
   });
 
   final PodcastSummary summary;
+  static const heroPrefix = 'subscription:';
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -66,10 +68,12 @@ class _ListTile extends ConsumerWidget {
 
     final podcast = podcastState.value!.podcast;
     final theme = Theme.of(context);
-    return GridTile(
-      child: Hero(
-        key: Key('tilehero${podcast.imageUrl}:${podcast.linkUrl}'),
-        tag: '${podcast.imageUrl}:${podcast.linkUrl}',
+    return GestureDetector(
+      onTap: () {
+        NavigationHelper.router
+            .push('/home/detail', extra: (summary, heroPrefix));
+      },
+      child: GridTile(
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 20),
           decoration: BoxDecoration(
@@ -78,9 +82,13 @@ class _ListTile extends ConsumerWidget {
           ),
           child: Column(
             children: [
-              TileImage(
-                url: podcast.imageUrl,
-                size: 150,
+              Hero(
+                key: Key('tilehero${podcast.imageUrl}:${podcast.guid}'),
+                tag: '$heroPrefix:${podcast.guid}',
+                child: TileImage(
+                  url: podcast.imageUrl,
+                  size: 150,
+                ),
               ),
               Padding(
                 padding: const EdgeInsets.only(

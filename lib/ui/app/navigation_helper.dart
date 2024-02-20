@@ -30,9 +30,13 @@ class NavigationHelper {
                     path: 'detail',
                     parentNavigatorKey: homeTabNavigatorKey,
                     pageBuilder: (context, state) {
-                      final baseInfo = state.extra as PodcastSummary?;
+                      final (summary, heroPrefix) =
+                          state.extra! as (PodcastSummary, String);
                       return _getPage(
-                        child: PodcastDetailsPage(baseInfo!),
+                        child: PodcastDetailsPage(
+                          summary: summary,
+                          heroPrefix: heroPrefix,
+                        ),
                         state: state,
                       );
                     },

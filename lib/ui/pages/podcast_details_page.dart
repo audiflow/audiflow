@@ -25,12 +25,14 @@ import 'package:seasoning/ui/widgets/podcast_html.dart';
 /// From here a user can option to subscribe/unsubscribe or play a podcast
 /// directly from a search result.
 class PodcastDetailsPage extends HookConsumerWidget {
-  const PodcastDetailsPage(
-    this.baseInfo, {
+  const PodcastDetailsPage({
+    required this.summary,
+    required this.heroPrefix,
     super.key,
   });
 
-  final PodcastSummary baseInfo;
+  final PodcastSummary summary;
+  final String heroPrefix;
 
   // widget._podcastBloc.backgroundLoading
   //     .where((event) => event is BlocPopulatedState<void>)
@@ -67,8 +69,7 @@ class PodcastDetailsPage extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final scaffoldMessengerKey =
         useState(GlobalKey<ScaffoldMessengerState>()).value;
-    final podcastDetailsState =
-        ref.watch(podcastDetailsProvider.call(baseInfo));
+    final podcastDetailsState = ref.watch(podcastDetailsProvider.call(summary));
     final podcast = podcastDetailsState.value?.podcast;
 
     return Semantics(
@@ -84,7 +85,7 @@ class PodcastDetailsPage extends HookConsumerWidget {
             child: CustomScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: <Widget>[
-                PodcastDetailsAppBar(summary: baseInfo),
+                PodcastDetailsAppBar(summary: summary, heroPrefix: heroPrefix),
                 if (podcastDetailsState.isLoading)
                   const FillRemainingLoading()
                 else if (podcastDetailsState.hasError || podcast == null)
