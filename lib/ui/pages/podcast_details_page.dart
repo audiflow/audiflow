@@ -8,9 +8,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:seasoning/entities/podcast.dart';
+import 'package:seasoning/entities/entities.dart';
 import 'package:seasoning/l10n/L.dart';
 import 'package:seasoning/providers/podcast/podcast_details_provider.dart';
+import 'package:seasoning/providers/podcast/podcast_seasons_provider.dart';
 import 'package:seasoning/services/settings/settings_service.dart';
 import 'package:seasoning/ui/pages/app_bars/podcast_details_app_bar.dart';
 import 'package:seasoning/ui/podcast/episode_list.dart';
@@ -71,6 +72,9 @@ class PodcastDetailsPage extends HookConsumerWidget {
         useState(GlobalKey<ScaffoldMessengerState>()).value;
     final podcastDetailsState = ref.watch(podcastDetailsProvider.call(summary));
     final podcast = podcastDetailsState.value?.podcast;
+    final seasonsState = podcast == null
+        ? const AsyncLoading<List<Season>>()
+        : ref.watch(podcastSeasonsProvider(podcast));
 
     return Semantics(
       header: false,
@@ -86,12 +90,16 @@ class PodcastDetailsPage extends HookConsumerWidget {
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: <Widget>[
                 PodcastDetailsAppBar(summary: summary, heroPrefix: heroPrefix),
-                if (podcastDetailsState.isLoading)
+                if (podcastDetailsState.isLoading || seasonsState.isLoading)
                   const FillRemainingLoading()
                 else if (podcastDetailsState.hasError || podcast == null)
                   FillRemainingError.podcastNoResults()
                 else ...[
                   _PodcastTitle(podcast),
+                  _SwitchBar(
+                    podcast: podcast,
+                    seasons: seasonsState.value!,
+                  ),
                   EpisodeList(
                     summary: podcast,
                     episodes: podcast.episodes,
@@ -224,7 +232,6 @@ class _PodcastTitle extends HookConsumerWidget {
       ),
     );
   }
-
 // @override
 // void initState() {
 //   super.initState();
@@ -381,6 +388,103 @@ class _PodcastDescription extends StatelessWidget {
 //     );
 //   }
 // }
+
+class _SwitchBar extends ConsumerWidget {
+  const _SwitchBar({
+    required this.podcast,
+    required this.seasons,
+  });
+
+  final Podcast podcast;
+  final List<Season> seasons;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final stats = ref.watch(
+      podcastDetailsProvider(podcast).select((value) => value.value?.stats),
+    );
+
+    final selectedViewMode = stats?.viewMode ?? PodcastDetailViewMode.episodes;
+
+    final theme = Theme.of(context);
+    return SliverToBoxAdapter(
+      child: Container(
+        color: theme.dividerColor,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            _PodcastViewModeSwitch(
+              viewMode: selectedViewMode,
+              onChanged: (mode) {
+                ref
+                    .read(podcastDetailsProvider(podcast).notifier)
+                    .setViewMode(mode);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PodcastViewModeSwitch extends ConsumerWidget {
+  const _PodcastViewModeSwitch({
+    required this.viewMode,
+    required this.onChanged,
+  });
+
+  final PodcastDetailViewMode viewMode;
+  final ValueChanged<PodcastDetailViewMode> onChanged;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    return PopupMenuButton<PodcastDetailViewMode>(
+      onSelected: onChanged,
+      position: PopupMenuPosition.under,
+      child: Row(
+        children: [
+          Text(
+            viewMode.label,
+            style: theme.textTheme.titleMedium,
+          ),
+          const Icon(Icons.arrow_drop_down),
+        ],
+      ),
+      itemBuilder: (context) {
+        return PodcastDetailViewMode.values
+            .map(
+              (mode) => PopupMenuItem(
+                value: mode,
+                child: Text(mode.label),
+              ),
+            )
+            .toList();
+      },
+    );
+  }
+
+  void _showViewModeMenu(BuildContext context) {
+    final theme = Theme.of(context);
+    final items = PodcastDetailViewMode.values
+        .map((mode) => PopupMenuItem(
+              value: mode,
+              child: Text(mode.label),
+            ))
+        .toList();
+
+    showMenu(
+      context: context,
+      position: const RelativeRect.fromLTRB(0, 0, 0, 0),
+      items: items,
+    ).then((value) {
+      if (value != null) {
+        onChanged(value);
+      }
+    });
+  }
+}
 
 // class SeasonSwitch extends StatelessWidget {
 //   const SeasonSwitch({required this.isOn, super.key});

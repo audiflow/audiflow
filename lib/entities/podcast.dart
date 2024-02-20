@@ -207,6 +207,29 @@ class PodcastSearchResultItem
   }
 }
 
+enum PodcastDetailViewMode {
+  episodes,
+  seasons,
+  played,
+  unplayed,
+  downloaded;
+
+  String get label {
+    switch (this) {
+      case PodcastDetailViewMode.episodes:
+        return 'Episodes';
+      case PodcastDetailViewMode.seasons:
+        return 'Seasons';
+      case PodcastDetailViewMode.played:
+        return 'Played';
+      case PodcastDetailViewMode.unplayed:
+        return 'Unplayed';
+      case PodcastDetailViewMode.downloaded:
+        return 'Downloaded';
+    }
+  }
+}
+
 @freezed
 class PodcastStats with _$PodcastStats {
   const factory PodcastStats({
@@ -214,6 +237,8 @@ class PodcastStats with _$PodcastStats {
     required String guid,
     DateTime? subscribedDate,
     @Default(Duration.zero) Duration playTotal,
+    @Default(PodcastDetailViewMode.episodes) PodcastDetailViewMode viewMode,
+    @Default(false) bool ascend,
   }) = _PodcastStats;
 
   factory PodcastStats.fromJson(Map<String, dynamic> json) =>

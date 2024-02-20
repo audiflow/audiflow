@@ -80,6 +80,10 @@ _$PodcastStatsImpl _$$PodcastStatsImplFromJson(Map<String, dynamic> json) =>
       playTotal: json['playTotal'] == null
           ? Duration.zero
           : Duration(microseconds: json['playTotal'] as int),
+      viewMode: $enumDecodeNullable(
+              _$PodcastDetailViewModeEnumMap, json['viewMode']) ??
+          PodcastDetailViewMode.episodes,
+      ascend: json['ascend'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$$PodcastStatsImplToJson(_$PodcastStatsImpl instance) =>
@@ -88,4 +92,14 @@ Map<String, dynamic> _$$PodcastStatsImplToJson(_$PodcastStatsImpl instance) =>
       'guid': instance.guid,
       'subscribedDate': instance.subscribedDate?.toIso8601String(),
       'playTotal': instance.playTotal.inMicroseconds,
+      'viewMode': _$PodcastDetailViewModeEnumMap[instance.viewMode]!,
+      'ascend': instance.ascend,
     };
+
+const _$PodcastDetailViewModeEnumMap = {
+  PodcastDetailViewMode.episodes: 'episodes',
+  PodcastDetailViewMode.seasons: 'seasons',
+  PodcastDetailViewMode.played: 'played',
+  PodcastDetailViewMode.unplayed: 'unplayed',
+  PodcastDetailViewMode.downloaded: 'downloaded',
+};

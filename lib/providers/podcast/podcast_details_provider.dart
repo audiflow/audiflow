@@ -11,14 +11,15 @@ part 'podcast_details_provider.g.dart';
 
 @riverpod
 class PodcastDetails extends _$PodcastDetails {
+  Repository get _repository => ref.read(repositoryProvider);
+
   @override
   Future<PodcastDetailsState> build(PodcastSummary baseInfo) async {
     final podcastService = ref.read(podcastServiceProvider);
-    final repository = ref.read(repositoryProvider);
 
     final list = await Future.wait([
       podcastService.loadPodcast(baseInfo),
-      repository.findPodcastStatsByGuid(baseInfo.guid),
+      _repository.findPodcastStatsByGuid(baseInfo.guid),
     ]);
     final podcast = list[0] as Podcast?;
     final podcastStats = list[1] as PodcastStats?;
@@ -34,9 +35,7 @@ class PodcastDetails extends _$PodcastDetails {
   }
 
   void _listen() {
-    final repository = ref.read(repositoryProvider);
-
-    final sub = repository.podcastStream.listen((event) {
+    final sub = _repository.podcastStream.listen((event) {
       switch (event) {
         case PodcastSubscribedEvent(
                 podcast: final podcast,
@@ -65,6 +64,17 @@ class PodcastDetails extends _$PodcastDetails {
       }
     });
     ref.onDispose(sub.cancel);
+  }
+
+  void setViewMode(PodcastDetailViewMode viewMode) {
+    if (state.value == null) {
+      return;
+    }
+
+    final newStats =
+        (state.value!.stats ?? PodcastStats.fromPodcast(state.value!.podcast))
+            .copyWith(viewMode: viewMode);
+    _repository.savePodcastStats(newStats);
   }
 }
 

@@ -874,6 +874,8 @@ mixin _$PodcastStats {
   String get guid => throw _privateConstructorUsedError;
   DateTime? get subscribedDate => throw _privateConstructorUsedError;
   Duration get playTotal => throw _privateConstructorUsedError;
+  PodcastDetailViewMode get viewMode => throw _privateConstructorUsedError;
+  bool get ascend => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -888,7 +890,12 @@ abstract class $PodcastStatsCopyWith<$Res> {
       _$PodcastStatsCopyWithImpl<$Res, PodcastStats>;
   @useResult
   $Res call(
-      {int id, String guid, DateTime? subscribedDate, Duration playTotal});
+      {int id,
+      String guid,
+      DateTime? subscribedDate,
+      Duration playTotal,
+      PodcastDetailViewMode viewMode,
+      bool ascend});
 }
 
 /// @nodoc
@@ -908,6 +915,8 @@ class _$PodcastStatsCopyWithImpl<$Res, $Val extends PodcastStats>
     Object? guid = null,
     Object? subscribedDate = freezed,
     Object? playTotal = null,
+    Object? viewMode = null,
+    Object? ascend = null,
   }) {
     return _then(_value.copyWith(
       id: null == id
@@ -926,6 +935,14 @@ class _$PodcastStatsCopyWithImpl<$Res, $Val extends PodcastStats>
           ? _value.playTotal
           : playTotal // ignore: cast_nullable_to_non_nullable
               as Duration,
+      viewMode: null == viewMode
+          ? _value.viewMode
+          : viewMode // ignore: cast_nullable_to_non_nullable
+              as PodcastDetailViewMode,
+      ascend: null == ascend
+          ? _value.ascend
+          : ascend // ignore: cast_nullable_to_non_nullable
+              as bool,
     ) as $Val);
   }
 }
@@ -939,7 +956,12 @@ abstract class _$$PodcastStatsImplCopyWith<$Res>
   @override
   @useResult
   $Res call(
-      {int id, String guid, DateTime? subscribedDate, Duration playTotal});
+      {int id,
+      String guid,
+      DateTime? subscribedDate,
+      Duration playTotal,
+      PodcastDetailViewMode viewMode,
+      bool ascend});
 }
 
 /// @nodoc
@@ -957,6 +979,8 @@ class __$$PodcastStatsImplCopyWithImpl<$Res>
     Object? guid = null,
     Object? subscribedDate = freezed,
     Object? playTotal = null,
+    Object? viewMode = null,
+    Object? ascend = null,
   }) {
     return _then(_$PodcastStatsImpl(
       id: null == id
@@ -975,6 +999,14 @@ class __$$PodcastStatsImplCopyWithImpl<$Res>
           ? _value.playTotal
           : playTotal // ignore: cast_nullable_to_non_nullable
               as Duration,
+      viewMode: null == viewMode
+          ? _value.viewMode
+          : viewMode // ignore: cast_nullable_to_non_nullable
+              as PodcastDetailViewMode,
+      ascend: null == ascend
+          ? _value.ascend
+          : ascend // ignore: cast_nullable_to_non_nullable
+              as bool,
     ));
   }
 }
@@ -986,7 +1018,9 @@ class _$PodcastStatsImpl implements _PodcastStats {
       {this.id = 0,
       required this.guid,
       this.subscribedDate,
-      this.playTotal = Duration.zero});
+      this.playTotal = Duration.zero,
+      this.viewMode = PodcastDetailViewMode.episodes,
+      this.ascend = false});
 
   factory _$PodcastStatsImpl.fromJson(Map<String, dynamic> json) =>
       _$$PodcastStatsImplFromJson(json);
@@ -1001,10 +1035,16 @@ class _$PodcastStatsImpl implements _PodcastStats {
   @override
   @JsonKey()
   final Duration playTotal;
+  @override
+  @JsonKey()
+  final PodcastDetailViewMode viewMode;
+  @override
+  @JsonKey()
+  final bool ascend;
 
   @override
   String toString() {
-    return 'PodcastStats(id: $id, guid: $guid, subscribedDate: $subscribedDate, playTotal: $playTotal)';
+    return 'PodcastStats(id: $id, guid: $guid, subscribedDate: $subscribedDate, playTotal: $playTotal, viewMode: $viewMode, ascend: $ascend)';
   }
 
   @override
@@ -1017,13 +1057,16 @@ class _$PodcastStatsImpl implements _PodcastStats {
             (identical(other.subscribedDate, subscribedDate) ||
                 other.subscribedDate == subscribedDate) &&
             (identical(other.playTotal, playTotal) ||
-                other.playTotal == playTotal));
+                other.playTotal == playTotal) &&
+            (identical(other.viewMode, viewMode) ||
+                other.viewMode == viewMode) &&
+            (identical(other.ascend, ascend) || other.ascend == ascend));
   }
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode =>
-      Object.hash(runtimeType, id, guid, subscribedDate, playTotal);
+  int get hashCode => Object.hash(
+      runtimeType, id, guid, subscribedDate, playTotal, viewMode, ascend);
 
   @JsonKey(ignore: true)
   @override
@@ -1044,7 +1087,9 @@ abstract class _PodcastStats implements PodcastStats {
       {final int id,
       required final String guid,
       final DateTime? subscribedDate,
-      final Duration playTotal}) = _$PodcastStatsImpl;
+      final Duration playTotal,
+      final PodcastDetailViewMode viewMode,
+      final bool ascend}) = _$PodcastStatsImpl;
 
   factory _PodcastStats.fromJson(Map<String, dynamic> json) =
       _$PodcastStatsImpl.fromJson;
@@ -1057,6 +1102,10 @@ abstract class _PodcastStats implements PodcastStats {
   DateTime? get subscribedDate;
   @override
   Duration get playTotal;
+  @override
+  PodcastDetailViewMode get viewMode;
+  @override
+  bool get ascend;
   @override
   @JsonKey(ignore: true)
   _$$PodcastStatsImplCopyWith<_$PodcastStatsImpl> get copyWith =>
