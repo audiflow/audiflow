@@ -78,8 +78,15 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
   @override
   AudioPlayerState? build() => null;
 
+  var _initialized = false;
+
   @override
   Future<void> setup() async {
+    if (_initialized) {
+      return;
+    }
+
+    _initialized = true;
     _audioHandler = await AudioService.init(
       builder: () => _DefaultAudioPlayerHandler(
         repository: repository,

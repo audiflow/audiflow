@@ -13,8 +13,6 @@ part 'podcast_details_provider.g.dart';
 class PodcastDetails extends _$PodcastDetails {
   @override
   Future<PodcastDetailsState> build(PodcastSummary baseInfo) async {
-    _listen();
-
     final podcastService = ref.read(podcastServiceProvider);
     final repository = ref.read(repositoryProvider);
 
@@ -28,6 +26,7 @@ class PodcastDetails extends _$PodcastDetails {
       throw NotFoundError();
     }
 
+    _listen();
     return PodcastDetailsState(
       podcast: podcast,
       stats: podcastStats,
@@ -47,16 +46,22 @@ class PodcastDetails extends _$PodcastDetails {
                 podcast: final podcast,
                 stats: final stats
               ):
-          state = AsyncData(
-            PodcastDetailsState(
-              podcast: podcast,
-              stats: stats,
-            ),
-          );
+          if (podcast.guid == state.value?.podcast.guid) {
+            state = AsyncData(
+              PodcastDetailsState(
+                podcast: podcast,
+                stats: stats,
+              ),
+            );
+          }
         case PodcastUpdatedEvent(podcast: final podcast):
-          state = AsyncData(state.requireValue.copyWith(podcast: podcast));
+          if (podcast.guid == state.value?.podcast.guid) {
+            state = AsyncData(state.requireValue.copyWith(podcast: podcast));
+          }
         case PodcastStatsUpdatedEvent(stats: final stats):
-          state = AsyncData(state.requireValue.copyWith(stats: stats));
+          if (stats.guid == state.value?.podcast.guid) {
+            state = AsyncData(state.requireValue.copyWith(stats: stats));
+          }
       }
     });
     ref.onDispose(sub.cancel);

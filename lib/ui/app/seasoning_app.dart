@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:seasoning/l10n/L.dart';
-import 'package:seasoning/ui/app/navigation_helper.dart';
 import 'package:seasoning/providers/theme_provider.dart';
+import 'package:seasoning/ui/app/navigation_helper.dart';
 import 'package:seasoning/ui/pages/podcast_chart_page.dart';
 
 ThemeData theme = Themes.lightTheme().themeData;

@@ -13,10 +13,10 @@ import 'package:seasoning/services/podcast/mobile_podcast_service.dart';
 part 'podcast_chart_provider.freezed.dart';
 part 'podcast_chart_provider.g.dart';
 
-@riverpod
+@Riverpod(keepAlive: true)
 class PodcastChart extends _$PodcastChart {
   PodcastChart() {
-    _input.listen(_inputHandler);
+    _input.throttleTime(const Duration(seconds: 5)).listen(_inputHandler);
   }
 
   final BehaviorSubject<PodcastChartEvent> _input =

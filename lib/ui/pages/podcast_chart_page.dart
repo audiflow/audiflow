@@ -8,8 +8,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:seasoning/events/podcast_chart_event.dart';
+import 'package:seasoning/providers/entities/podcast_subscriptions_provider.dart';
 import 'package:seasoning/providers/podcast/podcast_chart_provider.dart';
 import 'package:seasoning/ui/podcast/podcast_list.dart';
+import 'package:seasoning/ui/podcast/podcast_list_horz.dart';
 import 'package:seasoning/ui/widgets/basic_app_bar.dart';
 import 'package:seasoning/ui/widgets/fill_remaining_error.dart';
 import 'package:seasoning/ui/widgets/fill_remaining_loading.dart';
@@ -38,6 +40,7 @@ class PodcastChartPage extends HookConsumerWidget {
       body: CustomScrollView(
         slivers: <Widget>[
           BasicAppBar.chart(),
+          const _SubscribedPodcasts(),
           if (state.hasValue)
             PodcastList(results: state.value!.podcasts)
           else if (state.hasError)
@@ -47,5 +50,17 @@ class PodcastChartPage extends HookConsumerWidget {
         ],
       ),
     );
+  }
+}
+
+class _SubscribedPodcasts extends ConsumerWidget {
+  const _SubscribedPodcasts();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(podcastSubscriptionsProvider);
+    return state.hasValue
+        ? PodcastListHorz(summaries: state.value!.map((e) => e.$2).toList())
+        : const SliverToBoxAdapter(child: SizedBox.shrink());
   }
 }
