@@ -160,7 +160,10 @@ class EpisodeStats with _$EpisodeStats {
       _$EpisodeStatsFromJson(json);
 
   factory EpisodeStats.fromEpisode(Episode episode) {
-    return EpisodeStats(guid: episode.guid);
+    return EpisodeStats(
+      guid: episode.guid,
+      duration: episode.duration,
+    );
   }
 }
 

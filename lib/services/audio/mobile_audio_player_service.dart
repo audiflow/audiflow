@@ -142,7 +142,7 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
       return;
     }
 
-    final uri = (await _generateEpisodeUri(episode))!;
+    final (uri, downloaded) = await _generateEpisodeUri(episode);
 
     log.info('Playing episode ${episode.guid} - '
         '${episode.title} from position $position');
@@ -190,8 +190,13 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
     );
 
     try {
-      await _audioHandler
-          .playMediaItem(_episodeToMediaItem(episode, position, uri));
+      final mediaItem = _episodeToMediaItem(
+        episode,
+        position,
+        uri,
+        downloaded,
+      );
+      await _audioHandler.playMediaItem(mediaItem);
       // ignore: avoid_catches_without_on_clauses
     } catch (e) {
       log
@@ -311,17 +316,17 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
     _sleepState.sink.add(_sleep);
   }
 
-  Future<String?> _generateEpisodeUri(Episode episode) async {
+  Future<(String, bool)> _generateEpisodeUri(Episode episode) async {
     final download = await repository.findDownloadByGuid(episode.guid);
     if (download?.state != DownloadState.downloaded) {
-      return episode.contentUrl;
+      return (episode.contentUrl!, false);
     }
 
     if (!await hasStoragePermission(appSettings)) {
       throw Exception('Insufficient storage permissions');
     }
 
-    return resolvePath(appSettings, download!);
+    return (await resolvePath(appSettings, download!), true);
   }
 
   @override
@@ -342,6 +347,7 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
     Episode episode,
     Duration position,
     String uri,
+    bool downloaded,
   ) {
     return MediaItem(
       id: uri,
@@ -351,7 +357,7 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
       duration: episode.duration,
       extras: <String, dynamic>{
         'position': position.inMilliseconds,
-        // 'downloaded': episode.downloaded,
+        'downloaded': downloaded,
         'speed': _audioPlayerSettings.speed,
         'trim': _audioPlayerSettings.trimSilence,
         'boost': _audioPlayerSettings.volumeBoost,

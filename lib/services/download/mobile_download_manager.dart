@@ -26,11 +26,16 @@ class MobileDownloaderManager implements DownloadManager {
   final ReceivePort _port = ReceivePort();
   final downloadController = StreamController<DownloadProgress>();
   var _lastUpdateTime = 0;
-
+  var _initialized = false;
   @override
   Stream<DownloadProgress> get downloadProgress => downloadController.stream;
 
   Future<void> setup() async {
+    if (_initialized) {
+      return;
+    }
+    _initialized = true;
+
     log.fine('Initialising download manager');
 
     await FlutterDownloader.initialize();
