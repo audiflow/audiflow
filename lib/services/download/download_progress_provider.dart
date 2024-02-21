@@ -1,6 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:seasoning/entities/entities.dart';
-import 'package:seasoning/events/download_event.dart';
+import 'package:seasoning/services/download/download_event.dart';
 import 'package:seasoning/repository/repository_provider.dart';
 import 'package:seasoning/services/download/download_service_provider.dart';
 

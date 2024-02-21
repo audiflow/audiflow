@@ -15,7 +15,7 @@ import 'package:rxdart/rxdart.dart';
 import 'package:seasoning/core/environment.dart';
 import 'package:seasoning/core/utils.dart';
 import 'package:seasoning/entities/entities.dart';
-import 'package:seasoning/events/episode_event.dart';
+import 'package:seasoning/repository/episode_event.dart';
 import 'package:seasoning/repository/repository_provider.dart';
 import 'package:seasoning/services/audio/audio_player_event.dart';
 import 'package:seasoning/services/audio/audio_player_service.dart';

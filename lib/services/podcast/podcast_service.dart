@@ -6,8 +6,8 @@
 
 import 'package:podcast_search/podcast_search.dart' as pcast;
 import 'package:seasoning/entities/entities.dart';
-import 'package:seasoning/events/episode_event.dart';
-import 'package:seasoning/events/podcast_event.dart';
+import 'package:seasoning/repository/episode_event.dart';
+import 'package:seasoning/repository/podcast_event.dart';
 
 abstract class PodcastService {
   static const itunesGenres = [

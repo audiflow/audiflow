@@ -7,20 +7,11 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:seasoning/entities/transcript.dart';
 
-part 'transcript_event.freezed.dart';
-
-@freezed
-class TranscriptEvent with _$TranscriptEvent {
-  const factory TranscriptEvent.clear() = TranscriptClearEvent;
-
-  const factory TranscriptEvent.filter({
-    required String search,
-  }) = TranscriptFilterEvent;
-}
+part 'transcript_state.freezed.dart';
 
 /// State
 @freezed
-class TranscriptState with _$TranscriptState {
+class TranscriptState {
   const factory TranscriptState.unavailable() = TranscriptUnavailableState;
 
   const factory TranscriptState.loading() = TranscriptLoadingState;

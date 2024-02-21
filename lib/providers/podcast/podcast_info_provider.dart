@@ -2,7 +2,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:seasoning/entities/entities.dart';
 import 'package:seasoning/errors/errors.dart';
-import 'package:seasoning/events/podcast_event.dart';
+import 'package:seasoning/repository/podcast_event.dart';
 import 'package:seasoning/repository/repository_provider.dart';
 import 'package:seasoning/services/podcast/mobile_podcast_service.dart';
 

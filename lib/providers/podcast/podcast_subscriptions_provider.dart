@@ -1,7 +1,7 @@
 import 'package:collection/collection.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:seasoning/entities/entities.dart';
-import 'package:seasoning/events/podcast_event.dart';
+import 'package:seasoning/repository/podcast_event.dart';
 import 'package:seasoning/repository/repository_provider.dart';
 
 part 'podcast_subscriptions_provider.g.dart';
