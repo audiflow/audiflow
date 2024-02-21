@@ -149,6 +149,8 @@ abstract class PodcastService {
     'Wrestling',
   ];
 
+  Future<void> setup();
+
   Future<pcast.SearchResult> search({
     required String term,
     String? country,

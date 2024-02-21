@@ -8,8 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 import 'package:seasoning/entities/entities.dart';
-import 'package:seasoning/providers/download_progress_provider.dart';
-import 'package:seasoning/providers/download_service_provider.dart';
+import 'package:seasoning/services/download/download_progress_provider.dart';
+import 'package:seasoning/services/download/download_service_provider.dart';
 
 /// Displays a download button for an episode.
 ///

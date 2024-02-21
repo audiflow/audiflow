@@ -18,42 +18,29 @@ import 'package:seasoning/entities/entities.dart';
 import 'package:seasoning/events/episode_event.dart';
 import 'package:seasoning/events/podcast_event.dart';
 import 'package:seasoning/l10n/messages_all.dart';
-import 'package:seasoning/providers/podcast_api_provider.dart';
-import 'package:seasoning/providers/repository_provider.dart';
+import 'package:seasoning/api/podcast/podcast_api_provider.dart';
+import 'package:seasoning/repository/repository_provider.dart';
 import 'package:seasoning/services/podcast/podcast_service.dart';
 import 'package:seasoning/services/settings/settings_service.dart';
 
 part 'mobile_podcast_service.g.dart';
 
 @Riverpod(keepAlive: true)
-PodcastService podcastService(PodcastServiceRef ref) {
-  final api = ref.read(podcastApiProvider);
-  final repository = ref.read(repositoryProvider);
-  final appSettings = ref.read(settingsServiceProvider);
-  return MobilePodcastService(
-    ref: ref,
-    api: api,
-    repository: repository,
-    appSettings: appSettings,
-  );
-}
+PodcastService podcastService(PodcastServiceRef ref) =>
+    MobilePodcastService(ref);
 
 class MobilePodcastService implements PodcastService {
-  MobilePodcastService({
-    required this.ref,
-    required this.api,
-    required this.repository,
-    required this.appSettings,
-  }) {
-    _init();
-  }
+  MobilePodcastService(this._ref);
 
-  final Ref ref;
-  final PodcastApi api;
-  final Repository repository;
-  final AppSettings appSettings;
+  final Ref _ref;
 
-  final log = Logger('MobilePodcastService');
+  PodcastApi get _api => _ref.read(podcastApiProvider);
+
+  Repository get _repository => _ref.read(repositoryProvider);
+
+  AppSettings get _appSettings => _ref.read(settingsServiceProvider);
+
+  final _log = Logger('MobilePodcastService');
   late var _categories = <String>[];
   late var _intlCategories = <String>[];
   late var _intlCategoriesSorted = <String>[];
@@ -63,13 +50,21 @@ class MobilePodcastService implements PodcastService {
 
   @override
   Stream<PodcastEvent> get podcastStream =>
-      Rx.merge([repository.podcastStream, _podcastSubject.stream]);
+      Rx.merge([_repository.podcastStream, _podcastSubject.stream]);
 
   @override
   Stream<EpisodeEvent> get episodeStream =>
-      Rx.merge([repository.episodeStream, _episodeSubject.stream]);
+      Rx.merge([_repository.episodeStream, _episodeSubject.stream]);
 
-  Future<void> _init() async {
+  var _initialized = false;
+
+  @override
+  Future<void> setup() async {
+    if (_initialized) {
+      return;
+    }
+    _initialized = true;
+
     final systemLocales = PlatformDispatcher.instance.locales;
 
     var currentLocale = Platform.localeName;
@@ -98,13 +93,13 @@ class MobilePodcastService implements PodcastService {
 
     /// Listen for user changes in search provider. If changed, reload the genre
     /// list
-    ref.listen(
+    _ref.listen(
         settingsServiceProvider.select((settings) => settings.searchProvider),
         (_, next) {
       _setupGenres(currentLocale);
     });
 
-    await repository.podcastStream.pipe(_podcastSubject);
+    await _repository.podcastStream.pipe(_podcastSubject);
   }
 
   void _setupGenres(String locale) {
@@ -112,7 +107,7 @@ class MobilePodcastService implements PodcastService {
 
     /// Fetch the correct categories for the current local and selected
     /// provider.
-    if (appSettings.searchProvider == 'itunes') {
+    if (_appSettings.searchProvider == 'itunes') {
       _categories = PodcastService.itunesGenres;
       categoryList =
           Intl.message('discovery_categories_itunes', locale: locale);
@@ -143,14 +138,14 @@ class MobilePodcastService implements PodcastService {
     int version = 0,
     bool explicit = false,
   }) {
-    return api.search(
+    return _api.search(
       term,
       country: country,
       attribute: attribute,
       limit: limit,
       language: language,
       explicit: explicit,
-      searchProvider: appSettings.searchProvider,
+      searchProvider: _appSettings.searchProvider,
     );
   }
 
@@ -160,9 +155,9 @@ class MobilePodcastService implements PodcastService {
     String? genre,
     String? countryCode = '',
   }) {
-    return api.charts(
+    return _api.charts(
       size: size,
-      searchProvider: appSettings.searchProvider,
+      searchProvider: _appSettings.searchProvider,
       genre: _decodeGenre(genre),
       countryCode: countryCode,
     );
@@ -198,30 +193,31 @@ class MobilePodcastService implements PodcastService {
 
   @override
   Future<Podcast?> loadPodcastById(int id) async {
-    return repository.findPodcastById(id);
+    return _repository.findPodcastById(id);
   }
 
   @override
   Future<Podcast?> loadPodcastByGuid(String guid) async {
-    final (_, podcast) = await repository.findPodcastByGuid(guid);
+    final (_, podcast) = await _repository.findPodcastByGuid(guid);
     return podcast;
   }
 
   Future<Podcast> _reloadPodcast(PodcastSummary summary) async {
     final feedPodcast = await _lookupPodcast(url: summary.feedUrl);
     final podcast = Podcast.fromSearch(feedPodcast, summary);
-    final (id, saved) = await repository.findPodcastByGuid(podcast.guid);
+    final (id, saved) = await _repository.findPodcastByGuid(podcast.guid);
     if (saved != null) {
-      await repository.savePodcast(id!, podcast);
+      await _repository.savePodcast(id!, podcast);
     }
 
     final savedEpisodes =
-        await repository.findEpisodesByPodcastGuid(podcast.guid);
+        await _repository.findEpisodesByPodcastGuid(podcast.guid);
     if (savedEpisodes.isEmpty) {
       return podcast;
     }
 
-    final downloads = await repository.findDownloadsByPodcastGuid(podcast.guid);
+    final downloads =
+        await _repository.findDownloadsByPodcastGuid(podcast.guid);
     final guids = <String>{
       ...[
         ...savedEpisodes.map((e) => e.guid),
@@ -231,7 +227,7 @@ class MobilePodcastService implements PodcastService {
     final deletedEpisodes =
         podcast.episodes.where((e) => !guids.contains(e.guid)).toList();
     if (deletedEpisodes.isNotEmpty) {
-      await repository.deleteEpisodes(deletedEpisodes);
+      await _repository.deleteEpisodes(deletedEpisodes);
     }
 
     return podcast;
@@ -363,29 +359,29 @@ class MobilePodcastService implements PodcastService {
 
   @override
   Future<List<Downloadable>> loadDownloads() async {
-    return repository.findDownloads();
+    return _repository.findDownloads();
   }
 
   @override
   Future<List<Episode>> loadEpisodesByPodcastGuid(String pguid) async {
-    return repository.findEpisodesByPodcastGuid(pguid);
+    return _repository.findEpisodesByPodcastGuid(pguid);
   }
 
   @override
   Future<EpisodeStats?> loadEpisodeStats(Episode episode) async {
-    return repository.findEpisodeStatsByGuid(episode.guid);
+    return _repository.findEpisodeStatsByGuid(episode.guid);
   }
 
   @override
   Future<void> deleteDownload(Episode episode) async {
-    final download = await repository.findDownloadByGuid(episode.guid);
+    final download = await _repository.findDownloadByGuid(episode.guid);
     if (download == null) {
       return;
     }
 
     // If this episode is currently downloading, cancel the download first.
     if (download.state == DownloadState.downloaded) {
-      if (appSettings.markDeletedEpisodesAsPlayed) {
+      if (_appSettings.markDeletedEpisodesAsPlayed) {
         // episode.played = true;
       }
     } else if (download.state == DownloadState.downloading &&
@@ -393,13 +389,13 @@ class MobilePodcastService implements PodcastService {
       await FlutterDownloader.cancel(taskId: download.taskId);
     }
 
-    await repository.deleteDownload(download);
+    await _repository.deleteDownload(download);
 
-    if (await hasStoragePermission(appSettings)) {
+    if (await hasStoragePermission(_appSettings)) {
       final f =
-          File.fromUri(Uri.file(await resolvePath(appSettings, download)));
+          File.fromUri(Uri.file(await resolvePath(_appSettings, download)));
       if (f.existsSync()) {
-        log.fine('Deleting file ${f.path}');
+        _log.fine('Deleting file ${f.path}');
         await f.delete();
       }
     }
@@ -417,19 +413,19 @@ class MobilePodcastService implements PodcastService {
 
   @override
   Future<List<(PodcastStats, PodcastSummary)>> subscriptions() async {
-    return repository.subscriptions();
+    return _repository.subscriptions();
   }
 
   @override
   Future<PodcastStats> subscribe(Podcast podcast) async {
-    return repository.subscribePodcast(podcast);
+    return _repository.subscribePodcast(podcast);
   }
 
   @override
   Future<void> unsubscribe(Podcast podcast) async {
-    if (await hasStoragePermission(appSettings)) {
-      final filename =
-          join(await getStorageDirectory(appSettings), safeFile(podcast.title));
+    if (await hasStoragePermission(_appSettings)) {
+      final filename = join(
+          await getStorageDirectory(_appSettings), safeFile(podcast.title));
 
       final d = Directory.fromUri(Uri.file(filename));
 
@@ -438,9 +434,9 @@ class MobilePodcastService implements PodcastService {
       }
     }
 
-    final stats = await repository.findPodcastStatsByGuid(podcast.guid);
+    final stats = await _repository.findPodcastStatsByGuid(podcast.guid);
     if (stats != null) {
-      return repository.unsubscribePodcast(podcast);
+      return _repository.unsubscribePodcast(podcast);
     }
   }
 
@@ -452,22 +448,22 @@ class MobilePodcastService implements PodcastService {
 
   @override
   Future<void> saveEpisode(Episode episode) async {
-    await repository.saveEpisode(episode);
+    await _repository.saveEpisode(episode);
   }
 
   @override
   Future<Transcript> saveTranscript(Transcript transcript) async {
-    return repository.saveTranscript(transcript);
+    return _repository.saveTranscript(transcript);
   }
 
   @override
   Future<void> saveQueue(List<Episode> episodes) async {
-    await repository.saveQueue(episodes);
+    await _repository.saveQueue(episodes);
   }
 
   @override
   Future<List<Episode>> loadQueue() async {
-    return repository.loadQueue();
+    return _repository.loadQueue();
   }
 
   Future<podcast_search.Podcast> _lookupPodcast({
@@ -477,14 +473,14 @@ class MobilePodcastService implements PodcastService {
     var tries = 2;
     while (0 < tries--) {
       try {
-        log.fine('Loading podcast from feed $url');
+        _log.fine('Loading podcast from feed $url');
         return _loadPodcastFeed(url: url);
       } on Exception {
         if (tries <= 0 || !url.startsWith('https')) {
           rethrow;
         }
         // Try the http only version - flesh out to setting later on
-        log.fine(
+        _log.fine(
           'Failed to load podcast. Fallback to http and try again',
         );
         url = url.replaceFirst('https', 'http');
@@ -497,7 +493,7 @@ class MobilePodcastService implements PodcastService {
   Future<podcast_search.Chapters?> _loadChaptersByUrl(String url) {
     return compute<_FeedComputer, podcast_search.Chapters?>(
       _loadChaptersByUrlCompute,
-      _FeedComputer(api: api, url: url),
+      _FeedComputer(api: _api, url: url),
     );
   }
 
@@ -523,7 +519,7 @@ class MobilePodcastService implements PodcastService {
   ) {
     return compute<_TranscriptComputer, podcast_search.Transcript?>(
       _loadTranscriptByUrlCompute,
-      _TranscriptComputer(api: api, transcriptUrl: transcriptUrl),
+      _TranscriptComputer(api: _api, transcriptUrl: transcriptUrl),
     );
   }
 
@@ -551,7 +547,7 @@ class MobilePodcastService implements PodcastService {
   Future<podcast_search.Podcast> _loadPodcastFeed({required String url}) {
     return compute<_FeedComputer, podcast_search.Podcast>(
       _loadPodcastFeedCompute,
-      _FeedComputer(api: api, url: url),
+      _FeedComputer(api: _api, url: url),
     );
   }
 
