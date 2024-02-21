@@ -7,7 +7,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:seasoning/entities/entities.dart';
-import 'package:seasoning/providers/podcast/podcast_details_provider.dart';
+import 'package:seasoning/providers/podcast/podcast_info_provider.dart';
 import 'package:seasoning/ui/app/navigation_helper.dart';
 import 'package:seasoning/ui/widgets/tile_image.dart';
 
@@ -61,7 +61,7 @@ class _ListTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final podcastState = ref.watch(podcastDetailsProvider(summary));
+    final podcastState = ref.watch(podcastInfoProvider(summary));
     if (!podcastState.hasValue) {
       return const SizedBox.shrink();
     }

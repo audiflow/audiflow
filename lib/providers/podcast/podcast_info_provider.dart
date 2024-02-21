@@ -6,11 +6,11 @@ import 'package:seasoning/events/podcast_event.dart';
 import 'package:seasoning/repository/repository_provider.dart';
 import 'package:seasoning/services/podcast/mobile_podcast_service.dart';
 
-part 'podcast_details_provider.freezed.dart';
-part 'podcast_details_provider.g.dart';
+part 'podcast_info_provider.freezed.dart';
+part 'podcast_info_provider.g.dart';
 
 @riverpod
-class PodcastDetails extends _$PodcastDetails {
+class PodcastInfo extends _$PodcastInfo {
   Repository get _repository => ref.read(repositoryProvider);
 
   @override

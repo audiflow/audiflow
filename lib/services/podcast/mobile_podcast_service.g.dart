@@ -6,7 +6,7 @@ part of 'mobile_podcast_service.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$podcastServiceHash() => r'b2f781708f152891e0f7ebd40389db9178452117';
+String _$podcastServiceHash() => r'1dc9ae3b0c711959f2625805eca452ba5cb853af';
 
 /// See also [podcastService].
 @ProviderFor(podcastService)

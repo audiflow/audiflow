@@ -1,12 +1,12 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'podcast_details_provider.dart';
+part of 'podcast_info_provider.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$podcastDetailsHash() => r'afb5591cbfc74eec091c567eca9022892223c55b';
+String _$podcastInfoHash() => r'4c24a98efa700b283cf779b78d4dacbcde48d43d';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -29,7 +29,7 @@ class _SystemHash {
   }
 }
 
-abstract class _$PodcastDetails
+abstract class _$PodcastInfo
     extends BuildlessAutoDisposeAsyncNotifier<PodcastDetailsState> {
   late final PodcastSummary baseInfo;
 
@@ -38,27 +38,27 @@ abstract class _$PodcastDetails
   );
 }
 
-/// See also [PodcastDetails].
-@ProviderFor(PodcastDetails)
-const podcastDetailsProvider = PodcastDetailsFamily();
+/// See also [PodcastInfo].
+@ProviderFor(PodcastInfo)
+const podcastInfoProvider = PodcastInfoFamily();
 
-/// See also [PodcastDetails].
-class PodcastDetailsFamily extends Family<AsyncValue<PodcastDetailsState>> {
-  /// See also [PodcastDetails].
-  const PodcastDetailsFamily();
+/// See also [PodcastInfo].
+class PodcastInfoFamily extends Family<AsyncValue<PodcastDetailsState>> {
+  /// See also [PodcastInfo].
+  const PodcastInfoFamily();
 
-  /// See also [PodcastDetails].
-  PodcastDetailsProvider call(
+  /// See also [PodcastInfo].
+  PodcastInfoProvider call(
     PodcastSummary baseInfo,
   ) {
-    return PodcastDetailsProvider(
+    return PodcastInfoProvider(
       baseInfo,
     );
   }
 
   @override
-  PodcastDetailsProvider getProviderOverride(
-    covariant PodcastDetailsProvider provider,
+  PodcastInfoProvider getProviderOverride(
+    covariant PodcastInfoProvider provider,
   ) {
     return call(
       provider.baseInfo,
@@ -77,30 +77,30 @@ class PodcastDetailsFamily extends Family<AsyncValue<PodcastDetailsState>> {
       _allTransitiveDependencies;
 
   @override
-  String? get name => r'podcastDetailsProvider';
+  String? get name => r'podcastInfoProvider';
 }
 
-/// See also [PodcastDetails].
-class PodcastDetailsProvider extends AutoDisposeAsyncNotifierProviderImpl<
-    PodcastDetails, PodcastDetailsState> {
-  /// See also [PodcastDetails].
-  PodcastDetailsProvider(
+/// See also [PodcastInfo].
+class PodcastInfoProvider extends AutoDisposeAsyncNotifierProviderImpl<
+    PodcastInfo, PodcastDetailsState> {
+  /// See also [PodcastInfo].
+  PodcastInfoProvider(
     PodcastSummary baseInfo,
   ) : this._internal(
-          () => PodcastDetails()..baseInfo = baseInfo,
-          from: podcastDetailsProvider,
-          name: r'podcastDetailsProvider',
+          () => PodcastInfo()..baseInfo = baseInfo,
+          from: podcastInfoProvider,
+          name: r'podcastInfoProvider',
           debugGetCreateSourceHash:
               const bool.fromEnvironment('dart.vm.product')
                   ? null
-                  : _$podcastDetailsHash,
-          dependencies: PodcastDetailsFamily._dependencies,
+                  : _$podcastInfoHash,
+          dependencies: PodcastInfoFamily._dependencies,
           allTransitiveDependencies:
-              PodcastDetailsFamily._allTransitiveDependencies,
+              PodcastInfoFamily._allTransitiveDependencies,
           baseInfo: baseInfo,
         );
 
-  PodcastDetailsProvider._internal(
+  PodcastInfoProvider._internal(
     super._createNotifier, {
     required super.name,
     required super.dependencies,
@@ -114,7 +114,7 @@ class PodcastDetailsProvider extends AutoDisposeAsyncNotifierProviderImpl<
 
   @override
   FutureOr<PodcastDetailsState> runNotifierBuild(
-    covariant PodcastDetails notifier,
+    covariant PodcastInfo notifier,
   ) {
     return notifier.build(
       baseInfo,
@@ -122,10 +122,10 @@ class PodcastDetailsProvider extends AutoDisposeAsyncNotifierProviderImpl<
   }
 
   @override
-  Override overrideWith(PodcastDetails Function() create) {
+  Override overrideWith(PodcastInfo Function() create) {
     return ProviderOverride(
       origin: this,
-      override: PodcastDetailsProvider._internal(
+      override: PodcastInfoProvider._internal(
         () => create()..baseInfo = baseInfo,
         from: from,
         name: null,
@@ -138,14 +138,14 @@ class PodcastDetailsProvider extends AutoDisposeAsyncNotifierProviderImpl<
   }
 
   @override
-  AutoDisposeAsyncNotifierProviderElement<PodcastDetails, PodcastDetailsState>
+  AutoDisposeAsyncNotifierProviderElement<PodcastInfo, PodcastDetailsState>
       createElement() {
-    return _PodcastDetailsProviderElement(this);
+    return _PodcastInfoProviderElement(this);
   }
 
   @override
   bool operator ==(Object other) {
-    return other is PodcastDetailsProvider && other.baseInfo == baseInfo;
+    return other is PodcastInfoProvider && other.baseInfo == baseInfo;
   }
 
   @override
@@ -157,19 +157,19 @@ class PodcastDetailsProvider extends AutoDisposeAsyncNotifierProviderImpl<
   }
 }
 
-mixin PodcastDetailsRef
+mixin PodcastInfoRef
     on AutoDisposeAsyncNotifierProviderRef<PodcastDetailsState> {
   /// The parameter `baseInfo` of this provider.
   PodcastSummary get baseInfo;
 }
 
-class _PodcastDetailsProviderElement
-    extends AutoDisposeAsyncNotifierProviderElement<PodcastDetails,
-        PodcastDetailsState> with PodcastDetailsRef {
-  _PodcastDetailsProviderElement(super.provider);
+class _PodcastInfoProviderElement
+    extends AutoDisposeAsyncNotifierProviderElement<PodcastInfo,
+        PodcastDetailsState> with PodcastInfoRef {
+  _PodcastInfoProviderElement(super.provider);
 
   @override
-  PodcastSummary get baseInfo => (origin as PodcastDetailsProvider).baseInfo;
+  PodcastSummary get baseInfo => (origin as PodcastInfoProvider).baseInfo;
 }
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

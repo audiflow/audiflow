@@ -9,7 +9,7 @@ import 'package:flutter_html/flutter_html.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:seasoning/entities/entities.dart';
 import 'package:seasoning/l10n/L.dart';
-import 'package:seasoning/providers/podcast/podcast_details_provider.dart';
+import 'package:seasoning/providers/podcast/podcast_info_provider.dart';
 import 'package:seasoning/services/settings/settings_service.dart';
 import 'package:seasoning/ui/pages/app_bars/podcast_season_app_bar.dart';
 import 'package:seasoning/ui/podcast/episode_list.dart';
@@ -348,7 +348,7 @@ class _SwitchBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final stats = ref.watch(
-      podcastDetailsProvider(podcast).select((value) => value.value?.stats),
+      podcastInfoProvider(podcast).select((value) => value.value?.stats),
     );
 
     final selectedViewMode = stats?.viewMode ?? PodcastDetailViewMode.episodes;
@@ -364,7 +364,7 @@ class _SwitchBar extends ConsumerWidget {
               viewMode: selectedViewMode,
               onChanged: (mode) {
                 ref
-                    .read(podcastDetailsProvider(podcast).notifier)
+                    .read(podcastInfoProvider(podcast).notifier)
                     .setViewMode(mode);
               },
             ),

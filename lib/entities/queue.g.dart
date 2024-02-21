@@ -7,12 +7,17 @@ part of 'queue.dart';
 // **************************************************************************
 
 _$QueueImpl _$$QueueImplFromJson(Map<String, dynamic> json) => _$QueueImpl(
-      guids:
-          (json['guids'] as List<dynamic>?)?.map((e) => e as String).toList() ??
+      primary: (json['primary'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          const <String>[],
+      adhoc:
+          (json['adhoc'] as List<dynamic>?)?.map((e) => e as String).toList() ??
               const <String>[],
     );
 
 Map<String, dynamic> _$$QueueImplToJson(_$QueueImpl instance) =>
     <String, dynamic>{
-      'guids': instance.guids,
+      'primary': instance.primary,
+      'adhoc': instance.adhoc,
     };

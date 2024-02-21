@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:seasoning/entities/podcast.dart';
-import 'package:seasoning/providers/podcast/podcast_details_provider.dart';
+import 'package:seasoning/providers/podcast/podcast_info_provider.dart';
 import 'package:seasoning/services/podcast/mobile_podcast_service.dart';
 import 'package:seasoning/ui/pages/app_bars/podcast_page_header_image.dart';
 import 'package:seasoning/ui/widgets/placeholder_builder.dart';
@@ -25,7 +25,7 @@ class PodcastDetailsAppBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final placeholderBuilder = PlaceholderBuilder.of(context);
-    final podcastState = ref.watch(podcastDetailsProvider(summary));
+    final podcastState = ref.watch(podcastInfoProvider(summary));
     final subscribed = podcastState.value?.stats?.subscribed;
 
     return SliverLayoutBuilder(

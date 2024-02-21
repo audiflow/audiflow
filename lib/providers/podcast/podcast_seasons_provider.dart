@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:collection/collection.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:seasoning/entities/entities.dart';
-import 'package:seasoning/providers/podcast/podcast_details_provider.dart';
+import 'package:seasoning/providers/podcast/podcast_info_provider.dart';
 
 part 'podcast_seasons_provider.g.dart';
 
@@ -13,7 +13,7 @@ Future<List<Season>> podcastSeasons(
   PodcastSummary summary,
 ) async {
   final podcast = await ref.watch(
-    podcastDetailsProvider(summary).selectAsync((state) => state.podcast),
+    podcastInfoProvider(summary).selectAsync((state) => state.podcast),
   );
 
   final map = <int?, List<Episode>>{};

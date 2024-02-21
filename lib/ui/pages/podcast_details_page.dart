@@ -10,7 +10,7 @@ import 'package:flutter_html/flutter_html.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:seasoning/entities/entities.dart';
 import 'package:seasoning/l10n/L.dart';
-import 'package:seasoning/providers/podcast/podcast_details_provider.dart';
+import 'package:seasoning/providers/podcast/podcast_info_provider.dart';
 import 'package:seasoning/providers/podcast/podcast_seasons_provider.dart';
 import 'package:seasoning/services/settings/settings_service.dart';
 import 'package:seasoning/ui/pages/app_bars/podcast_details_app_bar.dart';
@@ -71,7 +71,7 @@ class PodcastDetailsPage extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final scaffoldMessengerKey =
         useState(GlobalKey<ScaffoldMessengerState>()).value;
-    final podcastDetailsState = ref.watch(podcastDetailsProvider.call(summary));
+    final podcastDetailsState = ref.watch(podcastInfoProvider.call(summary));
     final podcast = podcastDetailsState.value?.podcast;
     final viewMode = podcastDetailsState.value?.stats?.viewMode ??
         PodcastDetailViewMode.episodes;
@@ -406,7 +406,7 @@ class _SwitchBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final stats = ref.watch(
-      podcastDetailsProvider(podcast).select((value) => value.value?.stats),
+      podcastInfoProvider(podcast).select((value) => value.value?.stats),
     );
 
     final selectedViewMode = stats?.viewMode ?? PodcastDetailViewMode.episodes;
@@ -422,7 +422,7 @@ class _SwitchBar extends ConsumerWidget {
               viewMode: selectedViewMode,
               onChanged: (mode) {
                 ref
-                    .read(podcastDetailsProvider(podcast).notifier)
+                    .read(podcastInfoProvider(podcast).notifier)
                     .setViewMode(mode);
               },
             ),

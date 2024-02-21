@@ -573,7 +573,7 @@ class SembastRepository extends Repository {
     }
 
     final queue = Queue.fromJson(snapshot.value);
-    final episodeFinder = Finder(filter: Filter.inList('guid', queue.guids));
+    final episodeFinder = Finder(filter: Filter.inList('guid', queue.primary));
 
     final recordSnapshots =
         await _episodeStore.find(await _db, finder: episodeFinder);
@@ -587,7 +587,7 @@ class SembastRepository extends Repository {
 
     /// Only bother saving if the queue has changed
     if (!listEquals(guids, _queueGuids)) {
-      final queue = Queue(guids: guids);
+      final queue = Queue(primary: guids);
       await _queueStore.record(1).put(await _db, queue.toJson());
       _queueGuids
         ..clear()

@@ -14,7 +14,8 @@ part 'queue.g.dart';
 @freezed
 class Queue with _$Queue {
   const factory Queue({
-    @Default(<String>[]) List<String> guids,
+    @Default(<String>[]) List<String> primary,
+    @Default(<String>[]) List<String> adhoc,
   }) = _Queue;
 
   factory Queue.fromJson(Map<String, dynamic> json) => _$QueueFromJson(json);
