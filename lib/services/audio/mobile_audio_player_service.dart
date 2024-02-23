@@ -15,12 +15,9 @@ import 'package:rxdart/rxdart.dart';
 import 'package:seasoning/core/environment.dart';
 import 'package:seasoning/core/utils.dart';
 import 'package:seasoning/entities/entities.dart';
-import 'package:seasoning/repository/episode_event.dart';
 import 'package:seasoning/repository/repository_provider.dart';
 import 'package:seasoning/services/audio/audio_player_event.dart';
 import 'package:seasoning/services/audio/audio_player_service.dart';
-import 'package:seasoning/services/podcast/mobile_podcast_service.dart';
-import 'package:seasoning/services/podcast/podcast_service.dart';
 import 'package:seasoning/services/settings/settings_service.dart';
 
 part 'mobile_audio_player_service.g.dart';
@@ -34,13 +31,11 @@ part 'mobile_audio_player_service.g.dart';
 @Riverpod(keepAlive: true)
 class MobileAudioPlayerService extends _$MobileAudioPlayerService
     implements AudioPlayerService {
-  final log = Logger('MobileAudioPlayerService');
+  final _log = Logger('MobileAudioPlayerService');
 
-  Repository get repository => ref.read(repositoryProvider);
+  Repository get _repository => ref.read(repositoryProvider);
 
-  AppSettings get appSettings => ref.read(settingsServiceProvider);
-
-  PodcastService get podcastService => ref.read(podcastServiceProvider);
+  AppSettings get _appSettings => ref.read(settingsServiceProvider);
 
   late AudioHandler _audioHandler;
   var _cold = false;
@@ -67,10 +62,6 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
 
   final _sleepState = BehaviorSubject<Sleep>();
 
-  final _audioPlayerEventSubject = BehaviorSubject<AudioPlayerEvent>();
-
-  Stream<EpisodeEvent>? get episodeListener => repository.episodeStream;
-
   // @override
   // Stream<Sleep> get sleepStream => _sleepState.stream;
 
@@ -88,8 +79,8 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
     _initialized = true;
     _audioHandler = await AudioService.init(
       builder: () => _DefaultAudioPlayerHandler(
-        repository: repository,
-        settings: appSettings,
+        repository: _repository,
+        settings: _appSettings,
       ),
       config: const AudioServiceConfig(
         androidNotificationChannelName: 'Seasoning Podcast Player',
@@ -103,7 +94,6 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
   void dispose() {
     _sleepState.close();
     _sleepSubscription?.cancel();
-    _audioPlayerEventSubject.close();
   }
 
   @override
@@ -137,13 +127,13 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
     bool? resume,
   }) async {
     if (episode.guid.isEmpty) {
-      log.warning('ERROR: Attempting to play an empty episode');
+      _log.warning('ERROR: Attempting to play an empty episode');
       return;
     }
 
     final (uri, downloaded) = await _generateEpisodeUri(episode);
 
-    log.info('Playing episode ${episode.guid} - '
+    _log.info('Playing episode ${episode.guid} - '
         '${episode.title} from position $position');
 
     if (state != null) {
@@ -153,7 +143,7 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
       final prevEpisode = state!.episode;
 
       if (currentState == AudioProcessingState.ready) {
-        _audioPlayerEventSubject.add(
+        _notifyAudioPlayerEvent(
           AudioPlayerPositionEvent(
             episode: prevEpisode,
             position: state!.position,
@@ -173,14 +163,14 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
     );
 
     _audioPlayerSettings = AudioPlayerSetting(
-      speed: appSettings.playbackSpeed,
-      trimSilence: appSettings.trimSilence,
-      volumeBoost: appSettings.volumeBoost,
+      speed: _appSettings.playbackSpeed,
+      trimSilence: _appSettings.trimSilence,
+      volumeBoost: _appSettings.volumeBoost,
     );
 
-    await repository.savePlayingEpisodeGuid(episode.guid);
+    await _repository.savePlayingEpisodeGuid(episode.guid);
 
-    _audioPlayerEventSubject.add(
+    _notifyAudioPlayerEvent(
       AudioPlayerStateEvent(
         episode: episode,
         state: AudioState.buffering,
@@ -198,7 +188,7 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
       await _audioHandler.playMediaItem(mediaItem);
       // ignore: avoid_catches_without_on_clauses
     } catch (e) {
-      log
+      _log
         ..fine('Error during playback')
         ..fine(e.toString());
 
@@ -208,7 +198,7 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
         audioState: AudioState.error,
         playing: false,
       );
-      _audioPlayerEventSubject.add(
+      _notifyAudioPlayerEvent(
         AudioPlayerStateEvent(
           episode: episode,
           state: AudioState.error,
@@ -280,15 +270,15 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
 
     // If _episode is null, we must have stopped whilst still active or we were
     // killed.
-    final guid = await repository.playingEpisodeGuid();
+    final guid = await _repository.playingEpisodeGuid();
     if (guid == null) {
       return;
     }
-    final (id, episode) = await repository.findEpisodeByGuid(guid);
+    final (id, episode) = await _repository.findEpisodeByGuid(guid);
     if (id == null || episode == null) {
       return;
     }
-    final stats = await repository.findEpisodeStatsById(id);
+    final stats = await _repository.findEpisodeStatsById(id);
     if (stats == null) {
       return;
     }
@@ -316,16 +306,16 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
   }
 
   Future<(String, bool)> _generateEpisodeUri(Episode episode) async {
-    final download = await repository.findDownloadByGuid(episode.guid);
+    final download = await _repository.findDownloadByGuid(episode.guid);
     if (download?.state != DownloadState.downloaded) {
       return (episode.contentUrl!, false);
     }
 
-    if (!await hasStoragePermission(appSettings)) {
+    if (!await hasStoragePermission(_appSettings)) {
       throw Exception('Insufficient storage permissions');
     }
 
-    return (await resolvePath(appSettings, download!), true);
+    return (await resolvePath(_appSettings, download!), true);
   }
 
   @override
@@ -372,7 +362,7 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
     }).listen((PlaybackState playbackState) {
       final audioState = AudioState.from(playbackState.processingState);
       var playing = state?.playing ?? false;
-      log.fine(
+      _log.fine(
         'Audio state is $audioState - playing is ${playbackState.playing}',
       );
       if (audioState == AudioState.ready) {
@@ -509,6 +499,9 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
       audioState: AudioState.from(playbackState.processingState),
     );
   }
+
+  void _notifyAudioPlayerEvent(AudioPlayerEvent event) =>
+      ref.read(audioPlayerEventStreamProvider.notifier).add(event);
 }
 
 /// This is the default audio handler used by the [MobileAudioPlayerService]

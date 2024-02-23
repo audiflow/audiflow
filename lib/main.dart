@@ -12,10 +12,10 @@ import 'package:flutter/services.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:logging/logging.dart';
 import 'package:seasoning/repository/repository_provider.dart';
+import 'package:seasoning/services/audio/audio_player_event.dart';
 import 'package:seasoning/services/audio/audio_player_service.dart';
 import 'package:seasoning/services/audio/mobile_audio_player_service.dart';
 import 'package:seasoning/services/download/download_manager_provider.dart';
-import 'package:seasoning/services/podcast/mobile_podcast_service.dart';
 import 'package:seasoning/services/queue/default_queue_manager.dart';
 import 'package:seasoning/services/queue/queue_manager.dart';
 import 'package:seasoning/services/settings/settings_service.dart';
@@ -93,18 +93,14 @@ class _GlobalProviders extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     ref
       ..watch(repositoryProvider)
-      ..watch(settingsServiceProvider);
-    final future = Future<void>.value()
-        .then(
-          (_) => ref.read(downloadManagerProvider).setup(),
-        )
-        .then(
-          (_) => ref.read(queueManagerProvider.notifier).setup(),
-        )
-        .then(
-          (_) => ref.read(audioPlayerServiceProvider.notifier).setup(),
-        )
-        .then((_) => ref.read(podcastServiceProvider).setup());
+      ..watch(settingsServiceProvider)
+      ..watch(audioPlayerServiceProvider)
+      ..watch(audioPlayerEventStreamProvider);
+    final future = Future.wait([
+      ref.read(downloadManagerProvider).setup(),
+      ref.read(queueManagerProvider.notifier).setup(),
+      ref.read(audioPlayerServiceProvider.notifier).setup(),
+    ]);
     return FutureBuilder(
       future: future,
       builder: (context, snapshot) {

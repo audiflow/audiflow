@@ -1,5 +1,8 @@
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:seasoning/entities/entities.dart';
 import 'package:seasoning/services/audio/audio_player_service.dart';
+
+part 'audio_player_event.g.dart';
 
 sealed class AudioPlayerEvent {}
 
@@ -25,4 +28,14 @@ class AudioPlayerPositionEvent implements AudioPlayerEvent {
   final Episode episode;
   final Duration position;
   final bool stopping;
+}
+
+@Riverpod(keepAlive: true)
+class AudioPlayerEventStream extends _$AudioPlayerEventStream {
+  @override
+  Stream<AudioPlayerEvent> build() async* {}
+
+  void add(AudioPlayerEvent event) {
+    state = AsyncData(event);
+  }
 }

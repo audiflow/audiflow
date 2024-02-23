@@ -4,6 +4,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:seasoning/l10n/L.dart';
 import 'package:seasoning/providers/theme_provider.dart';
+import 'package:seasoning/services/podcast/mobile_podcast_service.dart';
 import 'package:seasoning/ui/app/navigation_helper.dart';
 import 'package:seasoning/ui/pages/podcast_chart_page.dart';
 
@@ -38,6 +39,13 @@ class HomePage extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final scrollController = useScrollController();
+    useEffect(
+      () {
+        ref.read(podcastServiceProvider).setup();
+        return null;
+      },
+      [],
+    );
     return Scaffold(
       appBar: AppBar(
         title: const Text('Home'),
