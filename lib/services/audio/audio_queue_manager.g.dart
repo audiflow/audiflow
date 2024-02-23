@@ -6,7 +6,7 @@ part of 'audio_queue_manager.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$audioQueueManagerHash() => r'561ddd7c48013a79fc760826d963d43d25e582a1';
+String _$audioQueueManagerHash() => r'56a310fa0a1d8ffe49a5e3bcf0f0dfe09265f72c';
 
 /// See also [AudioQueueManager].
 @ProviderFor(AudioQueueManager)
