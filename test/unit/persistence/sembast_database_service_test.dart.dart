@@ -24,6 +24,7 @@ void main() {
     thumbImageUrl: 'http://p1.com',
     imageUrl: 'http://p1.com',
     releaseDate: DateTime(2021),
+    persons: [const Person(name: 'Person 1')],
   );
 
   final podcast2 = Podcast(
@@ -37,6 +38,7 @@ void main() {
     thumbImageUrl: 'http://p2.com',
     imageUrl: 'http://p2.com',
     releaseDate: DateTime(2021),
+    persons: [const Person(name: 'Person 1')],
   );
 
   setUp(() async {
@@ -240,8 +242,7 @@ void main() {
       expect(loaded, episodeStats);
     });
 
-    test('updateEpisodeStats should updates',
-        () async {
+    test('updateEpisodeStats should updates', () async {
       final param = EpisodeStatsUpdateParam(
         id: episodeStats.id,
         guid: podcast.episodes[2].guid,
@@ -291,31 +292,36 @@ void main() {
     });
   });
 
-  // group('Queue', () {
-  //   setUpAll(createRepository);
-  //   tearDownAll(cleanUpRepository);
-  //
-  //   late List<Episode> saved1;
-  //   late List<Episode> saved2;
-  //
-  //   test('empty', () async {
-  //     final loaded = await persistenceService!.loadQueue();
-  //     expect(loaded, isEmpty);
-  //   });
-  //
-  //   test('Create and save', () async {
-  //     final episodes1 = createEpisodeMocks(podcast1, 3);
-  //     final episodes2 = createEpisodeMocks(podcast2, 3);
-  //     saved1 = await persistenceService!.saveEpisodes(episodes1);
-  //     saved2 = await persistenceService!.saveEpisodes(episodes2);
-  //
-  //     final queue = [...saved1, ...saved2];
-  //     await persistenceService!.saveQueue(queue);
-  //
-  //     final loaded = await persistenceService!.loadQueue();
-  //     expect(listEquals(queue, loaded), isTrue);
-  //   });
-  //
+  group('Queue', () {
+    setUpAll(createRepository);
+    tearDownAll(cleanUpRepository);
+
+    late List<Episode> saved1;
+    late List<Episode> saved2;
+
+    test('empty', () async {
+      final loaded = await persistenceService!.loadQueue();
+      expect(loaded.queue, isEmpty);
+
+      await persistenceService!.saveQueue(const Queue());
+    });
+
+    test('Create and save', () async {
+      final episodes1 = createEpisodeMocks(podcast1, 3);
+      final episodes2 = createEpisodeMocks(podcast2, 3);
+      final queue = Queue(
+        queue: [
+          QueueItem.primary(guid: episodes1[0].guid),
+          QueueItem.adHoc(guid: episodes2[0].guid),
+        ],
+      );
+      await persistenceService!.saveQueue(queue);
+
+      final loaded = await persistenceService!.loadQueue();
+      expect(queue == loaded, isTrue);
+    });
+  });
+
   // group('Downloads', () {
   //   setUpAll(createRepository);
   //   tearDownAll(cleanUpRepository);
