@@ -231,7 +231,11 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
     _positionSubscription?.pause();
 
     state = state!.copyWith(
-      position: position,
+      position: maxDuration(
+        Duration.zero,
+        // FIXME: use state.duration
+        minDuration(position, state!.episode.duration!),
+      ),
       audioState: AudioState.buffering,
     );
     await _audioHandler.seek(position);
@@ -274,12 +278,13 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
     if (guid == null) {
       return;
     }
-    final (id, episode) = await _repository.findEpisodeByGuid(guid);
-    if (id == null || episode == null) {
-      return;
-    }
-    final stats = await _repository.findEpisodeStatsById(id);
-    if (stats == null) {
+    final ret = await Future.wait([
+      _repository.findEpisodeByGuid(guid),
+      _repository.findEpisodeStatsByGuid(guid),
+    ]);
+    final episode = ret[0] as Episode?;
+    final stats = ret[1] as EpisodeStats?;
+    if (episode == null || stats == null) {
       return;
     }
 
@@ -386,6 +391,7 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
   }
 
   Future<void> _completed() async {
+    _notifyAudioPlayerEvent(AudioPlayerCompletedEvent(state!.episode));
     // await _saveCurrentEpisodePosition(complete: true);
     //
     // log.fine('We have completed episode ${state?.episode.guid}');

@@ -13,12 +13,12 @@ import 'package:path/path.dart';
 import 'package:podcast_search/podcast_search.dart' as podcast_search;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:rxdart/rxdart.dart';
+import 'package:seasoning/api/podcast/podcast_api_provider.dart';
 import 'package:seasoning/core/utils.dart';
 import 'package:seasoning/entities/entities.dart';
+import 'package:seasoning/l10n/messages_all.dart';
 import 'package:seasoning/repository/episode_event.dart';
 import 'package:seasoning/repository/podcast_event.dart';
-import 'package:seasoning/l10n/messages_all.dart';
-import 'package:seasoning/api/podcast/podcast_api_provider.dart';
 import 'package:seasoning/repository/repository_provider.dart';
 import 'package:seasoning/services/podcast/podcast_service.dart';
 import 'package:seasoning/services/settings/settings_service.dart';
@@ -198,16 +198,16 @@ class MobilePodcastService implements PodcastService {
 
   @override
   Future<Podcast?> loadPodcastByGuid(String guid) async {
-    final (_, podcast) = await _repository.findPodcastByGuid(guid);
-    return podcast;
+    return _repository.findPodcastByGuid(guid);
   }
 
   Future<Podcast> _reloadPodcast(PodcastSummary summary) async {
     final feedPodcast = await _lookupPodcast(url: summary.feedUrl);
     final podcast = Podcast.fromSearch(feedPodcast, summary);
-    final (id, saved) = await _repository.findPodcastByGuid(podcast.guid);
+    final saved = await _repository.findPodcastByGuid(podcast.guid);
     if (saved != null) {
-      await _repository.savePodcast(id!, podcast);
+      final stats = await _repository.findPodcastStatsByGuid(podcast.guid);
+      await _repository.savePodcast(stats!.id, podcast);
     }
 
     final savedEpisodes =

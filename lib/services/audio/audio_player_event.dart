@@ -30,6 +30,12 @@ class AudioPlayerPositionEvent implements AudioPlayerEvent {
   final bool stopping;
 }
 
+class AudioPlayerCompletedEvent implements AudioPlayerEvent {
+  const AudioPlayerCompletedEvent(this.episode);
+
+  final Episode episode;
+}
+
 @Riverpod(keepAlive: true)
 class AudioPlayerEventStream extends _$AudioPlayerEventStream {
   @override
