@@ -375,11 +375,14 @@ class SembastRepository extends Repository {
     final db = await _db;
     return db.transaction((txn) async {
       final EpisodeStats? loaded;
+      var creating = true;
+
       if (param.id != null && 0 < param.id!) {
         final value = await _episodeStatsStore.record(param.id!).get(txn);
         loaded = value == null
             ? null
             : EpisodeStats.fromJson(value).copyWith(id: param.id!);
+        creating = false;
       } else {
         final finder = Finder(filter: Filter.equals('guid', param.guid));
         final snapshot =
@@ -419,7 +422,9 @@ class SembastRepository extends Repository {
           inQueue: param.inQueue ?? loaded.inQueue,
           downloaded: param.downloaded ?? loaded.downloaded,
         );
-        await _episodeStatsStore.record(stats.id).put(txn, stats.toJson());
+        if (creating || stats != loaded) {
+          await _episodeStatsStore.record(stats.id).put(txn, stats.toJson());
+        }
         return stats;
       }
     });

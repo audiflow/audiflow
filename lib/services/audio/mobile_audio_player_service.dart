@@ -803,19 +803,12 @@ class _DefaultAudioPlayerHandler extends BaseAudioHandler with SeekHandler {
     }
 
     final guid = _currentItem!.extras!['guid'] as String;
-    final stats = await repository.findEpisodeStatsByGuid(guid);
-    if (stats == null) {
-      return;
-    }
-
-    final newStats = stats.copyWith(
+    final updateParam = EpisodeStatsUpdateParam(
+      guid: guid,
       position:
           complete ? _currentItem!.duration! : playbackState.value.position,
-      played: complete || stats.played,
+      played: complete ? true : null,
     );
-
-    if (stats != newStats) {
-      await repository.saveEpisodeStats(newStats);
-    }
+    await repository.updateEpisodeStats(updateParam);
   }
 }
