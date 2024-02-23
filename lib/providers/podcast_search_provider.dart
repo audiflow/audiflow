@@ -5,7 +5,6 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:seasoning/bloc/search/search_state_event.dart';
 import 'package:seasoning/entities/entities.dart';
-import 'package:seasoning/providers/repository_provider.dart';
 import 'package:seasoning/services/podcast/mobile_podcast_service.dart';
 
 part 'podcast_search_provider.freezed.dart';
@@ -43,9 +42,7 @@ class PodcastSearch extends _$PodcastSearch {
         _chartResult ??=
             await ref.read(podcastServiceProvider).charts(size: 10);
         state = AsyncData(
-          PodcastSearchState(
-            results: await _toPodcasts(_chartResult!.items),
-          ),
+          PodcastSearchState(results: _toPodcasts(_chartResult!.items)),
         );
         return;
 
@@ -70,7 +67,7 @@ class PodcastSearch extends _$PodcastSearch {
           state = AsyncData(
             PodcastSearchState(
               term: term,
-              results: await _toPodcasts(results.items),
+              results: _toPodcasts(results.items),
             ),
           );
         } else {
@@ -79,22 +76,8 @@ class PodcastSearch extends _$PodcastSearch {
     }
   }
 
-  Future<List<PodcastSearchResultItem>> _toPodcasts(List<pcast.Item> items) async {
-    final repository = ref.read(repositoryProvider);
-    final podcasts = items.map(PodcastSearchResultItem.fromSearchResultItem).toList();
-    final results = await Future.wait(
-      podcasts.map((p) => repository.findPodcastByGuid(p.guid)),
-    );
-    for (var i = 0; i < podcasts.length; i++) {
-      if (results[i] != null) {
-        podcasts[i] = podcasts[i].copyWith(
-          id: results[i]!.id,
-          subscribedDate: results[i]!.subscribedDate,
-        );
-      }
-    }
-    return podcasts;
-  }
+  List<PodcastSearchResultItem> _toPodcasts(List<pcast.Item> items) =>
+      items.map(PodcastSearchResultItem.fromSearchResultItem).toList();
 }
 
 @freezed

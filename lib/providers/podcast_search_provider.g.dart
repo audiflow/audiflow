@@ -6,7 +6,7 @@ part of 'podcast_search_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$podcastSearchHash() => r'37c955ea95bb9bb30b479b5b752dc772664bda4d';
+String _$podcastSearchHash() => r'87024ae47d97b2c9045e76b1f6c8affabe7ca89e';
 
 /// See also [PodcastSearch].
 @ProviderFor(PodcastSearch)
