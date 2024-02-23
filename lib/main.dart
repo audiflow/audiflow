@@ -15,6 +15,7 @@ import 'package:logging/logging.dart';
 import 'package:seasoning/repository/repository_provider.dart';
 import 'package:seasoning/services/audio/audio_player_event.dart';
 import 'package:seasoning/services/audio/audio_player_service.dart';
+import 'package:seasoning/services/audio/audio_position_saver.dart';
 import 'package:seasoning/services/audio/audio_queue_manager.dart';
 import 'package:seasoning/services/audio/mobile_audio_player_service.dart';
 import 'package:seasoning/services/connectivity/connectivity_state.dart';
@@ -100,7 +101,8 @@ class _GlobalProviders extends HookConsumerWidget {
       ..watch(audioPlayerServiceProvider)
       ..watch(audioPlayerEventStreamProvider)
       ..watch(connectivityStateProvider)
-      ..watch(audioQueueManagerProvider);
+      ..watch(audioQueueManagerProvider)
+      ..watch(audioPositionSaverProvider);
 
     return _ProvidersInitializer(child: child);
   }

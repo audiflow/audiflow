@@ -1,26 +1,26 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'audio_queue_manager.dart';
+part of 'audio_position_saver.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$audioQueueManagerHash() => r'23a8ac601a78d2cd6e8ea8ae061e477f6b6a22fe';
+String _$audioPositionSaverHash() =>
+    r'd837944f5095cd78e7f821a2d0d9d796bd966ed2';
 
-/// See also [AudioQueueManager].
-@ProviderFor(AudioQueueManager)
-final audioQueueManagerProvider =
-    NotifierProvider<AudioQueueManager, bool>.internal(
-  AudioQueueManager.new,
-  name: r'audioQueueManagerProvider',
+/// See also [audioPositionSaver].
+@ProviderFor(audioPositionSaver)
+final audioPositionSaverProvider = Provider<bool>.internal(
+  audioPositionSaver,
+  name: r'audioPositionSaverProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
       ? null
-      : _$audioQueueManagerHash,
+      : _$audioPositionSaverHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
 
-typedef _$AudioQueueManager = Notifier<bool>;
+typedef AudioPositionSaverRef = ProviderRef<bool>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

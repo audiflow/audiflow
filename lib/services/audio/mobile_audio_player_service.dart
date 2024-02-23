@@ -112,6 +112,16 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
 
   @override
   Future<void> stop() async {
+    if (state != null) {
+      _notifyAudioPlayerEvent(
+        AudioPlayerActionEvent(
+          episode: state!.episode,
+          action: AudioPlayerAction.stop,
+          position: state!.position,
+        ),
+      );
+    }
+
     await _audioHandler.stop();
   }
 
@@ -133,8 +143,13 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
 
     final (uri, downloaded) = await _generateEpisodeUri(episode);
 
+    final playPosition =
+        (episode.duration?.inSeconds ?? 0) - 1 <= position.inSeconds
+            ? Duration.zero
+            : position;
+
     _log.info('Playing episode ${episode.guid} - '
-        '${episode.title} from position $position');
+        '${episode.title} from position $playPosition');
 
     if (state != null) {
       // If we are currently playing a track - save the position of the current
@@ -144,10 +159,10 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
 
       if (currentState == AudioProcessingState.ready) {
         _notifyAudioPlayerEvent(
-          AudioPlayerPositionEvent(
+          AudioPlayerActionEvent(
             episode: prevEpisode,
+            action: AudioPlayerAction.stop,
             position: state!.position,
-            stopping: true,
           ),
         );
       } else if (currentState == AudioProcessingState.loading) {
@@ -157,7 +172,7 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
 
     state = AudioPlayerState(
       episode: episode,
-      position: position,
+      position: playPosition,
       playing: true,
       audioState: AudioState.buffering,
     );
@@ -171,17 +186,17 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
     await _repository.savePlayingEpisodeGuid(episode.guid);
 
     _notifyAudioPlayerEvent(
-      AudioPlayerStateEvent(
+      AudioPlayerActionEvent(
         episode: episode,
-        state: AudioState.buffering,
-        position: position,
+        action: AudioPlayerAction.play,
+        position: playPosition,
       ),
     );
 
     try {
       final mediaItem = _episodeToMediaItem(
         episode,
-        position,
+        playPosition,
         uri,
         downloaded,
       );
@@ -194,15 +209,15 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
 
       state = AudioPlayerState(
         episode: episode,
-        position: position,
+        position: playPosition,
         audioState: AudioState.error,
         playing: false,
       );
       _notifyAudioPlayerEvent(
-        AudioPlayerStateEvent(
+        AudioPlayerActionEvent(
           episode: episode,
-          state: AudioState.error,
-          position: position,
+          action: AudioPlayerAction.stop,
+          position: playPosition,
         ),
       );
 
@@ -212,6 +227,16 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
 
   @override
   Future<void> pause() async {
+    if (state != null) {
+      _notifyAudioPlayerEvent(
+        AudioPlayerActionEvent(
+          episode: state!.episode,
+          action: AudioPlayerAction.pause,
+          position: state!.position,
+        ),
+      );
+    }
+
     await _audioHandler.pause();
   }
 
@@ -230,15 +255,26 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
     // Pause the ticker whilst we seek to prevent jumpy UI.
     _positionSubscription?.pause();
 
+    final seekPosition = maxDuration(
+      Duration.zero,
+      // FIXME: use state.duration
+      minDuration(position, state!.episode.duration!),
+    );
+
     state = state!.copyWith(
-      position: maxDuration(
-        Duration.zero,
-        // FIXME: use state.duration
-        minDuration(position, state!.episode.duration!),
-      ),
+      position: seekPosition,
       audioState: AudioState.buffering,
     );
-    await _audioHandler.seek(position);
+
+    _notifyAudioPlayerEvent(
+      AudioPlayerActionEvent(
+        episode: state!.episode,
+        action: AudioPlayerAction.seek,
+        position: seekPosition,
+      ),
+    );
+
+    await _audioHandler.seek(seekPosition);
     _positionSubscription?.resume();
   }
 
@@ -391,9 +427,15 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
   }
 
   Future<void> _completed() async {
-    _notifyAudioPlayerEvent(AudioPlayerCompletedEvent(state!.episode));
-    // await _saveCurrentEpisodePosition(complete: true);
-    //
+    if (state != null) {
+      _notifyAudioPlayerEvent(
+        AudioPlayerActionEvent(
+          episode: state!.episode,
+          action: AudioPlayerAction.completed,
+          position: state!.position,
+        ),
+      );
+    }
     // log.fine('We have completed episode ${state?.episode.guid}');
     //
     // await _stopPositionTicker();
@@ -421,32 +463,6 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
     //   _updateQueueState();
     // }
   }
-
-  /// Saves the current play position to persistent storage. This enables a
-  /// podcast to continue playing where it left off if played at a later
-  /// time.
-  // Future<void> _saveCurrentEpisodePosition({bool complete = false}) async {
-  // if (state == null) {
-  //   log.fine(' - Cannot save position as episode is null');
-  // }
-  //
-  // // The episode may have been updated elsewhere - re-fetch it.
-  // final currentPosition = _audioHandler.playbackState.value.position;
-  //
-// _currentEpisode = await repository.findEpisodeByGuid(_currentEpisode!.guid);
-  //
-  // log.fine(
-  //   '_saveCurrentEpisodePosition(): Current position is $currentPosition -
-  //   stored position is ${_currentEpisode!.position} complete is $complete',
-  // );
-  //
-  // if (currentPosition != _currentEpisode!.position) {
-  //   _currentEpisode!.position = complete ? 0 : currentPosition;
-  //   _currentEpisode!.played = complete;
-  //
-  //   _currentEpisode = await repository.saveEpisode(_currentEpisode!);
-  // }
-  // }
 
   /// Called when play starts. Each time we receive an event in the stream
   /// we check the current position of the episode from the audio service
@@ -805,7 +821,7 @@ class _DefaultAudioPlayerHandler extends BaseAudioHandler with SeekHandler {
       guid: guid,
       position:
           complete ? _currentItem!.duration! : playbackState.value.position,
-      played: complete ? true : null,
+      completed: complete ? true : null,
     );
     await repository.updateEpisodeStats(updateParam);
   }

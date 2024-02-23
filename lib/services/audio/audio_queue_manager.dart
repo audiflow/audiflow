@@ -27,11 +27,14 @@ class AudioQueueManager extends _$AudioQueueManager {
   bool build() {
     ref.listen(audioPlayerEventStreamProvider, (_, next) {
       if (next.valueOrNull
-          case AudioPlayerCompletedEvent(episode: final episode)) {
+          case AudioPlayerActionEvent(
+            episode: final episode,
+            action: AudioPlayerAction.completed
+          )) {
         if (_queue.firstOrNull?.guid == episode.guid) {
           ref.read(queueManagerProvider.notifier).pop();
-          _playNext();
         }
+        _playNext();
       }
     });
 

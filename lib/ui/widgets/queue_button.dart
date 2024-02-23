@@ -7,6 +7,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:seasoning/entities/entities.dart';
+import 'package:seasoning/services/audio/audio_player_service.dart';
 import 'package:seasoning/services/queue/queue_manager.dart';
 
 enum _Action {
@@ -41,6 +42,8 @@ class QueueButton extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final queue = ref.watch(queueManagerProvider).queue;
+    final playingEpisode =
+        ref.watch(audioPlayerServiceProvider.select((state) => state?.episode));
     final queueIndex = queue.indexWhere((e) => e.guid == episode.guid);
 
     final theme = Theme.of(context);
@@ -62,7 +65,7 @@ class QueueButton extends ConsumerWidget {
           Icon(0 <= queueIndex ? Icons.playlist_play : Icons.playlist_add),
           if (0 <= queueIndex)
             Text(
-              '${queueIndex + 1}',
+              episode.guid == playingEpisode?.guid ? '★' : '${queueIndex + 1}',
               style: theme.textTheme.bodyMedium,
             ),
         ],
