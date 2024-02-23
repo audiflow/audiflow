@@ -5,8 +5,12 @@
 // found in the LICENSE file.
 
 import 'package:audio_service/audio_service.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:seasoning/entities/episode.dart';
 import 'package:seasoning/entities/sleep.dart';
+import 'package:seasoning/services/audio/audio_player_state.dart';
+
+export 'package:seasoning/services/audio/audio_player_state.dart';
 
 enum AudioState {
   /// There hasn't been any resource loaded yet.
@@ -49,7 +53,7 @@ enum AudioState {
 ///
 /// The implementing classes will then handle the specifics for the platform we
 /// are running on.
-abstract class AudioPlayerService {
+abstract class AudioPlayerService implements Notifier<AudioPlayerState?> {
   /// Initialize the service.
   Future<void> setup();
 

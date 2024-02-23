@@ -456,16 +456,6 @@ class MobilePodcastService implements PodcastService {
     return _repository.saveTranscript(transcript);
   }
 
-  @override
-  Future<void> saveQueue(List<Episode> episodes) async {
-    await _repository.saveQueue(episodes);
-  }
-
-  @override
-  Future<List<Episode>> loadQueue() async {
-    return _repository.loadQueue();
-  }
-
   Future<podcast_search.Podcast> _lookupPodcast({
     required String url,
   }) async {

@@ -23,3 +23,9 @@ class AudioPlayerState with _$AudioPlayerState {
     @Default(0) int playbackError,
   }) = _AudioPlayerState;
 }
+
+extension AudioPlayerStateExt on AudioPlayerState {
+  double get percentagePlayed => episode.duration == null
+      ? 0.0
+      : position.inMilliseconds / episode!.duration!.inMilliseconds;
+}

@@ -208,10 +208,6 @@ abstract class PodcastService {
 
   Future<Transcript> saveTranscript(Transcript transcript);
 
-  Future<void> saveQueue(List<Episode> episodes);
-
-  Future<List<Episode>> loadQueue();
-
   /// Event listeners
   Stream<PodcastEvent> get podcastStream;
 

@@ -6,7 +6,7 @@ import 'package:seasoning/entities/entities.dart';
 import 'package:seasoning/l10n/L.dart';
 import 'package:seasoning/providers/podcast/episode_info_provider.dart';
 import 'package:seasoning/services/audio/audio_player_service.dart';
-import 'package:seasoning/services/audio/mobile_audio_player_service.dart';
+import 'package:seasoning/services/audio/audio_player_service_provider.dart';
 
 class AnimatedPlayButton extends HookConsumerWidget {
   const AnimatedPlayButton(
@@ -23,7 +23,7 @@ class AnimatedPlayButton extends HookConsumerWidget {
     );
 
     final episodeState = ref.watch(episodeInfoProvider(episode));
-    final playerState = ref.watch(mobileAudioPlayerServiceProvider);
+    final playerState = ref.watch(audioPlayerServiceProvider);
 
     final isTarget =
         episodeState.hasValue && playerState?.episode.guid == episode.guid;
@@ -67,14 +67,14 @@ class AnimatedPlayButton extends HookConsumerWidget {
             ),
             onPressed: () {
               if (playing) {
-                ref.read(mobileAudioPlayerServiceProvider.notifier).pause();
+                ref.read(audioPlayerServiceProvider.notifier).pause();
               } else if (isTarget) {
-                ref.read(mobileAudioPlayerServiceProvider.notifier).play();
+                ref.read(audioPlayerServiceProvider.notifier).play();
               } else {
                 final position =
                     episodeState.value?.stats?.position ?? Duration.zero;
                 ref
-                    .read(mobileAudioPlayerServiceProvider.notifier)
+                    .read(audioPlayerServiceProvider.notifier)
                     .playEpisode(episode: episode, position: position);
               }
             },

@@ -19,7 +19,6 @@ import 'package:seasoning/repository/episode_event.dart';
 import 'package:seasoning/repository/repository_provider.dart';
 import 'package:seasoning/services/audio/audio_player_event.dart';
 import 'package:seasoning/services/audio/audio_player_service.dart';
-import 'package:seasoning/services/audio/audio_player_state.dart';
 import 'package:seasoning/services/podcast/mobile_podcast_service.dart';
 import 'package:seasoning/services/podcast/podcast_service.dart';
 import 'package:seasoning/services/settings/settings_service.dart';

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:seasoning/services/audio/mobile_audio_player_service.dart';
+import 'package:seasoning/services/audio/audio_player_service_provider.dart';
+import 'package:seasoning/services/audio/audio_player_state.dart';
 import 'package:seasoning/ui/app/app_bottom_navigation_bar.dart';
 import 'package:seasoning/ui/mini_player/mini_player.dart';
 import 'package:seasoning/ui/mini_player/utils.dart';
@@ -23,7 +24,7 @@ class DetailedPlayer extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final playerState = ref.watch(mobileAudioPlayerServiceProvider);
+    final playerState = ref.watch(audioPlayerServiceProvider);
     if (playerState == null) {
       return const SizedBox.shrink();
     }
@@ -36,10 +37,10 @@ class DetailedPlayer extends ConsumerWidget {
       controller: controller,
       elevation: 4,
       onDismissed: () {
-        ref.read(mobileAudioPlayerServiceProvider.notifier).stop();
+        ref.read(audioPlayerServiceProvider.notifier).stop();
       },
       builder: (height, percentage) {
-        final miniplayer = percentage < miniPlayerPercentageDeclaration;
+        final showsMiniPlayer = percentage < miniPlayerPercentageDeclaration;
         final width = MediaQuery.of(context).size.width;
         final maxImgSize = width * 0.4;
 
@@ -50,12 +51,11 @@ class DetailedPlayer extends ConsumerWidget {
           onPressed: onTap,
         );
         final progressIndicator = LinearProgressIndicator(
-          value: playerState.position.inMilliseconds.toDouble() /
-              playerState.episode.duration.inMilliseconds.toDouble(),
+          value: playerState.percentagePlayed,
         );
 
         //Declare additional widgets (eg. SkipButton) and variables
-        if (!miniplayer) {
+        if (!showsMiniPlayer) {
           var percentageExpandedPlayer = percentageFromValueInRange(
             min: playerMaxHeight * miniPlayerPercentageDeclaration +
                 playerMinHeight,
