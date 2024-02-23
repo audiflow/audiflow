@@ -33,7 +33,7 @@ class NavigationHelper {
                     parentNavigatorKey: homeTabNavigatorKey,
                     pageBuilder: (context, state) {
                       final (podcast, season, heroPrefix) =
-                      state.extra! as (Podcast, Season, String);
+                          state.extra! as (Podcast, Season, String);
                       return _getPage(
                         child: PodcastSeasonPage(
                           podcast: podcast,
@@ -45,20 +45,20 @@ class NavigationHelper {
                     },
                   ),
                   GoRoute(
-                      path: 'detail',
-                      name: 'detail',
-                      parentNavigatorKey: homeTabNavigatorKey,
-                      pageBuilder: (context, state) {
-                        final (summary, heroPrefix) =
-                            state.extra! as (PodcastSummary, String);
-                        return _getPage(
-                          child: PodcastDetailsPage(
-                            summary: summary,
-                            heroPrefix: heroPrefix,
-                          ),
-                          state: state,
-                        );
-                      },
+                    path: 'detail',
+                    name: 'detail',
+                    parentNavigatorKey: homeTabNavigatorKey,
+                    pageBuilder: (context, state) {
+                      final (summary, heroPrefix) =
+                          state.extra! as (PodcastSummary, String);
+                      return _getPage(
+                        child: PodcastDetailsPage(
+                          summary: summary,
+                          heroPrefix: heroPrefix,
+                        ),
+                        state: state,
+                      );
+                    },
                   ),
                 ],
               ),

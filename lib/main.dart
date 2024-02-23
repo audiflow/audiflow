@@ -9,12 +9,14 @@ import 'dart:io';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:logging/logging.dart';
 import 'package:seasoning/repository/repository_provider.dart';
 import 'package:seasoning/services/audio/audio_player_event.dart';
 import 'package:seasoning/services/audio/audio_player_service.dart';
 import 'package:seasoning/services/audio/mobile_audio_player_service.dart';
+import 'package:seasoning/services/connectivity/connectivity_state.dart';
 import 'package:seasoning/services/download/download_manager_provider.dart';
 import 'package:seasoning/services/queue/default_queue_manager.dart';
 import 'package:seasoning/services/queue/queue_manager.dart';
@@ -84,7 +86,7 @@ Future<List<int>> setupCertificateAuthority() async {
   return ca;
 }
 
-class _GlobalProviders extends ConsumerWidget {
+class _GlobalProviders extends HookConsumerWidget {
   const _GlobalProviders({required this.child});
 
   final Widget child;
@@ -95,20 +97,38 @@ class _GlobalProviders extends ConsumerWidget {
       ..watch(repositoryProvider)
       ..watch(settingsServiceProvider)
       ..watch(audioPlayerServiceProvider)
-      ..watch(audioPlayerEventStreamProvider);
-    final future = Future.wait([
-      ref.read(downloadManagerProvider).setup(),
-      ref.read(queueManagerProvider.notifier).setup(),
-      ref.read(audioPlayerServiceProvider.notifier).setup(),
-    ]);
-    return FutureBuilder(
-      future: future,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.done) {
-          return child;
+      ..watch(audioPlayerEventStreamProvider)
+      ..watch(connectivityStateProvider);
+
+    return _ProvidersInitializer(child: child);
+  }
+}
+
+class _ProvidersInitializer extends HookConsumerWidget {
+  const _ProvidersInitializer({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final initState = useState(false);
+    useEffect(
+      () {
+        if (initState.value) {
+          return;
         }
-        return const SizedBox();
+
+        Future.wait([
+          ref.read(downloadManagerProvider).setup(),
+          ref.read(queueManagerProvider.notifier).setup(),
+          ref.read(audioPlayerServiceProvider.notifier).setup(),
+        ]).then((_) {
+          initState.value = true;
+        });
+        return;
       },
+      [],
     );
+    return initState.value ? child : const SizedBox();
   }
 }
