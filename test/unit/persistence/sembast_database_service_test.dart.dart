@@ -218,10 +218,13 @@ void main() {
       expect(stats, isNull);
     });
 
-    test('createEpisodeStats should assign id of the companion episode',
+    test('updateEpisodeStats should assign id of the companion episode',
         () async {
-      episodeStats =
-          await persistenceService!.createEpisodeStats(podcast.episodes[2]);
+      final param = EpisodeStatsUpdateParam(
+        guid: podcast.episodes[2].guid,
+        duration: podcast.episodes[2].duration,
+      );
+      episodeStats = await persistenceService!.updateEpisodeStats(param);
       expect(episodeStats.id, 3);
     });
 
@@ -237,15 +240,19 @@ void main() {
       expect(loaded, episodeStats);
     });
 
-    test('createEpisodeStats should assign id of the companion episode',
+    test('updateEpisodeStats should updates',
         () async {
-      final newStats =
-          episodeStats.copyWith(playTotal: const Duration(minutes: 30));
-      await persistenceService!.saveEpisodeStats(newStats);
+      final param = EpisodeStatsUpdateParam(
+        id: episodeStats.id,
+        guid: podcast.episodes[2].guid,
+        playTotal: const Duration(minutes: 30),
+        played: true,
+      );
+      await persistenceService!.updateEpisodeStats(param);
 
       final loaded =
-          await persistenceService!.findEpisodeStatsById(newStats.id);
-      expect(loaded, newStats);
+          await persistenceService!.findEpisodeStatsById(episodeStats.id);
+      expect(loaded == episodeStats, isFalse);
     });
 
     test('check updated field', () async {

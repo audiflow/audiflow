@@ -63,7 +63,7 @@ mixin _$Episode {
   /// The duration of the episode in milliseconds. This can be populated
   /// either from the RSS if available, or determined from the MP3 file at
   /// stream/download time.
-  Duration get duration => throw _privateConstructorUsedError;
+  Duration? get duration => throw _privateConstructorUsedError;
 
   /// URL pointing to a JSON file containing chapter information if available.
   String? get chaptersUrl => throw _privateConstructorUsedError;
@@ -101,7 +101,7 @@ abstract class $EpisodeCopyWith<$Res> {
       String? author,
       int? season,
       int? episode,
-      Duration duration,
+      Duration? duration,
       String? chaptersUrl,
       List<Chapter> chapters,
       List<TranscriptUrl> transcriptUrls,
@@ -134,7 +134,7 @@ class _$EpisodeCopyWithImpl<$Res, $Val extends Episode>
     Object? author = freezed,
     Object? season = freezed,
     Object? episode = freezed,
-    Object? duration = null,
+    Object? duration = freezed,
     Object? chaptersUrl = freezed,
     Object? chapters = null,
     Object? transcriptUrls = null,
@@ -193,10 +193,10 @@ class _$EpisodeCopyWithImpl<$Res, $Val extends Episode>
           ? _value.episode
           : episode // ignore: cast_nullable_to_non_nullable
               as int?,
-      duration: null == duration
+      duration: freezed == duration
           ? _value.duration
           : duration // ignore: cast_nullable_to_non_nullable
-              as Duration,
+              as Duration?,
       chaptersUrl: freezed == chaptersUrl
           ? _value.chaptersUrl
           : chaptersUrl // ignore: cast_nullable_to_non_nullable
@@ -238,7 +238,7 @@ abstract class _$$EpisodeImplCopyWith<$Res> implements $EpisodeCopyWith<$Res> {
       String? author,
       int? season,
       int? episode,
-      Duration duration,
+      Duration? duration,
       String? chaptersUrl,
       List<Chapter> chapters,
       List<TranscriptUrl> transcriptUrls,
@@ -269,7 +269,7 @@ class __$$EpisodeImplCopyWithImpl<$Res>
     Object? author = freezed,
     Object? season = freezed,
     Object? episode = freezed,
-    Object? duration = null,
+    Object? duration = freezed,
     Object? chaptersUrl = freezed,
     Object? chapters = null,
     Object? transcriptUrls = null,
@@ -328,10 +328,10 @@ class __$$EpisodeImplCopyWithImpl<$Res>
           ? _value.episode
           : episode // ignore: cast_nullable_to_non_nullable
               as int?,
-      duration: null == duration
+      duration: freezed == duration
           ? _value.duration
           : duration // ignore: cast_nullable_to_non_nullable
-              as Duration,
+              as Duration?,
       chaptersUrl: freezed == chaptersUrl
           ? _value.chaptersUrl
           : chaptersUrl // ignore: cast_nullable_to_non_nullable
@@ -438,7 +438,7 @@ class _$EpisodeImpl with DiagnosticableTreeMixin implements _Episode {
   /// either from the RSS if available, or determined from the MP3 file at
   /// stream/download time.
   @override
-  final Duration duration;
+  final Duration? duration;
 
   /// URL pointing to a JSON file containing chapter information if available.
   @override
@@ -595,7 +595,7 @@ abstract class _Episode implements Episode {
       final String? author,
       final int? season,
       final int? episode,
-      required final Duration duration,
+      required final Duration? duration,
       final String? chaptersUrl,
       final List<Chapter> chapters,
       final List<TranscriptUrl> transcriptUrls,
@@ -661,7 +661,7 @@ abstract class _Episode implements Episode {
   /// The duration of the episode in milliseconds. This can be populated
   /// either from the RSS if available, or determined from the MP3 file at
   /// stream/download time.
-  Duration get duration;
+  Duration? get duration;
   @override
 
   /// URL pointing to a JSON file containing chapter information if available.
@@ -693,11 +693,11 @@ mixin _$EpisodeStats {
   int get id => throw _privateConstructorUsedError;
   String get guid => throw _privateConstructorUsedError;
   Duration get position => throw _privateConstructorUsedError;
-  Duration get duration => throw _privateConstructorUsedError;
+  Duration? get duration => throw _privateConstructorUsedError;
   bool get played => throw _privateConstructorUsedError;
   int get playCount => throw _privateConstructorUsedError;
   Duration get playTotal => throw _privateConstructorUsedError;
-  bool get queued => throw _privateConstructorUsedError;
+  bool get inQueue => throw _privateConstructorUsedError;
   bool get downloaded => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -716,11 +716,11 @@ abstract class $EpisodeStatsCopyWith<$Res> {
       {int id,
       String guid,
       Duration position,
-      Duration duration,
+      Duration? duration,
       bool played,
       int playCount,
       Duration playTotal,
-      bool queued,
+      bool inQueue,
       bool downloaded});
 }
 
@@ -740,11 +740,11 @@ class _$EpisodeStatsCopyWithImpl<$Res, $Val extends EpisodeStats>
     Object? id = null,
     Object? guid = null,
     Object? position = null,
-    Object? duration = null,
+    Object? duration = freezed,
     Object? played = null,
     Object? playCount = null,
     Object? playTotal = null,
-    Object? queued = null,
+    Object? inQueue = null,
     Object? downloaded = null,
   }) {
     return _then(_value.copyWith(
@@ -760,10 +760,10 @@ class _$EpisodeStatsCopyWithImpl<$Res, $Val extends EpisodeStats>
           ? _value.position
           : position // ignore: cast_nullable_to_non_nullable
               as Duration,
-      duration: null == duration
+      duration: freezed == duration
           ? _value.duration
           : duration // ignore: cast_nullable_to_non_nullable
-              as Duration,
+              as Duration?,
       played: null == played
           ? _value.played
           : played // ignore: cast_nullable_to_non_nullable
@@ -776,9 +776,9 @@ class _$EpisodeStatsCopyWithImpl<$Res, $Val extends EpisodeStats>
           ? _value.playTotal
           : playTotal // ignore: cast_nullable_to_non_nullable
               as Duration,
-      queued: null == queued
-          ? _value.queued
-          : queued // ignore: cast_nullable_to_non_nullable
+      inQueue: null == inQueue
+          ? _value.inQueue
+          : inQueue // ignore: cast_nullable_to_non_nullable
               as bool,
       downloaded: null == downloaded
           ? _value.downloaded
@@ -800,11 +800,11 @@ abstract class _$$EpisodeStatsImplCopyWith<$Res>
       {int id,
       String guid,
       Duration position,
-      Duration duration,
+      Duration? duration,
       bool played,
       int playCount,
       Duration playTotal,
-      bool queued,
+      bool inQueue,
       bool downloaded});
 }
 
@@ -822,11 +822,11 @@ class __$$EpisodeStatsImplCopyWithImpl<$Res>
     Object? id = null,
     Object? guid = null,
     Object? position = null,
-    Object? duration = null,
+    Object? duration = freezed,
     Object? played = null,
     Object? playCount = null,
     Object? playTotal = null,
-    Object? queued = null,
+    Object? inQueue = null,
     Object? downloaded = null,
   }) {
     return _then(_$EpisodeStatsImpl(
@@ -842,10 +842,10 @@ class __$$EpisodeStatsImplCopyWithImpl<$Res>
           ? _value.position
           : position // ignore: cast_nullable_to_non_nullable
               as Duration,
-      duration: null == duration
+      duration: freezed == duration
           ? _value.duration
           : duration // ignore: cast_nullable_to_non_nullable
-              as Duration,
+              as Duration?,
       played: null == played
           ? _value.played
           : played // ignore: cast_nullable_to_non_nullable
@@ -858,9 +858,9 @@ class __$$EpisodeStatsImplCopyWithImpl<$Res>
           ? _value.playTotal
           : playTotal // ignore: cast_nullable_to_non_nullable
               as Duration,
-      queued: null == queued
-          ? _value.queued
-          : queued // ignore: cast_nullable_to_non_nullable
+      inQueue: null == inQueue
+          ? _value.inQueue
+          : inQueue // ignore: cast_nullable_to_non_nullable
               as bool,
       downloaded: null == downloaded
           ? _value.downloaded
@@ -877,11 +877,11 @@ class _$EpisodeStatsImpl with DiagnosticableTreeMixin implements _EpisodeStats {
       {this.id = 0,
       required this.guid,
       this.position = Duration.zero,
-      this.duration = Duration.zero,
+      this.duration,
       this.played = false,
       this.playCount = 0,
       this.playTotal = Duration.zero,
-      this.queued = false,
+      this.inQueue = false,
       this.downloaded = false});
 
   factory _$EpisodeStatsImpl.fromJson(Map<String, dynamic> json) =>
@@ -896,8 +896,7 @@ class _$EpisodeStatsImpl with DiagnosticableTreeMixin implements _EpisodeStats {
   @JsonKey()
   final Duration position;
   @override
-  @JsonKey()
-  final Duration duration;
+  final Duration? duration;
   @override
   @JsonKey()
   final bool played;
@@ -909,14 +908,14 @@ class _$EpisodeStatsImpl with DiagnosticableTreeMixin implements _EpisodeStats {
   final Duration playTotal;
   @override
   @JsonKey()
-  final bool queued;
+  final bool inQueue;
   @override
   @JsonKey()
   final bool downloaded;
 
   @override
   String toString({DiagnosticLevel minLevel = DiagnosticLevel.info}) {
-    return 'EpisodeStats(id: $id, guid: $guid, position: $position, duration: $duration, played: $played, playCount: $playCount, playTotal: $playTotal, queued: $queued, downloaded: $downloaded)';
+    return 'EpisodeStats(id: $id, guid: $guid, position: $position, duration: $duration, played: $played, playCount: $playCount, playTotal: $playTotal, inQueue: $inQueue, downloaded: $downloaded)';
   }
 
   @override
@@ -931,7 +930,7 @@ class _$EpisodeStatsImpl with DiagnosticableTreeMixin implements _EpisodeStats {
       ..add(DiagnosticsProperty('played', played))
       ..add(DiagnosticsProperty('playCount', playCount))
       ..add(DiagnosticsProperty('playTotal', playTotal))
-      ..add(DiagnosticsProperty('queued', queued))
+      ..add(DiagnosticsProperty('inQueue', inQueue))
       ..add(DiagnosticsProperty('downloaded', downloaded));
   }
 
@@ -951,7 +950,7 @@ class _$EpisodeStatsImpl with DiagnosticableTreeMixin implements _EpisodeStats {
                 other.playCount == playCount) &&
             (identical(other.playTotal, playTotal) ||
                 other.playTotal == playTotal) &&
-            (identical(other.queued, queued) || other.queued == queued) &&
+            (identical(other.inQueue, inQueue) || other.inQueue == inQueue) &&
             (identical(other.downloaded, downloaded) ||
                 other.downloaded == downloaded));
   }
@@ -959,7 +958,7 @@ class _$EpisodeStatsImpl with DiagnosticableTreeMixin implements _EpisodeStats {
   @JsonKey(ignore: true)
   @override
   int get hashCode => Object.hash(runtimeType, id, guid, position, duration,
-      played, playCount, playTotal, queued, downloaded);
+      played, playCount, playTotal, inQueue, downloaded);
 
   @JsonKey(ignore: true)
   @override
@@ -980,11 +979,11 @@ abstract class _EpisodeStats implements EpisodeStats {
       {final int id,
       required final String guid,
       final Duration position,
-      final Duration duration,
+      final Duration? duration,
       final bool played,
       final int playCount,
       final Duration playTotal,
-      final bool queued,
+      final bool inQueue,
       final bool downloaded}) = _$EpisodeStatsImpl;
 
   factory _EpisodeStats.fromJson(Map<String, dynamic> json) =
@@ -997,7 +996,7 @@ abstract class _EpisodeStats implements EpisodeStats {
   @override
   Duration get position;
   @override
-  Duration get duration;
+  Duration? get duration;
   @override
   bool get played;
   @override
@@ -1005,7 +1004,7 @@ abstract class _EpisodeStats implements EpisodeStats {
   @override
   Duration get playTotal;
   @override
-  bool get queued;
+  bool get inQueue;
   @override
   bool get downloaded;
   @override

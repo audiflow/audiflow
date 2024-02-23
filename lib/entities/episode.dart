@@ -68,7 +68,7 @@ class Episode with _$Episode {
     /// The duration of the episode in milliseconds. This can be populated
     /// either from the RSS if available, or determined from the MP3 file at
     /// stream/download time.
-    required Duration duration,
+    required Duration? duration,
 
     /// URL pointing to a JSON file containing chapter information if available.
     String? chaptersUrl,
@@ -116,7 +116,7 @@ class Episode with _$Episode {
       link: episode.link,
       imageUrl: episodeImage,
       thumbImageUrl: episodeThumbImage,
-      duration: duration,
+      duration: Duration.zero < duration ? duration : null,
       publicationDate: episode.publicationDate,
       chaptersUrl: episode.chapters?.url,
       persons: episode.persons.map(Person.fromSearch).toList(),
@@ -148,11 +148,11 @@ class EpisodeStats with _$EpisodeStats {
     @Default(0) int id,
     required String guid,
     @Default(Duration.zero) Duration position,
-    @Default(Duration.zero) Duration duration,
+    Duration? duration,
     @Default(false) bool played,
     @Default(0) int playCount,
     @Default(Duration.zero) Duration playTotal,
-    @Default(false) bool queued,
+    @Default(false) bool inQueue,
     @Default(false) bool downloaded,
   }) = _EpisodeStats;
 
@@ -167,11 +167,59 @@ class EpisodeStats with _$EpisodeStats {
   }
 }
 
+class EpisodeStatsUpdateParam {
+  const EpisodeStatsUpdateParam({
+    this.id,
+    required this.guid,
+    this.position,
+    this.duration,
+    this.played,
+    this.playCount,
+    this.playTotal,
+    this.inQueue,
+    this.downloaded,
+  });
+
+  final int? id;
+  final String guid;
+  final Duration? position;
+  final Duration? duration;
+  final bool? played;
+  final int? playCount;
+  final Duration? playTotal;
+  final bool? inQueue;
+  final bool? downloaded;
+
+  EpisodeStatsUpdateParam copyWith({
+    int? id,
+    String? guid,
+    Duration? position,
+    Duration? duration,
+    bool? played,
+    int? playCount,
+    Duration? playTotal,
+    bool? inQueue,
+    bool? downloaded,
+  }) {
+    return EpisodeStatsUpdateParam(
+      id: id ?? this.id,
+      guid: guid ?? this.guid,
+      position: position ?? this.position,
+      duration: duration ?? this.duration,
+      played: played ?? this.played,
+      playCount: playCount ?? this.playCount,
+      playTotal: playTotal ?? this.playTotal,
+      inQueue: inQueue ?? this.inQueue,
+      downloaded: downloaded ?? this.downloaded,
+    );
+  }
+}
+
 extension EpisodeStatsExt on EpisodeStats {
-  double get percentagePlayed => duration == Duration.zero
+  double get percentagePlayed => duration == null
       ? 0.0
-      : position.inMilliseconds / duration.inMilliseconds;
+      : position.inMilliseconds / duration!.inMilliseconds;
 
   Duration get timeRemaining =>
-      duration == Duration.zero ? Duration.zero : duration - position;
+      duration == null ? Duration.zero : duration! - position;
 }

@@ -23,7 +23,9 @@ _$EpisodeImpl _$$EpisodeImplFromJson(Map<String, dynamic> json) =>
       author: json['author'] as String?,
       season: json['season'] as int?,
       episode: json['episode'] as int?,
-      duration: Duration(microseconds: json['duration'] as int),
+      duration: json['duration'] == null
+          ? null
+          : Duration(microseconds: json['duration'] as int),
       chaptersUrl: json['chaptersUrl'] as String?,
       chapters: (json['chapters'] as List<dynamic>?)
               ?.map((e) => Chapter.fromJson(e as Map<String, dynamic>))
@@ -54,7 +56,7 @@ Map<String, dynamic> _$$EpisodeImplToJson(_$EpisodeImpl instance) =>
       'author': instance.author,
       'season': instance.season,
       'episode': instance.episode,
-      'duration': instance.duration.inMicroseconds,
+      'duration': instance.duration?.inMicroseconds,
       'chaptersUrl': instance.chaptersUrl,
       'chapters': instance.chapters,
       'transcriptUrls': instance.transcriptUrls,
@@ -69,14 +71,14 @@ _$EpisodeStatsImpl _$$EpisodeStatsImplFromJson(Map<String, dynamic> json) =>
           ? Duration.zero
           : Duration(microseconds: json['position'] as int),
       duration: json['duration'] == null
-          ? Duration.zero
+          ? null
           : Duration(microseconds: json['duration'] as int),
       played: json['played'] as bool? ?? false,
       playCount: json['playCount'] as int? ?? 0,
       playTotal: json['playTotal'] == null
           ? Duration.zero
           : Duration(microseconds: json['playTotal'] as int),
-      queued: json['queued'] as bool? ?? false,
+      inQueue: json['inQueue'] as bool? ?? false,
       downloaded: json['downloaded'] as bool? ?? false,
     );
 
@@ -85,10 +87,10 @@ Map<String, dynamic> _$$EpisodeStatsImplToJson(_$EpisodeStatsImpl instance) =>
       'id': instance.id,
       'guid': instance.guid,
       'position': instance.position.inMicroseconds,
-      'duration': instance.duration.inMicroseconds,
+      'duration': instance.duration?.inMicroseconds,
       'played': instance.played,
       'playCount': instance.playCount,
       'playTotal': instance.playTotal.inMicroseconds,
-      'queued': instance.queued,
+      'inQueue': instance.inQueue,
       'downloaded': instance.downloaded,
     };

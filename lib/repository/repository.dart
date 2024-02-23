@@ -4,13 +4,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:seasoning/entities/downloadable.dart';
-import 'package:seasoning/entities/episode.dart';
-import 'package:seasoning/entities/podcast.dart';
-import 'package:seasoning/entities/transcript.dart';
-import 'package:seasoning/services/download/download_event.dart';
+import 'package:seasoning/entities/entities.dart';
 import 'package:seasoning/repository/episode_event.dart';
 import 'package:seasoning/repository/podcast_event.dart';
+import 'package:seasoning/services/download/download_event.dart';
 
 /// An abstract class that represent the actions supported by the chosen
 /// database or storage implementation.
@@ -64,9 +61,7 @@ abstract class Repository {
 
   // --- EpisodeStats
 
-  Future<EpisodeStats> createEpisodeStats(Episode episode);
-
-  Future<void> saveEpisodeStats(EpisodeStats stats);
+  Future<EpisodeStats> updateEpisodeStats(EpisodeStatsUpdateParam param);
 
   Future<EpisodeStats?> findEpisodeStatsById(int id);
 
@@ -98,9 +93,9 @@ abstract class Repository {
 
   // --- Queue
 
-  Future<void> saveQueue(List<Episode> episodes);
+  Future<void> saveQueue(Queue queue);
 
-  Future<List<Episode>> loadQueue();
+  Future<Queue> loadQueue();
 
   // --- Player
 

@@ -38,8 +38,10 @@ extension SeasonExt on Season {
   // bool get playedAll =>
   //     episodes.map((e) => e.$2).every((stats) => stats?.played == true);
 
-  Duration get totalDuration => episodes
-      .fold(Duration.zero, (total, episode) => total + episode.duration);
+  Duration get totalDuration => episodes.fold(
+        Duration.zero,
+        (total, episode) => total + (episode.duration ?? Duration.zero),
+      );
 
   String? get thumbImageUrl {
     return episodes.first.thumbImageUrl;
@@ -53,18 +55,18 @@ extension SeasonExt on Season {
     return episodes.first.publicationDate;
   }
 
-  // Duration get timeRemaining {
-  //   final playedTotal =
-  //       episodes.map((e) => e.$2).fold(Duration.zero, (total, stats) {
-  //     final maxPosition = stats == null
-  //         ? Duration.zero
-  //         : stats.played
-  //             ? stats.duration
-  //             : stats.position;
-  //     return total + maxPosition;
-  //   });
-  //   return totalDuration - playedTotal;
-  // }
+// Duration get timeRemaining {
+//   final playedTotal =
+//       episodes.map((e) => e.$2).fold(Duration.zero, (total, stats) {
+//     final maxPosition = stats == null
+//         ? Duration.zero
+//         : stats.played
+//             ? stats.duration
+//             : stats.position;
+//     return total + maxPosition;
+//   });
+//   return totalDuration - playedTotal;
+// }
 }
 
 List<Episode> sortedSeasonEpisodes(List<Episode> episodes) =>

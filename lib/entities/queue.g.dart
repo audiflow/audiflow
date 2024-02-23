@@ -7,17 +7,30 @@ part of 'queue.dart';
 // **************************************************************************
 
 _$QueueImpl _$$QueueImplFromJson(Map<String, dynamic> json) => _$QueueImpl(
-      primary: (json['primary'] as List<dynamic>?)
-              ?.map((e) => e as String)
+      queue: (json['queue'] as List<dynamic>?)
+              ?.map((e) => QueueItem.fromJson(e as Map<String, dynamic>))
               .toList() ??
-          const <String>[],
-      adhoc:
-          (json['adhoc'] as List<dynamic>?)?.map((e) => e as String).toList() ??
-              const <String>[],
+          const <QueueItem>[],
     );
 
 Map<String, dynamic> _$$QueueImplToJson(_$QueueImpl instance) =>
     <String, dynamic>{
-      'primary': instance.primary,
-      'adhoc': instance.adhoc,
+      'queue': instance.queue,
     };
+
+_$QueueItemImpl _$$QueueItemImplFromJson(Map<String, dynamic> json) =>
+    _$QueueItemImpl(
+      guid: json['guid'] as String,
+      type: $enumDecode(_$QueueTypeEnumMap, json['type']),
+    );
+
+Map<String, dynamic> _$$QueueItemImplToJson(_$QueueItemImpl instance) =>
+    <String, dynamic>{
+      'guid': instance.guid,
+      'type': _$QueueTypeEnumMap[instance.type]!,
+    };
+
+const _$QueueTypeEnumMap = {
+  QueueType.primary: 'primary',
+  QueueType.adhoc: 'adhoc',
+};

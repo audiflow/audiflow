@@ -4,7 +4,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:flutter/foundation.dart';
 import 'package:logging/logging.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:seasoning/core/extensions.dart';
@@ -13,11 +12,11 @@ import 'package:seasoning/entities/episode.dart';
 import 'package:seasoning/entities/podcast.dart';
 import 'package:seasoning/entities/queue.dart';
 import 'package:seasoning/entities/transcript.dart';
-import 'package:seasoning/events/download_event.dart';
-import 'package:seasoning/events/episode_event.dart';
-import 'package:seasoning/events/podcast_event.dart';
+import 'package:seasoning/repository/episode_event.dart';
+import 'package:seasoning/repository/podcast_event.dart';
 import 'package:seasoning/repository/repository.dart';
 import 'package:seasoning/repository/sembast/sembast_database_service.dart';
+import 'package:seasoning/services/download/download_event.dart';
 import 'package:sembast/sembast.dart';
 
 /// An implementation of [Repository] that is backed by
@@ -370,44 +369,60 @@ class SembastRepository extends Repository {
   // --- EpisodeStats
 
   @override
-  Future<EpisodeStats> createEpisodeStats(Episode episode) async {
-    log.fine('Create EpisodeStats: ${episode.guid}');
-
-    final loaded = await findEpisodeStatsByGuid(episode.guid);
-    if (loaded != null) {
-      return loaded;
-    }
+  Future<EpisodeStats> updateEpisodeStats(EpisodeStatsUpdateParam param) async {
+    log.fine('Update EpisodeStats: ${param.guid}');
 
     final db = await _db;
-    final stats = await db.transaction((txn) async {
-      var stats = EpisodeStats.fromEpisode(episode);
-
-      final finder = Finder(filter: Filter.equals('guid', episode.guid));
-      final snapshot = await _episodeStore.findFirst(txn, finder: finder);
-      if (snapshot != null) {
-        stats = stats.copyWith(id: snapshot.key);
-        await _episodeStatsStore.record(stats.id).put(txn, stats.toJson());
+    return db.transaction((txn) async {
+      final EpisodeStats? loaded;
+      if (param.id != null && 0 < param.id!) {
+        final value = await _episodeStatsStore.record(param.id!).get(txn);
+        loaded = value == null
+            ? null
+            : EpisodeStats.fromJson(value).copyWith(id: param.id!);
       } else {
-        final id = await _episodeStatsStore.add(txn, stats.toJson());
-        stats = stats.copyWith(id: id);
+        final finder = Finder(filter: Filter.equals('guid', param.guid));
+        final snapshot =
+            await _episodeStatsStore.findFirst(await _db, finder: finder);
+        if (snapshot != null) {
+          loaded =
+              EpisodeStats.fromJson(snapshot.value).copyWith(id: snapshot.key);
+        } else {
+          final snapshot = await _episodeStore.findFirst(txn, finder: finder);
+          loaded = snapshot == null
+              ? null
+              : EpisodeStats.fromEpisode(Episode.fromJson(snapshot.value))
+                  .copyWith(id: snapshot.key);
+        }
       }
-      return stats;
+
+      if (loaded == null) {
+        final stats = EpisodeStats(
+          guid: param.guid,
+          position: param.position ?? Duration.zero,
+          duration: param.duration ?? Duration.zero,
+          played: param.played ?? false,
+          playCount: param.playCount ?? 0,
+          playTotal: param.playTotal ?? Duration.zero,
+          inQueue: param.inQueue ?? false,
+          downloaded: param.downloaded ?? false,
+        );
+        final id = await _episodeStatsStore.add(txn, stats.toJson());
+        return stats.copyWith(id: id);
+      } else {
+        final stats = loaded.copyWith(
+          position: param.position ?? loaded.position,
+          duration: param.duration ?? loaded.duration,
+          played: param.played ?? loaded.played,
+          playCount: param.playCount ?? loaded.playCount,
+          playTotal: param.playTotal ?? loaded.playTotal,
+          inQueue: param.inQueue ?? loaded.inQueue,
+          downloaded: param.downloaded ?? loaded.downloaded,
+        );
+        await _episodeStatsStore.record(stats.id).put(txn, stats.toJson());
+        return stats;
+      }
     });
-
-    _episodeSubject.add(EpisodeStatsUpdatedEvent(stats));
-    return stats;
-  }
-
-  @override
-  Future<void> saveEpisodeStats(EpisodeStats stats) async {
-    log.fine('Update EpisodeStats: ${stats.guid}');
-
-    if (stats.id == 0) {
-      throw ArgumentError('EpisodeStats.id must not be 0');
-    }
-
-    await _episodeStatsStore.record(stats.id).put(await _db, stats.toJson());
-    _episodeSubject.add(EpisodeStatsUpdatedEvent(stats));
   }
 
   @override
@@ -566,33 +581,14 @@ class SembastRepository extends Repository {
   }
 
   @override
-  Future<List<Episode>> loadQueue() async {
-    final snapshot = await _queueStore.record(1).getSnapshot(await _db);
-    if (snapshot == null) {
-      return [];
-    }
-
-    final queue = Queue.fromJson(snapshot.value);
-    final episodeFinder = Finder(filter: Filter.inList('guid', queue.primary));
-
-    final recordSnapshots =
-        await _episodeStore.find(await _db, finder: episodeFinder);
-
-    return recordSnapshots.map(_loadEpisodeSnapshot).toList();
+  Future<Queue> loadQueue() async {
+    final value = await _queueStore.record(1).get(await _db);
+    return value == null ? const Queue() : Queue.fromJson(value);
   }
 
   @override
-  Future<void> saveQueue(List<Episode> episodes) async {
-    final guids = episodes.map((e) => e.guid).toList();
-
-    /// Only bother saving if the queue has changed
-    if (!listEquals(guids, _queueGuids)) {
-      final queue = Queue(primary: guids);
-      await _queueStore.record(1).put(await _db, queue.toJson());
-      _queueGuids
-        ..clear()
-        ..addAll(guids);
-    }
+  Future<void> saveQueue(Queue queue) async {
+    await _queueStore.record(1).put(await _db, queue.toJson());
   }
 
   // --- Player

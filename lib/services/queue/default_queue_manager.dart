@@ -1,0 +1,155 @@
+import 'dart:async';
+
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:seasoning/entities/entities.dart';
+import 'package:seasoning/repository/repository_provider.dart';
+import 'package:seasoning/services/queue/queue_manager.dart';
+
+part 'default_queue_manager.g.dart';
+
+final queueManagerProvider =
+    NotifierProvider<QueueManager, Queue>(DefaultQueueManager.new);
+
+@Riverpod(keepAlive: true)
+class DefaultQueueManager extends _$DefaultQueueManager
+    implements QueueManager {
+  @override
+  Queue build() => const Queue();
+
+  Repository get _repository => ref.read(repositoryProvider);
+
+  @override
+  Future<String?> pop() async {
+    if (state.queue.isEmpty) {
+      return null;
+    }
+
+    final guid = state.queue.first.guid;
+    await remove(0);
+    return guid;
+  }
+
+  @override
+  Future<void> prepend(Episode episode) async {
+    final inQueue = state.queue.any((q) => q.guid == episode.guid);
+    final newQueue = [
+      QueueItem.primary(guid: episode.guid),
+      ...state.queue,
+    ];
+    state = state.copyWith(queue: newQueue);
+    await _repository.saveQueue(state);
+
+    if (!inQueue) {
+      await _markEpisodeAsQueued(episode);
+    }
+  }
+
+  @override
+  Future<void> append(Episode episode) async {
+    final inQueue = state.queue.any((q) => q.guid == episode.guid);
+    final newQueue = [
+      ...state.queue,
+      QueueItem.primary(guid: episode.guid),
+    ];
+    state = state.copyWith(queue: newQueue);
+    await _repository.saveQueue(state);
+
+    if (!inQueue) {
+      await _markEpisodeAsQueued(episode);
+    }
+  }
+
+  @override
+  Future<void> swap(int index1, int index2) async {
+    assert(0 <= index1 && index1 < state.queue.length, 'Invalid index1');
+    assert(0 <= index2 && index2 < state.queue.length, 'Invalid index2');
+
+    final newQueue = List.of(state.queue);
+    final temp = newQueue[index1];
+    newQueue[index1] = newQueue[index2];
+    newQueue[index2] = temp;
+
+    state = state.copyWith(queue: newQueue);
+    await _repository.saveQueue(state);
+  }
+
+  @override
+  Future<void> addAll(List<Episode> episodes) async {
+    final newQueue = [
+      ...state.queue,
+      ...episodes.map((e) => QueueItem.primary(guid: e.guid)),
+    ];
+    state = state.copyWith(queue: newQueue);
+    await _repository.saveQueue(state);
+
+    await Future.wait(episodes.map(_markEpisodeAsQueued));
+  }
+
+  @override
+  Future<void> replaceAll(List<Episode> episodes) async {
+    await _replaceAllAdHoc(episodes, QueueType.primary);
+  }
+
+  @override
+  Future<void> replaceAllAdHoc(List<Episode> episodes) async {
+    await _replaceAllAdHoc(episodes, QueueType.adhoc);
+  }
+
+  Future<void> _replaceAllAdHoc(List<Episode> episodes, QueueType type) async {
+    final oldQueue = state.queue;
+    final remains = oldQueue.where((item) => item.type == type);
+    final adds = episodes.map((e) => QueueItem(guid: e.guid, type: type));
+
+    final List<QueueItem> newQueue;
+    switch (type) {
+      case QueueType.primary:
+        newQueue = [...adds, ...remains].toList();
+      case QueueType.adhoc:
+        newQueue = [...remains, ...adds].toList();
+    }
+
+    state = state.copyWith(queue: newQueue);
+    await _repository.saveQueue(state);
+
+    final notInQueue =
+        oldQueue.where((item) => newQueue.any((i) => i.guid == item.guid));
+    await Future.wait(notInQueue.map(_unmarkEpisodeAsQueued));
+  }
+
+  @override
+  Future<void> remove(int index) async {
+    assert(0 <= index && index < state.queue.length, 'Invalid index');
+
+    final item = state.queue[index];
+    final newQueue = List.of(state.queue)..removeAt(index);
+    state = state.copyWith(queue: newQueue);
+    await _repository.saveQueue(state);
+
+    if (!newQueue.any((i) => i.guid == item.guid)) {
+      await _unmarkEpisodeAsQueued(item);
+    }
+  }
+
+  @override
+  Future<void> clear() async {
+    final oldQueue = state.queue;
+    final newQueue =
+        state.queue.where((item) => item.type != QueueType.primary).toList();
+    state = state.copyWith(queue: newQueue);
+    await _repository.saveQueue(state);
+
+    final notInQueue =
+        oldQueue.where((item) => newQueue.any((i) => i.guid == item.guid));
+    await Future.wait(notInQueue.map(_unmarkEpisodeAsQueued));
+  }
+
+  Future<void> _markEpisodeAsQueued(Episode episode) async {
+    final param = EpisodeStatsUpdateParam(guid: episode.guid, inQueue: true);
+    await _repository.updateEpisodeStats(param);
+  }
+
+  Future<void> _unmarkEpisodeAsQueued(QueueItem item) async {
+    final param = EpisodeStatsUpdateParam(guid: item.guid, inQueue: false);
+    await _repository.updateEpisodeStats(param);
+  }
+}

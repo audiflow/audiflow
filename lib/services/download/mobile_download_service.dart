@@ -17,8 +17,8 @@ import 'package:seasoning/entities/app_settings.dart';
 import 'package:seasoning/entities/downloadable.dart';
 import 'package:seasoning/entities/episode.dart';
 import 'package:seasoning/entities/transcript.dart';
-import 'package:seasoning/services/download/download_manager_provider.dart';
 import 'package:seasoning/repository/repository_provider.dart';
+import 'package:seasoning/services/download/download_manager_provider.dart';
 import 'package:seasoning/services/download/download_service.dart';
 import 'package:seasoning/services/podcast/mobile_podcast_service.dart';
 import 'package:seasoning/services/podcast/podcast_service.dart';
@@ -98,11 +98,6 @@ class MobileDownloadService extends DownloadService {
 
       if (episode != newEpisode) {
         await _podcastService.saveEpisode(newEpisode);
-      }
-
-      final stats = await _repository.findEpisodeStatsByGuid(episode.guid);
-      if (stats == null) {
-        await _repository.createEpisodeStats(episode);
       }
 
       // Ensure the download directory exists
@@ -204,23 +199,31 @@ class MobileDownloadService extends DownloadService {
     );
     await _repository.saveDownload(download);
 
-    if (progress.status != DownloadState.downloaded ||
-        !await hasStoragePermission(_appSettings)) {
-      return;
+    if (progress.status == DownloadState.downloaded &&
+        await hasStoragePermission(_appSettings)) {
+      await _onDownloadComplete(download);
     }
+  }
 
-    var stats = await _repository.findEpisodeStatsByGuid(download.guid);
-    stats = stats?.copyWith(downloaded: true);
+  Future<void> _onDownloadComplete(Downloadable download) async {
+    final stats = await _repository.findEpisodeStatsByGuid(download.guid);
+    var updateParam = EpisodeStatsUpdateParam(
+      id: stats?.id,
+      guid: download.guid,
+      downloaded: true,
+    );
 
-    if (stats?.duration == Duration.zero) {
+    if (stats?.duration != null) {
+      await _repository.updateEpisodeStats(updateParam);
+    } else {
       final path = await resolvePath(_appSettings, download);
       final mp3Info = MP3Processor.fromFile(File(path));
-      stats = stats!.copyWith(duration: mp3Info.duration);
-      await _repository.saveEpisodeStats(stats);
 
-      var (_, episode) = await _repository.findEpisodeByGuid(download.guid);
+      updateParam = updateParam.copyWith(duration: mp3Info.duration);
+      final stats = await _repository.updateEpisodeStats(updateParam);
+
+      var episode = await _repository.findEpisodeById(stats.id);
       if (episode != null) {
-        // If we do not have a duration for this file - let's calculate it
         episode = episode.copyWith(duration: mp3Info.duration);
         await _repository.saveEpisode(episode);
       }

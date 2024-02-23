@@ -20,8 +20,7 @@ Queue _$QueueFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$Queue {
-  List<String> get primary => throw _privateConstructorUsedError;
-  List<String> get adhoc => throw _privateConstructorUsedError;
+  List<QueueItem> get queue => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -33,7 +32,7 @@ abstract class $QueueCopyWith<$Res> {
   factory $QueueCopyWith(Queue value, $Res Function(Queue) then) =
       _$QueueCopyWithImpl<$Res, Queue>;
   @useResult
-  $Res call({List<String> primary, List<String> adhoc});
+  $Res call({List<QueueItem> queue});
 }
 
 /// @nodoc
@@ -49,18 +48,13 @@ class _$QueueCopyWithImpl<$Res, $Val extends Queue>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? primary = null,
-    Object? adhoc = null,
+    Object? queue = null,
   }) {
     return _then(_value.copyWith(
-      primary: null == primary
-          ? _value.primary
-          : primary // ignore: cast_nullable_to_non_nullable
-              as List<String>,
-      adhoc: null == adhoc
-          ? _value.adhoc
-          : adhoc // ignore: cast_nullable_to_non_nullable
-              as List<String>,
+      queue: null == queue
+          ? _value.queue
+          : queue // ignore: cast_nullable_to_non_nullable
+              as List<QueueItem>,
     ) as $Val);
   }
 }
@@ -72,7 +66,7 @@ abstract class _$$QueueImplCopyWith<$Res> implements $QueueCopyWith<$Res> {
       __$$QueueImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({List<String> primary, List<String> adhoc});
+  $Res call({List<QueueItem> queue});
 }
 
 /// @nodoc
@@ -86,18 +80,13 @@ class __$$QueueImplCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? primary = null,
-    Object? adhoc = null,
+    Object? queue = null,
   }) {
     return _then(_$QueueImpl(
-      primary: null == primary
-          ? _value._primary
-          : primary // ignore: cast_nullable_to_non_nullable
-              as List<String>,
-      adhoc: null == adhoc
-          ? _value._adhoc
-          : adhoc // ignore: cast_nullable_to_non_nullable
-              as List<String>,
+      queue: null == queue
+          ? _value._queue
+          : queue // ignore: cast_nullable_to_non_nullable
+              as List<QueueItem>,
     ));
   }
 }
@@ -105,36 +94,24 @@ class __$$QueueImplCopyWithImpl<$Res>
 /// @nodoc
 @JsonSerializable()
 class _$QueueImpl implements _Queue {
-  const _$QueueImpl(
-      {final List<String> primary = const <String>[],
-      final List<String> adhoc = const <String>[]})
-      : _primary = primary,
-        _adhoc = adhoc;
+  const _$QueueImpl({final List<QueueItem> queue = const <QueueItem>[]})
+      : _queue = queue;
 
   factory _$QueueImpl.fromJson(Map<String, dynamic> json) =>
       _$$QueueImplFromJson(json);
 
-  final List<String> _primary;
+  final List<QueueItem> _queue;
   @override
   @JsonKey()
-  List<String> get primary {
-    if (_primary is EqualUnmodifiableListView) return _primary;
+  List<QueueItem> get queue {
+    if (_queue is EqualUnmodifiableListView) return _queue;
     // ignore: implicit_dynamic_type
-    return EqualUnmodifiableListView(_primary);
-  }
-
-  final List<String> _adhoc;
-  @override
-  @JsonKey()
-  List<String> get adhoc {
-    if (_adhoc is EqualUnmodifiableListView) return _adhoc;
-    // ignore: implicit_dynamic_type
-    return EqualUnmodifiableListView(_adhoc);
+    return EqualUnmodifiableListView(_queue);
   }
 
   @override
   String toString() {
-    return 'Queue(primary: $primary, adhoc: $adhoc)';
+    return 'Queue(queue: $queue)';
   }
 
   @override
@@ -142,16 +119,13 @@ class _$QueueImpl implements _Queue {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$QueueImpl &&
-            const DeepCollectionEquality().equals(other._primary, _primary) &&
-            const DeepCollectionEquality().equals(other._adhoc, _adhoc));
+            const DeepCollectionEquality().equals(other._queue, _queue));
   }
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode => Object.hash(
-      runtimeType,
-      const DeepCollectionEquality().hash(_primary),
-      const DeepCollectionEquality().hash(_adhoc));
+  int get hashCode =>
+      Object.hash(runtimeType, const DeepCollectionEquality().hash(_queue));
 
   @JsonKey(ignore: true)
   @override
@@ -168,17 +142,167 @@ class _$QueueImpl implements _Queue {
 }
 
 abstract class _Queue implements Queue {
-  const factory _Queue({final List<String> primary, final List<String> adhoc}) =
-      _$QueueImpl;
+  const factory _Queue({final List<QueueItem> queue}) = _$QueueImpl;
 
   factory _Queue.fromJson(Map<String, dynamic> json) = _$QueueImpl.fromJson;
 
   @override
-  List<String> get primary;
-  @override
-  List<String> get adhoc;
+  List<QueueItem> get queue;
   @override
   @JsonKey(ignore: true)
   _$$QueueImplCopyWith<_$QueueImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+QueueItem _$QueueItemFromJson(Map<String, dynamic> json) {
+  return _QueueItem.fromJson(json);
+}
+
+/// @nodoc
+mixin _$QueueItem {
+  String get guid => throw _privateConstructorUsedError;
+  QueueType get type => throw _privateConstructorUsedError;
+
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+  @JsonKey(ignore: true)
+  $QueueItemCopyWith<QueueItem> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $QueueItemCopyWith<$Res> {
+  factory $QueueItemCopyWith(QueueItem value, $Res Function(QueueItem) then) =
+      _$QueueItemCopyWithImpl<$Res, QueueItem>;
+  @useResult
+  $Res call({String guid, QueueType type});
+}
+
+/// @nodoc
+class _$QueueItemCopyWithImpl<$Res, $Val extends QueueItem>
+    implements $QueueItemCopyWith<$Res> {
+  _$QueueItemCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? guid = null,
+    Object? type = null,
+  }) {
+    return _then(_value.copyWith(
+      guid: null == guid
+          ? _value.guid
+          : guid // ignore: cast_nullable_to_non_nullable
+              as String,
+      type: null == type
+          ? _value.type
+          : type // ignore: cast_nullable_to_non_nullable
+              as QueueType,
+    ) as $Val);
+  }
+}
+
+/// @nodoc
+abstract class _$$QueueItemImplCopyWith<$Res>
+    implements $QueueItemCopyWith<$Res> {
+  factory _$$QueueItemImplCopyWith(
+          _$QueueItemImpl value, $Res Function(_$QueueItemImpl) then) =
+      __$$QueueItemImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({String guid, QueueType type});
+}
+
+/// @nodoc
+class __$$QueueItemImplCopyWithImpl<$Res>
+    extends _$QueueItemCopyWithImpl<$Res, _$QueueItemImpl>
+    implements _$$QueueItemImplCopyWith<$Res> {
+  __$$QueueItemImplCopyWithImpl(
+      _$QueueItemImpl _value, $Res Function(_$QueueItemImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? guid = null,
+    Object? type = null,
+  }) {
+    return _then(_$QueueItemImpl(
+      guid: null == guid
+          ? _value.guid
+          : guid // ignore: cast_nullable_to_non_nullable
+              as String,
+      type: null == type
+          ? _value.type
+          : type // ignore: cast_nullable_to_non_nullable
+              as QueueType,
+    ));
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$QueueItemImpl implements _QueueItem {
+  const _$QueueItemImpl({required this.guid, required this.type});
+
+  factory _$QueueItemImpl.fromJson(Map<String, dynamic> json) =>
+      _$$QueueItemImplFromJson(json);
+
+  @override
+  final String guid;
+  @override
+  final QueueType type;
+
+  @override
+  String toString() {
+    return 'QueueItem(guid: $guid, type: $type)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$QueueItemImpl &&
+            (identical(other.guid, guid) || other.guid == guid) &&
+            (identical(other.type, type) || other.type == type));
+  }
+
+  @JsonKey(ignore: true)
+  @override
+  int get hashCode => Object.hash(runtimeType, guid, type);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$QueueItemImplCopyWith<_$QueueItemImpl> get copyWith =>
+      __$$QueueItemImplCopyWithImpl<_$QueueItemImpl>(this, _$identity);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$QueueItemImplToJson(
+      this,
+    );
+  }
+}
+
+abstract class _QueueItem implements QueueItem {
+  const factory _QueueItem(
+      {required final String guid,
+      required final QueueType type}) = _$QueueItemImpl;
+
+  factory _QueueItem.fromJson(Map<String, dynamic> json) =
+      _$QueueItemImpl.fromJson;
+
+  @override
+  String get guid;
+  @override
+  QueueType get type;
+  @override
+  @JsonKey(ignore: true)
+  _$$QueueItemImplCopyWith<_$QueueItemImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

@@ -13,8 +13,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
 import 'package:seasoning/core/environment.dart';
 import 'package:seasoning/entities/downloadable.dart';
-import 'package:seasoning/services/download/download_manager_provider.dart';
 import 'package:seasoning/services/download/download_manager.dart';
+import 'package:seasoning/services/download/download_manager_provider.dart';
 
 /// A [DownloadManager] for handling downloading of podcasts on a mobile device.
 class MobileDownloaderManager implements DownloadManager {
@@ -27,6 +27,7 @@ class MobileDownloaderManager implements DownloadManager {
   final downloadController = StreamController<DownloadProgress>();
   var _lastUpdateTime = 0;
   var _initialized = false;
+
   @override
   Stream<DownloadProgress> get downloadProgress => downloadController.stream;
 
