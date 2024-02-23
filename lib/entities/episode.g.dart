@@ -58,9 +58,9 @@ Map<String, dynamic> _$$EpisodeImplToJson(_$EpisodeImpl instance) =>
       'episode': instance.episode,
       'duration': instance.duration?.inMicroseconds,
       'chaptersUrl': instance.chaptersUrl,
-      'chapters': instance.chapters,
-      'transcriptUrls': instance.transcriptUrls,
-      'persons': instance.persons,
+      'chapters': instance.chapters.map((e) => e.toJson()).toList(),
+      'transcriptUrls': instance.transcriptUrls.map((e) => e.toJson()).toList(),
+      'persons': instance.persons.map((e) => e.toJson()).toList(),
     };
 
 _$EpisodeStatsImpl _$$EpisodeStatsImplFromJson(Map<String, dynamic> json) =>

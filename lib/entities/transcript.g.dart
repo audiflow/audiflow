@@ -45,7 +45,7 @@ Map<String, dynamic> _$$TranscriptImplToJson(_$TranscriptImpl instance) =>
       'id': instance.id,
       'pguid': instance.pguid,
       'guid': instance.guid,
-      'subtitles': instance.subtitles,
+      'subtitles': instance.subtitles.map((e) => e.toJson()).toList(),
       'filtered': instance.filtered,
     };
 

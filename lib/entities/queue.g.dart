@@ -15,7 +15,7 @@ _$QueueImpl _$$QueueImplFromJson(Map<String, dynamic> json) => _$QueueImpl(
 
 Map<String, dynamic> _$$QueueImplToJson(_$QueueImpl instance) =>
     <String, dynamic>{
-      'queue': instance.queue,
+      'queue': instance.queue.map((e) => e.toJson()).toList(),
     };
 
 _$QueueItemImpl _$$QueueItemImplFromJson(Map<String, dynamic> json) =>

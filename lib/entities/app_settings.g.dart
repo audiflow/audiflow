@@ -32,7 +32,8 @@ Map<String, dynamic> _$$AppSettingsImplToJson(_$AppSettingsImpl instance) =>
       'storeDownloadsSDCard': instance.storeDownloadsSDCard,
       'playbackSpeed': instance.playbackSpeed,
       'searchProvider': instance.searchProvider,
-      'searchProviders': instance.searchProviders,
+      'searchProviders':
+          instance.searchProviders.map((e) => e.toJson()).toList(),
       'externalLinkConsent': instance.externalLinkConsent,
       'autoOpenNowPlaying': instance.autoOpenNowPlaying,
       'showFunding': instance.showFunding,

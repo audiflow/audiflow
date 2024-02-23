@@ -40,8 +40,8 @@ Map<String, dynamic> _$$PodcastImplToJson(_$PodcastImpl instance) =>
       'thumbImageUrl': instance.thumbImageUrl,
       'imageUrl': instance.imageUrl,
       'releaseDate': instance.releaseDate.toIso8601String(),
-      'funding': instance.funding,
-      'persons': instance.persons,
+      'funding': instance.funding.map((e) => e.toJson()).toList(),
+      'persons': instance.persons.map((e) => e.toJson()).toList(),
     };
 
 _$PodcastSearchResultItemImpl _$$PodcastSearchResultItemImplFromJson(
