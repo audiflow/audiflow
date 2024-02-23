@@ -11,10 +11,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:logging/logging.dart';
-import 'package:seasoning/services/download/download_manager_provider.dart';
 import 'package:seasoning/repository/repository_provider.dart';
 import 'package:seasoning/services/audio/mobile_audio_player_service.dart';
+import 'package:seasoning/services/download/download_manager_provider.dart';
 import 'package:seasoning/services/podcast/mobile_podcast_service.dart';
+import 'package:seasoning/services/queue/default_queue_manager.dart';
 import 'package:seasoning/services/settings/settings_service.dart';
 import 'package:seasoning/ui/app/navigation_helper.dart';
 import 'package:seasoning/ui/app/seasoning_app.dart';
@@ -89,13 +90,16 @@ class _GlobalProviders extends ConsumerWidget {
       ..watch(settingsServiceProvider);
     final future = Future<void>.value()
         .then(
-          (_) => ref.watch(podcastServiceProvider).setup(),
+          (_) => ref.read(podcastServiceProvider).setup(),
         )
         .then(
-          (_) => ref.watch(downloadManagerProvider).setup(),
+          (_) => ref.read(downloadManagerProvider).setup(),
         )
         .then(
-          (_) => ref.watch(mobileAudioPlayerServiceProvider.notifier).setup(),
+          (_) => ref.read(queueManagerProvider.notifier).setup(),
+        )
+        .then(
+          (_) => ref.read(mobileAudioPlayerServiceProvider.notifier).setup(),
         );
     return FutureBuilder(
       future: future,

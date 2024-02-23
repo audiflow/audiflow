@@ -7,7 +7,7 @@ part of 'default_queue_manager.dart';
 // **************************************************************************
 
 String _$defaultQueueManagerHash() =>
-    r'0ec8043e3183d706a5ca3b4f58ab06584ee2e1e7';
+    r'8132571ffd8a435f971ce215b3d2d58e72e683d8';
 
 /// See also [DefaultQueueManager].
 @ProviderFor(DefaultQueueManager)

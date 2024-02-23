@@ -19,6 +19,11 @@ class DefaultQueueManager extends _$DefaultQueueManager
   Repository get _repository => ref.read(repositoryProvider);
 
   @override
+  Future<void> setup() async {
+    state = await _repository.loadQueue();
+  }
+
+  @override
   Future<String?> pop() async {
     if (state.queue.isEmpty) {
       return null;

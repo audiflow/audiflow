@@ -2,6 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:seasoning/entities/entities.dart';
 
 abstract class QueueManager implements Notifier<Queue> {
+  Future<void> setup();
+
   Future<String?> pop();
 
   Future<void> prepend(Episode episode);
