@@ -19,7 +19,7 @@ mixin _$EpisodeInfoState {
   Episode get episode => throw _privateConstructorUsedError;
   EpisodeStats? get stats => throw _privateConstructorUsedError;
   Downloadable? get download => throw _privateConstructorUsedError;
-  Queue? get queue => throw _privateConstructorUsedError;
+  int? get queueIndex => throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
   $EpisodeInfoStateCopyWith<EpisodeInfoState> get copyWith =>
@@ -36,12 +36,11 @@ abstract class $EpisodeInfoStateCopyWith<$Res> {
       {Episode episode,
       EpisodeStats? stats,
       Downloadable? download,
-      Queue? queue});
+      int? queueIndex});
 
   $EpisodeCopyWith<$Res> get episode;
   $EpisodeStatsCopyWith<$Res>? get stats;
   $DownloadableCopyWith<$Res>? get download;
-  $QueueCopyWith<$Res>? get queue;
 }
 
 /// @nodoc
@@ -60,7 +59,7 @@ class _$EpisodeInfoStateCopyWithImpl<$Res, $Val extends EpisodeInfoState>
     Object? episode = null,
     Object? stats = freezed,
     Object? download = freezed,
-    Object? queue = freezed,
+    Object? queueIndex = freezed,
   }) {
     return _then(_value.copyWith(
       episode: null == episode
@@ -75,10 +74,10 @@ class _$EpisodeInfoStateCopyWithImpl<$Res, $Val extends EpisodeInfoState>
           ? _value.download
           : download // ignore: cast_nullable_to_non_nullable
               as Downloadable?,
-      queue: freezed == queue
-          ? _value.queue
-          : queue // ignore: cast_nullable_to_non_nullable
-              as Queue?,
+      queueIndex: freezed == queueIndex
+          ? _value.queueIndex
+          : queueIndex // ignore: cast_nullable_to_non_nullable
+              as int?,
     ) as $Val);
   }
 
@@ -113,18 +112,6 @@ class _$EpisodeInfoStateCopyWithImpl<$Res, $Val extends EpisodeInfoState>
       return _then(_value.copyWith(download: value) as $Val);
     });
   }
-
-  @override
-  @pragma('vm:prefer-inline')
-  $QueueCopyWith<$Res>? get queue {
-    if (_value.queue == null) {
-      return null;
-    }
-
-    return $QueueCopyWith<$Res>(_value.queue!, (value) {
-      return _then(_value.copyWith(queue: value) as $Val);
-    });
-  }
 }
 
 /// @nodoc
@@ -139,7 +126,7 @@ abstract class _$$EpisodeStateImplCopyWith<$Res>
       {Episode episode,
       EpisodeStats? stats,
       Downloadable? download,
-      Queue? queue});
+      int? queueIndex});
 
   @override
   $EpisodeCopyWith<$Res> get episode;
@@ -147,8 +134,6 @@ abstract class _$$EpisodeStateImplCopyWith<$Res>
   $EpisodeStatsCopyWith<$Res>? get stats;
   @override
   $DownloadableCopyWith<$Res>? get download;
-  @override
-  $QueueCopyWith<$Res>? get queue;
 }
 
 /// @nodoc
@@ -165,7 +150,7 @@ class __$$EpisodeStateImplCopyWithImpl<$Res>
     Object? episode = null,
     Object? stats = freezed,
     Object? download = freezed,
-    Object? queue = freezed,
+    Object? queueIndex = freezed,
   }) {
     return _then(_$EpisodeStateImpl(
       episode: null == episode
@@ -180,10 +165,10 @@ class __$$EpisodeStateImplCopyWithImpl<$Res>
           ? _value.download
           : download // ignore: cast_nullable_to_non_nullable
               as Downloadable?,
-      queue: freezed == queue
-          ? _value.queue
-          : queue // ignore: cast_nullable_to_non_nullable
-              as Queue?,
+      queueIndex: freezed == queueIndex
+          ? _value.queueIndex
+          : queueIndex // ignore: cast_nullable_to_non_nullable
+              as int?,
     ));
   }
 }
@@ -192,7 +177,7 @@ class __$$EpisodeStateImplCopyWithImpl<$Res>
 
 class _$EpisodeStateImpl implements _EpisodeState {
   const _$EpisodeStateImpl(
-      {required this.episode, this.stats, this.download, this.queue});
+      {required this.episode, this.stats, this.download, this.queueIndex});
 
   @override
   final Episode episode;
@@ -201,11 +186,11 @@ class _$EpisodeStateImpl implements _EpisodeState {
   @override
   final Downloadable? download;
   @override
-  final Queue? queue;
+  final int? queueIndex;
 
   @override
   String toString() {
-    return 'EpisodeInfoState(episode: $episode, stats: $stats, download: $download, queue: $queue)';
+    return 'EpisodeInfoState(episode: $episode, stats: $stats, download: $download, queueIndex: $queueIndex)';
   }
 
   @override
@@ -217,11 +202,13 @@ class _$EpisodeStateImpl implements _EpisodeState {
             (identical(other.stats, stats) || other.stats == stats) &&
             (identical(other.download, download) ||
                 other.download == download) &&
-            (identical(other.queue, queue) || other.queue == queue));
+            (identical(other.queueIndex, queueIndex) ||
+                other.queueIndex == queueIndex));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, episode, stats, download, queue);
+  int get hashCode =>
+      Object.hash(runtimeType, episode, stats, download, queueIndex);
 
   @JsonKey(ignore: true)
   @override
@@ -235,7 +222,7 @@ abstract class _EpisodeState implements EpisodeInfoState {
       {required final Episode episode,
       final EpisodeStats? stats,
       final Downloadable? download,
-      final Queue? queue}) = _$EpisodeStateImpl;
+      final int? queueIndex}) = _$EpisodeStateImpl;
 
   @override
   Episode get episode;
@@ -244,7 +231,7 @@ abstract class _EpisodeState implements EpisodeInfoState {
   @override
   Downloadable? get download;
   @override
-  Queue? get queue;
+  int? get queueIndex;
   @override
   @JsonKey(ignore: true)
   _$$EpisodeStateImplCopyWith<_$EpisodeStateImpl> get copyWith =>
