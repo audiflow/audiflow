@@ -3,7 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:seasoning/services/audio/audio_player_service_provider.dart';
+import 'package:seasoning/services/audio/audio_player_service.dart';
 import 'package:seasoning/ui/app/player.dart';
 import 'package:seasoning/ui/mini_player/utils.dart';
 

@@ -7,9 +7,6 @@ import 'package:seasoning/services/queue/queue_manager.dart';
 
 part 'default_queue_manager.g.dart';
 
-final queueManagerProvider =
-    NotifierProvider<QueueManager, Queue>(DefaultQueueManager.new);
-
 @Riverpod(keepAlive: true)
 class DefaultQueueManager extends _$DefaultQueueManager
     implements QueueManager {

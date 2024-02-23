@@ -12,10 +12,12 @@ import 'package:flutter/services.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:logging/logging.dart';
 import 'package:seasoning/repository/repository_provider.dart';
-import 'package:seasoning/services/audio/audio_player_service_provider.dart';
+import 'package:seasoning/services/audio/audio_player_service.dart';
+import 'package:seasoning/services/audio/mobile_audio_player_service.dart';
 import 'package:seasoning/services/download/download_manager_provider.dart';
 import 'package:seasoning/services/podcast/mobile_podcast_service.dart';
 import 'package:seasoning/services/queue/default_queue_manager.dart';
+import 'package:seasoning/services/queue/queue_manager.dart';
 import 'package:seasoning/services/settings/settings_service.dart';
 import 'package:seasoning/ui/app/navigation_helper.dart';
 import 'package:seasoning/ui/app/seasoning_app.dart';
@@ -43,8 +45,12 @@ void main() async {
   await SettingsService.setup();
 
   runApp(
-    const ProviderScope(
-      child: _GlobalProviders(
+    ProviderScope(
+      overrides: [
+        audioPlayerServiceProvider.overrideWith(MobileAudioPlayerService.new),
+        queueManagerProvider.overrideWith(DefaultQueueManager.new),
+      ],
+      child: const _GlobalProviders(
         child: SeasoningApp(
             // certificateAuthorityBytes: certificateAuthorityBytes,
             ),

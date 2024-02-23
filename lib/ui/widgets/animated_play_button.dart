@@ -6,7 +6,6 @@ import 'package:seasoning/entities/entities.dart';
 import 'package:seasoning/l10n/L.dart';
 import 'package:seasoning/providers/podcast/episode_info_provider.dart';
 import 'package:seasoning/services/audio/audio_player_service.dart';
-import 'package:seasoning/services/audio/audio_player_service_provider.dart';
 
 class AnimatedPlayButton extends HookConsumerWidget {
   const AnimatedPlayButton(

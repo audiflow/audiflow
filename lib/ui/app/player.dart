@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:seasoning/services/audio/audio_player_service_provider.dart';
-import 'package:seasoning/services/audio/audio_player_state.dart';
+import 'package:seasoning/services/audio/audio_player_service.dart';
 import 'package:seasoning/ui/app/app_bottom_navigation_bar.dart';
 import 'package:seasoning/ui/mini_player/mini_player.dart';
 import 'package:seasoning/ui/mini_player/utils.dart';
