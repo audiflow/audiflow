@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import 'package:seasoning/entities/entities.dart';
+import 'package:seasoning/ui/podcast/episode_date.dart';
 import 'package:seasoning/ui/widgets/animated_play_button.dart';
 import 'package:seasoning/ui/widgets/download_button.dart';
 import 'package:seasoning/ui/widgets/queue_button.dart';
@@ -24,14 +25,10 @@ class EpisodeTile extends HookConsumerWidget {
     super.key,
     required this.showsThumbnail,
     required this.episode,
-    required this.download,
-    required this.play,
   });
 
   final bool showsThumbnail;
   final Episode episode;
-  final bool download;
-  final bool play;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -363,7 +360,7 @@ class _Content extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _EpisodeDate(episode),
+        EpisodeDate(episode),
         const SizedBox(height: 4),
         Text(
           episode.title,
@@ -449,47 +446,6 @@ class EpisodeTransportControls extends StatelessWidget {
         children: <Widget>[...buttons],
       ),
     );
-  }
-}
-
-class _EpisodeDate extends StatelessWidget {
-  const _EpisodeDate(this.episode);
-
-  final Episode episode;
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      dateString,
-      overflow: TextOverflow.ellipsis,
-      softWrap: false,
-      style: Theme.of(context).textTheme.bodySmall,
-    );
-  }
-
-  String get dateString {
-    if (episode.publicationDate == null) {
-      return '';
-    }
-
-    final elapsed = DateTime.now().difference(episode.publicationDate!);
-
-    if (7 <= elapsed.inDays) {
-      return DateFormat(
-        episode.publicationDate!.year == DateTime.now().year
-            ? 'yyyy.MM.dd'
-            : 'yyyy.MM',
-      ).format(episode.publicationDate!);
-    }
-
-    if (1 <= elapsed.inDays) {
-      return '${elapsed.inDays} DAY${1 < elapsed.inDays ? 'S' : ''} AGO';
-    } else if (1 <= elapsed.inHours) {
-      return '${elapsed.inHours} HOUR${1 < elapsed.inHours ? 'S' : ''} AGO';
-    } else {
-      return '${elapsed.inMinutes} MINUTE${1 < elapsed.inMinutes ? 'S' : ''}'
-          ' AGO';
-    }
   }
 }
 

@@ -108,8 +108,6 @@ class PodcastDetailsPage extends HookConsumerWidget {
                       : EpisodeList(
                           summary: podcast,
                           episodes: podcast.episodes,
-                          play: true,
-                          download: true,
                         ),
                 ],
               ],

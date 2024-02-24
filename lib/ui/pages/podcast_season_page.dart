@@ -51,8 +51,6 @@ class PodcastSeasonPage extends HookConsumerWidget {
                   thumbnailVisibility: ThumbnailVisibility.hidden,
                   summary: podcast,
                   episodes: season.episodes,
-                  play: true,
-                  download: true,
                 ),
               ],
             ),
