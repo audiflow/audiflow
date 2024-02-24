@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:seasoning/entities/entities.dart';
 import 'package:seasoning/services/audio/audio_player_service.dart';
 import 'package:seasoning/ui/app/app_bottom_navigation_bar.dart';
 import 'package:seasoning/ui/mini_player/mini_player.dart';
@@ -40,166 +41,189 @@ class DetailedPlayer extends HookConsumerWidget {
       },
       builder: (height, percentage) {
         final showsMiniPlayer = percentage < miniPlayerPercentageDeclaration;
-        final width = MediaQuery.of(context).size.width;
-        final maxImgSize = width * 0.4;
-
-        final img = Image.network(episode.imageUrl!);
-        final text = Text(episode.title);
-        final buttonPlay = IconButton(
-          icon: const Icon(Icons.pause),
-          onPressed: () => ref.read(audioPlayerServiceProvider.notifier).play(),
-        );
-
         //Declare additional widgets (eg. SkipButton) and variables
-        if (!showsMiniPlayer) {
-          var percentageExpandedPlayer = percentageFromValueInRange(
-            min: playerMaxHeight * miniPlayerPercentageDeclaration +
-                playerMinHeight,
-            max: playerMaxHeight,
-            value: height,
-          );
-          if (percentageExpandedPlayer < 0) {
-            percentageExpandedPlayer = 0;
-          }
-          final paddingVertical = valueFromPercentageInRange(
-            min: 0,
-            max: 10,
-            percentage: percentageExpandedPlayer,
-          );
-          final heightWithoutPadding = height - paddingVertical * 2;
-          final imageSize = heightWithoutPadding > maxImgSize
-              ? maxImgSize
-              : heightWithoutPadding;
-          final paddingLeft = valueFromPercentageInRange(
-                min: 0,
-                max: width - imageSize,
-                percentage: percentageExpandedPlayer,
-              ) /
-              2;
+        return showsMiniPlayer
+            ? _MiniPlayerContent(episode: episode, height: height)
+            : _DetailedPlayerContent(episode: episode, height: height);
+      },
+    );
+  }
+}
 
-          return Column(
+class _MiniPlayerContent extends StatelessWidget {
+  const _MiniPlayerContent({
+    required this.episode,
+    required this.height,
+  });
+
+  final Episode episode;
+  final double height;
+
+  @override
+  Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    final maxImgSize = width * 0.4;
+    final img = Image.network(episode.thumbImageUrl!);
+
+    //MiniPlayer
+    final percentageMiniPlayer = percentageFromValueInRange(
+      min: playerMinHeight,
+      max: playerMaxHeight * miniPlayerPercentageDeclaration + playerMinHeight,
+      value: height,
+    );
+
+    final elementOpacity = 1 - 1 * percentageMiniPlayer;
+    final progressIndicatorHeight = 4 - 4 * percentageMiniPlayer;
+
+    return Column(
+      children: [
+        Expanded(
+          child: Row(
             children: [
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Padding(
-                  padding: EdgeInsets.only(
-                    left: paddingLeft,
-                    top: paddingVertical,
-                    bottom: paddingVertical,
-                  ),
-                  child: SizedBox(
-                    height: imageSize,
-                    child: img,
-                  ),
-                ),
+              ConstrainedBox(
+                constraints: BoxConstraints(maxHeight: maxImgSize),
+                child: img,
               ),
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 33),
+                  padding: const EdgeInsets.only(left: 10),
                   child: Opacity(
-                    opacity: percentageExpandedPlayer,
+                    opacity: elementOpacity,
                     child: Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Flexible(child: text),
-                        const Flexible(
-                          child: SizedBox(
-                            height: 80,
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                _SkipButton(forward: false),
-                                _PlayButton(),
-                                _SkipButton(forward: true),
-                              ],
-                            ),
-                          ),
+                        Text(
+                          episode.title,
+                          maxLines: 3,
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodySmall!
+                              .copyWith(fontSize: 16),
                         ),
-                        const _ProgressIndicator(),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          );
-        }
-
-        //MiniPlayer
-        final percentageMiniPlayer = percentageFromValueInRange(
-          min: playerMinHeight,
-          max: playerMaxHeight * miniPlayerPercentageDeclaration +
-              playerMinHeight,
-          value: height,
-        );
-
-        final elementOpacity = 1 - 1 * percentageMiniPlayer;
-        final progressIndicatorHeight = 4 - 4 * percentageMiniPlayer;
-
-        return Column(
-          children: [
-            Expanded(
-              child: Row(
-                children: [
-                  ConstrainedBox(
-                    constraints: BoxConstraints(maxHeight: maxImgSize),
-                    child: img,
-                  ),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 10),
-                      child: Opacity(
-                        opacity: elementOpacity,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              episode.title,
-                              maxLines: 3,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodySmall!
-                                  .copyWith(fontSize: 16),
-                            ),
-                            Text(
-                              '',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium!
-                                  .copyWith(
+                        Text(
+                          '',
+                          style:
+                              Theme.of(context).textTheme.bodyMedium!.copyWith(
                                     color: Theme.of(context)
                                         .textTheme
                                         .bodyMedium!
                                         .color!
                                         .withOpacity(0.55),
                                   ),
-                            ),
-                          ],
                         ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              _IconButton(
+                icon: Icons.fullscreen,
+                iconSize: IconSize.small,
+                onPressed: () {
+                  controller.animateToHeight(state: PanelState.max);
+                },
+              ),
+              Padding(
+                padding: const EdgeInsets.only(right: 3),
+                child: Opacity(
+                  opacity: elementOpacity,
+                  child: const _PlayButton.small(),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _DetailedPlayerContent extends StatelessWidget {
+  const _DetailedPlayerContent({
+    required this.height,
+    required this.episode,
+  });
+
+  final Episode episode;
+  final double height;
+
+  @override
+  Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    final maxImgSize = width * 0.4;
+    final image = Image.network(episode.imageUrl!);
+    final text = Text(episode.title);
+
+    var percentageExpandedPlayer = percentageFromValueInRange(
+      min: playerMaxHeight * miniPlayerPercentageDeclaration + playerMinHeight,
+      max: playerMaxHeight,
+      value: height,
+    );
+    if (percentageExpandedPlayer < 0) {
+      percentageExpandedPlayer = 0;
+    }
+    final paddingVertical = valueFromPercentageInRange(
+      min: 0,
+      max: 10,
+      percentage: percentageExpandedPlayer,
+    );
+    final heightWithoutPadding = height - paddingVertical * 2;
+    final imageSize =
+        maxImgSize < heightWithoutPadding ? maxImgSize : heightWithoutPadding;
+    final paddingLeft = valueFromPercentageInRange(
+          min: 0,
+          max: width - imageSize,
+          percentage: percentageExpandedPlayer,
+        ) /
+        2;
+
+    return Column(
+      children: [
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Padding(
+            padding: EdgeInsets.only(
+              left: paddingLeft,
+              top: paddingVertical,
+              bottom: paddingVertical,
+            ),
+            child: SizedBox(
+              height: imageSize,
+              child: image,
+            ),
+          ),
+        ),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 33),
+            child: Opacity(
+              opacity: percentageExpandedPlayer,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Flexible(child: text),
+                  const Flexible(
+                    child: SizedBox(
+                      height: 80,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          _SkipButton(forward: false),
+                          _PlayButton.large(),
+                          _SkipButton(forward: true),
+                        ],
                       ),
                     ),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.fullscreen),
-                    onPressed: () {
-                      controller.animateToHeight(state: PanelState.max);
-                    },
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(right: 3),
-                    child: Opacity(
-                      opacity: elementOpacity,
-                      child: buttonPlay,
-                    ),
-                  ),
+                  const _ProgressIndicator(),
                 ],
               ),
             ),
-          ],
-        );
-      },
+          ),
+        ),
+      ],
     );
   }
 }
@@ -217,33 +241,100 @@ class _ProgressIndicator extends ConsumerWidget {
   }
 }
 
+enum IconSize {
+  small,
+  middle,
+  large;
+
+  double get size {
+    switch (this) {
+      case IconSize.small:
+        return 46;
+      case IconSize.middle:
+        return 60;
+      case IconSize.large:
+        return 70;
+    }
+  }
+
+  double get iconSize {
+    switch (this) {
+      case IconSize.small:
+        return 30;
+      case IconSize.middle:
+        return 40;
+      case IconSize.large:
+        return 50;
+    }
+  }
+}
+
+class _IconButton extends StatelessWidget {
+  const _IconButton({
+    required this.icon,
+    required this.iconSize,
+    required this.onPressed,
+  });
+
+  final IconData icon;
+  final IconSize iconSize;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: iconSize.size,
+      height: iconSize.size,
+      child: IconButton(
+        iconSize: iconSize.iconSize,
+        icon: Icon(icon),
+        onPressed: onPressed,
+      ),
+    );
+  }
+}
+
 class _PlayButton extends ConsumerWidget {
-  const _PlayButton();
+  const _PlayButton({
+    required this.iconSize,
+    required this.playIcon,
+    required this.pauseIcon,
+  });
+
+  const _PlayButton.large()
+      : iconSize = IconSize.large,
+        playIcon = Icons.play_circle_filled,
+        pauseIcon = Icons.pause_circle_filled;
+
+  const _PlayButton.small()
+      : iconSize = IconSize.small,
+        playIcon = Icons.play_arrow_outlined,
+        pauseIcon = Icons.pause_rounded;
+
+  final IconSize iconSize;
+
+  final IconData pauseIcon;
+  final IconData playIcon;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final playing =
         ref.watch(audioPlayerServiceProvider.select((state) => state?.playing));
-    if (playing == null) {
-      return const SizedBox.shrink();
-    }
-    return SizedBox(
-      width: 70,
-      height: 70,
-      child: IconButton(
-        iconSize: 50,
-        icon: playing
-            ? const Icon(Icons.pause_circle_filled)
-            : const Icon(Icons.play_circle_filled),
-        onPressed: () {
-          if (playing) {
-            ref.read(audioPlayerServiceProvider.notifier).pause();
-          } else {
-            ref.read(audioPlayerServiceProvider.notifier).play();
-          }
-        },
-      ),
-    );
+    return playing == null
+        ? const SizedBox.shrink()
+        : playing
+            ? _IconButton(
+                icon: pauseIcon,
+                iconSize: iconSize,
+                onPressed: () =>
+                    ref.read(audioPlayerServiceProvider.notifier).pause(),
+              )
+            : _IconButton(
+                icon: pauseIcon,
+                iconSize: iconSize,
+                onPressed: () =>
+                    ref.read(audioPlayerServiceProvider.notifier).pause(),
+              );
   }
 }
 
@@ -259,10 +350,9 @@ class _SkipButton extends ConsumerWidget {
     if (position == null) {
       return const SizedBox.shrink();
     }
-    return IconButton(
-      icon: forward
-          ? const Icon(Icons.forward_30, size: 33)
-          : const Icon(Icons.replay_10, size: 33),
+    return _IconButton(
+      icon: forward ? Icons.forward_30 : Icons.replay_10,
+      iconSize: IconSize.middle,
       onPressed: () {
         // final position = playerState.position +
         //     (forward
