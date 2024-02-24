@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:seasoning/services/audio/audio_player_service.dart';
 import 'package:seasoning/ui/app/app_bottom_navigation_bar.dart';
 import 'package:seasoning/ui/mini_player/mini_player.dart';
@@ -18,17 +18,17 @@ double valueFromPercentageInRange({
 
 final controller = MiniPlayerController();
 
-class DetailedPlayer extends ConsumerWidget {
+class DetailedPlayer extends HookConsumerWidget {
   const DetailedPlayer({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final playerState = ref.watch(audioPlayerServiceProvider);
-    if (playerState == null) {
+    final episode =
+        ref.watch(audioPlayerServiceProvider.select((state) => state?.episode));
+    if (episode == null) {
       return const SizedBox.shrink();
     }
 
-    final episode = playerState.episode;
     return MiniPlayer(
       valueNotifier: playerExpandProgress,
       minHeight: playerMinHeight,

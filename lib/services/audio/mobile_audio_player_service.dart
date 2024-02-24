@@ -422,6 +422,8 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
       );
       if (audioState == AudioState.completed) {
         _completed();
+      } else if (audioState == AudioState.idle) {
+        state = null;
       }
     });
   }
@@ -690,17 +692,15 @@ class _DefaultAudioPlayerHandler extends BaseAudioHandler with SeekHandler {
 
   @override
   Future<void> pause() async {
-    log.fine('pause() triggered - saving position');
-    await _savePosition();
+    log.fine('pause() triggered');
     await _player.pause();
   }
 
   @override
   Future<void> stop() async {
-    log.fine('stop() triggered - saving position');
+    log.fine('stop() triggered');
 
     await _player.stop();
-    await _savePosition();
   }
 
   @override
@@ -809,20 +809,5 @@ class _DefaultAudioPlayerHandler extends BaseAudioHandler with SeekHandler {
       speed: _player.speed,
       queueIndex: event.currentIndex,
     );
-  }
-
-  Future<void> _savePosition({bool complete = false}) async {
-    if (_currentItem == null) {
-      return;
-    }
-
-    final guid = _currentItem!.extras!['guid'] as String;
-    final updateParam = EpisodeStatsUpdateParam(
-      guid: guid,
-      position:
-          complete ? _currentItem!.duration! : playbackState.value.position,
-      completed: complete ? true : null,
-    );
-    await repository.updateEpisodeStats(updateParam);
   }
 }
