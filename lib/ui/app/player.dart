@@ -330,10 +330,10 @@ class _PlayButton extends ConsumerWidget {
                     ref.read(audioPlayerServiceProvider.notifier).pause(),
               )
             : _IconButton(
-                icon: pauseIcon,
+                icon: playIcon,
                 iconSize: iconSize,
                 onPressed: () =>
-                    ref.read(audioPlayerServiceProvider.notifier).pause(),
+                    ref.read(audioPlayerServiceProvider.notifier).play(),
               );
   }
 }
