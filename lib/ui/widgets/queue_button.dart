@@ -62,7 +62,12 @@ class QueueButton extends ConsumerWidget {
       },
       child: Row(
         children: [
-          Icon(0 <= queueIndex ? Icons.playlist_play : Icons.playlist_add),
+          Icon(
+            0 <= queueIndex
+                ? Icons.playlist_play_outlined
+                : Icons.playlist_add_circle_outlined,
+            size: 42,
+          ),
           if (0 <= queueIndex)
             Text(
               episode.guid == playingEpisode?.guid ? '★' : '${queueIndex + 1}',

@@ -9,6 +9,7 @@ import 'package:intl/intl.dart' show DateFormat;
 import 'package:seasoning/entities/entities.dart';
 import 'package:seasoning/ui/widgets/animated_play_button.dart';
 import 'package:seasoning/ui/widgets/download_button.dart';
+import 'package:seasoning/ui/widgets/queue_button.dart';
 import 'package:seasoning/ui/widgets/tile_image.dart';
 
 /// An EpisodeTitle is built with an ExpandedTile widget and displays the
@@ -397,7 +398,8 @@ class _Controls extends StatelessWidget {
       children: [
         AnimatedPlayButton(episode),
         DownloadButton(episode),
-        IconButton(onPressed: () {}, icon: Icon(Icons.playlist_add)),
+        const SizedBox(width: 12),
+        QueueButton(episode),
       ],
     );
   }
@@ -502,11 +504,11 @@ class EpisodeSubtitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var title = Duration.zero == episode.duration
+    var title = episode.duration == null
         ? date
-        : episode.duration.inSeconds < 60
-            ? '$date - ${episode.duration.inSeconds} sec'
-            : '$date - ${episode.duration.inMinutes} min';
+        : episode.duration!.inSeconds < 60
+            ? '$date - ${episode.duration!.inSeconds} sec'
+            : '$date - ${episode.duration!.inMinutes} min';
 
     final timeRemaining = stats?.timeRemaining ?? Duration.zero;
     if (Duration.zero < timeRemaining) {
