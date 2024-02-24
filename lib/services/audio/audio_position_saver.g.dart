@@ -7,7 +7,7 @@ part of 'audio_position_saver.dart';
 // **************************************************************************
 
 String _$audioPositionSaverHash() =>
-    r'd837944f5095cd78e7f821a2d0d9d796bd966ed2';
+    r'e7200c70d78b2c2f65d898b3a65a17a3a33c6d5a';
 
 /// See also [audioPositionSaver].
 @ProviderFor(audioPositionSaver)

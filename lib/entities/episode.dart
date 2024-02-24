@@ -173,7 +173,7 @@ class EpisodeStatsUpdateParam {
     required this.guid,
     this.position,
     this.duration,
-    this.played,
+    this.completed,
     this.playCount,
     this.playTotal,
     this.inQueue,
@@ -184,7 +184,7 @@ class EpisodeStatsUpdateParam {
   final String guid;
   final Duration? position;
   final Duration? duration;
-  final bool? played;
+  final bool? completed;
   final int? playCount;
   final Duration? playTotal;
   final bool? inQueue;
@@ -206,7 +206,7 @@ class EpisodeStatsUpdateParam {
       guid: guid ?? this.guid,
       position: position ?? this.position,
       duration: duration ?? this.duration,
-      played: played ?? this.played,
+      completed: played ?? this.completed,
       playCount: playCount ?? this.playCount,
       playTotal: playTotal ?? this.playTotal,
       inQueue: inQueue ?? this.inQueue,

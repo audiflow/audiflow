@@ -50,8 +50,6 @@ class SembastRepository extends Repository {
   final _playerStore = intMapStoreFactory.store('player');
   final _transcriptStore = intMapStoreFactory.store('transcript');
 
-  final _queueGuids = <String>[];
-
   late DatabaseService _databaseService;
 
   Future<Database> get _db async => _databaseService.database;
@@ -93,16 +91,16 @@ class SembastRepository extends Repository {
   }
 
   @override
-  Future<(int?, Podcast?)> findPodcastByGuid(String guid) async {
+  Future<Podcast?> findPodcastByGuid(String guid) async {
     final finder = Finder(filter: Filter.equals('guid', guid));
     final snapshot = await _podcastStore.findFirst(await _db, finder: finder);
     if (snapshot == null) {
-      return (null, null);
+      return null;
     }
 
     final podcast = Podcast.fromJson(snapshot.value);
     final episodes = await findEpisodesByPodcastGuid(podcast.guid);
-    return (snapshot.key, podcast.copyWith(episodes: episodes));
+    return podcast.copyWith(episodes: episodes);
   }
 
   @override
@@ -341,13 +339,13 @@ class SembastRepository extends Repository {
   }
 
   @override
-  Future<(int?, Episode?)> findEpisodeByGuid(String guid) async {
+  Future<Episode?> findEpisodeByGuid(String guid) async {
     final finder = Finder(filter: Filter.equals('guid', guid));
     final snapshot = await _episodeStore.findFirst(await _db, finder: finder);
     if (snapshot == null) {
-      return (null, null);
+      return null;
     }
-    return (snapshot.key, _loadEpisodeSnapshot(snapshot));
+    return _loadEpisodeSnapshot(snapshot);
   }
 
   @override
@@ -370,10 +368,10 @@ class SembastRepository extends Repository {
 
   @override
   Future<EpisodeStats> updateEpisodeStats(EpisodeStatsUpdateParam param) async {
-    log.fine('Update EpisodeStats: ${param.guid}');
+    log.fine('Update EpisodeStats: ${param.guid} $param');
 
     final db = await _db;
-    return db.transaction((txn) async {
+    final stats = await db.transaction((txn) async {
       final EpisodeStats? loaded;
       var creating = true;
 
@@ -404,7 +402,7 @@ class SembastRepository extends Repository {
           guid: param.guid,
           position: param.position ?? Duration.zero,
           duration: param.duration ?? Duration.zero,
-          played: param.played ?? false,
+          played: param.completed ?? false,
           playCount: param.playCount ?? 0,
           playTotal: param.playTotal ?? Duration.zero,
           inQueue: param.inQueue ?? false,
@@ -416,7 +414,7 @@ class SembastRepository extends Repository {
         final stats = loaded.copyWith(
           position: param.position ?? loaded.position,
           duration: param.duration ?? loaded.duration,
-          played: param.played ?? loaded.played,
+          played: param.completed ?? loaded.played,
           playCount: param.playCount ?? loaded.playCount,
           playTotal: param.playTotal ?? loaded.playTotal,
           inQueue: param.inQueue ?? loaded.inQueue,
@@ -428,6 +426,9 @@ class SembastRepository extends Repository {
         return stats;
       }
     });
+
+    _episodeSubject.add(EpisodeStatsUpdatedEvent(stats));
+    return stats;
   }
 
   @override

@@ -1,39 +1,22 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:seasoning/entities/entities.dart';
-import 'package:seasoning/services/audio/audio_player_service.dart';
 
 part 'audio_player_event.g.dart';
 
 sealed class AudioPlayerEvent {}
 
-class AudioPlayerStateEvent implements AudioPlayerEvent {
-  const AudioPlayerStateEvent({
+enum AudioPlayerAction { play, pause, stop, seek, completed }
+
+class AudioPlayerActionEvent implements AudioPlayerEvent {
+  const AudioPlayerActionEvent({
     required this.episode,
-    required this.state,
+    required this.action,
     required this.position,
   });
 
   final Episode episode;
-  final AudioState state;
+  final AudioPlayerAction action;
   final Duration position;
-}
-
-class AudioPlayerPositionEvent implements AudioPlayerEvent {
-  const AudioPlayerPositionEvent({
-    required this.episode,
-    required this.position,
-    this.stopping = false,
-  });
-
-  final Episode episode;
-  final Duration position;
-  final bool stopping;
-}
-
-class AudioPlayerCompletedEvent implements AudioPlayerEvent {
-  const AudioPlayerCompletedEvent(this.episode);
-
-  final Episode episode;
 }
 
 @Riverpod(keepAlive: true)

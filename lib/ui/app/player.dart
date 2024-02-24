@@ -45,12 +45,9 @@ class DetailedPlayer extends ConsumerWidget {
 
         final img = Image.network(episode.imageUrl!);
         final text = Text(episode.title);
-        const buttonPlay = IconButton(
-          icon: Icon(Icons.pause),
-          onPressed: onTap,
-        );
-        final progressIndicator = LinearProgressIndicator(
-          value: playerState.percentagePlayed,
+        final buttonPlay = IconButton(
+          icon: const Icon(Icons.pause),
+          onPressed: () => ref.read(audioPlayerServiceProvider.notifier).play(),
         );
 
         //Declare additional widgets (eg. SkipButton) and variables
@@ -80,22 +77,6 @@ class DetailedPlayer extends ConsumerWidget {
               ) /
               2;
 
-          const buttonSkipForward = IconButton(
-            icon: Icon(Icons.forward_30),
-            iconSize: 33,
-            onPressed: onTap,
-          );
-          const buttonSkipBackwards = IconButton(
-            icon: Icon(Icons.replay_10),
-            iconSize: 33,
-            onPressed: onTap,
-          );
-          const buttonPlayExpanded = IconButton(
-            icon: Icon(Icons.pause_circle_filled),
-            iconSize: 50,
-            onPressed: onTap,
-          );
-
           return Column(
             children: [
               Align(
@@ -118,22 +99,23 @@ class DetailedPlayer extends ConsumerWidget {
                   child: Opacity(
                     opacity: percentageExpandedPlayer,
                     child: Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Flexible(child: text),
                         const Flexible(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              buttonSkipBackwards,
-                              buttonPlayExpanded,
-                              buttonSkipForward,
-                            ],
+                          child: SizedBox(
+                            height: 80,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                _SkipButton(forward: false),
+                                _PlayButton(),
+                                _SkipButton(forward: true),
+                              ],
+                            ),
                           ),
                         ),
-                        Flexible(child: progressIndicator),
-                        Container(),
-                        Container(),
+                        const _ProgressIndicator(),
                       ],
                     ),
                   ),
@@ -222,4 +204,77 @@ class DetailedPlayer extends ConsumerWidget {
   }
 }
 
-void onTap() {}
+class _ProgressIndicator extends ConsumerWidget {
+  const _ProgressIndicator();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final playerState = ref.watch(audioPlayerServiceProvider);
+    if (playerState == null) {
+      return const SizedBox.shrink();
+    }
+    return LinearProgressIndicator(value: playerState.percentagePlayed);
+  }
+}
+
+class _PlayButton extends ConsumerWidget {
+  const _PlayButton();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final playing =
+        ref.watch(audioPlayerServiceProvider.select((state) => state?.playing));
+    if (playing == null) {
+      return const SizedBox.shrink();
+    }
+    return SizedBox(
+      width: 70,
+      height: 70,
+      child: IconButton(
+        iconSize: 50,
+        icon: playing
+            ? const Icon(Icons.pause_circle_filled)
+            : const Icon(Icons.play_circle_filled),
+        onPressed: () {
+          if (playing) {
+            ref.read(audioPlayerServiceProvider.notifier).pause();
+          } else {
+            ref.read(audioPlayerServiceProvider.notifier).play();
+          }
+        },
+      ),
+    );
+  }
+}
+
+class _SkipButton extends ConsumerWidget {
+  const _SkipButton({required this.forward});
+
+  final bool forward;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final (position, episode) = ref.watch(audioPlayerServiceProvider
+        .select((state) => (state?.position, state?.episode)));
+    if (position == null) {
+      return const SizedBox.shrink();
+    }
+    return IconButton(
+      icon: forward
+          ? const Icon(Icons.forward_30, size: 33)
+          : const Icon(Icons.replay_10, size: 33),
+      onPressed: () {
+        // final position = playerState.position +
+        //     (forward
+        //         ? const Duration(seconds: 30)
+        //         : const Duration(seconds: -10));
+        final newPosition = forward
+            ? episode!.duration! - const Duration(seconds: 10)
+            : position + const Duration(seconds: -10);
+        ref
+            .read(audioPlayerServiceProvider.notifier)
+            .seek(position: newPosition);
+      },
+    );
+  }
+}
