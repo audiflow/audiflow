@@ -12,6 +12,29 @@ import 'package:seasoning/entities/entities.dart';
 part 'podcast.freezed.dart';
 part 'podcast.g.dart';
 
+@freezed
+class PodcastPreview with _$PodcastPreview {
+  const factory PodcastPreview({
+    /// Unique identifier for podcast.
+    required String guid,
+
+    /// The collection ID(iTunesID).
+    required int collectionId,
+
+    /// The link to the podcast RSS feed.
+    String? feedUrl,
+
+    /// Podcast title.
+    required String title,
+
+    /// URL for thumbnail version of artwork image.
+    required String thumbImageUrl,
+  }) = _PodcastPreview;
+
+  factory PodcastPreview.fromJson(Map<String, dynamic> json) =>
+      _$PodcastPreviewFromJson(json);
+}
+
 abstract class PodcastMetadata {
   /// Unique identifier for podcast.
   String get guid;
@@ -36,6 +59,7 @@ abstract class PodcastMetadata {
 
   /// Release date of the latest episode.
   DateTime get releaseDate;
+
 }
 
 /// A class that represents an instance of a podcast.
