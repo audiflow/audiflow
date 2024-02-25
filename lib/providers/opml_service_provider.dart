@@ -1,8 +1,8 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:seasoning/repository/repository_provider.dart';
 import 'package:seasoning/services/podcast/mobile_opml_service.dart';
-import 'package:seasoning/services/podcast/mobile_podcast_service.dart';
 import 'package:seasoning/services/podcast/opml_service.dart';
+import 'package:seasoning/services/podcast/podcast_service_provider.dart';
 
 export 'package:seasoning/services/podcast/opml_service.dart';
 

@@ -10,7 +10,7 @@ _$PodcastImpl _$$PodcastImplFromJson(Map<String, dynamic> json) =>
     _$PodcastImpl(
       guid: json['guid'] as String,
       collectionId: json['collectionId'] as int,
-      feedUrl: json['feedUrl'] as String,
+      feedUrl: json['feedUrl'] as String?,
       linkUrl: json['linkUrl'] as String,
       title: json['title'] as String,
       description: json['description'] as String,
@@ -49,7 +49,7 @@ _$PodcastSearchResultItemImpl _$$PodcastSearchResultItemImplFromJson(
     _$PodcastSearchResultItemImpl(
       guid: json['guid'] as String,
       collectionId: json['collectionId'] as int,
-      feedUrl: json['feedUrl'] as String,
+      feedUrl: json['feedUrl'] as String?,
       title: json['title'] as String,
       thumbImageUrl: json['thumbImageUrl'] as String,
       imageUrl: json['imageUrl'] as String,

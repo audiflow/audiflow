@@ -27,7 +27,7 @@ mixin _$Podcast {
   int get collectionId => throw _privateConstructorUsedError;
 
   /// The link to the podcast RSS feed.
-  String get feedUrl => throw _privateConstructorUsedError;
+  String? get feedUrl => throw _privateConstructorUsedError;
 
   /// RSS link URL.
   String get linkUrl => throw _privateConstructorUsedError;
@@ -75,7 +75,7 @@ abstract class $PodcastCopyWith<$Res> {
   $Res call(
       {String guid,
       int collectionId,
-      String feedUrl,
+      String? feedUrl,
       String linkUrl,
       String title,
       String description,
@@ -104,7 +104,7 @@ class _$PodcastCopyWithImpl<$Res, $Val extends Podcast>
   $Res call({
     Object? guid = null,
     Object? collectionId = null,
-    Object? feedUrl = null,
+    Object? feedUrl = freezed,
     Object? linkUrl = null,
     Object? title = null,
     Object? description = null,
@@ -125,10 +125,10 @@ class _$PodcastCopyWithImpl<$Res, $Val extends Podcast>
           ? _value.collectionId
           : collectionId // ignore: cast_nullable_to_non_nullable
               as int,
-      feedUrl: null == feedUrl
+      feedUrl: freezed == feedUrl
           ? _value.feedUrl
           : feedUrl // ignore: cast_nullable_to_non_nullable
-              as String,
+              as String?,
       linkUrl: null == linkUrl
           ? _value.linkUrl
           : linkUrl // ignore: cast_nullable_to_non_nullable
@@ -183,7 +183,7 @@ abstract class _$$PodcastImplCopyWith<$Res> implements $PodcastCopyWith<$Res> {
   $Res call(
       {String guid,
       int collectionId,
-      String feedUrl,
+      String? feedUrl,
       String linkUrl,
       String title,
       String description,
@@ -210,7 +210,7 @@ class __$$PodcastImplCopyWithImpl<$Res>
   $Res call({
     Object? guid = null,
     Object? collectionId = null,
-    Object? feedUrl = null,
+    Object? feedUrl = freezed,
     Object? linkUrl = null,
     Object? title = null,
     Object? description = null,
@@ -231,10 +231,10 @@ class __$$PodcastImplCopyWithImpl<$Res>
           ? _value.collectionId
           : collectionId // ignore: cast_nullable_to_non_nullable
               as int,
-      feedUrl: null == feedUrl
+      feedUrl: freezed == feedUrl
           ? _value.feedUrl
           : feedUrl // ignore: cast_nullable_to_non_nullable
-              as String,
+              as String?,
       linkUrl: null == linkUrl
           ? _value.linkUrl
           : linkUrl // ignore: cast_nullable_to_non_nullable
@@ -314,7 +314,7 @@ class _$PodcastImpl implements _Podcast {
 
   /// The link to the podcast RSS feed.
   @override
-  final String feedUrl;
+  final String? feedUrl;
 
   /// RSS link URL.
   @override
@@ -450,7 +450,7 @@ abstract class _Podcast implements Podcast {
   const factory _Podcast(
       {required final String guid,
       required final int collectionId,
-      required final String feedUrl,
+      required final String? feedUrl,
       required final String linkUrl,
       required final String title,
       required final String description,
@@ -476,7 +476,7 @@ abstract class _Podcast implements Podcast {
   @override
 
   /// The link to the podcast RSS feed.
-  String get feedUrl;
+  String? get feedUrl;
   @override
 
   /// RSS link URL.
@@ -540,7 +540,7 @@ mixin _$PodcastSearchResultItem {
   int get collectionId => throw _privateConstructorUsedError;
 
   /// The link to the podcast RSS feed.
-  String get feedUrl => throw _privateConstructorUsedError;
+  String? get feedUrl => throw _privateConstructorUsedError;
 
   /// Podcast title.
   String get title => throw _privateConstructorUsedError;
@@ -572,7 +572,7 @@ abstract class $PodcastSearchResultItemCopyWith<$Res> {
   $Res call(
       {String guid,
       int collectionId,
-      String feedUrl,
+      String? feedUrl,
       String title,
       String thumbImageUrl,
       String imageUrl,
@@ -596,7 +596,7 @@ class _$PodcastSearchResultItemCopyWithImpl<$Res,
   $Res call({
     Object? guid = null,
     Object? collectionId = null,
-    Object? feedUrl = null,
+    Object? feedUrl = freezed,
     Object? title = null,
     Object? thumbImageUrl = null,
     Object? imageUrl = null,
@@ -612,10 +612,10 @@ class _$PodcastSearchResultItemCopyWithImpl<$Res,
           ? _value.collectionId
           : collectionId // ignore: cast_nullable_to_non_nullable
               as int,
-      feedUrl: null == feedUrl
+      feedUrl: freezed == feedUrl
           ? _value.feedUrl
           : feedUrl // ignore: cast_nullable_to_non_nullable
-              as String,
+              as String?,
       title: null == title
           ? _value.title
           : title // ignore: cast_nullable_to_non_nullable
@@ -652,7 +652,7 @@ abstract class _$$PodcastSearchResultItemImplCopyWith<$Res>
   $Res call(
       {String guid,
       int collectionId,
-      String feedUrl,
+      String? feedUrl,
       String title,
       String thumbImageUrl,
       String imageUrl,
@@ -675,7 +675,7 @@ class __$$PodcastSearchResultItemImplCopyWithImpl<$Res>
   $Res call({
     Object? guid = null,
     Object? collectionId = null,
-    Object? feedUrl = null,
+    Object? feedUrl = freezed,
     Object? title = null,
     Object? thumbImageUrl = null,
     Object? imageUrl = null,
@@ -691,10 +691,10 @@ class __$$PodcastSearchResultItemImplCopyWithImpl<$Res>
           ? _value.collectionId
           : collectionId // ignore: cast_nullable_to_non_nullable
               as int,
-      feedUrl: null == feedUrl
+      feedUrl: freezed == feedUrl
           ? _value.feedUrl
           : feedUrl // ignore: cast_nullable_to_non_nullable
-              as String,
+              as String?,
       title: null == title
           ? _value.title
           : title // ignore: cast_nullable_to_non_nullable
@@ -745,7 +745,7 @@ class _$PodcastSearchResultItemImpl implements _PodcastSearchResultItem {
 
   /// The link to the podcast RSS feed.
   @override
-  final String feedUrl;
+  final String? feedUrl;
 
   /// Podcast title.
   @override
@@ -816,7 +816,7 @@ abstract class _PodcastSearchResultItem implements PodcastSearchResultItem {
   const factory _PodcastSearchResultItem(
       {required final String guid,
       required final int collectionId,
-      required final String feedUrl,
+      required final String? feedUrl,
       required final String title,
       required final String thumbImageUrl,
       required final String imageUrl,
@@ -837,7 +837,7 @@ abstract class _PodcastSearchResultItem implements PodcastSearchResultItem {
   @override
 
   /// The link to the podcast RSS feed.
-  String get feedUrl;
+  String? get feedUrl;
   @override
 
   /// Podcast title.
