@@ -40,7 +40,7 @@ class SembastRepository extends Repository {
   final log = Logger('SembastRepository');
 
   final _podcastStore = stringMapStoreFactory.store('podcast');
-  final _podcastFeedUrlStore = stringMapStoreFactory.store('podcastFeedUrl');
+  final _podcastPreviewStore = stringMapStoreFactory.store('podcastPreview');
   final _podcastStatsStore = stringMapStoreFactory.store('podcastStats');
   final _episodeStore = stringMapStoreFactory.store('episode');
   final _episodeStatsStore = stringMapStoreFactory.store('episodeStats');
@@ -62,37 +62,45 @@ class SembastRepository extends Repository {
   DownloadEventStream get _downloadEventStream =>
       _ref.read(downloadEventStreamProvider.notifier);
 
-  // --- Podcast feed url
+  // --- PodcastPreview
 
   @override
-  Future<void> savePodcastFeedUrls(
+  Future<void> savePodcastPreview(
     Iterable<PodcastMetadata> metadataList,
   ) async {
-    final targets = metadataList
-        .where((metadata) => metadata.feedUrl?.isNotEmpty == true)
-        .map(
-          (metadata) => (
-            metadata.guid,
-            <String, dynamic>{'feedUrl': metadata.feedUrl},
-          ),
-        );
-    await _podcastFeedUrlStore
+    final targets = metadataList.map(
+      (metadata) {
+        final value = PodcastPreview.fromMetadata(metadata).toJson();
+        if (metadata.feedUrl?.isNotEmpty == true) {
+          value.remove('feedUrl');
+        }
+        return (metadata.guid, value);
+      },
+    );
+
+    await _podcastPreviewStore
         .records(targets.map((target) => target.$1))
         .put(await _db, targets.map((target) => target.$2).toList());
   }
 
   @override
-  Future<List<PodcastSearchResultItem>> populatePodcastFeedUrls(
+  Future<PodcastPreview?> findPodcastPreview(String guid) async {
+    final value = await _podcastPreviewStore.record(guid).get(await _db);
+    return value == null ? null : PodcastPreview.fromJson(value);
+  }
+
+  @override
+  Future<List<PodcastSearchResultItem>> populatePodcastFeedUrl(
     Iterable<PodcastSearchResultItem> items,
   ) async {
     final guids = items
-        .where((metadata) => metadata.feedUrl?.isNotEmpty == true)
-        .map((metadata) => metadata.guid);
+        .where((item) => item.feedUrl?.isNotEmpty == true)
+        .map((item) => item.guid);
     if (guids.isEmpty) {
       return items.toList();
     }
 
-    final values = await _podcastFeedUrlStore.records(guids).get(await _db);
+    final values = await _podcastPreviewStore.records(guids).get(await _db);
     return items.map((item) {
       if (item.feedUrl?.isNotEmpty == true) {
         return item;
@@ -107,7 +115,7 @@ class SembastRepository extends Repository {
 
   @override
   Future<String?> findFeedUrl(String guid) async {
-    final value = await _podcastFeedUrlStore.record(guid).get(await _db);
+    final value = await _podcastPreviewStore.record(guid).get(await _db);
     return value?['feedUrl'] as String?;
   }
 

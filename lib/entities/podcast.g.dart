@@ -6,6 +6,27 @@ part of 'podcast.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
+_$PodcastPreviewImpl _$$PodcastPreviewImplFromJson(Map<String, dynamic> json) =>
+    _$PodcastPreviewImpl(
+      guid: json['guid'] as String,
+      collectionId: json['collectionId'] as int,
+      feedUrl: json['feedUrl'] as String?,
+      title: json['title'] as String,
+      thumbImageUrl: json['thumbImageUrl'] as String,
+      lastUpdated: DateTime.parse(json['lastUpdated'] as String),
+    );
+
+Map<String, dynamic> _$$PodcastPreviewImplToJson(
+        _$PodcastPreviewImpl instance) =>
+    <String, dynamic>{
+      'guid': instance.guid,
+      'collectionId': instance.collectionId,
+      'feedUrl': instance.feedUrl,
+      'title': instance.title,
+      'thumbImageUrl': instance.thumbImageUrl,
+      'lastUpdated': instance.lastUpdated.toIso8601String(),
+    };
+
 _$PodcastImpl _$$PodcastImplFromJson(Map<String, dynamic> json) =>
     _$PodcastImpl(
       guid: json['guid'] as String,

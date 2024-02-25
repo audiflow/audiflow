@@ -29,10 +29,24 @@ class PodcastPreview with _$PodcastPreview {
 
     /// URL for thumbnail version of artwork image.
     required String thumbImageUrl,
+
+    /// Last updated date.
+    required DateTime lastUpdated
   }) = _PodcastPreview;
 
   factory PodcastPreview.fromJson(Map<String, dynamic> json) =>
       _$PodcastPreviewFromJson(json);
+
+  factory PodcastPreview.fromMetadata(PodcastMetadata metadata) {
+    return PodcastPreview(
+      guid: metadata.guid,
+      collectionId: metadata.collectionId,
+      feedUrl: metadata.feedUrl,
+      title: metadata.title,
+      thumbImageUrl: metadata.thumbImageUrl,
+      lastUpdated: DateTime.now(),
+    );
+  }
 }
 
 abstract class PodcastMetadata {

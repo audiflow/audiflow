@@ -125,7 +125,7 @@ class MobilePodcastService implements PodcastService {
 
     final items =
         result.items.map(PodcastSearchResultItem.fromSearchResultItem);
-    await _repository.savePodcastFeedUrls(items);
+    await _repository.savePodcastPreview(items);
     return items.toList();
   }
 
@@ -146,7 +146,7 @@ class MobilePodcastService implements PodcastService {
     }
     final items =
         result.items.map(PodcastSearchResultItem.fromSearchResultItem);
-    return _repository.populatePodcastFeedUrls(items);
+    return _repository.populatePodcastFeedUrl(items);
   }
 
   @override
@@ -189,7 +189,7 @@ class MobilePodcastService implements PodcastService {
         return null;
       }
       feedUrl = newMetadata!.feedUrl!;
-      await _repository.savePodcastFeedUrls([newMetadata]);
+      await _repository.savePodcastPreview([newMetadata]);
     }
 
     final feedPodcast = await _lookupPodcast(url: feedUrl);
