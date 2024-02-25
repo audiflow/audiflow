@@ -147,10 +147,10 @@ class _PodcastTitle extends HookConsumerWidget {
             _PodcastDescription(
                 key: descriptionKey,
                 content: PodcastHtml(
-                  content: podcast.description!,
+                  content: podcast.description,
                   fontSize: FontSize.medium,
                 ),
-                isExpanded: expandedState.value),
+                isExpanded: expandedState.value,),
             Padding(
               padding: const EdgeInsets.only(left: 8, right: 8),
               child: Row(
@@ -416,7 +416,7 @@ class _PodcastViewModeSwitch extends ConsumerWidget {
         .map((mode) => PopupMenuItem(
               value: mode,
               child: Text(mode.label),
-            ))
+            ),)
         .toList();
 
     showMenu(

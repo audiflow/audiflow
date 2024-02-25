@@ -36,7 +36,8 @@ class EpisodeList extends StatelessWidget {
             final bool showsThumbnail;
             switch (thumbnailVisibility) {
               case ThumbnailVisibility.auto:
-                showsThumbnail = episode.thumbImageUrl != metadata.thumbImageUrl;
+                showsThumbnail =
+                    episode.thumbImageUrl != metadata.thumbImageUrl;
               case ThumbnailVisibility.visible:
                 showsThumbnail = true;
               case ThumbnailVisibility.hidden:

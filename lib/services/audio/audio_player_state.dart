@@ -27,5 +27,5 @@ class AudioPlayerState with _$AudioPlayerState {
 extension AudioPlayerStateExt on AudioPlayerState {
   double get percentagePlayed => episode.duration == null
       ? 0.0
-      : position.inMilliseconds / episode!.duration!.inMilliseconds;
+      : position.inMilliseconds / episode.duration!.inMilliseconds;
 }

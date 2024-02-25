@@ -53,9 +53,9 @@ class HomePage extends HookConsumerWidget {
       body: CustomScrollView(
         shrinkWrap: true,
         controller: scrollController,
-        slivers: [
+        slivers: const [
 //          SliverPinnedHeader(child: PodcastSearchBar()),
-          const PodcastChartPage(),
+          PodcastChartPage(),
         ],
       ),
     );
@@ -69,7 +69,7 @@ class DetailPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Detail"),
+        title: const Text('Detail'),
       ),
     );
   }
@@ -82,7 +82,7 @@ class SignUpPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("SignUp"),
+        title: const Text('SignUp'),
       ),
       body: Center(
         child: Column(
@@ -97,7 +97,7 @@ class SignUpPage extends StatelessWidget {
               child: const Text('Push SignIn'),
             ),
             const Padding(
-              padding: EdgeInsets.all(8.0),
+              padding: EdgeInsets.all(8),
               child: Text(
                 'Using push method of router enable us to go back functionality',
                 textAlign: TextAlign.center,
@@ -117,7 +117,7 @@ class SignInPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("SignIn"),
+        title: const Text('SignIn'),
       ),
       body: Center(
         child: Column(
@@ -132,7 +132,7 @@ class SignInPage extends StatelessWidget {
               child: const Text('Push Home Page'),
             ),
             const Padding(
-              padding: EdgeInsets.all(8.0),
+              padding: EdgeInsets.all(8),
               child: Text(
                 'Using push method of router enable us to push that page as standalone page instead of showing with Shell',
                 textAlign: TextAlign.center,
@@ -147,7 +147,7 @@ class SignInPage extends StatelessWidget {
               child: const Text('Go Home Page'),
             ),
             const Padding(
-              padding: EdgeInsets.all(8.0),
+              padding: EdgeInsets.all(8),
               child: Text(
                 'Instead if we use go method of router we will have the home page with the Shell',
                 textAlign: TextAlign.center,
@@ -162,7 +162,7 @@ class SignInPage extends StatelessWidget {
               child: const Text('Go Search Page'),
             ),
             const Padding(
-              padding: EdgeInsets.all(8.0),
+              padding: EdgeInsets.all(8),
               child: Text(
                 'Or instead we can launch the bottom navigation page(with shell) for different tab with only changing the path',
                 textAlign: TextAlign.center,
@@ -182,7 +182,7 @@ class SearchPage1 extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Search"),
+        title: const Text('Search'),
       ),
       body: Center(
         child: Column(
@@ -196,7 +196,7 @@ class SearchPage1 extends StatelessWidget {
               child: const Text('Go Home Tab -> Push Detail Page'),
             ),
             const Padding(
-              padding: EdgeInsets.all(8.0),
+              padding: EdgeInsets.all(8),
               child: Text(
                 'It will change the tab without loosing the state',
                 textAlign: TextAlign.center,
@@ -211,7 +211,7 @@ class SearchPage1 extends StatelessWidget {
               child: const Text('Go Settings Tab'),
             ),
             const Padding(
-              padding: EdgeInsets.all(8.0),
+              padding: EdgeInsets.all(8),
               child: Text(
                 'Or instead we can launch the bottom navigation page(with shell) for different tab with only changing the path',
                 textAlign: TextAlign.center,
@@ -231,7 +231,7 @@ class SettingsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Settings"),
+        title: const Text('Settings'),
       ),
       body: Center(
         child: Column(
@@ -246,7 +246,7 @@ class SettingsPage extends StatelessWidget {
               child: const Text('Go SignIn Page'),
             ),
             const Padding(
-              padding: EdgeInsets.all(8.0),
+              padding: EdgeInsets.all(8),
               child: Text(
                 'Or instead we can launch the bottom navigation page(with shell) for different tab with only changing the path',
                 textAlign: TextAlign.center,
@@ -261,7 +261,7 @@ class SettingsPage extends StatelessWidget {
               child: const Text('Push SignIn Page'),
             ),
             const Padding(
-              padding: EdgeInsets.all(8.0),
+              padding: EdgeInsets.all(8),
               child: Text(
                 'Or instead we can launch the bottom navigation page(with shell) for different tab with only changing the path',
                 textAlign: TextAlign.center,

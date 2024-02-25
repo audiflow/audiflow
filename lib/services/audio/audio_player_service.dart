@@ -58,6 +58,7 @@ enum AudioState {
 @Riverpod(keepAlive: true)
 class AudioPlayerService extends _$AudioPlayerService {
   /// Initialize the service.
+  @override
   AudioPlayerState? build() => null;
 
   Future<void> setup() => throw UnimplementedError();

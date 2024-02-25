@@ -92,7 +92,8 @@ class PodcastDetailsPage extends HookConsumerWidget {
             child: CustomScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: <Widget>[
-                PodcastDetailsAppBar(metadata: metadata, heroPrefix: heroPrefix),
+                PodcastDetailsAppBar(
+                    metadata: metadata, heroPrefix: heroPrefix,),
                 if (podcastDetailsState.isLoading || seasonsState.isLoading)
                   const FillRemainingLoading()
                 else if (podcastDetailsState.hasError || podcast == null)
@@ -205,10 +206,10 @@ class _PodcastTitle extends HookConsumerWidget {
             _PodcastDescription(
                 key: descriptionKey,
                 content: PodcastHtml(
-                  content: podcast.description!,
+                  content: podcast.description,
                   fontSize: FontSize.medium,
                 ),
-                isExpanded: expandedState.value),
+                isExpanded: expandedState.value,),
             Padding(
               padding: const EdgeInsets.only(left: 8, right: 8),
               child: Row(
@@ -474,7 +475,7 @@ class _PodcastViewModeSwitch extends ConsumerWidget {
         .map((mode) => PopupMenuItem(
               value: mode,
               child: Text(mode.label),
-            ))
+            ),)
         .toList();
 
     showMenu(

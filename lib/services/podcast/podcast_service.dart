@@ -4,10 +4,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:podcast_search/podcast_search.dart' as pcast;
 import 'package:seasoning/entities/entities.dart';
-import 'package:seasoning/repository/episode_event.dart';
-import 'package:seasoning/repository/podcast_event.dart';
 
 part 'podcast_genres.dart';
 

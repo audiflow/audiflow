@@ -179,7 +179,7 @@ class _DetailedPlayerContent extends StatelessWidget {
     final image = Image.network(episode.imageUrl!);
     final text = Text(episode.title);
 
-    var percentageExpandedPlayer = percentageFromValueInRange(
+    final percentageExpandedPlayer = percentageFromValueInRange(
       min: maxHeight * miniPlayerPercentageDeclaration + playerMinHeight,
       max: maxHeight,
       value: height,
