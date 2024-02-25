@@ -13,7 +13,7 @@ abstract class Repository {
   Future<void> close();
 
   // --- Podcast
-  Future<void> savePodcastFeedUrls(Iterable<PodcastSummary> summaries);
+  Future<void> savePodcastFeedUrls(Iterable<PodcastMetadata> metadataList);
 
   Future<List<PodcastSearchResultItem>> populatePodcastFeedUrls(
     Iterable<PodcastSearchResultItem> items,
@@ -25,7 +25,7 @@ abstract class Repository {
 
   Future<Podcast?> findPodcast(String guid);
 
-  Future<List<(PodcastSummary, PodcastStats)>> subscriptions();
+  Future<List<(PodcastMetadata, PodcastStats)>> subscriptions();
 
   // -- PodcastStats
 

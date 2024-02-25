@@ -161,8 +161,8 @@ class _MiniPlayerContent extends StatelessWidget {
 
 class _DetailedPlayerContent extends StatelessWidget {
   const _DetailedPlayerContent({
-    required this.height,
     required this.episode,
+    required this.height,
     required this.minHeight,
     required this.maxHeight,
   });
@@ -174,25 +174,19 @@ class _DetailedPlayerContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final image = Image.network(episode.thumbImageUrl!);
+    final width = MediaQuery.of(context).size.width;
+    final maxImgSize = width * 0.4;
+    final image = Image.network(episode.imageUrl!);
     final text = Text(episode.title);
 
+    var percentageExpandedPlayer = percentageFromValueInRange(
+      min: maxHeight * miniPlayerPercentageDeclaration + playerMinHeight,
+      max: maxHeight,
+      value: height,
+    ); // ref.watch(podcastInfoProvider())
     return Column(
       children: [
-        Align(
-          alignment: Alignment.centerLeft,
-          child: Padding(
-            padding: EdgeInsets.only(
-              left: paddingLeft,
-              top: paddingVertical,
-              bottom: paddingVertical,
-            ),
-            child: SizedBox(
-              height: imageSize,
-              child: image,
-            ),
-          ),
-        ),
+        // PlayerEpisodeTile()
         Expanded(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 33),

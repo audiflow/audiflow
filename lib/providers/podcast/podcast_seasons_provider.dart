@@ -10,10 +10,10 @@ part 'podcast_seasons_provider.g.dart';
 @riverpod
 Future<List<Season>> podcastSeasons(
   PodcastSeasonsRef ref,
-  PodcastSummary summary,
+  PodcastMetadata metadata,
 ) async {
   final podcast = await ref.watch(
-    podcastInfoProvider(summary).selectAsync((state) => state.podcast),
+    podcastInfoProvider(metadata).selectAsync((state) => state.podcast),
   );
 
   final map = <int?, List<Episode>>{};

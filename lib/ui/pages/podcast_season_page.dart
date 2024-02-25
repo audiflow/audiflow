@@ -49,7 +49,7 @@ class PodcastSeasonPage extends HookConsumerWidget {
                 PodcastSeasonAppBar(season: season, heroPrefix: heroPrefix),
                 EpisodeList(
                   thumbnailVisibility: ThumbnailVisibility.hidden,
-                  summary: podcast,
+                  metadata: podcast,
                   episodes: season.episodes,
                 ),
               ],

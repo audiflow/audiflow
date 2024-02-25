@@ -12,7 +12,7 @@ import 'package:seasoning/entities/entities.dart';
 part 'podcast.freezed.dart';
 part 'podcast.g.dart';
 
-abstract class PodcastSummary {
+abstract class PodcastMetadata {
   /// Unique identifier for podcast.
   String get guid;
 
@@ -42,7 +42,7 @@ abstract class PodcastSummary {
 ///
 /// When persisted to disk this represents a podcast that is being followed.
 @freezed
-class Podcast with _$Podcast implements PodcastSummary {
+class Podcast with _$Podcast implements PodcastMetadata {
   const factory Podcast({
     /// Unique identifier for podcast.
     required String guid,
@@ -91,7 +91,7 @@ class Podcast with _$Podcast implements PodcastSummary {
   factory Podcast.fromJson(Map<String, dynamic> json) =>
       _$PodcastFromJson(json);
 
-  factory Podcast.fromSearch(search.Podcast podcast, PodcastSummary baseInfo) {
+  factory Podcast.fromSearch(search.Podcast podcast, PodcastMetadata baseInfo) {
     final episodes = podcast.episodes
         .map(
           (e) => Episode.fromSearch(
@@ -146,7 +146,7 @@ extension PodcastExtension on Podcast {
 @freezed
 class PodcastSearchResultItem
     with _$PodcastSearchResultItem
-    implements PodcastSummary {
+    implements PodcastMetadata {
   const factory PodcastSearchResultItem({
     /// Unique identifier for podcast.
     required String guid,

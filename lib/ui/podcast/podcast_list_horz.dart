@@ -14,14 +14,14 @@ import 'package:seasoning/ui/widgets/tile_image.dart';
 class PodcastListHorz extends ConsumerWidget {
   const PodcastListHorz({
     super.key,
-    required this.summaries,
+    required this.metadataList,
   });
 
-  final List<PodcastSummary> summaries;
+  final List<PodcastMetadata> metadataList;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    if (summaries.isEmpty) {
+    if (metadataList.isEmpty) {
       return const SizedBox.shrink();
     }
 
@@ -36,14 +36,14 @@ class PodcastListHorz extends ConsumerWidget {
           ),
           itemBuilder: (context, index) {
             return _ListTile(
-              key: ValueKey(summaries[index].guid),
-              summary: summaries[index],
+              key: ValueKey(metadataList[index].guid),
+              metadata: metadataList[index],
             );
           },
           separatorBuilder: (context, index) {
             return const SizedBox(width: 20);
           },
-          itemCount: summaries.length,
+          itemCount: metadataList.length,
         ),
       ),
     );
@@ -53,15 +53,15 @@ class PodcastListHorz extends ConsumerWidget {
 class _ListTile extends ConsumerWidget {
   const _ListTile({
     super.key,
-    required this.summary,
+    required this.metadata,
   });
 
-  final PodcastSummary summary;
+  final PodcastMetadata metadata;
   static const heroPrefix = 'subscription:';
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final podcastState = ref.watch(podcastInfoProvider(summary));
+    final podcastState = ref.watch(podcastInfoProvider(metadata));
     if (!podcastState.hasValue) {
       return const SizedBox.shrink();
     }
@@ -71,7 +71,7 @@ class _ListTile extends ConsumerWidget {
     return GestureDetector(
       onTap: () {
         NavigationHelper.router
-            .push('/home/detail', extra: (summary, heroPrefix));
+            .push('/home/detail', extra: (metadata, heroPrefix));
       },
       child: GridTile(
         child: Container(

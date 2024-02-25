@@ -6,7 +6,7 @@ part of 'podcast_info_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$podcastInfoHash() => r'9f37b6e41c2893584320a192032f032c16f15930';
+String _$podcastInfoHash() => r'37b67da597b3cd536eb9f79525409f926815a9d7';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -31,10 +31,10 @@ class _SystemHash {
 
 abstract class _$PodcastInfo
     extends BuildlessAutoDisposeAsyncNotifier<PodcastDetailsState> {
-  late final PodcastSummary baseInfo;
+  late final PodcastMetadata baseInfo;
 
   FutureOr<PodcastDetailsState> build(
-    PodcastSummary baseInfo,
+    PodcastMetadata baseInfo,
   );
 }
 
@@ -49,7 +49,7 @@ class PodcastInfoFamily extends Family<AsyncValue<PodcastDetailsState>> {
 
   /// See also [PodcastInfo].
   PodcastInfoProvider call(
-    PodcastSummary baseInfo,
+    PodcastMetadata baseInfo,
   ) {
     return PodcastInfoProvider(
       baseInfo,
@@ -85,7 +85,7 @@ class PodcastInfoProvider extends AutoDisposeAsyncNotifierProviderImpl<
     PodcastInfo, PodcastDetailsState> {
   /// See also [PodcastInfo].
   PodcastInfoProvider(
-    PodcastSummary baseInfo,
+    PodcastMetadata baseInfo,
   ) : this._internal(
           () => PodcastInfo()..baseInfo = baseInfo,
           from: podcastInfoProvider,
@@ -110,7 +110,7 @@ class PodcastInfoProvider extends AutoDisposeAsyncNotifierProviderImpl<
     required this.baseInfo,
   }) : super.internal();
 
-  final PodcastSummary baseInfo;
+  final PodcastMetadata baseInfo;
 
   @override
   FutureOr<PodcastDetailsState> runNotifierBuild(
@@ -160,7 +160,7 @@ class PodcastInfoProvider extends AutoDisposeAsyncNotifierProviderImpl<
 mixin PodcastInfoRef
     on AutoDisposeAsyncNotifierProviderRef<PodcastDetailsState> {
   /// The parameter `baseInfo` of this provider.
-  PodcastSummary get baseInfo;
+  PodcastMetadata get baseInfo;
 }
 
 class _PodcastInfoProviderElement
@@ -169,7 +169,7 @@ class _PodcastInfoProviderElement
   _PodcastInfoProviderElement(super.provider);
 
   @override
-  PodcastSummary get baseInfo => (origin as PodcastInfoProvider).baseInfo;
+  PodcastMetadata get baseInfo => (origin as PodcastInfoProvider).baseInfo;
 }
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

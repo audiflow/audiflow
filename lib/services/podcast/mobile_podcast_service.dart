@@ -160,14 +160,14 @@ class MobilePodcastService implements PodcastService {
   /// to load it from the network.
   @override
   Future<Podcast?> loadPodcast(
-    PodcastSummary summary, {
+    PodcastMetadata metadata, {
     bool refresh = false,
   }) async {
     if (refresh) {
-      return _reloadPodcast(summary);
+      return _reloadPodcast(metadata);
     }
-    return await loadPodcastByGuid(summary.guid) ??
-        await _reloadPodcast(summary);
+    return await loadPodcastByGuid(metadata.guid) ??
+        await _reloadPodcast(metadata);
   }
 
   @override
@@ -175,25 +175,25 @@ class MobilePodcastService implements PodcastService {
     return _repository.findPodcast(guid);
   }
 
-  Future<Podcast?> _reloadPodcast(PodcastSummary summary) async {
-    _log.fine('Reloading podcast ${summary.title}');
+  Future<Podcast?> _reloadPodcast(PodcastMetadata metadata) async {
+    _log.fine('Reloading podcast ${metadata.title}');
 
-    var feedUrl = summary.feedUrl ?? '';
+    var feedUrl = metadata.feedUrl ?? '';
     if (feedUrl.isEmpty) {
-      feedUrl = (await _repository.findFeedUrl(summary.guid)) ?? '';
+      feedUrl = (await _repository.findFeedUrl(metadata.guid)) ?? '';
     }
     if (feedUrl.isEmpty) {
-      final newSummary =
-          await _lookupSummary(collectionId: summary.collectionId);
-      if (newSummary?.feedUrl == null) {
+      final newMetadata =
+          await _lookupPodcastMetadata(collectionId: metadata.collectionId);
+      if (newMetadata?.feedUrl == null) {
         return null;
       }
-      feedUrl = newSummary!.feedUrl!;
-      await _repository.savePodcastFeedUrls([newSummary]);
+      feedUrl = newMetadata!.feedUrl!;
+      await _repository.savePodcastFeedUrls([newMetadata]);
     }
 
     final feedPodcast = await _lookupPodcast(url: feedUrl);
-    final podcast = Podcast.fromSearch(feedPodcast, summary);
+    final podcast = Podcast.fromSearch(feedPodcast, metadata);
 
     final saved = await _repository.findPodcast(podcast.guid);
     if (saved != null && saved != podcast) {
@@ -382,7 +382,7 @@ class MobilePodcastService implements PodcastService {
   }
 
   @override
-  Future<List<(PodcastSummary, PodcastStats)>> subscriptions() async {
+  Future<List<(PodcastMetadata, PodcastStats)>> subscriptions() async {
     return _repository.subscriptions();
   }
 
@@ -395,7 +395,9 @@ class MobilePodcastService implements PodcastService {
   Future<void> unsubscribe(Podcast podcast) async {
     if (await hasStoragePermission(_appSettings)) {
       final filename = join(
-          await getStorageDirectory(_appSettings), safeFile(podcast.title));
+        await getStorageDirectory(_appSettings),
+        safeFile(podcast.title),
+      );
 
       final d = Directory.fromUri(Uri.file(filename));
 
@@ -426,7 +428,7 @@ class MobilePodcastService implements PodcastService {
     return _repository.saveTranscript(transcript);
   }
 
-  Future<PodcastSearchResultItem?> _lookupSummary({
+  Future<PodcastSearchResultItem?> _lookupPodcastMetadata({
     required int collectionId,
   }) async {
     final item = await _api.lookup(collectionId: collectionId);

@@ -60,7 +60,7 @@ class _SubscribedPodcasts extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(podcastSubscriptionsProvider);
     return state.valueOrNull?.isNotEmpty == true
-        ? PodcastListHorz(summaries: state.value!.map((e) => e.$1).toList())
+        ? PodcastListHorz(metadataList: state.value!.map((e) => e.$1).toList())
         : const SliverToBoxAdapter(child: SizedBox.shrink());
   }
 }

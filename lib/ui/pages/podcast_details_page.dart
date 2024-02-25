@@ -28,12 +28,12 @@ import 'package:seasoning/ui/widgets/podcast_html.dart';
 /// directly from a search result.
 class PodcastDetailsPage extends HookConsumerWidget {
   const PodcastDetailsPage({
-    required this.summary,
+    required this.metadata,
     required this.heroPrefix,
     super.key,
   });
 
-  final PodcastSummary summary;
+  final PodcastMetadata metadata;
   final String heroPrefix;
 
   // widget._podcastBloc.backgroundLoading
@@ -71,7 +71,7 @@ class PodcastDetailsPage extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final scaffoldMessengerKey =
         useState(GlobalKey<ScaffoldMessengerState>()).value;
-    final podcastDetailsState = ref.watch(podcastInfoProvider.call(summary));
+    final podcastDetailsState = ref.watch(podcastInfoProvider.call(metadata));
     final podcast = podcastDetailsState.value?.podcast;
     final viewMode = podcastDetailsState.value?.stats?.viewMode ??
         PodcastDetailViewMode.episodes;
@@ -92,7 +92,7 @@ class PodcastDetailsPage extends HookConsumerWidget {
             child: CustomScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: <Widget>[
-                PodcastDetailsAppBar(summary: summary, heroPrefix: heroPrefix),
+                PodcastDetailsAppBar(metadata: metadata, heroPrefix: heroPrefix),
                 if (podcastDetailsState.isLoading || seasonsState.isLoading)
                   const FillRemainingLoading()
                 else if (podcastDetailsState.hasError || podcast == null)
@@ -106,7 +106,7 @@ class PodcastDetailsPage extends HookConsumerWidget {
                   viewMode == PodcastDetailViewMode.seasons
                       ? SeasonList(podcast: podcast)
                       : EpisodeList(
-                          summary: podcast,
+                          metadata: podcast,
                           episodes: podcast.episodes,
                         ),
                 ],

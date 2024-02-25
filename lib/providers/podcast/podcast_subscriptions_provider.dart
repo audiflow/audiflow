@@ -9,14 +9,14 @@ part 'podcast_subscriptions_provider.g.dart';
 @Riverpod(keepAlive: true)
 class PodcastSubscriptions extends _$PodcastSubscriptions {
   @override
-  Future<List<(PodcastSummary, PodcastStats)>> build() async {
+  Future<List<(PodcastMetadata, PodcastStats)>> build() async {
     final subscriptions = await ref.read(repositoryProvider).subscriptions();
     _listen();
     return subscriptions;
   }
 
-  List<(PodcastSummary, PodcastStats)> _sorted(
-    List<(PodcastSummary, PodcastStats)> subscriptions,
+  List<(PodcastMetadata, PodcastStats)> _sorted(
+    List<(PodcastMetadata, PodcastStats)> subscriptions,
   ) {
     return subscriptions
         .sorted(

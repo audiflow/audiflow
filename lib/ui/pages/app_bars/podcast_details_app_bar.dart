@@ -15,17 +15,17 @@ import 'package:seasoning/ui/widgets/placeholder_builder.dart';
 class PodcastDetailsAppBar extends ConsumerWidget {
   const PodcastDetailsAppBar({
     super.key,
-    required this.summary,
+    required this.metadata,
     required this.heroPrefix,
   });
 
-  final PodcastSummary summary;
+  final PodcastMetadata metadata;
   final String heroPrefix;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final placeholderBuilder = PlaceholderBuilder.of(context);
-    final podcastState = ref.watch(podcastInfoProvider(summary));
+    final podcastState = ref.watch(podcastInfoProvider(metadata));
     final subscribed = podcastState.value?.stats?.subscribed;
 
     return SliverLayoutBuilder(
@@ -36,7 +36,7 @@ class PodcastDetailsAppBar extends ConsumerWidget {
           title: AnimatedOpacity(
             opacity: 300 < constraints.scrollOffset ? 1.0 : 0.0,
             duration: const Duration(milliseconds: 200),
-            child: Text(summary.title),
+            child: Text(metadata.title),
           ),
           actions: [
             Opacity(
@@ -72,12 +72,12 @@ class PodcastDetailsAppBar extends ConsumerWidget {
                 Expanded(
                   child: Hero(
                     key: Key(
-                      'detailHero:${summary.imageUrl}:${summary.guid}',
+                      'detailHero:${metadata.imageUrl}:${metadata.guid}',
                     ),
-                    tag: '$heroPrefix:${summary.guid}',
+                    tag: '$heroPrefix:${metadata.guid}',
                     child: ExcludeSemantics(
                       child: PodcastHeaderImage(
-                        imageUrl: summary.imageUrl,
+                        imageUrl: metadata.imageUrl,
                         placeholderBuilder: placeholderBuilder,
                       ),
                     ),

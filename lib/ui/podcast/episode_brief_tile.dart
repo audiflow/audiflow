@@ -19,16 +19,16 @@ import 'package:seasoning/ui/widgets/tile_image.dart';
 class EpisodeBriefTile extends HookConsumerWidget {
   const EpisodeBriefTile({
     super.key,
-    required this.summary,
+    required this.metadata,
     required this.episode,
   });
 
-  final PodcastSummary summary;
+  final PodcastMetadata metadata;
   final Episode episode;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final thumbImageUrl = summary.thumbImageUrl;
+    final thumbImageUrl = metadata.thumbImageUrl;
 
     return Material(
       child: InkWell(

@@ -65,14 +65,17 @@ class SembastRepository extends Repository {
   // --- Podcast feed url
 
   @override
-  Future<void> savePodcastFeedUrls(Iterable<PodcastSummary> summaries) async {
-    final targets =
-        summaries.where((summary) => summary.feedUrl?.isNotEmpty == true).map(
-              (summary) => (
-                summary.guid,
-                <String, dynamic>{'feedUrl': summary.feedUrl},
-              ),
-            );
+  Future<void> savePodcastFeedUrls(
+    Iterable<PodcastMetadata> metadataList,
+  ) async {
+    final targets = metadataList
+        .where((metadata) => metadata.feedUrl?.isNotEmpty == true)
+        .map(
+          (metadata) => (
+            metadata.guid,
+            <String, dynamic>{'feedUrl': metadata.feedUrl},
+          ),
+        );
     await _podcastFeedUrlStore
         .records(targets.map((target) => target.$1))
         .put(await _db, targets.map((target) => target.$2).toList());
@@ -80,11 +83,11 @@ class SembastRepository extends Repository {
 
   @override
   Future<List<PodcastSearchResultItem>> populatePodcastFeedUrls(
-      Iterable<PodcastSearchResultItem> items,
+    Iterable<PodcastSearchResultItem> items,
   ) async {
     final guids = items
-        .where((summary) => summary.feedUrl?.isNotEmpty == true)
-        .map((summary) => summary.guid);
+        .where((metadata) => metadata.feedUrl?.isNotEmpty == true)
+        .map((metadata) => metadata.guid);
     if (guids.isEmpty) {
       return items.toList();
     }
@@ -130,7 +133,7 @@ class SembastRepository extends Repository {
   }
 
   @override
-  Future<List<(PodcastSummary, PodcastStats)>> subscriptions() async {
+  Future<List<(PodcastMetadata, PodcastStats)>> subscriptions() async {
     final db = await _db;
     final statsFinder = Finder(filter: Filter.notNull('subscribedDate'));
     final snapshots = await _podcastStatsStore.find(db, finder: statsFinder);
@@ -152,8 +155,8 @@ class SembastRepository extends Repository {
               )
               .value,
         );
-        final summary = PodcastSearchResultItem.fromJson(snapshot.value);
-        return (summary, stats);
+        final metadata = PodcastSearchResultItem.fromJson(snapshot.value);
+        return (metadata, stats);
       },
     ).toList();
   }

@@ -36,7 +36,7 @@ abstract class PodcastService {
   List<String> genres();
 
   Future<Podcast?> loadPodcast(
-    PodcastSummary summary, {
+    PodcastMetadata metadata, {
     bool refresh = false,
   });
 
@@ -59,7 +59,7 @@ abstract class PodcastService {
 
   Future<void> toggleEpisodePlayed(Episode episode);
 
-  Future<List<(PodcastSummary, PodcastStats)>> subscriptions();
+  Future<List<(PodcastMetadata, PodcastStats)>> subscriptions();
 
   Future<void> subscribe(Podcast podcast);
 

@@ -12,12 +12,12 @@ import 'package:seasoning/ui/widgets/fill_remaining_error.dart';
 class EpisodeList extends StatelessWidget {
   const EpisodeList({
     super.key,
-    required this.summary,
+    required this.metadata,
     required this.episodes,
     this.thumbnailVisibility = ThumbnailVisibility.auto,
   });
 
-  final PodcastSummary summary;
+  final PodcastMetadata metadata;
   final List<Episode> episodes;
   final ThumbnailVisibility thumbnailVisibility;
 
@@ -36,7 +36,7 @@ class EpisodeList extends StatelessWidget {
             final bool showsThumbnail;
             switch (thumbnailVisibility) {
               case ThumbnailVisibility.auto:
-                showsThumbnail = episode.thumbImageUrl != summary.thumbImageUrl;
+                showsThumbnail = episode.thumbImageUrl != metadata.thumbImageUrl;
               case ThumbnailVisibility.visible:
                 showsThumbnail = true;
               case ThumbnailVisibility.hidden:

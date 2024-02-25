@@ -14,7 +14,7 @@ class PodcastInfo extends _$PodcastInfo {
   Repository get _repository => ref.read(repositoryProvider);
 
   @override
-  Future<PodcastDetailsState> build(PodcastSummary baseInfo) async {
+  Future<PodcastDetailsState> build(PodcastMetadata baseInfo) async {
     final podcastService = ref.read(podcastServiceProvider);
 
     final list = await Future.wait([
