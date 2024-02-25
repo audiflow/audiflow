@@ -60,6 +60,13 @@ class MobilePodcastApi extends PodcastApi {
   }
 
   @override
+  Future<podcast_search.Item?> lookup({required int collectionId}) async {
+    return podcast_search.Search(
+      userAgent: Environment.userAgent(),
+    ).lookup(collectionId: collectionId);
+  }
+
+  @override
   List<String> genres(String searchProvider) {
     final provider = searchProvider == 'itunes'
         ? const podcast_search.ITunesProvider()
@@ -141,11 +148,12 @@ class MobilePodcastApi extends PodcastApi {
           .first;
     }
 
+    final limit = int.tryParse(searchParams['size'] ?? '*') ?? 50;
     return podcast_search.Search(
       userAgent: Environment.userAgent(),
       searchProvider: provider,
     )
-        .charts(genre: searchParams['genre']!, country: country, limit: 50)
+        .charts(genre: searchParams['genre']!, country: country, limit: limit)
         .timeout(const Duration(seconds: 30));
   }
 

@@ -7,4 +7,4 @@ export 'package:seasoning/repository/repository.dart';
 part 'repository_provider.g.dart';
 
 @Riverpod(keepAlive: true)
-Repository repository(RepositoryRef ref) => SembastRepository();
+Repository repository(RepositoryRef ref) => SembastRepository(ref);

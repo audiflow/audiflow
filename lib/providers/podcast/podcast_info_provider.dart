@@ -4,7 +4,7 @@ import 'package:seasoning/entities/entities.dart';
 import 'package:seasoning/errors/errors.dart';
 import 'package:seasoning/repository/podcast_event.dart';
 import 'package:seasoning/repository/repository_provider.dart';
-import 'package:seasoning/services/podcast/mobile_podcast_service.dart';
+import 'package:seasoning/services/podcast/podcast_service_provider.dart';
 
 part 'podcast_info_provider.freezed.dart';
 part 'podcast_info_provider.g.dart';
@@ -35,7 +35,8 @@ class PodcastInfo extends _$PodcastInfo {
   }
 
   void _listen() {
-    final sub = _repository.podcastStream.listen((event) {
+    ref.listen(podcastEventStreamProvider, (_, next) {
+      final event = next.valueOrNull;
       switch (event) {
         case PodcastSubscribedEvent(
                 podcast: final podcast,
@@ -61,9 +62,9 @@ class PodcastInfo extends _$PodcastInfo {
           if (stats.guid == state.value?.podcast.guid) {
             state = AsyncData(state.requireValue.copyWith(stats: stats));
           }
+        case null:
       }
     });
-    ref.onDispose(sub.cancel);
   }
 
   void setViewMode(PodcastDetailViewMode viewMode) {

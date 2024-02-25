@@ -11,23 +11,13 @@ import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 import 'package:path/path.dart';
 import 'package:podcast_search/podcast_search.dart' as podcast_search;
-import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:rxdart/rxdart.dart';
 import 'package:seasoning/api/podcast/podcast_api_provider.dart';
 import 'package:seasoning/core/utils.dart';
 import 'package:seasoning/entities/entities.dart';
 import 'package:seasoning/l10n/messages_all.dart';
-import 'package:seasoning/repository/episode_event.dart';
-import 'package:seasoning/repository/podcast_event.dart';
 import 'package:seasoning/repository/repository_provider.dart';
 import 'package:seasoning/services/podcast/podcast_service.dart';
 import 'package:seasoning/services/settings/settings_service.dart';
-
-part 'mobile_podcast_service.g.dart';
-
-@Riverpod(keepAlive: true)
-PodcastService podcastService(PodcastServiceRef ref) =>
-    MobilePodcastService(ref);
 
 class MobilePodcastService implements PodcastService {
   MobilePodcastService(this._ref);
@@ -44,17 +34,6 @@ class MobilePodcastService implements PodcastService {
   late var _categories = <String>[];
   late var _intlCategories = <String>[];
   late var _intlCategoriesSorted = <String>[];
-
-  final _podcastSubject = BehaviorSubject<PodcastEvent>();
-  final _episodeSubject = BehaviorSubject<EpisodeEvent>();
-
-  @override
-  Stream<PodcastEvent> get podcastStream =>
-      Rx.merge([_repository.podcastStream, _podcastSubject.stream]);
-
-  @override
-  Stream<EpisodeEvent> get episodeStream =>
-      Rx.merge([_repository.episodeStream, _episodeSubject.stream]);
 
   var _initialized = false;
 
@@ -98,8 +77,6 @@ class MobilePodcastService implements PodcastService {
         (_, next) {
       _setupGenres(currentLocale);
     });
-
-    await _repository.podcastStream.pipe(_podcastSubject);
   }
 
   void _setupGenres(String locale) {
@@ -121,11 +98,6 @@ class MobilePodcastService implements PodcastService {
     _intlCategoriesSorted = categoryList.split(',');
     _intlCategoriesSorted
         .sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
-  }
-
-  void dispose() {
-    _podcastSubject.close();
-    _episodeSubject.close();
   }
 
   @override
@@ -201,8 +173,15 @@ class MobilePodcastService implements PodcastService {
     return _repository.findPodcastByGuid(guid);
   }
 
-  Future<Podcast> _reloadPodcast(PodcastSummary summary) async {
-    final feedPodcast = await _lookupPodcast(url: summary.feedUrl);
+  Future<Podcast?> _reloadPodcast(PodcastSummary summary) async {
+    _log.fine('Reloading podcast ${summary.title}');
+    final newSummary = summary.feedUrl?.isNotEmpty == true
+        ? summary
+        : await _lookupSummary(collectionId: summary.collectionId);
+    if (newSummary?.feedUrl == null) {
+      return null;
+    }
+    final feedPodcast = await _lookupPodcast(url: newSummary!.feedUrl!);
     final podcast = Podcast.fromSearch(feedPodcast, summary);
     final saved = await _repository.findPodcastByGuid(podcast.guid);
     if (saved != null) {
@@ -454,6 +433,15 @@ class MobilePodcastService implements PodcastService {
   @override
   Future<Transcript> saveTranscript(Transcript transcript) async {
     return _repository.saveTranscript(transcript);
+  }
+
+  Future<PodcastSearchResultItem?> _lookupSummary({
+    required int collectionId,
+  }) async {
+    final item = await _api.lookup(collectionId: collectionId);
+    return item == null
+        ? null
+        : PodcastSearchResultItem.fromSearchResultItem(item);
   }
 
   Future<podcast_search.Podcast> _lookupPodcast({

@@ -969,8 +969,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: HEAD
-      resolved-ref: ce3d6573421de9782a6eb2f6427ffa5c789aa00a
+      ref: "feature/lookup"
+      resolved-ref: dd0645a30f15b584b4848759da7df4908c7358b4
       url: "git@github.com:reedom/podcast_search.git"
     source: git
     version: "0.6.8"

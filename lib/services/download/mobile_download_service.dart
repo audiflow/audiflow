@@ -20,8 +20,7 @@ import 'package:seasoning/entities/transcript.dart';
 import 'package:seasoning/repository/repository_provider.dart';
 import 'package:seasoning/services/download/download_manager_provider.dart';
 import 'package:seasoning/services/download/download_service.dart';
-import 'package:seasoning/services/podcast/mobile_podcast_service.dart';
-import 'package:seasoning/services/podcast/podcast_service.dart';
+import 'package:seasoning/services/podcast/podcast_service_provider.dart';
 import 'package:seasoning/services/settings/settings_service.dart';
 
 /// An implementation of a [DownloadService] that handles downloading

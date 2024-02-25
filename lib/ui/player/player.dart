@@ -20,7 +20,14 @@ double valueFromPercentageInRange({
 final controller = MiniPlayerController();
 
 class DetailedPlayer extends HookConsumerWidget {
-  const DetailedPlayer({super.key});
+  const DetailedPlayer({
+    super.key,
+    required this.minHeight,
+    required this.maxHeight,
+  });
+
+  final double minHeight;
+  final double maxHeight;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -32,8 +39,8 @@ class DetailedPlayer extends HookConsumerWidget {
 
     return MiniPlayer(
       valueNotifier: playerExpandProgress,
-      minHeight: playerMinHeight,
-      maxHeight: playerMaxHeight,
+      minHeight: minHeight,
+      maxHeight: maxHeight,
       controller: controller,
       elevation: 4,
       onDismissed: () {
@@ -43,8 +50,18 @@ class DetailedPlayer extends HookConsumerWidget {
         final showsMiniPlayer = percentage < miniPlayerPercentageDeclaration;
         //Declare additional widgets (eg. SkipButton) and variables
         return showsMiniPlayer
-            ? _MiniPlayerContent(episode: episode, height: height)
-            : _DetailedPlayerContent(episode: episode, height: height);
+            ? _MiniPlayerContent(
+                episode: episode,
+                height: height,
+                minHeight: minHeight,
+                maxHeight: maxHeight,
+              )
+            : _DetailedPlayerContent(
+                episode: episode,
+                height: height,
+                minHeight: minHeight,
+                maxHeight: maxHeight,
+              );
       },
     );
   }
@@ -54,10 +71,14 @@ class _MiniPlayerContent extends StatelessWidget {
   const _MiniPlayerContent({
     required this.episode,
     required this.height,
+    required this.minHeight,
+    required this.maxHeight,
   });
 
   final Episode episode;
   final double height;
+  final double minHeight;
+  final double maxHeight;
 
   @override
   Widget build(BuildContext context) {
@@ -67,14 +88,12 @@ class _MiniPlayerContent extends StatelessWidget {
 
     //MiniPlayer
     final percentageMiniPlayer = percentageFromValueInRange(
-      min: playerMinHeight,
-      max: playerMaxHeight * miniPlayerPercentageDeclaration + playerMinHeight,
+      min: minHeight,
+      max: maxHeight * miniPlayerPercentageDeclaration + minHeight,
       value: height,
     );
 
     final elementOpacity = 1 - 1 * percentageMiniPlayer;
-    final progressIndicatorHeight = 4 - 4 * percentageMiniPlayer;
-
     return Column(
       children: [
         Expanded(
@@ -144,40 +163,19 @@ class _DetailedPlayerContent extends StatelessWidget {
   const _DetailedPlayerContent({
     required this.height,
     required this.episode,
+    required this.minHeight,
+    required this.maxHeight,
   });
 
   final Episode episode;
   final double height;
+  final double minHeight;
+  final double maxHeight;
 
   @override
   Widget build(BuildContext context) {
-    final width = MediaQuery.of(context).size.width;
-    final maxImgSize = width * 0.4;
-    final image = Image.network(episode.imageUrl!);
+    final image = Image.network(episode.thumbImageUrl!);
     final text = Text(episode.title);
-
-    var percentageExpandedPlayer = percentageFromValueInRange(
-      min: playerMaxHeight * miniPlayerPercentageDeclaration + playerMinHeight,
-      max: playerMaxHeight,
-      value: height,
-    );
-    if (percentageExpandedPlayer < 0) {
-      percentageExpandedPlayer = 0;
-    }
-    final paddingVertical = valueFromPercentageInRange(
-      min: 0,
-      max: 10,
-      percentage: percentageExpandedPlayer,
-    );
-    final heightWithoutPadding = height - paddingVertical * 2;
-    final imageSize =
-        maxImgSize < heightWithoutPadding ? maxImgSize : heightWithoutPadding;
-    final paddingLeft = valueFromPercentageInRange(
-          min: 0,
-          max: width - imageSize,
-          percentage: percentageExpandedPlayer,
-        ) /
-        2;
 
     return Column(
       children: [
@@ -345,8 +343,10 @@ class _SkipButton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final (position, episode) = ref.watch(audioPlayerServiceProvider
-        .select((state) => (state?.position, state?.episode)));
+    final (position, episode) = ref.watch(
+      audioPlayerServiceProvider
+          .select((state) => (state?.position, state?.episode)),
+    );
     if (position == null) {
       return const SizedBox.shrink();
     }

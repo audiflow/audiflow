@@ -50,7 +50,9 @@ dependencies:
   percent_indicator: 4.2.3
   permission_handler: ^11.3.0
   podcast_search:
-    git: git@github.com:reedom/podcast_search.git
+    git:
+      url: git@github.com:reedom/podcast_search.git
+      ref: feature/lookup
   provider: ^6.1.1
   riverpod: ^2.5.0
   riverpod_annotation: ^2.3.4

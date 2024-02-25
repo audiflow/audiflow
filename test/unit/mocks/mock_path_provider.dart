@@ -8,7 +8,7 @@ import 'dart:io';
 
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 
-class MockPathProvder extends PathProviderPlatform {
+class MockPathProvider extends PathProviderPlatform {
   Future<Directory> getApplicationDocumentsDirectory() {
     return Future.value(Directory.systemTemp);
   }

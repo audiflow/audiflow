@@ -1,7 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:seasoning/entities/entities.dart';
-import 'package:seasoning/services/download/download_event.dart';
-import 'package:seasoning/repository/repository_provider.dart';
+import 'package:seasoning/repository/download_event.dart';
 import 'package:seasoning/services/download/download_service_provider.dart';
 
 export 'package:seasoning/services/download/download_service.dart';
@@ -12,14 +11,14 @@ part 'download_progress_provider.g.dart';
 class DownloadProgress extends _$DownloadProgress {
   @override
   Future<Downloadable?> build(Episode episode) async {
-    final download =
-        ref.watch(downloadServiceProvider).findDownloadByGuid(episode.guid);
     _listen(episode);
-    return download;
+    // initial
+    return ref.watch(downloadServiceProvider).findDownloadByGuid(episode.guid);
   }
 
   void _listen(Episode episode) {
-    final sub = ref.read(repositoryProvider).downloadStream.listen((event) {
+    ref.listen(downloadEventStreamProvider, (_, next) {
+      final event = next.valueOrNull;
       switch (event) {
         case DownloadUpdatedEvent(download: final download):
           if (download.guid == episode.guid) {
@@ -29,9 +28,8 @@ class DownloadProgress extends _$DownloadProgress {
           if (download.guid == episode.guid) {
             state = const AsyncData(null);
           }
+        case null:
       }
     });
-
-    ref.onDispose(sub.cancel);
   }
 }

@@ -4,11 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:seasoning/services/audio/audio_player_service.dart';
-import 'package:seasoning/ui/app/player.dart';
+import 'package:seasoning/ui/player/player.dart';
 import 'package:seasoning/ui/mini_player/utils.dart';
 
 const double playerMinHeight = 94;
-const double playerMaxHeight = 600;
+
+double playerMaxHeight(BuildContext content) {
+  final mediaQuery = MediaQuery.of(content);
+  return mediaQuery.size.height - mediaQuery.padding.horizontal;
+}
+
 const miniPlayerPercentageDeclaration = 0.2;
 const kAppBottomNavigationBarHeight = 89.0;
 
@@ -40,9 +45,12 @@ class AppBottomNavigationBar extends ConsumerWidget {
               },
             ),
             if (playingEpisode != null)
-              const Align(
+              Align(
                 alignment: Alignment.bottomCenter,
-                child: DetailedPlayer(),
+                child: DetailedPlayer(
+                  minHeight: playerMinHeight,
+                  maxHeight: playerMaxHeight(context),
+                ),
               ),
           ],
         ),
@@ -52,7 +60,7 @@ class AppBottomNavigationBar extends ConsumerWidget {
         builder: (BuildContext context, double playerHeight, Widget? child) {
           final value = percentageFromValueInRange(
             min: playerMinHeight,
-            max: playerMaxHeight,
+            max: playerMaxHeight(context),
             value: playerHeight,
           );
 

@@ -8,7 +8,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:seasoning/entities/podcast.dart';
 import 'package:seasoning/providers/podcast/podcast_info_provider.dart';
-import 'package:seasoning/services/podcast/mobile_podcast_service.dart';
+import 'package:seasoning/services/podcast/podcast_service_provider.dart';
 import 'package:seasoning/ui/pages/app_bars/podcast_page_header_image.dart';
 import 'package:seasoning/ui/widgets/placeholder_builder.dart';
 

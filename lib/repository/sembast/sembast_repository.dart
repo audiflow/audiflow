@@ -4,25 +4,26 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
-import 'package:rxdart/rxdart.dart';
 import 'package:seasoning/core/extensions.dart';
 import 'package:seasoning/entities/downloadable.dart';
 import 'package:seasoning/entities/episode.dart';
 import 'package:seasoning/entities/podcast.dart';
 import 'package:seasoning/entities/queue.dart';
 import 'package:seasoning/entities/transcript.dart';
+import 'package:seasoning/repository/download_event.dart';
 import 'package:seasoning/repository/episode_event.dart';
 import 'package:seasoning/repository/podcast_event.dart';
 import 'package:seasoning/repository/repository.dart';
 import 'package:seasoning/repository/sembast/sembast_database_service.dart';
-import 'package:seasoning/services/download/download_event.dart';
 import 'package:sembast/sembast.dart';
 
 /// An implementation of [Repository] that is backed by
 /// [Sembast](https://github.com/tekartik/sembast.dart/tree/master/sembast)
 class SembastRepository extends Repository {
-  SembastRepository({
+  SembastRepository(
+    this._ref, {
     bool cleanup = true,
     String databaseName = 'seasoning.db',
   }) {
@@ -35,11 +36,8 @@ class SembastRepository extends Repository {
     }
   }
 
+  final Ref _ref;
   final log = Logger('SembastRepository');
-
-  final _podcastSubject = BehaviorSubject<PodcastEvent>();
-  final _episodeSubject = BehaviorSubject<EpisodeEvent>();
-  final _downloadSubject = BehaviorSubject<DownloadEvent>();
 
   final _podcastStore = intMapStoreFactory.store('podcast');
   final _podcastStatsStore = intMapStoreFactory.store('podcastStats');
@@ -54,20 +52,14 @@ class SembastRepository extends Repository {
 
   Future<Database> get _db async => _databaseService.database;
 
-  void dispose() {
-    _podcastSubject.close();
-    _episodeSubject.close();
-    _downloadSubject.close();
-  }
+  PodcastEventStream get _podcastEventStream =>
+      _ref.read(podcastEventStreamProvider.notifier);
 
-  @override
-  Stream<PodcastEvent> get podcastStream => _podcastSubject.stream;
+  EpisodeEventStream get _episodeEventStream =>
+      _ref.read(episodeEventStreamProvider.notifier);
 
-  @override
-  Stream<EpisodeEvent> get episodeStream => _episodeSubject.stream;
-
-  @override
-  Stream<DownloadEvent> get downloadStream => _downloadSubject.stream;
+  DownloadEventStream get _downloadEventStream =>
+      _ref.read(downloadEventStreamProvider.notifier);
 
   // --- Podcast
 
@@ -75,7 +67,7 @@ class SembastRepository extends Repository {
   Future<void> savePodcast(int id, Podcast podcast) async {
     log.fine('Update Podcast: ${podcast.feedUrl}');
     await _podcastStore.record(id).put(await _db, podcast.toJson());
-    _podcastSubject.add(PodcastUpdatedEvent(id, podcast));
+    _podcastEventStream.add(PodcastUpdatedEvent(id, podcast));
   }
 
   @override
@@ -173,7 +165,7 @@ class SembastRepository extends Repository {
       return stats;
     });
 
-    _podcastSubject
+    _podcastEventStream
       ..add(PodcastStatsUpdatedEvent(stats))
       ..add(PodcastSubscribedEvent(podcast, stats));
     return stats;
@@ -216,7 +208,7 @@ class SembastRepository extends Repository {
     }
 
     log.warning('unsubscribed: ${stats.guid}');
-    _podcastSubject.add(PodcastUnsubscribedEvent(podcast, newStats));
+    _podcastEventStream.add(PodcastUnsubscribedEvent(podcast, newStats));
   }
 
   @override
@@ -228,7 +220,7 @@ class SembastRepository extends Repository {
     }
 
     await _podcastStatsStore.record(stats.id).put(await _db, stats.toJson());
-    _podcastSubject.add(PodcastStatsUpdatedEvent(stats));
+    _podcastEventStream.add(PodcastStatsUpdatedEvent(stats));
   }
 
   @override
@@ -299,14 +291,14 @@ class SembastRepository extends Repository {
       final e = _loadEpisodeSnapshot(snapshot);
       if (episode != e) {
         await _episodeStore.update(client, episode.toJson(), finder: finder);
-        _episodeSubject.add(EpisodeUpdatedEvent(episode));
+        _episodeEventStream.add(EpisodeUpdatedEvent(episode));
       }
     } else if (statsSnapshot != null) {
       final id = statsSnapshot.key;
       await _episodeStore.record(id).put(client, episode.toJson());
     } else {
       await _episodeStore.add(client, episode.toJson());
-      _episodeSubject.add(EpisodeInsertedEvent(episode));
+      _episodeEventStream.add(EpisodeInsertedEvent(episode));
     }
   }
 
@@ -329,7 +321,7 @@ class SembastRepository extends Repository {
     await _episodeStore.delete(client, finder: guidFinder);
     await _downloadableStore.delete(client, finder: guidFinder);
     await _transcriptStore.delete(client, finder: guidFinder);
-    _episodeSubject.add(EpisodeDeletedEvent(episode));
+    _episodeEventStream.add(EpisodeDeletedEvent(episode));
   }
 
   @override
@@ -427,7 +419,7 @@ class SembastRepository extends Repository {
       }
     });
 
-    _episodeSubject.add(EpisodeStatsUpdatedEvent(stats));
+    _episodeEventStream.add(EpisodeStatsUpdatedEvent(stats));
     return stats;
   }
 
@@ -458,7 +450,7 @@ class SembastRepository extends Repository {
     if (snapshot == null) {
       final id = await _downloadableStore.add(client, download.toJson());
       final newDownload = download.copyWith(id: id);
-      _downloadSubject.add(DownloadUpdatedEvent(newDownload));
+      _downloadEventStream.add(DownloadUpdatedEvent(newDownload));
       return newDownload;
     } else {
       await _downloadableStore.update(
@@ -466,7 +458,7 @@ class SembastRepository extends Repository {
         download.toJson(),
         finder: finder,
       );
-      _downloadSubject.add(DownloadUpdatedEvent(download));
+      _downloadEventStream.add(DownloadUpdatedEvent(download));
       return download;
     }
   }
@@ -475,7 +467,7 @@ class SembastRepository extends Repository {
   Future<void> deleteDownload(Downloadable download) async {
     final finder = Finder(filter: Filter.byKey(download.id));
     await _downloadableStore.delete(await _db, finder: finder);
-    _downloadSubject.add(DownloadDeletedEvent(download));
+    _downloadEventStream.add(DownloadDeletedEvent(download));
   }
 
   @override

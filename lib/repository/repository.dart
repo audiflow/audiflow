@@ -5,20 +5,10 @@
 // found in the LICENSE file.
 
 import 'package:seasoning/entities/entities.dart';
-import 'package:seasoning/repository/episode_event.dart';
-import 'package:seasoning/repository/podcast_event.dart';
-import 'package:seasoning/services/download/download_event.dart';
 
 /// An abstract class that represent the actions supported by the chosen
 /// database or storage implementation.
 abstract class Repository {
-  // Event listeners
-  Stream<PodcastEvent> get podcastStream;
-
-  Stream<EpisodeEvent> get episodeStream;
-
-  Stream<DownloadEvent> get downloadStream;
-
   // --- General
   Future<void> close();
 

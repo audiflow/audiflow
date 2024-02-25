@@ -20,7 +20,7 @@ abstract class PodcastSummary {
   int get collectionId;
 
   /// The link to the podcast RSS feed.
-  String get feedUrl;
+  String? get feedUrl;
 
   /// Podcast title.
   String get title;
@@ -51,7 +51,7 @@ class Podcast with _$Podcast implements PodcastSummary {
     required int collectionId,
 
     /// The link to the podcast RSS feed.
-    required String feedUrl,
+    required String? feedUrl,
 
     /// RSS link URL.
     required String linkUrl,
@@ -111,7 +111,7 @@ class Podcast with _$Podcast implements PodcastSummary {
     return Podcast(
       guid: baseInfo.guid,
       collectionId: baseInfo.collectionId,
-      feedUrl: podcast.url!,
+      feedUrl: podcast.url,
       linkUrl: podcast.link ?? '',
       title: baseInfo.title,
       description: removeHtmlPadding(podcast.description),
@@ -155,7 +155,7 @@ class PodcastSearchResultItem
     required int collectionId,
 
     /// The link to the podcast RSS feed.
-    required String feedUrl,
+    required String? feedUrl,
 
     /// Podcast title.
     required String title,
@@ -183,9 +183,9 @@ class PodcastSearchResultItem
 
     return PodcastSearchResultItem(
       guid: guid,
-      feedUrl: item.feedUrl ?? '',
+      feedUrl: item.feedUrl,
       collectionId: item.collectionId ?? 0,
-      title: item.collectionName!,
+      title: item.collectionName ?? item.trackName ?? '',
       thumbImageUrl: thumbImageUrl,
       imageUrl: imageUrl,
       copyright: item.artistName ?? '',
