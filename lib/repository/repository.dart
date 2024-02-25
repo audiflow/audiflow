@@ -19,6 +19,8 @@ abstract class Repository {
     Iterable<PodcastSearchResultItem> items,
   );
 
+  Future<String?> findFeedUrl(String guid);
+
   Future<void> savePodcast(Podcast podcast);
 
   Future<Podcast?> findPodcast(String guid);

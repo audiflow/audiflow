@@ -102,6 +102,12 @@ class SembastRepository extends Repository {
     }).toList();
   }
 
+  @override
+  Future<String?> findFeedUrl(String guid) async {
+    final value = await _podcastFeedUrlStore.record(guid).get(await _db);
+    return value?['feedUrl'] as String?;
+  }
+
   // --- Podcast
 
   @override

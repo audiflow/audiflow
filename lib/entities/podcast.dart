@@ -98,7 +98,7 @@ class Podcast with _$Podcast implements PodcastSummary {
             e,
             pguid: baseInfo.guid,
             thumbImageUrl: baseInfo.thumbImageUrl,
-            imageUrl: baseInfo.imageUrl,
+            imageUrl: podcast.image ?? baseInfo.imageUrl,
           ),
         )
         .toList();
@@ -117,7 +117,7 @@ class Podcast with _$Podcast implements PodcastSummary {
       description: removeHtmlPadding(podcast.description),
       copyright: baseInfo.copyright,
       thumbImageUrl: baseInfo.thumbImageUrl,
-      imageUrl: baseInfo.imageUrl,
+      imageUrl: podcast.image ?? baseInfo.imageUrl,
       releaseDate: baseInfo.releaseDate,
       episodes: episodes,
       funding: funding,

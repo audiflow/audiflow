@@ -177,13 +177,22 @@ class MobilePodcastService implements PodcastService {
 
   Future<Podcast?> _reloadPodcast(PodcastSummary summary) async {
     _log.fine('Reloading podcast ${summary.title}');
-    final newSummary = summary.feedUrl?.isNotEmpty == true
-        ? summary
-        : await _lookupSummary(collectionId: summary.collectionId);
-    if (newSummary?.feedUrl == null) {
-      return null;
+
+    var feedUrl = summary.feedUrl ?? '';
+    if (feedUrl.isEmpty) {
+      feedUrl = (await _repository.findFeedUrl(summary.guid)) ?? '';
     }
-    final feedPodcast = await _lookupPodcast(url: newSummary!.feedUrl!);
+    if (feedUrl.isEmpty) {
+      final newSummary =
+          await _lookupSummary(collectionId: summary.collectionId);
+      if (newSummary?.feedUrl == null) {
+        return null;
+      }
+      feedUrl = newSummary!.feedUrl!;
+      await _repository.savePodcastFeedUrls([newSummary]);
+    }
+
+    final feedPodcast = await _lookupPodcast(url: feedUrl);
     final podcast = Podcast.fromSearch(feedPodcast, summary);
 
     final saved = await _repository.findPodcast(podcast.guid);
