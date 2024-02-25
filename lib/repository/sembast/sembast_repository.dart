@@ -71,7 +71,7 @@ class SembastRepository extends Repository {
     final targets = metadataList.map(
       (metadata) {
         final value = PodcastPreview.fromMetadata(metadata).toJson();
-        if (metadata.feedUrl?.isNotEmpty == true) {
+        if (metadata.feedUrl == null || metadata.feedUrl!.isEmpty) {
           value.remove('feedUrl');
         }
         return (metadata.guid, value);
@@ -94,18 +94,19 @@ class SembastRepository extends Repository {
     Iterable<PodcastSearchResultItem> items,
   ) async {
     final guids = items
-        .where((item) => item.feedUrl?.isNotEmpty == true)
+        .where((item) => item.feedUrl == null || item.feedUrl!.isEmpty)
         .map((item) => item.guid);
     if (guids.isEmpty) {
       return items.toList();
     }
 
     final values = await _podcastPreviewStore.records(guids).get(await _db);
+    var i = 0;
     return items.map((item) {
       if (item.feedUrl?.isNotEmpty == true) {
         return item;
       }
-      final value = values.removeAt(0);
+      final value = values[i++];
       if (value == null) {
         return item;
       }

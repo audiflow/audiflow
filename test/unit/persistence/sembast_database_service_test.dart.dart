@@ -80,9 +80,59 @@ void main() {
     }
   }
 
-  /// Test the creation and retrieval of podcasts both with and without
-  /// episodes. Ensure that data fetched is equal to the data originally
-  /// stored.
+  group('PodcastPreview', () {
+    setUpAll(createRepository);
+    tearDownAll(cleanUpRepository);
+
+    test('Fetch preview with non-existent GUID', () async {
+      final actual = await persistenceService.findPodcastPreview('abc');
+      expect(actual, null);
+    });
+
+    test('findPodcastPreview', () async {
+      final value = podcast1.toJson()..remove('feedUrl');
+      final podcast = Podcast.fromJson(value);
+
+      await persistenceService.savePodcastPreview([podcast]);
+    });
+
+    test('findPodcastPreview', () async {
+      final actual = await persistenceService.findPodcastPreview(podcast1.guid);
+      expect(actual, isNotNull);
+      expect(actual!.title, podcast1.title);
+      expect(actual.feedUrl, isNull);
+    });
+
+    test('findPodcastPreview is null', () async {
+      final actual = await persistenceService.findFeedUrl(podcast1.guid);
+      expect(actual, isNull);
+    });
+
+    test('populate feedUrl', () async {
+      await persistenceService.savePodcastPreview([podcast1]);
+      final feedUrl = await persistenceService.findFeedUrl(podcast1.guid);
+      expect(feedUrl, podcast1.feedUrl);
+
+      final itemFull = PodcastSearchResultItem.fromPodcast(podcast2);
+      expect(itemFull.feedUrl, isNotEmpty);
+
+      final value = podcast1.toJson()..remove('feedUrl');
+      final podcast = Podcast.fromJson(value);
+      final itemPartial = PodcastSearchResultItem.fromPodcast(podcast);
+      expect(itemPartial.feedUrl, isNull);
+
+      final actual = await persistenceService.populatePodcastFeedUrl([
+        itemPartial,
+        itemFull,
+        itemPartial,
+      ]);
+      expect(actual, hasLength(3));
+      expect(actual[0].feedUrl, podcast1.feedUrl);
+      expect(actual[1].feedUrl, podcast2.feedUrl);
+      expect(actual[2].feedUrl, podcast1.feedUrl);
+    });
+  });
+
   group('Podcast', () {
     setUpAll(createRepository);
     tearDownAll(cleanUpRepository);
