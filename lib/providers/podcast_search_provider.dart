@@ -16,8 +16,6 @@ class PodcastSearch extends _$PodcastSearch {
     _searchInput.listen(_search);
   }
 
-  pcast.SearchResult? _chartResult;
-
   final BehaviorSubject<SearchEvent> _searchInput =
       BehaviorSubject<SearchEvent>();
 
@@ -37,13 +35,6 @@ class PodcastSearch extends _$PodcastSearch {
         return;
 
       case SearchChartsEvent():
-        state = const AsyncLoading();
-
-        _chartResult ??=
-            await ref.read(podcastServiceProvider).charts(size: 10);
-        state = AsyncData(
-          PodcastSearchState(results: _toPodcasts(_chartResult!.items)),
-        );
         return;
 
       case SearchTermEvent(term: final term):
@@ -61,23 +52,16 @@ class PodcastSearch extends _$PodcastSearch {
         }
 
         state = const AsyncLoading();
-        final results =
+        final podcasts =
             await ref.read(podcastServiceProvider).search(term: term);
-        if (results.successful) {
-          state = AsyncData(
-            PodcastSearchState(
-              term: term,
-              results: _toPodcasts(results.items),
-            ),
-          );
-        } else {
-          state = AsyncError(Exception(results.lastError), StackTrace.current);
-        }
+        state = AsyncData(
+          PodcastSearchState(
+            term: term,
+            results: podcasts,
+          ),
+        );
     }
   }
-
-  List<PodcastSearchResultItem> _toPodcasts(List<pcast.Item> items) =>
-      items.map(PodcastSearchResultItem.fromSearchResultItem).toList();
 }
 
 @freezed
@@ -85,6 +69,5 @@ class PodcastSearchState with _$PodcastSearchState {
   const factory PodcastSearchState({
     @Default('') String term,
     @Default([]) List<PodcastSearchResultItem> results,
-    pcast.SearchResult? chartResults,
   }) = _PodcastSearchState;
 }

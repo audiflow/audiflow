@@ -17,7 +17,7 @@ abstract class PodcastService {
 
   Future<void> setup();
 
-  Future<pcast.SearchResult> search({
+  Future<List<PodcastSearchResultItem>> search({
     required String term,
     String? country,
     String? attribute,
@@ -27,7 +27,7 @@ abstract class PodcastService {
     bool explicit = false,
   });
 
-  Future<pcast.SearchResult> charts({
+  Future<List<PodcastSearchResultItem>> charts({
     required int size,
     String? genre,
     String? countryCode,

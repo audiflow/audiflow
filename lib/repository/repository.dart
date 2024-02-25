@@ -13,6 +13,12 @@ abstract class Repository {
   Future<void> close();
 
   // --- Podcast
+  Future<void> savePodcastFeedUrls(Iterable<PodcastSummary> summaries);
+
+  Future<List<PodcastSearchResultItem>> populatePodcastFeedUrls(
+    Iterable<PodcastSearchResultItem> items,
+  );
+
   Future<void> savePodcast(Podcast podcast);
 
   Future<Podcast?> findPodcast(String guid);

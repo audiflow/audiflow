@@ -19,7 +19,6 @@ mixin _$PodcastSearchState {
   String get term => throw _privateConstructorUsedError;
   List<PodcastSearchResultItem> get results =>
       throw _privateConstructorUsedError;
-  pcast.SearchResult? get chartResults => throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
   $PodcastSearchStateCopyWith<PodcastSearchState> get copyWith =>
@@ -32,10 +31,7 @@ abstract class $PodcastSearchStateCopyWith<$Res> {
           PodcastSearchState value, $Res Function(PodcastSearchState) then) =
       _$PodcastSearchStateCopyWithImpl<$Res, PodcastSearchState>;
   @useResult
-  $Res call(
-      {String term,
-      List<PodcastSearchResultItem> results,
-      pcast.SearchResult? chartResults});
+  $Res call({String term, List<PodcastSearchResultItem> results});
 }
 
 /// @nodoc
@@ -53,7 +49,6 @@ class _$PodcastSearchStateCopyWithImpl<$Res, $Val extends PodcastSearchState>
   $Res call({
     Object? term = null,
     Object? results = null,
-    Object? chartResults = freezed,
   }) {
     return _then(_value.copyWith(
       term: null == term
@@ -64,10 +59,6 @@ class _$PodcastSearchStateCopyWithImpl<$Res, $Val extends PodcastSearchState>
           ? _value.results
           : results // ignore: cast_nullable_to_non_nullable
               as List<PodcastSearchResultItem>,
-      chartResults: freezed == chartResults
-          ? _value.chartResults
-          : chartResults // ignore: cast_nullable_to_non_nullable
-              as pcast.SearchResult?,
     ) as $Val);
   }
 }
@@ -80,10 +71,7 @@ abstract class _$$PodcastSearchStateImplCopyWith<$Res>
       __$$PodcastSearchStateImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call(
-      {String term,
-      List<PodcastSearchResultItem> results,
-      pcast.SearchResult? chartResults});
+  $Res call({String term, List<PodcastSearchResultItem> results});
 }
 
 /// @nodoc
@@ -99,7 +87,6 @@ class __$$PodcastSearchStateImplCopyWithImpl<$Res>
   $Res call({
     Object? term = null,
     Object? results = null,
-    Object? chartResults = freezed,
   }) {
     return _then(_$PodcastSearchStateImpl(
       term: null == term
@@ -110,10 +97,6 @@ class __$$PodcastSearchStateImplCopyWithImpl<$Res>
           ? _value._results
           : results // ignore: cast_nullable_to_non_nullable
               as List<PodcastSearchResultItem>,
-      chartResults: freezed == chartResults
-          ? _value.chartResults
-          : chartResults // ignore: cast_nullable_to_non_nullable
-              as pcast.SearchResult?,
     ));
   }
 }
@@ -122,9 +105,7 @@ class __$$PodcastSearchStateImplCopyWithImpl<$Res>
 
 class _$PodcastSearchStateImpl implements _PodcastSearchState {
   const _$PodcastSearchStateImpl(
-      {this.term = '',
-      final List<PodcastSearchResultItem> results = const [],
-      this.chartResults})
+      {this.term = '', final List<PodcastSearchResultItem> results = const []})
       : _results = results;
 
   @override
@@ -140,11 +121,8 @@ class _$PodcastSearchStateImpl implements _PodcastSearchState {
   }
 
   @override
-  final pcast.SearchResult? chartResults;
-
-  @override
   String toString() {
-    return 'PodcastSearchState(term: $term, results: $results, chartResults: $chartResults)';
+    return 'PodcastSearchState(term: $term, results: $results)';
   }
 
   @override
@@ -153,14 +131,12 @@ class _$PodcastSearchStateImpl implements _PodcastSearchState {
         (other.runtimeType == runtimeType &&
             other is _$PodcastSearchStateImpl &&
             (identical(other.term, term) || other.term == term) &&
-            const DeepCollectionEquality().equals(other._results, _results) &&
-            (identical(other.chartResults, chartResults) ||
-                other.chartResults == chartResults));
+            const DeepCollectionEquality().equals(other._results, _results));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, term,
-      const DeepCollectionEquality().hash(_results), chartResults);
+  int get hashCode => Object.hash(
+      runtimeType, term, const DeepCollectionEquality().hash(_results));
 
   @JsonKey(ignore: true)
   @override
@@ -173,15 +149,12 @@ class _$PodcastSearchStateImpl implements _PodcastSearchState {
 abstract class _PodcastSearchState implements PodcastSearchState {
   const factory _PodcastSearchState(
       {final String term,
-      final List<PodcastSearchResultItem> results,
-      final pcast.SearchResult? chartResults}) = _$PodcastSearchStateImpl;
+      final List<PodcastSearchResultItem> results}) = _$PodcastSearchStateImpl;
 
   @override
   String get term;
   @override
   List<PodcastSearchResultItem> get results;
-  @override
-  pcast.SearchResult? get chartResults;
   @override
   @JsonKey(ignore: true)
   _$$PodcastSearchStateImplCopyWith<_$PodcastSearchStateImpl> get copyWith =>

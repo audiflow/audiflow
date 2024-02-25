@@ -101,7 +101,7 @@ class MobilePodcastService implements PodcastService {
   }
 
   @override
-  Future<podcast_search.SearchResult> search({
+  Future<List<PodcastSearchResultItem>> search({
     required String term,
     String? country,
     String? attribute,
@@ -109,8 +109,8 @@ class MobilePodcastService implements PodcastService {
     String? language,
     int version = 0,
     bool explicit = false,
-  }) {
-    return _api.search(
+  }) async {
+    final result = await _api.search(
       term,
       country: country,
       attribute: attribute,
@@ -119,20 +119,34 @@ class MobilePodcastService implements PodcastService {
       explicit: explicit,
       searchProvider: _appSettings.searchProvider,
     );
+    if (!result.successful) {
+      throw Exception(result.lastError);
+    }
+
+    final items =
+        result.items.map(PodcastSearchResultItem.fromSearchResultItem);
+    await _repository.savePodcastFeedUrls(items);
+    return items.toList();
   }
 
   @override
-  Future<podcast_search.SearchResult> charts({
+  Future<List<PodcastSearchResultItem>> charts({
     int size = 20,
     String? genre,
     String? countryCode = '',
-  }) {
-    return _api.charts(
+  }) async {
+    final result = await _api.charts(
       size: size,
       searchProvider: _appSettings.searchProvider,
       genre: _decodeGenre(genre),
       countryCode: countryCode,
     );
+    if (!result.successful) {
+      throw Exception(result.lastError);
+    }
+    final items =
+        result.items.map(PodcastSearchResultItem.fromSearchResultItem);
+    return _repository.populatePodcastFeedUrls(items);
   }
 
   @override

@@ -40,27 +40,20 @@ class PodcastChart extends _$PodcastChart {
   Future<void> _searchNewChart(NewPodcastChartEvent event) async {
     state = const AsyncLoading();
 
-    final result = await ref.read(podcastServiceProvider).charts(
+    final podcasts = await ref.read(podcastServiceProvider).charts(
           size: event.size,
           genre: event.genre,
           countryCode: event.countryCode,
         );
 
-    if (result.successful) {
-      final podcasts =
-          result.items.map(PodcastSearchResultItem.fromSearchResultItem);
-      state = AsyncData(
-        PodcastChartState(
-          size: event.size,
-          genre: event.genre,
-          countryCode: event.countryCode,
-          podcasts: podcasts.toList(),
-        ),
-      );
-    } else {
-      state = AsyncError(Exception(result.lastError), StackTrace.current);
-    }
-    return;
+    state = AsyncData(
+      PodcastChartState(
+        size: event.size,
+        genre: event.genre,
+        countryCode: event.countryCode,
+        podcasts: podcasts.toList(),
+      ),
+    );
   }
 }
 

@@ -40,6 +40,7 @@ class SembastRepository extends Repository {
   final log = Logger('SembastRepository');
 
   final _podcastStore = stringMapStoreFactory.store('podcast');
+  final _podcastFeedUrlStore = stringMapStoreFactory.store('podcastFeedUrl');
   final _podcastStatsStore = stringMapStoreFactory.store('podcastStats');
   final _episodeStore = stringMapStoreFactory.store('episode');
   final _episodeStatsStore = stringMapStoreFactory.store('episodeStats');
@@ -60,6 +61,46 @@ class SembastRepository extends Repository {
 
   DownloadEventStream get _downloadEventStream =>
       _ref.read(downloadEventStreamProvider.notifier);
+
+  // --- Podcast feed url
+
+  @override
+  Future<void> savePodcastFeedUrls(Iterable<PodcastSummary> summaries) async {
+    final targets =
+        summaries.where((summary) => summary.feedUrl?.isNotEmpty == true).map(
+              (summary) => (
+                summary.guid,
+                <String, dynamic>{'feedUrl': summary.feedUrl},
+              ),
+            );
+    await _podcastFeedUrlStore
+        .records(targets.map((target) => target.$1))
+        .put(await _db, targets.map((target) => target.$2).toList());
+  }
+
+  @override
+  Future<List<PodcastSearchResultItem>> populatePodcastFeedUrls(
+      Iterable<PodcastSearchResultItem> items,
+  ) async {
+    final guids = items
+        .where((summary) => summary.feedUrl?.isNotEmpty == true)
+        .map((summary) => summary.guid);
+    if (guids.isEmpty) {
+      return items.toList();
+    }
+
+    final values = await _podcastFeedUrlStore.records(guids).get(await _db);
+    return items.map((item) {
+      if (item.feedUrl?.isNotEmpty == true) {
+        return item;
+      }
+      final value = values.removeAt(0);
+      if (value == null) {
+        return item;
+      }
+      return item.copyWith(feedUrl: value['feedUrl'] as String?);
+    }).toList();
+  }
 
   // --- Podcast
 

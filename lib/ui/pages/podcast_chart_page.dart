@@ -59,7 +59,7 @@ class _SubscribedPodcasts extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(podcastSubscriptionsProvider);
-    return state.hasValue
+    return state.valueOrNull?.isNotEmpty == true
         ? PodcastListHorz(summaries: state.value!.map((e) => e.$1).toList())
         : const SliverToBoxAdapter(child: SizedBox.shrink());
   }
