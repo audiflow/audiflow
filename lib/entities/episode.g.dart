@@ -65,7 +65,6 @@ Map<String, dynamic> _$$EpisodeImplToJson(_$EpisodeImpl instance) =>
 
 _$EpisodeStatsImpl _$$EpisodeStatsImplFromJson(Map<String, dynamic> json) =>
     _$EpisodeStatsImpl(
-      id: json['id'] as int? ?? 0,
       guid: json['guid'] as String,
       position: json['position'] == null
           ? Duration.zero
@@ -73,24 +72,23 @@ _$EpisodeStatsImpl _$$EpisodeStatsImplFromJson(Map<String, dynamic> json) =>
       duration: json['duration'] == null
           ? null
           : Duration(microseconds: json['duration'] as int),
-      played: json['played'] as bool? ?? false,
       playCount: json['playCount'] as int? ?? 0,
       playTotal: json['playTotal'] == null
           ? Duration.zero
           : Duration(microseconds: json['playTotal'] as int),
+      completeCount: json['completeCount'] as int? ?? 0,
       inQueue: json['inQueue'] as bool? ?? false,
       downloaded: json['downloaded'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$$EpisodeStatsImplToJson(_$EpisodeStatsImpl instance) =>
     <String, dynamic>{
-      'id': instance.id,
       'guid': instance.guid,
       'position': instance.position.inMicroseconds,
       'duration': instance.duration?.inMicroseconds,
-      'played': instance.played,
       'playCount': instance.playCount,
       'playTotal': instance.playTotal.inMicroseconds,
+      'completeCount': instance.completeCount,
       'inQueue': instance.inQueue,
       'downloaded': instance.downloaded,
     };

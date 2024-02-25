@@ -45,8 +45,8 @@ class AudioQueueManager extends _$AudioQueueManager {
     while (_queue.isNotEmpty) {
       final queueItem = _queue.first;
       final ret = await Future.wait([
-        _repository.findEpisodeByGuid(queueItem.guid),
-        _repository.findEpisodeStatsByGuid(queueItem.guid),
+        _repository.findEpisode(queueItem.guid),
+        _repository.findEpisodeStats(queueItem.guid),
       ]);
       final episode = ret[0] as Episode?;
       final stats = ret[1] as EpisodeStats?;

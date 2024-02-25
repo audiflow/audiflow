@@ -37,11 +37,8 @@ abstract class PodcastService {
 
   Future<Podcast?> loadPodcast(
     PodcastSummary summary, {
-    int? id,
     bool refresh = false,
   });
-
-  Future<Podcast?> loadPodcastById(int id);
 
   Future<Podcast?> loadPodcastByGuid(String guid);
 
@@ -62,9 +59,9 @@ abstract class PodcastService {
 
   Future<void> toggleEpisodePlayed(Episode episode);
 
-  Future<List<(PodcastStats, PodcastSummary)>> subscriptions();
+  Future<List<(PodcastSummary, PodcastStats)>> subscriptions();
 
-  Future<PodcastStats> subscribe(Podcast podcast);
+  Future<void> subscribe(Podcast podcast);
 
   Future<void> unsubscribe(Podcast podcast);
 

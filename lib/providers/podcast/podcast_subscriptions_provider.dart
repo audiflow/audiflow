@@ -9,20 +9,20 @@ part 'podcast_subscriptions_provider.g.dart';
 @Riverpod(keepAlive: true)
 class PodcastSubscriptions extends _$PodcastSubscriptions {
   @override
-  Future<List<(PodcastStats, PodcastSummary)>> build() async {
+  Future<List<(PodcastSummary, PodcastStats)>> build() async {
     final subscriptions = await ref.read(repositoryProvider).subscriptions();
     _listen();
     return subscriptions;
   }
 
-  List<(PodcastStats, PodcastSummary)> _sorted(
-    List<(PodcastStats, PodcastSummary)> subscriptions,
+  List<(PodcastSummary, PodcastStats)> _sorted(
+    List<(PodcastSummary, PodcastStats)> subscriptions,
   ) {
     return subscriptions
         .sorted(
           (a, b) =>
-              b.$2.releaseDate.millisecondsSinceEpoch -
-              a.$2.releaseDate.millisecondsSinceEpoch,
+              b.$1.releaseDate.millisecondsSinceEpoch -
+              a.$1.releaseDate.millisecondsSinceEpoch,
         )
         .toList();
   }
@@ -32,10 +32,11 @@ class PodcastSubscriptions extends _$PodcastSubscriptions {
       final event = next.valueOrNull;
       switch (event) {
         case PodcastSubscribedEvent(podcast: final podcast, stats: final stats):
-          final list = [...state.value!, (stats, podcast)];
+          final list = [...state.value!, (podcast, stats)];
           state = AsyncData(_sorted(list));
         case PodcastUnsubscribedEvent(stats: final stats):
-          final list = state.value!.where((e) => e.$1.id != stats.id).toList();
+          final list =
+              state.value!.where((e) => e.$2.guid != stats.guid).toList();
           state = AsyncData(list);
         case PodcastUpdatedEvent():
         // final list = state.value!

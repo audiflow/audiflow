@@ -233,20 +233,14 @@ enum PodcastDetailViewMode {
 @freezed
 class PodcastStats with _$PodcastStats {
   const factory PodcastStats({
-    @Default(0) int id,
     required String guid,
     DateTime? subscribedDate,
-    @Default(Duration.zero) Duration playTotal,
     @Default(PodcastDetailViewMode.episodes) PodcastDetailViewMode viewMode,
     @Default(false) bool ascend,
   }) = _PodcastStats;
 
   factory PodcastStats.fromJson(Map<String, dynamic> json) =>
       _$PodcastStatsFromJson(json);
-
-  factory PodcastStats.fromPodcast(Podcast podcast) => PodcastStats(
-        guid: podcast.guid,
-      );
 }
 
 extension PodcastStatsExt on PodcastStats {

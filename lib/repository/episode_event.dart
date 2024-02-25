@@ -11,12 +11,6 @@ part 'episode_event.g.dart';
 
 sealed class EpisodeEvent {}
 
-class EpisodeInsertedEvent implements EpisodeEvent {
-  const EpisodeInsertedEvent(this.episode);
-
-  final Episode episode;
-}
-
 class EpisodeUpdatedEvent implements EpisodeEvent {
   const EpisodeUpdatedEvent(this.episode);
 

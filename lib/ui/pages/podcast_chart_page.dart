@@ -8,8 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:seasoning/events/podcast_chart_event.dart';
-import 'package:seasoning/providers/podcast/podcast_subscriptions_provider.dart';
 import 'package:seasoning/providers/podcast/podcast_chart_provider.dart';
+import 'package:seasoning/providers/podcast/podcast_subscriptions_provider.dart';
 import 'package:seasoning/ui/podcast/podcast_list.dart';
 import 'package:seasoning/ui/podcast/podcast_list_horz.dart';
 import 'package:seasoning/ui/widgets/basic_app_bar.dart';
@@ -29,7 +29,7 @@ class PodcastChartPage extends HookConsumerWidget {
       () {
         ref
             .read(podcastChartProvider.notifier)
-            .input(const NewPodcastChartEvent(countryCode: 'jp'));
+            .input(const NewPodcastChartEvent(size: 10, countryCode: 'jp'));
         return null;
       },
       [],
@@ -60,7 +60,7 @@ class _SubscribedPodcasts extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(podcastSubscriptionsProvider);
     return state.hasValue
-        ? PodcastListHorz(summaries: state.value!.map((e) => e.$2).toList())
+        ? PodcastListHorz(summaries: state.value!.map((e) => e.$1).toList())
         : const SliverToBoxAdapter(child: SizedBox.shrink());
   }
 }

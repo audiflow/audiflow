@@ -315,8 +315,8 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
       return;
     }
     final ret = await Future.wait([
-      _repository.findEpisodeByGuid(guid),
-      _repository.findEpisodeStatsByGuid(guid),
+      _repository.findEpisode(guid),
+      _repository.findEpisodeStats(guid),
     ]);
     final episode = ret[0] as Episode?;
     final stats = ret[1] as EpisodeStats?;
@@ -347,7 +347,7 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
   }
 
   Future<(String, bool)> _generateEpisodeUri(Episode episode) async {
-    final download = await _repository.findDownloadByGuid(episode.guid);
+    final download = await _repository.findDownload(episode.guid);
     if (download?.state != DownloadState.downloaded) {
       return (episode.contentUrl!, false);
     }

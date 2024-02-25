@@ -46,8 +46,7 @@ class EpisodeInfo extends _$EpisodeInfo {
       ..listen(episodeEventStreamProvider, (_, next) {
         final event = next.valueOrNull;
         switch (event) {
-          case EpisodeInsertedEvent(episode: final episode) ||
-                EpisodeUpdatedEvent(episode: final episode) ||
+          case EpisodeUpdatedEvent(episode: final episode) ||
                 EpisodeDeletedEvent(episode: final episode):
             state = AsyncData(state.requireValue.copyWith(episode: episode));
           case EpisodeStatsUpdatedEvent(stats: final stats):

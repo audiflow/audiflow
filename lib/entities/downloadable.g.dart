@@ -8,7 +8,6 @@ part of 'downloadable.dart';
 
 _$DownloadableImpl _$$DownloadableImplFromJson(Map<String, dynamic> json) =>
     _$DownloadableImpl(
-      id: json['id'] as int?,
       pguid: json['pguid'] as String,
       guid: json['guid'] as String,
       url: json['url'] as String,
@@ -21,7 +20,6 @@ _$DownloadableImpl _$$DownloadableImplFromJson(Map<String, dynamic> json) =>
 
 Map<String, dynamic> _$$DownloadableImplToJson(_$DownloadableImpl instance) =>
     <String, dynamic>{
-      'id': instance.id,
       'pguid': instance.pguid,
       'guid': instance.guid,
       'url': instance.url,

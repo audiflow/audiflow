@@ -147,30 +147,18 @@ class MobilePodcastService implements PodcastService {
   @override
   Future<Podcast?> loadPodcast(
     PodcastSummary summary, {
-    int? id,
     bool refresh = false,
   }) async {
     if (refresh) {
       return _reloadPodcast(summary);
     }
-    final podcast = id != null
-        ? await loadPodcastById(id)
-        : await loadPodcastByGuid(summary.guid);
-    if (podcast == null) {
-      return _reloadPodcast(summary);
-    } else {
-      return podcast;
-    }
-  }
-
-  @override
-  Future<Podcast?> loadPodcastById(int id) async {
-    return _repository.findPodcastById(id);
+    return await loadPodcastByGuid(summary.guid) ??
+        await _reloadPodcast(summary);
   }
 
   @override
   Future<Podcast?> loadPodcastByGuid(String guid) async {
-    return _repository.findPodcastByGuid(guid);
+    return _repository.findPodcast(guid);
   }
 
   Future<Podcast?> _reloadPodcast(PodcastSummary summary) async {
@@ -183,30 +171,10 @@ class MobilePodcastService implements PodcastService {
     }
     final feedPodcast = await _lookupPodcast(url: newSummary!.feedUrl!);
     final podcast = Podcast.fromSearch(feedPodcast, summary);
-    final saved = await _repository.findPodcastByGuid(podcast.guid);
-    if (saved != null) {
-      final stats = await _repository.findPodcastStatsByGuid(podcast.guid);
-      await _repository.savePodcast(stats!.id, podcast);
-    }
 
-    final savedEpisodes =
-        await _repository.findEpisodesByPodcastGuid(podcast.guid);
-    if (savedEpisodes.isEmpty) {
-      return podcast;
-    }
-
-    final downloads =
-        await _repository.findDownloadsByPodcastGuid(podcast.guid);
-    final guids = <String>{
-      ...[
-        ...savedEpisodes.map((e) => e.guid),
-        ...downloads.map((d) => d.guid),
-      ],
-    };
-    final deletedEpisodes =
-        podcast.episodes.where((e) => !guids.contains(e.guid)).toList();
-    if (deletedEpisodes.isNotEmpty) {
-      await _repository.deleteEpisodes(deletedEpisodes);
+    final saved = await _repository.findPodcast(podcast.guid);
+    if (saved != null && saved != podcast) {
+      await _repository.savePodcast(podcast);
     }
 
     return podcast;
@@ -348,12 +316,12 @@ class MobilePodcastService implements PodcastService {
 
   @override
   Future<EpisodeStats?> loadEpisodeStats(Episode episode) async {
-    return _repository.findEpisodeStatsByGuid(episode.guid);
+    return _repository.findEpisodeStats(episode.guid);
   }
 
   @override
   Future<void> deleteDownload(Episode episode) async {
-    final download = await _repository.findDownloadByGuid(episode.guid);
+    final download = await _repository.findDownload(episode.guid);
     if (download == null) {
       return;
     }
@@ -391,13 +359,13 @@ class MobilePodcastService implements PodcastService {
   }
 
   @override
-  Future<List<(PodcastStats, PodcastSummary)>> subscriptions() async {
+  Future<List<(PodcastSummary, PodcastStats)>> subscriptions() async {
     return _repository.subscriptions();
   }
 
   @override
-  Future<PodcastStats> subscribe(Podcast podcast) async {
-    return _repository.subscribePodcast(podcast);
+  Future<void> subscribe(Podcast podcast) async {
+    await _repository.subscribePodcast(podcast);
   }
 
   @override
@@ -413,7 +381,7 @@ class MobilePodcastService implements PodcastService {
       }
     }
 
-    final stats = await _repository.findPodcastStatsByGuid(podcast.guid);
+    final stats = await _repository.findPodcastStats(podcast.guid);
     if (stats != null) {
       return _repository.unsubscribePodcast(podcast);
     }

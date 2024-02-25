@@ -67,7 +67,7 @@ Future<void> _savePosition(
         EpisodeStatsUpdateParam(
           guid: episode.guid,
           position: position,
-          completed: completed ? completed : null,
+          // completed: completed ? completed : null,
         ),
       );
 }

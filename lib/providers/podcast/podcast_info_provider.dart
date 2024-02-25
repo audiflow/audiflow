@@ -19,7 +19,7 @@ class PodcastInfo extends _$PodcastInfo {
 
     final list = await Future.wait([
       podcastService.loadPodcast(baseInfo),
-      _repository.findPodcastStatsByGuid(baseInfo.guid),
+      _repository.findPodcastStats(baseInfo.guid),
     ]);
     final podcast = list[0] as Podcast?;
     final podcastStats = list[1] as PodcastStats?;
@@ -73,7 +73,7 @@ class PodcastInfo extends _$PodcastInfo {
     }
 
     final newStats =
-        (state.value!.stats ?? PodcastStats.fromPodcast(state.value!.podcast))
+        (state.value!.stats ?? PodcastStats(guid: state.value!.podcast.guid))
             .copyWith(viewMode: viewMode);
     _repository.savePodcastStats(newStats);
   }

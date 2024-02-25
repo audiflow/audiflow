@@ -870,10 +870,8 @@ PodcastStats _$PodcastStatsFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$PodcastStats {
-  int get id => throw _privateConstructorUsedError;
   String get guid => throw _privateConstructorUsedError;
   DateTime? get subscribedDate => throw _privateConstructorUsedError;
-  Duration get playTotal => throw _privateConstructorUsedError;
   PodcastDetailViewMode get viewMode => throw _privateConstructorUsedError;
   bool get ascend => throw _privateConstructorUsedError;
 
@@ -890,10 +888,8 @@ abstract class $PodcastStatsCopyWith<$Res> {
       _$PodcastStatsCopyWithImpl<$Res, PodcastStats>;
   @useResult
   $Res call(
-      {int id,
-      String guid,
+      {String guid,
       DateTime? subscribedDate,
-      Duration playTotal,
       PodcastDetailViewMode viewMode,
       bool ascend});
 }
@@ -911,18 +907,12 @@ class _$PodcastStatsCopyWithImpl<$Res, $Val extends PodcastStats>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? id = null,
     Object? guid = null,
     Object? subscribedDate = freezed,
-    Object? playTotal = null,
     Object? viewMode = null,
     Object? ascend = null,
   }) {
     return _then(_value.copyWith(
-      id: null == id
-          ? _value.id
-          : id // ignore: cast_nullable_to_non_nullable
-              as int,
       guid: null == guid
           ? _value.guid
           : guid // ignore: cast_nullable_to_non_nullable
@@ -931,10 +921,6 @@ class _$PodcastStatsCopyWithImpl<$Res, $Val extends PodcastStats>
           ? _value.subscribedDate
           : subscribedDate // ignore: cast_nullable_to_non_nullable
               as DateTime?,
-      playTotal: null == playTotal
-          ? _value.playTotal
-          : playTotal // ignore: cast_nullable_to_non_nullable
-              as Duration,
       viewMode: null == viewMode
           ? _value.viewMode
           : viewMode // ignore: cast_nullable_to_non_nullable
@@ -956,10 +942,8 @@ abstract class _$$PodcastStatsImplCopyWith<$Res>
   @override
   @useResult
   $Res call(
-      {int id,
-      String guid,
+      {String guid,
       DateTime? subscribedDate,
-      Duration playTotal,
       PodcastDetailViewMode viewMode,
       bool ascend});
 }
@@ -975,18 +959,12 @@ class __$$PodcastStatsImplCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? id = null,
     Object? guid = null,
     Object? subscribedDate = freezed,
-    Object? playTotal = null,
     Object? viewMode = null,
     Object? ascend = null,
   }) {
     return _then(_$PodcastStatsImpl(
-      id: null == id
-          ? _value.id
-          : id // ignore: cast_nullable_to_non_nullable
-              as int,
       guid: null == guid
           ? _value.guid
           : guid // ignore: cast_nullable_to_non_nullable
@@ -995,10 +973,6 @@ class __$$PodcastStatsImplCopyWithImpl<$Res>
           ? _value.subscribedDate
           : subscribedDate // ignore: cast_nullable_to_non_nullable
               as DateTime?,
-      playTotal: null == playTotal
-          ? _value.playTotal
-          : playTotal // ignore: cast_nullable_to_non_nullable
-              as Duration,
       viewMode: null == viewMode
           ? _value.viewMode
           : viewMode // ignore: cast_nullable_to_non_nullable
@@ -1015,10 +989,8 @@ class __$$PodcastStatsImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$PodcastStatsImpl implements _PodcastStats {
   const _$PodcastStatsImpl(
-      {this.id = 0,
-      required this.guid,
+      {required this.guid,
       this.subscribedDate,
-      this.playTotal = Duration.zero,
       this.viewMode = PodcastDetailViewMode.episodes,
       this.ascend = false});
 
@@ -1026,15 +998,9 @@ class _$PodcastStatsImpl implements _PodcastStats {
       _$$PodcastStatsImplFromJson(json);
 
   @override
-  @JsonKey()
-  final int id;
-  @override
   final String guid;
   @override
   final DateTime? subscribedDate;
-  @override
-  @JsonKey()
-  final Duration playTotal;
   @override
   @JsonKey()
   final PodcastDetailViewMode viewMode;
@@ -1044,7 +1010,7 @@ class _$PodcastStatsImpl implements _PodcastStats {
 
   @override
   String toString() {
-    return 'PodcastStats(id: $id, guid: $guid, subscribedDate: $subscribedDate, playTotal: $playTotal, viewMode: $viewMode, ascend: $ascend)';
+    return 'PodcastStats(guid: $guid, subscribedDate: $subscribedDate, viewMode: $viewMode, ascend: $ascend)';
   }
 
   @override
@@ -1052,12 +1018,9 @@ class _$PodcastStatsImpl implements _PodcastStats {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$PodcastStatsImpl &&
-            (identical(other.id, id) || other.id == id) &&
             (identical(other.guid, guid) || other.guid == guid) &&
             (identical(other.subscribedDate, subscribedDate) ||
                 other.subscribedDate == subscribedDate) &&
-            (identical(other.playTotal, playTotal) ||
-                other.playTotal == playTotal) &&
             (identical(other.viewMode, viewMode) ||
                 other.viewMode == viewMode) &&
             (identical(other.ascend, ascend) || other.ascend == ascend));
@@ -1065,8 +1028,8 @@ class _$PodcastStatsImpl implements _PodcastStats {
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode => Object.hash(
-      runtimeType, id, guid, subscribedDate, playTotal, viewMode, ascend);
+  int get hashCode =>
+      Object.hash(runtimeType, guid, subscribedDate, viewMode, ascend);
 
   @JsonKey(ignore: true)
   @override
@@ -1084,10 +1047,8 @@ class _$PodcastStatsImpl implements _PodcastStats {
 
 abstract class _PodcastStats implements PodcastStats {
   const factory _PodcastStats(
-      {final int id,
-      required final String guid,
+      {required final String guid,
       final DateTime? subscribedDate,
-      final Duration playTotal,
       final PodcastDetailViewMode viewMode,
       final bool ascend}) = _$PodcastStatsImpl;
 
@@ -1095,13 +1056,9 @@ abstract class _PodcastStats implements PodcastStats {
       _$PodcastStatsImpl.fromJson;
 
   @override
-  int get id;
-  @override
   String get guid;
   @override
   DateTime? get subscribedDate;
-  @override
-  Duration get playTotal;
   @override
   PodcastDetailViewMode get viewMode;
   @override

@@ -145,14 +145,28 @@ extension EpisodeExtension on Episode {
 @freezed
 class EpisodeStats with _$EpisodeStats {
   const factory EpisodeStats({
-    @Default(0) int id,
+    /// A String GUID for the episode.
     required String guid,
+
+    /// Current position in the episode
     @Default(Duration.zero) Duration position,
+
+    /// Duration of the episode
     Duration? duration,
-    @Default(false) bool played,
+
+    /// Number of times of start playing
     @Default(0) int playCount,
+
+    /// Total playing time
     @Default(Duration.zero) Duration playTotal,
+
+    /// Number of times of complete playing
+    @Default(0) int completeCount,
+
+    /// Whether the episode is in the queue
     @Default(false) bool inQueue,
+
+    /// Whether the episode is downloaded
     @Default(false) bool downloaded,
   }) = _EpisodeStats;
 
@@ -169,24 +183,22 @@ class EpisodeStats with _$EpisodeStats {
 
 class EpisodeStatsUpdateParam {
   const EpisodeStatsUpdateParam({
-    this.id,
     required this.guid,
     this.position,
     this.duration,
-    this.completed,
     this.playCount,
     this.playTotal,
+    this.completeCount,
     this.inQueue,
     this.downloaded,
   });
 
-  final int? id;
   final String guid;
   final Duration? position;
   final Duration? duration;
-  final bool? completed;
   final int? playCount;
   final Duration? playTotal;
+  final int? completeCount;
   final bool? inQueue;
   final bool? downloaded;
 
@@ -195,20 +207,19 @@ class EpisodeStatsUpdateParam {
     String? guid,
     Duration? position,
     Duration? duration,
-    bool? played,
     int? playCount,
     Duration? playTotal,
+    int? completeCount,
     bool? inQueue,
     bool? downloaded,
   }) {
     return EpisodeStatsUpdateParam(
-      id: id ?? this.id,
       guid: guid ?? this.guid,
       position: position ?? this.position,
       duration: duration ?? this.duration,
-      completed: played ?? this.completed,
       playCount: playCount ?? this.playCount,
       playTotal: playTotal ?? this.playTotal,
+      completeCount: completeCount ?? this.completeCount,
       inQueue: inQueue ?? this.inQueue,
       downloaded: downloaded ?? this.downloaded,
     );

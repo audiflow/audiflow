@@ -27,9 +27,6 @@ enum DownloadState {
 @freezed
 class Downloadable with _$Downloadable {
   const factory Downloadable({
-    /// Database ID
-    int? id,
-
     /// The GUID for an associated podcast.
     required String pguid,
 

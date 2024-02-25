@@ -4,7 +4,6 @@ export './downloadable.dart';
 export './episode.dart';
 export './feed.dart';
 export './funding.dart';
-export './persistable.dart';
 export './person.dart';
 export './podcast.dart';
 export './queue.dart';

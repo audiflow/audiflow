@@ -53,7 +53,7 @@ class MobileDownloadService extends DownloadService {
 
   @override
   Future<void> deleteDownload(Episode episode) async {
-    final download = await _repository.findDownloadByGuid(episode.guid);
+    final download = await _repository.findDownload(episode.guid);
     if (download != null) {
       await _repository.deleteDownload(download);
     }
@@ -176,7 +176,7 @@ class MobileDownloadService extends DownloadService {
 
   @override
   Future<Downloadable?> findDownloadByGuid(String guid) {
-    return _repository.findDownloadByGuid(guid);
+    return _repository.findDownload(guid);
   }
 
   Future<void> _updateDownloadProgress(DownloadProgress progress) async {
@@ -205,9 +205,8 @@ class MobileDownloadService extends DownloadService {
   }
 
   Future<void> _onDownloadComplete(Downloadable download) async {
-    final stats = await _repository.findEpisodeStatsByGuid(download.guid);
+    final stats = await _repository.findEpisodeStats(download.guid);
     var updateParam = EpisodeStatsUpdateParam(
-      id: stats?.id,
       guid: download.guid,
       downloaded: true,
     );
@@ -221,7 +220,7 @@ class MobileDownloadService extends DownloadService {
       updateParam = updateParam.copyWith(duration: mp3Info.duration);
       final stats = await _repository.updateEpisodeStats(updateParam);
 
-      var episode = await _repository.findEpisodeById(stats.id);
+      var episode = await _repository.findEpisode(stats.guid);
       if (episode != null) {
         episode = episode.copyWith(duration: mp3Info.duration);
         await _repository.saveEpisode(episode);

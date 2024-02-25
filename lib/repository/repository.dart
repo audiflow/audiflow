@@ -13,39 +13,27 @@ abstract class Repository {
   Future<void> close();
 
   // --- Podcast
-  Future<void> savePodcast(int id, Podcast podcast);
+  Future<void> savePodcast(Podcast podcast);
 
-  Future<Podcast?> findPodcastById(int id);
+  Future<Podcast?> findPodcast(String guid);
 
-  Future<Podcast?> findPodcastByGuid(String guid);
-
-  Future<List<(PodcastStats, PodcastSummary)>> subscriptions();
+  Future<List<(PodcastSummary, PodcastStats)>> subscriptions();
 
   // -- PodcastStats
 
-  Future<PodcastStats> subscribePodcast(Podcast podcast);
+  Future<void> subscribePodcast(Podcast podcast);
 
   Future<void> unsubscribePodcast(Podcast podcast);
 
   Future<void> savePodcastStats(PodcastStats stats);
 
-  Future<PodcastStats?> findPodcastStatsById(int id);
-
-  Future<PodcastStats?> findPodcastStatsByGuid(String guid);
+  Future<PodcastStats?> findPodcastStats(String guid);
 
   // --- Episode
 
-  Future<void> saveEpisodes(List<Episode> episodes);
-
   Future<void> saveEpisode(Episode episode);
 
-  Future<void> deleteEpisodes(List<Episode> episodes);
-
-  Future<void> deleteEpisode(Episode episode);
-
-  Future<Episode?> findEpisodeById(int id);
-
-  Future<Episode?> findEpisodeByGuid(String guid);
+  Future<Episode?> findEpisode(String guid);
 
   Future<List<Episode>> findEpisodesByPodcastGuid(String pguid);
 
@@ -53,13 +41,11 @@ abstract class Repository {
 
   Future<EpisodeStats> updateEpisodeStats(EpisodeStatsUpdateParam param);
 
-  Future<EpisodeStats?> findEpisodeStatsById(int id);
-
-  Future<EpisodeStats?> findEpisodeStatsByGuid(String guid);
+  Future<EpisodeStats?> findEpisodeStats(String guid);
 
   // --- Downloads
 
-  Future<Downloadable> saveDownload(Downloadable download);
+  Future<void> saveDownload(Downloadable download);
 
   Future<void> deleteDownload(Downloadable download);
 
@@ -67,7 +53,7 @@ abstract class Repository {
 
   Future<List<Downloadable>> findDownloads();
 
-  Future<Downloadable?> findDownloadByGuid(String guid);
+  Future<Downloadable?> findDownload(String guid);
 
   Future<Downloadable?> findDownloadByTaskId(String taskId);
 
