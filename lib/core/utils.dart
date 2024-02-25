@@ -164,3 +164,11 @@ String removeHtmlPadding(String? input) {
           .replaceAll(descriptionRegExp1, '</p>') ??
       '';
 }
+
+Duration minDuration(Duration a, Duration b) {
+  return a < b ? a : b;
+}
+
+Duration maxDuration(Duration a, Duration b) {
+  return b < a ? a : b;
+}
