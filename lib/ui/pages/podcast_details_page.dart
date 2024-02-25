@@ -93,7 +93,9 @@ class PodcastDetailsPage extends HookConsumerWidget {
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: <Widget>[
                 PodcastDetailsAppBar(
-                    metadata: metadata, heroPrefix: heroPrefix,),
+                  metadata: metadata,
+                  heroPrefix: heroPrefix,
+                ),
                 if (podcastDetailsState.isLoading || seasonsState.isLoading)
                   const FillRemainingLoading()
                 else if (podcastDetailsState.hasError || podcast == null)
@@ -204,12 +206,13 @@ class _PodcastTitle extends HookConsumerWidget {
               ],
             ),
             _PodcastDescription(
-                key: descriptionKey,
-                content: PodcastHtml(
-                  content: podcast.description,
-                  fontSize: FontSize.medium,
-                ),
-                isExpanded: expandedState.value,),
+              key: descriptionKey,
+              content: PodcastHtml(
+                content: podcast.description,
+                fontSize: FontSize.medium,
+              ),
+              isExpanded: expandedState.value,
+            ),
             Padding(
               padding: const EdgeInsets.only(left: 8, right: 8),
               child: Row(
@@ -257,7 +260,6 @@ class _PodcastTitle extends HookConsumerWidget {
 /// this constraint, would require the use to always scroll before reaching the
 /// podcast episodes.
 ///
-/// TODO: Animate between the two states.
 class _PodcastDescription extends StatelessWidget {
   const _PodcastDescription({
     super.key,
@@ -301,98 +303,6 @@ class _PodcastDescription extends StatelessWidget {
   }
 }
 
-// class FollowButton extends StatelessWidget {
-//   const FollowButton(this.podcast, {super.key});
-//
-//   final Podcast podcast;
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     final bloc = Provider.of<PodcastBloc>(context);
-//
-//     return StreamBuilder<BlocState<Podcast>>(
-//       stream: bloc.details,
-//       builder: (context, snapshot) {
-//         if (snapshot.hasData) {
-//           final state = snapshot.data;
-//
-//           if (state is BlocPopulatedState<Podcast>) {
-//             final p = state.results!;
-//
-//             return Semantics(
-//               liveRegion: true,
-//               child: p.subscribed
-//                   ? OutlinedButton.icon(
-//                       style: OutlinedButton.styleFrom(
-//                         shape: RoundedRectangleBorder(
-//                           borderRadius: BorderRadius.circular(8),
-//                         ),
-//                       ),
-//                       icon: const Icon(
-//                         Icons.delete_outline,
-//                       ),
-//                       label: Text(L.of(context)!.unsubscribe_label),
-//                       onPressed: () {
-//                         showPlatformDialog<void>(
-//                           context: context,
-//                           useRootNavigator: false,
-//                           builder: (_) => BasicDialogAlert(
-//                             title: Text(L.of(context)!.unsubscribe_label),
-//                             content: Text(L.of(context)!.unsubscribe_message),
-//                             actions: <Widget>[
-//                               BasicDialogAction(
-//                                 title: ExcludeSemantics(
-//                                   child: ActionText(
-//                                     L.of(context)!.cancel_button_label,
-//                                   ),
-//                                 ),
-//                                 onPressed: () {
-//                                   Navigator.pop(context);
-//                                 },
-//                               ),
-//                               BasicDialogAction(
-//                                 title: ExcludeSemantics(
-//                                   child: ActionText(
-//                                     L.of(context)!.unsubscribe_button_label,
-//                                   ),
-//                                 ),
-//                                 iosIsDefaultAction: true,
-//                                 iosIsDestructiveAction: true,
-//                                 onPressed: () {
-//                                   bloc.podcastEvent(PodcastEvent.unsubscribe);
-//
-//                                   Navigator.pop(context);
-//                                   Navigator.pop(context);
-//                                 },
-//                               ),
-//                             ],
-//                           ),
-//                         );
-//                       },
-//                     )
-//                   : OutlinedButton.icon(
-//                       style: OutlinedButton.styleFrom(
-//                         shape: RoundedRectangleBorder(
-//                           borderRadius: BorderRadius.circular(8),
-//                         ),
-//                       ),
-//                       icon: const Icon(
-//                         Icons.add,
-//                       ),
-//                       label: Text(L.of(context)!.subscribe_label),
-//                       onPressed: () {
-//                         bloc.podcastEvent(PodcastEvent.subscribe);
-//                       },
-//                     ),
-//             );
-//           }
-//         }
-//         return Container();
-//       },
-//     );
-//   }
-// }
-
 class _SwitchBar extends ConsumerWidget {
   const _SwitchBar({
     required this.podcast,
@@ -419,6 +329,7 @@ class _SwitchBar extends ConsumerWidget {
           children: [
             _PodcastViewModeSwitch(
               viewMode: selectedViewMode,
+              hasSeasons: seasons.isNotEmpty,
               onChanged: (mode) {
                 ref
                     .read(podcastInfoProvider(podcast).notifier)
@@ -435,10 +346,12 @@ class _SwitchBar extends ConsumerWidget {
 class _PodcastViewModeSwitch extends ConsumerWidget {
   const _PodcastViewModeSwitch({
     required this.viewMode,
+    required this.hasSeasons,
     required this.onChanged,
   });
 
   final PodcastDetailViewMode viewMode;
+  final bool hasSeasons;
   final ValueChanged<PodcastDetailViewMode> onChanged;
 
   @override
@@ -458,6 +371,10 @@ class _PodcastViewModeSwitch extends ConsumerWidget {
       ),
       itemBuilder: (context) {
         return PodcastDetailViewMode.values
+            .where(
+              (viewMode) =>
+                  hasSeasons || viewMode != PodcastDetailViewMode.seasons,
+            )
             .map(
               (mode) => PopupMenuItem(
                 value: mode,
@@ -468,47 +385,4 @@ class _PodcastViewModeSwitch extends ConsumerWidget {
       },
     );
   }
-
-  void _showViewModeMenu(BuildContext context) {
-    final theme = Theme.of(context);
-    final items = PodcastDetailViewMode.values
-        .map((mode) => PopupMenuItem(
-              value: mode,
-              child: Text(mode.label),
-            ),)
-        .toList();
-
-    showMenu(
-      context: context,
-      position: const RelativeRect.fromLTRB(0, 0, 0, 0),
-      items: items,
-    ).then((value) {
-      if (value != null) {
-        onChanged(value);
-      }
-    });
-  }
 }
-
-// class SeasonSwitch extends StatelessWidget {
-//   const SeasonSwitch({required this.isOn, super.key});
-//
-//   final bool isOn;
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return Row(
-//       children: [
-//         const Text('Season'),
-//         Switch(
-//           value: isOn,
-//           onChanged: (isOn) {
-//             final podcastBloc =
-//                 Provider.of<PodcastBloc>(context, listen: false);
-//             podcastBloc.toggleSeasonView();
-//           },
-//         ),
-//       ],
-//     );
-//   }
-// }
