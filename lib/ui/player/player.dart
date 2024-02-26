@@ -1,3 +1,6 @@
+import 'dart:math';
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:seasoning/entities/entities.dart';
@@ -5,6 +8,8 @@ import 'package:seasoning/services/audio/audio_player_service.dart';
 import 'package:seasoning/ui/app/app_bottom_navigation_bar.dart';
 import 'package:seasoning/ui/mini_player/mini_player.dart';
 import 'package:seasoning/ui/mini_player/utils.dart';
+import 'package:seasoning/ui/player/player_episode_tile.dart';
+import 'package:seasoning/ui/podcast/queue_list_block.dart';
 
 final ValueNotifier<double> playerExpandProgress =
     ValueNotifier(playerMinHeight);
@@ -48,7 +53,6 @@ class DetailedPlayer extends HookConsumerWidget {
       },
       builder: (height, percentage) {
         final showsMiniPlayer = percentage < miniPlayerPercentageDeclaration;
-        //Declare additional widgets (eg. SkipButton) and variables
         return showsMiniPlayer
             ? _MiniPlayerContent(
                 episode: episode,
@@ -159,7 +163,7 @@ class _MiniPlayerContent extends StatelessWidget {
   }
 }
 
-class _DetailedPlayerContent extends StatelessWidget {
+class _DetailedPlayerContent extends ConsumerWidget {
   const _DetailedPlayerContent({
     required this.episode,
     required this.height,
@@ -173,50 +177,73 @@ class _DetailedPlayerContent extends StatelessWidget {
   final double maxHeight;
 
   @override
-  Widget build(BuildContext context) {
-    final width = MediaQuery.of(context).size.width;
-    final maxImgSize = width * 0.4;
-    final image = Image.network(episode.imageUrl!);
-    final text = Text(episode.title);
-
+  Widget build(BuildContext context, WidgetRef ref) {
     final percentageExpandedPlayer = percentageFromValueInRange(
       min: maxHeight * miniPlayerPercentageDeclaration + playerMinHeight,
       max: maxHeight,
       value: height,
-    ); // ref.watch(podcastInfoProvider())
-    return Column(
-      children: [
-        // PlayerEpisodeTile()
-        Expanded(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 33),
-            child: Opacity(
-              opacity: percentageExpandedPlayer,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Flexible(child: text),
-                  const Flexible(
-                    child: SizedBox(
-                      height: 80,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          _SkipButton(forward: false),
-                          _PlayButton.large(),
-                          _SkipButton(forward: true),
-                        ],
-                      ),
-                    ),
+    );
+
+    return Opacity(
+      opacity: percentageExpandedPlayer,
+      child: Stack(
+        children: [
+          Align(
+            alignment: Alignment.topCenter,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(
+                  width: 50,
+                  height: 50,
+                  child: Divider(
+                    thickness: 5,
                   ),
-                  const _ProgressIndicator(),
-                ],
-              ),
+                ),
+                PlayerEpisodeTile(episode: episode),
+                SizedBox(
+                  height: max(0, min(maxHeight - 300, height - 300)),
+                  child: const CustomScrollView(
+                    slivers: [
+                      QueueListBlock(),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
-        ),
-      ],
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _SkipButton(forward: false),
+                    _PlayButton.large(),
+                    _SkipButton(forward: true),
+                  ],
+                ),
+                const _ProgressIndicator(),
+                SizedBox(
+                    height: MediaQueryData.fromView(
+                  ui.PlatformDispatcher.instance.implicitView!,
+                ).padding.bottom),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
+  }
+}
+
+class _Hoge extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    print(MediaQuery.of(context).viewPadding.bottom);
+    return SizedBox();
   }
 }
 

@@ -154,6 +154,11 @@ class MobilePodcastService implements PodcastService {
     return _intlCategoriesSorted;
   }
 
+  @override
+  Future<PodcastPreview?> loadPodcastPreview(String guid) async {
+    return _repository.findPodcastPreview(guid);
+  }
+
   /// Loads the specified [Podcast]. If the Podcast instance has an ID we'll
   /// fetch it from storage. If not, we'll check the cache to see if we have
   /// seen it recently and return that if available. If not, we'll make a call
@@ -335,6 +340,16 @@ class MobilePodcastService implements PodcastService {
   @override
   Future<List<Episode>> loadEpisodesByPodcastGuid(String pguid) async {
     return _repository.findEpisodesByPodcastGuid(pguid);
+  }
+
+  @override
+  Future<Episode?> loadEpisode(String guid) async {
+    return _repository.findEpisode(guid);
+  }
+
+  @override
+  Future<List<Episode?>> loadEpisodes(Iterable<String> guids) async {
+    return _repository.findEpisodes(guids);
   }
 
   @override

@@ -6,6 +6,7 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:seasoning/entities/entities.dart';
+import 'package:seasoning/providers/podcast/episode_info_provider.dart';
 import 'package:seasoning/ui/podcast/episode_date.dart';
 import 'package:seasoning/ui/widgets/tile_image.dart';
 
@@ -19,16 +20,17 @@ import 'package:seasoning/ui/widgets/tile_image.dart';
 class EpisodeBriefTile extends HookConsumerWidget {
   const EpisodeBriefTile({
     super.key,
-    required this.metadata,
     required this.episode,
   });
 
-  final PodcastMetadata metadata;
   final Episode episode;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final thumbImageUrl = metadata.thumbImageUrl;
+    final episodeInfo = ref.watch(episodeInfoProvider(episode));
+    final thumbImageUrl = episodeInfo.hasValue
+        ? episodeInfo.value!.podcastPreview.thumbImageUrl
+        : '';
 
     return Material(
       child: InkWell(

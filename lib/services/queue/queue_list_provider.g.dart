@@ -1,24 +1,24 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'queue_manager.dart';
+part of 'queue_list_provider.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$queueManagerHash() => r'5a737903ec11fe0a358c987136652fadfcd8a8de';
+String _$queueListHash() => r'b2029592bb2da8e97392b6da3556ec7377a9f792';
 
-/// See also [QueueManager].
-@ProviderFor(QueueManager)
-final queueManagerProvider = NotifierProvider<QueueManager, Queue>.internal(
-  QueueManager.new,
-  name: r'queueManagerProvider',
+/// See also [QueueList].
+@ProviderFor(QueueList)
+final queueListProvider = NotifierProvider<QueueList, QueueListState>.internal(
+  QueueList.new,
+  name: r'queueListProvider',
   debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product') ? null : _$queueManagerHash,
+      const bool.fromEnvironment('dart.vm.product') ? null : _$queueListHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
 
-typedef _$QueueManager = Notifier<Queue>;
+typedef _$QueueList = Notifier<QueueListState>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

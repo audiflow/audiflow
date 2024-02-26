@@ -25,7 +25,7 @@ Future<List<Season>> podcastSeasons(
     }
   }
 
-  if (map.isEmpty || map.keys.first == null) {
+  if (map.keys.length < 2) {
     return [];
   }
 

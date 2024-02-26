@@ -99,7 +99,8 @@ class SignUpPage extends StatelessWidget {
             const Padding(
               padding: EdgeInsets.all(8),
               child: Text(
-                'Using push method of router enable us to go back functionality',
+                'Using push method of router enable us to go back'
+                ' functionality',
                 textAlign: TextAlign.center,
               ),
             ),
@@ -134,7 +135,8 @@ class SignInPage extends StatelessWidget {
             const Padding(
               padding: EdgeInsets.all(8),
               child: Text(
-                'Using push method of router enable us to push that page as standalone page instead of showing with Shell',
+                'Using push method of router enable us to push that page as'
+                ' standalone page instead of showing with Shell',
                 textAlign: TextAlign.center,
               ),
             ),
@@ -149,7 +151,8 @@ class SignInPage extends StatelessWidget {
             const Padding(
               padding: EdgeInsets.all(8),
               child: Text(
-                'Instead if we use go method of router we will have the home page with the Shell',
+                'Instead if we use go method of router we will have the home'
+                ' page with the Shell',
                 textAlign: TextAlign.center,
               ),
             ),
@@ -164,7 +167,8 @@ class SignInPage extends StatelessWidget {
             const Padding(
               padding: EdgeInsets.all(8),
               child: Text(
-                'Or instead we can launch the bottom navigation page(with shell) for different tab with only changing the path',
+                'Or instead we can launch the bottom navigation page'
+                '(with shell) for different tab with only changing the path',
                 textAlign: TextAlign.center,
               ),
             ),
@@ -213,7 +217,8 @@ class SearchPage1 extends StatelessWidget {
             const Padding(
               padding: EdgeInsets.all(8),
               child: Text(
-                'Or instead we can launch the bottom navigation page(with shell) for different tab with only changing the path',
+                'Or instead we can launch the bottom navigation page'
+                '(with shell) for different tab with only changing the path',
                 textAlign: TextAlign.center,
               ),
             ),
@@ -248,7 +253,8 @@ class SettingsPage extends StatelessWidget {
             const Padding(
               padding: EdgeInsets.all(8),
               child: Text(
-                'Or instead we can launch the bottom navigation page(with shell) for different tab with only changing the path',
+                'Or instead we can launch the bottom navigation page'
+                '(with shell) for different tab with only changing the path',
                 textAlign: TextAlign.center,
               ),
             ),
@@ -263,7 +269,8 @@ class SettingsPage extends StatelessWidget {
             const Padding(
               padding: EdgeInsets.all(8),
               child: Text(
-                'Or instead we can launch the bottom navigation page(with shell) for different tab with only changing the path',
+                'Or instead we can launch the bottom navigation page'
+                '(with shell) for different tab with only changing the path',
                 textAlign: TextAlign.center,
               ),
             ),

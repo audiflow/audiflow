@@ -25,7 +25,7 @@ extension QueueExt on Queue {
     return queue.where((q) => q.type == QueueType.primary);
   }
 
-  Iterable<QueueItem> get adHoc {
+  Iterable<QueueItem> get adhoc {
     return queue.where((element) => element.type == QueueType.adhoc);
   }
 }

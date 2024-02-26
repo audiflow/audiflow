@@ -62,15 +62,13 @@ class DefaultQueueManager extends _$DefaultQueueManager
   }
 
   @override
-  Future<void> swap(int index1, int index2) async {
-    assert(0 <= index1 && index1 < state.queue.length, 'Invalid index1');
-    assert(0 <= index2 && index2 < state.queue.length, 'Invalid index2');
+  Future<void> reorder(int oldIndex, int newIndex) async {
+    assert(0 <= oldIndex && oldIndex < state.queue.length, 'Invalid oldIndex');
+    assert(0 <= newIndex && newIndex <= state.queue.length, 'Invalid newIndex');
 
     final newQueue = List.of(state.queue);
-    final temp = newQueue[index1];
-    newQueue[index1] = newQueue[index2];
-    newQueue[index2] = temp;
-
+    final temp = newQueue.removeAt(oldIndex);
+    newQueue.insert(newIndex - (oldIndex < newIndex ? 1 : 0), temp);
     state = state.copyWith(queue: newQueue);
     await _repository.saveQueue(state);
   }

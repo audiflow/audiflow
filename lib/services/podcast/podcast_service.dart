@@ -32,6 +32,8 @@ abstract class PodcastService {
 
   List<String> genres();
 
+  Future<PodcastPreview?> loadPodcastPreview(String guid);
+
   Future<Podcast?> loadPodcast(
     PodcastMetadata metadata, {
     bool refresh = false,
@@ -42,6 +44,10 @@ abstract class PodcastService {
   Future<List<Downloadable>> loadDownloads();
 
   Future<List<Episode>> loadEpisodesByPodcastGuid(String pguid);
+
+  Future<Episode?> loadEpisode(String guid);
+
+  Future<List<Episode?>> loadEpisodes(Iterable<String> guids);
 
   Future<EpisodeStats?> loadEpisodeStats(Episode episode);
 

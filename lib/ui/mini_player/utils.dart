@@ -21,7 +21,7 @@ double percentageFromValueInRange({
   required double max,
   required double value,
 }) {
-  return (value - min) / (max - min);
+  return math.max(0, math.min(1, (value - min) / (max - min)));
 }
 
 double borderDouble(double value) => math.max(0, math.min(1, value));

@@ -6,6 +6,7 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:seasoning/entities/entities.dart';
+import 'package:seasoning/providers/podcast/episode_info_provider.dart';
 import 'package:seasoning/ui/widgets/tile_image.dart';
 
 /// An EpisodeTitle is built with an ExpandedTile widget and displays the
@@ -15,20 +16,17 @@ import 'package:seasoning/ui/widgets/tile_image.dart';
 /// and further controls.
 ///
 
-class PlayerEpisodeTile extends HookConsumerWidget {
+class PlayerEpisodeTile extends StatelessWidget {
   const PlayerEpisodeTile({
     super.key,
-    required this.metadata,
     required this.episode,
   });
 
-  final PodcastMetadata metadata;
   final Episode episode;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final thumbImageUrl =
-        episode.thumbImageUrl ?? episode.imageUrl ?? metadata.thumbImageUrl;
+  Widget build(BuildContext context) {
+    final thumbImageUrl = episode.thumbImageUrl ?? '';
 
     return Material(
       child: InkWell(
@@ -40,7 +38,7 @@ class PlayerEpisodeTile extends HookConsumerWidget {
             children: [
               TileImage(url: thumbImageUrl, size: 50),
               const SizedBox(width: 12),
-              Expanded(child: _Content(metadata, episode)),
+              Expanded(child: _Content(episode)),
             ],
           ),
         ),
@@ -49,15 +47,15 @@ class PlayerEpisodeTile extends HookConsumerWidget {
   }
 }
 
-class _Content extends StatelessWidget {
-  const _Content(this.metadata, this.episode);
+class _Content extends ConsumerWidget {
+  const _Content(this.episode);
 
-  final PodcastMetadata metadata;
   final Episode episode;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final episodeInfo = ref.watch(episodeInfoProvider(episode));
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -71,7 +69,7 @@ class _Content extends StatelessWidget {
         ),
         const SizedBox(height: 6),
         Text(
-          metadata.title,
+          episodeInfo.valueOrNull?.podcastPreview.title ?? '',
           overflow: TextOverflow.ellipsis,
           softWrap: false,
           style: Theme.of(context)

@@ -48,6 +48,8 @@ abstract class Repository {
 
   Future<Episode?> findEpisode(String guid);
 
+  Future<List<Episode?>> findEpisodes(Iterable<String> guids);
+
   Future<List<Episode>> findEpisodesByPodcastGuid(String pguid);
 
   // --- EpisodeStats
