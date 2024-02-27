@@ -79,6 +79,9 @@ _$EpisodeStatsImpl _$$EpisodeStatsImplFromJson(Map<String, dynamic> json) =>
       completeCount: json['completeCount'] as int? ?? 0,
       inQueue: json['inQueue'] as bool? ?? false,
       downloaded: json['downloaded'] as bool? ?? false,
+      lastPlayedAt: json['lastPlayedAt'] == null
+          ? null
+          : DateTime.parse(json['lastPlayedAt'] as String),
     );
 
 Map<String, dynamic> _$$EpisodeStatsImplToJson(_$EpisodeStatsImpl instance) =>
@@ -91,4 +94,5 @@ Map<String, dynamic> _$$EpisodeStatsImplToJson(_$EpisodeStatsImpl instance) =>
       'completeCount': instance.completeCount,
       'inQueue': instance.inQueue,
       'downloaded': instance.downloaded,
+      'lastPlayedAt': instance.lastPlayedAt?.toIso8601String(),
     };

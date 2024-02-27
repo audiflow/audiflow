@@ -714,6 +714,9 @@ mixin _$EpisodeStats {
   /// Whether the episode is downloaded
   bool get downloaded => throw _privateConstructorUsedError;
 
+  /// Latest playing start time
+  DateTime? get lastPlayedAt => throw _privateConstructorUsedError;
+
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
   $EpisodeStatsCopyWith<EpisodeStats> get copyWith =>
@@ -734,7 +737,8 @@ abstract class $EpisodeStatsCopyWith<$Res> {
       Duration playTotal,
       int completeCount,
       bool inQueue,
-      bool downloaded});
+      bool downloaded,
+      DateTime? lastPlayedAt});
 }
 
 /// @nodoc
@@ -758,6 +762,7 @@ class _$EpisodeStatsCopyWithImpl<$Res, $Val extends EpisodeStats>
     Object? completeCount = null,
     Object? inQueue = null,
     Object? downloaded = null,
+    Object? lastPlayedAt = freezed,
   }) {
     return _then(_value.copyWith(
       guid: null == guid
@@ -792,6 +797,10 @@ class _$EpisodeStatsCopyWithImpl<$Res, $Val extends EpisodeStats>
           ? _value.downloaded
           : downloaded // ignore: cast_nullable_to_non_nullable
               as bool,
+      lastPlayedAt: freezed == lastPlayedAt
+          ? _value.lastPlayedAt
+          : lastPlayedAt // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
     ) as $Val);
   }
 }
@@ -812,7 +821,8 @@ abstract class _$$EpisodeStatsImplCopyWith<$Res>
       Duration playTotal,
       int completeCount,
       bool inQueue,
-      bool downloaded});
+      bool downloaded,
+      DateTime? lastPlayedAt});
 }
 
 /// @nodoc
@@ -834,6 +844,7 @@ class __$$EpisodeStatsImplCopyWithImpl<$Res>
     Object? completeCount = null,
     Object? inQueue = null,
     Object? downloaded = null,
+    Object? lastPlayedAt = freezed,
   }) {
     return _then(_$EpisodeStatsImpl(
       guid: null == guid
@@ -868,6 +879,10 @@ class __$$EpisodeStatsImplCopyWithImpl<$Res>
           ? _value.downloaded
           : downloaded // ignore: cast_nullable_to_non_nullable
               as bool,
+      lastPlayedAt: freezed == lastPlayedAt
+          ? _value.lastPlayedAt
+          : lastPlayedAt // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
     ));
   }
 }
@@ -883,7 +898,8 @@ class _$EpisodeStatsImpl with DiagnosticableTreeMixin implements _EpisodeStats {
       this.playTotal = Duration.zero,
       this.completeCount = 0,
       this.inQueue = false,
-      this.downloaded = false});
+      this.downloaded = false,
+      this.lastPlayedAt});
 
   factory _$EpisodeStatsImpl.fromJson(Map<String, dynamic> json) =>
       _$$EpisodeStatsImplFromJson(json);
@@ -926,9 +942,13 @@ class _$EpisodeStatsImpl with DiagnosticableTreeMixin implements _EpisodeStats {
   @JsonKey()
   final bool downloaded;
 
+  /// Latest playing start time
+  @override
+  final DateTime? lastPlayedAt;
+
   @override
   String toString({DiagnosticLevel minLevel = DiagnosticLevel.info}) {
-    return 'EpisodeStats(guid: $guid, position: $position, duration: $duration, playCount: $playCount, playTotal: $playTotal, completeCount: $completeCount, inQueue: $inQueue, downloaded: $downloaded)';
+    return 'EpisodeStats(guid: $guid, position: $position, duration: $duration, playCount: $playCount, playTotal: $playTotal, completeCount: $completeCount, inQueue: $inQueue, downloaded: $downloaded, lastPlayedAt: $lastPlayedAt)';
   }
 
   @override
@@ -943,7 +963,8 @@ class _$EpisodeStatsImpl with DiagnosticableTreeMixin implements _EpisodeStats {
       ..add(DiagnosticsProperty('playTotal', playTotal))
       ..add(DiagnosticsProperty('completeCount', completeCount))
       ..add(DiagnosticsProperty('inQueue', inQueue))
-      ..add(DiagnosticsProperty('downloaded', downloaded));
+      ..add(DiagnosticsProperty('downloaded', downloaded))
+      ..add(DiagnosticsProperty('lastPlayedAt', lastPlayedAt));
   }
 
   @override
@@ -964,13 +985,15 @@ class _$EpisodeStatsImpl with DiagnosticableTreeMixin implements _EpisodeStats {
                 other.completeCount == completeCount) &&
             (identical(other.inQueue, inQueue) || other.inQueue == inQueue) &&
             (identical(other.downloaded, downloaded) ||
-                other.downloaded == downloaded));
+                other.downloaded == downloaded) &&
+            (identical(other.lastPlayedAt, lastPlayedAt) ||
+                other.lastPlayedAt == lastPlayedAt));
   }
 
   @JsonKey(ignore: true)
   @override
   int get hashCode => Object.hash(runtimeType, guid, position, duration,
-      playCount, playTotal, completeCount, inQueue, downloaded);
+      playCount, playTotal, completeCount, inQueue, downloaded, lastPlayedAt);
 
   @JsonKey(ignore: true)
   @override
@@ -995,7 +1018,8 @@ abstract class _EpisodeStats implements EpisodeStats {
       final Duration playTotal,
       final int completeCount,
       final bool inQueue,
-      final bool downloaded}) = _$EpisodeStatsImpl;
+      final bool downloaded,
+      final DateTime? lastPlayedAt}) = _$EpisodeStatsImpl;
 
   factory _EpisodeStats.fromJson(Map<String, dynamic> json) =
       _$EpisodeStatsImpl.fromJson;
@@ -1032,6 +1056,10 @@ abstract class _EpisodeStats implements EpisodeStats {
 
   /// Whether the episode is downloaded
   bool get downloaded;
+  @override
+
+  /// Latest playing start time
+  DateTime? get lastPlayedAt;
   @override
   @JsonKey(ignore: true)
   _$$EpisodeStatsImplCopyWith<_$EpisodeStatsImpl> get copyWith =>

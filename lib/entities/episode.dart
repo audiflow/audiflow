@@ -168,6 +168,9 @@ class EpisodeStats with _$EpisodeStats {
 
     /// Whether the episode is downloaded
     @Default(false) bool downloaded,
+
+    /// Latest playing start time
+    DateTime? lastPlayedAt,
   }) = _EpisodeStats;
 
   factory EpisodeStats.fromJson(Map<String, dynamic> json) =>
