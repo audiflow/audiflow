@@ -16,13 +16,15 @@ class QueueManager extends _$QueueManager {
 
   Future<void> append(Episode episode) => throw UnimplementedError();
 
-  Future<void> reorder(int oldIndex, int newIndex) => throw UnimplementedError();
+  Future<void> reorder(int oldIndex, int newIndex) =>
+      throw UnimplementedError();
 
-  Future<void> addAll(List<Episode> episodes) => throw UnimplementedError();
+  Future<void> addAll(Iterable<Episode> episodes) => throw UnimplementedError();
 
-  Future<void> replaceAll(List<Episode> episodes) => throw UnimplementedError();
+  Future<void> replaceAll(Iterable<Episode> episodes) =>
+      throw UnimplementedError();
 
-  Future<void> replaceAllAdHoc(List<Episode> episode) =>
+  Future<void> replaceAllAdHoc(Iterable<Episode> episodes) =>
       throw UnimplementedError();
 
   Future<void> remove(int index) => throw UnimplementedError();

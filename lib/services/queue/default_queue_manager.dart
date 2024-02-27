@@ -74,7 +74,7 @@ class DefaultQueueManager extends _$DefaultQueueManager
   }
 
   @override
-  Future<void> addAll(List<Episode> episodes) async {
+  Future<void> addAll(Iterable<Episode> episodes) async {
     final newQueue = [
       ...state.queue,
       ...episodes.map((e) => QueueItem.primary(guid: e.guid)),
@@ -86,18 +86,18 @@ class DefaultQueueManager extends _$DefaultQueueManager
   }
 
   @override
-  Future<void> replaceAll(List<Episode> episodes) async {
-    await _replaceAllAdHoc(episodes, QueueType.primary);
+  Future<void> replaceAll(Iterable<Episode> episodes) async {
+    await _replaceAll(episodes, QueueType.primary);
   }
 
   @override
-  Future<void> replaceAllAdHoc(List<Episode> episodes) async {
-    await _replaceAllAdHoc(episodes, QueueType.adhoc);
+  Future<void> replaceAllAdHoc(Iterable<Episode> episodes) async {
+    await _replaceAll(episodes, QueueType.adhoc);
   }
 
-  Future<void> _replaceAllAdHoc(List<Episode> episodes, QueueType type) async {
+  Future<void> _replaceAll(Iterable<Episode> episodes, QueueType type) async {
     final oldQueue = state.queue;
-    final remains = oldQueue.where((item) => item.type == type);
+    final remains = oldQueue.where((item) => item.type != type);
     final adds = episodes.map((e) => QueueItem(guid: e.guid, type: type));
 
     final List<QueueItem> newQueue;

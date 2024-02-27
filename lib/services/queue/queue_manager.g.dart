@@ -6,7 +6,7 @@ part of 'queue_manager.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$queueManagerHash() => r'5a737903ec11fe0a358c987136652fadfcd8a8de';
+String _$queueManagerHash() => r'5581d40428cac78dbd7d6412709f219c5dc52232';
 
 /// See also [QueueManager].
 @ProviderFor(QueueManager)
