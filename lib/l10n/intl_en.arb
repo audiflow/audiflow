@@ -885,5 +885,29 @@
     "type": "text",
     "placeholders_order": [],
     "placeholders": {}
+  },
+  "play_from_start": "Play from start",
+  "@play_from_start": {
+    "description": "Play from start",
+    "type": "text",
+    "placeholders": {}
+  },
+  "play_latest": "Play latest",
+  "@play_latest": {
+    "description": "Play from start",
+    "type": "text",
+    "placeholders": {}
+  },
+  "play_latest_again": "Play again",
+  "@play_latest_again": {
+    "description": "Play latest again",
+    "type": "text",
+    "placeholders": {}
+  },
+  "resume": "Resume",
+  "@resume": {
+    "description": "Resume",
+    "type": "text",
+    "placeholders": {}
   }
 }
