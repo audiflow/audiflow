@@ -7,18 +7,22 @@ import 'package:seasoning/ui/podcast/episode_brief_tile.dart';
 import 'package:sliver_tools/sliver_tools.dart';
 
 class QueueListBlock extends ConsumerWidget {
-  const QueueListBlock({super.key});
+  const QueueListBlock({required this.queueType, super.key});
+
+  final QueueType queueType;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final queueState = ref.watch(queueListProvider);
-    if (queueState.primary.isEmpty && queueState.adhoc.isEmpty) {
+    final queue =
+        queueType == QueueType.primary ? queueState.primary : queueState.adhoc;
+    if (queue.isEmpty) {
       return const SliverToBoxAdapter(child: SizedBox.shrink());
     }
 
     return Section(
-      title: 'Queue',
-      episodes: queueState.primary,
+      title: queueType == QueueType.primary ? 'Queue' : 'Adhoc Queue',
+      episodes: queue,
       onReorder: (oldIndex, newIndex) =>
           ref.read(queueManagerProvider.notifier).reorder(oldIndex, newIndex),
     );
@@ -42,12 +46,10 @@ class Section extends MultiSliver {
               ),
             ),
             SliverReorderableList(
-              itemBuilder: (context, index) => ReorderableDragStartListener(
-                index: index,
+              itemBuilder: (context, index) => EpisodeBriefTile(
                 key: ValueKey(episodes[index].guid),
-                child: EpisodeBriefTile(
-                  episode: episodes[index],
-                ),
+                episode: episodes[index],
+                sortableIndex: index,
               ),
               itemCount: episodes.length,
               onReorder: onReorder,

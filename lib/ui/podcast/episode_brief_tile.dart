@@ -21,9 +21,11 @@ class EpisodeBriefTile extends HookConsumerWidget {
   const EpisodeBriefTile({
     super.key,
     required this.episode,
+    this.sortableIndex,
   });
 
   final Episode episode;
+  final int? sortableIndex;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -43,6 +45,14 @@ class EpisodeBriefTile extends HookConsumerWidget {
               TileImage(url: thumbImageUrl, size: 50),
               const SizedBox(width: 12),
               Expanded(child: _Content(episode)),
+              if (sortableIndex != null)
+                ReorderableDragStartListener(
+                  index: sortableIndex!,
+                  child: const Icon(
+                    Icons.drag_handle,
+                    color: Colors.grey,
+                  ),
+                ),
             ],
           ),
         ),
