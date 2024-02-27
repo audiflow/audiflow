@@ -1,5 +1,4 @@
 // Copyright 2024 HANAI Tohru, Reedom, INC.
-// Copyright 2020 Ben Hills and the project contributors.
 // All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
@@ -27,6 +26,10 @@ extension QueueExt on Queue {
 
   Iterable<QueueItem> get adhoc {
     return queue.where((element) => element.type == QueueType.adhoc);
+  }
+
+  bool contains(String guid) {
+    return queue.any((element) => element.guid == guid);
   }
 }
 
