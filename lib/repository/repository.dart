@@ -58,6 +58,8 @@ abstract class Repository {
 
   Future<EpisodeStats?> findEpisodeStats(String guid);
 
+  Future<List<EpisodeStats?>> findEpisodeStatsList(Iterable<String> guids);
+
   // --- Downloads
 
   Future<void> saveDownload(Downloadable download);

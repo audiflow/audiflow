@@ -410,6 +410,16 @@ class SembastRepository extends Repository {
     return value == null ? null : EpisodeStats.fromJson(value);
   }
 
+  @override
+  Future<List<EpisodeStats?>> findEpisodeStatsList(
+    Iterable<String> guids,
+  ) async {
+    final values = await _episodeStatsStore.records(guids).get(await _db);
+    return values
+        .map((value) => value == null ? null : EpisodeStats.fromJson(value))
+        .toList();
+  }
+
   // --- Downloads
 
   @override
