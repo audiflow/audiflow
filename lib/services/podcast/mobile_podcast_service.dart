@@ -16,7 +16,9 @@ import 'package:seasoning/core/utils.dart';
 import 'package:seasoning/entities/entities.dart';
 import 'package:seasoning/l10n/messages_all.dart';
 import 'package:seasoning/repository/repository_provider.dart';
+import 'package:seasoning/services/audio/audio_player_service.dart';
 import 'package:seasoning/services/podcast/podcast_service.dart';
+import 'package:seasoning/services/queue/queue_manager.dart';
 import 'package:seasoning/services/settings/settings_service.dart';
 
 class MobilePodcastService implements PodcastService {
@@ -29,6 +31,11 @@ class MobilePodcastService implements PodcastService {
   Repository get _repository => _ref.read(repositoryProvider);
 
   AppSettings get _appSettings => _ref.read(settingsServiceProvider);
+
+  QueueManager get _queueManager => _ref.read(queueManagerProvider.notifier);
+
+  AudioPlayerService get _audioService =>
+      _ref.read(audioPlayerServiceProvider.notifier);
 
   final _log = Logger('MobilePodcastService');
   late var _categories = <String>[];
@@ -428,12 +435,6 @@ class MobilePodcastService implements PodcastService {
   }
 
   @override
-  Future<void> toggleSeasonView(Podcast podcast) async {
-    // podcast.seasonView = !podcast.seasonView;
-    // await repository.savePodcast(podcast);
-  }
-
-  @override
   Future<void> saveEpisode(Episode episode) async {
     await _repository.saveEpisode(episode);
   }
@@ -441,6 +442,48 @@ class MobilePodcastService implements PodcastService {
   @override
   Future<Transcript> saveTranscript(Transcript transcript) async {
     return _repository.saveTranscript(transcript);
+  }
+
+  @override
+  Future<void> togglePlayState(
+    Episode episode, {
+    Iterable<Episode>? group,
+  }) async {
+    final playerState = _ref.read(audioPlayerServiceProvider);
+    if (playerState != null && playerState.episode.guid == episode.guid) {
+      if (playerState.playing) {
+        await _audioService.pause();
+      } else {
+        await _audioService.play();
+      }
+      return;
+    }
+
+    final stats = await _repository.findEpisodeStats(episode.guid);
+    final position = stats?.position ?? Duration.zero;
+    await _audioService.playEpisode(episode: episode, position: position);
+
+    if (group == null) {
+      return;
+    }
+
+    final list = group.toList();
+    final i = list.indexWhere((e) => e.guid == episode.guid);
+    if (i < 0){
+      return;
+    }
+    await _addToAdhocQueue(list.sublist(i));
+  }
+
+  Future<void> _addToAdhocQueue(Iterable<Episode> episodes) async {
+    await _queueManager.replaceAllAdHoc(episodes);
+    await Future.wait(
+      episodes.map(
+        (e) => _repository.updateEpisodeStats(
+          EpisodeStatsUpdateParam(guid: e.guid, inQueue: true),
+        ),
+      ),
+    );
   }
 
   Future<PodcastSearchResultItem?> _lookupPodcastMetadata({
