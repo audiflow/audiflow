@@ -1,10 +1,8 @@
 import 'dart:async';
 
 import 'package:collection/collection.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:flutter/foundation.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:seasoning/core/types.dart';
 import 'package:seasoning/entities/entities.dart';
@@ -14,53 +12,18 @@ import 'package:seasoning/services/podcast/podcast_service_provider.dart';
 part 'episodes_group_provider.freezed.dart';
 part 'episodes_group_provider.g.dart';
 
-class EpisodesGroupScope extends HookConsumerWidget {
-  const EpisodesGroupScope({
-    required this.episodes,
-    required this.child,
-    super.key,
-  });
-
-  final Iterable<Episode> episodes;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return ProviderScope(
-        overrides: [
-          episodesGroupProvider.overrideWith(EpisodesGroup.new),
-        ],
-        child: HookConsumer(
-          builder: (context, ref, child) {
-            final state = ref.watch(episodesGroupProvider);
-            useEffect(
-              () {
-                ref.read(episodesGroupProvider.notifier).setup(episodes);
-                return null;
-              },
-              [],
-            );
-            return child ?? const SizedBox();
-          },
-          child: child,
-        ));
-  }
-}
-
-// ignore: provider_dependencies
-@Riverpod(dependencies: [podcastService, repository])
+@riverpod
 class EpisodesGroup extends _$EpisodesGroup {
   final _completer = Completer<EpisodesGroupState>();
 
   PodcastService get _podcastService => ref.read(podcastServiceProvider);
 
   @override
-  Future<EpisodesGroupState> build() async {
+  Future<EpisodesGroupState> build(Key key) async {
     return _completer.future;
   }
 
   Future<void> setup(Iterable<Episode> episodes) async {
-    print('EpisodesGroup.setup');
     final stats = await ref
         .read(repositoryProvider)
         .findEpisodeStatsList(episodes.map((e) => e.guid));

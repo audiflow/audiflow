@@ -109,6 +109,7 @@ class PodcastDetailsPage extends HookConsumerWidget {
                   viewMode == PodcastDetailViewMode.seasons
                       ? SeasonList(podcast: podcast)
                       : EpisodeList(
+                          episodeGroupKey: ValueKey(podcast.guid),
                           metadata: podcast,
                           episodes: podcast.episodes,
                         ),

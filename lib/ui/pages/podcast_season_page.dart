@@ -48,11 +48,13 @@ class PodcastSeasonPage extends HookConsumerWidget {
                 SliverToBoxAdapter(
                   child: ContextualPlayButton(
                     season.episodes,
+                    episodeGroupKey: ValueKey(season.guid),
                     playOrder: PlayOrder.timeAscend,
                     isSeries: true,
                   ),
                 ),
                 EpisodeList(
+                  episodeGroupKey: ValueKey(season.guid),
                   thumbnailVisibility: ThumbnailVisibility.hidden,
                   metadata: podcast,
                   episodes: season.episodes,
@@ -69,18 +71,20 @@ class PodcastSeasonPage extends HookConsumerWidget {
 class ContextualPlayButton extends ConsumerWidget {
   const ContextualPlayButton(
     this.episodes, {
+    required this.episodeGroupKey,
     required this.playOrder,
     required this.isSeries,
     super.key,
   });
 
+  final Key episodeGroupKey;
   final List<Episode> episodes;
   final PlayOrder playOrder;
   final bool isSeries;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final episodesState = ref.watch(episodesGroupProvider);
+    final episodesState = ref.watch(episodesGroupProvider(episodeGroupKey));
     final buttonState = episodesState.valueOrNull
         ?.nextEpisodeToPlay(playOrder: playOrder, isSeries: isSeries);
     return RoundedStadiumButton(
@@ -94,7 +98,7 @@ class ContextualPlayButton extends ConsumerWidget {
           : () {
               final episode = buttonState!.$1!;
               ref
-                  .read(episodesGroupProvider.notifier)
+                  .read(episodesGroupProvider(episodeGroupKey).notifier)
                   .togglePlayState(episode: episode);
             },
     );

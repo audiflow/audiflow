@@ -102,7 +102,9 @@ class __$$EpisodesGroupStateImplCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$EpisodesGroupStateImpl implements _EpisodesGroupState {
+class _$EpisodesGroupStateImpl
+    with DiagnosticableTreeMixin
+    implements _EpisodesGroupState {
   const _$EpisodesGroupStateImpl(
       {required final List<Episode> episodes,
       required final Map<String, EpisodeStats> statsMap})
@@ -126,8 +128,17 @@ class _$EpisodesGroupStateImpl implements _EpisodesGroupState {
   }
 
   @override
-  String toString() {
+  String toString({DiagnosticLevel minLevel = DiagnosticLevel.info}) {
     return 'EpisodesGroupState(episodes: $episodes, statsMap: $statsMap)';
+  }
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DiagnosticsProperty('type', 'EpisodesGroupState'))
+      ..add(DiagnosticsProperty('episodes', episodes))
+      ..add(DiagnosticsProperty('statsMap', statsMap));
   }
 
   @override

@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:seasoning/core/types.dart';
 import 'package:seasoning/entities/entities.dart';
 import 'package:seasoning/l10n/L.dart';
 import 'package:seasoning/providers/podcast/episode_info_provider.dart';
-import 'package:seasoning/providers/podcast/episodes_group_provider.dart';
 import 'package:seasoning/services/audio/audio_player_service.dart';
 
 class AnimatedPlayButton extends HookConsumerWidget {
@@ -66,9 +66,7 @@ class AnimatedPlayButton extends HookConsumerWidget {
               padding: const EdgeInsets.all(6),
             ),
             onPressed: () {
-              ref
-                  .read(episodesGroupProvider.notifier)
-                  .togglePlayState(episode: episode);
+              PlayButtonTappedNotification(episode).dispatch(context);
             },
             child: AnimatedIcon(
               semanticLabel: playing
