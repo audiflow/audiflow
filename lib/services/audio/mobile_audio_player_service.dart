@@ -556,7 +556,7 @@ class _DefaultAudioPlayerHandler extends BaseAudioHandler with SeekHandler {
     final downloaded = mediaItem.extras!['downloaded'] as bool? ?? false;
     final startPosition = mediaItem.extras!['position'] as int? ?? 0;
     final playbackSpeed = mediaItem.extras!['speed'] as double? ?? 0.0;
-    final start = startPosition > 0
+    final start = 0 < startPosition
         ? Duration(milliseconds: startPosition)
         : Duration.zero;
     final boost = mediaItem.extras!['boost'] as bool? ?? true;
@@ -603,7 +603,9 @@ class _DefaultAudioPlayerHandler extends BaseAudioHandler with SeekHandler {
             await volumeBoost(boost: boost);
           }
 
-          await _player.play();
+          // _player.play() does not return while the player is playing the
+          // media.
+          unawaited(_player.play());
           // ignore: avoid_catches_without_on_clauses
         } catch (e) {
           log.fine('State error $e');

@@ -456,23 +456,26 @@ class MobilePodcastService implements PodcastService {
       } else {
         await _audioService.play();
       }
-      return;
+    } else {
+      await _playEpisode(episode, group: group);
+    }
+  }
+
+  Future<void> _playEpisode(
+    Episode episode, {
+    Iterable<Episode>? group,
+  }) async {
+    if (group != null) {
+      final list = group.toList();
+      final i = list.indexWhere((e) => e.guid == episode.guid);
+      if (0 <= i) {
+        await _addToAdhocQueue(list.sublist(i));
+      }
     }
 
     final stats = await _repository.findEpisodeStats(episode.guid);
     final position = stats?.position ?? Duration.zero;
     await _audioService.playEpisode(episode: episode, position: position);
-
-    if (group == null) {
-      return;
-    }
-
-    final list = group.toList();
-    final i = list.indexWhere((e) => e.guid == episode.guid);
-    if (i < 0){
-      return;
-    }
-    await _addToAdhocQueue(list.sublist(i));
   }
 
   Future<void> _addToAdhocQueue(Iterable<Episode> episodes) async {
