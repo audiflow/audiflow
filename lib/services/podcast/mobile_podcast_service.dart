@@ -451,7 +451,7 @@ class MobilePodcastService implements PodcastService {
   }) async {
     final playerState = _ref.read(audioPlayerServiceProvider);
     if (playerState != null && playerState.episode.guid == episode.guid) {
-      if (playerState.playing) {
+      if (playerState.phase == PlayerPhase.play) {
         await _audioService.pause();
       } else {
         await _audioService.play();

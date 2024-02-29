@@ -38,7 +38,6 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
   AppSettings get _appSettings => ref.read(settingsServiceProvider);
 
   late AudioHandler _audioHandler;
-  var _cold = false;
   var _sleep = const Sleep(type: SleepType.none);
   var _audioPlayerSettings = const AudioPlayerSetting();
 
@@ -98,8 +97,7 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
 
   @override
   Future<void> play() {
-    if (_cold && state != null) {
-      _cold = false;
+    if (state != null) {
       return playEpisode(
         episode: state!.episode,
         position: state!.position,
@@ -113,13 +111,8 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
   @override
   Future<void> stop() async {
     if (state != null) {
-      _notifyAudioPlayerEvent(
-        AudioPlayerActionEvent(
-          episode: state!.episode,
-          action: AudioPlayerAction.stop,
-          position: state!.position,
-        ),
-      );
+      state = state!.copyWith(phase: PlayerPhase.stop);
+      state = null;
     }
 
     await _audioHandler.stop();
@@ -151,46 +144,23 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
     _log.info('Playing episode ${episode.guid} - '
         '${episode.title} from position $playPosition');
 
-    if (state != null) {
-      // If we are currently playing a track - save the position of the current
-      // track before switching to the next.
-      final currentState = _audioHandler.playbackState.value.processingState;
-      final prevEpisode = state!.episode;
-
-      if (currentState == AudioProcessingState.ready) {
-        _notifyAudioPlayerEvent(
-          AudioPlayerActionEvent(
-            episode: prevEpisode,
-            action: AudioPlayerAction.stop,
-            position: state!.position,
-          ),
-        );
-      } else if (currentState == AudioProcessingState.loading) {
-        await _audioHandler.stop();
-      }
+    if (state?.phase == PlayerPhase.play && state?.episode != episode) {
+      state = state!.copyWith(phase: PlayerPhase.pause);
     }
 
     state = AudioPlayerState(
       episode: episode,
       position: playPosition,
-      playing: true,
+      phase: PlayerPhase.play,
       audioState: AudioState.buffering,
     );
+
+    _notifyAudioPlayerEvent(AudioPlayerAction.play);
 
     _audioPlayerSettings = AudioPlayerSetting(
       speed: _appSettings.playbackSpeed,
       trimSilence: _appSettings.trimSilence,
       volumeBoost: _appSettings.volumeBoost,
-    );
-
-    await _repository.savePlayingEpisodeGuid(episode.guid);
-
-    _notifyAudioPlayerEvent(
-      AudioPlayerActionEvent(
-        episode: episode,
-        action: AudioPlayerAction.play,
-        position: playPosition,
-      ),
     );
 
     try {
@@ -211,14 +181,7 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
         episode: episode,
         position: playPosition,
         audioState: AudioState.error,
-        playing: false,
-      );
-      _notifyAudioPlayerEvent(
-        AudioPlayerActionEvent(
-          episode: episode,
-          action: AudioPlayerAction.stop,
-          position: playPosition,
-        ),
+        phase: PlayerPhase.stop,
       );
 
       await _audioHandler.stop();
@@ -228,13 +191,7 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
   @override
   Future<void> pause() async {
     if (state != null) {
-      _notifyAudioPlayerEvent(
-        AudioPlayerActionEvent(
-          episode: state!.episode,
-          action: AudioPlayerAction.pause,
-          position: state!.position,
-        ),
-      );
+      state = state!.copyWith(phase: PlayerPhase.pause);
     }
 
     await _audioHandler.pause();
@@ -266,14 +223,6 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
       audioState: AudioState.buffering,
     );
 
-    _notifyAudioPlayerEvent(
-      AudioPlayerActionEvent(
-        episode: state!.episode,
-        action: AudioPlayerAction.seek,
-        position: seekPosition,
-      ),
-    );
-
     await _audioHandler.seek(seekPosition);
     _positionSubscription?.resume();
   }
@@ -299,7 +248,7 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
       if (audioState == AudioState.idle) {
         // We will have to assume we have stopped.
         state = state!.copyWith(
-          playing: false,
+          phase: PlayerPhase.pause,
           audioState: audioState,
         );
       } else if (audioState == AudioState.ready) {
@@ -327,7 +276,7 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
     state = AudioPlayerState(
       episode: episode,
       position: stats.position,
-      playing: false,
+      phase: PlayerPhase.pause,
       audioState: AudioState.idle,
     );
   }
@@ -402,68 +351,55 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
           previous.processingState == current.processingState;
     }).listen((PlaybackState playbackState) {
       final audioState = AudioState.from(playbackState.processingState);
-      var playing = state?.playing ?? false;
       _log.fine(
         'Audio state is $audioState - playing is ${playbackState.playing}',
       );
       if (audioState == AudioState.ready) {
         if (playbackState.playing) {
           _startPositionTicker();
-          playing = true;
         } else {
-          playing = false;
           _stopPositionTicker();
         }
       }
       state = state?.copyWith(
         position: playbackState.position,
-        playing: playing,
         audioState: audioState,
       );
       if (audioState == AudioState.completed) {
         _completed();
-      } else if (audioState == AudioState.idle) {
-        state = null;
       }
     });
   }
 
   Future<void> _completed() async {
     if (state != null) {
-      _notifyAudioPlayerEvent(
-        AudioPlayerActionEvent(
-          episode: state!.episode,
-          action: AudioPlayerAction.completed,
-          position: state!.position,
-        ),
-      );
+      _notifyAudioPlayerEvent(AudioPlayerAction.completed);
+      // log.fine('We have completed episode ${state?.episode.guid}');
+      //
+      // await _stopPositionTicker();
+      //
+      // if (_queue.isEmpty) {
+      //   log.fine('Queue is empty so we will stop');
+      //   _queue = <Episode>[];
+      //   _currentEpisode = null;
+      //   _audioState.add(AudioState.stopped);
+      //
+      //   await _audioHandler.customAction('queueend');
+      // } else if (_sleep.type == SleepType.episode) {
+      //   log.fine('Sleeping at end of episode');
+      //
+      //   await _audioHandler.customAction('sleep');
+      //   _audioState.add(AudioState.pausing);
+      //   await _stopSleepTicker();
+      // } else {
+      //   log.fine('Queue has ${_queue.length} episodes left');
+      //   _currentEpisode = null;
+      //   final ep = _queue.removeAt(0);
+      //
+      //   await playEpisode(episode: ep);
+      //
+      //   _updateQueueState();
     }
-    // log.fine('We have completed episode ${state?.episode.guid}');
-    //
-    // await _stopPositionTicker();
-    //
-    // if (_queue.isEmpty) {
-    //   log.fine('Queue is empty so we will stop');
-    //   _queue = <Episode>[];
-    //   _currentEpisode = null;
-    //   _audioState.add(AudioState.stopped);
-    //
-    //   await _audioHandler.customAction('queueend');
-    // } else if (_sleep.type == SleepType.episode) {
-    //   log.fine('Sleeping at end of episode');
-    //
-    //   await _audioHandler.customAction('sleep');
-    //   _audioState.add(AudioState.pausing);
-    //   await _stopSleepTicker();
-    // } else {
-    //   log.fine('Queue has ${_queue.length} episodes left');
-    //   _currentEpisode = null;
-    //   final ep = _queue.removeAt(0);
-    //
-    //   await playEpisode(episode: ep);
-    //
-    //   _updateQueueState();
-    // }
   }
 
   /// Called when play starts. Each time we receive an event in the stream
@@ -524,8 +460,14 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
     );
   }
 
-  void _notifyAudioPlayerEvent(AudioPlayerEvent event) =>
-      ref.read(audioPlayerEventStreamProvider.notifier).add(event);
+  void _notifyAudioPlayerEvent(AudioPlayerAction action) =>
+      ref.read(audioPlayerEventStreamProvider.notifier).add(
+            AudioPlayerActionEvent(
+              episode: state!.episode,
+              action: action,
+              position: state!.position,
+            ),
+          );
 }
 
 /// This is the default audio handler used by the [MobileAudioPlayerService]

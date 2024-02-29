@@ -49,10 +49,17 @@ class DefaultQueueManager extends _$DefaultQueueManager
   @override
   Future<void> append(Episode episode) async {
     final inQueue = state.queue.any((q) => q.guid == episode.guid);
-    final newQueue = [
-      ...state.queue,
-      QueueItem.primary(guid: episode.guid),
-    ];
+    final i = state.queue.lastIndexWhere((q) => q.type == QueueType.primary);
+    final newQueue = 0 <= i
+        ? [
+            ...state.queue.sublist(0, i + 1),
+            QueueItem.primary(guid: episode.guid),
+            ...state.queue.sublist(i + 1),
+          ]
+        : [
+            ...state.queue,
+            QueueItem.primary(guid: episode.guid),
+          ];
     state = state.copyWith(queue: newQueue);
     await _repository.saveQueue(state);
 

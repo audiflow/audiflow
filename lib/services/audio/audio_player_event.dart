@@ -5,7 +5,7 @@ part 'audio_player_event.g.dart';
 
 sealed class AudioPlayerEvent {}
 
-enum AudioPlayerAction { play, pause, stop, seek, completed }
+enum AudioPlayerAction { play, completed }
 
 class AudioPlayerActionEvent implements AudioPlayerEvent {
   const AudioPlayerActionEvent({

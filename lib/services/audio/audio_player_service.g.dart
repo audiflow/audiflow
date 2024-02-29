@@ -7,7 +7,7 @@ part of 'audio_player_service.dart';
 // **************************************************************************
 
 String _$audioPlayerServiceHash() =>
-    r'263c8f102a69f8131844c1dc5066af4dccaa1c84';
+    r'd6328600fcc19a72b706c5251a672d7a276cde1a';
 
 /// This class defines the audio playback options supported by Anytime.
 ///

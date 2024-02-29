@@ -13,12 +13,18 @@ class AudioPlayerSetting with _$AudioPlayerSetting {
   }) = _AudioPlayerSetting;
 }
 
+enum PlayerPhase {
+  stop,
+  play,
+  pause,
+}
+
 @freezed
 class AudioPlayerState with _$AudioPlayerState {
   const factory AudioPlayerState({
     required Episode episode,
     required Duration position,
-    required bool playing,
+    required PlayerPhase phase,
     required AudioState audioState,
     @Default(0) int playbackError,
   }) = _AudioPlayerState;

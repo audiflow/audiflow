@@ -228,23 +228,16 @@ class _DetailedPlayerContent extends ConsumerWidget {
                 ),
                 const _ProgressIndicator(),
                 SizedBox(
-                    height: MediaQueryData.fromView(
-                  ui.PlatformDispatcher.instance.implicitView!,
-                ).padding.bottom),
+                  height: MediaQueryData.fromView(
+                    ui.PlatformDispatcher.instance.implicitView!,
+                  ).padding.bottom,
+                ),
               ],
             ),
           ),
         ],
       ),
     );
-  }
-}
-
-class _Hoge extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    print(MediaQuery.of(context).viewPadding.bottom);
-    return SizedBox();
   }
 }
 
@@ -338,11 +331,12 @@ class _PlayButton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final playing =
-        ref.watch(audioPlayerServiceProvider.select((state) => state?.playing));
-    return playing == null
+    final playerPhase = ref.watch(
+      audioPlayerServiceProvider.select((state) => state?.phase),
+    );
+    return playerPhase == null
         ? const SizedBox.shrink()
-        : playing
+        : playerPhase == PlayerPhase.play
             ? _IconButton(
                 icon: pauseIcon,
                 iconSize: iconSize,

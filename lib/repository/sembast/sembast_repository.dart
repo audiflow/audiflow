@@ -359,7 +359,7 @@ class SembastRepository extends Repository {
 
   @override
   Future<EpisodeStats> updateEpisodeStats(EpisodeStatsUpdateParam param) async {
-    log.fine('Update EpisodeStats: ${param.guid} $param');
+    log.fine('Update EpisodeStats: ${param.guid}');
 
     final db = await _db;
     final stats = await db.transaction((txn) async {

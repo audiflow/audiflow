@@ -27,7 +27,7 @@ class AnimatedPlayButton extends HookConsumerWidget {
 
     final isTarget =
         episodeState.hasValue && playerState?.episode.guid == episode.guid;
-    final playing = isTarget && playerState?.playing == true;
+    final playing = isTarget && playerState?.phase == PlayerPhase.play;
     final buffering =
         isTarget && playerState?.audioState == AudioState.buffering;
 
