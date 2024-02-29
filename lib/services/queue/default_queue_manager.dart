@@ -57,14 +57,27 @@ class DefaultQueueManager extends _$DefaultQueueManager
             ...state.queue.sublist(i + 1),
           ]
         : [
-            ...state.queue,
             QueueItem.primary(guid: episode.guid),
+            ...state.queue,
           ];
     state = state.copyWith(queue: newQueue);
     await _repository.saveQueue(state);
 
     if (!inQueue) {
       await _markEpisodeAsQueued(episode);
+    }
+  }
+
+  @override
+  Future<void> toggle(Episode episode) async {
+    var index = state.queue.indexWhere((q) => q.guid == episode.guid);
+    if (0 <= index) {
+      do {
+        await remove(index);
+        index = state.queue.indexWhere((q) => q.guid == episode.guid);
+      } while (0 <= index);
+    } else {
+      await append(episode);
     }
   }
 

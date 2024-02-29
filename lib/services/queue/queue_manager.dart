@@ -16,6 +16,8 @@ class QueueManager extends _$QueueManager {
 
   Future<void> append(Episode episode) => throw UnimplementedError();
 
+  Future<void> toggle(Episode episode) => throw UnimplementedError();
+
   Future<void> reorder(int oldIndex, int newIndex) =>
       throw UnimplementedError();
 
