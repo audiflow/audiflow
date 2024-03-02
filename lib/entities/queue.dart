@@ -14,33 +14,18 @@ part 'queue.g.dart';
 @freezed
 class Queue with _$Queue {
   const factory Queue({
-    @Default(<QueueItem>[]) List<QueueItem> primary,
-    @Default(<QueueItem>[]) List<QueueItem> adhoc,
+    @Default(<QueueItem>[]) List<QueueItem> queue,
   }) = _Queue;
 
   factory Queue.fromJson(Map<String, dynamic> json) => _$QueueFromJson(json);
 }
 
 extension QueueExt on Queue {
-  bool contains(String guid, {QueueType? type}) {
-    switch (type) {
-      case QueueType.primary:
-        return primary.any((element) => element.guid == guid);
-      case QueueType.adhoc:
-        return adhoc.any((element) => element.guid == guid);
-      case null:
-        return primary.any((element) => element.guid == guid) ||
-            adhoc.any((element) => element.guid == guid);
-    }
-  }
-
-  int indexOf(QueueItem item) {
-    switch (item.type) {
-      case QueueType.primary:
-        return primary.indexWhere((element) => element.id == item.id);
-      case QueueType.adhoc:
-        return adhoc.indexWhere((element) => element.id == item.id);
-    }
+  bool contains({required String guid, QueueType? type}) {
+    return queue.any(
+      (element) =>
+          element.guid == guid && (type == null || element.type == type),
+    );
   }
 }
 
