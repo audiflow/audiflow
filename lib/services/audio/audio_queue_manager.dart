@@ -1,3 +1,8 @@
+// Copyright 2024 HANAI Tohru, Reedom, INC.
+// All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:seasoning/entities/entities.dart';
@@ -18,7 +23,7 @@ class AudioQueueManager extends _$AudioQueueManager {
 
   QueueManager get _queueManager => ref.read(queueManagerProvider.notifier);
 
-  Queue get _queue => ref.read(queueManagerProvider);
+  List<QueueItem> get _queue => ref.read(queueManagerProvider).queue;
 
   ConnectivityResult get _connectivityResult =>
       ref.read(connectivityStateProvider);
