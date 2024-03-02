@@ -150,7 +150,7 @@ class DefaultQueueManager extends _$DefaultQueueManager
   }
 
   @override
-  Future<void> reorder(QueueType type, int oldIndex, int newIndex) async {
+  Future<void> reorder(int oldIndex, int newIndex) async {
     final newQueue = List.of(state.queue);
     final temp = newQueue.removeAt(oldIndex);
     newQueue.insert(newIndex - (oldIndex < newIndex ? 1 : 0), temp);

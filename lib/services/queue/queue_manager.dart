@@ -32,7 +32,7 @@ class QueueManager extends _$QueueManager {
   Future<void> removeFromTop({required QueueItem to}) =>
       throw UnimplementedError();
 
-  Future<void> reorder(QueueType type, int oldIndex, int newIndex) =>
+  Future<void> reorder(int oldIndex, int newIndex) =>
       throw UnimplementedError();
 
   Future<void> clear({QueueType? type}) => throw UnimplementedError();
