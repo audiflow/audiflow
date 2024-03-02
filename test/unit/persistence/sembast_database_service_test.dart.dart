@@ -278,6 +278,30 @@ void main() {
       episodeStats = loaded!;
     });
 
+    test('updateEpisodeStatsList', () async {
+      final params = [
+        EpisodeStatsUpdateParam(
+          guid: podcast.episodes[0].guid,
+          playCount: 2,
+        ),
+        EpisodeStatsUpdateParam(
+          guid: podcast.episodes[1].guid,
+          playCount: 1,
+        ),
+      ];
+      final result = await persistenceService.updateEpisodeStatsList(params);
+      expect(result, hasLength(2));
+      expect(result[0].guid, podcast.episodes[0].guid);
+      expect(result[0].duration, podcast.episodes[0].duration);
+      expect(result[1].playCount, 1);
+    });
+
+    test('check updated field(2)', () async {
+      final loaded =
+          await persistenceService.findEpisodeStats(podcast.episodes[1].guid);
+      expect(loaded?.playCount, 1);
+    });
+
     test('unsubscribePodcast', () async {
       await persistenceService.unsubscribePodcast(podcast1);
       final episodes =
@@ -323,8 +347,8 @@ void main() {
       final episodes2 = createEpisodeMocks(podcast2, 3);
       final queue = Queue(
         queue: [
-          QueueItem.primary(eguid: episodes1[0].guid),
-          QueueItem.adhoc(eguid: episodes2[0].guid),
+          QueueItem.primary(episodes1[0].guid),
+          QueueItem.adhoc(episodes2[0].guid),
         ],
       );
       await persistenceService.saveQueue(queue);

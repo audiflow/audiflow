@@ -405,6 +405,70 @@ class SembastRepository extends Repository {
   }
 
   @override
+  Future<List<EpisodeStats>> updateEpisodeStatsList(
+    Iterable<EpisodeStatsUpdateParam> params,
+  ) async {
+    if (params.isEmpty) {
+      return [];
+    }
+
+    final db = await _db;
+    final statsList = await db.transaction((txn) async {
+      final values = await _episodeStatsStore
+          .records(params.map((param) => param.guid))
+          .get(txn);
+
+      final paramList = params.toList();
+      final futures = List.generate(params.length, (i) async {
+        final param = paramList[i];
+        final value = values[i];
+
+        final EpisodeStats? stats;
+        if (value != null) {
+          stats = EpisodeStats.fromJson(value);
+        } else {
+          final value = await _episodeStore.record(param.guid).get(txn);
+          stats = value != null
+              ? EpisodeStats.fromEpisode(Episode.fromJson(value))
+              : EpisodeStats(
+                  guid: param.guid,
+                  position: param.position ?? Duration.zero,
+                  duration: param.duration ?? Duration.zero,
+                  playCount: param.playCount ?? 0,
+                  playTotal: param.playTotal ?? Duration.zero,
+                  completeCount: param.completeCount ?? 0,
+                  inQueue: param.inQueue ?? false,
+                  downloaded: param.downloaded ?? false,
+                );
+        }
+
+        final newStats = stats.copyWith(
+          position: param.position ?? stats.position,
+          duration: param.duration ?? stats.duration,
+          playCount: param.playCount ?? stats.playCount,
+          playTotal: param.playTotal ?? stats.playTotal,
+          completeCount: param.completeCount ?? 0,
+          inQueue: param.inQueue ?? stats.inQueue,
+          downloaded: param.downloaded ?? stats.downloaded,
+        );
+
+        if (newStats != stats) {
+          await _episodeStatsStore
+              .record(stats.guid)
+              .put(txn, newStats.toJson());
+        }
+        return newStats;
+      });
+      return Future.wait(futures);
+    });
+
+    for (final stats in statsList) {
+      _episodeEventStream.add(EpisodeStatsUpdatedEvent(stats));
+    }
+    return statsList;
+  }
+
+  @override
   Future<EpisodeStats?> findEpisodeStats(String guid) async {
     final value = await _episodeStatsStore.record(guid).get(await _db);
     return value == null ? null : EpisodeStats.fromJson(value);

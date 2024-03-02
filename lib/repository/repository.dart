@@ -56,6 +56,9 @@ abstract class Repository {
 
   Future<EpisodeStats> updateEpisodeStats(EpisodeStatsUpdateParam param);
 
+  Future<List<EpisodeStats>> updateEpisodeStatsList(
+      Iterable<EpisodeStatsUpdateParam> params);
+
   Future<EpisodeStats?> findEpisodeStats(String guid);
 
   Future<List<EpisodeStats?>> findEpisodeStatsList(Iterable<String> guids);
