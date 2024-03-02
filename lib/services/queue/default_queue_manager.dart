@@ -1,3 +1,8 @@
+// Copyright 2024 HANAI Tohru, Reedom, INC.
+// All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
 import 'dart:async';
 
 import 'package:collection/collection.dart';
@@ -23,27 +28,13 @@ class DefaultQueueManager extends _$DefaultQueueManager
 
   @override
   Future<QueueItem?> pop() async {
-    if (state.primary.isNotEmpty) {
-      return removeByIndex(QueueType.primary, 0);
-    } else if (state.adhoc.isNotEmpty) {
-      return removeByIndex(QueueType.adhoc, 0);
-    } else {
-      return null;
-    }
+    return state.queue.isNotEmpty ? removeByIndex(QueueType.primary, 0) : null;
   }
 
   @override
   Future<void> prepend(QueueItem item) async {
-    final isNewEpisode = !state.contains(item.guid);
-
-    if (item.type == QueueType.primary) {
-      final newQueue = [item, ...state.primary];
-      state = state.copyWith(primary: newQueue);
-    } else {
-      final newQueue = [item, ...state.adhoc];
-      state = state.copyWith(adhoc: newQueue);
-    }
-
+    final isNewEpisode = !state.contains(guid: item.guid);
+    state = state.copyWith(queue: [item, ...state.queue]);
     await _repository.saveQueue(state);
     if (isNewEpisode) {
       await _markEpisodeAsQueued(item.guid);
@@ -52,13 +43,16 @@ class DefaultQueueManager extends _$DefaultQueueManager
 
   @override
   Future<void> append(QueueItem item) async {
-    final isNewEpisode = !state.contains(item.guid);
-    if (item.type == QueueType.primary) {
-      final newQueue = [...state.primary, item];
-      state = state.copyWith(primary: newQueue);
+    final isNewEpisode = !state.contains(guid: item.guid);
+
+    final i = state.queue.lastIndexWhere((q) => q.type == item.type);
+    if (0 <= i) {
+      final newQueue = List.of(state.queue)..insert(i + 1, item);
+      state = state.copyWith(queue: newQueue);
+    } else if (item.type == QueueType.adhoc || state.queue.isEmpty) {
+      state = state.copyWith(queue: [...state.queue, item]);
     } else {
-      final newQueue = [...state.adhoc, item];
-      state = state.copyWith(adhoc: newQueue);
+      state = state.copyWith(queue: [item, ...state.queue]);
     }
 
     await _repository.saveQueue(state);
@@ -68,60 +62,66 @@ class DefaultQueueManager extends _$DefaultQueueManager
   }
 
   @override
-  Future<void> addAll(Iterable<QueueItem> items) async {
+  Future<void> appendAll(Iterable<QueueItem> items) async {
+    if (items.isEmpty) {
+      return;
+    }
+
     assert(
-      items.isEmpty || items.every((item) => item.type == items.first.type),
+      items.every((item) => item.type == items.first.type),
       'All items must have the same type',
     );
 
-    if (items.first.type == QueueType.primary) {
-      final newQueue = [...state.primary, ...items];
-      state = state.copyWith(primary: newQueue);
+    final type = items.first.type;
+    final i = state.queue.lastIndexWhere((q) => q.type == type);
+    if (0 <= i) {
+      final newQueue = List.of(state.queue)..insertAll(i + 1, items);
+      state = state.copyWith(queue: newQueue);
+    } else if (type == QueueType.adhoc || state.queue.isEmpty) {
+      state = state.copyWith(queue: [...state.queue, ...items]);
     } else {
-      final newQueue = [...state.adhoc, ...items];
-      state = state.copyWith(adhoc: newQueue);
+      state = state.copyWith(queue: [...items, ...state.queue]);
     }
 
     await _repository.saveQueue(state);
-    await Future.wait(items.map((item) => _markEpisodeAsQueued(item.guid)));
+    await _markEpisodesAsQueued(items.map((item) => item.guid));
   }
 
   @override
   Future<void> replaceAll(Iterable<QueueItem> items) async {
+    if (items.isEmpty) {
+      return clear();
+    }
+
     final type = items.first.type;
-    final removingItems =
-        type == QueueType.primary ? state.primary : state.adhoc;
-    final newEpisodes = items.map((item) => item.guid).whereNot(state.contains);
+    final remaining = state.queue.where((q) => q.type != type);
+    final removing = state.queue.where((q) => q.type == type);
+    final newEpisodes =
+        items.map((q) => q.guid).where((guid) => state.contains(guid: guid));
 
     state = state.copyWith(
-      primary: type == QueueType.primary ? [...items] : state.primary,
-      adhoc: type == QueueType.adhoc ? [...items] : state.adhoc,
+      queue: type == QueueType.primary
+          ? [...items, ...remaining]
+          : [...remaining, ...items],
     );
     await _repository.saveQueue(state);
 
-    final purgingEpisodes =
-        removingItems.map((item) => item.guid).whereNot(state.contains);
-    await Future.wait([
-      ...purgingEpisodes.map(_unmarkEpisodeAsQueued),
-      ...newEpisodes.map(_markEpisodeAsQueued),
-    ]);
+    final purgingEpisodes = removing
+        .map((item) => item.guid)
+        .whereNot((guid) => state.contains(guid: guid));
+    await _unmarkEpisodesAsQueued(purgingEpisodes);
+    await _markEpisodesAsQueued(newEpisodes);
   }
 
   @override
   Future<QueueItem> removeByIndex(QueueType type, int index) async {
-    final queue = type == QueueType.primary ? state.primary : state.adhoc;
-    assert(0 <= index && index < queue.length, 'Invalid index');
+    assert(0 <= index && index < state.queue.length, 'Invalid index');
 
-    final removedItem = queue[index];
-    final newQueue = List.of(queue)..removeAt(index);
-
-    state = state.copyWith(
-      primary: type == QueueType.primary ? newQueue : state.primary,
-      adhoc: type == QueueType.adhoc ? newQueue : state.adhoc,
-    );
+    final removedItem = state.queue[index];
+    state = state.copyWith(queue: List.of(state.queue)..removeAt(index));
     await _repository.saveQueue(state);
 
-    if (!state.contains(removedItem.guid)) {
+    if (!state.contains(guid: removedItem.guid)) {
       await _unmarkEpisodeAsQueued(removedItem.guid);
     }
     return removedItem;
@@ -129,47 +129,56 @@ class DefaultQueueManager extends _$DefaultQueueManager
 
   @override
   Future<void> removeFromTop({required QueueItem to}) async {
-    final queue = to.type == QueueType.primary ? state.primary : state.adhoc;
-    final i = queue.indexOf(to);
+    final i = state.queue.indexOf(to);
     assert(0 <= i, 'Queue item not found');
-    await replaceAll(queue.sublist(i + 1));
+    if (i == 0 || state.queue.sublist(0, i).every((q) => q.type == to.type)) {
+      return replaceAll(state.queue.sublist(i + 1));
+    }
+
+    final primary = (to.type == QueueType.primary
+            ? state.queue.sublist(i + 1)
+            : state.queue)
+        .where((q) => q.type == QueueType.primary);
+    final adhoc =
+        (to.type == QueueType.adhoc ? state.queue.sublist(i + 1) : state.queue)
+            .where((q) => q.type == QueueType.adhoc);
+
+    final newQueue = to.type == QueueType.primary
+        ? [...primary, ...adhoc]
+        : [...adhoc, ...primary];
+    await replaceAll(newQueue);
   }
 
   @override
   Future<void> reorder(QueueType type, int oldIndex, int newIndex) async {
-    final queue = type == QueueType.primary ? state.primary : state.adhoc;
-    assert(0 <= newIndex && newIndex <= queue.length, 'Invalid newIndex');
-
-    final newQueue = List.of(queue);
+    final newQueue = List.of(state.queue);
     final temp = newQueue.removeAt(oldIndex);
     newQueue.insert(newIndex - (oldIndex < newIndex ? 1 : 0), temp);
 
-    state = state.copyWith(
-      primary: type == QueueType.primary ? newQueue : state.primary,
-      adhoc: type == QueueType.adhoc ? newQueue : state.adhoc,
-    );
+    state = state.copyWith(queue: newQueue);
     await _repository.saveQueue(state);
   }
 
   @override
   Future<void> clear({QueueType? type}) async {
-    final removingItems = type == QueueType.primary
-        ? state.primary
+    final removing = type == QueueType.primary
+        ? state.queue.where((q) => q.type != QueueType.primary)
         : type == QueueType.adhoc
-            ? state.adhoc
-            : [...state.primary, ...state.adhoc];
+            ? state.queue.where((q) => q.type != QueueType.adhoc)
+            : [...state.queue];
+    final newQueue = type == QueueType.primary
+        ? state.queue.where((q) => q.type == QueueType.primary)
+        : type == QueueType.adhoc
+            ? state.queue.where((q) => q.type == QueueType.adhoc)
+            : <QueueItem>[];
 
-    state = state.copyWith(
-      primary: type == QueueType.primary ? [] : state.primary,
-      adhoc: type == QueueType.adhoc ? [] : state.adhoc,
-    );
+    state = state.copyWith(queue: newQueue.toList());
     await _repository.saveQueue(state);
 
-    final purgingEpisodes =
-        removingItems.map((item) => item.guid).whereNot(state.contains);
-    await Future.wait([
-      ...purgingEpisodes.map(_unmarkEpisodeAsQueued),
-    ]);
+    final purgingEpisodes = removing
+        .map((item) => item.guid)
+        .whereNot((guid) => state.contains(guid: guid));
+    await _unmarkEpisodesAsQueued(purgingEpisodes);
   }
 
   Future<void> _markEpisodeAsQueued(String guid) async {
@@ -177,8 +186,20 @@ class DefaultQueueManager extends _$DefaultQueueManager
     await _repository.updateEpisodeStats(param);
   }
 
+  Future<void> _markEpisodesAsQueued(Iterable<String> guids) async {
+    final params =
+        guids.map((guid) => EpisodeStatsUpdateParam(guid: guid, inQueue: true));
+    await _repository.updateEpisodeStatsList(params);
+  }
+
   Future<void> _unmarkEpisodeAsQueued(String guid) async {
     final param = EpisodeStatsUpdateParam(guid: guid, inQueue: false);
     await _repository.updateEpisodeStats(param);
+  }
+
+  Future<void> _unmarkEpisodesAsQueued(Iterable<String> guids) async {
+    final params = guids
+        .map((guid) => EpisodeStatsUpdateParam(guid: guid, inQueue: false));
+    await _repository.updateEpisodeStatsList(params);
   }
 }

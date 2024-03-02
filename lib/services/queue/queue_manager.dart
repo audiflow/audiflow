@@ -1,3 +1,8 @@
+// Copyright 2024 HANAI Tohru, Reedom, INC.
+// All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:seasoning/entities/entities.dart';
 
@@ -16,7 +21,7 @@ class QueueManager extends _$QueueManager {
 
   Future<void> append(QueueItem item) => throw UnimplementedError();
 
-  Future<void> addAll(Iterable<QueueItem> items) => throw UnimplementedError();
+  Future<void> appendAll(Iterable<QueueItem> items) => throw UnimplementedError();
 
   Future<void> replaceAll(Iterable<QueueItem> items) =>
       throw UnimplementedError();
