@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:seasoning/core/types.dart';
+import 'package:seasoning/entities/entities.dart';
 import 'package:seasoning/services/podcast/podcast_service_provider.dart';
 import 'package:seasoning/services/queue/queue_list_provider.dart';
 import 'package:seasoning/services/queue/queue_manager.dart';
@@ -68,6 +69,10 @@ class Section extends MultiSliver {
                 key: ValueKey(queuedEpisodes[index].item.id),
                 episode: queuedEpisodes[index].episode,
                 sortableIndex: index,
+                backgroundColor:
+                    queuedEpisodes[index].item.type == QueueType.primary
+                        ? Colors.transparent
+                        : Colors.grey[200],
               ),
               itemCount: queuedEpisodes.length,
               onReorder: onReorder,

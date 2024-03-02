@@ -131,10 +131,8 @@ class DefaultQueueManager extends _$DefaultQueueManager
   Future<void> removeFromTop({required QueueItem to}) async {
     final i = state.queue.indexOf(to);
     assert(0 <= i, 'Queue item not found');
-    if (i == 0 || state.queue.sublist(0, i).every((q) => q.type == to.type)) {
-      return replaceAll(state.queue.sublist(i + 1));
-    }
 
+    final oldQueue = state.queue;
     final primary = (to.type == QueueType.primary
             ? state.queue.sublist(i + 1)
             : state.queue)
@@ -142,11 +140,15 @@ class DefaultQueueManager extends _$DefaultQueueManager
     final adhoc =
         (to.type == QueueType.adhoc ? state.queue.sublist(i + 1) : state.queue)
             .where((q) => q.type == QueueType.adhoc);
-
     final newQueue = to.type == QueueType.primary
         ? [...primary, ...adhoc]
         : [...adhoc, ...primary];
-    await replaceAll(newQueue);
+    state = state.copyWith(queue: newQueue);
+
+    final purgingEpisodes = oldQueue
+        .map((q) => q.guid)
+        .where((guid) => !state.queue.any((q) => q.guid == guid));
+    await _unmarkEpisodesAsQueued(purgingEpisodes);
   }
 
   @override

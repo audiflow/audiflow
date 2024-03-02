@@ -23,10 +23,12 @@ class EpisodeBriefTile extends HookConsumerWidget {
     super.key,
     required this.episode,
     this.sortableIndex,
+    this.backgroundColor,
   });
 
   final Episode episode;
   final int? sortableIndex;
+  final Color? backgroundColor;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -39,6 +41,7 @@ class EpisodeBriefTile extends HookConsumerWidget {
       child: InkWell(
         child: Container(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+          color: backgroundColor,
           height: 70,
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
