@@ -203,8 +203,7 @@ class _DetailedPlayerContent extends ConsumerWidget {
                   height: max(0, min(maxHeight - 300, height - 300)),
                   child: const CustomScrollView(
                     slivers: [
-                      QueueListBlock(queueType: QueueType.primary),
-                      QueueListBlock(queueType: QueueType.adhoc),
+                      QueueListBlock(),
                     ],
                   ),
                 ),

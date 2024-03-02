@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:seasoning/core/types.dart';
-import 'package:seasoning/entities/entities.dart';
 import 'package:seasoning/services/podcast/podcast_service_provider.dart';
 import 'package:seasoning/services/queue/queue_list_provider.dart';
 import 'package:seasoning/services/queue/queue_manager.dart';
@@ -9,15 +8,11 @@ import 'package:seasoning/ui/podcast/episode_brief_tile.dart';
 import 'package:sliver_tools/sliver_tools.dart';
 
 class QueueListBlock extends ConsumerWidget {
-  const QueueListBlock({required this.queueType, super.key});
-
-  final QueueType queueType;
+  const QueueListBlock({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final queueState = ref.watch(queueListProvider);
-    final queue =
-        queueType == QueueType.primary ? queueState.primary : queueState.adhoc;
+    final queue = ref.watch(queueListProvider).queue;
     if (queue.isEmpty) {
       return const SliverToBoxAdapter(child: SizedBox.shrink());
     }
@@ -29,14 +24,15 @@ class QueueListBlock extends ConsumerWidget {
         if (index == null || queue.length <= index) {
           ref.read(podcastServiceProvider).handlePlay(episode);
         } else {
-          final item = queue[index];
-          ref.read(podcastServiceProvider).handlePlayFromQueue(item, episode);
+          ref
+              .read(podcastServiceProvider)
+              .handlePlayFromQueue(queue[index].item, queue[index].episode);
         }
         return false;
       },
       child: Section(
-        title: queueType == QueueType.primary ? 'Queue' : 'Adhoc Queue',
-        episodes: queue,
+        title: 'Queue',
+        queuedEpisodes: queue,
         onReorder: (oldIndex, newIndex) =>
             ref.read(queueManagerProvider.notifier).reorder(oldIndex, newIndex),
       ),
@@ -49,7 +45,7 @@ class Section extends MultiSliver {
     super.key,
     required String title,
     Color titleColor = Colors.black,
-    required List<Episode> episodes,
+    required List<QueuedEpisode> queuedEpisodes,
     required ReorderCallback onReorder,
   }) : super(
           pushPinnedChildren: true,
@@ -69,11 +65,11 @@ class Section extends MultiSliver {
             ),
             SliverReorderableList(
               itemBuilder: (context, index) => EpisodeBriefTile(
-                key: ValueKey(episodes[index].guid),
-                episode: episodes[index],
+                key: ValueKey(queuedEpisodes[index].item.id),
+                episode: queuedEpisodes[index].episode,
                 sortableIndex: index,
               ),
-              itemCount: episodes.length,
+              itemCount: queuedEpisodes.length,
               onReorder: onReorder,
             ),
           ],

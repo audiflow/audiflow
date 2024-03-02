@@ -46,7 +46,13 @@ class QueueButton extends HookConsumerWidget {
     final key = useState(GlobalKey<PopupMenuButtonState<_Action>>()).value;
     return GestureDetector(
       onTap: () {
-        ref.read(queueManagerProvider.notifier).toggle(episode);
+        if (queueIndex < 0) {
+          ref
+              .read(queueManagerProvider.notifier)
+              .append(QueueItem.primary(episode.guid));
+        } else {
+          ref.read(queueManagerProvider.notifier).removeByIndex(queueIndex);
+        }
       },
       onLongPress: () {
         key.currentState!.showButtonMenu();
@@ -60,11 +66,11 @@ class QueueButton extends HookConsumerWidget {
 
           switch (value) {
             case _Action.prepend:
-              queueManager.prepend(episode);
+              queueManager.prepend(QueueItem.primary(episode.guid));
             case _Action.append:
-              queueManager.append(episode);
+              queueManager.append(QueueItem.primary(episode.guid));
             case _Action.remove:
-              queueManager.remove(queueIndex);
+              queueManager.removeByIndex(queueIndex);
           }
         },
         child: Row(

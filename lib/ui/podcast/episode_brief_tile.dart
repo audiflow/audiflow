@@ -41,6 +41,7 @@ class EpisodeBriefTile extends HookConsumerWidget {
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
           height: 70,
           child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
             onTap: () {
               PlayButtonTappedNotification(episode, index: sortableIndex)
                   .dispatch(context);

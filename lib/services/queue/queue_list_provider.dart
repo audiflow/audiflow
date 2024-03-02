@@ -29,21 +29,21 @@ class QueueList extends _$QueueList {
         .asyncMap(Future.value)
         .map((queue) => queue.queue)
         .listen((queue) async {
-      final episodes = <Episode>{...state.queue.map((e) => e.episode)};
+      final knownEpisodes = <Episode>{...state.queue.map((e) => e.episode)};
 
       final guidsToLoad = Set<String>.from(
         queue
             .map((i) => i.guid)
-            .where((guid) => !episodes.any((e) => e.guid == guid)),
+            .where((guid) => !knownEpisodes.any((e) => e.guid == guid)),
       );
       if (guidsToLoad.isNotEmpty) {
         final episodes =
             await ref.read(podcastServiceProvider).loadEpisodes(guidsToLoad);
-        episodes.addAll(episodes.where((e) => e != null).cast<Episode>());
+        knownEpisodes.addAll(episodes.where((e) => e != null).cast<Episode>());
       }
 
       state = QueueListState(
-        queue: _generate(queue, episodes),
+        queue: _generate(queue, knownEpisodes),
       );
     });
     ref.onDispose(sub.cancel);
