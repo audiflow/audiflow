@@ -26,42 +26,61 @@ class QueueList extends _$QueueList {
 
   void _listen() {
     final sub = _queueInputState.asyncMap(Future.value).listen((queue) async {
-      final known = <Episode>{...state.primary, ...state.adhoc};
-
-      final toLoad = <String>{
-        ...queue.queue.map((i) => i.guid).where(
-              (guid) =>
-                  !state.primary.any((e) => e.guid == guid) &&
-                  !state.adhoc.any((e) => e.guid == guid),
-            ),
+      final episodes = <Episode>{
+        ...state.primary.map((e) => e.episode),
+        ...state.adhoc.map((e) => e.episode),
       };
-      if (toLoad.isNotEmpty) {
+
+      final guidsToLoad = Set<String>.from(
+        [...queue.primary, ...queue.adhoc].map((i) => i.guid).where(
+              (guid) =>
+                  !state.primary.any((e) => e.item.guid == guid) &&
+                  !state.adhoc.any((e) => e.item.guid == guid),
+            ),
+      );
+      if (guidsToLoad.isNotEmpty) {
         final episodes =
-            await ref.read(podcastServiceProvider).loadEpisodes(toLoad);
-        known.addAll(episodes.where((e) => e != null).cast<Episode>());
+            await ref.read(podcastServiceProvider).loadEpisodes(guidsToLoad);
+        episodes.addAll(episodes.where((e) => e != null).cast<Episode>());
       }
 
       state = QueueListState(
-        primary: queue.primary
-            .map((item) => known.firstWhereOrNull((e) => e.guid == item.guid))
-            .where((e) => e != null)
-            .cast<Episode>()
-            .toList(),
-        adhoc: queue.adhoc
-            .map((item) => known.firstWhereOrNull((e) => e.guid == item.guid))
-            .where((e) => e != null)
-            .cast<Episode>()
-            .toList(),
+        primary: _generate(queue.primary, episodes),
+        adhoc: _generate(queue.adhoc, episodes),
       );
     });
     ref.onDispose(sub.cancel);
+  }
+
+  List<QueuedEpisode> _generate(
+    Iterable<QueueItem> items,
+    Set<Episode> episodes,
+  ) {
+    return items
+        .map(
+          (item) {
+            final e = episodes.firstWhereOrNull((e) => e.guid == item.guid);
+            return (item, e);
+          },
+        )
+        .where((e) => e.$2 != null)
+        .map((e) => QueuedEpisode(item: e.$1, episode: e.$2!))
+        .toList();
   }
 }
 
 @freezed
 class QueueListState with _$QueueListState {
   const factory QueueListState({
-    @Default(<Episode>[]) List<Episode> primary,
-    @Default(<Episode>[]) List<Episode> adhoc,
+    @Default(<QueuedEpisode>[]) List<QueuedEpisode> primary,
+    @Default(<QueuedEpisode>[]) List<QueuedEpisode> adhoc,
   }) = _QueueListState;
+}
+
+@freezed
+class QueuedEpisode with _$QueuedEpisode {
+  const factory QueuedEpisode({
+    required QueueItem item,
+    required Episode episode,
+  }) = _QueuedEpisode;
 }

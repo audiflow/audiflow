@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:seasoning/core/types.dart';
 import 'package:seasoning/entities/entities.dart';
+import 'package:seasoning/services/podcast/podcast_service_provider.dart';
 import 'package:seasoning/services/queue/queue_list_provider.dart';
 import 'package:seasoning/services/queue/queue_manager.dart';
 import 'package:seasoning/ui/podcast/episode_brief_tile.dart';
@@ -20,11 +22,24 @@ class QueueListBlock extends ConsumerWidget {
       return const SliverToBoxAdapter(child: SizedBox.shrink());
     }
 
-    return Section(
-      title: queueType == QueueType.primary ? 'Queue' : 'Adhoc Queue',
-      episodes: queue,
-      onReorder: (oldIndex, newIndex) =>
-          ref.read(queueManagerProvider.notifier).reorder(oldIndex, newIndex),
+    return NotificationListener<PlayButtonTappedNotification>(
+      onNotification: (notification) {
+        final episode = notification.episode;
+        final index = notification.index;
+        if (index == null || queue.length <= index) {
+          ref.read(podcastServiceProvider).handlePlay(episode);
+        } else {
+          final item = queue[index];
+          ref.read(podcastServiceProvider).handlePlayFromQueue(item, episode);
+        }
+        return false;
+      },
+      child: Section(
+        title: queueType == QueueType.primary ? 'Queue' : 'Adhoc Queue',
+        episodes: queue,
+        onReorder: (oldIndex, newIndex) =>
+            ref.read(queueManagerProvider.notifier).reorder(oldIndex, newIndex),
+      ),
     );
   }
 }
@@ -40,9 +55,16 @@ class Section extends MultiSliver {
           pushPinnedChildren: true,
           children: [
             SliverPinnedHeader(
-              child: ListTile(
-                textColor: titleColor,
-                title: Text(title),
+              child: Builder(
+                builder: (context) {
+                  return ColoredBox(
+                    color: Theme.of(context).colorScheme.background,
+                    child: ListTile(
+                      textColor: titleColor,
+                      title: Text(title),
+                    ),
+                  );
+                },
               ),
             ),
             SliverReorderableList(

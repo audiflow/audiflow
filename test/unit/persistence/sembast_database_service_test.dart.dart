@@ -323,8 +323,8 @@ void main() {
       final episodes2 = createEpisodeMocks(podcast2, 3);
       final queue = Queue(
         queue: [
-          QueueItem.primary(guid: episodes1[0].guid),
-          QueueItem.adHoc(guid: episodes2[0].guid),
+          QueueItem.primary(eguid: episodes1[0].guid),
+          QueueItem.adhoc(eguid: episodes2[0].guid),
         ],
       );
       await persistenceService.saveQueue(queue);

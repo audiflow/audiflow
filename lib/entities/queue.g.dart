@@ -7,7 +7,11 @@ part of 'queue.dart';
 // **************************************************************************
 
 _$QueueImpl _$$QueueImplFromJson(Map<String, dynamic> json) => _$QueueImpl(
-      queue: (json['queue'] as List<dynamic>?)
+      primary: (json['primary'] as List<dynamic>?)
+              ?.map((e) => QueueItem.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const <QueueItem>[],
+      adhoc: (json['adhoc'] as List<dynamic>?)
               ?.map((e) => QueueItem.fromJson(e as Map<String, dynamic>))
               .toList() ??
           const <QueueItem>[],
@@ -15,17 +19,20 @@ _$QueueImpl _$$QueueImplFromJson(Map<String, dynamic> json) => _$QueueImpl(
 
 Map<String, dynamic> _$$QueueImplToJson(_$QueueImpl instance) =>
     <String, dynamic>{
-      'queue': instance.queue.map((e) => e.toJson()).toList(),
+      'primary': instance.primary.map((e) => e.toJson()).toList(),
+      'adhoc': instance.adhoc.map((e) => e.toJson()).toList(),
     };
 
 _$QueueItemImpl _$$QueueItemImplFromJson(Map<String, dynamic> json) =>
     _$QueueItemImpl(
+      id: json['id'] as String,
       guid: json['guid'] as String,
       type: $enumDecode(_$QueueTypeEnumMap, json['type']),
     );
 
 Map<String, dynamic> _$$QueueItemImplToJson(_$QueueItemImpl instance) =>
     <String, dynamic>{
+      'id': instance.id,
       'guid': instance.guid,
       'type': _$QueueTypeEnumMap[instance.type]!,
     };

@@ -11,7 +11,8 @@ enum PlayOrder {
 }
 
 class PlayButtonTappedNotification extends Notification {
-  PlayButtonTappedNotification(this.episode);
+  PlayButtonTappedNotification(this.episode, { this.index });
 
   final Episode episode;
+  final int? index;
 }

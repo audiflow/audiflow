@@ -10,26 +10,25 @@ class QueueManager extends _$QueueManager {
 
   Future<void> setup() => throw UnimplementedError();
 
-  Future<String?> pop() => throw UnimplementedError();
+  Future<QueueItem?> pop() => throw UnimplementedError();
 
-  Future<void> prepend(Episode episode) => throw UnimplementedError();
+  Future<void> prepend(QueueItem item) => throw UnimplementedError();
 
-  Future<void> append(Episode episode) => throw UnimplementedError();
+  Future<void> append(QueueItem item) => throw UnimplementedError();
 
-  Future<void> toggle(Episode episode) => throw UnimplementedError();
+  Future<void> addAll(Iterable<QueueItem> items) => throw UnimplementedError();
 
-  Future<void> reorder(int oldIndex, int newIndex) =>
+  Future<void> replaceAll(Iterable<QueueItem> items) =>
       throw UnimplementedError();
 
-  Future<void> addAll(Iterable<Episode> episodes) => throw UnimplementedError();
-
-  Future<void> replaceAll(Iterable<Episode> episodes) =>
+  Future<QueueItem> removeByIndex(QueueType type, int index) =>
       throw UnimplementedError();
 
-  Future<void> replaceAllAdHoc(Iterable<Episode> episodes) =>
+  Future<void> removeFromTop({required QueueItem to}) =>
       throw UnimplementedError();
 
-  Future<void> remove(int index) => throw UnimplementedError();
+  Future<void> reorder(QueueType type, int oldIndex, int newIndex) =>
+      throw UnimplementedError();
 
-  Future<void> clear() => throw UnimplementedError();
+  Future<void> clear({QueueType? type}) => throw UnimplementedError();
 }

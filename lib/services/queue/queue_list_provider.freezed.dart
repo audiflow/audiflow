@@ -16,8 +16,8 @@ final _privateConstructorUsedError = UnsupportedError(
 
 /// @nodoc
 mixin _$QueueListState {
-  List<Episode> get primary => throw _privateConstructorUsedError;
-  List<Episode> get adhoc => throw _privateConstructorUsedError;
+  List<QueuedEpisode> get primary => throw _privateConstructorUsedError;
+  List<QueuedEpisode> get adhoc => throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
   $QueueListStateCopyWith<QueueListState> get copyWith =>
@@ -30,7 +30,7 @@ abstract class $QueueListStateCopyWith<$Res> {
           QueueListState value, $Res Function(QueueListState) then) =
       _$QueueListStateCopyWithImpl<$Res, QueueListState>;
   @useResult
-  $Res call({List<Episode> primary, List<Episode> adhoc});
+  $Res call({List<QueuedEpisode> primary, List<QueuedEpisode> adhoc});
 }
 
 /// @nodoc
@@ -53,11 +53,11 @@ class _$QueueListStateCopyWithImpl<$Res, $Val extends QueueListState>
       primary: null == primary
           ? _value.primary
           : primary // ignore: cast_nullable_to_non_nullable
-              as List<Episode>,
+              as List<QueuedEpisode>,
       adhoc: null == adhoc
           ? _value.adhoc
           : adhoc // ignore: cast_nullable_to_non_nullable
-              as List<Episode>,
+              as List<QueuedEpisode>,
     ) as $Val);
   }
 }
@@ -70,7 +70,7 @@ abstract class _$$QueueListStateImplCopyWith<$Res>
       __$$QueueListStateImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({List<Episode> primary, List<Episode> adhoc});
+  $Res call({List<QueuedEpisode> primary, List<QueuedEpisode> adhoc});
 }
 
 /// @nodoc
@@ -91,11 +91,11 @@ class __$$QueueListStateImplCopyWithImpl<$Res>
       primary: null == primary
           ? _value._primary
           : primary // ignore: cast_nullable_to_non_nullable
-              as List<Episode>,
+              as List<QueuedEpisode>,
       adhoc: null == adhoc
           ? _value._adhoc
           : adhoc // ignore: cast_nullable_to_non_nullable
-              as List<Episode>,
+              as List<QueuedEpisode>,
     ));
   }
 }
@@ -104,24 +104,24 @@ class __$$QueueListStateImplCopyWithImpl<$Res>
 
 class _$QueueListStateImpl implements _QueueListState {
   const _$QueueListStateImpl(
-      {final List<Episode> primary = const <Episode>[],
-      final List<Episode> adhoc = const <Episode>[]})
+      {final List<QueuedEpisode> primary = const <QueuedEpisode>[],
+      final List<QueuedEpisode> adhoc = const <QueuedEpisode>[]})
       : _primary = primary,
         _adhoc = adhoc;
 
-  final List<Episode> _primary;
+  final List<QueuedEpisode> _primary;
   @override
   @JsonKey()
-  List<Episode> get primary {
+  List<QueuedEpisode> get primary {
     if (_primary is EqualUnmodifiableListView) return _primary;
     // ignore: implicit_dynamic_type
     return EqualUnmodifiableListView(_primary);
   }
 
-  final List<Episode> _adhoc;
+  final List<QueuedEpisode> _adhoc;
   @override
   @JsonKey()
-  List<Episode> get adhoc {
+  List<QueuedEpisode> get adhoc {
     if (_adhoc is EqualUnmodifiableListView) return _adhoc;
     // ignore: implicit_dynamic_type
     return EqualUnmodifiableListView(_adhoc);
@@ -157,15 +157,174 @@ class _$QueueListStateImpl implements _QueueListState {
 
 abstract class _QueueListState implements QueueListState {
   const factory _QueueListState(
-      {final List<Episode> primary,
-      final List<Episode> adhoc}) = _$QueueListStateImpl;
+      {final List<QueuedEpisode> primary,
+      final List<QueuedEpisode> adhoc}) = _$QueueListStateImpl;
 
   @override
-  List<Episode> get primary;
+  List<QueuedEpisode> get primary;
   @override
-  List<Episode> get adhoc;
+  List<QueuedEpisode> get adhoc;
   @override
   @JsonKey(ignore: true)
   _$$QueueListStateImplCopyWith<_$QueueListStateImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+mixin _$QueuedEpisode {
+  QueueItem get item => throw _privateConstructorUsedError;
+  Episode get episode => throw _privateConstructorUsedError;
+
+  @JsonKey(ignore: true)
+  $QueuedEpisodeCopyWith<QueuedEpisode> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $QueuedEpisodeCopyWith<$Res> {
+  factory $QueuedEpisodeCopyWith(
+          QueuedEpisode value, $Res Function(QueuedEpisode) then) =
+      _$QueuedEpisodeCopyWithImpl<$Res, QueuedEpisode>;
+  @useResult
+  $Res call({QueueItem item, Episode episode});
+
+  $QueueItemCopyWith<$Res> get item;
+  $EpisodeCopyWith<$Res> get episode;
+}
+
+/// @nodoc
+class _$QueuedEpisodeCopyWithImpl<$Res, $Val extends QueuedEpisode>
+    implements $QueuedEpisodeCopyWith<$Res> {
+  _$QueuedEpisodeCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? item = null,
+    Object? episode = null,
+  }) {
+    return _then(_value.copyWith(
+      item: null == item
+          ? _value.item
+          : item // ignore: cast_nullable_to_non_nullable
+              as QueueItem,
+      episode: null == episode
+          ? _value.episode
+          : episode // ignore: cast_nullable_to_non_nullable
+              as Episode,
+    ) as $Val);
+  }
+
+  @override
+  @pragma('vm:prefer-inline')
+  $QueueItemCopyWith<$Res> get item {
+    return $QueueItemCopyWith<$Res>(_value.item, (value) {
+      return _then(_value.copyWith(item: value) as $Val);
+    });
+  }
+
+  @override
+  @pragma('vm:prefer-inline')
+  $EpisodeCopyWith<$Res> get episode {
+    return $EpisodeCopyWith<$Res>(_value.episode, (value) {
+      return _then(_value.copyWith(episode: value) as $Val);
+    });
+  }
+}
+
+/// @nodoc
+abstract class _$$QueuedEpisodeImplCopyWith<$Res>
+    implements $QueuedEpisodeCopyWith<$Res> {
+  factory _$$QueuedEpisodeImplCopyWith(
+          _$QueuedEpisodeImpl value, $Res Function(_$QueuedEpisodeImpl) then) =
+      __$$QueuedEpisodeImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({QueueItem item, Episode episode});
+
+  @override
+  $QueueItemCopyWith<$Res> get item;
+  @override
+  $EpisodeCopyWith<$Res> get episode;
+}
+
+/// @nodoc
+class __$$QueuedEpisodeImplCopyWithImpl<$Res>
+    extends _$QueuedEpisodeCopyWithImpl<$Res, _$QueuedEpisodeImpl>
+    implements _$$QueuedEpisodeImplCopyWith<$Res> {
+  __$$QueuedEpisodeImplCopyWithImpl(
+      _$QueuedEpisodeImpl _value, $Res Function(_$QueuedEpisodeImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? item = null,
+    Object? episode = null,
+  }) {
+    return _then(_$QueuedEpisodeImpl(
+      item: null == item
+          ? _value.item
+          : item // ignore: cast_nullable_to_non_nullable
+              as QueueItem,
+      episode: null == episode
+          ? _value.episode
+          : episode // ignore: cast_nullable_to_non_nullable
+              as Episode,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$QueuedEpisodeImpl implements _QueuedEpisode {
+  const _$QueuedEpisodeImpl({required this.item, required this.episode});
+
+  @override
+  final QueueItem item;
+  @override
+  final Episode episode;
+
+  @override
+  String toString() {
+    return 'QueuedEpisode(item: $item, episode: $episode)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$QueuedEpisodeImpl &&
+            (identical(other.item, item) || other.item == item) &&
+            (identical(other.episode, episode) || other.episode == episode));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, item, episode);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$QueuedEpisodeImplCopyWith<_$QueuedEpisodeImpl> get copyWith =>
+      __$$QueuedEpisodeImplCopyWithImpl<_$QueuedEpisodeImpl>(this, _$identity);
+}
+
+abstract class _QueuedEpisode implements QueuedEpisode {
+  const factory _QueuedEpisode(
+      {required final QueueItem item,
+      required final Episode episode}) = _$QueuedEpisodeImpl;
+
+  @override
+  QueueItem get item;
+  @override
+  Episode get episode;
+  @override
+  @JsonKey(ignore: true)
+  _$$QueuedEpisodeImplCopyWith<_$QueuedEpisodeImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

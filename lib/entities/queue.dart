@@ -4,6 +4,7 @@
 // found in the LICENSE file.
 
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:nanoid/nanoid.dart';
 
 part 'queue.freezed.dart';
 part 'queue.g.dart';
@@ -13,23 +14,33 @@ part 'queue.g.dart';
 @freezed
 class Queue with _$Queue {
   const factory Queue({
-    @Default(<QueueItem>[]) List<QueueItem> queue,
+    @Default(<QueueItem>[]) List<QueueItem> primary,
+    @Default(<QueueItem>[]) List<QueueItem> adhoc,
   }) = _Queue;
 
   factory Queue.fromJson(Map<String, dynamic> json) => _$QueueFromJson(json);
 }
 
 extension QueueExt on Queue {
-  Iterable<QueueItem> get primary {
-    return queue.where((q) => q.type == QueueType.primary);
+  bool contains(String guid, {QueueType? type}) {
+    switch (type) {
+      case QueueType.primary:
+        return primary.any((element) => element.guid == guid);
+      case QueueType.adhoc:
+        return adhoc.any((element) => element.guid == guid);
+      case null:
+        return primary.any((element) => element.guid == guid) ||
+            adhoc.any((element) => element.guid == guid);
+    }
   }
 
-  Iterable<QueueItem> get adhoc {
-    return queue.where((element) => element.type == QueueType.adhoc);
-  }
-
-  bool contains(String guid) {
-    return queue.any((element) => element.guid == guid);
+  int indexOf(QueueItem item) {
+    switch (item.type) {
+      case QueueType.primary:
+        return primary.indexWhere((element) => element.id == item.id);
+      case QueueType.adhoc:
+        return adhoc.indexWhere((element) => element.id == item.id);
+    }
   }
 }
 
@@ -41,23 +52,22 @@ enum QueueType {
 @freezed
 class QueueItem with _$QueueItem {
   const factory QueueItem({
+    required String id,
     required String guid,
     required QueueType type,
   }) = _QueueItem;
 
-  factory QueueItem.primary({
-    required String guid,
-  }) {
+  factory QueueItem.primary(String guid) {
     return QueueItem(
+      id: nanoid(),
       guid: guid,
       type: QueueType.primary,
     );
   }
 
-  factory QueueItem.adHoc({
-    required String guid,
-  }) {
+  factory QueueItem.adhoc(String guid) {
     return QueueItem(
+      id: nanoid(),
       guid: guid,
       type: QueueType.adhoc,
     );

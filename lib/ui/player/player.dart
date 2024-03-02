@@ -88,7 +88,12 @@ class _MiniPlayerContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
     final maxImgSize = width * 0.4;
-    final img = Image.network(episode.thumbImageUrl!);
+    final img = Image.network(
+      episode.thumbImageUrl!,
+      errorBuilder: (context, error, stackTrace) {
+        return const SizedBox.shrink();
+      },
+    );
 
     //MiniPlayer
     final percentageMiniPlayer = percentageFromValueInRange(
@@ -140,13 +145,6 @@ class _MiniPlayerContent extends StatelessWidget {
                     ),
                   ),
                 ),
-              ),
-              _IconButton(
-                icon: Icons.fullscreen,
-                iconSize: IconSize.small,
-                onPressed: () {
-                  controller.animateToHeight(state: PanelState.max);
-                },
               ),
               Padding(
                 padding: const EdgeInsets.only(right: 3),

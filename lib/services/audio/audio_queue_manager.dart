@@ -18,7 +18,7 @@ class AudioQueueManager extends _$AudioQueueManager {
 
   QueueManager get _queueManager => ref.read(queueManagerProvider.notifier);
 
-  List<QueueItem> get _queue => ref.read(queueManagerProvider).queue;
+  Queue get _queue => ref.read(queueManagerProvider);
 
   ConnectivityResult get _connectivityResult =>
       ref.read(connectivityStateProvider);

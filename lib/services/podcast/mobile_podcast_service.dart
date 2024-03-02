@@ -445,7 +445,7 @@ class MobilePodcastService implements PodcastService {
   }
 
   @override
-  Future<void> togglePlayState(
+  Future<void> handlePlay(
     Episode episode, {
     Iterable<Episode>? group,
   }) async {
@@ -459,6 +459,12 @@ class MobilePodcastService implements PodcastService {
     } else {
       await _playEpisode(episode, group: group);
     }
+  }
+
+  @override
+  Future<void> handlePlayFromQueue(QueueItem item, Episode episode) async {
+    await _queueManager.removeFromTop(to: item);
+    await _playEpisode(episode);
   }
 
   Future<void> _playEpisode(
@@ -479,7 +485,8 @@ class MobilePodcastService implements PodcastService {
   }
 
   Future<void> _addToAdhocQueue(Iterable<Episode> episodes) async {
-    await _queueManager.replaceAllAdHoc(episodes);
+    final items = episodes.map((e) => QueueItem.adhoc(e.guid));
+    await _queueManager.replaceAll(items);
     await Future.wait(
       episodes.map(
         (e) => _repository.updateEpisodeStats(

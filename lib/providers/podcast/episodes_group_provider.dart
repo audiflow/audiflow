@@ -40,7 +40,7 @@ class EpisodesGroup extends _$EpisodesGroup {
   }
 
   Future<void> togglePlayState({required Episode episode}) =>
-      _podcastService.togglePlayState(
+      _podcastService.handlePlay(
         episode,
         group: state.requireValue.episodes,
       );

@@ -5,6 +5,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:seasoning/core/types.dart';
 import 'package:seasoning/entities/entities.dart';
 import 'package:seasoning/providers/podcast/episode_info_provider.dart';
 import 'package:seasoning/ui/podcast/episode_date.dart';
@@ -39,21 +40,27 @@ class EpisodeBriefTile extends HookConsumerWidget {
         child: Container(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
           height: 70,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              TileImage(url: thumbImageUrl, size: 50),
-              const SizedBox(width: 12),
-              Expanded(child: _Content(episode)),
-              if (sortableIndex != null)
-                ReorderableDragStartListener(
-                  index: sortableIndex!,
-                  child: const Icon(
-                    Icons.drag_handle,
-                    color: Colors.grey,
+          child: GestureDetector(
+            onTap: () {
+              PlayButtonTappedNotification(episode, index: sortableIndex)
+                  .dispatch(context);
+            },
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TileImage(url: thumbImageUrl, size: 50),
+                const SizedBox(width: 12),
+                Expanded(child: _Content(episode)),
+                if (sortableIndex != null)
+                  ReorderableDragStartListener(
+                    index: sortableIndex!,
+                    child: const Icon(
+                      Icons.drag_handle,
+                      color: Colors.grey,
+                    ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

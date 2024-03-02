@@ -72,8 +72,7 @@ abstract class PodcastService {
 
   Future<Transcript> saveTranscript(Transcript transcript);
 
-  Future<void> togglePlayState(
-    Episode episode, {
-    Iterable<Episode>? group,
-  });
+  Future<void> handlePlay(Episode episode, {Iterable<Episode>? group});
+
+  Future<void> handlePlayFromQueue(QueueItem item, Episode episode);
 }
