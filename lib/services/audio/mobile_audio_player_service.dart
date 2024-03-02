@@ -98,10 +98,10 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
   @override
   Future<void> play() {
     if (state != null) {
-      return playEpisode(
+      return loadEpisode(
         episode: state!.episode,
         position: state!.position,
-        resume: true,
+        autoPlay: true,
       );
     } else {
       return _audioHandler.play();
@@ -124,10 +124,10 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
   /// If we have a downloaded copy of the requested episode we will use that;
   /// otherwise we will stream the episode directly.
   @override
-  Future<void> playEpisode({
+  Future<void> loadEpisode({
     required Episode episode,
     required Duration position,
-    bool? resume,
+    required bool autoPlay,
   }) async {
     if (episode.guid.isEmpty) {
       _log.warning('ERROR: Attempting to play an empty episode');
@@ -151,8 +151,8 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
     state = AudioPlayerState(
       episode: episode,
       position: playPosition,
-      phase: PlayerPhase.play,
-      audioState: AudioState.buffering,
+      phase: autoPlay ? PlayerPhase.play : PlayerPhase.pause,
+      audioState: autoPlay ? AudioState.buffering : AudioState.idle,
     );
 
     _notifyAudioPlayerEvent(AudioPlayerAction.play);
@@ -170,7 +170,9 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
         uri,
         downloaded,
       );
-      await _audioHandler.playMediaItem(mediaItem);
+      if (autoPlay) {
+        await _audioHandler.playMediaItem(mediaItem);
+      }
       // ignore: avoid_catches_without_on_clauses
     } catch (e) {
       _log
@@ -240,45 +242,22 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
 
   @override
   Future<void> resume() async {
-    if (state != null) {
-      final playbackState = _audioHandler.playbackState.value;
-      final audioState = AudioState.from(playbackState.processingState);
-
-      // If we have no state we'll have to assume we stopped whilst suspended.
-      if (audioState == AudioState.idle) {
-        // We will have to assume we have stopped.
-        state = state!.copyWith(
-          phase: PlayerPhase.pause,
-          audioState: audioState,
-        );
-      } else if (audioState == AudioState.ready) {
-        await _startPositionTicker();
-      }
+    if (state == null) {
       return;
     }
+    final playbackState = _audioHandler.playbackState.value;
+    final audioState = AudioState.from(playbackState.processingState);
 
-    // If _episode is null, we must have stopped whilst still active or we were
-    // killed.
-    final guid = await _repository.playingEpisodeGuid();
-    if (guid == null) {
-      return;
+    // If we have no state we'll have to assume we stopped whilst suspended.
+    if (audioState == AudioState.idle) {
+      // We will have to assume we have stopped.
+      state = state!.copyWith(
+        phase: PlayerPhase.pause,
+        audioState: audioState,
+      );
+    } else if (audioState == AudioState.ready) {
+      await _startPositionTicker();
     }
-    final ret = await Future.wait([
-      _repository.findEpisode(guid),
-      _repository.findEpisodeStats(guid),
-    ]);
-    final episode = ret[0] as Episode?;
-    final stats = ret[1] as EpisodeStats?;
-    if (episode == null || stats == null) {
-      return;
-    }
-
-    state = AudioPlayerState(
-      episode: episode,
-      position: stats.position,
-      phase: PlayerPhase.pause,
-      audioState: AudioState.idle,
-    );
   }
 
   @override

@@ -84,6 +84,8 @@ class MobilePodcastService implements PodcastService {
         (_, next) {
       _setupGenres(currentLocale);
     });
+
+    await _resumeEpisode();
   }
 
   void _setupGenres(String locale) {
@@ -105,6 +107,25 @@ class MobilePodcastService implements PodcastService {
     _intlCategoriesSorted = categoryList.split(',');
     _intlCategoriesSorted
         .sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+  }
+
+  Future<void> _resumeEpisode() async {
+    final guid = await _repository.playingEpisodeGuid();
+    if (guid != null) {
+      final values = await Future.wait([
+        _repository.findEpisode(guid),
+        _repository.findEpisodeStats(guid),
+      ]);
+      final episode = values[0] as Episode?;
+      final stats = values[1] as EpisodeStats?;
+      if (episode != null) {
+        await _audioService.loadEpisode(
+          episode: episode,
+          position: stats?.position ?? Duration.zero,
+          autoPlay: false,
+        );
+      }
+    }
   }
 
   @override
@@ -481,7 +502,11 @@ class MobilePodcastService implements PodcastService {
 
     final stats = await _repository.findEpisodeStats(episode.guid);
     final position = stats?.position ?? Duration.zero;
-    await _audioService.playEpisode(episode: episode, position: position);
+    await _audioService.loadEpisode(
+      episode: episode,
+      position: position,
+      autoPlay: true,
+    );
   }
 
   Future<void> _addToAdhocQueue(Iterable<Episode> episodes) async {

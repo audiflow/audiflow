@@ -1,9 +1,11 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:seasoning/services/audio/audio_player_service.dart';
+import 'package:seasoning/services/podcast/podcast_service_provider.dart';
 import 'package:seasoning/ui/mini_player/utils.dart';
 import 'package:seasoning/ui/player/player.dart';
 
@@ -17,7 +19,7 @@ double playerMaxHeight(BuildContext content) {
 const miniPlayerPercentageDeclaration = 0.2;
 const kAppBottomNavigationBarHeight = 89.0;
 
-class AppBottomNavigationBar extends ConsumerWidget {
+class AppBottomNavigationBar extends HookConsumerWidget {
   const AppBottomNavigationBar({
     super.key,
     required this.navigationShell,
@@ -27,6 +29,14 @@ class AppBottomNavigationBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    useEffect(
+      () {
+        ref.read(podcastServiceProvider).setup();
+        return null;
+      },
+      [],
+    );
+
     final playingEpisode = ref.watch(
       audioPlayerServiceProvider.select((state) => state?.episode),
     );

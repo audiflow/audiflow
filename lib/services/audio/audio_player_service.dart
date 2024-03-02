@@ -63,11 +63,11 @@ class AudioPlayerService extends _$AudioPlayerService {
 
   Future<void> setup() => throw UnimplementedError();
 
-  /// Play a new episode, optionally resume at last save point.
-  Future<void> playEpisode({
+  /// Load a new episode, and play if [autoPlay] is true.
+  Future<void> loadEpisode({
     required Episode episode,
     required Duration position,
-    bool resume = true,
+    required bool autoPlay,
   }) =>
       throw UnimplementedError();
 

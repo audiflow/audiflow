@@ -68,9 +68,10 @@ class AudioQueueManager extends _$AudioQueueManager {
       }
 
       if (stats?.downloaded == true || _connectivityResult.isConnected) {
-        await _audioPlayerService.playEpisode(
+        await _audioPlayerService.loadEpisode(
           episode: episode,
           position: stats?.position ?? Duration.zero,
+          autoPlay: true,
         );
       } else {
         await _audioPlayerService.stop();
