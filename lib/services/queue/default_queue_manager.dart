@@ -28,7 +28,7 @@ class DefaultQueueManager extends _$DefaultQueueManager
 
   @override
   Future<QueueItem?> pop() async {
-    return state.queue.isNotEmpty ? removeByIndex(QueueType.primary, 0) : null;
+    return state.queue.isNotEmpty ? removeByIndex(0) : null;
   }
 
   @override
@@ -114,7 +114,7 @@ class DefaultQueueManager extends _$DefaultQueueManager
   }
 
   @override
-  Future<QueueItem> removeByIndex(QueueType type, int index) async {
+  Future<QueueItem> removeByIndex(int index) async {
     assert(0 <= index && index < state.queue.length, 'Invalid index');
 
     final removedItem = state.queue[index];

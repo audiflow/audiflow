@@ -21,13 +21,13 @@ class QueueManager extends _$QueueManager {
 
   Future<void> append(QueueItem item) => throw UnimplementedError();
 
-  Future<void> appendAll(Iterable<QueueItem> items) => throw UnimplementedError();
+  Future<void> appendAll(Iterable<QueueItem> items) =>
+      throw UnimplementedError();
 
   Future<void> replaceAll(Iterable<QueueItem> items) =>
       throw UnimplementedError();
 
-  Future<QueueItem> removeByIndex(QueueType type, int index) =>
-      throw UnimplementedError();
+  Future<QueueItem> removeByIndex(int index) => throw UnimplementedError();
 
   Future<void> removeFromTop({required QueueItem to}) =>
       throw UnimplementedError();
