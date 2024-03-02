@@ -16,8 +16,7 @@ final _privateConstructorUsedError = UnsupportedError(
 
 /// @nodoc
 mixin _$QueueListState {
-  List<QueuedEpisode> get primary => throw _privateConstructorUsedError;
-  List<QueuedEpisode> get adhoc => throw _privateConstructorUsedError;
+  List<QueuedEpisode> get queue => throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
   $QueueListStateCopyWith<QueueListState> get copyWith =>
@@ -30,7 +29,7 @@ abstract class $QueueListStateCopyWith<$Res> {
           QueueListState value, $Res Function(QueueListState) then) =
       _$QueueListStateCopyWithImpl<$Res, QueueListState>;
   @useResult
-  $Res call({List<QueuedEpisode> primary, List<QueuedEpisode> adhoc});
+  $Res call({List<QueuedEpisode> queue});
 }
 
 /// @nodoc
@@ -46,17 +45,12 @@ class _$QueueListStateCopyWithImpl<$Res, $Val extends QueueListState>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? primary = null,
-    Object? adhoc = null,
+    Object? queue = null,
   }) {
     return _then(_value.copyWith(
-      primary: null == primary
-          ? _value.primary
-          : primary // ignore: cast_nullable_to_non_nullable
-              as List<QueuedEpisode>,
-      adhoc: null == adhoc
-          ? _value.adhoc
-          : adhoc // ignore: cast_nullable_to_non_nullable
+      queue: null == queue
+          ? _value.queue
+          : queue // ignore: cast_nullable_to_non_nullable
               as List<QueuedEpisode>,
     ) as $Val);
   }
@@ -70,7 +64,7 @@ abstract class _$$QueueListStateImplCopyWith<$Res>
       __$$QueueListStateImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({List<QueuedEpisode> primary, List<QueuedEpisode> adhoc});
+  $Res call({List<QueuedEpisode> queue});
 }
 
 /// @nodoc
@@ -84,17 +78,12 @@ class __$$QueueListStateImplCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? primary = null,
-    Object? adhoc = null,
+    Object? queue = null,
   }) {
     return _then(_$QueueListStateImpl(
-      primary: null == primary
-          ? _value._primary
-          : primary // ignore: cast_nullable_to_non_nullable
-              as List<QueuedEpisode>,
-      adhoc: null == adhoc
-          ? _value._adhoc
-          : adhoc // ignore: cast_nullable_to_non_nullable
+      queue: null == queue
+          ? _value._queue
+          : queue // ignore: cast_nullable_to_non_nullable
               as List<QueuedEpisode>,
     ));
   }
@@ -104,32 +93,21 @@ class __$$QueueListStateImplCopyWithImpl<$Res>
 
 class _$QueueListStateImpl implements _QueueListState {
   const _$QueueListStateImpl(
-      {final List<QueuedEpisode> primary = const <QueuedEpisode>[],
-      final List<QueuedEpisode> adhoc = const <QueuedEpisode>[]})
-      : _primary = primary,
-        _adhoc = adhoc;
+      {final List<QueuedEpisode> queue = const <QueuedEpisode>[]})
+      : _queue = queue;
 
-  final List<QueuedEpisode> _primary;
+  final List<QueuedEpisode> _queue;
   @override
   @JsonKey()
-  List<QueuedEpisode> get primary {
-    if (_primary is EqualUnmodifiableListView) return _primary;
+  List<QueuedEpisode> get queue {
+    if (_queue is EqualUnmodifiableListView) return _queue;
     // ignore: implicit_dynamic_type
-    return EqualUnmodifiableListView(_primary);
-  }
-
-  final List<QueuedEpisode> _adhoc;
-  @override
-  @JsonKey()
-  List<QueuedEpisode> get adhoc {
-    if (_adhoc is EqualUnmodifiableListView) return _adhoc;
-    // ignore: implicit_dynamic_type
-    return EqualUnmodifiableListView(_adhoc);
+    return EqualUnmodifiableListView(_queue);
   }
 
   @override
   String toString() {
-    return 'QueueListState(primary: $primary, adhoc: $adhoc)';
+    return 'QueueListState(queue: $queue)';
   }
 
   @override
@@ -137,15 +115,12 @@ class _$QueueListStateImpl implements _QueueListState {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$QueueListStateImpl &&
-            const DeepCollectionEquality().equals(other._primary, _primary) &&
-            const DeepCollectionEquality().equals(other._adhoc, _adhoc));
+            const DeepCollectionEquality().equals(other._queue, _queue));
   }
 
   @override
-  int get hashCode => Object.hash(
-      runtimeType,
-      const DeepCollectionEquality().hash(_primary),
-      const DeepCollectionEquality().hash(_adhoc));
+  int get hashCode =>
+      Object.hash(runtimeType, const DeepCollectionEquality().hash(_queue));
 
   @JsonKey(ignore: true)
   @override
@@ -156,14 +131,11 @@ class _$QueueListStateImpl implements _QueueListState {
 }
 
 abstract class _QueueListState implements QueueListState {
-  const factory _QueueListState(
-      {final List<QueuedEpisode> primary,
-      final List<QueuedEpisode> adhoc}) = _$QueueListStateImpl;
+  const factory _QueueListState({final List<QueuedEpisode> queue}) =
+      _$QueueListStateImpl;
 
   @override
-  List<QueuedEpisode> get primary;
-  @override
-  List<QueuedEpisode> get adhoc;
+  List<QueuedEpisode> get queue;
   @override
   @JsonKey(ignore: true)
   _$$QueueListStateImplCopyWith<_$QueueListStateImpl> get copyWith =>

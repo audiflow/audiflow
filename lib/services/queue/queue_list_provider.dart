@@ -25,18 +25,16 @@ class QueueList extends _$QueueList {
   }
 
   void _listen() {
-    final sub = _queueInputState.asyncMap(Future.value).listen((queue) async {
-      final episodes = <Episode>{
-        ...state.primary.map((e) => e.episode),
-        ...state.adhoc.map((e) => e.episode),
-      };
+    final sub = _queueInputState
+        .asyncMap(Future.value)
+        .map((queue) => queue.queue)
+        .listen((queue) async {
+      final episodes = <Episode>{...state.queue.map((e) => e.episode)};
 
       final guidsToLoad = Set<String>.from(
-        [...queue.primary, ...queue.adhoc].map((i) => i.guid).where(
-              (guid) =>
-                  !state.primary.any((e) => e.item.guid == guid) &&
-                  !state.adhoc.any((e) => e.item.guid == guid),
-            ),
+        queue
+            .map((i) => i.guid)
+            .where((guid) => !episodes.any((e) => e.guid == guid)),
       );
       if (guidsToLoad.isNotEmpty) {
         final episodes =
@@ -45,8 +43,7 @@ class QueueList extends _$QueueList {
       }
 
       state = QueueListState(
-        primary: _generate(queue.primary, episodes),
-        adhoc: _generate(queue.adhoc, episodes),
+        queue: _generate(queue, episodes),
       );
     });
     ref.onDispose(sub.cancel);
@@ -72,8 +69,7 @@ class QueueList extends _$QueueList {
 @freezed
 class QueueListState with _$QueueListState {
   const factory QueueListState({
-    @Default(<QueuedEpisode>[]) List<QueuedEpisode> primary,
-    @Default(<QueuedEpisode>[]) List<QueuedEpisode> adhoc,
+    @Default(<QueuedEpisode>[]) List<QueuedEpisode> queue,
   }) = _QueueListState;
 }
 
