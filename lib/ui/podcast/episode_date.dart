@@ -27,11 +27,7 @@ class EpisodeDate extends StatelessWidget {
     final elapsed = DateTime.now().difference(episode.publicationDate!);
 
     if (7 <= elapsed.inDays) {
-      return DateFormat(
-        episode.publicationDate!.year == DateTime.now().year
-            ? 'yyyy.MM.dd'
-            : 'yyyy.MM',
-      ).format(episode.publicationDate!);
+      return DateFormat('yyyy.MM.dd').format(episode.publicationDate!);
     }
 
     if (1 <= elapsed.inDays) {
