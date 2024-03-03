@@ -7,11 +7,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
 import 'package:seasoning/core/extensions.dart';
-import 'package:seasoning/entities/downloadable.dart';
-import 'package:seasoning/entities/episode.dart';
-import 'package:seasoning/entities/podcast.dart';
-import 'package:seasoning/entities/queue.dart';
-import 'package:seasoning/entities/transcript.dart';
+import 'package:seasoning/entities/entities.dart';
 import 'package:seasoning/repository/download_event.dart';
 import 'package:seasoning/repository/episode_event.dart';
 import 'package:seasoning/repository/podcast_event.dart';
@@ -39,6 +35,7 @@ class SembastRepository extends Repository {
   final Ref _ref;
   final log = Logger('SembastRepository');
 
+  final _chartsStore = intMapStoreFactory.store('charts');
   final _podcastStore = stringMapStoreFactory.store('podcast');
   final _podcastPreviewStore = stringMapStoreFactory.store('podcastPreview');
   final _podcastStatsStore = stringMapStoreFactory.store('podcastStats');
@@ -61,6 +58,19 @@ class SembastRepository extends Repository {
 
   DownloadEventStream get _downloadEventStream =>
       _ref.read(downloadEventStreamProvider.notifier);
+
+  // --- charts
+
+  @override
+  Future<void> savePodcastChart(PodcastChartState chart) async {
+    await _chartsStore.record(1).put(await _db, chart.toJson());
+  }
+
+  @override
+  Future<PodcastChartState?> loadPodcastChart() async {
+    final value = await _chartsStore.record(1).get(await _db);
+    return value == null ? null : PodcastChartState.fromJson(value);
+  }
 
   // --- PodcastPreview
 
@@ -252,7 +262,6 @@ class SembastRepository extends Repository {
     return stats;
   }
 
-  @override
   Future<PodcastStats> _updatePodcastStats(
     DatabaseClient txn,
     PodcastStatsUpdateParam param,

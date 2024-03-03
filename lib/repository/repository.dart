@@ -10,7 +10,14 @@ import 'package:seasoning/entities/entities.dart';
 /// database or storage implementation.
 abstract class Repository {
   // --- General
+
   Future<void> close();
+
+  // --- charts
+
+  Future<void> savePodcastChart(PodcastChartState chart);
+
+  Future<PodcastChartState?> loadPodcastChart();
 
   // --- PodcastPreview
 
@@ -26,7 +33,8 @@ abstract class Repository {
 
   // --- Podcast
 
-  Future<void> savePodcast(Podcast podcast, { PodcastStatsUpdateParam? statsParam });
+  Future<void> savePodcast(Podcast podcast,
+      {PodcastStatsUpdateParam? statsParam});
 
   Future<Podcast?> findPodcast(String guid);
 
@@ -43,7 +51,7 @@ abstract class Repository {
   Future<PodcastStats?> findPodcastStats(String guid);
 
   Future<PodcastStats> updatePodcastStats(PodcastStatsUpdateParam param);
-  
+
   // --- Episode
 
   Future<void> saveEpisode(Episode episode);

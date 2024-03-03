@@ -6,12 +6,12 @@ part of 'podcast_chart_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$podcastChartHash() => r'a374ba06cfd1b0cd6213906080e283a636034bdc';
+String _$podcastChartHash() => r'ee4665a4cf6ecbec97aa67e2d96a9242bd3658bb';
 
 /// See also [PodcastChart].
 @ProviderFor(PodcastChart)
 final podcastChartProvider =
-    NotifierProvider<PodcastChart, AsyncValue<PodcastChartState>>.internal(
+    AsyncNotifierProvider<PodcastChart, PodcastChartState>.internal(
   PodcastChart.new,
   name: r'podcastChartProvider',
   debugGetCreateSourceHash:
@@ -20,6 +20,6 @@ final podcastChartProvider =
   allTransitiveDependencies: null,
 );
 
-typedef _$PodcastChart = Notifier<AsyncValue<PodcastChartState>>;
+typedef _$PodcastChart = AsyncNotifier<PodcastChartState>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

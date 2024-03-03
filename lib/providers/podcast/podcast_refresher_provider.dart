@@ -5,7 +5,10 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:seasoning/core/utils.dart';
 import 'package:seasoning/entities/podcast.dart';
+import 'package:seasoning/errors/errors.dart';
 import 'package:seasoning/providers/podcast/podcast_subscriptions_provider.dart';
+import 'package:seasoning/repository/repository_provider.dart';
+import 'package:seasoning/services/error/error_manager.dart';
 import 'package:seasoning/services/podcast/podcast_service_provider.dart';
 
 part 'podcast_refresher_provider.g.dart';
@@ -17,6 +20,10 @@ class PodcastRefresher extends _$PodcastRefresher {
   final _inputState = PublishSubject<List<(PodcastMetadata, PodcastStats)>>();
   Timer? _timer;
   (PodcastMetadata, PodcastStats)? _nextRefreshTarget;
+
+  Repository get _repository => ref.read(repositoryProvider);
+
+  ErrorManager get _errorManager => ref.read(errorManagerProvider.notifier);
 
   void dispose() {
     _inputState.close();
@@ -89,11 +96,31 @@ class PodcastRefresher extends _$PodcastRefresher {
     final podcast = _nextRefreshTarget!.$1;
     _log.fine('refresh target: ${podcast.title}');
 
-    final loaded = await ref
-        .read(podcastServiceProvider)
-        .loadPodcast(podcast, refresh: true);
-    if (loaded == null) {
-      _timer = Timer(const Duration(minutes: 1), _refreshTarget);
+    try {
+      final loaded = await ref
+          .read(podcastServiceProvider)
+          .loadPodcast(podcast, refresh: true);
+      if (loaded != null) {
+        _log.fine('Podcast refreshed: ${podcast.title}');
+      } else {
+        _log.warning('Failed to load podcast: ${podcast.title}');
+        await _repository.updatePodcastStats(
+          PodcastStatsUpdateParam(
+            guid: podcast.guid,
+            lastCheckedAt: DateTime.now(),
+          ),
+        );
+      }
+    } on NetworkError catch (e) {
+      _log.warning('Network error: ${e.type}');
+      if (e is NoConnectivityError) {
+        _errorManager.retryOnReconnect(
+          key: 'refresh/${podcast.guid}',
+          retry: _refreshTarget,
+        );
+      } else {
+        _timer = Timer(const Duration(minutes: 5), _refreshTarget);
+      }
     }
   }
 }

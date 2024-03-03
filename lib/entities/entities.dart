@@ -6,6 +6,7 @@ export './feed.dart';
 export './funding.dart';
 export './person.dart';
 export './podcast.dart';
+export './podcast_chart.dart';
 export './queue.dart';
 export './search_providers.dart';
 export './season.dart';

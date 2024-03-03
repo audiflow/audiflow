@@ -15,9 +15,11 @@ import 'package:podcast_search/podcast_search.dart' as podcast_search;
 import 'package:seasoning/api/podcast/podcast_api_provider.dart';
 import 'package:seasoning/core/utils.dart';
 import 'package:seasoning/entities/entities.dart';
+import 'package:seasoning/errors/errors.dart';
 import 'package:seasoning/l10n/messages_all.dart';
 import 'package:seasoning/repository/repository_provider.dart';
 import 'package:seasoning/services/audio/audio_player_service.dart';
+import 'package:seasoning/services/connectivity/connectivity.dart';
 import 'package:seasoning/services/podcast/podcast_service.dart';
 import 'package:seasoning/services/queue/queue_manager.dart';
 import 'package:seasoning/services/settings/settings_service.dart';
@@ -139,6 +141,11 @@ class MobilePodcastService implements PodcastService {
     int version = 0,
     bool explicit = false,
   }) async {
+    if (!await hasConnectivity()) {
+      _log.fine('no network');
+      throw NoConnectivityError();
+    }
+
     final result = await _api.search(
       term,
       country: country,
@@ -164,6 +171,11 @@ class MobilePodcastService implements PodcastService {
     String? genre,
     String? countryCode = '',
   }) async {
+    if (!await hasConnectivity()) {
+      _log.fine('no network');
+      throw NoConnectivityError();
+    }
+
     final result = await _api.charts(
       size: size,
       searchProvider: _appSettings.searchProvider,
@@ -212,10 +224,9 @@ class MobilePodcastService implements PodcastService {
   Future<Podcast?> _reloadPodcast(PodcastMetadata metadata) async {
     _log.fine('Reloading podcast ${metadata.title}');
 
-    final connectivityResult = await Connectivity().checkConnectivity();
-    if (connectivityResult == ConnectivityResult.none) {
+    if (!await hasConnectivity()) {
       _log.fine('no network');
-      return null;
+      throw NoConnectivityError();
     }
 
     var feedUrl = metadata.feedUrl ?? '';
@@ -226,10 +237,15 @@ class MobilePodcastService implements PodcastService {
       final newMetadata =
           await _lookupPodcastMetadata(collectionId: metadata.collectionId);
       if (newMetadata?.feedUrl == null) {
+        _log.info('No way to determine feed URL for ${metadata.title}');
         return null;
       }
       feedUrl = newMetadata!.feedUrl!;
       await _repository.savePodcastPreview([newMetadata]);
+    }
+    if (feedUrl.isEmpty) {
+      _log.info('No feed URL for ${metadata.title}');
+      return null;
     }
 
     final feedPodcast = await _lookupPodcast(url: feedUrl);

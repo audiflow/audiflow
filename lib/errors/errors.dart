@@ -18,12 +18,21 @@ class NetworkError implements Exception {
 
 class NoConnectivityError extends NetworkError {
   NoConnectivityError() : super(NetworkErrorType.connectivity);
+
+  @override
+  String toString() => 'NoConnectivityError';
 }
 
 class NetworkTimeoutError extends NetworkError {
   NetworkTimeoutError() : super(NetworkErrorType.timeout);
+
+  @override
+  String toString() => 'NetworkTimeoutError';
 }
 
 class NetworkUnknownError extends NetworkError {
   NetworkUnknownError() : super(NetworkErrorType.unknown);
+
+  @override
+  String toString() => 'NetworkUnknownError';
 }

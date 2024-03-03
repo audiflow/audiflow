@@ -10,9 +10,11 @@ class NewPodcastChartEvent implements PodcastChartEvent {
     this.size = 20,
     this.genre,
     this.countryCode,
+    this.refresh = false,
   });
 
   final int size;
   final String? genre;
   final String? countryCode;
+  final bool refresh;
 }

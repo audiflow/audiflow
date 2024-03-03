@@ -14,25 +14,25 @@ part 'podcast.g.dart';
 
 @freezed
 class PodcastPreview with _$PodcastPreview {
-  const factory PodcastPreview(
-      {
-      /// Unique identifier for podcast.
-      required String guid,
+  const factory PodcastPreview({
+    /// Unique identifier for podcast.
+    required String guid,
 
-      /// The collection ID(iTunesID).
-      required int collectionId,
+    /// The collection ID(iTunesID).
+    required int collectionId,
 
-      /// The link to the podcast RSS feed.
-      String? feedUrl,
+    /// The link to the podcast RSS feed.
+    String? feedUrl,
 
-      /// Podcast title.
-      required String title,
+    /// Podcast title.
+    required String title,
 
-      /// URL for thumbnail version of artwork image.
-      required String thumbImageUrl,
+    /// URL for thumbnail version of artwork image.
+    required String thumbImageUrl,
 
-      /// Last updated date.
-      required DateTime lastUpdated}) = _PodcastPreview;
+    /// Last updated date.
+    required DateTime lastUpdated,
+  }) = _PodcastPreview;
 
   factory PodcastPreview.fromJson(Map<String, dynamic> json) =>
       _$PodcastPreviewFromJson(json);
@@ -128,14 +128,14 @@ class Podcast with _$Podcast implements PodcastMetadata {
   factory Podcast.fromJson(Map<String, dynamic> json) =>
       _$PodcastFromJson(json);
 
-  factory Podcast.fromSearch(search.Podcast podcast, PodcastMetadata baseInfo) {
+  factory Podcast.fromSearch(search.Podcast podcast, PodcastMetadata metadata) {
     final episodes = podcast.episodes
         .map(
           (e) => Episode.fromSearch(
             e,
-            pguid: baseInfo.guid,
-            thumbImageUrl: baseInfo.thumbImageUrl,
-            imageUrl: podcast.image ?? baseInfo.imageUrl,
+            pguid: metadata.guid,
+            thumbImageUrl: metadata.thumbImageUrl,
+            imageUrl: podcast.image ?? metadata.imageUrl,
           ),
         )
         .toList();
@@ -146,16 +146,16 @@ class Podcast with _$Podcast implements PodcastMetadata {
     final persons = podcast.persons.map(Person.fromSearch).toList();
 
     return Podcast(
-      guid: baseInfo.guid,
-      collectionId: baseInfo.collectionId,
+      guid: metadata.guid,
+      collectionId: metadata.collectionId,
       feedUrl: podcast.url,
       linkUrl: podcast.link ?? '',
-      title: baseInfo.title,
+      title: metadata.title,
       description: removeHtmlPadding(podcast.description),
-      copyright: baseInfo.copyright,
-      thumbImageUrl: baseInfo.thumbImageUrl,
-      imageUrl: podcast.image ?? baseInfo.imageUrl,
-      releaseDate: baseInfo.releaseDate,
+      copyright: metadata.copyright,
+      thumbImageUrl: metadata.thumbImageUrl,
+      imageUrl: podcast.image ?? metadata.imageUrl,
+      releaseDate: metadata.releaseDate,
       episodes: episodes,
       funding: funding,
       persons: persons,

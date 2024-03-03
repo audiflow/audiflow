@@ -47,15 +47,19 @@ class ErrorManager extends _$ErrorManager {
     _retries.clear();
   }
 
+  void noticeError(NetworkError error) {
+    state = AsyncData(error);
+  }
+
   void noticeConnectivityError() {
-    state = const AsyncData(NetworkError.connectivity());
+    state = AsyncData(NoConnectivityError());
   }
 
   void noticeNetworkTimeoutError() {
-    state = const AsyncData(NetworkError.timeout());
+    state = AsyncData(NetworkTimeoutError());
   }
 
   void noticeNetworkUnknownError() {
-    state = const AsyncData(NetworkError.unknown());
+    state = AsyncData(NetworkUnknownError());
   }
 }
