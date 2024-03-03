@@ -33,11 +33,11 @@ import 'package:seasoning/ui/app/seasoning_app.dart';
 
 // ignore_for_file: avoid_print
 void main() async {
-  var certificateAuthorityBytes = <int>[];
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(statusBarColor: Colors.transparent),
   );
+  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
   Logger.root.level = Level.FINE;
 
@@ -48,7 +48,7 @@ void main() async {
     );
   });
 
-  certificateAuthorityBytes = await setupCertificateAuthority();
+  final certificateAuthorityBytes = await setupCertificateAuthority();
 
   NavigationHelper.setup();
   await SettingsService.setup();
