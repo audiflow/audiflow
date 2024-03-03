@@ -4,6 +4,7 @@
 
 import 'dart:io';
 
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -210,6 +211,12 @@ class MobilePodcastService implements PodcastService {
 
   Future<Podcast?> _reloadPodcast(PodcastMetadata metadata) async {
     _log.fine('Reloading podcast ${metadata.title}');
+
+    final connectivityResult = await Connectivity().checkConnectivity();
+    if (connectivityResult == ConnectivityResult.none) {
+      _log.fine('no network');
+      return null;
+    }
 
     var feedUrl = metadata.feedUrl ?? '';
     if (feedUrl.isEmpty) {

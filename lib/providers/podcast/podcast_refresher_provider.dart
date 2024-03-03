@@ -44,10 +44,11 @@ class PodcastRefresher extends _$PodcastRefresher {
   void _setupNextRefreshTarget(
     List<(PodcastMetadata, PodcastStats)> subscriptions,
   ) {
+    _timer?.cancel();
+    _timer = null;
+
     if (subscriptions.isEmpty) {
       _log.fine('no subscriptions');
-      _timer?.cancel();
-      _timer = null;
       return;
     }
 
@@ -64,7 +65,7 @@ class PodcastRefresher extends _$PodcastRefresher {
       }
     });
 
-    if (nextTarget.$1.guid == _nextRefreshTarget?.$1.guid) {
+    if (nextTarget.$1.guid == _nextRefreshTarget?.$1.guid && _timer == null) {
       return;
     }
 
@@ -79,7 +80,8 @@ class PodcastRefresher extends _$PodcastRefresher {
     _log.fine('Next refresh target: ${nextTarget.$1.title} in $delay');
   }
 
-  void _refreshTarget() {
+  Future<void> _refreshTarget() async {
+    _timer = null;
     if (_nextRefreshTarget == null) {
       return;
     }
@@ -87,6 +89,11 @@ class PodcastRefresher extends _$PodcastRefresher {
     final podcast = _nextRefreshTarget!.$1;
     _log.fine('refresh target: ${podcast.title}');
 
-    ref.read(podcastServiceProvider).loadPodcast(podcast, refresh: true);
+    final loaded = await ref
+        .read(podcastServiceProvider)
+        .loadPodcast(podcast, refresh: true);
+    if (loaded == null) {
+      _timer = Timer(const Duration(minutes: 1), _refreshTarget);
+    }
   }
 }
