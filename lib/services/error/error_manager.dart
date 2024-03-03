@@ -32,7 +32,7 @@ class ErrorManager extends _$ErrorManager {
     }
   }
 
-  void registerRetry({
+  void retryOnReconnect({
     required String key,
     required VoidCallback retry,
   }) {
