@@ -229,8 +229,16 @@ class MobilePodcastService implements PodcastService {
     final podcast = Podcast.fromSearch(feedPodcast, metadata);
 
     final saved = await _repository.findPodcast(podcast.guid);
-    if (saved != null && saved != podcast) {
-      await _repository.savePodcast(podcast);
+    if (saved != null) {
+      final updateParam = PodcastStatsUpdateParam(
+        guid: podcast.guid,
+        lastCheckedAt: DateTime.now(),
+      );
+      if (saved != podcast) {
+        await _repository.savePodcast(podcast, statsParam: updateParam);
+      } else {
+        await _repository.updatePodcastStats(updateParam);
+      }
     }
 
     return podcast;

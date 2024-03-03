@@ -206,8 +206,6 @@ class EpisodeStatsUpdateParam {
   final bool? downloaded;
 
   EpisodeStatsUpdateParam copyWith({
-    int? id,
-    String? guid,
     Duration? position,
     Duration? duration,
     int? playCount,
@@ -217,7 +215,7 @@ class EpisodeStatsUpdateParam {
     bool? downloaded,
   }) {
     return EpisodeStatsUpdateParam(
-      guid: guid ?? this.guid,
+      guid: guid,
       position: position ?? this.position,
       duration: duration ?? this.duration,
       playCount: playCount ?? this.playCount,

@@ -101,6 +101,9 @@ _$PodcastStatsImpl _$$PodcastStatsImplFromJson(Map<String, dynamic> json) =>
               _$PodcastDetailViewModeEnumMap, json['viewMode']) ??
           PodcastDetailViewMode.episodes,
       ascend: json['ascend'] as bool? ?? false,
+      lastCheckedAt: json['lastCheckedAt'] == null
+          ? null
+          : DateTime.parse(json['lastCheckedAt'] as String),
     );
 
 Map<String, dynamic> _$$PodcastStatsImplToJson(_$PodcastStatsImpl instance) =>
@@ -109,6 +112,7 @@ Map<String, dynamic> _$$PodcastStatsImplToJson(_$PodcastStatsImpl instance) =>
       'subscribedDate': instance.subscribedDate?.toIso8601String(),
       'viewMode': _$PodcastDetailViewModeEnumMap[instance.viewMode]!,
       'ascend': instance.ascend,
+      'lastCheckedAt': instance.lastCheckedAt?.toIso8601String(),
     };
 
 const _$PodcastDetailViewModeEnumMap = {

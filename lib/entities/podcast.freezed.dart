@@ -1153,6 +1153,7 @@ mixin _$PodcastStats {
   DateTime? get subscribedDate => throw _privateConstructorUsedError;
   PodcastDetailViewMode get viewMode => throw _privateConstructorUsedError;
   bool get ascend => throw _privateConstructorUsedError;
+  DateTime? get lastCheckedAt => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -1170,7 +1171,8 @@ abstract class $PodcastStatsCopyWith<$Res> {
       {String guid,
       DateTime? subscribedDate,
       PodcastDetailViewMode viewMode,
-      bool ascend});
+      bool ascend,
+      DateTime? lastCheckedAt});
 }
 
 /// @nodoc
@@ -1190,6 +1192,7 @@ class _$PodcastStatsCopyWithImpl<$Res, $Val extends PodcastStats>
     Object? subscribedDate = freezed,
     Object? viewMode = null,
     Object? ascend = null,
+    Object? lastCheckedAt = freezed,
   }) {
     return _then(_value.copyWith(
       guid: null == guid
@@ -1208,6 +1211,10 @@ class _$PodcastStatsCopyWithImpl<$Res, $Val extends PodcastStats>
           ? _value.ascend
           : ascend // ignore: cast_nullable_to_non_nullable
               as bool,
+      lastCheckedAt: freezed == lastCheckedAt
+          ? _value.lastCheckedAt
+          : lastCheckedAt // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
     ) as $Val);
   }
 }
@@ -1224,7 +1231,8 @@ abstract class _$$PodcastStatsImplCopyWith<$Res>
       {String guid,
       DateTime? subscribedDate,
       PodcastDetailViewMode viewMode,
-      bool ascend});
+      bool ascend,
+      DateTime? lastCheckedAt});
 }
 
 /// @nodoc
@@ -1242,6 +1250,7 @@ class __$$PodcastStatsImplCopyWithImpl<$Res>
     Object? subscribedDate = freezed,
     Object? viewMode = null,
     Object? ascend = null,
+    Object? lastCheckedAt = freezed,
   }) {
     return _then(_$PodcastStatsImpl(
       guid: null == guid
@@ -1260,6 +1269,10 @@ class __$$PodcastStatsImplCopyWithImpl<$Res>
           ? _value.ascend
           : ascend // ignore: cast_nullable_to_non_nullable
               as bool,
+      lastCheckedAt: freezed == lastCheckedAt
+          ? _value.lastCheckedAt
+          : lastCheckedAt // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
     ));
   }
 }
@@ -1271,7 +1284,8 @@ class _$PodcastStatsImpl implements _PodcastStats {
       {required this.guid,
       this.subscribedDate,
       this.viewMode = PodcastDetailViewMode.episodes,
-      this.ascend = false});
+      this.ascend = false,
+      this.lastCheckedAt});
 
   factory _$PodcastStatsImpl.fromJson(Map<String, dynamic> json) =>
       _$$PodcastStatsImplFromJson(json);
@@ -1286,10 +1300,12 @@ class _$PodcastStatsImpl implements _PodcastStats {
   @override
   @JsonKey()
   final bool ascend;
+  @override
+  final DateTime? lastCheckedAt;
 
   @override
   String toString() {
-    return 'PodcastStats(guid: $guid, subscribedDate: $subscribedDate, viewMode: $viewMode, ascend: $ascend)';
+    return 'PodcastStats(guid: $guid, subscribedDate: $subscribedDate, viewMode: $viewMode, ascend: $ascend, lastCheckedAt: $lastCheckedAt)';
   }
 
   @override
@@ -1302,13 +1318,15 @@ class _$PodcastStatsImpl implements _PodcastStats {
                 other.subscribedDate == subscribedDate) &&
             (identical(other.viewMode, viewMode) ||
                 other.viewMode == viewMode) &&
-            (identical(other.ascend, ascend) || other.ascend == ascend));
+            (identical(other.ascend, ascend) || other.ascend == ascend) &&
+            (identical(other.lastCheckedAt, lastCheckedAt) ||
+                other.lastCheckedAt == lastCheckedAt));
   }
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode =>
-      Object.hash(runtimeType, guid, subscribedDate, viewMode, ascend);
+  int get hashCode => Object.hash(
+      runtimeType, guid, subscribedDate, viewMode, ascend, lastCheckedAt);
 
   @JsonKey(ignore: true)
   @override
@@ -1329,7 +1347,8 @@ abstract class _PodcastStats implements PodcastStats {
       {required final String guid,
       final DateTime? subscribedDate,
       final PodcastDetailViewMode viewMode,
-      final bool ascend}) = _$PodcastStatsImpl;
+      final bool ascend,
+      final DateTime? lastCheckedAt}) = _$PodcastStatsImpl;
 
   factory _PodcastStats.fromJson(Map<String, dynamic> json) =
       _$PodcastStatsImpl.fromJson;
@@ -1342,6 +1361,8 @@ abstract class _PodcastStats implements PodcastStats {
   PodcastDetailViewMode get viewMode;
   @override
   bool get ascend;
+  @override
+  DateTime? get lastCheckedAt;
   @override
   @JsonKey(ignore: true)
   _$$PodcastStatsImplCopyWith<_$PodcastStatsImpl> get copyWith =>

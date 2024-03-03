@@ -123,10 +123,19 @@ class SembastRepository extends Repository {
   // --- Podcast
 
   @override
-  Future<void> savePodcast(Podcast podcast) async {
+  Future<void> savePodcast(
+    Podcast podcast, {
+    PodcastStatsUpdateParam? statsParam,
+  }) async {
     log.fine('Update Podcast: ${podcast.feedUrl}');
-    await _podcastStore.record(podcast.guid).put(await _db, podcast.toJson());
-    _podcastEventStream.add(PodcastUpdatedEvent(podcast));
+    final db = await _db;
+    final stats = await db.transaction((txn) async {
+      await _podcastStore.record(podcast.guid).put(txn, podcast.toJson());
+      return statsParam == null
+          ? null
+          : await _updatePodcastStats(txn, statsParam);
+    });
+    _podcastEventStream.add(PodcastUpdatedEvent(podcast, stats: stats));
   }
 
   @override
@@ -208,40 +217,16 @@ class SembastRepository extends Repository {
 
   @override
   Future<void> unsubscribePodcast(Podcast podcast) async {
-    final db = await _db;
     final guid = podcast.guid;
-    final results = await Future.wait([
-      findPodcastStats(guid),
-      findDownloadsByPodcastGuid(guid),
-    ]);
-
-    final stats = results[0] as PodcastStats?;
-    final downloads = results[1]! as List<Downloadable>;
+    final stats = await findPodcastStats(guid);
     if (stats?.subscribed != true) {
       log.warning('unsubscribePodcast: already unsubscribed: $guid');
       return;
     }
 
-    // TODO(reedom): Let sweeper manages these entities.
-
     final newStats = stats!.copyWith(subscribedDate: null);
-    if (downloads.isEmpty) {
-      await db.transaction((txn) async {
-        final finder = Finder(filter: Filter.equals('pguid', guid));
-        await _podcastStatsStore.record(guid).put(txn, newStats.toJson());
-        await _episodeStore.delete(txn, finder: finder);
-        await _downloadableStore.delete(txn, finder: finder);
-        await _transcriptStore.delete(txn, finder: finder);
-      });
-    } else {
-      final episodes = podcast.episodes
-          .where((e) => !downloads.any((d) => d.guid == e.guid))
-          .toList();
-      await _deleteEpisodes(episodes);
-      await _podcastStatsStore.record(guid).put(db, newStats.toJson());
-    }
-
-    log.warning('unsubscribed: guid');
+    await _podcastStatsStore.record(guid).put(await _db, newStats.toJson());
+    log.warning('unsubscribed: $guid');
     _podcastEventStream.add(PodcastUnsubscribedEvent(podcast, newStats));
   }
 
@@ -256,6 +241,37 @@ class SembastRepository extends Repository {
   Future<PodcastStats?> findPodcastStats(String guid) async {
     final value = await _podcastStatsStore.record(guid).get(await _db);
     return value == null ? null : PodcastStats.fromJson(value);
+  }
+
+  @override
+  Future<PodcastStats> updatePodcastStats(PodcastStatsUpdateParam param) async {
+    final db = await _db;
+    final stats =
+        await db.transaction((txn) => _updatePodcastStats(txn, param));
+    _podcastEventStream.add(PodcastStatsUpdatedEvent(stats));
+    return stats;
+  }
+
+  @override
+  Future<PodcastStats> _updatePodcastStats(
+    DatabaseClient txn,
+    PodcastStatsUpdateParam param,
+  ) async {
+    final value = await _podcastStatsStore.record(param.guid).get(txn);
+    final loaded = value == null ? null : PodcastStats.fromJson(value);
+    final newStats = loaded?.copyWith(
+          viewMode: param.viewMode ?? loaded.viewMode,
+          ascend: param.ascend ?? loaded.ascend,
+          lastCheckedAt: param.lastCheckedAt ?? loaded.lastCheckedAt,
+        ) ??
+        PodcastStats(
+          guid: param.guid,
+          viewMode: param.viewMode ?? PodcastDetailViewMode.episodes,
+          ascend: param.ascend ?? false,
+          lastCheckedAt: param.lastCheckedAt,
+        );
+    await _podcastStatsStore.record(param.guid).put(txn, newStats.toJson());
+    return newStats;
   }
 
   // --- Episodes

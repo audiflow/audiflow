@@ -14,25 +14,25 @@ part 'podcast.g.dart';
 
 @freezed
 class PodcastPreview with _$PodcastPreview {
-  const factory PodcastPreview({
-    /// Unique identifier for podcast.
-    required String guid,
+  const factory PodcastPreview(
+      {
+      /// Unique identifier for podcast.
+      required String guid,
 
-    /// The collection ID(iTunesID).
-    required int collectionId,
+      /// The collection ID(iTunesID).
+      required int collectionId,
 
-    /// The link to the podcast RSS feed.
-    String? feedUrl,
+      /// The link to the podcast RSS feed.
+      String? feedUrl,
 
-    /// Podcast title.
-    required String title,
+      /// Podcast title.
+      required String title,
 
-    /// URL for thumbnail version of artwork image.
-    required String thumbImageUrl,
+      /// URL for thumbnail version of artwork image.
+      required String thumbImageUrl,
 
-    /// Last updated date.
-    required DateTime lastUpdated
-  }) = _PodcastPreview;
+      /// Last updated date.
+      required DateTime lastUpdated}) = _PodcastPreview;
 
   factory PodcastPreview.fromJson(Map<String, dynamic> json) =>
       _$PodcastPreviewFromJson(json);
@@ -73,7 +73,6 @@ abstract class PodcastMetadata {
 
   /// Release date of the latest episode.
   DateTime get releaseDate;
-
 }
 
 /// A class that represents an instance of a podcast.
@@ -275,6 +274,7 @@ class PodcastStats with _$PodcastStats {
     DateTime? subscribedDate,
     @Default(PodcastDetailViewMode.episodes) PodcastDetailViewMode viewMode,
     @Default(false) bool ascend,
+    DateTime? lastCheckedAt,
   }) = _PodcastStats;
 
   factory PodcastStats.fromJson(Map<String, dynamic> json) =>
@@ -283,4 +283,35 @@ class PodcastStats with _$PodcastStats {
 
 extension PodcastStatsExt on PodcastStats {
   bool get subscribed => subscribedDate != null;
+}
+
+class PodcastStatsUpdateParam {
+  const PodcastStatsUpdateParam({
+    required this.guid,
+    this.subscribedDate,
+    this.viewMode,
+    this.ascend,
+    this.lastCheckedAt,
+  });
+
+  final String guid;
+  final DateTime? subscribedDate;
+  final PodcastDetailViewMode? viewMode;
+  final bool? ascend;
+  final DateTime? lastCheckedAt;
+
+  PodcastStatsUpdateParam copyWith({
+    DateTime? subscribedDate,
+    PodcastDetailViewMode? viewMode,
+    bool? ascend,
+    DateTime? lastCheckedAt,
+  }) {
+    return PodcastStatsUpdateParam(
+      guid: guid,
+      subscribedDate: subscribedDate ?? this.subscribedDate,
+      viewMode: viewMode ?? this.viewMode,
+      ascend: ascend ?? this.ascend,
+      lastCheckedAt: lastCheckedAt ?? this.lastCheckedAt,
+    );
+  }
 }

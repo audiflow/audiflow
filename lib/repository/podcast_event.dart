@@ -20,9 +20,10 @@ class PodcastUnsubscribedEvent implements PodcastEvent {
 }
 
 class PodcastUpdatedEvent implements PodcastEvent {
-  const PodcastUpdatedEvent(this.podcast);
+  const PodcastUpdatedEvent(this.podcast, {this.stats});
 
   final Podcast podcast;
+  final PodcastStats? stats;
 }
 
 class PodcastStatsUpdatedEvent implements PodcastEvent {

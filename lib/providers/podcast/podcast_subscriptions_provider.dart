@@ -1,4 +1,5 @@
 import 'package:collection/collection.dart';
+import 'package:logging/logging.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:seasoning/entities/entities.dart';
 import 'package:seasoning/repository/podcast_event.dart';
@@ -8,10 +9,13 @@ part 'podcast_subscriptions_provider.g.dart';
 
 @Riverpod(keepAlive: true)
 class PodcastSubscriptions extends _$PodcastSubscriptions {
+  final _log = Logger('PodcastSubscriptions');
+
   @override
   Future<List<(PodcastMetadata, PodcastStats)>> build() async {
     final subscriptions = await ref.read(repositoryProvider).subscriptions();
     _listen();
+    _log.info('${subscriptions.length} subscriptions');
     return subscriptions;
   }
 
@@ -29,23 +33,33 @@ class PodcastSubscriptions extends _$PodcastSubscriptions {
 
   void _listen() {
     ref.listen(podcastEventStreamProvider, (_, next) {
-      final event = next.valueOrNull;
-      switch (event) {
-        case PodcastSubscribedEvent(podcast: final podcast, stats: final stats):
-          final list = [...state.value!, (podcast, stats)];
-          state = AsyncData(_sorted(list));
-        case PodcastUnsubscribedEvent(stats: final stats):
-          final list =
-              state.value!.where((e) => e.$2.guid != stats.guid).toList();
-          state = AsyncData(list);
-        case PodcastUpdatedEvent():
-        // final list = state.value!
-        //     .map((e) => e.$2.guid == podcast.guid ? (e.$1, podcast) : e)
-        //     .toList();
-        // state = AsyncData(list);
-        case PodcastStatsUpdatedEvent():
-        case null:
-      }
+      next.whenData((event) {
+        switch (event) {
+          case PodcastSubscribedEvent(
+              podcast: final podcast,
+              stats: final stats
+            ):
+            final list = [...state.value!, (podcast, stats)];
+            state = AsyncData(_sorted(list));
+          case PodcastUnsubscribedEvent(stats: final stats):
+            final list =
+                state.value!.where((e) => e.$2.guid != stats.guid).toList();
+            state = AsyncData(list);
+          case PodcastUpdatedEvent(podcast: final podcast, stats: final stats):
+            final list = state.value!
+                .map(
+                  (e) =>
+                      e.$1.guid == podcast.guid ? (podcast, stats ?? e.$2) : e,
+                )
+                .toList();
+            state = AsyncData(list);
+          case PodcastStatsUpdatedEvent(stats: final stats):
+            final list = state.value!
+                .map((e) => e.$2.guid == stats.guid ? (e.$1, stats) : e)
+                .toList();
+            state = AsyncData(list);
+        }
+      });
     });
   }
 }

@@ -26,7 +26,7 @@ abstract class Repository {
 
   // --- Podcast
 
-  Future<void> savePodcast(Podcast podcast);
+  Future<void> savePodcast(Podcast podcast, { PodcastStatsUpdateParam? statsParam });
 
   Future<Podcast?> findPodcast(String guid);
 
@@ -42,6 +42,8 @@ abstract class Repository {
 
   Future<PodcastStats?> findPodcastStats(String guid);
 
+  Future<PodcastStats> updatePodcastStats(PodcastStatsUpdateParam param);
+  
   // --- Episode
 
   Future<void> saveEpisode(Episode episode);

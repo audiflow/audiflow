@@ -72,10 +72,12 @@ class PodcastInfo extends _$PodcastInfo {
       return;
     }
 
-    final newStats =
-        (state.value!.stats ?? PodcastStats(guid: state.value!.podcast.guid))
-            .copyWith(viewMode: viewMode);
-    _repository.savePodcastStats(newStats);
+    _repository.updatePodcastStats(
+      PodcastStatsUpdateParam(
+        guid: state.value!.podcast.guid,
+        viewMode: viewMode,
+      ),
+    );
   }
 }
 

@@ -12,6 +12,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:logging/logging.dart';
+import 'package:seasoning/providers/podcast/podcast_refresher_provider.dart';
 import 'package:seasoning/repository/download_event.dart';
 import 'package:seasoning/repository/episode_event.dart';
 import 'package:seasoning/repository/podcast_event.dart';
@@ -108,6 +109,7 @@ class _GlobalProviders extends HookConsumerWidget {
       ..watch(audioQueueManagerProvider)
       ..watch(audioPositionSaverProvider)
       ..watch(podcastEventStreamProvider)
+      ..watch(podcastRefresherProvider)
       ..watch(episodeEventStreamProvider)
       ..watch(downloadEventStreamProvider)
       ..watch(transcriptEventStreamProvider);
