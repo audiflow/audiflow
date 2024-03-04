@@ -10,9 +10,12 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:logging/logging.dart';
+import 'package:seasoning/l10n/L.dart';
 import 'package:seasoning/providers/podcast/podcast_refresher_provider.dart';
+import 'package:seasoning/providers/theme_provider.dart';
 import 'package:seasoning/repository/download_event.dart';
 import 'package:seasoning/repository/episode_event.dart';
 import 'package:seasoning/repository/podcast_event.dart';
@@ -30,6 +33,7 @@ import 'package:seasoning/services/queue/queue_manager.dart';
 import 'package:seasoning/services/settings/settings_service.dart';
 import 'package:seasoning/ui/app/navigation_helper.dart';
 import 'package:seasoning/ui/app/seasoning_app.dart';
+import 'package:seasoning/ui/widgets/error_notifier.dart';
 
 // ignore_for_file: avoid_print
 void main() async {
@@ -59,10 +63,31 @@ void main() async {
         audioPlayerServiceProvider.overrideWith(MobileAudioPlayerService.new),
         queueManagerProvider.overrideWith(DefaultQueueManager.new),
       ],
-      child: const _GlobalProviders(
-        child: SeasoningApp(
-            // certificateAuthorityBytes: certificateAuthorityBytes,
+      child: MaterialApp(
+        theme: Themes.lightTheme().themeData,
+        debugShowCheckedModeBanner: false,
+        localizationsDelegates: const <LocalizationsDelegate<Object>>[
+          AnytimeLocalisationsDelegate(),
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: const [
+          Locale('en', ''),
+          Locale('de', ''),
+        ],
+        home: const Stack(
+          children: [
+            ErrorNotifier(),
+            _GlobalProviders(),
+            _ProvidersInitializer(
+              child: SeasoningApp(
+                key: Key('SeasoningApp'),
+                // certificateAuthorityBytes: certificateAuthorityBytes,
+              ),
             ),
+          ],
+        ),
       ),
     ),
   );
@@ -94,9 +119,7 @@ Future<List<int>> setupCertificateAuthority() async {
 }
 
 class _GlobalProviders extends HookConsumerWidget {
-  const _GlobalProviders({required this.child});
-
-  final Widget child;
+  const _GlobalProviders();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -114,7 +137,7 @@ class _GlobalProviders extends HookConsumerWidget {
       ..watch(downloadEventStreamProvider)
       ..watch(transcriptEventStreamProvider);
 
-    return _ProvidersInitializer(child: child);
+    return const SizedBox();
   }
 }
 
@@ -143,6 +166,15 @@ class _ProvidersInitializer extends HookConsumerWidget {
       },
       [],
     );
-    return initState.value ? child : const SizedBox();
+    return initState.value ? child : const _Blank();
+  }
+}
+
+class _Blank extends StatelessWidget {
+  const _Blank();
+
+  @override
+  Widget build(BuildContext context) {
+    return ColoredBox(color: Theme.of(context).scaffoldBackgroundColor);
   }
 }

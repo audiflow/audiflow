@@ -13,6 +13,7 @@ import 'package:seasoning/providers/podcast/podcast_subscriptions_provider.dart'
 import 'package:seasoning/ui/podcast/podcast_list.dart';
 import 'package:seasoning/ui/podcast/podcast_list_horz.dart';
 import 'package:seasoning/ui/widgets/basic_app_bar.dart';
+import 'package:seasoning/ui/widgets/error_notifier.dart';
 import 'package:seasoning/ui/widgets/fill_remaining_error.dart';
 import 'package:seasoning/ui/widgets/fill_remaining_loading.dart';
 
@@ -25,6 +26,8 @@ class PodcastChartPage extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(podcastChartProvider);
+
     useEffect(
       () {
         ref
@@ -35,18 +38,22 @@ class PodcastChartPage extends HookConsumerWidget {
       [],
     );
 
-    final state = ref.watch(podcastChartProvider);
     return Scaffold(
-      body: CustomScrollView(
-        slivers: <Widget>[
-          BasicAppBar.chart(),
-          const _SubscribedPodcasts(),
-          if (state.hasValue)
-            PodcastList(results: state.value!.podcasts)
-          else if (state.hasError)
-            FillRemainingError.podcastNoResults()
-          else
-            const FillRemainingLoading(),
+      body: Stack(
+        children: [
+          CustomScrollView(
+            slivers: <Widget>[
+              BasicAppBar.chart(),
+              const _SubscribedPodcasts(),
+              if (state.hasValue)
+                PodcastList(results: state.value!.podcasts)
+              else if (state.hasError)
+                FillRemainingError.podcastNoResults()
+              else
+                const FillRemainingLoading(),
+            ],
+          ),
+          const ErrorNotifier(),
         ],
       ),
     );

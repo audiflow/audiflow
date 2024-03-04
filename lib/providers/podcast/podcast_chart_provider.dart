@@ -5,7 +5,6 @@
 
 import 'package:logging/logging.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:rxdart/rxdart.dart';
 import 'package:seasoning/entities/podcast_chart.dart';
 import 'package:seasoning/errors/errors.dart';
 import 'package:seasoning/events/podcast_chart_event.dart';
@@ -17,26 +16,13 @@ part 'podcast_chart_provider.g.dart';
 
 @Riverpod(keepAlive: true)
 class PodcastChart extends _$PodcastChart {
-  PodcastChart() {
-    _input.throttleTime(const Duration(seconds: 5)).listen(_inputHandler);
-  }
-
   static const _ttl = Duration(hours: 3);
   static const _errorKey = 'podcastChart';
   final _log = Logger('PodcastChart');
 
-  final BehaviorSubject<PodcastChartEvent> _input =
-      BehaviorSubject<PodcastChartEvent>();
-
   ErrorManager get _errorManager => ref.read(errorManagerProvider.notifier);
 
   Repository get _repository => ref.read(repositoryProvider);
-
-  void dispose() {
-    _input.close();
-  }
-
-  void input(PodcastChartEvent event) => _input.add(event);
 
   @override
   Future<PodcastChartState> build() async {
@@ -44,7 +30,7 @@ class PodcastChart extends _$PodcastChart {
     return lastState ?? const PodcastChartState();
   }
 
-  Future<void> _inputHandler(PodcastChartEvent event) async {
+  Future<void> input(PodcastChartEvent event) async {
     if (event is NewPodcastChartEvent) {
       await state.when(
         data: (data) {
@@ -59,7 +45,7 @@ class PodcastChart extends _$PodcastChart {
           ref.listenSelf((_, next) {
             if (!handled && next.hasValue || next.hasError) {
               handled = true;
-              _inputHandler(event);
+              input(event);
             }
           });
         },
@@ -69,6 +55,7 @@ class PodcastChart extends _$PodcastChart {
   }
 
   Future<void> _searchNewChart(NewPodcastChartEvent event) async {
+    _log.fine('_searchNewChart $event');
     _errorManager.unregisterRetry(_errorKey);
 
     try {

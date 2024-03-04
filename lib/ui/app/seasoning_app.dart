@@ -7,6 +7,7 @@ import 'package:seasoning/providers/theme_provider.dart';
 import 'package:seasoning/services/podcast/podcast_service_provider.dart';
 import 'package:seasoning/ui/app/navigation_helper.dart';
 import 'package:seasoning/ui/pages/podcast_chart_page.dart';
+import 'package:seasoning/ui/widgets/error_notifier.dart';
 
 ThemeData theme = Themes.lightTheme().themeData;
 
@@ -50,12 +51,17 @@ class HomePage extends HookConsumerWidget {
       appBar: AppBar(
         title: const Text('Home'),
       ),
-      body: CustomScrollView(
-        shrinkWrap: true,
-        controller: scrollController,
-        slivers: const [
-//          SliverPinnedHeader(child: PodcastSearchBar()),
-          PodcastChartPage(),
+      body: Stack(
+        children: [
+          CustomScrollView(
+            shrinkWrap: true,
+            controller: scrollController,
+            slivers: const [
+              //          SliverPinnedHeader(child: PodcastSearchBar()),
+              PodcastChartPage(),
+            ],
+          ),
+          const ErrorNotifier(),
         ],
       ),
     );
