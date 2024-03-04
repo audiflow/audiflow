@@ -4,7 +4,6 @@
 
 import 'dart:io';
 
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -159,8 +158,7 @@ class MobilePodcastService implements PodcastService {
       throw Exception(result.lastError);
     }
 
-    final items =
-        result.items.map(PodcastMetadata.fromSearchResultItem);
+    final items = result.items.map(PodcastMetadata.fromSearchResultItem);
     await _repository.savePodcastPreview(items);
     return items.toList();
   }
@@ -185,8 +183,7 @@ class MobilePodcastService implements PodcastService {
     if (!result.successful) {
       throw Exception(result.lastError);
     }
-    final items =
-        result.items.map(PodcastMetadata.fromSearchResultItem);
+    final items = result.items.map(PodcastMetadata.fromSearchResultItem);
     return _repository.populatePodcastFeedUrl(items);
   }
 
@@ -252,22 +249,16 @@ class MobilePodcastService implements PodcastService {
     final podcast = Podcast.fromSearch(feedPodcast, metadata);
 
     final saved = await _repository.findPodcast(podcast.guid);
-    if (saved != null) {
-      final updateParam = PodcastStatsUpdateParam(
-        guid: podcast.guid,
-        lastCheckedAt: DateTime.now(),
-      );
-      if (saved != podcast) {
-        await _repository.savePodcast(podcast, statsParam: updateParam);
-      } else {
-        await _repository.updatePodcastStats(updateParam);
-      }
+    final updateParam = PodcastStatsUpdateParam(
+      guid: podcast.guid,
+      lastCheckedAt: DateTime.now(),
+    );
+    if (saved != podcast) {
+      await _repository.savePodcast(podcast, statsParam: updateParam);
+    } else {
+      await _repository.updatePodcastStats(updateParam);
     }
-
-    final stats = await _repository.findPodcastStats(podcast.guid);
-    if (stats?.subscribed == true) {
-      await _repository.saveEpisodes(podcast.episodes);
-    }
+    await _repository.saveEpisodes(podcast.episodes);
 
     return podcast;
   }
@@ -561,9 +552,7 @@ class MobilePodcastService implements PodcastService {
     required int collectionId,
   }) async {
     final item = await _api.lookup(collectionId: collectionId);
-    return item == null
-        ? null
-        : PodcastMetadata.fromSearchResultItem(item);
+    return item == null ? null : PodcastMetadata.fromSearchResultItem(item);
   }
 
   Future<podcast_search.Podcast> _lookupPodcast({
