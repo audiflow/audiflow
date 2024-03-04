@@ -30,9 +30,27 @@ Future<List<Season>> podcastSeasons(
   }
 
   return map.keys.sorted((a, b) => (b ?? 0) - (a ?? 0)).map((seasonKey) {
-    final seasonEpisodes = map[seasonKey]!
-        .sorted((a, b) => (a.episode ?? 0) - (b.episode ?? 0))
-        .toList();
+    final seasonEpisodes = map[seasonKey]!.sorted(
+      (a, b) {
+        // if (a.episode != null && b.episode != null) {
+        //   return a.episode! < b.episode! ? -1 : 1;
+        // }
+        if (a.publicationDate != null && b.publicationDate != null) {
+          return a.publicationDate!.millisecondsSinceEpoch <
+                  b.publicationDate!.millisecondsSinceEpoch
+              ? -1
+              : 1;
+        }
+        // if (a.episode != null || b.episode != null) {
+        //   return (a.episode == null ? 1 : -1);
+        // }
+        if (a.publicationDate != null || b.publicationDate != null) {
+          return (a.publicationDate == null ? 1 : -1);
+        } else {
+          return 0;
+        }
+      },
+    ).toList();
     final firstEpisode = seasonEpisodes.first;
     return Season(
       guid: 'season-${firstEpisode.pguid}-${seasonKey ?? 0}',
