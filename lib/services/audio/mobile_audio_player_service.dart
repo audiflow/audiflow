@@ -18,6 +18,8 @@ import 'package:seasoning/entities/entities.dart';
 import 'package:seasoning/repository/repository_provider.dart';
 import 'package:seasoning/services/audio/audio_player_event.dart';
 import 'package:seasoning/services/audio/audio_player_service.dart';
+import 'package:seasoning/services/connectivity/connectivity.dart';
+import 'package:seasoning/services/error/error_manager.dart';
 import 'package:seasoning/services/settings/settings_service.dart';
 
 part 'mobile_audio_player_service.g.dart';
@@ -36,6 +38,8 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
   Repository get _repository => ref.read(repositoryProvider);
 
   AppSettings get _appSettings => ref.read(settingsServiceProvider);
+
+  ErrorManager get _errorManager => ref.read(errorManagerProvider.notifier);
 
   late AudioHandler _audioHandler;
   var _sleep = const Sleep(type: SleepType.none);
@@ -135,6 +139,12 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
     }
 
     final (uri, downloaded) = await _generateEpisodeUri(episode);
+
+    if (!downloaded && !await hasConnectivity()) {
+      // TODO(reedom): skip to a downloaded episode, by a provider in charge
+      _errorManager.noticeConnectivityError();
+      return;
+    }
 
     final playPosition =
         (episode.duration?.inSeconds ?? 0) - 1 <= position.inSeconds
