@@ -25,8 +25,8 @@ abstract class Repository {
 
   Future<PodcastPreview?> findPodcastPreview(String guid);
 
-  Future<List<PodcastSearchResultItem>> populatePodcastFeedUrl(
-    Iterable<PodcastSearchResultItem> items,
+  Future<List<PodcastMetadata>> populatePodcastFeedUrl(
+    Iterable<PodcastMetadata> items,
   );
 
   Future<String?> findFeedUrl(String guid);

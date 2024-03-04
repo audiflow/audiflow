@@ -28,7 +28,7 @@ class SeasonList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final seasonsState = ref.watch(podcastSeasonsProvider(podcast));
+    final seasonsState = ref.watch(podcastSeasonsProvider(podcast.metadata));
     if (seasonsState.isLoading) {
       return const FillRemainingLoading();
     } else if (seasonsState.hasError || seasonsState.value!.isEmpty) {

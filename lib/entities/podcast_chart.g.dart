@@ -13,8 +13,7 @@ _$PodcastChartStateImpl _$$PodcastChartStateImplFromJson(
       genre: json['genre'] as String?,
       countryCode: json['countryCode'] as String?,
       podcasts: (json['podcasts'] as List<dynamic>?)
-              ?.map((e) =>
-                  PodcastSearchResultItem.fromJson(e as Map<String, dynamic>))
+              ?.map((e) => PodcastMetadata.fromJson(e as Map<String, dynamic>))
               .toList() ??
           const [],
       expiresAt: json['expiresAt'] == null

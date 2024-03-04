@@ -6,7 +6,7 @@ part of 'podcast_info_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$podcastInfoHash() => r'bb6bab3fe84c5295e5c687a53dde403429851bcc';
+String _$podcastInfoHash() => r'7bf15e6824feb77a7fcb9789ccace82816bace28';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -31,10 +31,10 @@ class _SystemHash {
 
 abstract class _$PodcastInfo
     extends BuildlessAutoDisposeAsyncNotifier<PodcastDetailsState> {
-  late final PodcastMetadata baseInfo;
+  late final PodcastMetadata metadata;
 
   FutureOr<PodcastDetailsState> build(
-    PodcastMetadata baseInfo,
+    PodcastMetadata metadata,
   );
 }
 
@@ -49,10 +49,10 @@ class PodcastInfoFamily extends Family<AsyncValue<PodcastDetailsState>> {
 
   /// See also [PodcastInfo].
   PodcastInfoProvider call(
-    PodcastMetadata baseInfo,
+    PodcastMetadata metadata,
   ) {
     return PodcastInfoProvider(
-      baseInfo,
+      metadata,
     );
   }
 
@@ -61,7 +61,7 @@ class PodcastInfoFamily extends Family<AsyncValue<PodcastDetailsState>> {
     covariant PodcastInfoProvider provider,
   ) {
     return call(
-      provider.baseInfo,
+      provider.metadata,
     );
   }
 
@@ -85,9 +85,9 @@ class PodcastInfoProvider extends AutoDisposeAsyncNotifierProviderImpl<
     PodcastInfo, PodcastDetailsState> {
   /// See also [PodcastInfo].
   PodcastInfoProvider(
-    PodcastMetadata baseInfo,
+    PodcastMetadata metadata,
   ) : this._internal(
-          () => PodcastInfo()..baseInfo = baseInfo,
+          () => PodcastInfo()..metadata = metadata,
           from: podcastInfoProvider,
           name: r'podcastInfoProvider',
           debugGetCreateSourceHash:
@@ -97,7 +97,7 @@ class PodcastInfoProvider extends AutoDisposeAsyncNotifierProviderImpl<
           dependencies: PodcastInfoFamily._dependencies,
           allTransitiveDependencies:
               PodcastInfoFamily._allTransitiveDependencies,
-          baseInfo: baseInfo,
+          metadata: metadata,
         );
 
   PodcastInfoProvider._internal(
@@ -107,17 +107,17 @@ class PodcastInfoProvider extends AutoDisposeAsyncNotifierProviderImpl<
     required super.allTransitiveDependencies,
     required super.debugGetCreateSourceHash,
     required super.from,
-    required this.baseInfo,
+    required this.metadata,
   }) : super.internal();
 
-  final PodcastMetadata baseInfo;
+  final PodcastMetadata metadata;
 
   @override
   FutureOr<PodcastDetailsState> runNotifierBuild(
     covariant PodcastInfo notifier,
   ) {
     return notifier.build(
-      baseInfo,
+      metadata,
     );
   }
 
@@ -126,13 +126,13 @@ class PodcastInfoProvider extends AutoDisposeAsyncNotifierProviderImpl<
     return ProviderOverride(
       origin: this,
       override: PodcastInfoProvider._internal(
-        () => create()..baseInfo = baseInfo,
+        () => create()..metadata = metadata,
         from: from,
         name: null,
         dependencies: null,
         allTransitiveDependencies: null,
         debugGetCreateSourceHash: null,
-        baseInfo: baseInfo,
+        metadata: metadata,
       ),
     );
   }
@@ -145,13 +145,13 @@ class PodcastInfoProvider extends AutoDisposeAsyncNotifierProviderImpl<
 
   @override
   bool operator ==(Object other) {
-    return other is PodcastInfoProvider && other.baseInfo == baseInfo;
+    return other is PodcastInfoProvider && other.metadata == metadata;
   }
 
   @override
   int get hashCode {
     var hash = _SystemHash.combine(0, runtimeType.hashCode);
-    hash = _SystemHash.combine(hash, baseInfo.hashCode);
+    hash = _SystemHash.combine(hash, metadata.hashCode);
 
     return _SystemHash.finish(hash);
   }
@@ -159,8 +159,8 @@ class PodcastInfoProvider extends AutoDisposeAsyncNotifierProviderImpl<
 
 mixin PodcastInfoRef
     on AutoDisposeAsyncNotifierProviderRef<PodcastDetailsState> {
-  /// The parameter `baseInfo` of this provider.
-  PodcastMetadata get baseInfo;
+  /// The parameter `metadata` of this provider.
+  PodcastMetadata get metadata;
 }
 
 class _PodcastInfoProviderElement
@@ -169,7 +169,7 @@ class _PodcastInfoProviderElement
   _PodcastInfoProviderElement(super.provider);
 
   @override
-  PodcastMetadata get baseInfo => (origin as PodcastInfoProvider).baseInfo;
+  PodcastMetadata get metadata => (origin as PodcastInfoProvider).metadata;
 }
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

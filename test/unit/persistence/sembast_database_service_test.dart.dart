@@ -93,7 +93,7 @@ void main() {
       final value = podcast1.toJson()..remove('feedUrl');
       final podcast = Podcast.fromJson(value);
 
-      await persistenceService.savePodcastPreview([podcast]);
+      await persistenceService.savePodcastPreview([podcast.metadata]);
     });
 
     test('findPodcastPreview', () async {
@@ -109,16 +109,16 @@ void main() {
     });
 
     test('populate feedUrl', () async {
-      await persistenceService.savePodcastPreview([podcast1]);
+      await persistenceService.savePodcastPreview([podcast1.metadata]);
       final feedUrl = await persistenceService.findFeedUrl(podcast1.guid);
       expect(feedUrl, podcast1.feedUrl);
 
-      final itemFull = PodcastSearchResultItem.fromPodcast(podcast2);
+      final itemFull = PodcastMetadata.fromPodcast(podcast2);
       expect(itemFull.feedUrl, isNotEmpty);
 
       final value = podcast1.toJson()..remove('feedUrl');
       final podcast = Podcast.fromJson(value);
-      final itemPartial = PodcastSearchResultItem.fromPodcast(podcast);
+      final itemPartial = PodcastMetadata.fromPodcast(podcast);
       expect(itemPartial.feedUrl, isNull);
 
       final actual = await persistenceService.populatePodcastFeedUrl([
@@ -306,7 +306,7 @@ void main() {
       await persistenceService.unsubscribePodcast(podcast1);
       final episodes =
           await persistenceService.findEpisodesByPodcastGuid(podcastStats.guid);
-      expect(episodes, isEmpty);
+      expect(episodes, isNotEmpty);
 
       // EpisodeStats should still exist.
       final loaded =

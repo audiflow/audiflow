@@ -67,6 +67,6 @@ class PodcastSearch extends _$PodcastSearch {
 class PodcastSearchState with _$PodcastSearchState {
   const factory PodcastSearchState({
     @Default('') String term,
-    @Default([]) List<PodcastSearchResultItem> results,
+    @Default([]) List<PodcastMetadata> results,
   }) = _PodcastSearchState;
 }

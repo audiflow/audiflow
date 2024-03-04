@@ -17,8 +17,7 @@ final _privateConstructorUsedError = UnsupportedError(
 /// @nodoc
 mixin _$PodcastSearchState {
   String get term => throw _privateConstructorUsedError;
-  List<PodcastSearchResultItem> get results =>
-      throw _privateConstructorUsedError;
+  List<PodcastMetadata> get results => throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
   $PodcastSearchStateCopyWith<PodcastSearchState> get copyWith =>
@@ -31,7 +30,7 @@ abstract class $PodcastSearchStateCopyWith<$Res> {
           PodcastSearchState value, $Res Function(PodcastSearchState) then) =
       _$PodcastSearchStateCopyWithImpl<$Res, PodcastSearchState>;
   @useResult
-  $Res call({String term, List<PodcastSearchResultItem> results});
+  $Res call({String term, List<PodcastMetadata> results});
 }
 
 /// @nodoc
@@ -58,7 +57,7 @@ class _$PodcastSearchStateCopyWithImpl<$Res, $Val extends PodcastSearchState>
       results: null == results
           ? _value.results
           : results // ignore: cast_nullable_to_non_nullable
-              as List<PodcastSearchResultItem>,
+              as List<PodcastMetadata>,
     ) as $Val);
   }
 }
@@ -71,7 +70,7 @@ abstract class _$$PodcastSearchStateImplCopyWith<$Res>
       __$$PodcastSearchStateImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({String term, List<PodcastSearchResultItem> results});
+  $Res call({String term, List<PodcastMetadata> results});
 }
 
 /// @nodoc
@@ -96,7 +95,7 @@ class __$$PodcastSearchStateImplCopyWithImpl<$Res>
       results: null == results
           ? _value._results
           : results // ignore: cast_nullable_to_non_nullable
-              as List<PodcastSearchResultItem>,
+              as List<PodcastMetadata>,
     ));
   }
 }
@@ -105,16 +104,16 @@ class __$$PodcastSearchStateImplCopyWithImpl<$Res>
 
 class _$PodcastSearchStateImpl implements _PodcastSearchState {
   const _$PodcastSearchStateImpl(
-      {this.term = '', final List<PodcastSearchResultItem> results = const []})
+      {this.term = '', final List<PodcastMetadata> results = const []})
       : _results = results;
 
   @override
   @JsonKey()
   final String term;
-  final List<PodcastSearchResultItem> _results;
+  final List<PodcastMetadata> _results;
   @override
   @JsonKey()
-  List<PodcastSearchResultItem> get results {
+  List<PodcastMetadata> get results {
     if (_results is EqualUnmodifiableListView) return _results;
     // ignore: implicit_dynamic_type
     return EqualUnmodifiableListView(_results);
@@ -149,12 +148,12 @@ class _$PodcastSearchStateImpl implements _PodcastSearchState {
 abstract class _PodcastSearchState implements PodcastSearchState {
   const factory _PodcastSearchState(
       {final String term,
-      final List<PodcastSearchResultItem> results}) = _$PodcastSearchStateImpl;
+      final List<PodcastMetadata> results}) = _$PodcastSearchStateImpl;
 
   @override
   String get term;
   @override
-  List<PodcastSearchResultItem> get results;
+  List<PodcastMetadata> get results;
   @override
   @JsonKey(ignore: true)
   _$$PodcastSearchStateImplCopyWith<_$PodcastSearchStateImpl> get copyWith =>

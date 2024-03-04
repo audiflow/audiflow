@@ -10,7 +10,7 @@ class PodcastChartState with _$PodcastChartState {
     int? size,
     String? genre,
     String? countryCode,
-    @Default([]) List<PodcastSearchResultItem> podcasts,
+    @Default([]) List<PodcastMetadata> podcasts,
     DateTime? expiresAt,
   }) = _PodcastChartState;
 

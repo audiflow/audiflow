@@ -100,8 +100,8 @@ class SembastRepository extends Repository {
   }
 
   @override
-  Future<List<PodcastSearchResultItem>> populatePodcastFeedUrl(
-    Iterable<PodcastSearchResultItem> items,
+  Future<List<PodcastMetadata>> populatePodcastFeedUrl(
+    Iterable<PodcastMetadata> items,
   ) async {
     final guids = items
         .where((item) => item.feedUrl == null || item.feedUrl!.isEmpty)
@@ -183,7 +183,7 @@ class SembastRepository extends Repository {
               )
               .value,
         );
-        final metadata = PodcastSearchResultItem.fromJson(snapshot.value);
+        final metadata = PodcastMetadata.fromJson(snapshot.value);
         return (metadata, stats);
       },
     ).toList();

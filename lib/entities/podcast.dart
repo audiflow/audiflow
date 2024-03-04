@@ -49,37 +49,74 @@ class PodcastPreview with _$PodcastPreview {
   }
 }
 
-abstract class PodcastMetadata {
-  /// Unique identifier for podcast.
-  String get guid;
+/// A class that represents an instance of a podcast search result item.
+@freezed
+class PodcastMetadata with _$PodcastMetadata {
+  const factory PodcastMetadata({
+    /// Unique identifier for podcast.
+    required String guid,
 
-  /// The collection ID(iTunesID).
-  int get collectionId;
+    /// The collection ID(iTunesID).
+    required int collectionId,
 
-  /// The link to the podcast RSS feed.
-  String? get feedUrl;
+    /// The link to the podcast RSS feed.
+    required String? feedUrl,
 
-  /// Podcast title.
-  String get title;
+    /// Podcast title.
+    required String title,
 
-  /// URL for thumbnail version of artwork image.
-  String get thumbImageUrl;
+    /// URL for thumbnail version of artwork image.
+    required String thumbImageUrl,
 
-  /// URL to the full size artwork image.
-  String get imageUrl;
+    /// URL to the full size artwork image.
+    required String imageUrl,
 
-  /// Copyright owner of the podcast.
-  String get copyright;
+    /// Copyright owner of the podcast.
+    required String copyright,
 
-  /// Release date of the latest episode.
-  DateTime get releaseDate;
+    /// Release date of the latest episode.
+    required DateTime releaseDate,
+  }) = _PodcastMetadata;
+
+  factory PodcastMetadata.fromJson(Map<String, dynamic> json) =>
+      _$PodcastMetadataFromJson(json);
+
+  factory PodcastMetadata.fromSearchResultItem(search.Item item) {
+    final guid = '${item.collectionId ?? item.feedUrl}';
+    final thumbImageUrl = item.thumbnailArtworkUrl;
+    final imageUrl = item.bestArtworkUrl;
+
+    return PodcastMetadata(
+      guid: guid,
+      feedUrl: item.feedUrl,
+      collectionId: item.collectionId ?? 0,
+      title: item.collectionName ?? item.trackName ?? '',
+      thumbImageUrl: thumbImageUrl,
+      imageUrl: imageUrl,
+      copyright: item.artistName ?? '',
+      releaseDate: item.releaseDate!,
+    );
+  }
+
+  factory PodcastMetadata.fromPodcast(Podcast podcast) {
+    return PodcastMetadata(
+      guid: podcast.guid,
+      feedUrl: podcast.feedUrl,
+      collectionId: podcast.collectionId,
+      title: podcast.title,
+      thumbImageUrl: podcast.thumbImageUrl,
+      imageUrl: podcast.imageUrl,
+      copyright: podcast.copyright,
+      releaseDate: podcast.releaseDate,
+    );
+  }
 }
 
 /// A class that represents an instance of a podcast.
 ///
 /// When persisted to disk this represents a podcast that is being followed.
 @freezed
-class Podcast with _$Podcast implements PodcastMetadata {
+class Podcast with _$Podcast {
   const factory Podcast({
     /// Unique identifier for podcast.
     required String guid,
@@ -177,69 +214,17 @@ extension PodcastExtension on Podcast {
         funding,
         persons,
       );
-}
 
-/// A class that represents an instance of a podcast search result item.
-@freezed
-class PodcastSearchResultItem
-    with _$PodcastSearchResultItem
-    implements PodcastMetadata {
-  const factory PodcastSearchResultItem({
-    /// Unique identifier for podcast.
-    required String guid,
-
-    /// The collection ID(iTunesID).
-    required int collectionId,
-
-    /// The link to the podcast RSS feed.
-    required String? feedUrl,
-
-    /// Podcast title.
-    required String title,
-
-    /// URL for thumbnail version of artwork image.
-    required String thumbImageUrl,
-
-    /// URL to the full size artwork image.
-    required String imageUrl,
-
-    /// Copyright owner of the podcast.
-    required String copyright,
-
-    /// Release date of the latest episode.
-    required DateTime releaseDate,
-  }) = _PodcastSearchResultItem;
-
-  factory PodcastSearchResultItem.fromJson(Map<String, dynamic> json) =>
-      _$PodcastSearchResultItemFromJson(json);
-
-  factory PodcastSearchResultItem.fromSearchResultItem(search.Item item) {
-    final guid = '${item.collectionId ?? item.feedUrl}';
-    final thumbImageUrl = item.thumbnailArtworkUrl;
-    final imageUrl = item.bestArtworkUrl;
-
-    return PodcastSearchResultItem(
+  PodcastMetadata get metadata {
+    return PodcastMetadata(
       guid: guid,
-      feedUrl: item.feedUrl,
-      collectionId: item.collectionId ?? 0,
-      title: item.collectionName ?? item.trackName ?? '',
+      collectionId: collectionId,
+      feedUrl: feedUrl,
+      title: title,
       thumbImageUrl: thumbImageUrl,
       imageUrl: imageUrl,
-      copyright: item.artistName ?? '',
-      releaseDate: item.releaseDate!,
-    );
-  }
-
-  factory PodcastSearchResultItem.fromPodcast(Podcast podcast) {
-    return PodcastSearchResultItem(
-      guid: podcast.guid,
-      feedUrl: podcast.feedUrl,
-      collectionId: podcast.collectionId,
-      title: podcast.title,
-      thumbImageUrl: podcast.thumbImageUrl,
-      imageUrl: podcast.imageUrl,
-      copyright: podcast.copyright,
-      releaseDate: podcast.releaseDate,
+      copyright: copyright,
+      releaseDate: releaseDate,
     );
   }
 }

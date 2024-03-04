@@ -39,7 +39,7 @@ class PodcastSubscriptions extends _$PodcastSubscriptions {
               podcast: final podcast,
               stats: final stats
             ):
-            final list = [...state.value!, (podcast, stats)];
+            final list = [...state.value!, (podcast.metadata, stats)];
             state = AsyncData(_sorted(list));
           case PodcastUnsubscribedEvent(stats: final stats):
             final list =
@@ -48,8 +48,9 @@ class PodcastSubscriptions extends _$PodcastSubscriptions {
           case PodcastUpdatedEvent(podcast: final podcast, stats: final stats):
             final list = state.value!
                 .map(
-                  (e) =>
-                      e.$1.guid == podcast.guid ? (podcast, stats ?? e.$2) : e,
+                  (e) => e.$1.guid == podcast.guid
+                      ? (podcast.metadata, stats ?? e.$2)
+                      : e,
                 )
                 .toList();
             state = AsyncData(list);

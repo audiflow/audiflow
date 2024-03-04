@@ -44,7 +44,7 @@ class PodcastSeasonPage extends HookConsumerWidget {
             onRefresh: () async {
               await ref
                   .read(podcastServiceProvider)
-                  .loadPodcast(podcast, refresh: true);
+                  .loadPodcast(podcast.metadata, refresh: true);
             },
             child: CustomScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
@@ -61,7 +61,7 @@ class PodcastSeasonPage extends HookConsumerWidget {
                 EpisodeList(
                   episodeGroupKey: ValueKey(season.guid),
                   thumbnailVisibility: ThumbnailVisibility.hidden,
-                  metadata: podcast,
+                  metadata: podcast.metadata,
                   episodes: season.episodes,
                 ),
               ],

@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:logging/logging.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:seasoning/entities/entities.dart';
 import 'package:seasoning/errors/errors.dart';
@@ -11,15 +12,22 @@ part 'podcast_info_provider.g.dart';
 
 @riverpod
 class PodcastInfo extends _$PodcastInfo {
+
+  PodcastInfo() {
+    _log.fine('PodcastInfo created');
+  }
+
+  final _log = Logger('PodcastInfo');
+
   Repository get _repository => ref.read(repositoryProvider);
 
   @override
-  Future<PodcastDetailsState> build(PodcastMetadata baseInfo) async {
+  Future<PodcastDetailsState> build(PodcastMetadata metadata) async {
     final podcastService = ref.read(podcastServiceProvider);
 
     final list = await Future.wait([
-      podcastService.loadPodcast(baseInfo),
-      _repository.findPodcastStats(baseInfo.guid),
+      podcastService.loadPodcast(metadata),
+      _repository.findPodcastStats(metadata.guid),
     ]);
     final podcast = list[0] as Podcast?;
     final podcastStats = list[1] as PodcastStats?;

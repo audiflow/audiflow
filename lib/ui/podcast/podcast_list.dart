@@ -17,7 +17,7 @@ class PodcastList extends ConsumerWidget {
     required this.results,
   });
 
-  final List<PodcastSearchResultItem> results;
+  final List<PodcastMetadata> results;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

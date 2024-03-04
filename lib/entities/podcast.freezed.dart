@@ -293,6 +293,339 @@ abstract class _PodcastPreview implements PodcastPreview {
       throw _privateConstructorUsedError;
 }
 
+PodcastMetadata _$PodcastMetadataFromJson(Map<String, dynamic> json) {
+  return _PodcastMetadata.fromJson(json);
+}
+
+/// @nodoc
+mixin _$PodcastMetadata {
+  /// Unique identifier for podcast.
+  String get guid => throw _privateConstructorUsedError;
+
+  /// The collection ID(iTunesID).
+  int get collectionId => throw _privateConstructorUsedError;
+
+  /// The link to the podcast RSS feed.
+  String? get feedUrl => throw _privateConstructorUsedError;
+
+  /// Podcast title.
+  String get title => throw _privateConstructorUsedError;
+
+  /// URL for thumbnail version of artwork image.
+  String get thumbImageUrl => throw _privateConstructorUsedError;
+
+  /// URL to the full size artwork image.
+  String get imageUrl => throw _privateConstructorUsedError;
+
+  /// Copyright owner of the podcast.
+  String get copyright => throw _privateConstructorUsedError;
+
+  /// Release date of the latest episode.
+  DateTime get releaseDate => throw _privateConstructorUsedError;
+
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+  @JsonKey(ignore: true)
+  $PodcastMetadataCopyWith<PodcastMetadata> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $PodcastMetadataCopyWith<$Res> {
+  factory $PodcastMetadataCopyWith(
+          PodcastMetadata value, $Res Function(PodcastMetadata) then) =
+      _$PodcastMetadataCopyWithImpl<$Res, PodcastMetadata>;
+  @useResult
+  $Res call(
+      {String guid,
+      int collectionId,
+      String? feedUrl,
+      String title,
+      String thumbImageUrl,
+      String imageUrl,
+      String copyright,
+      DateTime releaseDate});
+}
+
+/// @nodoc
+class _$PodcastMetadataCopyWithImpl<$Res, $Val extends PodcastMetadata>
+    implements $PodcastMetadataCopyWith<$Res> {
+  _$PodcastMetadataCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? guid = null,
+    Object? collectionId = null,
+    Object? feedUrl = freezed,
+    Object? title = null,
+    Object? thumbImageUrl = null,
+    Object? imageUrl = null,
+    Object? copyright = null,
+    Object? releaseDate = null,
+  }) {
+    return _then(_value.copyWith(
+      guid: null == guid
+          ? _value.guid
+          : guid // ignore: cast_nullable_to_non_nullable
+              as String,
+      collectionId: null == collectionId
+          ? _value.collectionId
+          : collectionId // ignore: cast_nullable_to_non_nullable
+              as int,
+      feedUrl: freezed == feedUrl
+          ? _value.feedUrl
+          : feedUrl // ignore: cast_nullable_to_non_nullable
+              as String?,
+      title: null == title
+          ? _value.title
+          : title // ignore: cast_nullable_to_non_nullable
+              as String,
+      thumbImageUrl: null == thumbImageUrl
+          ? _value.thumbImageUrl
+          : thumbImageUrl // ignore: cast_nullable_to_non_nullable
+              as String,
+      imageUrl: null == imageUrl
+          ? _value.imageUrl
+          : imageUrl // ignore: cast_nullable_to_non_nullable
+              as String,
+      copyright: null == copyright
+          ? _value.copyright
+          : copyright // ignore: cast_nullable_to_non_nullable
+              as String,
+      releaseDate: null == releaseDate
+          ? _value.releaseDate
+          : releaseDate // ignore: cast_nullable_to_non_nullable
+              as DateTime,
+    ) as $Val);
+  }
+}
+
+/// @nodoc
+abstract class _$$PodcastMetadataImplCopyWith<$Res>
+    implements $PodcastMetadataCopyWith<$Res> {
+  factory _$$PodcastMetadataImplCopyWith(_$PodcastMetadataImpl value,
+          $Res Function(_$PodcastMetadataImpl) then) =
+      __$$PodcastMetadataImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call(
+      {String guid,
+      int collectionId,
+      String? feedUrl,
+      String title,
+      String thumbImageUrl,
+      String imageUrl,
+      String copyright,
+      DateTime releaseDate});
+}
+
+/// @nodoc
+class __$$PodcastMetadataImplCopyWithImpl<$Res>
+    extends _$PodcastMetadataCopyWithImpl<$Res, _$PodcastMetadataImpl>
+    implements _$$PodcastMetadataImplCopyWith<$Res> {
+  __$$PodcastMetadataImplCopyWithImpl(
+      _$PodcastMetadataImpl _value, $Res Function(_$PodcastMetadataImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? guid = null,
+    Object? collectionId = null,
+    Object? feedUrl = freezed,
+    Object? title = null,
+    Object? thumbImageUrl = null,
+    Object? imageUrl = null,
+    Object? copyright = null,
+    Object? releaseDate = null,
+  }) {
+    return _then(_$PodcastMetadataImpl(
+      guid: null == guid
+          ? _value.guid
+          : guid // ignore: cast_nullable_to_non_nullable
+              as String,
+      collectionId: null == collectionId
+          ? _value.collectionId
+          : collectionId // ignore: cast_nullable_to_non_nullable
+              as int,
+      feedUrl: freezed == feedUrl
+          ? _value.feedUrl
+          : feedUrl // ignore: cast_nullable_to_non_nullable
+              as String?,
+      title: null == title
+          ? _value.title
+          : title // ignore: cast_nullable_to_non_nullable
+              as String,
+      thumbImageUrl: null == thumbImageUrl
+          ? _value.thumbImageUrl
+          : thumbImageUrl // ignore: cast_nullable_to_non_nullable
+              as String,
+      imageUrl: null == imageUrl
+          ? _value.imageUrl
+          : imageUrl // ignore: cast_nullable_to_non_nullable
+              as String,
+      copyright: null == copyright
+          ? _value.copyright
+          : copyright // ignore: cast_nullable_to_non_nullable
+              as String,
+      releaseDate: null == releaseDate
+          ? _value.releaseDate
+          : releaseDate // ignore: cast_nullable_to_non_nullable
+              as DateTime,
+    ));
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$PodcastMetadataImpl implements _PodcastMetadata {
+  const _$PodcastMetadataImpl(
+      {required this.guid,
+      required this.collectionId,
+      required this.feedUrl,
+      required this.title,
+      required this.thumbImageUrl,
+      required this.imageUrl,
+      required this.copyright,
+      required this.releaseDate});
+
+  factory _$PodcastMetadataImpl.fromJson(Map<String, dynamic> json) =>
+      _$$PodcastMetadataImplFromJson(json);
+
+  /// Unique identifier for podcast.
+  @override
+  final String guid;
+
+  /// The collection ID(iTunesID).
+  @override
+  final int collectionId;
+
+  /// The link to the podcast RSS feed.
+  @override
+  final String? feedUrl;
+
+  /// Podcast title.
+  @override
+  final String title;
+
+  /// URL for thumbnail version of artwork image.
+  @override
+  final String thumbImageUrl;
+
+  /// URL to the full size artwork image.
+  @override
+  final String imageUrl;
+
+  /// Copyright owner of the podcast.
+  @override
+  final String copyright;
+
+  /// Release date of the latest episode.
+  @override
+  final DateTime releaseDate;
+
+  @override
+  String toString() {
+    return 'PodcastMetadata(guid: $guid, collectionId: $collectionId, feedUrl: $feedUrl, title: $title, thumbImageUrl: $thumbImageUrl, imageUrl: $imageUrl, copyright: $copyright, releaseDate: $releaseDate)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$PodcastMetadataImpl &&
+            (identical(other.guid, guid) || other.guid == guid) &&
+            (identical(other.collectionId, collectionId) ||
+                other.collectionId == collectionId) &&
+            (identical(other.feedUrl, feedUrl) || other.feedUrl == feedUrl) &&
+            (identical(other.title, title) || other.title == title) &&
+            (identical(other.thumbImageUrl, thumbImageUrl) ||
+                other.thumbImageUrl == thumbImageUrl) &&
+            (identical(other.imageUrl, imageUrl) ||
+                other.imageUrl == imageUrl) &&
+            (identical(other.copyright, copyright) ||
+                other.copyright == copyright) &&
+            (identical(other.releaseDate, releaseDate) ||
+                other.releaseDate == releaseDate));
+  }
+
+  @JsonKey(ignore: true)
+  @override
+  int get hashCode => Object.hash(runtimeType, guid, collectionId, feedUrl,
+      title, thumbImageUrl, imageUrl, copyright, releaseDate);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$PodcastMetadataImplCopyWith<_$PodcastMetadataImpl> get copyWith =>
+      __$$PodcastMetadataImplCopyWithImpl<_$PodcastMetadataImpl>(
+          this, _$identity);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$PodcastMetadataImplToJson(
+      this,
+    );
+  }
+}
+
+abstract class _PodcastMetadata implements PodcastMetadata {
+  const factory _PodcastMetadata(
+      {required final String guid,
+      required final int collectionId,
+      required final String? feedUrl,
+      required final String title,
+      required final String thumbImageUrl,
+      required final String imageUrl,
+      required final String copyright,
+      required final DateTime releaseDate}) = _$PodcastMetadataImpl;
+
+  factory _PodcastMetadata.fromJson(Map<String, dynamic> json) =
+      _$PodcastMetadataImpl.fromJson;
+
+  @override
+
+  /// Unique identifier for podcast.
+  String get guid;
+  @override
+
+  /// The collection ID(iTunesID).
+  int get collectionId;
+  @override
+
+  /// The link to the podcast RSS feed.
+  String? get feedUrl;
+  @override
+
+  /// Podcast title.
+  String get title;
+  @override
+
+  /// URL for thumbnail version of artwork image.
+  String get thumbImageUrl;
+  @override
+
+  /// URL to the full size artwork image.
+  String get imageUrl;
+  @override
+
+  /// Copyright owner of the podcast.
+  String get copyright;
+  @override
+
+  /// Release date of the latest episode.
+  DateTime get releaseDate;
+  @override
+  @JsonKey(ignore: true)
+  _$$PodcastMetadataImplCopyWith<_$PodcastMetadataImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
 Podcast _$PodcastFromJson(Map<String, dynamic> json) {
   return _Podcast.fromJson(json);
 }
@@ -803,344 +1136,6 @@ abstract class _Podcast implements Podcast {
   @JsonKey(ignore: true)
   _$$PodcastImplCopyWith<_$PodcastImpl> get copyWith =>
       throw _privateConstructorUsedError;
-}
-
-PodcastSearchResultItem _$PodcastSearchResultItemFromJson(
-    Map<String, dynamic> json) {
-  return _PodcastSearchResultItem.fromJson(json);
-}
-
-/// @nodoc
-mixin _$PodcastSearchResultItem {
-  /// Unique identifier for podcast.
-  String get guid => throw _privateConstructorUsedError;
-
-  /// The collection ID(iTunesID).
-  int get collectionId => throw _privateConstructorUsedError;
-
-  /// The link to the podcast RSS feed.
-  String? get feedUrl => throw _privateConstructorUsedError;
-
-  /// Podcast title.
-  String get title => throw _privateConstructorUsedError;
-
-  /// URL for thumbnail version of artwork image.
-  String get thumbImageUrl => throw _privateConstructorUsedError;
-
-  /// URL to the full size artwork image.
-  String get imageUrl => throw _privateConstructorUsedError;
-
-  /// Copyright owner of the podcast.
-  String get copyright => throw _privateConstructorUsedError;
-
-  /// Release date of the latest episode.
-  DateTime get releaseDate => throw _privateConstructorUsedError;
-
-  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-  @JsonKey(ignore: true)
-  $PodcastSearchResultItemCopyWith<PodcastSearchResultItem> get copyWith =>
-      throw _privateConstructorUsedError;
-}
-
-/// @nodoc
-abstract class $PodcastSearchResultItemCopyWith<$Res> {
-  factory $PodcastSearchResultItemCopyWith(PodcastSearchResultItem value,
-          $Res Function(PodcastSearchResultItem) then) =
-      _$PodcastSearchResultItemCopyWithImpl<$Res, PodcastSearchResultItem>;
-  @useResult
-  $Res call(
-      {String guid,
-      int collectionId,
-      String? feedUrl,
-      String title,
-      String thumbImageUrl,
-      String imageUrl,
-      String copyright,
-      DateTime releaseDate});
-}
-
-/// @nodoc
-class _$PodcastSearchResultItemCopyWithImpl<$Res,
-        $Val extends PodcastSearchResultItem>
-    implements $PodcastSearchResultItemCopyWith<$Res> {
-  _$PodcastSearchResultItemCopyWithImpl(this._value, this._then);
-
-  // ignore: unused_field
-  final $Val _value;
-  // ignore: unused_field
-  final $Res Function($Val) _then;
-
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({
-    Object? guid = null,
-    Object? collectionId = null,
-    Object? feedUrl = freezed,
-    Object? title = null,
-    Object? thumbImageUrl = null,
-    Object? imageUrl = null,
-    Object? copyright = null,
-    Object? releaseDate = null,
-  }) {
-    return _then(_value.copyWith(
-      guid: null == guid
-          ? _value.guid
-          : guid // ignore: cast_nullable_to_non_nullable
-              as String,
-      collectionId: null == collectionId
-          ? _value.collectionId
-          : collectionId // ignore: cast_nullable_to_non_nullable
-              as int,
-      feedUrl: freezed == feedUrl
-          ? _value.feedUrl
-          : feedUrl // ignore: cast_nullable_to_non_nullable
-              as String?,
-      title: null == title
-          ? _value.title
-          : title // ignore: cast_nullable_to_non_nullable
-              as String,
-      thumbImageUrl: null == thumbImageUrl
-          ? _value.thumbImageUrl
-          : thumbImageUrl // ignore: cast_nullable_to_non_nullable
-              as String,
-      imageUrl: null == imageUrl
-          ? _value.imageUrl
-          : imageUrl // ignore: cast_nullable_to_non_nullable
-              as String,
-      copyright: null == copyright
-          ? _value.copyright
-          : copyright // ignore: cast_nullable_to_non_nullable
-              as String,
-      releaseDate: null == releaseDate
-          ? _value.releaseDate
-          : releaseDate // ignore: cast_nullable_to_non_nullable
-              as DateTime,
-    ) as $Val);
-  }
-}
-
-/// @nodoc
-abstract class _$$PodcastSearchResultItemImplCopyWith<$Res>
-    implements $PodcastSearchResultItemCopyWith<$Res> {
-  factory _$$PodcastSearchResultItemImplCopyWith(
-          _$PodcastSearchResultItemImpl value,
-          $Res Function(_$PodcastSearchResultItemImpl) then) =
-      __$$PodcastSearchResultItemImplCopyWithImpl<$Res>;
-  @override
-  @useResult
-  $Res call(
-      {String guid,
-      int collectionId,
-      String? feedUrl,
-      String title,
-      String thumbImageUrl,
-      String imageUrl,
-      String copyright,
-      DateTime releaseDate});
-}
-
-/// @nodoc
-class __$$PodcastSearchResultItemImplCopyWithImpl<$Res>
-    extends _$PodcastSearchResultItemCopyWithImpl<$Res,
-        _$PodcastSearchResultItemImpl>
-    implements _$$PodcastSearchResultItemImplCopyWith<$Res> {
-  __$$PodcastSearchResultItemImplCopyWithImpl(
-      _$PodcastSearchResultItemImpl _value,
-      $Res Function(_$PodcastSearchResultItemImpl) _then)
-      : super(_value, _then);
-
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({
-    Object? guid = null,
-    Object? collectionId = null,
-    Object? feedUrl = freezed,
-    Object? title = null,
-    Object? thumbImageUrl = null,
-    Object? imageUrl = null,
-    Object? copyright = null,
-    Object? releaseDate = null,
-  }) {
-    return _then(_$PodcastSearchResultItemImpl(
-      guid: null == guid
-          ? _value.guid
-          : guid // ignore: cast_nullable_to_non_nullable
-              as String,
-      collectionId: null == collectionId
-          ? _value.collectionId
-          : collectionId // ignore: cast_nullable_to_non_nullable
-              as int,
-      feedUrl: freezed == feedUrl
-          ? _value.feedUrl
-          : feedUrl // ignore: cast_nullable_to_non_nullable
-              as String?,
-      title: null == title
-          ? _value.title
-          : title // ignore: cast_nullable_to_non_nullable
-              as String,
-      thumbImageUrl: null == thumbImageUrl
-          ? _value.thumbImageUrl
-          : thumbImageUrl // ignore: cast_nullable_to_non_nullable
-              as String,
-      imageUrl: null == imageUrl
-          ? _value.imageUrl
-          : imageUrl // ignore: cast_nullable_to_non_nullable
-              as String,
-      copyright: null == copyright
-          ? _value.copyright
-          : copyright // ignore: cast_nullable_to_non_nullable
-              as String,
-      releaseDate: null == releaseDate
-          ? _value.releaseDate
-          : releaseDate // ignore: cast_nullable_to_non_nullable
-              as DateTime,
-    ));
-  }
-}
-
-/// @nodoc
-@JsonSerializable()
-class _$PodcastSearchResultItemImpl implements _PodcastSearchResultItem {
-  const _$PodcastSearchResultItemImpl(
-      {required this.guid,
-      required this.collectionId,
-      required this.feedUrl,
-      required this.title,
-      required this.thumbImageUrl,
-      required this.imageUrl,
-      required this.copyright,
-      required this.releaseDate});
-
-  factory _$PodcastSearchResultItemImpl.fromJson(Map<String, dynamic> json) =>
-      _$$PodcastSearchResultItemImplFromJson(json);
-
-  /// Unique identifier for podcast.
-  @override
-  final String guid;
-
-  /// The collection ID(iTunesID).
-  @override
-  final int collectionId;
-
-  /// The link to the podcast RSS feed.
-  @override
-  final String? feedUrl;
-
-  /// Podcast title.
-  @override
-  final String title;
-
-  /// URL for thumbnail version of artwork image.
-  @override
-  final String thumbImageUrl;
-
-  /// URL to the full size artwork image.
-  @override
-  final String imageUrl;
-
-  /// Copyright owner of the podcast.
-  @override
-  final String copyright;
-
-  /// Release date of the latest episode.
-  @override
-  final DateTime releaseDate;
-
-  @override
-  String toString() {
-    return 'PodcastSearchResultItem(guid: $guid, collectionId: $collectionId, feedUrl: $feedUrl, title: $title, thumbImageUrl: $thumbImageUrl, imageUrl: $imageUrl, copyright: $copyright, releaseDate: $releaseDate)';
-  }
-
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$PodcastSearchResultItemImpl &&
-            (identical(other.guid, guid) || other.guid == guid) &&
-            (identical(other.collectionId, collectionId) ||
-                other.collectionId == collectionId) &&
-            (identical(other.feedUrl, feedUrl) || other.feedUrl == feedUrl) &&
-            (identical(other.title, title) || other.title == title) &&
-            (identical(other.thumbImageUrl, thumbImageUrl) ||
-                other.thumbImageUrl == thumbImageUrl) &&
-            (identical(other.imageUrl, imageUrl) ||
-                other.imageUrl == imageUrl) &&
-            (identical(other.copyright, copyright) ||
-                other.copyright == copyright) &&
-            (identical(other.releaseDate, releaseDate) ||
-                other.releaseDate == releaseDate));
-  }
-
-  @JsonKey(ignore: true)
-  @override
-  int get hashCode => Object.hash(runtimeType, guid, collectionId, feedUrl,
-      title, thumbImageUrl, imageUrl, copyright, releaseDate);
-
-  @JsonKey(ignore: true)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$PodcastSearchResultItemImplCopyWith<_$PodcastSearchResultItemImpl>
-      get copyWith => __$$PodcastSearchResultItemImplCopyWithImpl<
-          _$PodcastSearchResultItemImpl>(this, _$identity);
-
-  @override
-  Map<String, dynamic> toJson() {
-    return _$$PodcastSearchResultItemImplToJson(
-      this,
-    );
-  }
-}
-
-abstract class _PodcastSearchResultItem implements PodcastSearchResultItem {
-  const factory _PodcastSearchResultItem(
-      {required final String guid,
-      required final int collectionId,
-      required final String? feedUrl,
-      required final String title,
-      required final String thumbImageUrl,
-      required final String imageUrl,
-      required final String copyright,
-      required final DateTime releaseDate}) = _$PodcastSearchResultItemImpl;
-
-  factory _PodcastSearchResultItem.fromJson(Map<String, dynamic> json) =
-      _$PodcastSearchResultItemImpl.fromJson;
-
-  @override
-
-  /// Unique identifier for podcast.
-  String get guid;
-  @override
-
-  /// The collection ID(iTunesID).
-  int get collectionId;
-  @override
-
-  /// The link to the podcast RSS feed.
-  String? get feedUrl;
-  @override
-
-  /// Podcast title.
-  String get title;
-  @override
-
-  /// URL for thumbnail version of artwork image.
-  String get thumbImageUrl;
-  @override
-
-  /// URL to the full size artwork image.
-  String get imageUrl;
-  @override
-
-  /// Copyright owner of the podcast.
-  String get copyright;
-  @override
-
-  /// Release date of the latest episode.
-  DateTime get releaseDate;
-  @override
-  @JsonKey(ignore: true)
-  _$$PodcastSearchResultItemImplCopyWith<_$PodcastSearchResultItemImpl>
-      get copyWith => throw _privateConstructorUsedError;
 }
 
 PodcastStats _$PodcastStatsFromJson(Map<String, dynamic> json) {

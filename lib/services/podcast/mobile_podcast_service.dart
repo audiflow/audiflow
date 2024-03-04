@@ -132,7 +132,7 @@ class MobilePodcastService implements PodcastService {
   }
 
   @override
-  Future<List<PodcastSearchResultItem>> search({
+  Future<List<PodcastMetadata>> search({
     required String term,
     String? country,
     String? attribute,
@@ -160,13 +160,13 @@ class MobilePodcastService implements PodcastService {
     }
 
     final items =
-        result.items.map(PodcastSearchResultItem.fromSearchResultItem);
+        result.items.map(PodcastMetadata.fromSearchResultItem);
     await _repository.savePodcastPreview(items);
     return items.toList();
   }
 
   @override
-  Future<List<PodcastSearchResultItem>> charts({
+  Future<List<PodcastMetadata>> charts({
     int size = 20,
     String? genre,
     String? countryCode = '',
@@ -186,7 +186,7 @@ class MobilePodcastService implements PodcastService {
       throw Exception(result.lastError);
     }
     final items =
-        result.items.map(PodcastSearchResultItem.fromSearchResultItem);
+        result.items.map(PodcastMetadata.fromSearchResultItem);
     return _repository.populatePodcastFeedUrl(items);
   }
 
@@ -557,13 +557,13 @@ class MobilePodcastService implements PodcastService {
     );
   }
 
-  Future<PodcastSearchResultItem?> _lookupPodcastMetadata({
+  Future<PodcastMetadata?> _lookupPodcastMetadata({
     required int collectionId,
   }) async {
     final item = await _api.lookup(collectionId: collectionId);
     return item == null
         ? null
-        : PodcastSearchResultItem.fromSearchResultItem(item);
+        : PodcastMetadata.fromSearchResultItem(item);
   }
 
   Future<podcast_search.Podcast> _lookupPodcast({

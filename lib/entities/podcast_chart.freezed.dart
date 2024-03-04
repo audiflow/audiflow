@@ -23,8 +23,7 @@ mixin _$PodcastChartState {
   int? get size => throw _privateConstructorUsedError;
   String? get genre => throw _privateConstructorUsedError;
   String? get countryCode => throw _privateConstructorUsedError;
-  List<PodcastSearchResultItem> get podcasts =>
-      throw _privateConstructorUsedError;
+  List<PodcastMetadata> get podcasts => throw _privateConstructorUsedError;
   DateTime? get expiresAt => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -43,7 +42,7 @@ abstract class $PodcastChartStateCopyWith<$Res> {
       {int? size,
       String? genre,
       String? countryCode,
-      List<PodcastSearchResultItem> podcasts,
+      List<PodcastMetadata> podcasts,
       DateTime? expiresAt});
 }
 
@@ -82,7 +81,7 @@ class _$PodcastChartStateCopyWithImpl<$Res, $Val extends PodcastChartState>
       podcasts: null == podcasts
           ? _value.podcasts
           : podcasts // ignore: cast_nullable_to_non_nullable
-              as List<PodcastSearchResultItem>,
+              as List<PodcastMetadata>,
       expiresAt: freezed == expiresAt
           ? _value.expiresAt
           : expiresAt // ignore: cast_nullable_to_non_nullable
@@ -103,7 +102,7 @@ abstract class _$$PodcastChartStateImplCopyWith<$Res>
       {int? size,
       String? genre,
       String? countryCode,
-      List<PodcastSearchResultItem> podcasts,
+      List<PodcastMetadata> podcasts,
       DateTime? expiresAt});
 }
 
@@ -140,7 +139,7 @@ class __$$PodcastChartStateImplCopyWithImpl<$Res>
       podcasts: null == podcasts
           ? _value._podcasts
           : podcasts // ignore: cast_nullable_to_non_nullable
-              as List<PodcastSearchResultItem>,
+              as List<PodcastMetadata>,
       expiresAt: freezed == expiresAt
           ? _value.expiresAt
           : expiresAt // ignore: cast_nullable_to_non_nullable
@@ -156,7 +155,7 @@ class _$PodcastChartStateImpl implements _PodcastChartState {
       {this.size,
       this.genre,
       this.countryCode,
-      final List<PodcastSearchResultItem> podcasts = const [],
+      final List<PodcastMetadata> podcasts = const [],
       this.expiresAt})
       : _podcasts = podcasts;
 
@@ -169,10 +168,10 @@ class _$PodcastChartStateImpl implements _PodcastChartState {
   final String? genre;
   @override
   final String? countryCode;
-  final List<PodcastSearchResultItem> _podcasts;
+  final List<PodcastMetadata> _podcasts;
   @override
   @JsonKey()
-  List<PodcastSearchResultItem> get podcasts {
+  List<PodcastMetadata> get podcasts {
     if (_podcasts is EqualUnmodifiableListView) return _podcasts;
     // ignore: implicit_dynamic_type
     return EqualUnmodifiableListView(_podcasts);
@@ -225,7 +224,7 @@ abstract class _PodcastChartState implements PodcastChartState {
       {final int? size,
       final String? genre,
       final String? countryCode,
-      final List<PodcastSearchResultItem> podcasts,
+      final List<PodcastMetadata> podcasts,
       final DateTime? expiresAt}) = _$PodcastChartStateImpl;
 
   factory _PodcastChartState.fromJson(Map<String, dynamic> json) =
@@ -238,7 +237,7 @@ abstract class _PodcastChartState implements PodcastChartState {
   @override
   String? get countryCode;
   @override
-  List<PodcastSearchResultItem> get podcasts;
+  List<PodcastMetadata> get podcasts;
   @override
   DateTime? get expiresAt;
   @override

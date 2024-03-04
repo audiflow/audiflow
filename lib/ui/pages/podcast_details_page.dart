@@ -71,13 +71,13 @@ class PodcastDetailsPage extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final scaffoldMessengerKey =
         useState(GlobalKey<ScaffoldMessengerState>()).value;
-    final podcastDetailsState = ref.watch(podcastInfoProvider.call(metadata));
+    final podcastDetailsState = ref.watch(podcastInfoProvider(metadata));
     final podcast = podcastDetailsState.value?.podcast;
     final viewMode = podcastDetailsState.value?.stats?.viewMode ??
         PodcastDetailViewMode.episodes;
     final seasonsState = podcast == null
         ? const AsyncLoading<List<Season>>()
-        : ref.watch(podcastSeasonsProvider(podcast));
+        : ref.watch(podcastSeasonsProvider(podcast.metadata));
 
     return Semantics(
       header: false,
@@ -110,7 +110,7 @@ class PodcastDetailsPage extends HookConsumerWidget {
                       ? SeasonList(podcast: podcast)
                       : EpisodeList(
                           episodeGroupKey: ValueKey(podcast.guid),
-                          metadata: podcast,
+                          metadata: podcast.metadata,
                           episodes: podcast.episodes,
                         ),
                 ],
@@ -316,7 +316,8 @@ class _SwitchBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final stats = ref.watch(
-      podcastInfoProvider(podcast).select((value) => value.value?.stats),
+      podcastInfoProvider(podcast.metadata)
+          .select((value) => value.value?.stats),
     );
 
     final selectedViewMode = stats?.viewMode ?? PodcastDetailViewMode.episodes;
@@ -333,7 +334,7 @@ class _SwitchBar extends ConsumerWidget {
               hasSeasons: seasons.isNotEmpty,
               onChanged: (mode) {
                 ref
-                    .read(podcastInfoProvider(podcast).notifier)
+                    .read(podcastInfoProvider(podcast.metadata).notifier)
                     .setViewMode(mode);
               },
             ),

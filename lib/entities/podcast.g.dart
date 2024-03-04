@@ -27,6 +27,32 @@ Map<String, dynamic> _$$PodcastPreviewImplToJson(
       'lastUpdated': instance.lastUpdated.toIso8601String(),
     };
 
+_$PodcastMetadataImpl _$$PodcastMetadataImplFromJson(
+        Map<String, dynamic> json) =>
+    _$PodcastMetadataImpl(
+      guid: json['guid'] as String,
+      collectionId: json['collectionId'] as int,
+      feedUrl: json['feedUrl'] as String?,
+      title: json['title'] as String,
+      thumbImageUrl: json['thumbImageUrl'] as String,
+      imageUrl: json['imageUrl'] as String,
+      copyright: json['copyright'] as String,
+      releaseDate: DateTime.parse(json['releaseDate'] as String),
+    );
+
+Map<String, dynamic> _$$PodcastMetadataImplToJson(
+        _$PodcastMetadataImpl instance) =>
+    <String, dynamic>{
+      'guid': instance.guid,
+      'collectionId': instance.collectionId,
+      'feedUrl': instance.feedUrl,
+      'title': instance.title,
+      'thumbImageUrl': instance.thumbImageUrl,
+      'imageUrl': instance.imageUrl,
+      'copyright': instance.copyright,
+      'releaseDate': instance.releaseDate.toIso8601String(),
+    };
+
 _$PodcastImpl _$$PodcastImplFromJson(Map<String, dynamic> json) =>
     _$PodcastImpl(
       guid: json['guid'] as String,
@@ -63,32 +89,6 @@ Map<String, dynamic> _$$PodcastImplToJson(_$PodcastImpl instance) =>
       'releaseDate': instance.releaseDate.toIso8601String(),
       'funding': instance.funding.map((e) => e.toJson()).toList(),
       'persons': instance.persons.map((e) => e.toJson()).toList(),
-    };
-
-_$PodcastSearchResultItemImpl _$$PodcastSearchResultItemImplFromJson(
-        Map<String, dynamic> json) =>
-    _$PodcastSearchResultItemImpl(
-      guid: json['guid'] as String,
-      collectionId: json['collectionId'] as int,
-      feedUrl: json['feedUrl'] as String?,
-      title: json['title'] as String,
-      thumbImageUrl: json['thumbImageUrl'] as String,
-      imageUrl: json['imageUrl'] as String,
-      copyright: json['copyright'] as String,
-      releaseDate: DateTime.parse(json['releaseDate'] as String),
-    );
-
-Map<String, dynamic> _$$PodcastSearchResultItemImplToJson(
-        _$PodcastSearchResultItemImpl instance) =>
-    <String, dynamic>{
-      'guid': instance.guid,
-      'collectionId': instance.collectionId,
-      'feedUrl': instance.feedUrl,
-      'title': instance.title,
-      'thumbImageUrl': instance.thumbImageUrl,
-      'imageUrl': instance.imageUrl,
-      'copyright': instance.copyright,
-      'releaseDate': instance.releaseDate.toIso8601String(),
     };
 
 _$PodcastStatsImpl _$$PodcastStatsImplFromJson(Map<String, dynamic> json) =>
