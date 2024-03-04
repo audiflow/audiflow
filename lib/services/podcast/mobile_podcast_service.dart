@@ -264,6 +264,11 @@ class MobilePodcastService implements PodcastService {
       }
     }
 
+    final stats = await _repository.findPodcastStats(podcast.guid);
+    if (stats?.subscribed == true) {
+      await _repository.saveEpisodes(podcast.episodes);
+    }
+
     return podcast;
   }
 

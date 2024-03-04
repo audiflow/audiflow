@@ -286,12 +286,17 @@ class SembastRepository extends Repository {
   // --- Episodes
 
   @override
+  Future<void> saveEpisodes(Iterable<Episode> episodes) async {
+    await _saveEpisodes(episodes);
+  }
+
+  @override
   Future<void> saveEpisode(Episode episode) async {
     await _saveEpisode(episode);
   }
 
   Future<void> _saveEpisodes(
-    List<Episode> episodes, {
+    Iterable<Episode> episodes, {
     DatabaseClient? db,
   }) async {
     final client = db ?? await _db;

@@ -54,6 +54,8 @@ abstract class Repository {
 
   // --- Episode
 
+  Future<void> saveEpisodes(Iterable<Episode> episodes);
+
   Future<void> saveEpisode(Episode episode);
 
   Future<Episode?> findEpisode(String guid);
