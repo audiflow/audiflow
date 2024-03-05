@@ -27,7 +27,9 @@ class PodcastChart extends _$PodcastChart {
   @override
   Future<PodcastChartState> build() async {
     final lastState = await _repository.loadPodcastChart();
-    return lastState ?? const PodcastChartState();
+    return lastState?.isExpired == false
+        ? lastState!
+        : const PodcastChartState();
   }
 
   Future<void> input(PodcastChartEvent event) async {
