@@ -136,9 +136,6 @@ class PodcastDetailsPage extends HookConsumerWidget {
 /// If the episode description is fairly long, an overflow icon is also shown
 /// and a portion of the episode description is shown. Tapping the overflow
 /// icons allows the user to expand and collapse the text.
-///
-/// Description is rendered by [_PodcastDescription].
-/// Follow/Unfollow button rendered by [FollowButton].
 class _PodcastTitle extends HookConsumerWidget {
   const _PodcastTitle(this.podcast);
 
@@ -262,9 +259,9 @@ class _PodcastTitle extends HookConsumerWidget {
 
 /// This class wraps the description in an expandable box.
 ///
-/// This handles the common case whereby the description is very long and, without
-/// this constraint, would require the use to always scroll before reaching the
-/// podcast episodes.
+/// This handles the common case whereby the description is very long and,
+/// without this constraint, would require the use to always scroll before
+/// reaching the podcast episodes.
 ///
 class _PodcastDescription extends StatelessWidget {
   const _PodcastDescription({

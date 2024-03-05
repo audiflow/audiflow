@@ -27,7 +27,7 @@ class PodcastList extends ConsumerWidget {
 
     final settings = ref.watch(settingsServiceProvider);
     final mode = settings.layout;
-    final size = mode == 1 ? 100.0 : 160.0;
+    // final size = mode == 1 ? 100.0 : 160.0;
 
     return mode == 0
         ? SliverList(

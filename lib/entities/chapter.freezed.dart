@@ -29,8 +29,8 @@ mixin _$Chapter {
   /// URL of an external link for this chapter if available.
   String? get url => throw _privateConstructorUsedError;
 
-  /// Table of contents flag. If this is false the chapter should be treated as
-  /// meta data only and not be displayed.
+  /// Table of contents flag. If this is false the chapter should be treated
+  /// as meta data only and not be displayed.
   bool get toc => throw _privateConstructorUsedError;
 
   /// The optional end time of the chapter in seconds.
@@ -196,8 +196,8 @@ class _$ChapterImpl implements _Chapter {
   @override
   final String? url;
 
-  /// Table of contents flag. If this is false the chapter should be treated as
-  /// meta data only and not be displayed.
+  /// Table of contents flag. If this is false the chapter should be treated
+  /// as meta data only and not be displayed.
   @override
   @JsonKey()
   final bool toc;
@@ -274,8 +274,8 @@ abstract class _Chapter implements Chapter {
   String? get url;
   @override
 
-  /// Table of contents flag. If this is false the chapter should be treated as
-  /// meta data only and not be displayed.
+  /// Table of contents flag. If this is false the chapter should be treated
+  /// as meta data only and not be displayed.
   bool get toc;
   @override
 

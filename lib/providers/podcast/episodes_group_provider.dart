@@ -24,6 +24,10 @@ class EpisodesGroup extends _$EpisodesGroup {
   }
 
   Future<void> setup(Iterable<Episode> episodes) async {
+    if (_completer.isCompleted) {
+      return;
+    }
+
     final stats = await ref
         .read(repositoryProvider)
         .findEpisodeStatsList(episodes.map((e) => e.guid));

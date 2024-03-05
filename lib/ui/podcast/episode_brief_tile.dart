@@ -34,7 +34,7 @@ class EpisodeBriefTile extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final episodeInfo = ref.watch(episodeInfoProvider(episode));
     final thumbImageUrl = episodeInfo.hasValue
-        ? episodeInfo.value!.podcastPreview.thumbImageUrl
+        ? episodeInfo.value!.podcastMetadata.thumbImageUrl
         : '';
 
     return Material(

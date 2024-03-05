@@ -97,7 +97,8 @@ void main() {
     });
 
     test('findPodcastMetadata', () async {
-      final actual = await persistenceService.findPodcastMetadata(podcast1.guid);
+      final actual =
+          await persistenceService.findPodcastMetadata(podcast1.guid);
       expect(actual, isNotNull);
       expect(actual!.title, podcast1.title);
       expect(actual.feedUrl, isNull);

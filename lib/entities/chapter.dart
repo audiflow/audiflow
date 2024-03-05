@@ -9,7 +9,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 part 'chapter.freezed.dart';
 part 'chapter.g.dart';
 
-/// A class that represents an individual chapter within an [Episode].
+/// A class that represents an individual chapter within an Episode.
 ///
 /// Chapters may, or may not, exist for an episode.
 ///
@@ -26,8 +26,8 @@ class Chapter with _$Chapter {
     /// URL of an external link for this chapter if available.
     String? url,
 
-    /// Table of contents flag. If this is false the chapter should be treated as
-    /// meta data only and not be displayed.
+    /// Table of contents flag. If this is false the chapter should be treated
+    /// as meta data only and not be displayed.
     @Default(true) bool toc,
 
     /// The optional end time of the chapter in seconds.

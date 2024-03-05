@@ -19,13 +19,9 @@ void main() {
   final settings = <String, Object>{'dummy': 1};
   late ProviderContainer container;
 
-  SettingsService service() =>
-   container.read(settingsServiceProvider.notifier);
+  SettingsService service() => container.read(settingsServiceProvider.notifier);
 
-  AppSettings state() =>
-      container.read(settingsServiceProvider);
-
-  final mobileSettingsServiceProvider = Provider((_)=> SettingsService());
+  AppSettings state() => container.read(settingsServiceProvider);
 
   void createRepository() {
     SharedPreferences.setMockInitialValues(settings);

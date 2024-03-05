@@ -125,9 +125,9 @@ class MobileDownloaderManager implements DownloadManager {
       state = DownloadState.paused;
     }
 
-    /// If we are running, we want to limit notifications to 1 per second. Otherwise,
-    /// small downloads can cause a flood of events. Any other status we always want
-    /// to push through.
+    /// If we are running, we want to limit notifications to 1 per second.
+    /// Otherwise, small downloads can cause a flood of events. Any other
+    /// status we always want to push through.
     if (status != DownloadTaskStatus.running ||
         progress == 0 ||
         progress == 100 ||

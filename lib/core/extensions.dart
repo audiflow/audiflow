@@ -29,7 +29,9 @@ extension ExtString on String? {
     if (this != null) {
       final url = Uri.tryParse(this!);
 
-      if (url == null || !url.isScheme('http')) return this!;
+      if (url == null || !url.isScheme('http')) {
+        return this!;
+      }
 
       return url.replace(scheme: 'https').toString();
     }

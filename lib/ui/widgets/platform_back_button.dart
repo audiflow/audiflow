@@ -9,7 +9,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:seasoning/l10n/L.dart';
 
-/// Simple widget for rendering either the standard Android close or iOS Back button.
+/// Simple widget for rendering either the standard Android close or iOS Back
+/// button.
 class PlatformBackButton extends StatelessWidget {
   const PlatformBackButton({
     super.key,

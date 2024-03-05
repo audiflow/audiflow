@@ -27,8 +27,10 @@ class EpisodeInfo extends _$EpisodeInfo {
     ]);
 
     final podcastMetadata = values[0] as PodcastMetadata?;
-    if (podcastMetadata == null){
-      throw StateError('PodcastMetadata not found for episode: ${episode.guid}');
+    if (podcastMetadata == null) {
+      throw StateError(
+        'PodcastMetadata not found for episode: ${episode.guid}',
+      );
     }
 
     final initial = EpisodeInfoState(

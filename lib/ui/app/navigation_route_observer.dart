@@ -9,10 +9,10 @@ import 'package:flutter/widgets.dart';
 
 /// This class will observe the current route.
 ///
-/// This gives us an easy way to tell what screen we are on from elsewhere within
-/// the application. This is useful, for example, when responding to external links
-/// and determining if we need to display the podcast details or just update the
-/// current screen.
+/// This gives us an easy way to tell what screen we are on from elsewhere
+/// within the application. This is useful, for example, when responding to
+/// external links and determining if we need to display the podcast details or
+/// just update the current screen.
 class NavigationRouteObserver extends NavigatorObserver {
   factory NavigationRouteObserver() {
     return _instance;

@@ -11,8 +11,8 @@ import 'package:url_launcher/url_launcher.dart';
 
 /// This class is a simple, common wrapper around the flutter_html Html widget.
 ///
-/// This wrapper allows us to remove some of the HTML tags which can cause rendering
-/// issues when viewing podcast descriptions on a mobile device.
+/// This wrapper allows us to remove some of the HTML tags which can cause
+/// rendering issues when viewing podcast descriptions on a mobile device.
 class PodcastHtml extends StatelessWidget {
   const PodcastHtml({
     super.key,

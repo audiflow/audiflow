@@ -89,7 +89,6 @@ class SeasonSubtitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final timeRemaining = season.totalDuration; //season.timeRemaining;
 
     final playedEpisodes = season.episodes.where((episode) => false).length;
     final episodes = '$playedEpisodes/${season.episodes.length} episodes';

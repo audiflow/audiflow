@@ -1,5 +1,4 @@
 // Copyright 2024 HANAI Tohru, Reedom, INC.
-// Copyright 2020 Ben Hills and the project contributors.
 // All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
@@ -13,7 +12,7 @@ import 'package:seasoning/l10n/L.dart';
 import 'package:seasoning/providers/podcast/podcast_info_provider.dart';
 import 'package:seasoning/providers/podcast/podcast_seasons_provider.dart';
 import 'package:seasoning/services/settings/settings_service.dart';
-import 'package:seasoning/ui/pages/app_bars/podcast_details_app_bar.dart';
+import 'package:seasoning/ui/pages/app_bars/episode_page_app_bar.dart';
 import 'package:seasoning/ui/podcast/episode_list.dart';
 import 'package:seasoning/ui/podcast/funding_menu.dart';
 import 'package:seasoning/ui/podcast/season_list.dart';
@@ -26,51 +25,20 @@ import 'package:seasoning/ui/widgets/podcast_html.dart';
 ///
 /// From here a user can option to subscribe/unsubscribe or play a podcast
 /// directly from a search result.
-class PodcastDetailsPage extends HookConsumerWidget {
-  const PodcastDetailsPage({
+class EpisodePage extends HookConsumerWidget {
+  const EpisodePage({
     required this.metadata,
+    required this.episode,
     required this.heroPrefix,
     super.key,
   });
 
   final PodcastMetadata metadata;
+  final Episode episode;
   final String heroPrefix;
-
-  // widget._podcastBloc.backgroundLoading
-  //     .where((event) => event is BlocPopulatedState<void>)
-  //     .listen((event) {
-  //   if (mounted) {
-  //     /// If we have not scrolled (save a few pixels) just refresh the episode
-  //     /// list; otherwise prompt the user to prevent unexpected list jumping
-  //     if (_sliverScrollController.offset < 20) {
-  //       widget._podcastBloc.podcastEvent(PodcastEvent.refresh);
-  //     } else {
-  //       scaffoldMessengerKey.currentState!.showSnackBar(
-  //         SnackBar(
-  //           content: Text(L.of(context)!.new_episodes_label),
-  //           behavior: SnackBarBehavior.floating,
-  //           action: SnackBarAction(
-  //             label: L.of(context)!.new_episodes_view_now_label,
-  //             onPressed: () {
-  //               _sliverScrollController.animateTo(
-  //                 100,
-  //                 duration: const Duration(milliseconds: 500),
-  //                 curve: Curves.easeInOut,
-  //               );
-  //               widget._podcastBloc.podcastEvent(PodcastEvent.refresh);
-  //             },
-  //           ),
-  //           duration: const Duration(seconds: 5),
-  //         ),
-  //       );
-  //     }
-  //   }
-  // });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final scaffoldMessengerKey =
-        useState(GlobalKey<ScaffoldMessengerState>()).value;
     final podcastDetailsState = ref.watch(podcastInfoProvider(metadata));
     final podcast = podcastDetailsState.value?.podcast;
     final viewMode = podcastDetailsState.value?.stats?.viewMode ??
@@ -79,45 +47,35 @@ class PodcastDetailsPage extends HookConsumerWidget {
         ? const AsyncLoading<List<Season>>()
         : ref.watch(podcastSeasonsProvider(podcast.metadata));
 
-    return Semantics(
-      header: false,
-      label: L.of(context)!.semantics_podcast_details_header,
-      child: ScaffoldMessenger(
-        key: scaffoldMessengerKey,
-        child: Scaffold(
-          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          body: RefreshIndicator(
-            displacement: 60,
-            onRefresh: () async {},
-            child: CustomScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              slivers: <Widget>[
-                PodcastDetailsAppBar(
-                  metadata: metadata,
-                  heroPrefix: heroPrefix,
-                ),
-                if (podcastDetailsState.isLoading || seasonsState.isLoading)
-                  const FillRemainingLoading()
-                else if (podcastDetailsState.hasError || podcast == null)
-                  FillRemainingError.podcastNoResults()
-                else ...[
-                  _PodcastTitle(podcast),
-                  _SwitchBar(
-                    podcast: podcast,
-                    seasons: seasonsState.value!,
-                  ),
-                  viewMode == PodcastDetailViewMode.seasons
-                      ? SeasonList(podcast: podcast)
-                      : EpisodeList(
-                          episodeGroupKey: ValueKey(podcast.guid),
-                          metadata: podcast.metadata,
-                          episodes: podcast.episodes,
-                        ),
-                ],
-              ],
-            ),
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      body: CustomScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        slivers: <Widget>[
+          EpisodePageAppBar(
+            metadata: metadata,
+            episode: episode,
+            heroPrefix: heroPrefix,
           ),
-        ),
+          if (podcastDetailsState.isLoading || seasonsState.isLoading)
+            const FillRemainingLoading()
+          else if (podcastDetailsState.hasError || podcast == null)
+            FillRemainingError.podcastNoResults()
+          else ...[
+            _PodcastTitle(podcast),
+            _SwitchBar(
+              podcast: podcast,
+              seasons: seasonsState.value!,
+            ),
+            viewMode == PodcastDetailViewMode.seasons
+                ? SeasonList(podcast: podcast)
+                : EpisodeList(
+                    episodeGroupKey: ValueKey(podcast.guid),
+                    metadata: podcast.metadata,
+                    episodes: podcast.episodes,
+                  ),
+          ],
+        ],
       ),
     );
   }
@@ -131,9 +89,6 @@ class PodcastDetailsPage extends HookConsumerWidget {
 /// If the episode description is fairly long, an overflow icon is also shown
 /// and a portion of the episode description is shown. Tapping the overflow
 /// icons allows the user to expand and collapse the text.
-///
-/// Description is rendered by [_PodcastDescription].
-/// Follow/Unfollow button rendered by [FollowButton].
 class _PodcastTitle extends HookConsumerWidget {
   const _PodcastTitle(this.podcast);
 
@@ -257,9 +212,9 @@ class _PodcastTitle extends HookConsumerWidget {
 
 /// This class wraps the description in an expandable box.
 ///
-/// This handles the common case whereby the description is very long and, without
-/// this constraint, would require the use to always scroll before reaching the
-/// podcast episodes.
+/// This handles the common case whereby the description is very long and,
+/// without this constraint, would require the use to always scroll before
+/// reaching the podcast episodes.
 ///
 class _PodcastDescription extends StatelessWidget {
   const _PodcastDescription({
