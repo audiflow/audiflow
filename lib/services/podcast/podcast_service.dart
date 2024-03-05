@@ -32,7 +32,7 @@ abstract class PodcastService {
 
   List<String> genres();
 
-  Future<PodcastPreview?> loadPodcastPreview(String guid);
+  Future<PodcastMetadata?> loadPodcastMetadata(String guid);
 
   Future<Podcast?> loadPodcast(
     PodcastMetadata metadata, {

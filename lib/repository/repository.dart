@@ -19,11 +19,11 @@ abstract class Repository {
 
   Future<PodcastChartState?> loadPodcastChart();
 
-  // --- PodcastPreview
+  // --- PodcastMetadata
 
-  Future<void> savePodcastPreview(Iterable<PodcastMetadata> metadataList);
+  Future<void> savePodcastMetadata(Iterable<PodcastMetadata> metadataList);
 
-  Future<PodcastPreview?> findPodcastPreview(String guid);
+  Future<PodcastMetadata?> findPodcastMetadata(String guid);
 
   Future<List<PodcastMetadata>> populatePodcastFeedUrl(
     Iterable<PodcastMetadata> items,

@@ -37,7 +37,7 @@ class SembastRepository extends Repository {
 
   final _chartsStore = intMapStoreFactory.store('charts');
   final _podcastStore = stringMapStoreFactory.store('podcast');
-  final _podcastPreviewStore = stringMapStoreFactory.store('podcastPreview');
+  final _podcastMetadataStore = stringMapStoreFactory.store('podcastMetadata');
   final _podcastStatsStore = stringMapStoreFactory.store('podcastStats');
   final _episodeStore = stringMapStoreFactory.store('episode');
   final _episodeStatsStore = stringMapStoreFactory.store('episodeStats');
@@ -72,15 +72,15 @@ class SembastRepository extends Repository {
     return value == null ? null : PodcastChartState.fromJson(value);
   }
 
-  // --- PodcastPreview
+  // --- PodcastMetadata
 
   @override
-  Future<void> savePodcastPreview(
+  Future<void> savePodcastMetadata(
     Iterable<PodcastMetadata> metadataList,
   ) async {
     final targets = metadataList.map(
       (metadata) {
-        final value = PodcastPreview.fromMetadata(metadata).toJson();
+        final value = metadata.toJson();
         if (metadata.feedUrl == null || metadata.feedUrl!.isEmpty) {
           value.remove('feedUrl');
         }
@@ -88,15 +88,15 @@ class SembastRepository extends Repository {
       },
     );
 
-    await _podcastPreviewStore
+    await _podcastMetadataStore
         .records(targets.map((target) => target.$1))
         .put(await _db, targets.map((target) => target.$2).toList());
   }
 
   @override
-  Future<PodcastPreview?> findPodcastPreview(String guid) async {
-    final value = await _podcastPreviewStore.record(guid).get(await _db);
-    return value == null ? null : PodcastPreview.fromJson(value);
+  Future<PodcastMetadata?> findPodcastMetadata(String guid) async {
+    final value = await _podcastMetadataStore.record(guid).get(await _db);
+    return value == null ? null : PodcastMetadata.fromJson(value);
   }
 
   @override
@@ -110,7 +110,7 @@ class SembastRepository extends Repository {
       return items.toList();
     }
 
-    final values = await _podcastPreviewStore.records(guids).get(await _db);
+    final values = await _podcastMetadataStore.records(guids).get(await _db);
     var i = 0;
     return items.map((item) {
       if (item.feedUrl?.isNotEmpty == true) {
@@ -126,7 +126,7 @@ class SembastRepository extends Repository {
 
   @override
   Future<String?> findFeedUrl(String guid) async {
-    final value = await _podcastPreviewStore.record(guid).get(await _db);
+    final value = await _podcastMetadataStore.record(guid).get(await _db);
     return value?['feedUrl'] as String?;
   }
 

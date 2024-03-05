@@ -159,7 +159,7 @@ class MobilePodcastService implements PodcastService {
     }
 
     final items = result.items.map(PodcastMetadata.fromSearchResultItem);
-    await _repository.savePodcastPreview(items);
+    await _repository.savePodcastMetadata(items);
     return items.toList();
   }
 
@@ -193,8 +193,8 @@ class MobilePodcastService implements PodcastService {
   }
 
   @override
-  Future<PodcastPreview?> loadPodcastPreview(String guid) async {
-    return _repository.findPodcastPreview(guid);
+  Future<PodcastMetadata?> loadPodcastMetadata(String guid) async {
+    return _repository.findPodcastMetadata(guid);
   }
 
   /// Loads the specified [Podcast]. If the Podcast instance has an ID we'll
@@ -238,7 +238,7 @@ class MobilePodcastService implements PodcastService {
         return null;
       }
       feedUrl = newMetadata!.feedUrl!;
-      await _repository.savePodcastPreview([newMetadata]);
+      await _repository.savePodcastMetadata([newMetadata]);
     }
     if (feedUrl.isEmpty) {
       _log.info('No feed URL for ${metadata.title}');

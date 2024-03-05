@@ -19,20 +19,20 @@ class EpisodeInfo extends _$EpisodeInfo {
     final queueIndex = queue.indexWhere((item) => item.guid == episode.guid);
 
     final values = await Future.wait([
-      ref.read(podcastServiceProvider).loadPodcastPreview(episode.pguid),
+      ref.read(podcastServiceProvider).loadPodcastMetadata(episode.pguid),
       stats != null
           ? Future.value(stats)
           : ref.read(podcastServiceProvider).loadEpisodeStats(episode),
       ref.read(podcastServiceProvider).loadEpisodeStats(episode),
     ]);
 
-    final podcastPreview = values[0] as PodcastPreview?;
-    if (podcastPreview == null){
-      throw StateError('PodcastPreview not found for episode: ${episode.guid}');
+    final podcastMetadata = values[0] as PodcastMetadata?;
+    if (podcastMetadata == null){
+      throw StateError('PodcastMetadata not found for episode: ${episode.guid}');
     }
 
     final initial = EpisodeInfoState(
-      podcastPreview: podcastPreview,
+      podcastMetadata: podcastMetadata,
       episode: episode,
       stats: values[1] as EpisodeStats?,
       queueIndex: 0 <= queueIndex ? queueIndex : null,
@@ -73,7 +73,7 @@ class EpisodeInfo extends _$EpisodeInfo {
 @freezed
 class EpisodeInfoState with _$EpisodeInfoState {
   const factory EpisodeInfoState({
-    required PodcastPreview podcastPreview,
+    required PodcastMetadata podcastMetadata,
     required Episode episode,
     EpisodeStats? stats,
     Downloadable? download,

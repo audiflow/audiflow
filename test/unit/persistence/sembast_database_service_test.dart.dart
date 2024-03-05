@@ -80,36 +80,36 @@ void main() {
     }
   }
 
-  group('PodcastPreview', () {
+  group('PodcastMetadata', () {
     setUpAll(createRepository);
     tearDownAll(cleanUpRepository);
 
     test('Fetch preview with non-existent GUID', () async {
-      final actual = await persistenceService.findPodcastPreview('abc');
+      final actual = await persistenceService.findPodcastMetadata('abc');
       expect(actual, null);
     });
 
-    test('findPodcastPreview', () async {
+    test('findPodcastMetadata', () async {
       final value = podcast1.toJson()..remove('feedUrl');
       final podcast = Podcast.fromJson(value);
 
-      await persistenceService.savePodcastPreview([podcast.metadata]);
+      await persistenceService.savePodcastMetadata([podcast.metadata]);
     });
 
-    test('findPodcastPreview', () async {
-      final actual = await persistenceService.findPodcastPreview(podcast1.guid);
+    test('findPodcastMetadata', () async {
+      final actual = await persistenceService.findPodcastMetadata(podcast1.guid);
       expect(actual, isNotNull);
       expect(actual!.title, podcast1.title);
       expect(actual.feedUrl, isNull);
     });
 
-    test('findPodcastPreview is null', () async {
+    test('findPodcastMetadata is null', () async {
       final actual = await persistenceService.findFeedUrl(podcast1.guid);
       expect(actual, isNull);
     });
 
     test('populate feedUrl', () async {
-      await persistenceService.savePodcastPreview([podcast1.metadata]);
+      await persistenceService.savePodcastMetadata([podcast1.metadata]);
       final feedUrl = await persistenceService.findFeedUrl(podcast1.guid);
       expect(feedUrl, podcast1.feedUrl);
 
