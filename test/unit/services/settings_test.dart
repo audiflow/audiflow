@@ -3,10 +3,13 @@
 // All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seasoning/services/settings/mobile_settings_service.dart';
+import 'package:seasoning/entities/entities.dart';
 import 'package:seasoning/services/settings/settings_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../test_common/riverpod.dart';
 
 /// This set of tests ensures that we can set and get each setting and, more
 /// importantly, we get the correct notification in the settings stream as
@@ -14,25 +17,32 @@ import 'package:shared_preferences/shared_preferences.dart';
 void main() {
   const timeout = 500;
   final settings = <String, Object>{'dummy': 1};
-  SettingsService? mobileSettingsService;
-  late Stream<String>? settingsListener;
+  late ProviderContainer container;
+
+  SettingsService service() =>
+   container.read(settingsServiceProvider.notifier);
+
+  AppSettings state() =>
+      container.read(settingsServiceProvider);
+
+  final mobileSettingsServiceProvider = Provider((_)=> SettingsService());
+
+  void createRepository() {
+    SharedPreferences.setMockInitialValues(settings);
+    container = createContainer();
+  }
 
   setUp(() async {
-    SharedPreferences.setMockInitialValues(settings);
-    mobileSettingsService = await MobileSettingsService.instance();
-    settingsListener = mobileSettingsService?.settingsListener;
-
-    assert(mobileSettingsService != null);
-    assert(settingsListener != null);
+    createRepository();
+    await SettingsService.setup();
   });
 
   test(
     'Test mark deleted episodes as played',
     () async {
-      expect(mobileSettingsService?.markDeletedEpisodesAsPlayed, false);
-      await expectLater(settingsListener, emits('markplayedasdeleted'));
-      mobileSettingsService?.markDeletedEpisodesAsPlayed = true;
-      expect(mobileSettingsService?.markDeletedEpisodesAsPlayed, true);
+      expect(state().markDeletedEpisodesAsPlayed, false);
+      service().markDeletedEpisodesAsPlayed = true;
+      expect(state().markDeletedEpisodesAsPlayed, true);
     },
     timeout: const Timeout(Duration(milliseconds: timeout)),
   );
@@ -40,10 +50,9 @@ void main() {
   test(
     'Test SD card',
     () async {
-      expect(mobileSettingsService?.storeDownloadsSDCard, false);
-      await expectLater(settingsListener, emits('savesdcard'));
-      mobileSettingsService?.storeDownloadsSDCard = true;
-      expect(mobileSettingsService?.storeDownloadsSDCard, true);
+      expect(state().storeDownloadsSDCard, false);
+      service().storeDownloadsSDCard = true;
+      expect(state().storeDownloadsSDCard, true);
     },
     timeout: const Timeout(Duration(milliseconds: timeout)),
   );
@@ -51,10 +60,9 @@ void main() {
   test(
     'Test dark mode',
     () async {
-      expect(mobileSettingsService?.themeDarkMode, true);
-      await expectLater(settingsListener, emits('theme'));
-      mobileSettingsService?.themeDarkMode = false;
-      expect(mobileSettingsService?.themeDarkMode, false);
+      expect(state().theme, BrightnessMode.light);
+      service().theme = BrightnessMode.dark;
+      expect(state().theme, BrightnessMode.dark);
     },
     timeout: const Timeout(Duration(milliseconds: timeout)),
   );
@@ -62,10 +70,9 @@ void main() {
   test(
     'Test playback speed',
     () async {
-      expect(mobileSettingsService?.playbackSpeed, 1.0);
-      await expectLater(settingsListener, emits('speed'));
-      mobileSettingsService?.playbackSpeed = 1.25;
-      expect(mobileSettingsService?.playbackSpeed, 1.25);
+      expect(state().playbackSpeed, 1.0);
+      service().playbackSpeed = 1.25;
+      expect(state().playbackSpeed, 1.25);
     },
     timeout: const Timeout(Duration(milliseconds: timeout)),
   );
@@ -73,11 +80,10 @@ void main() {
   test(
     'Test search provider',
     () async {
-      expect(mobileSettingsService?.searchProvider, 'itunes');
-      await expectLater(settingsListener, emits('search'));
+      expect(state().searchProvider, 'itunes');
       // Key not set so should still return itunes.
-      mobileSettingsService?.searchProvider = 'itunes';
-      expect(mobileSettingsService?.searchProvider, 'itunes');
+      service().searchProvider = 'itunes';
+      expect(state().searchProvider, 'itunes');
     },
     timeout: const Timeout(Duration(milliseconds: timeout)),
   );
@@ -85,10 +91,9 @@ void main() {
   test(
     'Test external link consent',
     () async {
-      expect(mobileSettingsService?.externalLinkConsent, false);
-      await expectLater(settingsListener, emits('elconsent'));
-      mobileSettingsService?.externalLinkConsent = true;
-      expect(mobileSettingsService?.externalLinkConsent, true);
+      expect(state().externalLinkConsent, false);
+      service().externalLinkConsent = true;
+      expect(state().externalLinkConsent, true);
     },
     timeout: const Timeout(Duration(milliseconds: timeout)),
   );
@@ -96,10 +101,9 @@ void main() {
   test(
     'Test auto-open now playing screen',
     () async {
-      expect(mobileSettingsService?.autoOpenNowPlaying, false);
-      await expectLater(settingsListener, emits('autoopennowplaying'));
-      mobileSettingsService?.autoOpenNowPlaying = true;
-      expect(mobileSettingsService?.autoOpenNowPlaying, true);
+      expect(state().autoOpenNowPlaying, false);
+      service().autoOpenNowPlaying = true;
+      expect(state().autoOpenNowPlaying, true);
     },
     timeout: const Timeout(Duration(milliseconds: timeout)),
   );
@@ -107,10 +111,9 @@ void main() {
   test(
     'Test show funding',
     () async {
-      expect(mobileSettingsService?.showFunding, true);
-      await expectLater(settingsListener, emits('showFunding'));
-      mobileSettingsService?.showFunding = false;
-      expect(mobileSettingsService?.showFunding, false);
+      expect(state().showFunding, true);
+      service().showFunding = false;
+      expect(state().showFunding, false);
     },
     timeout: const Timeout(Duration(milliseconds: timeout)),
   );
@@ -118,10 +121,9 @@ void main() {
   test(
     'Test episode refresh time',
     () async {
-      expect(mobileSettingsService?.autoUpdateEpisodePeriod, 180);
-      await expectLater(settingsListener, emits('autoUpdateEpisodePeriod'));
-      mobileSettingsService?.autoUpdateEpisodePeriod = 60;
-      expect(mobileSettingsService?.autoUpdateEpisodePeriod, 60);
+      expect(state().autoUpdateEpisodePeriod, 180);
+      service().autoUpdateEpisodePeriod = 60;
+      expect(state().autoUpdateEpisodePeriod, 60);
     },
     timeout: const Timeout(Duration(milliseconds: timeout)),
   );
@@ -129,10 +131,9 @@ void main() {
   test(
     'Test trim silence',
     () async {
-      expect(mobileSettingsService?.trimSilence, false);
-      await expectLater(settingsListener, emits('trimSilence'));
-      mobileSettingsService?.trimSilence = true;
-      expect(mobileSettingsService?.trimSilence, true);
+      expect(state().trimSilence, false);
+      service().trimSilence = true;
+      expect(state().trimSilence, true);
     },
     timeout: const Timeout(Duration(milliseconds: timeout)),
   );
@@ -140,10 +141,9 @@ void main() {
   test(
     'Test volume boost',
     () async {
-      expect(mobileSettingsService?.volumeBoost, false);
-      await expectLater(settingsListener, emits('volumeBoost'));
-      mobileSettingsService?.volumeBoost = true;
-      expect(mobileSettingsService?.volumeBoost, true);
+      expect(state().volumeBoost, false);
+      service().volumeBoost = true;
+      expect(state().volumeBoost, true);
     },
     timeout: const Timeout(Duration(milliseconds: timeout)),
   );
@@ -151,10 +151,9 @@ void main() {
   test(
     'Test layout mode',
     () async {
-      expect(mobileSettingsService?.layoutMode, 0);
-      await expectLater(settingsListener, emits('layout'));
-      mobileSettingsService?.layoutMode = 1;
-      expect(mobileSettingsService?.layoutMode, 1);
+      expect(state().layout, 0);
+      service().layoutMode = 1;
+      expect(state().layout, 1);
     },
     timeout: const Timeout(Duration(milliseconds: timeout)),
   );
