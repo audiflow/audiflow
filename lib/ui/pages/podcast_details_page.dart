@@ -12,6 +12,7 @@ import 'package:seasoning/entities/entities.dart';
 import 'package:seasoning/l10n/L.dart';
 import 'package:seasoning/providers/podcast/podcast_info_provider.dart';
 import 'package:seasoning/providers/podcast/podcast_seasons_provider.dart';
+import 'package:seasoning/services/podcast/podcast_service_provider.dart';
 import 'package:seasoning/services/settings/settings_service.dart';
 import 'package:seasoning/ui/pages/app_bars/podcast_details_app_bar.dart';
 import 'package:seasoning/ui/podcast/episode_list.dart';
@@ -88,7 +89,11 @@ class PodcastDetailsPage extends HookConsumerWidget {
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           body: RefreshIndicator(
             displacement: 60,
-            onRefresh: () async {},
+            onRefresh: () async {
+              await ref
+                  .read(podcastServiceProvider)
+                  .loadPodcast(metadata, refresh: true);
+            },
             child: CustomScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: <Widget>[
