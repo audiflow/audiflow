@@ -12,43 +12,6 @@ import 'package:seasoning/entities/entities.dart';
 part 'podcast.freezed.dart';
 part 'podcast.g.dart';
 
-@freezed
-class PodcastPreview with _$PodcastPreview {
-  const factory PodcastPreview({
-    /// Unique identifier for podcast.
-    required String guid,
-
-    /// The collection ID(iTunesID).
-    required int collectionId,
-
-    /// The link to the podcast RSS feed.
-    String? feedUrl,
-
-    /// Podcast title.
-    required String title,
-
-    /// URL for thumbnail version of artwork image.
-    required String thumbImageUrl,
-
-    /// Last updated date.
-    required DateTime lastUpdated,
-  }) = _PodcastPreview;
-
-  factory PodcastPreview.fromJson(Map<String, dynamic> json) =>
-      _$PodcastPreviewFromJson(json);
-
-  factory PodcastPreview.fromMetadata(PodcastMetadata metadata) {
-    return PodcastPreview(
-      guid: metadata.guid,
-      collectionId: metadata.collectionId,
-      feedUrl: metadata.feedUrl,
-      title: metadata.title,
-      thumbImageUrl: metadata.thumbImageUrl,
-      lastUpdated: DateTime.now(),
-    );
-  }
-}
-
 /// A class that represents an instance of a podcast search result item.
 @freezed
 class PodcastMetadata with _$PodcastMetadata {

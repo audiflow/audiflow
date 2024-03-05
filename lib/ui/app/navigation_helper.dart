@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:seasoning/entities/entities.dart';
 import 'package:seasoning/ui/app/app_bottom_navigation_bar.dart';
 import 'package:seasoning/ui/app/seasoning_app.dart';
+import 'package:seasoning/ui/pages/episode_page.dart';
 import 'package:seasoning/ui/pages/podcast_chart_page.dart';
 import 'package:seasoning/ui/pages/podcast_details_page.dart';
 import 'package:seasoning/ui/pages/podcast_season_page.dart';
@@ -54,6 +55,23 @@ class NavigationHelper {
                       return _getPage(
                         child: PodcastDetailsPage(
                           metadata: metadata,
+                          heroPrefix: heroPrefix,
+                        ),
+                        state: state,
+                      );
+                    },
+                  ),
+                  GoRoute(
+                    path: 'episode',
+                    name: 'episode',
+                    parentNavigatorKey: homeTabNavigatorKey,
+                    pageBuilder: (context, state) {
+                      final (metadata, episode, heroPrefix) =
+                          state.extra! as (PodcastMetadata, Episode, String);
+                      return _getPage(
+                        child: EpisodePage(
+                          metadata: metadata,
+                          episode: episode,
                           heroPrefix: heroPrefix,
                         ),
                         state: state,

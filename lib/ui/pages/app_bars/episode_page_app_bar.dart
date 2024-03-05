@@ -6,20 +6,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:seasoning/entities/podcast.dart';
+import 'package:seasoning/entities/entities.dart';
 import 'package:seasoning/providers/podcast/podcast_info_provider.dart';
 import 'package:seasoning/services/podcast/podcast_service_provider.dart';
 import 'package:seasoning/ui/pages/app_bars/podcast_page_header_image.dart';
 import 'package:seasoning/ui/widgets/placeholder_builder.dart';
 
-class PodcastDetailsAppBar extends ConsumerWidget {
-  const PodcastDetailsAppBar({
+class EpisodePageAppBar extends ConsumerWidget {
+  const EpisodePageAppBar({
     super.key,
     required this.metadata,
+    required this.episode,
     required this.heroPrefix,
   });
 
   final PodcastMetadata metadata;
+  final Episode episode;
   final String heroPrefix;
 
   @override

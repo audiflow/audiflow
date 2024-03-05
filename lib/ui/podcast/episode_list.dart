@@ -67,6 +67,7 @@ class EpisodeList extends HookConsumerWidget {
 
               return EpisodeTile(
                 showsThumbnail: showsThumbnail,
+                metadata: metadata,
                 episode: episode,
               );
             },

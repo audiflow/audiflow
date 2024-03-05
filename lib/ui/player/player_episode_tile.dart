@@ -69,7 +69,7 @@ class _Content extends ConsumerWidget {
         ),
         const SizedBox(height: 6),
         Text(
-          episodeInfo.valueOrNull?.podcastPreview.title ?? '',
+          episodeInfo.valueOrNull?.podcastMetadata.title ?? '',
           overflow: TextOverflow.ellipsis,
           softWrap: false,
           style: Theme.of(context)

@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import 'package:seasoning/entities/entities.dart';
+import 'package:seasoning/ui/app/navigation_helper.dart';
 import 'package:seasoning/ui/podcast/episode_date.dart';
 import 'package:seasoning/ui/widgets/animated_play_button.dart';
 import 'package:seasoning/ui/widgets/download_button.dart';
@@ -24,10 +25,12 @@ class EpisodeTile extends HookConsumerWidget {
   const EpisodeTile({
     super.key,
     required this.showsThumbnail,
+    required this.metadata,
     required this.episode,
   });
 
   final bool showsThumbnail;
+  final PodcastMetadata metadata;
   final Episode episode;
 
   @override
@@ -44,7 +47,7 @@ class EpisodeTile extends HookConsumerWidget {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(child: _Content(episode)),
+                  Expanded(child: _Content(metadata, episode)),
                   if (showsThumbnail && thumbImageUrl?.isNotEmpty == true)
                     TileImage(
                       url: thumbImageUrl!,
@@ -349,25 +352,32 @@ class EpisodeTile extends HookConsumerWidget {
 }
 
 class _Content extends StatelessWidget {
-  const _Content(this.episode);
+  const _Content(this.metadata, this.episode);
 
+  final PodcastMetadata metadata;
   final Episode episode;
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         EpisodeDate(episode),
         const SizedBox(height: 4),
-        Text(
-          episode.title,
-          overflow: TextOverflow.ellipsis,
-          maxLines: 3,
-          softWrap: false,
-          style: textTheme.titleSmall,
+        GestureDetector(
+          onTap: () => NavigationHelper.router
+              .pushNamed('episode', extra: (metadata, episode, 'hero')),
+          child: SizedBox(
+            width: double.infinity,
+            child: Text(
+              episode.title,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 3,
+              softWrap: false,
+              style: textTheme.titleSmall,
+            ),
+          ),
         ),
         // Text(
         //   episode.descriptionText,
