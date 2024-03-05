@@ -367,7 +367,7 @@ class _Content extends StatelessWidget {
         const SizedBox(height: 4),
         GestureDetector(
           onTap: () => NavigationHelper.router
-              .pushNamed('episode', extra: (metadata, episode, 'hero')),
+              .pushNamed('episode', extra: (metadata, episode, 'episodeHero')),
           child: SizedBox(
             width: double.infinity,
             child: Text(

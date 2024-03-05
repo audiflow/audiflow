@@ -20,6 +20,13 @@ class FillRemainingError extends StatelessWidget {
           key: key,
         );
 
+  FillRemainingError.episode({Key? key})
+      : this(
+    icon: Icons.search,
+    messageBuilder: (context) => L.of(context)!.no_search_results_message,
+    key: key,
+  );
+
   final IconData icon;
   final String Function(BuildContext context) messageBuilder;
 
