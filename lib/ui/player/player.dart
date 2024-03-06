@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:seasoning/entities/entities.dart';
 import 'package:seasoning/services/audio/audio_player_service.dart';
+import 'package:seasoning/services/queue/queue_list_provider.dart';
 import 'package:seasoning/ui/app/app_bottom_navigation_bar.dart';
 import 'package:seasoning/ui/mini_player/mini_player.dart';
 import 'package:seasoning/ui/mini_player/utils.dart';
@@ -183,6 +184,8 @@ class _DetailedPlayerContent extends ConsumerWidget {
       value: height,
     );
 
+    final queue = ref.watch(queueListProvider).queue;
+
     return Opacity(
       opacity: percentageExpandedPlayer,
       child: Stack(
@@ -200,14 +203,15 @@ class _DetailedPlayerContent extends ConsumerWidget {
                   ),
                 ),
                 PlayerEpisodeTile(episode: episode),
-                SizedBox(
-                  height: max(0, min(maxHeight - 300, height - 300)),
-                  child: const CustomScrollView(
-                    slivers: [
-                      QueueListBlock(),
-                    ],
+                if (queue.isNotEmpty)
+                  SizedBox(
+                    height: max(0, min(maxHeight - 300, height - 350)),
+                    child: const CustomScrollView(
+                      slivers: [
+                        QueueListBlock(),
+                      ],
+                    ),
                   ),
-                ),
               ],
             ),
           ),
