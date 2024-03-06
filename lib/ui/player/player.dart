@@ -10,6 +10,7 @@ import 'package:seasoning/ui/mini_player/mini_player.dart';
 import 'package:seasoning/ui/mini_player/utils.dart';
 import 'package:seasoning/ui/player/player_episode_tile.dart';
 import 'package:seasoning/ui/podcast/queue_list_block.dart';
+import 'package:seasoning/ui/widgets/seek_bar.dart';
 
 final ValueNotifier<double> playerExpandProgress =
     ValueNotifier(playerMinHeight);
@@ -215,6 +216,7 @@ class _DetailedPlayerContent extends ConsumerWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                const SeekBar(),
                 const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -223,7 +225,6 @@ class _DetailedPlayerContent extends ConsumerWidget {
                     _SkipButton(forward: true),
                   ],
                 ),
-                const _ProgressIndicator(),
                 SizedBox(
                   height: MediaQueryData.fromView(
                     ui.PlatformDispatcher.instance.implicitView!,
@@ -235,19 +236,6 @@ class _DetailedPlayerContent extends ConsumerWidget {
         ],
       ),
     );
-  }
-}
-
-class _ProgressIndicator extends ConsumerWidget {
-  const _ProgressIndicator();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final playerState = ref.watch(audioPlayerServiceProvider);
-    if (playerState == null) {
-      return const SizedBox.shrink();
-    }
-    return LinearProgressIndicator(value: playerState.percentagePlayed);
   }
 }
 
