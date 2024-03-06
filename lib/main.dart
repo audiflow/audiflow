@@ -39,7 +39,10 @@ import 'package:seasoning/ui/widgets/error_notifier.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setSystemUIOverlayStyle(
-    const SystemUiOverlayStyle(statusBarColor: Colors.transparent),
+    const SystemUiOverlayStyle(
+      statusBarIconBrightness: Brightness.dark,
+      statusBarBrightness: Brightness.light,
+    ),
   );
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
