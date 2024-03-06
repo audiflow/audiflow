@@ -35,7 +35,6 @@ class EpisodePageAppBar extends ConsumerWidget {
         return SliverAppBar(
           expandedHeight: 350,
           pinned: true,
-          backgroundColor: backgroundColor,
           title: AnimatedOpacity(
             opacity: 300 < constraints.scrollOffset ? 1.0 : 0.0,
             duration: const Duration(milliseconds: 200),
@@ -48,7 +47,6 @@ class EpisodePageAppBar extends ConsumerWidget {
             ),
           ],
           flexibleSpace: FlexibleSpaceBar(
-            collapseMode: CollapseMode.pin,
             background: Column(
               mainAxisSize: MainAxisSize.min,
               children: [

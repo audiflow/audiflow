@@ -8,8 +8,12 @@ import 'package:flutter_html/flutter_html.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:seasoning/entities/entities.dart';
 import 'package:seasoning/providers/podcast/episode_info_provider.dart';
+import 'package:seasoning/services/audio/audio_player_service.dart';
+import 'package:seasoning/services/podcast/podcast_service_provider.dart';
+import 'package:seasoning/ui/app/navigation_helper.dart';
 import 'package:seasoning/ui/pages/app_bars/episode_page_app_bar.dart';
 import 'package:seasoning/ui/widgets/podcast_html.dart';
+import 'package:seasoning/ui/widgets/rounded_stadium_button.dart';
 
 /// This Widget takes a search result and builds a list of currently available
 /// podcasts.
@@ -32,31 +36,38 @@ class EpisodePage extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final episodeState = ref.watch(episodeInfoProvider(episode));
     final theme = Theme.of(context);
-    return Scaffold(
-      backgroundColor: Colors.grey[200],
-      body: CustomScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        slivers: <Widget>[
-          EpisodePageAppBar(
-            metadata: metadata,
-            episode: episode,
-            heroPrefix: heroPrefix,
+    return ColoredBox(
+      color: Colors.green,
+      child: SafeArea(
+        child: Scaffold(
+          body: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: <Widget>[
+              EpisodePageAppBar(
+                metadata: metadata,
+                episode: episode,
+                heroPrefix: heroPrefix,
+              ),
+              SliverPadding(
+                padding: const EdgeInsets.only(top: 12),
+                sliver: DecoratedSliver(
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                  ),
+                  sliver: _EpisodeHeader(metadata, episode),
+                ),
+              ),
+              _EpisodeBody(metadata, episode),
+            ],
           ),
-          _EpisodeTitle(metadata, episode),
-          DecoratedSliver(
-            decoration: BoxDecoration(
-              color: theme.canvasColor,
-            ),
-            sliver: _EpisodeBody(metadata, episode),
-          ),
-        ],
+        ),
       ),
     );
   }
 }
 
-class _EpisodeTitle extends HookConsumerWidget {
-  const _EpisodeTitle(this.metadata, this.episode);
+class _EpisodeHeader extends HookConsumerWidget {
+  const _EpisodeHeader(this.metadata, this.episode);
 
   final PodcastMetadata metadata;
   final Episode episode;
@@ -76,13 +87,61 @@ class _EpisodeTitle extends HookConsumerWidget {
               style: textTheme.titleMedium,
               textAlign: TextAlign.center,
             ),
-            Text(
-              metadata.title,
-              style: textTheme.bodySmall,
-              textAlign: TextAlign.center,
+            PodcastLink(
+              title: metadata.title,
+              thumbnailUrl: metadata.thumbImageUrl != episode.thumbImageUrl
+                  ? metadata.thumbImageUrl
+                  : null,
+              onTap: () {
+                NavigationHelper.router
+                    .pushNamed('detail', extra: (metadata, ''));
+              },
             ),
+            _EpisodePlayButton(episode: episode),
+            const SizedBox(height: 12),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class PodcastLink extends StatelessWidget {
+  const PodcastLink({
+    this.thumbnailUrl,
+    required this.title,
+    required this.onTap,
+    super.key,
+  });
+
+  final String? thumbnailUrl;
+  final String title;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    return TextButton(
+      onPressed: onTap,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (thumbnailUrl != null)
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: Image.network(
+                thumbnailUrl!,
+                width: 20,
+                height: 20,
+              ),
+            ),
+          Text(
+            title,
+            style: textTheme.bodySmall,
+            textAlign: TextAlign.center,
+          ),
+          const Icon(Icons.arrow_forward_ios, size: 16),
+        ],
       ),
     );
   }
@@ -108,5 +167,59 @@ class _EpisodeBody extends HookConsumerWidget {
         ),
       ),
     );
+  }
+}
+
+class _EpisodePlayButton extends ConsumerWidget {
+  const _EpisodePlayButton({
+    required this.episode,
+  });
+
+  final Episode episode;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isPlaying = ref.watch(
+      audioPlayerServiceProvider.select(
+        (state) =>
+            state?.episode.guid == episode.guid &&
+            state?.phase == PlayerPhase.play,
+      ),
+    );
+    final state = ref.watch(episodeInfoProvider(episode));
+    final stats = state.valueOrNull?.stats;
+    return Opacity(
+      opacity: state.hasValue ? 1 : 0,
+      child: RoundedStadiumButton.md(
+        caption: Text(_caption(context, stats, isPlaying: isPlaying)),
+        onPressed: () {
+          ref.read(podcastServiceProvider).handlePlay(episode);
+        },
+      ),
+    );
+  }
+
+  String _caption(
+    BuildContext context,
+    EpisodeStats? stats, {
+    required bool isPlaying,
+  }) {
+    if (isPlaying) {
+      return 'Pause';
+    }
+
+    if (stats == null) {
+      return 'Play';
+    }
+
+    final percentage = stats.percentagePlayed;
+    if (0 < percentage && percentage < 1) {
+      return 'Resume';
+    }
+    if (percentage == 0 && stats.completeCount == 0) {
+      return 'Play';
+    } else {
+      return 'Play again';
+    }
   }
 }

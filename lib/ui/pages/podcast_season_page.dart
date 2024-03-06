@@ -92,7 +92,7 @@ class ContextualPlayButton extends ConsumerWidget {
     final episodesState = ref.watch(episodesGroupProvider(episodeGroupKey));
     final buttonState = episodesState.valueOrNull
         ?.nextEpisodeToPlay(playOrder: playOrder, isSeries: isSeries);
-    return RoundedStadiumButton(
+    return RoundedStadiumButton.md(
       caption: AnimatedOpacity(
         opacity: episodesState.hasValue ? 1.0 : 0.0,
         duration: const Duration(milliseconds: 200),
