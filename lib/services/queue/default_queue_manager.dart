@@ -145,6 +145,7 @@ class DefaultQueueManager extends _$DefaultQueueManager
         : [...adhoc, ...primary];
     state = state.copyWith(queue: newQueue);
 
+    await _repository.saveQueue(state);
     final purgingEpisodes = oldQueue
         .map((q) => q.guid)
         .where((guid) => !state.queue.any((q) => q.guid == guid));
