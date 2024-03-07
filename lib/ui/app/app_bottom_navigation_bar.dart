@@ -9,7 +9,7 @@ import 'package:seasoning/services/podcast/podcast_service_provider.dart';
 import 'package:seasoning/ui/mini_player/utils.dart';
 import 'package:seasoning/ui/player/player.dart';
 
-const double playerMinHeight = 94;
+const double playerMinHeight = 80;
 
 double playerMaxHeight(BuildContext content) {
   final mediaQuery = MediaQuery.of(content);

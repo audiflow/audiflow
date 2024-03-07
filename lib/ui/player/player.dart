@@ -105,21 +105,21 @@ class _MiniPlayerContent extends StatelessWidget {
     );
 
     final elementOpacity = 1 - 1 * percentageMiniPlayer;
-    return Column(
-      children: [
-        Expanded(
-          child: Row(
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(left: 16),
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(maxHeight: maxImgSize),
-                  child: img,
+    return ColoredBox(
+      color: Colors.grey[50]!,
+      child: Column(
+        children: [
+          Expanded(
+            child: Row(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(left: 16, right: 10),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(maxHeight: maxImgSize),
+                    child: img,
+                  ),
                 ),
-              ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 10),
+                Expanded(
                   child: Opacity(
                     opacity: elementOpacity,
                     child: Column(
@@ -132,36 +132,25 @@ class _MiniPlayerContent extends StatelessWidget {
                           maxLines: 3,
                           style: Theme.of(context)
                               .textTheme
-                              .bodySmall!
-                              .copyWith(fontSize: 16),
-                        ),
-                        Text(
-                          '',
-                          style:
-                              Theme.of(context).textTheme.bodyMedium!.copyWith(
-                                    color: Theme.of(context)
-                                        .textTheme
-                                        .bodyMedium!
-                                        .color!
-                                        .withOpacity(0.55),
-                                  ),
+                              .bodyMedium!
+                              .copyWith(fontSize: 13),
                         ),
                       ],
                     ),
                   ),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(right: 3),
-                child: Opacity(
-                  opacity: elementOpacity,
-                  child: const _PlayButton.small(),
+                Padding(
+                  padding: const EdgeInsets.only(right: 3),
+                  child: Opacity(
+                    opacity: elementOpacity,
+                    child: const _PlayButton.small(),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
