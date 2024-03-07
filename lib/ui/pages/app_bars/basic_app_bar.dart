@@ -7,7 +7,11 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 class BasicAppBar extends HookConsumerWidget {
-  const BasicAppBar({super.key, required this.titleBuilder});
+  const BasicAppBar({
+    super.key,
+    required this.titleBuilder,
+    this.elevation,
+  });
 
   BasicAppBar.chart({Key? key})
       : this(
@@ -19,15 +23,18 @@ class BasicAppBar extends HookConsumerWidget {
       : this(
           key: key,
           titleBuilder: (context) => 'Search',
+          elevation: 0,
         );
 
   final String Function(BuildContext) titleBuilder;
+  final double? elevation;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return SliverAppBar(
       pinned: true,
       expandedHeight: 100,
+      elevation: elevation,
       flexibleSpace: FlexibleSpaceBar(
         centerTitle: false,
         titlePadding: const EdgeInsetsDirectional.only(start: 20, bottom: 20),

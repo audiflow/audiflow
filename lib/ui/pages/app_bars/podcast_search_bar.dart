@@ -33,6 +33,13 @@ class PodcastSearchBar extends HookConsumerWidget {
       //       : const Icon(Icons.arrow_back_ios),
       //   onPressed: () => Navigator.pop(context),
       // ),
+      pinned: true,
+      expandedHeight: 100,
+      flexibleSpace: const FlexibleSpaceBar(
+        centerTitle: false,
+        titlePadding: EdgeInsetsDirectional.only(start: 20, bottom: 20),
+        title: Text('Search'),
+      ),
       title: Semantics(
         label: L.of(context)!.search_for_podcasts_hint,
         textField: true,
@@ -62,7 +69,6 @@ class PodcastSearchBar extends HookConsumerWidget {
           },
         ),
       ),
-      pinned: true,
       actions: <Widget>[
         IconButton(
           tooltip: L.of(context)!.clear_search_button_label,

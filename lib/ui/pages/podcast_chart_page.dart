@@ -45,12 +45,12 @@ class PodcastChartPage extends HookConsumerWidget {
             slivers: <Widget>[
               BasicAppBar.chart(),
               const _SubscribedPodcasts(),
-              if (state.hasValue)
-                PodcastList(results: state.value!.podcasts)
+              if (state.isLoading)
+                const FillRemainingLoading()
               else if (state.hasError)
                 FillRemainingError.podcastNoResults()
               else
-                const FillRemainingLoading(),
+                PodcastList(results: state.value!.podcasts)
             ],
           ),
           const ErrorNotifier(),

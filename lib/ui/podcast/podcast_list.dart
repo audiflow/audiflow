@@ -9,7 +9,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:seasoning/entities/entities.dart';
 import 'package:seasoning/services/settings/settings_service.dart';
 import 'package:seasoning/ui/podcast/podcast_tile.dart';
-import 'package:seasoning/ui/widgets/fill_remaining_error.dart';
 
 class PodcastList extends ConsumerWidget {
   const PodcastList({
@@ -22,7 +21,7 @@ class PodcastList extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (results.isEmpty) {
-      return FillRemainingError.podcastNoResults();
+      return const SliverToBoxAdapter(child: SizedBox.shrink());
     }
 
     final settings = ref.watch(settingsServiceProvider);

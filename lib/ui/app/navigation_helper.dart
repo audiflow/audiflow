@@ -7,6 +7,7 @@ import 'package:seasoning/ui/pages/episode_page.dart';
 import 'package:seasoning/ui/pages/podcast_chart_page.dart';
 import 'package:seasoning/ui/pages/podcast_details_page.dart';
 import 'package:seasoning/ui/pages/podcast_season_page.dart';
+import 'package:seasoning/ui/pages/search_page.dart';
 
 class NavigationHelper {
   factory NavigationHelper.setup() => _instance;
@@ -89,7 +90,7 @@ class NavigationHelper {
                 path: searchPath,
                 pageBuilder: (context, state) {
                   return _getPage(
-                    child: const SizedBox.shrink(),
+                    child: const SearchPage(),
                     state: state,
                   );
                 },
