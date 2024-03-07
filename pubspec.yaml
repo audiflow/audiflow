@@ -68,17 +68,17 @@ dependencies:
   xml: 6.5.0
 
 dev_dependencies:
-  mockito: ^5.4.4
+  build_runner: ^2.4.8
+  custom_lint: ^0.6.0
   flutter_lints: ^3.0.1
   flutter_test:
     sdk: flutter
   freezed: ^2.4.7
-  build_runner: ^2.4.8
-  riverpod_lint: ^2.3.9
-  riverpod_generator: ^2.3.11
-  custom_lint: ^0.6.0
-  pedantic_mono: ^1.25.0
   json_serializable: ^6.7.1
+  mockito: ^5.4.4
+  pedantic_mono: ^1.25.0
+  riverpod_generator: ^2.3.11
+  riverpod_lint: ^2.3.9
 
 dependency_overrides:
   # Override layout grid to fix dependency issue with flutter_html_table

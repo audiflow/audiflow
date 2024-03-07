@@ -6,5 +6,5 @@ export 'package:seasoning/api/podcast/podcast_api.dart';
 
 part 'podcast_api_provider.g.dart';
 
-@riverpod
+@Riverpod(keepAlive: true)
 PodcastApi podcastApi(PodcastApiRef ref) => MobilePodcastApi();

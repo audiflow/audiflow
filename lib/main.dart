@@ -13,6 +13,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:logging/logging.dart';
+import 'package:seasoning/api/podcast/podcast_api_provider.dart';
 import 'package:seasoning/l10n/L.dart';
 import 'package:seasoning/providers/podcast/podcast_refresher_provider.dart';
 import 'package:seasoning/providers/theme_provider.dart';
@@ -54,8 +55,6 @@ void main() async {
       '${record.message}',
     );
   });
-
-  final certificateAuthorityBytes = await setupCertificateAuthority();
 
   NavigationHelper.setup();
   await SettingsService.setup();
@@ -162,6 +161,9 @@ class _ProvidersInitializer extends HookConsumerWidget {
           ref.read(downloadManagerProvider).setup(),
           ref.read(queueManagerProvider.notifier).setup(),
           ref.read(audioPlayerServiceProvider.notifier).setup(),
+          setupCertificateAuthority().then((ca) {
+            ref.read(podcastApiProvider).addClientAuthorityBytes(ca);
+          }),
         ]).then((_) {
           initState.value = true;
         });

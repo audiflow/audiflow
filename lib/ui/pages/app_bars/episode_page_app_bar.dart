@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:seasoning/entities/entities.dart';
-import 'package:seasoning/providers/podcast/episode_info_provider.dart';
 import 'package:seasoning/ui/pages/app_bars/podcast_page_header_image.dart';
 import 'package:seasoning/ui/widgets/placeholder_builder.dart';
 
@@ -28,7 +27,6 @@ class EpisodePageAppBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final placeholderBuilder = PlaceholderBuilder.of(context);
-    final episodeState = ref.watch(episodeInfoProvider(episode));
 
     return SliverLayoutBuilder(
       builder: (BuildContext context, SliverConstraints constraints) {
@@ -61,8 +59,7 @@ class EpisodePageAppBar extends ConsumerWidget {
                       child: PodcastHeaderImage(
                         imageUrl: episode.imageUrl ??
                             episode.thumbImageUrl ??
-                            metadata.imageUrl ??
-                            '',
+                            metadata.imageUrl,
                         placeholderBuilder: placeholderBuilder,
                       ),
                     ),

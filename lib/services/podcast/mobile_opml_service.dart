@@ -78,7 +78,7 @@ class MobileOPMLService extends OPMLService {
 
   @override
   Stream<OPMLActionEvent> saveOPMLFile() async* {
-    final subs = await podcastService.subscriptions();
+    // final subs = await podcastService.subscriptions();
 
     final builder = XmlBuilder()..processing('xml', 'version="1.0"');
     builder.element(
@@ -110,7 +110,7 @@ class MobileOPMLService extends OPMLService {
           ..element(
             'body',
             nest: () {
-              for (final sub in subs) {
+              // for (final sub in subs) {
                 // builder.element(
                 //   'outline',
                 //   nest: () {
@@ -119,7 +119,7 @@ class MobileOPMLService extends OPMLService {
                 //       ..attribute('xmlUrl', sub.url);
                 //   },
                 // );
-              }
+              // }
             },
           );
       },

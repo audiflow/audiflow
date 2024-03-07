@@ -50,7 +50,7 @@ class PodcastChartPage extends HookConsumerWidget {
               else if (state.hasError)
                 FillRemainingError.podcastNoResults()
               else
-                PodcastList(results: state.value!.podcasts)
+                PodcastList(results: state.value!.podcasts),
             ],
           ),
           const ErrorNotifier(),

@@ -12,10 +12,9 @@ class SeekBar extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final (position, duration, audioState) = ref.watch(
+    final (position, duration) = ref.watch(
       audioPlayerServiceProvider.select(
-        (state) =>
-            (state?.position, state?.episode.duration, state?.audioState),
+        (state) => (state?.position, state?.episode.duration),
       ),
     );
 

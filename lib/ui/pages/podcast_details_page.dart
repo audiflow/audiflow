@@ -141,8 +141,6 @@ class _PodcastTitle extends HookConsumerWidget {
 
   final Podcast podcast;
 
-  static const maxHeight = 100.0;
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final textTheme = Theme.of(context).textTheme;

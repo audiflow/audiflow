@@ -27,7 +27,8 @@ bool audioPositionSaver(AudioPositionSaverRef ref) {
     }
 
     if (episode != null && position != null) {
-      final completed = episode.duration!.inSeconds - 3 <= position.inSeconds;
+      // final completed = episode.duration!.inSeconds - 3 <=
+      // position.inSeconds;
       repository.updateEpisodeStats(
         EpisodeStatsUpdateParam(
           guid: episode.guid,

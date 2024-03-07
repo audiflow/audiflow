@@ -6,11 +6,11 @@ part of 'podcast_api_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$podcastApiHash() => r'5ad67ab142597335474f62cdc39cd155660d9a0d';
+String _$podcastApiHash() => r'39723c1568a91a9918159082102858d584c0df3c';
 
 /// See also [podcastApi].
 @ProviderFor(podcastApi)
-final podcastApiProvider = AutoDisposeProvider<PodcastApi>.internal(
+final podcastApiProvider = Provider<PodcastApi>.internal(
   podcastApi,
   name: r'podcastApiProvider',
   debugGetCreateSourceHash:
@@ -19,6 +19,6 @@ final podcastApiProvider = AutoDisposeProvider<PodcastApi>.internal(
   allTransitiveDependencies: null,
 );
 
-typedef PodcastApiRef = AutoDisposeProviderRef<PodcastApi>;
+typedef PodcastApiRef = ProviderRef<PodcastApi>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

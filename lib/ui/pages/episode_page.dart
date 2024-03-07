@@ -34,8 +34,6 @@ class EpisodePage extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final episodeState = ref.watch(episodeInfoProvider(episode));
-    final theme = Theme.of(context);
     return ColoredBox(
       color: Colors.green,
       child: SafeArea(
