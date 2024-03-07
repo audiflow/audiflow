@@ -7,8 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:seasoning/core/l10n.dart';
 import 'package:seasoning/events/podcast_search_event.dart';
-import 'package:seasoning/l10n/L.dart';
 import 'package:seasoning/providers/podcast/podcast_search_provider.dart';
 import 'package:seasoning/ui/pages/app_bars/basic_app_bar.dart';
 import 'package:seasoning/ui/podcast/podcast_list.dart';
@@ -67,7 +67,7 @@ class SearchBar extends HookConsumerWidget {
     });
 
     return Semantics(
-      label: L.of(context)!.search_for_podcasts_hint,
+      label: L10n.of(context)!.search_for_podcasts_hint,
       textField: true,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -90,7 +90,7 @@ class SearchBar extends HookConsumerWidget {
                     ),
                     onPressed: searchController.clear,
                   ),
-            hintText: L.of(context)!.search_for_podcasts_hint,
+            hintText: L10n.of(context)!.search_for_podcasts_hint,
             border: InputBorder.none,
           ),
           style: TextStyle(
@@ -100,7 +100,7 @@ class SearchBar extends HookConsumerWidget {
           ),
           onSubmitted: (value) {
             SemanticsService.announce(
-              L.of(context)!.semantic_announce_searching,
+              L10n.of(context)!.semantic_announce_searching,
               TextDirection.ltr,
             );
             ref

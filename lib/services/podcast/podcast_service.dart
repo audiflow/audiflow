@@ -4,6 +4,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'dart:ui';
+
 import 'package:seasoning/entities/entities.dart';
 
 part 'podcast_genres.dart';
@@ -12,7 +14,7 @@ abstract class PodcastService {
   static const itunesGenres = _itunesGenres;
   static const podcastIndexGenres = _podcastIndexGenres;
 
-  Future<void> setup();
+  Future<void> setup(Locale locale);
 
   Future<List<PodcastMetadata>> search({
     required String term,

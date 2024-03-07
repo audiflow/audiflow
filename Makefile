@@ -41,15 +41,10 @@ gen-clean: ## Clean cache of Dart's code generator.
 gen-clean:
 	flutter pub run build_runner clean
 
-.PHONY: gen-arb
-gen-arb: ## Generate ARB files from Dart code getters
-gen-arb:
-	dart run intl_translation:extract_to_arb --output-dir=lib/l10n lib/l10n/L.dart
-
-.PHONY: gen-l10n
-gen-l10n: ## Generate Dart code from ARB files
-gen-l10n: gen-arb
-	dart run intl_translation:generate_from_arb --output-dir=lib/l10n --no-use-deferred-loading lib/l10n/L.dart lib/l10n/intl_*.arb
+.PHONY: gen-loc
+gen-loc: ## Generate l10n Dart code from ARB files
+gen-loc:
+	flutter gen-l10n
 
 .PHONY: format
 format: ## Format Dart code.

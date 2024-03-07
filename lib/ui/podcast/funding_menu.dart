@@ -10,8 +10,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dialogs/flutter_dialogs.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:seasoning/core/l10n.dart';
 import 'package:seasoning/entities/funding.dart';
-import 'package:seasoning/l10n/L.dart';
 import 'package:seasoning/services/settings/settings_service.dart';
 import 'package:seasoning/ui/widgets/action_text.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -59,7 +59,7 @@ class _MaterialFundingMenu extends ConsumerWidget {
     return funding == null || funding!.isEmpty
         ? const SizedBox.shrink()
         : Semantics(
-            label: L.of(context)!.podcast_funding_dialog_header,
+            label: L10n.of(context)!.podcast_funding_dialog_header,
             child: PopupMenuButton<String>(
               onSelected: (url) {
                 FundingLink.fundingLink(
@@ -103,7 +103,8 @@ class _CupertinoFundingMenu extends ConsumerWidget {
     return funding == null || funding!.isEmpty
         ? const SizedBox.shrink()
         : IconButton(
-            tooltip: L.of(context)!.podcast_funding_dialog_header,
+            tooltip:
+                L10n.of(context)!.podcast_funding_dialog_header,
             icon: const Icon(Icons.payment),
             onPressed: () => showCupertinoModalPopup<void>(
               context: context,
@@ -134,7 +135,8 @@ class _CupertinoFundingMenu extends ConsumerWidget {
                     onPressed: () {
                       Navigator.pop(context, 'Cancel');
                     },
-                    child: Text(L.of(context)!.cancel_option_label),
+                    child:
+                        Text(L10n.of(context)!.cancel_option_label),
                   ),
                 );
               },
@@ -172,12 +174,13 @@ class FundingLink {
         context: context,
         useRootNavigator: false,
         builder: (_) => BasicDialogAlert(
-          title: Text(L.of(context)!.podcast_funding_dialog_header),
-          content: Text(L.of(context)!.consent_message),
+          title:
+              Text(L10n.of(context)!.podcast_funding_dialog_header),
+          content: Text(L10n.of(context)!.consent_message),
           actions: <Widget>[
             BasicDialogAction(
               title: ActionText(
-                L.of(context)!.go_back_button_label,
+                L10n.of(context)!.go_back_button_label,
               ),
               onPressed: () {
                 Navigator.pop(context, false);
@@ -185,7 +188,7 @@ class FundingLink {
             ),
             BasicDialogAction(
               title: ActionText(
-                L.of(context)!.continue_button_label,
+                L10n.of(context)!.continue_button_label,
               ),
               iosIsDefaultAction: true,
               onPressed: () {

@@ -1,13 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:flutter_gen/gen_l10n/messages_all.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:seasoning/l10n/L.dart';
 import 'package:seasoning/providers/theme_provider.dart';
-import 'package:seasoning/services/podcast/podcast_service_provider.dart';
 import 'package:seasoning/ui/app/navigation_helper.dart';
-import 'package:seasoning/ui/pages/podcast_chart_page.dart';
-import 'package:seasoning/ui/widgets/error_notifier.dart';
 
 ThemeData theme = Themes.lightTheme().themeData;
 
@@ -20,63 +15,16 @@ class SeasoningApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       routerConfig: NavigationHelper.router,
       localizationsDelegates: const <LocalizationsDelegate<Object>>[
-        AnytimeLocalisationsDelegate(),
+        AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: const [
-        Locale('en', ''),
-        Locale('de', ''),
+        Locale('en'),
+        Locale('ja'),
       ],
       theme: theme,
-    );
-  }
-}
-
-class HomePage extends HookConsumerWidget {
-  const HomePage({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final scrollController = useScrollController();
-    useEffect(
-      () {
-        ref.read(podcastServiceProvider).setup();
-        return null;
-      },
-      [],
-    );
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Home'),
-      ),
-      body: Stack(
-        children: [
-          CustomScrollView(
-            shrinkWrap: true,
-            controller: scrollController,
-            slivers: const [
-              //          SliverPinnedHeader(child: PodcastSearchBar()),
-              PodcastChartPage(),
-            ],
-          ),
-          const ErrorNotifier(),
-        ],
-      ),
-    );
-  }
-}
-
-class DetailPage extends StatelessWidget {
-  const DetailPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Detail'),
-      ),
     );
   }
 }

@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:seasoning/core/l10n.dart';
 import 'package:seasoning/core/types.dart';
 import 'package:seasoning/entities/entities.dart';
-import 'package:seasoning/l10n/L.dart';
 import 'package:seasoning/providers/podcast/episode_info_provider.dart';
 import 'package:seasoning/services/audio/audio_player_service.dart';
 
@@ -47,8 +47,8 @@ class AnimatedPlayButton extends HookConsumerWidget {
           ),
         Tooltip(
           message: playing
-              ? L.of(context)!.pause_button_label
-              : L.of(context)!.play_button_label,
+              ? L10n.of(context)!.pause_button_label
+              : L10n.of(context)!.play_button_label,
           child: TextButton(
             style: TextButton.styleFrom(
               shape: CircleBorder(
@@ -70,8 +70,8 @@ class AnimatedPlayButton extends HookConsumerWidget {
             },
             child: AnimatedIcon(
               semanticLabel: playing
-                  ? L.of(context)!.pause_button_label
-                  : L.of(context)!.play_button_label,
+                  ? L10n.of(context)!.pause_button_label
+                  : L10n.of(context)!.play_button_label,
               icon:
                   playing ? AnimatedIcons.pause_play : AnimatedIcons.play_pause,
               color: Colors.white,

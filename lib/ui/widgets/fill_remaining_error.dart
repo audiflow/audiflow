@@ -4,7 +4,7 @@
 // found in the LICENSE file.
 
 import 'package:flutter/material.dart';
-import 'package:seasoning/l10n/L.dart';
+import 'package:seasoning/core/l10n.dart';
 
 class FillRemainingError extends StatelessWidget {
   const FillRemainingError({
@@ -16,16 +16,18 @@ class FillRemainingError extends StatelessWidget {
   FillRemainingError.podcastNoResults({Key? key})
       : this(
           icon: Icons.search,
-          messageBuilder: (context) => L.of(context)!.no_search_results_message,
+          messageBuilder: (context) =>
+              L10n.of(context)!.no_search_results_message,
           key: key,
         );
 
   FillRemainingError.episode({Key? key})
       : this(
-    icon: Icons.search,
-    messageBuilder: (context) => L.of(context)!.no_search_results_message,
-    key: key,
-  );
+          icon: Icons.search,
+          messageBuilder: (context) =>
+              L10n.of(context)!.no_search_results_message,
+          key: key,
+        );
 
   final IconData icon;
   final String Function(BuildContext context) messageBuilder;

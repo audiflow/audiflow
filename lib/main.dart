@@ -9,12 +9,12 @@ import 'dart:io';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_gen/gen_l10n/messages_all.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:logging/logging.dart';
 import 'package:seasoning/api/podcast/podcast_api_provider.dart';
-import 'package:seasoning/l10n/L.dart';
 import 'package:seasoning/providers/podcast/podcast_refresher_provider.dart';
 import 'package:seasoning/providers/theme_provider.dart';
 import 'package:seasoning/repository/download_event.dart';
@@ -69,14 +69,14 @@ void main() async {
         theme: Themes.lightTheme().themeData,
         debugShowCheckedModeBanner: false,
         localizationsDelegates: const <LocalizationsDelegate<Object>>[
-          AnytimeLocalisationsDelegate(),
+          AppLocalizations.delegate,
           GlobalMaterialLocalizations.delegate,
           GlobalWidgetsLocalizations.delegate,
           GlobalCupertinoLocalizations.delegate,
         ],
         supportedLocales: const [
-          Locale('en', ''),
-          Locale('de', ''),
+          Locale('en'),
+          Locale('ja'),
         ],
         home: const Stack(
           children: [

@@ -8,8 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:seasoning/core/l10n.dart';
 import 'package:seasoning/entities/entities.dart';
-import 'package:seasoning/l10n/L.dart';
 import 'package:seasoning/providers/podcast/podcast_info_provider.dart';
 import 'package:seasoning/providers/podcast/podcast_seasons_provider.dart';
 import 'package:seasoning/services/podcast/podcast_service_provider.dart';
@@ -37,36 +37,36 @@ class PodcastDetailsPage extends HookConsumerWidget {
   final PodcastMetadata metadata;
   final String heroPrefix;
 
-  // widget._podcastBloc.backgroundLoading
-  //     .where((event) => event is BlocPopulatedState<void>)
-  //     .listen((event) {
-  //   if (mounted) {
-  //     /// If we have not scrolled (save a few pixels) just refresh the episode
-  //     /// list; otherwise prompt the user to prevent unexpected list jumping
-  //     if (_sliverScrollController.offset < 20) {
-  //       widget._podcastBloc.podcastEvent(PodcastEvent.refresh);
-  //     } else {
-  //       scaffoldMessengerKey.currentState!.showSnackBar(
-  //         SnackBar(
-  //           content: Text(L.of(context)!.new_episodes_label),
-  //           behavior: SnackBarBehavior.floating,
-  //           action: SnackBarAction(
-  //             label: L.of(context)!.new_episodes_view_now_label,
-  //             onPressed: () {
-  //               _sliverScrollController.animateTo(
-  //                 100,
-  //                 duration: const Duration(milliseconds: 500),
-  //                 curve: Curves.easeInOut,
-  //               );
-  //               widget._podcastBloc.podcastEvent(PodcastEvent.refresh);
-  //             },
-  //           ),
-  //           duration: const Duration(seconds: 5),
-  //         ),
-  //       );
-  //     }
-  //   }
-  // });
+// widget._podcastBloc.backgroundLoading
+//     .where((event) => event is BlocPopulatedState<void>)
+//     .listen((event) {
+//   if (mounted) {
+//     /// If we have not scrolled (save a few pixels) just refresh the episode
+//     /// list; otherwise prompt the user to prevent unexpected list jumping
+//     if (_sliverScrollController.offset < 20) {
+//       widget._podcastBloc.podcastEvent(PodcastEvent.refresh);
+//     } else {
+//       scaffoldMessengerKey.currentState!.showSnackBar(
+//         SnackBar(
+//           content: Text(L10n.of(context)!.new_episodes_label),
+//           behavior: SnackBarBehavior.floating,
+//           action: SnackBarAction(
+//             label: L10n.of(context)!.new_episodes_view_now_label,
+//             onPressed: () {
+//               _sliverScrollController.animateTo(
+//                 100,
+//                 duration: const Duration(milliseconds: 500),
+//                 curve: Curves.easeInOut,
+//               );
+//               widget._podcastBloc.podcastEvent(PodcastEvent.refresh);
+//             },
+//           ),
+//           duration: const Duration(seconds: 5),
+//         ),
+//       );
+//     }
+//   }
+// });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -82,7 +82,7 @@ class PodcastDetailsPage extends HookConsumerWidget {
 
     return Semantics(
       header: false,
-      label: L.of(context)!.semantics_podcast_details_header,
+      label: L10n.of(context)!.semantics_podcast_details_header,
       child: ScaffoldMessenger(
         key: scaffoldMessengerKey,
         child: Scaffold(
@@ -180,7 +180,7 @@ class _PodcastTitle extends HookConsumerWidget {
                             ),
                             child: Icon(
                               Icons.expand_less,
-                              semanticLabel: L
+                              semanticLabel: L10n
                                   .of(context)!
                                   .semantics_collapse_podcast_description,
                             ),
@@ -194,7 +194,7 @@ class _PodcastTitle extends HookConsumerWidget {
                             ),
                             child: Icon(
                               Icons.expand_more,
-                              semanticLabel: L
+                              semanticLabel: L10n
                                   .of(context)!
                                   .semantics_expand_podcast_description,
                             ),

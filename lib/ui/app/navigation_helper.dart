@@ -151,16 +151,6 @@ class NavigationHelper {
           );
         },
       ),
-      GoRoute(
-        parentNavigatorKey: parentNavigatorKey,
-        path: rootDetailPath,
-        pageBuilder: (context, state) {
-          return _getPage(
-            child: const DetailPage(),
-            state: state,
-          );
-        },
-      ),
     ];
 
     router = GoRouter(
@@ -193,7 +183,6 @@ class NavigationHelper {
 
   static const String signUpPath = '/signUp';
   static const String signInPath = '/signIn';
-  static const String rootDetailPath = '/rootDetail';
 
   static const String homePath = '/home';
   static const String detailPath = '/home/detail';

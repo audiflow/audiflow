@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/messages_all.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -29,9 +30,10 @@ class AppBottomNavigationBar extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final locale = Localizations.localeOf(context);
     useEffect(
       () {
-        ref.read(podcastServiceProvider).setup();
+        ref.read(podcastServiceProvider).setup(locale);
         return null;
       },
       [],
@@ -107,16 +109,17 @@ class AppBottomNavigationBar extends HookConsumerWidget {
               initialLocation: index == navigationShell.currentIndex,
             );
           },
-          items: const [
+          selectedFontSize: 12,
+          items: [
             BottomNavigationBarItem(
-              icon: Icon(Icons.home),
-              label: 'home',
+              icon: const Icon(Icons.home),
+              label: AppLocalizations.of(context)!.chart,
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.search),
-              label: 'search',
+              icon: const Icon(Icons.search),
+              label: AppLocalizations.of(context)!.search,
             ),
-            BottomNavigationBarItem(
+            const BottomNavigationBarItem(
               icon: Icon(Icons.settings),
               label: 'settings',
             ),

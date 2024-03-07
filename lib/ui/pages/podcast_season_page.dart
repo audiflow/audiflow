@@ -6,9 +6,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:seasoning/core/l10n.dart';
 import 'package:seasoning/core/types.dart';
 import 'package:seasoning/entities/entities.dart';
-import 'package:seasoning/l10n/L.dart';
 import 'package:seasoning/providers/podcast/episodes_group_provider.dart';
 import 'package:seasoning/services/podcast/podcast_service_provider.dart';
 import 'package:seasoning/ui/pages/app_bars/podcast_season_app_bar.dart';
@@ -34,7 +34,7 @@ class PodcastSeasonPage extends HookConsumerWidget {
         useState(GlobalKey<ScaffoldMessengerState>()).value;
     return Semantics(
       header: false,
-      label: L.of(context)!.semantics_podcast_details_header,
+      label: L10n.of(context)!.semantics_podcast_details_header,
       child: ScaffoldMessenger(
         key: scaffoldMessengerKey,
         child: Scaffold(

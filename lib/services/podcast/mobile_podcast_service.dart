@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
@@ -15,7 +16,6 @@ import 'package:seasoning/api/podcast/podcast_api_provider.dart';
 import 'package:seasoning/core/utils.dart';
 import 'package:seasoning/entities/entities.dart';
 import 'package:seasoning/errors/errors.dart';
-import 'package:seasoning/l10n/messages_all.dart';
 import 'package:seasoning/repository/repository_provider.dart';
 import 'package:seasoning/services/audio/audio_player_service.dart';
 import 'package:seasoning/services/connectivity/connectivity.dart';
@@ -47,62 +47,42 @@ class MobilePodcastService implements PodcastService {
   var _initialized = false;
 
   @override
-  Future<void> setup() async {
+  Future<void> setup(Locale locale) async {
     if (_initialized) {
       return;
     }
     _initialized = true;
 
-    final systemLocales = PlatformDispatcher.instance.locales;
-
-    var currentLocale = Platform.localeName;
-    // Attempt to get current locale
-    var supportedLocale = await initializeMessages(Platform.localeName);
-
-    // If we do not support the default, try all supported locales
-    if (!supportedLocale) {
-      for (final l in systemLocales) {
-        supportedLocale =
-            await initializeMessages('${l.languageCode}_${l.countryCode}');
-        if (supportedLocale) {
-          currentLocale = '${l.languageCode}_${l.countryCode}';
-          break;
-        }
-      }
-
-      if (!supportedLocale) {
-        // We give up! Default to English
-        currentLocale = 'en';
-        supportedLocale = await initializeMessages(currentLocale);
-      }
-    }
-
-    _setupGenres(currentLocale);
+    _setupGenres(locale);
 
     /// Listen for user changes in search provider. If changed, reload the genre
     /// list
     _ref.listen(
         settingsServiceProvider.select((settings) => settings.searchProvider),
         (_, next) {
-      _setupGenres(currentLocale);
+      _setupGenres(locale);
     });
 
     await _resumeEpisode();
   }
 
-  void _setupGenres(String locale) {
+  void _setupGenres(Locale locale) {
     var categoryList = '';
 
     /// Fetch the correct categories for the current local and selected
     /// provider.
     if (_appSettings.searchProvider == 'itunes') {
       _categories = PodcastService.itunesGenres;
-      categoryList =
-          Intl.message('discovery_categories_itunes', locale: locale);
+      categoryList = Intl.message(
+        'discovery_categories_itunes',
+        locale: locale.languageCode,
+      );
     } else {
       _categories = PodcastService.podcastIndexGenres;
-      categoryList =
-          Intl.message('discovery_categories_pindex', locale: locale);
+      categoryList = Intl.message(
+        'discovery_categories_pindex',
+        locale: locale.languageCode,
+      );
     }
 
     _intlCategories = categoryList.split(',');

@@ -9,7 +9,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:seasoning/l10n/L.dart';
+import 'package:seasoning/core/l10n.dart';
 
 // import 'package:seasoning/providers/podcast_search_provider.dart';
 // import 'package:seasoning/ui/search/search_results.dart';
@@ -24,7 +24,7 @@ class PodcastSearchBar extends HookConsumerWidget {
 
     return SliverAppBar(
       // leading: IconButton(
-      //   tooltip: L.of(context)!.search_back_button_label,
+      //   tooltip: L10n.of(context)!.search_back_button_label,
       //   icon: Platform.isAndroid
       //       ? Icon(
       //           Icons.arrow_back,
@@ -41,7 +41,7 @@ class PodcastSearchBar extends HookConsumerWidget {
         title: Text('Search'),
       ),
       title: Semantics(
-        label: L.of(context)!.search_for_podcasts_hint,
+        label: L10n.of(context)!.search_for_podcasts_hint,
         textField: true,
         child: TextField(
           controller: searchController,
@@ -50,7 +50,7 @@ class PodcastSearchBar extends HookConsumerWidget {
           keyboardType: TextInputType.text,
           textInputAction: TextInputAction.search,
           decoration: InputDecoration(
-            hintText: L.of(context)!.search_for_podcasts_hint,
+            hintText: L10n.of(context)!.search_for_podcasts_hint,
             border: InputBorder.none,
           ),
           style: TextStyle(
@@ -60,7 +60,7 @@ class PodcastSearchBar extends HookConsumerWidget {
           ),
           onSubmitted: (value) {
             SemanticsService.announce(
-              L.of(context)!.semantic_announce_searching,
+              L10n.of(context)!.semantic_announce_searching,
               TextDirection.ltr,
             );
             // ref
@@ -71,7 +71,7 @@ class PodcastSearchBar extends HookConsumerWidget {
       ),
       actions: <Widget>[
         IconButton(
-          tooltip: L.of(context)!.clear_search_button_label,
+          tooltip: L10n.of(context)!.clear_search_button_label,
           icon: const Icon(Icons.clear),
           onPressed: () {
             searchController.clear();
