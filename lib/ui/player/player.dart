@@ -89,7 +89,7 @@ class _MiniPlayerContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
-    final maxImgSize = width * 0.4;
+    final maxImgSize = width * 0.13;
     final img = Image.network(
       episode.thumbImageUrl!,
       errorBuilder: (context, error, stackTrace) {
@@ -110,9 +110,12 @@ class _MiniPlayerContent extends StatelessWidget {
         Expanded(
           child: Row(
             children: [
-              ConstrainedBox(
-                constraints: BoxConstraints(maxHeight: maxImgSize),
-                child: img,
+              Padding(
+                padding: const EdgeInsets.only(left: 16),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxHeight: maxImgSize),
+                  child: img,
+                ),
               ),
               Expanded(
                 child: Padding(
