@@ -62,9 +62,10 @@ class SeasonTile extends StatelessWidget {
       title: Opacity(
         opacity: 1, // season.played ? 0.5 : 1.0,
         child: Text(
-          season.seasonNum != null
-              ? '#${season.seasonNum} ${season.title}'
-              : 'Extra',
+          season.seasonNum == null
+              ? 'Extra' :
+               season.title != null ?'#${season.seasonNum} ${season.title}'
+               : 'Season ${season.seasonNum}',
           overflow: TextOverflow.ellipsis,
           maxLines: 2,
           softWrap: false,
