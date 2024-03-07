@@ -33,6 +33,11 @@ class PodcastSearch extends _$PodcastSearch {
   }
 
   Future<void> input(PodcastSearchEvent event) async {
+    if (event is ClearPodcastSearchEvent) {
+      state = const AsyncData(PodcastSearchState());
+      return;
+    }
+
     if (event is NewPodcastSearchEvent) {
       await state.when(
         data: (data) {

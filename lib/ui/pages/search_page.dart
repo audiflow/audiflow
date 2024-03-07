@@ -58,6 +58,14 @@ class SearchBar extends HookConsumerWidget {
     final searchController = useTextEditingController();
     final searchFocusNode = useFocusNode();
 
+    final term = useState('');
+
+    useEffect(() {
+      void onChange() => term.value = searchController.text;
+      searchController.addListener(onChange);
+      return () => searchController.removeListener(onChange);
+    });
+
     return Semantics(
       label: L.of(context)!.search_for_podcasts_hint,
       textField: true,
@@ -72,6 +80,16 @@ class SearchBar extends HookConsumerWidget {
           keyboardType: TextInputType.text,
           textInputAction: TextInputAction.search,
           decoration: InputDecoration(
+            prefixIcon: const Icon(Icons.search),
+            suffixIcon: term.value.isEmpty
+                ? null
+                : IconButton(
+                    icon: const Icon(
+                      Icons.clear,
+                      size: 32,
+                    ),
+                    onPressed: searchController.clear,
+                  ),
             hintText: L.of(context)!.search_for_podcasts_hint,
             border: InputBorder.none,
           ),

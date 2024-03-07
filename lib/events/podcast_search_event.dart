@@ -14,7 +14,6 @@ class NewPodcastSearchEvent implements PodcastSearchEvent {
     this.language,
     this.version = 0,
     this.explicit = false,
-
   });
 
   final String term;
@@ -25,3 +24,5 @@ class NewPodcastSearchEvent implements PodcastSearchEvent {
   final int version;
   final bool explicit;
 }
+
+class ClearPodcastSearchEvent implements PodcastSearchEvent {}
