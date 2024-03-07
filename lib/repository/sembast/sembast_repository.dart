@@ -137,7 +137,7 @@ class SembastRepository extends Repository {
     Podcast podcast, {
     PodcastStatsUpdateParam? statsParam,
   }) async {
-    log.fine('Update Podcast: ${podcast.feedUrl}');
+    log.fine('Save Podcast: ${podcast.feedUrl}');
     final db = await _db;
     final stats = await db.transaction((txn) async {
       await _podcastStore.record(podcast.guid).put(txn, podcast.toJson());
