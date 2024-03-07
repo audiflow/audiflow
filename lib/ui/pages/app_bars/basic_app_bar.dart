@@ -14,6 +14,13 @@ class BasicAppBar extends HookConsumerWidget {
           key: key,
           titleBuilder: (context) => 'Home',
         );
+
+  BasicAppBar.search({Key? key})
+      : this(
+          key: key,
+          titleBuilder: (context) => 'Search',
+        );
+
   final String Function(BuildContext) titleBuilder;
 
   @override
