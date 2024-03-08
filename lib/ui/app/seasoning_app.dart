@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/messages_all.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:seasoning/providers/theme_provider.dart';
 import 'package:seasoning/ui/app/navigation_helper.dart';
-
-ThemeData theme = Themes.lightTheme().themeData;
+import 'package:seasoning/ui/color_schemes.g.dart';
 
 class SeasoningApp extends StatelessWidget {
   const SeasoningApp({super.key});
@@ -24,7 +22,8 @@ class SeasoningApp extends StatelessWidget {
         Locale('en'),
         Locale('ja'),
       ],
-      theme: theme,
+      theme: ThemeData(useMaterial3: true, colorScheme: lightColorScheme),
+      darkTheme: ThemeData(useMaterial3: true, colorScheme: darkColorScheme),
     );
   }
 }

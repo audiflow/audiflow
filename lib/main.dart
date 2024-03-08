@@ -16,7 +16,6 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:logging/logging.dart';
 import 'package:seasoning/api/podcast/podcast_api_provider.dart';
 import 'package:seasoning/providers/podcast/podcast_refresher_provider.dart';
-import 'package:seasoning/providers/theme_provider.dart';
 import 'package:seasoning/repository/download_event.dart';
 import 'package:seasoning/repository/episode_event.dart';
 import 'package:seasoning/repository/podcast_event.dart';
@@ -34,6 +33,7 @@ import 'package:seasoning/services/queue/queue_manager.dart';
 import 'package:seasoning/services/settings/settings_service.dart';
 import 'package:seasoning/ui/app/navigation_helper.dart';
 import 'package:seasoning/ui/app/seasoning_app.dart';
+import 'package:seasoning/ui/color_schemes.g.dart';
 import 'package:seasoning/ui/widgets/error_notifier.dart';
 
 // ignore_for_file: avoid_print
@@ -66,7 +66,8 @@ void main() async {
         queueManagerProvider.overrideWith(DefaultQueueManager.new),
       ],
       child: MaterialApp(
-        theme: Themes.lightTheme().themeData,
+        theme: ThemeData(useMaterial3: true, colorScheme: lightColorScheme),
+        darkTheme: ThemeData(useMaterial3: true, colorScheme: darkColorScheme),
         debugShowCheckedModeBanner: false,
         localizationsDelegates: const <LocalizationsDelegate<Object>>[
           AppLocalizations.delegate,
