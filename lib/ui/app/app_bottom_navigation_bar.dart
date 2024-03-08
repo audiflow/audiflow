@@ -42,6 +42,7 @@ class AppBottomNavigationBar extends HookConsumerWidget {
     final playingEpisode = ref.watch(
       audioPlayerServiceProvider.select((state) => state?.episode),
     );
+    final theme = Theme.of(context);
     return Scaffold(
       body: SafeArea(
         child: Stack(
@@ -85,7 +86,6 @@ class AppBottomNavigationBar extends HookConsumerWidget {
               .toDouble();
           final offset = kAppBottomNavigationBarHeight * value * 0.5;
           final opacity = borderDouble(1 - value);
-
           return SizedBox(
             height: height,
             child: Transform.translate(
@@ -101,6 +101,8 @@ class AppBottomNavigationBar extends HookConsumerWidget {
           );
         },
         child: BottomNavigationBar(
+          // FIXME(reedom): replace with surface container
+          backgroundColor: theme.colorScheme.surfaceVariant,
           type: BottomNavigationBarType.fixed,
           currentIndex: navigationShell.currentIndex,
           onTap: (index) {
