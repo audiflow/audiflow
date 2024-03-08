@@ -180,8 +180,7 @@ class _PodcastTitle extends HookConsumerWidget {
                             ),
                             child: Icon(
                               Icons.expand_less,
-                              semanticLabel: L10n
-                                  .of(context)!
+                              semanticLabel: L10n.of(context)!
                                   .semantics_collapse_podcast_description,
                             ),
                             onPressed: () {
@@ -194,8 +193,7 @@ class _PodcastTitle extends HookConsumerWidget {
                             ),
                             child: Icon(
                               Icons.expand_more,
-                              semanticLabel: L10n
-                                  .of(context)!
+                              semanticLabel: L10n.of(context)!
                                   .semantics_expand_podcast_description,
                             ),
                             onPressed: () {
@@ -325,7 +323,7 @@ class _SwitchBar extends ConsumerWidget {
     final theme = Theme.of(context);
     return SliverToBoxAdapter(
       child: Container(
-        color: theme.dividerColor,
+        color: theme.colorScheme.secondaryContainer,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
@@ -362,15 +360,6 @@ class _PodcastViewModeSwitch extends ConsumerWidget {
     return PopupMenuButton<PodcastDetailViewMode>(
       onSelected: onChanged,
       position: PopupMenuPosition.under,
-      child: Row(
-        children: [
-          Text(
-            viewMode.label,
-            style: theme.textTheme.titleMedium,
-          ),
-          const Icon(Icons.arrow_drop_down),
-        ],
-      ),
       itemBuilder: (context) {
         return PodcastDetailViewMode.values
             .where(
@@ -380,11 +369,29 @@ class _PodcastViewModeSwitch extends ConsumerWidget {
             .map(
               (mode) => PopupMenuItem(
                 value: mode,
-                child: Text(mode.label),
+                child: Text(
+                  mode.label,
+                  style: TextStyle(
+                    color: theme.colorScheme.onSecondaryContainer,
+                  ),
+                ),
               ),
             )
             .toList();
       },
+      child: Row(
+        children: [
+          Text(
+            viewMode.label,
+            style: theme.textTheme.titleMedium!
+                .copyWith(color: theme.colorScheme.onSecondaryContainer),
+          ),
+          Icon(
+            Icons.arrow_drop_down,
+            color: theme.colorScheme.onSecondaryContainer,
+          ),
+        ],
+      ),
     );
   }
 }

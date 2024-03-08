@@ -27,7 +27,7 @@ class PodcastDetailsAppBar extends ConsumerWidget {
     final placeholderBuilder = PlaceholderBuilder.of(context);
     final podcastState = ref.watch(podcastInfoProvider(metadata));
     final subscribed = podcastState.value?.stats?.subscribed;
-
+    final theme = Theme.of(context);
     return SliverLayoutBuilder(
       builder: (BuildContext context, SliverConstraints constraints) {
         return SliverAppBar(
@@ -36,7 +36,10 @@ class PodcastDetailsAppBar extends ConsumerWidget {
           title: AnimatedOpacity(
             opacity: 300 < constraints.scrollOffset ? 1.0 : 0.0,
             duration: const Duration(milliseconds: 200),
-            child: Text(metadata.title),
+            child: Text(
+              metadata.title,
+              style: theme.textTheme.titleMedium,
+            ),
           ),
           actions: [
             Opacity(

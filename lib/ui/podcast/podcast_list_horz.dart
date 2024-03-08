@@ -76,8 +76,9 @@ class _ListTile extends ConsumerWidget {
       child: GridTile(
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 20),
+          width: 200,
           decoration: BoxDecoration(
-            color: theme.dividerColor,
+            color: theme.colorScheme.secondaryContainer,
             borderRadius: BorderRadius.circular(8),
           ),
           child: Column(
@@ -90,20 +91,14 @@ class _ListTile extends ConsumerWidget {
                   size: 150,
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.only(
-                  top: 4,
-                ),
-                child: SizedBox(
-                  width: 150,
-                  child: Text(
-                    podcast.title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.start,
-                    style: theme.textTheme.titleSmall,
-                  ),
-                ),
+              const SizedBox(height: 10),
+              Text(
+                podcast.title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.start,
+                style: theme.textTheme.titleSmall!
+                    .copyWith(color: theme.colorScheme.onSecondaryContainer),
               ),
             ],
           ),
