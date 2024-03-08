@@ -21,58 +21,59 @@ class SeasonTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
+    final theme = Theme.of(context);
 
-    return ListTile(
+    return InkWell(
       key: Key('PT${season.guid}'),
       onTap: () {
         NavigationHelper.router
             .pushNamed('season', extra: (podcast, season, 'season'));
       },
-      leading: ExcludeSemantics(
-        child: Stack(
-          alignment: Alignment.bottomLeft,
-          fit: StackFit.passthrough,
-          children: <Widget>[
-            Opacity(
-              opacity: 1, // season.played ? 0.5 : 1.0,
-              child: Hero(
-                key: Key('seasonhero${season.guid}'),
-                tag: season.guid,
-                child: TileImage(
-                  url: season.thumbImageUrl ?? season.imageUrl!,
-                  size: 56,
+      child: Container(
+        height: 77,
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Row(
+          children: [
+            ExcludeSemantics(
+              child: Padding(
+                padding: const EdgeInsets.only(left: 20, right: 10),
+                child: Hero(
+                  key: Key('seasonhero${season.guid}'),
+                  tag: season.guid,
+                  child: TileImage(
+                    url: season.thumbImageUrl ?? season.imageUrl!,
+                    size: 60,
+                  ),
                 ),
               ),
             ),
-            SizedBox(
-              height: 5,
-              width: 56.0 * 0, // (season.percentagePlayed / 100),
-              child: Container(
-                color: Theme.of(context).primaryColor,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    season.seasonNum == null
+                        ? 'Extra'
+                        : season.title != null
+                            ? '#${season.seasonNum} ${season.title}'
+                            : 'Season ${season.seasonNum}',
+                    maxLines: 2,
+                    textHeightBehavior: const TextHeightBehavior(
+                      applyHeightToFirstAscent: false,
+                    ),
+                    style: theme.textTheme.titleSmall!.copyWith(height: 1.3),
+                  ),
+                  const SizedBox(height: 2),
+                  SeasonSubtitle(season),
+                ],
               ),
             ),
+            const Icon(Icons.chevron_right),
+            const SizedBox(width: 8),
           ],
         ),
       ),
-      subtitle: Opacity(
-        opacity: 1, // season.played ? 0.5 : 1.0,
-        child: SeasonSubtitle(season),
-      ),
-      title: Opacity(
-        opacity: 1, // season.played ? 0.5 : 1.0,
-        child: Text(
-          season.seasonNum == null
-              ? 'Extra' :
-               season.title != null ?'#${season.seasonNum} ${season.title}'
-               : 'Season ${season.seasonNum}',
-          overflow: TextOverflow.ellipsis,
-          maxLines: 2,
-          softWrap: false,
-          style: textTheme.bodyMedium,
-        ),
-      ),
-      trailing: const Icon(Icons.chevron_right),
     );
   }
 }
@@ -89,7 +90,7 @@ class SeasonSubtitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
+    final theme = Theme.of(context);
 
     final playedEpisodes = season.episodes.where((episode) => false).length;
     final episodes = '$playedEpisodes/${season.episodes.length} episodes';
@@ -112,9 +113,9 @@ class SeasonSubtitle extends StatelessWidget {
       padding: const EdgeInsets.only(top: 4),
       child: Text(
         title,
+        maxLines: 1,
         overflow: TextOverflow.ellipsis,
-        softWrap: false,
-        style: textTheme.bodySmall,
+        style: theme.textTheme.bodySmall!.copyWith(color: theme.hintColor),
       ),
     );
   }
