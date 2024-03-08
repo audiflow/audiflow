@@ -63,10 +63,8 @@ class _PodcastImageState extends State<PodcastImage>
       cacheWidth: cacheWidth,
       fit: widget.fit,
       loadStateChanged: (ExtendedImageState state) {
-        Widget renderWidget;
-
         if (state.extendedImageLoadState == LoadState.failed) {
-          renderWidget = ClipRRect(
+          return ClipRRect(
             borderRadius:
                 BorderRadius.all(Radius.circular(widget.borderRadius)),
             child: widget.errorPlaceholder ??
@@ -75,90 +73,79 @@ class _PodcastImageState extends State<PodcastImage>
                   height: widget.height,
                 ),
           );
-        } else {
-          renderWidget = AnimatedCrossFade(
-            crossFadeState: state.wasSynchronouslyLoaded ||
-                    state.extendedImageLoadState == LoadState.completed
-                ? CrossFadeState.showSecond
-                : CrossFadeState.showFirst,
-            duration: const Duration(milliseconds: 500),
-            firstChild: ClipRRect(
-              borderRadius:
-                  BorderRadius.all(Radius.circular(widget.borderRadius)),
-              child: widget.placeholder ??
-                  SizedBox(
-                    width: widget.width,
-                    height: widget.height,
-                  ),
-            ),
-            secondChild: ClipRRect(
-              borderRadius:
-                  BorderRadius.all(Radius.circular(widget.borderRadius)),
-              child: ExtendedRawImage(
-                image: state.extendedImageInfo?.image,
-                fit: widget.fit,
-              ),
-            ),
-            layoutBuilder: (
-              Widget topChild,
-              Key topChildKey,
-              Widget bottomChild,
-              Key bottomChildKey,
-            ) {
-              return Stack(
-                clipBehavior: Clip.none,
-                alignment: Alignment.center,
-                children: widget.highlight
-                    ? [
-                        PositionedDirectional(
-                          key: bottomChildKey,
-                          child: bottomChild,
-                        ),
-                        PositionedDirectional(
-                          key: topChildKey,
-                          child: topChild,
-                        ),
-                        Positioned(
-                          top: -1.5,
-                          right: -1.5,
-                          child: Container(
-                            width: 13,
-                            height: 13,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Theme.of(context).canvasColor,
-                            ),
-                          ),
-                        ),
-                        Positioned(
-                          top: 0,
-                          right: 0,
-                          child: Container(
-                            width: 10,
-                            height: 10,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Theme.of(context).indicatorColor,
-                            ),
-                          ),
-                        ),
-                      ]
-                    : [
-                        PositionedDirectional(
-                          key: bottomChildKey,
-                          child: bottomChild,
-                        ),
-                        PositionedDirectional(
-                          key: topChildKey,
-                          child: topChild,
-                        ),
-                      ],
-              );
-            },
-          );
         }
 
-        return renderWidget;
+        return AnimatedCrossFade(
+          crossFadeState: state.wasSynchronouslyLoaded ||
+                  state.extendedImageLoadState == LoadState.completed
+              ? CrossFadeState.showSecond
+              : CrossFadeState.showFirst,
+          duration: const Duration(milliseconds: 500),
+          firstChild: ClipRRect(
+            borderRadius:
+                BorderRadius.all(Radius.circular(widget.borderRadius)),
+            child: widget.placeholder ??
+                SizedBox(
+                  width: widget.width,
+                  height: widget.height,
+                ),
+          ),
+          secondChild: ClipRRect(
+            borderRadius:
+                BorderRadius.all(Radius.circular(widget.borderRadius)),
+            child: ExtendedRawImage(
+              image: state.extendedImageInfo?.image,
+              fit: widget.fit,
+            ),
+          ),
+          layoutBuilder: (
+            Widget topChild,
+            Key topChildKey,
+            Widget bottomChild,
+            Key bottomChildKey,
+          ) {
+            return Stack(
+              clipBehavior: Clip.none,
+              alignment: Alignment.center,
+              children: [
+                PositionedDirectional(
+                  key: bottomChildKey,
+                  child: bottomChild,
+                ),
+                PositionedDirectional(
+                  key: topChildKey,
+                  child: topChild,
+                ),
+                if (widget.highlight) ...[
+                  Positioned(
+                    top: -1.5,
+                    right: -1.5,
+                    child: Container(
+                      width: 13,
+                      height: 13,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Theme.of(context).canvasColor,
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    top: 0,
+                    right: 0,
+                    child: Container(
+                      width: 10,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Theme.of(context).indicatorColor,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            );
+          },
+        );
       },
     );
   }
@@ -206,10 +193,8 @@ class _PodcastBannerImageState extends State<PodcastBannerImage>
       cacheWidth: cacheWidth,
       fit: widget.fit,
       loadStateChanged: (ExtendedImageState state) {
-        Widget renderWidget;
-
         if (state.extendedImageLoadState == LoadState.failed) {
-          renderWidget = Container(
+          return Container(
             alignment: Alignment.topCenter,
             width: widget.width - 2.0,
             height: widget.height - 2.0,
@@ -223,49 +208,47 @@ class _PodcastBannerImageState extends State<PodcastBannerImage>
                   ),
             ),
           );
-        } else {
-          renderWidget = AnimatedCrossFade(
-            crossFadeState: state.wasSynchronouslyLoaded ||
-                    state.extendedImageLoadState == LoadState.completed
-                ? CrossFadeState.showSecond
-                : CrossFadeState.showFirst,
-            duration: const Duration(seconds: 1),
-            firstChild: widget.placeholder ??
-                SizedBox(
-                  width: widget.width,
-                  height: widget.height,
-                ),
-            secondChild: ExtendedRawImage(
-              width: widget.width,
-              height: widget.height,
-              image: state.extendedImageInfo?.image,
-              fit: widget.fit,
-            ),
-            layoutBuilder: (
-              Widget topChild,
-              Key topChildKey,
-              Widget bottomChild,
-              Key bottomChildKey,
-            ) {
-              return Stack(
-                clipBehavior: Clip.none,
-                alignment: Alignment.center,
-                children: [
-                  PositionedDirectional(
-                    key: bottomChildKey,
-                    child: bottomChild,
-                  ),
-                  PositionedDirectional(
-                    key: topChildKey,
-                    child: topChild,
-                  ),
-                ],
-              );
-            },
-          );
         }
 
-        return renderWidget;
+        return AnimatedCrossFade(
+          crossFadeState: state.wasSynchronouslyLoaded ||
+                  state.extendedImageLoadState == LoadState.completed
+              ? CrossFadeState.showSecond
+              : CrossFadeState.showFirst,
+          duration: const Duration(seconds: 1),
+          firstChild: widget.placeholder ??
+              SizedBox(
+                width: widget.width,
+                height: widget.height,
+              ),
+          secondChild: ExtendedRawImage(
+            width: widget.width,
+            height: widget.height,
+            image: state.extendedImageInfo?.image,
+            fit: widget.fit,
+          ),
+          layoutBuilder: (
+            Widget topChild,
+            Key topChildKey,
+            Widget bottomChild,
+            Key bottomChildKey,
+          ) {
+            return Stack(
+              clipBehavior: Clip.none,
+              alignment: Alignment.center,
+              children: [
+                PositionedDirectional(
+                  key: bottomChildKey,
+                  child: bottomChild,
+                ),
+                PositionedDirectional(
+                  key: topChildKey,
+                  child: topChild,
+                ),
+              ],
+            );
+          },
+        );
       },
     );
   }
