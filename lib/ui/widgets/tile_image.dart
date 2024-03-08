@@ -34,7 +34,7 @@ class TileImage extends StatelessWidget {
       url: url,
       height: size,
       width: size,
-      borderRadius: 4,
+      borderRadius: 6,
       fit: BoxFit.contain,
       placeholder: placeholderBuilder != null
           ? placeholderBuilder.builder()(context)
