@@ -20,34 +20,54 @@ class PodcastTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
+    final theme = Theme.of(context);
+    return InkWell(
       onTap: () {
         NavigationHelper.router
             .pushNamed('detail', extra: (metadata, heroPrefix));
       },
-      minVerticalPadding: 9,
-      leading: ExcludeSemantics(
-        child: Hero(
-          key: Key('tileHero:${metadata.imageUrl}:${metadata.guid}'),
-          tag: '$heroPrefix:${metadata.guid}',
-          child: TileImage(
-            url: metadata.thumbImageUrl,
-            size: 60,
-          ),
+      child: Container(
+        height: 77,
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Row(
+          children: [
+            ExcludeSemantics(
+              child: Padding(
+                padding: const EdgeInsets.only(left: 20, right: 10),
+                child: Hero(
+                  key: Key('tileHero:${metadata.imageUrl}:${metadata.guid}'),
+                  tag: '$heroPrefix:${metadata.guid}',
+                  child: TileImage(
+                    url: metadata.thumbImageUrl,
+                    size: 60,
+                  ),
+                ),
+              ),
+            ),
+            Expanded(
+              child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      metadata.title,
+                      maxLines: 2,
+                      textHeightBehavior: const TextHeightBehavior(
+                        applyHeightToFirstAscent: false,
+                      ),
+                      style: theme.textTheme.titleSmall!.copyWith(height: 1.3),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      metadata.copyright,
+                      maxLines: 1,
+                      style: theme.textTheme.bodySmall!
+                          .copyWith(color: theme.hintColor),
+                    ),
+                  ]),
+            ),
+          ],
         ),
-      ),
-      title: Text(
-        metadata.title,
-        maxLines: 1,
-      ),
-
-      /// A ListTile's density changes depending upon whether we have 2 or more
-      /// lines of text. We manually add a newline character here to ensure the
-      /// density is consistent whether the podcast subtitle spans 1 or more
-      /// lines. Bit of a hack, but a simple solution.
-      subtitle: Text(
-        '${metadata.copyright}\n',
-        maxLines: 2,
       ),
     );
   }
