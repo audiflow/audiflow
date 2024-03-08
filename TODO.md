@@ -8,6 +8,7 @@ TODO
 ### Player
 - [x] Seekbar
 
+
 ### Home
 - [x] cache Podcast chart
   - [x] refresh per 3 hours
@@ -29,4 +30,4 @@ TODO
 - [ ] to detail page
 - [ ] Long push to show context menu
 - [ ] show downloaded state 
-
+- [ ] Stop at the end of the current episode
