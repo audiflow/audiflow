@@ -65,6 +65,7 @@ class SmallPlayButton extends ConsumerWidget {
                   isPlaying
                       ? Symbols.pause_rounded
                       : Symbols.play_arrow_rounded,
+                  size: 16,
                 ),
                 if (0 < percentage && percentage < 1)
                   Padding(

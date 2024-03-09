@@ -36,8 +36,8 @@ class DownloadButton extends ConsumerWidget {
     final style = OutlinedButton.styleFrom(
       shape: const StadiumBorder(),
       foregroundColor: theme.hintColor,
-      minimumSize: const Size(40, 26),
-      padding: const EdgeInsets.only(left: 14, right: 12),
+      minimumSize: const Size(30, 26),
+      padding: const EdgeInsets.only(left: 6, right: 6),
       side: BorderSide(color: theme.hintColor),
     );
 
@@ -66,9 +66,14 @@ class DownloadButton extends ConsumerWidget {
                 ),
               ),
             if (!downloading)
-              downloaded || percent == 1
-                  ? const Icon(Symbols.download_done)
-                  : const Icon(Symbols.download),
+              Center(
+                child: Icon(
+                  downloaded || percent == 1
+                      ? Symbols.download_done
+                      : Symbols.download,
+                  size: 18,
+                ),
+              ),
           ],
         ),
       ),

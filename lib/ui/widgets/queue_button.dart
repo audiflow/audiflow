@@ -45,7 +45,7 @@ class QueueButton extends HookConsumerWidget {
       shape: const StadiumBorder(),
       foregroundColor: theme.hintColor,
       minimumSize: const Size(40, 26),
-      padding: const EdgeInsets.only(left: 14, right: 12),
+      padding: const EdgeInsets.only(left: 10, right: 10),
       side: BorderSide(color: theme.hintColor),
     );
 
@@ -86,6 +86,7 @@ class QueueButton extends HookConsumerWidget {
               0 <= queueIndex
                   ? Symbols.playlist_add_check_rounded
                   : Symbols.playlist_add_rounded,
+              size: 18,
             ),
             if (0 <= queueIndex)
               Padding(

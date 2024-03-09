@@ -175,7 +175,15 @@ class _EpisodeTileNoThumbnail extends HookConsumerWidget {
               },
               child: Padding(
                 padding: const EdgeInsets.only(left: 20, right: 8),
-                child: _Content(metadata, episode),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _Content(metadata, episode),
+                    const SizedBox(height: 4),
+                    EpisodeDate(episode, color: theme.hintColor),
+                  ],
+                ),
               ),
             ),
             Row(
@@ -183,20 +191,12 @@ class _EpisodeTileNoThumbnail extends HookConsumerWidget {
               children: [
                 Padding(
                   padding: const EdgeInsets.only(left: 20),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      EpisodeDate(episode, color: theme.hintColor),
-                      SmallPlayButton(
-                        episode: episode,
-                        onPressed: () {
-                          PlayButtonTappedNotification(episode)
-                              .dispatch(context);
-                        },
-                      ),
-                    ],
+                  child: SmallPlayButton(
+                    episode: episode,
+                    onPressed: () {
+                      PlayButtonTappedNotification(episode)
+                          .dispatch(context);
+                    },
                   ),
                 ),
                 const Spacer(),
