@@ -198,21 +198,6 @@ enum PodcastDetailViewMode {
   played,
   unplayed,
   downloaded;
-
-  String get label {
-    switch (this) {
-      case PodcastDetailViewMode.episodes:
-        return 'Episodes';
-      case PodcastDetailViewMode.seasons:
-        return 'Seasons';
-      case PodcastDetailViewMode.played:
-        return 'Played';
-      case PodcastDetailViewMode.unplayed:
-        return 'Unplayed';
-      case PodcastDetailViewMode.downloaded:
-        return 'Downloaded';
-    }
-  }
 }
 
 @freezed

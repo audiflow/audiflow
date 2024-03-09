@@ -5,5 +5,10 @@
   "chart": "チャート",
   "search": "検索",
   "sec": "秒",
-  "min": "分"
+  "min": "分",
+  "view_mode_episodes": "エピソード",
+  "view_mode_seasons": "シーズン",
+  "view_mode_played": "再生済み",
+  "view_mode_unplayed": "未再生",
+  "view_mode_downloaded": "ダウンロード済み"
 }

@@ -5,6 +5,11 @@
   "search": "Search",
   "sec": "s",
   "min": "m",
+  "view_mode_episodes": "Episodes",
+  "view_mode_seasons": "Seasons",
+  "view_mode_played": "Played",
+  "view_mode_unplayed": "Unplayed",
+  "view_mode_downloaded": "Downloaded",
   "app_title": "Seasoning Podcast Player",
   "@app_title": {
     "description": "Full title for the application",

@@ -179,7 +179,7 @@ class NavigationHelper {
   static final GlobalKey<NavigatorState> settingsTabNavigatorKey =
       GlobalKey<NavigatorState>();
 
-  BuildContext get context =>
+  static BuildContext get context =>
       router.routerDelegate.navigatorKey.currentContext!;
 
   GoRouterDelegate get routerDelegate => router.routerDelegate;

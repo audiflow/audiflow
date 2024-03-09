@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:palette_generator/palette_generator.dart';
 import 'package:seasoning/core/l10n.dart';
 import 'package:seasoning/entities/entities.dart';
@@ -311,6 +312,7 @@ class _SwitchBar extends ConsumerWidget {
                     .setViewMode(mode);
               },
             ),
+            // _SortButton(podcast: podcast),
           ],
         ),
       ),
@@ -344,11 +346,24 @@ class _PodcastViewModeSwitch extends ConsumerWidget {
             .map(
               (mode) => PopupMenuItem(
                 value: mode,
-                child: Text(
-                  mode.label,
-                  style: TextStyle(
-                    color: theme.colorScheme.onSecondaryContainer,
-                  ),
+                height: 40,
+                child: Row(
+                  children: [
+                    mode == viewMode
+                        ? Icon(
+                            Symbols.check,
+                            color: theme.colorScheme.onSecondaryContainer,
+                      size: 18,
+                          )
+                        : const SizedBox(width: 18),
+                    const SizedBox(width: 4),
+                    Text(
+                      _labelOf(context, mode),
+                      style: TextStyle(
+                        color: theme.colorScheme.onSecondaryContainer,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             )
@@ -357,7 +372,7 @@ class _PodcastViewModeSwitch extends ConsumerWidget {
       child: Row(
         children: [
           Text(
-            viewMode.label,
+            _labelOf(context, viewMode),
             style: theme.textTheme.titleMedium!
                 .copyWith(color: theme.colorScheme.onSecondaryContainer),
           ),
@@ -368,5 +383,21 @@ class _PodcastViewModeSwitch extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  String _labelOf(BuildContext context, PodcastDetailViewMode viewMode) {
+    final l10n = L10n.of(context)!;
+    switch (viewMode) {
+      case PodcastDetailViewMode.episodes:
+        return l10n.view_mode_episodes;
+      case PodcastDetailViewMode.seasons:
+        return l10n.view_mode_seasons;
+      case PodcastDetailViewMode.played:
+        return l10n.view_mode_played;
+      case PodcastDetailViewMode.unplayed:
+        return l10n.view_mode_unplayed;
+      case PodcastDetailViewMode.downloaded:
+        return l10n.view_mode_downloaded;
+    }
   }
 }
