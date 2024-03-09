@@ -205,8 +205,9 @@ class PodcastStats with _$PodcastStats {
   const factory PodcastStats({
     required String guid,
     DateTime? subscribedDate,
-    @Default(PodcastDetailViewMode.episodes) PodcastDetailViewMode viewMode,
+    @Default(PodcastDetailViewMode.seasons) PodcastDetailViewMode viewMode,
     @Default(false) bool ascend,
+    @Default(true) bool ascendSeasonEpisodes,
     DateTime? lastCheckedAt,
   }) = _PodcastStats;
 
@@ -224,6 +225,7 @@ class PodcastStatsUpdateParam {
     this.subscribedDate,
     this.viewMode,
     this.ascend,
+    this.ascendSeasonEpisodes,
     this.lastCheckedAt,
   });
 
@@ -231,12 +233,14 @@ class PodcastStatsUpdateParam {
   final DateTime? subscribedDate;
   final PodcastDetailViewMode? viewMode;
   final bool? ascend;
+  final bool? ascendSeasonEpisodes;
   final DateTime? lastCheckedAt;
 
   PodcastStatsUpdateParam copyWith({
     DateTime? subscribedDate,
     PodcastDetailViewMode? viewMode,
     bool? ascend,
+    bool? ascendSeasonEpisodes,
     DateTime? lastCheckedAt,
   }) {
     return PodcastStatsUpdateParam(
@@ -244,6 +248,7 @@ class PodcastStatsUpdateParam {
       subscribedDate: subscribedDate ?? this.subscribedDate,
       viewMode: viewMode ?? this.viewMode,
       ascend: ascend ?? this.ascend,
+      ascendSeasonEpisodes: ascendSeasonEpisodes ?? this.ascendSeasonEpisodes,
       lastCheckedAt: lastCheckedAt ?? this.lastCheckedAt,
     );
   }

@@ -12,7 +12,6 @@ part 'podcast_info_provider.g.dart';
 
 @riverpod
 class PodcastInfo extends _$PodcastInfo {
-
   PodcastInfo() {
     _log.fine('PodcastInfo created');
   }
@@ -84,6 +83,33 @@ class PodcastInfo extends _$PodcastInfo {
       PodcastStatsUpdateParam(
         guid: state.value!.podcast.guid,
         viewMode: viewMode,
+      ),
+    );
+  }
+
+  void toggleAscend() {
+    if (state.value == null) {
+      return;
+    }
+
+    _repository.updatePodcastStats(
+      PodcastStatsUpdateParam(
+        guid: state.value!.podcast.guid,
+        ascend: !(state.value!.stats?.ascend ?? false),
+      ),
+    );
+  }
+
+  void toggleAscendSeasonEpisode() {
+    if (state.value == null) {
+      return;
+    }
+
+    _repository.updatePodcastStats(
+      PodcastStatsUpdateParam(
+        guid: state.value!.podcast.guid,
+        ascendSeasonEpisodes:
+            !(state.value!.stats?.ascendSeasonEpisodes ?? true),
       ),
     );
   }

@@ -7,6 +7,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:seasoning/entities/entities.dart';
+import 'package:seasoning/providers/podcast/podcast_info_provider.dart';
 import 'package:seasoning/providers/podcast/podcast_seasons_provider.dart';
 import 'package:seasoning/ui/podcast/season_tile.dart';
 import 'package:seasoning/ui/widgets/fill_remaining_error.dart';
@@ -29,13 +30,17 @@ class SeasonList extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final seasonsState = ref.watch(podcastSeasonsProvider(podcast.metadata));
-    if (seasonsState.isLoading) {
+    final podcastState = ref.watch(podcastInfoProvider(podcast.metadata));
+    if (seasonsState.isLoading || podcastState.isLoading) {
       return const FillRemainingLoading();
     } else if (seasonsState.hasError || seasonsState.value!.isEmpty) {
       return FillRemainingError.podcastNoResults();
     }
 
-    final seasons = seasonsState.value!;
+    final ascend =
+        podcastState.valueOrNull?.stats?.ascendSeasonEpisodes ?? true;
+    final seasons =
+        ascend ? seasonsState.value!.reversed.toList() : seasonsState.value!;
     return SliverSafeArea(
       sliver: SliverList(
         delegate: SliverChildBuilderDelegate(

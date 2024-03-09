@@ -47,11 +47,20 @@ class PodcastDetailsPage extends HookConsumerWidget {
         useState(GlobalKey<ScaffoldMessengerState>()).value;
     final podcastDetailsState = ref.watch(podcastInfoProvider(metadata));
     final podcast = podcastDetailsState.value?.podcast;
-    final viewMode = podcastDetailsState.value?.stats?.viewMode ??
-        PodcastDetailViewMode.episodes;
+    final stats = podcastDetailsState.value?.stats;
     final seasonsState = podcast == null
         ? const AsyncLoading<List<Season>>()
         : ref.watch(podcastSeasonsProvider(podcast.metadata));
+
+    var viewMode = stats?.viewMode ?? PodcastDetailViewMode.seasons;
+    if (seasonsState.valueOrNull?.isEmpty == true &&
+        viewMode == PodcastDetailViewMode.seasons) {
+      viewMode = PodcastDetailViewMode.episodes;
+    }
+
+    final ascend = viewMode == PodcastDetailViewMode.seasons
+        ? (stats?.ascendSeasonEpisodes ?? true)
+        : (stats?.ascend ?? false);
 
     return Semantics(
       header: false,
@@ -86,13 +95,17 @@ class PodcastDetailsPage extends HookConsumerWidget {
                   _SwitchBar(
                     podcast: podcast,
                     seasons: seasonsState.value!,
+                    viewMode: viewMode,
+                    ascend: ascend,
                   ),
                   viewMode == PodcastDetailViewMode.seasons
                       ? SeasonList(podcast: podcast)
                       : EpisodeList(
                           episodeGroupKey: ValueKey(podcast.guid),
                           metadata: podcast.metadata,
-                          episodes: podcast.episodes,
+                          episodes: ascend
+                              ? podcast.episodes.reversed.toList()
+                              : podcast.episodes,
                         ),
                 ],
               ],
@@ -282,29 +295,27 @@ class _SwitchBar extends ConsumerWidget {
   const _SwitchBar({
     required this.podcast,
     required this.seasons,
+    required this.viewMode,
+    required this.ascend,
   });
 
   final Podcast podcast;
   final List<Season> seasons;
+  final PodcastDetailViewMode viewMode;
+  final bool ascend;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final stats = ref.watch(
-      podcastInfoProvider(podcast.metadata)
-          .select((value) => value.value?.stats),
-    );
-
-    final selectedViewMode = stats?.viewMode ?? PodcastDetailViewMode.episodes;
-
     final theme = Theme.of(context);
     return SliverToBoxAdapter(
       child: Container(
         color: theme.colorScheme.secondaryContainer,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             _PodcastViewModeSwitch(
-              viewMode: selectedViewMode,
+              viewMode: viewMode,
               hasSeasons: seasons.isNotEmpty,
               onChanged: (mode) {
                 ref
@@ -312,7 +323,20 @@ class _SwitchBar extends ConsumerWidget {
                     .setViewMode(mode);
               },
             ),
-            // _SortButton(podcast: podcast),
+            IconButton(
+              onPressed: () {
+                final podcastInfo =
+                    ref.read(podcastInfoProvider(podcast.metadata).notifier);
+                if (viewMode == PodcastDetailViewMode.seasons) {
+                  podcastInfo.toggleAscendSeasonEpisode();
+                } else {
+                  podcastInfo.toggleAscend();
+                }
+              },
+              icon: ascend
+                  ? const Icon(Symbols.keyboard_double_arrow_down_rounded)
+                  : const Icon(Symbols.keyboard_double_arrow_up_rounded),
+            ),
           ],
         ),
       ),
@@ -320,7 +344,7 @@ class _SwitchBar extends ConsumerWidget {
   }
 }
 
-class _PodcastViewModeSwitch extends ConsumerWidget {
+class _PodcastViewModeSwitch extends StatelessWidget {
   const _PodcastViewModeSwitch({
     required this.viewMode,
     required this.hasSeasons,
@@ -332,7 +356,7 @@ class _PodcastViewModeSwitch extends ConsumerWidget {
   final ValueChanged<PodcastDetailViewMode> onChanged;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return PopupMenuButton<PodcastDetailViewMode>(
       onSelected: onChanged,
@@ -353,7 +377,7 @@ class _PodcastViewModeSwitch extends ConsumerWidget {
                         ? Icon(
                             Symbols.check,
                             color: theme.colorScheme.onSecondaryContainer,
-                      size: 18,
+                            size: 18,
                           )
                         : const SizedBox(width: 18),
                     const SizedBox(width: 4),

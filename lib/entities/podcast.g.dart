@@ -78,8 +78,9 @@ _$PodcastStatsImpl _$$PodcastStatsImplFromJson(Map<String, dynamic> json) =>
           : DateTime.parse(json['subscribedDate'] as String),
       viewMode: $enumDecodeNullable(
               _$PodcastDetailViewModeEnumMap, json['viewMode']) ??
-          PodcastDetailViewMode.episodes,
+          PodcastDetailViewMode.seasons,
       ascend: json['ascend'] as bool? ?? false,
+      ascendSeasonEpisodes: json['ascendSeasonEpisodes'] as bool? ?? true,
       lastCheckedAt: json['lastCheckedAt'] == null
           ? null
           : DateTime.parse(json['lastCheckedAt'] as String),
@@ -91,6 +92,7 @@ Map<String, dynamic> _$$PodcastStatsImplToJson(_$PodcastStatsImpl instance) =>
       'subscribedDate': instance.subscribedDate?.toIso8601String(),
       'viewMode': _$PodcastDetailViewModeEnumMap[instance.viewMode]!,
       'ascend': instance.ascend,
+      'ascendSeasonEpisodes': instance.ascendSeasonEpisodes,
       'lastCheckedAt': instance.lastCheckedAt?.toIso8601String(),
     };
 

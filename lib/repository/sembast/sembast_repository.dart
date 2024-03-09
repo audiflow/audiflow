@@ -271,12 +271,15 @@ class SembastRepository extends Repository {
     final newStats = loaded?.copyWith(
           viewMode: param.viewMode ?? loaded.viewMode,
           ascend: param.ascend ?? loaded.ascend,
+          ascendSeasonEpisodes:
+              param.ascendSeasonEpisodes ?? loaded.ascendSeasonEpisodes,
           lastCheckedAt: param.lastCheckedAt ?? loaded.lastCheckedAt,
         ) ??
         PodcastStats(
           guid: param.guid,
           viewMode: param.viewMode ?? PodcastDetailViewMode.episodes,
           ascend: param.ascend ?? false,
+          ascendSeasonEpisodes: param.ascendSeasonEpisodes ?? true,
           lastCheckedAt: param.lastCheckedAt,
         );
     await _podcastStatsStore.record(param.guid).put(txn, newStats.toJson());
