@@ -8,7 +8,6 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:seasoning/entities/entities.dart';
-import 'package:seasoning/services/audio/audio_player_service.dart';
 import 'package:seasoning/services/queue/queue_manager.dart';
 
 enum _Action {
@@ -39,8 +38,6 @@ class QueueButton extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final queue = ref.watch(queueManagerProvider).queue;
-    final playingEpisode =
-        ref.watch(audioPlayerServiceProvider.select((state) => state?.episode));
     final queueIndex = queue.indexWhere((e) => e.guid == episode.guid);
 
     final theme = Theme.of(context);
@@ -89,7 +86,6 @@ class QueueButton extends HookConsumerWidget {
               0 <= queueIndex
                   ? Symbols.playlist_add_check_rounded
                   : Symbols.playlist_add_rounded,
-              size: 26,
             ),
             if (0 <= queueIndex)
               Padding(
