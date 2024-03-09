@@ -5,7 +5,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:intl/intl.dart' show DateFormat;
 import 'package:seasoning/core/types.dart';
 import 'package:seasoning/entities/entities.dart';
 import 'package:seasoning/ui/app/navigation_helper.dart';
@@ -37,6 +36,23 @@ class EpisodeTile extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final showsThumbnail = this.showsThumbnail && episode.thumbImageUrl != null;
+    return showsThumbnail
+        ? _EpisodeTileWithThumbnail(metadata, episode)
+        : _EpisodeTileNoThumbnail(metadata, episode);
+  }
+}
+
+class _EpisodeTileWithThumbnail extends HookConsumerWidget {
+  const _EpisodeTileWithThumbnail(
+    this.metadata,
+    this.episode,
+  );
+
+  final PodcastMetadata metadata;
+  final Episode episode;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
     final thumbImageUrl = episode.thumbImageUrl ?? episode.imageUrl;
     final theme = Theme.of(context);
     return Material(
@@ -46,7 +62,7 @@ class EpisodeTile extends HookConsumerWidget {
           border: Border(
             bottom: BorderSide(
               color: theme.dividerColor,
-              width: 1,
+              width: 0.5,
             ),
           ),
         ),
@@ -55,7 +71,7 @@ class EpisodeTile extends HookConsumerWidget {
           children: [
             Positioned(
               top: 0,
-              left: showsThumbnail ? 90 : 20,
+              left: 90,
               right: 0,
               child: InkWell(
                 onTap: () {
@@ -85,12 +101,10 @@ class EpisodeTile extends HookConsumerWidget {
                     mainAxisAlignment: MainAxisAlignment.end,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      showsThumbnail
-                          ? TileImage(
-                              url: thumbImageUrl!,
-                              size: 60,
-                            )
-                          : const SizedBox(height: 60),
+                      TileImage(
+                        url: thumbImageUrl!,
+                        size: 60,
+                      ),
                       const SizedBox(height: 6),
                       EpisodeDate(episode, color: theme.hintColor),
                       SmallPlayButton(
@@ -118,6 +132,79 @@ class EpisodeTile extends HookConsumerWidget {
                   ],
                 ),
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _EpisodeTileNoThumbnail extends HookConsumerWidget {
+  const _EpisodeTileNoThumbnail(
+      this.metadata,
+      this.episode,
+      );
+
+  final PodcastMetadata metadata;
+  final Episode episode;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    return Material(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        foregroundDecoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(
+              color: theme.dividerColor,
+              width: 0.5,
+            ),
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            InkWell(
+              onTap: () {
+                NavigationHelper.router.pushNamed(
+                  'episode',
+                  extra: (metadata, episode, 'episodeHero'),
+                );
+              },
+              child: Padding(
+                padding: const EdgeInsets.only(left: 20, right: 8),
+                child: _Content(metadata, episode),
+              ),
+            ),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(left: 20),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      EpisodeDate(episode, color: theme.hintColor),
+                      SmallPlayButton(
+                        episode: episode,
+                        onPressed: () {
+                          PlayButtonTappedNotification(episode)
+                              .dispatch(context);
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                const Spacer(),
+                DownloadButton(episode),
+                const SizedBox(width: 6),
+                QueueButton(episode),
+                const SizedBox(width: 8),
+              ],
             ),
           ],
         ),
@@ -154,106 +241,6 @@ class _Content extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _Controls extends StatelessWidget {
-  const _Controls(this.episode);
-
-  final Episode episode;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        DownloadButton(episode),
-        const SizedBox(width: 12),
-        QueueButton(episode),
-      ],
-    );
-  }
-}
-
-class EpisodeTransportControls extends StatelessWidget {
-  const EpisodeTransportControls({
-    super.key,
-    required this.episode,
-    required this.download,
-    required this.play,
-  });
-
-  final Episode episode;
-  final bool download;
-  final bool play;
-
-  @override
-  Widget build(BuildContext context) {
-    final buttons = <Widget>[];
-
-    if (download) {
-      buttons.add(
-        Semantics(
-          container: true,
-          // child: DownloadControl(
-          //   episode: episode,
-          // ),
-        ),
-      );
-    }
-
-    if (play) {
-      buttons.add(
-        Semantics(
-          container: true,
-          // child: PlayControl(
-          //   episode: episode,
-          // ),
-        ),
-      );
-    }
-
-    return SizedBox(
-      width: buttons.length * 48.0,
-      child: Row(
-        children: <Widget>[...buttons],
-      ),
-    );
-  }
-}
-
-class EpisodeSubtitle extends StatelessWidget {
-  EpisodeSubtitle(this.episode, this.stats, {super.key})
-      : date = episode.publicationDate == null
-            ? ''
-            : DateFormat('yyyy.MM.dd').format(episode.publicationDate!);
-  final Episode episode;
-  final EpisodeStats? stats;
-  final String date;
-
-  @override
-  Widget build(BuildContext context) {
-    var title = episode.duration == null
-        ? date
-        : episode.duration!.inSeconds < 60
-            ? '$date - ${episode.duration!.inSeconds} sec'
-            : '$date - ${episode.duration!.inMinutes} min';
-
-    final timeRemaining = stats?.timeRemaining ?? Duration.zero;
-    if (Duration.zero < timeRemaining) {
-      title = timeRemaining.inSeconds < 60
-          ? '$title / ${timeRemaining.inSeconds} sec left'
-          : '$title / ${timeRemaining.inMinutes} min left';
-    }
-
-    return Padding(
-      padding: const EdgeInsets.only(top: 4),
-      child: Text(
-        title,
-        overflow: TextOverflow.ellipsis,
-        softWrap: false,
-        style: Theme.of(context).textTheme.bodySmall,
-      ),
     );
   }
 }
