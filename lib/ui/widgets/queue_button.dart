@@ -93,7 +93,7 @@ class QueueButton extends HookConsumerWidget {
                 padding: const EdgeInsets.only(left: 3),
                 child: Text(
                   '${queueIndex + 1}',
-                  style: theme.textTheme.bodyMedium!
+                  style: theme.textTheme.bodySmall!
                       .copyWith(color: theme.hintColor),
                 ),
               ),
