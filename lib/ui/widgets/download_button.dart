@@ -6,7 +6,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:percent_indicator/percent_indicator.dart';
+import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:seasoning/entities/entities.dart';
 import 'package:seasoning/services/download/download_progress_provider.dart';
 import 'package:seasoning/services/download/download_service_provider.dart';
@@ -28,26 +28,49 @@ class DownloadButton extends ConsumerWidget {
     final downloadState = ref.watch(downloadProgressProvider(episode));
     final downloads = downloadState.valueOrNull != null;
     final downloaded = downloads && downloadState.valueOrNull!.downloaded;
-    final percent = downloadState.valueOrNull?.percentage ?? 100;
+    final percent =
+        (downloadState.valueOrNull?.percentage ?? 0).toDouble() / 100;
+    final downloading = 0 < percent && percent < 1;
 
-    return InkWell(
-      onTap: () => downloads
+    final theme = Theme.of(context);
+    final style = OutlinedButton.styleFrom(
+      shape: const StadiumBorder(),
+      foregroundColor: theme.hintColor,
+      minimumSize: const Size(40, 26),
+      padding: const EdgeInsets.only(left: 14, right: 12),
+      side: BorderSide(color: theme.hintColor),
+    );
+
+    return OutlinedButton(
+      style: style,
+      onPressed: () => downloads
           ? ref.read(downloadServiceProvider).deleteDownload(episode)
           : ref.read(downloadServiceProvider).downloadEpisode(episode),
-      child: CircularPercentIndicator(
-        key: ValueKey(downloads),
-        radius: 19,
-        lineWidth: 1.5,
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        progressColor: Theme.of(context).indicatorColor,
-        animation: downloads && !downloaded,
-        animateFromLastPercent: true,
-        percent: percent / 100,
-        center: downloaded
-            ? const Icon(Icons.download_done, size: 22)
-            : downloads
-                ? Text('$percent%', style: const TextStyle(fontSize: 12))
-                : const Icon(Icons.download, size: 22),
+      child: SizedBox(
+        width: 26,
+        height: 26,
+        child: Stack(
+          children: [
+            if (downloading)
+              Center(
+                child: SizedBox(
+                  width: 12,
+                  height: 12,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    key: ValueKey(downloads),
+                    value: percent,
+                    color: theme.colorScheme.tertiary,
+                    // backgroundColor: theme.colorScheme.secondaryContainer,
+                  ),
+                ),
+              ),
+            if (!downloading)
+              downloaded || percent == 1
+                  ? const Icon(Symbols.download_done)
+                  : const Icon(Symbols.download),
+          ],
+        ),
       ),
     );
   }

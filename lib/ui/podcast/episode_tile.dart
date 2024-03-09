@@ -110,27 +110,15 @@ class EpisodeTile extends HookConsumerWidget {
               bottom: -6,
               child: Padding(
                 padding: const EdgeInsets.only(right: 8),
-                child: QueueButton(episode),
+                child: Row(
+                  children: [
+                    DownloadButton(episode),
+                    const SizedBox(width: 6),
+                    QueueButton(episode),
+                  ],
+                ),
               ),
             ),
-            // Column(
-            //   children: [
-            //     InkWell(
-            //       onTap: () {
-            //         PlayButtonTappedNotification(episode).dispatch(context);
-            //       },
-            //       child: Padding(
-            //         padding: EdgeInsets.only(
-            //             left: showsThumbnail ? 8 : 20, right: 4),
-            //         child: _Content(metadata, episode),
-            //       ),
-            //     ),
-            //     Padding(
-            //       padding: const EdgeInsets.only(left: 20, right: 8),
-            //       child: _Controls(episode),
-            //     ),
-            //   ],
-            // ),
           ],
         ),
       ),
