@@ -10,7 +10,6 @@ import 'package:seasoning/core/types.dart';
 import 'package:seasoning/entities/entities.dart';
 import 'package:seasoning/ui/app/navigation_helper.dart';
 import 'package:seasoning/ui/podcast/episode_date.dart';
-import 'package:seasoning/ui/widgets/animated_play_button.dart';
 import 'package:seasoning/ui/widgets/download_button.dart';
 import 'package:seasoning/ui/widgets/queue_button.dart';
 import 'package:seasoning/ui/widgets/small_play_button.dart';
@@ -43,6 +42,14 @@ class EpisodeTile extends HookConsumerWidget {
     return Material(
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 8),
+        foregroundDecoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(
+              color: theme.dividerColor,
+              width: 1,
+            ),
+          ),
+        ),
         height: 140,
         child: Stack(
           children: [
@@ -96,6 +103,14 @@ class EpisodeTile extends HookConsumerWidget {
                     ],
                   ),
                 ),
+              ),
+            ),
+            Positioned(
+              right: 0,
+              bottom: -6,
+              child: Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: QueueButton(episode),
               ),
             ),
             // Column(
@@ -164,7 +179,6 @@ class _Controls extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        AnimatedPlayButton(episode),
         DownloadButton(episode),
         const SizedBox(width: 12),
         QueueButton(episode),

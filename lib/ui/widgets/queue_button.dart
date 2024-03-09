@@ -6,6 +6,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:seasoning/entities/entities.dart';
 import 'package:seasoning/services/audio/audio_player_service.dart';
 import 'package:seasoning/services/queue/queue_manager.dart';
@@ -43,64 +44,75 @@ class QueueButton extends HookConsumerWidget {
     final queueIndex = queue.indexWhere((e) => e.guid == episode.guid);
 
     final theme = Theme.of(context);
+    final style = OutlinedButton.styleFrom(
+      shape: const StadiumBorder(),
+      foregroundColor: theme.hintColor,
+      minimumSize: const Size(40, 26),
+      padding: const EdgeInsets.only(left: 14, right: 12),
+      side: BorderSide(color: theme.hintColor),
+    );
+
     final key = useState(GlobalKey<PopupMenuButtonState<_Action>>()).value;
-    return GestureDetector(
-      onTap: () {
-        if (queueIndex < 0) {
-          ref
-              .read(queueManagerProvider.notifier)
-              .append(QueueItem.primary(episode.guid));
-        } else {
-          ref.read(queueManagerProvider.notifier).removeByIndex(queueIndex);
+    return PopupMenuButton<_Action>(
+      key: key,
+      enabled: false,
+      tooltip: '',
+      onSelected: (_Action value) {
+        final queueManager = ref.read(queueManagerProvider.notifier);
+
+        switch (value) {
+          case _Action.prepend:
+            queueManager.prepend(QueueItem.primary(episode.guid));
+          case _Action.append:
+            queueManager.append(QueueItem.primary(episode.guid));
+          case _Action.remove:
+            queueManager.removeByIndex(queueIndex);
         }
       },
-      onLongPress: () {
-        key.currentState!.showButtonMenu();
-      },
-      child: PopupMenuButton<_Action>(
-        key: key,
-        enabled: false,
-        tooltip: '',
-        onSelected: (_Action value) {
-          final queueManager = ref.read(queueManagerProvider.notifier);
-
-          switch (value) {
-            case _Action.prepend:
-              queueManager.prepend(QueueItem.primary(episode.guid));
-            case _Action.append:
-              queueManager.append(QueueItem.primary(episode.guid));
-            case _Action.remove:
-              queueManager.removeByIndex(queueIndex);
+      child: OutlinedButton(
+        onPressed: () {
+          if (queueIndex < 0) {
+            ref
+                .read(queueManagerProvider.notifier)
+                .append(QueueItem.primary(episode.guid));
+          } else {
+            ref.read(queueManagerProvider.notifier).removeByIndex(queueIndex);
           }
         },
+        onLongPress: () {
+          key.currentState!.showButtonMenu();
+        },
+        style: style,
         child: Row(
           children: [
             Icon(
               0 <= queueIndex
-                  ? Icons.playlist_play_outlined
-                  : Icons.playlist_add_circle_outlined,
-              size: 42,
+                  ? Symbols.playlist_add_check_rounded
+                  : Symbols.playlist_add_rounded,
+              size: 26,
             ),
             if (0 <= queueIndex)
-              Text(
-                episode.guid == playingEpisode?.guid
-                    ? '★'
-                    : '${queueIndex + 1}',
-                style: theme.textTheme.bodyMedium,
+              Padding(
+                padding: const EdgeInsets.only(left: 3),
+                child: Text(
+                  '${queueIndex + 1}',
+                  style: theme.textTheme.bodyMedium!
+                      .copyWith(color: theme.hintColor),
+                ),
               ),
           ],
         ),
-        itemBuilder: (context) {
-          return _Action.values
-              .map(
-                (mode) => PopupMenuItem(
-                  value: mode,
-                  child: Text(mode.label),
-                ),
-              )
-              .toList();
-        },
       ),
+      itemBuilder: (context) {
+        return _Action.values
+            .map(
+              (mode) => PopupMenuItem(
+                value: mode,
+                child: Text(mode.label),
+              ),
+            )
+            .toList();
+      },
     );
   }
 }
