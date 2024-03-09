@@ -34,8 +34,12 @@ class QueueListBlock extends ConsumerWidget {
       child: Section(
         title: 'Queue',
         queuedEpisodes: queue,
-        onReorder: (oldIndex, newIndex) =>
-            ref.read(queueManagerProvider.notifier).reorder(oldIndex, newIndex),
+        onReorder: (oldIndex, newIndex) {
+          ref.read(queueManagerProvider.notifier).reorder(oldIndex, newIndex);
+        },
+        onRemove: (index) {
+          ref.read(queueManagerProvider.notifier).removeByIndex(index);
+        },
       ),
     );
   }
@@ -45,9 +49,9 @@ class Section extends MultiSliver {
   Section({
     super.key,
     required String title,
-    Color titleColor = Colors.black,
     required List<QueuedEpisode> queuedEpisodes,
     required ReorderCallback onReorder,
+    required ValueChanged<int> onRemove,
   }) : super(
           pushPinnedChildren: true,
           children: [
@@ -57,7 +61,6 @@ class Section extends MultiSliver {
                   return ColoredBox(
                     color: Theme.of(context).colorScheme.background,
                     child: ListTile(
-                      textColor: titleColor,
                       title: Text(title),
                     ),
                   );
@@ -65,14 +68,30 @@ class Section extends MultiSliver {
               ),
             ),
             SliverReorderableList(
-              itemBuilder: (context, index) => EpisodeBriefTile(
+              itemBuilder: (context, index) => Dismissible(
                 key: ValueKey(queuedEpisodes[index].item.id),
-                episode: queuedEpisodes[index].episode,
-                sortableIndex: index,
-                backgroundColor:
-                    queuedEpisodes[index].item.type == QueueType.primary
-                        ? Colors.transparent
-                        : Colors.grey[200],
+                onDismissed: (_) {
+                  onRemove(index);
+                },
+                direction: DismissDirection.endToStart,
+                background: Container(
+                  color: Theme.of(context).colorScheme.error,
+                  alignment: Alignment.centerRight,
+                  padding: const EdgeInsets.only(right: 20),
+                  child: Icon(
+                    Icons.delete,
+                    color: Theme.of(context).colorScheme.onError,
+                  ),
+                ),
+                child: EpisodeBriefTile(
+                  key: ValueKey(queuedEpisodes[index].item.id),
+                  episode: queuedEpisodes[index].episode,
+                  sortableIndex: index,
+                  backgroundColor:
+                      queuedEpisodes[index].item.type == QueueType.primary
+                          ? Colors.transparent
+                          : Colors.grey[200],
+                ),
               ),
               itemCount: queuedEpisodes.length,
               onReorder: onReorder,
