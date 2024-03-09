@@ -75,9 +75,10 @@ class _EpisodeTileWithThumbnail extends HookConsumerWidget {
               right: 0,
               child: InkWell(
                 onTap: () {
-                  NavigationHelper.router.pushNamed(
-                    'episode',
-                    extra: (metadata, episode, 'episodeHero'),
+                  NavigationHelper.pushEpisodeDetail(
+                    metadata: metadata,
+                    episode: episode,
+                    heroPrefix: 'episodeHero',
                   );
                 },
                 child: Container(
@@ -142,9 +143,9 @@ class _EpisodeTileWithThumbnail extends HookConsumerWidget {
 
 class _EpisodeTileNoThumbnail extends HookConsumerWidget {
   const _EpisodeTileNoThumbnail(
-      this.metadata,
-      this.episode,
-      );
+    this.metadata,
+    this.episode,
+  );
 
   final PodcastMetadata metadata;
   final Episode episode;
@@ -168,9 +169,10 @@ class _EpisodeTileNoThumbnail extends HookConsumerWidget {
           children: [
             InkWell(
               onTap: () {
-                NavigationHelper.router.pushNamed(
-                  'episode',
-                  extra: (metadata, episode, 'episodeHero'),
+                NavigationHelper.pushEpisodeDetail(
+                  metadata: metadata,
+                  episode: episode,
+                  heroPrefix: 'episodeHero',
                 );
               },
               child: Padding(
@@ -194,8 +196,7 @@ class _EpisodeTileNoThumbnail extends HookConsumerWidget {
                   child: SmallPlayButton(
                     episode: episode,
                     onPressed: () {
-                      PlayButtonTappedNotification(episode)
-                          .dispatch(context);
+                      PlayButtonTappedNotification(episode).dispatch(context);
                     },
                   ),
                 ),

@@ -221,4 +221,15 @@ class NavigationHelper {
       extra: (metadata, heroPrefix, paletteGenerator),
     );
   }
+
+  static Future<void> pushEpisodeDetail({
+    required PodcastMetadata metadata,
+    required Episode episode,
+    required String heroPrefix,
+  }) async {
+    await NavigationHelper.router.pushNamed(
+      'episode',
+      extra: (metadata, episode, heroPrefix),
+    );
+  }
 }

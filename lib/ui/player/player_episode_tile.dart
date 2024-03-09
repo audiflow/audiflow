@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:seasoning/entities/entities.dart';
 import 'package:seasoning/providers/podcast/episode_info_provider.dart';
+import 'package:seasoning/ui/app/navigation_helper.dart';
 import 'package:seasoning/ui/widgets/tile_image.dart';
 
 /// An EpisodeTitle is built with an ExpandedTile widget and displays the
@@ -16,7 +17,7 @@ import 'package:seasoning/ui/widgets/tile_image.dart';
 /// and further controls.
 ///
 
-class PlayerEpisodeTile extends StatelessWidget {
+class PlayerEpisodeTile extends ConsumerWidget {
   const PlayerEpisodeTile({
     super.key,
     required this.episode,
@@ -25,11 +26,20 @@ class PlayerEpisodeTile extends StatelessWidget {
   final Episode episode;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final thumbImageUrl = episode.thumbImageUrl ?? '';
-
+    final state = ref.watch(episodeInfoProvider(episode));
     return Material(
       child: InkWell(
+        onTap: () {
+          if (state.valueOrNull?.podcastMetadata != null) {
+            NavigationHelper.pushEpisodeDetail(
+              metadata: state.valueOrNull!.podcastMetadata,
+              episode: episode,
+              heroPrefix: 'episodeHero',
+            );
+          }
+        },
         child: Container(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
           height: 70,
