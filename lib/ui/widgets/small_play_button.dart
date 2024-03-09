@@ -39,15 +39,16 @@ class SmallPlayButton extends ConsumerWidget {
       audioPlayerServiceProvider.select(
         (state) {
           return state?.episode.guid == episode.guid
-            ? (state?.phase == PlayerPhase.play, state?.position)
-            : (false, null);
+              ? (state?.phase == PlayerPhase.play, state?.position)
+              : (false, null);
         },
       ),
     );
     final stats = ref.watch(episodeInfoProvider(episode)).value?.stats;
     final duration = episode.duration ?? stats?.duration ?? Duration.zero;
     final position = playerPosition ?? stats?.position ?? Duration.zero;
-    final remains = duration - position;
+    final finished = duration - position < Duration.zero;
+    final remains = finished ? duration : duration - position;
     final percentage =
         position.inMilliseconds / math.max(duration.inMilliseconds, 1);
     return Column(
@@ -64,12 +65,14 @@ class SmallPlayButton extends ConsumerWidget {
                 Icon(
                   isPlaying
                       ? Symbols.pause_rounded
-                      : Symbols.play_arrow_rounded,
+                      : finished
+                          ? Symbols.replay_rounded
+                          : Symbols.play_arrow_rounded,
                   size: 16,
                 ),
                 if (0 < percentage && percentage < 1)
                   Padding(
-                    padding: const EdgeInsets.only(left:4, right: 2),
+                    padding: const EdgeInsets.only(left: 4, right: 2),
                     child: _SmallProgressBar(percentage: percentage),
                   ),
                 Text(_duration(context, remains)),
@@ -81,12 +84,15 @@ class SmallPlayButton extends ConsumerWidget {
     );
   }
 
-  String _duration(BuildContext context, Duration duration) {
-    if (duration.inSeconds < 60) {
-      return '${duration.inSeconds}${L10n.of(context)!.sec}';
+  String _duration(BuildContext context, Duration remaining) {
+    if (remaining.inSeconds < 60) {
+      final seconds = math.max(0, remaining.inSeconds);
+      return '$seconds${L10n.of(context)!.sec}';
     }
-    final minutes =
-        duration.inMinutes + (0 < duration.inSeconds.remainder(60) ? 1 : 0);
+    final minutes = math.max(
+      0,
+      remaining.inMinutes + (0 < remaining.inSeconds.remainder(60) ? 1 : 0),
+    );
     return '$minutes${L10n.of(context)!.min}';
   }
 }
