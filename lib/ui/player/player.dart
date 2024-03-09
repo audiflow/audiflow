@@ -340,9 +340,8 @@ class _SkipButton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final (position, episode) = ref.watch(
-      audioPlayerServiceProvider
-          .select((state) => (state?.position, state?.episode)),
+    final position = ref.watch(
+      audioPlayerServiceProvider.select((state) => state?.position),
     );
     if (position == null) {
       return const SizedBox.shrink();
@@ -351,16 +350,13 @@ class _SkipButton extends ConsumerWidget {
       icon: forward ? Icons.forward_30 : Icons.replay_10,
       iconSize: IconSize.middle,
       onPressed: () {
-        // final position = playerState.position +
-        //     (forward
-        //         ? const Duration(seconds: 30)
-        //         : const Duration(seconds: -10));
-        final newPosition = forward
-            ? episode!.duration! - const Duration(seconds: 10)
-            : position + const Duration(seconds: -10);
-        ref
-            .read(audioPlayerServiceProvider.notifier)
-            .seek(position: newPosition);
+        final audioPlayerService =
+            ref.read(audioPlayerServiceProvider.notifier);
+        if (forward) {
+          audioPlayerService.fastForward();
+        } else {
+          audioPlayerService.rewind();
+        }
       },
     );
   }
