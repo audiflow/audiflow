@@ -23,8 +23,10 @@ class PodcastTile extends StatelessWidget {
     final theme = Theme.of(context);
     return InkWell(
       onTap: () {
-        NavigationHelper.router
-            .pushNamed('detail', extra: (metadata, heroPrefix));
+        NavigationHelper.pushPodcastDetail(
+          metadata: metadata,
+          heroPrefix: heroPrefix,
+        );
       },
       child: Container(
         height: 77,

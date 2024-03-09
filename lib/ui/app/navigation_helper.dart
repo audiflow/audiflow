@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:palette_generator/palette_generator.dart';
 import 'package:seasoning/entities/entities.dart';
 import 'package:seasoning/ui/app/app_bottom_navigation_bar.dart';
 import 'package:seasoning/ui/app/seasoning_app.dart';
@@ -51,12 +52,17 @@ class NavigationHelper {
                     name: 'detail',
                     parentNavigatorKey: homeTabNavigatorKey,
                     pageBuilder: (context, state) {
-                      final (metadata, heroPrefix) =
-                          state.extra! as (PodcastMetadata, String);
+                      final (metadata, heroPrefix, paletteGenerator) =
+                          state.extra! as (
+                        PodcastMetadata,
+                        String,
+                        PaletteGenerator
+                      );
                       return _getPage(
                         child: PodcastDetailsPage(
                           metadata: metadata,
                           heroPrefix: heroPrefix,
+                          paletteGenerator: paletteGenerator,
                         ),
                         state: state,
                       );
@@ -197,6 +203,22 @@ class NavigationHelper {
     return MaterialPage(
       key: state.pageKey,
       child: child,
+    );
+  }
+
+  static Future<void> pushPodcastDetail({
+    required PodcastMetadata metadata,
+    required String heroPrefix,
+  }) async {
+    final paletteGenerator = await PaletteGenerator.fromImageProvider(
+      Image.network(metadata.thumbImageUrl, cacheWidth: 480).image,
+      size: const Size.fromWidth(480),
+      maximumColorCount: 20,
+    );
+
+    await router.pushNamed(
+      'detail',
+      extra: (metadata, heroPrefix, paletteGenerator),
     );
   }
 }

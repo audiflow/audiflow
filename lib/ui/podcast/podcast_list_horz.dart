@@ -70,8 +70,10 @@ class _ListTile extends ConsumerWidget {
     final theme = Theme.of(context);
     return GestureDetector(
       onTap: () {
-        NavigationHelper.router
-            .push('/home/detail', extra: (metadata, heroPrefix));
+        NavigationHelper.pushPodcastDetail(
+          metadata: metadata,
+          heroPrefix: heroPrefix,
+        );
       },
       child: GridTile(
         child: Container(

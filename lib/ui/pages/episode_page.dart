@@ -91,8 +91,10 @@ class _EpisodeHeader extends HookConsumerWidget {
                   ? metadata.thumbImageUrl
                   : null,
               onTap: () {
-                NavigationHelper.router
-                    .pushNamed('detail', extra: (metadata, ''));
+                NavigationHelper.pushPodcastDetail(
+                  metadata: metadata,
+                  heroPrefix: '',
+                );
               },
             ),
             _EpisodePlayButton(episode: episode),

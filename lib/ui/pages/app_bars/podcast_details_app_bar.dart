@@ -17,10 +17,14 @@ class PodcastDetailsAppBar extends ConsumerWidget {
     super.key,
     required this.metadata,
     required this.heroPrefix,
+    required this.foregroundColor,
+    required this.backgroundColor,
   });
 
   final PodcastMetadata metadata;
   final String heroPrefix;
+  final Color? foregroundColor;
+  final Color? backgroundColor;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -28,17 +32,20 @@ class PodcastDetailsAppBar extends ConsumerWidget {
     final podcastState = ref.watch(podcastInfoProvider(metadata));
     final subscribed = podcastState.value?.stats?.subscribed;
     final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
     return SliverLayoutBuilder(
       builder: (BuildContext context, SliverConstraints constraints) {
         return SliverAppBar(
           expandedHeight: 350,
           pinned: true,
+          foregroundColor: foregroundColor,
+          backgroundColor: backgroundColor,
           title: AnimatedOpacity(
             opacity: 300 < constraints.scrollOffset ? 1.0 : 0.0,
             duration: const Duration(milliseconds: 200),
             child: Text(
               metadata.title,
-              style: theme.textTheme.titleMedium,
+              style: textTheme.titleMedium?.copyWith(color: foregroundColor),
             ),
           ),
           actions: [
@@ -86,6 +93,7 @@ class PodcastDetailsAppBar extends ConsumerWidget {
                     ),
                   ),
                 ),
+                const SizedBox(height: 30),
               ],
             ),
           ),
