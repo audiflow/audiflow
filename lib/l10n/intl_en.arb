@@ -3,6 +3,8 @@
   "locale": "en",
   "chart": "Chart",
   "search": "Search",
+  "sec": "s",
+  "min": "m",
   "app_title": "Seasoning Podcast Player",
   "@app_title": {
     "description": "Full title for the application",

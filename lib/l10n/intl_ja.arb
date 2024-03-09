@@ -3,5 +3,7 @@
   "app_title": "Seasoningポッドキャストプレイヤ",
   "app_title_short": "Seasoning",
   "chart": "チャート",
-  "search": "検索"
+  "search": "検索",
+  "sec": "秒",
+  "min": "分"
 }
