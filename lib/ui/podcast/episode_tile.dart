@@ -6,12 +6,14 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:intl/intl.dart' show DateFormat;
+import 'package:seasoning/core/types.dart';
 import 'package:seasoning/entities/entities.dart';
 import 'package:seasoning/ui/app/navigation_helper.dart';
 import 'package:seasoning/ui/podcast/episode_date.dart';
 import 'package:seasoning/ui/widgets/animated_play_button.dart';
 import 'package:seasoning/ui/widgets/download_button.dart';
 import 'package:seasoning/ui/widgets/queue_button.dart';
+import 'package:seasoning/ui/widgets/small_play_button.dart';
 import 'package:seasoning/ui/widgets/tile_image.dart';
 
 /// An EpisodeTitle is built with an ExpandedTile widget and displays the
@@ -35,318 +37,88 @@ class EpisodeTile extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final showsThumbnail = this.showsThumbnail && episode.thumbImageUrl != null;
     final thumbImageUrl = episode.thumbImageUrl ?? episode.imageUrl;
-
+    final theme = Theme.of(context);
     return Material(
-      child: InkWell(
-        child: Container(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
-          height: 160,
-          child: Column(
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(child: _Content(metadata, episode)),
-                  if (showsThumbnail && thumbImageUrl?.isNotEmpty == true)
-                    TileImage(
-                      url: thumbImageUrl!,
-                      size: 86,
-                    ),
-                ],
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        height: 140,
+        child: Stack(
+          children: [
+            Positioned(
+              top: 0,
+              left: showsThumbnail ? 90 : 20,
+              right: 0,
+              child: InkWell(
+                onTap: () {
+                  NavigationHelper.router.pushNamed(
+                    'episode',
+                    extra: (metadata, episode, 'episodeHero'),
+                  );
+                },
+                child: Container(
+                  height: 60,
+                  padding: const EdgeInsets.only(right: 8),
+                  child: _Content(metadata, episode),
+                ),
               ),
-              SizedBox(
-                height: 40,
-                child: _Controls(episode),
+            ),
+            Positioned(
+              left: 0,
+              top: 0,
+              child: InkWell(
+                onTap: () {
+                  PlayButtonTappedNotification(episode).dispatch(context);
+                },
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 20),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      showsThumbnail
+                          ? TileImage(
+                              url: thumbImageUrl!,
+                              size: 60,
+                            )
+                          : const SizedBox(height: 60),
+                      const SizedBox(height: 6),
+                      EpisodeDate(episode, color: theme.hintColor),
+                      SmallPlayButton(
+                        episode: episode,
+                        onPressed: () {
+                          PlayButtonTappedNotification(episode)
+                              .dispatch(context);
+                        },
+                      ),
+                    ],
+                  ),
+                ),
               ),
-            ],
-          ),
+            ),
+            // Column(
+            //   children: [
+            //     InkWell(
+            //       onTap: () {
+            //         PlayButtonTappedNotification(episode).dispatch(context);
+            //       },
+            //       child: Padding(
+            //         padding: EdgeInsets.only(
+            //             left: showsThumbnail ? 8 : 20, right: 4),
+            //         child: _Content(metadata, episode),
+            //       ),
+            //     ),
+            //     Padding(
+            //       padding: const EdgeInsets.only(left: 20, right: 8),
+            //       child: _Controls(episode),
+            //     ),
+            //   ],
+            // ),
+          ],
         ),
       ),
-// contentPadding: const EdgeInsets.fromLTRB(16, 0, 8, 0),
-// key: Key('PT${episode.guid}'),
-// trailing: ExcludeSemantics(
-//   child: Stack(
-//     alignment: Alignment.bottomLeft,
-//     fit: StackFit.passthrough,
-//     children: <Widget>[
-//       Opacity(
-//         opacity: played ? 0.5 : 1.0,
-//         child: TileImage(
-//           url: episode.thumbImageUrl ?? episode.imageUrl!,
-//           size: 56,
-//           // highlight: episode.highlight,
-//         ),
-//       ),
-//       SizedBox(
-//         height: 5,
-//         width: 56.0 * (percentagePlayed / 100.0),
-//         child: Container(
-//           color: Theme.of(context).primaryColor,
-//         ),
-//       ),
-//     ],
-//   ),
-// ),
-// subtitle: Opacity(
-//   opacity: played ? 0.5 : 1.0,
-//   child: EpisodeSubtitle(episode, stats),
-// ),
-// title: Opacity(
-//   opacity: played ? 0.5 : 1.0,
-//   child: Text(
-//     episode.title,
-//     overflow: TextOverflow.ellipsis,
-//     maxLines: 2,
-//     softWrap: false,
-//     style: textTheme.bodyMedium,
-//   ),
-// ),
-// leading: Opacity(
-//   opacity: played ? 0.5 : 1.0,
-//   child: EpisodeTransportControls(
-//     episode: episode,
-//     download: download,
-//     play: play,
-//   ),
-// ),
-// children: <Widget>[
-//   Align(
-//     alignment: Alignment.centerLeft,
-//     child: Padding(
-//       padding: const EdgeInsets.symmetric(
-//         horizontal: 16,
-//         vertical: 4,
-//       ),
-//       child: Text(
-//         descriptionText,
-//         overflow: TextOverflow.ellipsis,
-//         softWrap: false,
-//         maxLines: 3,
-//         style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-//               fontSize: 14,
-//               fontWeight: FontWeight.normal,
-//             ),
-//       ),
-//     ),
-//   ),
-//   Padding(
-//     padding: const EdgeInsets.fromLTRB(0, 4, 0, 8),
-//     child: Row(
-//       mainAxisAlignment: MainAxisAlignment.center,
-//       crossAxisAlignment: CrossAxisAlignment.start,
-//       children: <Widget>[
-//         Expanded(
-//           child: TextButton(
-//             style: TextButton.styleFrom(
-//               padding: EdgeInsets.zero,
-//               shape: RoundedRectangleBorder(
-//                 borderRadius: BorderRadius.circular(4),
-//               ),
-//             ),
-//             onPressed: downloaded
-//                 ? () {
-//                     showPlatformDialog<void>(
-//                       context: context,
-//                       useRootNavigator: false,
-//                       builder: (_) => BasicDialogAlert(
-//                         title: Text(
-//                           L10n.of(context)!.delete_episode_title,
-//                         ),
-//                         content: Text(
-//                   L10n.of(context)!.delete_episode_confirmation,
-//                         ),
-//                         actions: <Widget>[
-//                           BasicDialogAction(
-//                             title: ActionText(
-//                           L10n.of(context)!.cancel_button_label,
-//                             ),
-//                             onPressed: () {
-//                               Navigator.pop(context);
-//                             },
-//                           ),
-//                           BasicDialogAction(
-//                             title: ActionText(
-//                            L10n.of(context)!.delete_button_label,
-//                             ),
-//                             iosIsDefaultAction: true,
-//                             iosIsDestructiveAction: true,
-//                             onPressed: () {
-//                               // episodeBloc
-//                               //     .deleteDownload(episode);
-//                               // Navigator.pop(context);
-//                             },
-//                           ),
-//                         ],
-//                       ),
-//                     );
-//                   }
-//                 : null,
-//             child: Column(
-//               children: <Widget>[
-//                 Icon(
-//                   Icons.delete_outline,
-//                   semanticLabel:
-//                   L10n.of(context)!.delete_episode_button_label,
-//                   size: 22,
-//                 ),
-//                 const Padding(
-//                   padding: EdgeInsets.symmetric(vertical: 2),
-//                 ),
-//                 ExcludeSemantics(
-//                   child: Text(
-//                     L10n.of(context)!.delete_label,
-//                     textAlign: TextAlign.center,
-//                     style: const TextStyle(
-//                       fontWeight: FontWeight.normal,
-//                     ),
-//                   ),
-//                 ),
-//               ],
-//             ),
-//           ),
-//         ),
-//         Expanded(
-//           child: TextButton(
-//             style: TextButton.styleFrom(
-//               padding: EdgeInsets.zero,
-//               shape: RoundedRectangleBorder(
-//                 borderRadius: BorderRadius.circular(0),
-//               ),
-//             ),
-//             onPressed: () {},
-//             // onPressed: playing
-//             //     ? null
-//             //     : () {
-//             //         if (queued) {
-//             //           // queueBloc.queueEvent(
-//             //           //   QueueRemoveEvent(episode: episode),
-//             //           // );
-//             //         } else {
-//             //           // queueBloc.queueEvent(
-//             //           //   QueueAddEvent(episode: episode),
-//             //           // );
-//             //         }
-//             //       },
-//             child: Column(
-//               children: <Widget>[
-//                 Icon(
-//                   // queued
-//                   //     ? Icons.playlist_add_check_outlined
-//                   //     :
-//                   Icons.playlist_add_outlined,
-//                   semanticLabel:
-//                       // queued
-//                       //     ? L10n.of(context)!.semantics_remove_from_queue
-//                       //     :
-//                       L10n.of(context)!.semantics_add_to_queue,
-//                   size: 22,
-//                 ),
-//                 const Padding(
-//                   padding: EdgeInsets.symmetric(vertical: 2),
-//                 ),
-//                 const ExcludeSemantics(
-//                   child: Text(
-//                     // queued ? 'Remove' : 'Add',
-//                     'Add',
-//                     textAlign: TextAlign.center,
-//                     style: TextStyle(
-//                       fontWeight: FontWeight.normal,
-//                     ),
-//                   ),
-//                 ),
-//               ],
-//             ),
-//           ),
-//         ),
-//         Expanded(
-//           child: TextButton(
-//             style: TextButton.styleFrom(
-//               padding: EdgeInsets.zero,
-//               shape: RoundedRectangleBorder(
-//                 borderRadius: BorderRadius.circular(0),
-//               ),
-//             ),
-//             onPressed: () {
-//               // episodeBloc.togglePlayed(episode);
-//             },
-//             child: Column(
-//               mainAxisAlignment: MainAxisAlignment.center,
-//               children: <Widget>[
-//                 Icon(
-//                   played
-//                       ? Icons.unpublished_outlined
-//                       : Icons.check_circle_outline,
-//                   size: 22,
-//                 ),
-//                 const Padding(
-//                   padding: EdgeInsets.symmetric(vertical: 2),
-//                 ),
-//                 Text(
-//                   played
-//                       ? L10n.of(context)!.mark_unplayed_label
-//                       : L10n.of(context)!.mark_played_label,
-//                   textAlign: TextAlign.center,
-//                   style: const TextStyle(
-//                     fontWeight: FontWeight.normal,
-//                   ),
-//                 ),
-//               ],
-//             ),
-//           ),
-//         ),
-//         Expanded(
-//           child: TextButton(
-//             style: TextButton.styleFrom(
-//               padding: EdgeInsets.zero,
-//               shape: RoundedRectangleBorder(
-//                 borderRadius: BorderRadius.circular(0),
-//               ),
-//             ),
-//             onPressed: () {
-//               showModalBottomSheet<void>(
-//                 context: context,
-//                 backgroundColor: theme.bottomAppBarTheme.color,
-//                 isScrollControlled: true,
-//                 shape: const RoundedRectangleBorder(
-//                   borderRadius: BorderRadius.only(
-//                     topLeft: Radius.circular(10),
-//                     topRight: Radius.circular(10),
-//                   ),
-//                 ),
-//                 builder: (context) {
-//                   return const SizedBox.shrink();
-//                   // return EpisodeDetails(
-//                   //   episode: episode,
-//                   // );
-//                 },
-//               );
-//             },
-//             child: Column(
-//               mainAxisAlignment: MainAxisAlignment.center,
-//               children: <Widget>[
-//                 const Icon(
-//                   Icons.unfold_more_outlined,
-//                   size: 22,
-//                 ),
-//                 const Padding(
-//                   padding: EdgeInsets.symmetric(vertical: 2),
-//                 ),
-//                 Text(
-//                   L10n.of(context)!.more_label,
-//                   textAlign: TextAlign.center,
-//                   style: const TextStyle(
-//                     fontWeight: FontWeight.normal,
-//                   ),
-//                 ),
-//               ],
-//             ),
-//           ),
-//         ),
-//       ],
-//     ),
-//   ),
-// ],
     );
   }
 }
@@ -359,12 +131,11 @@ class _Content extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        EpisodeDate(episode),
-        const SizedBox(height: 4),
         GestureDetector(
           onTap: () => NavigationHelper.router
               .pushNamed('episode', extra: (metadata, episode, 'episodeHero')),
@@ -379,16 +150,6 @@ class _Content extends StatelessWidget {
             ),
           ),
         ),
-        // Text(
-        //   episode.descriptionText,
-        //   overflow: TextOverflow.ellipsis,
-        //   softWrap: false,
-        //   maxLines: 3,
-        //   style: Theme.of(context)
-        //       .textTheme
-        //       .bodySmall
-        //       ?.copyWith(fontSize: 14, fontWeight: FontWeight.normal),
-        // ),
       ],
     );
   }
