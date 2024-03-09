@@ -63,9 +63,13 @@ class EpisodeInfo extends _$EpisodeInfo {
         switch (event) {
           case EpisodeUpdatedEvent(episode: final episode) ||
                 EpisodeDeletedEvent(episode: final episode):
-            state = AsyncData(state.requireValue.copyWith(episode: episode));
+            if (episode.guid == state.requireValue.episode.guid) {
+              state = AsyncData(state.requireValue.copyWith(episode: episode));
+            }
           case EpisodeStatsUpdatedEvent(stats: final stats):
-            state = AsyncData(state.requireValue.copyWith(stats: stats));
+            if (stats.guid == state.requireValue.episode.guid) {
+              state = AsyncData(state.requireValue.copyWith(stats: stats));
+            }
           case null:
         }
       });
