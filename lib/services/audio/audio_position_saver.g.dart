@@ -7,12 +7,13 @@ part of 'audio_position_saver.dart';
 // **************************************************************************
 
 String _$audioPositionSaverHash() =>
-    r'3da10e9ac7c76c61948c87a34aed73babb36131d';
+    r'b1354b4133cf63eec0ebf797712df6707ee65867';
 
-/// See also [audioPositionSaver].
-@ProviderFor(audioPositionSaver)
-final audioPositionSaverProvider = Provider<bool>.internal(
-  audioPositionSaver,
+/// See also [AudioPositionSaver].
+@ProviderFor(AudioPositionSaver)
+final audioPositionSaverProvider =
+    NotifierProvider<AudioPositionSaver, AudioPositionSaverState>.internal(
+  AudioPositionSaver.new,
   name: r'audioPositionSaverProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
       ? null
@@ -21,6 +22,6 @@ final audioPositionSaverProvider = Provider<bool>.internal(
   allTransitiveDependencies: null,
 );
 
-typedef AudioPositionSaverRef = ProviderRef<bool>;
+typedef _$AudioPositionSaver = Notifier<AudioPositionSaverState>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

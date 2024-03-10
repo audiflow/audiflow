@@ -190,8 +190,8 @@ class EpisodeStatsUpdateParam {
     this.position,
     this.duration,
     this.playCount,
-    this.playTotal,
-    this.completeCount,
+    this.playTotalDelta,
+    this.completeCountDelta,
     this.inQueue,
     this.downloaded,
     this.lastPlayedAt,
@@ -201,8 +201,8 @@ class EpisodeStatsUpdateParam {
   final Duration? position;
   final Duration? duration;
   final int? playCount;
-  final Duration? playTotal;
-  final int? completeCount;
+  final Duration? playTotalDelta;
+  final int? completeCountDelta;
   final bool? inQueue;
   final bool? downloaded;
   final DateTime? lastPlayedAt;
@@ -211,8 +211,8 @@ class EpisodeStatsUpdateParam {
     Duration? position,
     Duration? duration,
     int? playCount,
-    Duration? playTotal,
-    int? completeCount,
+    Duration? playTotalDelta,
+    int? completeCountDelta,
     bool? inQueue,
     bool? downloaded,
     DateTime? lastPlayedAt,
@@ -222,8 +222,8 @@ class EpisodeStatsUpdateParam {
       position: position ?? this.position,
       duration: duration ?? this.duration,
       playCount: playCount ?? this.playCount,
-      playTotal: playTotal ?? this.playTotal,
-      completeCount: completeCount ?? this.completeCount,
+      playTotalDelta: playTotalDelta ?? this.playTotalDelta,
+      completeCountDelta: completeCountDelta ?? this.completeCountDelta,
       inQueue: inQueue ?? this.inQueue,
       downloaded: downloaded ?? this.downloaded,
       lastPlayedAt: lastPlayedAt ?? this.lastPlayedAt,
@@ -234,8 +234,8 @@ class EpisodeStatsUpdateParam {
       position == null &&
       duration == null &&
       playCount == null &&
-      playTotal == null &&
-      completeCount == null &&
+      playTotalDelta == null &&
+      completeCountDelta == null &&
       inQueue == null &&
       downloaded == null;
 }

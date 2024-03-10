@@ -260,16 +260,16 @@ void main() {
     test('updateEpisodeStats should update', () async {
       final param = EpisodeStatsUpdateParam(
         guid: podcast.episodes[2].guid,
-        playTotal: const Duration(minutes: 33),
-        completeCount: 2,
+        playTotalDelta: const Duration(minutes: 33),
+        completeCountDelta: 2,
       );
       await persistenceService.updateEpisodeStats(param);
 
       final loaded =
           await persistenceService.findEpisodeStats(episodeStats.guid);
       expect(loaded == episodeStats, isFalse);
-      expect(loaded?.playTotal, param.playTotal);
-      expect(loaded?.completeCount, param.completeCount);
+      expect(loaded?.playTotal, param.playTotalDelta);
+      expect(loaded?.completeCount, param.completeCountDelta);
     });
 
     test('check updated field', () async {
