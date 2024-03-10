@@ -10,11 +10,15 @@ import 'package:seasoning/core/l10n.dart';
 import 'package:seasoning/core/types.dart';
 import 'package:seasoning/entities/entities.dart';
 import 'package:seasoning/providers/podcast/episodes_group_provider.dart';
+import 'package:seasoning/providers/podcast/podcast_info_provider.dart';
 import 'package:seasoning/services/podcast/podcast_service_provider.dart';
 import 'package:seasoning/ui/pages/app_bars/podcast_season_app_bar.dart';
 import 'package:seasoning/ui/podcast/episode_list.dart';
 import 'package:seasoning/ui/podcast/types.dart';
+import 'package:seasoning/ui/widgets/fill_remaining_error.dart';
+import 'package:seasoning/ui/widgets/fill_remaining_loading.dart';
 import 'package:seasoning/ui/widgets/rounded_stadium_button.dart';
+import 'package:seasoning/ui/widgets/sort_icon_button.dart';
 
 class PodcastSeasonPage extends HookConsumerWidget {
   const PodcastSeasonPage({
@@ -32,6 +36,11 @@ class PodcastSeasonPage extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final scaffoldMessengerKey =
         useState(GlobalKey<ScaffoldMessengerState>()).value;
+    final podcastDetailsState =
+        ref.watch(podcastInfoProvider(podcast.metadata));
+    final ascend =
+        podcastDetailsState.valueOrNull?.stats?.ascendSeasonEpisodes ?? true;
+
     return Semantics(
       header: false,
       label: L10n.of(context)!.semantics_podcast_details_header,
@@ -50,20 +59,44 @@ class PodcastSeasonPage extends HookConsumerWidget {
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: <Widget>[
                 PodcastSeasonAppBar(season: season, heroPrefix: heroPrefix),
-                SliverToBoxAdapter(
-                  child: ContextualPlayButton(
-                    season.episodes,
-                    episodeGroupKey: ValueKey(season.guid),
-                    playOrder: PlayOrder.timeAscend,
-                    isSeries: true,
+                if (podcastDetailsState.isLoading)
+                  const FillRemainingLoading()
+                else if (podcastDetailsState.hasError)
+                  FillRemainingError.podcastNoResults()
+                else ...[
+                  SliverToBoxAdapter(
+                    child: Stack(
+                      children: [
+                        ContextualPlayButton(
+                          season.episodes,
+                          episodeGroupKey: ValueKey(season.guid),
+                          playOrder: PlayOrder.timeAscend,
+                          isSeries: true,
+                        ),
+                        Positioned(
+                          right: 8,
+                          child: SortIconButton(
+                            ascend: ascend,
+                            onTap: () {
+                              final metadata = podcast.metadata;
+                              ref
+                                  .read(podcastInfoProvider(metadata).notifier)
+                                  .toggleAscendSeasonEpisode();
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                EpisodeList(
-                  episodeGroupKey: ValueKey(season.guid),
-                  thumbnailVisibility: ThumbnailVisibility.hidden,
-                  metadata: podcast.metadata,
-                  episodes: season.episodes,
-                ),
+                  EpisodeList(
+                    episodeGroupKey: ValueKey(season.guid),
+                    thumbnailVisibility: ThumbnailVisibility.hidden,
+                    metadata: podcast.metadata,
+                    episodes: ascend
+                        ? season.episodes
+                        : season.episodes.reversed.toList(),
+                  ),
+                ],
               ],
             ),
           ),

@@ -50,7 +50,7 @@ class PodcastInfo extends _$PodcastInfo {
                 podcast: final podcast,
                 stats: final stats
               ):
-          if (podcast.guid == state.value?.podcast.guid) {
+          if (podcast.guid == state.valueOrNull?.podcast.guid) {
             state = AsyncData(
               PodcastDetailsState(
                 podcast: podcast,
@@ -59,11 +59,11 @@ class PodcastInfo extends _$PodcastInfo {
             );
           }
         case PodcastUpdatedEvent(podcast: final podcast):
-          if (podcast.guid == state.value?.podcast.guid) {
+          if (podcast.guid == state.valueOrNull?.podcast.guid) {
             state = AsyncData(state.requireValue.copyWith(podcast: podcast));
           }
         case PodcastStatsUpdatedEvent(stats: final stats):
-          if (stats.guid == state.value?.podcast.guid) {
+          if (stats.guid == state.valueOrNull?.podcast.guid) {
             state = AsyncData(state.requireValue.copyWith(stats: stats));
           }
         case null:
@@ -72,41 +72,41 @@ class PodcastInfo extends _$PodcastInfo {
   }
 
   void setViewMode(PodcastDetailViewMode viewMode) {
-    if (state.value == null) {
+    if (state.valueOrNull == null) {
       return;
     }
 
     _repository.updatePodcastStats(
       PodcastStatsUpdateParam(
-        guid: state.value!.podcast.guid,
+        guid: state.requireValue.podcast.guid,
         viewMode: viewMode,
       ),
     );
   }
 
   void toggleAscend() {
-    if (state.value == null) {
+    if (state.valueOrNull == null) {
       return;
     }
 
     _repository.updatePodcastStats(
       PodcastStatsUpdateParam(
-        guid: state.value!.podcast.guid,
-        ascend: !(state.value!.stats?.ascend ?? false),
+        guid: state.requireValue.podcast.guid,
+        ascend: !(state.requireValue.stats?.ascend ?? false),
       ),
     );
   }
 
   void toggleAscendSeasonEpisode() {
-    if (state.value == null) {
+    if (state.valueOrNull == null) {
       return;
     }
 
     _repository.updatePodcastStats(
       PodcastStatsUpdateParam(
-        guid: state.value!.podcast.guid,
+        guid: state.requireValue.podcast.guid,
         ascendSeasonEpisodes:
-            !(state.value!.stats?.ascendSeasonEpisodes ?? true),
+            !(state.requireValue.stats?.ascendSeasonEpisodes ?? true),
       ),
     );
   }
