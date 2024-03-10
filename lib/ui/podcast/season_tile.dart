@@ -4,10 +4,10 @@
 // found in the LICENSE file.
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart' show DateFormat;
 import 'package:seasoning/core/l10n.dart';
 import 'package:seasoning/entities/entities.dart';
 import 'package:seasoning/ui/app/navigation_helper.dart';
+import 'package:seasoning/ui/util/datetime.dart';
 import 'package:seasoning/ui/widgets/tile_image.dart';
 
 class SeasonTile extends StatelessWidget {
@@ -104,14 +104,20 @@ class _SeasonSubtitle extends StatelessWidget {
 
     final l10n = L10n.of(context)!;
     final playedEpisodes = season.episodes.where((episode) => false).length;
-    final firstDate = _dateString(season.episodes.first.publicationDate);
-    final lastDate = _dateString(season.episodes.last.publicationDate);
+    final firstDate =
+        _dateString(context, season.episodes.first.publicationDate);
+    final lastDate = _dateString(context, season.episodes.last.publicationDate);
     final duration = _durationString(context, season.totalDuration);
     final episodes =
         '$playedEpisodes/${l10n.nEpisodes(season.episodes.length)}';
 
-    final firstLine =
-        firstDate != null && lastDate != null ? '$firstDate 〜 $lastDate' : null;
+    final firstLine = firstDate == null && lastDate == null
+        ? null
+        : firstDate == lastDate
+            ? firstDate
+            : (firstDate == null || lastDate == null)
+                ? (firstDate ?? lastDate)
+                : '$firstDate 〜 $lastDate';
     final secondLine = duration.isNotEmpty ? '$episodes $duration' : episodes;
     final title = firstLine != null ? '$firstLine\n$secondLine' : secondLine;
 
@@ -127,8 +133,14 @@ class _SeasonSubtitle extends StatelessWidget {
     );
   }
 
-  String? _dateString(DateTime? date) {
-    return date == null ? null : DateFormat('yyyy.MM.dd').format(date);
+  String? _dateString(BuildContext context, DateTime? date) {
+    if (date == null) {
+      return null;
+    }
+    final elapsed = DateTime.now().difference(date);
+    return 7 <= elapsed.inDays
+        ? DateTimeString.formatDate(date)
+        : DateTimeString.relativeDateTime(context, elapsed);
   }
 
   String _durationString(BuildContext context, Duration duration) {

@@ -20,6 +20,43 @@
   "sec": "秒",
   "min": "分",
   "hour": "時間",
+  "nDaysAgo": "{count}日前",
+  "@nDaysAgo": {
+    "description": "日数",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "nHoursAgo": "{count}時間前",
+  "@nHoursAgo": {
+    "description": "時間数",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "nMinutesAgo": "{count}分前",
+  "@nMinutesAgo": {
+    "description": "分数",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "nSecondsAgo": "{count}秒前",
+  "@nSecondsAgo": {
+    "description": "秒数",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "justNow": "たった今",
   "view_mode_episodes": "エピソード",
   "view_mode_seasons": "シーズン",
   "view_mode_played": "再生済み",

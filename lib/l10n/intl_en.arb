@@ -34,6 +34,43 @@
   "sec": "s",
   "min": "m",
   "hour": "h",
+  "nDaysAgo": "{count, plural, =1{1 day ago} other{{count} days ago}}",
+  "@nDaysAgo": {
+    "description": "Number of days ago",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "nHoursAgo": "{count, plural, =1{1 hour ago} other{{count} hours ago}}",
+  "@nHoursAgo": {
+    "description": "Number of hours ago",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "nMinutesAgo": "{count, plural, =1{1 minute ago} other{{count} minutes ago}}",
+  "@nMinutesAgo": {
+    "description": "Number of minutes ago",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "nSecondsAgo": "{count, plural, =1{1 second ago} other{{count} seconds ago}}",
+  "@nSecondsAgo": {
+    "description": "Number of seconds ago",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "justNow": "Just now",
   "view_mode_episodes": "Episodes",
   "view_mode_seasons": "Seasons",
   "view_mode_played": "Played",
