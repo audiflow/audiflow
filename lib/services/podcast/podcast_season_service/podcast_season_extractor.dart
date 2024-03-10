@@ -6,7 +6,7 @@ abstract class PodcastSeasonExtractor {
 
   String get label;
 
-  List<Season>? extractSeasons(Podcast podcast) {
+  List<Season> extractSeasons(Podcast podcast) {
     final map = <int?, List<Episode>>{};
     for (final episode in podcast.episodes) {
       if (map.containsKey(episode.season)) {

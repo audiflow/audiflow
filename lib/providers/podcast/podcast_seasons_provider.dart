@@ -15,5 +15,5 @@ Future<List<Season>> podcastSeasons(
   final podcast = await ref.watch(
     podcastInfoProvider(metadata).selectAsync((state) => state.podcast),
   );
-  return PodcastSeasonService().extractSeasons(podcast) ?? [];
+  return PodcastSeasonService().extractSeasons(podcast);
 }
