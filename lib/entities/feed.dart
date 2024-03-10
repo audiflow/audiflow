@@ -1,17 +1,28 @@
-// Copyright 2020 Ben Hills and the project contributors. All rights reserved.
+// Copyright 2024 HANAI Tohru, Reedom, INC.
+// Copyright 2020 Ben Hills and the project contributors.
+// All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:seasoning/entities/podcast.dart';
+import 'package:audiflow/entities/podcast.dart';
 
 /// This class is used when loading a [Podcast] feed.
 ///
 /// The key information is contained within the [Podcast] instance, but as the
-/// iTunes API also returns large and thumbnail artwork within its search results
-/// this class also contains properties to represent those.
+/// iTunes API also returns large and thumbnail artwork within its search
+/// results this class also contains properties to represent those.
 class Feed {
+  Feed({
+    required this.podcastUrl,
+    this.imageUrl,
+    this.thumbImageUrl,
+    this.refresh = false,
+    this.backgroundFresh = false,
+    this.silently = false,
+  });
+
   /// The podcast to load
-  final Podcast podcast;
+  final String podcastUrl;
 
   /// The full-size artwork for the podcast.
   String? imageUrl;
@@ -27,13 +38,4 @@ class Feed {
 
   /// If true any error can be ignored.
   bool silently;
-
-  Feed({
-    required this.podcast,
-    this.imageUrl,
-    this.thumbImageUrl,
-    this.refresh = false,
-    this.backgroundFresh = false,
-    this.silently = false,
-  });
 }

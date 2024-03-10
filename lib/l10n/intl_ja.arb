@@ -1,0 +1,71 @@
+{
+  "locale": "ja",
+  "app_title": "Seasoningポッドキャストプレイヤ",
+  "app_title_short": "Seasoning",
+  "chart": "チャート",
+  "search": "検索",
+  "queue": "連続再生キュー",
+  "clear": "クリア",
+  "season": "シーズン",
+  "null_season": "その他",
+  "nEpisodes": "{count}エピソード",
+  "@nEpisodes": {
+    "description": "エピソード数",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sec": "秒",
+  "min": "分",
+  "hour": "時間",
+  "nDaysAgo": "{count}日前",
+  "@nDaysAgo": {
+    "description": "日数",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "nHoursAgo": "{count}時間前",
+  "@nHoursAgo": {
+    "description": "時間数",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "nMinutesAgo": "{count}分前",
+  "@nMinutesAgo": {
+    "description": "分数",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "nSecondsAgo": "{count}秒前",
+  "@nSecondsAgo": {
+    "description": "秒数",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "justNow": "たった今",
+  "view_mode_episodes": "エピソード",
+  "view_mode_seasons": "シーズン",
+  "view_mode_played": "再生済み",
+  "view_mode_unplayed": "未再生",
+  "view_mode_downloaded": "ダウンロード済み",
+  "resume": "再開",
+  "play": "再生",
+  "pause": "一時停止",
+  "playFromStart": "最初から再生",
+  "playLatest": "最新のエピソードを再生",
+  "playAgain": "再生"
+}

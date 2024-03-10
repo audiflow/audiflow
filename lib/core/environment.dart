@@ -1,24 +1,26 @@
-// Copyright 2020 Ben Hills and the project contributors. All rights reserved.
+// Copyright 2024 HANAI Tohru, Reedom, INC.
+// Copyright 2020 Ben Hills and the project contributors.
+// All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
 import 'dart:io';
 
 /// The key required when searching via PodcastIndex.org.
-const podcastIndexKey = String.fromEnvironment('PINDEX_KEY', defaultValue: '');
+const podcastIndexKey = String.fromEnvironment('PINDEX_KEY');
 
 /// The secret required when searching via PodcastIndex.org.
-const podcastIndexSecret =
-    String.fromEnvironment('PINDEX_SECRET', defaultValue: '');
+const podcastIndexSecret = String.fromEnvironment('PINDEX_SECRET');
 
 /// Allows a user to override the default user agent string.
-const userAgentAppString =
-    String.fromEnvironment('USER_AGENT', defaultValue: '');
+const userAgentAppString = String.fromEnvironment('USER_AGENT');
 
 /// Link to a feedback form. This will be shown in the main overflow menu if set
-const feedbackUrl = String.fromEnvironment('FEEDBACK_URL', defaultValue: '');
+const feedbackUrl = String.fromEnvironment('FEEDBACK_URL');
 
 class Environment {
+  Environment._();
+
   static const _applicationName = 'Anytime';
   static const _applicationUrl =
       'https://github.com/amugofjava/anytime_podcast_player';
@@ -31,7 +33,7 @@ class Environment {
 
   static String userAgent() {
     if (_agentString.isEmpty) {
-      var platform =
+      final platform =
           '${Platform.operatingSystem} ${Platform.operatingSystemVersion}'
               .trim();
 

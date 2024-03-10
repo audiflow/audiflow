@@ -1,4 +1,6 @@
-// Copyright 2020 Ben Hills and the project contributors. All rights reserved.
+// Copyright 2024 HANAI Tohru, Reedom, INC.
+// Copyright 2020 Ben Hills and the project contributors.
+// All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -14,10 +16,10 @@ import 'package:flutter/widgets.dart';
 /// guidelines; otherwise it will be displayed as is to fit in the with iOS
 /// developer guidelines.
 class ActionText extends StatelessWidget {
+  const ActionText(this.text, {super.key});
+
   /// The text to display which will be shifted to all upper-case on Android.
   final String text;
-
-  const ActionText(this.text, {super.key});
 
   @override
   Widget build(BuildContext context) {

@@ -1,208 +1,255 @@
-// Copyright 2020 Ben Hills and the project contributors. All rights reserved.
+// Copyright 2024 HANAI Tohru, Reedom, INC.
+// Copyright 2020 Ben Hills and the project contributors.
+// All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:seasoning/core/extensions.dart';
-import 'package:seasoning/entities/funding.dart';
-import 'package:seasoning/entities/person.dart';
-import 'package:seasoning/entities/season.dart';
+import 'package:audiflow/core/utils.dart';
+import 'package:audiflow/entities/entities.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:podcast_search/podcast_search.dart' as search;
 
-import 'episode.dart';
+part 'podcast.freezed.dart';
+part 'podcast.g.dart';
+
+/// A class that represents an instance of a podcast search result item.
+@freezed
+class PodcastMetadata with _$PodcastMetadata {
+  const factory PodcastMetadata({
+    /// Unique identifier for podcast.
+    required String guid,
+
+    /// The collection ID(iTunesID).
+    required int collectionId,
+
+    /// The link to the podcast RSS feed.
+    required String? feedUrl,
+
+    /// Podcast title.
+    required String title,
+
+    /// URL for thumbnail version of artwork image.
+    required String thumbImageUrl,
+
+    /// URL to the full size artwork image.
+    required String imageUrl,
+
+    /// Copyright owner of the podcast.
+    required String copyright,
+
+    /// Release date of the latest episode.
+    required DateTime releaseDate,
+  }) = _PodcastMetadata;
+
+  factory PodcastMetadata.fromJson(Map<String, dynamic> json) =>
+      _$PodcastMetadataFromJson(json);
+
+  factory PodcastMetadata.fromSearchResultItem(search.Item item) {
+    final guid = '${item.collectionId ?? item.feedUrl}';
+    final thumbImageUrl = item.thumbnailArtworkUrl;
+    final imageUrl = item.bestArtworkUrl;
+
+    return PodcastMetadata(
+      guid: guid,
+      feedUrl: item.feedUrl,
+      collectionId: item.collectionId ?? 0,
+      title: item.collectionName ?? item.trackName ?? '',
+      thumbImageUrl: thumbImageUrl,
+      imageUrl: imageUrl,
+      copyright: item.artistName ?? '',
+      releaseDate: item.releaseDate!,
+    );
+  }
+
+  factory PodcastMetadata.fromPodcast(Podcast podcast) {
+    return PodcastMetadata(
+      guid: podcast.guid,
+      feedUrl: podcast.feedUrl,
+      collectionId: podcast.collectionId,
+      title: podcast.title,
+      thumbImageUrl: podcast.thumbImageUrl,
+      imageUrl: podcast.imageUrl,
+      copyright: podcast.copyright,
+      releaseDate: podcast.releaseDate,
+    );
+  }
+}
 
 /// A class that represents an instance of a podcast.
 ///
 /// When persisted to disk this represents a podcast that is being followed.
-class Podcast {
-  /// Database ID
-  int? id;
+@freezed
+class Podcast with _$Podcast {
+  const factory Podcast({
+    /// Unique identifier for podcast.
+    required String guid,
 
-  /// Unique identifier for podcast.
-  final String? guid;
+    /// The collection ID(iTunesID).
+    required int collectionId,
 
-  /// The link to the podcast RSS feed.
-  final String url;
+    /// The link to the podcast RSS feed.
+    required String? feedUrl,
 
-  /// RSS link URL.
-  final String? link;
+    /// RSS link URL.
+    required String linkUrl,
 
-  /// Podcast title.
-  final String title;
+    /// Podcast title.
+    required String title,
 
-  /// Podcast description. Can be either plain text or HTML.
-  final String? description;
+    /// Podcast description. Can be either plain text or HTML.
+    required String description,
 
-  /// URL to the full size artwork image.
-  final String? imageUrl;
+    /// Copyright owner of the podcast.
+    required String copyright,
 
-  /// URL for thumbnail version of artwork image. Not contained within
-  /// the RSS but may be calculated or provided within search results.
-  final String? thumbImageUrl;
+    /// URL for thumbnail version of artwork image. Not contained within
+    /// the RSS but may be calculated or provided within search results.
+    required String thumbImageUrl,
 
-  /// Copyright owner of the podcast.
-  final String? copyright;
+    /// URL to the full size artwork image.
+    required String imageUrl,
 
-  /// Zero or more funding links.
-  final List<Funding>? funding;
+    /// Release date of the latest episode.
+    required DateTime releaseDate,
 
-  /// Date and time user subscribed to the podcast.
-  DateTime? subscribedDate;
+    /// List of episodes.
+    // ignore: invalid_annotation_target
+    @JsonKey(includeToJson: false, includeFromJson: false)
+    @Default([])
+    List<Episode> episodes,
 
-  /// Date and time podcast was last updated/refreshed.
-  DateTime? _lastUpdated;
+    /// List of  funding links.
+    @Default([]) List<Funding> funding,
 
-  /// One or more seasons for this podcast.
-  List<Season> seasons;
+    /// List of people of interest to the podcast.
+    @Default([]) List<Person> persons,
+  }) = _Podcast;
 
-  /// One or more episodes for this podcast.
-  List<Episode> episodes;
+  factory Podcast.fromJson(Map<String, dynamic> json) =>
+      _$PodcastFromJson(json);
 
-  final List<Person>? persons;
-
-  /// Indicates whether the user wants to see the podcast as a list of seasons
-  bool seasonView;
-
-  bool newEpisodes;
-  bool updatedEpisodes = false;
-
-  Podcast({
-    required this.guid,
-    required String url,
-    required this.link,
-    required this.title,
-    this.id,
-    this.description,
-    String? imageUrl,
-    String? thumbImageUrl,
-    this.copyright,
-    this.subscribedDate,
-    this.funding,
-    this.seasons = const <Season>[],
-    this.episodes = const <Episode>[],
-    this.seasonView = false,
-    this.newEpisodes = false,
-    this.persons,
-    DateTime? lastUpdated,
-  })  : url = url.forceHttps,
-        imageUrl = imageUrl?.forceHttps,
-        thumbImageUrl = thumbImageUrl?.forceHttps {
-    _lastUpdated = lastUpdated;
-  }
-
-  factory Podcast.fromUrl({required String url}) => Podcast(
-        url: url,
-        guid: '',
-        link: '',
-        title: '',
-        description: '',
-        thumbImageUrl: null,
-        imageUrl: null,
-        copyright: '',
-        funding: <Funding>[],
-        persons: <Person>[],
-      );
-
-  factory Podcast.fromSearchResultItem(search.Item item) => Podcast(
-        guid: item.guid ?? '',
-        url: item.feedUrl ?? '',
-        link: item.feedUrl,
-        title: item.trackName!,
-        description: '',
-        imageUrl: item.bestArtworkUrl ?? item.artworkUrl,
-        thumbImageUrl: item.thumbnailArtworkUrl,
-        funding: const <Funding>[],
-        copyright: item.artistName,
-      );
-
-  Map<String, dynamic> toMap() {
-    return <String, dynamic>{
-      'guid': guid,
-      'title': title,
-      'copyright': copyright ?? '',
-      'description': description ?? '',
-      'url': url,
-      'imageUrl': imageUrl ?? '',
-      'thumbImageUrl': thumbImageUrl ?? '',
-      'subscribedDate': subscribedDate?.millisecondsSinceEpoch.toString() ?? '',
-      'funding': (funding ?? <Funding>[])
-          .map((funding) => funding.toMap())
-          .toList(growable: false),
-      'person': (persons ?? <Person>[])
-          .map((persons) => persons.toMap())
-          .toList(growable: false),
-      'lastUpdated': _lastUpdated?.millisecondsSinceEpoch ??
-          DateTime.now().millisecondsSinceEpoch,
-      'seasonView': seasonView ? 'true' : 'false',
-    };
-  }
-
-  static Podcast fromMap(int key, Map<String, dynamic> podcast) {
-    final sds = podcast['subscribedDate'] as String?;
-    final lus = podcast['lastUpdated'] as int?;
-    final funding = <Funding>[];
-    final persons = <Person>[];
-
-    var sd = DateTime.now();
-    var lastUpdated = DateTime(1971, 1, 1);
-
-    if (sds != null && sds.isNotEmpty && int.tryParse(sds) != null) {
-      sd = DateTime.fromMillisecondsSinceEpoch(int.parse(sds));
-    }
-
-    if (lus != null) {
-      lastUpdated = DateTime.fromMillisecondsSinceEpoch(lus);
-    }
-
-    if (podcast['funding'] != null) {
-      for (var chapter in (podcast['funding'] as List)) {
-        if (chapter is Map<String, dynamic>) {
-          funding.add(Funding.fromMap(chapter));
-        }
-      }
-    }
-
-    if (podcast['persons'] != null) {
-      for (var person in (podcast['persons'] as List)) {
-        if (person is Map<String, dynamic>) {
-          persons.add(Person.fromMap(person));
-        }
-      }
-    }
+  factory Podcast.fromSearch(search.Podcast podcast, PodcastMetadata metadata) {
+    final episodes = podcast.episodes
+        .map(
+          (e) => Episode.fromSearch(
+            e,
+            pguid: metadata.guid,
+            thumbImageUrl: metadata.thumbImageUrl,
+            imageUrl: podcast.image ?? metadata.imageUrl,
+          ),
+        )
+        .toList();
+    final funding = podcast.funding
+        .where((f) => f.url?.isNotEmpty == true)
+        .map(Funding.fromSearch)
+        .toList();
+    final persons = podcast.persons.map(Person.fromSearch).toList();
 
     return Podcast(
-      id: key,
-      guid: podcast['guid'] as String,
-      link: podcast['link'] as String?,
-      title: podcast['title'] as String,
-      copyright: podcast['copyright'] as String?,
-      description: podcast['description'] as String?,
-      url: podcast['url'] as String,
-      imageUrl: podcast['imageUrl'] as String?,
-      thumbImageUrl: podcast['thumbImageUrl'] as String?,
+      guid: metadata.guid,
+      collectionId: metadata.collectionId,
+      feedUrl: podcast.url,
+      linkUrl: podcast.link ?? '',
+      title: metadata.title,
+      description: removeHtmlPadding(podcast.description),
+      copyright: metadata.copyright,
+      thumbImageUrl: metadata.thumbImageUrl,
+      imageUrl: podcast.image ?? metadata.imageUrl,
+      releaseDate: metadata.releaseDate,
+      episodes: episodes,
       funding: funding,
       persons: persons,
-      subscribedDate: sd,
-      lastUpdated: lastUpdated,
-      seasonView: podcast['seasonView'] == 'true',
     );
   }
+}
 
-  bool get subscribed => id != null;
+extension PodcastExtension on Podcast {
+  int get contentHash => Object.hash(
+        guid,
+        collectionId,
+        feedUrl,
+        linkUrl,
+        title,
+        description,
+        thumbImageUrl,
+        imageUrl,
+        releaseDate,
+        funding,
+        persons,
+      );
 
-  DateTime get lastUpdated => _lastUpdated ?? DateTime(1970, 1, 1);
-
-  set lastUpdated(DateTime value) {
-    _lastUpdated = value;
+  PodcastMetadata get metadata {
+    return PodcastMetadata(
+      guid: guid,
+      collectionId: collectionId,
+      feedUrl: feedUrl,
+      title: title,
+      thumbImageUrl: thumbImageUrl,
+      imageUrl: imageUrl,
+      copyright: copyright,
+      releaseDate: releaseDate,
+    );
   }
+}
 
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is Podcast &&
-          runtimeType == other.runtimeType &&
-          guid == other.guid &&
-          url == other.url;
+enum PodcastDetailViewMode {
+  episodes,
+  seasons,
+  played,
+  unplayed,
+  downloaded;
+}
 
-  @override
-  int get hashCode => guid.hashCode ^ url.hashCode;
+@freezed
+class PodcastStats with _$PodcastStats {
+  const factory PodcastStats({
+    required String guid,
+    DateTime? subscribedDate,
+    @Default(PodcastDetailViewMode.seasons) PodcastDetailViewMode viewMode,
+    @Default(false) bool ascend,
+    @Default(true) bool ascendSeasonEpisodes,
+    DateTime? lastCheckedAt,
+  }) = _PodcastStats;
+
+  factory PodcastStats.fromJson(Map<String, dynamic> json) =>
+      _$PodcastStatsFromJson(json);
+}
+
+extension PodcastStatsExt on PodcastStats {
+  bool get subscribed => subscribedDate != null;
+}
+
+class PodcastStatsUpdateParam {
+  const PodcastStatsUpdateParam({
+    required this.guid,
+    this.subscribedDate,
+    this.viewMode,
+    this.ascend,
+    this.ascendSeasonEpisodes,
+    this.lastCheckedAt,
+  });
+
+  final String guid;
+  final DateTime? subscribedDate;
+  final PodcastDetailViewMode? viewMode;
+  final bool? ascend;
+  final bool? ascendSeasonEpisodes;
+  final DateTime? lastCheckedAt;
+
+  PodcastStatsUpdateParam copyWith({
+    DateTime? subscribedDate,
+    PodcastDetailViewMode? viewMode,
+    bool? ascend,
+    bool? ascendSeasonEpisodes,
+    DateTime? lastCheckedAt,
+  }) {
+    return PodcastStatsUpdateParam(
+      guid: guid,
+      subscribedDate: subscribedDate ?? this.subscribedDate,
+      viewMode: viewMode ?? this.viewMode,
+      ascend: ascend ?? this.ascend,
+      ascendSeasonEpisodes: ascendSeasonEpisodes ?? this.ascendSeasonEpisodes,
+      lastCheckedAt: lastCheckedAt ?? this.lastCheckedAt,
+    );
+  }
 }

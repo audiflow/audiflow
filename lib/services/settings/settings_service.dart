@@ -1,61 +1,113 @@
-// Copyright 2020 Ben Hills and the project contributors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
+import 'package:audiflow/core/environment.dart';
+import 'package:audiflow/entities/entities.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:seasoning/entities/app_settings.dart';
+part 'settings_service.g.dart';
 
-abstract class SettingsService {
-  AppSettings? get settings;
+@Riverpod(keepAlive: true)
+class SettingsService extends _$SettingsService {
+  @override
+  AppSettings build() {
+    return AppSettings(
+      markDeletedEpisodesAsPlayed:
+          _sharedPreferences.getBool('markPlayedAsDeleted') ?? false,
+      storeDownloadsSDCard:
+          _sharedPreferences.getBool('storeDownloadsSDCard') ?? false,
+      theme: BrightnessMode.values
+          .byName(_sharedPreferences.getString('theme') ?? 'system'),
+      playbackSpeed: _sharedPreferences.getDouble('speed') ?? 1.0,
+      searchProvider: podcastIndexKey.isEmpty
+          ? 'itunes'
+          : (_sharedPreferences.getString('search') ?? 'itunes'),
+      searchProviders: [
+        SearchProvider.itunes(),
+        if (podcastIndexKey.isNotEmpty) SearchProvider.podcastindex(),
+      ],
+      externalLinkConsent:
+          _sharedPreferences.getBool('externalLinkConsent') ?? false,
+      autoOpenNowPlaying:
+          _sharedPreferences.getBool('autoOpenNowPlaying') ?? false,
+      showFunding: _sharedPreferences.getBool('showFunding') ?? true,
+      autoUpdateEpisodePeriod:
+          _sharedPreferences.getInt('autoUpdateEpisodePeriod') ?? 180,
+      trimSilence: _sharedPreferences.getBool('trimSilence') ?? false,
+      volumeBoost: _sharedPreferences.getBool('volumeBoost') ?? false,
+      layout: _sharedPreferences.getInt('layout') ?? 0,
+    );
+  }
 
-  set settings(AppSettings? settings);
+  static late SharedPreferences _sharedPreferences;
 
-  bool get themeDarkMode;
+  static Future<void> setup() async {
+    _sharedPreferences = await SharedPreferences.getInstance();
+  }
 
-  set themeDarkMode(bool value);
+  // ignore: avoid_setters_without_getters
+  set markDeletedEpisodesAsPlayed(bool value) {
+    _sharedPreferences.setBool('markPlayedAsDeleted', value);
+    state = state.copyWith(markDeletedEpisodesAsPlayed: value);
+  }
 
-  bool get markDeletedEpisodesAsPlayed;
+  // ignore: avoid_setters_without_getters
+  set storeDownloadsSDCard(bool value) {
+    _sharedPreferences.setBool('storeDownloadsSDCard', value);
+    state = state.copyWith(storeDownloadsSDCard: value);
+  }
 
-  set markDeletedEpisodesAsPlayed(bool value);
+  // ignore: avoid_setters_without_getters
+  set theme(BrightnessMode mode) {
+    _sharedPreferences.setString('theme', mode.name);
+    state = state.copyWith(theme: mode);
+  }
 
-  bool get storeDownloadsSDCard;
+  // ignore: avoid_setters_without_getters
+  set playbackSpeed(double playbackSpeed) {
+    _sharedPreferences.setDouble('speed', playbackSpeed);
+  }
 
-  set storeDownloadsSDCard(bool value);
+  // ignore: avoid_setters_without_getters
+  set searchProvider(String provider) {
+    _sharedPreferences.setString('search', provider);
+  }
 
-  set playbackSpeed(double playbackSpeed);
+  // ignore: avoid_setters_without_getters
+  set externalLinkConsent(bool consent) {
+    _sharedPreferences.setBool('externalLinkConsent', consent);
+  }
 
-  double get playbackSpeed;
+  // ignore: avoid_setters_without_getters
+  set autoOpenNowPlaying(bool autoOpenNowPlaying) {
+    _sharedPreferences.setBool('autoOpenNowPlaying', autoOpenNowPlaying);
+  }
 
-  set searchProvider(String provider);
+  // ignore: avoid_setters_without_getters
+  set showFunding(bool show) {
+    _sharedPreferences.setBool('showFunding', show);
+  }
 
-  String get searchProvider;
+  // ignore: avoid_setters_without_getters
+  set autoUpdateEpisodePeriod(int period) {
+    _sharedPreferences.setInt('autoUpdateEpisodePeriod', period);
+  }
 
-  set externalLinkConsent(bool consent);
+  // ignore: avoid_setters_without_getters
+  set trimSilence(bool trim) {
+    _sharedPreferences.setBool('trimSilence', trim);
+  }
 
-  bool get externalLinkConsent;
+  // ignore: avoid_setters_without_getters
+  set volumeBoost(bool boost) {
+    _sharedPreferences.setBool('volumeBoost', boost);
+  }
 
-  set autoOpenNowPlaying(bool autoOpenNowPlaying);
+  // ignore: avoid_setters_without_getters
+  set layoutMode(int mode) {
+    _sharedPreferences.setInt('layout', mode);
+  }
 
-  bool get autoOpenNowPlaying;
-
-  set showFunding(bool show);
-
-  bool get showFunding;
-
-  set autoUpdateEpisodePeriod(int period);
-
-  int get autoUpdateEpisodePeriod;
-
-  set trimSilence(bool trim);
-
-  bool get trimSilence;
-
-  set volumeBoost(bool boost);
-
-  bool get volumeBoost;
-
-  set layoutMode(int mode);
-
-  int get layoutMode;
-
-  Stream<String> get settingsListener;
+  // ignore: avoid_setters_without_getters
+  set settings(AppSettings settings) {
+    state = settings;
+  }
 }

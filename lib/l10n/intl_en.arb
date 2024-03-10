@@ -1,5 +1,87 @@
 {
   "@@last_modified": "2020-02-20T12:15:52.645497",
+  "locale": "en",
+  "chart": "Chart",
+  "@chart": {
+    "description": "Title for the chart tab"
+  },
+  "search": "Search",
+  "@search": {
+    "description": "Title for the search tab"
+  },
+  "queue": "Queue",
+  "@queue": {
+    "description": "Title for a queue block"
+  },
+  "clear": "clear",
+  "season": "Season",
+  "@season": {
+    "description": "Title for a season"
+  },
+  "null_season": "Extras",
+  "@null_season": {
+    "description": "Title for a season-less section"
+  },
+  "nEpisodes": "{count, plural, =1{1 episodes} other{{count} episodes}}",
+  "@nEpisodes": {
+    "description": "Number of episodes",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sec": "s",
+  "min": "m",
+  "hour": "h",
+  "nDaysAgo": "{count, plural, =1{1 day ago} other{{count} days ago}}",
+  "@nDaysAgo": {
+    "description": "Number of days ago",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "nHoursAgo": "{count, plural, =1{1 hour ago} other{{count} hours ago}}",
+  "@nHoursAgo": {
+    "description": "Number of hours ago",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "nMinutesAgo": "{count, plural, =1{1 minute ago} other{{count} minutes ago}}",
+  "@nMinutesAgo": {
+    "description": "Number of minutes ago",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "nSecondsAgo": "{count, plural, =1{1 second ago} other{{count} seconds ago}}",
+  "@nSecondsAgo": {
+    "description": "Number of seconds ago",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "justNow": "Just now",
+  "view_mode_episodes": "Episodes",
+  "view_mode_seasons": "Seasons",
+  "view_mode_played": "Played",
+  "view_mode_unplayed": "Unplayed",
+  "view_mode_downloaded": "Downloaded",
+  "resume": "Resume",
+  "play": "Play",
+  "pause": "Pause",
+  "playFromStart": "Play from start",
+  "playLatest": "Play latest",
+  "playAgain": "Play again",
   "app_title": "Seasoning Podcast Player",
   "@app_title": {
     "description": "Full title for the application",
@@ -629,13 +711,13 @@
     "type": "text",
     "placeholders_order": [],
     "placeholders": {}
-   },
-   "search_transcript_label": "Search transcript",
-   "@search_transcript_label": {
-     "description": "Hint text for transcript search box",
-     "type": "text",
-     "placeholders_order": [],
-     "placeholders": {}
+  },
+  "search_transcript_label": "Search transcript",
+  "@search_transcript_label": {
+    "description": "Hint text for transcript search box",
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
   },
   "auto_scroll_transcript_label": "Follow transcript",
   "@auto_scroll_transcript_label": {
@@ -657,14 +739,14 @@
     "type": "text",
     "placeholders_order": [],
     "placeholders": {}
- },
+  },
   "semantics_podcast_details_header": "Podcast details and episodes page",
   "@semantics_podcast_details_header": {
     "description": "Describes podcast details page",
     "type": "text",
     "placeholders_order": [],
     "placeholders": {}
-   },
+  },
   "semantics_season_details_header": "Season episodes page",
   "@semantics_season_details_header": {
     "description": "Describes season details page",
@@ -672,26 +754,26 @@
     "placeholders_order": [],
     "placeholders": {}
   },
-   "semantics_layout_option_list": "List layout",
-   "@semantics_layout_option_list": {
-     "description": "Describes list layout button",
-     "type": "text",
-     "placeholders_order": [],
-     "placeholders": {}
-   },
-   "semantics_layout_option_compact_grid": "Compact grid layout",
-   "@semantics_layout_option_compact_grid": {
-     "description": "Describes compact grid layout button",
-     "type": "text",
-     "placeholders_order": [],
-     "placeholders": {}
-   },
-   "semantics_layout_option_grid": "Grid layout",
-   "@semantics_layout_option_grid": {
-     "description": "Describes grid layout button",
-     "type": "text",
-     "placeholders_order": [],
-     "placeholders": {}
+  "semantics_layout_option_list": "List layout",
+  "@semantics_layout_option_list": {
+    "description": "Describes list layout button",
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "semantics_layout_option_compact_grid": "Compact grid layout",
+  "@semantics_layout_option_compact_grid": {
+    "description": "Describes compact grid layout button",
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
+  },
+  "semantics_layout_option_grid": "Grid layout",
+  "@semantics_layout_option_grid": {
+    "description": "Describes grid layout button",
+    "type": "text",
+    "placeholders_order": [],
+    "placeholders": {}
   },
   "semantics_mini_player_header": "Mini player. Swipe right to play/pause button. Activate to open main player window",
   "@semantics_mini_player_header": {
@@ -884,6 +966,24 @@
     "description": "Placed around chapter",
     "type": "text",
     "placeholders_order": [],
+    "placeholders": {}
+  },
+  "play_from_start": "Play from start",
+  "@play_from_start": {
+    "description": "Play from start",
+    "type": "text",
+    "placeholders": {}
+  },
+  "play_latest": "Play latest",
+  "@play_latest": {
+    "description": "Play from start",
+    "type": "text",
+    "placeholders": {}
+  },
+  "play_latest_again": "Play again",
+  "@play_latest_again": {
+    "description": "Play latest again",
+    "type": "text",
     "placeholders": {}
   }
 }

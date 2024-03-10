@@ -1,111 +1,109 @@
-// Copyright 2020 Ben Hills and the project contributors. All rights reserved.
+// Copyright 2024 HANAI Tohru, Reedom, INC.
+// Copyright 2020 Ben Hills and the project contributors.
+// All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:seasoning/entities/episode.dart';
-import 'package:seasoning/entities/sleep.dart';
-import 'package:seasoning/state/queue_event_state.dart';
-import 'package:seasoning/state/transcript_state_event.dart';
+import 'package:audiflow/entities/episode.dart';
+import 'package:audiflow/entities/sleep.dart';
+import 'package:audiflow/services/audio/audio_player_state.dart';
+import 'package:audio_service/audio_service.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+export 'package:audiflow/services/audio/audio_player_state.dart';
+
+part 'audio_player_service.g.dart';
 
 enum AudioState {
-  none,
+  /// There hasn't been any resource loaded yet.
+  idle,
+
+  /// Resource is being loaded.
+  loading,
+
+  /// Resource is being buffered.
   buffering,
-  starting,
-  playing,
-  pausing,
-  stopped,
-  error,
-}
 
-class PositionState {
-  Duration position;
-  late Duration length;
-  late int percentage;
-  Episode? episode;
-  final bool buffering;
+  /// Resource is buffered enough and available for playback.
+  ready,
 
-  PositionState({
-    required this.position,
-    required this.length,
-    required this.percentage,
-    this.episode,
-    this.buffering = false,
-  });
+  /// The end of resource was reached.
+  completed,
 
-  PositionState.emptyState()
-      : position = const Duration(seconds: 0),
-        length = const Duration(seconds: 0),
-        percentage = 0,
-        buffering = false;
+  /// There was an error loading resource.
+  error;
+
+  static AudioState from(AudioProcessingState state) {
+    switch (state) {
+      case AudioProcessingState.idle:
+        return AudioState.idle;
+      case AudioProcessingState.loading:
+        return AudioState.loading;
+      case AudioProcessingState.buffering:
+        return AudioState.buffering;
+      case AudioProcessingState.ready:
+        return AudioState.ready;
+      case AudioProcessingState.completed:
+        return AudioState.completed;
+      case AudioProcessingState.error:
+        return AudioState.error;
+    }
+  }
 }
 
 /// This class defines the audio playback options supported by Anytime.
 ///
-/// The implementing classes will then handle the specifics for the platform we are running on.
-abstract class AudioPlayerService {
-  /// Play a new episode, optionally resume at last save point.
-  Future<void> playEpisode({required Episode episode, bool resume = true});
+/// The implementing classes will then handle the specifics for the platform we
+/// are running on.
+@Riverpod(keepAlive: true)
+class AudioPlayerService extends _$AudioPlayerService {
+  /// Initialize the service.
+  @override
+  AudioPlayerState? build() => null;
+
+  Future<void> setup() => throw UnimplementedError();
+
+  /// Load a new episode, and play if [autoPlay] is true.
+  Future<void> loadEpisode({
+    required Episode episode,
+    required Duration position,
+    required bool autoPlay,
+  }) =>
+      throw UnimplementedError();
 
   /// Resume playing of current episode
-  Future<void> play();
+  Future<void> play() => throw UnimplementedError();
 
   /// Stop playing of current episode. Set update to false to stop
   /// playback without saving any episode or positional updates.
-  Future<void> stop();
+  Future<void> stop() => throw UnimplementedError();
 
   /// Pause the current episode.
-  Future<void> pause();
+  Future<void> pause() => throw UnimplementedError();
 
   /// Rewind the current episode by pre-set number of seconds.
-  Future<void> rewind();
+  Future<void> rewind() => throw UnimplementedError();
 
   /// Fast forward the current episode by pre-set number of seconds.
-  Future<void> fastForward();
+  Future<void> fastForward() => throw UnimplementedError();
 
   /// Seek to the specified position within the current episode.
-  Future<void> seek({required int position});
-
-  /// Call when the app is resumed to re-establish the audio service.
-  Future<Episode?> resume();
-
-  /// Add an episode to the playback queue
-  Future<void> addUpNextEpisode(Episode episode);
-
-  /// Remove an episode from the playback queue if it exists
-  Future<bool> removeUpNextEpisode(Episode episode);
-
-  /// Remove an episode from the playback queue if it exists
-  Future<bool> moveUpNextEpisode(Episode episode, int oldIndex, int newIndex);
-
-  /// Empty the up next queue
-  Future<void> clearUpNext();
-
-  /// Call when the app is about to be suspended.
-  Future<void> suspend();
+  Future<void> seek({required Duration position}) => throw UnimplementedError();
 
   /// Call to set the playback speed.
-  Future<void> setPlaybackSpeed(double speed);
+  Future<void> setPlaybackSpeed(double speed) => throw UnimplementedError();
 
   /// Call to toggle trim silence.
-  Future<void> trimSilence(bool trim);
+  Future<void> trimSilence({required bool trim}) => throw UnimplementedError();
 
   /// Call to toggle trim silence.
-  Future<void> volumeBoost(bool boost);
+  Future<void> volumeBoost({required bool boost}) => throw UnimplementedError();
 
-  Future<void> searchTranscript(String search);
+  /// Call when the app is about to be suspended.
+  Future<void> suspend() => throw UnimplementedError();
 
-  Future<void> clearTranscript();
+  /// Call when the app is resumed to re-establish the audio service.
+  Future<void> resume() => throw UnimplementedError();
 
-  void sleep(Sleep sleep);
-
-  Episode? nowPlaying;
-
-  /// Event listeners
-  Stream<AudioState>? playingState;
-  Stream<PositionState>? playPosition;
-  Stream<Episode?>? episodeEvent;
-  Stream<TranscriptState>? transcriptEvent;
-  Stream<int>? playbackError;
-  Stream<QueueListState>? queueState;
-  Stream<Sleep>? sleepStream;
+  void sleep(Sleep sleep) => throw UnimplementedError();
 }

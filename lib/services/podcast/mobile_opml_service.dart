@@ -1,14 +1,15 @@
-// Copyright 2020 Ben Hills and the project contributors. All rights reserved.
+// Copyright 2024 HANAI Tohru, Reedom, INC.
+// Copyright 2020 Ben Hills and the project contributors.
+// All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
 import 'dart:io';
 
-import 'package:seasoning/entities/podcast.dart';
-import 'package:seasoning/repository/repository.dart';
-import 'package:seasoning/services/podcast/opml_service.dart';
-import 'package:seasoning/services/podcast/podcast_service.dart';
-import 'package:seasoning/state/opml_state.dart';
+import 'package:audiflow/events/opml_event.dart';
+import 'package:audiflow/repository/repository.dart';
+import 'package:audiflow/services/podcast/opml_service.dart';
+import 'package:audiflow/services/podcast/podcast_service.dart';
 import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 import 'package:path_provider/path_provider.dart';
@@ -16,20 +17,20 @@ import 'package:share_plus/share_plus.dart';
 import 'package:xml/xml.dart';
 
 class MobileOPMLService extends OPMLService {
-  final log = Logger('MobileOPMLService');
-  var process = false;
-
-  final PodcastService podcastService;
-  final Repository repository;
-
   MobileOPMLService({
     required this.podcastService,
     required this.repository,
   });
 
+  final log = Logger('MobileOPMLService');
+  bool process = false;
+
+  final PodcastService podcastService;
+  final Repository repository;
+
   @override
-  Stream<OPMLState> loadOPMLFile(String file) async* {
-    yield OPMLParsingState();
+  Stream<OPMLActionEvent> loadOPMLFile(String file) async* {
+    yield OPMLParsingEvent();
 
     process = true;
 
@@ -38,86 +39,107 @@ class MobileOPMLService extends OPMLService {
     final outlines = document.findAllElements('outline');
     final pods = <OmplOutlineTag>[];
 
-    for (var outline in outlines) {
+    for (final outline in outlines) {
       pods.add(OmplOutlineTag.parse(outline));
     }
 
-    var total = pods.length;
+    final total = pods.length;
     var current = 0;
 
-    for (var p in pods) {
-      if (process) {
-        yield OPMLLoadingState(
-          current: ++current,
-          total: total,
-          podcast: p.text,
-        );
+    for (final p in pods) {
+      if (!process) {
+        break;
+      }
+      yield OPMLLoadingEvent(
+        current: ++current,
+        total: total,
+        podcast: p.text,
+      );
 
-        try {
-          log.fine('Importing podcast ${p.xmlUrl}');
+      try {
+        log.fine('Importing podcast ${p.xmlUrl}');
 
-          var result = await podcastService.loadPodcast(
-            podcast:
-                Podcast(guid: '', link: '', title: p.text!, url: p.xmlUrl!),
-            refresh: true,
-          );
+        // final result = await podcastService.loadPodcast(
+        //   p.
+        //   podcast: Podcast(guid: '', link: '', title:
+        //   p.text!, url: p.xmlUrl!),
+        //   refresh: true,
+        // );
 
-          if (result != null) {
-            await podcastService.subscribe(result);
-          }
-        } on Exception {
-          log.fine('Failed to load podcast ${p.xmlUrl}');
-        }
+        // if (result != null) {
+        //   await podcastService.subscribe(result);
+        // }
+      } on Exception {
+        log.fine('Failed to load podcast ${p.xmlUrl}');
       }
     }
 
-    yield OPMLCompletedState();
+    yield OPMLCompletedEvent();
   }
 
   @override
-  Stream<OPMLState> saveOPMLFile() async* {
-    var subs = await podcastService.subscriptions();
+  Stream<OPMLActionEvent> saveOPMLFile() async* {
+    // final subs = await podcastService.subscriptions();
 
-    final builder = XmlBuilder();
-    builder.processing('xml', 'version="1.0"');
-    builder.element('opml', attributes: {'version': '2.0'}, nest: () {
-      builder.element('head', nest: () {
-        builder.element('title', nest: () {
-          builder.text('Anytime Subscriptions');
-        });
-        builder.element('dateCreated', nest: () {
-          var n = DateTime.now().toUtc();
-          var f = DateFormat('yyyy-MM-dd\'T\'HH:mm:ss\'Z\'').format(n);
-          builder.text(f);
-        });
-      });
-
-      builder.element('body', nest: () {
-        for (var sub in subs) {
-          builder.element('outline', nest: () {
-            builder.attribute('text', sub.title);
-            builder.attribute('xmlUrl', sub.url);
-          });
-        }
-      });
-    });
+    final builder = XmlBuilder()..processing('xml', 'version="1.0"');
+    builder.element(
+      'opml',
+      attributes: {'version': '2.0'},
+      nest: () {
+        builder
+          ..element(
+            'head',
+            nest: () {
+              builder
+                ..element(
+                  'title',
+                  nest: () {
+                    builder.text('Anytime Subscriptions');
+                  },
+                )
+                ..element(
+                  'dateCreated',
+                  nest: () {
+                    final n = DateTime.now().toUtc();
+                    final f =
+                        DateFormat('yyyy-MM-dd\'T\'HH:mm:ss\'Z\'').format(n);
+                    builder.text(f);
+                  },
+                );
+            },
+          )
+          ..element(
+            'body',
+            nest: () {
+              // for (final sub in subs) {
+              // builder.element(
+              //   'outline',
+              //   nest: () {
+              //     builder
+              //       ..attribute('text', sub.title)
+              //       ..attribute('xmlUrl', sub.url);
+              //   },
+              // );
+              // }
+            },
+          );
+      },
+    );
 
     final export = builder.buildDocument();
 
-    var output = Platform.isAndroid
+    final output = Platform.isAndroid
         ? (await getExternalStorageDirectory())!
         : await getApplicationDocumentsDirectory();
-    var outputFile = '${output.path}/anytime_export.opml';
-    var file = File(outputFile);
-
-    file.writeAsStringSync(export.toXmlString(pretty: true));
+    final outputFile = '${output.path}/anytime_export.opml';
+    File(outputFile).writeAsStringSync(export.toXmlString(pretty: true));
 
     await Share.shareXFiles(
       [XFile(outputFile)],
       text: 'Anytime OPML',
     );
 
-    yield OPMLCompletedState();
+    yield OPMLCompletedEvent();
   }
 
   @override
@@ -127,9 +149,6 @@ class MobileOPMLService extends OPMLService {
 }
 
 class OmplOutlineTag {
-  final String? text;
-  final String? xmlUrl;
-
   OmplOutlineTag({
     this.text,
     this.xmlUrl,
@@ -141,4 +160,7 @@ class OmplOutlineTag {
       xmlUrl: element.getAttribute('xmlUrl')?.trim(),
     );
   }
+
+  final String? text;
+  final String? xmlUrl;
 }

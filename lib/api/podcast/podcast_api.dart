@@ -1,17 +1,19 @@
-// Copyright 2020 Ben Hills and the project contributors. All rights reserved.
+// Copyright 2024 HANAI Tohru, Reedom, INC.
+// Copyright 2020 Ben Hills and the project contributors.
+// All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:seasoning/entities/transcript.dart';
+import 'package:audiflow/entities/transcript.dart';
 import 'package:podcast_search/podcast_search.dart' as pslib;
 
 /// A simple wrapper class that interacts with the search API via
 /// the podcast_search package.
 ///
-/// TODO: Make this more generic so it's not tied to podcast_search
+// TODO(unknown): Make this more generic so it's not tied to podcast_search
 abstract class PodcastApi {
   /// Search for podcasts matching the search criteria. Returns a
-  /// [SearchResult] instance.
+  /// [pslib.SearchResult] instance.
   Future<pslib.SearchResult> search(
     String term, {
     String? country,
@@ -30,6 +32,8 @@ abstract class PodcastApi {
     String? genre,
     String? countryCode,
   });
+
+  Future<pslib.Item?> lookup({required int collectionId});
 
   List<String> genres(
     String searchProvider,

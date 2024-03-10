@@ -46,7 +46,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.reedom.seasoning"
+        applicationId "com.reedom.audiflow"
         minSdkVersion 22
         targetSdkVersion 34
         versionCode flutterVersionCode.toInteger()
@@ -79,7 +79,7 @@ android {
         }
     }
 
-    namespace 'com.reedom.seasoning'
+    namespace 'com.reedom.audiflow'
 
     lint {
         abortOnError false

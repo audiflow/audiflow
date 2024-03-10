@@ -1,37 +1,36 @@
-// Copyright 2020 Ben Hills and the project contributors. All rights reserved.
+// Copyright 2024 HANAI Tohru, Reedom, INC.
+// Copyright 2020 Ben Hills and the project contributors.
+// All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
 import 'dart:async';
 
-import 'package:seasoning/bloc/settings/settings_bloc.dart';
-import 'package:seasoning/entities/app_settings.dart';
-import 'package:seasoning/entities/funding.dart';
-import 'package:seasoning/l10n/L.dart';
-import 'package:seasoning/ui/widgets/action_text.dart';
+import 'package:audiflow/core/l10n.dart';
+import 'package:audiflow/entities/funding.dart';
+import 'package:audiflow/services/settings/settings_service.dart';
+import 'package:audiflow/ui/widgets/action_text.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dialogs/flutter_dialogs.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-/// This class is responsible for rendering the funding menu on the podcast details page.
-///
-/// It returns either a [_MaterialPodcastMenu] or a [_CupertinoContextMenu]
-/// instance depending upon which platform we are running on.
+/// This class is responsible for rendering the funding menu on the podcast
+/// details page.
 ///
 /// The target platform is based on the current [Theme]: [ThemeData.platform].
 class FundingMenu extends StatelessWidget {
-  final List<Funding>? funding;
-
   const FundingMenu(
     this.funding, {
     super.key,
   });
 
+  final List<Funding>? funding;
+
   @override
   Widget build(BuildContext context) {
-    var theme = Theme.of(context);
+    final theme = Theme.of(context);
 
     switch (theme.platform) {
       case TargetPlatform.android:
@@ -46,124 +45,116 @@ class FundingMenu extends StatelessWidget {
   }
 }
 
-/// This is the material design version of the context menu. This will be rendered
-/// for all platforms that are not iOS.
-class _MaterialFundingMenu extends StatelessWidget {
-  final List<Funding>? funding;
-
+/// This is the material design version of the context menu. This will be
+/// rendered for all platforms that are not iOS.
+class _MaterialFundingMenu extends ConsumerWidget {
   const _MaterialFundingMenu(this.funding);
 
+  final List<Funding>? funding;
+
   @override
-  Widget build(BuildContext context) {
-    final settingsBloc = Provider.of<SettingsBloc>(context);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(settingsServiceProvider);
 
     return funding == null || funding!.isEmpty
-        ? const SizedBox(
-            width: 0.0,
-            height: 0.0,
-          )
-        : StreamBuilder<AppSettings>(
-            stream: settingsBloc.settings,
-            initialData: AppSettings.sensibleDefaults(),
-            builder: (context, snapshot) {
-              return Semantics(
-                label: L.of(context)!.podcast_funding_dialog_header,
-                child: PopupMenuButton<String>(
-                  onSelected: (url) {
-                    FundingLink.fundingLink(
-                      url,
-                      snapshot.data!.externalLinkConsent,
-                      context,
-                    ).then((value) {
-                      settingsBloc.setExternalLinkConsent(value);
-                    });
-                  },
-                  icon: const Icon(
-                    Icons.payment,
-                  ),
-                  itemBuilder: (BuildContext context) {
-                    return List<PopupMenuEntry<String>>.generate(
-                        funding!.length, (index) {
-                      return PopupMenuItem<String>(
-                        value: funding![index].url,
-                        enabled: true,
-                        child: Text(funding![index].value),
-                      );
-                    });
-                  },
-                ),
-              );
-            });
+        ? const SizedBox.shrink()
+        : Semantics(
+            label: L10n.of(context)!.podcast_funding_dialog_header,
+            child: PopupMenuButton<String>(
+              onSelected: (url) {
+                FundingLink.fundingLink(
+                  url,
+                  context,
+                  consent: settings.externalLinkConsent,
+                ).then((value) {
+                  ref
+                      .read(settingsServiceProvider.notifier)
+                      .externalLinkConsent = value;
+                });
+              },
+              icon: const Icon(
+                Icons.payment,
+              ),
+              itemBuilder: (BuildContext context) {
+                return List<PopupMenuEntry<String>>.generate(funding!.length,
+                    (index) {
+                  return PopupMenuItem<String>(
+                    value: funding![index].url,
+                    child: Text(funding![index].value),
+                  );
+                });
+              },
+            ),
+          );
   }
 }
 
 /// This is the Cupertino context menu and is rendered only when running on
 /// an iOS device.
-class _CupertinoFundingMenu extends StatelessWidget {
-  final List<Funding>? funding;
-
+class _CupertinoFundingMenu extends ConsumerWidget {
   const _CupertinoFundingMenu(this.funding);
 
+  final List<Funding>? funding;
+
   @override
-  Widget build(BuildContext context) {
-    final settingsBloc = Provider.of<SettingsBloc>(context);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(settingsServiceProvider);
 
     return funding == null || funding!.isEmpty
-        ? const SizedBox(
-            width: 0.0,
-            height: 0.0,
-          )
-        : StreamBuilder<AppSettings>(
-            stream: settingsBloc.settings,
-            initialData: AppSettings.sensibleDefaults(),
-            builder: (context, snapshot) {
-              return IconButton(
-                tooltip: L.of(context)!.podcast_funding_dialog_header,
-                icon: const Icon(Icons.payment),
-                onPressed: () => showCupertinoModalPopup<void>(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return CupertinoActionSheet(
-                      actions: <Widget>[
-                        ...List<CupertinoActionSheetAction>.generate(
-                            funding!.length, (index) {
-                          return CupertinoActionSheetAction(
-                            onPressed: () {
-                              FundingLink.fundingLink(
-                                funding![index].url,
-                                snapshot.data!.externalLinkConsent,
-                                context,
-                              ).then((value) {
-                                settingsBloc.setExternalLinkConsent(value);
-                                Navigator.pop(context, 'Cancel');
-                              });
-                            },
-                            child: Text(funding![index].value),
-                          );
-                        }),
-                      ],
-                      cancelButton: CupertinoActionSheetAction(
-                        isDefaultAction: true,
+        ? const SizedBox.shrink()
+        : IconButton(
+            tooltip: L10n.of(context)!.podcast_funding_dialog_header,
+            icon: const Icon(Icons.payment),
+            onPressed: () => showCupertinoModalPopup<void>(
+              context: context,
+              builder: (BuildContext context) {
+                return CupertinoActionSheet(
+                  actions: <Widget>[
+                    ...List<CupertinoActionSheetAction>.generate(
+                        funding!.length, (index) {
+                      return CupertinoActionSheetAction(
                         onPressed: () {
-                          Navigator.pop(context, 'Cancel');
+                          FundingLink.fundingLink(
+                            funding![index].url,
+                            context,
+                            consent: settings.externalLinkConsent,
+                          ).then((value) {
+                            ref
+                                .read(settingsServiceProvider.notifier)
+                                .externalLinkConsent = value;
+                            Navigator.pop(context, 'Cancel');
+                          });
                         },
-                        child: Text(L.of(context)!.cancel_option_label),
-                      ),
-                    );
-                  },
-                ),
-              );
-            });
+                        child: Text(funding![index].value),
+                      );
+                    }),
+                  ],
+                  cancelButton: CupertinoActionSheetAction(
+                    isDefaultAction: true,
+                    onPressed: () {
+                      Navigator.pop(context, 'Cancel');
+                    },
+                    child: Text(L10n.of(context)!.cancel_option_label),
+                  ),
+                );
+              },
+            ),
+          );
   }
 }
 
 class FundingLink {
+  FundingLink._();
+
   /// Check the consent status. If this is the first time we have been
   /// requested to open a funding link, present the user with and
   /// information dialog first to make clear that the link is provided
   /// by the podcast owner and not AnyTime.
   static Future<bool> fundingLink(
-      String url, bool consent, BuildContext context) async {
+    String url,
+    BuildContext context, {
+    required bool consent,
+  }) async {
     bool? result = false;
 
     if (consent) {
@@ -181,12 +172,12 @@ class FundingLink {
         context: context,
         useRootNavigator: false,
         builder: (_) => BasicDialogAlert(
-          title: Text(L.of(context)!.podcast_funding_dialog_header),
-          content: Text(L.of(context)!.consent_message),
+          title: Text(L10n.of(context)!.podcast_funding_dialog_header),
+          content: Text(L10n.of(context)!.consent_message),
           actions: <Widget>[
             BasicDialogAction(
               title: ActionText(
-                L.of(context)!.go_back_button_label,
+                L10n.of(context)!.go_back_button_label,
               ),
               onPressed: () {
                 Navigator.pop(context, false);
@@ -194,7 +185,7 @@ class FundingLink {
             ),
             BasicDialogAction(
               title: ActionText(
-                L.of(context)!.continue_button_label,
+                L10n.of(context)!.continue_button_label,
               ),
               iosIsDefaultAction: true,
               onPressed: () {
@@ -206,7 +197,7 @@ class FundingLink {
       );
 
       if (result!) {
-        var uri = Uri.parse(url);
+        final uri = Uri.parse(url);
 
         unawaited(
           canLaunchUrl(uri).then((value) => launchUrl(uri)),
