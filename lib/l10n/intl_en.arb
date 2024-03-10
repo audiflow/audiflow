@@ -76,6 +76,12 @@
   "view_mode_played": "Played",
   "view_mode_unplayed": "Unplayed",
   "view_mode_downloaded": "Downloaded",
+  "resume": "Resume",
+  "play": "Play",
+  "pause": "Pause",
+  "playFromStart": "Play from start",
+  "playLatest": "Play latest",
+  "playAgain": "Play again",
   "app_title": "Seasoning Podcast Player",
   "@app_title": {
     "description": "Full title for the application",
@@ -977,12 +983,6 @@
   "play_latest_again": "Play again",
   "@play_latest_again": {
     "description": "Play latest again",
-    "type": "text",
-    "placeholders": {}
-  },
-  "resume": "Resume",
-  "@resume": {
-    "description": "Resume",
     "type": "text",
     "placeholders": {}
   }

@@ -9,15 +9,14 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:seasoning/core/l10n.dart';
 import 'package:seasoning/core/types.dart';
 import 'package:seasoning/entities/entities.dart';
-import 'package:seasoning/providers/podcast/episodes_group_provider.dart';
 import 'package:seasoning/providers/podcast/podcast_info_provider.dart';
 import 'package:seasoning/services/podcast/podcast_service_provider.dart';
 import 'package:seasoning/ui/pages/app_bars/podcast_season_app_bar.dart';
+import 'package:seasoning/ui/podcast/contextual_play_button.dart';
 import 'package:seasoning/ui/podcast/episode_list.dart';
 import 'package:seasoning/ui/podcast/types.dart';
 import 'package:seasoning/ui/widgets/fill_remaining_error.dart';
 import 'package:seasoning/ui/widgets/fill_remaining_loading.dart';
-import 'package:seasoning/ui/widgets/rounded_stadium_button.dart';
 import 'package:seasoning/ui/widgets/sort_icon_button.dart';
 
 class PodcastSeasonPage extends HookConsumerWidget {
@@ -67,11 +66,15 @@ class PodcastSeasonPage extends HookConsumerWidget {
                   SliverToBoxAdapter(
                     child: Stack(
                       children: [
-                        ContextualPlayButton(
-                          season.episodes,
-                          episodeGroupKey: ValueKey(season.guid),
-                          playOrder: PlayOrder.timeAscend,
-                          isSeries: true,
+                        Align(
+                          child: IntrinsicWidth(
+                            child: ContextualPlayButton(
+                              season.episodes,
+                              episodeGroupKey: ValueKey(season.guid),
+                              playOrder: PlayOrder.timeAscend,
+                              isSeries: true,
+                            ),
+                          ),
                         ),
                         Positioned(
                           right: 8,
@@ -103,57 +106,5 @@ class PodcastSeasonPage extends HookConsumerWidget {
         ),
       ),
     );
-  }
-}
-
-class ContextualPlayButton extends ConsumerWidget {
-  const ContextualPlayButton(
-    this.episodes, {
-    required this.episodeGroupKey,
-    required this.playOrder,
-    required this.isSeries,
-    super.key,
-  });
-
-  final Key episodeGroupKey;
-  final List<Episode> episodes;
-  final PlayOrder playOrder;
-  final bool isSeries;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final episodesState = ref.watch(episodesGroupProvider(episodeGroupKey));
-    final buttonState = episodesState.valueOrNull
-        ?.nextEpisodeToPlay(playOrder: playOrder, isSeries: isSeries);
-    return RoundedStadiumButton.md(
-      caption: AnimatedOpacity(
-        opacity: episodesState.hasValue ? 1.0 : 0.0,
-        duration: const Duration(milliseconds: 200),
-        child: Text(buttonState?.$2.label(context) ?? ''),
-      ),
-      onPressed: buttonState?.$1 == null
-          ? null
-          : () {
-              final episode = buttonState!.$1!;
-              ref
-                  .read(episodesGroupProvider(episodeGroupKey).notifier)
-                  .togglePlayState(episode: episode);
-            },
-    );
-  }
-}
-
-extension ConditionalPlayButtonStateExt on ConditionalPlayButtonState {
-  String label(BuildContext context) {
-    switch (this) {
-      case ConditionalPlayButtonState.fromStart:
-        return 'Play from start';
-      case ConditionalPlayButtonState.latest:
-        return 'Play latest';
-      case ConditionalPlayButtonState.latestAgain:
-        return 'Play again';
-      case ConditionalPlayButtonState.resume:
-        return 'Resume';
-    }
   }
 }

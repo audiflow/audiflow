@@ -13,7 +13,6 @@ import 'package:seasoning/services/podcast/podcast_service_provider.dart';
 import 'package:seasoning/ui/app/navigation_helper.dart';
 import 'package:seasoning/ui/pages/app_bars/episode_page_app_bar.dart';
 import 'package:seasoning/ui/widgets/podcast_html.dart';
-import 'package:seasoning/ui/widgets/rounded_stadium_button.dart';
 
 /// This Widget takes a search result and builds a list of currently available
 /// podcasts.
@@ -190,8 +189,8 @@ class _EpisodePlayButton extends ConsumerWidget {
     final stats = state.valueOrNull?.stats;
     return Opacity(
       opacity: state.hasValue ? 1 : 0,
-      child: RoundedStadiumButton.md(
-        caption: Text(_caption(context, stats, isPlaying: isPlaying)),
+      child: FilledButton.tonal(
+        child: Text(_caption(context, stats, isPlaying: isPlaying)),
         onPressed: () {
           ref.read(podcastServiceProvider).handlePlay(episode);
         },

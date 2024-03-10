@@ -61,5 +61,11 @@
   "view_mode_seasons": "シーズン",
   "view_mode_played": "再生済み",
   "view_mode_unplayed": "未再生",
-  "view_mode_downloaded": "ダウンロード済み"
+  "view_mode_downloaded": "ダウンロード済み",
+  "resume": "再開",
+  "play": "再生",
+  "pause": "一時停止",
+  "playFromStart": "最初から再生",
+  "playLatest": "最新のエピソードを再生",
+  "playAgain": "再生"
 }
