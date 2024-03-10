@@ -29,35 +29,47 @@ Future<List<Season>> podcastSeasons(
     return [];
   }
 
-  return map.keys.sorted((a, b) => (b ?? 0) - (a ?? 0)).map((seasonKey) {
-    final seasonEpisodes = map[seasonKey]!.sorted(
-      (a, b) {
-        // if (a.episode != null && b.episode != null) {
-        //   return a.episode! < b.episode! ? -1 : 1;
-        // }
-        if (a.publicationDate != null && b.publicationDate != null) {
-          return a.publicationDate!.millisecondsSinceEpoch <
-                  b.publicationDate!.millisecondsSinceEpoch
-              ? -1
-              : 1;
-        }
-        // if (a.episode != null || b.episode != null) {
-        //   return (a.episode == null ? 1 : -1);
-        // }
-        if (a.publicationDate != null || b.publicationDate != null) {
-          return (a.publicationDate == null ? 1 : -1);
-        } else {
-          return 0;
-        }
-      },
-    ).toList();
-    final firstEpisode = seasonEpisodes.first;
+  for (final entry in map.entries) {
+    entry.value.sort((a, b) {
+      if (a.episode != null && b.episode != null) {
+        return a.episode!.compareTo(b.episode!);
+      }
+      if (a.publicationDate != null && b.publicationDate != null) {
+        return a.publicationDate!.millisecondsSinceEpoch
+            .compareTo(b.publicationDate!.millisecondsSinceEpoch);
+      }
+      return a.publicationDate != null
+          ? -1
+          : b.publicationDate != null
+              ? 1
+              : a.title.compareTo(b.title);
+    });
+  }
+
+  return map.keys.sorted((a, b) {
+    if (map[b]!.last.publicationDate != null &&
+        map[a]!.last.publicationDate != null) {
+      final aVal = map[a]!.last.publicationDate!.millisecondsSinceEpoch;
+      final bVal = map[b]!.last.publicationDate!.millisecondsSinceEpoch;
+      return bVal.compareTo(aVal);
+    }
+    if (a != null && b != null) {
+      return b.compareTo(a);
+    }
+    return map[b]!.last.publicationDate != null
+        ? -1
+        : map[a]!.last.publicationDate != null
+            ? 1
+            : map[b]!.last.title.compareTo(map[a]!.last.title);
+  }).map((seasonKey) {
+    final episodes = map[seasonKey]!;
+    final firstEpisode = episodes.first;
     return Season(
       guid: 'season-${firstEpisode.pguid}-${seasonKey ?? 0}',
       pguid: firstEpisode.pguid,
       title: _extractSeasonTitle(firstEpisode),
       seasonNum: seasonKey,
-      episodes: seasonEpisodes.toList(),
+      episodes: episodes,
     );
   }).toList();
 }

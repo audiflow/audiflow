@@ -53,11 +53,11 @@ class SeasonTile extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    season.seasonNum == null
-                        ? 'Extra'
-                        : season.title != null
+                    season.title != null
+                        ? season.seasonNum != null
                             ? '#${season.seasonNum} ${season.title}'
-                            : 'Season ${season.seasonNum}',
+                            : season.title!
+                        : 'Season ${season.seasonNum}',
                     maxLines: 2,
                     textHeightBehavior: const TextHeightBehavior(
                       applyHeightToFirstAscent: false,
