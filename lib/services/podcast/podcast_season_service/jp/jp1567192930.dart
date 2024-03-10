@@ -73,6 +73,6 @@ class JP1567192930 extends PodcastSeasonExtractor {
   @override
   String? extractSeasonTitle(Episode episode) {
     final m = RegExp(r'^#\d+[\s_]*(.*?)（').firstMatch(episode.title);
-    return m?.group(1) ?? 'その他!';
+    return m?.group(1) ?? 'その他';
   }
 }

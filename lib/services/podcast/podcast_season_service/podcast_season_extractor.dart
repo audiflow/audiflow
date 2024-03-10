@@ -38,14 +38,14 @@ abstract class PodcastSeasonExtractor {
     }
 
     return map.keys.sorted((a, b) {
+      if (a != null && b != null) {
+        return b.compareTo(a);
+      }
       if (map[b]!.last.publicationDate != null &&
           map[a]!.last.publicationDate != null) {
         final aVal = map[a]!.last.publicationDate!.millisecondsSinceEpoch;
         final bVal = map[b]!.last.publicationDate!.millisecondsSinceEpoch;
         return bVal.compareTo(aVal);
-      }
-      if (a != null && b != null) {
-        return b.compareTo(a);
       }
       return map[b]!.last.publicationDate != null
           ? -1
