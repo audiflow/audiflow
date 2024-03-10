@@ -144,7 +144,7 @@ class _SeasonSubtitle extends StatelessWidget {
       return '${length.inMinutes}${l10n.min}';
     } else {
       return '${length.inHours}${l10n.hour}'
-          ' ${length.inMinutes.remainder(60)}${l10n.min}';
+          '${length.inMinutes.remainder(60)}${l10n.min}';
     }
   }
 }
