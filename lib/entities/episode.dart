@@ -194,6 +194,7 @@ class EpisodeStatsUpdateParam {
     this.completeCount,
     this.inQueue,
     this.downloaded,
+    this.lastPlayedAt,
   });
 
   final String guid;
@@ -204,6 +205,7 @@ class EpisodeStatsUpdateParam {
   final int? completeCount;
   final bool? inQueue;
   final bool? downloaded;
+  final DateTime? lastPlayedAt;
 
   EpisodeStatsUpdateParam copyWith({
     Duration? position,
@@ -213,6 +215,7 @@ class EpisodeStatsUpdateParam {
     int? completeCount,
     bool? inQueue,
     bool? downloaded,
+    DateTime? lastPlayedAt,
   }) {
     return EpisodeStatsUpdateParam(
       guid: guid,
@@ -223,8 +226,18 @@ class EpisodeStatsUpdateParam {
       completeCount: completeCount ?? this.completeCount,
       inQueue: inQueue ?? this.inQueue,
       downloaded: downloaded ?? this.downloaded,
+      lastPlayedAt: lastPlayedAt ?? this.lastPlayedAt,
     );
   }
+
+  bool get isEmpty =>
+      position == null &&
+      duration == null &&
+      playCount == null &&
+      playTotal == null &&
+      completeCount == null &&
+      inQueue == null &&
+      downloaded == null;
 }
 
 extension EpisodeStatsExt on EpisodeStats {

@@ -1,3 +1,4 @@
+import 'package:logging/logging.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:seasoning/entities/entities.dart';
 import 'package:seasoning/repository/repository_provider.dart';
@@ -21,29 +22,38 @@ bool audioPositionSaver(AudioPositionSaverRef ref) {
     prev,
     next,
   ) {
-    final (prevEpisode, _, _) = prev ?? (null, null, null);
+    final (prevEpisode, _, prevPhase) = prev ?? (null, null, null);
     final (episode, position, phase) = next;
     final repository = ref.read(repositoryProvider);
+
+    if (episode == null || position == null || phase == null) {
+      return;
+    }
 
     // Save playing episode's guid
     if (phase == PlayerPhase.stop) {
       repository.clearPlayingEpisodeGuid();
-    } else if (prevEpisode != episode && episode != null) {
+    } else if (prevEpisode != episode) {
       repository.savePlayingEpisodeGuid(episode.guid);
     }
 
+    var statsUpdateParam = EpisodeStatsUpdateParam(
+      guid: episode.guid,
+      position: position,
+    );
+
+    final log = Logger('audioPositionSaver');
     // Save position
-    if (episode != null && position != null) {
-      // final completed = episode.duration!.inSeconds - 3 <=
-      // position.inSeconds;
-      repository.updateEpisodeStats(
-        EpisodeStatsUpdateParam(
-          guid: episode.guid,
-          position: position,
-          // completed: completed ? completed : null,
-        ),
+    // final completed = episode.duration!.inSeconds - 3 <=
+    // position.inSeconds;
+    if (phase == PlayerPhase.play &&
+        (prevPhase != phase || prevEpisode != episode)) {
+      statsUpdateParam = statsUpdateParam.copyWith(
+        lastPlayedAt: DateTime.now(),
       );
     }
+
+    repository.updateEpisodeStats(statsUpdateParam);
   });
   return true;
 }

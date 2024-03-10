@@ -405,16 +405,7 @@ class SembastRepository extends Repository {
         final value = await _episodeStore.record(param.guid).get(txn);
         stats = value != null
             ? EpisodeStats.fromEpisode(Episode.fromJson(value))
-            : EpisodeStats(
-                guid: param.guid,
-                position: param.position ?? Duration.zero,
-                duration: param.duration ?? Duration.zero,
-                playCount: param.playCount ?? 0,
-                playTotal: param.playTotal ?? Duration.zero,
-                completeCount: param.completeCount ?? 0,
-                inQueue: param.inQueue ?? false,
-                downloaded: param.downloaded ?? false,
-              );
+            : EpisodeStats(guid: param.guid);
       }
 
       final newStats = stats.copyWith(
@@ -425,6 +416,7 @@ class SembastRepository extends Repository {
         completeCount: param.completeCount ?? 0,
         inQueue: param.inQueue ?? stats.inQueue,
         downloaded: param.downloaded ?? stats.downloaded,
+        lastPlayedAt: param.lastPlayedAt ?? stats.lastPlayedAt,
       );
 
       if (newStats != stats) {
