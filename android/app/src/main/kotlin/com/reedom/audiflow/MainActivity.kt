@@ -1,4 +1,4 @@
-package com.reedom.seasoning
+package com.reedom.audiflow
 
 import io.flutter.embedding.android.FlutterActivity
 
