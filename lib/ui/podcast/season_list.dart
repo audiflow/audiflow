@@ -37,8 +37,7 @@ class SeasonList extends ConsumerWidget {
       return FillRemainingError.podcastNoResults();
     }
 
-    final ascend =
-        podcastState.valueOrNull?.stats?.ascendSeasonEpisodes ?? true;
+    final ascend = podcastState.valueOrNull?.stats?.ascend ?? false;
     final seasons =
         ascend ? seasonsState.value!.reversed.toList() : seasonsState.value!;
     return SliverSafeArea(

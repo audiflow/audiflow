@@ -59,9 +59,7 @@ class PodcastDetailsPage extends HookConsumerWidget {
       viewMode = PodcastDetailViewMode.episodes;
     }
 
-    final ascend = viewMode == PodcastDetailViewMode.seasons
-        ? (stats?.ascendSeasonEpisodes ?? true)
-        : (stats?.ascend ?? false);
+    final ascend = stats?.ascend ?? false;
 
     return Semantics(
       header: false,
@@ -305,13 +303,9 @@ class _SwitchBar extends ConsumerWidget {
             SortIconButton(
               ascend: ascend,
               onTap: () {
-                final podcastInfo =
-                    ref.read(podcastInfoProvider(podcast.metadata).notifier);
-                if (viewMode == PodcastDetailViewMode.seasons) {
-                  podcastInfo.toggleAscendSeasonEpisode();
-                } else {
-                  podcastInfo.toggleAscend();
-                }
+                ref
+                    .read(podcastInfoProvider(podcast.metadata).notifier)
+                    .toggleAscend();
               },
             ),
           ],
