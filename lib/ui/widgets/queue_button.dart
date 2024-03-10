@@ -3,12 +3,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'package:audiflow/entities/entities.dart';
+import 'package:audiflow/services/queue/queue_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
-import 'package:seasoning/entities/entities.dart';
-import 'package:seasoning/services/queue/queue_manager.dart';
 
 enum _Action {
   prepend,

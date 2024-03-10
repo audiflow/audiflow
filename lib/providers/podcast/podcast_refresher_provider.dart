@@ -1,15 +1,15 @@
 import 'dart:async';
 
+import 'package:audiflow/core/utils.dart';
+import 'package:audiflow/entities/podcast.dart';
+import 'package:audiflow/errors/errors.dart';
+import 'package:audiflow/providers/podcast/podcast_subscriptions_provider.dart';
+import 'package:audiflow/repository/repository_provider.dart';
+import 'package:audiflow/services/error/error_manager.dart';
+import 'package:audiflow/services/podcast/podcast_service_provider.dart';
 import 'package:logging/logging.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:rxdart/rxdart.dart';
-import 'package:seasoning/core/utils.dart';
-import 'package:seasoning/entities/podcast.dart';
-import 'package:seasoning/errors/errors.dart';
-import 'package:seasoning/providers/podcast/podcast_subscriptions_provider.dart';
-import 'package:seasoning/repository/repository_provider.dart';
-import 'package:seasoning/services/error/error_manager.dart';
-import 'package:seasoning/services/podcast/podcast_service_provider.dart';
 
 part 'podcast_refresher_provider.g.dart';
 

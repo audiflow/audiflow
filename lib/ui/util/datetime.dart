@@ -1,6 +1,6 @@
+import 'package:audiflow/core/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:seasoning/core/l10n.dart';
 
 class DateTimeString {
   DateTimeString._();

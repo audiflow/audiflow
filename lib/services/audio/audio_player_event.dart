@@ -1,5 +1,5 @@
+import 'package:audiflow/entities/entities.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:seasoning/entities/entities.dart';
 
 part 'audio_player_event.g.dart';
 

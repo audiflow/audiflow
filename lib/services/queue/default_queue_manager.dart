@@ -5,11 +5,11 @@
 
 import 'dart:async';
 
+import 'package:audiflow/entities/entities.dart';
+import 'package:audiflow/repository/repository_provider.dart';
+import 'package:audiflow/services/queue/queue_manager.dart';
 import 'package:collection/collection.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:seasoning/entities/entities.dart';
-import 'package:seasoning/repository/repository_provider.dart';
-import 'package:seasoning/services/queue/queue_manager.dart';
 
 part 'default_queue_manager.g.dart';
 

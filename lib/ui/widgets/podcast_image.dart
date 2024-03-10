@@ -4,9 +4,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'package:audiflow/core/environment.dart';
 import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
-import 'package:seasoning/core/environment.dart';
 
 /// This class handles rendering of podcast images from a url.
 /// Images will be cached for quicker fetching on subsequent requests.

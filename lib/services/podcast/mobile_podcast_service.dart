@@ -5,6 +5,16 @@
 import 'dart:io';
 import 'dart:ui';
 
+import 'package:audiflow/api/podcast/podcast_api_provider.dart';
+import 'package:audiflow/core/utils.dart';
+import 'package:audiflow/entities/entities.dart';
+import 'package:audiflow/errors/errors.dart';
+import 'package:audiflow/repository/repository_provider.dart';
+import 'package:audiflow/services/audio/audio_player_service.dart';
+import 'package:audiflow/services/connectivity/connectivity.dart';
+import 'package:audiflow/services/podcast/podcast_service.dart';
+import 'package:audiflow/services/queue/queue_manager.dart';
+import 'package:audiflow/services/settings/settings_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,16 +22,6 @@ import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 import 'package:path/path.dart';
 import 'package:podcast_search/podcast_search.dart' as podcast_search;
-import 'package:seasoning/api/podcast/podcast_api_provider.dart';
-import 'package:seasoning/core/utils.dart';
-import 'package:seasoning/entities/entities.dart';
-import 'package:seasoning/errors/errors.dart';
-import 'package:seasoning/repository/repository_provider.dart';
-import 'package:seasoning/services/audio/audio_player_service.dart';
-import 'package:seasoning/services/connectivity/connectivity.dart';
-import 'package:seasoning/services/podcast/podcast_service.dart';
-import 'package:seasoning/services/queue/queue_manager.dart';
-import 'package:seasoning/services/settings/settings_service.dart';
 
 class MobilePodcastService implements PodcastService {
   MobilePodcastService(this._ref);

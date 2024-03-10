@@ -1,6 +1,6 @@
+import 'package:audiflow/core/environment.dart';
+import 'package:audiflow/entities/entities.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:seasoning/core/environment.dart';
-import 'package:seasoning/entities/entities.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 part 'settings_service.g.dart';

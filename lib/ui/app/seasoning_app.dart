@@ -1,8 +1,8 @@
+import 'package:audiflow/ui/app/navigation_helper.dart';
+import 'package:audiflow/ui/color_schemes.g.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/messages_all.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:seasoning/ui/app/navigation_helper.dart';
-import 'package:seasoning/ui/color_schemes.g.dart';
 
 class SeasoningApp extends StatelessWidget {
   const SeasoningApp({super.key});

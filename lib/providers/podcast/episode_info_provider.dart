@@ -1,9 +1,9 @@
+import 'package:audiflow/entities/entities.dart';
+import 'package:audiflow/repository/episode_event.dart';
+import 'package:audiflow/services/podcast/podcast_service_provider.dart';
+import 'package:audiflow/services/queue/queue_manager.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:seasoning/entities/entities.dart';
-import 'package:seasoning/repository/episode_event.dart';
-import 'package:seasoning/services/podcast/podcast_service_provider.dart';
-import 'package:seasoning/services/queue/queue_manager.dart';
 
 part 'episode_info_provider.freezed.dart';
 part 'episode_info_provider.g.dart';

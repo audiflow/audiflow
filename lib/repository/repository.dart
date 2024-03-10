@@ -4,7 +4,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:seasoning/entities/entities.dart';
+import 'package:audiflow/entities/entities.dart';
 
 /// An abstract class that represent the actions supported by the chosen
 /// database or storage implementation.

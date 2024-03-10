@@ -4,8 +4,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'package:audiflow/entities/episode.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:seasoning/entities/episode.dart';
 
 part 'episode_event.g.dart';
 

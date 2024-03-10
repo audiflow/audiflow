@@ -1,5 +1,5 @@
+import 'package:audiflow/entities/entities.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:seasoning/entities/entities.dart';
 
 part 'podcast_chart.freezed.dart';
 part 'podcast_chart.g.dart';

@@ -1,10 +1,10 @@
+import 'package:audiflow/entities/entities.dart';
+import 'package:audiflow/services/settings/settings_service.dart';
+import 'package:audiflow/ui/themes.dart';
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:seasoning/entities/entities.dart';
-import 'package:seasoning/services/settings/settings_service.dart';
-import 'package:seasoning/ui/themes.dart';
 
-export 'package:seasoning/ui/themes.dart';
+export 'package:audiflow/ui/themes.dart';
 
 part 'theme_provider.g.dart';
 

@@ -1,7 +1,7 @@
 import 'dart:async';
 
+import 'package:audiflow/ui/mini_player/utils.dart';
 import 'package:flutter/material.dart';
-import 'package:seasoning/ui/mini_player/utils.dart';
 
 ///Type definition for the builder function
 typedef MiniPlayerBuilder = Widget Function(double height, double percentage);

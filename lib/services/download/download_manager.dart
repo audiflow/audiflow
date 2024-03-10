@@ -6,7 +6,7 @@
 
 import 'dart:async';
 
-import 'package:seasoning/entities/downloadable.dart';
+import 'package:audiflow/entities/downloadable.dart';
 
 class DownloadProgress {
   DownloadProgress(

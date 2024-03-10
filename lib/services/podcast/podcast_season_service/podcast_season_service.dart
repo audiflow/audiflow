@@ -1,4 +1,4 @@
-import 'package:seasoning/entities/entities.dart';
+import 'package:audiflow/entities/entities.dart';
 
 import 'jp/jp1450522865.dart';
 import 'jp/jp1567192930.dart';

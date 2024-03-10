@@ -1,10 +1,10 @@
+import 'package:audiflow/entities/entities.dart';
+import 'package:audiflow/repository/repository_provider.dart';
+import 'package:audiflow/services/audio/audio_player_event.dart';
+import 'package:audiflow/services/audio/audio_player_service.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:logging/logging.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:seasoning/entities/entities.dart';
-import 'package:seasoning/repository/repository_provider.dart';
-import 'package:seasoning/services/audio/audio_player_event.dart';
-import 'package:seasoning/services/audio/audio_player_service.dart';
 
 part 'audio_position_saver.freezed.dart';
 part 'audio_position_saver.g.dart';

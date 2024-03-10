@@ -7,21 +7,21 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:audiflow/core/utils.dart';
+import 'package:audiflow/entities/app_settings.dart';
+import 'package:audiflow/entities/downloadable.dart';
+import 'package:audiflow/entities/episode.dart';
+import 'package:audiflow/entities/transcript.dart';
+import 'package:audiflow/repository/repository_provider.dart';
+import 'package:audiflow/services/download/download_manager_provider.dart';
+import 'package:audiflow/services/download/download_service.dart';
+import 'package:audiflow/services/podcast/podcast_service_provider.dart';
+import 'package:audiflow/services/settings/settings_service.dart';
 import 'package:collection/collection.dart' show IterableExtension;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
 import 'package:mp3_info/mp3_info.dart';
 import 'package:rxdart/rxdart.dart';
-import 'package:seasoning/core/utils.dart';
-import 'package:seasoning/entities/app_settings.dart';
-import 'package:seasoning/entities/downloadable.dart';
-import 'package:seasoning/entities/episode.dart';
-import 'package:seasoning/entities/transcript.dart';
-import 'package:seasoning/repository/repository_provider.dart';
-import 'package:seasoning/services/download/download_manager_provider.dart';
-import 'package:seasoning/services/download/download_service.dart';
-import 'package:seasoning/services/podcast/podcast_service_provider.dart';
-import 'package:seasoning/services/settings/settings_service.dart';
 
 /// An implementation of a [DownloadService] that handles downloading
 /// of episodes on mobile.

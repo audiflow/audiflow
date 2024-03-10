@@ -1,12 +1,12 @@
+import 'package:audiflow/core/l10n.dart';
+import 'package:audiflow/core/types.dart';
+import 'package:audiflow/entities/entities.dart';
+import 'package:audiflow/providers/podcast/episode_info_provider.dart';
+import 'package:audiflow/services/audio/audio_player_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:seasoning/core/l10n.dart';
-import 'package:seasoning/core/types.dart';
-import 'package:seasoning/entities/entities.dart';
-import 'package:seasoning/providers/podcast/episode_info_provider.dart';
-import 'package:seasoning/services/audio/audio_player_service.dart';
 
 class AnimatedPlayButton extends HookConsumerWidget {
   const AnimatedPlayButton(

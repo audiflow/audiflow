@@ -1,17 +1,17 @@
 import 'dart:math';
 import 'dart:ui' as ui;
 
+import 'package:audiflow/entities/entities.dart';
+import 'package:audiflow/services/audio/audio_player_service.dart';
+import 'package:audiflow/services/queue/queue_list_provider.dart';
+import 'package:audiflow/ui/app/app_bottom_navigation_bar.dart';
+import 'package:audiflow/ui/mini_player/mini_player.dart';
+import 'package:audiflow/ui/mini_player/utils.dart';
+import 'package:audiflow/ui/player/player_episode_tile.dart';
+import 'package:audiflow/ui/podcast/queue_list_block.dart';
+import 'package:audiflow/ui/widgets/seek_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:seasoning/entities/entities.dart';
-import 'package:seasoning/services/audio/audio_player_service.dart';
-import 'package:seasoning/services/queue/queue_list_provider.dart';
-import 'package:seasoning/ui/app/app_bottom_navigation_bar.dart';
-import 'package:seasoning/ui/mini_player/mini_player.dart';
-import 'package:seasoning/ui/mini_player/utils.dart';
-import 'package:seasoning/ui/player/player_episode_tile.dart';
-import 'package:seasoning/ui/podcast/queue_list_block.dart';
-import 'package:seasoning/ui/widgets/seek_bar.dart';
 
 final ValueNotifier<double> playerExpandProgress =
     ValueNotifier(playerMinHeight);

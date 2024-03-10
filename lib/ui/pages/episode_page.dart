@@ -3,16 +3,16 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'package:audiflow/entities/entities.dart';
+import 'package:audiflow/providers/podcast/episode_info_provider.dart';
+import 'package:audiflow/services/audio/audio_player_service.dart';
+import 'package:audiflow/services/podcast/podcast_service_provider.dart';
+import 'package:audiflow/ui/app/navigation_helper.dart';
+import 'package:audiflow/ui/pages/app_bars/episode_page_app_bar.dart';
+import 'package:audiflow/ui/widgets/podcast_html.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:seasoning/entities/entities.dart';
-import 'package:seasoning/providers/podcast/episode_info_provider.dart';
-import 'package:seasoning/services/audio/audio_player_service.dart';
-import 'package:seasoning/services/podcast/podcast_service_provider.dart';
-import 'package:seasoning/ui/app/navigation_helper.dart';
-import 'package:seasoning/ui/pages/app_bars/episode_page_app_bar.dart';
-import 'package:seasoning/ui/widgets/podcast_html.dart';
 
 /// This Widget takes a search result and builds a list of currently available
 /// podcasts.

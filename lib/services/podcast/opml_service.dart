@@ -4,7 +4,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:seasoning/events/opml_event.dart';
+import 'package:audiflow/events/opml_event.dart';
 
 /// This service handles the import and export of Podcasts via
 /// the OPML format.

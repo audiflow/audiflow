@@ -3,12 +3,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'package:audiflow/entities/entities.dart';
+import 'package:audiflow/ui/pages/app_bars/podcast_page_header_image.dart';
+import 'package:audiflow/ui/widgets/placeholder_builder.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:seasoning/entities/entities.dart';
-import 'package:seasoning/ui/pages/app_bars/podcast_page_header_image.dart';
-import 'package:seasoning/ui/widgets/placeholder_builder.dart';
 
 class PodcastSeasonAppBar extends ConsumerWidget {
   const PodcastSeasonAppBar({

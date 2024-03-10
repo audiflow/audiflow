@@ -1,5 +1,5 @@
+import 'package:audiflow/entities/entities.dart';
 import 'package:flutter/widgets.dart';
-import 'package:seasoning/entities/entities.dart';
 
 /// The order in which episodes are played.
 enum PlayOrder {
@@ -11,7 +11,7 @@ enum PlayOrder {
 }
 
 class PlayButtonTappedNotification extends Notification {
-  PlayButtonTappedNotification(this.episode, { this.index });
+  PlayButtonTappedNotification(this.episode, {this.index});
 
   final Episode episode;
   final int? index;

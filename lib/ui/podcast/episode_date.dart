@@ -1,6 +1,6 @@
+import 'package:audiflow/entities/entities.dart';
+import 'package:audiflow/ui/util/datetime.dart';
 import 'package:flutter/material.dart';
-import 'package:seasoning/entities/entities.dart';
-import 'package:seasoning/ui/util/datetime.dart';
 
 class EpisodeDate extends StatelessWidget {
   const EpisodeDate(this.episode, {super.key, this.color});

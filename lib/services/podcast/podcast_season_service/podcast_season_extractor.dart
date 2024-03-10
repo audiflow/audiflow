@@ -1,5 +1,5 @@
+import 'package:audiflow/entities/entities.dart';
 import 'package:collection/collection.dart';
-import 'package:seasoning/entities/entities.dart';
 
 abstract class PodcastSeasonExtractor {
   String get guid;
@@ -32,8 +32,8 @@ abstract class PodcastSeasonExtractor {
         return a.publicationDate != null
             ? -1
             : b.publicationDate != null
-            ? 1
-            : a.title.compareTo(b.title);
+                ? 1
+                : a.title.compareTo(b.title);
       });
     }
 
@@ -50,8 +50,8 @@ abstract class PodcastSeasonExtractor {
       return map[b]!.last.publicationDate != null
           ? -1
           : map[a]!.last.publicationDate != null
-          ? 1
-          : map[b]!.last.title.compareTo(map[a]!.last.title);
+              ? 1
+              : map[b]!.last.title.compareTo(map[a]!.last.title);
     }).map((seasonKey) {
       final episodes = map[seasonKey]!;
       final firstEpisode = episodes.first;

@@ -1,12 +1,12 @@
+import 'package:audiflow/core/l10n.dart';
+import 'package:audiflow/core/types.dart';
+import 'package:audiflow/entities/entities.dart';
+import 'package:audiflow/services/podcast/podcast_service_provider.dart';
+import 'package:audiflow/services/queue/queue_list_provider.dart';
+import 'package:audiflow/services/queue/queue_manager.dart';
+import 'package:audiflow/ui/podcast/episode_brief_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:seasoning/core/l10n.dart';
-import 'package:seasoning/core/types.dart';
-import 'package:seasoning/entities/entities.dart';
-import 'package:seasoning/services/podcast/podcast_service_provider.dart';
-import 'package:seasoning/services/queue/queue_list_provider.dart';
-import 'package:seasoning/services/queue/queue_manager.dart';
-import 'package:seasoning/ui/podcast/episode_brief_tile.dart';
 import 'package:sliver_tools/sliver_tools.dart';
 
 class QueueListBlock extends ConsumerWidget {

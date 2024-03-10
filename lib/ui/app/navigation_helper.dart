@@ -1,14 +1,14 @@
+import 'package:audiflow/entities/entities.dart';
+import 'package:audiflow/ui/app/app_bottom_navigation_bar.dart';
+import 'package:audiflow/ui/app/seasoning_app.dart';
+import 'package:audiflow/ui/pages/episode_page.dart';
+import 'package:audiflow/ui/pages/podcast_chart_page.dart';
+import 'package:audiflow/ui/pages/podcast_details_page.dart';
+import 'package:audiflow/ui/pages/podcast_season_page.dart';
+import 'package:audiflow/ui/pages/search_page.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:palette_generator/palette_generator.dart';
-import 'package:seasoning/entities/entities.dart';
-import 'package:seasoning/ui/app/app_bottom_navigation_bar.dart';
-import 'package:seasoning/ui/app/seasoning_app.dart';
-import 'package:seasoning/ui/pages/episode_page.dart';
-import 'package:seasoning/ui/pages/podcast_chart_page.dart';
-import 'package:seasoning/ui/pages/podcast_details_page.dart';
-import 'package:seasoning/ui/pages/podcast_season_page.dart';
-import 'package:seasoning/ui/pages/search_page.dart';
 
 class NavigationHelper {
   factory NavigationHelper.setup() => _instance;

@@ -4,26 +4,26 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'package:audiflow/core/l10n.dart';
+import 'package:audiflow/entities/entities.dart';
+import 'package:audiflow/providers/podcast/podcast_info_provider.dart';
+import 'package:audiflow/providers/podcast/podcast_seasons_provider.dart';
+import 'package:audiflow/services/podcast/podcast_service_provider.dart';
+import 'package:audiflow/services/settings/settings_service.dart';
+import 'package:audiflow/ui/pages/app_bars/podcast_details_app_bar.dart';
+import 'package:audiflow/ui/podcast/episode_list.dart';
+import 'package:audiflow/ui/podcast/funding_menu.dart';
+import 'package:audiflow/ui/podcast/season_list.dart';
+import 'package:audiflow/ui/widgets/fill_remaining_error.dart';
+import 'package:audiflow/ui/widgets/fill_remaining_loading.dart';
+import 'package:audiflow/ui/widgets/podcast_html.dart';
+import 'package:audiflow/ui/widgets/sort_icon_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:palette_generator/palette_generator.dart';
-import 'package:seasoning/core/l10n.dart';
-import 'package:seasoning/entities/entities.dart';
-import 'package:seasoning/providers/podcast/podcast_info_provider.dart';
-import 'package:seasoning/providers/podcast/podcast_seasons_provider.dart';
-import 'package:seasoning/services/podcast/podcast_service_provider.dart';
-import 'package:seasoning/services/settings/settings_service.dart';
-import 'package:seasoning/ui/pages/app_bars/podcast_details_app_bar.dart';
-import 'package:seasoning/ui/podcast/episode_list.dart';
-import 'package:seasoning/ui/podcast/funding_menu.dart';
-import 'package:seasoning/ui/podcast/season_list.dart';
-import 'package:seasoning/ui/widgets/fill_remaining_error.dart';
-import 'package:seasoning/ui/widgets/fill_remaining_loading.dart';
-import 'package:seasoning/ui/widgets/podcast_html.dart';
-import 'package:seasoning/ui/widgets/sort_icon_button.dart';
 
 /// This Widget takes a search result and builds a list of currently available
 /// podcasts.

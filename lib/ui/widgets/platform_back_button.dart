@@ -6,8 +6,8 @@
 
 import 'dart:io';
 
+import 'package:audiflow/core/l10n.dart';
 import 'package:flutter/material.dart';
-import 'package:seasoning/core/l10n.dart';
 
 /// Simple widget for rendering either the standard Android close or iOS Back
 /// button.
@@ -46,8 +46,7 @@ class PlatformBackButton extends StatelessWidget {
                 child: Icon(
                   Platform.isIOS ? Icons.arrow_back_ios : Icons.close,
                   size: Platform.isIOS ? 20.0 : 26.0,
-                  semanticLabel:
-                      L10n.of(context)?.go_back_button_label,
+                  semanticLabel: L10n.of(context)?.go_back_button_label,
                 ),
               ),
             ),

@@ -5,15 +5,15 @@
 
 import 'dart:async';
 
+import 'package:audiflow/entities/entities.dart';
+import 'package:audiflow/errors/errors.dart';
+import 'package:audiflow/events/podcast_search_event.dart';
+import 'package:audiflow/repository/repository_provider.dart';
+import 'package:audiflow/services/error/error_manager.dart';
+import 'package:audiflow/services/podcast/podcast_service_provider.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:logging/logging.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:seasoning/entities/entities.dart';
-import 'package:seasoning/errors/errors.dart';
-import 'package:seasoning/events/podcast_search_event.dart';
-import 'package:seasoning/repository/repository_provider.dart';
-import 'package:seasoning/services/error/error_manager.dart';
-import 'package:seasoning/services/podcast/podcast_service_provider.dart';
 
 part 'podcast_search_provider.freezed.dart';
 part 'podcast_search_provider.g.dart';

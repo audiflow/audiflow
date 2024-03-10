@@ -3,10 +3,10 @@
 // All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
+import 'package:audiflow/entities/entities.dart';
+import 'package:audiflow/services/settings/settings_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seasoning/entities/entities.dart';
-import 'package:seasoning/services/settings/settings_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../test_common/riverpod.dart';

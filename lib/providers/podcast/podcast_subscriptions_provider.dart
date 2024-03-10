@@ -1,9 +1,9 @@
+import 'package:audiflow/entities/entities.dart';
+import 'package:audiflow/repository/podcast_event.dart';
+import 'package:audiflow/repository/repository_provider.dart';
 import 'package:collection/collection.dart';
 import 'package:logging/logging.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:seasoning/entities/entities.dart';
-import 'package:seasoning/repository/podcast_event.dart';
-import 'package:seasoning/repository/repository_provider.dart';
 
 part 'podcast_subscriptions_provider.g.dart';
 

@@ -3,10 +3,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'package:audiflow/ui/widgets/delayed_progress_indicator.dart';
+import 'package:audiflow/ui/widgets/placeholder_builder.dart';
+import 'package:audiflow/ui/widgets/podcast_image.dart';
 import 'package:flutter/material.dart';
-import 'package:seasoning/ui/widgets/delayed_progress_indicator.dart';
-import 'package:seasoning/ui/widgets/placeholder_builder.dart';
-import 'package:seasoning/ui/widgets/podcast_image.dart';
 
 class PodcastHeaderImage extends StatelessWidget {
   const PodcastHeaderImage({

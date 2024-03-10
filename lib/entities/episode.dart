@@ -4,15 +4,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'package:audiflow/core/utils.dart';
+import 'package:audiflow/entities/chapter.dart';
+import 'package:audiflow/entities/downloadable.dart';
+import 'package:audiflow/entities/person.dart';
+import 'package:audiflow/entities/transcript.dart';
 import 'package:flutter/foundation.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:html/parser.dart' show parseFragment;
 import 'package:podcast_search/podcast_search.dart' as search;
-import 'package:seasoning/core/utils.dart';
-import 'package:seasoning/entities/chapter.dart';
-import 'package:seasoning/entities/downloadable.dart';
-import 'package:seasoning/entities/person.dart';
-import 'package:seasoning/entities/transcript.dart';
 
 part 'episode.freezed.dart';
 part 'episode.g.dart';

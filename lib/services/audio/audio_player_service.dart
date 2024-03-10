@@ -4,13 +4,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'package:audiflow/entities/episode.dart';
+import 'package:audiflow/entities/sleep.dart';
+import 'package:audiflow/services/audio/audio_player_state.dart';
 import 'package:audio_service/audio_service.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:seasoning/entities/episode.dart';
-import 'package:seasoning/entities/sleep.dart';
-import 'package:seasoning/services/audio/audio_player_state.dart';
 
-export 'package:seasoning/services/audio/audio_player_state.dart';
+export 'package:audiflow/services/audio/audio_player_state.dart';
 
 part 'audio_player_service.g.dart';
 

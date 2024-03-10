@@ -4,10 +4,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-
+import 'package:audiflow/core/environment.dart';
+import 'package:audiflow/entities/search_providers.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:seasoning/core/environment.dart';
-import 'package:seasoning/entities/search_providers.dart';
 
 part 'app_settings.freezed.dart';
 part 'app_settings.g.dart';

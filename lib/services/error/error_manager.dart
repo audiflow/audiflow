@@ -1,8 +1,8 @@
+import 'package:audiflow/errors/errors.dart';
+import 'package:audiflow/services/connectivity/connectivity_state.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:seasoning/errors/errors.dart';
-import 'package:seasoning/services/connectivity/connectivity_state.dart';
 
 part 'error_manager.g.dart';
 

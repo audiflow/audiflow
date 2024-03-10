@@ -6,11 +6,11 @@
 
 import 'dart:io';
 
+import 'package:audiflow/api/podcast/podcast_api.dart';
+import 'package:audiflow/core/environment.dart';
+import 'package:audiflow/entities/transcript.dart';
 import 'package:flutter/foundation.dart';
 import 'package:podcast_search/podcast_search.dart' as podcast_search;
-import 'package:seasoning/api/podcast/podcast_api.dart';
-import 'package:seasoning/core/environment.dart';
-import 'package:seasoning/entities/transcript.dart';
 
 /// An implementation of the [PodcastApi].
 ///

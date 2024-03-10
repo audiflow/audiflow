@@ -8,13 +8,13 @@
 //
 // import 'package:flutter_test/flutter_test.dart';
 // import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
-// import 'package:seasoning/events/opml_event.dart';
-// import 'package:seasoning/repository/repository.dart';
-// import 'package:seasoning/repository/sembast/sembast_repository.dart';
-// import 'package:seasoning/services/podcast/mobile_opml_service.dart';
-// import 'package:seasoning/services/podcast/mobile_podcast_service.dart';
-// import 'package:seasoning/services/podcast/opml_service.dart';
-// import 'package:seasoning/services/podcast/podcast_service.dart';
+// import 'package:audiflow/events/opml_event.dart';
+// import 'package:audiflow/repository/repository.dart';
+// import 'package:audiflow/repository/sembast/sembast_repository.dart';
+// import 'package:audiflow/services/podcast/mobile_opml_service.dart';
+// import 'package:audiflow/services/podcast/mobile_podcast_service.dart';
+// import 'package:audiflow/services/podcast/opml_service.dart';
+// import 'package:audiflow/services/podcast/podcast_service.dart';
 //
 // import '../mocks/mock_path_provider.dart';
 // import '../mocks/mock_podcast_api.dart';

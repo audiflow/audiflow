@@ -3,15 +3,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'package:audiflow/core/l10n.dart';
+import 'package:audiflow/core/types.dart';
+import 'package:audiflow/entities/entities.dart';
+import 'package:audiflow/providers/podcast/episodes_group_provider.dart';
+import 'package:audiflow/services/audio/audio_player_service.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
-import 'package:seasoning/core/l10n.dart';
-import 'package:seasoning/core/types.dart';
-import 'package:seasoning/entities/entities.dart';
-import 'package:seasoning/providers/podcast/episodes_group_provider.dart';
-import 'package:seasoning/services/audio/audio_player_service.dart';
 
 class ContextualPlayButton extends ConsumerWidget {
   const ContextualPlayButton(

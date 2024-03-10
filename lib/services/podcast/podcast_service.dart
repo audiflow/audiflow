@@ -6,7 +6,7 @@
 
 import 'dart:ui';
 
-import 'package:seasoning/entities/entities.dart';
+import 'package:audiflow/entities/entities.dart';
 
 part 'podcast_genres.dart';
 

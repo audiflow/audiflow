@@ -1,12 +1,12 @@
 import 'dart:io';
 
+import 'package:audiflow/entities/entities.dart';
+import 'package:audiflow/repository/repository.dart';
+import 'package:audiflow/repository/sembast/sembast_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
-import 'package:seasoning/entities/entities.dart';
-import 'package:seasoning/repository/repository.dart';
-import 'package:seasoning/repository/sembast/sembast_repository.dart';
 
 import '../../test_common/riverpod.dart';
 import '../mocks/mock_path_provider.dart';

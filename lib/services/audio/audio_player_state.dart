@@ -1,6 +1,6 @@
+import 'package:audiflow/entities/entities.dart';
+import 'package:audiflow/services/audio/audio_player_service.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:seasoning/entities/entities.dart';
-import 'package:seasoning/services/audio/audio_player_service.dart';
 
 part 'audio_player_state.freezed.dart';
 

@@ -4,9 +4,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'package:audiflow/entities/entities.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:podcast_search/podcast_search.dart' as search;
-import 'package:seasoning/entities/entities.dart';
 
 part 'funding.freezed.dart';
 part 'funding.g.dart';

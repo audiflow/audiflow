@@ -7,20 +7,20 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:audiflow/core/environment.dart';
+import 'package:audiflow/core/utils.dart';
+import 'package:audiflow/entities/entities.dart';
+import 'package:audiflow/repository/repository_provider.dart';
+import 'package:audiflow/services/audio/audio_player_event.dart';
+import 'package:audiflow/services/audio/audio_player_service.dart';
+import 'package:audiflow/services/connectivity/connectivity.dart';
+import 'package:audiflow/services/error/error_manager.dart';
+import 'package:audiflow/services/settings/settings_service.dart';
 import 'package:audio_service/audio_service.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:logging/logging.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:rxdart/rxdart.dart';
-import 'package:seasoning/core/environment.dart';
-import 'package:seasoning/core/utils.dart';
-import 'package:seasoning/entities/entities.dart';
-import 'package:seasoning/repository/repository_provider.dart';
-import 'package:seasoning/services/audio/audio_player_event.dart';
-import 'package:seasoning/services/audio/audio_player_service.dart';
-import 'package:seasoning/services/connectivity/connectivity.dart';
-import 'package:seasoning/services/error/error_manager.dart';
-import 'package:seasoning/services/settings/settings_service.dart';
 
 part 'mobile_audio_player_service.g.dart';
 

@@ -4,12 +4,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'package:audiflow/entities/entities.dart';
+import 'package:audiflow/services/download/download_progress_provider.dart';
+import 'package:audiflow/services/download/download_service_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
-import 'package:seasoning/entities/entities.dart';
-import 'package:seasoning/services/download/download_progress_provider.dart';
-import 'package:seasoning/services/download/download_service_provider.dart';
 
 /// Displays a download button for an episode.
 ///

@@ -1,7 +1,7 @@
+import 'package:audiflow/errors/errors.dart';
+import 'package:audiflow/services/error/error_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:seasoning/errors/errors.dart';
-import 'package:seasoning/services/error/error_manager.dart';
 
 class ErrorNotifier extends HookConsumerWidget {
   const ErrorNotifier({super.key});

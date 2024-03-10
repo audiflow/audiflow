@@ -1,4 +1,4 @@
-import 'package:seasoning/entities/entities.dart';
+import 'package:audiflow/entities/entities.dart';
 
 import '../podcast_season_extractor.dart';
 

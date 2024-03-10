@@ -3,14 +3,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'package:audiflow/entities/entities.dart';
+import 'package:audiflow/repository/repository_provider.dart';
+import 'package:audiflow/services/audio/audio_player_event.dart';
+import 'package:audiflow/services/audio/audio_player_service.dart';
+import 'package:audiflow/services/connectivity/connectivity_state.dart';
+import 'package:audiflow/services/queue/queue_manager.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:seasoning/entities/entities.dart';
-import 'package:seasoning/repository/repository_provider.dart';
-import 'package:seasoning/services/audio/audio_player_event.dart';
-import 'package:seasoning/services/audio/audio_player_service.dart';
-import 'package:seasoning/services/connectivity/connectivity_state.dart';
-import 'package:seasoning/services/queue/queue_manager.dart';
 
 part 'audio_queue_manager.g.dart';
 

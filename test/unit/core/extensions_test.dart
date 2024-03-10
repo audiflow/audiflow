@@ -1,5 +1,5 @@
+import 'package:audiflow/core/extensions.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:seasoning/core/extensions.dart';
 
 void main() {
   final testCases = [

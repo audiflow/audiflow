@@ -3,12 +3,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'package:audiflow/core/l10n.dart';
+import 'package:audiflow/entities/entities.dart';
+import 'package:audiflow/ui/app/navigation_helper.dart';
+import 'package:audiflow/ui/util/datetime.dart';
+import 'package:audiflow/ui/widgets/tile_image.dart';
 import 'package:flutter/material.dart';
-import 'package:seasoning/core/l10n.dart';
-import 'package:seasoning/entities/entities.dart';
-import 'package:seasoning/ui/app/navigation_helper.dart';
-import 'package:seasoning/ui/util/datetime.dart';
-import 'package:seasoning/ui/widgets/tile_image.dart';
 
 class SeasonTile extends StatelessWidget {
   const SeasonTile({

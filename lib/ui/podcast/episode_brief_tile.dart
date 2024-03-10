@@ -3,13 +3,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'package:audiflow/core/types.dart';
+import 'package:audiflow/entities/entities.dart';
+import 'package:audiflow/providers/podcast/episode_info_provider.dart';
+import 'package:audiflow/ui/podcast/episode_date.dart';
+import 'package:audiflow/ui/widgets/tile_image.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:seasoning/core/types.dart';
-import 'package:seasoning/entities/entities.dart';
-import 'package:seasoning/providers/podcast/episode_info_provider.dart';
-import 'package:seasoning/ui/podcast/episode_date.dart';
-import 'package:seasoning/ui/widgets/tile_image.dart';
 
 /// An EpisodeTitle is built with an ExpandedTile widget and displays the
 /// episode's basic details, thumbnail and play button.

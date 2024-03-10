@@ -6,14 +6,14 @@
 
 import 'dart:async';
 
+import 'package:audiflow/core/l10n.dart';
+import 'package:audiflow/entities/funding.dart';
+import 'package:audiflow/services/settings/settings_service.dart';
+import 'package:audiflow/ui/widgets/action_text.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dialogs/flutter_dialogs.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:seasoning/core/l10n.dart';
-import 'package:seasoning/entities/funding.dart';
-import 'package:seasoning/services/settings/settings_service.dart';
-import 'package:seasoning/ui/widgets/action_text.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 /// This class is responsible for rendering the funding menu on the podcast
@@ -103,8 +103,7 @@ class _CupertinoFundingMenu extends ConsumerWidget {
     return funding == null || funding!.isEmpty
         ? const SizedBox.shrink()
         : IconButton(
-            tooltip:
-                L10n.of(context)!.podcast_funding_dialog_header,
+            tooltip: L10n.of(context)!.podcast_funding_dialog_header,
             icon: const Icon(Icons.payment),
             onPressed: () => showCupertinoModalPopup<void>(
               context: context,
@@ -135,8 +134,7 @@ class _CupertinoFundingMenu extends ConsumerWidget {
                     onPressed: () {
                       Navigator.pop(context, 'Cancel');
                     },
-                    child:
-                        Text(L10n.of(context)!.cancel_option_label),
+                    child: Text(L10n.of(context)!.cancel_option_label),
                   ),
                 );
               },
@@ -174,8 +172,7 @@ class FundingLink {
         context: context,
         useRootNavigator: false,
         builder: (_) => BasicDialogAlert(
-          title:
-              Text(L10n.of(context)!.podcast_funding_dialog_header),
+          title: Text(L10n.of(context)!.podcast_funding_dialog_header),
           content: Text(L10n.of(context)!.consent_message),
           actions: <Widget>[
             BasicDialogAction(

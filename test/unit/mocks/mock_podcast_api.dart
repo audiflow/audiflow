@@ -4,8 +4,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'package:audiflow/api/podcast/mobile_podcast_api.dart';
 import 'package:podcast_search/podcast_search.dart';
-import 'package:seasoning/api/podcast/mobile_podcast_api.dart';
 
 /// This Mock version of the Podcast API replaces loading via URL
 /// with loading via local file. This allows use to test API

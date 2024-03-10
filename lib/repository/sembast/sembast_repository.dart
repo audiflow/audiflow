@@ -4,15 +4,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'package:audiflow/core/extensions.dart';
+import 'package:audiflow/entities/entities.dart';
+import 'package:audiflow/repository/download_event.dart';
+import 'package:audiflow/repository/episode_event.dart';
+import 'package:audiflow/repository/podcast_event.dart';
+import 'package:audiflow/repository/repository.dart';
+import 'package:audiflow/repository/sembast/sembast_database_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
-import 'package:seasoning/core/extensions.dart';
-import 'package:seasoning/entities/entities.dart';
-import 'package:seasoning/repository/download_event.dart';
-import 'package:seasoning/repository/episode_event.dart';
-import 'package:seasoning/repository/podcast_event.dart';
-import 'package:seasoning/repository/repository.dart';
-import 'package:seasoning/repository/sembast/sembast_database_service.dart';
 import 'package:sembast/sembast.dart';
 
 /// An implementation of [Repository] that is backed by

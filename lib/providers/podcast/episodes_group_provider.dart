@@ -1,13 +1,13 @@
 import 'dart:async';
 
+import 'package:audiflow/core/types.dart';
+import 'package:audiflow/entities/entities.dart';
+import 'package:audiflow/repository/repository_provider.dart';
+import 'package:audiflow/services/podcast/podcast_service_provider.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:seasoning/core/types.dart';
-import 'package:seasoning/entities/entities.dart';
-import 'package:seasoning/repository/repository_provider.dart';
-import 'package:seasoning/services/podcast/podcast_service_provider.dart';
 
 part 'episodes_group_provider.freezed.dart';
 part 'episodes_group_provider.g.dart';

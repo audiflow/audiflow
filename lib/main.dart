@@ -6,6 +6,27 @@
 
 import 'dart:io';
 
+import 'package:audiflow/api/podcast/podcast_api_provider.dart';
+import 'package:audiflow/providers/podcast/podcast_refresher_provider.dart';
+import 'package:audiflow/repository/download_event.dart';
+import 'package:audiflow/repository/episode_event.dart';
+import 'package:audiflow/repository/podcast_event.dart';
+import 'package:audiflow/repository/repository_provider.dart';
+import 'package:audiflow/repository/transcript_event.dart';
+import 'package:audiflow/services/audio/audio_player_event.dart';
+import 'package:audiflow/services/audio/audio_player_service.dart';
+import 'package:audiflow/services/audio/audio_position_saver.dart';
+import 'package:audiflow/services/audio/audio_queue_manager.dart';
+import 'package:audiflow/services/audio/mobile_audio_player_service.dart';
+import 'package:audiflow/services/connectivity/connectivity_state.dart';
+import 'package:audiflow/services/download/download_manager_provider.dart';
+import 'package:audiflow/services/queue/default_queue_manager.dart';
+import 'package:audiflow/services/queue/queue_manager.dart';
+import 'package:audiflow/services/settings/settings_service.dart';
+import 'package:audiflow/ui/app/navigation_helper.dart';
+import 'package:audiflow/ui/app/seasoning_app.dart';
+import 'package:audiflow/ui/color_schemes.g.dart';
+import 'package:audiflow/ui/widgets/error_notifier.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -14,27 +35,6 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:logging/logging.dart';
-import 'package:seasoning/api/podcast/podcast_api_provider.dart';
-import 'package:seasoning/providers/podcast/podcast_refresher_provider.dart';
-import 'package:seasoning/repository/download_event.dart';
-import 'package:seasoning/repository/episode_event.dart';
-import 'package:seasoning/repository/podcast_event.dart';
-import 'package:seasoning/repository/repository_provider.dart';
-import 'package:seasoning/repository/transcript_event.dart';
-import 'package:seasoning/services/audio/audio_player_event.dart';
-import 'package:seasoning/services/audio/audio_player_service.dart';
-import 'package:seasoning/services/audio/audio_position_saver.dart';
-import 'package:seasoning/services/audio/audio_queue_manager.dart';
-import 'package:seasoning/services/audio/mobile_audio_player_service.dart';
-import 'package:seasoning/services/connectivity/connectivity_state.dart';
-import 'package:seasoning/services/download/download_manager_provider.dart';
-import 'package:seasoning/services/queue/default_queue_manager.dart';
-import 'package:seasoning/services/queue/queue_manager.dart';
-import 'package:seasoning/services/settings/settings_service.dart';
-import 'package:seasoning/ui/app/navigation_helper.dart';
-import 'package:seasoning/ui/app/seasoning_app.dart';
-import 'package:seasoning/ui/color_schemes.g.dart';
-import 'package:seasoning/ui/widgets/error_notifier.dart';
 
 // ignore_for_file: avoid_print
 void main() async {

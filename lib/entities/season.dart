@@ -1,9 +1,9 @@
 import 'dart:convert';
 
+import 'package:audiflow/entities/episode.dart';
 import 'package:collection/collection.dart';
 import 'package:crypto/crypto.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:seasoning/entities/episode.dart';
 
 part 'season.freezed.dart';
 
