@@ -11,7 +11,10 @@ bool audioPositionSaver(AudioPositionSaverRef ref) {
       audioPlayerServiceProvider.select(
         (state) => (
           state?.episode,
-          _roundInTwoSeconds(state?.position),
+          _roundInTwoSeconds(
+            position: state?.position,
+            duration: state?.episode.duration,
+          ),
           state?.phase,
         ),
       ), (
@@ -41,11 +44,20 @@ bool audioPositionSaver(AudioPositionSaverRef ref) {
   return true;
 }
 
-Duration? _roundInTwoSeconds(Duration? duration) {
-  if (duration == null) {
+Duration? _roundInTwoSeconds({
+  required Duration? duration,
+  required Duration? position,
+}) {
+  if (position == null || duration == null) {
     return null;
   }
-  final seconds = duration.inSeconds;
+
+  final remains = duration - position;
+  if (remains <= Duration.zero) {
+    return duration;
+  }
+
+  final seconds = position.inSeconds;
   final remainder = seconds % 2;
   return Duration(seconds: seconds - remainder);
 }
