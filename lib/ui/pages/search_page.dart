@@ -66,47 +66,53 @@ class SearchBar extends HookConsumerWidget {
       return () => searchController.removeListener(onChange);
     });
 
+    final theme = Theme.of(context);
     return Semantics(
       label: L10n.of(context)!.search_for_podcasts_hint,
       textField: true,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        color: Theme.of(context).appBarTheme.backgroundColor,
-        child: TextField(
-          controller: searchController,
-          focusNode: searchFocusNode,
-          autocorrect: false,
-          // autofocus: searchTerm != null,
-          keyboardType: TextInputType.text,
-          textInputAction: TextInputAction.search,
-          decoration: InputDecoration(
-            prefixIcon: const Icon(Icons.search),
-            suffixIcon: term.value.isEmpty
-                ? null
-                : IconButton(
-                    icon: const Icon(
-                      Icons.clear,
-                      size: 32,
+      child: Padding(
+        padding: const EdgeInsets.only(left: 20, right: 20, bottom: 20),
+        child: Container(
+          color: theme.colorScheme.surface,
+          foregroundDecoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: theme.dividerColor,
+              width: 0.5
+            ),
+          ),
+          child: TextField(
+            controller: searchController,
+            focusNode: searchFocusNode,
+            autocorrect: false,
+            // autofocus: searchTerm != null,
+            keyboardType: TextInputType.text,
+            textInputAction: TextInputAction.search,
+            decoration: InputDecoration(
+              prefixIcon: const Icon(Icons.search),
+              suffixIcon: term.value.isEmpty
+                  ? null
+                  : IconButton(
+                      icon: const Icon(
+                        Icons.clear,
+                        size: 32,
+                      ),
+                      onPressed: searchController.clear,
                     ),
-                    onPressed: searchController.clear,
-                  ),
-            hintText: L10n.of(context)!.search_for_podcasts_hint,
-            border: InputBorder.none,
+              hintText: L10n.of(context)!.search_for_podcasts_hint,
+              border: InputBorder.none,
+            ),
+            style: const TextStyle(fontSize: 18),
+            onSubmitted: (value) {
+              SemanticsService.announce(
+                L10n.of(context)!.semantic_announce_searching,
+                TextDirection.ltr,
+              );
+              ref
+                  .read(podcastSearchProvider.notifier)
+                  .input(NewPodcastSearchEvent(term: value));
+            },
           ),
-          style: TextStyle(
-            color: Theme.of(context).primaryIconTheme.color,
-            fontSize: 18,
-            decorationColor: Theme.of(context).scaffoldBackgroundColor,
-          ),
-          onSubmitted: (value) {
-            SemanticsService.announce(
-              L10n.of(context)!.semantic_announce_searching,
-              TextDirection.ltr,
-            );
-            ref
-                .read(podcastSearchProvider.notifier)
-                .input(NewPodcastSearchEvent(term: value));
-          },
         ),
       ),
     );
