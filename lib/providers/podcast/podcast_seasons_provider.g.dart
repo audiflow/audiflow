@@ -6,7 +6,7 @@ part of 'podcast_seasons_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$podcastSeasonsHash() => r'c120b2ff781e8c6bd8798368228c14926e8f298f';
+String _$podcastSeasonsHash() => r'19de793d3a88e45c7826f4cf170161b14600ef88';
 
 /// Copied from Dart SDK
 class _SystemHash {

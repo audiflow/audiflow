@@ -12,16 +12,13 @@ part 'podcast_info_provider.g.dart';
 
 @riverpod
 class PodcastInfo extends _$PodcastInfo {
-  PodcastInfo() {
-    _log.fine('PodcastInfo created');
-  }
-
   final _log = Logger('PodcastInfo');
 
   Repository get _repository => ref.read(repositoryProvider);
 
   @override
   Future<PodcastDetailsState> build(PodcastMetadata metadata) async {
+    _log.fine('build ${metadata.guid} ${metadata.title}');
     final podcastService = ref.read(podcastServiceProvider);
 
     final list = await Future.wait([
