@@ -4,8 +4,20 @@
   "app_title_short": "Seasoning",
   "chart": "チャート",
   "search": "検索",
+  "season": "シーズン",
+  "null_season": "その他",
   "sec": "秒",
   "min": "分",
+  "hour": "時間",
+  "nEpisodes": "{count}エピソード",
+  "@nEpisodes": {
+    "description": "エピソード数",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "view_mode_episodes": "エピソード",
   "view_mode_seasons": "シーズン",
   "view_mode_played": "再生済み",

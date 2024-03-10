@@ -5,6 +5,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' show DateFormat;
+import 'package:seasoning/core/l10n.dart';
 import 'package:seasoning/entities/entities.dart';
 import 'package:seasoning/ui/app/navigation_helper.dart';
 import 'package:seasoning/ui/widgets/tile_image.dart';
@@ -21,8 +22,6 @@ class SeasonTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return InkWell(
       key: Key('PT${season.guid}'),
       onTap: () {
@@ -52,20 +51,10 @@ class SeasonTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    season.title != null
-                        ? season.seasonNum != null
-                            ? '#${season.seasonNum} ${season.title}'
-                            : season.title!
-                        : 'Season ${season.seasonNum}',
-                    maxLines: 2,
-                    textHeightBehavior: const TextHeightBehavior(
-                      applyHeightToFirstAscent: false,
-                    ),
-                    style: theme.textTheme.titleSmall!.copyWith(height: 1.3),
-                  ),
-                  const SizedBox(height: 2),
-                  SeasonSubtitle(season),
+                  const Spacer(),
+                  _SeasonTitle(season),
+                  const Spacer(flex: 2),
+                  _SeasonSubtitle(season),
                 ],
               ),
             ),
@@ -78,45 +67,84 @@ class SeasonTile extends StatelessWidget {
   }
 }
 
-class SeasonSubtitle extends StatelessWidget {
-  SeasonSubtitle(this.season, {super.key})
-      : date = season.publicationDate == null
-            ? ''
-            : DateFormat('yyyy.MM.dd').format(season.publicationDate!),
-        length = season.totalDuration;
+class _SeasonTitle extends StatelessWidget {
+  const _SeasonTitle(this.season);
+
   final Season season;
-  final String date;
-  final Duration length;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = L10n.of(context)!;
+    return Text(
+      season.title != null
+          ? season.seasonNum != null
+              ? '#${season.seasonNum} ${season.title}'
+              : season.title!
+          : season.seasonNum != null
+              ? '${l10n.season} ${season.seasonNum}'
+              : l10n.null_season,
+      maxLines: 2,
+      textHeightBehavior: const TextHeightBehavior(
+        applyHeightToFirstAscent: false,
+      ),
+      style: theme.textTheme.titleSmall!.copyWith(height: 1.2),
+    );
+  }
+}
+
+class _SeasonSubtitle extends StatelessWidget {
+  const _SeasonSubtitle(this.season);
+
+  final Season season;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
+    final l10n = L10n.of(context)!;
     final playedEpisodes = season.episodes.where((episode) => false).length;
-    final episodes = '$playedEpisodes/${season.episodes.length} episodes';
+    final firstDate = _dateString(season.episodes.first.publicationDate);
+    final lastDate = _dateString(season.episodes.last.publicationDate);
+    final duration = _durationString(context, season.totalDuration);
+    final episodes =
+        '$playedEpisodes/${l10n.nEpisodes(season.episodes.length)}';
 
-    var duration = '';
-    if (0 < length.inSeconds) {
-      if (length.inSeconds < 60) {
-        duration = ' - ${length.inSeconds} sec';
-      } else if (length.inMinutes < 120) {
-        duration = ' - ${length.inMinutes} min';
-      } else {
-        duration =
-            ' - ${length.inHours} hr ${length.inMinutes.remainder(60)} min';
-      }
-    }
-
-    final title = '$date - $episodes$duration';
+    final firstLine =
+        firstDate != null && lastDate != null ? '$firstDate 〜 $lastDate' : null;
+    final secondLine = duration.isNotEmpty ? '$episodes $duration' : episodes;
+    final title = firstLine != null ? '$firstLine\n$secondLine' : secondLine;
 
     return Padding(
-      padding: const EdgeInsets.only(top: 4),
+      padding: const EdgeInsets.only(top: 2),
       child: Text(
         title,
-        maxLines: 1,
+        maxLines: 2,
         overflow: TextOverflow.ellipsis,
-        style: theme.textTheme.bodySmall!.copyWith(color: theme.hintColor),
+        style: theme.textTheme.bodySmall!
+            .copyWith(fontSize: 11, color: theme.hintColor, height: 1.1),
       ),
     );
+  }
+
+  String? _dateString(DateTime? date) {
+    return date == null ? null : DateFormat('yyyy.MM.dd').format(date);
+  }
+
+  String _durationString(BuildContext context, Duration duration) {
+    final length = season.totalDuration;
+    if (length.inSeconds < 1) {
+      return '';
+    }
+
+    final l10n = L10n.of(context)!;
+    if (length.inSeconds < 60) {
+      return '${length.inSeconds}${l10n.sec}';
+    } else if (length.inMinutes < 120) {
+      return '${length.inMinutes}${l10n.min}';
+    } else {
+      return '${length.inHours}${l10n.hour}'
+          ' ${length.inMinutes.remainder(60)}${l10n.min}';
+    }
   }
 }
