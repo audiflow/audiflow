@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:seasoning/core/l10n.dart';
 import 'package:seasoning/core/types.dart';
 import 'package:seasoning/entities/entities.dart';
 import 'package:seasoning/services/podcast/podcast_service_provider.dart';
@@ -18,6 +19,7 @@ class QueueListBlock extends ConsumerWidget {
       return const SliverToBoxAdapter(child: SizedBox.shrink());
     }
 
+    final l10n = L10n.of(context)!;
     return NotificationListener<PlayButtonTappedNotification>(
       onNotification: (notification) {
         final episode = notification.episode;
@@ -32,8 +34,14 @@ class QueueListBlock extends ConsumerWidget {
         return false;
       },
       child: Section(
-        title: 'Queue',
+        title: l10n.queue,
         queuedEpisodes: queue,
+        trailing: TextButton(
+          child: Text(l10n.clear),
+          onPressed: () {
+            ref.read(queueManagerProvider.notifier).clear();
+          },
+        ),
         onReorder: (oldIndex, newIndex) {
           ref.read(queueManagerProvider.notifier).reorder(oldIndex, newIndex);
         },
@@ -52,6 +60,7 @@ class Section extends MultiSliver {
     required List<QueuedEpisode> queuedEpisodes,
     required ReorderCallback onReorder,
     required ValueChanged<int> onRemove,
+    Widget? trailing,
   }) : super(
           pushPinnedChildren: true,
           children: [
@@ -62,6 +71,8 @@ class Section extends MultiSliver {
                     color: Theme.of(context).colorScheme.background,
                     child: ListTile(
                       title: Text(title),
+                      trailing: trailing,
+                      contentPadding: const EdgeInsets.only(left: 20, right: 8),
                     ),
                   );
                 },

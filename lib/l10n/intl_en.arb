@@ -9,6 +9,11 @@
   "@search": {
     "description": "Title for the search tab"
   },
+  "queue": "Queue",
+  "@queue": {
+    "description": "Title for a queue block"
+  },
+  "clear": "clear",
   "season": "Season",
   "@season": {
     "description": "Title for a season"
