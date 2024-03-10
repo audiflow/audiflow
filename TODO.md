@@ -20,14 +20,12 @@ TODO
 - [ ] automatic download
 - [ ] Group by episode# range
 - [ ] Group by date range
-- [ ] Sort menu
-  - [ ] by episode#
-  - [ ] by date
-- [ ] Episode detail page
+- [x] Sort by episode#
+- [x] Episode detail page
 
 ### Queue
-- [ ] swipe to remove
-- [ ] to detail page
+- [x] swipe to remove
+- [x] to detail page
 - [ ] Long push to show context menu
 - [ ] show downloaded state 
-- [ ] Stop at the end of the current episode
+- [x] Stop at the end of the current episode
