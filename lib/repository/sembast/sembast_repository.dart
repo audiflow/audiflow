@@ -651,6 +651,11 @@ class SembastRepository extends Repository {
   }
 
   @override
+  Future<void> clearPlayingEpisodeGuid() async {
+    await _playerStore.record(1).delete(await _db);
+  }
+
+  @override
   Future<String?> playingEpisodeGuid() async {
     final value = await _playerStore.record(1).get(await _db);
     return value?['guid'] as String?;

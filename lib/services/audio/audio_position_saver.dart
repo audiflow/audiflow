@@ -22,13 +22,17 @@ bool audioPositionSaver(AudioPositionSaverRef ref) {
     next,
   ) {
     final (prevEpisode, _, _) = prev ?? (null, null, null);
-    final (episode, position, _) = next;
+    final (episode, position, phase) = next;
     final repository = ref.read(repositoryProvider);
 
-    if (prevEpisode != episode && episode != null) {
+    // Save playing episode's guid
+    if (phase == PlayerPhase.stop) {
+      repository.clearPlayingEpisodeGuid();
+    } else if (prevEpisode != episode && episode != null) {
       repository.savePlayingEpisodeGuid(episode.guid);
     }
 
+    // Save position
     if (episode != null && position != null) {
       // final completed = episode.duration!.inSeconds - 3 <=
       // position.inSeconds;

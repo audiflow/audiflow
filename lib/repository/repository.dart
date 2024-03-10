@@ -112,5 +112,7 @@ abstract class Repository {
 
   Future<void> savePlayingEpisodeGuid(String guid);
 
+  Future<void> clearPlayingEpisodeGuid();
+
   Future<String?> playingEpisodeGuid();
 }
