@@ -73,10 +73,11 @@ class AudioQueueManager extends _$AudioQueueManager {
           position: stats?.position ?? Duration.zero,
           autoPlay: true,
         );
-      } else {
-        await _audioPlayerService.stop();
+        return;
       }
+
       break;
     }
+    await _audioPlayerService.stop();
   }
 }
