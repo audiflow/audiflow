@@ -49,24 +49,25 @@ class PodcastTile extends StatelessWidget {
             ),
             Expanded(
               child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      metadata.title,
-                      maxLines: 2,
-                      textHeightBehavior: const TextHeightBehavior(
-                        applyHeightToFirstAscent: false,
-                      ),
-                      style: theme.textTheme.titleSmall!.copyWith(height: 1.3),
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    metadata.title,
+                    maxLines: 2,
+                    textHeightBehavior: const TextHeightBehavior(
+                      applyHeightToFirstAscent: false,
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      metadata.copyright,
-                      maxLines: 1,
-                      style: theme.textTheme.bodySmall!
-                          .copyWith(color: theme.hintColor),
-                    ),
-                  ]),
+                    style: theme.textTheme.titleSmall!.copyWith(height: 1.3),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    metadata.copyright,
+                    maxLines: 1,
+                    style: theme.textTheme.bodySmall!
+                        .copyWith(color: theme.hintColor),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
