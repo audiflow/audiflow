@@ -23,6 +23,7 @@ import 'package:seasoning/ui/podcast/season_list.dart';
 import 'package:seasoning/ui/widgets/fill_remaining_error.dart';
 import 'package:seasoning/ui/widgets/fill_remaining_loading.dart';
 import 'package:seasoning/ui/widgets/podcast_html.dart';
+import 'package:seasoning/ui/widgets/sort_icon_button.dart';
 
 /// This Widget takes a search result and builds a list of currently available
 /// podcasts.
@@ -210,15 +211,6 @@ class _PodcastTitle extends HookConsumerWidget {
                   settings.showFunding
                       ? FundingMenu(podcast.funding)
                       : const SizedBox.shrink(),
-                  // const Expanded(
-                  //   child: Align(
-                  //     alignment: Alignment.centerRight,
-                  //     child: SyncSpinner(),
-                  //   ),
-                  // ),
-                  // hasSeasons
-                  //    ? SeasonSwitch(isOn: podcast!.seasonView)
-                  //    : const SizedBox.shrink();
                 ],
               ),
             ),
@@ -227,19 +219,6 @@ class _PodcastTitle extends HookConsumerWidget {
       ),
     );
   }
-// @override
-// void initState() {
-//   super.initState();
-//
-//
-//   WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-//     if (descriptionKey.currentContext!.size!.height == maxHeight) {
-//       setState(() {
-//         showOverflow = true;
-//       });
-//     }
-//   });
-// }
 }
 
 /// This class wraps the description in an expandable box.
@@ -323,8 +302,9 @@ class _SwitchBar extends ConsumerWidget {
                     .setViewMode(mode);
               },
             ),
-            IconButton(
-              onPressed: () {
+            SortIconButton(
+              ascend: ascend,
+              onTap: () {
                 final podcastInfo =
                     ref.read(podcastInfoProvider(podcast.metadata).notifier);
                 if (viewMode == PodcastDetailViewMode.seasons) {
@@ -333,9 +313,6 @@ class _SwitchBar extends ConsumerWidget {
                   podcastInfo.toggleAscend();
                 }
               },
-              icon: ascend
-                  ? const Icon(Symbols.keyboard_double_arrow_down_rounded)
-                  : const Icon(Symbols.keyboard_double_arrow_up_rounded),
             ),
           ],
         ),
