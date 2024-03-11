@@ -38,15 +38,23 @@ class TileImage extends StatelessWidget {
       fit: BoxFit.contain,
       placeholder: placeholderBuilder != null
           ? placeholderBuilder.builder()(context)
-          : const Image(
-              fit: BoxFit.contain,
-              image: AssetImage('assets/images/app-placeholder-logo.png'),
+          : Container(
+              width: size,
+              height: size,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(6),
+              ),
             ),
       errorPlaceholder: placeholderBuilder != null
           ? placeholderBuilder.errorBuilder()(context)
-          : const Image(
-              fit: BoxFit.contain,
-              image: AssetImage('assets/images/app-placeholder-logo.png'),
+          : Container(
+              width: size,
+              height: size,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(6),
+              ),
             ),
     );
   }

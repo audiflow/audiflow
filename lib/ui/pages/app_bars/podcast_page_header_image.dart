@@ -36,8 +36,13 @@ class PodcastHeaderImage extends StatelessWidget {
           : DelayedCircularProgressIndicator(),
       errorPlaceholder: placeholderBuilder != null
           ? placeholderBuilder?.errorBuilder()(context)
-          : const Image(
-              image: AssetImage('assets/images/app-placeholder-logo.png'),
+          : Container(
+              width: 560,
+              height: 560,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(16),
+              ),
             ),
     );
   }
