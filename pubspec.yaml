@@ -86,12 +86,12 @@ dependency_overrides:
   # Override layout grid to fix dependency issue with flutter_html_table
   flutter_layout_grid: ^2.0.5
 
-flutter_icons:
-  image_path_android: "assets/images/app-logo.png"
-  image_path_ios: "assets/images/app-logo-ios.png"
-  remove_alpha_ios: true
-  android: true
+flutter_launcher_icons:
+  android: "ic_launcher"
   ios: true
+  remove_alpha_ios: true
+  image_path: "assets/images/app-logo.png"
+  min_sdk_android: 22
 
 flutter:
   uses-material-design: true
@@ -99,8 +99,6 @@ flutter:
 
   assets:
     - assets/images/app-logo.png
-    - assets/images/app-logo-s.png
-    - assets/images/app-placeholder-logo.png
 
     # Certificate authorities
     - assets/ca/lets-encrypt-r3.pem
