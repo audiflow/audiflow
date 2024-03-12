@@ -4,30 +4,19 @@
 // found in the LICENSE file.
 
 import 'package:audiflow/core/l10n.dart';
+import 'package:audiflow/ui/app/navigation_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 class BasicAppBar extends HookConsumerWidget {
   const BasicAppBar({
     super.key,
-    required this.titleBuilder,
-    this.elevation,
+    required this.title,
+    this.elevation = 0,
   });
 
-  BasicAppBar.chart({Key? key})
-      : this(
-          key: key,
-          titleBuilder: (context) => L10n.of(context)!.chart,
-        );
 
-  BasicAppBar.search({Key? key})
-      : this(
-          key: key,
-          titleBuilder: (context) => L10n.of(context)!.search,
-          elevation: 0,
-        );
-
-  final String Function(BuildContext) titleBuilder;
+  final String title;
   final double? elevation;
 
   @override
@@ -40,7 +29,7 @@ class BasicAppBar extends HookConsumerWidget {
         centerTitle: false,
         titlePadding: const EdgeInsetsDirectional.only(start: 20, bottom: 20),
         title: Text(
-          titleBuilder(context),
+          title,
           style: Theme.of(context).textTheme.titleLarge!.copyWith(
                 color: Theme.of(context).colorScheme.onSurface,
               ),
@@ -48,7 +37,9 @@ class BasicAppBar extends HookConsumerWidget {
       ),
       actions: [
         PopupMenuButton<String>(
-          onSelected: (_) {},
+          onSelected: (_) {
+            NavigationHelper.router.pushNamed('settings');
+          },
           itemBuilder: (BuildContext context) {
             return ['settings'].map((String choice) {
               return PopupMenuItem<String>(

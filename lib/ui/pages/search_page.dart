@@ -31,7 +31,7 @@ class SearchPage extends HookConsumerWidget {
         children: [
           CustomScrollView(
             slivers: <Widget>[
-              BasicAppBar.search(),
+              BasicAppBar(title: L10n.of(context)!.search),
               const SliverPinnedHeader(child: SearchBar()),
               if (state.isLoading)
                 const FillRemainingLoading()
