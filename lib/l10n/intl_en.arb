@@ -13,6 +13,7 @@
   "@queue": {
     "description": "Title for a queue block"
   },
+  "settings": "Settings",
   "clear": "clear",
   "season": "Season",
   "@season": {

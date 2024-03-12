@@ -5,9 +5,10 @@
   "chart": "チャート",
   "search": "検索",
   "queue": "連続再生キュー",
+  "null_season": "その他",
   "clear": "クリア",
   "season": "シーズン",
-  "null_season": "その他",
+  "settings": "Settings",
   "nEpisodes": "{count}エピソード",
   "@nEpisodes": {
     "description": "エピソード数",

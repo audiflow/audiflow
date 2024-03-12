@@ -46,6 +46,19 @@ class BasicAppBar extends HookConsumerWidget {
               ),
         ),
       ),
+      actions: [
+        PopupMenuButton<String>(
+          onSelected: (_) {},
+          itemBuilder: (BuildContext context) {
+            return ['settings'].map((String choice) {
+              return PopupMenuItem<String>(
+                value: choice,
+                child: Text(L10n.of(context)!.settings),
+              );
+            }).toList();
+          },
+        ),
+      ],
     );
   }
 }
