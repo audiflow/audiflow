@@ -67,10 +67,11 @@ class _Contents extends ConsumerWidget {
       sliver: SliverList(
         delegate: SliverChildListDelegate(
           [
-            _Section(l10n.settingsStreamingPlayback),
-            _Description(l10n.settingsStreamingPlaybackDescription),
+            _Section(l10n.settingsOnDemandDownloadOnPlayback),
+            _Description(l10n.settingsOnDemandDownloadOnPlaybackDescription),
             _BinarySwitch(
-              l10n.settingsWarnWifi,
+              l10n.settingsWarnMobileData,
+              hint: l10n.settingsWarnMobileDataDescription,
               value: state.streamWarnMobileData,
               onToggle: () {
                 settings.streamWarnMobileData = !state.streamWarnMobileData;
@@ -80,7 +81,7 @@ class _Contents extends ConsumerWidget {
             _Section(l10n.settingsManualDownload),
             _Description(l10n.settingsManualDownloadDescription),
             _BinarySwitch(
-              l10n.settingsWarnWifi,
+              l10n.settingsWarnMobileData,
               value: state.downloadWarnMobileData,
               onToggle: () {
                 settings.downloadWarnMobileData = !state.downloadWarnMobileData;
@@ -96,6 +97,7 @@ class _Contents extends ConsumerWidget {
                 settings.autoDownloadOnlyOnWifi = !state.autoDownloadOnlyOnWifi;
               },
             ),
+            const _Divider(),
             _Section(l10n.settingsAutoDelete),
             _Description(l10n.settingsAutoDeleteDescription),
             _BinarySwitch(
@@ -137,7 +139,7 @@ class _Section extends StatelessWidget {
     final theme = Theme.of(context);
     return Text(
       title,
-      style: theme.textTheme.labelLarge!
+      style: theme.textTheme.titleMedium!
           .copyWith(color: theme.colorScheme.primary),
     );
   }
@@ -151,10 +153,13 @@ class _Description extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Text(
-      text,
-      style: theme.textTheme.labelSmall!
-          .copyWith(color: theme.hintColor, fontStyle: FontStyle.italic),
+    return Padding(
+      padding: const EdgeInsets.only(right: 60),
+      child: Text(
+        text,
+        style: theme.textTheme.labelSmall!
+            .copyWith(color: theme.hintColor, fontStyle: FontStyle.italic),
+      ),
     );
   }
 }
@@ -162,11 +167,13 @@ class _Description extends StatelessWidget {
 class _BinarySwitch extends StatelessWidget {
   const _BinarySwitch(
     this.text, {
+    this.hint,
     required this.value,
     required this.onToggle,
   });
 
   final String text;
+  final String? hint;
   final bool value;
   final VoidCallback onToggle;
 
@@ -175,12 +182,28 @@ class _BinarySwitch extends StatelessWidget {
     final theme = Theme.of(context);
     return Row(
       children: [
-        Text(
-          text,
-          style: theme.textTheme.bodyMedium!
-              .copyWith(color: theme.colorScheme.onSurface),
+        Expanded(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                text,
+                style: theme.textTheme.bodyMedium!
+                    .copyWith(color: theme.colorScheme.onSurface),
+              ),
+              if (hint != null)
+                Text(
+                  hint!,
+                  style: theme.textTheme.labelSmall!.copyWith(
+                    color: theme.hintColor,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+            ],
+          ),
         ),
-        const Spacer(),
+        const SizedBox(width: 8),
         Switch(
           value: value,
           activeTrackColor: theme.colorScheme.tertiary,
