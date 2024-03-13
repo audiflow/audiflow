@@ -9,3 +9,8 @@ Future<bool> isWifiEnabled() async {
   final connectivityResult = await Connectivity().checkConnectivity();
   return connectivityResult == ConnectivityResult.wifi;
 }
+
+Future<bool> usesCellularConnection() async {
+  final connectivityResult = await Connectivity().checkConnectivity();
+  return connectivityResult == ConnectivityResult.mobile;
+}

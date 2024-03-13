@@ -96,6 +96,7 @@
   "settingsWarnWifi": "Wi-Fi未接続時に警告を表示",
   "settingsWifiOnly": "Wi-Fi接続時のみ",
   "titleNoFiFi": "Wi-Fi未接続",
+  "titleCellularConnection": "モバイル回線接続中",
   "captionStreamingNoWifi": "WiFiが接続されていないため、モバイル回線で音声データを取得します。",
   "captionDownloadNoWifi": "'WiFiが接続されていないため、モバイル回線でエピソードをダウンロードします。'",
   "captionWarnSettingNavigation": "この警告表示有無は設定で変更できます",

@@ -1,22 +1,27 @@
+import 'dart:async';
+
 import 'package:audiflow/core/l10n.dart';
 import 'package:audiflow/ui/app/navigation_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
-void warnNoWifi({
+Future<bool?> warnNoWifi({
   required String caption,
   required String proceedCaption,
-  required VoidCallback onProceed,
 }) {
   final context = NavigationHelper.context;
   final theme = Theme.of(context);
   final l10n = L10n.of(context)!;
 
-  void close() {
-    Navigator.of(context, rootNavigator: true).pop();
+  void confirmed() {
+    Navigator.of(context, rootNavigator: true).pop(true);
   }
 
-  showAdaptiveDialog<void>(
+  void cancelled() {
+    Navigator.of(context, rootNavigator: true).pop(false);
+  }
+
+  return showAdaptiveDialog<bool>(
     context: context,
     builder: (BuildContext ctx) {
       return AlertDialog(
@@ -47,7 +52,7 @@ void warnNoWifi({
             const SizedBox(height: 10),
             GestureDetector(
               onTap: () {
-                close();
+                cancelled();
                 NavigationHelper.pushSettings();
               },
               child: Text(
@@ -65,17 +70,14 @@ void warnNoWifi({
             children: [
               Expanded(
                 child: OutlinedButton(
-                  onPressed: close,
+                  onPressed: cancelled,
                   child: Text(l10n.cancel),
                 ),
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: OutlinedButton(
-                  onPressed: () {
-                    close();
-                    onProceed();
-                  },
+                  onPressed: confirmed,
                   child: Text(proceedCaption),
                 ),
               ),

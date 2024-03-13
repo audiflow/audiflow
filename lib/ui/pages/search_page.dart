@@ -78,7 +78,7 @@ class SearchBar extends HookConsumerWidget {
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
               color: theme.dividerColor,
-              width: 0.5
+              width: 0.5,
             ),
           ),
           child: TextField(

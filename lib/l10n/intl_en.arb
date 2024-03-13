@@ -110,10 +110,11 @@
   "settingsWarnWifi": "Warn when not connected to Wi-Fi",
   "settingsWifiOnly": "Wi-Fi Connection Only",
   "titleNoFiFi": "Not Connected to Wi-Fi",
+  "titleCellularConnection": "Cellular Connection",
   "captionStreamingNoWifi": "Since Wi-Fi is not connected, audio data will be fetched over cellular data.",
   "captionDownloadNoWifi": "'Since Wi-Fi is not connected, the episode will be downloaded over cellular data.'",
-  "captionWarnSettingNavigation": "You can change this warning setting in the options",
-  "proceedPlaying": "Proceed with Playback",
+  "captionWarnSettingNavigation": "You can change this warning in the settings",
+  "proceedPlaying": "Play anyway",
   "app_title": "audiflow Podcast Player",
   "@app_title": {
     "description": "Full title for the application",

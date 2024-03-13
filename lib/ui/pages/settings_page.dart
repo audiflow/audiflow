@@ -32,7 +32,7 @@ class SettingsPage extends HookConsumerWidget {
               else if (state.hasError || (state.valueOrNull?.notFound == true))
                 FillRemainingError.podcastNoResults()
               else
-                _Contents()
+                const _Contents(),
             ],
           ),
           const ErrorNotifier(),
