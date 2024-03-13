@@ -2,6 +2,8 @@
   "locale": "ja",
   "app_title": "Seasoningポッドキャストプレイヤ",
   "app_title_short": "Seasoning",
+  "ok": "OK",
+  "cancel": "キャンセル",
   "chart": "チャート",
   "search": "検索",
   "queue": "連続再生キュー",
@@ -90,5 +92,10 @@
   "settings_auto_delete_after_14days": "14日",
   "settings_auto_delete_after_30days": "30日",
   "settings_warn_wifi": "Wi-Fi未接続時に警告",
-  "settings_wifi_only": "Wi-Fi接続時のみ"
+  "settings_wifi_only": "Wi-Fi接続時のみ",
+  "titleNoFiFi": "Wi-Fi未接続",
+  "captionStreamingNoWifi": "WiFiが接続されていないため、モバイル回線で音声データを取得します。",
+  "captionDownloadNoWifi": "'WiFiが接続されていないため、モバイル回線でエピソードをダウンロードします。'",
+  "captionWarnSettingNavigation": "この警告表示有無は設定で変更できます",
+  "proceedPlaying": "再生する"
 }

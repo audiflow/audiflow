@@ -195,4 +195,10 @@ class NavigationHelper {
       extra: (metadata, episode, heroPrefix),
     );
   }
+
+  static Future<void> pushSettings() async {
+    await NavigationHelper.router.pushNamed(
+      'settings',
+    );
+  }
 }

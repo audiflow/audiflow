@@ -1,6 +1,8 @@
 {
   "@@last_modified": "2020-02-20T12:15:52.645497",
   "locale": "en",
+  "ok": "OK",
+  "cancel": "Cancel",
   "chart": "Chart",
   "@chart": {
     "description": "Title for the chart tab"
@@ -105,6 +107,10 @@
   "settings_auto_delete_after_30days": "30 days",
   "settings_warn_wifi": "Warn if not on Wi-Fi",
   "settings_wifi_only": "Wi-Fi only",
+  "titleNoFiFi": "No Wi-Fi",
+  "captionStreamingNoWifi": "You are not connected to Wi-Fi. Streaming episodes may use a lot of mobile data.",
+  "captionWarnSettingNavigation": "You can change this setting in the settings menu.",
+  "proceedPlaying": "Play anyway",
   "app_title": "audiflow Podcast Player",
   "@app_title": {
     "description": "Full title for the application",
