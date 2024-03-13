@@ -25,12 +25,32 @@ class DownloadButton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final downloadState = ref.watch(downloadProgressProvider(episode));
-    final downloads = downloadState.valueOrNull != null;
-    final downloaded = downloads && downloadState.valueOrNull!.downloaded;
-    final percent =
-        (downloadState.valueOrNull?.percentage ?? 0).toDouble() / 100;
-    final downloading = 0 < percent && percent < 1;
+    final downloadableState = ref.watch(downloadProgressProvider(episode));
+    final downloads = downloadableState.valueOrNull != null;
+    final downloadState =
+        downloadableState.valueOrNull?.state ?? DownloadState.none;
+    final downloaded = downloadState == DownloadState.downloaded;
+
+    final double? percent;
+    switch (downloadState) {
+      case DownloadState.none:
+      case DownloadState.failed:
+      case DownloadState.cancelled:
+        percent = null;
+      case DownloadState.downloaded:
+        percent = 1;
+      case DownloadState.queued:
+      case DownloadState.downloading:
+      case DownloadState.paused:
+        final base = downloadableState.requireValue?.percentage ?? 0;
+        percent = base == 0 ? null : base.toDouble() / 100;
+    }
+
+    final downloading = [
+      DownloadState.queued,
+      DownloadState.downloading,
+      DownloadState.paused,
+    ].contains(downloadState);
 
     final theme = Theme.of(context);
     final style = OutlinedButton.styleFrom(
