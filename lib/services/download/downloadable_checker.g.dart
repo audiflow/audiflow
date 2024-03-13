@@ -1,26 +1,26 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'settings_service.dart';
+part of 'downloadable_checker.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$settingsServiceHash() => r'61ed7ce7cc9b545864e0e1366688ca6bc52d1d05';
+String _$downloadableCheckerHash() =>
+    r'fe929b34af2a8f504d14cdc4f0955166b0c15410';
 
-/// See also [SettingsService].
-@ProviderFor(SettingsService)
-final settingsServiceProvider =
-    NotifierProvider<SettingsService, AppSettings>.internal(
-  SettingsService.new,
-  name: r'settingsServiceProvider',
+/// See also [downloadableChecker].
+@ProviderFor(downloadableChecker)
+final downloadableCheckerProvider = Provider<DownloadableChecker>.internal(
+  downloadableChecker,
+  name: r'downloadableCheckerProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
       ? null
-      : _$settingsServiceHash,
+      : _$downloadableCheckerHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
 
-typedef _$SettingsService = Notifier<AppSettings>;
+typedef DownloadableCheckerRef = ProviderRef<DownloadableChecker>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

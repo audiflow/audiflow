@@ -31,7 +31,7 @@ class SearchPage extends HookConsumerWidget {
         children: [
           CustomScrollView(
             slivers: <Widget>[
-              BasicAppBar.search(),
+              BasicAppBar(title: L10n.of(context)!.search),
               const SliverPinnedHeader(child: SearchBar()),
               if (state.isLoading)
                 const FillRemainingLoading()
@@ -78,7 +78,7 @@ class SearchBar extends HookConsumerWidget {
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
               color: theme.dividerColor,
-              width: 0.5
+              width: 0.5,
             ),
           ),
           child: TextField(

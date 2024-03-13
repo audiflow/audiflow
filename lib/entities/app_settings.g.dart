@@ -8,11 +8,15 @@ part of 'app_settings.dart';
 
 _$AppSettingsImpl _$$AppSettingsImplFromJson(Map<String, dynamic> json) =>
     _$AppSettingsImpl(
+      streamWarnMobileData: json['streamWarnMobileData'] as bool,
+      downloadWarnMobileData: json['downloadWarnMobileData'] as bool,
+      autoDownloadOnlyOnWifi: json['autoDownloadOnlyOnWifi'] as bool,
+      autoDeleteEpisodes: json['autoDeleteEpisodes'] as bool,
       theme: $enumDecode(_$BrightnessModeEnumMap, json['theme']),
       markDeletedEpisodesAsPlayed: json['markDeletedEpisodesAsPlayed'] as bool,
       storeDownloadsSDCard: json['storeDownloadsSDCard'] as bool,
       playbackSpeed: (json['playbackSpeed'] as num).toDouble(),
-      searchProvider: json['searchProvider'] as String?,
+      searchProvider: json['searchProvider'] as String,
       searchProviders: (json['searchProviders'] as List<dynamic>)
           .map((e) => SearchProvider.fromJson(e as Map<String, dynamic>))
           .toList(),
@@ -27,6 +31,10 @@ _$AppSettingsImpl _$$AppSettingsImplFromJson(Map<String, dynamic> json) =>
 
 Map<String, dynamic> _$$AppSettingsImplToJson(_$AppSettingsImpl instance) =>
     <String, dynamic>{
+      'streamWarnMobileData': instance.streamWarnMobileData,
+      'downloadWarnMobileData': instance.downloadWarnMobileData,
+      'autoDownloadOnlyOnWifi': instance.autoDownloadOnlyOnWifi,
+      'autoDeleteEpisodes': instance.autoDeleteEpisodes,
       'theme': _$BrightnessModeEnumMap[instance.theme]!,
       'markDeletedEpisodesAsPlayed': instance.markDeletedEpisodesAsPlayed,
       'storeDownloadsSDCard': instance.storeDownloadsSDCard,

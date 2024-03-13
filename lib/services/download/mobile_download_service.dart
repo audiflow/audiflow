@@ -15,6 +15,7 @@ import 'package:audiflow/entities/transcript.dart';
 import 'package:audiflow/repository/repository_provider.dart';
 import 'package:audiflow/services/download/download_manager_provider.dart';
 import 'package:audiflow/services/download/download_service.dart';
+import 'package:audiflow/services/download/downloadable_checker.dart';
 import 'package:audiflow/services/podcast/podcast_service_provider.dart';
 import 'package:audiflow/services/settings/settings_service.dart';
 import 'package:collection/collection.dart' show IterableExtension;
@@ -63,6 +64,11 @@ class MobileDownloadService extends DownloadService {
   Future<bool> downloadEpisode(Episode episode) async {
     try {
       if (!await hasStoragePermission(_appSettings)) {
+        return false;
+      }
+
+      final downloadableChecker = _ref.read(downloadableCheckerProvider);
+      if (!await downloadableChecker.canDownload(episode)) {
         return false;
       }
 

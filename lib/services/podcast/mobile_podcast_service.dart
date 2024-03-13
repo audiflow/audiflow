@@ -10,6 +10,7 @@ import 'package:audiflow/core/utils.dart';
 import 'package:audiflow/entities/entities.dart';
 import 'package:audiflow/errors/errors.dart';
 import 'package:audiflow/repository/repository_provider.dart';
+import 'package:audiflow/services/audio/audio_playable_checker.dart';
 import 'package:audiflow/services/audio/audio_player_service.dart';
 import 'package:audiflow/services/connectivity/connectivity.dart';
 import 'package:audiflow/services/podcast/podcast_service.dart';
@@ -477,6 +478,11 @@ class MobilePodcastService implements PodcastService {
     Episode episode, {
     Iterable<Episode>? group,
   }) async {
+    final checker = _ref.read(audioPlayableCheckerProvider);
+    if (!await checker.canStartPlayback(episode)) {
+      return;
+    }
+
     final playerState = _ref.read(audioPlayerServiceProvider);
     if (playerState != null && playerState.episode.guid == episode.guid) {
       if (playerState.phase == PlayerPhase.play) {
@@ -491,6 +497,11 @@ class MobilePodcastService implements PodcastService {
 
   @override
   Future<void> handlePlayFromQueue(QueueItem item, Episode episode) async {
+    final checker = _ref.read(audioPlayableCheckerProvider);
+    if (!await checker.canStartPlayback(episode)) {
+      return;
+    }
+
     await _queueManager.removeFromTop(to: item);
     await _playEpisode(episode);
   }

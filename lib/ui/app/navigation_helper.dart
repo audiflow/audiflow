@@ -1,11 +1,11 @@
 import 'package:audiflow/entities/entities.dart';
 import 'package:audiflow/ui/app/app_bottom_navigation_bar.dart';
-import 'package:audiflow/ui/app/seasoning_app.dart';
 import 'package:audiflow/ui/pages/episode_page.dart';
 import 'package:audiflow/ui/pages/podcast_chart_page.dart';
 import 'package:audiflow/ui/pages/podcast_details_page.dart';
 import 'package:audiflow/ui/pages/podcast_season_page.dart';
 import 'package:audiflow/ui/pages/search_page.dart';
+import 'package:audiflow/ui/pages/settings_page.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:palette_generator/palette_generator.dart';
@@ -85,6 +85,17 @@ class NavigationHelper {
                       );
                     },
                   ),
+                  GoRoute(
+                    path: 'settings',
+                    name: 'settings',
+                    parentNavigatorKey: homeTabNavigatorKey,
+                    pageBuilder: (context, state) {
+                      return _getPage(
+                        child: const SettingsPage(),
+                        state: state,
+                      );
+                    },
+                  ),
                 ],
               ),
             ],
@@ -100,33 +111,6 @@ class NavigationHelper {
                     state: state,
                   );
                 },
-                // routes: [
-                //   GoRoute(
-                //     path: 'detail',
-                //     parentNavigatorKey: searchTabNavigatorKey,
-                //     pageBuilder: (context, state) {
-                //       final url = state.extra! as String;
-                //       return _getPage(
-                //         child: PodcastDetails(podcast),
-                //         state: state,
-                //       );
-                //     },
-                //   ),
-                // ]
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            navigatorKey: settingsTabNavigatorKey,
-            routes: [
-              GoRoute(
-                path: settingsPath,
-                pageBuilder: (context, state) {
-                  return _getPage(
-                    child: const SettingsPage(),
-                    state: state,
-                  );
-                },
               ),
             ],
           ),
@@ -134,26 +118,6 @@ class NavigationHelper {
         builder: (context, state, navigationShell) {
           return AppBottomNavigationBar(
             navigationShell: navigationShell,
-          );
-        },
-      ),
-      GoRoute(
-        parentNavigatorKey: parentNavigatorKey,
-        path: signUpPath,
-        pageBuilder: (context, state) {
-          return _getPage(
-            child: const SignUpPage(),
-            state: state,
-          );
-        },
-      ),
-      GoRoute(
-        parentNavigatorKey: parentNavigatorKey,
-        path: signInPath,
-        pageBuilder: (context, state) {
-          return _getPage(
-            child: const SignInPage(),
-            state: state,
           );
         },
       ),
@@ -192,7 +156,6 @@ class NavigationHelper {
 
   static const String homePath = '/home';
   static const String detailPath = '/home/detail';
-  static const String settingsPath = '/settings';
   static const String searchPath = '/search';
   static const String searchDetailPath = '/search';
 
@@ -230,6 +193,12 @@ class NavigationHelper {
     await NavigationHelper.router.pushNamed(
       'episode',
       extra: (metadata, episode, heroPrefix),
+    );
+  }
+
+  static Future<void> pushSettings() async {
+    await NavigationHelper.router.pushNamed(
+      'settings',
     );
   }
 }

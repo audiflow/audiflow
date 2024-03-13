@@ -20,6 +20,11 @@ AppSettings _$AppSettingsFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$AppSettings {
+  bool get streamWarnMobileData => throw _privateConstructorUsedError;
+  bool get downloadWarnMobileData => throw _privateConstructorUsedError;
+  bool get autoDownloadOnlyOnWifi => throw _privateConstructorUsedError;
+  bool get autoDeleteEpisodes =>
+      throw _privateConstructorUsedError; //----------------
   /// The current theme name.
   BrightnessMode get theme => throw _privateConstructorUsedError;
 
@@ -33,7 +38,7 @@ mixin _$AppSettings {
   double get playbackSpeed => throw _privateConstructorUsedError;
 
   /// The search provider: itunes or podcastindex.
-  String? get searchProvider => throw _privateConstructorUsedError;
+  String get searchProvider => throw _privateConstructorUsedError;
 
   /// List of search providers: currently itunes or podcastindex.
   List<SearchProvider> get searchProviders =>
@@ -73,11 +78,15 @@ abstract class $AppSettingsCopyWith<$Res> {
       _$AppSettingsCopyWithImpl<$Res, AppSettings>;
   @useResult
   $Res call(
-      {BrightnessMode theme,
+      {bool streamWarnMobileData,
+      bool downloadWarnMobileData,
+      bool autoDownloadOnlyOnWifi,
+      bool autoDeleteEpisodes,
+      BrightnessMode theme,
       bool markDeletedEpisodesAsPlayed,
       bool storeDownloadsSDCard,
       double playbackSpeed,
-      String? searchProvider,
+      String searchProvider,
       List<SearchProvider> searchProviders,
       bool externalLinkConsent,
       bool autoOpenNowPlaying,
@@ -101,11 +110,15 @@ class _$AppSettingsCopyWithImpl<$Res, $Val extends AppSettings>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
+    Object? streamWarnMobileData = null,
+    Object? downloadWarnMobileData = null,
+    Object? autoDownloadOnlyOnWifi = null,
+    Object? autoDeleteEpisodes = null,
     Object? theme = null,
     Object? markDeletedEpisodesAsPlayed = null,
     Object? storeDownloadsSDCard = null,
     Object? playbackSpeed = null,
-    Object? searchProvider = freezed,
+    Object? searchProvider = null,
     Object? searchProviders = null,
     Object? externalLinkConsent = null,
     Object? autoOpenNowPlaying = null,
@@ -116,6 +129,22 @@ class _$AppSettingsCopyWithImpl<$Res, $Val extends AppSettings>
     Object? layout = null,
   }) {
     return _then(_value.copyWith(
+      streamWarnMobileData: null == streamWarnMobileData
+          ? _value.streamWarnMobileData
+          : streamWarnMobileData // ignore: cast_nullable_to_non_nullable
+              as bool,
+      downloadWarnMobileData: null == downloadWarnMobileData
+          ? _value.downloadWarnMobileData
+          : downloadWarnMobileData // ignore: cast_nullable_to_non_nullable
+              as bool,
+      autoDownloadOnlyOnWifi: null == autoDownloadOnlyOnWifi
+          ? _value.autoDownloadOnlyOnWifi
+          : autoDownloadOnlyOnWifi // ignore: cast_nullable_to_non_nullable
+              as bool,
+      autoDeleteEpisodes: null == autoDeleteEpisodes
+          ? _value.autoDeleteEpisodes
+          : autoDeleteEpisodes // ignore: cast_nullable_to_non_nullable
+              as bool,
       theme: null == theme
           ? _value.theme
           : theme // ignore: cast_nullable_to_non_nullable
@@ -132,10 +161,10 @@ class _$AppSettingsCopyWithImpl<$Res, $Val extends AppSettings>
           ? _value.playbackSpeed
           : playbackSpeed // ignore: cast_nullable_to_non_nullable
               as double,
-      searchProvider: freezed == searchProvider
+      searchProvider: null == searchProvider
           ? _value.searchProvider
           : searchProvider // ignore: cast_nullable_to_non_nullable
-              as String?,
+              as String,
       searchProviders: null == searchProviders
           ? _value.searchProviders
           : searchProviders // ignore: cast_nullable_to_non_nullable
@@ -181,11 +210,15 @@ abstract class _$$AppSettingsImplCopyWith<$Res>
   @override
   @useResult
   $Res call(
-      {BrightnessMode theme,
+      {bool streamWarnMobileData,
+      bool downloadWarnMobileData,
+      bool autoDownloadOnlyOnWifi,
+      bool autoDeleteEpisodes,
+      BrightnessMode theme,
       bool markDeletedEpisodesAsPlayed,
       bool storeDownloadsSDCard,
       double playbackSpeed,
-      String? searchProvider,
+      String searchProvider,
       List<SearchProvider> searchProviders,
       bool externalLinkConsent,
       bool autoOpenNowPlaying,
@@ -207,11 +240,15 @@ class __$$AppSettingsImplCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
+    Object? streamWarnMobileData = null,
+    Object? downloadWarnMobileData = null,
+    Object? autoDownloadOnlyOnWifi = null,
+    Object? autoDeleteEpisodes = null,
     Object? theme = null,
     Object? markDeletedEpisodesAsPlayed = null,
     Object? storeDownloadsSDCard = null,
     Object? playbackSpeed = null,
-    Object? searchProvider = freezed,
+    Object? searchProvider = null,
     Object? searchProviders = null,
     Object? externalLinkConsent = null,
     Object? autoOpenNowPlaying = null,
@@ -222,6 +259,22 @@ class __$$AppSettingsImplCopyWithImpl<$Res>
     Object? layout = null,
   }) {
     return _then(_$AppSettingsImpl(
+      streamWarnMobileData: null == streamWarnMobileData
+          ? _value.streamWarnMobileData
+          : streamWarnMobileData // ignore: cast_nullable_to_non_nullable
+              as bool,
+      downloadWarnMobileData: null == downloadWarnMobileData
+          ? _value.downloadWarnMobileData
+          : downloadWarnMobileData // ignore: cast_nullable_to_non_nullable
+              as bool,
+      autoDownloadOnlyOnWifi: null == autoDownloadOnlyOnWifi
+          ? _value.autoDownloadOnlyOnWifi
+          : autoDownloadOnlyOnWifi // ignore: cast_nullable_to_non_nullable
+              as bool,
+      autoDeleteEpisodes: null == autoDeleteEpisodes
+          ? _value.autoDeleteEpisodes
+          : autoDeleteEpisodes // ignore: cast_nullable_to_non_nullable
+              as bool,
       theme: null == theme
           ? _value.theme
           : theme // ignore: cast_nullable_to_non_nullable
@@ -238,10 +291,10 @@ class __$$AppSettingsImplCopyWithImpl<$Res>
           ? _value.playbackSpeed
           : playbackSpeed // ignore: cast_nullable_to_non_nullable
               as double,
-      searchProvider: freezed == searchProvider
+      searchProvider: null == searchProvider
           ? _value.searchProvider
           : searchProvider // ignore: cast_nullable_to_non_nullable
-              as String?,
+              as String,
       searchProviders: null == searchProviders
           ? _value._searchProviders
           : searchProviders // ignore: cast_nullable_to_non_nullable
@@ -282,7 +335,11 @@ class __$$AppSettingsImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$AppSettingsImpl implements _AppSettings {
   const _$AppSettingsImpl(
-      {required this.theme,
+      {required this.streamWarnMobileData,
+      required this.downloadWarnMobileData,
+      required this.autoDownloadOnlyOnWifi,
+      required this.autoDeleteEpisodes,
+      required this.theme,
       required this.markDeletedEpisodesAsPlayed,
       required this.storeDownloadsSDCard,
       required this.playbackSpeed,
@@ -300,6 +357,15 @@ class _$AppSettingsImpl implements _AppSettings {
   factory _$AppSettingsImpl.fromJson(Map<String, dynamic> json) =>
       _$$AppSettingsImplFromJson(json);
 
+  @override
+  final bool streamWarnMobileData;
+  @override
+  final bool downloadWarnMobileData;
+  @override
+  final bool autoDownloadOnlyOnWifi;
+  @override
+  final bool autoDeleteEpisodes;
+//----------------
   /// The current theme name.
   @override
   final BrightnessMode theme;
@@ -318,7 +384,7 @@ class _$AppSettingsImpl implements _AppSettings {
 
   /// The search provider: itunes or podcastindex.
   @override
-  final String? searchProvider;
+  final String searchProvider;
 
   /// List of search providers: currently itunes or podcastindex.
   final List<SearchProvider> _searchProviders;
@@ -361,7 +427,7 @@ class _$AppSettingsImpl implements _AppSettings {
 
   @override
   String toString() {
-    return 'AppSettings(theme: $theme, markDeletedEpisodesAsPlayed: $markDeletedEpisodesAsPlayed, storeDownloadsSDCard: $storeDownloadsSDCard, playbackSpeed: $playbackSpeed, searchProvider: $searchProvider, searchProviders: $searchProviders, externalLinkConsent: $externalLinkConsent, autoOpenNowPlaying: $autoOpenNowPlaying, showFunding: $showFunding, autoUpdateEpisodePeriod: $autoUpdateEpisodePeriod, trimSilence: $trimSilence, volumeBoost: $volumeBoost, layout: $layout)';
+    return 'AppSettings(streamWarnMobileData: $streamWarnMobileData, downloadWarnMobileData: $downloadWarnMobileData, autoDownloadOnlyOnWifi: $autoDownloadOnlyOnWifi, autoDeleteEpisodes: $autoDeleteEpisodes, theme: $theme, markDeletedEpisodesAsPlayed: $markDeletedEpisodesAsPlayed, storeDownloadsSDCard: $storeDownloadsSDCard, playbackSpeed: $playbackSpeed, searchProvider: $searchProvider, searchProviders: $searchProviders, externalLinkConsent: $externalLinkConsent, autoOpenNowPlaying: $autoOpenNowPlaying, showFunding: $showFunding, autoUpdateEpisodePeriod: $autoUpdateEpisodePeriod, trimSilence: $trimSilence, volumeBoost: $volumeBoost, layout: $layout)';
   }
 
   @override
@@ -369,6 +435,14 @@ class _$AppSettingsImpl implements _AppSettings {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$AppSettingsImpl &&
+            (identical(other.streamWarnMobileData, streamWarnMobileData) ||
+                other.streamWarnMobileData == streamWarnMobileData) &&
+            (identical(other.downloadWarnMobileData, downloadWarnMobileData) ||
+                other.downloadWarnMobileData == downloadWarnMobileData) &&
+            (identical(other.autoDownloadOnlyOnWifi, autoDownloadOnlyOnWifi) ||
+                other.autoDownloadOnlyOnWifi == autoDownloadOnlyOnWifi) &&
+            (identical(other.autoDeleteEpisodes, autoDeleteEpisodes) ||
+                other.autoDeleteEpisodes == autoDeleteEpisodes) &&
             (identical(other.theme, theme) || other.theme == theme) &&
             (identical(other.markDeletedEpisodesAsPlayed,
                     markDeletedEpisodesAsPlayed) ||
@@ -402,6 +476,10 @@ class _$AppSettingsImpl implements _AppSettings {
   @override
   int get hashCode => Object.hash(
       runtimeType,
+      streamWarnMobileData,
+      downloadWarnMobileData,
+      autoDownloadOnlyOnWifi,
+      autoDeleteEpisodes,
       theme,
       markDeletedEpisodesAsPlayed,
       storeDownloadsSDCard,
@@ -432,11 +510,15 @@ class _$AppSettingsImpl implements _AppSettings {
 
 abstract class _AppSettings implements AppSettings {
   const factory _AppSettings(
-      {required final BrightnessMode theme,
+      {required final bool streamWarnMobileData,
+      required final bool downloadWarnMobileData,
+      required final bool autoDownloadOnlyOnWifi,
+      required final bool autoDeleteEpisodes,
+      required final BrightnessMode theme,
       required final bool markDeletedEpisodesAsPlayed,
       required final bool storeDownloadsSDCard,
       required final double playbackSpeed,
-      required final String? searchProvider,
+      required final String searchProvider,
       required final List<SearchProvider> searchProviders,
       required final bool externalLinkConsent,
       required final bool autoOpenNowPlaying,
@@ -450,7 +532,14 @@ abstract class _AppSettings implements AppSettings {
       _$AppSettingsImpl.fromJson;
 
   @override
-
+  bool get streamWarnMobileData;
+  @override
+  bool get downloadWarnMobileData;
+  @override
+  bool get autoDownloadOnlyOnWifi;
+  @override
+  bool get autoDeleteEpisodes;
+  @override //----------------
   /// The current theme name.
   BrightnessMode get theme;
   @override
@@ -468,7 +557,7 @@ abstract class _AppSettings implements AppSettings {
   @override
 
   /// The search provider: itunes or podcastindex.
-  String? get searchProvider;
+  String get searchProvider;
   @override
 
   /// List of search providers: currently itunes or podcastindex.

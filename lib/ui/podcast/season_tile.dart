@@ -83,7 +83,7 @@ class _SeasonTitle extends StatelessWidget {
               : season.title!
           : season.seasonNum != null
               ? '${l10n.season} ${season.seasonNum}'
-              : l10n.null_season,
+              : l10n.nullSeason,
       maxLines: 2,
       textHeightBehavior: const TextHeightBehavior(
         applyHeightToFirstAscent: false,

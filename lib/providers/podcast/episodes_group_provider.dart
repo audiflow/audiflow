@@ -6,6 +6,7 @@ import 'package:audiflow/repository/repository_provider.dart';
 import 'package:audiflow/services/podcast/podcast_service_provider.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -23,6 +24,10 @@ class EpisodesGroup extends _$EpisodesGroup {
     return _completer.future;
   }
 
+  // ignore: avoid_build_context_in_providers
+  void hoge(BuildContext context){
+
+  }
   Future<void> setup(Iterable<Episode> episodes) async {
     if (_completer.isCompleted) {
       return;

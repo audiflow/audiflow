@@ -9,31 +9,49 @@ part 'settings_service.g.dart';
 class SettingsService extends _$SettingsService {
   @override
   AppSettings build() {
+    final defaults = AppSettings.sensibleDefaults();
     return AppSettings(
+      streamWarnMobileData: _sharedPreferences.getBool('markPlayedAsDeleted') ??
+          defaults.streamWarnMobileData,
+      downloadWarnMobileData:
+          _sharedPreferences.getBool('markPlayedAsDeleted') ??
+              defaults.streamWarnMobileData,
+      autoDownloadOnlyOnWifi:
+          _sharedPreferences.getBool('markPlayedAsDeleted') ??
+              defaults.autoDownloadOnlyOnWifi,
+      autoDeleteEpisodes: _sharedPreferences.getBool('markPlayedAsDeleted') ??
+          defaults.autoDeleteEpisodes,
+      // ---------
       markDeletedEpisodesAsPlayed:
-          _sharedPreferences.getBool('markPlayedAsDeleted') ?? false,
+          _sharedPreferences.getBool('markPlayedAsDeleted') ??
+              defaults.markDeletedEpisodesAsPlayed,
       storeDownloadsSDCard:
-          _sharedPreferences.getBool('storeDownloadsSDCard') ?? false,
+          _sharedPreferences.getBool('storeDownloadsSDCard') ??
+              defaults.storeDownloadsSDCard,
       theme: BrightnessMode.values
-          .byName(_sharedPreferences.getString('theme') ?? 'system'),
+          .byName(_sharedPreferences.getString('theme') ?? defaults.theme.name),
       playbackSpeed: _sharedPreferences.getDouble('speed') ?? 1.0,
       searchProvider: podcastIndexKey.isEmpty
           ? 'itunes'
-          : (_sharedPreferences.getString('search') ?? 'itunes'),
+          : (_sharedPreferences.getString('search') ?? defaults.searchProvider),
       searchProviders: [
         SearchProvider.itunes(),
         if (podcastIndexKey.isNotEmpty) SearchProvider.podcastindex(),
       ],
-      externalLinkConsent:
-          _sharedPreferences.getBool('externalLinkConsent') ?? false,
-      autoOpenNowPlaying:
-          _sharedPreferences.getBool('autoOpenNowPlaying') ?? false,
-      showFunding: _sharedPreferences.getBool('showFunding') ?? true,
+      externalLinkConsent: _sharedPreferences.getBool('externalLinkConsent') ??
+          defaults.externalLinkConsent,
+      autoOpenNowPlaying: _sharedPreferences.getBool('autoOpenNowPlaying') ??
+          defaults.autoOpenNowPlaying,
+      showFunding:
+          _sharedPreferences.getBool('showFunding') ?? defaults.showFunding,
       autoUpdateEpisodePeriod:
-          _sharedPreferences.getInt('autoUpdateEpisodePeriod') ?? 180,
-      trimSilence: _sharedPreferences.getBool('trimSilence') ?? false,
-      volumeBoost: _sharedPreferences.getBool('volumeBoost') ?? false,
-      layout: _sharedPreferences.getInt('layout') ?? 0,
+          _sharedPreferences.getInt('autoUpdateEpisodePeriod') ??
+              defaults.autoUpdateEpisodePeriod,
+      trimSilence:
+          _sharedPreferences.getBool('trimSilence') ?? defaults.trimSilence,
+      volumeBoost:
+          _sharedPreferences.getBool('volumeBoost') ?? defaults.volumeBoost,
+      layout: _sharedPreferences.getInt('layout') ?? defaults.layout,
     );
   }
 
@@ -44,8 +62,32 @@ class SettingsService extends _$SettingsService {
   }
 
   // ignore: avoid_setters_without_getters
+  set streamWarnMobileData(bool value) {
+    _sharedPreferences.setBool('streamWarnMobileData', value);
+    state = state.copyWith(streamWarnMobileData: value);
+  }
+
+  // ignore: avoid_setters_without_getters
+  set downloadWarnMobileData(bool value) {
+    _sharedPreferences.setBool('downloadWarnMobileData', value);
+    state = state.copyWith(downloadWarnMobileData: value);
+  }
+
+  // ignore: avoid_setters_without_getters
+  set autoDownloadOnlyOnWifi(bool value) {
+    _sharedPreferences.setBool('autoDownloadOnlyOnWifi', value);
+    state = state.copyWith(autoDownloadOnlyOnWifi: value);
+  }
+
+  // ignore: avoid_setters_without_getters
+  set autoDeleteEpisodes(bool value) {
+    _sharedPreferences.setBool('autoDeleteEpisodes', value);
+    state = state.copyWith(autoDeleteEpisodes: value);
+  }
+
+  // ignore: avoid_setters_without_getters
   set markDeletedEpisodesAsPlayed(bool value) {
-    _sharedPreferences.setBool('markPlayedAsDeleted', value);
+    _sharedPreferences.setBool('markDeletedEpisodesAsPlayed', value);
     state = state.copyWith(markDeletedEpisodesAsPlayed: value);
   }
 
