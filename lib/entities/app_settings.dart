@@ -24,6 +24,13 @@ enum BrightnessMode {
 @freezed
 class AppSettings with _$AppSettings {
   const factory AppSettings({
+    required bool streamWarnMobileData,
+    required bool downloadWarnMobileData,
+    required bool autoDownloadOnlyOnWifi,
+    required bool autoDeleteEpisodes,
+
+    //----------------
+
     /// The current theme name.
     required BrightnessMode theme,
 
@@ -37,7 +44,7 @@ class AppSettings with _$AppSettings {
     required double playbackSpeed,
 
     /// The search provider: itunes or podcastindex.
-    required String? searchProvider,
+    required String searchProvider,
 
     /// List of search providers: currently itunes or podcastindex.
     required List<SearchProvider> searchProviders,
@@ -69,6 +76,11 @@ class AppSettings with _$AppSettings {
 
   factory AppSettings.sensibleDefaults() {
     return AppSettings(
+      streamWarnMobileData: true,
+      downloadWarnMobileData: true,
+      autoDownloadOnlyOnWifi: true,
+      autoDeleteEpisodes: true,
+      // --------
       theme: BrightnessMode.system,
       markDeletedEpisodesAsPlayed: false,
       storeDownloadsSDCard: false,
