@@ -67,39 +67,39 @@ class _Contents extends ConsumerWidget {
       sliver: SliverList(
         delegate: SliverChildListDelegate(
           [
-            _Section(l10n.settings_streaming_playback),
-            _Description(l10n.settings_streaming_playback_description),
+            _Section(l10n.settingsStreamingPlayback),
+            _Description(l10n.settingsStreamingPlaybackDescription),
             _BinarySwitch(
-              l10n.settings_warn_wifi,
+              l10n.settingsWarnWifi,
               value: state.streamWarnMobileData,
               onToggle: () {
                 settings.streamWarnMobileData = !state.streamWarnMobileData;
               },
             ),
             const _Divider(),
-            _Section(l10n.settings_manual_download),
-            _Description(l10n.settings_manual_download_description),
+            _Section(l10n.settingsManualDownload),
+            _Description(l10n.settingsManualDownloadDescription),
             _BinarySwitch(
-              l10n.settings_warn_wifi,
+              l10n.settingsWarnWifi,
               value: state.downloadWarnMobileData,
               onToggle: () {
                 settings.downloadWarnMobileData = !state.downloadWarnMobileData;
               },
             ),
             const _Divider(),
-            _Section(l10n.settings_auto_download),
-            _Description(l10n.settings_auto_download_description),
+            _Section(l10n.settingsAutoDownload),
+            _Description(l10n.settingsAutoDownloadDescription),
             _BinarySwitch(
-              l10n.settings_wifi_only,
+              l10n.settingsWifiOnly,
               value: state.autoDownloadOnlyOnWifi,
               onToggle: () {
                 settings.autoDownloadOnlyOnWifi = !state.autoDownloadOnlyOnWifi;
               },
             ),
-            _Section(l10n.settings_auto_delete),
-            _Description(l10n.settings_auto_delete_description),
+            _Section(l10n.settingsAutoDelete),
+            _Description(l10n.settingsAutoDeleteDescription),
             _BinarySwitch(
-              l10n.settings_auto_delete_after,
+              l10n.settingsAutoDeleteAfter,
               value: state.autoDeleteEpisodes,
               onToggle: () {
                 settings.autoDeleteEpisodes = !state.autoDeleteEpisodes;

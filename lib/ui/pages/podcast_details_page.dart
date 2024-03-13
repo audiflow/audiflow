@@ -384,15 +384,15 @@ class _PodcastViewModeSwitch extends StatelessWidget {
     final l10n = L10n.of(context)!;
     switch (viewMode) {
       case PodcastDetailViewMode.episodes:
-        return l10n.view_mode_episodes;
+        return l10n.viewModeEpisodes;
       case PodcastDetailViewMode.seasons:
-        return l10n.view_mode_seasons;
+        return l10n.viewModeSeasons;
       case PodcastDetailViewMode.played:
-        return l10n.view_mode_played;
+        return l10n.viewModePlayed;
       case PodcastDetailViewMode.unplayed:
-        return l10n.view_mode_unplayed;
+        return l10n.viewModeUnplayed;
       case PodcastDetailViewMode.downloaded:
-        return l10n.view_mode_downloaded;
+        return l10n.viewModeDownloaded;
     }
   }
 }
