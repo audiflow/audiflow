@@ -4,6 +4,10 @@ TODO
 ### System
 - [ ] support opml
 - [ ] handle network error
+- [ ] handle audio focus lost
+- [ ] handle phone call interuption
+- [ ] control center
+- [ ] purge files
 
 ### Player
 - [x] Seekbar
@@ -16,7 +20,7 @@ TODO
 
 ### Setting
 - [ ] setting page
-
+  - [x] downloads & wifi
 
 ### Podcast / Season detail
 - [x] resume from last played position
@@ -31,7 +35,7 @@ TODO
 - [ ] unplayed view
 
 ### Queue
-- [ ] order of adhoc queue registration
+- [x] order of adhoc queue registration
 - [x] swipe to remove
 - [x] to detail page
 - [ ] Long push to show context menu
