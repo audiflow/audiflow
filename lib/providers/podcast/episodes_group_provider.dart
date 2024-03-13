@@ -25,9 +25,8 @@ class EpisodesGroup extends _$EpisodesGroup {
   }
 
   // ignore: avoid_build_context_in_providers
-  void hoge(BuildContext context){
+  void hoge(BuildContext context) {}
 
-  }
   Future<void> setup(Iterable<Episode> episodes) async {
     if (_completer.isCompleted) {
       return;
@@ -51,7 +50,8 @@ class EpisodesGroup extends _$EpisodesGroup {
   Future<void> togglePlayState({required Episode episode}) =>
       _podcastService.handlePlay(
         episode,
-        group: state.requireValue.episodes,
+        group: state.requireValue.episodes
+            .sorted((a, b) => a.publicationDate!.compareTo(b.publicationDate!)),
       );
 }
 
