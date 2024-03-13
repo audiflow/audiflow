@@ -100,5 +100,6 @@
   "captionStreamingNoWifi": "WiFiが接続されていないため、モバイル回線で音声データを取得します。",
   "captionDownloadNoWifi": "'WiFiが接続されていないため、モバイル回線でエピソードをダウンロードします。'",
   "captionWarnSettingNavigation": "この警告表示有無は設定で変更できます",
-  "proceedPlaying": "再生する"
+  "proceedPlaying": "再生する",
+  "proceedDownload": "続行"
 }
