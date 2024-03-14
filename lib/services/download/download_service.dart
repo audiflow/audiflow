@@ -9,6 +9,8 @@ import 'package:audiflow/entities/entities.dart';
 abstract class DownloadService {
   Future<bool> downloadEpisode(Episode episode);
 
+  Future<bool> downloadEpisodes(Iterable<Episode> episodes);
+
   Future<void> deleteDownload(Episode episode);
 
   Future<Downloadable?> findDownloadByGuid(String guid);

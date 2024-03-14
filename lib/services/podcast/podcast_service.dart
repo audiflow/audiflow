@@ -16,6 +16,8 @@ abstract class PodcastService {
 
   Future<void> setup(Locale locale);
 
+  // --- Search and Load ---
+
   Future<List<PodcastMetadata>> search({
     required String term,
     String? country,
@@ -34,6 +36,8 @@ abstract class PodcastService {
 
   List<String> genres();
 
+  // --- Podcast ---
+
   Future<PodcastMetadata?> loadPodcastMetadata(String guid);
 
   Future<Podcast?> loadPodcast(
@@ -43,26 +47,9 @@ abstract class PodcastService {
 
   Future<Podcast?> loadPodcastByGuid(String guid);
 
-  Future<List<Downloadable>> loadDownloads();
-
   Future<List<Episode>> loadEpisodesByPodcastGuid(String pguid);
 
-  Future<Episode?> loadEpisode(String guid);
-
-  Future<List<Episode?>> loadEpisodes(Iterable<String> guids);
-
-  Future<EpisodeStats?> loadEpisodeStats(Episode episode);
-
-  Future<List<Chapter>> loadChaptersByUrl(String url);
-
-  Future<Transcript> loadTranscriptByUrl({
-    required Episode episode,
-    required TranscriptUrl transcriptUrl,
-  });
-
-  Future<void> deleteDownload(Episode episode);
-
-  Future<void> toggleEpisodePlayed(Episode episode);
+  // --- Podcast subscription ---
 
   Future<List<(PodcastMetadata, PodcastStats)>> subscriptions();
 
@@ -70,9 +57,45 @@ abstract class PodcastService {
 
   Future<void> unsubscribe(Podcast podcast);
 
+  // --- Episode ---
+
+  Future<Episode?> loadEpisode(String guid);
+
+  Future<List<Episode?>> loadEpisodes(Iterable<String> guids);
+
   Future<void> saveEpisode(Episode episode);
 
+  // --- Episode stats ---
+
+  Future<EpisodeStats?> loadEpisodeStats(Episode episode);
+
+  Future<void> toggleEpisodePlayed(Episode episode);
+
+  // --- Chapter ---
+
+  Future<List<Chapter>> loadChaptersByUrl(String url);
+
+  // --- Transcript ---
+
+  Future<Transcript> loadTranscriptByUrl({
+    required Episode episode,
+    required TranscriptUrl transcriptUrl,
+  });
+
   Future<Transcript> saveTranscript(Transcript transcript);
+
+  // --- Download ---
+
+  Future<List<Downloadable>> loadAllDownloads();
+
+  Future<void> deleteDownload(Episode episode);
+
+  Future<void> downloadEpisodes(
+    Iterable<Episode> episodes, {
+    bool unplayedOnly = false,
+  });
+
+  // --- Play episode ---
 
   Future<void> handlePlay(Episode episode, {Iterable<Episode>? group});
 

@@ -11,6 +11,7 @@ import 'package:audiflow/repository/episode_event.dart';
 import 'package:audiflow/repository/podcast_event.dart';
 import 'package:audiflow/repository/repository.dart';
 import 'package:audiflow/repository/sembast/sembast_database_service.dart';
+import 'package:collection/collection.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
 import 'package:sembast/sembast.dart';
@@ -542,7 +543,7 @@ class SembastRepository extends Repository {
   }
 
   @override
-  Future<List<Downloadable>> findDownloads() async {
+  Future<List<Downloadable>> findAllDownloads() async {
     final finder = Finder(
       sortOrders: [SortOrder('publicationDate', false)],
     );
@@ -552,6 +553,12 @@ class SembastRepository extends Repository {
         return Downloadable.fromJson(snapshot.value);
       },
     ).toList();
+  }
+
+  @override
+  Future<List<Downloadable>> findDownloads(Iterable<String> guids) async {
+    final values = await _downloadableStore.records(guids).get(await _db);
+    return values.whereNotNull().map(Downloadable.fromJson).toList();
   }
 
   @override
