@@ -134,7 +134,7 @@ class _CupertinoFundingMenu extends ConsumerWidget {
                     onPressed: () {
                       Navigator.pop(context, 'Cancel');
                     },
-                    child: Text(L10n.of(context)!.cancel_option_label),
+                    child: Text(L10n.of(context)!.cancel),
                   ),
                 );
               },
@@ -173,11 +173,11 @@ class FundingLink {
         useRootNavigator: false,
         builder: (_) => BasicDialogAlert(
           title: Text(L10n.of(context)!.podcast_funding_dialog_header),
-          content: Text(L10n.of(context)!.consent_message),
+          content: Text(L10n.of(context)!.podcast_funding_consent_message),
           actions: <Widget>[
             BasicDialogAction(
               title: ActionText(
-                L10n.of(context)!.go_back_button_label,
+                L10n.of(context)!.goBack,
               ),
               onPressed: () {
                 Navigator.pop(context, false);
@@ -185,7 +185,7 @@ class FundingLink {
             ),
             BasicDialogAction(
               title: ActionText(
-                L10n.of(context)!.continue_button_label,
+                L10n.of(context)!.continues,
               ),
               iosIsDefaultAction: true,
               onPressed: () {

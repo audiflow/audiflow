@@ -133,9 +133,7 @@ class _PodcastTitle extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final textTheme = Theme.of(context).textTheme;
     final settings = ref.watch(settingsServiceProvider);
-    final showOverflowState = useState(false);
     final descriptionKey = useState(GlobalKey()).value;
-    final expandedState = useState(false);
 
     return SliverPadding(
       padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
@@ -153,52 +151,12 @@ class _PodcastTitle extends HookConsumerWidget {
               style: textTheme.bodySmall,
               textAlign: TextAlign.center,
             ),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Visibility(
-                  visible: showOverflowState.value,
-                  child: SizedBox(
-                    height: 48,
-                    width: 48,
-                    child: expandedState.value
-                        ? TextButton(
-                            style: const ButtonStyle(
-                              visualDensity: VisualDensity.compact,
-                            ),
-                            child: Icon(
-                              Icons.expand_less,
-                              semanticLabel: L10n.of(context)!
-                                  .semantics_collapse_podcast_description,
-                            ),
-                            onPressed: () {
-                              expandedState.value = false;
-                            },
-                          )
-                        : TextButton(
-                            style: const ButtonStyle(
-                              visualDensity: VisualDensity.compact,
-                            ),
-                            child: Icon(
-                              Icons.expand_more,
-                              semanticLabel: L10n.of(context)!
-                                  .semantics_expand_podcast_description,
-                            ),
-                            onPressed: () {
-                              expandedState.value = true;
-                            },
-                          ),
-                  ),
-                ),
-              ],
-            ),
             _PodcastDescription(
               key: descriptionKey,
               content: PodcastHtml(
                 content: podcast.description,
                 fontSize: FontSize.medium,
               ),
-              isExpanded: expandedState.value,
             ),
             Padding(
               padding: const EdgeInsets.only(left: 8, right: 8),
@@ -229,11 +187,9 @@ class _PodcastDescription extends StatelessWidget {
   const _PodcastDescription({
     super.key,
     required this.content,
-    required this.isExpanded,
   });
 
   final PodcastHtml content;
-  final bool isExpanded;
   static const maxHeight = 100.0;
   static const padding = 4.0;
 
@@ -246,14 +202,10 @@ class _PodcastDescription extends StatelessWidget {
         curve: Curves.fastOutSlowIn,
         alignment: Alignment.topCenter,
         child: Container(
-          constraints: isExpanded
-              ? const BoxConstraints()
-              : BoxConstraints.loose(
+          constraints: BoxConstraints.loose(
                   const Size(double.infinity, maxHeight - padding),
                 ),
-          child: isExpanded
-              ? content
-              : ShaderMask(
+          child: ShaderMask(
                   shaderCallback: LinearGradient(
                     colors: [Colors.white, Colors.white.withAlpha(0)],
                     begin: Alignment.topCenter,

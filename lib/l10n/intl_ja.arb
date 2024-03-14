@@ -101,5 +101,13 @@
   "captionDownloadNoWifi": "'WiFiが接続されていないため、モバイル回線でエピソードをダウンロードします。'",
   "captionWarnSettingNavigation": "この警告表示有無は設定で変更できます",
   "proceedPlaying": "再生する",
-  "proceedDownload": "続行"
+  "proceedDownload": "続行",
+  "semantics_podcast_details_header": "ポッドキャスト詳細",
+  "search_for_podcasts_hint": "ポッドキャストを検索…",
+  "semantic_announce_searching": "検索しています…",
+  "no_search_results_message": "該当するポッドキャストが見つかりませんでした",
+  "podcast_funding_dialog_header": "ポッドキャストへのサポート",
+  "podcast_funding_consent_message": "このポッドキャストをサポートするために、以下のリンクからサポートを行うことができます。",
+  "goBack": "戻る",
+  "continues": "続行"
 }
