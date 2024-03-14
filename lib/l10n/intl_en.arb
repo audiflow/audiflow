@@ -1,30 +1,19 @@
 {
-  "@@last_modified": "2020-02-20T12:15:52.645497",
   "locale": "en",
   "ok": "OK",
   "cancel": "Cancel",
+  "goBack": "Go Back",
+  "continues": "Continue",
+  "clearSearchButton": "Clear search text",
   "chart": "Chart",
-  "@chart": {
-    "description": "Title for the chart tab"
-  },
   "search": "Search",
-  "@search": {
-    "description": "Title for the search tab"
-  },
   "queue": "Queue",
-  "@queue": {
-    "description": "Title for a queue block"
-  },
-  "settings": "Settings",
+  "nullSeason": "Extras",
   "clear": "clear",
   "season": "Season",
-  "@season": {
-    "description": "Title for a season"
-  },
-  "nullSeason": "Extras",
-  "@nullSeason": {
-    "description": "Title for a season-less section"
-  },
+  "settings": "Settings",
+  "wifi": "Wi-Fi",
+  "mobileData": "Cellular Connection",
   "nEpisodes": "{count, plural, =1{1 episodes} other{{count} episodes}}",
   "@nEpisodes": {
     "description": "Number of episodes",
@@ -85,13 +74,16 @@
   "playFromStart": "Play from start",
   "playLatest": "Play latest",
   "playAgain": "Play again",
+  "tooltipPlay": "Play episode",
+  "tooltipPause": "Pause episode",
   "settingsOnDemandDownloadOnPlayback": "Download Audio on Playback",
   "settingsOnDemandDownloadOnPlaybackDescription": "If not pre-downloaded, audio will be fetched at the start of playback",
   "settingsManualDownload": "Manual Download",
   "settingsManualDownloadDescription": "When manually downloading episodes",
   "settingsAutoDownload": "Automatic Download",
   "settingsAutoDownloadDescription": "Automatically downloads in various situations to reduce wait times and hassle",
-  "settingsAutoDownloadRecent": "Only Recent Episodes",
+  "settingsAutoDownloadEnabled": "Enabled",
+  "settingsAutoDownloadRecent": "Number of Recently Published Episodes to Fetch",
   "settingsAutoDownloadSubject": "",
   "settingsAutoDownloadQueuedEpisodes": "Episodes added to queue manually",
   "settingsAutoDownloadIncludesAdhoc": "Includes episodes automatically added to queue",
@@ -121,10 +113,5 @@
   "semantic_announce_searching": "Searching, please wait.",
   "no_search_results_message": "No podcasts found",
   "podcast_funding_dialog_header": "Podcast Funding",
-  "podcast_funding_consent_message": "This funding link will take you to an external site where you will be able to directly support the show. Links are provided by the podcast authors and is not controlled by Anytime.",
-  "goBack": "Go Back",
-  "continues": "Continue",
-  "clearSearchButton": "Clear search text",
-  "tooltipPlay": "Play episode",
-  "tooltipPause": "Pause episode"
+  "podcast_funding_consent_message": "This funding link will take you to an external site where you will be able to directly support the show. Links are provided by the podcast authors and is not controlled by Anytime."
 }

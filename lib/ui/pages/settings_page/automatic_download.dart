@@ -3,21 +3,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:audiflow/core/l10n.dart';
-import 'package:audiflow/providers/podcast/podcast_search_provider.dart';
-import 'package:audiflow/services/settings/settings_service.dart';
-import 'package:audiflow/ui/widgets/error_notifier.dart';
-import 'package:audiflow/ui/widgets/fill_remaining_loading.dart';
-import 'package:flutter/material.dart';
-import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:material_symbols_icons/material_symbols_icons.dart';
+part of '../settings_page.dart';
 
-part 'settings_page/automatic_download.dart';
-part 'settings_page/parts.dart';
-part 'settings_page/text.dart';
-
-class SettingsPage extends HookConsumerWidget {
-  const SettingsPage({
+class SettingsAutomaticDownloadPage extends HookConsumerWidget {
+  const SettingsAutomaticDownloadPage({
     super.key,
   });
 
@@ -30,7 +19,7 @@ class SettingsPage extends HookConsumerWidget {
         children: [
           CustomScrollView(
             slivers: <Widget>[
-              _AppBar(l10n.settings),
+              _AppBar(l10n.settingsAutoDownload),
               state.isLoading
                   ? const FillRemainingLoading()
                   : const _Contents(),
@@ -43,8 +32,8 @@ class SettingsPage extends HookConsumerWidget {
   }
 }
 
-class _Contents extends ConsumerWidget {
-  const _Contents();
+class _AutoDownloadContents extends ConsumerWidget {
+  const _AutoDownloadContents();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -80,37 +69,37 @@ class _Contents extends ConsumerWidget {
                 settings.downloadWarnMobileData = !state.downloadWarnMobileData;
               },
             ),
-            // const _Divider(),
-            // _Section(
-            //   title: l10n.settingsAutoDownload,
-            //   description: l10n.settingsAutoDownloadDescription,
-            // ),
-            // _BinarySwitch(
-            //   l10n.wifi,
-            //   value: state.autoDownloadOnlyOnWifi,
-            //   onToggle: () {
-            //     settings.autoDownloadOnlyOnWifi = !state.autoDownloadOnlyOnWifi;
-            //   },
-            // ),
-            // _BinarySwitch(
-            //   l10n.settingsAutoDownloadRecent,
-            //   value: state.autoDownloadOnlyOnWifi,
-            //   onToggle: () {
-            //     settings.autoDownloadOnlyOnWifi = !state.autoDownloadOnlyOnWifi;
-            //   },
-            // ),
-            // const _Divider(),
-            // _Section(
-            //   title: l10n.settingsAutoDelete,
-            //   description: l10n.settingsAutoDeleteDescription,
-            // ),
-            // _BinarySwitch(
-            //   l10n.settingsAutoDeleteAfter,
-            //   value: state.autoDeleteEpisodes,
-            //   onToggle: () {
-            //     settings.autoDeleteEpisodes = !state.autoDeleteEpisodes;
-            //   },
-            // ),
+            const _Divider(),
+            _Section(
+              title: l10n.settingsAutoDownload,
+              description: l10n.settingsAutoDownloadDescription,
+            ),
+            _BinarySwitch(
+              l10n.wifi,
+              value: state.autoDownloadOnlyOnWifi,
+              onToggle: () {
+                settings.autoDownloadOnlyOnWifi = !state.autoDownloadOnlyOnWifi;
+              },
+            ),
+            _BinarySwitch(
+              l10n.settingsAutoDownloadRecent,
+              value: state.autoDownloadOnlyOnWifi,
+              onToggle: () {
+                settings.autoDownloadOnlyOnWifi = !state.autoDownloadOnlyOnWifi;
+              },
+            ),
+            const _Divider(),
+            _Section(
+              title: l10n.settingsAutoDelete,
+              description: l10n.settingsAutoDeleteDescription,
+            ),
+            _BinarySwitch(
+              l10n.settingsAutoDeleteAfter,
+              value: state.autoDeleteEpisodes,
+              onToggle: () {
+                settings.autoDeleteEpisodes = !state.autoDeleteEpisodes;
+              },
+            ),
           ],
         ),
       ),
