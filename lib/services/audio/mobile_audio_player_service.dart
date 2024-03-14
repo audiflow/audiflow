@@ -17,6 +17,7 @@ import 'package:audiflow/services/connectivity/connectivity.dart';
 import 'package:audiflow/services/error/error_manager.dart';
 import 'package:audiflow/services/settings/settings_service.dart';
 import 'package:audio_service/audio_service.dart';
+import 'package:audio_session/audio_session.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:logging/logging.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -92,6 +93,9 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
       ),
     );
     _handleAudioServiceTransitions();
+
+    final session = await AudioSession.instance;
+    await session.configure(const AudioSessionConfiguration.speech());
   }
 
   void dispose() {
