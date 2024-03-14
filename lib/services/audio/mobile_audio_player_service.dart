@@ -96,6 +96,7 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
 
     final session = await AudioSession.instance;
     await session.configure(const AudioSessionConfiguration.speech());
+    _handleAudioInterruptions(session);
   }
 
   void dispose() {
@@ -360,6 +361,29 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
       );
       if (audioState == AudioState.completed) {
         _completed();
+      }
+    });
+  }
+
+  void _handleAudioInterruptions(AudioSession session) {
+    session.interruptionEventStream.listen((event) {
+      if (event.begin) {
+        switch (event.type) {
+          case AudioInterruptionType.duck:
+            break;
+          case AudioInterruptionType.pause:
+          case AudioInterruptionType.unknown:
+            pause();
+        }
+      } else {
+        switch (event.type) {
+          case AudioInterruptionType.duck:
+            break;
+          case AudioInterruptionType.pause:
+            play();
+          case AudioInterruptionType.unknown:
+            break;
+        }
       }
     });
   }
