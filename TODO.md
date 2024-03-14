@@ -4,14 +4,14 @@ TODO
 ### System
 - [ ] support opml
 - [ ] handle network error
-- [ ] handle audio focus lost
-- [ ] handle phone call interuption
-- [ ] control center
+- [x] handle audio focus lost
+- [x] handle phone call interuption
+- [x] control center
 - [ ] purge files
 
 ### Player
 - [x] Seekbar
-- [ ] smart play button
+- [x] smart play button
 
 ### Home
 - [x] cache Podcast chart
@@ -23,21 +23,34 @@ TODO
   - [x] downloads & wifi
 
 ### Podcast / Season detail
+- [ ] show full description, etc
 - [x] resume from last played position
 - [x] adhoc playlist
 - [ ] automatic download
 - [ ] group by episode# range
 - [ ] group by date range
-- [x] Sort by episode#
-- [x] Episode detail page
+- [x] sort by episode#
+- [x] episode detail page
 - [ ] downloaded view
 - [ ] played view
 - [ ] unplayed view
+- [ ] display stats
+  - [ ] total played length
+  - [ ] completed times
+
 
 ### Queue
 - [x] order of adhoc queue registration
 - [x] swipe to remove
 - [x] to detail page
-- [ ] Long push to show context menu
+- [ ] long push to show context menu
 - [ ] show downloaded state 
-- [x] Stop at the end of the current episode
+- [x] stop at the end of the current episode
+
+### Download
+- [ ] batch download
+  - [x] from season episode page
+  - [ ] from episode page
+  - [ ] from podcast page?
+- [ ] limit cellular connection, include network swithing in the middle
+- [ ] download one by one, at least it should care the episode the user is awaiting
