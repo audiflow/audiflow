@@ -123,5 +123,8 @@
   "podcast_funding_dialog_header": "Podcast Funding",
   "podcast_funding_consent_message": "This funding link will take you to an external site where you will be able to directly support the show. Links are provided by the podcast authors and is not controlled by Anytime.",
   "goBack": "Go Back",
-  "continues": "Continue"
+  "continues": "Continue",
+  "clearSearchButton": "Clear search text",
+  "tooltipPlay": "Play episode",
+  "tooltipPause": "Pause episode"
 }

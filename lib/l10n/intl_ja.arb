@@ -109,5 +109,8 @@
   "podcast_funding_dialog_header": "ポッドキャストへのサポート",
   "podcast_funding_consent_message": "このポッドキャストをサポートするために、以下のリンクからサポートを行うことができます。",
   "goBack": "戻る",
-  "continues": "続行"
+  "continues": "続行",
+  "clearSearchButton": "クリア",
+  "tooltipPlay": "エピソードを再生",
+  "tooltipPause": "エピソード再生を一時停止"
 }
