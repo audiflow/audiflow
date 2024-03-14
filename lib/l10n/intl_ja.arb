@@ -108,6 +108,8 @@
   "captionWarnSettingNavigation": "この警告表示有無は設定で変更できます",
   "proceedPlaying": "再生する",
   "proceedDownload": "続行",
+  "downloadAllEpisodes": "すべてのエピソードをダウンロード",
+  "downloadUnplayedEpisodes": "未再生のエピソードをダウンロード",
   "semantics_podcast_details_header": "ポッドキャスト詳細",
   "search_for_podcasts_hint": "ポッドキャストを検索…",
   "semantic_announce_searching": "検索しています…",

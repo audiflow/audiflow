@@ -108,6 +108,8 @@
   "captionWarnSettingNavigation": "You can change this warning in the settings",
   "proceedPlaying": "Play anyway",
   "proceedDownload": "Proceed",
+  "downloadAllEpisodes": "Download All Episodes",
+  "downloadUnplayedEpisodes": "Download Unplayed Episodes",
   "semantics_podcast_details_header": "Podcast details and episodes page",
   "search_for_podcasts_hint": "Search for podcasts",
   "semantic_announce_searching": "Searching, please wait.",

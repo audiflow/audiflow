@@ -13,9 +13,12 @@ import 'package:audiflow/repository/repository_provider.dart';
 import 'package:audiflow/services/audio/audio_playable_checker.dart';
 import 'package:audiflow/services/audio/audio_player_service.dart';
 import 'package:audiflow/services/connectivity/connectivity.dart';
+import 'package:audiflow/services/download/download_manager_provider.dart';
+import 'package:audiflow/services/download/download_service_provider.dart';
 import 'package:audiflow/services/podcast/podcast_service.dart';
 import 'package:audiflow/services/queue/queue_manager.dart';
 import 'package:audiflow/services/settings/settings_service.dart';
+import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -369,11 +372,6 @@ class MobilePodcastService implements PodcastService {
   }
 
   @override
-  Future<List<Downloadable>> loadDownloads() async {
-    return _repository.findDownloads();
-  }
-
-  @override
   Future<List<Episode>> loadEpisodesByPodcastGuid(String pguid) async {
     return _repository.findEpisodesByPodcastGuid(pguid);
   }
@@ -391,37 +389,6 @@ class MobilePodcastService implements PodcastService {
   @override
   Future<EpisodeStats?> loadEpisodeStats(Episode episode) async {
     return _repository.findEpisodeStats(episode.guid);
-  }
-
-  @override
-  Future<void> deleteDownload(Episode episode) async {
-    final download = await _repository.findDownload(episode.guid);
-    if (download == null) {
-      return;
-    }
-
-    // If this episode is currently downloading, cancel the download first.
-    if (download.state == DownloadState.downloaded) {
-      if (_appSettings.markDeletedEpisodesAsPlayed) {
-        // episode.played = true;
-      }
-    } else if (download.state == DownloadState.downloading &&
-        download.percentage < 100) {
-      await FlutterDownloader.cancel(taskId: download.taskId);
-    }
-
-    await _repository.deleteDownload(download);
-
-    if (await hasStoragePermission(_appSettings)) {
-      final f =
-          File.fromUri(Uri.file(await resolvePath(_appSettings, download)));
-      if (f.existsSync()) {
-        _log.fine('Deleting file ${f.path}');
-        await f.delete();
-      }
-    }
-
-    return;
   }
 
   @override
@@ -468,10 +435,77 @@ class MobilePodcastService implements PodcastService {
     await _repository.saveEpisode(episode);
   }
 
+  // --- Transcript ---
+
   @override
   Future<Transcript> saveTranscript(Transcript transcript) async {
     return _repository.saveTranscript(transcript);
   }
+
+  // --- Download ---
+
+  @override
+  Future<List<Downloadable>> loadAllDownloads() async {
+    return _repository.findAllDownloads();
+  }
+
+  @override
+  Future<void> deleteDownload(Episode episode) async {
+    final download = await _repository.findDownload(episode.guid);
+    if (download == null) {
+      return;
+    }
+
+    // If this episode is currently downloading, cancel the download first.
+    if (download.state == DownloadState.downloaded) {
+      if (_appSettings.markDeletedEpisodesAsPlayed) {
+        // episode.played = true;
+      }
+    } else if (download.state == DownloadState.downloading &&
+        download.percentage < 100) {
+      await FlutterDownloader.cancel(taskId: download.taskId);
+    }
+
+    await _repository.deleteDownload(download);
+
+    if (await hasStoragePermission(_appSettings)) {
+      final f =
+          File.fromUri(Uri.file(await resolvePath(_appSettings, download)));
+      if (f.existsSync()) {
+        _log.fine('Deleting file ${f.path}');
+        await f.delete();
+      }
+    }
+
+    return;
+  }
+
+  @override
+  Future<void> downloadEpisodes(
+    Iterable<Episode> episodes, {
+    bool unplayedOnly = false,
+  }) async {
+    final guids = episodes.map((e) => e.guid);
+    final downloads = await _repository.findDownloads(guids);
+    final statsList = unplayedOnly
+        ? <EpisodeStats>[]
+        : await _repository.findEpisodeStatsList(guids);
+
+    final toDownload = episodes.where((e) {
+      final stats = statsList.firstWhereOrNull((s) => s?.guid == e.guid);
+      return (stats?.completeCount ?? 0) == 0;
+    }).where((e) {
+      final download = downloads.firstWhereOrNull((d) => d.guid == e.guid);
+      return download?.state != DownloadState.downloaded;
+    });
+    if (toDownload.isEmpty) {
+      return;
+    }
+
+    await _ref.read(downloadServiceProvider).downloadEpisodes(toDownload);
+  }
+
+  // --- Play episode ---
 
   @override
   Future<void> handlePlay(

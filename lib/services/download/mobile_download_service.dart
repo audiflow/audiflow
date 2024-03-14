@@ -61,17 +61,44 @@ class MobileDownloadService extends DownloadService {
   }
 
   @override
+  Future<bool> downloadEpisodes(Iterable<Episode> episodes) async {
+    if (episodes.isEmpty) {
+      return true;
+    }
+
+    if (!await hasStoragePermission(_appSettings)) {
+      return false;
+    }
+
+    final downloadableChecker = _ref.read(downloadableCheckerProvider);
+    if (!await downloadableChecker.canDownload(episodes.first)) {
+      return false;
+    }
+
+    for (final episode in episodes) {
+      if (!await _downloadEpisode(episode)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  @override
   Future<bool> downloadEpisode(Episode episode) async {
+    if (!await hasStoragePermission(_appSettings)) {
+      return false;
+    }
+
+    final downloadableChecker = _ref.read(downloadableCheckerProvider);
+    if (!await downloadableChecker.canDownload(episode)) {
+      return false;
+    }
+    return _downloadEpisode(episode);
+  }
+
+  Future<bool> _downloadEpisode(Episode episode) async {
     try {
-      if (!await hasStoragePermission(_appSettings)) {
-        return false;
-      }
-
-      final downloadableChecker = _ref.read(downloadableCheckerProvider);
-      if (!await downloadableChecker.canDownload(episode)) {
-        return false;
-      }
-
       var newEpisode = episode;
 
       // If this episode contains chapter, fetch them first.

@@ -86,7 +86,9 @@ abstract class Repository {
 
   Future<List<Downloadable>> findDownloadsByPodcastGuid(String pguid);
 
-  Future<List<Downloadable>> findDownloads();
+  Future<List<Downloadable>> findAllDownloads();
+
+  Future<List<Downloadable>> findDownloads(Iterable<String> guids);
 
   Future<Downloadable?> findDownload(String guid);
 
