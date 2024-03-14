@@ -74,7 +74,7 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
   var _initialized = false;
 
   @override
-  Future<void> setup() async {
+  Future<void> ensureInitialized() async {
     if (_initialized) {
       return;
     }

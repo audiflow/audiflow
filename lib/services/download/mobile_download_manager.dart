@@ -32,7 +32,7 @@ class MobileDownloaderManager implements DownloadManager {
   Stream<DownloadProgress> get downloadProgress => downloadController.stream;
 
   @override
-  Future<void> setup() async {
+  Future<void> ensureInitialized() async {
     if (_initialized) {
       return;
     }

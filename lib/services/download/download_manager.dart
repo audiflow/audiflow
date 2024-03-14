@@ -21,7 +21,7 @@ class DownloadProgress {
 }
 
 abstract class DownloadManager {
-  Future<void> setup();
+  Future<void> ensureInitialized();
 
   Future<String?> enqueueTask(String url, String downloadPath, String fileName);
 

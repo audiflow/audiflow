@@ -22,7 +22,7 @@ class DefaultQueueManager extends _$DefaultQueueManager
   Repository get _repository => ref.read(repositoryProvider);
 
   @override
-  Future<void> setup() async {
+  Future<void> ensureInitialized() async {
     state = await _repository.loadQueue();
   }
 
