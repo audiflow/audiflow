@@ -47,8 +47,8 @@ class AnimatedPlayButton extends HookConsumerWidget {
           ),
         Tooltip(
           message: playing
-              ? L10n.of(context)!.pause_button_label
-              : L10n.of(context)!.play_button_label,
+              ? L10n.of(context)!.tooltipPause
+              : L10n.of(context)!.tooltipPlay,
           child: TextButton(
             style: TextButton.styleFrom(
               shape: CircleBorder(
@@ -70,8 +70,8 @@ class AnimatedPlayButton extends HookConsumerWidget {
             },
             child: AnimatedIcon(
               semanticLabel: playing
-                  ? L10n.of(context)!.pause_button_label
-                  : L10n.of(context)!.play_button_label,
+                  ? L10n.of(context)!.tooltipPause
+                  : L10n.of(context)!.tooltipPlay,
               icon:
                   playing ? AnimatedIcons.pause_play : AnimatedIcons.play_pause,
               color: Colors.white,

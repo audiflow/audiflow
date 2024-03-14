@@ -71,7 +71,7 @@ class PodcastSearchBar extends HookConsumerWidget {
       ),
       actions: <Widget>[
         IconButton(
-          tooltip: L10n.of(context)!.clear_search_button_label,
+          tooltip: L10n.of(context)!.clearSearchButton,
           icon: const Icon(Icons.clear),
           onPressed: () {
             searchController.clear();
