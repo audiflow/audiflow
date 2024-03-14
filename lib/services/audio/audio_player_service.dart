@@ -61,7 +61,7 @@ class AudioPlayerService extends _$AudioPlayerService {
   @override
   AudioPlayerState? build() => null;
 
-  Future<void> setup() => throw UnimplementedError();
+  Future<void> ensureInitialized() => throw UnimplementedError();
 
   /// Load a new episode, and play if [autoPlay] is true.
   Future<void> loadEpisode({

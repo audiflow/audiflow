@@ -13,7 +13,7 @@ class QueueManager extends _$QueueManager {
   @override
   Queue build() => const Queue();
 
-  Future<void> setup() => throw UnimplementedError();
+  Future<void> ensureInitialized() => throw UnimplementedError();
 
   Future<QueueItem?> pop() => throw UnimplementedError();
 
