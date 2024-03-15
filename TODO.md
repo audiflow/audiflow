@@ -37,7 +37,8 @@ TODO
 - [ ] display stats
   - [ ] total played length
   - [ ] completed times
-
+- [ ] position at the last played episode at the first view
+- [ ] tap-to-top
 
 ### Queue
 - [x] order of adhoc queue registration
