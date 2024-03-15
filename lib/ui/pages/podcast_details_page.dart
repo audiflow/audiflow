@@ -26,6 +26,7 @@ import 'package:flutter_html/flutter_html.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:palette_generator/palette_generator.dart';
+import 'package:scrolls_to_top/scrolls_to_top.dart';
 
 /// This Widget takes a search result and builds a list of currently available
 /// podcasts.
@@ -63,53 +64,65 @@ class PodcastDetailsPage extends HookConsumerWidget {
 
     final ascend = stats?.ascend ?? false;
 
+    final controller = useScrollController();
     return Semantics(
       header: false,
       label: L10n.of(context)!.semantics_podcast_details_header,
       child: ScaffoldMessenger(
         key: scaffoldMessengerKey,
-        child: Scaffold(
-          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          body: RefreshIndicator(
-            displacement: 60,
-            onRefresh: () async {
-              await ref
-                  .read(podcastServiceProvider)
-                  .loadPodcast(metadata, refresh: true);
-            },
-            child: CustomScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              slivers: <Widget>[
-                PodcastDetailsAppBar(
-                  metadata: metadata,
-                  heroPrefix: heroPrefix,
-                  foregroundColor:
-                      paletteGenerator.lightMutedColor?.titleTextColor,
-                  backgroundColor: paletteGenerator.lightMutedColor?.color,
-                ),
-                if (podcastDetailsState.isLoading || seasonsState.isLoading)
-                  const FillRemainingLoading()
-                else if (podcastDetailsState.hasError || podcast == null)
-                  FillRemainingError.podcastNoResults()
-                else ...[
-                  _PodcastTitle(podcast),
-                  _SwitchBar(
-                    podcast: podcast,
-                    seasons: seasonsState.value!,
-                    viewMode: viewMode,
-                    ascend: ascend,
+        child: ScrollsToTop(
+          onScrollsToTop: (event) async {
+            await controller.animateTo(
+              event.to,
+              duration: event.duration,
+              curve: event.curve,
+            );
+          },
+          child: Scaffold(
+            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+            body: RefreshIndicator(
+              key: GlobalKey(),
+              displacement: 60,
+              onRefresh: () async {
+                await ref
+                    .read(podcastServiceProvider)
+                    .loadPodcast(metadata, refresh: true);
+              },
+              child: CustomScrollView(
+                controller: controller,
+                physics: const AlwaysScrollableScrollPhysics(),
+                slivers: <Widget>[
+                  PodcastDetailsAppBar(
+                    metadata: metadata,
+                    heroPrefix: heroPrefix,
+                    foregroundColor:
+                        paletteGenerator.lightMutedColor?.titleTextColor,
+                    backgroundColor: paletteGenerator.lightMutedColor?.color,
                   ),
-                  viewMode == PodcastDetailViewMode.seasons
-                      ? SeasonList(podcast: podcast)
-                      : EpisodeList(
-                          episodeGroupKey: ValueKey(podcast.guid),
-                          metadata: podcast.metadata,
-                          episodes: ascend
-                              ? podcast.episodes.reversed.toList()
-                              : podcast.episodes,
-                        ),
+                  if (podcastDetailsState.isLoading || seasonsState.isLoading)
+                    const FillRemainingLoading()
+                  else if (podcastDetailsState.hasError || podcast == null)
+                    FillRemainingError.podcastNoResults()
+                  else ...[
+                    _PodcastTitle(podcast),
+                    _SwitchBar(
+                      podcast: podcast,
+                      seasons: seasonsState.value!,
+                      viewMode: viewMode,
+                      ascend: ascend,
+                    ),
+                    viewMode == PodcastDetailViewMode.seasons
+                        ? SeasonList(podcast: podcast)
+                        : EpisodeList(
+                            episodeGroupKey: ValueKey(podcast.guid),
+                            metadata: podcast.metadata,
+                            episodes: ascend
+                                ? podcast.episodes.reversed.toList()
+                                : podcast.episodes,
+                          ),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         ),

@@ -61,6 +61,9 @@ dependencies:
   riverpod_annotation: ^2.3.4
   rxdart: ^0.27.7
   scrollable_positioned_list: ^0.3.8
+  scrolls_to_top:
+    git:
+      url: git@github.com:reedom/scrolls_to_top.git
   sembast: ^3.6.0
   share_plus: ^7.2.2
   shared_preferences: ^2.2.2

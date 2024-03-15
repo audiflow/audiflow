@@ -19,6 +19,7 @@ import 'package:audiflow/ui/widgets/fill_remaining_loading.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:scrolls_to_top/scrolls_to_top.dart';
 
 /// This widget renders the search bar and allows the user to search for
 /// podcasts.
@@ -41,26 +42,38 @@ class PodcastChartPage extends HookConsumerWidget {
       [],
     );
 
-    return Scaffold(
-      body: Stack(
-        children: [
-          CustomScrollView(
-            slivers: <Widget>[
-              BasicAppBar(title: L10n.of(context)!.chart),
-              const _SubscribedPodcasts(),
-              if (state.isLoading)
-                const FillRemainingLoading()
-              else if (state.hasError)
-                FillRemainingError.podcastNoResults()
-              else
-                SliverPadding(
-                  padding: const EdgeInsets.only(top: 30),
-                  sliver: PodcastList(results: state.value!.podcasts),
-                ),
-            ],
-          ),
-          const ErrorNotifier(),
-        ],
+    final controller = useScrollController();
+
+    return ScrollsToTop(
+      onScrollsToTop: (event) async {
+        await controller.animateTo(
+          event.to,
+          duration: event.duration,
+          curve: event.curve,
+        );
+      },
+      child: Scaffold(
+        body: Stack(
+          children: [
+            CustomScrollView(
+              controller: controller,
+              slivers: <Widget>[
+                BasicAppBar(title: L10n.of(context)!.chart),
+                const _SubscribedPodcasts(),
+                if (state.isLoading)
+                  const FillRemainingLoading()
+                else if (state.hasError)
+                  FillRemainingError.podcastNoResults()
+                else
+                  SliverPadding(
+                    padding: const EdgeInsets.only(top: 30),
+                    sliver: PodcastList(results: state.value!.podcasts),
+                  ),
+              ],
+            ),
+            const ErrorNotifier(),
+          ],
+        ),
       ),
     );
   }
