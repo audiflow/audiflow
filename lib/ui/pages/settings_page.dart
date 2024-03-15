@@ -1,4 +1,6 @@
-// Copyright 2024 HANAI Tohru, Reedom, INC.
+// Copyright (c) 2024 by HANAI, Tohru.
+// Copyright (c) 2024 Reedom, Inc.
+// Additional contributions from project contributors.
 // All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
@@ -80,37 +82,37 @@ class _Contents extends ConsumerWidget {
                 settings.downloadWarnMobileData = !state.downloadWarnMobileData;
               },
             ),
-            // const _Divider(),
-            // _Section(
-            //   title: l10n.settingsAutoDownload,
-            //   description: l10n.settingsAutoDownloadDescription,
-            // ),
-            // _BinarySwitch(
-            //   l10n.wifi,
-            //   value: state.autoDownloadOnlyOnWifi,
-            //   onToggle: () {
-            //     settings.autoDownloadOnlyOnWifi = !state.autoDownloadOnlyOnWifi;
-            //   },
-            // ),
-            // _BinarySwitch(
-            //   l10n.settingsAutoDownloadRecent,
-            //   value: state.autoDownloadOnlyOnWifi,
-            //   onToggle: () {
-            //     settings.autoDownloadOnlyOnWifi = !state.autoDownloadOnlyOnWifi;
-            //   },
-            // ),
-            // const _Divider(),
-            // _Section(
-            //   title: l10n.settingsAutoDelete,
-            //   description: l10n.settingsAutoDeleteDescription,
-            // ),
-            // _BinarySwitch(
-            //   l10n.settingsAutoDeleteAfter,
-            //   value: state.autoDeleteEpisodes,
-            //   onToggle: () {
-            //     settings.autoDeleteEpisodes = !state.autoDeleteEpisodes;
-            //   },
-            // ),
+        // const _Divider(),
+        // _Section(
+        //   title: l10n.settingsAutoDownload,
+        //   description: l10n.settingsAutoDownloadDescription,
+        // ),
+        // _BinarySwitch(
+        //   l10n.wifi,
+        //   value: state.autoDownloadOnlyOnWifi,
+        //   onToggle: () {
+        //     settings.autoDownloadOnlyOnWifi = !state.autoDownloadOnlyOnWifi;
+        //   },
+        // ),
+        // _BinarySwitch(
+        //   l10n.settingsAutoDownloadRecent,
+        //   value: state.autoDownloadOnlyOnWifi,
+        //   onToggle: () {
+        //     settings.autoDownloadOnlyOnWifi = !state.autoDownloadOnlyOnWifi;
+        //   },
+        // ),
+        // const _Divider(),
+        // _Section(
+        //   title: l10n.settingsAutoDelete,
+        //   description: l10n.settingsAutoDeleteDescription,
+        // ),
+        // _BinarySwitch(
+        //   l10n.settingsAutoDeleteAfter,
+        //   value: state.autoDeleteEpisodes,
+        //   onToggle: () {
+        //     settings.autoDeleteEpisodes = !state.autoDeleteEpisodes;
+        //   },
+        // ),
           ],
         ),
       ),

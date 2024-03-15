@@ -1,3 +1,9 @@
+// Copyright (c) 2024 by HANAI, Tohru.
+// Copyright (c) 2024 Reedom, Inc.
+// Additional contributions from project contributors.
+// Originally (c) 2020 Ben Hills and the project contributors.
+// All rights reserved.
+
 import 'dart:async';
 
 import 'package:audiflow/core/l10n.dart';

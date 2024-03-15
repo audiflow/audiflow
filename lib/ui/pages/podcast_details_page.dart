@@ -1,5 +1,7 @@
-// Copyright 2024 HANAI Tohru, Reedom, INC.
-// Copyright 2020 Ben Hills and the project contributors.
+// Copyright (c) 2024 by HANAI, Tohru.
+// Copyright (c) 2024 Reedom, Inc.
+// Additional contributions from project contributors.
+// Originally (c) 2020 Ben Hills and the project contributors.
 // All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
@@ -203,17 +205,17 @@ class _PodcastDescription extends StatelessWidget {
         alignment: Alignment.topCenter,
         child: Container(
           constraints: BoxConstraints.loose(
-                  const Size(double.infinity, maxHeight - padding),
-                ),
+            const Size(double.infinity, maxHeight - padding),
+          ),
           child: ShaderMask(
-                  shaderCallback: LinearGradient(
-                    colors: [Colors.white, Colors.white.withAlpha(0)],
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    stops: const [0.9, 1],
-                  ).createShader,
-                  child: content,
-                ),
+            shaderCallback: LinearGradient(
+              colors: [Colors.white, Colors.white.withAlpha(0)],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              stops: const [0.9, 1],
+            ).createShader,
+            child: content,
+          ),
         ),
       ),
     );
