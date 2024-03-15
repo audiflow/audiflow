@@ -13,7 +13,6 @@ import 'package:audiflow/repository/repository_provider.dart';
 import 'package:audiflow/services/audio/audio_playable_checker.dart';
 import 'package:audiflow/services/audio/audio_player_service.dart';
 import 'package:audiflow/services/connectivity/connectivity.dart';
-import 'package:audiflow/services/download/download_manager_provider.dart';
 import 'package:audiflow/services/download/download_service_provider.dart';
 import 'package:audiflow/services/podcast/podcast_service.dart';
 import 'package:audiflow/services/queue/queue_manager.dart';

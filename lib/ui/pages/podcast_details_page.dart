@@ -205,17 +205,17 @@ class _PodcastDescription extends StatelessWidget {
         alignment: Alignment.topCenter,
         child: Container(
           constraints: BoxConstraints.loose(
-                  const Size(double.infinity, maxHeight - padding),
-                ),
+            const Size(double.infinity, maxHeight - padding),
+          ),
           child: ShaderMask(
-                  shaderCallback: LinearGradient(
-                    colors: [Colors.white, Colors.white.withAlpha(0)],
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    stops: const [0.9, 1],
-                  ).createShader,
-                  child: content,
-                ),
+            shaderCallback: LinearGradient(
+              colors: [Colors.white, Colors.white.withAlpha(0)],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              stops: const [0.9, 1],
+            ).createShader,
+            child: content,
+          ),
         ),
       ),
     );

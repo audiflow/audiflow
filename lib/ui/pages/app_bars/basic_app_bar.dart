@@ -17,7 +17,6 @@ class BasicAppBar extends HookConsumerWidget {
     this.elevation = 0,
   });
 
-
   final String title;
   final double? elevation;
 

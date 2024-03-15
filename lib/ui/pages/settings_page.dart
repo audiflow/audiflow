@@ -82,37 +82,37 @@ class _Contents extends ConsumerWidget {
                 settings.downloadWarnMobileData = !state.downloadWarnMobileData;
               },
             ),
-            // const _Divider(),
-            // _Section(
-            //   title: l10n.settingsAutoDownload,
-            //   description: l10n.settingsAutoDownloadDescription,
-            // ),
-            // _BinarySwitch(
-            //   l10n.wifi,
-            //   value: state.autoDownloadOnlyOnWifi,
-            //   onToggle: () {
-            //     settings.autoDownloadOnlyOnWifi = !state.autoDownloadOnlyOnWifi;
-            //   },
-            // ),
-            // _BinarySwitch(
-            //   l10n.settingsAutoDownloadRecent,
-            //   value: state.autoDownloadOnlyOnWifi,
-            //   onToggle: () {
-            //     settings.autoDownloadOnlyOnWifi = !state.autoDownloadOnlyOnWifi;
-            //   },
-            // ),
-            // const _Divider(),
-            // _Section(
-            //   title: l10n.settingsAutoDelete,
-            //   description: l10n.settingsAutoDeleteDescription,
-            // ),
-            // _BinarySwitch(
-            //   l10n.settingsAutoDeleteAfter,
-            //   value: state.autoDeleteEpisodes,
-            //   onToggle: () {
-            //     settings.autoDeleteEpisodes = !state.autoDeleteEpisodes;
-            //   },
-            // ),
+        // const _Divider(),
+        // _Section(
+        //   title: l10n.settingsAutoDownload,
+        //   description: l10n.settingsAutoDownloadDescription,
+        // ),
+        // _BinarySwitch(
+        //   l10n.wifi,
+        //   value: state.autoDownloadOnlyOnWifi,
+        //   onToggle: () {
+        //     settings.autoDownloadOnlyOnWifi = !state.autoDownloadOnlyOnWifi;
+        //   },
+        // ),
+        // _BinarySwitch(
+        //   l10n.settingsAutoDownloadRecent,
+        //   value: state.autoDownloadOnlyOnWifi,
+        //   onToggle: () {
+        //     settings.autoDownloadOnlyOnWifi = !state.autoDownloadOnlyOnWifi;
+        //   },
+        // ),
+        // const _Divider(),
+        // _Section(
+        //   title: l10n.settingsAutoDelete,
+        //   description: l10n.settingsAutoDeleteDescription,
+        // ),
+        // _BinarySwitch(
+        //   l10n.settingsAutoDeleteAfter,
+        //   value: state.autoDeleteEpisodes,
+        //   onToggle: () {
+        //     settings.autoDeleteEpisodes = !state.autoDeleteEpisodes;
+        //   },
+        // ),
           ],
         ),
       ),
