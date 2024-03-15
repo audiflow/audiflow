@@ -1,3 +1,9 @@
+// Copyright (c) 2024 by HANAI, Tohru.
+// Copyright (c) 2024 Reedom, Inc.
+// Additional contributions from project contributors.
+// Originally (c) 2020 Ben Hills and the project contributors.
+// All rights reserved.
+
 import 'package:audiflow/entities/entities.dart';
 import 'package:audiflow/ui/app/app_bottom_navigation_bar.dart';
 import 'package:audiflow/ui/pages/episode_page.dart';
