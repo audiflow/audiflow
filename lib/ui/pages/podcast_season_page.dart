@@ -20,6 +20,7 @@ import 'package:audiflow/ui/widgets/sort_icon_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:scrolls_to_top/scrolls_to_top.dart';
 
 class PodcastSeasonPage extends HookConsumerWidget {
   const PodcastSeasonPage({
@@ -42,67 +43,78 @@ class PodcastSeasonPage extends HookConsumerWidget {
     final ascend =
         podcastDetailsState.valueOrNull?.stats?.ascendSeasonEpisodes ?? true;
 
+    final controller = useScrollController();
     return Semantics(
       header: false,
       label: L10n.of(context)!.semantics_podcast_details_header,
       child: ScaffoldMessenger(
         key: scaffoldMessengerKey,
-        child: Scaffold(
-          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          body: RefreshIndicator(
-            displacement: 60,
-            onRefresh: () async {
-              await ref
-                  .read(podcastServiceProvider)
-                  .loadPodcast(podcast.metadata, refresh: true);
+        child: ScrollsToTop(
+            onScrollsToTop: (event) async {
+              await controller.animateTo(
+                event.to,
+                duration: event.duration,
+                curve: event.curve,
+              );
             },
-            child: CustomScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              slivers: <Widget>[
-                PodcastSeasonAppBar(season: season, heroPrefix: heroPrefix),
-                if (podcastDetailsState.isLoading)
-                  const FillRemainingLoading()
-                else if (podcastDetailsState.hasError)
-                  FillRemainingError.podcastNoResults()
-                else ...[
-                  SliverToBoxAdapter(
-                    child: Stack(
-                      children: [
-                        Align(
-                          child: IntrinsicWidth(
-                            child: ContextualPlayButton(
-                              season.episodes,
-                              episodeGroupKey: ValueKey(season.guid),
-                              playOrder: PlayOrder.timeAscend,
-                              isSeries: true,
+            child: Scaffold(
+            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+            body: RefreshIndicator(
+              displacement: 60,
+              onRefresh: () async {
+                await ref
+                    .read(podcastServiceProvider)
+                    .loadPodcast(podcast.metadata, refresh: true);
+              },
+              child: CustomScrollView(
+                controller: controller,
+                physics: const AlwaysScrollableScrollPhysics(),
+                slivers: <Widget>[
+                  PodcastSeasonAppBar(season: season, heroPrefix: heroPrefix),
+                  if (podcastDetailsState.isLoading)
+                    const FillRemainingLoading()
+                  else if (podcastDetailsState.hasError)
+                    FillRemainingError.podcastNoResults()
+                  else ...[
+                    SliverToBoxAdapter(
+                      child: Stack(
+                        children: [
+                          Align(
+                            child: IntrinsicWidth(
+                              child: ContextualPlayButton(
+                                season.episodes,
+                                episodeGroupKey: ValueKey(season.guid),
+                                playOrder: PlayOrder.timeAscend,
+                                isSeries: true,
+                              ),
                             ),
                           ),
-                        ),
-                        Positioned(
-                          right: 8,
-                          child: SortIconButton(
-                            ascend: ascend,
-                            onTap: () {
-                              final metadata = podcast.metadata;
-                              ref
-                                  .read(podcastInfoProvider(metadata).notifier)
-                                  .toggleAscendSeasonEpisode();
-                            },
+                          Positioned(
+                            right: 8,
+                            child: SortIconButton(
+                              ascend: ascend,
+                              onTap: () {
+                                final metadata = podcast.metadata;
+                                ref
+                                    .read(podcastInfoProvider(metadata).notifier)
+                                    .toggleAscendSeasonEpisode();
+                              },
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  EpisodeList(
-                    episodeGroupKey: ValueKey(season.guid),
-                    thumbnailVisibility: ThumbnailVisibility.hidden,
-                    metadata: podcast.metadata,
-                    episodes: ascend
-                        ? season.episodes
-                        : season.episodes.reversed.toList(),
-                  ),
+                    EpisodeList(
+                      episodeGroupKey: ValueKey(season.guid),
+                      thumbnailVisibility: ThumbnailVisibility.hidden,
+                      metadata: podcast.metadata,
+                      episodes: ascend
+                          ? season.episodes
+                          : season.episodes.reversed.toList(),
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         ),

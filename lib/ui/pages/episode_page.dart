@@ -13,8 +13,10 @@ import 'package:audiflow/ui/app/navigation_helper.dart';
 import 'package:audiflow/ui/pages/app_bars/episode_page_app_bar.dart';
 import 'package:audiflow/ui/widgets/podcast_html.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:scrolls_to_top/scrolls_to_top.dart';
 
 /// This Widget takes a search result and builds a list of currently available
 /// podcasts.
@@ -35,30 +37,36 @@ class EpisodePage extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return ColoredBox(
-      color: Colors.green,
-      child: SafeArea(
-        child: Scaffold(
-          body: CustomScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            slivers: <Widget>[
-              EpisodePageAppBar(
-                metadata: metadata,
-                episode: episode,
-                heroPrefix: heroPrefix,
-              ),
-              SliverPadding(
-                padding: const EdgeInsets.only(top: 12),
-                sliver: DecoratedSliver(
-                  decoration: BoxDecoration(
-                    color: Colors.grey[200],
-                  ),
-                  sliver: _EpisodeHeader(metadata, episode),
+    final controller = useScrollController();
+    return ScrollsToTop(
+      onScrollsToTop: (event) async {
+        await controller.animateTo(
+          event.to,
+          duration: event.duration,
+          curve: event.curve,
+        );
+      },
+      child: Scaffold(
+        body: CustomScrollView(
+          controller: controller,
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: <Widget>[
+            EpisodePageAppBar(
+              metadata: metadata,
+              episode: episode,
+              heroPrefix: heroPrefix,
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.only(top: 12),
+              sliver: DecoratedSliver(
+                decoration: BoxDecoration(
+                  color: Colors.grey[200],
                 ),
+                sliver: _EpisodeHeader(metadata, episode),
               ),
-              _EpisodeBody(metadata, episode),
-            ],
-          ),
+            ),
+            _EpisodeBody(metadata, episode),
+          ],
         ),
       ),
     );

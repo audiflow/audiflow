@@ -17,7 +17,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:scrolls_to_top/scrolls_to_top.dart';
 import 'package:sliver_tools/sliver_tools.dart';
+import 'package:visibility_detector/visibility_detector.dart';
 
 class SearchPage extends HookConsumerWidget {
   const SearchPage({
@@ -28,23 +30,35 @@ class SearchPage extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(podcastSearchProvider);
 
-    return Scaffold(
-      body: Stack(
-        children: [
-          CustomScrollView(
-            slivers: <Widget>[
-              BasicAppBar(title: L10n.of(context)!.search),
-              const SliverPinnedHeader(child: SearchBar()),
-              if (state.isLoading)
-                const FillRemainingLoading()
-              else if (state.hasError || (state.valueOrNull?.notFound == true))
-                FillRemainingError.podcastNoResults()
-              else
-                PodcastList(results: state.value!.podcasts),
-            ],
-          ),
-          const ErrorNotifier(),
-        ],
+    final controller = useScrollController();
+    return ScrollsToTop(
+      onScrollsToTop: (event) async {
+        await controller.animateTo(
+          event.to,
+          duration: event.duration,
+          curve: event.curve,
+        );
+      },
+      child: Scaffold(
+        body: Stack(
+          children: [
+            CustomScrollView(
+              controller: controller,
+              slivers: <Widget>[
+                BasicAppBar(title: L10n.of(context)!.search),
+                const SliverPinnedHeader(child: SearchBar()),
+                if (state.isLoading)
+                  const FillRemainingLoading()
+                else if (state.hasError ||
+                    (state.valueOrNull?.notFound == true))
+                  FillRemainingError.podcastNoResults()
+                else
+                  PodcastList(results: state.value!.podcasts),
+              ],
+            ),
+            const ErrorNotifier(),
+          ],
+        ),
       ),
     );
   }
