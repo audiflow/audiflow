@@ -1,6 +1,6 @@
-# coten_player
+audiflow Podcast Player
+=======================
 
-COTEN Player
 
 ## Getting Started
 
