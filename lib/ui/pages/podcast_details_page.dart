@@ -10,6 +10,7 @@ import 'package:audiflow/core/l10n.dart';
 import 'package:audiflow/entities/entities.dart';
 import 'package:audiflow/providers/podcast/podcast_info_provider.dart';
 import 'package:audiflow/providers/podcast/podcast_seasons_provider.dart';
+import 'package:audiflow/providers/podcast/podcast_view_info_provider.dart';
 import 'package:audiflow/services/podcast/podcast_service_provider.dart';
 import 'package:audiflow/services/settings/settings_service.dart';
 import 'package:audiflow/ui/pages/app_bars/podcast_details_app_bar.dart';
@@ -49,20 +50,22 @@ class PodcastDetailsPage extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final scaffoldMessengerKey =
         useState(GlobalKey<ScaffoldMessengerState>()).value;
-    final podcastDetailsState = ref.watch(podcastInfoProvider(metadata));
-    final podcast = podcastDetailsState.value?.podcast;
-    final stats = podcastDetailsState.value?.stats;
+
+    final podcastState = ref.watch(podcastInfoProvider(metadata));
+    final podcast = podcastState.value?.podcast;
     final seasonsState = podcast == null
         ? const AsyncLoading<List<Season>>()
         : ref.watch(podcastSeasonsProvider(podcast.metadata));
 
-    var viewMode = stats?.viewMode ?? PodcastDetailViewMode.seasons;
+    final podcastViewState = ref.watch(podcastViewInfoProvider(metadata.guid));
+    var viewMode =
+        podcastViewState.valueOrNull?.viewMode ?? PodcastDetailViewMode.seasons;
     if (seasonsState.valueOrNull?.isEmpty == true &&
         viewMode == PodcastDetailViewMode.seasons) {
       viewMode = PodcastDetailViewMode.episodes;
     }
 
-    final ascend = stats?.ascend ?? false;
+    final ascend = podcastViewState.valueOrNull?.ascend ?? false;
 
     final controller = useScrollController();
     return Semantics(
@@ -99,9 +102,9 @@ class PodcastDetailsPage extends HookConsumerWidget {
                         paletteGenerator.lightMutedColor?.titleTextColor,
                     backgroundColor: paletteGenerator.lightMutedColor?.color,
                   ),
-                  if (podcastDetailsState.isLoading || seasonsState.isLoading)
+                  if (podcastState.isLoading || seasonsState.isLoading)
                     const FillRemainingLoading()
-                  else if (podcastDetailsState.hasError || podcast == null)
+                  else if (podcastState.hasError || podcast == null)
                     FillRemainingError.podcastNoResults()
                   else ...[
                     _PodcastTitle(podcast),
@@ -263,7 +266,7 @@ class _SwitchBar extends ConsumerWidget {
               hasSeasons: seasons.isNotEmpty,
               onChanged: (mode) {
                 ref
-                    .read(podcastInfoProvider(podcast.metadata).notifier)
+                    .read(podcastViewInfoProvider(podcast.guid).notifier)
                     .setViewMode(mode);
               },
             ),
@@ -271,7 +274,7 @@ class _SwitchBar extends ConsumerWidget {
               ascend: ascend,
               onTap: () {
                 ref
-                    .read(podcastInfoProvider(podcast.metadata).notifier)
+                    .read(podcastViewInfoProvider(podcast.guid).notifier)
                     .toggleAscend();
               },
             ),
