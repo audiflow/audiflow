@@ -20,7 +20,6 @@ import 'package:audiflow/ui/podcast/season_list.dart';
 import 'package:audiflow/ui/widgets/fill_remaining_error.dart';
 import 'package:audiflow/ui/widgets/fill_remaining_loading.dart';
 import 'package:audiflow/ui/widgets/podcast_html.dart';
-import 'package:audiflow/ui/widgets/sort_icon_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_html/flutter_html.dart';
@@ -84,7 +83,6 @@ class PodcastDetailsPage extends HookConsumerWidget {
           child: Scaffold(
             backgroundColor: Theme.of(context).scaffoldBackgroundColor,
             body: RefreshIndicator(
-              key: GlobalKey(),
               displacement: 60,
               onRefresh: () async {
                 await ref
@@ -263,16 +261,14 @@ class _SwitchBar extends ConsumerWidget {
           children: [
             _PodcastViewModeSwitch(
               viewMode: viewMode,
+              ascend: ascend,
               hasSeasons: seasons.isNotEmpty,
-              onChanged: (mode) {
+              onViewModeChanged: (mode) {
                 ref
                     .read(podcastViewInfoProvider(podcast.guid).notifier)
                     .setViewMode(mode);
               },
-            ),
-            SortIconButton(
-              ascend: ascend,
-              onTap: () {
+              onSortOrderChanged: () {
                 ref
                     .read(podcastViewInfoProvider(podcast.guid).notifier)
                     .toggleAscend();
@@ -288,51 +284,85 @@ class _SwitchBar extends ConsumerWidget {
 class _PodcastViewModeSwitch extends StatelessWidget {
   const _PodcastViewModeSwitch({
     required this.viewMode,
+    required this.ascend,
     required this.hasSeasons,
-    required this.onChanged,
+    required this.onViewModeChanged,
+    required this.onSortOrderChanged,
   });
 
   final PodcastDetailViewMode viewMode;
+  final bool ascend;
   final bool hasSeasons;
-  final ValueChanged<PodcastDetailViewMode> onChanged;
+  final ValueChanged<PodcastDetailViewMode> onViewModeChanged;
+  final VoidCallback onSortOrderChanged;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return PopupMenuButton<PodcastDetailViewMode>(
-      onSelected: onChanged,
+    return PopupMenuButton<dynamic>(
+      onSelected: (value) {
+        if (value is PodcastDetailViewMode) {
+          onViewModeChanged(value);
+        } else if (value is bool) {
+          onSortOrderChanged();
+        }
+      },
       position: PopupMenuPosition.under,
       itemBuilder: (context) {
-        return PodcastDetailViewMode.values
-            .where(
-              (viewMode) =>
-                  hasSeasons || viewMode != PodcastDetailViewMode.seasons,
-            )
-            .map(
-              (mode) => PopupMenuItem(
-                value: mode,
-                height: 40,
-                child: Row(
-                  children: [
-                    mode == viewMode
-                        ? Icon(
-                            Symbols.check,
-                            color: theme.colorScheme.onSecondaryContainer,
-                            size: 18,
-                          )
-                        : const SizedBox(width: 18),
-                    const SizedBox(width: 4),
-                    Text(
-                      _labelOf(context, mode),
-                      style: TextStyle(
-                        color: theme.colorScheme.onSecondaryContainer,
+        return [
+          ...PodcastDetailViewMode.values
+              .where(
+                (viewMode) =>
+                    hasSeasons || viewMode != PodcastDetailViewMode.seasons,
+              )
+              .map(
+                (mode) => PopupMenuItem(
+                  value: mode,
+                  height: 40,
+                  child: Row(
+                    children: [
+                      mode == viewMode
+                          ? Icon(
+                              Symbols.check,
+                              color: theme.colorScheme.onSecondaryContainer,
+                              size: 18,
+                            )
+                          : const SizedBox(width: 18),
+                      const SizedBox(width: 4),
+                      Text(
+                        _labelOf(context, mode),
+                        style: TextStyle(
+                          color: theme.colorScheme.onSecondaryContainer,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            )
-            .toList();
+          const PopupMenuDivider(),
+          PopupMenuItem(
+            value: ascend,
+            height: 40,
+            child: Row(
+              children: [
+                ascend
+                    ? Icon(
+                        Symbols.check,
+                        color: theme.colorScheme.onSecondaryContainer,
+                        size: 18,
+                      )
+                    : const SizedBox(width: 18),
+                const SizedBox(width: 4),
+                Text(
+                  L10n.of(context)!.viewSortOldestToNewest,
+                  style: TextStyle(
+                    color: theme.colorScheme.onSecondaryContainer,
+                  ),
+                ),
+              ],
+            ),
+          )
+        ];
       },
       child: Row(
         children: [

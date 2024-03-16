@@ -68,6 +68,7 @@
   "viewModePlayed": "再生済み",
   "viewModeUnplayed": "未再生",
   "viewModeDownloaded": "ダウンロード済み",
+  "viewSortOldestToNewest": "古い順に並び替え",
   "resume": "再開",
   "play": "再生",
   "pause": "一時停止",

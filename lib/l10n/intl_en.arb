@@ -68,6 +68,7 @@
   "viewModePlayed": "Played",
   "viewModeUnplayed": "Unplayed",
   "viewModeDownloaded": "Downloaded",
+  "viewSortOldestToNewest": "Sort Oldest to Newest",
   "resume": "Resume",
   "play": "Play",
   "pause": "Pause",
