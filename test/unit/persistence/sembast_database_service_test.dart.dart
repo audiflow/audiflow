@@ -170,15 +170,6 @@ void main() {
       expect(loaded[0].$2, stats);
     });
 
-    test('savePodcastStats', () async {
-      final updated = stats.copyWith(viewMode: PodcastDetailViewMode.seasons);
-      await persistenceService.savePodcastStats(updated);
-      final loaded = await persistenceService.findPodcastStats(stats.guid);
-      expect(loaded, updated);
-      expect(loaded == stats, isFalse);
-      stats = updated;
-    });
-
     test('savePodcast', () async {
       final updated = podcast1.copyWith(title: '${podcast1.title} updated');
       await persistenceService.savePodcast(updated);

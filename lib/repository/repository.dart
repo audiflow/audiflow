@@ -44,17 +44,23 @@ abstract class Repository {
 
   Future<List<(PodcastMetadata, PodcastStats)>> subscriptions();
 
-  // -- PodcastStats
-
   Future<void> subscribePodcast(Podcast podcast);
 
   Future<void> unsubscribePodcast(Podcast podcast);
 
-  Future<void> savePodcastStats(PodcastStats stats);
+  // -- PodcastStats
 
   Future<PodcastStats?> findPodcastStats(String guid);
 
   Future<PodcastStats> updatePodcastStats(PodcastStatsUpdateParam param);
+
+  // -- PodcastViewStats
+
+  Future<PodcastViewStats?> findPodcastViewStats(String guid);
+
+  Future<PodcastViewStats> updatePodcastViewStats(
+    PodcastViewStatsUpdateParam param,
+  );
 
   // --- Episode
 
