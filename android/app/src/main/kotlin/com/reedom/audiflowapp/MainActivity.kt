@@ -1,4 +1,4 @@
-package com.reedom.audiflow
+package com.reedom.audiflowapp
 
 import io.flutter.embedding.android.FlutterActivity
 
