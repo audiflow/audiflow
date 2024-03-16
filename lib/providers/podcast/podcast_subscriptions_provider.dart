@@ -66,6 +66,7 @@ class PodcastSubscriptions extends _$PodcastSubscriptions {
                 .map((e) => e.$2.guid == stats.guid ? (e.$1, stats) : e)
                 .toList();
             state = AsyncData(list);
+          case PodcastViewStatsUpdatedEvent():
         }
       });
     });
