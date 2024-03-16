@@ -194,22 +194,11 @@ extension PodcastExtension on Podcast {
   }
 }
 
-enum PodcastDetailViewMode {
-  episodes,
-  seasons,
-  played,
-  unplayed,
-  downloaded;
-}
-
 @freezed
 class PodcastStats with _$PodcastStats {
   const factory PodcastStats({
     required String guid,
     DateTime? subscribedDate,
-    @Default(PodcastDetailViewMode.seasons) PodcastDetailViewMode viewMode,
-    @Default(false) bool ascend,
-    @Default(true) bool ascendSeasonEpisodes,
     DateTime? lastCheckedAt,
   }) = _PodcastStats;
 
@@ -225,33 +214,74 @@ class PodcastStatsUpdateParam {
   const PodcastStatsUpdateParam({
     required this.guid,
     this.subscribedDate,
-    this.viewMode,
-    this.ascend,
-    this.ascendSeasonEpisodes,
     this.lastCheckedAt,
   });
 
   final String guid;
   final DateTime? subscribedDate;
-  final PodcastDetailViewMode? viewMode;
-  final bool? ascend;
-  final bool? ascendSeasonEpisodes;
   final DateTime? lastCheckedAt;
 
   PodcastStatsUpdateParam copyWith({
     DateTime? subscribedDate,
-    PodcastDetailViewMode? viewMode,
-    bool? ascend,
-    bool? ascendSeasonEpisodes,
     DateTime? lastCheckedAt,
   }) {
     return PodcastStatsUpdateParam(
       guid: guid,
       subscribedDate: subscribedDate ?? this.subscribedDate,
+      lastCheckedAt: lastCheckedAt ?? this.lastCheckedAt,
+    );
+  }
+}
+
+enum PodcastDetailViewMode {
+  episodes,
+  seasons,
+  played,
+  unplayed,
+  downloaded;
+}
+
+@freezed
+class PodcastViewStats with _$PodcastViewStats {
+  const factory PodcastViewStats({
+    required String guid,
+    @Default(PodcastDetailViewMode.seasons) PodcastDetailViewMode viewMode,
+    @Default(false) bool ascend,
+    @Default(true) bool ascendSeasonEpisodes,
+    @Default(<String, DateTime>{}) Map<String, DateTime> listenedEpisodes,
+  }) = _PodcastViewStats;
+
+  factory PodcastViewStats.fromJson(Map<String, dynamic> json) =>
+      _$PodcastViewStatsFromJson(json);
+}
+
+class PodcastViewStatsUpdateParam {
+  const PodcastViewStatsUpdateParam({
+    required this.guid,
+    this.viewMode,
+    this.ascend,
+    this.ascendSeasonEpisodes,
+    this.listenedEpisodes,
+  });
+
+  final String guid;
+  final PodcastDetailViewMode? viewMode;
+  final bool? ascend;
+  final bool? ascendSeasonEpisodes;
+  final Map<String, DateTime>? listenedEpisodes;
+
+  PodcastViewStatsUpdateParam copyWith({
+    PodcastDetailViewMode? viewMode,
+    bool? ascend,
+    bool? ascendSeasonEpisodes,
+    Map<String, DateTime>? listenedEpisodes,
+  }) {
+    return PodcastViewStatsUpdateParam(
+      guid: guid,
       viewMode: viewMode ?? this.viewMode,
       ascend: ascend ?? this.ascend,
       ascendSeasonEpisodes: ascendSeasonEpisodes ?? this.ascendSeasonEpisodes,
-      lastCheckedAt: lastCheckedAt ?? this.lastCheckedAt,
+      listenedEpisodes: listenedEpisodes,
     );
   }
 }
