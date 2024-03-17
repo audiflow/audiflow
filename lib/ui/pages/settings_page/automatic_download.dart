@@ -34,6 +34,7 @@ class SettingsAutomaticDownloadPage extends HookConsumerWidget {
   }
 }
 
+// ignore: unused_element
 class _AutoDownloadContents extends ConsumerWidget {
   const _AutoDownloadContents();
 

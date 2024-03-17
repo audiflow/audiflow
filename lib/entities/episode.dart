@@ -83,6 +83,10 @@ class Episode with _$Episode {
 
     /// List of people of interest to the podcast.
     @Default([]) List<Person> persons,
+
+    /// True indicates this episode data is incomplete.
+    /// E.g. made from [EpisodeMetadata].
+    @Default(false) bool partialData,
   }) = _Episode;
 
   factory Episode.fromJson(Map<String, dynamic> json) =>
@@ -258,4 +262,48 @@ class EpisodeStatsUpdateParam {
       completeCountDelta == null &&
       inQueue == null &&
       downloadedTime == null;
+}
+
+@freezed
+class EpisodeMetadata with _$EpisodeMetadata {
+  factory EpisodeMetadata({
+    required String  guid,
+    required String  pguid,
+    required String  title,
+    required String  imageUrl,
+    required String  thumbImageUrl,
+    required Duration  duration,
+    required DateTime? publicationDate,
+  }) = _EpisodeMetadata;
+
+  factory EpisodeMetadata.fromEpisode(Episode episode) {
+    return EpisodeMetadata(
+      guid: episode.guid,
+      pguid: episode.pguid,
+      title: episode.title,
+      imageUrl: episode.imageUrl!,
+      thumbImageUrl: episode.thumbImageUrl!,
+      duration: episode.duration!,
+      publicationDate: episode.publicationDate,
+    );
+  }
+
+  factory EpisodeMetadata.fromJson(Map<String, dynamic> json) =>
+      _$EpisodeMetadataFromJson(json);
+}
+
+extension EpisodeMetadataExt on EpisodeMetadata {
+  Episode toPartialEpisode() {
+    return Episode(
+      guid: guid,
+      pguid: pguid,
+      title: title,
+      description: '',
+      imageUrl: imageUrl,
+      thumbImageUrl: thumbImageUrl,
+      duration: duration,
+      publicationDate: publicationDate,
+      partialData: true,
+    );
+  }
 }

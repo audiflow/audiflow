@@ -318,6 +318,80 @@ void main() {
     });
   });
 
+  group('RecentlyPlayed', () {
+    setUpAll(createRepository);
+    tearDownAll(cleanUpRepository);
+
+    var tm = DateTime.parse('2020-01-01');
+    DateTime generateTime() {
+      return tm = tm.add(const Duration(minutes: 1));
+    }
+
+    Future<void> addEntry(int n) async {
+      final param = EpisodeStatsUpdateParam(
+        pguid: 'p$n',
+        guid: 'g$n',
+        playCount: 1,
+      );
+      await persistenceService.updateEpisodeStats(param);
+      await persistenceService.saveRecentlyPlayedEpisode(
+        EpisodeMetadata(
+          guid: 'g$n',
+          pguid: 'p$n',
+          title: '',
+          imageUrl: '',
+          thumbImageUrl: '',
+          duration: Duration.zero,
+          publicationDate: tm,
+        ),
+        playedAt: generateTime(),
+      );
+    }
+
+    test('empty', () async {
+      final (statsList, cursor) =
+          await persistenceService.findRecentlyPlayedEpisodeStatsList();
+      expect(statsList, isEmpty);
+      expect(cursor, isNull);
+    });
+
+    test('create on entry', () async {
+      await addEntry(1);
+      final (statsList, cursor) =
+          await persistenceService.findRecentlyPlayedEpisodeStatsList();
+      expect(statsList, hasLength(1));
+      expect(cursor, isNull);
+    });
+
+    test('cursor', () async {
+      // Add g2...g6 entries.
+      await Future.wait(List.generate(5, (index) => addEntry(index + 2)));
+      // Add g2, this should removed the previous g2 entry.
+      await addEntry(2);
+
+      var (statsList, cursor) =
+          await persistenceService.findRecentlyPlayedEpisodeStatsList(limit: 3);
+      expect(statsList.map((s) => s.guid), ['g2', 'g6', 'g5']);
+      expect(cursor, isNotNull);
+
+      (statsList, cursor) =
+          await persistenceService.findRecentlyPlayedEpisodeStatsList(
+        limit: 3,
+        cursor: cursor,
+      );
+      expect(statsList.map((s) => s.guid), ['g4', 'g3']);
+      expect(cursor, isNotNull);
+
+      (statsList, cursor) =
+          await persistenceService.findRecentlyPlayedEpisodeStatsList(
+        limit: 3,
+        cursor: cursor,
+      );
+      expect(statsList.map((s) => s.guid), ['g1']);
+      expect(cursor, isNull);
+    });
+  });
+
   group('Player', () {
     setUpAll(createRepository);
     tearDownAll(cleanUpRepository);

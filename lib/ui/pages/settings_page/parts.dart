@@ -41,6 +41,7 @@ class _Section extends StatelessWidget {
   const _Section({
     required this.title,
     this.description,
+    // ignore: unused_element
     this.routeName,
   });
 
@@ -82,6 +83,7 @@ class _Section extends StatelessWidget {
   }
 }
 
+// ignore: unused_element
 class _Router extends StatelessWidget {
   const _Router({
     required this.text,

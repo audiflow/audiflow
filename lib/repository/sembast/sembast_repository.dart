@@ -6,6 +6,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'dart:math' as math;
+
 import 'package:audiflow/core/extensions.dart';
 import 'package:audiflow/entities/entities.dart';
 import 'package:audiflow/repository/download_event.dart';
@@ -46,6 +48,7 @@ class SembastRepository extends Repository {
       stringMapStoreFactory.store('podcastViewStats');
   final _episodeStore = stringMapStoreFactory.store('episode');
   final _episodeStatsStore = stringMapStoreFactory.store('episodeStats');
+  final _recentlyPlayedStore = intMapStoreFactory.store('recentlyPlayed');
   final _downloadableStore = stringMapStoreFactory.store('downloadable');
   final _queueStore = intMapStoreFactory.store('queue');
   final _playerStore = intMapStoreFactory.store('player');
@@ -351,6 +354,9 @@ class SembastRepository extends Repository {
     ]);
 
     if (statsValue != null) {
+      if (episode.partialData) {
+        return;
+      }
       final loaded = EpisodeStats.fromJson(statsValue);
       if (loaded.duration == null && episode.duration != null) {
         final newStats = loaded.copyWith(duration: episode.duration);
@@ -367,9 +373,9 @@ class SembastRepository extends Repository {
   }
 
   Future<void> _deleteEpisodes(List<Episode> episodes) async {
-    final d = await _db;
+    final db = await _db;
     for (final chunk in episodes.chunk(30)) {
-      await d.transaction((txn) async {
+      await db.transaction((txn) async {
         final futures = chunk.map((e) => _deleteEpisode(e, db: txn));
         await Future.wait(futures);
       });
@@ -503,6 +509,7 @@ class SembastRepository extends Repository {
               .record(stats.guid)
               .put(txn, newStats.toJson());
         }
+
         return newStats;
       });
       return Future.wait(futures);
@@ -532,7 +539,8 @@ class SembastRepository extends Repository {
 
   @override
   Future<List<EpisodeStats>> findDownloadedEpisodeStatsList(
-      String pguid) async {
+    String pguid,
+  ) async {
     final finder = Finder(
       filter: Filter.and([
         Filter.equals('pguid', pguid),
@@ -573,6 +581,68 @@ class SembastRepository extends Repository {
     return snapshots
         .map((snapshot) => EpisodeStats.fromJson(snapshot.value))
         .toList();
+  }
+
+  // --- Recently played episodes
+
+  @override
+  Future<void> saveRecentlyPlayedEpisode(
+    EpisodeMetadata metadata, {
+    DateTime? playedAt,
+  }) async {
+    final db = await _db;
+    await db.transaction((txn) async {
+      final finder = Finder(
+        filter: Filter.equals('guid', metadata.guid),
+      );
+      await _recentlyPlayedStore.delete(txn, finder: finder);
+
+      final value = Map<String, Object?>.from(metadata.toJson());
+      value['playedAt'] = (playedAt ?? DateTime.now()).millisecondsSinceEpoch;
+      await _recentlyPlayedStore.add(txn, value);
+    });
+  }
+
+  @override
+  Future<(List<EpisodeMetadata>, int?)> findRecentlyPlayedEpisodeStatsList({
+    int? cursor,
+    int limit = 100,
+  }) async {
+    assert(cursor == null || 0 <= cursor);
+    assert(0 < limit);
+
+    final db = await _db;
+    var key = cursor;
+    if (key == null) {
+      final finder = Finder(sortOrders: [SortOrder(Field.key, false)]);
+      key = await _recentlyPlayedStore.findKey(db, finder: finder);
+      if (key == null) {
+        return (<EpisodeMetadata>[], null);
+      }
+      key++;
+    }
+
+    List<RecordSnapshot<int, Map<String, Object?>>> snapshots;
+    do {
+      final finder = Finder(
+        sortOrders: [SortOrder(Field.key, false)],
+        start: Boundary(values: [key]),
+        end: Boundary(values: [math.max(0, key! - limit - 1)]),
+      );
+
+      snapshots = await _recentlyPlayedStore.find(db, finder: finder);
+      key -= limit;
+    } while (snapshots.isEmpty && 1 < key);
+
+    if (snapshots.isEmpty) {
+      return (<EpisodeMetadata>[], null);
+    }
+
+    final list = snapshots
+        .map((snapshot) => EpisodeMetadata.fromJson(snapshot.value))
+        .toList();
+    final nextCursor = snapshots.last.key;
+    return (list, 1 < nextCursor ? nextCursor : null);
   }
 
   // --- Downloads
@@ -674,10 +744,10 @@ class SembastRepository extends Repository {
 
   @override
   Future<void> deleteTranscriptsById(List<int> id) async {
-    final d = await _db;
+    final db = await _db;
 
     for (final chunk in id.chunk(100)) {
-      await d.transaction((txn) async {
+      await db.transaction((txn) async {
         final finder = Finder(
           filter: Filter.or(chunk.map(Filter.byKey).toList()),
         );
@@ -760,7 +830,7 @@ class SembastRepository extends Repository {
 
   @override
   Future<void> close() async {
-    final d = await _db;
-    await d.close();
+    final db = await _db;
+    await db.close();
   }
 }

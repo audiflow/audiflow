@@ -39,6 +39,7 @@ _$EpisodeImpl _$$EpisodeImplFromJson(Map<String, dynamic> json) =>
               ?.map((e) => Person.fromJson(e as Map<String, dynamic>))
               .toList() ??
           const [],
+      partialData: json['partialData'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$$EpisodeImplToJson(_$EpisodeImpl instance) =>
@@ -61,6 +62,7 @@ Map<String, dynamic> _$$EpisodeImplToJson(_$EpisodeImpl instance) =>
       'chapters': instance.chapters.map((e) => e.toJson()).toList(),
       'transcriptUrls': instance.transcriptUrls.map((e) => e.toJson()).toList(),
       'persons': instance.persons.map((e) => e.toJson()).toList(),
+      'partialData': instance.partialData,
     };
 
 _$EpisodeStatsImpl _$$EpisodeStatsImplFromJson(Map<String, dynamic> json) =>
@@ -99,4 +101,30 @@ Map<String, dynamic> _$$EpisodeStatsImplToJson(_$EpisodeStatsImpl instance) =>
       'inQueue': instance.inQueue,
       'downloadedTime': instance.downloadedTime?.toIso8601String(),
       'lastPlayedAt': instance.lastPlayedAt?.toIso8601String(),
+    };
+
+_$EpisodeMetadataImpl _$$EpisodeMetadataImplFromJson(
+        Map<String, dynamic> json) =>
+    _$EpisodeMetadataImpl(
+      guid: json['guid'] as String,
+      pguid: json['pguid'] as String,
+      title: json['title'] as String,
+      imageUrl: json['imageUrl'] as String,
+      thumbImageUrl: json['thumbImageUrl'] as String,
+      duration: Duration(microseconds: json['duration'] as int),
+      publicationDate: json['publicationDate'] == null
+          ? null
+          : DateTime.parse(json['publicationDate'] as String),
+    );
+
+Map<String, dynamic> _$$EpisodeMetadataImplToJson(
+        _$EpisodeMetadataImpl instance) =>
+    <String, dynamic>{
+      'guid': instance.guid,
+      'pguid': instance.pguid,
+      'title': instance.title,
+      'imageUrl': instance.imageUrl,
+      'thumbImageUrl': instance.thumbImageUrl,
+      'duration': instance.duration.inMicroseconds,
+      'publicationDate': instance.publicationDate?.toIso8601String(),
     };
