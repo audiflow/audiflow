@@ -435,7 +435,7 @@ class SembastRepository extends Repository {
         final value = await _episodeStore.record(param.guid).get(txn);
         stats = value != null
             ? EpisodeStats.fromEpisode(Episode.fromJson(value))
-            : EpisodeStats(guid: param.guid);
+            : EpisodeStats(pguid: param.pguid, guid: param.guid);
       }
 
       final newStats = stats.copyWith(
@@ -445,7 +445,7 @@ class SembastRepository extends Repository {
         playTotal: stats.playTotal + (param.playTotalDelta ?? Duration.zero),
         completeCount: stats.completeCount + (param.completeCountDelta ?? 0),
         inQueue: param.inQueue ?? stats.inQueue,
-        downloaded: param.downloaded ?? stats.downloaded,
+        downloadedTime: param.downloadedTime ?? stats.downloadedTime,
         lastPlayedAt: param.lastPlayedAt ?? stats.lastPlayedAt,
       );
 
@@ -485,16 +485,7 @@ class SembastRepository extends Repository {
           final value = await _episodeStore.record(param.guid).get(txn);
           stats = value != null
               ? EpisodeStats.fromEpisode(Episode.fromJson(value))
-              : EpisodeStats(
-                  guid: param.guid,
-                  position: param.position ?? Duration.zero,
-                  duration: param.duration ?? Duration.zero,
-                  playCount: param.playCount ?? 0,
-                  playTotal: param.playTotalDelta ?? Duration.zero,
-                  completeCount: param.completeCountDelta ?? 0,
-                  inQueue: param.inQueue ?? false,
-                  downloaded: param.downloaded ?? false,
-                );
+              : EpisodeStats(pguid: param.pguid, guid: param.guid);
         }
 
         final newStats = stats.copyWith(
@@ -504,7 +495,7 @@ class SembastRepository extends Repository {
           playTotal: param.playTotalDelta ?? stats.playTotal,
           completeCount: param.completeCountDelta ?? 0,
           inQueue: param.inQueue ?? stats.inQueue,
-          downloaded: param.downloaded ?? stats.downloaded,
+          downloadedTime: param.downloadedTime ?? stats.downloadedTime,
         );
 
         if (newStats != stats) {
@@ -536,6 +527,51 @@ class SembastRepository extends Repository {
     final values = await _episodeStatsStore.records(guids).get(await _db);
     return values
         .map((value) => value == null ? null : EpisodeStats.fromJson(value))
+        .toList();
+  }
+
+  @override
+  Future<List<EpisodeStats>> findDownloadedEpisodeStatsList(
+      String pguid) async {
+    final finder = Finder(
+      filter: Filter.and([
+        Filter.equals('pguid', pguid),
+        Filter.notNull('downloadedTime'),
+      ]),
+      sortOrders: [SortOrder('downloadedTime', false)],
+    );
+    final snapshots = await _episodeStatsStore.find(await _db, finder: finder);
+    return snapshots
+        .map((snapshot) => EpisodeStats.fromJson(snapshot.value))
+        .toList();
+  }
+
+  @override
+  Future<List<EpisodeStats>> findPlayedEpisodeStatsList(String pguid) async {
+    final finder = Finder(
+      filter: Filter.and([
+        Filter.equals('pguid', pguid),
+        Filter.greaterThan('completeCount', 0),
+      ]),
+      sortOrders: [SortOrder('lastPlayedAt', false, true)],
+    );
+    final snapshots = await _episodeStatsStore.find(await _db, finder: finder);
+    return snapshots
+        .map((snapshot) => EpisodeStats.fromJson(snapshot.value))
+        .toList();
+  }
+
+  @override
+  Future<List<EpisodeStats>> findUnplayedEpisodeStatsList(String pguid) async {
+    final finder = Finder(
+      filter: Filter.and([
+        Filter.equals('pguid', pguid),
+        Filter.equals('completeCount', 0),
+      ]),
+    );
+    final snapshots = await _episodeStatsStore.find(await _db, finder: finder);
+    return snapshots
+        .map((snapshot) => EpisodeStats.fromJson(snapshot.value))
         .toList();
   }
 

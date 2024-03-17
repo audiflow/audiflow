@@ -39,7 +39,7 @@ class DefaultQueueManager extends _$DefaultQueueManager
     state = state.copyWith(queue: [item, ...state.queue]);
     await _repository.saveQueue(state);
     if (isNewEpisode) {
-      await _markEpisodeAsQueued(item.guid);
+      await _markEpisodeAsQueued(_Item.from(item));
     }
   }
 
@@ -59,7 +59,7 @@ class DefaultQueueManager extends _$DefaultQueueManager
 
     await _repository.saveQueue(state);
     if (isNewEpisode) {
-      await _markEpisodeAsQueued(item.guid);
+      await _markEpisodeAsQueued(_Item.from(item));
     }
   }
 
@@ -86,7 +86,7 @@ class DefaultQueueManager extends _$DefaultQueueManager
     }
 
     await _repository.saveQueue(state);
-    await _markEpisodesAsQueued(items.map((item) => item.guid));
+    await _markEpisodesAsQueued(items.map(_Item.from));
   }
 
   @override
@@ -99,7 +99,7 @@ class DefaultQueueManager extends _$DefaultQueueManager
     final remaining = state.queue.where((q) => q.type != type);
     final removing = state.queue.where((q) => q.type == type);
     final newEpisodes =
-        items.map((q) => q.guid).where((guid) => state.contains(guid: guid));
+        items.where((item) => state.contains(guid: item.guid)).map(_Item.from);
 
     state = state.copyWith(
       queue: type == QueueType.primary
@@ -109,8 +109,8 @@ class DefaultQueueManager extends _$DefaultQueueManager
     await _repository.saveQueue(state);
 
     final purgingEpisodes = removing
-        .map((item) => item.guid)
-        .whereNot((guid) => state.contains(guid: guid));
+        .whereNot((item) => state.contains(guid: item.guid))
+        .map(_Item.from);
     await _unmarkEpisodesAsQueued(purgingEpisodes);
     await _markEpisodesAsQueued(newEpisodes);
   }
@@ -124,7 +124,7 @@ class DefaultQueueManager extends _$DefaultQueueManager
     await _repository.saveQueue(state);
 
     if (!state.contains(guid: removedItem.guid)) {
-      await _unmarkEpisodeAsQueued(removedItem.guid);
+      await _unmarkEpisodeAsQueued(_Item.from(removedItem));
     }
     return removedItem;
   }
@@ -149,8 +149,8 @@ class DefaultQueueManager extends _$DefaultQueueManager
 
     await _repository.saveQueue(state);
     final purgingEpisodes = oldQueue
-        .map((q) => q.guid)
-        .where((guid) => !state.queue.any((q) => q.guid == guid));
+        .where((item) => !state.queue.any((q) => q.guid == item.guid))
+        .map(_Item.from);
     await _unmarkEpisodesAsQueued(purgingEpisodes);
   }
 
@@ -181,30 +181,63 @@ class DefaultQueueManager extends _$DefaultQueueManager
     await _repository.saveQueue(state);
 
     final purgingEpisodes = removing
-        .map((item) => item.guid)
-        .whereNot((guid) => state.contains(guid: guid));
+        .whereNot((item) => state.contains(guid: item.guid))
+        .map(_Item.from);
+
     await _unmarkEpisodesAsQueued(purgingEpisodes);
   }
 
-  Future<void> _markEpisodeAsQueued(String guid) async {
-    final param = EpisodeStatsUpdateParam(guid: guid, inQueue: true);
+  Future<void> _markEpisodeAsQueued(_Item item) async {
+    final param = EpisodeStatsUpdateParam(
+      pguid: item.pguid,
+      guid: item.guid,
+      inQueue: true,
+    );
     await _repository.updateEpisodeStats(param);
   }
 
-  Future<void> _markEpisodesAsQueued(Iterable<String> guids) async {
-    final params =
-        guids.map((guid) => EpisodeStatsUpdateParam(guid: guid, inQueue: true));
-    await _repository.updateEpisodeStatsList(params);
-  }
-
-  Future<void> _unmarkEpisodeAsQueued(String guid) async {
-    final param = EpisodeStatsUpdateParam(guid: guid, inQueue: false);
+  Future<void> _unmarkEpisodeAsQueued(_Item item) async {
+    final param = EpisodeStatsUpdateParam(
+      pguid: item.pguid,
+      guid: item.guid,
+      inQueue: false,
+    );
     await _repository.updateEpisodeStats(param);
   }
 
-  Future<void> _unmarkEpisodesAsQueued(Iterable<String> guids) async {
-    final params = guids
-        .map((guid) => EpisodeStatsUpdateParam(guid: guid, inQueue: false));
+  Future<void> _markEpisodesAsQueued(Iterable<_Item> items) async {
+    final params = items.map(
+      (item) => EpisodeStatsUpdateParam(
+        pguid: item.pguid,
+        guid: item.guid,
+        inQueue: true,
+      ),
+    );
     await _repository.updateEpisodeStatsList(params);
   }
+
+  Future<void> _unmarkEpisodesAsQueued(Iterable<_Item> items) async {
+    final params = items.map(
+      (item) => EpisodeStatsUpdateParam(
+        pguid: item.pguid,
+        guid: item.guid,
+        inQueue: false,
+      ),
+    );
+    await _repository.updateEpisodeStatsList(params);
+  }
+}
+
+class _Item {
+  final String pguid;
+  final String guid;
+
+  _Item({
+    required this.pguid,
+    required this.guid,
+  });
+
+  _Item.from(QueueItem item)
+      : pguid = item.pguid,
+        guid = item.guid;
 }

@@ -61,9 +61,13 @@ class QueueButton extends HookConsumerWidget {
 
         switch (value) {
           case _Action.prepend:
-            queueManager.prepend(QueueItem.primary(episode.guid));
+            queueManager.prepend(
+              QueueItem.primary(pguid: episode.pguid, guid: episode.guid),
+            );
           case _Action.append:
-            queueManager.append(QueueItem.primary(episode.guid));
+            queueManager.append(
+              QueueItem.primary(pguid: episode.pguid, guid: episode.guid),
+            );
           case _Action.remove:
             queueManager.removeByIndex(queueIndex);
         }
@@ -71,9 +75,9 @@ class QueueButton extends HookConsumerWidget {
       child: OutlinedButton(
         onPressed: () {
           if (queueIndex < 0) {
-            ref
-                .read(queueManagerProvider.notifier)
-                .append(QueueItem.primary(episode.guid));
+            ref.read(queueManagerProvider.notifier).append(
+                  QueueItem.primary(pguid: episode.pguid, guid: episode.guid),
+                );
           } else {
             ref.read(queueManagerProvider.notifier).removeByIndex(queueIndex);
           }

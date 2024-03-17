@@ -147,6 +147,9 @@ extension EpisodeExtension on Episode {
 @freezed
 class EpisodeStats with _$EpisodeStats {
   const factory EpisodeStats({
+    /// The GUID for an associated podcast.
+    required String pguid,
+
     /// A String GUID for the episode.
     required String guid,
 
@@ -168,8 +171,8 @@ class EpisodeStats with _$EpisodeStats {
     /// Whether the episode is in the queue
     @Default(false) bool inQueue,
 
-    /// Whether the episode is downloaded
-    @Default(false) bool downloaded,
+    /// Downloaded time
+    DateTime? downloadedTime,
 
     /// Latest playing start time
     DateTime? lastPlayedAt,
@@ -180,14 +183,27 @@ class EpisodeStats with _$EpisodeStats {
 
   factory EpisodeStats.fromEpisode(Episode episode) {
     return EpisodeStats(
+      pguid: episode.pguid,
       guid: episode.guid,
       duration: episode.duration,
     );
   }
 }
 
+extension EpisodeStatsExt on EpisodeStats {
+  bool get downloaded => downloadedTime != null;
+
+  double get percentagePlayed => duration == null
+      ? 0.0
+      : position.inMilliseconds / duration!.inMilliseconds;
+
+  Duration get timeRemaining =>
+      duration == null ? Duration.zero : duration! - position;
+}
+
 class EpisodeStatsUpdateParam {
   const EpisodeStatsUpdateParam({
+    required this.pguid,
     required this.guid,
     this.position,
     this.duration,
@@ -195,10 +211,11 @@ class EpisodeStatsUpdateParam {
     this.playTotalDelta,
     this.completeCountDelta,
     this.inQueue,
-    this.downloaded,
+    this.downloadedTime,
     this.lastPlayedAt,
   });
 
+  final String pguid;
   final String guid;
   final Duration? position;
   final Duration? duration;
@@ -206,7 +223,7 @@ class EpisodeStatsUpdateParam {
   final Duration? playTotalDelta;
   final int? completeCountDelta;
   final bool? inQueue;
-  final bool? downloaded;
+  final DateTime? downloadedTime;
   final DateTime? lastPlayedAt;
 
   EpisodeStatsUpdateParam copyWith({
@@ -216,10 +233,11 @@ class EpisodeStatsUpdateParam {
     Duration? playTotalDelta,
     int? completeCountDelta,
     bool? inQueue,
-    bool? downloaded,
+    DateTime? downloadedTime,
     DateTime? lastPlayedAt,
   }) {
     return EpisodeStatsUpdateParam(
+      pguid: pguid,
       guid: guid,
       position: position ?? this.position,
       duration: duration ?? this.duration,
@@ -227,7 +245,7 @@ class EpisodeStatsUpdateParam {
       playTotalDelta: playTotalDelta ?? this.playTotalDelta,
       completeCountDelta: completeCountDelta ?? this.completeCountDelta,
       inQueue: inQueue ?? this.inQueue,
-      downloaded: downloaded ?? this.downloaded,
+      downloadedTime: downloadedTime ?? this.downloadedTime,
       lastPlayedAt: lastPlayedAt ?? this.lastPlayedAt,
     );
   }
@@ -239,14 +257,5 @@ class EpisodeStatsUpdateParam {
       playTotalDelta == null &&
       completeCountDelta == null &&
       inQueue == null &&
-      downloaded == null;
-}
-
-extension EpisodeStatsExt on EpisodeStats {
-  double get percentagePlayed => duration == null
-      ? 0.0
-      : position.inMilliseconds / duration!.inMilliseconds;
-
-  Duration get timeRemaining =>
-      duration == null ? Duration.zero : duration! - position;
+      downloadedTime == null;
 }

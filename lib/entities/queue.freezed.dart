@@ -161,6 +161,7 @@ QueueItem _$QueueItemFromJson(Map<String, dynamic> json) {
 /// @nodoc
 mixin _$QueueItem {
   String get id => throw _privateConstructorUsedError;
+  String get pguid => throw _privateConstructorUsedError;
   String get guid => throw _privateConstructorUsedError;
   QueueType get type => throw _privateConstructorUsedError;
 
@@ -175,7 +176,7 @@ abstract class $QueueItemCopyWith<$Res> {
   factory $QueueItemCopyWith(QueueItem value, $Res Function(QueueItem) then) =
       _$QueueItemCopyWithImpl<$Res, QueueItem>;
   @useResult
-  $Res call({String id, String guid, QueueType type});
+  $Res call({String id, String pguid, String guid, QueueType type});
 }
 
 /// @nodoc
@@ -192,6 +193,7 @@ class _$QueueItemCopyWithImpl<$Res, $Val extends QueueItem>
   @override
   $Res call({
     Object? id = null,
+    Object? pguid = null,
     Object? guid = null,
     Object? type = null,
   }) {
@@ -199,6 +201,10 @@ class _$QueueItemCopyWithImpl<$Res, $Val extends QueueItem>
       id: null == id
           ? _value.id
           : id // ignore: cast_nullable_to_non_nullable
+              as String,
+      pguid: null == pguid
+          ? _value.pguid
+          : pguid // ignore: cast_nullable_to_non_nullable
               as String,
       guid: null == guid
           ? _value.guid
@@ -220,7 +226,7 @@ abstract class _$$QueueItemImplCopyWith<$Res>
       __$$QueueItemImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({String id, String guid, QueueType type});
+  $Res call({String id, String pguid, String guid, QueueType type});
 }
 
 /// @nodoc
@@ -235,6 +241,7 @@ class __$$QueueItemImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? id = null,
+    Object? pguid = null,
     Object? guid = null,
     Object? type = null,
   }) {
@@ -242,6 +249,10 @@ class __$$QueueItemImplCopyWithImpl<$Res>
       id: null == id
           ? _value.id
           : id // ignore: cast_nullable_to_non_nullable
+              as String,
+      pguid: null == pguid
+          ? _value.pguid
+          : pguid // ignore: cast_nullable_to_non_nullable
               as String,
       guid: null == guid
           ? _value.guid
@@ -259,7 +270,10 @@ class __$$QueueItemImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$QueueItemImpl implements _QueueItem {
   const _$QueueItemImpl(
-      {required this.id, required this.guid, required this.type});
+      {required this.id,
+      required this.pguid,
+      required this.guid,
+      required this.type});
 
   factory _$QueueItemImpl.fromJson(Map<String, dynamic> json) =>
       _$$QueueItemImplFromJson(json);
@@ -267,13 +281,15 @@ class _$QueueItemImpl implements _QueueItem {
   @override
   final String id;
   @override
+  final String pguid;
+  @override
   final String guid;
   @override
   final QueueType type;
 
   @override
   String toString() {
-    return 'QueueItem(id: $id, guid: $guid, type: $type)';
+    return 'QueueItem(id: $id, pguid: $pguid, guid: $guid, type: $type)';
   }
 
   @override
@@ -282,13 +298,14 @@ class _$QueueItemImpl implements _QueueItem {
         (other.runtimeType == runtimeType &&
             other is _$QueueItemImpl &&
             (identical(other.id, id) || other.id == id) &&
+            (identical(other.pguid, pguid) || other.pguid == pguid) &&
             (identical(other.guid, guid) || other.guid == guid) &&
             (identical(other.type, type) || other.type == type));
   }
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode => Object.hash(runtimeType, id, guid, type);
+  int get hashCode => Object.hash(runtimeType, id, pguid, guid, type);
 
   @JsonKey(ignore: true)
   @override
@@ -307,6 +324,7 @@ class _$QueueItemImpl implements _QueueItem {
 abstract class _QueueItem implements QueueItem {
   const factory _QueueItem(
       {required final String id,
+      required final String pguid,
       required final String guid,
       required final QueueType type}) = _$QueueItemImpl;
 
@@ -315,6 +333,8 @@ abstract class _QueueItem implements QueueItem {
 
   @override
   String get id;
+  @override
+  String get pguid;
   @override
   String get guid;
   @override

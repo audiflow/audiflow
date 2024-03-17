@@ -7,7 +7,7 @@ part of 'episodes_list_event_provider.dart';
 // **************************************************************************
 
 String _$episodesListEventStreamHash() =>
-    r'033cd0a0b8bace38fb7f3ba2709824d38e4a60c7';
+    r'f01e9d1a74af995e8b4b10ec787cbd8d6f3da68b';
 
 /// See also [EpisodesListEventStream].
 @ProviderFor(EpisodesListEventStream)
@@ -18,8 +18,8 @@ final episodesListEventStreamProvider = AutoDisposeStreamNotifierProvider<
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
       ? null
       : _$episodesListEventStreamHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
+  dependencies: const <ProviderOrFamily>[],
+  allTransitiveDependencies: const <ProviderOrFamily>{},
 );
 
 typedef _$EpisodesListEventStream

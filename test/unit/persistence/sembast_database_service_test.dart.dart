@@ -240,6 +240,7 @@ void main() {
 
     test('updateEpisodeStats', () async {
       final param = EpisodeStatsUpdateParam(
+        pguid: podcast.episodes[2].pguid,
         guid: podcast.episodes[2].guid,
         playCount: 1,
       );
@@ -257,6 +258,7 @@ void main() {
 
     test('updateEpisodeStats should update', () async {
       final param = EpisodeStatsUpdateParam(
+        pguid: podcast.episodes[2].pguid,
         guid: podcast.episodes[2].guid,
         playTotalDelta: const Duration(minutes: 33),
         completeCountDelta: 2,
@@ -280,10 +282,12 @@ void main() {
     test('updateEpisodeStatsList', () async {
       final params = [
         EpisodeStatsUpdateParam(
+          pguid: podcast.episodes[0].pguid,
           guid: podcast.episodes[0].guid,
           playCount: 2,
         ),
         EpisodeStatsUpdateParam(
+          pguid: podcast.episodes[1].pguid,
           guid: podcast.episodes[1].guid,
           playCount: 1,
         ),
@@ -346,8 +350,8 @@ void main() {
       final episodes2 = createEpisodeMocks(podcast2, 3);
       final queue = Queue(
         queue: [
-          QueueItem.primary(episodes1[0].guid),
-          QueueItem.adhoc(episodes2[0].guid),
+          QueueItem.primary(pguid: episodes1[0].pguid, guid: episodes1[0].guid),
+          QueueItem.adhoc(pguid: episodes2[0].pguid, guid: episodes2[0].guid),
         ],
       );
       await persistenceService.saveQueue(queue);

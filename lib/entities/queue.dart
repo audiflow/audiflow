@@ -40,21 +40,30 @@ enum QueueType {
 class QueueItem with _$QueueItem {
   const factory QueueItem({
     required String id,
+    required String pguid,
     required String guid,
     required QueueType type,
   }) = _QueueItem;
 
-  factory QueueItem.primary(String guid) {
+  factory QueueItem.primary({
+    required String pguid,
+    required String guid,
+  }) {
     return QueueItem(
       id: nanoid(),
+      pguid: pguid,
       guid: guid,
       type: QueueType.primary,
     );
   }
 
-  factory QueueItem.adhoc(String guid) {
+  factory QueueItem.adhoc({
+    required String pguid,
+    required String guid,
+  }) {
     return QueueItem(
       id: nanoid(),
+      pguid: pguid,
       guid: guid,
       type: QueueType.adhoc,
     );
