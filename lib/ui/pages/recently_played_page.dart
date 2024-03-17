@@ -6,10 +6,12 @@
 // found in the LICENSE file.
 
 import 'package:audiflow/core/l10n.dart';
+import 'package:audiflow/entities/entities.dart';
 import 'package:audiflow/events/podcast_search_event.dart';
 import 'package:audiflow/ui/pages/app_bars/sub_page_app_bar.dart';
-import 'package:audiflow/ui/podcast/podcast_list.dart';
+import 'package:audiflow/ui/podcast/episode_list.dart';
 import 'package:audiflow/ui/providers/podcast_search_provider.dart';
+import 'package:audiflow/ui/providers/recently_played_episodes_provider.dart';
 import 'package:audiflow/ui/widgets/error_notifier.dart';
 import 'package:audiflow/ui/widgets/fill_remaining_error.dart';
 import 'package:audiflow/ui/widgets/fill_remaining_loading.dart';
@@ -26,7 +28,7 @@ class RecentlyPlayedPage extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(podcastSearchProvider);
+    final state = ref.watch(recentlyPlayedEpisodesProvider);
 
     final controller = useScrollController();
     return ScrollsToTop(
@@ -47,10 +49,16 @@ class RecentlyPlayedPage extends HookConsumerWidget {
                 if (state.isLoading)
                   const FillRemainingLoading()
                 else if (state.hasError ||
-                    (state.valueOrNull?.notFound == true))
+                    state.valueOrNull?.episodes.isEmpty == true)
                   FillRemainingError.podcastNoResults()
                 else
-                  PodcastList(results: state.value!.podcasts),
+                  EpisodeList(
+                    episodeGroupKey: const Key('recentlyPlayed'),
+                    episodes: state.value!.episodes
+                        .map((e) => e.toPartialEpisode())
+                        .toList(),
+                    scrollController: controller,
+                  ),
               ],
             ),
             const ErrorNotifier(),
