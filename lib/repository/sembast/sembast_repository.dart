@@ -354,6 +354,9 @@ class SembastRepository extends Repository {
     ]);
 
     if (statsValue != null) {
+      if (episode.partialData) {
+        return;
+      }
       final loaded = EpisodeStats.fromJson(statsValue);
       if (loaded.duration == null && episode.duration != null) {
         final newStats = loaded.copyWith(duration: episode.duration);
