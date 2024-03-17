@@ -7,6 +7,7 @@
 import 'package:audiflow/entities/entities.dart';
 import 'package:audiflow/ui/app/app_bottom_navigation_bar.dart';
 import 'package:audiflow/ui/pages/episode_page.dart';
+import 'package:audiflow/ui/pages/library_page.dart';
 import 'package:audiflow/ui/pages/podcast_details_page.dart';
 import 'package:audiflow/ui/pages/podcast_home_page.dart';
 import 'package:audiflow/ui/pages/podcast_season_page.dart';
@@ -127,7 +128,7 @@ class NavigationHelper {
                 path: libraryPath,
                 pageBuilder: (context, state) {
                   return _getPage(
-                    child: const SearchPage(),
+                    child: const LibraryPage(),
                     state: state,
                   );
                 },
