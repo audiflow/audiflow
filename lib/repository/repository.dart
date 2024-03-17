@@ -92,6 +92,19 @@ abstract class Repository {
 
   Future<List<EpisodeStats>> findUnplayedEpisodeStatsList(String pguid);
 
+  // --- Recently played episodes
+
+  Future<void> saveRecentlyPlayedEpisode({
+    required String pguid,
+    required String guid,
+    DateTime? playedAt,
+  });
+
+  Future<(List<EpisodeStats>, int?)> findRecentlyPlayedEpisodeStatsList({
+    int? cursor,
+    int limit = 100,
+  });
+
   // --- Downloads
 
   Future<void> saveDownload(Downloadable download);
