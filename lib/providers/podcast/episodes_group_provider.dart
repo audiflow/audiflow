@@ -13,7 +13,6 @@ import 'package:audiflow/repository/repository_provider.dart';
 import 'package:audiflow/services/podcast/podcast_service_provider.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -31,25 +30,13 @@ class EpisodesGroup extends _$EpisodesGroup {
     return _completer.future;
   }
 
-  // ignore: avoid_build_context_in_providers
-  void hoge(BuildContext context) {}
-
   Future<void> setup(Iterable<Episode> episodes) async {
     if (_completer.isCompleted) {
       return;
     }
 
-    final stats = await ref
-        .read(repositoryProvider)
-        .findEpisodeStatsList(episodes.map((e) => e.guid));
     final initialState = EpisodesGroupState(
       episodes: episodes.toList(),
-      statsMap: Map<String, EpisodeStats>.fromEntries(
-        stats
-            .where((s) => s != null)
-            .cast<EpisodeStats>()
-            .map((s) => MapEntry(s.guid, s)),
-      ),
     );
     _completer.complete(initialState);
   }
@@ -60,66 +47,41 @@ class EpisodesGroup extends _$EpisodesGroup {
         group: state.requireValue.episodes
             .sorted((a, b) => a.publicationDate!.compareTo(b.publicationDate!)),
       );
-}
 
-@freezed
-class EpisodesGroupState with _$EpisodesGroupState {
-  const factory EpisodesGroupState({
-    required List<Episode> episodes,
-    required Map<String, EpisodeStats> statsMap,
-  }) = _EpisodesGroupState;
-}
-
-enum ConditionalPlayButtonState {
-  fromStart,
-  latest,
-  latestAgain,
-  resume;
-}
-
-extension EpisodesInfoStateExt on EpisodesGroupState {
-  Episode? _earliestEpisode() {
-    return episodes.fold(null, (Episode? acc, e) {
-      if (acc?.publicationDate == null) {
-        return e;
-      } else if (e.publicationDate == null) {
-        return acc;
-      }
-      return acc!.publicationDate!.isBefore(e.publicationDate!) ? acc : e;
-    });
+  Future<String?> getLastListenedEpisode() async {
+    final stats = await _lastPlayedStats();
+    return stats?.guid;
   }
 
-  Episode? _latestEpisode() {
-    return episodes.fold(null, (Episode? acc, e) {
-      if (acc?.publicationDate == null) {
-        return e;
-      } else if (e.publicationDate == null) {
-        return acc;
-      }
-      return acc!.publicationDate!.isBefore(e.publicationDate!) ? e : acc;
-    });
+  Future<EpisodeStats?> _lastPlayedStats() async {
+    final episodes = state.valueOrNull?.episodes;
+    if (episodes == null || episodes.isEmpty) {
+      return null;
+    }
+
+    final stats = await ref
+        .read(repositoryProvider)
+        .findEpisodeStatsList(episodes.map((e) => e.guid));
+
+    final playedStatsList =
+        stats.where((s) => s?.lastPlayedAt != null).cast<EpisodeStats>();
+
+    return playedStatsList.isEmpty
+        ? null
+        : playedStatsList.reduce(
+            (a, b) => a.lastPlayedAt!.isBefore(b.lastPlayedAt!) ? b : a);
   }
 
-  EpisodeStats? _lastPlayedStats() {
-    return statsMap.values.fold(null, (EpisodeStats? acc, e) {
-      if (acc?.lastPlayedAt == null) {
-        return e;
-      } else if (e.lastPlayedAt == null) {
-        return acc;
-      }
-      return acc!.lastPlayedAt!.isBefore(e.lastPlayedAt!) ? e : acc;
-    });
-  }
-
-  (Episode?, ConditionalPlayButtonState) nextEpisodeToPlay({
+  Future<(Episode?, ConditionalPlayButtonState)> nextEpisodeToPlay({
     required PlayOrder playOrder,
     bool isSeries = false,
-  }) {
-    if (episodes.isEmpty) {
+  }) async {
+    final episodes = state.valueOrNull?.episodes;
+    if (episodes == null || episodes.isEmpty) {
       return (null, ConditionalPlayButtonState.fromStart);
     }
 
-    final lastPlayedStats = _lastPlayedStats();
+    final lastPlayedStats = await _lastPlayedStats();
     final lastPlayedEpisode = lastPlayedStats == null
         ? null
         : episodes.firstWhereOrNull((e) => e.guid == lastPlayedStats.guid);
@@ -175,4 +137,41 @@ extension EpisodesInfoStateExt on EpisodesGroupState {
         }
     }
   }
+
+  Episode? _earliestEpisode() {
+    return state.valueOrNull?.episodes.fold(null, (Episode? acc, e) {
+      if (acc?.publicationDate == null) {
+        return e;
+      } else if (e.publicationDate == null) {
+        return acc;
+      }
+      return acc!.publicationDate!.isBefore(e.publicationDate!) ? acc : e;
+    });
+  }
+
+  Episode? _latestEpisode() {
+    return state.valueOrNull?.episodes.fold(null, (Episode? acc, e) {
+      if (acc?.publicationDate == null) {
+        return e;
+      } else if (e.publicationDate == null) {
+        return acc;
+      }
+      return acc!.publicationDate!.isBefore(e.publicationDate!) ? e : acc;
+    });
+  }
+}
+
+@freezed
+class EpisodesGroupState with _$EpisodesGroupState {
+  const factory EpisodesGroupState({
+    required List<Episode> episodes,
+    // required Map<String, EpisodeStats> statsMap,
+  }) = _EpisodesGroupState;
+}
+
+enum ConditionalPlayButtonState {
+  fromStart,
+  latest,
+  latestAgain,
+  resume;
 }

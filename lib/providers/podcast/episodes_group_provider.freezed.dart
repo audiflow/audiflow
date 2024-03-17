@@ -17,7 +17,6 @@ final _privateConstructorUsedError = UnsupportedError(
 /// @nodoc
 mixin _$EpisodesGroupState {
   List<Episode> get episodes => throw _privateConstructorUsedError;
-  Map<String, EpisodeStats> get statsMap => throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
   $EpisodesGroupStateCopyWith<EpisodesGroupState> get copyWith =>
@@ -30,7 +29,7 @@ abstract class $EpisodesGroupStateCopyWith<$Res> {
           EpisodesGroupState value, $Res Function(EpisodesGroupState) then) =
       _$EpisodesGroupStateCopyWithImpl<$Res, EpisodesGroupState>;
   @useResult
-  $Res call({List<Episode> episodes, Map<String, EpisodeStats> statsMap});
+  $Res call({List<Episode> episodes});
 }
 
 /// @nodoc
@@ -47,17 +46,12 @@ class _$EpisodesGroupStateCopyWithImpl<$Res, $Val extends EpisodesGroupState>
   @override
   $Res call({
     Object? episodes = null,
-    Object? statsMap = null,
   }) {
     return _then(_value.copyWith(
       episodes: null == episodes
           ? _value.episodes
           : episodes // ignore: cast_nullable_to_non_nullable
               as List<Episode>,
-      statsMap: null == statsMap
-          ? _value.statsMap
-          : statsMap // ignore: cast_nullable_to_non_nullable
-              as Map<String, EpisodeStats>,
     ) as $Val);
   }
 }
@@ -70,7 +64,7 @@ abstract class _$$EpisodesGroupStateImplCopyWith<$Res>
       __$$EpisodesGroupStateImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({List<Episode> episodes, Map<String, EpisodeStats> statsMap});
+  $Res call({List<Episode> episodes});
 }
 
 /// @nodoc
@@ -85,17 +79,12 @@ class __$$EpisodesGroupStateImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? episodes = null,
-    Object? statsMap = null,
   }) {
     return _then(_$EpisodesGroupStateImpl(
       episodes: null == episodes
           ? _value._episodes
           : episodes // ignore: cast_nullable_to_non_nullable
               as List<Episode>,
-      statsMap: null == statsMap
-          ? _value._statsMap
-          : statsMap // ignore: cast_nullable_to_non_nullable
-              as Map<String, EpisodeStats>,
     ));
   }
 }
@@ -105,11 +94,8 @@ class __$$EpisodesGroupStateImplCopyWithImpl<$Res>
 class _$EpisodesGroupStateImpl
     with DiagnosticableTreeMixin
     implements _EpisodesGroupState {
-  const _$EpisodesGroupStateImpl(
-      {required final List<Episode> episodes,
-      required final Map<String, EpisodeStats> statsMap})
-      : _episodes = episodes,
-        _statsMap = statsMap;
+  const _$EpisodesGroupStateImpl({required final List<Episode> episodes})
+      : _episodes = episodes;
 
   final List<Episode> _episodes;
   @override
@@ -119,17 +105,9 @@ class _$EpisodesGroupStateImpl
     return EqualUnmodifiableListView(_episodes);
   }
 
-  final Map<String, EpisodeStats> _statsMap;
-  @override
-  Map<String, EpisodeStats> get statsMap {
-    if (_statsMap is EqualUnmodifiableMapView) return _statsMap;
-    // ignore: implicit_dynamic_type
-    return EqualUnmodifiableMapView(_statsMap);
-  }
-
   @override
   String toString({DiagnosticLevel minLevel = DiagnosticLevel.info}) {
-    return 'EpisodesGroupState(episodes: $episodes, statsMap: $statsMap)';
+    return 'EpisodesGroupState(episodes: $episodes)';
   }
 
   @override
@@ -137,8 +115,7 @@ class _$EpisodesGroupStateImpl
     super.debugFillProperties(properties);
     properties
       ..add(DiagnosticsProperty('type', 'EpisodesGroupState'))
-      ..add(DiagnosticsProperty('episodes', episodes))
-      ..add(DiagnosticsProperty('statsMap', statsMap));
+      ..add(DiagnosticsProperty('episodes', episodes));
   }
 
   @override
@@ -146,15 +123,12 @@ class _$EpisodesGroupStateImpl
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$EpisodesGroupStateImpl &&
-            const DeepCollectionEquality().equals(other._episodes, _episodes) &&
-            const DeepCollectionEquality().equals(other._statsMap, _statsMap));
+            const DeepCollectionEquality().equals(other._episodes, _episodes));
   }
 
   @override
-  int get hashCode => Object.hash(
-      runtimeType,
-      const DeepCollectionEquality().hash(_episodes),
-      const DeepCollectionEquality().hash(_statsMap));
+  int get hashCode =>
+      Object.hash(runtimeType, const DeepCollectionEquality().hash(_episodes));
 
   @JsonKey(ignore: true)
   @override
@@ -165,15 +139,11 @@ class _$EpisodesGroupStateImpl
 }
 
 abstract class _EpisodesGroupState implements EpisodesGroupState {
-  const factory _EpisodesGroupState(
-          {required final List<Episode> episodes,
-          required final Map<String, EpisodeStats> statsMap}) =
+  const factory _EpisodesGroupState({required final List<Episode> episodes}) =
       _$EpisodesGroupStateImpl;
 
   @override
   List<Episode> get episodes;
-  @override
-  Map<String, EpisodeStats> get statsMap;
   @override
   @JsonKey(ignore: true)
   _$$EpisodesGroupStateImplCopyWith<_$EpisodesGroupStateImpl> get copyWith =>
