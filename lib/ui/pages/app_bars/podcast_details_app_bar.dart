@@ -7,10 +7,10 @@
 
 import 'package:audiflow/core/l10n.dart';
 import 'package:audiflow/entities/podcast.dart';
-import 'package:audiflow/providers/podcast/podcast_info_provider.dart';
-import 'package:audiflow/providers/ui/episodes_list_event_provider.dart';
 import 'package:audiflow/services/podcast/podcast_service_provider.dart';
 import 'package:audiflow/ui/pages/app_bars/podcast_page_header_image.dart';
+import 'package:audiflow/ui/providers/episodes_list_event_provider.dart';
+import 'package:audiflow/ui/providers/podcast_info_provider.dart';
 import 'package:audiflow/ui/widgets/placeholder_builder.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';

@@ -69,7 +69,8 @@ class EpisodesGroup extends _$EpisodesGroup {
     return playedStatsList.isEmpty
         ? null
         : playedStatsList.reduce(
-            (a, b) => a.lastPlayedAt!.isBefore(b.lastPlayedAt!) ? b : a);
+            (a, b) => a.lastPlayedAt!.isBefore(b.lastPlayedAt!) ? b : a,
+          );
   }
 
   Future<(Episode?, ConditionalPlayButtonState)> nextEpisodeToPlay({

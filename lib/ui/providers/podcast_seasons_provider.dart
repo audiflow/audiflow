@@ -8,8 +8,8 @@
 import 'dart:async';
 
 import 'package:audiflow/entities/entities.dart';
-import 'package:audiflow/providers/podcast/podcast_info_provider.dart';
 import 'package:audiflow/services/podcast/podcast_season_service.dart';
+import 'package:audiflow/ui/providers/podcast_info_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'podcast_seasons_provider.g.dart';

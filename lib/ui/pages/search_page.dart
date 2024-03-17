@@ -7,9 +7,9 @@
 
 import 'package:audiflow/core/l10n.dart';
 import 'package:audiflow/events/podcast_search_event.dart';
-import 'package:audiflow/providers/podcast/podcast_search_provider.dart';
 import 'package:audiflow/ui/pages/app_bars/basic_app_bar.dart';
 import 'package:audiflow/ui/podcast/podcast_list.dart';
+import 'package:audiflow/ui/providers/podcast_search_provider.dart';
 import 'package:audiflow/ui/widgets/error_notifier.dart';
 import 'package:audiflow/ui/widgets/fill_remaining_error.dart';
 import 'package:audiflow/ui/widgets/fill_remaining_loading.dart';
@@ -19,7 +19,6 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:scrolls_to_top/scrolls_to_top.dart';
 import 'package:sliver_tools/sliver_tools.dart';
-import 'package:visibility_detector/visibility_detector.dart';
 
 class SearchPage extends HookConsumerWidget {
   const SearchPage({

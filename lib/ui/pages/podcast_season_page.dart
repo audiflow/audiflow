@@ -8,12 +8,12 @@
 import 'package:audiflow/core/l10n.dart';
 import 'package:audiflow/core/types.dart';
 import 'package:audiflow/entities/entities.dart';
-import 'package:audiflow/providers/podcast/podcast_view_info_provider.dart';
 import 'package:audiflow/services/podcast/podcast_service_provider.dart';
 import 'package:audiflow/ui/pages/app_bars/podcast_season_app_bar.dart';
 import 'package:audiflow/ui/podcast/contextual_play_button.dart';
 import 'package:audiflow/ui/podcast/episode_list.dart';
 import 'package:audiflow/ui/podcast/types.dart';
+import 'package:audiflow/ui/providers/podcast_view_info_provider.dart';
 import 'package:audiflow/ui/widgets/fill_remaining_error.dart';
 import 'package:audiflow/ui/widgets/fill_remaining_loading.dart';
 import 'package:audiflow/ui/widgets/sort_icon_button.dart';
