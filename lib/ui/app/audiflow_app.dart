@@ -10,8 +10,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/messages_all.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
-class SeasoningApp extends StatelessWidget {
-  const SeasoningApp({super.key});
+class AudiflowApp extends StatelessWidget {
+  const AudiflowApp({super.key});
 
   @override
   Widget build(BuildContext context) {

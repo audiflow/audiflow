@@ -24,8 +24,8 @@ import 'package:audiflow/services/download/download_manager_provider.dart';
 import 'package:audiflow/services/queue/default_queue_manager.dart';
 import 'package:audiflow/services/queue/queue_manager.dart';
 import 'package:audiflow/services/settings/settings_service.dart';
+import 'package:audiflow/ui/app/audiflow_app.dart';
 import 'package:audiflow/ui/app/navigation_helper.dart';
-import 'package:audiflow/ui/app/seasoning_app.dart';
 import 'package:audiflow/ui/color_schemes.g.dart';
 import 'package:audiflow/ui/providers/podcast_refresher_provider.dart';
 import 'package:audiflow/ui/widgets/error_notifier.dart';
@@ -86,8 +86,8 @@ void main() async {
             ErrorNotifier(),
             _GlobalProviders(),
             _ProvidersInitializer(
-              child: SeasoningApp(
-                key: Key('SeasoningApp'),
+              child: AudiflowApp(
+                key: Key('AudiflowApp'),
               ),
             ),
           ],
