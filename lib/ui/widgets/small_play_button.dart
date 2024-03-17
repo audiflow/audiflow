@@ -31,8 +31,8 @@ class SmallPlayButton extends ConsumerWidget {
     final theme = Theme.of(context);
     final style = ElevatedButton.styleFrom(
       shape: const StadiumBorder(),
-      backgroundColor: theme.colorScheme.tertiaryContainer,
-      foregroundColor: theme.colorScheme.onTertiaryContainer,
+      backgroundColor: theme.colorScheme.surfaceVariant,
+      foregroundColor: theme.colorScheme.onSurfaceVariant,
       minimumSize: size,
       padding: const EdgeInsets.only(left: 8, right: 12),
     );
