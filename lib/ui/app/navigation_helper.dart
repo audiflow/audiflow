@@ -11,6 +11,7 @@ import 'package:audiflow/ui/pages/library_page.dart';
 import 'package:audiflow/ui/pages/podcast_details_page.dart';
 import 'package:audiflow/ui/pages/podcast_home_page.dart';
 import 'package:audiflow/ui/pages/podcast_season_page.dart';
+import 'package:audiflow/ui/pages/recently_played_page.dart';
 import 'package:audiflow/ui/pages/search_page.dart';
 import 'package:audiflow/ui/pages/settings_page.dart';
 import 'package:flutter/material.dart';
@@ -132,6 +133,19 @@ class NavigationHelper {
                     state: state,
                   );
                 },
+                routes: [
+                  GoRoute(
+                    path: 'recentlyPlayed',
+                    name: 'recentlyPlayed',
+                    parentNavigatorKey: libraryTabNavigatorKey,
+                    pageBuilder: (context, state) {
+                      return _getPage(
+                        child: const RecentlyPlayedPage(),
+                        state: state,
+                      );
+                    },
+                  ),
+                ],
               ),
             ],
           ),
@@ -221,6 +235,12 @@ class NavigationHelper {
   static Future<void> pushSettings() async {
     await NavigationHelper.router.pushNamed(
       'settings',
+    );
+  }
+
+  static Future<void> pushRecentlyPlayed() async {
+    await NavigationHelper.router.pushNamed(
+      'recentlyPlayed',
     );
   }
 }

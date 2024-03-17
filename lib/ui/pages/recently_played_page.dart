@@ -7,8 +7,8 @@
 
 import 'package:audiflow/core/l10n.dart';
 import 'package:audiflow/events/podcast_search_event.dart';
-import 'package:audiflow/ui/app/navigation_helper.dart';
-import 'package:audiflow/ui/pages/app_bars/basic_app_bar.dart';
+import 'package:audiflow/ui/pages/app_bars/sub_page_app_bar.dart';
+import 'package:audiflow/ui/podcast/podcast_list.dart';
 import 'package:audiflow/ui/providers/podcast_search_provider.dart';
 import 'package:audiflow/ui/widgets/error_notifier.dart';
 import 'package:audiflow/ui/widgets/fill_remaining_error.dart';
@@ -17,11 +17,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:scrolls_to_top/scrolls_to_top.dart';
 
-class LibraryPage extends HookConsumerWidget {
-  const LibraryPage({
+class RecentlyPlayedPage extends HookConsumerWidget {
+  const RecentlyPlayedPage({
     super.key,
   });
 
@@ -30,8 +29,6 @@ class LibraryPage extends HookConsumerWidget {
     final state = ref.watch(podcastSearchProvider);
 
     final controller = useScrollController();
-    final theme = Theme.of(context);
-    final l10n = L10n.of(context)!;
     return ScrollsToTop(
       onScrollsToTop: (event) async {
         await controller.animateTo(
@@ -46,26 +43,14 @@ class LibraryPage extends HookConsumerWidget {
             CustomScrollView(
               controller: controller,
               slivers: <Widget>[
-                BasicAppBar(title: L10n.of(context)!.library),
+                SubPageAppBar(title: L10n.of(context)!.recentlyPlayed),
                 if (state.isLoading)
                   const FillRemainingLoading()
                 else if (state.hasError ||
                     (state.valueOrNull?.notFound == true))
                   FillRemainingError.podcastNoResults()
                 else
-                  SliverFixedExtentList(
-                    itemExtent: 60,
-                    delegate: SliverChildListDelegate(
-                      [
-                        ListTile(
-                          leading: const Icon(Symbols.history),
-                          title: Text(l10n.recentlyPlayed),
-                          trailing: const Icon(Icons.chevron_right),
-                          onTap: NavigationHelper.pushRecentlyPlayed,
-                        ),
-                      ],
-                    ),
-                  ),
+                  PodcastList(results: state.value!.podcasts),
               ],
             ),
             const ErrorNotifier(),
