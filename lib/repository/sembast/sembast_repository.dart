@@ -307,7 +307,7 @@ class SembastRepository extends Repository {
             ascendSeasonEpisodes: param.ascendSeasonEpisodes ?? true,
             listenedEpisodes: param.listenedEpisodes ?? const {},
           );
-      await _podcastStatsStore
+      await _podcastViewStatsStore
           .record(param.guid)
           .put(txn, newViewStats.toJson());
       return newViewStats;
