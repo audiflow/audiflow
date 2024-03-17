@@ -30,7 +30,6 @@ class LibraryPage extends HookConsumerWidget {
     final state = ref.watch(podcastSearchProvider);
 
     final controller = useScrollController();
-    final theme = Theme.of(context);
     final l10n = L10n.of(context)!;
     return ScrollsToTop(
       onScrollsToTop: (event) async {
