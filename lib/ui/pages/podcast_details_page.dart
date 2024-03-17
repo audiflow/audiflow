@@ -261,7 +261,7 @@ class _SwitchBar extends ConsumerWidget {
     final theme = Theme.of(context);
     return SliverToBoxAdapter(
       child: Container(
-        color: theme.colorScheme.secondaryContainer,
+        color: theme.colorScheme.surfaceVariant,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
