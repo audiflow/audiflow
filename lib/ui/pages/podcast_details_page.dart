@@ -8,16 +8,16 @@
 
 import 'package:audiflow/core/l10n.dart';
 import 'package:audiflow/entities/entities.dart';
-import 'package:audiflow/providers/podcast/podcast_info_provider.dart';
-import 'package:audiflow/providers/podcast/podcast_seasons_provider.dart';
-import 'package:audiflow/providers/podcast/podcast_view_info_provider.dart';
-import 'package:audiflow/providers/ui/episodes_list_event_provider.dart';
 import 'package:audiflow/services/podcast/podcast_service_provider.dart';
 import 'package:audiflow/services/settings/settings_service.dart';
 import 'package:audiflow/ui/pages/app_bars/podcast_details_app_bar.dart';
 import 'package:audiflow/ui/podcast/episode_list.dart';
 import 'package:audiflow/ui/podcast/funding_menu.dart';
 import 'package:audiflow/ui/podcast/season_list.dart';
+import 'package:audiflow/ui/providers/episodes_list_event_provider.dart';
+import 'package:audiflow/ui/providers/podcast_info_provider.dart';
+import 'package:audiflow/ui/providers/podcast_seasons_provider.dart';
+import 'package:audiflow/ui/providers/podcast_view_info_provider.dart';
 import 'package:audiflow/ui/widgets/fill_remaining_error.dart';
 import 'package:audiflow/ui/widgets/fill_remaining_loading.dart';
 import 'package:audiflow/ui/widgets/podcast_html.dart';
@@ -368,7 +368,7 @@ class _PodcastViewModeSwitch extends StatelessWidget {
                 ),
               ],
             ),
-          )
+          ),
         ];
       },
       child: Row(

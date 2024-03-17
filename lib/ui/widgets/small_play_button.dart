@@ -9,8 +9,8 @@ import 'dart:math' as math;
 
 import 'package:audiflow/core/l10n.dart';
 import 'package:audiflow/entities/entities.dart';
-import 'package:audiflow/providers/podcast/episode_info_provider.dart';
 import 'package:audiflow/services/audio/audio_player_service.dart';
+import 'package:audiflow/ui/providers/episode_info_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';

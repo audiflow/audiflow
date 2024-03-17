@@ -8,8 +8,8 @@
 import 'package:audiflow/core/l10n.dart';
 import 'package:audiflow/core/types.dart';
 import 'package:audiflow/entities/entities.dart';
-import 'package:audiflow/providers/podcast/episodes_group_provider.dart';
 import 'package:audiflow/services/audio/audio_player_service.dart';
+import 'package:audiflow/ui/providers/episodes_group_provider.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';

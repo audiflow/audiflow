@@ -10,7 +10,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'episodes_list_event_provider.g.dart';
 
-@riverpod
+@Riverpod(dependencies: [])
 class EpisodesListEventStream extends _$EpisodesListEventStream {
   @override
   Stream<EpisodesListEvent> build() async* {}

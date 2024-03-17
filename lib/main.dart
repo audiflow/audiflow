@@ -9,7 +9,6 @@
 import 'dart:io';
 
 import 'package:audiflow/api/podcast/podcast_api_provider.dart';
-import 'package:audiflow/providers/podcast/podcast_refresher_provider.dart';
 import 'package:audiflow/repository/download_event.dart';
 import 'package:audiflow/repository/episode_event.dart';
 import 'package:audiflow/repository/podcast_event.dart';
@@ -28,6 +27,7 @@ import 'package:audiflow/services/settings/settings_service.dart';
 import 'package:audiflow/ui/app/navigation_helper.dart';
 import 'package:audiflow/ui/app/seasoning_app.dart';
 import 'package:audiflow/ui/color_schemes.g.dart';
+import 'package:audiflow/ui/providers/podcast_refresher_provider.dart';
 import 'package:audiflow/ui/widgets/error_notifier.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';

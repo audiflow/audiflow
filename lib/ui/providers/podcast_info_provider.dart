@@ -51,13 +51,13 @@ class PodcastInfo extends _$PodcastInfo {
       next.whenData((event) {
         switch (event) {
           case PodcastSubscribedEvent(
-          podcast: final podcast,
-          stats: final stats
-          ) ||
-          PodcastUnsubscribedEvent(
-          podcast: final podcast,
-          stats: final stats
-          ):
+                  podcast: final podcast,
+                  stats: final stats
+                ) ||
+                PodcastUnsubscribedEvent(
+                  podcast: final podcast,
+                  stats: final stats
+                ):
             if (podcast.guid == state.valueOrNull?.podcast.guid) {
               state = AsyncData(
                 PodcastInfoState(

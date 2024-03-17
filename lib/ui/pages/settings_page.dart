@@ -6,8 +6,8 @@
 // found in the LICENSE file.
 
 import 'package:audiflow/core/l10n.dart';
-import 'package:audiflow/providers/podcast/podcast_search_provider.dart';
 import 'package:audiflow/services/settings/settings_service.dart';
+import 'package:audiflow/ui/providers/podcast_search_provider.dart';
 import 'package:audiflow/ui/widgets/error_notifier.dart';
 import 'package:audiflow/ui/widgets/fill_remaining_loading.dart';
 import 'package:flutter/material.dart';

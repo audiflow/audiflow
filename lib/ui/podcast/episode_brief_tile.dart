@@ -7,8 +7,8 @@
 
 import 'package:audiflow/core/types.dart';
 import 'package:audiflow/entities/entities.dart';
-import 'package:audiflow/providers/podcast/episode_info_provider.dart';
 import 'package:audiflow/ui/podcast/episode_date.dart';
+import 'package:audiflow/ui/providers/episode_info_provider.dart';
 import 'package:audiflow/ui/widgets/tile_image.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
