@@ -44,6 +44,7 @@ class AudioPositionSaver extends _$AudioPositionSaver {
             state = const AudioPositionSaverState();
             await repository.updateEpisodeStats(
               EpisodeStatsUpdateParam(
+                pguid: episode.pguid,
                 guid: episode.guid,
                 lastPlayedAt: DateTime.now(),
               ),
@@ -60,6 +61,7 @@ class AudioPositionSaver extends _$AudioPositionSaver {
                   '${episode.title}');
               await repository.updateEpisodeStats(
                 EpisodeStatsUpdateParam(
+                  pguid: episode.pguid,
                   guid: episode.guid,
                   completeCountDelta: 1,
                 ),
@@ -103,6 +105,7 @@ class AudioPositionSaver extends _$AudioPositionSaver {
 
       repository.updateEpisodeStats(
         EpisodeStatsUpdateParam(
+          pguid: episode.pguid,
           guid: episode.guid,
           position: position,
           playTotalDelta: state.lastSavedPosition != null &&

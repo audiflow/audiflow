@@ -65,6 +65,7 @@ Map<String, dynamic> _$$EpisodeImplToJson(_$EpisodeImpl instance) =>
 
 _$EpisodeStatsImpl _$$EpisodeStatsImplFromJson(Map<String, dynamic> json) =>
     _$EpisodeStatsImpl(
+      pguid: json['pguid'] as String,
       guid: json['guid'] as String,
       position: json['position'] == null
           ? Duration.zero
@@ -78,7 +79,9 @@ _$EpisodeStatsImpl _$$EpisodeStatsImplFromJson(Map<String, dynamic> json) =>
           : Duration(microseconds: json['playTotal'] as int),
       completeCount: json['completeCount'] as int? ?? 0,
       inQueue: json['inQueue'] as bool? ?? false,
-      downloaded: json['downloaded'] as bool? ?? false,
+      downloadedTime: json['downloadedTime'] == null
+          ? null
+          : DateTime.parse(json['downloadedTime'] as String),
       lastPlayedAt: json['lastPlayedAt'] == null
           ? null
           : DateTime.parse(json['lastPlayedAt'] as String),
@@ -86,6 +89,7 @@ _$EpisodeStatsImpl _$$EpisodeStatsImplFromJson(Map<String, dynamic> json) =>
 
 Map<String, dynamic> _$$EpisodeStatsImplToJson(_$EpisodeStatsImpl instance) =>
     <String, dynamic>{
+      'pguid': instance.pguid,
       'guid': instance.guid,
       'position': instance.position.inMicroseconds,
       'duration': instance.duration?.inMicroseconds,
@@ -93,6 +97,6 @@ Map<String, dynamic> _$$EpisodeStatsImplToJson(_$EpisodeStatsImpl instance) =>
       'playTotal': instance.playTotal.inMicroseconds,
       'completeCount': instance.completeCount,
       'inQueue': instance.inQueue,
-      'downloaded': instance.downloaded,
+      'downloadedTime': instance.downloadedTime?.toIso8601String(),
       'lastPlayedAt': instance.lastPlayedAt?.toIso8601String(),
     };

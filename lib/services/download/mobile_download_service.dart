@@ -242,8 +242,9 @@ class MobileDownloadService extends DownloadService {
   Future<void> _onDownloadComplete(Downloadable download) async {
     final stats = await _repository.findEpisodeStats(download.guid);
     var updateParam = EpisodeStatsUpdateParam(
+      pguid: download.pguid,
       guid: download.guid,
-      downloaded: true,
+      downloadedTime: DateTime.now(),
     );
 
     if (stats?.duration != null) {

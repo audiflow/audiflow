@@ -17,6 +17,7 @@ import 'package:audiflow/ui/podcast/season_list.dart';
 import 'package:audiflow/ui/providers/episodes_list_event_provider.dart';
 import 'package:audiflow/ui/providers/podcast_info_provider.dart';
 import 'package:audiflow/ui/providers/podcast_seasons_provider.dart';
+import 'package:audiflow/ui/providers/podcast_view_episodes_provider.dart';
 import 'package:audiflow/ui/providers/podcast_view_info_provider.dart';
 import 'package:audiflow/ui/widgets/fill_remaining_error.dart';
 import 'package:audiflow/ui/widgets/fill_remaining_loading.dart';
@@ -65,6 +66,9 @@ class PodcastDetailsPage extends HookConsumerWidget {
       viewMode = PodcastDetailViewMode.episodes;
     }
     final ascend = podcastViewState.valueOrNull?.ascend ?? false;
+    final podcastViewEpisodesState = podcast == null
+        ? null
+        : ref.watch(podcastViewEpisodesProvider(podcast));
 
     final controller = useScrollController();
     return ProviderScope(
@@ -105,9 +109,13 @@ class PodcastDetailsPage extends HookConsumerWidget {
                           paletteGenerator.lightMutedColor?.titleTextColor,
                       backgroundColor: paletteGenerator.lightMutedColor?.color,
                     ),
-                    if (podcastState.isLoading || seasonsState.isLoading)
+                    if (podcastState.isLoading ||
+                        seasonsState.isLoading ||
+                        podcastViewEpisodesState == null ||
+                        podcastViewEpisodesState.isLoading)
                       const FillRemainingLoading()
-                    else if (podcastState.hasError || podcast == null)
+                    else if (podcastState.hasError ||
+                        podcast == null)
                       FillRemainingError.podcastNoResults()
                     else ...[
                       _PodcastTitle(podcast),
@@ -122,9 +130,7 @@ class PodcastDetailsPage extends HookConsumerWidget {
                           : EpisodeList(
                               episodeGroupKey: ValueKey(podcast.guid),
                               metadata: podcast.metadata,
-                              episodes: ascend
-                                  ? podcast.episodes.reversed.toList()
-                                  : podcast.episodes,
+                              episodes: podcastViewEpisodesState.requireValue,
                               scrollController: controller,
                             ),
                     ],

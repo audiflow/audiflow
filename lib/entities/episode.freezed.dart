@@ -690,6 +690,9 @@ EpisodeStats _$EpisodeStatsFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$EpisodeStats {
+  /// The GUID for an associated podcast.
+  String get pguid => throw _privateConstructorUsedError;
+
   /// A String GUID for the episode.
   String get guid => throw _privateConstructorUsedError;
 
@@ -711,8 +714,8 @@ mixin _$EpisodeStats {
   /// Whether the episode is in the queue
   bool get inQueue => throw _privateConstructorUsedError;
 
-  /// Whether the episode is downloaded
-  bool get downloaded => throw _privateConstructorUsedError;
+  /// Downloaded time
+  DateTime? get downloadedTime => throw _privateConstructorUsedError;
 
   /// Latest playing start time
   DateTime? get lastPlayedAt => throw _privateConstructorUsedError;
@@ -730,14 +733,15 @@ abstract class $EpisodeStatsCopyWith<$Res> {
       _$EpisodeStatsCopyWithImpl<$Res, EpisodeStats>;
   @useResult
   $Res call(
-      {String guid,
+      {String pguid,
+      String guid,
       Duration position,
       Duration? duration,
       int playCount,
       Duration playTotal,
       int completeCount,
       bool inQueue,
-      bool downloaded,
+      DateTime? downloadedTime,
       DateTime? lastPlayedAt});
 }
 
@@ -754,6 +758,7 @@ class _$EpisodeStatsCopyWithImpl<$Res, $Val extends EpisodeStats>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
+    Object? pguid = null,
     Object? guid = null,
     Object? position = null,
     Object? duration = freezed,
@@ -761,10 +766,14 @@ class _$EpisodeStatsCopyWithImpl<$Res, $Val extends EpisodeStats>
     Object? playTotal = null,
     Object? completeCount = null,
     Object? inQueue = null,
-    Object? downloaded = null,
+    Object? downloadedTime = freezed,
     Object? lastPlayedAt = freezed,
   }) {
     return _then(_value.copyWith(
+      pguid: null == pguid
+          ? _value.pguid
+          : pguid // ignore: cast_nullable_to_non_nullable
+              as String,
       guid: null == guid
           ? _value.guid
           : guid // ignore: cast_nullable_to_non_nullable
@@ -793,10 +802,10 @@ class _$EpisodeStatsCopyWithImpl<$Res, $Val extends EpisodeStats>
           ? _value.inQueue
           : inQueue // ignore: cast_nullable_to_non_nullable
               as bool,
-      downloaded: null == downloaded
-          ? _value.downloaded
-          : downloaded // ignore: cast_nullable_to_non_nullable
-              as bool,
+      downloadedTime: freezed == downloadedTime
+          ? _value.downloadedTime
+          : downloadedTime // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
       lastPlayedAt: freezed == lastPlayedAt
           ? _value.lastPlayedAt
           : lastPlayedAt // ignore: cast_nullable_to_non_nullable
@@ -814,14 +823,15 @@ abstract class _$$EpisodeStatsImplCopyWith<$Res>
   @override
   @useResult
   $Res call(
-      {String guid,
+      {String pguid,
+      String guid,
       Duration position,
       Duration? duration,
       int playCount,
       Duration playTotal,
       int completeCount,
       bool inQueue,
-      bool downloaded,
+      DateTime? downloadedTime,
       DateTime? lastPlayedAt});
 }
 
@@ -836,6 +846,7 @@ class __$$EpisodeStatsImplCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
+    Object? pguid = null,
     Object? guid = null,
     Object? position = null,
     Object? duration = freezed,
@@ -843,10 +854,14 @@ class __$$EpisodeStatsImplCopyWithImpl<$Res>
     Object? playTotal = null,
     Object? completeCount = null,
     Object? inQueue = null,
-    Object? downloaded = null,
+    Object? downloadedTime = freezed,
     Object? lastPlayedAt = freezed,
   }) {
     return _then(_$EpisodeStatsImpl(
+      pguid: null == pguid
+          ? _value.pguid
+          : pguid // ignore: cast_nullable_to_non_nullable
+              as String,
       guid: null == guid
           ? _value.guid
           : guid // ignore: cast_nullable_to_non_nullable
@@ -875,10 +890,10 @@ class __$$EpisodeStatsImplCopyWithImpl<$Res>
           ? _value.inQueue
           : inQueue // ignore: cast_nullable_to_non_nullable
               as bool,
-      downloaded: null == downloaded
-          ? _value.downloaded
-          : downloaded // ignore: cast_nullable_to_non_nullable
-              as bool,
+      downloadedTime: freezed == downloadedTime
+          ? _value.downloadedTime
+          : downloadedTime // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
       lastPlayedAt: freezed == lastPlayedAt
           ? _value.lastPlayedAt
           : lastPlayedAt // ignore: cast_nullable_to_non_nullable
@@ -891,18 +906,23 @@ class __$$EpisodeStatsImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$EpisodeStatsImpl with DiagnosticableTreeMixin implements _EpisodeStats {
   const _$EpisodeStatsImpl(
-      {required this.guid,
+      {required this.pguid,
+      required this.guid,
       this.position = Duration.zero,
       this.duration,
       this.playCount = 0,
       this.playTotal = Duration.zero,
       this.completeCount = 0,
       this.inQueue = false,
-      this.downloaded = false,
+      this.downloadedTime,
       this.lastPlayedAt});
 
   factory _$EpisodeStatsImpl.fromJson(Map<String, dynamic> json) =>
       _$$EpisodeStatsImplFromJson(json);
+
+  /// The GUID for an associated podcast.
+  @override
+  final String pguid;
 
   /// A String GUID for the episode.
   @override
@@ -937,10 +957,9 @@ class _$EpisodeStatsImpl with DiagnosticableTreeMixin implements _EpisodeStats {
   @JsonKey()
   final bool inQueue;
 
-  /// Whether the episode is downloaded
+  /// Downloaded time
   @override
-  @JsonKey()
-  final bool downloaded;
+  final DateTime? downloadedTime;
 
   /// Latest playing start time
   @override
@@ -948,7 +967,7 @@ class _$EpisodeStatsImpl with DiagnosticableTreeMixin implements _EpisodeStats {
 
   @override
   String toString({DiagnosticLevel minLevel = DiagnosticLevel.info}) {
-    return 'EpisodeStats(guid: $guid, position: $position, duration: $duration, playCount: $playCount, playTotal: $playTotal, completeCount: $completeCount, inQueue: $inQueue, downloaded: $downloaded, lastPlayedAt: $lastPlayedAt)';
+    return 'EpisodeStats(pguid: $pguid, guid: $guid, position: $position, duration: $duration, playCount: $playCount, playTotal: $playTotal, completeCount: $completeCount, inQueue: $inQueue, downloadedTime: $downloadedTime, lastPlayedAt: $lastPlayedAt)';
   }
 
   @override
@@ -956,6 +975,7 @@ class _$EpisodeStatsImpl with DiagnosticableTreeMixin implements _EpisodeStats {
     super.debugFillProperties(properties);
     properties
       ..add(DiagnosticsProperty('type', 'EpisodeStats'))
+      ..add(DiagnosticsProperty('pguid', pguid))
       ..add(DiagnosticsProperty('guid', guid))
       ..add(DiagnosticsProperty('position', position))
       ..add(DiagnosticsProperty('duration', duration))
@@ -963,7 +983,7 @@ class _$EpisodeStatsImpl with DiagnosticableTreeMixin implements _EpisodeStats {
       ..add(DiagnosticsProperty('playTotal', playTotal))
       ..add(DiagnosticsProperty('completeCount', completeCount))
       ..add(DiagnosticsProperty('inQueue', inQueue))
-      ..add(DiagnosticsProperty('downloaded', downloaded))
+      ..add(DiagnosticsProperty('downloadedTime', downloadedTime))
       ..add(DiagnosticsProperty('lastPlayedAt', lastPlayedAt));
   }
 
@@ -972,6 +992,7 @@ class _$EpisodeStatsImpl with DiagnosticableTreeMixin implements _EpisodeStats {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$EpisodeStatsImpl &&
+            (identical(other.pguid, pguid) || other.pguid == pguid) &&
             (identical(other.guid, guid) || other.guid == guid) &&
             (identical(other.position, position) ||
                 other.position == position) &&
@@ -984,16 +1005,26 @@ class _$EpisodeStatsImpl with DiagnosticableTreeMixin implements _EpisodeStats {
             (identical(other.completeCount, completeCount) ||
                 other.completeCount == completeCount) &&
             (identical(other.inQueue, inQueue) || other.inQueue == inQueue) &&
-            (identical(other.downloaded, downloaded) ||
-                other.downloaded == downloaded) &&
+            (identical(other.downloadedTime, downloadedTime) ||
+                other.downloadedTime == downloadedTime) &&
             (identical(other.lastPlayedAt, lastPlayedAt) ||
                 other.lastPlayedAt == lastPlayedAt));
   }
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode => Object.hash(runtimeType, guid, position, duration,
-      playCount, playTotal, completeCount, inQueue, downloaded, lastPlayedAt);
+  int get hashCode => Object.hash(
+      runtimeType,
+      pguid,
+      guid,
+      position,
+      duration,
+      playCount,
+      playTotal,
+      completeCount,
+      inQueue,
+      downloadedTime,
+      lastPlayedAt);
 
   @JsonKey(ignore: true)
   @override
@@ -1011,19 +1042,24 @@ class _$EpisodeStatsImpl with DiagnosticableTreeMixin implements _EpisodeStats {
 
 abstract class _EpisodeStats implements EpisodeStats {
   const factory _EpisodeStats(
-      {required final String guid,
+      {required final String pguid,
+      required final String guid,
       final Duration position,
       final Duration? duration,
       final int playCount,
       final Duration playTotal,
       final int completeCount,
       final bool inQueue,
-      final bool downloaded,
+      final DateTime? downloadedTime,
       final DateTime? lastPlayedAt}) = _$EpisodeStatsImpl;
 
   factory _EpisodeStats.fromJson(Map<String, dynamic> json) =
       _$EpisodeStatsImpl.fromJson;
 
+  @override
+
+  /// The GUID for an associated podcast.
+  String get pguid;
   @override
 
   /// A String GUID for the episode.
@@ -1054,8 +1090,8 @@ abstract class _EpisodeStats implements EpisodeStats {
   bool get inQueue;
   @override
 
-  /// Whether the episode is downloaded
-  bool get downloaded;
+  /// Downloaded time
+  DateTime? get downloadedTime;
   @override
 
   /// Latest playing start time

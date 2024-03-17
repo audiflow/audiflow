@@ -561,12 +561,17 @@ class MobilePodcastService implements PodcastService {
   }
 
   Future<void> _addToAdhocQueue(Iterable<Episode> episodes) async {
-    final items = episodes.map((e) => QueueItem.adhoc(e.guid));
+    final items =
+        episodes.map((e) => QueueItem.adhoc(pguid: e.pguid, guid: e.guid));
     await _queueManager.replaceAll(items);
     await Future.wait(
       episodes.map(
         (e) => _repository.updateEpisodeStats(
-          EpisodeStatsUpdateParam(guid: e.guid, inQueue: true),
+          EpisodeStatsUpdateParam(
+            pguid: e.pguid,
+            guid: e.guid,
+            inQueue: true,
+          ),
         ),
       ),
     );

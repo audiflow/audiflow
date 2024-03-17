@@ -21,6 +21,7 @@ Map<String, dynamic> _$$QueueImplToJson(_$QueueImpl instance) =>
 _$QueueItemImpl _$$QueueItemImplFromJson(Map<String, dynamic> json) =>
     _$QueueItemImpl(
       id: json['id'] as String,
+      pguid: json['pguid'] as String,
       guid: json['guid'] as String,
       type: $enumDecode(_$QueueTypeEnumMap, json['type']),
     );
@@ -28,6 +29,7 @@ _$QueueItemImpl _$$QueueItemImplFromJson(Map<String, dynamic> json) =>
 Map<String, dynamic> _$$QueueItemImplToJson(_$QueueItemImpl instance) =>
     <String, dynamic>{
       'id': instance.id,
+      'pguid': instance.pguid,
       'guid': instance.guid,
       'type': _$QueueTypeEnumMap[instance.type]!,
     };
