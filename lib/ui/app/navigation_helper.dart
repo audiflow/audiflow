@@ -7,8 +7,8 @@
 import 'package:audiflow/entities/entities.dart';
 import 'package:audiflow/ui/app/app_bottom_navigation_bar.dart';
 import 'package:audiflow/ui/pages/episode_page.dart';
-import 'package:audiflow/ui/pages/podcast_chart_page.dart';
 import 'package:audiflow/ui/pages/podcast_details_page.dart';
+import 'package:audiflow/ui/pages/podcast_home_page.dart';
 import 'package:audiflow/ui/pages/podcast_season_page.dart';
 import 'package:audiflow/ui/pages/search_page.dart';
 import 'package:audiflow/ui/pages/settings_page.dart';
@@ -32,7 +32,7 @@ class NavigationHelper {
                 pageBuilder: (context, state) {
                   return NoTransitionPage(
                     key: state.pageKey,
-                    child: const PodcastChartPage(),
+                    child: const PodcastHomePage(),
                   );
                 },
                 routes: [

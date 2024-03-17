@@ -23,8 +23,8 @@ import 'package:scrolls_to_top/scrolls_to_top.dart';
 
 /// This widget renders the search bar and allows the user to search for
 /// podcasts.
-class PodcastChartPage extends HookConsumerWidget {
-  const PodcastChartPage({
+class PodcastHomePage extends HookConsumerWidget {
+  const PodcastHomePage({
     super.key,
   });
 
@@ -58,17 +58,27 @@ class PodcastChartPage extends HookConsumerWidget {
             CustomScrollView(
               controller: controller,
               slivers: <Widget>[
-                BasicAppBar(title: L10n.of(context)!.chart),
+                BasicAppBar(title: L10n.of(context)!.home),
                 const _SubscribedPodcasts(),
                 if (state.isLoading)
                   const FillRemainingLoading()
                 else if (state.hasError)
                   FillRemainingError.podcastNoResults()
-                else
+                else ...[
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 40, left: 20),
+                      child: Text(
+                        L10n.of(context)!.popularPodcasts,
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                    ),
+                  ),
                   SliverPadding(
                     padding: const EdgeInsets.only(top: 30),
                     sliver: PodcastList(results: state.value!.podcasts),
                   ),
+                ],
               ],
             ),
             const ErrorNotifier(),
