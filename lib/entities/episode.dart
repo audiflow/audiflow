@@ -83,6 +83,10 @@ class Episode with _$Episode {
 
     /// List of people of interest to the podcast.
     @Default([]) List<Person> persons,
+
+    /// True indicates this episode data is incomplete.
+    /// E.g. made from [EpisodeMetadata].
+    @Default(false) bool partialData,
   }) = _Episode;
 
   factory Episode.fromJson(Map<String, dynamic> json) =>
@@ -286,4 +290,20 @@ class EpisodeMetadata with _$EpisodeMetadata {
 
   factory EpisodeMetadata.fromJson(Map<String, dynamic> json) =>
       _$EpisodeMetadataFromJson(json);
+}
+
+extension EpisodeMetadataExt on EpisodeMetadata {
+  Episode toPartialEpisode() {
+    return Episode(
+      guid: guid,
+      pguid: pguid,
+      title: title,
+      description: '',
+      imageUrl: imageUrl,
+      thumbImageUrl: thumbImageUrl,
+      duration: duration,
+      publicationDate: publicationDate,
+      partialData: true,
+    );
+  }
 }

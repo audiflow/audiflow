@@ -39,6 +39,7 @@ _$EpisodeImpl _$$EpisodeImplFromJson(Map<String, dynamic> json) =>
               ?.map((e) => Person.fromJson(e as Map<String, dynamic>))
               .toList() ??
           const [],
+      partialData: json['partialData'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$$EpisodeImplToJson(_$EpisodeImpl instance) =>
@@ -61,6 +62,7 @@ Map<String, dynamic> _$$EpisodeImplToJson(_$EpisodeImpl instance) =>
       'chapters': instance.chapters.map((e) => e.toJson()).toList(),
       'transcriptUrls': instance.transcriptUrls.map((e) => e.toJson()).toList(),
       'persons': instance.persons.map((e) => e.toJson()).toList(),
+      'partialData': instance.partialData,
     };
 
 _$EpisodeStatsImpl _$$EpisodeStatsImplFromJson(Map<String, dynamic> json) =>
