@@ -88,7 +88,6 @@ void main() async {
             _ProvidersInitializer(
               child: SeasoningApp(
                 key: Key('SeasoningApp'),
-                // certificateAuthorityBytes: certificateAuthorityBytes,
               ),
             ),
           ],
