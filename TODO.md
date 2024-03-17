@@ -31,14 +31,14 @@ TODO
 - [ ] group by date range
 - [x] sort by episode#
 - [x] episode detail page
-- [ ] downloaded view
-- [ ] played view
-- [ ] unplayed view
+- [x] downloaded view
+- [x] played view
+- [x] unplayed view
 - [ ] display stats
   - [ ] total played length
   - [ ] completed times
-- [ ] position at the last played episode at the first view
-- [ ] tap-to-top
+- [x] position at the last played episode(menu)
+- [x] tap-to-top
 
 ### Queue
 - [x] order of adhoc queue registration
@@ -53,5 +53,11 @@ TODO
   - [x] from season episode page
   - [ ] from episode page
   - [ ] from podcast page?
-- [ ] limit cellular connection, include network swithing in the middle
+- [ ] limit cellular connection, include network switching in the middle
 - [ ] download one by one, at least it should care the episode the user is awaiting
+
+### Library
+- [ ] play history
+- [ ] smart playlist
+  - [ ] recently updated episodes
+  - [ ] custom
