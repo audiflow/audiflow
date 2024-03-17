@@ -6,7 +6,7 @@ part of 'podcast_info_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$podcastInfoHash() => r'2202cc0ddb245afbc7679de4c13a6bebb7478cbe';
+String _$podcastInfoHash() => r'af54568f6a03dfee41219e27761823b39db04e47';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -30,10 +30,10 @@ class _SystemHash {
 }
 
 abstract class _$PodcastInfo
-    extends BuildlessAutoDisposeAsyncNotifier<PodcastDetailsState> {
+    extends BuildlessAutoDisposeAsyncNotifier<PodcastInfoState> {
   late final PodcastMetadata metadata;
 
-  FutureOr<PodcastDetailsState> build(
+  FutureOr<PodcastInfoState> build(
     PodcastMetadata metadata,
   );
 }
@@ -43,7 +43,7 @@ abstract class _$PodcastInfo
 const podcastInfoProvider = PodcastInfoFamily();
 
 /// See also [PodcastInfo].
-class PodcastInfoFamily extends Family<AsyncValue<PodcastDetailsState>> {
+class PodcastInfoFamily extends Family<AsyncValue<PodcastInfoState>> {
   /// See also [PodcastInfo].
   const PodcastInfoFamily();
 
@@ -82,7 +82,7 @@ class PodcastInfoFamily extends Family<AsyncValue<PodcastDetailsState>> {
 
 /// See also [PodcastInfo].
 class PodcastInfoProvider extends AutoDisposeAsyncNotifierProviderImpl<
-    PodcastInfo, PodcastDetailsState> {
+    PodcastInfo, PodcastInfoState> {
   /// See also [PodcastInfo].
   PodcastInfoProvider(
     PodcastMetadata metadata,
@@ -113,7 +113,7 @@ class PodcastInfoProvider extends AutoDisposeAsyncNotifierProviderImpl<
   final PodcastMetadata metadata;
 
   @override
-  FutureOr<PodcastDetailsState> runNotifierBuild(
+  FutureOr<PodcastInfoState> runNotifierBuild(
     covariant PodcastInfo notifier,
   ) {
     return notifier.build(
@@ -138,7 +138,7 @@ class PodcastInfoProvider extends AutoDisposeAsyncNotifierProviderImpl<
   }
 
   @override
-  AutoDisposeAsyncNotifierProviderElement<PodcastInfo, PodcastDetailsState>
+  AutoDisposeAsyncNotifierProviderElement<PodcastInfo, PodcastInfoState>
       createElement() {
     return _PodcastInfoProviderElement(this);
   }
@@ -157,15 +157,14 @@ class PodcastInfoProvider extends AutoDisposeAsyncNotifierProviderImpl<
   }
 }
 
-mixin PodcastInfoRef
-    on AutoDisposeAsyncNotifierProviderRef<PodcastDetailsState> {
+mixin PodcastInfoRef on AutoDisposeAsyncNotifierProviderRef<PodcastInfoState> {
   /// The parameter `metadata` of this provider.
   PodcastMetadata get metadata;
 }
 
 class _PodcastInfoProviderElement
     extends AutoDisposeAsyncNotifierProviderElement<PodcastInfo,
-        PodcastDetailsState> with PodcastInfoRef {
+        PodcastInfoState> with PodcastInfoRef {
   _PodcastInfoProviderElement(super.provider);
 
   @override

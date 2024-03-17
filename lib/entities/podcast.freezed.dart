@@ -867,9 +867,6 @@ PodcastStats _$PodcastStatsFromJson(Map<String, dynamic> json) {
 mixin _$PodcastStats {
   String get guid => throw _privateConstructorUsedError;
   DateTime? get subscribedDate => throw _privateConstructorUsedError;
-  PodcastDetailViewMode get viewMode => throw _privateConstructorUsedError;
-  bool get ascend => throw _privateConstructorUsedError;
-  bool get ascendSeasonEpisodes => throw _privateConstructorUsedError;
   DateTime? get lastCheckedAt => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -884,13 +881,7 @@ abstract class $PodcastStatsCopyWith<$Res> {
           PodcastStats value, $Res Function(PodcastStats) then) =
       _$PodcastStatsCopyWithImpl<$Res, PodcastStats>;
   @useResult
-  $Res call(
-      {String guid,
-      DateTime? subscribedDate,
-      PodcastDetailViewMode viewMode,
-      bool ascend,
-      bool ascendSeasonEpisodes,
-      DateTime? lastCheckedAt});
+  $Res call({String guid, DateTime? subscribedDate, DateTime? lastCheckedAt});
 }
 
 /// @nodoc
@@ -908,9 +899,6 @@ class _$PodcastStatsCopyWithImpl<$Res, $Val extends PodcastStats>
   $Res call({
     Object? guid = null,
     Object? subscribedDate = freezed,
-    Object? viewMode = null,
-    Object? ascend = null,
-    Object? ascendSeasonEpisodes = null,
     Object? lastCheckedAt = freezed,
   }) {
     return _then(_value.copyWith(
@@ -922,18 +910,6 @@ class _$PodcastStatsCopyWithImpl<$Res, $Val extends PodcastStats>
           ? _value.subscribedDate
           : subscribedDate // ignore: cast_nullable_to_non_nullable
               as DateTime?,
-      viewMode: null == viewMode
-          ? _value.viewMode
-          : viewMode // ignore: cast_nullable_to_non_nullable
-              as PodcastDetailViewMode,
-      ascend: null == ascend
-          ? _value.ascend
-          : ascend // ignore: cast_nullable_to_non_nullable
-              as bool,
-      ascendSeasonEpisodes: null == ascendSeasonEpisodes
-          ? _value.ascendSeasonEpisodes
-          : ascendSeasonEpisodes // ignore: cast_nullable_to_non_nullable
-              as bool,
       lastCheckedAt: freezed == lastCheckedAt
           ? _value.lastCheckedAt
           : lastCheckedAt // ignore: cast_nullable_to_non_nullable
@@ -950,13 +926,7 @@ abstract class _$$PodcastStatsImplCopyWith<$Res>
       __$$PodcastStatsImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call(
-      {String guid,
-      DateTime? subscribedDate,
-      PodcastDetailViewMode viewMode,
-      bool ascend,
-      bool ascendSeasonEpisodes,
-      DateTime? lastCheckedAt});
+  $Res call({String guid, DateTime? subscribedDate, DateTime? lastCheckedAt});
 }
 
 /// @nodoc
@@ -972,9 +942,6 @@ class __$$PodcastStatsImplCopyWithImpl<$Res>
   $Res call({
     Object? guid = null,
     Object? subscribedDate = freezed,
-    Object? viewMode = null,
-    Object? ascend = null,
-    Object? ascendSeasonEpisodes = null,
     Object? lastCheckedAt = freezed,
   }) {
     return _then(_$PodcastStatsImpl(
@@ -986,18 +953,6 @@ class __$$PodcastStatsImplCopyWithImpl<$Res>
           ? _value.subscribedDate
           : subscribedDate // ignore: cast_nullable_to_non_nullable
               as DateTime?,
-      viewMode: null == viewMode
-          ? _value.viewMode
-          : viewMode // ignore: cast_nullable_to_non_nullable
-              as PodcastDetailViewMode,
-      ascend: null == ascend
-          ? _value.ascend
-          : ascend // ignore: cast_nullable_to_non_nullable
-              as bool,
-      ascendSeasonEpisodes: null == ascendSeasonEpisodes
-          ? _value.ascendSeasonEpisodes
-          : ascendSeasonEpisodes // ignore: cast_nullable_to_non_nullable
-              as bool,
       lastCheckedAt: freezed == lastCheckedAt
           ? _value.lastCheckedAt
           : lastCheckedAt // ignore: cast_nullable_to_non_nullable
@@ -1010,12 +965,7 @@ class __$$PodcastStatsImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$PodcastStatsImpl implements _PodcastStats {
   const _$PodcastStatsImpl(
-      {required this.guid,
-      this.subscribedDate,
-      this.viewMode = PodcastDetailViewMode.seasons,
-      this.ascend = false,
-      this.ascendSeasonEpisodes = true,
-      this.lastCheckedAt});
+      {required this.guid, this.subscribedDate, this.lastCheckedAt});
 
   factory _$PodcastStatsImpl.fromJson(Map<String, dynamic> json) =>
       _$$PodcastStatsImplFromJson(json);
@@ -1025,20 +975,11 @@ class _$PodcastStatsImpl implements _PodcastStats {
   @override
   final DateTime? subscribedDate;
   @override
-  @JsonKey()
-  final PodcastDetailViewMode viewMode;
-  @override
-  @JsonKey()
-  final bool ascend;
-  @override
-  @JsonKey()
-  final bool ascendSeasonEpisodes;
-  @override
   final DateTime? lastCheckedAt;
 
   @override
   String toString() {
-    return 'PodcastStats(guid: $guid, subscribedDate: $subscribedDate, viewMode: $viewMode, ascend: $ascend, ascendSeasonEpisodes: $ascendSeasonEpisodes, lastCheckedAt: $lastCheckedAt)';
+    return 'PodcastStats(guid: $guid, subscribedDate: $subscribedDate, lastCheckedAt: $lastCheckedAt)';
   }
 
   @override
@@ -1049,19 +990,14 @@ class _$PodcastStatsImpl implements _PodcastStats {
             (identical(other.guid, guid) || other.guid == guid) &&
             (identical(other.subscribedDate, subscribedDate) ||
                 other.subscribedDate == subscribedDate) &&
-            (identical(other.viewMode, viewMode) ||
-                other.viewMode == viewMode) &&
-            (identical(other.ascend, ascend) || other.ascend == ascend) &&
-            (identical(other.ascendSeasonEpisodes, ascendSeasonEpisodes) ||
-                other.ascendSeasonEpisodes == ascendSeasonEpisodes) &&
             (identical(other.lastCheckedAt, lastCheckedAt) ||
                 other.lastCheckedAt == lastCheckedAt));
   }
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode => Object.hash(runtimeType, guid, subscribedDate, viewMode,
-      ascend, ascendSeasonEpisodes, lastCheckedAt);
+  int get hashCode =>
+      Object.hash(runtimeType, guid, subscribedDate, lastCheckedAt);
 
   @JsonKey(ignore: true)
   @override
@@ -1081,9 +1017,6 @@ abstract class _PodcastStats implements PodcastStats {
   const factory _PodcastStats(
       {required final String guid,
       final DateTime? subscribedDate,
-      final PodcastDetailViewMode viewMode,
-      final bool ascend,
-      final bool ascendSeasonEpisodes,
       final DateTime? lastCheckedAt}) = _$PodcastStatsImpl;
 
   factory _PodcastStats.fromJson(Map<String, dynamic> json) =
@@ -1094,15 +1027,251 @@ abstract class _PodcastStats implements PodcastStats {
   @override
   DateTime? get subscribedDate;
   @override
+  DateTime? get lastCheckedAt;
+  @override
+  @JsonKey(ignore: true)
+  _$$PodcastStatsImplCopyWith<_$PodcastStatsImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+PodcastViewStats _$PodcastViewStatsFromJson(Map<String, dynamic> json) {
+  return _PodcastViewStats.fromJson(json);
+}
+
+/// @nodoc
+mixin _$PodcastViewStats {
+  String get guid => throw _privateConstructorUsedError;
+  PodcastDetailViewMode get viewMode => throw _privateConstructorUsedError;
+  bool get ascend => throw _privateConstructorUsedError;
+  bool get ascendSeasonEpisodes => throw _privateConstructorUsedError;
+  Map<String, DateTime> get listenedEpisodes =>
+      throw _privateConstructorUsedError;
+
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+  @JsonKey(ignore: true)
+  $PodcastViewStatsCopyWith<PodcastViewStats> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $PodcastViewStatsCopyWith<$Res> {
+  factory $PodcastViewStatsCopyWith(
+          PodcastViewStats value, $Res Function(PodcastViewStats) then) =
+      _$PodcastViewStatsCopyWithImpl<$Res, PodcastViewStats>;
+  @useResult
+  $Res call(
+      {String guid,
+      PodcastDetailViewMode viewMode,
+      bool ascend,
+      bool ascendSeasonEpisodes,
+      Map<String, DateTime> listenedEpisodes});
+}
+
+/// @nodoc
+class _$PodcastViewStatsCopyWithImpl<$Res, $Val extends PodcastViewStats>
+    implements $PodcastViewStatsCopyWith<$Res> {
+  _$PodcastViewStatsCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? guid = null,
+    Object? viewMode = null,
+    Object? ascend = null,
+    Object? ascendSeasonEpisodes = null,
+    Object? listenedEpisodes = null,
+  }) {
+    return _then(_value.copyWith(
+      guid: null == guid
+          ? _value.guid
+          : guid // ignore: cast_nullable_to_non_nullable
+              as String,
+      viewMode: null == viewMode
+          ? _value.viewMode
+          : viewMode // ignore: cast_nullable_to_non_nullable
+              as PodcastDetailViewMode,
+      ascend: null == ascend
+          ? _value.ascend
+          : ascend // ignore: cast_nullable_to_non_nullable
+              as bool,
+      ascendSeasonEpisodes: null == ascendSeasonEpisodes
+          ? _value.ascendSeasonEpisodes
+          : ascendSeasonEpisodes // ignore: cast_nullable_to_non_nullable
+              as bool,
+      listenedEpisodes: null == listenedEpisodes
+          ? _value.listenedEpisodes
+          : listenedEpisodes // ignore: cast_nullable_to_non_nullable
+              as Map<String, DateTime>,
+    ) as $Val);
+  }
+}
+
+/// @nodoc
+abstract class _$$PodcastViewStatsImplCopyWith<$Res>
+    implements $PodcastViewStatsCopyWith<$Res> {
+  factory _$$PodcastViewStatsImplCopyWith(_$PodcastViewStatsImpl value,
+          $Res Function(_$PodcastViewStatsImpl) then) =
+      __$$PodcastViewStatsImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call(
+      {String guid,
+      PodcastDetailViewMode viewMode,
+      bool ascend,
+      bool ascendSeasonEpisodes,
+      Map<String, DateTime> listenedEpisodes});
+}
+
+/// @nodoc
+class __$$PodcastViewStatsImplCopyWithImpl<$Res>
+    extends _$PodcastViewStatsCopyWithImpl<$Res, _$PodcastViewStatsImpl>
+    implements _$$PodcastViewStatsImplCopyWith<$Res> {
+  __$$PodcastViewStatsImplCopyWithImpl(_$PodcastViewStatsImpl _value,
+      $Res Function(_$PodcastViewStatsImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? guid = null,
+    Object? viewMode = null,
+    Object? ascend = null,
+    Object? ascendSeasonEpisodes = null,
+    Object? listenedEpisodes = null,
+  }) {
+    return _then(_$PodcastViewStatsImpl(
+      guid: null == guid
+          ? _value.guid
+          : guid // ignore: cast_nullable_to_non_nullable
+              as String,
+      viewMode: null == viewMode
+          ? _value.viewMode
+          : viewMode // ignore: cast_nullable_to_non_nullable
+              as PodcastDetailViewMode,
+      ascend: null == ascend
+          ? _value.ascend
+          : ascend // ignore: cast_nullable_to_non_nullable
+              as bool,
+      ascendSeasonEpisodes: null == ascendSeasonEpisodes
+          ? _value.ascendSeasonEpisodes
+          : ascendSeasonEpisodes // ignore: cast_nullable_to_non_nullable
+              as bool,
+      listenedEpisodes: null == listenedEpisodes
+          ? _value._listenedEpisodes
+          : listenedEpisodes // ignore: cast_nullable_to_non_nullable
+              as Map<String, DateTime>,
+    ));
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$PodcastViewStatsImpl implements _PodcastViewStats {
+  const _$PodcastViewStatsImpl(
+      {required this.guid,
+      this.viewMode = PodcastDetailViewMode.seasons,
+      this.ascend = false,
+      this.ascendSeasonEpisodes = true,
+      final Map<String, DateTime> listenedEpisodes =
+          const <String, DateTime>{}})
+      : _listenedEpisodes = listenedEpisodes;
+
+  factory _$PodcastViewStatsImpl.fromJson(Map<String, dynamic> json) =>
+      _$$PodcastViewStatsImplFromJson(json);
+
+  @override
+  final String guid;
+  @override
+  @JsonKey()
+  final PodcastDetailViewMode viewMode;
+  @override
+  @JsonKey()
+  final bool ascend;
+  @override
+  @JsonKey()
+  final bool ascendSeasonEpisodes;
+  final Map<String, DateTime> _listenedEpisodes;
+  @override
+  @JsonKey()
+  Map<String, DateTime> get listenedEpisodes {
+    if (_listenedEpisodes is EqualUnmodifiableMapView) return _listenedEpisodes;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableMapView(_listenedEpisodes);
+  }
+
+  @override
+  String toString() {
+    return 'PodcastViewStats(guid: $guid, viewMode: $viewMode, ascend: $ascend, ascendSeasonEpisodes: $ascendSeasonEpisodes, listenedEpisodes: $listenedEpisodes)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$PodcastViewStatsImpl &&
+            (identical(other.guid, guid) || other.guid == guid) &&
+            (identical(other.viewMode, viewMode) ||
+                other.viewMode == viewMode) &&
+            (identical(other.ascend, ascend) || other.ascend == ascend) &&
+            (identical(other.ascendSeasonEpisodes, ascendSeasonEpisodes) ||
+                other.ascendSeasonEpisodes == ascendSeasonEpisodes) &&
+            const DeepCollectionEquality()
+                .equals(other._listenedEpisodes, _listenedEpisodes));
+  }
+
+  @JsonKey(ignore: true)
+  @override
+  int get hashCode => Object.hash(
+      runtimeType,
+      guid,
+      viewMode,
+      ascend,
+      ascendSeasonEpisodes,
+      const DeepCollectionEquality().hash(_listenedEpisodes));
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$PodcastViewStatsImplCopyWith<_$PodcastViewStatsImpl> get copyWith =>
+      __$$PodcastViewStatsImplCopyWithImpl<_$PodcastViewStatsImpl>(
+          this, _$identity);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$PodcastViewStatsImplToJson(
+      this,
+    );
+  }
+}
+
+abstract class _PodcastViewStats implements PodcastViewStats {
+  const factory _PodcastViewStats(
+      {required final String guid,
+      final PodcastDetailViewMode viewMode,
+      final bool ascend,
+      final bool ascendSeasonEpisodes,
+      final Map<String, DateTime> listenedEpisodes}) = _$PodcastViewStatsImpl;
+
+  factory _PodcastViewStats.fromJson(Map<String, dynamic> json) =
+      _$PodcastViewStatsImpl.fromJson;
+
+  @override
+  String get guid;
+  @override
   PodcastDetailViewMode get viewMode;
   @override
   bool get ascend;
   @override
   bool get ascendSeasonEpisodes;
   @override
-  DateTime? get lastCheckedAt;
+  Map<String, DateTime> get listenedEpisodes;
   @override
   @JsonKey(ignore: true)
-  _$$PodcastStatsImplCopyWith<_$PodcastStatsImpl> get copyWith =>
+  _$$PodcastViewStatsImplCopyWith<_$PodcastViewStatsImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

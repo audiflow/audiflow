@@ -7,8 +7,8 @@
 // found in the LICENSE file.
 
 import 'package:audiflow/entities/entities.dart';
-import 'package:audiflow/providers/podcast/podcast_info_provider.dart';
 import 'package:audiflow/providers/podcast/podcast_seasons_provider.dart';
+import 'package:audiflow/providers/podcast/podcast_view_info_provider.dart';
 import 'package:audiflow/ui/podcast/season_tile.dart';
 import 'package:audiflow/ui/widgets/fill_remaining_error.dart';
 import 'package:audiflow/ui/widgets/fill_remaining_loading.dart';
@@ -32,14 +32,14 @@ class SeasonList extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final seasonsState = ref.watch(podcastSeasonsProvider(podcast.metadata));
-    final podcastState = ref.watch(podcastInfoProvider(podcast.metadata));
-    if (seasonsState.isLoading || podcastState.isLoading) {
+    final podcastViewState = ref.watch(podcastViewInfoProvider(podcast.guid));
+    if (podcastViewState.isLoading || podcastViewState.isLoading) {
       return const FillRemainingLoading();
     } else if (seasonsState.hasError || seasonsState.value!.isEmpty) {
       return FillRemainingError.podcastNoResults();
     }
 
-    final ascend = podcastState.valueOrNull?.stats?.ascend ?? false;
+    final ascend = podcastViewState.valueOrNull?.ascend ?? false;
     final seasons =
         ascend ? seasonsState.value!.reversed.toList() : seasonsState.value!;
     return SliverSafeArea(

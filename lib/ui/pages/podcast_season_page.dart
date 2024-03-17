@@ -8,7 +8,7 @@
 import 'package:audiflow/core/l10n.dart';
 import 'package:audiflow/core/types.dart';
 import 'package:audiflow/entities/entities.dart';
-import 'package:audiflow/providers/podcast/podcast_info_provider.dart';
+import 'package:audiflow/providers/podcast/podcast_view_info_provider.dart';
 import 'package:audiflow/services/podcast/podcast_service_provider.dart';
 import 'package:audiflow/ui/pages/app_bars/podcast_season_app_bar.dart';
 import 'package:audiflow/ui/podcast/contextual_play_button.dart';
@@ -38,10 +38,8 @@ class PodcastSeasonPage extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final scaffoldMessengerKey =
         useState(GlobalKey<ScaffoldMessengerState>()).value;
-    final podcastDetailsState =
-        ref.watch(podcastInfoProvider(podcast.metadata));
-    final ascend =
-        podcastDetailsState.valueOrNull?.stats?.ascendSeasonEpisodes ?? true;
+    final podcastViewState = ref.watch(podcastViewInfoProvider(podcast.guid));
+    final ascend = podcastViewState.valueOrNull?.ascendSeasonEpisodes ?? true;
 
     final controller = useScrollController();
     return Semantics(
@@ -50,14 +48,14 @@ class PodcastSeasonPage extends HookConsumerWidget {
       child: ScaffoldMessenger(
         key: scaffoldMessengerKey,
         child: ScrollsToTop(
-            onScrollsToTop: (event) async {
-              await controller.animateTo(
-                event.to,
-                duration: event.duration,
-                curve: event.curve,
-              );
-            },
-            child: Scaffold(
+          onScrollsToTop: (event) async {
+            await controller.animateTo(
+              event.to,
+              duration: event.duration,
+              curve: event.curve,
+            );
+          },
+          child: Scaffold(
             backgroundColor: Theme.of(context).scaffoldBackgroundColor,
             body: RefreshIndicator(
               displacement: 60,
@@ -71,9 +69,9 @@ class PodcastSeasonPage extends HookConsumerWidget {
                 physics: const AlwaysScrollableScrollPhysics(),
                 slivers: <Widget>[
                   PodcastSeasonAppBar(season: season, heroPrefix: heroPrefix),
-                  if (podcastDetailsState.isLoading)
+                  if (podcastViewState.isLoading)
                     const FillRemainingLoading()
-                  else if (podcastDetailsState.hasError)
+                  else if (podcastViewState.hasError)
                     FillRemainingError.podcastNoResults()
                   else ...[
                     SliverToBoxAdapter(
@@ -94,9 +92,11 @@ class PodcastSeasonPage extends HookConsumerWidget {
                             child: SortIconButton(
                               ascend: ascend,
                               onTap: () {
-                                final metadata = podcast.metadata;
                                 ref
-                                    .read(podcastInfoProvider(metadata).notifier)
+                                    .read(
+                                      podcastViewInfoProvider(podcast.guid)
+                                          .notifier,
+                                    )
                                     .toggleAscendSeasonEpisode();
                               },
                             ),
@@ -111,6 +111,7 @@ class PodcastSeasonPage extends HookConsumerWidget {
                       episodes: ascend
                           ? season.episodes
                           : season.episodes.reversed.toList(),
+                      scrollController: controller,
                     ),
                   ],
                 ],

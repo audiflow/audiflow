@@ -15,20 +15,20 @@ final _privateConstructorUsedError = UnsupportedError(
     'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
 
 /// @nodoc
-mixin _$PodcastDetailsState {
+mixin _$PodcastInfoState {
   Podcast get podcast => throw _privateConstructorUsedError;
   PodcastStats? get stats => throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
-  $PodcastDetailsStateCopyWith<PodcastDetailsState> get copyWith =>
+  $PodcastInfoStateCopyWith<PodcastInfoState> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class $PodcastDetailsStateCopyWith<$Res> {
-  factory $PodcastDetailsStateCopyWith(
-          PodcastDetailsState value, $Res Function(PodcastDetailsState) then) =
-      _$PodcastDetailsStateCopyWithImpl<$Res, PodcastDetailsState>;
+abstract class $PodcastInfoStateCopyWith<$Res> {
+  factory $PodcastInfoStateCopyWith(
+          PodcastInfoState value, $Res Function(PodcastInfoState) then) =
+      _$PodcastInfoStateCopyWithImpl<$Res, PodcastInfoState>;
   @useResult
   $Res call({Podcast podcast, PodcastStats? stats});
 
@@ -37,9 +37,9 @@ abstract class $PodcastDetailsStateCopyWith<$Res> {
 }
 
 /// @nodoc
-class _$PodcastDetailsStateCopyWithImpl<$Res, $Val extends PodcastDetailsState>
-    implements $PodcastDetailsStateCopyWith<$Res> {
-  _$PodcastDetailsStateCopyWithImpl(this._value, this._then);
+class _$PodcastInfoStateCopyWithImpl<$Res, $Val extends PodcastInfoState>
+    implements $PodcastInfoStateCopyWith<$Res> {
+  _$PodcastInfoStateCopyWithImpl(this._value, this._then);
 
   // ignore: unused_field
   final $Val _value;
@@ -86,11 +86,11 @@ class _$PodcastDetailsStateCopyWithImpl<$Res, $Val extends PodcastDetailsState>
 }
 
 /// @nodoc
-abstract class _$$PodcastDetailsStateImplCopyWith<$Res>
-    implements $PodcastDetailsStateCopyWith<$Res> {
-  factory _$$PodcastDetailsStateImplCopyWith(_$PodcastDetailsStateImpl value,
-          $Res Function(_$PodcastDetailsStateImpl) then) =
-      __$$PodcastDetailsStateImplCopyWithImpl<$Res>;
+abstract class _$$PodcastInfoStateImplCopyWith<$Res>
+    implements $PodcastInfoStateCopyWith<$Res> {
+  factory _$$PodcastInfoStateImplCopyWith(_$PodcastInfoStateImpl value,
+          $Res Function(_$PodcastInfoStateImpl) then) =
+      __$$PodcastInfoStateImplCopyWithImpl<$Res>;
   @override
   @useResult
   $Res call({Podcast podcast, PodcastStats? stats});
@@ -102,11 +102,11 @@ abstract class _$$PodcastDetailsStateImplCopyWith<$Res>
 }
 
 /// @nodoc
-class __$$PodcastDetailsStateImplCopyWithImpl<$Res>
-    extends _$PodcastDetailsStateCopyWithImpl<$Res, _$PodcastDetailsStateImpl>
-    implements _$$PodcastDetailsStateImplCopyWith<$Res> {
-  __$$PodcastDetailsStateImplCopyWithImpl(_$PodcastDetailsStateImpl _value,
-      $Res Function(_$PodcastDetailsStateImpl) _then)
+class __$$PodcastInfoStateImplCopyWithImpl<$Res>
+    extends _$PodcastInfoStateCopyWithImpl<$Res, _$PodcastInfoStateImpl>
+    implements _$$PodcastInfoStateImplCopyWith<$Res> {
+  __$$PodcastInfoStateImplCopyWithImpl(_$PodcastInfoStateImpl _value,
+      $Res Function(_$PodcastInfoStateImpl) _then)
       : super(_value, _then);
 
   @pragma('vm:prefer-inline')
@@ -115,7 +115,7 @@ class __$$PodcastDetailsStateImplCopyWithImpl<$Res>
     Object? podcast = null,
     Object? stats = freezed,
   }) {
-    return _then(_$PodcastDetailsStateImpl(
+    return _then(_$PodcastInfoStateImpl(
       podcast: null == podcast
           ? _value.podcast
           : podcast // ignore: cast_nullable_to_non_nullable
@@ -130,8 +130,8 @@ class __$$PodcastDetailsStateImplCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$PodcastDetailsStateImpl implements _PodcastDetailsState {
-  const _$PodcastDetailsStateImpl({required this.podcast, this.stats});
+class _$PodcastInfoStateImpl implements _PodcastInfoState {
+  const _$PodcastInfoStateImpl({required this.podcast, this.stats});
 
   @override
   final Podcast podcast;
@@ -140,14 +140,14 @@ class _$PodcastDetailsStateImpl implements _PodcastDetailsState {
 
   @override
   String toString() {
-    return 'PodcastDetailsState(podcast: $podcast, stats: $stats)';
+    return 'PodcastInfoState(podcast: $podcast, stats: $stats)';
   }
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$PodcastDetailsStateImpl &&
+            other is _$PodcastInfoStateImpl &&
             (identical(other.podcast, podcast) || other.podcast == podcast) &&
             (identical(other.stats, stats) || other.stats == stats));
   }
@@ -158,15 +158,15 @@ class _$PodcastDetailsStateImpl implements _PodcastDetailsState {
   @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
-  _$$PodcastDetailsStateImplCopyWith<_$PodcastDetailsStateImpl> get copyWith =>
-      __$$PodcastDetailsStateImplCopyWithImpl<_$PodcastDetailsStateImpl>(
+  _$$PodcastInfoStateImplCopyWith<_$PodcastInfoStateImpl> get copyWith =>
+      __$$PodcastInfoStateImplCopyWithImpl<_$PodcastInfoStateImpl>(
           this, _$identity);
 }
 
-abstract class _PodcastDetailsState implements PodcastDetailsState {
-  const factory _PodcastDetailsState(
+abstract class _PodcastInfoState implements PodcastInfoState {
+  const factory _PodcastInfoState(
       {required final Podcast podcast,
-      final PodcastStats? stats}) = _$PodcastDetailsStateImpl;
+      final PodcastStats? stats}) = _$PodcastInfoStateImpl;
 
   @override
   Podcast get podcast;
@@ -174,6 +174,6 @@ abstract class _PodcastDetailsState implements PodcastDetailsState {
   PodcastStats? get stats;
   @override
   @JsonKey(ignore: true)
-  _$$PodcastDetailsStateImplCopyWith<_$PodcastDetailsStateImpl> get copyWith =>
+  _$$PodcastInfoStateImplCopyWith<_$PodcastInfoStateImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

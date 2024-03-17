@@ -42,6 +42,8 @@ class SembastRepository extends Repository {
   final _podcastStore = stringMapStoreFactory.store('podcast');
   final _podcastMetadataStore = stringMapStoreFactory.store('podcastMetadata');
   final _podcastStatsStore = stringMapStoreFactory.store('podcastStats');
+  final _podcastViewStatsStore =
+      stringMapStoreFactory.store('podcastViewStats');
   final _episodeStore = stringMapStoreFactory.store('episode');
   final _episodeStatsStore = stringMapStoreFactory.store('episodeStats');
   final _downloadableStore = stringMapStoreFactory.store('downloadable');
@@ -244,13 +246,6 @@ class SembastRepository extends Repository {
   }
 
   @override
-  Future<void> savePodcastStats(PodcastStats stats) async {
-    log.fine('Update PodcastStats: ${stats.guid}');
-    await _podcastStatsStore.record(stats.guid).put(await _db, stats.toJson());
-    _podcastEventStream.add(PodcastStatsUpdatedEvent(stats));
-  }
-
-  @override
   Future<PodcastStats?> findPodcastStats(String guid) async {
     final value = await _podcastStatsStore.record(guid).get(await _db);
     return value == null ? null : PodcastStats.fromJson(value);
@@ -272,21 +267,53 @@ class SembastRepository extends Repository {
     final value = await _podcastStatsStore.record(param.guid).get(txn);
     final loaded = value == null ? null : PodcastStats.fromJson(value);
     final newStats = loaded?.copyWith(
-          viewMode: param.viewMode ?? loaded.viewMode,
-          ascend: param.ascend ?? loaded.ascend,
-          ascendSeasonEpisodes:
-              param.ascendSeasonEpisodes ?? loaded.ascendSeasonEpisodes,
           lastCheckedAt: param.lastCheckedAt ?? loaded.lastCheckedAt,
         ) ??
         PodcastStats(
           guid: param.guid,
-          viewMode: param.viewMode ?? PodcastDetailViewMode.episodes,
-          ascend: param.ascend ?? false,
-          ascendSeasonEpisodes: param.ascendSeasonEpisodes ?? true,
           lastCheckedAt: param.lastCheckedAt,
         );
     await _podcastStatsStore.record(param.guid).put(txn, newStats.toJson());
     return newStats;
+  }
+
+  // -- PodcastViewStats
+
+  @override
+  Future<PodcastViewStats?> findPodcastViewStats(String guid) async {
+    final value = await _podcastViewStatsStore.record(guid).get(await _db);
+    return value == null ? null : PodcastViewStats.fromJson(value);
+  }
+
+  @override
+  Future<PodcastViewStats> updatePodcastViewStats(
+    PodcastViewStatsUpdateParam param,
+  ) async {
+    final db = await _db;
+    final newViewStats = await db.transaction((txn) async {
+      final value = await _podcastViewStatsStore.record(param.guid).get(txn);
+      final loaded = value == null ? null : PodcastViewStats.fromJson(value);
+      final newViewStats = loaded?.copyWith(
+            viewMode: param.viewMode ?? loaded.viewMode,
+            ascend: param.ascend ?? loaded.ascend,
+            ascendSeasonEpisodes:
+                param.ascendSeasonEpisodes ?? loaded.ascendSeasonEpisodes,
+            listenedEpisodes: param.listenedEpisodes ?? loaded.listenedEpisodes,
+          ) ??
+          PodcastViewStats(
+            guid: param.guid,
+            viewMode: param.viewMode ?? PodcastDetailViewMode.episodes,
+            ascend: param.ascend ?? false,
+            ascendSeasonEpisodes: param.ascendSeasonEpisodes ?? true,
+            listenedEpisodes: param.listenedEpisodes ?? const {},
+          );
+      await _podcastStatsStore
+          .record(param.guid)
+          .put(txn, newViewStats.toJson());
+      return newViewStats;
+    });
+    _podcastEventStream.add(PodcastViewStatsUpdatedEvent(newViewStats));
+    return newViewStats;
   }
 
   // --- Episodes

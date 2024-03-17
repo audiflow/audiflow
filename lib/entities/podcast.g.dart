@@ -76,11 +76,6 @@ _$PodcastStatsImpl _$$PodcastStatsImplFromJson(Map<String, dynamic> json) =>
       subscribedDate: json['subscribedDate'] == null
           ? null
           : DateTime.parse(json['subscribedDate'] as String),
-      viewMode: $enumDecodeNullable(
-              _$PodcastDetailViewModeEnumMap, json['viewMode']) ??
-          PodcastDetailViewMode.seasons,
-      ascend: json['ascend'] as bool? ?? false,
-      ascendSeasonEpisodes: json['ascendSeasonEpisodes'] as bool? ?? true,
       lastCheckedAt: json['lastCheckedAt'] == null
           ? null
           : DateTime.parse(json['lastCheckedAt'] as String),
@@ -90,10 +85,34 @@ Map<String, dynamic> _$$PodcastStatsImplToJson(_$PodcastStatsImpl instance) =>
     <String, dynamic>{
       'guid': instance.guid,
       'subscribedDate': instance.subscribedDate?.toIso8601String(),
+      'lastCheckedAt': instance.lastCheckedAt?.toIso8601String(),
+    };
+
+_$PodcastViewStatsImpl _$$PodcastViewStatsImplFromJson(
+        Map<String, dynamic> json) =>
+    _$PodcastViewStatsImpl(
+      guid: json['guid'] as String,
+      viewMode: $enumDecodeNullable(
+              _$PodcastDetailViewModeEnumMap, json['viewMode']) ??
+          PodcastDetailViewMode.seasons,
+      ascend: json['ascend'] as bool? ?? false,
+      ascendSeasonEpisodes: json['ascendSeasonEpisodes'] as bool? ?? true,
+      listenedEpisodes:
+          (json['listenedEpisodes'] as Map<String, dynamic>?)?.map(
+                (k, e) => MapEntry(k, DateTime.parse(e as String)),
+              ) ??
+              const <String, DateTime>{},
+    );
+
+Map<String, dynamic> _$$PodcastViewStatsImplToJson(
+        _$PodcastViewStatsImpl instance) =>
+    <String, dynamic>{
+      'guid': instance.guid,
       'viewMode': _$PodcastDetailViewModeEnumMap[instance.viewMode]!,
       'ascend': instance.ascend,
       'ascendSeasonEpisodes': instance.ascendSeasonEpisodes,
-      'lastCheckedAt': instance.lastCheckedAt?.toIso8601String(),
+      'listenedEpisodes': instance.listenedEpisodes
+          .map((k, e) => MapEntry(k, e.toIso8601String())),
     };
 
 const _$PodcastDetailViewModeEnumMap = {

@@ -23,13 +23,14 @@ class PodcastInfo extends _$PodcastInfo {
 
   Repository get _repository => ref.read(repositoryProvider);
 
+  PodcastService get _podcastService => ref.read(podcastServiceProvider);
+
   @override
-  Future<PodcastDetailsState> build(PodcastMetadata metadata) async {
+  Future<PodcastInfoState> build(PodcastMetadata metadata) async {
     _log.fine('build ${metadata.guid} ${metadata.title}');
-    final podcastService = ref.read(podcastServiceProvider);
 
     final list = await Future.wait([
-      podcastService.loadPodcast(metadata),
+      _podcastService.loadPodcast(metadata),
       _repository.findPodcastStats(metadata.guid),
     ]);
     final podcast = list[0] as Podcast?;
@@ -39,7 +40,7 @@ class PodcastInfo extends _$PodcastInfo {
     }
 
     _listen();
-    return PodcastDetailsState(
+    return PodcastInfoState(
       podcast: podcast,
       stats: podcastStats,
     );
@@ -47,82 +48,43 @@ class PodcastInfo extends _$PodcastInfo {
 
   void _listen() {
     ref.listen(podcastEventStreamProvider, (_, next) {
-      final event = next.valueOrNull;
-      switch (event) {
-        case PodcastSubscribedEvent(
-                podcast: final podcast,
-                stats: final stats
-              ) ||
-              PodcastUnsubscribedEvent(
-                podcast: final podcast,
-                stats: final stats
-              ):
-          if (podcast.guid == state.valueOrNull?.podcast.guid) {
-            state = AsyncData(
-              PodcastDetailsState(
-                podcast: podcast,
-                stats: stats,
-              ),
-            );
-          }
-        case PodcastUpdatedEvent(podcast: final podcast):
-          if (podcast.guid == state.valueOrNull?.podcast.guid) {
-            state = AsyncData(state.requireValue.copyWith(podcast: podcast));
-          }
-        case PodcastStatsUpdatedEvent(stats: final stats):
-          if (stats.guid == state.valueOrNull?.podcast.guid) {
-            state = AsyncData(state.requireValue.copyWith(stats: stats));
-          }
-        case null:
-      }
+      next.whenData((event) {
+        switch (event) {
+          case PodcastSubscribedEvent(
+          podcast: final podcast,
+          stats: final stats
+          ) ||
+          PodcastUnsubscribedEvent(
+          podcast: final podcast,
+          stats: final stats
+          ):
+            if (podcast.guid == state.valueOrNull?.podcast.guid) {
+              state = AsyncData(
+                PodcastInfoState(
+                  podcast: podcast,
+                  stats: stats,
+                ),
+              );
+            }
+          case PodcastUpdatedEvent(podcast: final podcast):
+            if (podcast.guid == state.valueOrNull?.podcast.guid) {
+              state = AsyncData(state.requireValue.copyWith(podcast: podcast));
+            }
+          case PodcastStatsUpdatedEvent(stats: final stats):
+            if (stats.guid == state.valueOrNull?.podcast.guid) {
+              state = AsyncData(state.requireValue.copyWith(stats: stats));
+            }
+          case PodcastViewStatsUpdatedEvent():
+        }
+      });
     });
-  }
-
-  void setViewMode(PodcastDetailViewMode viewMode) {
-    if (state.valueOrNull == null) {
-      return;
-    }
-
-    _repository.updatePodcastStats(
-      PodcastStatsUpdateParam(
-        guid: state.requireValue.podcast.guid,
-        viewMode: viewMode,
-      ),
-    );
-  }
-
-  void toggleAscend() {
-    if (state.valueOrNull == null) {
-      return;
-    }
-
-    _repository.updatePodcastStats(
-      PodcastStatsUpdateParam(
-        guid: state.requireValue.podcast.guid,
-        ascend: !(state.requireValue.stats?.ascend ?? false),
-      ),
-    );
-  }
-
-  void toggleAscendSeasonEpisode() {
-    if (state.valueOrNull == null) {
-      return;
-    }
-
-    _repository.updatePodcastStats(
-      PodcastStatsUpdateParam(
-        guid: state.requireValue.podcast.guid,
-        ascendSeasonEpisodes:
-            !(state.requireValue.stats?.ascendSeasonEpisodes ?? true),
-      ),
-    );
   }
 }
 
 @freezed
-class PodcastDetailsState with _$PodcastDetailsState {
-  const factory PodcastDetailsState({
+class PodcastInfoState with _$PodcastInfoState {
+  const factory PodcastInfoState({
     required Podcast podcast,
     PodcastStats? stats,
-  }) = _PodcastDetailsState;
+  }) = _PodcastInfoState;
 }

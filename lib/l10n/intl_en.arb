@@ -68,6 +68,8 @@
   "viewModePlayed": "Played",
   "viewModeUnplayed": "Unplayed",
   "viewModeDownloaded": "Downloaded",
+  "viewSortOldestToNewest": "Sort Oldest to Newest",
+  "jumpToLastEpisode": "Jump to last episode",
   "resume": "Resume",
   "play": "Play",
   "pause": "Pause",

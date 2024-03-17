@@ -5,8 +5,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'package:audiflow/core/l10n.dart';
 import 'package:audiflow/entities/podcast.dart';
 import 'package:audiflow/providers/podcast/podcast_info_provider.dart';
+import 'package:audiflow/providers/ui/episodes_list_event_provider.dart';
 import 'package:audiflow/services/podcast/podcast_service_provider.dart';
 import 'package:audiflow/ui/pages/app_bars/podcast_page_header_image.dart';
 import 'package:audiflow/ui/widgets/placeholder_builder.dart';
@@ -71,9 +73,20 @@ class PodcastDetailsAppBar extends ConsumerWidget {
                       },
                     ),
             ),
-            IconButton(
-              icon: const Icon(Icons.menu),
-              onPressed: () {},
+            PopupMenuButton<String>(
+              onSelected: (_) {
+                ref
+                    .read(episodesListEventStreamProvider.notifier)
+                    .add(const MenuScrollToEpisodeEvent());
+              },
+              itemBuilder: (BuildContext context) {
+                return ['jumpToLastEpisode'].map((String choice) {
+                  return PopupMenuItem<String>(
+                    value: choice,
+                    child: Text(L10n.of(context)!.jumpToLastEpisode),
+                  );
+                }).toList();
+              },
             ),
           ],
           flexibleSpace: FlexibleSpaceBar(

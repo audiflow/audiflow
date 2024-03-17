@@ -31,71 +31,75 @@ class ContextualPlayButton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final (captionText, icon, targetEpisode) =
-        _buttonCaptionAndIcon(context, ref);
-    return FilledButton.tonalIcon(
-      icon: AnimatedOpacity(
-        opacity: captionText == null ? 0 : 1,
-        duration: const Duration(milliseconds: 200),
-        child: Icon(icon),
-      ),
-      label: AnimatedOpacity(
-        opacity: captionText == null ? 0 : 1,
-        duration: const Duration(milliseconds: 200),
-        child: Text(captionText ?? ''),
-      ),
-      onPressed: targetEpisode == null
-          ? null
-          : () {
-              ref
-                  .read(episodesGroupProvider(episodeGroupKey).notifier)
-                  .togglePlayState(episode: targetEpisode);
-            },
+    return FutureBuilder(
+      future: _buttonCaptionAndIcon(context, ref),
+      builder: (context, snapshot) {
+        final (captionText, icon, targetEpisode) =
+            snapshot.data ?? (null, null, null);
+        return FilledButton.tonalIcon(
+          icon: AnimatedOpacity(
+            opacity: captionText == null ? 0 : 1,
+            duration: const Duration(milliseconds: 200),
+            child: Icon(icon),
+          ),
+          label: AnimatedOpacity(
+            opacity: captionText == null ? 0 : 1,
+            duration: const Duration(milliseconds: 200),
+            child: Text(captionText ?? ''),
+          ),
+          onPressed: targetEpisode == null
+              ? null
+              : () {
+                  ref
+                      .read(episodesGroupProvider(episodeGroupKey).notifier)
+                      .togglePlayState(episode: targetEpisode);
+                },
+        );
+      },
     );
   }
 
-  (String?, IconData?, Episode?) _buttonCaptionAndIcon(
+  Future<(String?, IconData?, Episode?)> _buttonCaptionAndIcon(
     BuildContext context,
     WidgetRef ref,
-  ) {
-    return ref.watch(episodesGroupProvider(episodeGroupKey)).maybeWhen(
-          data: (episodesState) {
-            final playerState = ref.watch(audioPlayerServiceProvider);
-            final isPlayerActive = playerState != null;
-            final playerEpisode = isPlayerActive
-                ? episodes
-                    .firstWhereOrNull((e) => e.guid == playerState.episode.guid)
-                : null;
+  ) async {
+    final playerState = ref.watch(audioPlayerServiceProvider);
+    final isPlayerActive = playerState != null;
+    final playerEpisode = isPlayerActive
+        ? episodes.firstWhereOrNull((e) => e.guid == playerState.episode.guid)
+        : null;
 
-            final l10n = L10n.of(context)!;
-            if (playerEpisode != null) {
-              if (playerState!.phase == PlayerPhase.play) {
-                return (l10n.pause, Symbols.pause_rounded, playerEpisode);
-              } else {
-                return (l10n.resume, Symbols.play_arrow_rounded, playerEpisode);
-              }
-            }
+    final l10n = L10n.of(context)!;
+    if (playerEpisode != null) {
+      if (playerState!.phase == PlayerPhase.play) {
+        return (l10n.pause, Symbols.pause_rounded, playerEpisode);
+      } else {
+        return (l10n.resume, Symbols.play_arrow_rounded, playerEpisode);
+      }
+    }
 
-            final (targetEpisode, buttonState) =
-                episodesState.nextEpisodeToPlay(
-              playOrder: playOrder,
-              isSeries: isSeries,
-            );
+    final state = ref.watch(episodesGroupProvider(episodeGroupKey));
+    if (!state.hasValue) {
+      return (null, null, null);
+    }
 
-            var captionText = '';
-            switch (buttonState) {
-              case ConditionalPlayButtonState.fromStart:
-                captionText = l10n.playFromStart;
-              case ConditionalPlayButtonState.latest:
-                captionText = l10n.playLatest;
-              case ConditionalPlayButtonState.latestAgain:
-                captionText = l10n.playAgain;
-              case ConditionalPlayButtonState.resume:
-                captionText = l10n.resume;
-            }
-            return (captionText, Symbols.play_arrow_rounded, targetEpisode);
-          },
-          orElse: () => (null, null, null),
+    final (targetEpisode, buttonState) = await ref
+        .read(episodesGroupProvider(episodeGroupKey).notifier)
+        .nextEpisodeToPlay(
+          playOrder: playOrder,
+          isSeries: isSeries,
         );
+    var captionText = '';
+    switch (buttonState) {
+      case ConditionalPlayButtonState.fromStart:
+        captionText = l10n.playFromStart;
+      case ConditionalPlayButtonState.latest:
+        captionText = l10n.playLatest;
+      case ConditionalPlayButtonState.latestAgain:
+        captionText = l10n.playAgain;
+      case ConditionalPlayButtonState.resume:
+        captionText = l10n.resume;
+    }
+    return (captionText, Symbols.play_arrow_rounded, targetEpisode);
   }
 }

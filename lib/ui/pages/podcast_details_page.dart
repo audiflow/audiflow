@@ -10,6 +10,8 @@ import 'package:audiflow/core/l10n.dart';
 import 'package:audiflow/entities/entities.dart';
 import 'package:audiflow/providers/podcast/podcast_info_provider.dart';
 import 'package:audiflow/providers/podcast/podcast_seasons_provider.dart';
+import 'package:audiflow/providers/podcast/podcast_view_info_provider.dart';
+import 'package:audiflow/providers/ui/episodes_list_event_provider.dart';
 import 'package:audiflow/services/podcast/podcast_service_provider.dart';
 import 'package:audiflow/services/settings/settings_service.dart';
 import 'package:audiflow/ui/pages/app_bars/podcast_details_app_bar.dart';
@@ -19,7 +21,6 @@ import 'package:audiflow/ui/podcast/season_list.dart';
 import 'package:audiflow/ui/widgets/fill_remaining_error.dart';
 import 'package:audiflow/ui/widgets/fill_remaining_loading.dart';
 import 'package:audiflow/ui/widgets/podcast_html.dart';
-import 'package:audiflow/ui/widgets/sort_icon_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_html/flutter_html.dart';
@@ -49,79 +50,86 @@ class PodcastDetailsPage extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final scaffoldMessengerKey =
         useState(GlobalKey<ScaffoldMessengerState>()).value;
-    final podcastDetailsState = ref.watch(podcastInfoProvider(metadata));
-    final podcast = podcastDetailsState.value?.podcast;
-    final stats = podcastDetailsState.value?.stats;
+
+    final podcastState = ref.watch(podcastInfoProvider(metadata));
+    final podcast = podcastState.value?.podcast;
     final seasonsState = podcast == null
         ? const AsyncLoading<List<Season>>()
         : ref.watch(podcastSeasonsProvider(podcast.metadata));
 
-    var viewMode = stats?.viewMode ?? PodcastDetailViewMode.seasons;
+    final podcastViewState = ref.watch(podcastViewInfoProvider(metadata.guid));
+    var viewMode =
+        podcastViewState.valueOrNull?.viewMode ?? PodcastDetailViewMode.seasons;
     if (seasonsState.valueOrNull?.isEmpty == true &&
         viewMode == PodcastDetailViewMode.seasons) {
       viewMode = PodcastDetailViewMode.episodes;
     }
-
-    final ascend = stats?.ascend ?? false;
+    final ascend = podcastViewState.valueOrNull?.ascend ?? false;
 
     final controller = useScrollController();
-    return Semantics(
-      header: false,
-      label: L10n.of(context)!.semantics_podcast_details_header,
-      child: ScaffoldMessenger(
-        key: scaffoldMessengerKey,
-        child: ScrollsToTop(
-          onScrollsToTop: (event) async {
-            await controller.animateTo(
-              event.to,
-              duration: event.duration,
-              curve: event.curve,
-            );
-          },
-          child: Scaffold(
-            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-            body: RefreshIndicator(
-              key: GlobalKey(),
-              displacement: 60,
-              onRefresh: () async {
-                await ref
-                    .read(podcastServiceProvider)
-                    .loadPodcast(metadata, refresh: true);
-              },
-              child: CustomScrollView(
-                controller: controller,
-                physics: const AlwaysScrollableScrollPhysics(),
-                slivers: <Widget>[
-                  PodcastDetailsAppBar(
-                    metadata: metadata,
-                    heroPrefix: heroPrefix,
-                    foregroundColor:
-                        paletteGenerator.lightMutedColor?.titleTextColor,
-                    backgroundColor: paletteGenerator.lightMutedColor?.color,
-                  ),
-                  if (podcastDetailsState.isLoading || seasonsState.isLoading)
-                    const FillRemainingLoading()
-                  else if (podcastDetailsState.hasError || podcast == null)
-                    FillRemainingError.podcastNoResults()
-                  else ...[
-                    _PodcastTitle(podcast),
-                    _SwitchBar(
-                      podcast: podcast,
-                      seasons: seasonsState.value!,
-                      viewMode: viewMode,
-                      ascend: ascend,
+    return ProviderScope(
+      overrides: [
+        episodesListEventStreamProvider
+            .overrideWith(EpisodesListEventStream.new),
+      ],
+      child: Semantics(
+        header: false,
+        label: L10n.of(context)!.semantics_podcast_details_header,
+        child: ScaffoldMessenger(
+          key: scaffoldMessengerKey,
+          child: ScrollsToTop(
+            onScrollsToTop: (event) async {
+              await controller.animateTo(
+                event.to,
+                duration: event.duration,
+                curve: event.curve,
+              );
+            },
+            child: Scaffold(
+              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+              body: RefreshIndicator(
+                displacement: 60,
+                onRefresh: () async {
+                  await ref
+                      .read(podcastServiceProvider)
+                      .loadPodcast(metadata, refresh: true);
+                },
+                child: CustomScrollView(
+                  controller: controller,
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  slivers: <Widget>[
+                    PodcastDetailsAppBar(
+                      metadata: metadata,
+                      heroPrefix: heroPrefix,
+                      foregroundColor:
+                          paletteGenerator.lightMutedColor?.titleTextColor,
+                      backgroundColor: paletteGenerator.lightMutedColor?.color,
                     ),
-                    viewMode == PodcastDetailViewMode.seasons
-                        ? SeasonList(podcast: podcast)
-                        : EpisodeList(
-                            episodeGroupKey: ValueKey(podcast.guid),
-                            metadata: podcast.metadata,
-                            episodes: ascend
-                                ? podcast.episodes.reversed.toList()
-                                : podcast.episodes,
-                          ),
+                    if (podcastState.isLoading || seasonsState.isLoading)
+                      const FillRemainingLoading()
+                    else if (podcastState.hasError || podcast == null)
+                      FillRemainingError.podcastNoResults()
+                    else ...[
+                      _PodcastTitle(podcast),
+                      _SwitchBar(
+                        podcast: podcast,
+                        seasons: seasonsState.value!,
+                        viewMode: viewMode,
+                        ascend: ascend,
+                      ),
+                      viewMode == PodcastDetailViewMode.seasons
+                          ? SeasonList(podcast: podcast)
+                          : EpisodeList(
+                              episodeGroupKey: ValueKey(podcast.guid),
+                              metadata: podcast.metadata,
+                              episodes: ascend
+                                  ? podcast.episodes.reversed.toList()
+                                  : podcast.episodes,
+                              scrollController: controller,
+                            ),
+                    ],
                   ],
-                ],
+                ),
               ),
             ),
           ),
@@ -260,18 +268,16 @@ class _SwitchBar extends ConsumerWidget {
           children: [
             _PodcastViewModeSwitch(
               viewMode: viewMode,
+              ascend: ascend,
               hasSeasons: seasons.isNotEmpty,
-              onChanged: (mode) {
+              onViewModeChanged: (mode) {
                 ref
-                    .read(podcastInfoProvider(podcast.metadata).notifier)
+                    .read(podcastViewInfoProvider(podcast.guid).notifier)
                     .setViewMode(mode);
               },
-            ),
-            SortIconButton(
-              ascend: ascend,
-              onTap: () {
+              onSortOrderChanged: () {
                 ref
-                    .read(podcastInfoProvider(podcast.metadata).notifier)
+                    .read(podcastViewInfoProvider(podcast.guid).notifier)
                     .toggleAscend();
               },
             ),
@@ -285,51 +291,85 @@ class _SwitchBar extends ConsumerWidget {
 class _PodcastViewModeSwitch extends StatelessWidget {
   const _PodcastViewModeSwitch({
     required this.viewMode,
+    required this.ascend,
     required this.hasSeasons,
-    required this.onChanged,
+    required this.onViewModeChanged,
+    required this.onSortOrderChanged,
   });
 
   final PodcastDetailViewMode viewMode;
+  final bool ascend;
   final bool hasSeasons;
-  final ValueChanged<PodcastDetailViewMode> onChanged;
+  final ValueChanged<PodcastDetailViewMode> onViewModeChanged;
+  final VoidCallback onSortOrderChanged;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return PopupMenuButton<PodcastDetailViewMode>(
-      onSelected: onChanged,
+    return PopupMenuButton<dynamic>(
+      onSelected: (value) {
+        if (value is PodcastDetailViewMode) {
+          onViewModeChanged(value);
+        } else if (value is bool) {
+          onSortOrderChanged();
+        }
+      },
       position: PopupMenuPosition.under,
       itemBuilder: (context) {
-        return PodcastDetailViewMode.values
-            .where(
-              (viewMode) =>
-                  hasSeasons || viewMode != PodcastDetailViewMode.seasons,
-            )
-            .map(
-              (mode) => PopupMenuItem(
-                value: mode,
-                height: 40,
-                child: Row(
-                  children: [
-                    mode == viewMode
-                        ? Icon(
-                            Symbols.check,
-                            color: theme.colorScheme.onSecondaryContainer,
-                            size: 18,
-                          )
-                        : const SizedBox(width: 18),
-                    const SizedBox(width: 4),
-                    Text(
-                      _labelOf(context, mode),
-                      style: TextStyle(
-                        color: theme.colorScheme.onSecondaryContainer,
+        return [
+          ...PodcastDetailViewMode.values
+              .where(
+                (viewMode) =>
+                    hasSeasons || viewMode != PodcastDetailViewMode.seasons,
+              )
+              .map(
+                (mode) => PopupMenuItem(
+                  value: mode,
+                  height: 40,
+                  child: Row(
+                    children: [
+                      mode == viewMode
+                          ? Icon(
+                              Symbols.check,
+                              color: theme.colorScheme.onSecondaryContainer,
+                              size: 18,
+                            )
+                          : const SizedBox(width: 18),
+                      const SizedBox(width: 4),
+                      Text(
+                        _labelOf(context, mode),
+                        style: TextStyle(
+                          color: theme.colorScheme.onSecondaryContainer,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            )
-            .toList();
+          const PopupMenuDivider(),
+          PopupMenuItem(
+            value: ascend,
+            height: 40,
+            child: Row(
+              children: [
+                ascend
+                    ? Icon(
+                        Symbols.check,
+                        color: theme.colorScheme.onSecondaryContainer,
+                        size: 18,
+                      )
+                    : const SizedBox(width: 18),
+                const SizedBox(width: 4),
+                Text(
+                  L10n.of(context)!.viewSortOldestToNewest,
+                  style: TextStyle(
+                    color: theme.colorScheme.onSecondaryContainer,
+                  ),
+                ),
+              ],
+            ),
+          )
+        ];
       },
       child: Row(
         children: [
