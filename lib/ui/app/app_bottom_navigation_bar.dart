@@ -6,6 +6,7 @@
 
 import 'dart:math' as math;
 
+import 'package:audiflow/core/l10n.dart';
 import 'package:audiflow/services/audio/audio_player_service.dart';
 import 'package:audiflow/services/podcast/podcast_service_provider.dart';
 import 'package:audiflow/ui/mini_player/utils.dart';
@@ -15,6 +16,7 @@ import 'package:flutter_gen/gen_l10n/messages_all.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 const double playerMinHeight = 80;
 
@@ -48,6 +50,7 @@ class AppBottomNavigationBar extends HookConsumerWidget {
     final playingEpisode = ref.watch(
       audioPlayerServiceProvider.select((state) => state?.episode),
     );
+    final l10n = L10n.of(context)!;
     final theme = Theme.of(context);
     return Scaffold(
       body: SafeArea(
@@ -120,17 +123,17 @@ class AppBottomNavigationBar extends HookConsumerWidget {
           selectedFontSize: 12,
           items: [
             BottomNavigationBarItem(
-              icon: const Icon(Icons.home),
-              label: AppLocalizations.of(context)!.home,
+              icon: const Icon(Symbols.home),
+              label: l10n.home,
             ),
             BottomNavigationBarItem(
-              icon: const Icon(Icons.search),
-              label: AppLocalizations.of(context)!.search,
+              icon: const Icon(Symbols.search),
+              label: l10n.search,
             ),
-            // const BottomNavigationBarItem(
-            //   icon: Icon(Icons.settings),
-            //   label: 'settings',
-            // ),
+            BottomNavigationBarItem(
+              icon: const Icon(Symbols.video_library),
+              label: l10n.library,
+            ),
           ],
         ),
       ),
