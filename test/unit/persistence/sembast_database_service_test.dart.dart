@@ -335,8 +335,15 @@ void main() {
       );
       await persistenceService.updateEpisodeStats(param);
       await persistenceService.saveRecentlyPlayedEpisode(
-        pguid: 'p$n',
-        guid: 'g$n',
+        EpisodeMetadata(
+          guid: 'g$n',
+          pguid: 'p$n',
+          title: '',
+          imageUrl: '',
+          thumbImageUrl: '',
+          duration: Duration.zero,
+          publicationDate: tm,
+        ),
         playedAt: generateTime(),
       );
     }
@@ -376,7 +383,7 @@ void main() {
       expect(cursor, isNotNull);
 
       (statsList, cursor) =
-      await persistenceService.findRecentlyPlayedEpisodeStatsList(
+          await persistenceService.findRecentlyPlayedEpisodeStatsList(
         limit: 3,
         cursor: cursor,
       );

@@ -536,7 +536,8 @@ class SembastRepository extends Repository {
 
   @override
   Future<List<EpisodeStats>> findDownloadedEpisodeStatsList(
-      String pguid) async {
+    String pguid,
+  ) async {
     final finder = Finder(
       filter: Filter.and([
         Filter.equals('pguid', pguid),
@@ -582,29 +583,25 @@ class SembastRepository extends Repository {
   // --- Recently played episodes
 
   @override
-  Future<void> saveRecentlyPlayedEpisode({
-    required String pguid,
-    required String guid,
+  Future<void> saveRecentlyPlayedEpisode(
+    EpisodeMetadata metadata, {
     DateTime? playedAt,
   }) async {
     final db = await _db;
     await db.transaction((txn) async {
       final finder = Finder(
-        filter: Filter.equals('guid', guid),
+        filter: Filter.equals('guid', metadata.guid),
       );
       await _recentlyPlayedStore.delete(txn, finder: finder);
 
-      final value = <String, dynamic>{
-        'pguid': pguid,
-        'guid': guid,
-        'playedAt': (playedAt ?? DateTime.now()).millisecondsSinceEpoch,
-      };
+      final value = Map<String, Object?>.from(metadata.toJson());
+      value['playedAt'] = (playedAt ?? DateTime.now()).millisecondsSinceEpoch;
       await _recentlyPlayedStore.add(txn, value);
     });
   }
 
   @override
-  Future<(List<EpisodeStats>, int?)> findRecentlyPlayedEpisodeStatsList({
+  Future<(List<EpisodeMetadata>, int?)> findRecentlyPlayedEpisodeStatsList({
     int? cursor,
     int limit = 100,
   }) async {
@@ -617,7 +614,7 @@ class SembastRepository extends Repository {
       final finder = Finder(sortOrders: [SortOrder(Field.key, false)]);
       key = await _recentlyPlayedStore.findKey(db, finder: finder);
       if (key == null) {
-        return (<EpisodeStats>[], null);
+        return (<EpisodeMetadata>[], null);
       }
       key++;
     }
@@ -635,15 +632,14 @@ class SembastRepository extends Repository {
     } while (snapshots.isEmpty && 1 < key);
 
     if (snapshots.isEmpty) {
-      return (<EpisodeStats>[], null);
+      return (<EpisodeMetadata>[], null);
     }
 
-    final guids =
-        snapshots.map((snapshot) => snapshot.value['guid']! as String);
-    final statsList = await findEpisodeStatsList(guids)
-        .then((value) => value.whereNotNull().toList());
+    final list = snapshots
+        .map((snapshot) => EpisodeMetadata.fromJson(snapshot.value))
+        .toList();
     final nextCursor = snapshots.last.key;
-    return (statsList, 1 < nextCursor ? nextCursor : null);
+    return (list, 1 < nextCursor ? nextCursor : null);
   }
 
   // --- Downloads

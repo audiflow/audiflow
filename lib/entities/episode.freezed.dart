@@ -1101,3 +1101,285 @@ abstract class _EpisodeStats implements EpisodeStats {
   _$$EpisodeStatsImplCopyWith<_$EpisodeStatsImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
+
+EpisodeMetadata _$EpisodeMetadataFromJson(Map<String, dynamic> json) {
+  return _EpisodeMetadata.fromJson(json);
+}
+
+/// @nodoc
+mixin _$EpisodeMetadata {
+  String get guid => throw _privateConstructorUsedError;
+  String get pguid => throw _privateConstructorUsedError;
+  String get title => throw _privateConstructorUsedError;
+  String get imageUrl => throw _privateConstructorUsedError;
+  String get thumbImageUrl => throw _privateConstructorUsedError;
+  Duration get duration => throw _privateConstructorUsedError;
+  DateTime? get publicationDate => throw _privateConstructorUsedError;
+
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+  @JsonKey(ignore: true)
+  $EpisodeMetadataCopyWith<EpisodeMetadata> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $EpisodeMetadataCopyWith<$Res> {
+  factory $EpisodeMetadataCopyWith(
+          EpisodeMetadata value, $Res Function(EpisodeMetadata) then) =
+      _$EpisodeMetadataCopyWithImpl<$Res, EpisodeMetadata>;
+  @useResult
+  $Res call(
+      {String guid,
+      String pguid,
+      String title,
+      String imageUrl,
+      String thumbImageUrl,
+      Duration duration,
+      DateTime? publicationDate});
+}
+
+/// @nodoc
+class _$EpisodeMetadataCopyWithImpl<$Res, $Val extends EpisodeMetadata>
+    implements $EpisodeMetadataCopyWith<$Res> {
+  _$EpisodeMetadataCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? guid = null,
+    Object? pguid = null,
+    Object? title = null,
+    Object? imageUrl = null,
+    Object? thumbImageUrl = null,
+    Object? duration = null,
+    Object? publicationDate = freezed,
+  }) {
+    return _then(_value.copyWith(
+      guid: null == guid
+          ? _value.guid
+          : guid // ignore: cast_nullable_to_non_nullable
+              as String,
+      pguid: null == pguid
+          ? _value.pguid
+          : pguid // ignore: cast_nullable_to_non_nullable
+              as String,
+      title: null == title
+          ? _value.title
+          : title // ignore: cast_nullable_to_non_nullable
+              as String,
+      imageUrl: null == imageUrl
+          ? _value.imageUrl
+          : imageUrl // ignore: cast_nullable_to_non_nullable
+              as String,
+      thumbImageUrl: null == thumbImageUrl
+          ? _value.thumbImageUrl
+          : thumbImageUrl // ignore: cast_nullable_to_non_nullable
+              as String,
+      duration: null == duration
+          ? _value.duration
+          : duration // ignore: cast_nullable_to_non_nullable
+              as Duration,
+      publicationDate: freezed == publicationDate
+          ? _value.publicationDate
+          : publicationDate // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
+    ) as $Val);
+  }
+}
+
+/// @nodoc
+abstract class _$$EpisodeMetadataImplCopyWith<$Res>
+    implements $EpisodeMetadataCopyWith<$Res> {
+  factory _$$EpisodeMetadataImplCopyWith(_$EpisodeMetadataImpl value,
+          $Res Function(_$EpisodeMetadataImpl) then) =
+      __$$EpisodeMetadataImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call(
+      {String guid,
+      String pguid,
+      String title,
+      String imageUrl,
+      String thumbImageUrl,
+      Duration duration,
+      DateTime? publicationDate});
+}
+
+/// @nodoc
+class __$$EpisodeMetadataImplCopyWithImpl<$Res>
+    extends _$EpisodeMetadataCopyWithImpl<$Res, _$EpisodeMetadataImpl>
+    implements _$$EpisodeMetadataImplCopyWith<$Res> {
+  __$$EpisodeMetadataImplCopyWithImpl(
+      _$EpisodeMetadataImpl _value, $Res Function(_$EpisodeMetadataImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? guid = null,
+    Object? pguid = null,
+    Object? title = null,
+    Object? imageUrl = null,
+    Object? thumbImageUrl = null,
+    Object? duration = null,
+    Object? publicationDate = freezed,
+  }) {
+    return _then(_$EpisodeMetadataImpl(
+      guid: null == guid
+          ? _value.guid
+          : guid // ignore: cast_nullable_to_non_nullable
+              as String,
+      pguid: null == pguid
+          ? _value.pguid
+          : pguid // ignore: cast_nullable_to_non_nullable
+              as String,
+      title: null == title
+          ? _value.title
+          : title // ignore: cast_nullable_to_non_nullable
+              as String,
+      imageUrl: null == imageUrl
+          ? _value.imageUrl
+          : imageUrl // ignore: cast_nullable_to_non_nullable
+              as String,
+      thumbImageUrl: null == thumbImageUrl
+          ? _value.thumbImageUrl
+          : thumbImageUrl // ignore: cast_nullable_to_non_nullable
+              as String,
+      duration: null == duration
+          ? _value.duration
+          : duration // ignore: cast_nullable_to_non_nullable
+              as Duration,
+      publicationDate: freezed == publicationDate
+          ? _value.publicationDate
+          : publicationDate // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
+    ));
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$EpisodeMetadataImpl
+    with DiagnosticableTreeMixin
+    implements _EpisodeMetadata {
+  _$EpisodeMetadataImpl(
+      {required this.guid,
+      required this.pguid,
+      required this.title,
+      required this.imageUrl,
+      required this.thumbImageUrl,
+      required this.duration,
+      required this.publicationDate});
+
+  factory _$EpisodeMetadataImpl.fromJson(Map<String, dynamic> json) =>
+      _$$EpisodeMetadataImplFromJson(json);
+
+  @override
+  final String guid;
+  @override
+  final String pguid;
+  @override
+  final String title;
+  @override
+  final String imageUrl;
+  @override
+  final String thumbImageUrl;
+  @override
+  final Duration duration;
+  @override
+  final DateTime? publicationDate;
+
+  @override
+  String toString({DiagnosticLevel minLevel = DiagnosticLevel.info}) {
+    return 'EpisodeMetadata(guid: $guid, pguid: $pguid, title: $title, imageUrl: $imageUrl, thumbImageUrl: $thumbImageUrl, duration: $duration, publicationDate: $publicationDate)';
+  }
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DiagnosticsProperty('type', 'EpisodeMetadata'))
+      ..add(DiagnosticsProperty('guid', guid))
+      ..add(DiagnosticsProperty('pguid', pguid))
+      ..add(DiagnosticsProperty('title', title))
+      ..add(DiagnosticsProperty('imageUrl', imageUrl))
+      ..add(DiagnosticsProperty('thumbImageUrl', thumbImageUrl))
+      ..add(DiagnosticsProperty('duration', duration))
+      ..add(DiagnosticsProperty('publicationDate', publicationDate));
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$EpisodeMetadataImpl &&
+            (identical(other.guid, guid) || other.guid == guid) &&
+            (identical(other.pguid, pguid) || other.pguid == pguid) &&
+            (identical(other.title, title) || other.title == title) &&
+            (identical(other.imageUrl, imageUrl) ||
+                other.imageUrl == imageUrl) &&
+            (identical(other.thumbImageUrl, thumbImageUrl) ||
+                other.thumbImageUrl == thumbImageUrl) &&
+            (identical(other.duration, duration) ||
+                other.duration == duration) &&
+            (identical(other.publicationDate, publicationDate) ||
+                other.publicationDate == publicationDate));
+  }
+
+  @JsonKey(ignore: true)
+  @override
+  int get hashCode => Object.hash(runtimeType, guid, pguid, title, imageUrl,
+      thumbImageUrl, duration, publicationDate);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$EpisodeMetadataImplCopyWith<_$EpisodeMetadataImpl> get copyWith =>
+      __$$EpisodeMetadataImplCopyWithImpl<_$EpisodeMetadataImpl>(
+          this, _$identity);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$EpisodeMetadataImplToJson(
+      this,
+    );
+  }
+}
+
+abstract class _EpisodeMetadata implements EpisodeMetadata {
+  factory _EpisodeMetadata(
+      {required final String guid,
+      required final String pguid,
+      required final String title,
+      required final String imageUrl,
+      required final String thumbImageUrl,
+      required final Duration duration,
+      required final DateTime? publicationDate}) = _$EpisodeMetadataImpl;
+
+  factory _EpisodeMetadata.fromJson(Map<String, dynamic> json) =
+      _$EpisodeMetadataImpl.fromJson;
+
+  @override
+  String get guid;
+  @override
+  String get pguid;
+  @override
+  String get title;
+  @override
+  String get imageUrl;
+  @override
+  String get thumbImageUrl;
+  @override
+  Duration get duration;
+  @override
+  DateTime? get publicationDate;
+  @override
+  @JsonKey(ignore: true)
+  _$$EpisodeMetadataImplCopyWith<_$EpisodeMetadataImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}

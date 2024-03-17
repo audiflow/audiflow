@@ -259,3 +259,31 @@ class EpisodeStatsUpdateParam {
       inQueue == null &&
       downloadedTime == null;
 }
+
+@freezed
+class EpisodeMetadata with _$EpisodeMetadata {
+  factory EpisodeMetadata({
+    required String  guid,
+    required String  pguid,
+    required String  title,
+    required String  imageUrl,
+    required String  thumbImageUrl,
+    required Duration  duration,
+    required DateTime? publicationDate,
+  }) = _EpisodeMetadata;
+
+  factory EpisodeMetadata.fromEpisode(Episode episode) {
+    return EpisodeMetadata(
+      guid: episode.guid,
+      pguid: episode.pguid,
+      title: episode.title,
+      imageUrl: episode.imageUrl!,
+      thumbImageUrl: episode.thumbImageUrl!,
+      duration: episode.duration!,
+      publicationDate: episode.publicationDate,
+    );
+  }
+
+  factory EpisodeMetadata.fromJson(Map<String, dynamic> json) =>
+      _$EpisodeMetadataFromJson(json);
+}

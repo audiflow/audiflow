@@ -94,13 +94,12 @@ abstract class Repository {
 
   // --- Recently played episodes
 
-  Future<void> saveRecentlyPlayedEpisode({
-    required String pguid,
-    required String guid,
+  Future<void> saveRecentlyPlayedEpisode(
+    EpisodeMetadata metadata, {
     DateTime? playedAt,
   });
 
-  Future<(List<EpisodeStats>, int?)> findRecentlyPlayedEpisodeStatsList({
+  Future<(List<EpisodeMetadata>, int?)> findRecentlyPlayedEpisodeStatsList({
     int? cursor,
     int limit = 100,
   });
