@@ -121,7 +121,7 @@ class AppBottomNavigationBar extends HookConsumerWidget {
           items: [
             BottomNavigationBarItem(
               icon: const Icon(Icons.home),
-              label: AppLocalizations.of(context)!.chart,
+              label: AppLocalizations.of(context)!.home,
             ),
             BottomNavigationBarItem(
               icon: const Icon(Icons.search),
