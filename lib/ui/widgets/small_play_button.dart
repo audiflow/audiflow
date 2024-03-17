@@ -113,9 +113,9 @@ class _SmallProgressBar extends StatelessWidget {
       child: LinearProgressIndicator(
         minHeight: 3,
         value: percentage,
-        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         valueColor: AlwaysStoppedAnimation<Color>(
-          Theme.of(context).colorScheme.onPrimaryContainer,
+          Theme.of(context).colorScheme.onSurface,
         ),
       ),
     );
