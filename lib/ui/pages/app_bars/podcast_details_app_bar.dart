@@ -8,8 +8,8 @@
 import 'package:audiflow/core/l10n.dart';
 import 'package:audiflow/entities/podcast.dart';
 import 'package:audiflow/providers/podcast/podcast_info_provider.dart';
+import 'package:audiflow/providers/ui/episodes_list_event_provider.dart';
 import 'package:audiflow/services/podcast/podcast_service_provider.dart';
-import 'package:audiflow/ui/app/navigation_helper.dart';
 import 'package:audiflow/ui/pages/app_bars/podcast_page_header_image.dart';
 import 'package:audiflow/ui/widgets/placeholder_builder.dart';
 import 'package:flutter/material.dart';
@@ -75,9 +75,12 @@ class PodcastDetailsAppBar extends ConsumerWidget {
             ),
             PopupMenuButton<String>(
               onSelected: (_) {
+                ref
+                    .read(episodesListEventStreamProvider.notifier)
+                    .add(const MenuScrollToEpisodeEvent());
               },
               itemBuilder: (BuildContext context) {
-                return ['settings'].map((String choice) {
+                return ['jumpToLastEpisode'].map((String choice) {
                   return PopupMenuItem<String>(
                     value: choice,
                     child: Text(L10n.of(context)!.jumpToLastEpisode),

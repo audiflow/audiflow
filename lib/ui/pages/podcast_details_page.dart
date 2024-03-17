@@ -11,6 +11,7 @@ import 'package:audiflow/entities/entities.dart';
 import 'package:audiflow/providers/podcast/podcast_info_provider.dart';
 import 'package:audiflow/providers/podcast/podcast_seasons_provider.dart';
 import 'package:audiflow/providers/podcast/podcast_view_info_provider.dart';
+import 'package:audiflow/providers/ui/episodes_list_event_provider.dart';
 import 'package:audiflow/services/podcast/podcast_service_provider.dart';
 import 'package:audiflow/services/settings/settings_service.dart';
 import 'package:audiflow/ui/pages/app_bars/podcast_details_app_bar.dart';
@@ -63,66 +64,72 @@ class PodcastDetailsPage extends HookConsumerWidget {
         viewMode == PodcastDetailViewMode.seasons) {
       viewMode = PodcastDetailViewMode.episodes;
     }
-
     final ascend = podcastViewState.valueOrNull?.ascend ?? false;
 
     final controller = useScrollController();
-    return Semantics(
-      header: false,
-      label: L10n.of(context)!.semantics_podcast_details_header,
-      child: ScaffoldMessenger(
-        key: scaffoldMessengerKey,
-        child: ScrollsToTop(
-          onScrollsToTop: (event) async {
-            await controller.animateTo(
-              event.to,
-              duration: event.duration,
-              curve: event.curve,
-            );
-          },
-          child: Scaffold(
-            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-            body: RefreshIndicator(
-              displacement: 60,
-              onRefresh: () async {
-                await ref
-                    .read(podcastServiceProvider)
-                    .loadPodcast(metadata, refresh: true);
-              },
-              child: CustomScrollView(
-                controller: controller,
-                physics: const AlwaysScrollableScrollPhysics(),
-                slivers: <Widget>[
-                  PodcastDetailsAppBar(
-                    metadata: metadata,
-                    heroPrefix: heroPrefix,
-                    foregroundColor:
-                        paletteGenerator.lightMutedColor?.titleTextColor,
-                    backgroundColor: paletteGenerator.lightMutedColor?.color,
-                  ),
-                  if (podcastState.isLoading || seasonsState.isLoading)
-                    const FillRemainingLoading()
-                  else if (podcastState.hasError || podcast == null)
-                    FillRemainingError.podcastNoResults()
-                  else ...[
-                    _PodcastTitle(podcast),
-                    _SwitchBar(
-                      podcast: podcast,
-                      seasons: seasonsState.value!,
-                      viewMode: viewMode,
-                      ascend: ascend,
+    return ProviderScope(
+      overrides: [
+        episodesListEventStreamProvider
+            .overrideWith(EpisodesListEventStream.new),
+      ],
+      child: Semantics(
+        header: false,
+        label: L10n.of(context)!.semantics_podcast_details_header,
+        child: ScaffoldMessenger(
+          key: scaffoldMessengerKey,
+          child: ScrollsToTop(
+            onScrollsToTop: (event) async {
+              await controller.animateTo(
+                event.to,
+                duration: event.duration,
+                curve: event.curve,
+              );
+            },
+            child: Scaffold(
+              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+              body: RefreshIndicator(
+                displacement: 60,
+                onRefresh: () async {
+                  await ref
+                      .read(podcastServiceProvider)
+                      .loadPodcast(metadata, refresh: true);
+                },
+                child: CustomScrollView(
+                  controller: controller,
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  slivers: <Widget>[
+                    PodcastDetailsAppBar(
+                      metadata: metadata,
+                      heroPrefix: heroPrefix,
+                      foregroundColor:
+                          paletteGenerator.lightMutedColor?.titleTextColor,
+                      backgroundColor: paletteGenerator.lightMutedColor?.color,
                     ),
-                    viewMode == PodcastDetailViewMode.seasons
-                        ? SeasonList(podcast: podcast)
-                        : EpisodeList(
-                            episodeGroupKey: ValueKey(podcast.guid),
-                            metadata: podcast.metadata,
-                            episodes: ascend
-                                ? podcast.episodes.reversed.toList()
-                                : podcast.episodes,
-                          ),
+                    if (podcastState.isLoading || seasonsState.isLoading)
+                      const FillRemainingLoading()
+                    else if (podcastState.hasError || podcast == null)
+                      FillRemainingError.podcastNoResults()
+                    else ...[
+                      _PodcastTitle(podcast),
+                      _SwitchBar(
+                        podcast: podcast,
+                        seasons: seasonsState.value!,
+                        viewMode: viewMode,
+                        ascend: ascend,
+                      ),
+                      viewMode == PodcastDetailViewMode.seasons
+                          ? SeasonList(podcast: podcast)
+                          : EpisodeList(
+                              episodeGroupKey: ValueKey(podcast.guid),
+                              metadata: podcast.metadata,
+                              episodes: ascend
+                                  ? podcast.episodes.reversed.toList()
+                                  : podcast.episodes,
+                              scrollController: controller,
+                            ),
+                    ],
                   ],
-                ],
+                ),
               ),
             ),
           ),

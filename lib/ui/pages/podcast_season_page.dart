@@ -111,6 +111,7 @@ class PodcastSeasonPage extends HookConsumerWidget {
                       episodes: ascend
                           ? season.episodes
                           : season.episodes.reversed.toList(),
+                      scrollController: controller,
                     ),
                   ],
                 ],
