@@ -49,6 +49,9 @@ class AudioPositionSaver extends _$AudioPositionSaver {
                 lastPlayedAt: DateTime.now(),
               ),
             );
+            await repository.saveRecentlyPlayedEpisode(
+              EpisodeMetadata.fromEpisode(episode),
+            );
           } else if (action == AudioPlayerAction.completed) {
             if ((episode.duration?.inSeconds ?? 0) < 1) {
               return;
