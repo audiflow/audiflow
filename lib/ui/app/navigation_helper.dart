@@ -7,6 +7,7 @@
 import 'package:audiflow/entities/entities.dart';
 import 'package:audiflow/ui/app/app_bottom_navigation_bar.dart';
 import 'package:audiflow/ui/pages/episode_page.dart';
+import 'package:audiflow/ui/pages/library_page.dart';
 import 'package:audiflow/ui/pages/podcast_details_page.dart';
 import 'package:audiflow/ui/pages/podcast_home_page.dart';
 import 'package:audiflow/ui/pages/podcast_season_page.dart';
@@ -120,6 +121,20 @@ class NavigationHelper {
               ),
             ],
           ),
+          StatefulShellBranch(
+            navigatorKey: libraryTabNavigatorKey,
+            routes: [
+              GoRoute(
+                path: libraryPath,
+                pageBuilder: (context, state) {
+                  return _getPage(
+                    child: const LibraryPage(),
+                    state: state,
+                  );
+                },
+              ),
+            ],
+          ),
         ],
         builder: (context, state, navigationShell) {
           return AppBottomNavigationBar(
@@ -146,6 +161,8 @@ class NavigationHelper {
       GlobalKey<NavigatorState>();
   static final GlobalKey<NavigatorState> searchTabNavigatorKey =
       GlobalKey<NavigatorState>();
+  static final GlobalKey<NavigatorState> libraryTabNavigatorKey =
+      GlobalKey<NavigatorState>();
   static final GlobalKey<NavigatorState> settingsTabNavigatorKey =
       GlobalKey<NavigatorState>();
 
@@ -161,9 +178,8 @@ class NavigationHelper {
   static const String signInPath = '/signIn';
 
   static const String homePath = '/home';
-  static const String detailPath = '/home/detail';
   static const String searchPath = '/search';
-  static const String searchDetailPath = '/search';
+  static const String libraryPath = '/library';
 
   static Page<Widget> _getPage({
     required Widget child,
