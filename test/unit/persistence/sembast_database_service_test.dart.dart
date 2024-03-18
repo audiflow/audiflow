@@ -134,6 +134,16 @@ void main() {
       expect(actual[1].feedUrl, podcast2.feedUrl);
       expect(actual[2].feedUrl, podcast1.feedUrl);
     });
+
+    test('metadata cannot overwrite full podcast', () async {
+      final itemPartial =
+          PodcastMetadata.fromPodcast(podcast1).toPartialPodcast();
+      await repository.savePodcast(itemPartial);
+
+      final actual = await repository.findPodcast(podcast1.guid);
+      expect(actual!.metadataOnly, isFalse);
+      await repository.savePodcast(actual);
+    });
   });
 
   group('Podcast', () {

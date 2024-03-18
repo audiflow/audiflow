@@ -184,7 +184,8 @@ class SembastRepository extends Repository {
     final value = await record.get(txn);
     if (value == null ||
         (!podcast.metadataOnly && value['metadataOnly'] == true) ||
-        value['hash'] != podcast.hashCode) {
+        (podcast.metadataOnly == value['metadataOnly'] &&
+            value['hash'] != podcast.hashCode)) {
       final newValue = podcast.toJson();
       newValue['hash'] = podcast.hashCode;
       await record.put(txn, newValue);
@@ -374,7 +375,10 @@ class SembastRepository extends Repository {
   Future<void> _saveEpisode(Episode episode, DatabaseClient txn) async {
     final guid = episode.guid;
     final value = await _episodeStore.record(guid).get(txn);
-    if (value == null || value['hash'] != episode.hashCode) {
+    if (value == null ||
+        (!episode.metadataOnly && value['metadataOnly'] == true) ||
+        (episode.metadataOnly == value['metadataOnly'] &&
+            value['hash'] != episode.hashCode)) {
       final value = episode.toJson();
       value['hash'] = episode.hashCode;
       await _episodeStore.record(guid).put(txn, value);
