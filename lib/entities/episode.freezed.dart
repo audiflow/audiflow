@@ -1108,6 +1108,7 @@ mixin _$EpisodeMetadata {
   String get thumbImageUrl => throw _privateConstructorUsedError;
   Duration get duration => throw _privateConstructorUsedError;
   DateTime? get publicationDate => throw _privateConstructorUsedError;
+  String? get contentUrl => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -1128,7 +1129,8 @@ abstract class $EpisodeMetadataCopyWith<$Res> {
       String imageUrl,
       String thumbImageUrl,
       Duration duration,
-      DateTime? publicationDate});
+      DateTime? publicationDate,
+      String? contentUrl});
 }
 
 /// @nodoc
@@ -1151,6 +1153,7 @@ class _$EpisodeMetadataCopyWithImpl<$Res, $Val extends EpisodeMetadata>
     Object? thumbImageUrl = null,
     Object? duration = null,
     Object? publicationDate = freezed,
+    Object? contentUrl = freezed,
   }) {
     return _then(_value.copyWith(
       guid: null == guid
@@ -1181,6 +1184,10 @@ class _$EpisodeMetadataCopyWithImpl<$Res, $Val extends EpisodeMetadata>
           ? _value.publicationDate
           : publicationDate // ignore: cast_nullable_to_non_nullable
               as DateTime?,
+      contentUrl: freezed == contentUrl
+          ? _value.contentUrl
+          : contentUrl // ignore: cast_nullable_to_non_nullable
+              as String?,
     ) as $Val);
   }
 }
@@ -1200,7 +1207,8 @@ abstract class _$$EpisodeMetadataImplCopyWith<$Res>
       String imageUrl,
       String thumbImageUrl,
       Duration duration,
-      DateTime? publicationDate});
+      DateTime? publicationDate,
+      String? contentUrl});
 }
 
 /// @nodoc
@@ -1221,6 +1229,7 @@ class __$$EpisodeMetadataImplCopyWithImpl<$Res>
     Object? thumbImageUrl = null,
     Object? duration = null,
     Object? publicationDate = freezed,
+    Object? contentUrl = freezed,
   }) {
     return _then(_$EpisodeMetadataImpl(
       guid: null == guid
@@ -1251,6 +1260,10 @@ class __$$EpisodeMetadataImplCopyWithImpl<$Res>
           ? _value.publicationDate
           : publicationDate // ignore: cast_nullable_to_non_nullable
               as DateTime?,
+      contentUrl: freezed == contentUrl
+          ? _value.contentUrl
+          : contentUrl // ignore: cast_nullable_to_non_nullable
+              as String?,
     ));
   }
 }
@@ -1267,7 +1280,8 @@ class _$EpisodeMetadataImpl
       required this.imageUrl,
       required this.thumbImageUrl,
       required this.duration,
-      required this.publicationDate});
+      required this.publicationDate,
+      required this.contentUrl});
 
   factory _$EpisodeMetadataImpl.fromJson(Map<String, dynamic> json) =>
       _$$EpisodeMetadataImplFromJson(json);
@@ -1286,10 +1300,12 @@ class _$EpisodeMetadataImpl
   final Duration duration;
   @override
   final DateTime? publicationDate;
+  @override
+  final String? contentUrl;
 
   @override
   String toString({DiagnosticLevel minLevel = DiagnosticLevel.info}) {
-    return 'EpisodeMetadata(guid: $guid, pguid: $pguid, title: $title, imageUrl: $imageUrl, thumbImageUrl: $thumbImageUrl, duration: $duration, publicationDate: $publicationDate)';
+    return 'EpisodeMetadata(guid: $guid, pguid: $pguid, title: $title, imageUrl: $imageUrl, thumbImageUrl: $thumbImageUrl, duration: $duration, publicationDate: $publicationDate, contentUrl: $contentUrl)';
   }
 
   @override
@@ -1303,7 +1319,8 @@ class _$EpisodeMetadataImpl
       ..add(DiagnosticsProperty('imageUrl', imageUrl))
       ..add(DiagnosticsProperty('thumbImageUrl', thumbImageUrl))
       ..add(DiagnosticsProperty('duration', duration))
-      ..add(DiagnosticsProperty('publicationDate', publicationDate));
+      ..add(DiagnosticsProperty('publicationDate', publicationDate))
+      ..add(DiagnosticsProperty('contentUrl', contentUrl));
   }
 
   @override
@@ -1321,13 +1338,15 @@ class _$EpisodeMetadataImpl
             (identical(other.duration, duration) ||
                 other.duration == duration) &&
             (identical(other.publicationDate, publicationDate) ||
-                other.publicationDate == publicationDate));
+                other.publicationDate == publicationDate) &&
+            (identical(other.contentUrl, contentUrl) ||
+                other.contentUrl == contentUrl));
   }
 
   @JsonKey(ignore: true)
   @override
   int get hashCode => Object.hash(runtimeType, guid, pguid, title, imageUrl,
-      thumbImageUrl, duration, publicationDate);
+      thumbImageUrl, duration, publicationDate, contentUrl);
 
   @JsonKey(ignore: true)
   @override
@@ -1352,7 +1371,8 @@ abstract class _EpisodeMetadata implements EpisodeMetadata {
       required final String imageUrl,
       required final String thumbImageUrl,
       required final Duration duration,
-      required final DateTime? publicationDate}) = _$EpisodeMetadataImpl;
+      required final DateTime? publicationDate,
+      required final String? contentUrl}) = _$EpisodeMetadataImpl;
 
   factory _EpisodeMetadata.fromJson(Map<String, dynamic> json) =
       _$EpisodeMetadataImpl.fromJson;
@@ -1371,6 +1391,8 @@ abstract class _EpisodeMetadata implements EpisodeMetadata {
   Duration get duration;
   @override
   DateTime? get publicationDate;
+  @override
+  String? get contentUrl;
   @override
   @JsonKey(ignore: true)
   _$$EpisodeMetadataImplCopyWith<_$EpisodeMetadataImpl> get copyWith =>

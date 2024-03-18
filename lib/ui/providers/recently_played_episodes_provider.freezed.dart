@@ -16,7 +16,7 @@ final _privateConstructorUsedError = UnsupportedError(
 
 /// @nodoc
 mixin _$RecentlyPlayedEpisodesState {
-  List<EpisodeMetadata> get episodes => throw _privateConstructorUsedError;
+  List<Episode> get episodes => throw _privateConstructorUsedError;
   int? get cursor => throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
@@ -32,7 +32,7 @@ abstract class $RecentlyPlayedEpisodesStateCopyWith<$Res> {
       _$RecentlyPlayedEpisodesStateCopyWithImpl<$Res,
           RecentlyPlayedEpisodesState>;
   @useResult
-  $Res call({List<EpisodeMetadata> episodes, int? cursor});
+  $Res call({List<Episode> episodes, int? cursor});
 }
 
 /// @nodoc
@@ -56,7 +56,7 @@ class _$RecentlyPlayedEpisodesStateCopyWithImpl<$Res,
       episodes: null == episodes
           ? _value.episodes
           : episodes // ignore: cast_nullable_to_non_nullable
-              as List<EpisodeMetadata>,
+              as List<Episode>,
       cursor: freezed == cursor
           ? _value.cursor
           : cursor // ignore: cast_nullable_to_non_nullable
@@ -74,7 +74,7 @@ abstract class _$$RecentlyPlayedEpisodesStateImplCopyWith<$Res>
       __$$RecentlyPlayedEpisodesStateImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({List<EpisodeMetadata> episodes, int? cursor});
+  $Res call({List<Episode> episodes, int? cursor});
 }
 
 /// @nodoc
@@ -97,7 +97,7 @@ class __$$RecentlyPlayedEpisodesStateImplCopyWithImpl<$Res>
       episodes: null == episodes
           ? _value._episodes
           : episodes // ignore: cast_nullable_to_non_nullable
-              as List<EpisodeMetadata>,
+              as List<Episode>,
       cursor: freezed == cursor
           ? _value.cursor
           : cursor // ignore: cast_nullable_to_non_nullable
@@ -111,12 +111,12 @@ class __$$RecentlyPlayedEpisodesStateImplCopyWithImpl<$Res>
 class _$RecentlyPlayedEpisodesStateImpl
     implements _RecentlyPlayedEpisodesState {
   const _$RecentlyPlayedEpisodesStateImpl(
-      {required final List<EpisodeMetadata> episodes, required this.cursor})
+      {required final List<Episode> episodes, required this.cursor})
       : _episodes = episodes;
 
-  final List<EpisodeMetadata> _episodes;
+  final List<Episode> _episodes;
   @override
-  List<EpisodeMetadata> get episodes {
+  List<Episode> get episodes {
     if (_episodes is EqualUnmodifiableListView) return _episodes;
     // ignore: implicit_dynamic_type
     return EqualUnmodifiableListView(_episodes);
@@ -154,11 +154,11 @@ class _$RecentlyPlayedEpisodesStateImpl
 abstract class _RecentlyPlayedEpisodesState
     implements RecentlyPlayedEpisodesState {
   const factory _RecentlyPlayedEpisodesState(
-      {required final List<EpisodeMetadata> episodes,
+      {required final List<Episode> episodes,
       required final int? cursor}) = _$RecentlyPlayedEpisodesStateImpl;
 
   @override
-  List<EpisodeMetadata> get episodes;
+  List<Episode> get episodes;
   @override
   int? get cursor;
   @override

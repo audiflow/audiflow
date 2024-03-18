@@ -46,6 +46,23 @@ class PodcastMetadata with _$PodcastMetadata {
   factory PodcastMetadata.fromJson(Map<String, dynamic> json) =>
       _$PodcastMetadataFromJson(json);
 
+  factory PodcastMetadata.fromSearchResultItem(search.Item item) {
+    final guid = '${item.collectionId ?? item.feedUrl}';
+    final thumbImageUrl = item.thumbnailArtworkUrl;
+    final imageUrl = item.bestArtworkUrl;
+
+    return PodcastMetadata(
+      guid: guid,
+      feedUrl: item.feedUrl,
+      collectionId: item.collectionId ?? 0,
+      title: item.collectionName ?? item.trackName ?? '',
+      thumbImageUrl: thumbImageUrl,
+      imageUrl: imageUrl,
+      copyright: item.artistName ?? '',
+      releaseDate: item.releaseDate!,
+    );
+  }
+
   factory PodcastMetadata.fromPodcast(Podcast podcast) {
     return PodcastMetadata(
       guid: podcast.guid,
@@ -61,21 +78,7 @@ class PodcastMetadata with _$PodcastMetadata {
 }
 
 extension PodcastMetadataExtension on PodcastMetadata {
-  Podcast toPartialPodcast() {
-    return Podcast(
-      guid: guid,
-      collectionId: collectionId,
-      feedUrl: feedUrl,
-      linkUrl: '',
-      title: title,
-      description: '',
-      thumbImageUrl: thumbImageUrl,
-      imageUrl: imageUrl,
-      copyright: copyright,
-      releaseDate: releaseDate,
-      metadataOnly: true,
-    );
-  }
+  Podcast toPartialPodcast() => Podcast.fromMetadata(this);
 
   int get contentHash => Object.hash(
         guid,
@@ -145,26 +148,6 @@ class Podcast with _$Podcast {
   factory Podcast.fromJson(Map<String, dynamic> json) =>
       _$PodcastFromJson(json);
 
-  factory Podcast.fromSearchResultItem(search.Item item) {
-    final guid = '${item.collectionId ?? item.feedUrl}';
-    final thumbImageUrl = item.thumbnailArtworkUrl;
-    final imageUrl = item.bestArtworkUrl;
-
-    return Podcast(
-      guid: guid,
-      feedUrl: item.feedUrl,
-      linkUrl: '',
-      collectionId: item.collectionId ?? 0,
-      title: item.collectionName ?? item.trackName ?? '',
-      description: '',
-      thumbImageUrl: thumbImageUrl,
-      imageUrl: imageUrl,
-      copyright: item.artistName ?? '',
-      releaseDate: item.releaseDate!,
-      metadataOnly: true,
-    );
-  }
-
   factory Podcast.fromSearch(search.Podcast podcast, PodcastMetadata metadata) {
     final episodes = podcast.episodes
         .map(
@@ -198,9 +181,27 @@ class Podcast with _$Podcast {
       persons: persons,
     );
   }
+
+  factory Podcast.fromMetadata(PodcastMetadata metadata) {
+    return Podcast(
+      guid: metadata.guid,
+      collectionId: metadata.collectionId,
+      feedUrl: metadata.feedUrl,
+      linkUrl: '',
+      title: metadata.title,
+      description: '',
+      thumbImageUrl: metadata.thumbImageUrl,
+      imageUrl: metadata.imageUrl,
+      copyright: metadata.copyright,
+      releaseDate: metadata.releaseDate,
+      metadataOnly: true,
+    );
+  }
 }
 
 extension PodcastExtension on Podcast {
+  PodcastMetadata get metadata => PodcastMetadata.fromPodcast(this);
+
   int get contentHash => Object.hash(
         guid,
         collectionId,

@@ -25,13 +25,13 @@ class RecentlyPlayedEpisodes extends _$RecentlyPlayedEpisodes {
   Future<RecentlyPlayedEpisodesState> build() async {
     _log.fine('build');
 
-    final episodes = <EpisodeMetadata>[];
+    final episodes = <Episode>[];
 
-    List<EpisodeMetadata> list;
+    List<Episode> list;
     int? cursor;
     do {
       (list, cursor) =
-          await _repository.findRecentlyPlayedEpisodeStatsList(cursor: cursor);
+          await _repository.findRecentlyPlayedEpisodeList(cursor: cursor);
       episodes.addAll(list);
     } while (list.length < 50 && cursor != null);
 
@@ -53,7 +53,7 @@ class RecentlyPlayedEpisodes extends _$RecentlyPlayedEpisodes {
         final list = state.requireValue.episodes
             .where((e) => e.guid != episode.guid)
             .toList()
-          ..insert(0, EpisodeMetadata.fromEpisode(episode));
+          ..insert(0, episode);
         state = AsyncData(state.requireValue.copyWith(episodes: list));
       }
     });
@@ -63,7 +63,7 @@ class RecentlyPlayedEpisodes extends _$RecentlyPlayedEpisodes {
 @freezed
 class RecentlyPlayedEpisodesState with _$RecentlyPlayedEpisodesState {
   const factory RecentlyPlayedEpisodesState({
-    required List<EpisodeMetadata> episodes,
+    required List<Episode> episodes,
     required int? cursor,
   }) = _RecentlyPlayedEpisodesState;
 }

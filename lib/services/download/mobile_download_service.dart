@@ -240,27 +240,19 @@ class MobileDownloadService extends DownloadService {
   }
 
   Future<void> _onDownloadComplete(Downloadable download) async {
-    final stats = await _repository.findEpisodeStats(download.guid);
-    var updateParam = EpisodeStatsUpdateParam(
+    final updateParam = EpisodeStatsUpdateParam(
       pguid: download.pguid,
       guid: download.guid,
       downloadedTime: DateTime.now(),
     );
+    await _repository.updateEpisodeStats(updateParam);
 
-    if (stats?.duration != null) {
-      await _repository.updateEpisodeStats(updateParam);
-    } else {
+    var episode = await _repository.findEpisode(download.guid);
+    if (episode != null && episode.duration == null) {
       final path = await resolvePath(_appSettings, download);
       final mp3Info = MP3Processor.fromFile(File(path));
-
-      updateParam = updateParam.copyWith(duration: mp3Info.duration);
-      final stats = await _repository.updateEpisodeStats(updateParam);
-
-      var episode = await _repository.findEpisode(stats.guid);
-      if (episode != null) {
-        episode = episode.copyWith(duration: mp3Info.duration);
-        await _repository.saveEpisode(episode);
-      }
+      episode = episode.copyWith(duration: mp3Info.duration);
+      await _repository.saveEpisode(episode);
     }
   }
 }

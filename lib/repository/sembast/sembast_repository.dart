@@ -78,6 +78,14 @@ class SembastRepository extends Repository {
   // --- PodcastMetadata
 
   @override
+  Future<void> savePodcastMetadataList(Iterable<PodcastMetadata> list) =>
+      savePodcasts(list.map(Podcast.fromMetadata));
+
+  @override
+  Future<void> savePodcastMetadata(PodcastMetadata metadata) =>
+      savePodcast(metadata.toPartialPodcast());
+
+  @override
   Future<PodcastMetadata?> findPodcastMetadata(String guid) async {
     final value = await _podcastStore.record(guid).get(await _db);
     return value == null ? null : PodcastMetadata.fromJson(value);
@@ -617,7 +625,7 @@ class SembastRepository extends Repository {
   }
 
   @override
-  Future<(List<Episode>, int?)> findRecentlyPlayedEpisodeStatsList({
+  Future<(List<Episode>, int?)> findRecentlyPlayedEpisodeList({
     int? cursor,
     int limit = 100,
   }) async {

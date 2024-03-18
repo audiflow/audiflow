@@ -81,11 +81,10 @@ class NavigationHelper {
                     name: 'episode',
                     parentNavigatorKey: homeTabNavigatorKey,
                     pageBuilder: (context, state) {
-                      final (metadata, episode, heroPrefix) =
-                          state.extra! as (PodcastMetadata, Episode, String);
+                      final (episode, heroPrefix) =
+                          state.extra! as (Episode, String);
                       return _getPage(
                         child: EpisodePage(
-                          metadata: metadata,
                           episode: episode,
                           heroPrefix: heroPrefix,
                         ),
@@ -222,13 +221,12 @@ class NavigationHelper {
   }
 
   static Future<void> pushEpisodeDetail({
-    required PodcastMetadata metadata,
     required Episode episode,
     required String heroPrefix,
   }) async {
     await NavigationHelper.router.pushNamed(
       'episode',
-      extra: (metadata, episode, heroPrefix),
+      extra: (episode, heroPrefix),
     );
   }
 

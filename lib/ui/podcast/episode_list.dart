@@ -20,14 +20,14 @@ class EpisodeList extends HookConsumerWidget {
   const EpisodeList({
     super.key,
     required this.episodeGroupKey,
-    required this.metadata,
+    this.metadata,
     required this.episodes,
     required this.scrollController,
     this.thumbnailVisibility = ThumbnailVisibility.auto,
   });
 
   final Key episodeGroupKey;
-  final PodcastMetadata metadata;
+  final PodcastMetadata? metadata;
   final List<Episode> episodes;
   final ThumbnailVisibility thumbnailVisibility;
   final ScrollController scrollController;
@@ -89,7 +89,7 @@ class EpisodeList extends HookConsumerWidget {
               switch (thumbnailVisibility) {
                 case ThumbnailVisibility.auto:
                   showsThumbnail =
-                      episode.thumbImageUrl != metadata.thumbImageUrl;
+                      episode.thumbImageUrl != metadata?.thumbImageUrl;
                 case ThumbnailVisibility.visible:
                   showsThumbnail = true;
                 case ThumbnailVisibility.hidden:
@@ -98,7 +98,6 @@ class EpisodeList extends HookConsumerWidget {
 
               return EpisodeTile(
                 showsThumbnail: showsThumbnail,
-                metadata: metadata,
                 episode: episode,
               );
             },
@@ -119,7 +118,7 @@ class _ScrollOffsetCalculator {
   static const episodeTileNotThumbnailHeight = 124.0;
 
   static double calcOffset(
-    PodcastMetadata metadata,
+    PodcastMetadata? metadata,
     List<Episode> episodes,
     String guid,
   ) {
@@ -128,7 +127,7 @@ class _ScrollOffsetCalculator {
       if (episode.guid == guid) {
         break;
       }
-      final showsThumbnail = episode.thumbImageUrl != metadata.thumbImageUrl;
+      final showsThumbnail = episode.thumbImageUrl != metadata?.thumbImageUrl;
       offset += (showsThumbnail
           ? episodeTileWithThumbnailHeight
           : episodeTileNotThumbnailHeight);

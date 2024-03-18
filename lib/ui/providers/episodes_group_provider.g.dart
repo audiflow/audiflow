@@ -6,7 +6,7 @@ part of 'episodes_group_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$episodesGroupHash() => r'6dc8024adc2c3b7a9746ec556cf9a5afc1bc7ce4';
+String _$episodesGroupHash() => r'af4e7ade083c607e7c624e1d96dc164a3c002125';
 
 /// Copied from Dart SDK
 class _SystemHash {

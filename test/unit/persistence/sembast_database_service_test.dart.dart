@@ -93,9 +93,9 @@ void main() {
     tearDownAll(cleanUpRepository);
 
     test('findPodcastMetadata', () async {
-      final value = podcast1.toJson()..remove('feedUrl');
-      final podcast = PodcastMetadata.fromJson(value).toPartialPodcast();
-      await repository.savePodcast(podcast);
+      final podcast = podcast1.copyWith(feedUrl: null);
+      final metadata = podcast.metadata;
+      await repository.savePodcast(metadata.toPartialPodcast());
     });
 
     test('findPodcastMetadata', () async {
@@ -346,7 +346,7 @@ void main() {
 
     test('empty', () async {
       final (statsList, cursor) =
-          await repository.findRecentlyPlayedEpisodeStatsList();
+          await repository.findRecentlyPlayedEpisodeList();
       expect(statsList, isEmpty);
       expect(cursor, isNull);
     });
@@ -354,7 +354,7 @@ void main() {
     test('create on entry', () async {
       await addEntry(1);
       final (statsList, cursor) =
-          await repository.findRecentlyPlayedEpisodeStatsList();
+          await repository.findRecentlyPlayedEpisodeList();
       expect(statsList, hasLength(1));
       expect(cursor, isNull);
     });
@@ -366,18 +366,18 @@ void main() {
       await addEntry(2);
 
       var (statsList, cursor) =
-          await repository.findRecentlyPlayedEpisodeStatsList(limit: 3);
+          await repository.findRecentlyPlayedEpisodeList(limit: 3);
       expect(statsList.map((s) => s.guid), ['g2', 'g6', 'g5']);
       expect(cursor, isNotNull);
 
-      (statsList, cursor) = await repository.findRecentlyPlayedEpisodeStatsList(
+      (statsList, cursor) = await repository.findRecentlyPlayedEpisodeList(
         limit: 3,
         cursor: cursor,
       );
       expect(statsList.map((s) => s.guid), ['g4', 'g3']);
       expect(cursor, isNotNull);
 
-      (statsList, cursor) = await repository.findRecentlyPlayedEpisodeStatsList(
+      (statsList, cursor) = await repository.findRecentlyPlayedEpisodeList(
         limit: 3,
         cursor: cursor,
       );

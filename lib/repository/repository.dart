@@ -50,6 +50,10 @@ abstract class Repository {
 
   // --- PodcastMetadata
 
+  Future<void> savePodcastMetadataList(Iterable<PodcastMetadata> list);
+
+  Future<void> savePodcastMetadata(PodcastMetadata metadata);
+
   Future<PodcastMetadata?> findPodcastMetadata(String guid);
 
   Future<List<PodcastMetadata>> populatePodcastFeedUrl(
@@ -126,7 +130,7 @@ abstract class Repository {
     DateTime? playedAt,
   });
 
-  Future<(List<Episode>, int?)> findRecentlyPlayedEpisodeStatsList({
+  Future<(List<Episode>, int?)> findRecentlyPlayedEpisodeList({
     int? cursor,
     int limit = 100,
   });

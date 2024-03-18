@@ -63,7 +63,8 @@ class _ListTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final podcastState = ref.watch(podcastInfoProvider(metadata));
+    final podcastState =
+        ref.watch(podcastInfoProvider(metadata.guid, needsEpisodes: true));
     if (!podcastState.hasValue) {
       return const SizedBox.shrink();
     }

@@ -93,7 +93,7 @@ class PodcastSearch extends _$PodcastSearch {
         explicit: event.explicit,
         podcasts: metadataList,
       );
-      await _repository.savePodcastMetadata(metadataList);
+      await _repository.savePodcastMetadataList(metadataList);
       state = AsyncData(newState);
     } on NetworkError catch (e) {
       _log.warning('Network error: ${e.type}');

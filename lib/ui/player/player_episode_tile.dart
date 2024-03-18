@@ -36,7 +36,6 @@ class PlayerEpisodeTile extends ConsumerWidget {
         onTap: () {
           if (state.valueOrNull?.podcastMetadata != null) {
             NavigationHelper.pushEpisodeDetail(
-              metadata: state.valueOrNull!.podcastMetadata,
               episode: episode,
               heroPrefix: 'episodeHero',
             );

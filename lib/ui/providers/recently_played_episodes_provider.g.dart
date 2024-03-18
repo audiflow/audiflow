@@ -7,7 +7,7 @@ part of 'recently_played_episodes_provider.dart';
 // **************************************************************************
 
 String _$recentlyPlayedEpisodesHash() =>
-    r'3c7e7f75d3f10187ce1ab5ee48747564d4a1a7da';
+    r'0b3fcb2fdc1f8e4dfba63e03c580f5e132b26a0e';
 
 /// See also [RecentlyPlayedEpisodes].
 @ProviderFor(RecentlyPlayedEpisodes)

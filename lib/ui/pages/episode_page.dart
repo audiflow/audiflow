@@ -11,6 +11,8 @@ import 'package:audiflow/services/podcast/podcast_service_provider.dart';
 import 'package:audiflow/ui/app/navigation_helper.dart';
 import 'package:audiflow/ui/pages/app_bars/episode_page_app_bar.dart';
 import 'package:audiflow/ui/providers/episode_info_provider.dart';
+import 'package:audiflow/ui/providers/podcast_info_provider.dart';
+import 'package:audiflow/ui/widgets/fill_remaining_loading.dart';
 import 'package:audiflow/ui/widgets/podcast_html.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -25,19 +27,20 @@ import 'package:scrolls_to_top/scrolls_to_top.dart';
 /// directly from a search result.
 class EpisodePage extends HookConsumerWidget {
   const EpisodePage({
-    required this.metadata,
     required this.episode,
     required this.heroPrefix,
     super.key,
   });
 
-  final PodcastMetadata metadata;
   final Episode episode;
   final String heroPrefix;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final controller = useScrollController();
+    final podcastState =
+        ref.watch(podcastInfoProvider(episode.pguid, needsEpisodes: false));
+    final metadata = podcastState.valueOrNull?.podcast.metadata;
     return ScrollsToTop(
       onScrollsToTop: (event) async {
         await controller.animateTo(
@@ -51,21 +54,31 @@ class EpisodePage extends HookConsumerWidget {
           controller: controller,
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: <Widget>[
-            EpisodePageAppBar(
-              metadata: metadata,
-              episode: episode,
-              heroPrefix: heroPrefix,
-            ),
-            SliverPadding(
-              padding: const EdgeInsets.only(top: 12),
-              sliver: DecoratedSliver(
-                decoration: BoxDecoration(
-                  color: Colors.grey[200],
+            if (podcastState.isLoading)
+              const FillRemainingLoading()
+            else if (podcastState.hasError)
+              SliverFillRemaining(
+                child: Center(
+                  child: Text(podcastState.error.toString()),
                 ),
-                sliver: _EpisodeHeader(metadata, episode),
+              )
+            else ...[
+              EpisodePageAppBar(
+                metadata: metadata!,
+                episode: episode,
+                heroPrefix: heroPrefix,
               ),
-            ),
-            _EpisodeBody(metadata, episode),
+              SliverPadding(
+                padding: const EdgeInsets.only(top: 12),
+                sliver: DecoratedSliver(
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                  ),
+                  sliver: _EpisodeHeader(metadata, episode),
+                ),
+              ),
+              _EpisodeBody(metadata, episode),
+            ],
           ],
         ),
       ),
@@ -221,7 +234,7 @@ class _EpisodePlayButton extends ConsumerWidget {
       return 'Play';
     }
 
-    final percentage = stats.percentagePlayed;
+    final percentage = stats.percentagePlayed(episode.duration);
     if (0 < percentage && percentage < 1) {
       return 'Resume';
     }

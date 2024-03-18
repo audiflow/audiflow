@@ -130,6 +130,21 @@ class Episode with _$Episode {
           episode.transcripts.map(TranscriptUrl.fromSearch).toList(),
     );
   }
+
+  factory Episode.fromMetadata(EpisodeMetadata metadata) {
+    return Episode(
+      guid: metadata.guid,
+      pguid: metadata.pguid,
+      title: metadata.title,
+      description: '',
+      imageUrl: metadata.imageUrl,
+      thumbImageUrl: metadata.thumbImageUrl,
+      duration: metadata.duration,
+      publicationDate: metadata.publicationDate,
+      contentUrl: metadata.contentUrl,
+      metadataOnly: true,
+    );
+  }
 }
 
 extension EpisodeExtension on Episode {
@@ -192,12 +207,15 @@ class EpisodeStats with _$EpisodeStats {
 extension EpisodeStatsExt on EpisodeStats {
   bool get downloaded => downloadedTime != null;
 
-// double get percentagePlayed => duration == null
-//     ? 0.0
-//     : position.inMilliseconds / duration!.inMilliseconds;
-//
-// Duration get timeRemaining =>
-//     duration == null ? Duration.zero : duration! - position;
+  double percentagePlayed(Duration? duration) {
+    return duration == null
+        ? 0.0
+        : position.inMilliseconds / duration.inMilliseconds;
+  }
+
+  Duration timeRemaining(Duration? duration) {
+    return duration == null ? Duration.zero : duration - position;
+  }
 }
 
 class EpisodeStatsUpdateParam {
@@ -265,6 +283,7 @@ class EpisodeMetadata with _$EpisodeMetadata {
     required String thumbImageUrl,
     required Duration duration,
     required DateTime? publicationDate,
+    required String? contentUrl,
   }) = _EpisodeMetadata;
 
   factory EpisodeMetadata.fromEpisode(Episode episode) {
@@ -276,6 +295,7 @@ class EpisodeMetadata with _$EpisodeMetadata {
       thumbImageUrl: episode.thumbImageUrl!,
       duration: episode.duration!,
       publicationDate: episode.publicationDate,
+      contentUrl: episode.contentUrl,
     );
   }
 
@@ -284,17 +304,5 @@ class EpisodeMetadata with _$EpisodeMetadata {
 }
 
 extension EpisodeMetadataExt on EpisodeMetadata {
-  Episode toPartialEpisode() {
-    return Episode(
-      guid: guid,
-      pguid: pguid,
-      title: title,
-      description: '',
-      imageUrl: imageUrl,
-      thumbImageUrl: thumbImageUrl,
-      duration: duration,
-      publicationDate: publicationDate,
-      metadataOnly: true,
-    );
-  }
+  Episode toPartialEpisode() => Episode.fromMetadata(this);
 }

@@ -111,6 +111,7 @@ _$EpisodeMetadataImpl _$$EpisodeMetadataImplFromJson(
       publicationDate: json['publicationDate'] == null
           ? null
           : DateTime.parse(json['publicationDate'] as String),
+      contentUrl: json['contentUrl'] as String?,
     );
 
 Map<String, dynamic> _$$EpisodeMetadataImplToJson(
@@ -123,4 +124,5 @@ Map<String, dynamic> _$$EpisodeMetadataImplToJson(
       'thumbImageUrl': instance.thumbImageUrl,
       'duration': instance.duration.inMicroseconds,
       'publicationDate': instance.publicationDate?.toIso8601String(),
+      'contentUrl': instance.contentUrl,
     };
