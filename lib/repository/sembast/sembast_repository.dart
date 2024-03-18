@@ -24,14 +24,12 @@ class SembastRepository extends Repository {
   SembastRepository(
     this._ref, {
     bool cleanup = true,
-    String databaseName = 'seasoning.db',
+    String databaseName = 'audiflow.db',
   }) {
     _databaseService = DatabaseService(databaseName, version: 1);
 
     if (cleanup) {
-      _cleanupEpisodes().then((value) {
-        log.fine('Orphan episodes cleanup complete');
-      });
+      _cleanupEpisodes();
     }
   }
 
@@ -40,7 +38,6 @@ class SembastRepository extends Repository {
 
   final _chartsStore = intMapStoreFactory.store('charts');
   final _podcastStore = stringMapStoreFactory.store('podcast');
-  final _podcastMetadataStore = stringMapStoreFactory.store('podcastMetadata');
   final _podcastStatsStore = stringMapStoreFactory.store('podcastStats');
   final _podcastViewStatsStore =
       stringMapStoreFactory.store('podcastViewStats');
@@ -81,27 +78,8 @@ class SembastRepository extends Repository {
   // --- PodcastMetadata
 
   @override
-  Future<void> savePodcastMetadata(
-    Iterable<PodcastMetadata> metadataList,
-  ) async {
-    final targets = metadataList.map(
-      (metadata) {
-        final value = metadata.toJson();
-        if (metadata.feedUrl == null || metadata.feedUrl!.isEmpty) {
-          value.remove('feedUrl');
-        }
-        return (metadata.guid, value);
-      },
-    );
-
-    await _podcastMetadataStore
-        .records(targets.map((target) => target.$1))
-        .put(await _db, targets.map((target) => target.$2).toList());
-  }
-
-  @override
   Future<PodcastMetadata?> findPodcastMetadata(String guid) async {
-    final value = await _podcastMetadataStore.record(guid).get(await _db);
+    final value = await _podcastStore.record(guid).get(await _db);
     return value == null ? null : PodcastMetadata.fromJson(value);
   }
 
@@ -116,7 +94,7 @@ class SembastRepository extends Repository {
       return items.toList();
     }
 
-    final values = await _podcastMetadataStore.records(guids).get(await _db);
+    final values = await _podcastStore.records(guids).get(await _db);
     var i = 0;
     return items.map((item) {
       if (item.feedUrl?.isNotEmpty == true) {
@@ -132,38 +110,8 @@ class SembastRepository extends Repository {
 
   @override
   Future<String?> findFeedUrl(String guid) async {
-    final value = await _podcastMetadataStore.record(guid).get(await _db);
-    return value?['feedUrl'] as String?;
-  }
-
-  // --- Podcast
-
-  @override
-  Future<void> savePodcast(
-    Podcast podcast, {
-    PodcastStatsUpdateParam? statsParam,
-  }) async {
-    log.fine('Save Podcast: ${podcast.feedUrl}');
-    final db = await _db;
-    final stats = await db.transaction((txn) async {
-      await _podcastStore.record(podcast.guid).put(txn, podcast.toJson());
-      return statsParam == null
-          ? null
-          : await _updatePodcastStats(txn, statsParam);
-    });
-    _podcastEventStream.add(PodcastUpdatedEvent(podcast, stats: stats));
-  }
-
-  @override
-  Future<Podcast?> findPodcast(String guid) async {
     final value = await _podcastStore.record(guid).get(await _db);
-    if (value == null) {
-      return null;
-    }
-
-    final podcast = Podcast.fromJson(value);
-    final episodes = await findEpisodesByPodcastGuid(podcast.guid);
-    return podcast.copyWith(episodes: episodes);
+    return value?['feedUrl'] as String?;
   }
 
   @override
@@ -195,6 +143,68 @@ class SembastRepository extends Repository {
     ).toList();
   }
 
+  // --- Podcast
+
+  @override
+  Future<void> savePodcasts(Iterable<Podcast> podcasts) async {
+    final db = await _db;
+    final updates = await db.transaction((txn) async {
+      return Future.wait(
+        podcasts.map((podcast) => _savePodcast(podcast, txn)),
+      );
+    });
+    for (final (i, updated) in updates.indexed) {
+      if (updated) {
+        _podcastEventStream.add(PodcastUpdatedEvent(podcasts.elementAt(i)));
+      }
+    }
+  }
+
+  @override
+  Future<void> savePodcast(
+    Podcast podcast, {
+    PodcastStatsUpdateParam? statsParam,
+  }) async {
+    log.fine('Save Podcast: ${podcast.feedUrl}');
+    final db = await _db;
+    final (updated, stats) = await db.transaction((txn) async {
+      final updated = await _savePodcast(podcast, txn);
+      final stats = statsParam == null
+          ? null
+          : await _updatePodcastStats(statsParam, txn);
+      return (updated, stats);
+    });
+    if (updated || stats != null) {
+      _podcastEventStream.add(PodcastUpdatedEvent(podcast, stats: stats));
+    }
+  }
+
+  Future<bool> _savePodcast(Podcast podcast, DatabaseClient txn) async {
+    final record = _podcastStore.record(podcast.guid);
+    final value = await record.get(txn);
+    if (value == null ||
+        (!podcast.metadataOnly && value['metadataOnly'] == true) ||
+        value['hash'] != podcast.hashCode) {
+      final newValue = podcast.toJson();
+      newValue['hash'] = podcast.hashCode;
+      await record.put(txn, newValue);
+      return true;
+    }
+    return false;
+  }
+
+  @override
+  Future<Podcast?> findPodcast(String guid) async {
+    final value = await _podcastStore.record(guid).get(await _db);
+    if (value == null) {
+      return null;
+    }
+
+    final podcast = Podcast.fromJson(value);
+    final episodes = await findEpisodesByPodcastGuid(podcast.guid);
+    return podcast.copyWith(episodes: episodes);
+  }
+
   // -- PodcastStats
 
   @override
@@ -202,26 +212,25 @@ class SembastRepository extends Repository {
     final db = await _db;
     final newStats = await db.transaction((txn) async {
       final value = await _podcastStatsStore.record(podcast.guid).get(txn);
-      final saved = value == null ? null : PodcastStats.fromJson(value);
-      if (saved?.subscribed == true) {
-        log.warning('subscribePodcast: already subscribed: ${podcast.guid}');
+      final subscribed = value != null && value['subscribedDate'] != null;
+      if (subscribed) {
+        log.warning('subscribePodcast: '
+            'already subscribed: ${podcast.guid} ${podcast.title}');
         return null;
       }
 
-      log.fine('subscribePodcast: ${podcast.guid}');
-      final newStats = saved != null
-          ? saved.copyWith(subscribedDate: DateTime.now())
-          : PodcastStats(
-              guid: podcast.guid,
-              subscribedDate: DateTime.now(),
-            );
+      log.fine('subscribe podcast: ${podcast.guid} ${podcast.title}');
+      final updateParam = PodcastStatsUpdateParam(
+        guid: podcast.guid,
+        subscribed: true,
+      );
 
-      await Future.wait([
-        _podcastStatsStore.record(newStats.guid).put(txn, newStats.toJson()),
-        _podcastStore.record(newStats.guid).put(txn, podcast.toJson()),
-        _saveEpisodes(podcast.episodes, db: txn),
+      final ret = await Future.wait<dynamic>([
+        _savePodcast(podcast, txn),
+        _updatePodcastStats(updateParam, txn),
+        _saveEpisodes(podcast.episodes, txn),
       ]);
-      return newStats;
+      return ret[1] as PodcastStats;
     });
 
     if (newStats != null) {
@@ -233,17 +242,30 @@ class SembastRepository extends Repository {
 
   @override
   Future<void> unsubscribePodcast(Podcast podcast) async {
-    final guid = podcast.guid;
-    final stats = await findPodcastStats(guid);
-    if (stats?.subscribed != true) {
-      log.warning('unsubscribePodcast: already unsubscribed: $guid');
-      return;
-    }
+    final db = await _db;
+    final newStats = await db.transaction((txn) async {
+      final value = await _podcastStatsStore.record(podcast.guid).get(txn);
+      final subscribed = value != null && value['subscribedDate'] != null;
+      if (!subscribed) {
+        log.warning('unsubscribePodcast: '
+            'already unsubscribed: ${podcast.guid} ${podcast.title}');
+        return null;
+      }
 
-    final newStats = stats!.copyWith(subscribedDate: null);
-    await _podcastStatsStore.record(guid).put(await _db, newStats.toJson());
-    log.warning('unsubscribed: $guid');
-    _podcastEventStream.add(PodcastUnsubscribedEvent(podcast, newStats));
+      log.fine('unsubscribe podcast: ${podcast.guid} ${podcast.title}');
+      final updateParam = PodcastStatsUpdateParam(
+        guid: podcast.guid,
+        subscribed: false,
+      );
+
+      return _updatePodcastStats(updateParam, txn);
+    });
+
+    if (newStats != null) {
+      _podcastEventStream
+        ..add(PodcastStatsUpdatedEvent(newStats))
+        ..add(PodcastUnsubscribedEvent(podcast, newStats));
+    }
   }
 
   @override
@@ -256,22 +278,32 @@ class SembastRepository extends Repository {
   Future<PodcastStats> updatePodcastStats(PodcastStatsUpdateParam param) async {
     final db = await _db;
     final stats =
-        await db.transaction((txn) => _updatePodcastStats(txn, param));
+        await db.transaction((txn) => _updatePodcastStats(param, txn));
     _podcastEventStream.add(PodcastStatsUpdatedEvent(stats));
     return stats;
   }
 
   Future<PodcastStats> _updatePodcastStats(
-    DatabaseClient txn,
     PodcastStatsUpdateParam param,
+    DatabaseClient txn,
   ) async {
     final value = await _podcastStatsStore.record(param.guid).get(txn);
     final loaded = value == null ? null : PodcastStats.fromJson(value);
     final newStats = loaded?.copyWith(
+          subscribedDate: param.subscribed == null
+              ? loaded.subscribedDate
+              : param.subscribed!
+                  ? DateTime.now()
+                  : null,
           lastCheckedAt: param.lastCheckedAt ?? loaded.lastCheckedAt,
         ) ??
         PodcastStats(
           guid: param.guid,
+          subscribedDate: param.subscribed == null
+              ? null
+              : param.subscribed!
+                  ? DateTime.now()
+                  : null,
           lastCheckedAt: param.lastCheckedAt,
         );
     await _podcastStatsStore.record(param.guid).put(txn, newStats.toJson());
@@ -321,53 +353,33 @@ class SembastRepository extends Repository {
 
   @override
   Future<void> saveEpisodes(Iterable<Episode> episodes) async {
-    await _saveEpisodes(episodes);
+    await _saveEpisodes(episodes, await _db);
   }
 
   @override
   Future<void> saveEpisode(Episode episode) async {
-    await _saveEpisode(episode);
+    await _saveEpisode(episode, await _db);
   }
 
   Future<void> _saveEpisodes(
-    Iterable<Episode> episodes, {
-    DatabaseClient? db,
-  }) async {
-    final client = db ?? await _db;
+    Iterable<Episode> episodes,
+    DatabaseClient txn,
+  ) async {
     for (final chunk in episodes.chunk(100)) {
-      final futures = chunk.map((e) => _saveEpisode(e, db: client));
+      final futures = chunk.map((e) => _saveEpisode(e, txn));
       await Future.wait(futures);
     }
   }
 
-  Future<void> _saveEpisode(
-    Episode episode, {
-    DatabaseClient? db,
-  }) async {
-    final client = db ?? await _db;
+  Future<void> _saveEpisode(Episode episode, DatabaseClient txn) async {
     final guid = episode.guid;
-    final [episodeValue, statsValue] = await Future.wait([
-      _episodeStore.record(guid).get(client),
-      _episodeStatsStore.record(guid).get(client),
-    ]);
-
-    if (statsValue != null) {
-      if (episode.partialData) {
-        return;
-      }
-      final loaded = EpisodeStats.fromJson(statsValue);
-      if (loaded.duration == null && episode.duration != null) {
-        final newStats = loaded.copyWith(duration: episode.duration);
-        await _episodeStatsStore.record(guid).put(client, newStats.toJson());
-        _episodeEventStream.add(EpisodeStatsUpdatedEvent(newStats));
-      }
+    final value = await _episodeStore.record(guid).get(txn);
+    if (value == null || value['hash'] != episode.hashCode) {
+      final value = episode.toJson();
+      value['hash'] = episode.hashCode;
+      await _episodeStore.record(guid).put(txn, value);
+      _episodeEventStream.add(EpisodeUpdatedEvent(episode));
     }
-
-    if (episodeValue != null && Episode.fromJson(episodeValue) == episode) {
-      return;
-    }
-    await _episodeStore.record(guid).put(client, episode.toJson());
-    _episodeEventStream.add(EpisodeUpdatedEvent(episode));
   }
 
   Future<void> _deleteEpisodes(List<Episode> episodes) async {
@@ -444,7 +456,6 @@ class SembastRepository extends Repository {
 
       final newStats = stats.copyWith(
         position: param.position ?? stats.position,
-        duration: param.duration ?? stats.duration,
         playCount: param.playCount ?? stats.playCount,
         playTotal: stats.playTotal + (param.playTotalDelta ?? Duration.zero),
         completeCount: stats.completeCount + (param.completeCountDelta ?? 0),
@@ -494,7 +505,6 @@ class SembastRepository extends Repository {
 
         final newStats = stats.copyWith(
           position: param.position ?? stats.position,
-          duration: param.duration ?? stats.duration,
           playCount: param.playCount ?? stats.playCount,
           playTotal: param.playTotalDelta ?? stats.playTotal,
           completeCount: param.completeCountDelta ?? 0,
@@ -585,16 +595,17 @@ class SembastRepository extends Repository {
 
   @override
   Future<void> saveRecentlyPlayedEpisode(
-    EpisodeMetadata metadata, {
+    Episode episode, {
     DateTime? playedAt,
   }) async {
     final db = await _db;
     await db.transaction((txn) async {
       final finder = Finder(
-        filter: Filter.equals('guid', metadata.guid),
+        filter: Filter.equals('guid', episode.guid),
       );
       await _recentlyPlayedStore.delete(txn, finder: finder);
 
+      final metadata = EpisodeMetadata.fromEpisode(episode);
       final value = Map<String, Object?>.from(metadata.toJson());
       value['playedAt'] = (playedAt ?? DateTime.now()).millisecondsSinceEpoch;
       await _recentlyPlayedStore.add(txn, value);
@@ -602,7 +613,7 @@ class SembastRepository extends Repository {
   }
 
   @override
-  Future<(List<EpisodeMetadata>, int?)> findRecentlyPlayedEpisodeStatsList({
+  Future<(List<Episode>, int?)> findRecentlyPlayedEpisodeStatsList({
     int? cursor,
     int limit = 100,
   }) async {
@@ -615,7 +626,7 @@ class SembastRepository extends Repository {
       final finder = Finder(sortOrders: [SortOrder(Field.key, false)]);
       key = await _recentlyPlayedStore.findKey(db, finder: finder);
       if (key == null) {
-        return (<EpisodeMetadata>[], null);
+        return (<Episode>[], null);
       }
       key++;
     }
@@ -633,11 +644,12 @@ class SembastRepository extends Repository {
     } while (snapshots.isEmpty && 1 < key);
 
     if (snapshots.isEmpty) {
-      return (<EpisodeMetadata>[], null);
+      return (<Episode>[], null);
     }
 
     final list = snapshots
         .map((snapshot) => EpisodeMetadata.fromJson(snapshot.value))
+        .map((metadata) => metadata.toPartialEpisode())
         .toList();
     final nextCursor = snapshots.last.key;
     return (list, 1 < nextCursor ? nextCursor : null);
@@ -794,6 +806,7 @@ class SembastRepository extends Repository {
   }
 
   Future<void> _cleanupEpisodes() async {
+    log.fine('Start cleanup repository');
     final threshold = DateTime.now()
         .subtract(const Duration(days: 60))
         .millisecondsSinceEpoch;
@@ -824,6 +837,7 @@ class SembastRepository extends Repository {
     }
 
     await _deleteEpisodes(orphaned);
+    log.fine('Completed cleanup repository');
   }
 
   @override

@@ -58,7 +58,9 @@ class PodcastMetadata with _$PodcastMetadata {
       releaseDate: podcast.releaseDate,
     );
   }
+}
 
+extension PodcastMetadataExtension on PodcastMetadata {
   Podcast toPartialPodcast() {
     return Podcast(
       guid: guid,
@@ -74,6 +76,17 @@ class PodcastMetadata with _$PodcastMetadata {
       metadataOnly: true,
     );
   }
+
+  int get contentHash => Object.hash(
+        guid,
+        collectionId,
+        feedUrl,
+        title,
+        thumbImageUrl,
+        imageUrl,
+        copyright,
+        releaseDate,
+      );
 }
 
 /// A class that represents an instance of a podcast.
@@ -201,19 +214,6 @@ extension PodcastExtension on Podcast {
         funding,
         persons,
       );
-
-  PodcastMetadata get metadata {
-    return PodcastMetadata(
-      guid: guid,
-      collectionId: collectionId,
-      feedUrl: feedUrl,
-      title: title,
-      thumbImageUrl: thumbImageUrl,
-      imageUrl: imageUrl,
-      copyright: copyright,
-      releaseDate: releaseDate,
-    );
-  }
 }
 
 @freezed
@@ -235,21 +235,21 @@ extension PodcastStatsExt on PodcastStats {
 class PodcastStatsUpdateParam {
   const PodcastStatsUpdateParam({
     required this.guid,
-    this.subscribedDate,
+    this.subscribed,
     this.lastCheckedAt,
   });
 
   final String guid;
-  final DateTime? subscribedDate;
+  final bool? subscribed;
   final DateTime? lastCheckedAt;
 
   PodcastStatsUpdateParam copyWith({
-    DateTime? subscribedDate,
+    bool? subscribed,
     DateTime? lastCheckedAt,
   }) {
     return PodcastStatsUpdateParam(
       guid: guid,
-      subscribedDate: subscribedDate ?? this.subscribedDate,
+      subscribed: subscribed ?? this.subscribed,
       lastCheckedAt: lastCheckedAt ?? this.lastCheckedAt,
     );
   }

@@ -159,9 +159,6 @@ class EpisodeStats with _$EpisodeStats {
     /// Current position in the episode
     @Default(Duration.zero) Duration position,
 
-    /// Duration of the episode
-    Duration? duration,
-
     /// Number of times of start playing
     @Default(0) int playCount,
 
@@ -188,7 +185,6 @@ class EpisodeStats with _$EpisodeStats {
     return EpisodeStats(
       pguid: episode.pguid,
       guid: episode.guid,
-      duration: episode.duration,
     );
   }
 }
@@ -196,12 +192,12 @@ class EpisodeStats with _$EpisodeStats {
 extension EpisodeStatsExt on EpisodeStats {
   bool get downloaded => downloadedTime != null;
 
-  double get percentagePlayed => duration == null
-      ? 0.0
-      : position.inMilliseconds / duration!.inMilliseconds;
-
-  Duration get timeRemaining =>
-      duration == null ? Duration.zero : duration! - position;
+// double get percentagePlayed => duration == null
+//     ? 0.0
+//     : position.inMilliseconds / duration!.inMilliseconds;
+//
+// Duration get timeRemaining =>
+//     duration == null ? Duration.zero : duration! - position;
 }
 
 class EpisodeStatsUpdateParam {
@@ -209,7 +205,6 @@ class EpisodeStatsUpdateParam {
     required this.pguid,
     required this.guid,
     this.position,
-    this.duration,
     this.playCount,
     this.playTotalDelta,
     this.completeCountDelta,
@@ -221,7 +216,6 @@ class EpisodeStatsUpdateParam {
   final String pguid;
   final String guid;
   final Duration? position;
-  final Duration? duration;
   final int? playCount;
   final Duration? playTotalDelta;
   final int? completeCountDelta;
@@ -231,7 +225,6 @@ class EpisodeStatsUpdateParam {
 
   EpisodeStatsUpdateParam copyWith({
     Duration? position,
-    Duration? duration,
     int? playCount,
     Duration? playTotalDelta,
     int? completeCountDelta,
@@ -243,7 +236,6 @@ class EpisodeStatsUpdateParam {
       pguid: pguid,
       guid: guid,
       position: position ?? this.position,
-      duration: duration ?? this.duration,
       playCount: playCount ?? this.playCount,
       playTotalDelta: playTotalDelta ?? this.playTotalDelta,
       completeCountDelta: completeCountDelta ?? this.completeCountDelta,
@@ -255,23 +247,23 @@ class EpisodeStatsUpdateParam {
 
   bool get isEmpty =>
       position == null &&
-      duration == null &&
       playCount == null &&
       playTotalDelta == null &&
       completeCountDelta == null &&
       inQueue == null &&
-      downloadedTime == null;
+      downloadedTime == null &&
+      lastPlayedAt == null;
 }
 
 @freezed
 class EpisodeMetadata with _$EpisodeMetadata {
   factory EpisodeMetadata({
-    required String  guid,
-    required String  pguid,
-    required String  title,
-    required String  imageUrl,
-    required String  thumbImageUrl,
-    required Duration  duration,
+    required String guid,
+    required String pguid,
+    required String title,
+    required String imageUrl,
+    required String thumbImageUrl,
+    required Duration duration,
     required DateTime? publicationDate,
   }) = _EpisodeMetadata;
 

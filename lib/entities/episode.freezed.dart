@@ -730,9 +730,6 @@ mixin _$EpisodeStats {
   /// Current position in the episode
   Duration get position => throw _privateConstructorUsedError;
 
-  /// Duration of the episode
-  Duration? get duration => throw _privateConstructorUsedError;
-
   /// Number of times of start playing
   int get playCount => throw _privateConstructorUsedError;
 
@@ -767,7 +764,6 @@ abstract class $EpisodeStatsCopyWith<$Res> {
       {String pguid,
       String guid,
       Duration position,
-      Duration? duration,
       int playCount,
       Duration playTotal,
       int completeCount,
@@ -792,7 +788,6 @@ class _$EpisodeStatsCopyWithImpl<$Res, $Val extends EpisodeStats>
     Object? pguid = null,
     Object? guid = null,
     Object? position = null,
-    Object? duration = freezed,
     Object? playCount = null,
     Object? playTotal = null,
     Object? completeCount = null,
@@ -813,10 +808,6 @@ class _$EpisodeStatsCopyWithImpl<$Res, $Val extends EpisodeStats>
           ? _value.position
           : position // ignore: cast_nullable_to_non_nullable
               as Duration,
-      duration: freezed == duration
-          ? _value.duration
-          : duration // ignore: cast_nullable_to_non_nullable
-              as Duration?,
       playCount: null == playCount
           ? _value.playCount
           : playCount // ignore: cast_nullable_to_non_nullable
@@ -857,7 +848,6 @@ abstract class _$$EpisodeStatsImplCopyWith<$Res>
       {String pguid,
       String guid,
       Duration position,
-      Duration? duration,
       int playCount,
       Duration playTotal,
       int completeCount,
@@ -880,7 +870,6 @@ class __$$EpisodeStatsImplCopyWithImpl<$Res>
     Object? pguid = null,
     Object? guid = null,
     Object? position = null,
-    Object? duration = freezed,
     Object? playCount = null,
     Object? playTotal = null,
     Object? completeCount = null,
@@ -901,10 +890,6 @@ class __$$EpisodeStatsImplCopyWithImpl<$Res>
           ? _value.position
           : position // ignore: cast_nullable_to_non_nullable
               as Duration,
-      duration: freezed == duration
-          ? _value.duration
-          : duration // ignore: cast_nullable_to_non_nullable
-              as Duration?,
       playCount: null == playCount
           ? _value.playCount
           : playCount // ignore: cast_nullable_to_non_nullable
@@ -940,7 +925,6 @@ class _$EpisodeStatsImpl with DiagnosticableTreeMixin implements _EpisodeStats {
       {required this.pguid,
       required this.guid,
       this.position = Duration.zero,
-      this.duration,
       this.playCount = 0,
       this.playTotal = Duration.zero,
       this.completeCount = 0,
@@ -963,10 +947,6 @@ class _$EpisodeStatsImpl with DiagnosticableTreeMixin implements _EpisodeStats {
   @override
   @JsonKey()
   final Duration position;
-
-  /// Duration of the episode
-  @override
-  final Duration? duration;
 
   /// Number of times of start playing
   @override
@@ -998,7 +978,7 @@ class _$EpisodeStatsImpl with DiagnosticableTreeMixin implements _EpisodeStats {
 
   @override
   String toString({DiagnosticLevel minLevel = DiagnosticLevel.info}) {
-    return 'EpisodeStats(pguid: $pguid, guid: $guid, position: $position, duration: $duration, playCount: $playCount, playTotal: $playTotal, completeCount: $completeCount, inQueue: $inQueue, downloadedTime: $downloadedTime, lastPlayedAt: $lastPlayedAt)';
+    return 'EpisodeStats(pguid: $pguid, guid: $guid, position: $position, playCount: $playCount, playTotal: $playTotal, completeCount: $completeCount, inQueue: $inQueue, downloadedTime: $downloadedTime, lastPlayedAt: $lastPlayedAt)';
   }
 
   @override
@@ -1009,7 +989,6 @@ class _$EpisodeStatsImpl with DiagnosticableTreeMixin implements _EpisodeStats {
       ..add(DiagnosticsProperty('pguid', pguid))
       ..add(DiagnosticsProperty('guid', guid))
       ..add(DiagnosticsProperty('position', position))
-      ..add(DiagnosticsProperty('duration', duration))
       ..add(DiagnosticsProperty('playCount', playCount))
       ..add(DiagnosticsProperty('playTotal', playTotal))
       ..add(DiagnosticsProperty('completeCount', completeCount))
@@ -1027,8 +1006,6 @@ class _$EpisodeStatsImpl with DiagnosticableTreeMixin implements _EpisodeStats {
             (identical(other.guid, guid) || other.guid == guid) &&
             (identical(other.position, position) ||
                 other.position == position) &&
-            (identical(other.duration, duration) ||
-                other.duration == duration) &&
             (identical(other.playCount, playCount) ||
                 other.playCount == playCount) &&
             (identical(other.playTotal, playTotal) ||
@@ -1044,18 +1021,8 @@ class _$EpisodeStatsImpl with DiagnosticableTreeMixin implements _EpisodeStats {
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode => Object.hash(
-      runtimeType,
-      pguid,
-      guid,
-      position,
-      duration,
-      playCount,
-      playTotal,
-      completeCount,
-      inQueue,
-      downloadedTime,
-      lastPlayedAt);
+  int get hashCode => Object.hash(runtimeType, pguid, guid, position, playCount,
+      playTotal, completeCount, inQueue, downloadedTime, lastPlayedAt);
 
   @JsonKey(ignore: true)
   @override
@@ -1076,7 +1043,6 @@ abstract class _EpisodeStats implements EpisodeStats {
       {required final String pguid,
       required final String guid,
       final Duration position,
-      final Duration? duration,
       final int playCount,
       final Duration playTotal,
       final int completeCount,
@@ -1099,10 +1065,6 @@ abstract class _EpisodeStats implements EpisodeStats {
 
   /// Current position in the episode
   Duration get position;
-  @override
-
-  /// Duration of the episode
-  Duration? get duration;
   @override
 
   /// Number of times of start playing
