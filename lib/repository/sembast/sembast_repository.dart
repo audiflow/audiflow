@@ -20,8 +20,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
 import 'package:sembast/sembast.dart';
 
-/// An implementation of [Repository] that is backed by
-/// [Sembast](https://github.com/tekartik/sembast.dart/tree/master/sembast)
 class SembastRepository extends Repository {
   SembastRepository(
     this._ref, {

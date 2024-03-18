@@ -10,6 +10,33 @@ import 'package:audiflow/entities/entities.dart';
 
 /// An abstract class that represent the actions supported by the chosen
 /// database or storage implementation.
+///
+/// An implementation of [Repository] that is backed by
+/// [Sembast](https://github.com/tekartik/sembast.dart/tree/master/sembast)
+///
+///
+/// <Data Management Rules>
+///
+/// It utilize [PodcastMetadata], [EpisodeMetadata] to reduce the data size.
+/// It stores in [Podcast] only for subscribed podcasts. Otherwise, it stores in
+/// [PodcastMetadata].
+/// Either [Podcast] or [PodcastMetadata] must be found if any of their episode
+/// is saved under the following state:
+///  - downloaded
+///  - queued
+///  - once played(for Recently Played feature)
+///
+/// It stores in [Episode] if the episode in the following state:
+///  - its podcast is subscribed
+///  - downloaded
+///  - queued
+/// Or it stores in [EpisodeMetadata] if the episode in the following state:
+///  - once played(for Recently Played feature)
+///
+/// xxxStats never get deleted.
+///  - [PodcastStats]
+///  - [PodcastViewStats]
+///  - [EpisodeStats]
 abstract class Repository {
   // --- General
 
