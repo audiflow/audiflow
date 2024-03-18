@@ -46,23 +46,6 @@ class PodcastMetadata with _$PodcastMetadata {
   factory PodcastMetadata.fromJson(Map<String, dynamic> json) =>
       _$PodcastMetadataFromJson(json);
 
-  factory PodcastMetadata.fromSearchResultItem(search.Item item) {
-    final guid = '${item.collectionId ?? item.feedUrl}';
-    final thumbImageUrl = item.thumbnailArtworkUrl;
-    final imageUrl = item.bestArtworkUrl;
-
-    return PodcastMetadata(
-      guid: guid,
-      feedUrl: item.feedUrl,
-      collectionId: item.collectionId ?? 0,
-      title: item.collectionName ?? item.trackName ?? '',
-      thumbImageUrl: thumbImageUrl,
-      imageUrl: imageUrl,
-      copyright: item.artistName ?? '',
-      releaseDate: item.releaseDate!,
-    );
-  }
-
   factory PodcastMetadata.fromPodcast(Podcast podcast) {
     return PodcastMetadata(
       guid: podcast.guid,
@@ -73,6 +56,22 @@ class PodcastMetadata with _$PodcastMetadata {
       imageUrl: podcast.imageUrl,
       copyright: podcast.copyright,
       releaseDate: podcast.releaseDate,
+    );
+  }
+
+  Podcast toPartialPodcast() {
+    return Podcast(
+      guid: guid,
+      collectionId: collectionId,
+      feedUrl: feedUrl,
+      linkUrl: '',
+      title: title,
+      description: '',
+      thumbImageUrl: thumbImageUrl,
+      imageUrl: imageUrl,
+      copyright: copyright,
+      releaseDate: releaseDate,
+      metadataOnly: true,
     );
   }
 }
@@ -125,10 +124,33 @@ class Podcast with _$Podcast {
 
     /// List of people of interest to the podcast.
     @Default([]) List<Person> persons,
+
+    /// True indicates this episode data contains only [PodcastMetadata] fields.
+    @Default(false) bool metadataOnly,
   }) = _Podcast;
 
   factory Podcast.fromJson(Map<String, dynamic> json) =>
       _$PodcastFromJson(json);
+
+  factory Podcast.fromSearchResultItem(search.Item item) {
+    final guid = '${item.collectionId ?? item.feedUrl}';
+    final thumbImageUrl = item.thumbnailArtworkUrl;
+    final imageUrl = item.bestArtworkUrl;
+
+    return Podcast(
+      guid: guid,
+      feedUrl: item.feedUrl,
+      linkUrl: '',
+      collectionId: item.collectionId ?? 0,
+      title: item.collectionName ?? item.trackName ?? '',
+      description: '',
+      thumbImageUrl: thumbImageUrl,
+      imageUrl: imageUrl,
+      copyright: item.artistName ?? '',
+      releaseDate: item.releaseDate!,
+      metadataOnly: true,
+    );
+  }
 
   factory Podcast.fromSearch(search.Podcast podcast, PodcastMetadata metadata) {
     final episodes = podcast.episodes

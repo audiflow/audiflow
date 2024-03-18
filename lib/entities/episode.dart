@@ -84,9 +84,8 @@ class Episode with _$Episode {
     /// List of people of interest to the podcast.
     @Default([]) List<Person> persons,
 
-    /// True indicates this episode data is incomplete.
-    /// E.g. made from [EpisodeMetadata].
-    @Default(false) bool partialData,
+    /// True indicates this episode data contains only [EpisodeMetadata] fields.
+    @Default(false) bool metadataOnly,
   }) = _Episode;
 
   factory Episode.fromJson(Map<String, dynamic> json) =>
@@ -303,7 +302,7 @@ extension EpisodeMetadataExt on EpisodeMetadata {
       thumbImageUrl: thumbImageUrl,
       duration: duration,
       publicationDate: publicationDate,
-      partialData: true,
+      metadataOnly: true,
     );
   }
 }

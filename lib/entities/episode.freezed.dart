@@ -77,9 +77,8 @@ mixin _$Episode {
   /// List of people of interest to the podcast.
   List<Person> get persons => throw _privateConstructorUsedError;
 
-  /// True indicates this episode data is incomplete.
-  /// E.g. made from [EpisodeMetadata].
-  bool get partialData => throw _privateConstructorUsedError;
+  /// True indicates this episode data contains only [EpisodeMetadata] fields.
+  bool get metadataOnly => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -110,7 +109,7 @@ abstract class $EpisodeCopyWith<$Res> {
       List<Chapter> chapters,
       List<TranscriptUrl> transcriptUrls,
       List<Person> persons,
-      bool partialData});
+      bool metadataOnly});
 }
 
 /// @nodoc
@@ -144,7 +143,7 @@ class _$EpisodeCopyWithImpl<$Res, $Val extends Episode>
     Object? chapters = null,
     Object? transcriptUrls = null,
     Object? persons = null,
-    Object? partialData = null,
+    Object? metadataOnly = null,
   }) {
     return _then(_value.copyWith(
       guid: null == guid
@@ -219,9 +218,9 @@ class _$EpisodeCopyWithImpl<$Res, $Val extends Episode>
           ? _value.persons
           : persons // ignore: cast_nullable_to_non_nullable
               as List<Person>,
-      partialData: null == partialData
-          ? _value.partialData
-          : partialData // ignore: cast_nullable_to_non_nullable
+      metadataOnly: null == metadataOnly
+          ? _value.metadataOnly
+          : metadataOnly // ignore: cast_nullable_to_non_nullable
               as bool,
     ) as $Val);
   }
@@ -253,7 +252,7 @@ abstract class _$$EpisodeImplCopyWith<$Res> implements $EpisodeCopyWith<$Res> {
       List<Chapter> chapters,
       List<TranscriptUrl> transcriptUrls,
       List<Person> persons,
-      bool partialData});
+      bool metadataOnly});
 }
 
 /// @nodoc
@@ -285,7 +284,7 @@ class __$$EpisodeImplCopyWithImpl<$Res>
     Object? chapters = null,
     Object? transcriptUrls = null,
     Object? persons = null,
-    Object? partialData = null,
+    Object? metadataOnly = null,
   }) {
     return _then(_$EpisodeImpl(
       guid: null == guid
@@ -360,9 +359,9 @@ class __$$EpisodeImplCopyWithImpl<$Res>
           ? _value._persons
           : persons // ignore: cast_nullable_to_non_nullable
               as List<Person>,
-      partialData: null == partialData
-          ? _value.partialData
-          : partialData // ignore: cast_nullable_to_non_nullable
+      metadataOnly: null == metadataOnly
+          ? _value.metadataOnly
+          : metadataOnly // ignore: cast_nullable_to_non_nullable
               as bool,
     ));
   }
@@ -390,7 +389,7 @@ class _$EpisodeImpl with DiagnosticableTreeMixin implements _Episode {
       final List<Chapter> chapters = const [],
       final List<TranscriptUrl> transcriptUrls = const [],
       final List<Person> persons = const [],
-      this.partialData = false})
+      this.metadataOnly = false})
       : _chapters = chapters,
         _transcriptUrls = transcriptUrls,
         _persons = persons;
@@ -497,15 +496,14 @@ class _$EpisodeImpl with DiagnosticableTreeMixin implements _Episode {
     return EqualUnmodifiableListView(_persons);
   }
 
-  /// True indicates this episode data is incomplete.
-  /// E.g. made from [EpisodeMetadata].
+  /// True indicates this episode data contains only [EpisodeMetadata] fields.
   @override
   @JsonKey()
-  final bool partialData;
+  final bool metadataOnly;
 
   @override
   String toString({DiagnosticLevel minLevel = DiagnosticLevel.info}) {
-    return 'Episode(guid: $guid, pguid: $pguid, title: $title, description: $description, content: $content, link: $link, imageUrl: $imageUrl, thumbImageUrl: $thumbImageUrl, publicationDate: $publicationDate, contentUrl: $contentUrl, author: $author, season: $season, episode: $episode, duration: $duration, chaptersUrl: $chaptersUrl, chapters: $chapters, transcriptUrls: $transcriptUrls, persons: $persons, partialData: $partialData)';
+    return 'Episode(guid: $guid, pguid: $pguid, title: $title, description: $description, content: $content, link: $link, imageUrl: $imageUrl, thumbImageUrl: $thumbImageUrl, publicationDate: $publicationDate, contentUrl: $contentUrl, author: $author, season: $season, episode: $episode, duration: $duration, chaptersUrl: $chaptersUrl, chapters: $chapters, transcriptUrls: $transcriptUrls, persons: $persons, metadataOnly: $metadataOnly)';
   }
 
   @override
@@ -531,7 +529,7 @@ class _$EpisodeImpl with DiagnosticableTreeMixin implements _Episode {
       ..add(DiagnosticsProperty('chapters', chapters))
       ..add(DiagnosticsProperty('transcriptUrls', transcriptUrls))
       ..add(DiagnosticsProperty('persons', persons))
-      ..add(DiagnosticsProperty('partialData', partialData));
+      ..add(DiagnosticsProperty('metadataOnly', metadataOnly));
   }
 
   @override
@@ -565,8 +563,8 @@ class _$EpisodeImpl with DiagnosticableTreeMixin implements _Episode {
             const DeepCollectionEquality()
                 .equals(other._transcriptUrls, _transcriptUrls) &&
             const DeepCollectionEquality().equals(other._persons, _persons) &&
-            (identical(other.partialData, partialData) ||
-                other.partialData == partialData));
+            (identical(other.metadataOnly, metadataOnly) ||
+                other.metadataOnly == metadataOnly));
   }
 
   @JsonKey(ignore: true)
@@ -591,7 +589,7 @@ class _$EpisodeImpl with DiagnosticableTreeMixin implements _Episode {
         const DeepCollectionEquality().hash(_chapters),
         const DeepCollectionEquality().hash(_transcriptUrls),
         const DeepCollectionEquality().hash(_persons),
-        partialData
+        metadataOnly
       ]);
 
   @JsonKey(ignore: true)
@@ -628,7 +626,7 @@ abstract class _Episode implements Episode {
       final List<Chapter> chapters,
       final List<TranscriptUrl> transcriptUrls,
       final List<Person> persons,
-      final bool partialData}) = _$EpisodeImpl;
+      final bool metadataOnly}) = _$EpisodeImpl;
 
   factory _Episode.fromJson(Map<String, dynamic> json) = _$EpisodeImpl.fromJson;
 
@@ -709,9 +707,8 @@ abstract class _Episode implements Episode {
   List<Person> get persons;
   @override
 
-  /// True indicates this episode data is incomplete.
-  /// E.g. made from [EpisodeMetadata].
-  bool get partialData;
+  /// True indicates this episode data contains only [EpisodeMetadata] fields.
+  bool get metadataOnly;
   @override
   @JsonKey(ignore: true)
   _$$EpisodeImplCopyWith<_$EpisodeImpl> get copyWith =>
