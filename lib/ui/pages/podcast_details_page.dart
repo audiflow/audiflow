@@ -52,11 +52,14 @@ class PodcastDetailsPage extends HookConsumerWidget {
     final scaffoldMessengerKey =
         useState(GlobalKey<ScaffoldMessengerState>()).value;
 
-    final podcastState = ref.watch(podcastInfoProvider(metadata));
+    final podcastState =
+        ref.watch(podcastInfoProvider(metadata.guid, needsEpisodes: true));
     final podcast = podcastState.value?.podcast;
     final seasonsState = podcast == null
         ? const AsyncLoading<List<Season>>()
-        : ref.watch(podcastSeasonsProvider(podcast.metadata));
+        : ref.watch(
+            podcastSeasonsProvider(podcast),
+          );
 
     final podcastViewState = ref.watch(podcastViewInfoProvider(metadata.guid));
     var viewMode =
@@ -68,7 +71,7 @@ class PodcastDetailsPage extends HookConsumerWidget {
     final ascend = podcastViewState.valueOrNull?.ascend ?? false;
     final podcastViewEpisodesState = podcast == null
         ? null
-        : ref.watch(podcastViewEpisodesProvider(podcast));
+        : ref.watch(podcastViewEpisodesProvider(podcast.guid));
 
     final controller = useScrollController();
     return ProviderScope(
@@ -114,8 +117,7 @@ class PodcastDetailsPage extends HookConsumerWidget {
                         podcastViewEpisodesState == null ||
                         podcastViewEpisodesState.isLoading)
                       const FillRemainingLoading()
-                    else if (podcastState.hasError ||
-                        podcast == null)
+                    else if (podcastState.hasError || podcast == null)
                       FillRemainingError.podcastNoResults()
                     else ...[
                       _PodcastTitle(podcast),

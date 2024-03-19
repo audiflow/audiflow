@@ -52,6 +52,7 @@ _$PodcastImpl _$$PodcastImplFromJson(Map<String, dynamic> json) =>
               ?.map((e) => Person.fromJson(e as Map<String, dynamic>))
               .toList() ??
           const [],
+      metadataOnly: json['metadataOnly'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$$PodcastImplToJson(_$PodcastImpl instance) =>
@@ -68,6 +69,7 @@ Map<String, dynamic> _$$PodcastImplToJson(_$PodcastImpl instance) =>
       'releaseDate': instance.releaseDate.toIso8601String(),
       'funding': instance.funding.map((e) => e.toJson()).toList(),
       'persons': instance.persons.map((e) => e.toJson()).toList(),
+      'metadataOnly': instance.metadataOnly,
     };
 
 _$PodcastStatsImpl _$$PodcastStatsImplFromJson(Map<String, dynamic> json) =>

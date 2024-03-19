@@ -84,9 +84,8 @@ class Episode with _$Episode {
     /// List of people of interest to the podcast.
     @Default([]) List<Person> persons,
 
-    /// True indicates this episode data is incomplete.
-    /// E.g. made from [EpisodeMetadata].
-    @Default(false) bool partialData,
+    /// True indicates this episode data contains only [EpisodeMetadata] fields.
+    @Default(false) bool metadataOnly,
   }) = _Episode;
 
   factory Episode.fromJson(Map<String, dynamic> json) =>
@@ -131,6 +130,21 @@ class Episode with _$Episode {
           episode.transcripts.map(TranscriptUrl.fromSearch).toList(),
     );
   }
+
+  factory Episode.fromMetadata(EpisodeMetadata metadata) {
+    return Episode(
+      guid: metadata.guid,
+      pguid: metadata.pguid,
+      title: metadata.title,
+      description: '',
+      imageUrl: metadata.imageUrl,
+      thumbImageUrl: metadata.thumbImageUrl,
+      duration: metadata.duration,
+      publicationDate: metadata.publicationDate,
+      contentUrl: metadata.contentUrl,
+      metadataOnly: true,
+    );
+  }
 }
 
 extension EpisodeExtension on Episode {
@@ -160,9 +174,6 @@ class EpisodeStats with _$EpisodeStats {
     /// Current position in the episode
     @Default(Duration.zero) Duration position,
 
-    /// Duration of the episode
-    Duration? duration,
-
     /// Number of times of start playing
     @Default(0) int playCount,
 
@@ -189,7 +200,6 @@ class EpisodeStats with _$EpisodeStats {
     return EpisodeStats(
       pguid: episode.pguid,
       guid: episode.guid,
-      duration: episode.duration,
     );
   }
 }
@@ -197,12 +207,15 @@ class EpisodeStats with _$EpisodeStats {
 extension EpisodeStatsExt on EpisodeStats {
   bool get downloaded => downloadedTime != null;
 
-  double get percentagePlayed => duration == null
-      ? 0.0
-      : position.inMilliseconds / duration!.inMilliseconds;
+  double percentagePlayed(Duration? duration) {
+    return duration == null
+        ? 0.0
+        : position.inMilliseconds / duration.inMilliseconds;
+  }
 
-  Duration get timeRemaining =>
-      duration == null ? Duration.zero : duration! - position;
+  Duration timeRemaining(Duration? duration) {
+    return duration == null ? Duration.zero : duration - position;
+  }
 }
 
 class EpisodeStatsUpdateParam {
@@ -210,7 +223,6 @@ class EpisodeStatsUpdateParam {
     required this.pguid,
     required this.guid,
     this.position,
-    this.duration,
     this.playCount,
     this.playTotalDelta,
     this.completeCountDelta,
@@ -222,7 +234,6 @@ class EpisodeStatsUpdateParam {
   final String pguid;
   final String guid;
   final Duration? position;
-  final Duration? duration;
   final int? playCount;
   final Duration? playTotalDelta;
   final int? completeCountDelta;
@@ -232,7 +243,6 @@ class EpisodeStatsUpdateParam {
 
   EpisodeStatsUpdateParam copyWith({
     Duration? position,
-    Duration? duration,
     int? playCount,
     Duration? playTotalDelta,
     int? completeCountDelta,
@@ -244,7 +254,6 @@ class EpisodeStatsUpdateParam {
       pguid: pguid,
       guid: guid,
       position: position ?? this.position,
-      duration: duration ?? this.duration,
       playCount: playCount ?? this.playCount,
       playTotalDelta: playTotalDelta ?? this.playTotalDelta,
       completeCountDelta: completeCountDelta ?? this.completeCountDelta,
@@ -256,24 +265,25 @@ class EpisodeStatsUpdateParam {
 
   bool get isEmpty =>
       position == null &&
-      duration == null &&
       playCount == null &&
       playTotalDelta == null &&
       completeCountDelta == null &&
       inQueue == null &&
-      downloadedTime == null;
+      downloadedTime == null &&
+      lastPlayedAt == null;
 }
 
 @freezed
 class EpisodeMetadata with _$EpisodeMetadata {
   factory EpisodeMetadata({
-    required String  guid,
-    required String  pguid,
-    required String  title,
-    required String  imageUrl,
-    required String  thumbImageUrl,
-    required Duration  duration,
+    required String guid,
+    required String pguid,
+    required String title,
+    required String imageUrl,
+    required String thumbImageUrl,
+    required Duration duration,
     required DateTime? publicationDate,
+    required String? contentUrl,
   }) = _EpisodeMetadata;
 
   factory EpisodeMetadata.fromEpisode(Episode episode) {
@@ -285,6 +295,7 @@ class EpisodeMetadata with _$EpisodeMetadata {
       thumbImageUrl: episode.thumbImageUrl!,
       duration: episode.duration!,
       publicationDate: episode.publicationDate,
+      contentUrl: episode.contentUrl,
     );
   }
 
@@ -293,17 +304,5 @@ class EpisodeMetadata with _$EpisodeMetadata {
 }
 
 extension EpisodeMetadataExt on EpisodeMetadata {
-  Episode toPartialEpisode() {
-    return Episode(
-      guid: guid,
-      pguid: pguid,
-      title: title,
-      description: '',
-      imageUrl: imageUrl,
-      thumbImageUrl: thumbImageUrl,
-      duration: duration,
-      publicationDate: publicationDate,
-      partialData: true,
-    );
-  }
+  Episode toPartialEpisode() => Episode.fromMetadata(this);
 }

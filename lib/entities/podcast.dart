@@ -77,6 +77,21 @@ class PodcastMetadata with _$PodcastMetadata {
   }
 }
 
+extension PodcastMetadataExtension on PodcastMetadata {
+  Podcast toPartialPodcast() => Podcast.fromMetadata(this);
+
+  int get contentHash => Object.hash(
+        guid,
+        collectionId,
+        feedUrl,
+        title,
+        thumbImageUrl,
+        imageUrl,
+        copyright,
+        releaseDate,
+      );
+}
+
 /// A class that represents an instance of a podcast.
 ///
 /// When persisted to disk this represents a podcast that is being followed.
@@ -125,6 +140,9 @@ class Podcast with _$Podcast {
 
     /// List of people of interest to the podcast.
     @Default([]) List<Person> persons,
+
+    /// True indicates this episode data contains only [PodcastMetadata] fields.
+    @Default(false) bool metadataOnly,
   }) = _Podcast;
 
   factory Podcast.fromJson(Map<String, dynamic> json) =>
@@ -163,9 +181,27 @@ class Podcast with _$Podcast {
       persons: persons,
     );
   }
+
+  factory Podcast.fromMetadata(PodcastMetadata metadata) {
+    return Podcast(
+      guid: metadata.guid,
+      collectionId: metadata.collectionId,
+      feedUrl: metadata.feedUrl,
+      linkUrl: '',
+      title: metadata.title,
+      description: '',
+      thumbImageUrl: metadata.thumbImageUrl,
+      imageUrl: metadata.imageUrl,
+      copyright: metadata.copyright,
+      releaseDate: metadata.releaseDate,
+      metadataOnly: true,
+    );
+  }
 }
 
 extension PodcastExtension on Podcast {
+  PodcastMetadata get metadata => PodcastMetadata.fromPodcast(this);
+
   int get contentHash => Object.hash(
         guid,
         collectionId,
@@ -179,19 +215,6 @@ extension PodcastExtension on Podcast {
         funding,
         persons,
       );
-
-  PodcastMetadata get metadata {
-    return PodcastMetadata(
-      guid: guid,
-      collectionId: collectionId,
-      feedUrl: feedUrl,
-      title: title,
-      thumbImageUrl: thumbImageUrl,
-      imageUrl: imageUrl,
-      copyright: copyright,
-      releaseDate: releaseDate,
-    );
-  }
 }
 
 @freezed
@@ -213,21 +236,21 @@ extension PodcastStatsExt on PodcastStats {
 class PodcastStatsUpdateParam {
   const PodcastStatsUpdateParam({
     required this.guid,
-    this.subscribedDate,
+    this.subscribed,
     this.lastCheckedAt,
   });
 
   final String guid;
-  final DateTime? subscribedDate;
+  final bool? subscribed;
   final DateTime? lastCheckedAt;
 
   PodcastStatsUpdateParam copyWith({
-    DateTime? subscribedDate,
+    bool? subscribed,
     DateTime? lastCheckedAt,
   }) {
     return PodcastStatsUpdateParam(
       guid: guid,
-      subscribedDate: subscribedDate ?? this.subscribedDate,
+      subscribed: subscribed ?? this.subscribed,
       lastCheckedAt: lastCheckedAt ?? this.lastCheckedAt,
     );
   }

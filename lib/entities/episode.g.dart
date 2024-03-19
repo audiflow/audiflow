@@ -39,7 +39,7 @@ _$EpisodeImpl _$$EpisodeImplFromJson(Map<String, dynamic> json) =>
               ?.map((e) => Person.fromJson(e as Map<String, dynamic>))
               .toList() ??
           const [],
-      partialData: json['partialData'] as bool? ?? false,
+      metadataOnly: json['metadataOnly'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$$EpisodeImplToJson(_$EpisodeImpl instance) =>
@@ -62,7 +62,7 @@ Map<String, dynamic> _$$EpisodeImplToJson(_$EpisodeImpl instance) =>
       'chapters': instance.chapters.map((e) => e.toJson()).toList(),
       'transcriptUrls': instance.transcriptUrls.map((e) => e.toJson()).toList(),
       'persons': instance.persons.map((e) => e.toJson()).toList(),
-      'partialData': instance.partialData,
+      'metadataOnly': instance.metadataOnly,
     };
 
 _$EpisodeStatsImpl _$$EpisodeStatsImplFromJson(Map<String, dynamic> json) =>
@@ -72,9 +72,6 @@ _$EpisodeStatsImpl _$$EpisodeStatsImplFromJson(Map<String, dynamic> json) =>
       position: json['position'] == null
           ? Duration.zero
           : Duration(microseconds: json['position'] as int),
-      duration: json['duration'] == null
-          ? null
-          : Duration(microseconds: json['duration'] as int),
       playCount: json['playCount'] as int? ?? 0,
       playTotal: json['playTotal'] == null
           ? Duration.zero
@@ -94,7 +91,6 @@ Map<String, dynamic> _$$EpisodeStatsImplToJson(_$EpisodeStatsImpl instance) =>
       'pguid': instance.pguid,
       'guid': instance.guid,
       'position': instance.position.inMicroseconds,
-      'duration': instance.duration?.inMicroseconds,
       'playCount': instance.playCount,
       'playTotal': instance.playTotal.inMicroseconds,
       'completeCount': instance.completeCount,
@@ -115,6 +111,7 @@ _$EpisodeMetadataImpl _$$EpisodeMetadataImplFromJson(
       publicationDate: json['publicationDate'] == null
           ? null
           : DateTime.parse(json['publicationDate'] as String),
+      contentUrl: json['contentUrl'] as String?,
     );
 
 Map<String, dynamic> _$$EpisodeMetadataImplToJson(
@@ -127,4 +124,5 @@ Map<String, dynamic> _$$EpisodeMetadataImplToJson(
       'thumbImageUrl': instance.thumbImageUrl,
       'duration': instance.duration.inMicroseconds,
       'publicationDate': instance.publicationDate?.toIso8601String(),
+      'contentUrl': instance.contentUrl,
     };

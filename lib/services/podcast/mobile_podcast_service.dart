@@ -141,9 +141,9 @@ class MobilePodcastService implements PodcastService {
       throw Exception(result.lastError);
     }
 
-    final items = result.items.map(PodcastMetadata.fromSearchResultItem);
-    await _repository.savePodcastMetadata(items);
-    return items.toList();
+    final metadataList = result.items.map(PodcastMetadata.fromSearchResultItem);
+    await _repository.savePodcastMetadataList(metadataList);
+    return metadataList.toList();
   }
 
   @override
@@ -221,7 +221,7 @@ class MobilePodcastService implements PodcastService {
         return null;
       }
       feedUrl = newMetadata!.feedUrl!;
-      await _repository.savePodcastMetadata([newMetadata]);
+      await _repository.savePodcast(newMetadata.toPartialPodcast());
     }
     if (feedUrl.isEmpty) {
       _log.info('No feed URL for ${metadata.title}');

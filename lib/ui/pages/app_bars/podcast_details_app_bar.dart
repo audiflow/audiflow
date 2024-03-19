@@ -33,7 +33,8 @@ class PodcastDetailsAppBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final placeholderBuilder = PlaceholderBuilder.of(context);
-    final podcastState = ref.watch(podcastInfoProvider(metadata));
+    final podcastState =
+        ref.watch(podcastInfoProvider(metadata.guid, needsEpisodes: true));
     final subscribed = podcastState.value?.stats?.subscribed;
     final theme = Theme.of(context);
     final textTheme = theme.textTheme;

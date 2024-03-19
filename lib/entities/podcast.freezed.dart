@@ -395,6 +395,9 @@ mixin _$Podcast {
   /// List of people of interest to the podcast.
   List<Person> get persons => throw _privateConstructorUsedError;
 
+  /// True indicates this episode data contains only [PodcastMetadata] fields.
+  bool get metadataOnly => throw _privateConstructorUsedError;
+
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
   $PodcastCopyWith<Podcast> get copyWith => throw _privateConstructorUsedError;
@@ -419,7 +422,8 @@ abstract class $PodcastCopyWith<$Res> {
       @JsonKey(includeToJson: false, includeFromJson: false)
       List<Episode> episodes,
       List<Funding> funding,
-      List<Person> persons});
+      List<Person> persons,
+      bool metadataOnly});
 }
 
 /// @nodoc
@@ -448,6 +452,7 @@ class _$PodcastCopyWithImpl<$Res, $Val extends Podcast>
     Object? episodes = null,
     Object? funding = null,
     Object? persons = null,
+    Object? metadataOnly = null,
   }) {
     return _then(_value.copyWith(
       guid: null == guid
@@ -502,6 +507,10 @@ class _$PodcastCopyWithImpl<$Res, $Val extends Podcast>
           ? _value.persons
           : persons // ignore: cast_nullable_to_non_nullable
               as List<Person>,
+      metadataOnly: null == metadataOnly
+          ? _value.metadataOnly
+          : metadataOnly // ignore: cast_nullable_to_non_nullable
+              as bool,
     ) as $Val);
   }
 }
@@ -527,7 +536,8 @@ abstract class _$$PodcastImplCopyWith<$Res> implements $PodcastCopyWith<$Res> {
       @JsonKey(includeToJson: false, includeFromJson: false)
       List<Episode> episodes,
       List<Funding> funding,
-      List<Person> persons});
+      List<Person> persons,
+      bool metadataOnly});
 }
 
 /// @nodoc
@@ -554,6 +564,7 @@ class __$$PodcastImplCopyWithImpl<$Res>
     Object? episodes = null,
     Object? funding = null,
     Object? persons = null,
+    Object? metadataOnly = null,
   }) {
     return _then(_$PodcastImpl(
       guid: null == guid
@@ -608,6 +619,10 @@ class __$$PodcastImplCopyWithImpl<$Res>
           ? _value._persons
           : persons // ignore: cast_nullable_to_non_nullable
               as List<Person>,
+      metadataOnly: null == metadataOnly
+          ? _value.metadataOnly
+          : metadataOnly // ignore: cast_nullable_to_non_nullable
+              as bool,
     ));
   }
 }
@@ -629,7 +644,8 @@ class _$PodcastImpl implements _Podcast {
       @JsonKey(includeToJson: false, includeFromJson: false)
       final List<Episode> episodes = const [],
       final List<Funding> funding = const [],
-      final List<Person> persons = const []})
+      final List<Person> persons = const [],
+      this.metadataOnly = false})
       : _episodes = episodes,
         _funding = funding,
         _persons = persons;
@@ -716,9 +732,14 @@ class _$PodcastImpl implements _Podcast {
     return EqualUnmodifiableListView(_persons);
   }
 
+  /// True indicates this episode data contains only [PodcastMetadata] fields.
+  @override
+  @JsonKey()
+  final bool metadataOnly;
+
   @override
   String toString() {
-    return 'Podcast(guid: $guid, collectionId: $collectionId, feedUrl: $feedUrl, linkUrl: $linkUrl, title: $title, description: $description, copyright: $copyright, thumbImageUrl: $thumbImageUrl, imageUrl: $imageUrl, releaseDate: $releaseDate, episodes: $episodes, funding: $funding, persons: $persons)';
+    return 'Podcast(guid: $guid, collectionId: $collectionId, feedUrl: $feedUrl, linkUrl: $linkUrl, title: $title, description: $description, copyright: $copyright, thumbImageUrl: $thumbImageUrl, imageUrl: $imageUrl, releaseDate: $releaseDate, episodes: $episodes, funding: $funding, persons: $persons, metadataOnly: $metadataOnly)';
   }
 
   @override
@@ -744,7 +765,9 @@ class _$PodcastImpl implements _Podcast {
                 other.releaseDate == releaseDate) &&
             const DeepCollectionEquality().equals(other._episodes, _episodes) &&
             const DeepCollectionEquality().equals(other._funding, _funding) &&
-            const DeepCollectionEquality().equals(other._persons, _persons));
+            const DeepCollectionEquality().equals(other._persons, _persons) &&
+            (identical(other.metadataOnly, metadataOnly) ||
+                other.metadataOnly == metadataOnly));
   }
 
   @JsonKey(ignore: true)
@@ -763,7 +786,8 @@ class _$PodcastImpl implements _Podcast {
       releaseDate,
       const DeepCollectionEquality().hash(_episodes),
       const DeepCollectionEquality().hash(_funding),
-      const DeepCollectionEquality().hash(_persons));
+      const DeepCollectionEquality().hash(_persons),
+      metadataOnly);
 
   @JsonKey(ignore: true)
   @override
@@ -794,7 +818,8 @@ abstract class _Podcast implements Podcast {
       @JsonKey(includeToJson: false, includeFromJson: false)
       final List<Episode> episodes,
       final List<Funding> funding,
-      final List<Person> persons}) = _$PodcastImpl;
+      final List<Person> persons,
+      final bool metadataOnly}) = _$PodcastImpl;
 
   factory _Podcast.fromJson(Map<String, dynamic> json) = _$PodcastImpl.fromJson;
 
@@ -853,6 +878,10 @@ abstract class _Podcast implements Podcast {
 
   /// List of people of interest to the podcast.
   List<Person> get persons;
+  @override
+
+  /// True indicates this episode data contains only [PodcastMetadata] fields.
+  bool get metadataOnly;
   @override
   @JsonKey(ignore: true)
   _$$PodcastImplCopyWith<_$PodcastImpl> get copyWith =>

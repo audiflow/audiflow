@@ -8,6 +8,7 @@
 import 'package:audiflow/core/l10n.dart';
 import 'package:audiflow/events/podcast_search_event.dart';
 import 'package:audiflow/ui/pages/app_bars/sub_page_app_bar.dart';
+import 'package:audiflow/ui/podcast/episode_list.dart';
 import 'package:audiflow/ui/providers/podcast_search_provider.dart';
 import 'package:audiflow/ui/providers/recently_played_episodes_provider.dart';
 import 'package:audiflow/ui/widgets/error_notifier.dart';
@@ -50,14 +51,11 @@ class RecentlyPlayedPage extends HookConsumerWidget {
                     state.valueOrNull?.episodes.isEmpty == true)
                   FillRemainingError.podcastNoResults()
                 else
-                  const SizedBox.shrink(),
-                // EpisodeList(
-                //   episodeGroupKey: const Key('recentlyPlayed'),
-                //   episodes: state.value!.episodes
-                //       .map((e) => e.toPartialEpisode())
-                //       .toList(),
-                //   scrollController: controller,
-                // ),
+                  EpisodeList(
+                    episodeGroupKey: const Key('recentlyPlayed'),
+                    episodes: state.value!.episodes,
+                    scrollController: controller,
+                  ),
               ],
             ),
             const ErrorNotifier(),

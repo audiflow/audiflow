@@ -39,7 +39,7 @@ Map<String, dynamic> _$$PodcastSearchStateImplToJson(
 // RiverpodGenerator
 // **************************************************************************
 
-String _$podcastSearchHash() => r'ceb27b200642d0063192d741844cf5ab4a878a40';
+String _$podcastSearchHash() => r'47171cfd4ce5537520490011c24378636b7e02b1';
 
 /// See also [PodcastSearch].
 @ProviderFor(PodcastSearch)

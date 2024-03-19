@@ -6,7 +6,7 @@ part of 'podcast_info_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$podcastInfoHash() => r'af54568f6a03dfee41219e27761823b39db04e47';
+String _$podcastInfoHash() => r'55b4063647b1371abfb843f1b66aa79b1a2eaf53';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -31,11 +31,13 @@ class _SystemHash {
 
 abstract class _$PodcastInfo
     extends BuildlessAutoDisposeAsyncNotifier<PodcastInfoState> {
-  late final PodcastMetadata metadata;
+  late final String guid;
+  late final bool needsEpisodes;
 
   FutureOr<PodcastInfoState> build(
-    PodcastMetadata metadata,
-  );
+    String guid, {
+    required bool needsEpisodes,
+  });
 }
 
 /// See also [PodcastInfo].
@@ -49,10 +51,12 @@ class PodcastInfoFamily extends Family<AsyncValue<PodcastInfoState>> {
 
   /// See also [PodcastInfo].
   PodcastInfoProvider call(
-    PodcastMetadata metadata,
-  ) {
+    String guid, {
+    required bool needsEpisodes,
+  }) {
     return PodcastInfoProvider(
-      metadata,
+      guid,
+      needsEpisodes: needsEpisodes,
     );
   }
 
@@ -61,7 +65,8 @@ class PodcastInfoFamily extends Family<AsyncValue<PodcastInfoState>> {
     covariant PodcastInfoProvider provider,
   ) {
     return call(
-      provider.metadata,
+      provider.guid,
+      needsEpisodes: provider.needsEpisodes,
     );
   }
 
@@ -85,9 +90,12 @@ class PodcastInfoProvider extends AutoDisposeAsyncNotifierProviderImpl<
     PodcastInfo, PodcastInfoState> {
   /// See also [PodcastInfo].
   PodcastInfoProvider(
-    PodcastMetadata metadata,
-  ) : this._internal(
-          () => PodcastInfo()..metadata = metadata,
+    String guid, {
+    required bool needsEpisodes,
+  }) : this._internal(
+          () => PodcastInfo()
+            ..guid = guid
+            ..needsEpisodes = needsEpisodes,
           from: podcastInfoProvider,
           name: r'podcastInfoProvider',
           debugGetCreateSourceHash:
@@ -97,7 +105,8 @@ class PodcastInfoProvider extends AutoDisposeAsyncNotifierProviderImpl<
           dependencies: PodcastInfoFamily._dependencies,
           allTransitiveDependencies:
               PodcastInfoFamily._allTransitiveDependencies,
-          metadata: metadata,
+          guid: guid,
+          needsEpisodes: needsEpisodes,
         );
 
   PodcastInfoProvider._internal(
@@ -107,17 +116,20 @@ class PodcastInfoProvider extends AutoDisposeAsyncNotifierProviderImpl<
     required super.allTransitiveDependencies,
     required super.debugGetCreateSourceHash,
     required super.from,
-    required this.metadata,
+    required this.guid,
+    required this.needsEpisodes,
   }) : super.internal();
 
-  final PodcastMetadata metadata;
+  final String guid;
+  final bool needsEpisodes;
 
   @override
   FutureOr<PodcastInfoState> runNotifierBuild(
     covariant PodcastInfo notifier,
   ) {
     return notifier.build(
-      metadata,
+      guid,
+      needsEpisodes: needsEpisodes,
     );
   }
 
@@ -126,13 +138,16 @@ class PodcastInfoProvider extends AutoDisposeAsyncNotifierProviderImpl<
     return ProviderOverride(
       origin: this,
       override: PodcastInfoProvider._internal(
-        () => create()..metadata = metadata,
+        () => create()
+          ..guid = guid
+          ..needsEpisodes = needsEpisodes,
         from: from,
         name: null,
         dependencies: null,
         allTransitiveDependencies: null,
         debugGetCreateSourceHash: null,
-        metadata: metadata,
+        guid: guid,
+        needsEpisodes: needsEpisodes,
       ),
     );
   }
@@ -145,21 +160,27 @@ class PodcastInfoProvider extends AutoDisposeAsyncNotifierProviderImpl<
 
   @override
   bool operator ==(Object other) {
-    return other is PodcastInfoProvider && other.metadata == metadata;
+    return other is PodcastInfoProvider &&
+        other.guid == guid &&
+        other.needsEpisodes == needsEpisodes;
   }
 
   @override
   int get hashCode {
     var hash = _SystemHash.combine(0, runtimeType.hashCode);
-    hash = _SystemHash.combine(hash, metadata.hashCode);
+    hash = _SystemHash.combine(hash, guid.hashCode);
+    hash = _SystemHash.combine(hash, needsEpisodes.hashCode);
 
     return _SystemHash.finish(hash);
   }
 }
 
 mixin PodcastInfoRef on AutoDisposeAsyncNotifierProviderRef<PodcastInfoState> {
-  /// The parameter `metadata` of this provider.
-  PodcastMetadata get metadata;
+  /// The parameter `guid` of this provider.
+  String get guid;
+
+  /// The parameter `needsEpisodes` of this provider.
+  bool get needsEpisodes;
 }
 
 class _PodcastInfoProviderElement
@@ -168,7 +189,9 @@ class _PodcastInfoProviderElement
   _PodcastInfoProviderElement(super.provider);
 
   @override
-  PodcastMetadata get metadata => (origin as PodcastInfoProvider).metadata;
+  String get guid => (origin as PodcastInfoProvider).guid;
+  @override
+  bool get needsEpisodes => (origin as PodcastInfoProvider).needsEpisodes;
 }
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

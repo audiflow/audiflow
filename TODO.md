@@ -39,6 +39,12 @@ TODO
   - [ ] completed times
 - [x] position at the last played episode(menu)
 - [x] tap-to-top
+- [ ] optimize rss parser
+  - [ ] partial parsing
+    - [ ] newest 10 episodes
+    - [ ] oldest 10 episodes
+    - [ ] specific episode
+  - [ ] on memory cache
 
 ### Queue
 - [x] order of adhoc queue registration
@@ -57,7 +63,7 @@ TODO
 - [ ] download one by one, at least it should care the episode the user is awaiting
 
 ### Library
-- [ ] play history
+- [x] play history
 - [ ] smart playlist
   - [ ] recently updated episodes
   - [ ] custom

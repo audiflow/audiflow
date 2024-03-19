@@ -94,7 +94,7 @@ class EpisodesGroup extends _$EpisodesGroup {
           : (_earliestEpisode(), ConditionalPlayButtonState.fromStart);
     }
 
-    if (lastPlayedStats.percentagePlayed < 0.999 &&
+    if (lastPlayedStats.percentagePlayed(lastPlayedEpisode.duration) < 0.999 &&
         // means the user would have interest in the episode
         (isSeries || const Duration(minutes: 1) <= lastPlayedStats.position)) {
       return (lastPlayedEpisode, ConditionalPlayButtonState.resume);

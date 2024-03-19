@@ -5,10 +5,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'dart:async';
+
 import 'package:audiflow/entities/entities.dart';
 import 'package:audiflow/repository/download_event.dart';
 import 'package:audiflow/repository/repository_provider.dart';
 import 'package:audiflow/services/audio/audio_player_event.dart';
+import 'package:audiflow/ui/providers/podcast_info_provider.dart';
 import 'package:audiflow/ui/providers/podcast_view_info_provider.dart';
 import 'package:logging/logging.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -22,11 +25,22 @@ class PodcastViewEpisodes extends _$PodcastViewEpisodes {
   Repository get _repository => ref.read(repositoryProvider);
 
   @override
-  Future<List<Episode>> build(Podcast podcast) async {
-    _log.fine('build ${podcast.title}');
+  Future<List<Episode>> build(String guid) async {
+    _log.fine('build $guid');
 
-    final viewStats = ref.watch(podcastViewInfoProvider(podcast.guid));
+    final podcastState =
+        ref.watch(podcastInfoProvider(guid, needsEpisodes: true));
+    final podcast = podcastState.valueOrNull?.podcast;
+    final viewStats = ref.watch(podcastViewInfoProvider(guid));
     final viewMode = viewStats.valueOrNull?.viewMode;
+
+    if (podcast == null) {
+      final completer = Completer<List<Episode>>();
+      ref.onDispose(() {
+        completer.complete([]);
+      });
+      return completer.future;
+    }
 
     if (viewMode != null) {
       _listenStats(viewMode, podcast);

@@ -26,15 +26,22 @@ class PodcastInfo extends _$PodcastInfo {
   PodcastService get _podcastService => ref.read(podcastServiceProvider);
 
   @override
-  Future<PodcastInfoState> build(PodcastMetadata metadata) async {
-    _log.fine('build ${metadata.guid} ${metadata.title}');
+  Future<PodcastInfoState> build(
+    String guid, {
+    required bool needsEpisodes,
+  }) async {
+    _log.fine('build $guid');
 
     final list = await Future.wait([
-      _podcastService.loadPodcast(metadata),
-      _repository.findPodcastStats(metadata.guid),
+      _repository.findPodcast(guid),
+      _repository.findPodcastStats(guid),
     ]);
-    final podcast = list[0] as Podcast?;
+    var podcast = list[0] as Podcast?;
     final podcastStats = list[1] as PodcastStats?;
+    if (needsEpisodes && podcast?.episodes.isEmpty == true) {
+      podcast =
+          await _podcastService.loadPodcast(podcast!.metadata, refresh: true);
+    }
     if (podcast == null) {
       throw NotFoundError();
     }

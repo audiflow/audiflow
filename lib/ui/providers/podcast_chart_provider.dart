@@ -69,6 +69,8 @@ class PodcastChart extends _$PodcastChart {
             countryCode: event.countryCode,
           );
 
+      await _repository.savePodcastMetadataList(podcasts);
+
       final newState = PodcastChartState(
         size: event.size,
         genre: event.genre,

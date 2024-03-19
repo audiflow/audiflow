@@ -19,7 +19,7 @@ import '../../test_common/riverpod.dart';
 import '../mocks/mock_path_provider.dart';
 
 void main() {
-  late Repository persistenceService;
+  late Repository repository;
 
   final podcast1 = Podcast(
     guid: 'http://p1.com',
@@ -69,19 +69,20 @@ void main() {
         .toList();
   }
 
-  final sembastRepositoryProvider = Provider(SembastRepository.new);
+  final sembastRepositoryProvider =
+      Provider((ref) => SembastRepository(ref, databaseName: 'test.db'));
 
   void createRepository() {
     final container = createContainer();
     final mockPath = MockPathProvider();
     PathProviderPlatform.instance = mockPath;
-    persistenceService = container.read(sembastRepositoryProvider);
+    repository = container.read(sembastRepositoryProvider);
   }
 
   Future<void> cleanUpRepository() async {
-    await persistenceService.close();
+    await repository.close();
 
-    final f = File('${Directory.systemTemp.path}/seasoning.db');
+    final f = File('${Directory.systemTemp.path}/test.db');
     if (f.existsSync()) {
       f.deleteSync();
     }
@@ -91,53 +92,57 @@ void main() {
     setUpAll(createRepository);
     tearDownAll(cleanUpRepository);
 
-    test('Fetch preview with non-existent GUID', () async {
-      final actual = await persistenceService.findPodcastMetadata('abc');
-      expect(actual, null);
+    test('findPodcastMetadata', () async {
+      final podcast = podcast1.copyWith(feedUrl: null);
+      final metadata = podcast.metadata;
+      await repository.savePodcast(metadata.toPartialPodcast());
     });
 
     test('findPodcastMetadata', () async {
-      final value = podcast1.toJson()..remove('feedUrl');
-      final podcast = Podcast.fromJson(value);
-
-      await persistenceService.savePodcastMetadata([podcast.metadata]);
-    });
-
-    test('findPodcastMetadata', () async {
-      final actual =
-          await persistenceService.findPodcastMetadata(podcast1.guid);
+      final actual = await repository.findPodcastMetadata(podcast1.guid);
       expect(actual, isNotNull);
       expect(actual!.title, podcast1.title);
       expect(actual.feedUrl, isNull);
     });
 
-    test('findPodcastMetadata is null', () async {
-      final actual = await persistenceService.findFeedUrl(podcast1.guid);
+    test('findPodcast', () async {
+      final actual = await repository.findPodcast(podcast1.guid);
+      expect(actual, isNotNull);
+      expect(actual!.title, podcast1.title);
+      expect(actual.feedUrl, isNull);
+      expect(actual.metadataOnly, isTrue);
+    });
+
+    test('findFeedUrl is null', () async {
+      final actual = await repository.findFeedUrl(podcast1.guid);
       expect(actual, isNull);
     });
 
     test('populate feedUrl', () async {
-      await persistenceService.savePodcastMetadata([podcast1.metadata]);
-      final feedUrl = await persistenceService.findFeedUrl(podcast1.guid);
-      expect(feedUrl, podcast1.feedUrl);
-
-      final itemFull = PodcastMetadata.fromPodcast(podcast2);
-      expect(itemFull.feedUrl, isNotEmpty);
+      await repository.savePodcast(podcast1);
 
       final value = podcast1.toJson()..remove('feedUrl');
-      final podcast = Podcast.fromJson(value);
-      final itemPartial = PodcastMetadata.fromPodcast(podcast);
-      expect(itemPartial.feedUrl, isNull);
+      final itemPartial = Podcast.fromJson(value);
 
-      final actual = await persistenceService.populatePodcastFeedUrl([
-        itemPartial,
-        itemFull,
-        itemPartial,
+      final actual = await repository.populatePodcastFeedUrl([
+        PodcastMetadata.fromPodcast(podcast1),
+        PodcastMetadata.fromPodcast(podcast2),
+        PodcastMetadata.fromPodcast(itemPartial),
       ]);
       expect(actual, hasLength(3));
       expect(actual[0].feedUrl, podcast1.feedUrl);
       expect(actual[1].feedUrl, podcast2.feedUrl);
       expect(actual[2].feedUrl, podcast1.feedUrl);
+    });
+
+    test('metadata cannot overwrite full podcast', () async {
+      final itemPartial =
+          PodcastMetadata.fromPodcast(podcast1).toPartialPodcast();
+      await repository.savePodcast(itemPartial);
+
+      final actual = await repository.findPodcast(podcast1.guid);
+      expect(actual!.metadataOnly, isFalse);
+      await repository.savePodcast(actual);
     });
   });
 
@@ -146,25 +151,25 @@ void main() {
     tearDownAll(cleanUpRepository);
 
     test('Fetch podcast with non-existent GUID', () async {
-      final actual = await persistenceService.findPodcast('abc');
+      final actual = await repository.findPodcast('abc');
       expect(actual, null);
     });
 
     late PodcastStats stats;
 
     test('subscribePodcast', () async {
-      await persistenceService.subscribePodcast(podcast1);
-      stats = (await persistenceService.findPodcastStats(podcast1.guid))!;
+      await repository.subscribePodcast(podcast1);
+      stats = (await repository.findPodcastStats(podcast1.guid))!;
       expect(stats.subscribedDate, isNotNull);
     });
 
-    test('findPodcast', () async {
-      final loaded = await persistenceService.findPodcast(stats.guid);
-      expect(loaded, podcast1);
+    test('findPodcastMetadata', () async {
+      final loaded = await repository.findPodcastMetadata(stats.guid);
+      expect(loaded, PodcastMetadata.fromPodcast(podcast1));
     });
 
     test('subscriptions', () async {
-      final loaded = await persistenceService.subscriptions();
+      final loaded = await repository.subscriptions();
       expect(loaded, hasLength(1));
       expect(loaded[0].$1.guid, stats.guid);
       expect(loaded[0].$2, stats);
@@ -172,24 +177,24 @@ void main() {
 
     test('savePodcast', () async {
       final updated = podcast1.copyWith(title: '${podcast1.title} updated');
-      await persistenceService.savePodcast(updated);
-      final loaded = await persistenceService.findPodcast(stats.guid);
-      expect(loaded, updated);
+      await repository.savePodcast(updated);
+      final loaded = await repository.findPodcastMetadata(stats.guid);
+      expect(loaded, PodcastMetadata.fromPodcast(updated));
     });
 
     test('unsubscribePodcast', () async {
       // Podcast remains.
-      await persistenceService.unsubscribePodcast(podcast1);
-      final podcast = await persistenceService.findPodcast(podcast1.guid);
+      await repository.unsubscribePodcast(podcast1);
+      final podcast = await repository.findPodcast(podcast1.guid);
       expect(podcast, isNotNull);
 
       // PodcastStats remains.
-      final loaded = await persistenceService.findPodcastStats(stats.guid);
+      final loaded = await repository.findPodcastStats(stats.guid);
       expect(loaded?.guid, stats.guid);
       expect(loaded?.subscribed, isFalse);
 
       // deletePodcast twice should do nothing.
-      await persistenceService.unsubscribePodcast(podcast1);
+      await repository.unsubscribePodcast(podcast1);
     });
   });
 
@@ -203,38 +208,35 @@ void main() {
     late EpisodeStats episodeStats;
 
     test('findEpisode with non-existence id', () async {
-      final loaded = await persistenceService.findEpisode('abc');
+      final loaded = await repository.findEpisode('abc');
       expect(loaded, null);
     });
 
     test('findEpisodeStats with non-existence id', () async {
-      final loaded = await persistenceService.findEpisodeStats('abc');
+      final loaded = await repository.findEpisodeStats('abc');
       expect(loaded, null);
     });
 
     test('findEpisodesByPodcastGuid with non-existence id', () async {
-      final loaded = await persistenceService.findEpisodesByPodcastGuid('abc');
+      final loaded = await repository.findEpisodesByPodcastGuid('abc');
       expect(loaded, isEmpty);
     });
 
     test('subscribePodcast', () async {
-      await persistenceService.subscribePodcast(podcast);
-      podcastStats = (await persistenceService.findPodcastStats(podcast.guid))!;
+      await repository.subscribePodcast(podcast);
+      podcastStats = (await repository.findPodcastStats(podcast.guid))!;
     });
 
     test('findEpisodesByPodcastGuid', () async {
-      final loaded =
-          await persistenceService.findEpisodesByPodcastGuid(podcast.guid);
+      final loaded = await repository.findEpisodesByPodcastGuid(podcast.guid);
       expect(loaded, hasLength(3));
     });
 
     test('findEpisode should return non-null but not stats', () async {
-      final episode =
-          await persistenceService.findEpisode(podcast.episodes[2].guid);
+      final episode = await repository.findEpisode(podcast.episodes[2].guid);
       expect(episode, podcast.episodes[2]);
 
-      final stats =
-          await persistenceService.findEpisodeStats(podcast.episodes[2].guid);
+      final stats = await repository.findEpisodeStats(podcast.episodes[2].guid);
       expect(stats, isNull);
     });
 
@@ -244,15 +246,13 @@ void main() {
         guid: podcast.episodes[2].guid,
         playCount: 1,
       );
-      episodeStats = await persistenceService.updateEpisodeStats(param);
+      episodeStats = await repository.updateEpisodeStats(param);
       expect(episodeStats, isNotNull);
-      expect(episodeStats.duration, podcast.episodes[2].duration);
       expect(episodeStats.playCount, 1);
     });
 
     test('findEpisodeStats', () async {
-      final loaded =
-          await persistenceService.findEpisodeStats(episodeStats.guid);
+      final loaded = await repository.findEpisodeStats(episodeStats.guid);
       expect(loaded, episodeStats);
     });
 
@@ -263,18 +263,16 @@ void main() {
         playTotalDelta: const Duration(minutes: 33),
         completeCountDelta: 2,
       );
-      await persistenceService.updateEpisodeStats(param);
+      await repository.updateEpisodeStats(param);
 
-      final loaded =
-          await persistenceService.findEpisodeStats(episodeStats.guid);
+      final loaded = await repository.findEpisodeStats(episodeStats.guid);
       expect(loaded == episodeStats, isFalse);
       expect(loaded?.playTotal, param.playTotalDelta);
       expect(loaded?.completeCount, param.completeCountDelta);
     });
 
     test('check updated field', () async {
-      final loaded =
-          await persistenceService.findEpisodeStats(episodeStats.guid);
+      final loaded = await repository.findEpisodeStats(episodeStats.guid);
       expect(loaded?.playTotal, const Duration(minutes: 33));
       episodeStats = loaded!;
     });
@@ -292,28 +290,26 @@ void main() {
           playCount: 1,
         ),
       ];
-      final result = await persistenceService.updateEpisodeStatsList(params);
+      final result = await repository.updateEpisodeStatsList(params);
       expect(result, hasLength(2));
       expect(result[0].guid, podcast.episodes[0].guid);
-      expect(result[0].duration, podcast.episodes[0].duration);
       expect(result[1].playCount, 1);
     });
 
     test('check updated field(2)', () async {
       final loaded =
-          await persistenceService.findEpisodeStats(podcast.episodes[1].guid);
+          await repository.findEpisodeStats(podcast.episodes[1].guid);
       expect(loaded?.playCount, 1);
     });
 
     test('unsubscribePodcast', () async {
-      await persistenceService.unsubscribePodcast(podcast1);
+      await repository.unsubscribePodcast(podcast1);
       final episodes =
-          await persistenceService.findEpisodesByPodcastGuid(podcastStats.guid);
+          await repository.findEpisodesByPodcastGuid(podcastStats.guid);
       expect(episodes, isNotEmpty);
 
       // EpisodeStats should still exist.
-      final loaded =
-          await persistenceService.findEpisodeStats(episodeStats.guid);
+      final loaded = await repository.findEpisodeStats(episodeStats.guid);
       expect(loaded, episodeStats);
     });
   });
@@ -333,8 +329,8 @@ void main() {
         guid: 'g$n',
         playCount: 1,
       );
-      await persistenceService.updateEpisodeStats(param);
-      await persistenceService.saveRecentlyPlayedEpisode(
+      await repository.updateEpisodeStats(param);
+      await repository.saveRecentlyPlayedEpisode(
         EpisodeMetadata(
           guid: 'g$n',
           pguid: 'p$n',
@@ -343,14 +339,15 @@ void main() {
           thumbImageUrl: '',
           duration: Duration.zero,
           publicationDate: tm,
-        ),
+          contentUrl: '',
+        ).toPartialEpisode(),
         playedAt: generateTime(),
       );
     }
 
     test('empty', () async {
       final (statsList, cursor) =
-          await persistenceService.findRecentlyPlayedEpisodeStatsList();
+          await repository.findRecentlyPlayedEpisodeList();
       expect(statsList, isEmpty);
       expect(cursor, isNull);
     });
@@ -358,7 +355,7 @@ void main() {
     test('create on entry', () async {
       await addEntry(1);
       final (statsList, cursor) =
-          await persistenceService.findRecentlyPlayedEpisodeStatsList();
+          await repository.findRecentlyPlayedEpisodeList();
       expect(statsList, hasLength(1));
       expect(cursor, isNull);
     });
@@ -370,20 +367,18 @@ void main() {
       await addEntry(2);
 
       var (statsList, cursor) =
-          await persistenceService.findRecentlyPlayedEpisodeStatsList(limit: 3);
+          await repository.findRecentlyPlayedEpisodeList(limit: 3);
       expect(statsList.map((s) => s.guid), ['g2', 'g6', 'g5']);
       expect(cursor, isNotNull);
 
-      (statsList, cursor) =
-          await persistenceService.findRecentlyPlayedEpisodeStatsList(
+      (statsList, cursor) = await repository.findRecentlyPlayedEpisodeList(
         limit: 3,
         cursor: cursor,
       );
       expect(statsList.map((s) => s.guid), ['g4', 'g3']);
       expect(cursor, isNotNull);
 
-      (statsList, cursor) =
-          await persistenceService.findRecentlyPlayedEpisodeStatsList(
+      (statsList, cursor) = await repository.findRecentlyPlayedEpisodeList(
         limit: 3,
         cursor: cursor,
       );
@@ -397,13 +392,13 @@ void main() {
     tearDownAll(cleanUpRepository);
 
     test('playingEpisodeGuid initial value', () async {
-      final guid = await persistenceService.playingEpisodeGuid();
+      final guid = await repository.playingEpisodeGuid();
       expect(guid, isNull);
     });
 
     test('savePlayingEpisodeGuid', () async {
-      await persistenceService.savePlayingEpisodeGuid('abc');
-      final guid = await persistenceService.playingEpisodeGuid();
+      await repository.savePlayingEpisodeGuid('abc');
+      final guid = await repository.playingEpisodeGuid();
       expect(guid, 'abc');
     });
   });
@@ -413,10 +408,10 @@ void main() {
     tearDownAll(cleanUpRepository);
 
     test('empty', () async {
-      final loaded = await persistenceService.loadQueue();
+      final loaded = await repository.loadQueue();
       expect(loaded.queue, isEmpty);
 
-      await persistenceService.saveQueue(const Queue());
+      await repository.saveQueue(const Queue());
     });
 
     test('Create and save', () async {
@@ -428,9 +423,9 @@ void main() {
           QueueItem.adhoc(pguid: episodes2[0].pguid, guid: episodes2[0].guid),
         ],
       );
-      await persistenceService.saveQueue(queue);
+      await repository.saveQueue(queue);
 
-      final loaded = await persistenceService.loadQueue();
+      final loaded = await repository.loadQueue();
       expect(queue == loaded, isTrue);
     });
   });

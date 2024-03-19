@@ -7,7 +7,7 @@ part of 'podcast_view_episodes_provider.dart';
 // **************************************************************************
 
 String _$podcastViewEpisodesHash() =>
-    r'76d4fbeee9bb51f3e47bda22cc26a8e9532e7a12';
+    r'a6dcfa153428bf775e85dd1f756ad01eb0b11f5b';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -32,10 +32,10 @@ class _SystemHash {
 
 abstract class _$PodcastViewEpisodes
     extends BuildlessAutoDisposeAsyncNotifier<List<Episode>> {
-  late final Podcast podcast;
+  late final String guid;
 
   FutureOr<List<Episode>> build(
-    Podcast podcast,
+    String guid,
   );
 }
 
@@ -50,10 +50,10 @@ class PodcastViewEpisodesFamily extends Family<AsyncValue<List<Episode>>> {
 
   /// See also [PodcastViewEpisodes].
   PodcastViewEpisodesProvider call(
-    Podcast podcast,
+    String guid,
   ) {
     return PodcastViewEpisodesProvider(
-      podcast,
+      guid,
     );
   }
 
@@ -62,7 +62,7 @@ class PodcastViewEpisodesFamily extends Family<AsyncValue<List<Episode>>> {
     covariant PodcastViewEpisodesProvider provider,
   ) {
     return call(
-      provider.podcast,
+      provider.guid,
     );
   }
 
@@ -86,9 +86,9 @@ class PodcastViewEpisodesProvider extends AutoDisposeAsyncNotifierProviderImpl<
     PodcastViewEpisodes, List<Episode>> {
   /// See also [PodcastViewEpisodes].
   PodcastViewEpisodesProvider(
-    Podcast podcast,
+    String guid,
   ) : this._internal(
-          () => PodcastViewEpisodes()..podcast = podcast,
+          () => PodcastViewEpisodes()..guid = guid,
           from: podcastViewEpisodesProvider,
           name: r'podcastViewEpisodesProvider',
           debugGetCreateSourceHash:
@@ -98,7 +98,7 @@ class PodcastViewEpisodesProvider extends AutoDisposeAsyncNotifierProviderImpl<
           dependencies: PodcastViewEpisodesFamily._dependencies,
           allTransitiveDependencies:
               PodcastViewEpisodesFamily._allTransitiveDependencies,
-          podcast: podcast,
+          guid: guid,
         );
 
   PodcastViewEpisodesProvider._internal(
@@ -108,17 +108,17 @@ class PodcastViewEpisodesProvider extends AutoDisposeAsyncNotifierProviderImpl<
     required super.allTransitiveDependencies,
     required super.debugGetCreateSourceHash,
     required super.from,
-    required this.podcast,
+    required this.guid,
   }) : super.internal();
 
-  final Podcast podcast;
+  final String guid;
 
   @override
   FutureOr<List<Episode>> runNotifierBuild(
     covariant PodcastViewEpisodes notifier,
   ) {
     return notifier.build(
-      podcast,
+      guid,
     );
   }
 
@@ -127,13 +127,13 @@ class PodcastViewEpisodesProvider extends AutoDisposeAsyncNotifierProviderImpl<
     return ProviderOverride(
       origin: this,
       override: PodcastViewEpisodesProvider._internal(
-        () => create()..podcast = podcast,
+        () => create()..guid = guid,
         from: from,
         name: null,
         dependencies: null,
         allTransitiveDependencies: null,
         debugGetCreateSourceHash: null,
-        podcast: podcast,
+        guid: guid,
       ),
     );
   }
@@ -146,13 +146,13 @@ class PodcastViewEpisodesProvider extends AutoDisposeAsyncNotifierProviderImpl<
 
   @override
   bool operator ==(Object other) {
-    return other is PodcastViewEpisodesProvider && other.podcast == podcast;
+    return other is PodcastViewEpisodesProvider && other.guid == guid;
   }
 
   @override
   int get hashCode {
     var hash = _SystemHash.combine(0, runtimeType.hashCode);
-    hash = _SystemHash.combine(hash, podcast.hashCode);
+    hash = _SystemHash.combine(hash, guid.hashCode);
 
     return _SystemHash.finish(hash);
   }
@@ -160,8 +160,8 @@ class PodcastViewEpisodesProvider extends AutoDisposeAsyncNotifierProviderImpl<
 
 mixin PodcastViewEpisodesRef
     on AutoDisposeAsyncNotifierProviderRef<List<Episode>> {
-  /// The parameter `podcast` of this provider.
-  Podcast get podcast;
+  /// The parameter `guid` of this provider.
+  String get guid;
 }
 
 class _PodcastViewEpisodesProviderElement
@@ -170,7 +170,7 @@ class _PodcastViewEpisodesProviderElement
   _PodcastViewEpisodesProviderElement(super.provider);
 
   @override
-  Podcast get podcast => (origin as PodcastViewEpisodesProvider).podcast;
+  String get guid => (origin as PodcastViewEpisodesProvider).guid;
 }
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

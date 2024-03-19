@@ -27,30 +27,26 @@ class EpisodeTile extends HookConsumerWidget {
   const EpisodeTile({
     super.key,
     required this.showsThumbnail,
-    required this.metadata,
     required this.episode,
   });
 
   final bool showsThumbnail;
-  final PodcastMetadata metadata;
   final Episode episode;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final showsThumbnail = this.showsThumbnail && episode.thumbImageUrl != null;
     return showsThumbnail
-        ? _EpisodeTileWithThumbnail(metadata, episode)
-        : _EpisodeTileNoThumbnail(metadata, episode);
+        ? _EpisodeTileWithThumbnail(episode)
+        : _EpisodeTileNoThumbnail(episode);
   }
 }
 
 class _EpisodeTileWithThumbnail extends HookConsumerWidget {
   const _EpisodeTileWithThumbnail(
-    this.metadata,
     this.episode,
   );
 
-  final PodcastMetadata metadata;
   final Episode episode;
 
   @override
@@ -78,7 +74,6 @@ class _EpisodeTileWithThumbnail extends HookConsumerWidget {
               child: InkWell(
                 onTap: () {
                   NavigationHelper.pushEpisodeDetail(
-                    metadata: metadata,
                     episode: episode,
                     heroPrefix: 'episodeHero',
                   );
@@ -86,7 +81,7 @@ class _EpisodeTileWithThumbnail extends HookConsumerWidget {
                 child: Container(
                   height: 60,
                   padding: const EdgeInsets.only(right: 8),
-                  child: _Content(metadata, episode),
+                  child: _Content(episode),
                 ),
               ),
             ),
@@ -145,11 +140,9 @@ class _EpisodeTileWithThumbnail extends HookConsumerWidget {
 
 class _EpisodeTileNoThumbnail extends HookConsumerWidget {
   const _EpisodeTileNoThumbnail(
-    this.metadata,
     this.episode,
   );
 
-  final PodcastMetadata metadata;
   final Episode episode;
 
   @override
@@ -172,7 +165,6 @@ class _EpisodeTileNoThumbnail extends HookConsumerWidget {
             InkWell(
               onTap: () {
                 NavigationHelper.pushEpisodeDetail(
-                  metadata: metadata,
                   episode: episode,
                   heroPrefix: 'episodeHero',
                 );
@@ -183,7 +175,7 @@ class _EpisodeTileNoThumbnail extends HookConsumerWidget {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _Content(metadata, episode),
+                    _Content(episode),
                     const SizedBox(height: 4),
                     EpisodeDate(episode, color: theme.hintColor),
                   ],
@@ -217,9 +209,8 @@ class _EpisodeTileNoThumbnail extends HookConsumerWidget {
 }
 
 class _Content extends StatelessWidget {
-  const _Content(this.metadata, this.episode);
+  const _Content(this.episode);
 
-  final PodcastMetadata metadata;
   final Episode episode;
 
   @override
@@ -230,8 +221,10 @@ class _Content extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         GestureDetector(
-          onTap: () => NavigationHelper.router
-              .pushNamed('episode', extra: (metadata, episode, 'episodeHero')),
+          onTap: () => NavigationHelper.pushEpisodeDetail(
+            episode: episode,
+            heroPrefix: 'episodeHero',
+          ),
           child: SizedBox(
             width: double.infinity,
             child: Text(

@@ -47,7 +47,7 @@ class SmallPlayButton extends ConsumerWidget {
       ),
     );
     final stats = ref.watch(episodeInfoProvider(episode)).value?.stats;
-    final duration = episode.duration ?? stats?.duration ?? Duration.zero;
+    final duration = episode.duration ?? Duration.zero;
     final position = playerPosition ?? stats?.position ?? Duration.zero;
     final finished = duration - position < Duration.zero;
     final remains = finished ? duration : duration - position;
