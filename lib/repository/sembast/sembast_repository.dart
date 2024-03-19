@@ -454,29 +454,12 @@ class SembastRepository extends Repository {
 
     final db = await _db;
     final stats = await db.transaction((txn) async {
-      final EpisodeStats? stats;
-
       final value = await _episodeStatsStore.record(param.guid).get(txn);
-      if (value != null) {
-        stats = EpisodeStats.fromJson(value);
-      } else {
-        final value = await _episodeStore.record(param.guid).get(txn);
-        stats = value != null
-            ? EpisodeStats.fromEpisode(Episode.fromJson(value))
-            : EpisodeStats(pguid: param.pguid, guid: param.guid);
-      }
+      final stats = value != null
+          ? EpisodeStats.fromJson(value)
+          : EpisodeStats(pguid: param.pguid, guid: param.guid);
 
-      final newStats = stats.copyWith(
-        position: param.position ?? stats.position,
-        playCount: stats.playCount + (param.lastPlayedAt != null ? 1 : 0),
-        playTotal: stats.playTotal + (param.playTotalDelta ?? Duration.zero),
-        played: param.played ?? stats.played,
-        completeCount: stats.completeCount + (param.completeCountDelta ?? 0),
-        inQueue: param.inQueue ?? stats.inQueue,
-        downloadedTime: param.downloadedTime ?? stats.downloadedTime,
-        lastPlayedAt: param.lastPlayedAt ?? stats.lastPlayedAt,
-      );
-
+      final newStats = _composeNewEpisodeStats(stats, param);
       if (newStats != stats) {
         await _episodeStatsStore.record(stats.guid).put(txn, newStats.toJson());
       }
@@ -505,26 +488,11 @@ class SembastRepository extends Repository {
       final futures = List.generate(params.length, (i) async {
         final param = paramList[i];
         final value = values[i];
+        final stats = value != null
+            ? EpisodeStats.fromJson(value)
+            : EpisodeStats(pguid: param.pguid, guid: param.guid);
 
-        final EpisodeStats? stats;
-        if (value != null) {
-          stats = EpisodeStats.fromJson(value);
-        } else {
-          final value = await _episodeStore.record(param.guid).get(txn);
-          stats = value != null
-              ? EpisodeStats.fromEpisode(Episode.fromJson(value))
-              : EpisodeStats(pguid: param.pguid, guid: param.guid);
-        }
-
-        final newStats = stats.copyWith(
-          position: param.position ?? stats.position,
-          playCount: param.startPlaying ?? stats.playCount,
-          playTotal: param.playTotalDelta ?? stats.playTotal,
-          completeCount: param.completeCountDelta ?? 0,
-          inQueue: param.inQueue ?? stats.inQueue,
-          downloadedTime: param.downloadedTime ?? stats.downloadedTime,
-        );
-
+        final newStats = _composeNewEpisodeStats(stats, param);
         if (newStats != stats) {
           await _episodeStatsStore
               .record(stats.guid)
@@ -540,6 +508,22 @@ class SembastRepository extends Repository {
       _episodeEventStream.add(EpisodeStatsUpdatedEvent(stats));
     }
     return statsList;
+  }
+
+  EpisodeStats _composeNewEpisodeStats(
+    EpisodeStats stats,
+    EpisodeStatsUpdateParam param,
+  ) {
+    return stats.copyWith(
+      position: param.position ?? stats.position,
+      playCount: stats.playCount + (param.lastPlayedAt != null ? 1 : 0),
+      playTotal: stats.playTotal + (param.playTotalDelta ?? Duration.zero),
+      played: param.played ?? stats.played,
+      completeCount: stats.completeCount + (param.completeCountDelta ?? 0),
+      inQueue: param.inQueue ?? stats.inQueue,
+      downloadedTime: param.downloadedTime ?? stats.downloadedTime,
+      lastPlayedAt: param.lastPlayedAt ?? stats.lastPlayedAt,
+    );
   }
 
   @override

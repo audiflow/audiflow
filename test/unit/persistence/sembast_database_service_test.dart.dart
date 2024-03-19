@@ -244,11 +244,11 @@ void main() {
       final param = EpisodeStatsUpdateParam(
         pguid: podcast.episodes[2].pguid,
         guid: podcast.episodes[2].guid,
-        startPlaying: 1,
+        played: true,
       );
       episodeStats = await repository.updateEpisodeStats(param);
       expect(episodeStats, isNotNull);
-      expect(episodeStats.playCount, 1);
+      expect(episodeStats.played, true);
     });
 
     test('findEpisodeStats', () async {
@@ -282,24 +282,23 @@ void main() {
         EpisodeStatsUpdateParam(
           pguid: podcast.episodes[0].pguid,
           guid: podcast.episodes[0].guid,
-          startPlaying: 2,
         ),
         EpisodeStatsUpdateParam(
           pguid: podcast.episodes[1].pguid,
           guid: podcast.episodes[1].guid,
-          startPlaying: 1,
+          played: true,
         ),
       ];
       final result = await repository.updateEpisodeStatsList(params);
       expect(result, hasLength(2));
       expect(result[0].guid, podcast.episodes[0].guid);
-      expect(result[1].playCount, 1);
+      expect(result[1].played, isTrue);
     });
 
     test('check updated field(2)', () async {
       final loaded =
           await repository.findEpisodeStats(podcast.episodes[1].guid);
-      expect(loaded?.playCount, 1);
+      expect(loaded?.played, isTrue);
     });
 
     test('unsubscribePodcast', () async {
@@ -327,7 +326,7 @@ void main() {
       final param = EpisodeStatsUpdateParam(
         pguid: 'p$n',
         guid: 'g$n',
-        startPlaying: 1,
+        played: true,
       );
       await repository.updateEpisodeStats(param);
       await repository.saveRecentlyPlayedEpisode(
