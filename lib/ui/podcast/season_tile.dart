@@ -8,9 +8,11 @@
 import 'package:audiflow/core/l10n.dart';
 import 'package:audiflow/entities/entities.dart';
 import 'package:audiflow/ui/app/navigation_helper.dart';
+import 'package:audiflow/ui/providers/podcast_season_info_provider.dart';
 import 'package:audiflow/ui/util/datetime.dart';
 import 'package:audiflow/ui/widgets/tile_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class SeasonTile extends StatelessWidget {
   const SeasonTile({
@@ -95,21 +97,23 @@ class _SeasonTitle extends StatelessWidget {
   }
 }
 
-class _SeasonSubtitle extends StatelessWidget {
+class _SeasonSubtitle extends ConsumerWidget {
   const _SeasonSubtitle(this.season);
 
   final Season season;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-
     final l10n = L10n.of(context)!;
-    final playedEpisodes = season.episodes.where((episode) => false).length;
+
     final firstDate =
         _dateString(context, season.episodes.first.publicationDate);
     final lastDate = _dateString(context, season.episodes.last.publicationDate);
     final duration = _durationString(context, season.totalDuration);
+
+    final seasonState = ref.watch(podcastSeasonInfoProvider(season));
+    final playedEpisodes = seasonState.valueOrNull?.playedCount;
     final episodes =
         '$playedEpisodes/${l10n.nEpisodes(season.episodes.length)}';
 
