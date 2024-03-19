@@ -468,8 +468,9 @@ class SembastRepository extends Repository {
 
       final newStats = stats.copyWith(
         position: param.position ?? stats.position,
-        playCount: param.playCount ?? stats.playCount,
+        playCount: stats.playCount + (param.lastPlayedAt != null ? 1 : 0),
         playTotal: stats.playTotal + (param.playTotalDelta ?? Duration.zero),
+        played: param.played ?? stats.played,
         completeCount: stats.completeCount + (param.completeCountDelta ?? 0),
         inQueue: param.inQueue ?? stats.inQueue,
         downloadedTime: param.downloadedTime ?? stats.downloadedTime,
@@ -517,7 +518,7 @@ class SembastRepository extends Repository {
 
         final newStats = stats.copyWith(
           position: param.position ?? stats.position,
-          playCount: param.playCount ?? stats.playCount,
+          playCount: param.startPlaying ?? stats.playCount,
           playTotal: param.playTotalDelta ?? stats.playTotal,
           completeCount: param.completeCountDelta ?? 0,
           inQueue: param.inQueue ?? stats.inQueue,

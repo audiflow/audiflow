@@ -736,6 +736,9 @@ mixin _$EpisodeStats {
   /// Total playing time
   Duration get playTotal => throw _privateConstructorUsedError;
 
+  /// Whether the episode has been marked as played
+  bool get played => throw _privateConstructorUsedError;
+
   /// Number of times of complete playing
   int get completeCount => throw _privateConstructorUsedError;
 
@@ -766,6 +769,7 @@ abstract class $EpisodeStatsCopyWith<$Res> {
       Duration position,
       int playCount,
       Duration playTotal,
+      bool played,
       int completeCount,
       bool inQueue,
       DateTime? downloadedTime,
@@ -790,6 +794,7 @@ class _$EpisodeStatsCopyWithImpl<$Res, $Val extends EpisodeStats>
     Object? position = null,
     Object? playCount = null,
     Object? playTotal = null,
+    Object? played = null,
     Object? completeCount = null,
     Object? inQueue = null,
     Object? downloadedTime = freezed,
@@ -816,6 +821,10 @@ class _$EpisodeStatsCopyWithImpl<$Res, $Val extends EpisodeStats>
           ? _value.playTotal
           : playTotal // ignore: cast_nullable_to_non_nullable
               as Duration,
+      played: null == played
+          ? _value.played
+          : played // ignore: cast_nullable_to_non_nullable
+              as bool,
       completeCount: null == completeCount
           ? _value.completeCount
           : completeCount // ignore: cast_nullable_to_non_nullable
@@ -850,6 +859,7 @@ abstract class _$$EpisodeStatsImplCopyWith<$Res>
       Duration position,
       int playCount,
       Duration playTotal,
+      bool played,
       int completeCount,
       bool inQueue,
       DateTime? downloadedTime,
@@ -872,6 +882,7 @@ class __$$EpisodeStatsImplCopyWithImpl<$Res>
     Object? position = null,
     Object? playCount = null,
     Object? playTotal = null,
+    Object? played = null,
     Object? completeCount = null,
     Object? inQueue = null,
     Object? downloadedTime = freezed,
@@ -898,6 +909,10 @@ class __$$EpisodeStatsImplCopyWithImpl<$Res>
           ? _value.playTotal
           : playTotal // ignore: cast_nullable_to_non_nullable
               as Duration,
+      played: null == played
+          ? _value.played
+          : played // ignore: cast_nullable_to_non_nullable
+              as bool,
       completeCount: null == completeCount
           ? _value.completeCount
           : completeCount // ignore: cast_nullable_to_non_nullable
@@ -927,6 +942,7 @@ class _$EpisodeStatsImpl with DiagnosticableTreeMixin implements _EpisodeStats {
       this.position = Duration.zero,
       this.playCount = 0,
       this.playTotal = Duration.zero,
+      this.played = false,
       this.completeCount = 0,
       this.inQueue = false,
       this.downloadedTime,
@@ -958,6 +974,11 @@ class _$EpisodeStatsImpl with DiagnosticableTreeMixin implements _EpisodeStats {
   @JsonKey()
   final Duration playTotal;
 
+  /// Whether the episode has been marked as played
+  @override
+  @JsonKey()
+  final bool played;
+
   /// Number of times of complete playing
   @override
   @JsonKey()
@@ -978,7 +999,7 @@ class _$EpisodeStatsImpl with DiagnosticableTreeMixin implements _EpisodeStats {
 
   @override
   String toString({DiagnosticLevel minLevel = DiagnosticLevel.info}) {
-    return 'EpisodeStats(pguid: $pguid, guid: $guid, position: $position, playCount: $playCount, playTotal: $playTotal, completeCount: $completeCount, inQueue: $inQueue, downloadedTime: $downloadedTime, lastPlayedAt: $lastPlayedAt)';
+    return 'EpisodeStats(pguid: $pguid, guid: $guid, position: $position, playCount: $playCount, playTotal: $playTotal, played: $played, completeCount: $completeCount, inQueue: $inQueue, downloadedTime: $downloadedTime, lastPlayedAt: $lastPlayedAt)';
   }
 
   @override
@@ -991,6 +1012,7 @@ class _$EpisodeStatsImpl with DiagnosticableTreeMixin implements _EpisodeStats {
       ..add(DiagnosticsProperty('position', position))
       ..add(DiagnosticsProperty('playCount', playCount))
       ..add(DiagnosticsProperty('playTotal', playTotal))
+      ..add(DiagnosticsProperty('played', played))
       ..add(DiagnosticsProperty('completeCount', completeCount))
       ..add(DiagnosticsProperty('inQueue', inQueue))
       ..add(DiagnosticsProperty('downloadedTime', downloadedTime))
@@ -1010,6 +1032,7 @@ class _$EpisodeStatsImpl with DiagnosticableTreeMixin implements _EpisodeStats {
                 other.playCount == playCount) &&
             (identical(other.playTotal, playTotal) ||
                 other.playTotal == playTotal) &&
+            (identical(other.played, played) || other.played == played) &&
             (identical(other.completeCount, completeCount) ||
                 other.completeCount == completeCount) &&
             (identical(other.inQueue, inQueue) || other.inQueue == inQueue) &&
@@ -1022,7 +1045,7 @@ class _$EpisodeStatsImpl with DiagnosticableTreeMixin implements _EpisodeStats {
   @JsonKey(ignore: true)
   @override
   int get hashCode => Object.hash(runtimeType, pguid, guid, position, playCount,
-      playTotal, completeCount, inQueue, downloadedTime, lastPlayedAt);
+      playTotal, played, completeCount, inQueue, downloadedTime, lastPlayedAt);
 
   @JsonKey(ignore: true)
   @override
@@ -1045,6 +1068,7 @@ abstract class _EpisodeStats implements EpisodeStats {
       final Duration position,
       final int playCount,
       final Duration playTotal,
+      final bool played,
       final int completeCount,
       final bool inQueue,
       final DateTime? downloadedTime,
@@ -1073,6 +1097,10 @@ abstract class _EpisodeStats implements EpisodeStats {
 
   /// Total playing time
   Duration get playTotal;
+  @override
+
+  /// Whether the episode has been marked as played
+  bool get played;
   @override
 
   /// Number of times of complete playing

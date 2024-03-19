@@ -244,7 +244,7 @@ void main() {
       final param = EpisodeStatsUpdateParam(
         pguid: podcast.episodes[2].pguid,
         guid: podcast.episodes[2].guid,
-        playCount: 1,
+        startPlaying: 1,
       );
       episodeStats = await repository.updateEpisodeStats(param);
       expect(episodeStats, isNotNull);
@@ -282,12 +282,12 @@ void main() {
         EpisodeStatsUpdateParam(
           pguid: podcast.episodes[0].pguid,
           guid: podcast.episodes[0].guid,
-          playCount: 2,
+          startPlaying: 2,
         ),
         EpisodeStatsUpdateParam(
           pguid: podcast.episodes[1].pguid,
           guid: podcast.episodes[1].guid,
-          playCount: 1,
+          startPlaying: 1,
         ),
       ];
       final result = await repository.updateEpisodeStatsList(params);
@@ -327,7 +327,7 @@ void main() {
       final param = EpisodeStatsUpdateParam(
         pguid: 'p$n',
         guid: 'g$n',
-        playCount: 1,
+        startPlaying: 1,
       );
       await repository.updateEpisodeStats(param);
       await repository.saveRecentlyPlayedEpisode(
