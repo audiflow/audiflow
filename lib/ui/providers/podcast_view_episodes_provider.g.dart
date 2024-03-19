@@ -7,7 +7,7 @@ part of 'podcast_view_episodes_provider.dart';
 // **************************************************************************
 
 String _$podcastViewEpisodesHash() =>
-    r'a6dcfa153428bf775e85dd1f756ad01eb0b11f5b';
+    r'8a43f196831f211d897ff01c346d772878a29666';
 
 /// Copied from Dart SDK
 class _SystemHash {

@@ -9,9 +9,14 @@
 import 'package:audiflow/entities/entities.dart';
 
 abstract class DownloadService {
+  Future<List<Downloadable>> loadAllDownloads();
+
   Future<bool> downloadEpisode(Episode episode);
 
-  Future<bool> downloadEpisodes(Iterable<Episode> episodes);
+  Future<void> downloadEpisodes(
+    Iterable<Episode> episodes, {
+    bool unplayedOnly = false,
+  });
 
   Future<void> deleteDownload(Episode episode);
 

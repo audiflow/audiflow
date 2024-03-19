@@ -450,24 +450,27 @@ class SembastRepository extends Repository {
 
   @override
   Future<EpisodeStats> updateEpisodeStats(EpisodeStatsUpdateParam param) async {
-    // log.fine('Update EpisodeStats: ${param.guid}');
-
     final db = await _db;
-    final stats = await db.transaction((txn) async {
-      final value = await _episodeStatsStore.record(param.guid).get(txn);
-      final stats = value != null
-          ? EpisodeStats.fromJson(value)
-          : EpisodeStats(pguid: param.pguid, guid: param.guid);
-
-      final newStats = _composeNewEpisodeStats(stats, param);
-      if (newStats != stats) {
-        await _episodeStatsStore.record(stats.guid).put(txn, newStats.toJson());
-      }
-      return newStats;
-    });
-
+    final stats =
+        await db.transaction((txn) => _updateEpisodeStats(param, txn));
     _episodeEventStream.add(EpisodeStatsUpdatedEvent(stats));
     return stats;
+  }
+
+  Future<EpisodeStats> _updateEpisodeStats(
+    EpisodeStatsUpdateParam param,
+    DatabaseClient txn,
+  ) async {
+    final value = await _episodeStatsStore.record(param.guid).get(txn);
+    final stats = value != null
+        ? EpisodeStats.fromJson(value)
+        : EpisodeStats(pguid: param.pguid, guid: param.guid);
+
+    final newStats = _composeNewEpisodeStats(stats, param);
+    if (newStats != stats) {
+      await _episodeStatsStore.record(stats.guid).put(txn, newStats.toJson());
+    }
+    return newStats;
   }
 
   @override
@@ -521,7 +524,11 @@ class SembastRepository extends Repository {
       played: param.played ?? stats.played,
       completeCount: stats.completeCount + (param.completeCountDelta ?? 0),
       inQueue: param.inQueue ?? stats.inQueue,
-      downloadedTime: param.downloadedTime ?? stats.downloadedTime,
+      downloadedTime: param.downloaded == null
+          ? stats.downloadedTime
+          : param.downloaded!
+              ? DateTime.now()
+              : null,
       lastPlayedAt: param.lastPlayedAt ?? stats.lastPlayedAt,
     );
   }
@@ -657,17 +664,45 @@ class SembastRepository extends Repository {
   @override
   Future<void> saveDownload(Downloadable download) async {
     final client = await _db;
-    await _downloadableStore
-        .record(download.guid)
-        .put(client, download.toJson());
+    final newStats = await client.transaction((txn) async {
+      await _downloadableStore
+          .record(download.guid)
+          .put(txn, download.toJson());
+      if (download.state != DownloadState.downloaded) {
+        return null;
+      }
+
+      // If the episode is downloaded, update the episode stats.
+      // (This is a bit of a hack, but it's the easiest way to keep the
+      // episode stats in sync with the download state.
+      final updateParam = EpisodeStatsUpdateParam(
+        pguid: download.pguid,
+        guid: download.guid,
+        downloaded: true,
+      );
+      return _updateEpisodeStats(updateParam, txn);
+    });
+
     _downloadEventStream.add(DownloadUpdatedEvent(download));
+    if (newStats != null) {
+      _episodeEventStream.add(EpisodeStatsUpdatedEvent(newStats));
+    }
   }
 
   @override
   Future<void> deleteDownload(Downloadable download) async {
     final client = await _db;
-    await _downloadableStore.record(download.guid).delete(client);
+    final newStats = await client.transaction((txn) async {
+      await _downloadableStore.record(download.guid).delete(txn);
+      final updateParam = EpisodeStatsUpdateParam(
+        pguid: download.pguid,
+        guid: download.guid,
+        downloaded: false,
+      );
+      return _updateEpisodeStats(updateParam, txn);
+    });
     _downloadEventStream.add(DownloadDeletedEvent(download));
+    _episodeEventStream.add(EpisodeStatsUpdatedEvent(newStats));
   }
 
   @override

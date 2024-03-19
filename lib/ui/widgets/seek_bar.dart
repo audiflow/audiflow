@@ -154,8 +154,14 @@ class _TimeLabel extends StatelessWidget {
 
 extension _DurationExt on Duration {
   String format() {
-    final minutes = inMinutes;
-    final seconds = inSeconds.remainder(60).abs().toString().padLeft(2, '0');
-    return '$minutes:$seconds';
+    final milliseconds = inMilliseconds;
+    final totalSeconds =
+        milliseconds ~/ 1000 + (0 < milliseconds.remainder(1000) ? 1 : 0);
+    final minutes = (totalSeconds ~/ 60).abs();
+    final seconds = totalSeconds.remainder(60).abs();
+    final flag = isNegative ? '-' : '';
+    return 0 < minutes || 0 < seconds
+        ? '$flag$minutes:${seconds.toString().padLeft(2, '0')}'
+        : '0:00';
   }
 }

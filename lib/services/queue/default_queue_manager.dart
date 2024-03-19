@@ -229,9 +229,6 @@ class DefaultQueueManager extends _$DefaultQueueManager
 }
 
 class _Item {
-  final String pguid;
-  final String guid;
-
   _Item({
     required this.pguid,
     required this.guid,
@@ -240,4 +237,6 @@ class _Item {
   _Item.from(QueueItem item)
       : pguid = item.pguid,
         guid = item.guid;
+  final String pguid;
+  final String guid;
 }
