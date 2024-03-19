@@ -66,6 +66,7 @@ class AudioPositionSaver extends _$AudioPositionSaver {
               EpisodeStatsUpdateParam(
                 pguid: episode.pguid,
                 guid: episode.guid,
+                position: episode.duration,
                 completeCountDelta: 1,
               ),
             );
