@@ -49,9 +49,6 @@ class PodcastDetailsPage extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final scaffoldMessengerKey =
-        useState(GlobalKey<ScaffoldMessengerState>()).value;
-
     final podcastState =
         ref.watch(podcastInfoProvider(metadata.guid, needsEpisodes: true));
     final podcast = podcastState.value?.podcast;
@@ -78,63 +75,60 @@ class PodcastDetailsPage extends HookConsumerWidget {
       child: Semantics(
         header: false,
         label: L10n.of(context)!.semantics_podcast_details_header,
-        child: ScaffoldMessenger(
-          key: scaffoldMessengerKey,
-          child: ScrollsToTop(
-            onScrollsToTop: (event) async {
-              await controller.animateTo(
-                event.to,
-                duration: event.duration,
-                curve: event.curve,
-              );
-            },
-            child: Scaffold(
-              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-              body: RefreshIndicator(
-                displacement: 60,
-                onRefresh: () async {
-                  await ref
-                      .read(podcastServiceProvider)
-                      .loadPodcast(metadata, refresh: true);
-                },
-                child: CustomScrollView(
-                  controller: controller,
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  slivers: <Widget>[
-                    PodcastDetailsAppBar(
-                      metadata: metadata,
-                      heroPrefix: heroPrefix,
-                      foregroundColor:
-                          paletteGenerator.lightMutedColor?.titleTextColor,
-                      backgroundColor: paletteGenerator.lightMutedColor?.color,
+        child: ScrollsToTop(
+          onScrollsToTop: (event) async {
+            await controller.animateTo(
+              event.to,
+              duration: event.duration,
+              curve: event.curve,
+            );
+          },
+          child: Scaffold(
+            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+            body: RefreshIndicator(
+              displacement: 60,
+              onRefresh: () async {
+                await ref
+                    .read(podcastServiceProvider)
+                    .loadPodcast(metadata, refresh: true);
+              },
+              child: CustomScrollView(
+                controller: controller,
+                physics: const AlwaysScrollableScrollPhysics(),
+                slivers: <Widget>[
+                  PodcastDetailsAppBar(
+                    metadata: metadata,
+                    heroPrefix: heroPrefix,
+                    foregroundColor:
+                        paletteGenerator.lightMutedColor?.titleTextColor,
+                    backgroundColor: paletteGenerator.lightMutedColor?.color,
+                  ),
+                  if (podcastState.isLoading ||
+                      seasonsState.isLoading ||
+                      podcastViewState.isLoading ||
+                      podcastViewEpisodesState == null ||
+                      podcastViewEpisodesState.isLoading)
+                    const FillRemainingLoading()
+                  else if (podcastState.hasError || podcast == null)
+                    FillRemainingError.podcastNoResults()
+                  else ...[
+                    _PodcastTitle(podcast),
+                    _SwitchBar(
+                      podcast: podcast,
+                      seasons: seasonsState.value!,
+                      viewMode: viewMode,
+                      ascend: ascend,
                     ),
-                    if (podcastState.isLoading ||
-                        seasonsState.isLoading ||
-                        podcastViewState.isLoading ||
-                        podcastViewEpisodesState == null ||
-                        podcastViewEpisodesState.isLoading)
-                      const FillRemainingLoading()
-                    else if (podcastState.hasError || podcast == null)
-                      FillRemainingError.podcastNoResults()
-                    else ...[
-                      _PodcastTitle(podcast),
-                      _SwitchBar(
-                        podcast: podcast,
-                        seasons: seasonsState.value!,
-                        viewMode: viewMode,
-                        ascend: ascend,
-                      ),
-                      viewMode == PodcastDetailViewMode.seasons
-                          ? SeasonList(podcast: podcast)
-                          : EpisodeList(
-                              episodeGroupKey: ValueKey(podcast.guid),
-                              metadata: podcast.metadata,
-                              episodes: podcastViewEpisodesState.requireValue,
-                              scrollController: controller,
-                            ),
-                    ],
+                    viewMode == PodcastDetailViewMode.seasons
+                        ? SeasonList(podcast: podcast)
+                        : EpisodeList(
+                            episodeGroupKey: ValueKey(podcast.guid),
+                            metadata: podcast.metadata,
+                            episodes: podcastViewEpisodesState.requireValue,
+                            scrollController: controller,
+                          ),
                   ],
-                ),
+                ],
               ),
             ),
           ),

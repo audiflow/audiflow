@@ -7,7 +7,7 @@
 
 import 'package:audiflow/core/l10n.dart';
 import 'package:audiflow/entities/entities.dart';
-import 'package:audiflow/services/podcast/podcast_service_provider.dart';
+import 'package:audiflow/services/download/download_service_provider.dart';
 import 'package:audiflow/ui/pages/app_bars/podcast_page_header_image.dart';
 import 'package:audiflow/ui/widgets/placeholder_builder.dart';
 import 'package:flutter/material.dart';
@@ -33,7 +33,7 @@ class PodcastSeasonAppBar extends ConsumerWidget {
         L10n.of(context)!.downloadAllEpisodes,
         Icons.download,
         onSelected: () {
-          ref.read(podcastServiceProvider).downloadEpisodes(season.episodes);
+          ref.read(downloadServiceProvider).downloadEpisodes(season.episodes);
         },
       ),
       _MenuItem(
@@ -41,7 +41,7 @@ class PodcastSeasonAppBar extends ConsumerWidget {
         Icons.download,
         onSelected: () {
           ref
-              .read(podcastServiceProvider)
+              .read(downloadServiceProvider)
               .downloadEpisodes(season.episodes, unplayedOnly: true);
         },
       ),

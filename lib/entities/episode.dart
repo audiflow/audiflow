@@ -230,7 +230,7 @@ class EpisodeStatsUpdateParam {
     this.playTotalDelta,
     this.completeCountDelta,
     this.inQueue,
-    this.downloadedTime,
+    this.downloaded,
     this.lastPlayedAt,
   });
 
@@ -241,7 +241,7 @@ class EpisodeStatsUpdateParam {
   final Duration? playTotalDelta;
   final int? completeCountDelta;
   final bool? inQueue;
-  final DateTime? downloadedTime;
+  final bool? downloaded;
   final DateTime? lastPlayedAt;
 
   EpisodeStatsUpdateParam copyWith({
@@ -251,7 +251,7 @@ class EpisodeStatsUpdateParam {
     Duration? playTotalDelta,
     int? completeCountDelta,
     bool? inQueue,
-    DateTime? downloadedTime,
+    bool? downloaded,
     DateTime? lastPlayedAt,
   }) {
     return EpisodeStatsUpdateParam(
@@ -262,7 +262,7 @@ class EpisodeStatsUpdateParam {
       playTotalDelta: playTotalDelta ?? this.playTotalDelta,
       completeCountDelta: completeCountDelta ?? this.completeCountDelta,
       inQueue: inQueue ?? this.inQueue,
-      downloadedTime: downloadedTime ?? this.downloadedTime,
+      downloaded: downloaded ?? this.downloaded,
       lastPlayedAt: lastPlayedAt ?? this.lastPlayedAt,
     );
   }
@@ -273,7 +273,7 @@ class EpisodeStatsUpdateParam {
       playTotalDelta == null &&
       completeCountDelta == null &&
       inQueue == null &&
-      downloadedTime == null &&
+      downloaded == null &&
       lastPlayedAt == null;
 }
 

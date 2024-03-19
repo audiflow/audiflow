@@ -21,6 +21,7 @@ import 'package:audiflow/services/download/downloadable_checker.dart';
 import 'package:audiflow/services/podcast/podcast_service_provider.dart';
 import 'package:audiflow/services/settings/settings_service.dart';
 import 'package:collection/collection.dart' show IterableExtension;
+import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
 import 'package:mp3_info/mp3_info.dart';
@@ -55,35 +56,75 @@ class MobileDownloadService extends DownloadService {
   }
 
   @override
+  Future<List<Downloadable>> loadAllDownloads() async {
+    return _repository.findAllDownloads();
+  }
+
+  @override
   Future<void> deleteDownload(Episode episode) async {
     final download = await _repository.findDownload(episode.guid);
-    if (download != null) {
-      await _repository.deleteDownload(download);
+    if (download == null) {
+      return;
+    }
+
+    // If this episode is currently downloading, cancel the download first.
+    if (download.state == DownloadState.downloaded) {
+      if (_appSettings.markDeletedEpisodesAsPlayed) {
+        // episode.played = true;
+      }
+    } else if (download.state == DownloadState.downloading &&
+        download.percentage < 100) {
+      await FlutterDownloader.cancel(taskId: download.taskId);
+    }
+
+    await _repository.deleteDownload(download);
+
+    if (await hasStoragePermission(_appSettings)) {
+      final f =
+          File.fromUri(Uri.file(await resolvePath(_appSettings, download)));
+      if (f.existsSync()) {
+        _log.fine('Deleting file ${f.path}');
+        await f.delete();
+      }
     }
   }
 
   @override
-  Future<bool> downloadEpisodes(Iterable<Episode> episodes) async {
-    if (episodes.isEmpty) {
-      return true;
+  Future<void> downloadEpisodes(
+      Iterable<Episode> episodes, {
+        bool unplayedOnly = false,
+      }) async {
+    if (!await hasStoragePermission(_appSettings)) {
+      return;
     }
 
-    if (!await hasStoragePermission(_appSettings)) {
-      return false;
+    final guids = episodes.map((e) => e.guid);
+    final downloads = await _repository.findDownloads(guids);
+    final statsList = unplayedOnly
+        ? <EpisodeStats>[]
+        : await _repository.findEpisodeStatsList(guids);
+
+    final toDownload = episodes.where((e) {
+      final stats = statsList.firstWhereOrNull((s) => s?.guid == e.guid);
+      return stats?.played != true;
+    }).where((e) {
+      final download = downloads.firstWhereOrNull((d) => d.guid == e.guid);
+      return download?.state != DownloadState.downloaded;
+    });
+    if (toDownload.isEmpty) {
+      return;
     }
 
     final downloadableChecker = _ref.read(downloadableCheckerProvider);
     if (!await downloadableChecker.canDownload(episodes.first)) {
-      return false;
+      return;
     }
 
     for (final episode in episodes) {
       if (!await _downloadEpisode(episode)) {
-        return false;
+        return;
       }
     }
-
-    return true;
   }
 
   @override
@@ -240,13 +281,6 @@ class MobileDownloadService extends DownloadService {
   }
 
   Future<void> _onDownloadComplete(Downloadable download) async {
-    final updateParam = EpisodeStatsUpdateParam(
-      pguid: download.pguid,
-      guid: download.guid,
-      downloadedTime: DateTime.now(),
-    );
-    await _repository.updateEpisodeStats(updateParam);
-
     var episode = await _repository.findEpisode(download.guid);
     if (episode != null && episode.duration == null) {
       final path = await resolvePath(_appSettings, download);

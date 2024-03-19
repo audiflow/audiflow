@@ -86,17 +86,6 @@ abstract class PodcastService {
 
   Future<Transcript> saveTranscript(Transcript transcript);
 
-  // --- Download ---
-
-  Future<List<Downloadable>> loadAllDownloads();
-
-  Future<void> deleteDownload(Episode episode);
-
-  Future<void> downloadEpisodes(
-    Iterable<Episode> episodes, {
-    bool unplayedOnly = false,
-  });
-
   // --- Play episode ---
 
   Future<void> handlePlay(Episode episode, {Iterable<Episode>? group});

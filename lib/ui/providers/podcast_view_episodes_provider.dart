@@ -28,52 +28,114 @@ class PodcastViewEpisodes extends _$PodcastViewEpisodes {
   Future<List<Episode>> build(String guid) async {
     _log.fine('build $guid');
 
-    final podcastState =
-        ref.watch(podcastInfoProvider(guid, needsEpisodes: true));
-    final podcast = podcastState.valueOrNull?.podcast;
-    final viewStats = ref.watch(podcastViewInfoProvider(guid));
-    final viewMode = viewStats.valueOrNull?.viewMode;
+    _listen(guid);
+    final completer = Completer<List<Episode>>();
+    ref.onDispose(() {
+      completer.complete([]);
+    });
+    return completer.future;
+  }
 
-    if (podcast == null) {
-      final completer = Completer<List<Episode>>();
-      ref.onDispose(() {
-        completer.complete([]);
+  void _listen(String guid) {
+    Podcast? podcast;
+    PodcastDetailViewMode? viewMode;
+    bool? ascend;
+
+    Future<void> onUpdate() async {
+      if (podcast != null && viewMode != null && ascend != null) {
+        final episodes =
+            await _getEpisodes(podcast!, viewMode!, ascend: ascend!);
+        state = AsyncData(episodes);
+      }
+    }
+
+    ref
+      ..listen(
+        podcastInfoProvider(guid, needsEpisodes: true)
+            .selectAsync((data) => data.podcast),
+        (_, next) async {
+          podcast = await next;
+          await onUpdate();
+        },
+        fireImmediately: true,
+      )
+      ..listen(
+        podcastViewInfoProvider(guid)
+            .selectAsync((data) => (data.viewMode, data.ascend)),
+        (_, next) async {
+          (viewMode, ascend) = await next;
+          await onUpdate();
+        },
+        fireImmediately: true,
+      )
+      ..listen(downloadEventStreamProvider, (_, next) {
+        if (podcast == null || viewMode != PodcastDetailViewMode.downloaded) {
+          return;
+        }
+
+        final event = next.requireValue;
+        if (event
+            case DownloadUpdatedEvent(download: final download) ||
+                DownloadDeletedEvent(download: final download)) {
+          if (download.state == DownloadState.downloaded &&
+              podcast!.episodes.any((e) => e.guid == download.guid)) {
+            onUpdate();
+          }
+        }
+      })
+      ..listen(audioPlayerEventStreamProvider, (_, next) {
+        if (podcast == null ||
+            ![
+              PodcastDetailViewMode.unplayed,
+              PodcastDetailViewMode.played,
+            ].contains(viewMode)) {
+          return;
+        }
+
+        final event = next.requireValue;
+        if (event
+            case AudioPlayerActionEvent(
+              episode: final episode,
+              action: final action
+            )) {
+          if (action == AudioPlayerAction.completed &&
+              podcast!.episodes.any((e) => e.guid == episode.guid)) {
+            onUpdate();
+          }
+        }
       });
-      return completer.future;
-    }
+  }
 
-    if (viewMode != null) {
-      _listenStats(viewMode, podcast);
-    }
-
+  Future<List<Episode>> _getEpisodes(
+    Podcast podcast,
+    PodcastDetailViewMode viewMode, {
+    required bool ascend,
+  }) async {
     switch (viewMode) {
-      case null:
       case PodcastDetailViewMode.seasons:
         return [];
       case PodcastDetailViewMode.episodes:
-        return viewStats.requireValue.ascend
-            ? podcast.episodes.reversed.toList()
-            : podcast.episodes;
+        return ascend ? podcast.episodes.reversed.toList() : podcast.episodes;
       case PodcastDetailViewMode.played:
         return _filterEpisodesBy(
           viewMode,
           podcast.episodes,
           await _repository.findPlayedEpisodeStatsList(podcast.guid),
-          ascend: viewStats.requireValue.ascend,
+          ascend: ascend,
         );
       case PodcastDetailViewMode.unplayed:
         return _filterEpisodesBy(
           viewMode,
           podcast.episodes,
           await _repository.findPlayedEpisodeStatsList(podcast.guid),
-          ascend: viewStats.requireValue.ascend,
+          ascend: ascend,
         );
       case PodcastDetailViewMode.downloaded:
         return _filterEpisodesBy(
           viewMode,
           podcast.episodes,
           await _repository.findDownloadedEpisodeStatsList(podcast.guid),
-          ascend: viewStats.requireValue.ascend,
+          ascend: ascend,
         );
     }
   }
@@ -96,35 +158,5 @@ class PodcastViewEpisodes extends _$PodcastViewEpisodes {
             .where((episode) => statsMap.containsKey(episode.guid))
             .toList();
     return ascend ? list.reversed.toList() : list;
-  }
-
-  void _listenStats(PodcastDetailViewMode viewMode, Podcast podcast) {
-    if (viewMode == PodcastDetailViewMode.downloaded) {
-      ref.listen(downloadEventStreamProvider, (_, next) {
-        final event = next.requireValue;
-        if (event case DownloadUpdatedEvent(download: final download)) {
-          if (download.state == DownloadState.downloaded &&
-              podcast.episodes.any((e) => e.guid == download.guid)) {
-            ref.invalidateSelf();
-          }
-        }
-      });
-    }
-    if ([PodcastDetailViewMode.unplayed, PodcastDetailViewMode.played]
-        .contains(viewMode)) {
-      ref.listen(audioPlayerEventStreamProvider, (_, next) {
-        final event = next.requireValue;
-        if (event
-            case AudioPlayerActionEvent(
-              episode: final episode,
-              action: final action
-            )) {
-          if (action == AudioPlayerAction.completed &&
-              podcast.episodes.any((e) => e.guid == episode.guid)) {
-            ref.invalidateSelf();
-          }
-        }
-      });
-    }
   }
 }
