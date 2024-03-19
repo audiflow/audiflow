@@ -33,6 +33,18 @@ double valueFromPercentageInRange({
 
 final controller = MiniPlayerController();
 
+final _expandProgressResettingProvider = Provider((ref) {
+  ref.listen(audioPlayerServiceProvider.select((state) => state?.phase),
+      (_, phase) {
+    if (phase == PlayerPhase.stop || phase == null) {
+      if (playerExpandProgress.value != playerMinHeight) {
+        playerExpandProgress.value = playerMinHeight;
+      }
+    }
+  });
+  return true;
+});
+
 class DetailedPlayer extends HookConsumerWidget {
   const DetailedPlayer({
     super.key,
@@ -45,6 +57,7 @@ class DetailedPlayer extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(_expandProgressResettingProvider);
     final episode =
         ref.watch(audioPlayerServiceProvider.select((state) => state?.episode));
     if (episode == null) {
