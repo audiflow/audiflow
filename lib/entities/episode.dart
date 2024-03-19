@@ -180,6 +180,9 @@ class EpisodeStats with _$EpisodeStats {
     /// Total playing time
     @Default(Duration.zero) Duration playTotal,
 
+    /// Whether the episode has been marked as played
+    @Default(false) bool played,
+
     /// Number of times of complete playing
     @Default(0) int completeCount,
 
@@ -223,7 +226,7 @@ class EpisodeStatsUpdateParam {
     required this.pguid,
     required this.guid,
     this.position,
-    this.playCount,
+    this.played,
     this.playTotalDelta,
     this.completeCountDelta,
     this.inQueue,
@@ -234,7 +237,7 @@ class EpisodeStatsUpdateParam {
   final String pguid;
   final String guid;
   final Duration? position;
-  final int? playCount;
+  final bool? played;
   final Duration? playTotalDelta;
   final int? completeCountDelta;
   final bool? inQueue;
@@ -243,7 +246,8 @@ class EpisodeStatsUpdateParam {
 
   EpisodeStatsUpdateParam copyWith({
     Duration? position,
-    int? playCount,
+    bool? startPlaying,
+    bool? played,
     Duration? playTotalDelta,
     int? completeCountDelta,
     bool? inQueue,
@@ -254,7 +258,7 @@ class EpisodeStatsUpdateParam {
       pguid: pguid,
       guid: guid,
       position: position ?? this.position,
-      playCount: playCount ?? this.playCount,
+      played: played ?? this.played,
       playTotalDelta: playTotalDelta ?? this.playTotalDelta,
       completeCountDelta: completeCountDelta ?? this.completeCountDelta,
       inQueue: inQueue ?? this.inQueue,
@@ -265,7 +269,7 @@ class EpisodeStatsUpdateParam {
 
   bool get isEmpty =>
       position == null &&
-      playCount == null &&
+      played == null &&
       playTotalDelta == null &&
       completeCountDelta == null &&
       inQueue == null &&

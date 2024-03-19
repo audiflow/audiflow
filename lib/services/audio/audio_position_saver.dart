@@ -37,37 +37,38 @@ class AudioPositionSaver extends _$AudioPositionSaver {
       switch (next.requireValue) {
         case AudioPlayerActionEvent(
             episode: final episode,
-            action: final action
+            action: AudioPlayerAction.play
           ):
-          if (action == AudioPlayerAction.play) {
-            _log.fine('save EpisodeStats.lastPlayedAt:${episode.title}');
-            state = const AudioPositionSaverState();
+          _log.fine('save EpisodeStats.lastPlayedAt:${episode.title}');
+          state = const AudioPositionSaverState();
+          await repository.updateEpisodeStats(
+            EpisodeStatsUpdateParam(
+              pguid: episode.pguid,
+              guid: episode.guid,
+              lastPlayedAt: DateTime.now(),
+            ),
+          );
+          await repository.saveRecentlyPlayedEpisode(episode);
+        case AudioPlayerActionEvent(
+            episode: final episode,
+            action: AudioPlayerAction.completed,
+          ):
+          if ((episode.duration?.inSeconds ?? 0) < 1) {
+            return;
+          }
+          final stats = await repository.findEpisodeStats(episode.guid);
+          final playedDuration =
+              stats!.playTotal - episode.duration! * stats.playCount;
+          if (episode.duration! * 0.95 <= playedDuration) {
+            _log.fine('save EpisodeStats.completeCountDelta +1:'
+                '${episode.title}');
             await repository.updateEpisodeStats(
               EpisodeStatsUpdateParam(
                 pguid: episode.pguid,
                 guid: episode.guid,
-                lastPlayedAt: DateTime.now(),
+                completeCountDelta: 1,
               ),
             );
-            await repository.saveRecentlyPlayedEpisode(episode);
-          } else if (action == AudioPlayerAction.completed) {
-            if ((episode.duration?.inSeconds ?? 0) < 1) {
-              return;
-            }
-            final stats = await repository.findEpisodeStats(episode.guid);
-            final playedDuration =
-                stats!.playTotal - episode.duration! * stats.playCount;
-            if (episode.duration! * 0.95 <= playedDuration) {
-              _log.fine('save EpisodeStats.completeCountDelta +1:'
-                  '${episode.title}');
-              await repository.updateEpisodeStats(
-                EpisodeStatsUpdateParam(
-                  pguid: episode.pguid,
-                  guid: episode.guid,
-                  completeCountDelta: 1,
-                ),
-              );
-            }
           }
       }
     });
@@ -84,10 +85,7 @@ class AudioPositionSaver extends _$AudioPositionSaver {
             ),
             state?.phase,
           ),
-        ), (
-      prev,
-      next,
-    ) {
+        ), (prev, next) {
       final (prevEpisode, _, _) = prev ?? (null, null, null);
       final (episode, position, phase) = next;
       final repository = ref.read(repositoryProvider);
@@ -104,11 +102,18 @@ class AudioPositionSaver extends _$AudioPositionSaver {
         repository.savePlayingEpisodeGuid(episode.guid);
       }
 
+      final played = episode.duration == null
+          ? null
+          : (episode.duration! - position) < const Duration(seconds: 30)
+              ? true
+              : null;
+
       repository.updateEpisodeStats(
         EpisodeStatsUpdateParam(
           pguid: episode.pguid,
           guid: episode.guid,
           position: position,
+          played: played,
           playTotalDelta: state.lastSavedPosition != null &&
                   state.lastSavedPosition! < position
               ? position - state.lastSavedPosition!
