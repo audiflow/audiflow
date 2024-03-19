@@ -339,6 +339,7 @@ void main() {
           thumbImageUrl: '',
           duration: Duration.zero,
           publicationDate: tm,
+          contentUrl: '',
         ).toPartialEpisode(),
         playedAt: generateTime(),
       );

@@ -71,7 +71,7 @@ class PodcastDetailsPage extends HookConsumerWidget {
     final ascend = podcastViewState.valueOrNull?.ascend ?? false;
     final podcastViewEpisodesState = podcast == null
         ? null
-        : ref.watch(podcastViewEpisodesProvider(podcast));
+        : ref.watch(podcastViewEpisodesProvider(podcast.guid));
 
     final controller = useScrollController();
     return ProviderScope(
