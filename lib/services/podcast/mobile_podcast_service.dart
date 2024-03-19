@@ -492,7 +492,7 @@ class MobilePodcastService implements PodcastService {
 
     final toDownload = episodes.where((e) {
       final stats = statsList.firstWhereOrNull((s) => s?.guid == e.guid);
-      return (stats?.completeCount ?? 0) == 0;
+      return stats?.played != true;
     }).where((e) {
       final download = downloads.firstWhereOrNull((d) => d.guid == e.guid);
       return download?.state != DownloadState.downloaded;

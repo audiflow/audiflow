@@ -62,12 +62,8 @@ class PodcastDetailsPage extends HookConsumerWidget {
           );
 
     final podcastViewState = ref.watch(podcastViewInfoProvider(metadata.guid));
-    var viewMode =
+    final viewMode =
         podcastViewState.valueOrNull?.viewMode ?? PodcastDetailViewMode.seasons;
-    if (seasonsState.valueOrNull?.isEmpty == true &&
-        viewMode == PodcastDetailViewMode.seasons) {
-      viewMode = PodcastDetailViewMode.episodes;
-    }
     final ascend = podcastViewState.valueOrNull?.ascend ?? false;
     final podcastViewEpisodesState = podcast == null
         ? null
@@ -114,6 +110,7 @@ class PodcastDetailsPage extends HookConsumerWidget {
                     ),
                     if (podcastState.isLoading ||
                         seasonsState.isLoading ||
+                        podcastViewState.isLoading ||
                         podcastViewEpisodesState == null ||
                         podcastViewEpisodesState.isLoading)
                       const FillRemainingLoading()

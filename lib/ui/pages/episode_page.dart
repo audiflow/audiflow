@@ -238,7 +238,7 @@ class _EpisodePlayButton extends ConsumerWidget {
     if (0 < percentage && percentage < 1) {
       return 'Resume';
     }
-    if (percentage == 0 && stats.completeCount == 0) {
+    if (percentage == 0 && !stats.played) {
       return 'Play';
     } else {
       return 'Play again';

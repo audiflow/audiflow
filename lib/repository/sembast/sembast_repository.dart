@@ -564,7 +564,7 @@ class SembastRepository extends Repository {
     final finder = Finder(
       filter: Filter.and([
         Filter.equals('pguid', pguid),
-        Filter.greaterThan('completeCount', 0),
+        Filter.equals('played', true),
       ]),
       sortOrders: [SortOrder('lastPlayedAt', false, true)],
     );
@@ -579,7 +579,7 @@ class SembastRepository extends Repository {
     final finder = Finder(
       filter: Filter.and([
         Filter.equals('pguid', pguid),
-        Filter.equals('completeCount', 0),
+        Filter.equals('played', false),
       ]),
     );
     final snapshots = await _episodeStatsStore.find(await _db, finder: finder);
