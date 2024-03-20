@@ -57,9 +57,15 @@ class LibraryPage extends HookConsumerWidget {
                     delegate: SliverChildListDelegate(
                       [
                         ListTile(
+                          leading: const Icon(Symbols.fiber_new),
+                          title: Text(l10n.latestEpisodes),
+                          trailing: const Icon(Symbols.chevron_right),
+                          onTap: NavigationHelper.pushRecentlyPlayed,
+                        ),
+                        ListTile(
                           leading: const Icon(Symbols.history),
                           title: Text(l10n.recentlyPlayed),
-                          trailing: const Icon(Icons.chevron_right),
+                          trailing: const Icon(Symbols.chevron_right),
                           onTap: NavigationHelper.pushRecentlyPlayed,
                         ),
                       ],

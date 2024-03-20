@@ -236,6 +236,12 @@ class NavigationHelper {
     );
   }
 
+  static Future<void> pushLatestEpisodes() async {
+    await NavigationHelper.router.pushNamed(
+      'latestEpisodes',
+    );
+  }
+
   static Future<void> pushRecentlyPlayed() async {
     await NavigationHelper.router.pushNamed(
       'recentlyPlayed',
