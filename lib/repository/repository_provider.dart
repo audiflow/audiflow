@@ -6,6 +6,7 @@
 // found in the LICENSE file.
 
 import 'package:audiflow/repository/repository.dart';
+import 'package:audiflow/repository/repository_cache.dart';
 import 'package:audiflow/repository/sembast/sembast_repository.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -14,4 +15,5 @@ export 'package:audiflow/repository/repository.dart';
 part 'repository_provider.g.dart';
 
 @Riverpod(keepAlive: true)
-Repository repository(RepositoryRef ref) => SembastRepository(ref);
+Repository repository(RepositoryRef ref) =>
+    RepositoryCache(SembastRepository(ref));
