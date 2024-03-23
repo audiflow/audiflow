@@ -152,3 +152,47 @@ class _BinarySwitch extends StatelessWidget {
     );
   }
 }
+
+class _TextButton extends StatelessWidget {
+  const _TextButton(
+    this.text, {
+    this.hint,
+    required this.onTap,
+  });
+
+  final String text;
+  final String? hint;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      text,
+                      style: theme.textTheme.bodyMedium!
+                          .copyWith(color: theme.colorScheme.tertiary),
+                    ),
+                    if (hint != null) _HintText(hint!),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

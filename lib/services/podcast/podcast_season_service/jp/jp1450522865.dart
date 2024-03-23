@@ -11,7 +11,7 @@ import '../podcast_season_extractor.dart';
 
 class JP1450522865 extends PodcastSeasonExtractor {
   @override
-  final guid = '1450522865';
+  final guid = 'https://anchor.fm/s/8c2088c/podcast/rss';
   @override
   final label = 'COTENラジオ';
 

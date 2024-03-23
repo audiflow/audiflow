@@ -6,7 +6,7 @@ part of 'opml_service_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$opmlServiceHash() => r'cd341077e38f5d448a17eb556271a56b4f15f6b0';
+String _$opmlServiceHash() => r'2329660edb278c4a1a485b24df9927a0f3a7fea7';
 
 /// See also [opmlService].
 @ProviderFor(opmlService)

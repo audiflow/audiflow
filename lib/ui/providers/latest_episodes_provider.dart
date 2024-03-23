@@ -63,7 +63,8 @@ class LatestEpisodes extends _$LatestEpisodes {
                   .map((e) => e.guid == episode.guid ? episode : e)
                   .toList(),
             );
-          } else if (state.podcasts.contains(episode.pguid) &&
+          } else if (!state.episodes.contains(episode) &&
+              state.podcasts.contains(episode.pguid) &&
               episode.publicationDate != null &&
               episode.publicationDate!.isAfter(_scope)) {
             state = state.copyWith(episodes: [episode, ...state.episodes]);

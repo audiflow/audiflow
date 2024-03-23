@@ -12,7 +12,7 @@ import '../podcast_season_extractor.dart';
 
 class JP1567192930 extends PodcastSeasonExtractor {
   @override
-  final guid = '1567192930';
+  final guid = 'https://anchor.fm/s/57a9101c/podcast/rss';
   @override
   final label = '超相対性理論';
 

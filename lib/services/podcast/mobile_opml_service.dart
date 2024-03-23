@@ -8,10 +8,11 @@
 
 import 'dart:io';
 
-import 'package:audiflow/events/opml_event.dart';
-import 'package:audiflow/repository/repository.dart';
+import 'package:audiflow/repository/repository_provider.dart';
+import 'package:audiflow/services/podcast/opml_event_stream_provider.dart';
 import 'package:audiflow/services/podcast/opml_service.dart';
-import 'package:audiflow/services/podcast/podcast_service.dart';
+import 'package:audiflow/services/podcast/podcast_service_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 import 'package:path_provider/path_provider.dart';
@@ -19,22 +20,22 @@ import 'package:share_plus/share_plus.dart';
 import 'package:xml/xml.dart';
 
 class MobileOPMLService extends OPMLService {
-  MobileOPMLService({
-    required this.podcastService,
-    required this.repository,
-  });
+  MobileOPMLService(this._ref);
 
-  final log = Logger('MobileOPMLService');
-  bool process = false;
+  final _log = Logger('MobileOPMLService');
+  final Ref _ref;
+  bool _process = false;
 
-  final PodcastService podcastService;
-  final Repository repository;
+  PodcastService get _podcastService => _ref.read(podcastServiceProvider);
+
+  Repository get _repository => _ref.read(repositoryProvider);
+
+  OpmlEventStream get _opmlEventStream =>
+      _ref.read(opmlEventStreamProvider.notifier);
 
   @override
-  Stream<OPMLActionEvent> loadOPMLFile(String file) async* {
-    yield OPMLParsingEvent();
-
-    process = true;
+  Future<void> loadOPMLFile(String file) async {
+    _process = true;
 
     final opmlFile = File(file);
     final document = XmlDocument.parse(opmlFile.readAsStringSync());
@@ -49,39 +50,35 @@ class MobileOPMLService extends OPMLService {
     var current = 0;
 
     for (final p in pods) {
-      if (!process) {
+      if (!_process) {
         break;
       }
-      yield OPMLLoadingEvent(
-        current: ++current,
-        total: total,
-        podcast: p.text,
-      );
+      _opmlEventStream.add(
+            OPMLLoadingEvent(
+              current: ++current,
+              total: total,
+              podcastTitle: p.text ?? '',
+            ),
+          );
 
       try {
-        log.fine('Importing podcast ${p.xmlUrl}');
+        _log.fine('Importing podcast ${p.xmlUrl}');
 
-        // final result = await podcastService.loadPodcast(
-        //   p.
-        //   podcast: Podcast(guid: '', link: '', title:
-        //   p.text!, url: p.xmlUrl!),
-        //   refresh: true,
-        // );
-
-        // if (result != null) {
-        //   await podcastService.subscribe(result);
-        // }
+        final result = await _podcastService.lookupPodcast(p.xmlUrl!);
+        if (result != null) {
+          await _repository.subscribePodcast(result);
+        }
       } on Exception {
-        log.fine('Failed to load podcast ${p.xmlUrl}');
+        _log.fine('Failed to load podcast ${p.xmlUrl}');
       }
     }
 
-    yield OPMLCompletedEvent();
+    _opmlEventStream.add(OPMLCompletedEvent());
   }
 
   @override
-  Stream<OPMLActionEvent> saveOPMLFile() async* {
-    // final subs = await podcastService.subscriptions();
+  Future<void> saveOPMLFile() async {
+    final subs = await _repository.subscriptions();
 
     final builder = XmlBuilder()..processing('xml', 'version="1.0"');
     builder.element(
@@ -96,7 +93,7 @@ class MobileOPMLService extends OPMLService {
                 ..element(
                   'title',
                   nest: () {
-                    builder.text('Anytime Subscriptions');
+                    builder.text('audiflow Subscriptions');
                   },
                 )
                 ..element(
@@ -113,16 +110,16 @@ class MobileOPMLService extends OPMLService {
           ..element(
             'body',
             nest: () {
-              // for (final sub in subs) {
-              // builder.element(
-              //   'outline',
-              //   nest: () {
-              //     builder
-              //       ..attribute('text', sub.title)
-              //       ..attribute('xmlUrl', sub.url);
-              //   },
-              // );
-              // }
+              for (final sub in subs) {
+                builder.element(
+                  'outline',
+                  nest: () {
+                    builder
+                      ..attribute('text', sub.$1.title)
+                      ..attribute('xmlUrl', sub.$1.feedUrl);
+                  },
+                );
+              }
             },
           );
       },
@@ -133,20 +130,20 @@ class MobileOPMLService extends OPMLService {
     final output = Platform.isAndroid
         ? (await getExternalStorageDirectory())!
         : await getApplicationDocumentsDirectory();
-    final outputFile = '${output.path}/anytime_export.opml';
+    final outputFile = '${output.path}/audiflow_export.opml';
     File(outputFile).writeAsStringSync(export.toXmlString(pretty: true));
 
     await Share.shareXFiles(
       [XFile(outputFile)],
-      text: 'Anytime OPML',
+      text: 'audiflow OPML',
     );
 
-    yield OPMLCompletedEvent();
+    _opmlEventStream.add(OPMLCompletedEvent());
   }
 
   @override
   void cancel() {
-    process = false;
+    _process = false;
   }
 }
 

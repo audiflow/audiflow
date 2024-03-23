@@ -6,10 +6,12 @@
 // found in the LICENSE file.
 
 import 'package:audiflow/core/l10n.dart';
+import 'package:audiflow/services/podcast/opml_service_provider.dart';
 import 'package:audiflow/services/settings/settings_service.dart';
 import 'package:audiflow/ui/providers/podcast_search_provider.dart';
 import 'package:audiflow/ui/widgets/error_notifier.dart';
 import 'package:audiflow/ui/widgets/fill_remaining_loading.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
@@ -82,37 +84,58 @@ class _Contents extends ConsumerWidget {
                 settings.downloadWarnMobileData = !state.downloadWarnMobileData;
               },
             ),
-        // const _Divider(),
-        // _Section(
-        //   title: l10n.settingsAutoDownload,
-        //   description: l10n.settingsAutoDownloadDescription,
-        // ),
-        // _BinarySwitch(
-        //   l10n.wifi,
-        //   value: state.autoDownloadOnlyOnWifi,
-        //   onToggle: () {
-        //     settings.autoDownloadOnlyOnWifi = !state.autoDownloadOnlyOnWifi;
-        //   },
-        // ),
-        // _BinarySwitch(
-        //   l10n.settingsAutoDownloadRecent,
-        //   value: state.autoDownloadOnlyOnWifi,
-        //   onToggle: () {
-        //     settings.autoDownloadOnlyOnWifi = !state.autoDownloadOnlyOnWifi;
-        //   },
-        // ),
-        // const _Divider(),
-        // _Section(
-        //   title: l10n.settingsAutoDelete,
-        //   description: l10n.settingsAutoDeleteDescription,
-        // ),
-        // _BinarySwitch(
-        //   l10n.settingsAutoDeleteAfter,
-        //   value: state.autoDeleteEpisodes,
-        //   onToggle: () {
-        //     settings.autoDeleteEpisodes = !state.autoDeleteEpisodes;
-        //   },
-        // ),
+            const _Divider(),
+            _Section(
+              title: l10n.settingsOpml,
+              description: l10n.settingsOpmlDescription,
+            ),
+            _TextButton(
+              l10n.settingsOpmlImport,
+              onTap: () async {
+                final result = (await FilePicker.platform.pickFiles())!;
+                if (result.files.isNotEmpty) {
+                  final file = result.files.first;
+                  await ref.read(opmlServiceProvider).loadOPMLFile(file.path!);
+                }
+              },
+            ),
+            _TextButton(
+              l10n.settingsOpmlExport,
+              onTap: () async {
+                await ref.read(opmlServiceProvider).saveOPMLFile();
+              },
+            ),
+            // const _Divider(),
+            // _Section(
+            //   title: l10n.settingsAutoDownload,
+            //   description: l10n.settingsAutoDownloadDescription,
+            // ),
+            // _BinarySwitch(
+            //   l10n.wifi,
+            //   value: state.autoDownloadOnlyOnWifi,
+            //   onToggle: () {
+            //     settings.autoDownloadOnlyOnWifi = !state.autoDownloadOnlyOnWifi;
+            //   },
+            // ),
+            // _BinarySwitch(
+            //   l10n.settingsAutoDownloadRecent,
+            //   value: state.autoDownloadOnlyOnWifi,
+            //   onToggle: () {
+            //     settings.autoDownloadOnlyOnWifi = !state.autoDownloadOnlyOnWifi;
+            //   },
+            // ),
+            // const _Divider(),
+            // _Section(
+            //   title: l10n.settingsAutoDelete,
+            //   description: l10n.settingsAutoDeleteDescription,
+            // ),
+            // _BinarySwitch(
+            //   l10n.settingsAutoDeleteAfter,
+            //   value: state.autoDeleteEpisodes,
+            //   onToggle: () {
+            //     settings.autoDeleteEpisodes = !state.autoDeleteEpisodes;
+            //   },
+            // ),
           ],
         ),
       ),

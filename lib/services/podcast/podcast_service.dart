@@ -42,6 +42,8 @@ abstract class PodcastService {
 
   Future<PodcastMetadata?> loadPodcastMetadata(String guid);
 
+  Future<Podcast?> lookupPodcast(String feedUrl);
+
   Future<Podcast?> loadPodcast(
     PodcastMetadata metadata, {
     bool refresh = false,
