@@ -47,7 +47,7 @@ class PodcastMetadata with _$PodcastMetadata {
       _$PodcastMetadataFromJson(json);
 
   factory PodcastMetadata.fromSearchResultItem(search.Item item) {
-    final guid = '${item.collectionId ?? item.feedUrl}';
+    final guid = '${item.feedUrl ?? item.collectionId}';
     final thumbImageUrl = item.thumbnailArtworkUrl;
     final imageUrl = item.bestArtworkUrl;
 
@@ -148,14 +148,19 @@ class Podcast with _$Podcast {
   factory Podcast.fromJson(Map<String, dynamic> json) =>
       _$PodcastFromJson(json);
 
-  factory Podcast.fromSearch(search.Podcast podcast, PodcastMetadata metadata) {
+  factory Podcast.fromSearch(
+    search.Podcast podcast, [
+    PodcastMetadata? metadata,
+  ]) {
+    final guid =
+        metadata?.guid ?? podcast.url ?? podcast.guid ?? podcast.title!;
     final episodes = podcast.episodes
         .map(
           (e) => Episode.fromSearch(
             e,
-            pguid: metadata.guid,
-            thumbImageUrl: metadata.thumbImageUrl,
-            imageUrl: podcast.image ?? metadata.imageUrl,
+            pguid: guid,
+            thumbImageUrl: metadata?.thumbImageUrl ?? podcast.image ?? '',
+            imageUrl: podcast.image ?? metadata?.imageUrl,
           ),
         )
         .toList();
@@ -166,16 +171,18 @@ class Podcast with _$Podcast {
     final persons = podcast.persons.map(Person.fromSearch).toList();
 
     return Podcast(
-      guid: metadata.guid,
-      collectionId: metadata.collectionId,
+      guid: guid,
+      collectionId: metadata?.collectionId ?? 0,
       feedUrl: podcast.url,
       linkUrl: podcast.link ?? '',
-      title: metadata.title,
+      title: podcast.title ?? metadata?.title ?? '',
       description: removeHtmlPadding(podcast.description),
-      copyright: metadata.copyright,
-      thumbImageUrl: metadata.thumbImageUrl,
-      imageUrl: podcast.image ?? metadata.imageUrl,
-      releaseDate: metadata.releaseDate,
+      copyright: metadata?.copyright ?? podcast.copyright ?? '',
+      thumbImageUrl: metadata?.thumbImageUrl ?? podcast.image ?? '',
+      imageUrl: podcast.image ?? metadata?.imageUrl ?? '',
+      releaseDate: metadata?.releaseDate ??
+          episodes.last.publicationDate ??
+          DateTime.now(),
       episodes: episodes,
       funding: funding,
       persons: persons,

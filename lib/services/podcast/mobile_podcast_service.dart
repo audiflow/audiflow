@@ -177,6 +177,11 @@ class MobilePodcastService implements PodcastService {
     return _repository.findPodcastMetadata(guid);
   }
 
+  @override
+  Future<Podcast?> lookupPodcast(String feedUrl) async {
+    return _lookupPodcast(feedUrl: feedUrl);
+  }
+
   /// Loads the specified [Podcast]. If the Podcast instance has an ID we'll
   /// fetch it from storage. If not, we'll check the cache to see if we have
   /// seen it recently and return that if available. If not, we'll make a call
@@ -187,10 +192,10 @@ class MobilePodcastService implements PodcastService {
     bool refresh = false,
   }) async {
     if (refresh) {
-      return _reloadPodcast(metadata);
+      return _lookupPodcast(metadata: metadata);
     }
     return await loadPodcastByGuid(metadata.guid) ??
-        await _reloadPodcast(metadata);
+        await _lookupPodcast(metadata: metadata);
   }
 
   @override
@@ -198,34 +203,38 @@ class MobilePodcastService implements PodcastService {
     return _repository.findPodcast(guid);
   }
 
-  Future<Podcast?> _reloadPodcast(PodcastMetadata metadata) async {
-    _log.fine('Reloading podcast ${metadata.title}');
+  Future<Podcast?> _lookupPodcast({
+    String? feedUrl,
+    PodcastMetadata? metadata,
+  }) async {
+    assert(metadata != null || feedUrl?.isNotEmpty == true);
+    _log.fine('Reloading podcast ${metadata?.title ?? feedUrl}');
 
     if (!await hasConnectivity()) {
       _log.fine('no network');
       throw NoConnectivityError();
     }
 
-    var feedUrl = metadata.feedUrl ?? '';
-    if (feedUrl.isEmpty) {
-      feedUrl = (await _repository.findFeedUrl(metadata.guid)) ?? '';
+    var url = feedUrl ?? metadata?.feedUrl ?? '';
+    if (url.isEmpty && metadata != null) {
+      url = (await _repository.findFeedUrl(metadata.guid)) ?? '';
     }
-    if (feedUrl.isEmpty) {
+    if (url.isEmpty && metadata != null) {
       final newMetadata =
           await _lookupPodcastMetadata(collectionId: metadata.collectionId);
       if (newMetadata?.feedUrl == null) {
         _log.info('No way to determine feed URL for ${metadata.title}');
         return null;
       }
-      feedUrl = newMetadata!.feedUrl!;
+      url = newMetadata!.feedUrl!;
       await _repository.savePodcast(newMetadata.toPartialPodcast());
     }
-    if (feedUrl.isEmpty) {
-      _log.info('No feed URL for ${metadata.title}');
+    if (url.isEmpty) {
+      _log.info('No feed URL for ${metadata!.title}');
       return null;
     }
 
-    final feedPodcast = await _lookupPodcast(url: feedUrl);
+    final feedPodcast = await _lookupPodcastBy(url: url);
     final podcast = Podcast.fromSearch(feedPodcast, metadata);
 
     final saved = await _repository.findPodcast(podcast.guid);
@@ -518,7 +527,7 @@ class MobilePodcastService implements PodcastService {
     return item == null ? null : PodcastMetadata.fromSearchResultItem(item);
   }
 
-  Future<podcast_search.Podcast> _lookupPodcast({
+  Future<podcast_search.Podcast> _lookupPodcastBy({
     required String url,
   }) async {
     // If we didn't get a cache hit load the podcast feed.

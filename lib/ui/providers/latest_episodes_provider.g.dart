@@ -6,7 +6,7 @@ part of 'latest_episodes_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$latestEpisodesHash() => r'4a2e1933f1159a3bf327b77afd3827765910e119';
+String _$latestEpisodesHash() => r'46e910cc98471d4e820644f8a24f19106e52446c';
 
 /// See also [LatestEpisodes].
 @ProviderFor(LatestEpisodes)
