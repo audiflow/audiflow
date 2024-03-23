@@ -113,3 +113,9 @@ class LatestEpisodesState with _$LatestEpisodesState {
     @Default(<String>{}) Set<String> played,
   }) = _LatestEpisodesState;
 }
+
+extension LatestEpisodesStateExt on LatestEpisodesState {
+  List<Episode> get unplayedEpisodes {
+    return episodes.where((e) => !played.contains(e.guid)).toList();
+  }
+}

@@ -60,7 +60,7 @@ class LibraryPage extends HookConsumerWidget {
                           leading: const Icon(Symbols.fiber_new),
                           title: Text(l10n.latestEpisodes),
                           trailing: const Icon(Symbols.chevron_right),
-                          onTap: NavigationHelper.pushRecentlyPlayed,
+                          onTap: NavigationHelper.pushLatestEpisodes,
                         ),
                         ListTile(
                           leading: const Icon(Symbols.history),

@@ -7,6 +7,7 @@
 import 'package:audiflow/entities/entities.dart';
 import 'package:audiflow/ui/app/app_bottom_navigation_bar.dart';
 import 'package:audiflow/ui/pages/episode_page.dart';
+import 'package:audiflow/ui/pages/latest_episodes_page.dart';
 import 'package:audiflow/ui/pages/library_page.dart';
 import 'package:audiflow/ui/pages/podcast_details_page.dart';
 import 'package:audiflow/ui/pages/podcast_home_page.dart';
@@ -134,7 +135,18 @@ class NavigationHelper {
                 },
                 routes: [
                   GoRoute(
-                    path: 'recentlyPlayed',
+                    path: 'latest',
+                    name: 'latestEpisodes',
+                    parentNavigatorKey: libraryTabNavigatorKey,
+                    pageBuilder: (context, state) {
+                      return _getPage(
+                        child: const LatestEpisodesPage(),
+                        state: state,
+                      );
+                    },
+                  ),
+                  GoRoute(
+                    path: 'recent',
                     name: 'recentlyPlayed',
                     parentNavigatorKey: libraryTabNavigatorKey,
                     pageBuilder: (context, state) {
