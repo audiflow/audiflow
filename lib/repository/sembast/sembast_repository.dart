@@ -66,11 +66,13 @@ class SembastRepository extends Repository {
 
   @override
   Future<void> savePodcastChart(PodcastChartState chart) async {
+    log.fine('savePodcastChart');
     await _chartsStore.record(1).put(await _db, chart.toJson());
   }
 
   @override
   Future<PodcastChartState?> loadPodcastChart() async {
+    log.fine('loadPodcastChart');
     final value = await _chartsStore.record(1).get(await _db);
     return value == null ? null : PodcastChartState.fromJson(value);
   }
@@ -431,7 +433,7 @@ class SembastRepository extends Repository {
   }
 
   @override
-  Future<List<Episode>> findEpisodesByPodcastGuid(String? pguid) async {
+  Future<List<Episode>> findEpisodesByPodcastGuid(String pguid) async {
     final finder = Finder(
       filter: Filter.equals('pguid', pguid),
       sortOrders: [SortOrder('publicationDate', false)],
@@ -799,7 +801,7 @@ class SembastRepository extends Repository {
   }
 
   @override
-  Future<Transcript?> findTranscriptById(int? id) async {
+  Future<Transcript?> findTranscriptById(int id) async {
     final finder = Finder(filter: Filter.byKey(id));
     final snapshot =
         await _transcriptStore.findFirst(await _db, finder: finder);
