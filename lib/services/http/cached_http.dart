@@ -56,13 +56,17 @@ class CachedHttp {
       ..interceptors.add(DioCacheInterceptor(options: cacheOptions));
   }
 
-  Future<String?> fetch(String uri, {bool loadFromCache = true}) async {
+  Future<dynamic> fetch(
+    String uri, {
+    bool loadFromCache = true,
+    ResponseType responseType = ResponseType.json,
+  }) async {
     final policy = loadFromCache ? CachePolicy.request : CachePolicy.refresh;
     final options = cacheOptions
         .copyWith(policy: policy)
         .toOptions()
-        .copyWith(responseType: ResponseType.plain);
-    final res = await dio.get<String>(uri, options: options);
+        .copyWith(responseType: responseType);
+    final res = await dio.get<dynamic>(uri, options: options);
     return res.data;
   }
 }
