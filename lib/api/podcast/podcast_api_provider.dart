@@ -14,4 +14,5 @@ export 'package:audiflow/api/podcast/podcast_api.dart';
 part 'podcast_api_provider.g.dart';
 
 @Riverpod(keepAlive: true)
-PodcastApi podcastApi(PodcastApiRef ref) => MobilePodcastApi();
+PodcastApi podcastApi(PodcastApiRef ref) =>
+    MobilePodcastApi(ref)..ensureInitialized();

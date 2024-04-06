@@ -7,6 +7,7 @@
 // found in the LICENSE file.
 
 import 'package:audiflow/entities/transcript.dart';
+import 'package:podcast_feed/podcast_feed.dart' show ITunesChartItem;
 import 'package:podcast_search/podcast_search.dart' as pslib;
 
 /// A simple wrapper class that interacts with the search API via
@@ -28,7 +29,7 @@ abstract class PodcastApi {
   });
 
   /// Request the top podcast charts from iTunes, and at most [size] records.
-  Future<pslib.SearchResult> charts({
+  Future<List<ITunesChartItem>> charts({
     int? size,
     String? searchProvider,
     String? genre,

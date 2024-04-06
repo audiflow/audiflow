@@ -6,12 +6,17 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:audiflow/api/podcast/podcast_api.dart';
 import 'package:audiflow/core/environment.dart';
 import 'package:audiflow/entities/transcript.dart';
+import 'package:audiflow/services/http/cached_http.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:podcast_feed/podcast_feed.dart'
+    hide TranscriptFormat, TranscriptUrl;
 import 'package:podcast_search/podcast_search.dart' as podcast_search;
 
 /// An implementation of the [PodcastApi].
@@ -19,6 +24,41 @@ import 'package:podcast_search/podcast_search.dart' as podcast_search;
 /// A simple wrapper class that interacts with the iTunes/PodcastIndex search API
 /// via the podcast_search package.
 class MobilePodcastApi extends PodcastApi {
+  MobilePodcastApi(this._ref);
+
+  void ensureInitialized() {
+    _http = _ref.read(cachedHttpProvider);
+  }
+
+  final Ref _ref;
+  late CachedHttp _http;
+
+  static String feedApiEndpoint = 'https://itunes.apple.com';
+  static String searchApiEndpoint = 'https://itunes.apple.com/search';
+
+  static const _genres = <String, int>{
+    '': -1,
+    'Arts': 1301,
+    'Business': 1321,
+    'Comedy': 1303,
+    'Education': 1304,
+    'Fiction': 1483,
+    'Government': 1511,
+    'Health & Fitness': 1512,
+    'History': 1487,
+    'Kids & Family': 1305,
+    'Leisure': 1502,
+    'Music': 1301,
+    'News': 1489,
+    'Religion & Spirituality': 1314,
+    'Science': 1533,
+    'Society & Culture': 1324,
+    'Sports': 1545,
+    'TV & Film': 1309,
+    'Technology': 1318,
+    'True Crime': 1488,
+  };
+
   /// Set when using a custom certificate authority.
   SecurityContext? _defaultSecurityContext;
 
@@ -45,7 +85,7 @@ class MobilePodcastApi extends PodcastApi {
   }
 
   @override
-  Future<podcast_search.SearchResult> charts({
+  Future<List<ITunesChartItem>> charts({
     int? size = 20,
     String? genre,
     String? searchProvider,
@@ -58,7 +98,7 @@ class MobilePodcastApi extends PodcastApi {
       'countryCode': countryCode,
     };
 
-    return compute(_charts, searchParams);
+    return _charts(searchParams);
   }
 
   @override
@@ -131,32 +171,61 @@ class MobilePodcastApi extends PodcastApi {
     ).search(term).timeout(const Duration(seconds: 30));
   }
 
-  static Future<podcast_search.SearchResult> _charts(
+  Future<List<ITunesChartItem>> _charts(
     Map<String, String?> searchParams,
-  ) {
-    final provider = searchParams['searchProvider'] == 'itunes'
-        ? const podcast_search.ITunesProvider()
-        : podcast_search.PodcastIndexProvider(
-            key: podcastIndexKey,
-            secret: podcastIndexSecret,
-          );
-
+  ) async {
     final countryCode = searchParams['countryCode'];
-    var country = podcast_search.Country.none;
-
-    if (countryCode != null && countryCode.isNotEmpty) {
-      country = podcast_search.Country.values
-          .where((element) => element.code == countryCode)
-          .first;
-    }
+    final country = countryCode?.isNotEmpty == true
+        ? Country.values
+        .where((element) => element.code == countryCode)
+        .first
+        : Country.none;
 
     final limit = int.tryParse(searchParams['size'] ?? '*') ?? 50;
-    return podcast_search.Search(
-      userAgent: Environment.userAgent(),
-      searchProvider: provider,
-    )
-        .charts(genre: searchParams['genre']!, country: country, limit: limit)
-        .timeout(const Duration(seconds: 30));
+    final url = _buildChartsUrl(
+      country: country,
+      limit: limit,
+      genre: searchParams['genre'] ?? '',
+    );
+
+    final json = await _http.fetch(url).timeout(const Duration(seconds: 30));
+    if (json == null) {
+      debugPrint('json is null, url=$url');
+      return [];
+    }
+
+    final message = <String, String>{
+      'url': url,
+      'json': json as String,
+    };
+    return compute(_parseCharts, message);
+  }
+
+  static List<ITunesChartItem> _parseCharts(Map<String, String> message) {
+    final url = message['url']!;
+    final json = message['json']!;
+
+    final decoded = jsonDecode(json) as Map<String, dynamic>?;
+    if (decoded == null) {
+      debugPrint('decoded is null, url=$url');
+      return [];
+    }
+
+    final feed = decoded['feed'] as Map<String, dynamic>?;
+    if (feed == null) {
+      debugPrint('feed is null, url=$url');
+      return [];
+    }
+
+    final list = feed['entry'] as List<dynamic>?;
+    if (list == null) {
+      debugPrint('list is null, url=$url');
+      return [];
+    }
+
+    return list
+        .map((e) => ITunesChartItem.fromJson(json: e as Map<String, dynamic>))
+        .toList();
   }
 
   Future<podcast_search.Podcast> _loadFeed(String url) {
@@ -179,5 +248,32 @@ class MobilePodcastApi extends PodcastApi {
   @override
   void addClientAuthorityBytes(List<int> certificateAuthorityBytes) {
     _certificateAuthorityBytes = certificateAuthorityBytes;
+  }
+
+  static String _buildChartsUrl({
+    Country country = Country.none,
+    int limit = 20,
+    bool explicit = false,
+    String genre = '',
+  }) {
+    final buf = StringBuffer(feedApiEndpoint)
+      ..write(country.code.isNotEmpty ? '/' : '')
+      ..write(country.code)
+      ..write('/rss/toppodcasts/limit=')
+      ..write(limit);
+
+    if (genre != '') {
+      final g = _genres[genre];
+      if (g != null) {
+        buf.write('/genre=$g');
+      }
+    }
+
+    buf
+      ..write('/explicit=')
+      ..write(explicit)
+      ..write('/json');
+
+    return buf.toString();
   }
 }
