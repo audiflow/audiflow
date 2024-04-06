@@ -7,7 +7,7 @@
 // found in the LICENSE file.
 
 import 'package:audiflow/entities/transcript.dart';
-import 'package:podcast_feed/podcast_feed.dart' show ITunesChartItem;
+import 'package:podcast_feed/podcast_feed.dart' hide TranscriptUrl;
 import 'package:podcast_search/podcast_search.dart' as pslib;
 
 /// A simple wrapper class that interacts with the search API via
@@ -15,25 +15,22 @@ import 'package:podcast_search/podcast_search.dart' as pslib;
 ///
 // TODO(unknown): Make this more generic so it's not tied to podcast_search
 abstract class PodcastApi {
-  /// Search for podcasts matching the search criteria. Returns a
-  /// [pslib.SearchResult] instance.
-  Future<pslib.SearchResult> search(
+  /// Search for podcasts matching the search criteria.
+  Future<List<ITunesSearchItem>> search(
     String term, {
-    String? country,
-    String? attribute,
-    int? limit,
+    int limit = 20,
+    Country? country,
+    Attribute? attribute,
     String? language,
-    int version = 0,
+    int? version,
     bool explicit = false,
-    String? searchProvider,
   });
 
   /// Request the top podcast charts from iTunes, and at most [size] records.
   Future<List<ITunesChartItem>> charts({
-    int? size,
-    String? searchProvider,
-    String? genre,
-    String? countryCode,
+    int size = 20,
+    String genre = '',
+    String countryCode = '',
   });
 
   Future<pslib.Item?> lookup({required int collectionId});

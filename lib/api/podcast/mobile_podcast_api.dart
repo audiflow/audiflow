@@ -66,39 +66,65 @@ class MobilePodcastApi extends PodcastApi {
   List<int> _certificateAuthorityBytes = [];
 
   @override
-  Future<podcast_search.SearchResult> search(
+  Future<List<ITunesSearchItem>> search(
     String term, {
-    String? country,
-    String? attribute,
-    int? limit,
+    int limit = 20,
+    Country? country,
+    Attribute? attribute,
     String? language,
-    int version = 0,
+    int? version,
     bool explicit = false,
-    String? searchProvider,
   }) async {
-    final searchParams = {
-      'term': term,
-      'searchProvider': searchProvider,
-    };
+    final url = _buildSearchUrl(
+      term: term,
+      country: country,
+      limit: limit,
+      attribute: attribute,
+      explicit: explicit,
+      language: language,
+      version: version,
+    );
 
-    return compute(_search, searchParams);
+    final json = await _http.fetch(url).timeout(const Duration(seconds: 30));
+    if (json == null) {
+      debugPrint('json is null, url=$url');
+      return [];
+    }
+
+    final message = <String, String>{
+      'url': url,
+      'json': json as String,
+    };
+    return compute(_parseSearchResult, message);
   }
 
   @override
   Future<List<ITunesChartItem>> charts({
-    int? size = 20,
-    String? genre,
-    String? searchProvider,
-    String? countryCode = '',
+    int size = 20,
+    String genre = '',
+    String countryCode = '',
   }) async {
-    final searchParams = {
-      'size': size.toString(),
-      'genre': genre,
-      'searchProvider': searchProvider,
-      'countryCode': countryCode,
-    };
+    final country = countryCode.isNotEmpty
+        ? Country.values.where((element) => element.code == countryCode).first
+        : Country.none;
 
-    return _charts(searchParams);
+    final url = _buildChartsUrl(
+      country: country,
+      limit: size,
+      genre: genre,
+    );
+
+    final json = await _http.fetch(url).timeout(const Duration(seconds: 30));
+    if (json == null) {
+      debugPrint('json is null, url=$url');
+      return [];
+    }
+
+    final message = <String, String>{
+      'url': url,
+      'json': json as String,
+    };
+    return compute(_parseCharts, message);
   }
 
   @override
@@ -154,53 +180,6 @@ class MobilePodcastApi extends PodcastApi {
     );
   }
 
-  static Future<podcast_search.SearchResult> _search(
-    Map<String, String?> searchParams,
-  ) {
-    final term = searchParams['term']!;
-    final provider = searchParams['searchProvider'] == 'itunes'
-        ? const podcast_search.ITunesProvider()
-        : podcast_search.PodcastIndexProvider(
-            key: podcastIndexKey,
-            secret: podcastIndexSecret,
-          );
-
-    return podcast_search.Search(
-      userAgent: Environment.userAgent(),
-      searchProvider: provider,
-    ).search(term).timeout(const Duration(seconds: 30));
-  }
-
-  Future<List<ITunesChartItem>> _charts(
-    Map<String, String?> searchParams,
-  ) async {
-    final countryCode = searchParams['countryCode'];
-    final country = countryCode?.isNotEmpty == true
-        ? Country.values
-        .where((element) => element.code == countryCode)
-        .first
-        : Country.none;
-
-    final limit = int.tryParse(searchParams['size'] ?? '*') ?? 50;
-    final url = _buildChartsUrl(
-      country: country,
-      limit: limit,
-      genre: searchParams['genre'] ?? '',
-    );
-
-    final json = await _http.fetch(url).timeout(const Duration(seconds: 30));
-    if (json == null) {
-      debugPrint('json is null, url=$url');
-      return [];
-    }
-
-    final message = <String, String>{
-      'url': url,
-      'json': json as String,
-    };
-    return compute(_parseCharts, message);
-  }
-
   static List<ITunesChartItem> _parseCharts(Map<String, String> message) {
     final url = message['url']!;
     final json = message['json']!;
@@ -225,6 +204,28 @@ class MobilePodcastApi extends PodcastApi {
 
     return list
         .map((e) => ITunesChartItem.fromJson(json: e as Map<String, dynamic>))
+        .toList();
+  }
+
+  static List<ITunesSearchItem> _parseSearchResult(
+    Map<String, String> message,
+  ) {
+    final url = message['url']!;
+    final json = message['json']!;
+
+    final decoded = jsonDecode(json) as Map<String, dynamic>?;
+    if (decoded == null) {
+      debugPrint('decoded is null, url=$url');
+      return [];
+    }
+
+    final results = decoded['results'] as List<dynamic>?;
+    if (results == null) {
+      debugPrint('results is null, url=$url');
+      return [];
+    }
+    return results
+        .map((e) => ITunesSearchItem.fromJson(e as Map<String, dynamic>))
         .toList();
   }
 
@@ -275,5 +276,41 @@ class MobilePodcastApi extends PodcastApi {
       ..write('/json');
 
     return buf.toString();
+  }
+
+  /// This internal method constructs a correctly encoded URL which is then
+  /// used to perform the search.
+  static String _buildSearchUrl({
+    required String term,
+    required int limit,
+    Country? country,
+    Attribute? attribute,
+    String? language,
+    int? version,
+    bool? explicit,
+  }) {
+    final queryParams = <String, String>{
+      'term': term,
+      'limit': limit.toString(),
+    };
+    if (country != null && country != Country.none) {
+      queryParams['country'] = country.code;
+    }
+    if (attribute != null && attribute != Attribute.none) {
+      queryParams['attribute'] = attribute.attribute;
+    }
+    if (language != null) {
+      queryParams['language'] = language;
+    }
+    if (version != null) {
+      queryParams['version'] = version.toString();
+    }
+    if (explicit != null) {
+      queryParams['explicit'] = explicit ? 'yes' : 'no';
+    }
+
+    return Uri.parse(searchApiEndpoint)
+        .replace(queryParameters: queryParams)
+        .toString();
   }
 }
