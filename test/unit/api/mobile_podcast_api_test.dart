@@ -56,4 +56,25 @@ void main() {
     expect(charts[0].trackName, 'A Longer Title');
     expect(charts[0].releaseDate, DateTime.parse('2024-04-04T03:00:00-07:00'));
   });
+
+  test('iTunes search', () async {
+    final f = File('test_resources/itunes_search.json');
+    final rss = await f.readAsString();
+    DioAdapter(dio: cachedHttp.dio).onGet(
+      'https://itunes.apple.com/search?term=example&limit=20&explicit=no',
+          (server) => server.reply(
+        200,
+        rss,
+        headers: {
+          'content-type': ['application/json'],
+          'etag': ['12345'],
+          'age': ['10'],
+        },
+      ),
+    );
+    final charts = await podcastApi.search('example');
+    expect(charts, hasLength(1));
+    expect(charts[0].trackName, 'Track Name');
+    expect(charts[0].releaseDate, DateTime.parse('2024-04-05T04:00:00Z'));
+  });
 }
