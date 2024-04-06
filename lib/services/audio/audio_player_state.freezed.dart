@@ -179,6 +179,7 @@ mixin _$AudioPlayerState {
   Duration get position => throw _privateConstructorUsedError;
   PlayerPhase get phase => throw _privateConstructorUsedError;
   AudioState get audioState => throw _privateConstructorUsedError;
+  bool get interrupted => throw _privateConstructorUsedError;
   int get playbackError => throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
@@ -197,6 +198,7 @@ abstract class $AudioPlayerStateCopyWith<$Res> {
       Duration position,
       PlayerPhase phase,
       AudioState audioState,
+      bool interrupted,
       int playbackError});
 
   $EpisodeCopyWith<$Res> get episode;
@@ -219,6 +221,7 @@ class _$AudioPlayerStateCopyWithImpl<$Res, $Val extends AudioPlayerState>
     Object? position = null,
     Object? phase = null,
     Object? audioState = null,
+    Object? interrupted = null,
     Object? playbackError = null,
   }) {
     return _then(_value.copyWith(
@@ -238,6 +241,10 @@ class _$AudioPlayerStateCopyWithImpl<$Res, $Val extends AudioPlayerState>
           ? _value.audioState
           : audioState // ignore: cast_nullable_to_non_nullable
               as AudioState,
+      interrupted: null == interrupted
+          ? _value.interrupted
+          : interrupted // ignore: cast_nullable_to_non_nullable
+              as bool,
       playbackError: null == playbackError
           ? _value.playbackError
           : playbackError // ignore: cast_nullable_to_non_nullable
@@ -267,6 +274,7 @@ abstract class _$$AudioPlayerStateImplCopyWith<$Res>
       Duration position,
       PlayerPhase phase,
       AudioState audioState,
+      bool interrupted,
       int playbackError});
 
   @override
@@ -288,6 +296,7 @@ class __$$AudioPlayerStateImplCopyWithImpl<$Res>
     Object? position = null,
     Object? phase = null,
     Object? audioState = null,
+    Object? interrupted = null,
     Object? playbackError = null,
   }) {
     return _then(_$AudioPlayerStateImpl(
@@ -307,6 +316,10 @@ class __$$AudioPlayerStateImplCopyWithImpl<$Res>
           ? _value.audioState
           : audioState // ignore: cast_nullable_to_non_nullable
               as AudioState,
+      interrupted: null == interrupted
+          ? _value.interrupted
+          : interrupted // ignore: cast_nullable_to_non_nullable
+              as bool,
       playbackError: null == playbackError
           ? _value.playbackError
           : playbackError // ignore: cast_nullable_to_non_nullable
@@ -323,6 +336,7 @@ class _$AudioPlayerStateImpl implements _AudioPlayerState {
       required this.position,
       required this.phase,
       required this.audioState,
+      this.interrupted = false,
       this.playbackError = 0});
 
   @override
@@ -335,11 +349,14 @@ class _$AudioPlayerStateImpl implements _AudioPlayerState {
   final AudioState audioState;
   @override
   @JsonKey()
+  final bool interrupted;
+  @override
+  @JsonKey()
   final int playbackError;
 
   @override
   String toString() {
-    return 'AudioPlayerState(episode: $episode, position: $position, phase: $phase, audioState: $audioState, playbackError: $playbackError)';
+    return 'AudioPlayerState(episode: $episode, position: $position, phase: $phase, audioState: $audioState, interrupted: $interrupted, playbackError: $playbackError)';
   }
 
   @override
@@ -353,13 +370,15 @@ class _$AudioPlayerStateImpl implements _AudioPlayerState {
             (identical(other.phase, phase) || other.phase == phase) &&
             (identical(other.audioState, audioState) ||
                 other.audioState == audioState) &&
+            (identical(other.interrupted, interrupted) ||
+                other.interrupted == interrupted) &&
             (identical(other.playbackError, playbackError) ||
                 other.playbackError == playbackError));
   }
 
   @override
-  int get hashCode => Object.hash(
-      runtimeType, episode, position, phase, audioState, playbackError);
+  int get hashCode => Object.hash(runtimeType, episode, position, phase,
+      audioState, interrupted, playbackError);
 
   @JsonKey(ignore: true)
   @override
@@ -375,6 +394,7 @@ abstract class _AudioPlayerState implements AudioPlayerState {
       required final Duration position,
       required final PlayerPhase phase,
       required final AudioState audioState,
+      final bool interrupted,
       final int playbackError}) = _$AudioPlayerStateImpl;
 
   @override
@@ -385,6 +405,8 @@ abstract class _AudioPlayerState implements AudioPlayerState {
   PlayerPhase get phase;
   @override
   AudioState get audioState;
+  @override
+  bool get interrupted;
   @override
   int get playbackError;
   @override

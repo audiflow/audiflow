@@ -33,6 +33,7 @@ class AudioPlayerState with _$AudioPlayerState {
     required Duration position,
     required PlayerPhase phase,
     required AudioState audioState,
+    @Default(false) bool interrupted,
     @Default(0) int playbackError,
   }) = _AudioPlayerState;
 }
