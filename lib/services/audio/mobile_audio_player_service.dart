@@ -208,9 +208,12 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
   }
 
   @override
-  Future<void> pause() async {
+  Future<void> pause({bool interrupted = false}) async {
     if (state != null) {
-      state = state!.copyWith(phase: PlayerPhase.pause);
+      state = state!.copyWith(
+        phase: PlayerPhase.pause,
+        interrupted: interrupted,
+      );
     }
 
     await _audioHandler.pause();
@@ -382,7 +385,9 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
           case AudioInterruptionType.duck:
             break;
           case AudioInterruptionType.pause:
-            play();
+            if (state?.interrupted == true) {
+              play();
+            }
           case AudioInterruptionType.unknown:
             break;
         }
