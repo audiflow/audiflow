@@ -77,4 +77,22 @@ void main() {
     expect(charts[0].trackName, 'Track Name');
     expect(charts[0].releaseDate, DateTime.parse('2024-04-05T04:00:00Z'));
   });
-}
+
+  test('feed', () async {
+    final f = File('test_resources/podcast1.rss');
+    final rss = await f.readAsString();
+    const url = 'https://example.com/feed.rss';
+    DioAdapter(dio: cachedHttp.dio).onGet(
+      url,
+          (server) => server.reply(
+        200,
+        rss,
+        headers: {
+          'content-type': ['application/json'],
+          'etag': ['12345'],
+          'age': ['10'],
+        },
+      ),
+    );
+    final (a, b) = await podcastApi.loadFeed(url);
+  });}
