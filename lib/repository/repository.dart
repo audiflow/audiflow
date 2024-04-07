@@ -42,29 +42,9 @@ abstract class Repository {
 
   Future<void> close();
 
-  // --- charts
-
-  Future<void> savePodcastChart(PodcastChartState chart);
-
-  Future<PodcastChartState?> loadPodcastChart();
-
-  // --- PodcastMetadata
-
-  Future<void> savePodcastMetadataList(Iterable<PodcastMetadata> list);
-
-  Future<void> savePodcastMetadata(PodcastMetadata metadata);
-
-  Future<PodcastMetadata?> findPodcastMetadata(String guid);
-
-  Future<List<PodcastMetadata>> populatePodcastFeedUrl(
-    Iterable<PodcastMetadata> items,
-  );
-
-  Future<String?> findFeedUrl(String guid);
-
-  Future<List<(PodcastMetadata, PodcastStats)>> subscriptions();
-
   // --- Podcast
+
+  Future<Podcast?> findPodcast({int? pid, int? collectionId});
 
   Future<void> savePodcasts(Iterable<Podcast> podcasts);
 
@@ -73,7 +53,7 @@ abstract class Repository {
     PodcastStatsUpdateParam? statsParam,
   });
 
-  Future<Podcast?> findPodcast(String guid);
+  Future<List<Podcast>> subscriptions();
 
   Future<void> subscribePodcast(Podcast podcast);
 
@@ -81,13 +61,13 @@ abstract class Repository {
 
   // -- PodcastStats
 
-  Future<PodcastStats?> findPodcastStats(String guid);
+  Future<PodcastStats?> findPodcastStats(int pid);
 
   Future<PodcastStats> updatePodcastStats(PodcastStatsUpdateParam param);
 
   // -- PodcastViewStats
 
-  Future<PodcastViewStats?> findPodcastViewStats(String guid);
+  Future<PodcastViewStats?> findPodcastViewStats(int pid);
 
   Future<PodcastViewStats> updatePodcastViewStats(
     PodcastViewStatsUpdateParam param,
