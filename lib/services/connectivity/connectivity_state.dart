@@ -16,10 +16,10 @@ class ConnectivityState extends _$ConnectivityState {
   final _log = Logger('ConnectivityState');
 
   @override
-  ConnectivityResult build() {
+  List<ConnectivityResult> build() {
     _listen();
     final initialState = ref.watch(initialConnectivityStateProvider);
-    return initialState.valueOrNull ?? ConnectivityResult.none;
+    return initialState.valueOrNull ?? [];
   }
 
   void _listen() {
@@ -36,11 +36,11 @@ class ConnectivityState extends _$ConnectivityState {
 @Riverpod(keepAlive: true)
 class InitialConnectivityState extends _$InitialConnectivityState {
   @override
-  Future<ConnectivityResult> build() async {
+  Future<List<ConnectivityResult>> build() async {
     return Connectivity().checkConnectivity();
   }
 }
 
-extension ConnectivityResultExt on ConnectivityResult {
-  bool get isConnected => this != ConnectivityResult.none;
+extension ConnectivityResultExt on List<ConnectivityResult> {
+  bool get isConnected => isNotEmpty && first != ConnectivityResult.none;
 }
