@@ -33,7 +33,7 @@ abstract class PodcastApi {
     String countryCode = '',
   });
 
-  Future<pslib.Item?> lookup({required int collectionId});
+  Future<ITunesSearchItem?> lookup({required int collectionId});
 
   List<String> genres(
     String searchProvider,

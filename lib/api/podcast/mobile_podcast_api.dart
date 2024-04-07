@@ -128,10 +128,20 @@ class MobilePodcastApi extends PodcastApi {
   }
 
   @override
-  Future<podcast_search.Item?> lookup({required int collectionId}) async {
-    return podcast_search.Search(
-      userAgent: Environment.userAgent(),
-    ).lookup(collectionId: collectionId);
+  Future<ITunesSearchItem?> lookup({required int collectionId}) async {
+    final url = _buildLookupUrl(iTunesId: collectionId);
+    final json = await _http.fetch(url).timeout(const Duration(seconds: 30));
+    if (json == null) {
+      debugPrint('json is null, url=$url');
+      return null;
+    }
+
+    final message = <String, String>{
+      'url': url,
+      'json': json as String,
+    };
+    final list = await compute(_parseSearchResult, message);
+    return list.firstOrNull;
   }
 
   @override
@@ -329,5 +339,9 @@ class MobilePodcastApi extends PodcastApi {
     return Uri.parse(searchApiEndpoint)
         .replace(queryParameters: queryParams)
         .toString();
+  }
+
+  static String _buildLookupUrl({required int iTunesId}) {
+    return Uri.parse('$searchApiEndpoint/lookup?id=$iTunesId').toString();
   }
 }
