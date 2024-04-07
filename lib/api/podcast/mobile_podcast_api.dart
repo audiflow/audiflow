@@ -11,7 +11,7 @@ import 'dart:io';
 
 import 'package:audiflow/api/podcast/podcast_api.dart';
 import 'package:audiflow/core/environment.dart';
-import 'package:audiflow/entities/transcript.dart';
+import 'package:audiflow/entities/entities.dart';
 import 'package:audiflow/services/http/cached_http.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -150,8 +150,24 @@ class MobilePodcastApi extends PodcastApi {
   }
 
   @override
-  Future<podcast_search.Podcast> loadFeed(String url) async {
-    return _loadFeed(url);
+  Future<(ChannelValues?, ItemParser?)> loadFeed(String url) async {
+    _setupSecurityContext();
+    final rss = await _http.fetch(url).timeout(const Duration(seconds: 30));
+    if (rss == null) {
+      debugPrint('json is null, url=$url');
+      return (null, null);
+    }
+
+    final message = <String, String>{
+      'url': url,
+      'rss': rss as String,
+    };
+    try {
+      return compute(_parseFeed, message);
+    } on Exception catch (e) {
+      debugPrint('Failed to parse feed: $e\n$url\n$rss');
+      return (null, null);
+    }
   }
 
   @override
@@ -229,12 +245,13 @@ class MobilePodcastApi extends PodcastApi {
         .toList();
   }
 
-  Future<podcast_search.Podcast> _loadFeed(String url) {
-    _setupSecurityContext();
-    return podcast_search.Podcast.loadFeed(
-      url: url,
-      userAgent: Environment.userAgent(),
-    );
+  static Future<(ChannelValues, ItemParser)> _parseFeed(
+    Map<String, String> message,
+  ) async {
+    final rss = message['rss']!;
+    final (channelParser, itemParser) = await createPodcastFeedParsers(rss);
+    final channelValue = await channelParser.parseWith((value) => value).first;
+    return (channelValue, itemParser);
   }
 
   void _setupSecurityContext() {

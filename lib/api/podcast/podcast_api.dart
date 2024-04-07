@@ -40,7 +40,7 @@ abstract class PodcastApi {
   );
 
   /// URL representing the RSS feed for a podcast.
-  Future<pslib.Podcast> loadFeed(String url);
+  Future<(ChannelValues?, ItemParser?)> loadFeed(String url);
 
   /// Load episode chapters via JSON file.
   Future<pslib.Chapters> loadChapters(String url);
