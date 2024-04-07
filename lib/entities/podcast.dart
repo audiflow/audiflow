@@ -6,234 +6,146 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:audiflow/core/utils.dart';
+import 'package:audiflow/core/hash.dart';
 import 'package:audiflow/entities/entities.dart';
-import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:podcast_search/podcast_search.dart' as search;
+import 'package:isar/isar.dart';
+import 'package:podcast_feed/podcast_feed.dart' show ShowType;
 
-part 'podcast.freezed.dart';
 part 'podcast.g.dart';
 
 /// A class that represents an instance of a podcast search result item.
-@freezed
-class PodcastMetadata with _$PodcastMetadata {
-  const factory PodcastMetadata({
-    /// Unique identifier for podcast.
-    required String guid,
+@collection
+class Podcast {
+  Podcast({
+    required this.feedUrl,
+    required this.collectionId,
+    this.newFeedUrl,
+    required this.title,
+    required this.description,
+    required this.language,
+    required this.category,
+    this.subcategory,
+    required this.explicit,
+    required this.image,
+    this.link,
+    this.guid,
+    this.author,
+    this.copyright,
+    this.complete = false,
+    this.type = ShowType.episodic,
+  });
 
-    /// The collection ID(iTunesID).
-    required int collectionId,
+  static int pidFrom(String feedUrl) => fastHash(feedUrl);
 
-    /// The link to the podcast RSS feed.
-    required String? feedUrl,
+  Id get id => pidFrom(feedUrl);
 
-    /// Podcast title.
-    required String title,
+  /// The declared canonical feed URL for the podcast.
+  @Index(unique: true)
+  final String feedUrl;
 
-    /// URL for thumbnail version of artwork image.
-    required String thumbImageUrl,
+  /// The collection ID(iTunesID).
+  @Index(unique: true)
+  final int collectionId;
 
-    /// URL to the full size artwork image.
-    required String imageUrl,
+  /// The new podcast RSS Feed URL.
+  final String? newFeedUrl;
 
-    /// Copyright owner of the podcast.
-    required String copyright,
+  /// The podcast title. A string containing the name of a podcast and nothing
+  /// else.
+  final String title;
 
-    /// Release date of the latest episode.
-    required DateTime releaseDate,
-  }) = _PodcastMetadata;
+  /// Text that describes a podcast to potential listeners.
+  final String description;
 
-  factory PodcastMetadata.fromJson(Map<String, dynamic> json) =>
-      _$PodcastMetadataFromJson(json);
+  /// The language that is spoken on the podcast, specified in the ISO 639
+  /// format.
+  final String language;
 
-  factory PodcastMetadata.fromSearchResultItem(search.Item item) {
-    final guid = '${item.feedUrl ?? item.collectionId}';
-    final thumbImageUrl = item.thumbnailArtworkUrl;
-    final imageUrl = item.bestArtworkUrl;
+  /// The category that best fits a podcast, selected from the list of Apple
+  /// Podcasts categories (https://help.apple.com/itc/podcasts_connect/#/itcb54353390).
+  final String category;
+  final String? subcategory;
 
-    return PodcastMetadata(
-      guid: guid,
-      feedUrl: item.feedUrl,
-      collectionId: item.collectionId ?? 0,
-      title: item.collectionName ?? item.trackName ?? '',
-      thumbImageUrl: thumbImageUrl,
-      imageUrl: imageUrl,
-      copyright: item.artistName ?? '',
-      releaseDate: item.releaseDate!,
-    );
-  }
+  /// The parental advisory information for a podcast.
+  /// The value can be true, indicating the presence of explicit content, or
+  /// false, indicating that a podcast doesn’t contain explicit language or
+  /// adult content.
+  final bool explicit;
 
-  factory PodcastMetadata.fromPodcast(Podcast podcast) {
-    return PodcastMetadata(
-      guid: podcast.guid,
-      feedUrl: podcast.feedUrl,
-      collectionId: podcast.collectionId,
-      title: podcast.title,
-      thumbImageUrl: podcast.thumbImageUrl,
-      imageUrl: podcast.imageUrl,
-      copyright: podcast.copyright,
-      releaseDate: podcast.releaseDate,
-    );
-  }
-}
+  /// The artwork for the podcast.
+  /// Image must be a minimum size of 1400 x 1400 pixels and a maximum size of
+  /// 3000 x 3000 pixels, in JPEG or PNG format, 72 dpi, with appropriate file
+  /// extensions (.jpg, .png), and in the RGB color-space. File type extension
+  /// must match the actual file type of the image file.
+  final String image;
 
-extension PodcastMetadataExtension on PodcastMetadata {
-  Podcast toPartialPodcast() => Podcast.fromMetadata(this);
+  /// The website or web page associated with a podcast.
+  final String? link;
 
-  int get contentHash => Object.hash(
-        guid,
-        collectionId,
-        feedUrl,
-        title,
-        thumbImageUrl,
-        imageUrl,
-        copyright,
-        releaseDate,
-      );
-}
+  /// Tells podcast hosting platforms whether they are allowed to import this
+  /// feed.
+  final locked = IsarLinks<Locked>();
 
-/// A class that represents an instance of a podcast.
-///
-/// When persisted to disk this represents a podcast that is being followed.
-@freezed
-class Podcast with _$Podcast {
-  const factory Podcast({
-    /// Unique identifier for podcast.
-    required String guid,
+  /// The Podcasting 2.0 GUID value (optional).
+  /// https://github.com/Podcastindex-org/podcast-namespace/blob/main/docs/1.0.md#guid
+  final String? guid;
 
-    /// The collection ID(iTunesID).
-    required int collectionId,
+  /// The group, person, or people responsible for creating the podcast.
+  final String? author;
 
-    /// The link to the podcast RSS feed.
-    required String? feedUrl,
+  /// The copyright details for a podcast.
+  final String? copyright;
 
-    /// RSS link URL.
-    required String linkUrl,
+  /// If the podcast supports funding this will contain an instance of [Funding]
+  /// that contains the Url and optional description.
+  final funding = IsarLinks<Funding>();
 
-    /// Podcast title.
-    required String title,
+  /// The type of show.
+  @enumerated
+  final ShowType type;
 
-    /// Podcast description. Can be either plain text or HTML.
-    required String description,
+  /// Specifies that a podcast is complete and will not post any more episodes
+  /// in the future.
+  final bool complete;
 
-    /// Copyright owner of the podcast.
-    required String copyright,
+  /// A value block designates single or multiple destinations for these
+  /// micro-payments.
+  final value = IsarLinks<Value>();
 
-    /// URL for thumbnail version of artwork image. Not contained within
-    /// the RSS but may be calculated or provided within search results.
-    required String thumbImageUrl,
+  /// A list of [Block] tags.
+  final block = IsarLinks<Block>();
 
-    /// URL to the full size artwork image.
-    required String imageUrl,
+  /// A list of [Person] tags.
+  final person = IsarLinks<Person>();
 
-    /// Release date of the latest episode.
-    required DateTime releaseDate,
-
-    /// List of episodes.
-    // ignore: invalid_annotation_target
-    @JsonKey(includeToJson: false, includeFromJson: false)
-    @Default([])
-    List<Episode> episodes,
-
-    /// List of  funding links.
-    @Default([]) List<Funding> funding,
-
-    /// List of people of interest to the podcast.
-    @Default([]) List<Person> persons,
-
-    /// True indicates this episode data contains only [PodcastMetadata] fields.
-    @Default(false) bool metadataOnly,
-  }) = _Podcast;
-
-  factory Podcast.fromJson(Map<String, dynamic> json) =>
-      _$PodcastFromJson(json);
-
-  factory Podcast.fromSearch(
-    search.Podcast podcast, [
-    PodcastMetadata? metadata,
-  ]) {
-    final guid =
-        metadata?.guid ?? podcast.url ?? podcast.guid ?? podcast.title!;
-    final episodes = podcast.episodes
-        .map(
-          (e) => Episode.fromSearch(
-            e,
-            pguid: guid,
-            thumbImageUrl: metadata?.thumbImageUrl ?? podcast.image ?? '',
-            imageUrl: podcast.image ?? metadata?.imageUrl,
-          ),
-        )
-        .toList();
-    final funding = podcast.funding
-        .where((f) => f.url?.isNotEmpty == true)
-        .map(Funding.fromSearch)
-        .toList();
-    final persons = podcast.persons.map(Person.fromSearch).toList();
-
-    return Podcast(
-      guid: guid,
-      collectionId: metadata?.collectionId ?? 0,
-      feedUrl: podcast.url,
-      linkUrl: podcast.link ?? '',
-      title: podcast.title ?? metadata?.title ?? '',
-      description: removeHtmlPadding(podcast.description),
-      copyright: metadata?.copyright ?? podcast.copyright ?? '',
-      thumbImageUrl: metadata?.thumbImageUrl ?? podcast.image ?? '',
-      imageUrl: podcast.image ?? metadata?.imageUrl ?? '',
-      releaseDate: metadata?.releaseDate ??
-          episodes.last.publicationDate ??
-          DateTime.now(),
-      episodes: episodes,
-      funding: funding,
-      persons: persons,
-    );
-  }
-
-  factory Podcast.fromMetadata(PodcastMetadata metadata) {
-    return Podcast(
-      guid: metadata.guid,
-      collectionId: metadata.collectionId,
-      feedUrl: metadata.feedUrl,
-      linkUrl: '',
-      title: metadata.title,
-      description: '',
-      thumbImageUrl: metadata.thumbImageUrl,
-      imageUrl: metadata.imageUrl,
-      copyright: metadata.copyright,
-      releaseDate: metadata.releaseDate,
-      metadataOnly: true,
-    );
+  @override
+  String toString() {
+    return '''Podcast(title: '$title', feedUrl: '$feedUrl')''';
   }
 }
 
-extension PodcastExtension on Podcast {
-  PodcastMetadata get metadata => PodcastMetadata.fromPodcast(this);
+@collection
+class PodcastStats {
+  PodcastStats({
+    required this.id,
+    this.subscribedDate,
+    this.lastCheckedAt,
+  });
 
-  int get contentHash => Object.hash(
-        guid,
-        collectionId,
-        feedUrl,
-        linkUrl,
-        title,
-        description,
-        thumbImageUrl,
-        imageUrl,
-        releaseDate,
-        funding,
-        persons,
-      );
-}
+  final Id id;
+  final DateTime? subscribedDate;
+  final DateTime? lastCheckedAt;
 
-@freezed
-class PodcastStats with _$PodcastStats {
-  const factory PodcastStats({
-    required String guid,
+  PodcastStats copyWith({
     DateTime? subscribedDate,
     DateTime? lastCheckedAt,
-  }) = _PodcastStats;
-
-  factory PodcastStats.fromJson(Map<String, dynamic> json) =>
-      _$PodcastStatsFromJson(json);
+  }) {
+    return PodcastStats(
+      id: id,
+      subscribedDate: subscribedDate ?? this.subscribedDate,
+      lastCheckedAt: lastCheckedAt ?? this.lastCheckedAt,
+    );
+  }
 }
 
 extension PodcastStatsExt on PodcastStats {
@@ -242,12 +154,12 @@ extension PodcastStatsExt on PodcastStats {
 
 class PodcastStatsUpdateParam {
   const PodcastStatsUpdateParam({
-    required this.guid,
+    required this.id,
     this.subscribed,
     this.lastCheckedAt,
   });
 
-  final String guid;
+  final Id id;
   final bool? subscribed;
   final DateTime? lastCheckedAt;
 
@@ -256,7 +168,7 @@ class PodcastStatsUpdateParam {
     DateTime? lastCheckedAt,
   }) {
     return PodcastStatsUpdateParam(
-      guid: guid,
+      id: id,
       subscribed: subscribed ?? this.subscribed,
       lastCheckedAt: lastCheckedAt ?? this.lastCheckedAt,
     );
@@ -271,30 +183,45 @@ enum PodcastDetailViewMode {
   downloaded;
 }
 
-@freezed
-class PodcastViewStats with _$PodcastViewStats {
-  const factory PodcastViewStats({
-    required String guid,
-    @Default(PodcastDetailViewMode.seasons) PodcastDetailViewMode viewMode,
-    @Default(false) bool ascend,
-    @Default(true) bool ascendSeasonEpisodes,
-    @Default(<String, DateTime>{}) Map<String, DateTime> listenedEpisodes,
-  }) = _PodcastViewStats;
+@collection
+class PodcastViewStats {
+  PodcastViewStats({
+    required this.id,
+    this.viewMode = PodcastDetailViewMode.seasons,
+    this.ascend = false,
+    this.ascendSeasonEpisodes = true,
+  });
 
-  factory PodcastViewStats.fromJson(Map<String, dynamic> json) =>
-      _$PodcastViewStatsFromJson(json);
+  final Id id;
+  @enumerated
+  final PodcastDetailViewMode viewMode;
+  final bool ascend;
+  final bool ascendSeasonEpisodes;
+
+  PodcastViewStats copyWith({
+    PodcastDetailViewMode? viewMode,
+    bool? ascend,
+    bool? ascendSeasonEpisodes,
+  }) {
+    return PodcastViewStats(
+      id: id,
+      viewMode: viewMode ?? this.viewMode,
+      ascend: ascend ?? this.ascend,
+      ascendSeasonEpisodes: ascendSeasonEpisodes ?? this.ascendSeasonEpisodes,
+    );
+  }
 }
 
 class PodcastViewStatsUpdateParam {
   const PodcastViewStatsUpdateParam({
-    required this.guid,
+    required this.id,
     this.viewMode,
     this.ascend,
     this.ascendSeasonEpisodes,
     this.listenedEpisodes,
   });
 
-  final String guid;
+  final Id id;
   final PodcastDetailViewMode? viewMode;
   final bool? ascend;
   final bool? ascendSeasonEpisodes;
@@ -307,7 +234,7 @@ class PodcastViewStatsUpdateParam {
     Map<String, DateTime>? listenedEpisodes,
   }) {
     return PodcastViewStatsUpdateParam(
-      guid: guid,
+      id: id,
       viewMode: viewMode ?? this.viewMode,
       ascend: ascend ?? this.ascend,
       ascendSeasonEpisodes: ascendSeasonEpisodes ?? this.ascendSeasonEpisodes,

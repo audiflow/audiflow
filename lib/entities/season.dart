@@ -50,10 +50,6 @@ extension SeasonExt on Season {
         (total, episode) => total + (episode.duration ?? Duration.zero),
       );
 
-  String? get thumbImageUrl {
-    return episodes.first.thumbImageUrl;
-  }
-
   String? get imageUrl {
     return episodes.first.imageUrl;
   }

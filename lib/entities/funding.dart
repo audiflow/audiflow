@@ -7,32 +7,33 @@
 // found in the LICENSE file.
 
 import 'package:audiflow/entities/entities.dart';
-import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:podcast_search/podcast_search.dart' as search;
+import 'package:isar/isar.dart';
+import 'package:podcast_feed/podcast_feed.dart' as feed;
 
-part 'funding.freezed.dart';
 part 'funding.g.dart';
 
 /// part of a [Podcast].
 ///
 /// Part of the [podcast namespace](https://github.com/Podcastindex-org/podcast-namespace)
-@freezed
-class Funding with _$Funding {
-  const factory Funding({
-    /// The URL to the funding/donation/information page.
-    required String url,
+@collection
+class Funding {
+  Funding({
+    required this.url,
+    required this.value,
+  });
 
-    /// The label for the link which will be presented to the user.
-    required String value,
-  }) = _Funding;
-
-  factory Funding.fromJson(Map<String, dynamic> json) =>
-      _$FundingFromJson(json);
-
-  factory Funding.fromSearch(search.Funding funding) {
+  factory Funding.fromFeed(feed.Funding funding) {
     return Funding(
       url: funding.url!,
       value: funding.value ?? '',
     );
   }
+
+  Id? id;
+
+  /// The URL to the funding/donation/information page.
+  final String url;
+
+  /// The label for the link which will be presented to the user.
+  final String value;
 }

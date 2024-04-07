@@ -14,19 +14,14 @@ T _$identity<T>(T value) => value;
 final _privateConstructorUsedError = UnsupportedError(
     'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
 
-PodcastChartState _$PodcastChartStateFromJson(Map<String, dynamic> json) {
-  return _PodcastChartState.fromJson(json);
-}
-
 /// @nodoc
 mixin _$PodcastChartState {
   int? get size => throw _privateConstructorUsedError;
   String? get genre => throw _privateConstructorUsedError;
   String? get countryCode => throw _privateConstructorUsedError;
-  List<PodcastMetadata> get podcasts => throw _privateConstructorUsedError;
+  List<Podcast> get podcasts => throw _privateConstructorUsedError;
   DateTime? get expiresAt => throw _privateConstructorUsedError;
 
-  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
   $PodcastChartStateCopyWith<PodcastChartState> get copyWith =>
       throw _privateConstructorUsedError;
@@ -42,7 +37,7 @@ abstract class $PodcastChartStateCopyWith<$Res> {
       {int? size,
       String? genre,
       String? countryCode,
-      List<PodcastMetadata> podcasts,
+      List<Podcast> podcasts,
       DateTime? expiresAt});
 }
 
@@ -81,7 +76,7 @@ class _$PodcastChartStateCopyWithImpl<$Res, $Val extends PodcastChartState>
       podcasts: null == podcasts
           ? _value.podcasts
           : podcasts // ignore: cast_nullable_to_non_nullable
-              as List<PodcastMetadata>,
+              as List<Podcast>,
       expiresAt: freezed == expiresAt
           ? _value.expiresAt
           : expiresAt // ignore: cast_nullable_to_non_nullable
@@ -102,7 +97,7 @@ abstract class _$$PodcastChartStateImplCopyWith<$Res>
       {int? size,
       String? genre,
       String? countryCode,
-      List<PodcastMetadata> podcasts,
+      List<Podcast> podcasts,
       DateTime? expiresAt});
 }
 
@@ -139,7 +134,7 @@ class __$$PodcastChartStateImplCopyWithImpl<$Res>
       podcasts: null == podcasts
           ? _value._podcasts
           : podcasts // ignore: cast_nullable_to_non_nullable
-              as List<PodcastMetadata>,
+              as List<Podcast>,
       expiresAt: freezed == expiresAt
           ? _value.expiresAt
           : expiresAt // ignore: cast_nullable_to_non_nullable
@@ -149,18 +144,15 @@ class __$$PodcastChartStateImplCopyWithImpl<$Res>
 }
 
 /// @nodoc
-@JsonSerializable()
+
 class _$PodcastChartStateImpl implements _PodcastChartState {
   const _$PodcastChartStateImpl(
       {this.size,
       this.genre,
       this.countryCode,
-      final List<PodcastMetadata> podcasts = const [],
+      final List<Podcast> podcasts = const [],
       this.expiresAt})
       : _podcasts = podcasts;
-
-  factory _$PodcastChartStateImpl.fromJson(Map<String, dynamic> json) =>
-      _$$PodcastChartStateImplFromJson(json);
 
   @override
   final int? size;
@@ -168,10 +160,10 @@ class _$PodcastChartStateImpl implements _PodcastChartState {
   final String? genre;
   @override
   final String? countryCode;
-  final List<PodcastMetadata> _podcasts;
+  final List<Podcast> _podcasts;
   @override
   @JsonKey()
-  List<PodcastMetadata> get podcasts {
+  List<Podcast> get podcasts {
     if (_podcasts is EqualUnmodifiableListView) return _podcasts;
     // ignore: implicit_dynamic_type
     return EqualUnmodifiableListView(_podcasts);
@@ -199,7 +191,6 @@ class _$PodcastChartStateImpl implements _PodcastChartState {
                 other.expiresAt == expiresAt));
   }
 
-  @JsonKey(ignore: true)
   @override
   int get hashCode => Object.hash(runtimeType, size, genre, countryCode,
       const DeepCollectionEquality().hash(_podcasts), expiresAt);
@@ -210,13 +201,6 @@ class _$PodcastChartStateImpl implements _PodcastChartState {
   _$$PodcastChartStateImplCopyWith<_$PodcastChartStateImpl> get copyWith =>
       __$$PodcastChartStateImplCopyWithImpl<_$PodcastChartStateImpl>(
           this, _$identity);
-
-  @override
-  Map<String, dynamic> toJson() {
-    return _$$PodcastChartStateImplToJson(
-      this,
-    );
-  }
 }
 
 abstract class _PodcastChartState implements PodcastChartState {
@@ -224,11 +208,8 @@ abstract class _PodcastChartState implements PodcastChartState {
       {final int? size,
       final String? genre,
       final String? countryCode,
-      final List<PodcastMetadata> podcasts,
+      final List<Podcast> podcasts,
       final DateTime? expiresAt}) = _$PodcastChartStateImpl;
-
-  factory _PodcastChartState.fromJson(Map<String, dynamic> json) =
-      _$PodcastChartStateImpl.fromJson;
 
   @override
   int? get size;
@@ -237,7 +218,7 @@ abstract class _PodcastChartState implements PodcastChartState {
   @override
   String? get countryCode;
   @override
-  List<PodcastMetadata> get podcasts;
+  List<Podcast> get podcasts;
   @override
   DateTime? get expiresAt;
   @override

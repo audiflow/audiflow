@@ -6,11 +6,13 @@
 // found in the LICENSE file.
 
 export './app_settings.dart';
+export './block.dart';
 export './chapter.dart';
 export './downloadable.dart';
 export './episode.dart';
 export './feed.dart';
 export './funding.dart';
+export './locked.dart';
 export './person.dart';
 export './podcast.dart';
 export './podcast_chart.dart';
@@ -19,3 +21,4 @@ export './search_providers.dart';
 export './season.dart';
 export './sleep.dart';
 export './transcript.dart';
+export './value.dart';

@@ -17,7 +17,7 @@ class Feed {
   Feed({
     required this.podcastUrl,
     this.imageUrl,
-    this.thumbImageUrl,
+    this.thumbnailUrl,
     this.refresh = false,
     this.backgroundFresh = false,
     this.silently = false,
@@ -30,7 +30,7 @@ class Feed {
   String? imageUrl;
 
   /// The thumbnail artwork for the podcast,
-  String? thumbImageUrl;
+  String? thumbnailUrl;
 
   /// If true the podcast is loaded regardless of if it's currently cached.
   bool refresh;

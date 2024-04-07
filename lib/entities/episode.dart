@@ -6,17 +6,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'package:audiflow/core/hash.dart';
 import 'package:audiflow/core/utils.dart';
-import 'package:audiflow/entities/chapter.dart';
-import 'package:audiflow/entities/downloadable.dart';
-import 'package:audiflow/entities/person.dart';
-import 'package:audiflow/entities/transcript.dart';
-import 'package:flutter/foundation.dart';
-import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:audiflow/entities/entities.dart';
 import 'package:html/parser.dart' show parseFragment;
-import 'package:podcast_search/podcast_search.dart' as search;
+import 'package:isar/isar.dart';
+import 'package:podcast_feed/podcast_feed.dart'
+    show ChannelItemValues, EpisodeType;
 
-part 'episode.freezed.dart';
 part 'episode.g.dart';
 
 /// An object that represents an individual episode of a Podcast.
@@ -24,191 +21,181 @@ part 'episode.g.dart';
 /// An Episode can be used in conjunction with a [Downloadable] to
 /// determine if the Episode is available on the local filesystem.
 
-@freezed
-class Episode with _$Episode {
-  const factory Episode({
-    /// A String GUID for the episode.
-    required String guid,
+@collection
+class Episode {
+  Episode({
+    required this.pid,
+    required this.guid,
+    required this.title,
+    this.author,
+    this.link,
+    this.publicationDate,
+    this.description,
+    this.durationMS,
+    this.imageUrl,
+    this.explicit = false,
+    this.season,
+    this.episode,
+    this.type = EpisodeType.full,
+  });
 
-    /// The GUID for an associated podcast. If an episode has been downloaded
-    /// without subscribing to a podcast this may be null.
-    required String pguid,
-
-    /// The name of the podcast the episode is part of.
-    required String title,
-
-    /// The episode description. This could be plain text or HTML.
-    required String description,
-
-    /// More detailed description - optional.
-    String? content,
-
-    /// External link
-    String? link,
-
-    /// URL to the episode artwork image.
-    required String? imageUrl,
-
-    /// URL to a thumbnail version of the episode artwork image.
-    required String? thumbImageUrl,
-
-    /// The date the episode was published (if known).
-    DateTime? publicationDate,
-
-    /// The URL for the episode location.
-    String? contentUrl,
-
-    /// Author of the episode if known.
-    String? author,
-
-    /// The season the episode is part of if available.
-    int? season,
-
-    /// The episode number within a season if available.
-    int? episode,
-
-    /// The duration of the episode in milliseconds. This can be populated
-    /// either from the RSS if available, or determined from the MP3 file at
-    /// stream/download time.
-    required Duration? duration,
-
-    /// URL pointing to a JSON file containing chapter information if available.
-    String? chaptersUrl,
-
-    /// List of chapters for the episode if available.
-    @Default([]) List<Chapter> chapters,
-
-    /// List of transcript URLs for the episode if available.
-    @Default([]) List<TranscriptUrl> transcriptUrls,
-
-    /// List of people of interest to the podcast.
-    @Default([]) List<Person> persons,
-
-    /// True indicates this episode data contains only [EpisodeMetadata] fields.
-    @Default(false) bool metadataOnly,
-  }) = _Episode;
-
-  factory Episode.fromJson(Map<String, dynamic> json) =>
-      _$EpisodeFromJson(json);
-
-  factory Episode.fromSearch(
-    search.Episode episode, {
-    required String pguid,
-    String? imageUrl,
-    String? thumbImageUrl,
-  }) {
-    final author = episode.author?.replaceAll('\n', '').trim() ?? '';
-    final title = removeHtmlPadding(episode.title);
-    final description = removeHtmlPadding(episode.description);
-    final content = episode.content;
-
-    final episodeImage =
-        episode.imageUrl?.isNotEmpty == true ? episode.imageUrl : imageUrl;
-    final episodeThumbImage =
-        episode.imageUrl?.isNotEmpty == true ? episode.imageUrl : thumbImageUrl;
-    final duration = episode.duration ?? Duration.zero;
-
+  factory Episode.fromChannelItem(int pid, ChannelItemValues item) {
     return Episode(
-      pguid: pguid,
-      guid: episode.guid,
-      title: title,
-      description: description,
-      content: content,
-      author: author,
-      season: episode.season,
-      episode: episode.episode,
-      contentUrl: episode.contentUrl,
-      link: episode.link,
-      imageUrl: episodeImage,
-      thumbImageUrl: episodeThumbImage,
-      duration: Duration.zero < duration ? duration : null,
-      publicationDate: episode.publicationDate,
-      chaptersUrl: episode.chapters?.url,
-      persons: episode.persons.map(Person.fromSearch).toList(),
-      chapters: <Chapter>[],
-      transcriptUrls:
-          episode.transcripts.map(TranscriptUrl.fromSearch).toList(),
+      pid: pid,
+      guid: item.guid,
+      title: removeHtmlPadding(item.title),
+      author: item.author?.replaceAll('\n', ', ').trim() ?? '',
+      link: item.link,
+      publicationDate: item.pubDate,
+      description: item.description,
+      durationMS: item.duration?.inMilliseconds,
+      imageUrl: item.imageUrl,
+      explicit: item.explicit,
+      season: item.season,
+      episode: item.episode,
+      type: item.type,
     );
   }
 
-  factory Episode.fromMetadata(EpisodeMetadata metadata) {
-    return Episode(
-      guid: metadata.guid,
-      pguid: metadata.pguid,
-      title: metadata.title,
-      description: '',
-      imageUrl: metadata.imageUrl,
-      thumbImageUrl: metadata.thumbImageUrl,
-      duration: metadata.duration,
-      publicationDate: metadata.publicationDate,
-      contentUrl: metadata.contentUrl,
-      metadataOnly: true,
-    );
+  static Id idFrom(String guid) => fastHash(guid);
+
+  Id get id => idFrom(guid);
+
+  /// The Isar ID of the parent podcast.
+  final int pid;
+
+  /// The title for the podcast episode.
+  final String title;
+
+  /// The globally unique identifier (GUID) for a podcast episode.
+  @Index(unique: true)
+  final String guid;
+
+  /// The group responsible for creating the show.
+  String? author;
+
+  /// The URL of a web page associated with the podcast episode.
+  String? link;
+
+  /// The release date and time of an episode.
+  final DateTime? publicationDate;
+
+  /// The episode description.
+  /// The maximum amount of text allowed for this tag is 4000 bytes.
+  /// Some HTML is permitted
+  /// (<p>, <ol>, <ul>, <li>, <a>, <b>, <i>, <strong>, <em>)
+  /// if wrapped in the <CDATA> tag.
+  final String? description;
+
+  /// Length of the episode in milli seconds.
+  final int? durationMS;
+
+  /// The episode-specific artwork.
+  /// Image must be a minimum size of 1400 x 1400 pixels and a maximum size of
+  /// 3000 x 3000 pixels, in JPEG or PNG format, 72 dpi, with appropriate file
+  /// extensions (.jpg, .png), and in the sRGB color-space. File type extension
+  /// must match the actual file type of the image file.
+  String? imageUrl;
+
+  /// The parental advisory information for a podcast.
+  final bool explicit;
+
+  /// A list of URLs containing a transcript.
+  final transcripts = IsarLinks<TranscriptUrl>();
+
+  /// The chronological number that is associated with a podcast episode.
+  /// Must be a non-zero integer. This is required for serial podcasts.
+  int? episode;
+
+  /// The chronological number associated with a podcast episode's season.
+  /// Must be a non-zero integer.
+  int? season;
+
+  /// The type of episode.
+  @enumerated
+  EpisodeType type;
+
+  /// A list of [Block] tags.
+  final block = IsarLinks<Block>();
+
+  /// A list of [Person] tags.
+  final person = IsarLinks<Person>();
+
+  @override
+  String toString() {
+    return '''Episode(guid: '$guid', title: '$title')''';
   }
 }
 
 extension EpisodeExtension on Episode {
+  Duration? get duration =>
+      durationMS == null ? null : Duration(milliseconds: durationMS!);
+
   String get descriptionText {
-    if (description.isEmpty) {
-      return '';
-    } else {
-      final stripped = description.replaceAll(RegExp(r'(<br/?>)+'), ' ');
+    if (description?.isNotEmpty == true) {
+      final stripped = description!.replaceAll(RegExp(r'(<br/?>)+'), ' ');
       return parseFragment(stripped).text ?? '';
+    } else {
+      return '';
     }
   }
-
-  bool get hasChapters => chaptersUrl != null && chaptersUrl!.isNotEmpty;
-
-  bool get hasTranscripts => transcriptUrls.isNotEmpty;
+//
+// bool get hasChapters => chaptersUrl != null && chaptersUrl!.isNotEmpty;
+//
+// bool get hasTranscripts => transcriptUrls.isNotEmpty;
 }
 
-@freezed
-class EpisodeStats with _$EpisodeStats {
-  const factory EpisodeStats({
-    /// The GUID for an associated podcast.
-    required String pguid,
+@collection
+class EpisodeStats {
+  EpisodeStats({
+    required this.pid,
+    required this.id,
+    this.positionMS = 0,
+    this.playCount = 0,
+    this.playTotalMS = 0,
+    this.played = false,
+    this.completeCount = 0,
+    this.inQueue = false,
+    this.downloadedTime,
+    this.lastPlayedAt,
+  });
 
-    /// A String GUID for the episode.
-    required String guid,
+  final Id id;
 
-    /// Current position in the episode
-    @Default(Duration.zero) Duration position,
+  /// The Isar ID of the parent podcast.
+  final int pid;
 
-    /// Number of times of start playing
-    @Default(0) int playCount,
+  /// Current position in the episode
+  final int positionMS;
 
-    /// Total playing time
-    @Default(Duration.zero) Duration playTotal,
+  /// Number of times of start playing
+  final int playCount;
 
-    /// Whether the episode has been marked as played
-    @Default(false) bool played,
+  /// Total playing time
+  final int playTotalMS;
 
-    /// Number of times of complete playing
-    @Default(0) int completeCount,
+  /// Whether the episode has been marked as played
+  final bool played;
 
-    /// Whether the episode is in the queue
-    @Default(false) bool inQueue,
+  /// Number of times of complete playing
+  final int completeCount;
 
-    /// Downloaded time
-    DateTime? downloadedTime,
+  /// Whether the episode is in the queue
+  final bool inQueue;
 
-    /// Latest playing start time
-    DateTime? lastPlayedAt,
-  }) = _EpisodeStats;
+  /// Downloaded time
+  final DateTime? downloadedTime;
 
-  factory EpisodeStats.fromJson(Map<String, dynamic> json) =>
-      _$EpisodeStatsFromJson(json);
-
-  factory EpisodeStats.fromEpisode(Episode episode) {
-    return EpisodeStats(
-      pguid: episode.pguid,
-      guid: episode.guid,
-    );
-  }
+  /// Latest playing start time
+  final DateTime? lastPlayedAt;
 }
 
 extension EpisodeStatsExt on EpisodeStats {
   bool get downloaded => downloadedTime != null;
+
+  Duration get playTotal => Duration(milliseconds: playTotalMS);
+
+  Duration get position => Duration(milliseconds: positionMS);
 
   double percentagePlayed(Duration? duration) {
     return duration == null
@@ -224,7 +211,7 @@ extension EpisodeStatsExt on EpisodeStats {
 class EpisodeStatsUpdateParam {
   const EpisodeStatsUpdateParam({
     required this.pguid,
-    required this.guid,
+    required this.id,
     this.position,
     this.played,
     this.playTotalDelta,
@@ -235,7 +222,7 @@ class EpisodeStatsUpdateParam {
   });
 
   final String pguid;
-  final String guid;
+  final Id id;
   final Duration? position;
   final bool? played;
   final Duration? playTotalDelta;
@@ -256,7 +243,7 @@ class EpisodeStatsUpdateParam {
   }) {
     return EpisodeStatsUpdateParam(
       pguid: pguid,
-      guid: guid,
+      id: id,
       position: position ?? this.position,
       played: played ?? this.played,
       playTotalDelta: playTotalDelta ?? this.playTotalDelta,
@@ -275,38 +262,4 @@ class EpisodeStatsUpdateParam {
       inQueue == null &&
       downloaded == null &&
       lastPlayedAt == null;
-}
-
-@freezed
-class EpisodeMetadata with _$EpisodeMetadata {
-  factory EpisodeMetadata({
-    required String guid,
-    required String pguid,
-    required String title,
-    required String imageUrl,
-    required String thumbImageUrl,
-    required Duration duration,
-    required DateTime? publicationDate,
-    required String? contentUrl,
-  }) = _EpisodeMetadata;
-
-  factory EpisodeMetadata.fromEpisode(Episode episode) {
-    return EpisodeMetadata(
-      guid: episode.guid,
-      pguid: episode.pguid,
-      title: episode.title,
-      imageUrl: episode.imageUrl!,
-      thumbImageUrl: episode.thumbImageUrl!,
-      duration: episode.duration!,
-      publicationDate: episode.publicationDate,
-      contentUrl: episode.contentUrl,
-    );
-  }
-
-  factory EpisodeMetadata.fromJson(Map<String, dynamic> json) =>
-      _$EpisodeMetadataFromJson(json);
-}
-
-extension EpisodeMetadataExt on EpisodeMetadata {
-  Episode toPartialEpisode() => Episode.fromMetadata(this);
 }

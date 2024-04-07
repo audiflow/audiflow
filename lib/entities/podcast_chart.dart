@@ -9,7 +9,6 @@ import 'package:audiflow/entities/entities.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'podcast_chart.freezed.dart';
-part 'podcast_chart.g.dart';
 
 @freezed
 class PodcastChartState with _$PodcastChartState {
@@ -17,12 +16,9 @@ class PodcastChartState with _$PodcastChartState {
     int? size,
     String? genre,
     String? countryCode,
-    @Default([]) List<PodcastMetadata> podcasts,
+    @Default([]) List<Podcast> podcasts,
     DateTime? expiresAt,
   }) = _PodcastChartState;
-
-  factory PodcastChartState.fromJson(Map<String, dynamic> json) =>
-      _$PodcastChartStateFromJson(json);
 }
 
 extension PodcastChartStateExt on PodcastChartState {
