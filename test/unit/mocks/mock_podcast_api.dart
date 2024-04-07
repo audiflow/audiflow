@@ -6,19 +6,26 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'dart:io';
+
 import 'package:audiflow/api/podcast/mobile_podcast_api.dart';
-import 'package:podcast_search/podcast_search.dart';
+import 'package:podcast_feed/podcast_feed.dart';
 
 /// This Mock version of the Podcast API replaces loading via URL
 /// with loading via local file. This allows use to test API
 /// loading without requiring an Internet connection.
 class MockPodcastApi extends MobilePodcastApi {
-  @override
-  Future<Podcast> loadFeed(String? url) async {
-    return _loadFeed(url!);
-  }
+  MockPodcastApi(super._ref);
 
-  Future<Podcast> _loadFeed(String url) {
-    return Podcast.loadFeedFile(file: url);
+  @override
+  Future<(ChannelValues?, ItemParser?)> loadFeed(String? url) async {
+    final f = File(url!);
+    if (!f.existsSync()) {
+      return (null, null);
+    }
+    final rss = f.readAsStringSync();
+    final (channelParser, itemParser) = await createPodcastFeedParsers(rss);
+    final channelValue = await channelParser.parseWith((value) => value).first;
+    return (channelValue, itemParser);
   }
 }
