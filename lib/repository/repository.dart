@@ -7,6 +7,7 @@
 // found in the LICENSE file.
 
 import 'package:audiflow/entities/entities.dart';
+import 'package:isar/isar.dart';
 
 /// An abstract class that represent the actions supported by the chosen
 /// database or storage implementation.
@@ -44,13 +45,13 @@ abstract class Repository {
 
   // --- Podcast
 
-  Future<Podcast?> findPodcast({int? pid, int? collectionId});
+  Future<Podcast?> findPodcast({Id? id, int? collectionId});
 
   Future<void> savePodcasts(Iterable<Podcast> podcasts);
 
   Future<void> savePodcast(
     Podcast podcast, {
-    PodcastStatsUpdateParam? statsParam,
+    PodcastStatsUpdateParam? param,
   });
 
   Future<List<Podcast>> subscriptions();
@@ -75,17 +76,21 @@ abstract class Repository {
 
   // --- Episode
 
-  Future<void> saveEpisodes(Iterable<Episode> episodes);
+  Future<Episode?> findEpisode(Id id);
+
+  Future<List<Episode?>> findEpisodes(Iterable<Id> ids);
+
+  Future<List<Episode>> findEpisodesByPodcastId(Id pid);
 
   Future<void> saveEpisode(Episode episode);
 
-  Future<Episode?> findEpisode(String guid);
-
-  Future<List<Episode?>> findEpisodes(Iterable<String> guids);
-
-  Future<List<Episode>> findEpisodesByPodcastGuid(String pguid);
+  Future<void> saveEpisodes(Iterable<Episode> episodes);
 
   // --- EpisodeStats
+
+  Future<EpisodeStats?> findEpisodeStats(Id id);
+
+  Future<List<EpisodeStats?>> findEpisodeStatsList(Iterable<Id> ids);
 
   Future<EpisodeStats> updateEpisodeStats(EpisodeStatsUpdateParam param);
 
@@ -93,26 +98,22 @@ abstract class Repository {
     Iterable<EpisodeStatsUpdateParam> params,
   );
 
-  Future<EpisodeStats?> findEpisodeStats(String guid);
+  Future<List<EpisodeStats>> findDownloadedEpisodeStatsList(Id pid);
 
-  Future<List<EpisodeStats?>> findEpisodeStatsList(Iterable<String> guids);
+  Future<List<EpisodeStats>> findPlayedEpisodeStatsList(Id pid);
 
-  Future<List<EpisodeStats>> findDownloadedEpisodeStatsList(String pguid);
-
-  Future<List<EpisodeStats>> findPlayedEpisodeStatsList(String pguid);
-
-  Future<List<EpisodeStats>> findUnplayedEpisodeStatsList(String pguid);
+  Future<List<EpisodeStats>> findUnplayedEpisodeStatsList(Id pid);
 
   // --- Recently played episodes
-
-  Future<void> saveRecentlyPlayedEpisode(
-    Episode episode, {
-    DateTime? playedAt,
-  });
 
   Future<(List<Episode>, int?)> findRecentlyPlayedEpisodeList({
     int? cursor,
     int limit = 100,
+  });
+
+  Future<void> saveRecentlyPlayedEpisode(
+    Episode episode, {
+    DateTime? playedAt,
   });
 
   // --- Downloads

@@ -49,9 +49,9 @@ class IsarRepository implements Repository {
   // --- Podcast
 
   @override
-  Future<Podcast?> findPodcast({int? pid, int? collectionId}) {
-    if (pid != null) {
-      return _isar.podcasts.get(pid);
+  Future<Podcast?> findPodcast({Id? id, int? collectionId}) {
+    if (id != null) {
+      return _isar.podcasts.get(id);
     }
     if (collectionId != null) {
       return _isar.podcasts
@@ -71,12 +71,12 @@ class IsarRepository implements Repository {
   @override
   Future<void> savePodcast(
     Podcast podcast, {
-    PodcastStatsUpdateParam? statsParam,
+    PodcastStatsUpdateParam? param,
   }) async {
     await _isar.writeTxn(() async {
       await _isar.podcasts.put(podcast);
-      if (statsParam != null) {
-        await _updatePodcastStats(statsParam);
+      if (param != null) {
+        await _updatePodcastStats(param);
       }
     });
   }
@@ -97,7 +97,7 @@ class IsarRepository implements Repository {
   Future<void> subscribePodcast(Podcast podcast) async {
     return savePodcast(
       podcast,
-      statsParam: PodcastStatsUpdateParam(
+      param: PodcastStatsUpdateParam(
         id: podcast.id,
         subscribed: true,
       ),
@@ -127,7 +127,8 @@ class IsarRepository implements Repository {
   }
 
   Future<PodcastStats> _updatePodcastStats(
-      PodcastStatsUpdateParam param) async {
+    PodcastStatsUpdateParam param,
+  ) async {
     final stats = await _isar.podcastStats.get(param.id);
     final newStats = PodcastStats(
       id: param.id,
@@ -169,6 +170,148 @@ class IsarRepository implements Repository {
           );
     await _isar.podcastViewStats.put(newStats);
     return newStats;
+  }
+
+  // --- Episode
+
+  @override
+  Future<Episode?> findEpisode(Id id) async {
+    return _isar.episodes.get(id);
+  }
+
+  @override
+  Future<List<Episode?>> findEpisodes(Iterable<Id> ids) async {
+    return _isar.episodes.getAll(ids.toList());
+  }
+
+  @override
+  Future<List<Episode>> findEpisodesByPodcastId(Id pid) async {
+    return _isar.episodes.where().filter().pidEqualTo(pid).findAll();
+  }
+
+  @override
+  Future<void> saveEpisode(Episode episode) async {
+    await _isar.episodes.put(episode);
+  }
+
+  @override
+  Future<void> saveEpisodes(Iterable<Episode> episodes) async {
+    await _isar.episodes.putAll(episodes.toList());
+  }
+
+  // --- EpisodeStats
+
+  @override
+  Future<EpisodeStats?> findEpisodeStats(Id id) async {
+    return _isar.episodeStats.get(id);
+  }
+
+  @override
+  Future<List<EpisodeStats?>> findEpisodeStatsList(Iterable<Id> ids) async {
+    return _isar.episodeStats.getAll(ids.toList());
+  }
+
+  @override
+  Future<EpisodeStats> updateEpisodeStats(EpisodeStatsUpdateParam param) async {
+    return _updateEpisodeStats(param);
+  }
+
+  Future<EpisodeStats> _updateEpisodeStats(
+    EpisodeStatsUpdateParam param,
+  ) async {
+    final stats = await _isar.episodeStats.get(param.id);
+    final newStats = EpisodeStats(
+      id: param.id,
+      pid: param.pid,
+      positionMS: param.position?.inMilliseconds ?? stats?.positionMS ?? 0,
+      playCount: (stats?.playCount ?? 0) + (param.played == true ? 1 : 0),
+      playTotalMS: (stats?.playTotalMS ?? 0) +
+          (param.playTotalDelta?.inMilliseconds ?? 0),
+      played: (stats?.played ?? false) || (param.played ?? false),
+      completeCount:
+          (stats?.completeCount ?? 0) + (param.completed == true ? 1 : 0),
+      inQueue: (stats?.inQueue ?? false) || (param.inQueue ?? false),
+      downloadedTime: param.downloaded == null
+          ? stats?.downloadedTime
+          : param.downloaded!
+              ? DateTime.now()
+              : null,
+      lastPlayedAt: param.lastPlayedAt ?? stats?.lastPlayedAt,
+    );
+    await _isar.episodeStats.put(newStats);
+    return newStats;
+  }
+
+  @override
+  Future<List<EpisodeStats>> updateEpisodeStatsList(
+    Iterable<EpisodeStatsUpdateParam> params,
+  ) async {
+    return _isar.writeTxn(() => Future.wait(params.map(_updateEpisodeStats)));
+  }
+
+  @override
+  Future<List<EpisodeStats>> findDownloadedEpisodeStatsList(Id pid) async {
+    return _isar.episodeStats
+        .where()
+        .filter()
+        .pidEqualTo(pid)
+        .downloadedTimeIsNotNull()
+        .findAll();
+  }
+
+  @override
+  Future<List<EpisodeStats>> findPlayedEpisodeStatsList(Id pid) async {
+    return _isar.episodeStats
+        .where()
+        .filter()
+        .playedEqualTo(true)
+        .downloadedTimeIsNotNull()
+        .findAll();
+  }
+
+  @override
+  Future<List<EpisodeStats>> findUnplayedEpisodeStatsList(Id pid) async {
+    return _isar.episodeStats
+        .where()
+        .filter()
+        .playedEqualTo(false)
+        .downloadedTimeIsNotNull()
+        .findAll();
+  }
+
+  // --- Recently played episodes
+
+  @override
+  Future<(List<Episode>, int?)> findRecentlyPlayedEpisodeList({
+    int? cursor,
+    int limit = 100,
+  }) async {
+    final ids = await _isar.episodeStats
+        .where(sort: Sort.desc)
+        .sortByLastPlayedAtDesc()
+        .offset(cursor ?? 0)
+        .limit(limit)
+        .idProperty()
+        .findAll();
+    final nextCursor = ids.length < limit ? null : (cursor ?? 0) + limit;
+    final episodes = await _isar.episodes
+        .getAll(ids)
+        .then((value) => value.whereNotNull().toList());
+    return (episodes, nextCursor);
+  }
+
+  @override
+  Future<void> saveRecentlyPlayedEpisode(
+    Episode episode, {
+    DateTime? playedAt,
+  }) async {
+    await updateEpisodeStats(
+      EpisodeStatsUpdateParam(
+        id: episode.id,
+        pid: episode.pid,
+        lastPlayedAt: playedAt ?? DateTime.now(),
+      ),
+    );
   }
 
   @override
@@ -214,12 +357,6 @@ class IsarRepository implements Repository {
   }
 
   @override
-  Future<List<EpisodeStats>> findDownloadedEpisodeStatsList(String pguid) {
-    // TODO: implement findDownloadedEpisodeStatsList
-    throw UnimplementedError();
-  }
-
-  @override
   Future<List<Downloadable>> findDownloads(Iterable<String> guids) {
     // TODO: implement findDownloads
     throw UnimplementedError();
@@ -232,57 +369,8 @@ class IsarRepository implements Repository {
   }
 
   @override
-  Future<Episode?> findEpisode(String guid) {
-    // TODO: implement findEpisode
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<EpisodeStats?> findEpisodeStats(String guid) {
-    // TODO: implement findEpisodeStats
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<List<EpisodeStats?>> findEpisodeStatsList(Iterable<String> guids) {
-    // TODO: implement findEpisodeStatsList
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<List<Episode?>> findEpisodes(Iterable<String> guids) {
-    // TODO: implement findEpisodes
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<List<Episode>> findEpisodesByPodcastGuid(String pguid) {
-    // TODO: implement findEpisodesByPodcastGuid
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<List<EpisodeStats>> findPlayedEpisodeStatsList(String pguid) {
-    // TODO: implement findPlayedEpisodeStatsList
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<(List<Episode>, int?)> findRecentlyPlayedEpisodeList(
-      {int? cursor, int limit = 100}) {
-    // TODO: implement findRecentlyPlayedEpisodeList
-    throw UnimplementedError();
-  }
-
-  @override
   Future<Transcript?> findTranscriptById(int id) {
     // TODO: implement findTranscriptById
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<List<EpisodeStats>> findUnplayedEpisodeStatsList(String pguid) {
-    // TODO: implement findUnplayedEpisodeStatsList
     throw UnimplementedError();
   }
 
@@ -305,18 +393,6 @@ class IsarRepository implements Repository {
   }
 
   @override
-  Future<void> saveEpisode(Episode episode) {
-    // TODO: implement saveEpisode
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<void> saveEpisodes(Iterable<Episode> episodes) {
-    // TODO: implement saveEpisodes
-    throw UnimplementedError();
-  }
-
-  @override
   Future<void> savePlayingEpisodeGuid(String guid) {
     // TODO: implement savePlayingEpisodeGuid
     throw UnimplementedError();
@@ -329,28 +405,8 @@ class IsarRepository implements Repository {
   }
 
   @override
-  Future<void> saveRecentlyPlayedEpisode(Episode episode,
-      {DateTime? playedAt}) {
-    // TODO: implement saveRecentlyPlayedEpisode
-    throw UnimplementedError();
-  }
-
-  @override
   Future<Transcript> saveTranscript(Transcript transcript) {
     // TODO: implement saveTranscript
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<EpisodeStats> updateEpisodeStats(EpisodeStatsUpdateParam param) {
-    // TODO: implement updateEpisodeStats
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<List<EpisodeStats>> updateEpisodeStatsList(
-      Iterable<EpisodeStatsUpdateParam> params) {
-    // TODO: implement updateEpisodeStatsList
     throw UnimplementedError();
   }
 }
