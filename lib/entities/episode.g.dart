@@ -2487,7 +2487,73 @@ const EpisodeStatsSchema = CollectionSchema(
   deserialize: _episodeStatsDeserialize,
   deserializeProp: _episodeStatsDeserializeProp,
   idName: r'id',
-  indexes: {},
+  indexes: {
+    r'pid': IndexSchema(
+      id: 2970402811525951487,
+      name: r'pid',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'pid',
+          type: IndexType.value,
+          caseSensitive: false,
+        )
+      ],
+    ),
+    r'played': IndexSchema(
+      id: 2181219931364678477,
+      name: r'played',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'played',
+          type: IndexType.value,
+          caseSensitive: false,
+        )
+      ],
+    ),
+    r'inQueue': IndexSchema(
+      id: 8111862656609435752,
+      name: r'inQueue',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'inQueue',
+          type: IndexType.value,
+          caseSensitive: false,
+        )
+      ],
+    ),
+    r'downloadedTime': IndexSchema(
+      id: -2690293643392173367,
+      name: r'downloadedTime',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'downloadedTime',
+          type: IndexType.value,
+          caseSensitive: false,
+        )
+      ],
+    ),
+    r'lastPlayedAt': IndexSchema(
+      id: 1709968845012040220,
+      name: r'lastPlayedAt',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'lastPlayedAt',
+          type: IndexType.value,
+          caseSensitive: false,
+        )
+      ],
+    )
+  },
   links: {},
   embeddedSchemas: {},
   getId: _episodeStatsGetId,
@@ -2591,6 +2657,46 @@ extension EpisodeStatsQueryWhereSort
       return query.addWhereClause(const IdWhereClause.any());
     });
   }
+
+  QueryBuilder<EpisodeStats, EpisodeStats, QAfterWhere> anyPid() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'pid'),
+      );
+    });
+  }
+
+  QueryBuilder<EpisodeStats, EpisodeStats, QAfterWhere> anyPlayed() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'played'),
+      );
+    });
+  }
+
+  QueryBuilder<EpisodeStats, EpisodeStats, QAfterWhere> anyInQueue() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'inQueue'),
+      );
+    });
+  }
+
+  QueryBuilder<EpisodeStats, EpisodeStats, QAfterWhere> anyDownloadedTime() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'downloadedTime'),
+      );
+    });
+  }
+
+  QueryBuilder<EpisodeStats, EpisodeStats, QAfterWhere> anyLastPlayedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'lastPlayedAt'),
+      );
+    });
+  }
 }
 
 extension EpisodeStatsQueryWhere
@@ -2657,6 +2763,416 @@ extension EpisodeStatsQueryWhere
         lower: lowerId,
         includeLower: includeLower,
         upper: upperId,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<EpisodeStats, EpisodeStats, QAfterWhereClause> pidEqualTo(
+      int pid) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'pid',
+        value: [pid],
+      ));
+    });
+  }
+
+  QueryBuilder<EpisodeStats, EpisodeStats, QAfterWhereClause> pidNotEqualTo(
+      int pid) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'pid',
+              lower: [],
+              upper: [pid],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'pid',
+              lower: [pid],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'pid',
+              lower: [pid],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'pid',
+              lower: [],
+              upper: [pid],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<EpisodeStats, EpisodeStats, QAfterWhereClause> pidGreaterThan(
+    int pid, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'pid',
+        lower: [pid],
+        includeLower: include,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<EpisodeStats, EpisodeStats, QAfterWhereClause> pidLessThan(
+    int pid, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'pid',
+        lower: [],
+        upper: [pid],
+        includeUpper: include,
+      ));
+    });
+  }
+
+  QueryBuilder<EpisodeStats, EpisodeStats, QAfterWhereClause> pidBetween(
+    int lowerPid,
+    int upperPid, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'pid',
+        lower: [lowerPid],
+        includeLower: includeLower,
+        upper: [upperPid],
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<EpisodeStats, EpisodeStats, QAfterWhereClause> playedEqualTo(
+      bool played) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'played',
+        value: [played],
+      ));
+    });
+  }
+
+  QueryBuilder<EpisodeStats, EpisodeStats, QAfterWhereClause> playedNotEqualTo(
+      bool played) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'played',
+              lower: [],
+              upper: [played],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'played',
+              lower: [played],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'played',
+              lower: [played],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'played',
+              lower: [],
+              upper: [played],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<EpisodeStats, EpisodeStats, QAfterWhereClause> inQueueEqualTo(
+      bool inQueue) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'inQueue',
+        value: [inQueue],
+      ));
+    });
+  }
+
+  QueryBuilder<EpisodeStats, EpisodeStats, QAfterWhereClause> inQueueNotEqualTo(
+      bool inQueue) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'inQueue',
+              lower: [],
+              upper: [inQueue],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'inQueue',
+              lower: [inQueue],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'inQueue',
+              lower: [inQueue],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'inQueue',
+              lower: [],
+              upper: [inQueue],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<EpisodeStats, EpisodeStats, QAfterWhereClause>
+      downloadedTimeIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'downloadedTime',
+        value: [null],
+      ));
+    });
+  }
+
+  QueryBuilder<EpisodeStats, EpisodeStats, QAfterWhereClause>
+      downloadedTimeIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'downloadedTime',
+        lower: [null],
+        includeLower: false,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<EpisodeStats, EpisodeStats, QAfterWhereClause>
+      downloadedTimeEqualTo(DateTime? downloadedTime) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'downloadedTime',
+        value: [downloadedTime],
+      ));
+    });
+  }
+
+  QueryBuilder<EpisodeStats, EpisodeStats, QAfterWhereClause>
+      downloadedTimeNotEqualTo(DateTime? downloadedTime) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'downloadedTime',
+              lower: [],
+              upper: [downloadedTime],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'downloadedTime',
+              lower: [downloadedTime],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'downloadedTime',
+              lower: [downloadedTime],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'downloadedTime',
+              lower: [],
+              upper: [downloadedTime],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<EpisodeStats, EpisodeStats, QAfterWhereClause>
+      downloadedTimeGreaterThan(
+    DateTime? downloadedTime, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'downloadedTime',
+        lower: [downloadedTime],
+        includeLower: include,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<EpisodeStats, EpisodeStats, QAfterWhereClause>
+      downloadedTimeLessThan(
+    DateTime? downloadedTime, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'downloadedTime',
+        lower: [],
+        upper: [downloadedTime],
+        includeUpper: include,
+      ));
+    });
+  }
+
+  QueryBuilder<EpisodeStats, EpisodeStats, QAfterWhereClause>
+      downloadedTimeBetween(
+    DateTime? lowerDownloadedTime,
+    DateTime? upperDownloadedTime, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'downloadedTime',
+        lower: [lowerDownloadedTime],
+        includeLower: includeLower,
+        upper: [upperDownloadedTime],
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<EpisodeStats, EpisodeStats, QAfterWhereClause>
+      lastPlayedAtIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'lastPlayedAt',
+        value: [null],
+      ));
+    });
+  }
+
+  QueryBuilder<EpisodeStats, EpisodeStats, QAfterWhereClause>
+      lastPlayedAtIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'lastPlayedAt',
+        lower: [null],
+        includeLower: false,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<EpisodeStats, EpisodeStats, QAfterWhereClause>
+      lastPlayedAtEqualTo(DateTime? lastPlayedAt) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'lastPlayedAt',
+        value: [lastPlayedAt],
+      ));
+    });
+  }
+
+  QueryBuilder<EpisodeStats, EpisodeStats, QAfterWhereClause>
+      lastPlayedAtNotEqualTo(DateTime? lastPlayedAt) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'lastPlayedAt',
+              lower: [],
+              upper: [lastPlayedAt],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'lastPlayedAt',
+              lower: [lastPlayedAt],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'lastPlayedAt',
+              lower: [lastPlayedAt],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'lastPlayedAt',
+              lower: [],
+              upper: [lastPlayedAt],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<EpisodeStats, EpisodeStats, QAfterWhereClause>
+      lastPlayedAtGreaterThan(
+    DateTime? lastPlayedAt, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'lastPlayedAt',
+        lower: [lastPlayedAt],
+        includeLower: include,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<EpisodeStats, EpisodeStats, QAfterWhereClause>
+      lastPlayedAtLessThan(
+    DateTime? lastPlayedAt, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'lastPlayedAt',
+        lower: [],
+        upper: [lastPlayedAt],
+        includeUpper: include,
+      ));
+    });
+  }
+
+  QueryBuilder<EpisodeStats, EpisodeStats, QAfterWhereClause>
+      lastPlayedAtBetween(
+    DateTime? lowerLastPlayedAt,
+    DateTime? upperLastPlayedAt, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'lastPlayedAt',
+        lower: [lowerLastPlayedAt],
+        includeLower: includeLower,
+        upper: [upperLastPlayedAt],
         includeUpper: includeUpper,
       ));
     });

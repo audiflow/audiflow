@@ -148,8 +148,8 @@ extension EpisodeExtension on Episode {
 @collection
 class EpisodeStats {
   EpisodeStats({
-    required this.pid,
     required this.id,
+    required this.pid,
     this.positionMS = 0,
     this.playCount = 0,
     this.playTotalMS = 0,
@@ -163,6 +163,7 @@ class EpisodeStats {
   final Id id;
 
   /// The Isar ID of the parent podcast.
+  @Index()
   final int pid;
 
   /// Current position in the episode
@@ -175,18 +176,22 @@ class EpisodeStats {
   final int playTotalMS;
 
   /// Whether the episode has been marked as played
+  @Index()
   final bool played;
 
   /// Number of times of complete playing
   final int completeCount;
 
   /// Whether the episode is in the queue
+  @Index()
   final bool inQueue;
 
   /// Downloaded time
+  @Index()
   final DateTime? downloadedTime;
 
   /// Latest playing start time
+  @Index()
   final DateTime? lastPlayedAt;
 }
 
@@ -210,23 +215,23 @@ extension EpisodeStatsExt on EpisodeStats {
 
 class EpisodeStatsUpdateParam {
   const EpisodeStatsUpdateParam({
-    required this.pguid,
     required this.id,
+    required this.pid,
     this.position,
     this.played,
     this.playTotalDelta,
-    this.completeCountDelta,
+    this.completed,
     this.inQueue,
     this.downloaded,
     this.lastPlayedAt,
   });
 
-  final String pguid;
   final Id id;
+  final int pid;
   final Duration? position;
   final bool? played;
   final Duration? playTotalDelta;
-  final int? completeCountDelta;
+  final bool? completed;
   final bool? inQueue;
   final bool? downloaded;
   final DateTime? lastPlayedAt;
@@ -236,18 +241,18 @@ class EpisodeStatsUpdateParam {
     bool? startPlaying,
     bool? played,
     Duration? playTotalDelta,
-    int? completeCountDelta,
+    bool? completed,
     bool? inQueue,
     bool? downloaded,
     DateTime? lastPlayedAt,
   }) {
     return EpisodeStatsUpdateParam(
-      pguid: pguid,
       id: id,
+      pid: pid,
       position: position ?? this.position,
       played: played ?? this.played,
       playTotalDelta: playTotalDelta ?? this.playTotalDelta,
-      completeCountDelta: completeCountDelta ?? this.completeCountDelta,
+      completed: completed ?? this.completed,
       inQueue: inQueue ?? this.inQueue,
       downloaded: downloaded ?? this.downloaded,
       lastPlayedAt: lastPlayedAt ?? this.lastPlayedAt,
@@ -258,7 +263,7 @@ class EpisodeStatsUpdateParam {
       position == null &&
       played == null &&
       playTotalDelta == null &&
-      completeCountDelta == null &&
+      completed == null &&
       inQueue == null &&
       downloaded == null &&
       lastPlayedAt == null;

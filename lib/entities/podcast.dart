@@ -133,6 +133,7 @@ class PodcastStats {
   });
 
   final Id id;
+  @Index()
   final DateTime? subscribedDate;
   final DateTime? lastCheckedAt;
 

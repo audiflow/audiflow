@@ -3445,7 +3445,21 @@ const PodcastStatsSchema = CollectionSchema(
   deserialize: _podcastStatsDeserialize,
   deserializeProp: _podcastStatsDeserializeProp,
   idName: r'id',
-  indexes: {},
+  indexes: {
+    r'subscribedDate': IndexSchema(
+      id: -9177708408589377138,
+      name: r'subscribedDate',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'subscribedDate',
+          type: IndexType.value,
+          caseSensitive: false,
+        )
+      ],
+    )
+  },
   links: {},
   embeddedSchemas: {},
   getId: _podcastStatsGetId,
@@ -3521,6 +3535,14 @@ extension PodcastStatsQueryWhereSort
       return query.addWhereClause(const IdWhereClause.any());
     });
   }
+
+  QueryBuilder<PodcastStats, PodcastStats, QAfterWhere> anySubscribedDate() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'subscribedDate'),
+      );
+    });
+  }
 }
 
 extension PodcastStatsQueryWhere
@@ -3587,6 +3609,121 @@ extension PodcastStatsQueryWhere
         lower: lowerId,
         includeLower: includeLower,
         upper: upperId,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<PodcastStats, PodcastStats, QAfterWhereClause>
+      subscribedDateIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'subscribedDate',
+        value: [null],
+      ));
+    });
+  }
+
+  QueryBuilder<PodcastStats, PodcastStats, QAfterWhereClause>
+      subscribedDateIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'subscribedDate',
+        lower: [null],
+        includeLower: false,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<PodcastStats, PodcastStats, QAfterWhereClause>
+      subscribedDateEqualTo(DateTime? subscribedDate) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'subscribedDate',
+        value: [subscribedDate],
+      ));
+    });
+  }
+
+  QueryBuilder<PodcastStats, PodcastStats, QAfterWhereClause>
+      subscribedDateNotEqualTo(DateTime? subscribedDate) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'subscribedDate',
+              lower: [],
+              upper: [subscribedDate],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'subscribedDate',
+              lower: [subscribedDate],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'subscribedDate',
+              lower: [subscribedDate],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'subscribedDate',
+              lower: [],
+              upper: [subscribedDate],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<PodcastStats, PodcastStats, QAfterWhereClause>
+      subscribedDateGreaterThan(
+    DateTime? subscribedDate, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'subscribedDate',
+        lower: [subscribedDate],
+        includeLower: include,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<PodcastStats, PodcastStats, QAfterWhereClause>
+      subscribedDateLessThan(
+    DateTime? subscribedDate, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'subscribedDate',
+        lower: [],
+        upper: [subscribedDate],
+        includeUpper: include,
+      ));
+    });
+  }
+
+  QueryBuilder<PodcastStats, PodcastStats, QAfterWhereClause>
+      subscribedDateBetween(
+    DateTime? lowerSubscribedDate,
+    DateTime? upperSubscribedDate, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'subscribedDate',
+        lower: [lowerSubscribedDate],
+        includeLower: includeLower,
+        upper: [upperSubscribedDate],
         includeUpper: includeUpper,
       ));
     });
