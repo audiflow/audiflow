@@ -118,41 +118,41 @@ abstract class Repository {
 
   // --- Downloads
 
+  Future<List<Downloadable>> findDownloadsByPodcastId(int pid);
+
+  Future<List<Downloadable>> findAllDownloads();
+
+  Future<List<Downloadable?>> findDownloads(Iterable<Id> ids);
+
+  Future<Downloadable?> findDownload(Id id);
+
+  Future<Downloadable?> findDownloadByTaskId(String taskId);
+
   Future<void> saveDownload(Downloadable download);
 
   Future<void> deleteDownload(Downloadable download);
 
-  Future<List<Downloadable>> findDownloadsByPodcastGuid(String pguid);
-
-  Future<List<Downloadable>> findAllDownloads();
-
-  Future<List<Downloadable>> findDownloads(Iterable<String> guids);
-
-  Future<Downloadable?> findDownload(String guid);
-
-  Future<Downloadable?> findDownloadByTaskId(String taskId);
-
   // --- Transcript
+
+  Future<Transcript?> findTranscriptById(int id);
 
   Future<Transcript> saveTranscript(Transcript transcript);
 
   Future<void> deleteTranscriptById(int id);
 
-  Future<void> deleteTranscriptsById(List<int> id);
-
-  Future<Transcript?> findTranscriptById(int id);
+  Future<void> deleteTranscriptsById(List<int> ids);
 
   // --- Queue
 
-  Future<void> saveQueue(Queue queue);
-
   Future<Queue> loadQueue();
+
+  Future<void> saveQueue(Queue queue);
 
   // --- Player
 
-  Future<void> savePlayingEpisodeGuid(String guid);
+  Future<int?> playingEpisodeId();
 
-  Future<void> clearPlayingEpisodeGuid();
+  Future<void> savePlayingEpisodeId(int eid);
 
-  Future<String?> playingEpisodeGuid();
+  Future<void> clearPlayingEpisodeId();
 }

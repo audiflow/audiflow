@@ -5,7 +5,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'dart:convert';
+
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:isar/isar.dart';
 import 'package:nanoid/nanoid.dart';
 
 part 'queue.freezed.dart';
@@ -13,13 +16,21 @@ part 'queue.g.dart';
 
 /// The current persistable queue.
 
-@freezed
-class Queue with _$Queue {
-  const factory Queue({
-    @Default(<QueueItem>[]) List<QueueItem> queue,
-  }) = _Queue;
+@collection
+class Queue {
+  Queue({required String encoded})
+      : queue = jsonDecode(encoded) as List<QueueItem>;
 
-  factory Queue.fromJson(Map<String, dynamic> json) => _$QueueFromJson(json);
+  factory Queue.empty() {
+    return Queue(encoded: '[]');
+  }
+
+  final Id id = 1;
+
+  @ignore
+  final List<QueueItem> queue;
+
+  String get encoded => jsonEncode(queue);
 }
 
 extension QueueExt on Queue {

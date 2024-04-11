@@ -6,6 +6,7 @@
 //  found in the LICENSE file.
 
 import 'package:audiflow/entities/entities.dart';
+import 'package:audiflow/entities/playing_episode.dart';
 import 'package:audiflow/repository/repository.dart';
 import 'package:collection/collection.dart';
 import 'package:isar/isar.dart';
@@ -25,15 +26,20 @@ class IsarRepository implements Repository {
     isar = await Isar.open(
       [
         BlockSchema,
+        DownloadableSchema,
         EpisodeSchema,
         EpisodeStatsSchema,
         FundingSchema,
         LockedSchema,
         PersonSchema,
+        PlayingEpisodeSchema,
         PodcastSchema,
         PodcastStatsSchema,
         PodcastViewStatsSchema,
+        QueueSchema,
         TranscriptUrlSchema,
+        TranscriptSchema,
+        SubtitleSchema,
         ValueSchema,
         ValueRecipientSchema,
       ],
@@ -318,99 +324,113 @@ class IsarRepository implements Repository {
     );
   }
 
+  // --- Downloads
+
   @override
-  Future<void> clearPlayingEpisodeGuid() {
-    // TODO: implement clearPlayingEpisodeGuid
-    throw UnimplementedError();
+  Future<List<Downloadable>> findDownloadsByPodcastId(int pid) async {
+    return isar.downloadables.where().filter().pidEqualTo(pid).findAll();
   }
 
   @override
-  Future<void> deleteDownload(Downloadable download) {
-    // TODO: implement deleteDownload
-    throw UnimplementedError();
+  Future<List<Downloadable>> findAllDownloads() async {
+    return isar.downloadables.where().findAll();
   }
 
   @override
-  Future<void> deleteTranscriptById(int id) {
-    // TODO: implement deleteTranscriptById
-    throw UnimplementedError();
+  Future<List<Downloadable?>> findDownloads(Iterable<Id> ids) async {
+    return isar.downloadables.getAll(ids.toList());
   }
 
   @override
-  Future<void> deleteTranscriptsById(List<int> id) {
-    // TODO: implement deleteTranscriptsById
-    throw UnimplementedError();
+  Future<Downloadable?> findDownload(Id id) async {
+    return isar.downloadables.get(id);
   }
 
   @override
-  Future<List<Downloadable>> findAllDownloads() {
-    // TODO: implement findAllDownloads
-    throw UnimplementedError();
+  Future<Downloadable?> findDownloadByTaskId(String taskId) async {
+    return isar.downloadables
+        .where()
+        .filter()
+        .taskIdEqualTo(taskId)
+        .findFirst();
   }
 
   @override
-  Future<Downloadable?> findDownload(String guid) {
-    // TODO: implement findDownload
-    throw UnimplementedError();
+  Future<void> saveDownload(Downloadable download) async {
+    await isar.writeTxn(() async {
+      await isar.downloadables.put(download);
+    });
   }
 
   @override
-  Future<Downloadable?> findDownloadByTaskId(String taskId) {
-    // TODO: implement findDownloadByTaskId
-    throw UnimplementedError();
+  Future<void> deleteDownload(Downloadable download) async {
+    await isar.writeTxn(() async {
+      await isar.downloadables.delete(download.id);
+    });
+  }
+
+  // --- Transcript
+
+  @override
+  Future<Transcript?> findTranscriptById(Id id) async {
+    return isar.transcripts.get(id);
   }
 
   @override
-  Future<List<Downloadable>> findDownloads(Iterable<String> guids) {
-    // TODO: implement findDownloads
-    throw UnimplementedError();
+  Future<Transcript> saveTranscript(Transcript transcript) async {
+    return isar.writeTxn(() async {
+      await isar.transcripts.put(transcript);
+      return transcript;
+    });
   }
 
   @override
-  Future<List<Downloadable>> findDownloadsByPodcastGuid(String pguid) {
-    // TODO: implement findDownloadsByPodcastGuid
-    throw UnimplementedError();
+  Future<void> deleteTranscriptById(int id) async {
+    await isar.writeTxn(() async {
+      await isar.transcripts.delete(id);
+    });
   }
 
   @override
-  Future<Transcript?> findTranscriptById(int id) {
-    // TODO: implement findTranscriptById
-    throw UnimplementedError();
+  Future<void> deleteTranscriptsById(List<int> ids) async {
+    await isar.writeTxn(() async {
+      await isar.transcripts.deleteAll(ids);
+    });
+  }
+
+  // --- Queue
+
+  @override
+  Future<Queue> loadQueue() async {
+    return await isar.queues.get(1) ?? Queue.empty();
   }
 
   @override
-  Future<Queue> loadQueue() {
-    // TODO: implement loadQueue
-    throw UnimplementedError();
+  Future<void> saveQueue(Queue queue) async {
+    await isar.writeTxn(() async {
+      await isar.queues.put(queue);
+    });
+  }
+
+  // --- Player
+
+  @override
+  Future<int?> playingEpisodeId() async {
+    final e = await isar.playingEpisodes.get(1);
+    return e?.eid;
   }
 
   @override
-  Future<String?> playingEpisodeGuid() {
-    // TODO: implement playingEpisodeGuid
-    throw UnimplementedError();
+  Future<void> savePlayingEpisodeId(int eid) async {
+    await isar.writeTxn(() async {
+      await isar.playingEpisodes.put(PlayingEpisode(eid: eid));
+    });
   }
 
   @override
-  Future<void> saveDownload(Downloadable download) {
-    // TODO: implement saveDownload
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<void> savePlayingEpisodeGuid(String guid) {
-    // TODO: implement savePlayingEpisodeGuid
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<void> saveQueue(Queue queue) {
-    // TODO: implement saveQueue
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<Transcript> saveTranscript(Transcript transcript) {
-    // TODO: implement saveTranscript
-    throw UnimplementedError();
+  Future<void> clearPlayingEpisodeId() async {
+    await isar.writeTxn(() async {
+      await isar.playingEpisodes.delete(1);
+    });
   }
 }

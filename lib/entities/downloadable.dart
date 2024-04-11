@@ -40,6 +40,8 @@ class Downloadable {
     this.percentage = 0,
   });
 
+  static Id fromGuid(String guid) => fastHash(guid);
+
   Id get id => fastHash(guid);
 
   /// The GUID for an associated podcast.

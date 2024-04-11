@@ -6,12 +6,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:flutter/foundation.dart';
-import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:audiflow/core/hash.dart';
 import 'package:isar/isar.dart';
 import 'package:podcast_feed/podcast_feed.dart' as feed;
 
-part 'transcript.freezed.dart';
 part 'transcript.g.dart';
 
 enum TranscriptFormat {
@@ -68,31 +66,45 @@ class TranscriptUrl {
 
 /// This class represents a Podcasting 2.0 transcript container.
 /// [docs](https://github.com/Podcastindex-org/podcast-namespace/blob/main/docs/1.0.md#transcript)
-@freezed
-class Transcript with _$Transcript {
-  const factory Transcript({
-    int? id,
-    required String pguid,
-    required String guid,
-    @Default(<Subtitle>[]) List<Subtitle> subtitles,
-    @Default(false) bool filtered,
-  }) = _Transcript;
+@collection
+class Transcript {
+  Transcript({
+    this.transcriptId,
+    required this.pguid,
+    required this.guid,
+    this.filtered = false,
+  });
 
-  factory Transcript.fromJson(Map<String, dynamic> json) =>
-      _$TranscriptFromJson(json);
+  Id get id => fastHash(guid);
+  final int? transcriptId;
+  final String pguid;
+  final String guid;
+  final subtitles = IsarLinks<Subtitle>();
+  final bool filtered;
 }
 
 /// Represents an individual line within a transcript.
-@freezed
-class Subtitle with _$Subtitle {
-  const factory Subtitle({
-    required int index,
-    required Duration start,
-    Duration? end,
-    String? data,
-    @Default('') String speaker,
-  }) = _Subtitle;
+@collection
+class Subtitle {
+  Subtitle({
+    required this.id,
+    required this.index,
+    required this.startMS,
+    this.endMS,
+    this.data,
+    this.speaker = '',
+  });
 
-  factory Subtitle.fromJson(Map<String, dynamic> json) =>
-      _$SubtitleFromJson(json);
+  final Id id;
+  final int index;
+  final int startMS;
+  final int? endMS;
+  final String? data;
+  final String speaker;
+}
+
+extension SubtitleExt on Subtitle {
+  Duration get start => Duration(milliseconds: startMS);
+
+  Duration? get end => endMS == null ? null : Duration(milliseconds: endMS!);
 }
