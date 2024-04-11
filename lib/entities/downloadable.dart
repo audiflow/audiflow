@@ -6,9 +6,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'package:audiflow/core/hash.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:isar/isar.dart';
 
-part 'downloadable.freezed.dart';
 part 'downloadable.g.dart';
 
 enum DownloadState {
@@ -26,36 +27,45 @@ enum DownloadState {
 ///
 /// Downloadable can be used to determine if a download has been successful and
 /// if an episode can be played from the filesystem.
-@freezed
-class Downloadable with _$Downloadable {
-  const factory Downloadable({
-    /// The GUID for an associated podcast.
-    required String pguid,
+@collection
+class Downloadable {
+  Downloadable({
+    required this.pid,
+    required this.guid,
+    required this.url,
+    required this.directory,
+    required this.filename,
+    required this.taskId,
+    required this.state,
+    this.percentage = 0,
+  });
 
-    /// Unique identifier for the episode.
-    required String guid,
+  Id get id => fastHash(guid);
 
-    /// Unique identifier for the download
-    required String url,
+  /// The GUID for an associated podcast.
+  final int pid;
 
-    /// Destination directory
-    required String directory,
+  /// Unique identifier for the episode.
+  final String guid;
 
-    /// Name of file
-    required String filename,
+  /// Unique identifier for the download
+  final String url;
 
-    /// Current task ID for the download
-    required String taskId,
+  /// Destination directory
+  final String directory;
 
-    /// Current state of the download
-    required DownloadState state,
+  /// Name of file
+  final String filename;
 
-    /// Percentage of MP3 downloaded
-    @Default(0) int percentage,
-  }) = _Downloadable;
+  /// Current task ID for the download
+  final String taskId;
 
-  factory Downloadable.fromJson(Map<String, dynamic> json) =>
-      _$DownloadableFromJson(json);
+  /// Current state of the download
+  @enumerated
+  final DownloadState state;
+
+  /// Percentage of MP3 downloaded
+  @Default(0) int percentage;
 }
 
 extension DownloadableExt on Downloadable {
