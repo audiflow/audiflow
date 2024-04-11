@@ -5,22 +5,21 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'dart:io';
-
 import 'package:audiflow/entities/entities.dart';
 import 'package:audiflow/repository/isar_repository.dart';
 import 'package:audiflow/repository/repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/intl.dart';
-import 'package:isar/isar.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 
 import '../../test_common/riverpod.dart';
 import '../mocks/mock_path_provider.dart';
 
 void main() {
+  final mockPath = MockPathProvider();
+  PathProviderPlatform.instance = mockPath;
+
   late Repository repository;
 
   final podcast1 = Podcast(
@@ -74,33 +73,13 @@ void main() {
 
   Future<void> createRepository() async {
     final container = createContainer();
-    final mockPath = MockPathProvider();
-    PathProviderPlatform.instance = mockPath;
     repository = container.read(repositoryProvider);
     await (repository as IsarRepository).ensureInitialized();
+    final isar = (repository as IsarRepository).isar;
   }
 
   Future<void> cleanUpRepository() async {
-    await repository.close();
-    final dir = await getApplicationDocumentsDirectory();
-    final isar = await Isar.open(
-      [
-        BlockSchema,
-        EpisodeSchema,
-        EpisodeStatsSchema,
-        FundingSchema,
-        LockedSchema,
-        PersonSchema,
-        PodcastSchema,
-        PodcastStatsSchema,
-        PodcastViewStatsSchema,
-        TranscriptUrlSchema,
-        ValueSchema,
-        ValueRecipientSchema,
-      ],
-      directory: dir.path,
-    );
-    await isar.close(deleteFromDisk: true);
+    await (repository as IsarRepository).isar.close(deleteFromDisk: true);
   }
 
   group('Podcast', () {
@@ -108,7 +87,7 @@ void main() {
     tearDownAll(cleanUpRepository);
 
     test('findPodcast', () async {
-      final actual = await repository.findPodcast(pid: podcast1.id);
+      final actual = await repository.findPodcast(id: podcast1.id);
       expect(actual, isNull);
     });
 
@@ -117,7 +96,7 @@ void main() {
     test('subscribePodcast', () async {
       await repository.subscribePodcast(podcast1);
       // Also it records the podcast.
-      final podcast = await repository.findPodcast(pid: podcast1.id);
+      final podcast = await repository.findPodcast(id: podcast1.id);
       expect(podcast, isNotNull);
 
       stats = (await repository.findPodcastStats(podcast1.id))!;
@@ -132,12 +111,126 @@ void main() {
     test('unsubscribePodcast', () async {
       // Podcast remains.
       await repository.unsubscribePodcast(podcast1);
-      final podcast = await repository.findPodcast(pid: podcast1.id);
+      final podcast = await repository.findPodcast(id: podcast1.id);
       expect(podcast, isNotNull);
 
       // PodcastStats remains.
       stats = (await repository.findPodcastStats(podcast1.id))!;
       expect(stats.subscribedDate, isNull);
+    });
+  });
+
+  group('Episode', () {
+    setUpAll(createRepository);
+    tearDownAll(cleanUpRepository);
+
+    final episodes = createEpisodeMocks(podcast2, 3);
+    late PodcastStats podcastStats;
+    late EpisodeStats episodeStats;
+
+    test('findEpisode with non-existence id', () async {
+      final loaded = await repository.findEpisode(podcast2.id);
+      expect(loaded, isNull);
+    });
+
+    test('findEpisodeStats with non-existence id', () async {
+      final loaded = await repository.findEpisodeStats(episodes[0].id);
+      expect(loaded, null);
+    });
+
+    test('findEpisodesByPodcastGuid with non-existence id', () async {
+      final loaded = await repository.findEpisodesByPodcastId(podcast2.id);
+      expect(loaded, isEmpty);
+    });
+
+    test('subscribePodcast', () async {
+      await repository.subscribePodcast(podcast2);
+      await repository.saveEpisodes(episodes);
+      podcastStats = (await repository.findPodcastStats(podcast2.id))!;
+    });
+
+    test('findEpisodesByPodcastId', () async {
+      final loaded = await repository.findEpisodesByPodcastId(podcast2.id);
+      expect(loaded, hasLength(3));
+    });
+
+    test('findEpisode should return non-null but not stats', () async {
+      final episode = await repository.findEpisode(episodes[2].id);
+      expect(episode?.title, episodes[2].title);
+
+      final stats = await repository.findEpisodeStats(episodes[2].id);
+      expect(stats, isNull);
+    });
+
+    test('updateEpisodeStats', () async {
+      final param = EpisodeStatsUpdateParam(
+        id: episodes[2].id,
+        pid: podcast2.id,
+        played: true,
+      );
+      episodeStats = await repository.updateEpisodeStats(param);
+      expect(episodeStats, isNotNull);
+      expect(episodeStats.played, true);
+    });
+
+    test('findEpisodeStats', () async {
+      final loaded = await repository.findEpisodeStats(episodeStats.id);
+      expect(loaded?.played, isTrue);
+    });
+
+    test('updateEpisodeStats should update', () async {
+      final param = EpisodeStatsUpdateParam(
+        pid: episodes[2].pid,
+        id: episodes[2].id,
+        playTotalDelta: const Duration(minutes: 33),
+        completed: true,
+      );
+      await repository.updateEpisodeStats(param);
+
+      final loaded = await repository.findEpisodeStats(episodes[2].id);
+      expect(loaded == episodeStats, isFalse);
+      expect(loaded?.playTotal, param.playTotalDelta);
+      expect(loaded?.completeCount, 1);
+    });
+
+    test('check updated field', () async {
+      final loaded = await repository.findEpisodeStats(episodeStats.id);
+      expect(loaded?.playTotal, const Duration(minutes: 33));
+      episodeStats = loaded!;
+    });
+
+    test('updateEpisodeStatsList', () async {
+      final params = [
+        EpisodeStatsUpdateParam(
+          id: episodes[0].id,
+          pid: episodes[0].pid,
+        ),
+        EpisodeStatsUpdateParam(
+          id: episodes[1].id,
+          pid: episodes[1].pid,
+          played: true,
+        ),
+      ];
+      final result = await repository.updateEpisodeStatsList(params);
+      expect(result, hasLength(2));
+      expect(result[0].id, episodes[0].id);
+      expect(result[1].played, isTrue);
+    });
+
+    test('check updated field(2)', () async {
+      final loaded = await repository.findEpisodeStats(episodes[1].id);
+      expect(loaded?.played, isTrue);
+    });
+
+    test('unsubscribePodcast', () async {
+      await repository.unsubscribePodcast(podcast2);
+      final episodes =
+          await repository.findEpisodesByPodcastId(podcastStats.id);
+      expect(episodes, isNotEmpty);
+
+      // EpisodeStats should still exist.
+      final loaded = await repository.findEpisodeStats(episodeStats.id);
+      expect(loaded?.played, isTrue);
     });
   });
 }

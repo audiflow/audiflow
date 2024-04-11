@@ -13,7 +13,7 @@ import 'package:path_provider/path_provider.dart';
 
 class IsarRepository implements Repository {
   bool _initialized = false;
-  late Isar _isar;
+  late Isar isar;
 
   Future<void> ensureInitialized() async {
     if (_initialized) {
@@ -22,7 +22,7 @@ class IsarRepository implements Repository {
     _initialized = true;
 
     final dir = await getApplicationDocumentsDirectory();
-    _isar = await Isar.open(
+    isar = await Isar.open(
       [
         BlockSchema,
         EpisodeSchema,
@@ -43,7 +43,7 @@ class IsarRepository implements Repository {
 
   @override
   Future<void> close() async {
-    await _isar.close();
+    await isar.close();
   }
 
   // --- Podcast
@@ -51,10 +51,10 @@ class IsarRepository implements Repository {
   @override
   Future<Podcast?> findPodcast({Id? id, int? collectionId}) {
     if (id != null) {
-      return _isar.podcasts.get(id);
+      return isar.podcasts.get(id);
     }
     if (collectionId != null) {
-      return _isar.podcasts
+      return isar.podcasts
           .where()
           .filter()
           .collectionIdEqualTo(collectionId)
@@ -65,7 +65,7 @@ class IsarRepository implements Repository {
 
   @override
   Future<void> savePodcasts(Iterable<Podcast> podcasts) async {
-    await _isar.podcasts.putAll(podcasts.toList());
+    await isar.podcasts.putAll(podcasts.toList());
   }
 
   @override
@@ -73,8 +73,8 @@ class IsarRepository implements Repository {
     Podcast podcast, {
     PodcastStatsUpdateParam? param,
   }) async {
-    await _isar.writeTxn(() async {
-      await _isar.podcasts.put(podcast);
+    await isar.writeTxn(() async {
+      await isar.podcasts.put(podcast);
       if (param != null) {
         await _updatePodcastStats(param);
       }
@@ -83,12 +83,12 @@ class IsarRepository implements Repository {
 
   @override
   Future<List<Podcast>> subscriptions() async {
-    final statsList = await _isar.podcastStats
+    final statsList = await isar.podcastStats
         .where()
         .filter()
         .subscribedDateIsNotNull()
         .findAll();
-    return _isar.podcasts
+    return isar.podcasts
         .getAll(statsList.map((e) => e.id).toList())
         .then((value) => value.whereNotNull().toList());
   }
@@ -118,18 +118,18 @@ class IsarRepository implements Repository {
 
   @override
   Future<PodcastStats?> findPodcastStats(int pid) async {
-    return _isar.podcastStats.get(pid);
+    return isar.podcastStats.get(pid);
   }
 
   @override
   Future<PodcastStats> updatePodcastStats(PodcastStatsUpdateParam param) async {
-    return _isar.writeTxn(() => _updatePodcastStats(param));
+    return isar.writeTxn(() => _updatePodcastStats(param));
   }
 
   Future<PodcastStats> _updatePodcastStats(
     PodcastStatsUpdateParam param,
   ) async {
-    final stats = await _isar.podcastStats.get(param.id);
+    final stats = await isar.podcastStats.get(param.id);
     final newStats = PodcastStats(
       id: param.id,
       subscribedDate: param.subscribed == null
@@ -139,7 +139,7 @@ class IsarRepository implements Repository {
               : null,
       lastCheckedAt: param.lastCheckedAt ?? stats?.lastCheckedAt,
     );
-    await _isar.podcastStats.put(newStats);
+    await isar.podcastStats.put(newStats);
     return newStats;
   }
 
@@ -147,14 +147,14 @@ class IsarRepository implements Repository {
 
   @override
   Future<PodcastViewStats?> findPodcastViewStats(int pid) async {
-    return _isar.podcastViewStats.get(pid);
+    return isar.podcastViewStats.get(pid);
   }
 
   @override
   Future<PodcastViewStats> updatePodcastViewStats(
     PodcastViewStatsUpdateParam param,
   ) async {
-    final stats = await _isar.podcastViewStats.get(param.id);
+    final stats = await isar.podcastViewStats.get(param.id);
     final newStats = stats != null
         ? stats.copyWith(
             viewMode: param.viewMode ?? stats.viewMode,
@@ -168,7 +168,7 @@ class IsarRepository implements Repository {
             ascend: param.ascend ?? false,
             ascendSeasonEpisodes: param.ascendSeasonEpisodes ?? true,
           );
-    await _isar.podcastViewStats.put(newStats);
+    await isar.podcastViewStats.put(newStats);
     return newStats;
   }
 
@@ -176,50 +176,54 @@ class IsarRepository implements Repository {
 
   @override
   Future<Episode?> findEpisode(Id id) async {
-    return _isar.episodes.get(id);
+    return isar.episodes.get(id);
   }
 
   @override
   Future<List<Episode?>> findEpisodes(Iterable<Id> ids) async {
-    return _isar.episodes.getAll(ids.toList());
+    return isar.episodes.getAll(ids.toList());
   }
 
   @override
   Future<List<Episode>> findEpisodesByPodcastId(Id pid) async {
-    return _isar.episodes.where().filter().pidEqualTo(pid).findAll();
+    return isar.episodes.where().filter().pidEqualTo(pid).findAll();
   }
 
   @override
   Future<void> saveEpisode(Episode episode) async {
-    await _isar.episodes.put(episode);
+    await isar.writeTxn(() async {
+      await isar.episodes.put(episode);
+    });
   }
 
   @override
   Future<void> saveEpisodes(Iterable<Episode> episodes) async {
-    await _isar.episodes.putAll(episodes.toList());
+    await isar.writeTxn(() async {
+      await isar.episodes.putAll(episodes.toList());
+    });
   }
 
   // --- EpisodeStats
 
   @override
   Future<EpisodeStats?> findEpisodeStats(Id id) async {
-    return _isar.episodeStats.get(id);
+    return isar.episodeStats.get(id);
   }
 
   @override
   Future<List<EpisodeStats?>> findEpisodeStatsList(Iterable<Id> ids) async {
-    return _isar.episodeStats.getAll(ids.toList());
+    return isar.episodeStats.getAll(ids.toList());
   }
 
   @override
   Future<EpisodeStats> updateEpisodeStats(EpisodeStatsUpdateParam param) async {
-    return _updateEpisodeStats(param);
+    return isar.writeTxn(() => _updateEpisodeStats(param));
   }
 
   Future<EpisodeStats> _updateEpisodeStats(
     EpisodeStatsUpdateParam param,
   ) async {
-    final stats = await _isar.episodeStats.get(param.id);
+    final stats = await isar.episodeStats.get(param.id);
     final newStats = EpisodeStats(
       id: param.id,
       pid: param.pid,
@@ -238,7 +242,7 @@ class IsarRepository implements Repository {
               : null,
       lastPlayedAt: param.lastPlayedAt ?? stats?.lastPlayedAt,
     );
-    await _isar.episodeStats.put(newStats);
+    await isar.episodeStats.put(newStats);
     return newStats;
   }
 
@@ -246,12 +250,12 @@ class IsarRepository implements Repository {
   Future<List<EpisodeStats>> updateEpisodeStatsList(
     Iterable<EpisodeStatsUpdateParam> params,
   ) async {
-    return _isar.writeTxn(() => Future.wait(params.map(_updateEpisodeStats)));
+    return isar.writeTxn(() => Future.wait(params.map(_updateEpisodeStats)));
   }
 
   @override
   Future<List<EpisodeStats>> findDownloadedEpisodeStatsList(Id pid) async {
-    return _isar.episodeStats
+    return isar.episodeStats
         .where()
         .filter()
         .pidEqualTo(pid)
@@ -261,7 +265,7 @@ class IsarRepository implements Repository {
 
   @override
   Future<List<EpisodeStats>> findPlayedEpisodeStatsList(Id pid) async {
-    return _isar.episodeStats
+    return isar.episodeStats
         .where()
         .filter()
         .playedEqualTo(true)
@@ -271,7 +275,7 @@ class IsarRepository implements Repository {
 
   @override
   Future<List<EpisodeStats>> findUnplayedEpisodeStatsList(Id pid) async {
-    return _isar.episodeStats
+    return isar.episodeStats
         .where()
         .filter()
         .playedEqualTo(false)
@@ -286,7 +290,7 @@ class IsarRepository implements Repository {
     int? cursor,
     int limit = 100,
   }) async {
-    final ids = await _isar.episodeStats
+    final ids = await isar.episodeStats
         .where(sort: Sort.desc)
         .sortByLastPlayedAtDesc()
         .offset(cursor ?? 0)
@@ -294,7 +298,7 @@ class IsarRepository implements Repository {
         .idProperty()
         .findAll();
     final nextCursor = ids.length < limit ? null : (cursor ?? 0) + limit;
-    final episodes = await _isar.episodes
+    final episodes = await isar.episodes
         .getAll(ids)
         .then((value) => value.whereNotNull().toList());
     return (episodes, nextCursor);
