@@ -425,16 +425,16 @@ extension QueueQueryProperty on QueryBuilder<Queue, Queue, QQueryProperty> {
 _$QueueItemImpl _$$QueueItemImplFromJson(Map<String, dynamic> json) =>
     _$QueueItemImpl(
       id: json['id'] as String,
-      pguid: json['pguid'] as String,
-      guid: json['guid'] as String,
+      pid: json['pid'] as int,
+      eid: json['eid'] as int,
       type: $enumDecode(_$QueueTypeEnumMap, json['type']),
     );
 
 Map<String, dynamic> _$$QueueItemImplToJson(_$QueueItemImpl instance) =>
     <String, dynamic>{
       'id': instance.id,
-      'pguid': instance.pguid,
-      'guid': instance.guid,
+      'pid': instance.pid,
+      'eid': instance.eid,
       'type': _$QueueTypeEnumMap[instance.type]!,
     };
 

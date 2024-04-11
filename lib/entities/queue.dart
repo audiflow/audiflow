@@ -19,10 +19,17 @@ part 'queue.g.dart';
 @collection
 class Queue {
   Queue({required String encoded})
-      : queue = jsonDecode(encoded) as List<QueueItem>;
+      : queue = (jsonDecode(encoded) as List<dynamic>)
+            .cast<Map<String, dynamic>>()
+            .map(QueueItem.fromJson)
+            .toList();
 
   factory Queue.empty() {
     return Queue(encoded: '[]');
+  }
+
+  factory Queue.from(List<QueueItem> queue) {
+    return Queue.empty().copyWith(queue: queue);
   }
 
   final Id id = 1;
@@ -31,13 +38,17 @@ class Queue {
   final List<QueueItem> queue;
 
   String get encoded => jsonEncode(queue);
+
+  Queue copyWith({required List<QueueItem> queue}) {
+    final newQueue = Queue(encoded: jsonEncode(queue));
+    return newQueue;
+  }
 }
 
 extension QueueExt on Queue {
-  bool contains({required String guid, QueueType? type}) {
+  bool contains({required int eid, QueueType? type}) {
     return queue.any(
-      (element) =>
-          element.guid == guid && (type == null || element.type == type),
+      (element) => element.eid == eid && (type == null || element.type == type),
     );
   }
 }
@@ -51,31 +62,31 @@ enum QueueType {
 class QueueItem with _$QueueItem {
   const factory QueueItem({
     required String id,
-    required String pguid,
-    required String guid,
+    required int pid,
+    required int eid,
     required QueueType type,
   }) = _QueueItem;
 
   factory QueueItem.primary({
-    required String pguid,
-    required String guid,
+    required int pid,
+    required int eid,
   }) {
     return QueueItem(
       id: nanoid(),
-      pguid: pguid,
-      guid: guid,
+      pid: pid,
+      eid: eid,
       type: QueueType.primary,
     );
   }
 
   factory QueueItem.adhoc({
-    required String pguid,
-    required String guid,
+    required int pid,
+    required int eid,
   }) {
     return QueueItem(
       id: nanoid(),
-      pguid: pguid,
-      guid: guid,
+      pid: pid,
+      eid: eid,
       type: QueueType.adhoc,
     );
   }

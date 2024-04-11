@@ -233,4 +233,31 @@ void main() {
       expect(loaded?.played, isTrue);
     });
   });
+
+  group('Queue', ()
+  {
+    setUpAll(createRepository);
+    tearDownAll(cleanUpRepository);
+
+    test('empty', () async {
+      final loaded = await repository.loadQueue();
+      expect(loaded.queue, isEmpty);
+
+      await repository.saveQueue(Queue.empty());
+    });
+
+    test('Create and save', () async {
+      final queue = Queue.from(
+        [
+          QueueItem.primary(pid: 1, eid: 1),
+          QueueItem.adhoc(pid: 1, eid: 2),
+        ],
+      );
+
+      await repository.saveQueue(queue);
+      final loaded = await repository.loadQueue();
+      expect(loaded.queue, hasLength(2));
+      expect(loaded.queue[0], queue.queue[0]);
+    });
+  });
 }
