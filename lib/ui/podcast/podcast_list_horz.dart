@@ -29,7 +29,7 @@ class PodcastListHorz extends ConsumerWidget {
 
     return SliverToBoxAdapter(
       child: SizedBox(
-        height: 240,
+        height: 242,
         width: 100,
         child: ListView.separated(
           scrollDirection: Axis.horizontal,

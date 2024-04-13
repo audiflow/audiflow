@@ -79,7 +79,7 @@ class _EpisodeTileWithThumbnail extends HookConsumerWidget {
                   );
                 },
                 child: Container(
-                  height: 60,
+                  height: 64,
                   padding: const EdgeInsets.only(right: 8),
                   child: _Content(episode),
                 ),
