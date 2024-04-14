@@ -26,6 +26,7 @@ class Episode {
   Episode({
     required this.pid,
     required this.guid,
+    required this.contentUrl,
     required this.title,
     this.author,
     this.link,
@@ -43,6 +44,7 @@ class Episode {
     return Episode(
       pid: pid,
       guid: item.guid,
+      contentUrl: item.enclosure.url,
       title: removeHtmlPadding(item.title),
       author: item.author?.replaceAll('\n', ', ').trim() ?? '',
       link: item.link,
@@ -63,6 +65,9 @@ class Episode {
 
   /// The Isar ID of the parent podcast.
   final int pid;
+
+  /// The URL of the media file.
+  final String contentUrl;
 
   /// The title for the podcast episode.
   final String title;
@@ -150,6 +155,7 @@ class EpisodeStats {
   EpisodeStats({
     required this.id,
     required this.pid,
+    this.durationMS,
     this.positionMS = 0,
     this.playCount = 0,
     this.playTotalMS = 0,
@@ -165,6 +171,9 @@ class EpisodeStats {
   /// The Isar ID of the parent podcast.
   @Index()
   final int pid;
+
+  /// Actual duration of the episode.
+  final int? durationMS;
 
   /// Current position in the episode
   final int positionMS;
@@ -198,6 +207,9 @@ class EpisodeStats {
 extension EpisodeStatsExt on EpisodeStats {
   bool get downloaded => downloadedTime != null;
 
+  Duration? get duration =>
+      durationMS == null ? null : Duration(milliseconds: durationMS!);
+
   Duration get playTotal => Duration(milliseconds: playTotalMS);
 
   Duration get position => Duration(milliseconds: positionMS);
@@ -216,7 +228,7 @@ extension EpisodeStatsExt on EpisodeStats {
 class EpisodeStatsUpdateParam {
   const EpisodeStatsUpdateParam({
     required this.id,
-    required this.pid,
+    this.duration,
     this.position,
     this.played,
     this.playTotalDelta,
@@ -227,7 +239,7 @@ class EpisodeStatsUpdateParam {
   });
 
   final Id id;
-  final int pid;
+  final Duration? duration;
   final Duration? position;
   final bool? played;
   final Duration? playTotalDelta;
@@ -237,6 +249,7 @@ class EpisodeStatsUpdateParam {
   final DateTime? lastPlayedAt;
 
   EpisodeStatsUpdateParam copyWith({
+    Duration? duration,
     Duration? position,
     bool? startPlaying,
     bool? played,
@@ -248,7 +261,7 @@ class EpisodeStatsUpdateParam {
   }) {
     return EpisodeStatsUpdateParam(
       id: id,
-      pid: pid,
+      duration: duration ?? this.duration,
       position: position ?? this.position,
       played: played ?? this.played,
       playTotalDelta: playTotalDelta ?? this.playTotalDelta,
@@ -260,6 +273,7 @@ class EpisodeStatsUpdateParam {
   }
 
   bool get isEmpty =>
+      duration == null &&
       position == null &&
       played == null &&
       playTotalDelta == null &&
