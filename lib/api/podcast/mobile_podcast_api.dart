@@ -15,8 +15,9 @@ import 'package:audiflow/entities/entities.dart';
 import 'package:audiflow/services/http/cached_http.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:podcast_feed/podcast_feed.dart'
-    hide TranscriptFormat, TranscriptUrl;
+import 'package:podcast_feed/parsers/channel_item_parser.dart';
+import 'package:podcast_feed/parsers/channel_parser.dart';
+import 'package:podcast_feed/parsers/create_parsers.dart';
 import 'package:podcast_search/podcast_search.dart' as podcast_search;
 
 /// An implementation of the [PodcastApi].
@@ -102,12 +103,8 @@ class MobilePodcastApi extends PodcastApi {
   Future<List<ITunesChartItem>> charts({
     int size = 20,
     String genre = '',
-    String countryCode = '',
+    Country country = Country.none,
   }) async {
-    final country = countryCode.isNotEmpty
-        ? Country.values.where((element) => element.code == countryCode).first
-        : Country.none;
-
     final url = _buildChartsUrl(
       country: country,
       limit: size,

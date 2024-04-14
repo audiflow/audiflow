@@ -6,12 +6,17 @@
 // found in the LICENSE file.
 
 export './app_settings.dart';
+export './attribute.dart';
 export './block.dart';
 export './chapter.dart';
+export './country.dart';
 export './downloadable.dart';
 export './episode.dart';
 export './feed.dart';
 export './funding.dart';
+export './genre.dart';
+export './itunes_chart_item.dart';
+export './itunes_search_item.dart';
 export './locked.dart';
 export './person.dart';
 export './podcast.dart';

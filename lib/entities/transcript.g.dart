@@ -960,10 +960,10 @@ const TranscriptSchema = CollectionSchema(
       name: r'guid',
       type: IsarType.string,
     ),
-    r'pguid': PropertySchema(
+    r'pid': PropertySchema(
       id: 2,
-      name: r'pguid',
-      type: IsarType.string,
+      name: r'pid',
+      type: IsarType.long,
     ),
     r'transcriptId': PropertySchema(
       id: 3,
@@ -999,7 +999,6 @@ int _transcriptEstimateSize(
 ) {
   var bytesCount = offsets.last;
   bytesCount += 3 + object.guid.length * 3;
-  bytesCount += 3 + object.pguid.length * 3;
   return bytesCount;
 }
 
@@ -1011,7 +1010,7 @@ void _transcriptSerialize(
 ) {
   writer.writeBool(offsets[0], object.filtered);
   writer.writeString(offsets[1], object.guid);
-  writer.writeString(offsets[2], object.pguid);
+  writer.writeLong(offsets[2], object.pid);
   writer.writeLong(offsets[3], object.transcriptId);
 }
 
@@ -1024,7 +1023,7 @@ Transcript _transcriptDeserialize(
   final object = Transcript(
     filtered: reader.readBoolOrNull(offsets[0]) ?? false,
     guid: reader.readString(offsets[1]),
-    pguid: reader.readString(offsets[2]),
+    pid: reader.readLong(offsets[2]),
     transcriptId: reader.readLongOrNull(offsets[3]),
   );
   return object;
@@ -1042,7 +1041,7 @@ P _transcriptDeserializeProp<P>(
     case 1:
       return (reader.readString(offset)) as P;
     case 2:
-      return (reader.readString(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 3:
       return (reader.readLongOrNull(offset)) as P;
     default:
@@ -1335,133 +1334,55 @@ extension TranscriptQueryFilter
     });
   }
 
-  QueryBuilder<Transcript, Transcript, QAfterFilterCondition> pguidEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  QueryBuilder<Transcript, Transcript, QAfterFilterCondition> pidEqualTo(
+      int value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'pguid',
+        property: r'pid',
         value: value,
-        caseSensitive: caseSensitive,
       ));
     });
   }
 
-  QueryBuilder<Transcript, Transcript, QAfterFilterCondition> pguidGreaterThan(
-    String value, {
+  QueryBuilder<Transcript, Transcript, QAfterFilterCondition> pidGreaterThan(
+    int value, {
     bool include = false,
-    bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         include: include,
-        property: r'pguid',
+        property: r'pid',
         value: value,
-        caseSensitive: caseSensitive,
       ));
     });
   }
 
-  QueryBuilder<Transcript, Transcript, QAfterFilterCondition> pguidLessThan(
-    String value, {
+  QueryBuilder<Transcript, Transcript, QAfterFilterCondition> pidLessThan(
+    int value, {
     bool include = false,
-    bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.lessThan(
         include: include,
-        property: r'pguid',
+        property: r'pid',
         value: value,
-        caseSensitive: caseSensitive,
       ));
     });
   }
 
-  QueryBuilder<Transcript, Transcript, QAfterFilterCondition> pguidBetween(
-    String lower,
-    String upper, {
+  QueryBuilder<Transcript, Transcript, QAfterFilterCondition> pidBetween(
+    int lower,
+    int upper, {
     bool includeLower = true,
     bool includeUpper = true,
-    bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
-        property: r'pguid',
+        property: r'pid',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
         includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Transcript, Transcript, QAfterFilterCondition> pguidStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'pguid',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Transcript, Transcript, QAfterFilterCondition> pguidEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'pguid',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Transcript, Transcript, QAfterFilterCondition> pguidContains(
-      String value,
-      {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'pguid',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Transcript, Transcript, QAfterFilterCondition> pguidMatches(
-      String pattern,
-      {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'pguid',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Transcript, Transcript, QAfterFilterCondition> pguidIsEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'pguid',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<Transcript, Transcript, QAfterFilterCondition>
-      pguidIsNotEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'pguid',
-        value: '',
       ));
     });
   }
@@ -1634,15 +1555,15 @@ extension TranscriptQuerySortBy
     });
   }
 
-  QueryBuilder<Transcript, Transcript, QAfterSortBy> sortByPguid() {
+  QueryBuilder<Transcript, Transcript, QAfterSortBy> sortByPid() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'pguid', Sort.asc);
+      return query.addSortBy(r'pid', Sort.asc);
     });
   }
 
-  QueryBuilder<Transcript, Transcript, QAfterSortBy> sortByPguidDesc() {
+  QueryBuilder<Transcript, Transcript, QAfterSortBy> sortByPidDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'pguid', Sort.desc);
+      return query.addSortBy(r'pid', Sort.desc);
     });
   }
 
@@ -1697,15 +1618,15 @@ extension TranscriptQuerySortThenBy
     });
   }
 
-  QueryBuilder<Transcript, Transcript, QAfterSortBy> thenByPguid() {
+  QueryBuilder<Transcript, Transcript, QAfterSortBy> thenByPid() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'pguid', Sort.asc);
+      return query.addSortBy(r'pid', Sort.asc);
     });
   }
 
-  QueryBuilder<Transcript, Transcript, QAfterSortBy> thenByPguidDesc() {
+  QueryBuilder<Transcript, Transcript, QAfterSortBy> thenByPidDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'pguid', Sort.desc);
+      return query.addSortBy(r'pid', Sort.desc);
     });
   }
 
@@ -1737,10 +1658,9 @@ extension TranscriptQueryWhereDistinct
     });
   }
 
-  QueryBuilder<Transcript, Transcript, QDistinct> distinctByPguid(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Transcript, Transcript, QDistinct> distinctByPid() {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'pguid', caseSensitive: caseSensitive);
+      return query.addDistinctBy(r'pid');
     });
   }
 
@@ -1771,9 +1691,9 @@ extension TranscriptQueryProperty
     });
   }
 
-  QueryBuilder<Transcript, String, QQueryOperations> pguidProperty() {
+  QueryBuilder<Transcript, int, QQueryOperations> pidProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'pguid');
+      return query.addPropertyName(r'pid');
     });
   }
 

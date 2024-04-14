@@ -61,6 +61,7 @@ void main() {
             guid: 'EP${numberFormat.format(i + 1)}',
             title: 'Title ${i + 1}',
             description: 'desc ${i + 1}',
+            contentUrl: 'https://example.com/content.mp3',
             imageUrl: 'https://example.com/image.jpg',
             publicationDate: DateTime.now().add(Duration(days: -i)),
             durationMS: const Duration(minutes: 30).inMilliseconds,

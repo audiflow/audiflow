@@ -6,8 +6,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:audiflow/entities/transcript.dart';
-import 'package:podcast_feed/podcast_feed.dart' hide TranscriptUrl;
+import 'package:audiflow/entities/entities.dart';
+import 'package:podcast_feed/parsers/channel_item_parser.dart';
+import 'package:podcast_feed/parsers/channel_parser.dart';
 import 'package:podcast_search/podcast_search.dart' as pslib;
 
 /// A simple wrapper class that interacts with the search API via
@@ -30,7 +31,7 @@ abstract class PodcastApi {
   Future<List<ITunesChartItem>> charts({
     int size = 20,
     String genre = '',
-    String countryCode = '',
+    Country country = Country.none,
   });
 
   Future<ITunesSearchItem?> lookup({required int collectionId});

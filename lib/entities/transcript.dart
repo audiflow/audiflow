@@ -70,14 +70,14 @@ class TranscriptUrl {
 class Transcript {
   Transcript({
     this.transcriptId,
-    required this.pguid,
+    required this.pid,
     required this.guid,
     this.filtered = false,
   });
 
   Id get id => fastHash(guid);
   final int? transcriptId;
-  final String pguid;
+  final int pid;
   final String guid;
   final subtitles = IsarLinks<Subtitle>();
   final bool filtered;

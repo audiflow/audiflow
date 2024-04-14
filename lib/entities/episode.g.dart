@@ -22,63 +22,68 @@ const EpisodeSchema = CollectionSchema(
       name: r'author',
       type: IsarType.string,
     ),
-    r'description': PropertySchema(
+    r'contentUrl': PropertySchema(
       id: 1,
+      name: r'contentUrl',
+      type: IsarType.string,
+    ),
+    r'description': PropertySchema(
+      id: 2,
       name: r'description',
       type: IsarType.string,
     ),
     r'durationMS': PropertySchema(
-      id: 2,
+      id: 3,
       name: r'durationMS',
       type: IsarType.long,
     ),
     r'episode': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'episode',
       type: IsarType.long,
     ),
     r'explicit': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'explicit',
       type: IsarType.bool,
     ),
     r'guid': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'guid',
       type: IsarType.string,
     ),
     r'imageUrl': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'imageUrl',
       type: IsarType.string,
     ),
     r'link': PropertySchema(
-      id: 7,
+      id: 8,
       name: r'link',
       type: IsarType.string,
     ),
     r'pid': PropertySchema(
-      id: 8,
+      id: 9,
       name: r'pid',
       type: IsarType.long,
     ),
     r'publicationDate': PropertySchema(
-      id: 9,
+      id: 10,
       name: r'publicationDate',
       type: IsarType.dateTime,
     ),
     r'season': PropertySchema(
-      id: 10,
+      id: 11,
       name: r'season',
       type: IsarType.long,
     ),
     r'title': PropertySchema(
-      id: 11,
+      id: 12,
       name: r'title',
       type: IsarType.string,
     ),
     r'type': PropertySchema(
-      id: 12,
+      id: 13,
       name: r'type',
       type: IsarType.byte,
       enumMap: _EpisodetypeEnumValueMap,
@@ -143,6 +148,7 @@ int _episodeEstimateSize(
       bytesCount += 3 + value.length * 3;
     }
   }
+  bytesCount += 3 + object.contentUrl.length * 3;
   {
     final value = object.description;
     if (value != null) {
@@ -173,18 +179,19 @@ void _episodeSerialize(
   Map<Type, List<int>> allOffsets,
 ) {
   writer.writeString(offsets[0], object.author);
-  writer.writeString(offsets[1], object.description);
-  writer.writeLong(offsets[2], object.durationMS);
-  writer.writeLong(offsets[3], object.episode);
-  writer.writeBool(offsets[4], object.explicit);
-  writer.writeString(offsets[5], object.guid);
-  writer.writeString(offsets[6], object.imageUrl);
-  writer.writeString(offsets[7], object.link);
-  writer.writeLong(offsets[8], object.pid);
-  writer.writeDateTime(offsets[9], object.publicationDate);
-  writer.writeLong(offsets[10], object.season);
-  writer.writeString(offsets[11], object.title);
-  writer.writeByte(offsets[12], object.type.index);
+  writer.writeString(offsets[1], object.contentUrl);
+  writer.writeString(offsets[2], object.description);
+  writer.writeLong(offsets[3], object.durationMS);
+  writer.writeLong(offsets[4], object.episode);
+  writer.writeBool(offsets[5], object.explicit);
+  writer.writeString(offsets[6], object.guid);
+  writer.writeString(offsets[7], object.imageUrl);
+  writer.writeString(offsets[8], object.link);
+  writer.writeLong(offsets[9], object.pid);
+  writer.writeDateTime(offsets[10], object.publicationDate);
+  writer.writeLong(offsets[11], object.season);
+  writer.writeString(offsets[12], object.title);
+  writer.writeByte(offsets[13], object.type.index);
 }
 
 Episode _episodeDeserialize(
@@ -195,18 +202,19 @@ Episode _episodeDeserialize(
 ) {
   final object = Episode(
     author: reader.readStringOrNull(offsets[0]),
-    description: reader.readStringOrNull(offsets[1]),
-    durationMS: reader.readLongOrNull(offsets[2]),
-    episode: reader.readLongOrNull(offsets[3]),
-    explicit: reader.readBoolOrNull(offsets[4]) ?? false,
-    guid: reader.readString(offsets[5]),
-    imageUrl: reader.readStringOrNull(offsets[6]),
-    link: reader.readStringOrNull(offsets[7]),
-    pid: reader.readLong(offsets[8]),
-    publicationDate: reader.readDateTimeOrNull(offsets[9]),
-    season: reader.readLongOrNull(offsets[10]),
-    title: reader.readString(offsets[11]),
-    type: _EpisodetypeValueEnumMap[reader.readByteOrNull(offsets[12])] ??
+    contentUrl: reader.readString(offsets[1]),
+    description: reader.readStringOrNull(offsets[2]),
+    durationMS: reader.readLongOrNull(offsets[3]),
+    episode: reader.readLongOrNull(offsets[4]),
+    explicit: reader.readBoolOrNull(offsets[5]) ?? false,
+    guid: reader.readString(offsets[6]),
+    imageUrl: reader.readStringOrNull(offsets[7]),
+    link: reader.readStringOrNull(offsets[8]),
+    pid: reader.readLong(offsets[9]),
+    publicationDate: reader.readDateTimeOrNull(offsets[10]),
+    season: reader.readLongOrNull(offsets[11]),
+    title: reader.readString(offsets[12]),
+    type: _EpisodetypeValueEnumMap[reader.readByteOrNull(offsets[13])] ??
         EpisodeType.full,
   );
   return object;
@@ -222,28 +230,30 @@ P _episodeDeserializeProp<P>(
     case 0:
       return (reader.readStringOrNull(offset)) as P;
     case 1:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 2:
-      return (reader.readLongOrNull(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 3:
       return (reader.readLongOrNull(offset)) as P;
     case 4:
-      return (reader.readBoolOrNull(offset) ?? false) as P;
+      return (reader.readLongOrNull(offset)) as P;
     case 5:
-      return (reader.readString(offset)) as P;
+      return (reader.readBoolOrNull(offset) ?? false) as P;
     case 6:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 7:
       return (reader.readStringOrNull(offset)) as P;
     case 8:
-      return (reader.readLong(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 9:
-      return (reader.readDateTimeOrNull(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 10:
-      return (reader.readLongOrNull(offset)) as P;
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 11:
-      return (reader.readString(offset)) as P;
+      return (reader.readLongOrNull(offset)) as P;
     case 12:
+      return (reader.readString(offset)) as P;
+    case 13:
       return (_EpisodetypeValueEnumMap[reader.readByteOrNull(offset)] ??
           EpisodeType.full) as P;
     default:
@@ -593,6 +603,136 @@ extension EpisodeQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         property: r'author',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterFilterCondition> contentUrlEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'contentUrl',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterFilterCondition> contentUrlGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'contentUrl',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterFilterCondition> contentUrlLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'contentUrl',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterFilterCondition> contentUrlBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'contentUrl',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterFilterCondition> contentUrlStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'contentUrl',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterFilterCondition> contentUrlEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'contentUrl',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterFilterCondition> contentUrlContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'contentUrl',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterFilterCondition> contentUrlMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'contentUrl',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterFilterCondition> contentUrlIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'contentUrl',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterFilterCondition> contentUrlIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'contentUrl',
         value: '',
       ));
     });
@@ -1935,6 +2075,18 @@ extension EpisodeQuerySortBy on QueryBuilder<Episode, Episode, QSortBy> {
     });
   }
 
+  QueryBuilder<Episode, Episode, QAfterSortBy> sortByContentUrl() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'contentUrl', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterSortBy> sortByContentUrlDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'contentUrl', Sort.desc);
+    });
+  }
+
   QueryBuilder<Episode, Episode, QAfterSortBy> sortByDescription() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'description', Sort.asc);
@@ -2091,6 +2243,18 @@ extension EpisodeQuerySortThenBy
   QueryBuilder<Episode, Episode, QAfterSortBy> thenByAuthorDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'author', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterSortBy> thenByContentUrl() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'contentUrl', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterSortBy> thenByContentUrlDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'contentUrl', Sort.desc);
     });
   }
 
@@ -2260,6 +2424,13 @@ extension EpisodeQueryWhereDistinct
     });
   }
 
+  QueryBuilder<Episode, Episode, QDistinct> distinctByContentUrl(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'contentUrl', caseSensitive: caseSensitive);
+    });
+  }
+
   QueryBuilder<Episode, Episode, QDistinct> distinctByDescription(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -2349,6 +2520,12 @@ extension EpisodeQueryProperty
   QueryBuilder<Episode, String?, QQueryOperations> authorProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'author');
+    });
+  }
+
+  QueryBuilder<Episode, String, QQueryOperations> contentUrlProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'contentUrl');
     });
   }
 
@@ -2446,38 +2623,43 @@ const EpisodeStatsSchema = CollectionSchema(
       name: r'downloadedTime',
       type: IsarType.dateTime,
     ),
-    r'inQueue': PropertySchema(
+    r'durationMS': PropertySchema(
       id: 2,
+      name: r'durationMS',
+      type: IsarType.long,
+    ),
+    r'inQueue': PropertySchema(
+      id: 3,
       name: r'inQueue',
       type: IsarType.bool,
     ),
     r'lastPlayedAt': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'lastPlayedAt',
       type: IsarType.dateTime,
     ),
     r'pid': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'pid',
       type: IsarType.long,
     ),
     r'playCount': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'playCount',
       type: IsarType.long,
     ),
     r'playTotalMS': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'playTotalMS',
       type: IsarType.long,
     ),
     r'played': PropertySchema(
-      id: 7,
+      id: 8,
       name: r'played',
       type: IsarType.bool,
     ),
     r'positionMS': PropertySchema(
-      id: 8,
+      id: 9,
       name: r'positionMS',
       type: IsarType.long,
     )
@@ -2579,13 +2761,14 @@ void _episodeStatsSerialize(
 ) {
   writer.writeLong(offsets[0], object.completeCount);
   writer.writeDateTime(offsets[1], object.downloadedTime);
-  writer.writeBool(offsets[2], object.inQueue);
-  writer.writeDateTime(offsets[3], object.lastPlayedAt);
-  writer.writeLong(offsets[4], object.pid);
-  writer.writeLong(offsets[5], object.playCount);
-  writer.writeLong(offsets[6], object.playTotalMS);
-  writer.writeBool(offsets[7], object.played);
-  writer.writeLong(offsets[8], object.positionMS);
+  writer.writeLong(offsets[2], object.durationMS);
+  writer.writeBool(offsets[3], object.inQueue);
+  writer.writeDateTime(offsets[4], object.lastPlayedAt);
+  writer.writeLong(offsets[5], object.pid);
+  writer.writeLong(offsets[6], object.playCount);
+  writer.writeLong(offsets[7], object.playTotalMS);
+  writer.writeBool(offsets[8], object.played);
+  writer.writeLong(offsets[9], object.positionMS);
 }
 
 EpisodeStats _episodeStatsDeserialize(
@@ -2597,14 +2780,15 @@ EpisodeStats _episodeStatsDeserialize(
   final object = EpisodeStats(
     completeCount: reader.readLongOrNull(offsets[0]) ?? 0,
     downloadedTime: reader.readDateTimeOrNull(offsets[1]),
+    durationMS: reader.readLongOrNull(offsets[2]),
     id: id,
-    inQueue: reader.readBoolOrNull(offsets[2]) ?? false,
-    lastPlayedAt: reader.readDateTimeOrNull(offsets[3]),
-    pid: reader.readLong(offsets[4]),
-    playCount: reader.readLongOrNull(offsets[5]) ?? 0,
-    playTotalMS: reader.readLongOrNull(offsets[6]) ?? 0,
-    played: reader.readBoolOrNull(offsets[7]) ?? false,
-    positionMS: reader.readLongOrNull(offsets[8]) ?? 0,
+    inQueue: reader.readBoolOrNull(offsets[3]) ?? false,
+    lastPlayedAt: reader.readDateTimeOrNull(offsets[4]),
+    pid: reader.readLong(offsets[5]),
+    playCount: reader.readLongOrNull(offsets[6]) ?? 0,
+    playTotalMS: reader.readLongOrNull(offsets[7]) ?? 0,
+    played: reader.readBoolOrNull(offsets[8]) ?? false,
+    positionMS: reader.readLongOrNull(offsets[9]) ?? 0,
   );
   return object;
 }
@@ -2621,18 +2805,20 @@ P _episodeStatsDeserializeProp<P>(
     case 1:
       return (reader.readDateTimeOrNull(offset)) as P;
     case 2:
-      return (reader.readBoolOrNull(offset) ?? false) as P;
+      return (reader.readLongOrNull(offset)) as P;
     case 3:
-      return (reader.readDateTimeOrNull(offset)) as P;
+      return (reader.readBoolOrNull(offset) ?? false) as P;
     case 4:
-      return (reader.readLong(offset)) as P;
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 5:
-      return (reader.readLongOrNull(offset) ?? 0) as P;
+      return (reader.readLong(offset)) as P;
     case 6:
       return (reader.readLongOrNull(offset) ?? 0) as P;
     case 7:
-      return (reader.readBoolOrNull(offset) ?? false) as P;
+      return (reader.readLongOrNull(offset) ?? 0) as P;
     case 8:
+      return (reader.readBoolOrNull(offset) ?? false) as P;
+    case 9:
       return (reader.readLongOrNull(offset) ?? 0) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -3311,6 +3497,80 @@ extension EpisodeStatsQueryFilter
     });
   }
 
+  QueryBuilder<EpisodeStats, EpisodeStats, QAfterFilterCondition>
+      durationMSIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'durationMS',
+      ));
+    });
+  }
+
+  QueryBuilder<EpisodeStats, EpisodeStats, QAfterFilterCondition>
+      durationMSIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'durationMS',
+      ));
+    });
+  }
+
+  QueryBuilder<EpisodeStats, EpisodeStats, QAfterFilterCondition>
+      durationMSEqualTo(int? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'durationMS',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<EpisodeStats, EpisodeStats, QAfterFilterCondition>
+      durationMSGreaterThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'durationMS',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<EpisodeStats, EpisodeStats, QAfterFilterCondition>
+      durationMSLessThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'durationMS',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<EpisodeStats, EpisodeStats, QAfterFilterCondition>
+      durationMSBetween(
+    int? lower,
+    int? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'durationMS',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
   QueryBuilder<EpisodeStats, EpisodeStats, QAfterFilterCondition> idEqualTo(
       Id value) {
     return QueryBuilder.apply(this, (query) {
@@ -3716,6 +3976,19 @@ extension EpisodeStatsQuerySortBy
     });
   }
 
+  QueryBuilder<EpisodeStats, EpisodeStats, QAfterSortBy> sortByDurationMS() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'durationMS', Sort.asc);
+    });
+  }
+
+  QueryBuilder<EpisodeStats, EpisodeStats, QAfterSortBy>
+      sortByDurationMSDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'durationMS', Sort.desc);
+    });
+  }
+
   QueryBuilder<EpisodeStats, EpisodeStats, QAfterSortBy> sortByInQueue() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'inQueue', Sort.asc);
@@ -3830,6 +4103,19 @@ extension EpisodeStatsQuerySortThenBy
       thenByDownloadedTimeDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'downloadedTime', Sort.desc);
+    });
+  }
+
+  QueryBuilder<EpisodeStats, EpisodeStats, QAfterSortBy> thenByDurationMS() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'durationMS', Sort.asc);
+    });
+  }
+
+  QueryBuilder<EpisodeStats, EpisodeStats, QAfterSortBy>
+      thenByDurationMSDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'durationMS', Sort.desc);
     });
   }
 
@@ -3949,6 +4235,12 @@ extension EpisodeStatsQueryWhereDistinct
     });
   }
 
+  QueryBuilder<EpisodeStats, EpisodeStats, QDistinct> distinctByDurationMS() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'durationMS');
+    });
+  }
+
   QueryBuilder<EpisodeStats, EpisodeStats, QDistinct> distinctByInQueue() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'inQueue');
@@ -4010,6 +4302,12 @@ extension EpisodeStatsQueryProperty
       downloadedTimeProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'downloadedTime');
+    });
+  }
+
+  QueryBuilder<EpisodeStats, int?, QQueryOperations> durationMSProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'durationMS');
     });
   }
 
