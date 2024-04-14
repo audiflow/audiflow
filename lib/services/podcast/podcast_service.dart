@@ -20,42 +20,40 @@ abstract class PodcastService {
 
   // --- Search and Load ---
 
-  Future<List<PodcastMetadata>> search({
+  Future<List<ITunesSearchItem>> search({
     required String term,
-    String? country,
-    String? attribute,
-    int? limit,
+    Country? country,
+    Attribute? attribute,
+    int limit = 20,
     String? language,
     int version = 0,
     bool explicit = false,
   });
 
-  Future<List<PodcastMetadata>> charts({
+  Future<List<ITunesChartItem>> charts({
     required int size,
     String? genre,
-    String? countryCode,
+    Country country = Country.none,
   });
 
   List<String> genres();
 
   // --- Podcast ---
 
-  Future<PodcastMetadata?> loadPodcastMetadata(String guid);
-
-  Future<Podcast?> lookupPodcast(String feedUrl);
-
-  Future<Podcast?> loadPodcast(
-    PodcastMetadata metadata, {
-    bool refresh = false,
-  });
-
-  Future<Podcast?> loadPodcastByGuid(String guid);
-
-  Future<List<Episode>> loadEpisodesByPodcastGuid(String pguid);
+  // Future<Podcast?> lookupPodcast(String feedUrl);
+  //
+  // Future<Podcast?> loadPodcast(
+  //   Podcast podcast, {
+  //   bool refresh = false,
+  // });
+  //
+  // Future<Podcast?> loadPodcastById(int id);
+  //
+  // Future<List<Episode>> loadEpisodesByPodcastId(int pid);
 
   // --- Podcast subscription ---
 
-  Future<List<(PodcastMetadata, PodcastStats)>> subscriptions();
+  Future<List<Podcast>> subscriptions();
 
   Future<void> subscribe(Podcast podcast);
 
@@ -63,9 +61,9 @@ abstract class PodcastService {
 
   // --- Episode ---
 
-  Future<Episode?> loadEpisode(String guid);
+  Future<Episode?> loadEpisode(int id);
 
-  Future<List<Episode?>> loadEpisodes(Iterable<String> guids);
+  Future<List<Episode?>> loadEpisodes(Iterable<int> ids);
 
   Future<void> saveEpisode(Episode episode);
 
@@ -77,14 +75,14 @@ abstract class PodcastService {
 
   // --- Chapter ---
 
-  Future<List<Chapter>> loadChaptersByUrl(String url);
+  // Future<List<Chapter>> loadChaptersByUrl(String url);
 
   // --- Transcript ---
 
-  Future<Transcript> loadTranscriptByUrl({
-    required Episode episode,
-    required TranscriptUrl transcriptUrl,
-  });
+  // Future<Transcript> loadTranscriptByUrl({
+  //   required Episode episode,
+  //   required TranscriptUrl transcriptUrl,
+  // });
 
   Future<Transcript> saveTranscript(Transcript transcript);
 

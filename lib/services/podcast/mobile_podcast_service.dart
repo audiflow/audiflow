@@ -21,6 +21,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 import 'package:path/path.dart';
+import 'package:podcast_feed/parsers/channel_item_parser.dart';
+import 'package:podcast_feed/parsers/channel_parser.dart';
 import 'package:podcast_search/podcast_search.dart' as podcast_search;
 
 class MobilePodcastService implements PodcastService {
@@ -92,11 +94,11 @@ class MobilePodcastService implements PodcastService {
   }
 
   Future<void> _resumeEpisode() async {
-    final guid = await _repository.playingEpisodeGuid();
-    if (guid != null) {
+    final eid = await _repository.playingEpisodeId();
+    if (eid != null) {
       final values = await Future.wait([
-        _repository.findEpisode(guid),
-        _repository.findEpisodeStats(guid),
+        _repository.findEpisode(eid),
+        _repository.findEpisodeStats(eid),
       ]);
       final episode = values[0] as Episode?;
       final stats = values[1] as EpisodeStats?;
@@ -111,11 +113,11 @@ class MobilePodcastService implements PodcastService {
   }
 
   @override
-  Future<List<PodcastMetadata>> search({
+  Future<List<ITunesSearchItem>> search({
     required String term,
-    String? country,
-    String? attribute,
-    int? limit,
+    Country? country,
+    Attribute? attribute,
+    int limit = 20,
     String? language,
     int version = 0,
     bool explicit = false,
@@ -125,46 +127,32 @@ class MobilePodcastService implements PodcastService {
       throw NoConnectivityError();
     }
 
-    final result = await _api.search(
+    return _api.search(
       term,
       country: country,
       attribute: attribute,
       limit: limit,
       language: language,
       explicit: explicit,
-      searchProvider: _appSettings.searchProvider,
     );
-    if (!result.successful) {
-      throw Exception(result.lastError);
-    }
-
-    final metadataList = result.items.map(PodcastMetadata.fromSearchResultItem);
-    await _repository.savePodcastMetadataList(metadataList);
-    return metadataList.toList();
   }
 
   @override
-  Future<List<PodcastMetadata>> charts({
+  Future<List<ITunesChartItem>> charts({
     int size = 20,
     String? genre,
-    String? countryCode = '',
+    Country country = Country.none,
   }) async {
     if (!await hasConnectivity()) {
       _log.fine('no network');
       throw NoConnectivityError();
     }
 
-    final result = await _api.charts(
+    return _api.charts(
       size: size,
-      searchProvider: _appSettings.searchProvider,
       genre: _decodeGenre(genre),
-      countryCode: countryCode,
+      country: country,
     );
-    if (!result.successful) {
-      throw Exception(result.lastError);
-    }
-    final items = result.items.map(PodcastMetadata.fromSearchResultItem);
-    return _repository.populatePodcastFeedUrl(items);
   }
 
   @override
@@ -172,228 +160,222 @@ class MobilePodcastService implements PodcastService {
     return _intlCategoriesSorted;
   }
 
+  // @override
+  // Future<Podcast?> lookupPodcast(String feedUrl) async {
+  //   return _lookupPodcast(feedUrl: feedUrl);
+  // }
+  //
+  // /// Loads the specified [Podcast]. If the Podcast instance has an ID we'll
+  // /// fetch it from storage. If not, we'll check the cache to see if we have
+  // /// seen it recently and return that if available. If not, we'll make a call
+  // /// to load it from the network.
+  // @override
+  // Future<Podcast?> loadPodcast(
+  //   Podcast podcast, {
+  //   bool refresh = false,
+  // }) async {
+  //   if (refresh) {
+  //     return _lookupPodcast(podcast: podcast);
+  //   }
+  //   return await loadPodcastById(podcast.id) ??
+  //       await _lookupPodcast(metadata: metadata);
+  // }
+  //
+  // @override
+  // Future<Podcast?> loadPodcastById(int id) async {
+  //   return _repository.findPodcast(id: id);
+  // }
+  //
+  // Future<Podcast?> _lookupPodcast({
+  //   String? feedUrl,
+  //   PodcastMetadata? metadata,
+  // }) async {
+  //   assert(metadata != null || feedUrl?.isNotEmpty == true);
+  //   _log.fine('Reloading podcast ${metadata?.title ?? feedUrl}');
+  //
+  //   if (!await hasConnectivity()) {
+  //     _log.fine('no network');
+  //     throw NoConnectivityError();
+  //   }
+  //
+  //   var url = feedUrl ?? metadata?.feedUrl ?? '';
+  //   if (url.isEmpty && metadata != null) {
+  //     url = (await _repository.findFeedUrl(metadata.guid)) ?? '';
+  //   }
+  //   if (url.isEmpty && metadata != null) {
+  //     final itunesSearchItem =
+  //         await _lookupItunesSearchItem(collectionId: metadata.collectionId);
+  //     if (itunesSearchItem?.feedUrl == null) {
+  //       _log.info('No way to determine feed URL for ${metadata.title}');
+  //       return null;
+  //     }
+  //     url = itunesSearchItem!.feedUrl;
+  //     await _repository.savePodcast(itunesSearchItem.toPartialPodcast());
+  //   }
+  //   if (url.isEmpty) {
+  //     _log.info('No feed URL for ${metadata!.title}');
+  //     return null;
+  //   }
+  //
+  //   final feedPodcast = await _lookupPodcastBy(url: url);
+  //   final podcast = Podcast.fromSearch(feedPodcast, metadata);
+  //
+  //   final saved = await _repository.findPodcast(podcast.guid);
+  //   final updateParam = PodcastStatsUpdateParam(
+  //     guid: podcast.guid,
+  //     lastCheckedAt: DateTime.now(),
+  //   );
+  //   if (saved != podcast) {
+  //     await _repository.savePodcast(podcast, param: updateParam);
+  //   } else {
+  //     await _repository.updatePodcastStats(updateParam);
+  //   }
+  //   await _repository.saveEpisodes(podcast.episodes);
+  //
+  //   return podcast;
+  // }
+  //
+  // @override
+  // Future<List<Chapter>> loadChaptersByUrl(String url) async {
+  //   final c = await _loadChaptersByUrl(url);
+  //   final chapters = <Chapter>[];
+  //
+  //   if (c != null) {
+  //     for (final chapter in c.chapters) {
+  //       chapters.add(
+  //         Chapter(
+  //           title: chapter.title,
+  //           url: chapter.url,
+  //           imageUrl: chapter.imageUrl,
+  //           startTime: chapter.startTime,
+  //           endTime: chapter.endTime,
+  //           toc: chapter.toc,
+  //         ),
+  //       );
+  //     }
+  //   }
+  //
+  //   return chapters;
+  // }
+  //
+  // /// This method will load either of the supported transcript types. Currently,
+  // /// we do not support word level highlighting of transcripts, therefore this
+  // /// routine will also group transcript lines together by speaker and/or
+  // /// timeframe.
+  // @override
+  // Future<Transcript> loadTranscriptByUrl({
+  //   required Episode episode,
+  //   required TranscriptUrl transcriptUrl,
+  // }) async {
+  //   final subtitles = <Subtitle>[];
+  //   final result = await _loadTranscriptByUrl(transcriptUrl);
+  //   if (result == null) {
+  //     return Transcript(
+  //       pid: episode.pid,
+  //       guid: episode.guid,
+  //     );
+  //   }
+  //
+  //   const threshold = Duration(seconds: 5);
+  //   Subtitle? groupSubtitle;
+  //
+  //   for (var index = 0; index < result.subtitles.length; index++) {
+  //     final subtitle = result.subtitles[index];
+  //     var completeGroup = true;
+  //     var data = subtitle.data;
+  //
+  //     if (groupSubtitle != null) {
+  //       if (transcriptUrl.type == TranscriptFormat.json) {
+  //         if (groupSubtitle.speaker == subtitle.speaker &&
+  //             (subtitle.start.compareTo(groupSubtitle.start + threshold) < 0 ||
+  //                 subtitle.data.length == 1)) {
+  //           /// We need to handle transcripts that have spaces between
+  //           /// sentences, and those which do not.
+  //           if (groupSubtitle.data != null &&
+  //               (groupSubtitle.data!.endsWith(' ') ||
+  //                   subtitle.data.startsWith(' ') ||
+  //                   subtitle.data.length == 1)) {
+  //             data = '${groupSubtitle.data}${subtitle.data}';
+  //           } else {
+  //             data = '${groupSubtitle.data} ${subtitle.data.trim()}';
+  //           }
+  //           completeGroup = false;
+  //         }
+  //       } else {
+  //         if (groupSubtitle.start == subtitle.start) {
+  //           if (groupSubtitle.data != null &&
+  //               (groupSubtitle.data!.endsWith(' ') ||
+  //                   subtitle.data.startsWith(' ') ||
+  //                   subtitle.data.length == 1)) {
+  //             data = '${groupSubtitle.data}${subtitle.data}';
+  //           } else {
+  //             data = '${groupSubtitle.data} ${subtitle.data.trim()}';
+  //           }
+  //           completeGroup = false;
+  //         }
+  //       }
+  //     } else {
+  //       completeGroup = false;
+  //       groupSubtitle = Subtitle(
+  //         data: subtitle.data,
+  //         speaker: subtitle.speaker,
+  //         startMS: subtitle.start.inMilliseconds,
+  //         endMS: subtitle.end.inMilliseconds,
+  //         index: subtitle.index,
+  //       );
+  //     }
+  //
+  //     /// If we have a complete group, or we're the very last subtitle -
+  //     /// add it.
+  //     if (completeGroup || index == result.subtitles.length - 1) {
+  //       groupSubtitle =
+  //           groupSubtitle.copyWith(data: groupSubtitle.data?.trim());
+  //
+  //       subtitles.add(groupSubtitle);
+  //
+  //       groupSubtitle = Subtitle(
+  //         data: subtitle.data,
+  //         speaker: subtitle.speaker,
+  //         start: subtitle.start,
+  //         end: subtitle.end,
+  //         index: subtitle.index,
+  //       );
+  //     } else {
+  //       groupSubtitle = Subtitle(
+  //         data: data,
+  //         speaker: subtitle.speaker,
+  //         start: groupSubtitle.start,
+  //         end: subtitle.end,
+  //         index: groupSubtitle.index,
+  //       );
+  //     }
+  //   }
+  //
+  //   return Transcript(
+  //     pguid: episode.pguid,
+  //     guid: episode.guid,
+  //     subtitles: subtitles,
+  //   );
+  // }
+
   @override
-  Future<PodcastMetadata?> loadPodcastMetadata(String guid) async {
-    return _repository.findPodcastMetadata(guid);
+  Future<List<Episode>> loadEpisodesByPodcastId(int pid) async {
+    return _repository.findEpisodesByPodcastId(pid);
   }
 
   @override
-  Future<Podcast?> lookupPodcast(String feedUrl) async {
-    return _lookupPodcast(feedUrl: feedUrl);
-  }
-
-  /// Loads the specified [Podcast]. If the Podcast instance has an ID we'll
-  /// fetch it from storage. If not, we'll check the cache to see if we have
-  /// seen it recently and return that if available. If not, we'll make a call
-  /// to load it from the network.
-  @override
-  Future<Podcast?> loadPodcast(
-    PodcastMetadata metadata, {
-    bool refresh = false,
-  }) async {
-    if (refresh) {
-      return _lookupPodcast(metadata: metadata);
-    }
-    return await loadPodcastByGuid(metadata.guid) ??
-        await _lookupPodcast(metadata: metadata);
+  Future<Episode?> loadEpisode(int id) async {
+    return _repository.findEpisode(id);
   }
 
   @override
-  Future<Podcast?> loadPodcastByGuid(String guid) async {
-    return _repository.findPodcast(guid);
-  }
-
-  Future<Podcast?> _lookupPodcast({
-    String? feedUrl,
-    PodcastMetadata? metadata,
-  }) async {
-    assert(metadata != null || feedUrl?.isNotEmpty == true);
-    _log.fine('Reloading podcast ${metadata?.title ?? feedUrl}');
-
-    if (!await hasConnectivity()) {
-      _log.fine('no network');
-      throw NoConnectivityError();
-    }
-
-    var url = feedUrl ?? metadata?.feedUrl ?? '';
-    if (url.isEmpty && metadata != null) {
-      url = (await _repository.findFeedUrl(metadata.guid)) ?? '';
-    }
-    if (url.isEmpty && metadata != null) {
-      final newMetadata =
-          await _lookupPodcastMetadata(collectionId: metadata.collectionId);
-      if (newMetadata?.feedUrl == null) {
-        _log.info('No way to determine feed URL for ${metadata.title}');
-        return null;
-      }
-      url = newMetadata!.feedUrl!;
-      await _repository.savePodcast(newMetadata.toPartialPodcast());
-    }
-    if (url.isEmpty) {
-      _log.info('No feed URL for ${metadata!.title}');
-      return null;
-    }
-
-    final feedPodcast = await _lookupPodcastBy(url: url);
-    final podcast = Podcast.fromSearch(feedPodcast, metadata);
-
-    final saved = await _repository.findPodcast(podcast.guid);
-    final updateParam = PodcastStatsUpdateParam(
-      guid: podcast.guid,
-      lastCheckedAt: DateTime.now(),
-    );
-    if (saved != podcast) {
-      await _repository.savePodcast(podcast, statsParam: updateParam);
-    } else {
-      await _repository.updatePodcastStats(updateParam);
-    }
-    await _repository.saveEpisodes(podcast.episodes);
-
-    return podcast;
-  }
-
-  @override
-  Future<List<Chapter>> loadChaptersByUrl(String url) async {
-    final c = await _loadChaptersByUrl(url);
-    final chapters = <Chapter>[];
-
-    if (c != null) {
-      for (final chapter in c.chapters) {
-        chapters.add(
-          Chapter(
-            title: chapter.title,
-            url: chapter.url,
-            imageUrl: chapter.imageUrl,
-            startTime: chapter.startTime,
-            endTime: chapter.endTime,
-            toc: chapter.toc,
-          ),
-        );
-      }
-    }
-
-    return chapters;
-  }
-
-  /// This method will load either of the supported transcript types. Currently,
-  /// we do not support word level highlighting of transcripts, therefore this
-  /// routine will also group transcript lines together by speaker and/or
-  /// timeframe.
-  @override
-  Future<Transcript> loadTranscriptByUrl({
-    required Episode episode,
-    required TranscriptUrl transcriptUrl,
-  }) async {
-    final subtitles = <Subtitle>[];
-    final result = await _loadTranscriptByUrl(transcriptUrl);
-    if (result == null) {
-      return Transcript(
-        pguid: episode.pguid,
-        guid: episode.guid,
-        subtitles: [],
-      );
-    }
-
-    const threshold = Duration(seconds: 5);
-    Subtitle? groupSubtitle;
-
-    for (var index = 0; index < result.subtitles.length; index++) {
-      final subtitle = result.subtitles[index];
-      var completeGroup = true;
-      var data = subtitle.data;
-
-      if (groupSubtitle != null) {
-        if (transcriptUrl.type == TranscriptFormat.json) {
-          if (groupSubtitle.speaker == subtitle.speaker &&
-              (subtitle.start.compareTo(groupSubtitle.start + threshold) < 0 ||
-                  subtitle.data.length == 1)) {
-            /// We need to handle transcripts that have spaces between
-            /// sentences, and those which do not.
-            if (groupSubtitle.data != null &&
-                (groupSubtitle.data!.endsWith(' ') ||
-                    subtitle.data.startsWith(' ') ||
-                    subtitle.data.length == 1)) {
-              data = '${groupSubtitle.data}${subtitle.data}';
-            } else {
-              data = '${groupSubtitle.data} ${subtitle.data.trim()}';
-            }
-            completeGroup = false;
-          }
-        } else {
-          if (groupSubtitle.start == subtitle.start) {
-            if (groupSubtitle.data != null &&
-                (groupSubtitle.data!.endsWith(' ') ||
-                    subtitle.data.startsWith(' ') ||
-                    subtitle.data.length == 1)) {
-              data = '${groupSubtitle.data}${subtitle.data}';
-            } else {
-              data = '${groupSubtitle.data} ${subtitle.data.trim()}';
-            }
-            completeGroup = false;
-          }
-        }
-      } else {
-        completeGroup = false;
-        groupSubtitle = Subtitle(
-          data: subtitle.data,
-          speaker: subtitle.speaker,
-          start: subtitle.start,
-          end: subtitle.end,
-          index: subtitle.index,
-        );
-      }
-
-      /// If we have a complete group, or we're the very last subtitle -
-      /// add it.
-      if (completeGroup || index == result.subtitles.length - 1) {
-        groupSubtitle =
-            groupSubtitle.copyWith(data: groupSubtitle.data?.trim());
-
-        subtitles.add(groupSubtitle);
-
-        groupSubtitle = Subtitle(
-          data: subtitle.data,
-          speaker: subtitle.speaker,
-          start: subtitle.start,
-          end: subtitle.end,
-          index: subtitle.index,
-        );
-      } else {
-        groupSubtitle = Subtitle(
-          data: data,
-          speaker: subtitle.speaker,
-          start: groupSubtitle.start,
-          end: subtitle.end,
-          index: groupSubtitle.index,
-        );
-      }
-    }
-
-    return Transcript(
-      pguid: episode.pguid,
-      guid: episode.guid,
-      subtitles: subtitles,
-    );
-  }
-
-  @override
-  Future<List<Episode>> loadEpisodesByPodcastGuid(String pguid) async {
-    return _repository.findEpisodesByPodcastGuid(pguid);
-  }
-
-  @override
-  Future<Episode?> loadEpisode(String guid) async {
-    return _repository.findEpisode(guid);
-  }
-
-  @override
-  Future<List<Episode?>> loadEpisodes(Iterable<String> guids) async {
-    return _repository.findEpisodes(guids);
+  Future<List<Episode?>> loadEpisodes(Iterable<int> ids) async {
+    return _repository.findEpisodes(ids);
   }
 
   @override
   Future<EpisodeStats?> loadEpisodeStats(Episode episode) async {
-    return _repository.findEpisodeStats(episode.guid);
+    return _repository.findEpisodeStats(episode.id);
   }
 
   @override
@@ -405,7 +387,7 @@ class MobilePodcastService implements PodcastService {
   }
 
   @override
-  Future<List<(PodcastMetadata, PodcastStats)>> subscriptions() async {
+  Future<List<Podcast>> subscriptions() async {
     return _repository.subscriptions();
   }
 
@@ -429,7 +411,7 @@ class MobilePodcastService implements PodcastService {
       }
     }
 
-    final stats = await _repository.findPodcastStats(podcast.guid);
+    final stats = await _repository.findPodcastStats(podcast.id);
     if (stats != null) {
       return _repository.unsubscribePodcast(podcast);
     }
@@ -494,7 +476,7 @@ class MobilePodcastService implements PodcastService {
       }
     }
 
-    final stats = await _repository.findEpisodeStats(episode.guid);
+    final stats = await _repository.findEpisodeStats(episode.id);
     final position = stats?.position ?? Duration.zero;
     await _audioService.loadEpisode(
       episode: episode,
@@ -504,15 +486,14 @@ class MobilePodcastService implements PodcastService {
   }
 
   Future<void> _addToAdhocQueue(Iterable<Episode> episodes) async {
-    final items =
-        episodes.map((e) => QueueItem.adhoc(pguid: e.pguid, guid: e.guid));
+    final items = episodes.map((e) => QueueItem.adhoc(pid: e.pid, eid: e.id));
     await _queueManager.replaceAll(items);
     await Future.wait(
       episodes.map(
         (e) => _repository.updateEpisodeStats(
           EpisodeStatsUpdateParam(
-            pguid: e.pguid,
-            guid: e.guid,
+            pid: e.pid,
+            id: e.id,
             inQueue: true,
           ),
         ),
@@ -520,14 +501,13 @@ class MobilePodcastService implements PodcastService {
     );
   }
 
-  Future<PodcastMetadata?> _lookupPodcastMetadata({
+  Future<ITunesSearchItem?> _lookupItunesSearchItem({
     required int collectionId,
   }) async {
-    final item = await _api.lookup(collectionId: collectionId);
-    return item == null ? null : PodcastMetadata.fromSearchResultItem(item);
+    return _api.lookup(collectionId: collectionId);
   }
 
-  Future<podcast_search.Podcast> _lookupPodcastBy({
+  Future<(ChannelValues?, ItemParser?)> _lookupPodcastBy({
     required String url,
   }) async {
     // If we didn't get a cache hit load the podcast feed.
@@ -605,8 +585,10 @@ class MobilePodcastService implements PodcastService {
   /// can end up blocking the UI thread. We perform our feed load in a
   /// separate isolate so that the UI can continue to present a loading
   /// indicator whilst the data is fetched without locking the UI.
-  Future<podcast_search.Podcast> _loadPodcastFeed({required String url}) {
-    return compute<_FeedComputer, podcast_search.Podcast>(
+  Future<(ChannelValues?, ItemParser?)> _loadPodcastFeed({
+    required String url,
+  }) {
+    return compute<_FeedComputer, (ChannelValues?, ItemParser?)>(
       _loadPodcastFeedCompute,
       _FeedComputer(api: _api, url: url),
     );
@@ -615,7 +597,7 @@ class MobilePodcastService implements PodcastService {
   /// We have to separate the process of calling compute as you cannot use
   /// named parameters with compute. The podcast feed load API uses named
   /// parameters so we need to change it to a single, positional parameter.
-  static Future<podcast_search.Podcast> _loadPodcastFeedCompute(
+  static Future<(ChannelValues?, ItemParser?)> _loadPodcastFeedCompute(
     _FeedComputer c,
   ) {
     return c.api.loadFeed(c.url);

@@ -64,10 +64,10 @@ class MobileOPMLService extends OPMLService {
       try {
         _log.fine('Importing podcast ${p.xmlUrl}');
 
-        final result = await _podcastService.lookupPodcast(p.xmlUrl!);
-        if (result != null) {
-          await _repository.subscribePodcast(result);
-        }
+        // final result = await _podcastService.lookupPodcast(p.xmlUrl!);
+        // if (result != null) {
+        //   await _repository.subscribePodcast(result);
+        // }
       } on Exception {
         _log.fine('Failed to load podcast ${p.xmlUrl}');
       }
@@ -114,9 +114,9 @@ class MobileOPMLService extends OPMLService {
                 builder.element(
                   'outline',
                   nest: () {
-                    builder
-                      ..attribute('text', sub.$1.title)
-                      ..attribute('xmlUrl', sub.$1.feedUrl);
+                    // builder
+                    //   ..attribute('text', sub.$1.title)
+                    //   ..attribute('xmlUrl', sub.$1.feedUrl);
                   },
                 );
               }
