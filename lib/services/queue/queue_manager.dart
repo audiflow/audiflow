@@ -13,7 +13,7 @@ part 'queue_manager.g.dart';
 @Riverpod(keepAlive: true)
 class QueueManager extends _$QueueManager {
   @override
-  Queue build() => const Queue();
+  Queue build() => Queue.empty();
 
   Future<void> ensureInitialized() => throw UnimplementedError();
 

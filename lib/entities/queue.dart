@@ -46,7 +46,7 @@ class Queue {
 }
 
 extension QueueExt on Queue {
-  bool contains({required int eid, QueueType? type}) {
+  bool containsEpisode({required int eid, QueueType? type}) {
     return queue.any(
       (element) => element.eid == eid && (type == null || element.type == type),
     );

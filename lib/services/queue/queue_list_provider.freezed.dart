@@ -161,7 +161,6 @@ abstract class $QueuedEpisodeCopyWith<$Res> {
   $Res call({QueueItem item, Episode episode});
 
   $QueueItemCopyWith<$Res> get item;
-  $EpisodeCopyWith<$Res> get episode;
 }
 
 /// @nodoc
@@ -199,14 +198,6 @@ class _$QueuedEpisodeCopyWithImpl<$Res, $Val extends QueuedEpisode>
       return _then(_value.copyWith(item: value) as $Val);
     });
   }
-
-  @override
-  @pragma('vm:prefer-inline')
-  $EpisodeCopyWith<$Res> get episode {
-    return $EpisodeCopyWith<$Res>(_value.episode, (value) {
-      return _then(_value.copyWith(episode: value) as $Val);
-    });
-  }
 }
 
 /// @nodoc
@@ -221,8 +212,6 @@ abstract class _$$QueuedEpisodeImplCopyWith<$Res>
 
   @override
   $QueueItemCopyWith<$Res> get item;
-  @override
-  $EpisodeCopyWith<$Res> get episode;
 }
 
 /// @nodoc

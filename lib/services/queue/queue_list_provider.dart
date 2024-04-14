@@ -38,14 +38,14 @@ class QueueList extends _$QueueList {
         .listen((queue) async {
       final knownEpisodes = <Episode>{...state.queue.map((e) => e.episode)};
 
-      final guidsToLoad = Set<String>.from(
+      final idsToLoad = Set<int>.from(
         queue
-            .map((i) => i.guid)
-            .where((guid) => !knownEpisodes.any((e) => e.guid == guid)),
+            .map((i) => i.eid)
+            .where((eid) => !knownEpisodes.any((e) => e.id == eid)),
       );
-      if (guidsToLoad.isNotEmpty) {
+      if (idsToLoad.isNotEmpty) {
         final episodes =
-            await ref.read(podcastServiceProvider).loadEpisodes(guidsToLoad);
+            await ref.read(podcastServiceProvider).loadEpisodes(idsToLoad);
         knownEpisodes.addAll(episodes.where((e) => e != null).cast<Episode>());
       }
 
@@ -63,7 +63,7 @@ class QueueList extends _$QueueList {
     return items
         .map(
           (item) {
-            final e = episodes.firstWhereOrNull((e) => e.guid == item.guid);
+            final e = episodes.firstWhereOrNull((e) => e.id == item.eid);
             return (item, e);
           },
         )
