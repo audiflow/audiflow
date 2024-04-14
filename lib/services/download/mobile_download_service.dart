@@ -62,7 +62,7 @@ class MobileDownloadService extends DownloadService {
 
   @override
   Future<void> deleteDownload(Episode episode) async {
-    final download = await _repository.findDownload(episode.guid);
+    final download = await _repository.findDownload(episode.id);
     if (download == null) {
       return;
     }
@@ -91,24 +91,24 @@ class MobileDownloadService extends DownloadService {
 
   @override
   Future<void> downloadEpisodes(
-      Iterable<Episode> episodes, {
-        bool unplayedOnly = false,
-      }) async {
+    Iterable<Episode> episodes, {
+    bool unplayedOnly = false,
+  }) async {
     if (!await hasStoragePermission(_appSettings)) {
       return;
     }
 
-    final guids = episodes.map((e) => e.guid);
-    final downloads = await _repository.findDownloads(guids);
+    final ids = episodes.map((e) => e.id);
+    final downloads = await _repository.findDownloads(ids);
     final statsList = unplayedOnly
         ? <EpisodeStats>[]
-        : await _repository.findEpisodeStatsList(guids);
+        : await _repository.findEpisodeStatsList(ids);
 
     final toDownload = episodes.where((e) {
-      final stats = statsList.firstWhereOrNull((s) => s?.guid == e.guid);
+      final stats = statsList.firstWhereOrNull((s) => s?.id == e.id);
       return stats?.played != true;
     }).where((e) {
-      final download = downloads.firstWhereOrNull((d) => d.guid == e.guid);
+      final download = downloads.firstWhereOrNull((d) => d?.id == e.id);
       return download?.state != DownloadState.downloaded;
     });
     if (toDownload.isEmpty) {
@@ -145,30 +145,30 @@ class MobileDownloadService extends DownloadService {
       var newEpisode = episode;
 
       // If this episode contains chapter, fetch them first.
-      if (episode.hasChapters) {
-        final chapters =
-            await _podcastService.loadChaptersByUrl(episode.chaptersUrl!);
-
-        newEpisode = newEpisode.copyWith(chapters: chapters);
-      }
+      // if (episode.hasChapters) {
+      //   final chapters =
+      //       await _podcastService.loadChaptersByUrl(episode.chaptersUrl!);
+      //
+      //   newEpisode = newEpisode.copyWith(chapters: chapters);
+      // }
 
       // Next, if the episode supports transcripts download that next
-      if (episode.hasTranscripts) {
-        var sub = episode.transcriptUrls.firstWhereOrNull(
+      if (episode.transcripts.isNotEmpty) {
+        var sub = episode.transcripts.firstWhereOrNull(
           (element) => element.type == TranscriptFormat.json,
         );
 
-        sub ??= episode.transcriptUrls.firstWhereOrNull(
+        sub ??= episode.transcripts.firstWhereOrNull(
           (element) => element.type == TranscriptFormat.subrip,
         );
 
-        if (sub != null) {
-          final transcript = await _podcastService.loadTranscriptByUrl(
-            episode: episode,
-            transcriptUrl: sub,
-          );
-          await _podcastService.saveTranscript(transcript);
-        }
+        // if (sub != null) {
+        //   final transcript = await _podcastService.loadTranscriptByUrl(
+        //     episode: episode,
+        //     transcriptUrl: sub,
+        //   );
+        //   await _podcastService.saveTranscript(transcript);
+        // }
       }
 
       if (episode != newEpisode) {
@@ -177,7 +177,7 @@ class MobileDownloadService extends DownloadService {
 
       // Ensure the download directory exists
       final directory = await createDownloadDirectory(_appSettings, newEpisode);
-      var uri = Uri.parse(newEpisode.contentUrl!);
+      var uri = Uri.parse(newEpisode.contentUrl);
 
       // Filename should be last segment of URI.
       var filename = uri.pathSegments
@@ -231,7 +231,7 @@ class MobileDownloadService extends DownloadService {
 
       // Update the episode with download data
       final download = Downloadable(
-        pguid: episode.pguid,
+        pid: episode.pid,
         guid: episode.guid,
         url: url,
         directory: await directoryToRecord(_appSettings, newEpisode),
@@ -251,8 +251,8 @@ class MobileDownloadService extends DownloadService {
   }
 
   @override
-  Future<Downloadable?> findDownloadByGuid(String guid) {
-    return _repository.findDownload(guid);
+  Future<Downloadable?> findDownload(Episode episode) {
+    return _repository.findDownload(episode.id);
   }
 
   Future<void> _updateDownloadProgress(DownloadProgress progress) async {
@@ -281,12 +281,17 @@ class MobileDownloadService extends DownloadService {
   }
 
   Future<void> _onDownloadComplete(Downloadable download) async {
-    var episode = await _repository.findEpisode(download.guid);
-    if (episode != null && episode.duration == null) {
+    final stats = await _repository.findEpisodeStats(download.id);
+    if (stats?.durationMS == null) {
       final path = await resolvePath(_appSettings, download);
       final mp3Info = MP3Processor.fromFile(File(path));
-      episode = episode.copyWith(duration: mp3Info.duration);
-      await _repository.saveEpisode(episode);
+      await _repository.updateEpisodeStats(
+        EpisodeStatsUpdateParam(
+          id: download.id,
+          pid: download.pid,
+          duration: mp3Info.duration,
+        ),
+      );
     }
   }
 }

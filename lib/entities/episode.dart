@@ -228,6 +228,7 @@ extension EpisodeStatsExt on EpisodeStats {
 class EpisodeStatsUpdateParam {
   const EpisodeStatsUpdateParam({
     required this.id,
+    required this.pid,
     this.duration,
     this.position,
     this.played,
@@ -239,6 +240,7 @@ class EpisodeStatsUpdateParam {
   });
 
   final Id id;
+  final int pid;
   final Duration? duration;
   final Duration? position;
   final bool? played;
@@ -261,6 +263,7 @@ class EpisodeStatsUpdateParam {
   }) {
     return EpisodeStatsUpdateParam(
       id: id,
+      pid: pid,
       duration: duration ?? this.duration,
       position: position ?? this.position,
       played: played ?? this.played,

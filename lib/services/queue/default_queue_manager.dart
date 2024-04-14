@@ -190,6 +190,7 @@ class DefaultQueueManager extends _$DefaultQueueManager
 
   Future<void> _markEpisodeAsQueued(_Item item) async {
     final param = EpisodeStatsUpdateParam(
+      pid: item.pid,
       id: item.eid,
       inQueue: true,
     );
@@ -198,6 +199,7 @@ class DefaultQueueManager extends _$DefaultQueueManager
 
   Future<void> _unmarkEpisodeAsQueued(_Item item) async {
     final param = EpisodeStatsUpdateParam(
+      pid: item.pid,
       id: item.eid,
       inQueue: false,
     );
@@ -207,6 +209,7 @@ class DefaultQueueManager extends _$DefaultQueueManager
   Future<void> _markEpisodesAsQueued(Iterable<_Item> items) async {
     final params = items.map(
       (item) => EpisodeStatsUpdateParam(
+        pid: item.pid,
         id: item.eid,
         inQueue: true,
       ),
@@ -217,6 +220,7 @@ class DefaultQueueManager extends _$DefaultQueueManager
   Future<void> _unmarkEpisodesAsQueued(Iterable<_Item> items) async {
     final params = items.map(
       (item) => EpisodeStatsUpdateParam(
+        pid: item.pid,
         id: item.eid,
         inQueue: false,
       ),

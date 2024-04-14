@@ -20,7 +20,7 @@ class DownloadProgress extends _$DownloadProgress {
   Future<Downloadable?> build(Episode episode) async {
     _listen(episode);
     // initial
-    return ref.watch(downloadServiceProvider).findDownloadByGuid(episode.guid);
+    return ref.watch(downloadServiceProvider).findDownload(episode);
   }
 
   void _listen(Episode episode) {

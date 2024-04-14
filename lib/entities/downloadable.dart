@@ -68,6 +68,26 @@ class Downloadable {
 
   /// Percentage of MP3 downloaded
   @Default(0) int percentage;
+
+  Downloadable copyWith({
+    String? url,
+    String? directory,
+    String? filename,
+    String? taskId,
+    DownloadState? state,
+    int? percentage,
+  }) {
+    return Downloadable(
+      pid: pid,
+      guid: guid,
+      url: url ?? this.url,
+      directory: directory ?? this.directory,
+      filename: filename ?? this.filename,
+      taskId: taskId ?? this.taskId,
+      state: state ?? this.state,
+      percentage: percentage ?? this.percentage,
+    );
+  }
 }
 
 extension DownloadableExt on Downloadable {

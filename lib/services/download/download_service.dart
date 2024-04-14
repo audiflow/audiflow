@@ -20,7 +20,7 @@ abstract class DownloadService {
 
   Future<void> deleteDownload(Episode episode);
 
-  Future<Downloadable?> findDownloadByGuid(String guid);
+  Future<Downloadable?> findDownload(Episode episode);
 
   void dispose();
 }
