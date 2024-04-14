@@ -17,9 +17,9 @@ class JP1567192930 extends PodcastSeasonExtractor {
   final label = '超相対性理論';
 
   @override
-  List<Season> extractSeasons(Podcast podcast) {
+  List<Season> extractSeasons(Podcast podcast, List<Episode> episodes) {
     final map = <String?, List<Episode>>{};
-    for (final episode in podcast.episodes) {
+    for (final episode in episodes) {
       final title = extractSeasonTitle(episode);
       if (map.containsKey(title)) {
         map[title]!.add(episode);
@@ -68,8 +68,8 @@ class JP1567192930 extends PodcastSeasonExtractor {
       final episodes = map[seasonKey]!;
       final firstEpisode = episodes.first;
       return Season(
-        guid: 'season-${firstEpisode.pguid}-${seasonKey ?? 0}',
-        pguid: firstEpisode.pguid,
+        guid: 'season-${firstEpisode.pid}-${seasonKey ?? 0}',
+        pid: firstEpisode.pid,
         title: extractSeasonTitle(firstEpisode),
         seasonNum: map.keys.length - i,
         episodes: episodes,

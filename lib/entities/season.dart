@@ -28,7 +28,7 @@ class Season with _$Season {
 
     /// The GUID for an associated podcast. If an episode has been downloaded
     /// without subscribing to a podcast this may be null.
-    required String pguid,
+    required int pid,
 
     /// Episodes under the season.
     required List<Episode> episodes,

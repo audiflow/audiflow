@@ -21,7 +21,7 @@ mixin _$Season {
 
   /// The GUID for an associated podcast. If an episode has been downloaded
   /// without subscribing to a podcast this may be null.
-  String get pguid => throw _privateConstructorUsedError;
+  int get pid => throw _privateConstructorUsedError;
 
   /// Episodes under the season.
   List<Episode> get episodes => throw _privateConstructorUsedError;
@@ -43,7 +43,7 @@ abstract class $SeasonCopyWith<$Res> {
   @useResult
   $Res call(
       {String guid,
-      String pguid,
+      int pid,
       List<Episode> episodes,
       String? title,
       int? seasonNum});
@@ -63,7 +63,7 @@ class _$SeasonCopyWithImpl<$Res, $Val extends Season>
   @override
   $Res call({
     Object? guid = null,
-    Object? pguid = null,
+    Object? pid = null,
     Object? episodes = null,
     Object? title = freezed,
     Object? seasonNum = freezed,
@@ -73,10 +73,10 @@ class _$SeasonCopyWithImpl<$Res, $Val extends Season>
           ? _value.guid
           : guid // ignore: cast_nullable_to_non_nullable
               as String,
-      pguid: null == pguid
-          ? _value.pguid
-          : pguid // ignore: cast_nullable_to_non_nullable
-              as String,
+      pid: null == pid
+          ? _value.pid
+          : pid // ignore: cast_nullable_to_non_nullable
+              as int,
       episodes: null == episodes
           ? _value.episodes
           : episodes // ignore: cast_nullable_to_non_nullable
@@ -102,7 +102,7 @@ abstract class _$$SeasonImplCopyWith<$Res> implements $SeasonCopyWith<$Res> {
   @useResult
   $Res call(
       {String guid,
-      String pguid,
+      int pid,
       List<Episode> episodes,
       String? title,
       int? seasonNum});
@@ -120,7 +120,7 @@ class __$$SeasonImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? guid = null,
-    Object? pguid = null,
+    Object? pid = null,
     Object? episodes = null,
     Object? title = freezed,
     Object? seasonNum = freezed,
@@ -130,10 +130,10 @@ class __$$SeasonImplCopyWithImpl<$Res>
           ? _value.guid
           : guid // ignore: cast_nullable_to_non_nullable
               as String,
-      pguid: null == pguid
-          ? _value.pguid
-          : pguid // ignore: cast_nullable_to_non_nullable
-              as String,
+      pid: null == pid
+          ? _value.pid
+          : pid // ignore: cast_nullable_to_non_nullable
+              as int,
       episodes: null == episodes
           ? _value._episodes
           : episodes // ignore: cast_nullable_to_non_nullable
@@ -155,7 +155,7 @@ class __$$SeasonImplCopyWithImpl<$Res>
 class _$SeasonImpl implements _Season {
   const _$SeasonImpl(
       {required this.guid,
-      required this.pguid,
+      required this.pid,
       required final List<Episode> episodes,
       this.title,
       this.seasonNum})
@@ -168,7 +168,7 @@ class _$SeasonImpl implements _Season {
   /// The GUID for an associated podcast. If an episode has been downloaded
   /// without subscribing to a podcast this may be null.
   @override
-  final String pguid;
+  final int pid;
 
   /// Episodes under the season.
   final List<Episode> _episodes;
@@ -191,7 +191,7 @@ class _$SeasonImpl implements _Season {
 
   @override
   String toString() {
-    return 'Season(guid: $guid, pguid: $pguid, episodes: $episodes, title: $title, seasonNum: $seasonNum)';
+    return 'Season(guid: $guid, pid: $pid, episodes: $episodes, title: $title, seasonNum: $seasonNum)';
   }
 
   @override
@@ -200,7 +200,7 @@ class _$SeasonImpl implements _Season {
         (other.runtimeType == runtimeType &&
             other is _$SeasonImpl &&
             (identical(other.guid, guid) || other.guid == guid) &&
-            (identical(other.pguid, pguid) || other.pguid == pguid) &&
+            (identical(other.pid, pid) || other.pid == pid) &&
             const DeepCollectionEquality().equals(other._episodes, _episodes) &&
             (identical(other.title, title) || other.title == title) &&
             (identical(other.seasonNum, seasonNum) ||
@@ -208,7 +208,7 @@ class _$SeasonImpl implements _Season {
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, guid, pguid,
+  int get hashCode => Object.hash(runtimeType, guid, pid,
       const DeepCollectionEquality().hash(_episodes), title, seasonNum);
 
   @JsonKey(ignore: true)
@@ -221,7 +221,7 @@ class _$SeasonImpl implements _Season {
 abstract class _Season implements Season {
   const factory _Season(
       {required final String guid,
-      required final String pguid,
+      required final int pid,
       required final List<Episode> episodes,
       final String? title,
       final int? seasonNum}) = _$SeasonImpl;
@@ -234,7 +234,7 @@ abstract class _Season implements Season {
 
   /// The GUID for an associated podcast. If an episode has been downloaded
   /// without subscribing to a podcast this may be null.
-  String get pguid;
+  int get pid;
   @override
 
   /// Episodes under the season.

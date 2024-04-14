@@ -31,9 +31,9 @@ class PodcastSeasonService {
 
   final _extractors = <String, PodcastSeasonExtractor>{};
 
-  List<Season> extractSeasons(Podcast podcast) {
+  List<Season> extractSeasons(Podcast podcast, List<Episode> episodes) {
     final extractor =
         _extractors[podcast.guid] ?? DefaultPodcastSeasonExtractor();
-    return extractor.extractSeasons(podcast);
+    return extractor.extractSeasons(podcast, episodes);
   }
 }

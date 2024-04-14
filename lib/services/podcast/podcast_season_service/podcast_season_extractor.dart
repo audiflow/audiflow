@@ -13,9 +13,9 @@ abstract class PodcastSeasonExtractor {
 
   String get label;
 
-  List<Season> extractSeasons(Podcast podcast) {
+  List<Season> extractSeasons(Podcast podcast, List<Episode> episodes) {
     final map = <int?, List<Episode>>{};
-    for (final episode in podcast.episodes) {
+    for (final episode in episodes) {
       if (map.containsKey(episode.season)) {
         map[episode.season]!.add(episode);
       } else {
@@ -63,8 +63,8 @@ abstract class PodcastSeasonExtractor {
       final episodes = map[seasonKey]!;
       final firstEpisode = episodes.first;
       return Season(
-        guid: 'season-${firstEpisode.pguid}-${seasonKey ?? 0}',
-        pguid: firstEpisode.pguid,
+        guid: 'season-${firstEpisode.pid}-${seasonKey ?? 0}',
+        pid: firstEpisode.pid,
         title: extractSeasonTitle(firstEpisode),
         seasonNum: seasonKey,
         episodes: episodes,
