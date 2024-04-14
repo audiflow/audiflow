@@ -295,7 +295,7 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
   }
 
   Future<(String, bool)> _generateEpisodeUri(Episode episode) async {
-    final download = await _repository.findDownload(episode.guid);
+    final download = await _repository.findDownload(episode.id);
     if (download?.state != DownloadState.downloaded) {
       return (episode.contentUrl!, false);
     }
@@ -331,7 +331,7 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
       id: uri,
       title: episode.title,
       artist: episode.author ?? 'Unknown Author',
-      artUri: Uri.parse(episode.imageUrl ?? episode.thumbImageUrl ?? ''),
+      artUri: Uri.parse(episode.imageUrl ?? ''),
       duration: episode.duration,
       extras: <String, dynamic>{
         'position': position.inMilliseconds,

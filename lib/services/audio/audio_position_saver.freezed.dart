@@ -31,8 +31,6 @@ abstract class $AudioPositionSaverStateCopyWith<$Res> {
       _$AudioPositionSaverStateCopyWithImpl<$Res, AudioPositionSaverState>;
   @useResult
   $Res call({Episode? episode, Duration? lastSavedPosition});
-
-  $EpisodeCopyWith<$Res>? get episode;
 }
 
 /// @nodoc
@@ -63,18 +61,6 @@ class _$AudioPositionSaverStateCopyWithImpl<$Res,
               as Duration?,
     ) as $Val);
   }
-
-  @override
-  @pragma('vm:prefer-inline')
-  $EpisodeCopyWith<$Res>? get episode {
-    if (_value.episode == null) {
-      return null;
-    }
-
-    return $EpisodeCopyWith<$Res>(_value.episode!, (value) {
-      return _then(_value.copyWith(episode: value) as $Val);
-    });
-  }
 }
 
 /// @nodoc
@@ -87,9 +73,6 @@ abstract class _$$AudioPositionSaverStateImplCopyWith<$Res>
   @override
   @useResult
   $Res call({Episode? episode, Duration? lastSavedPosition});
-
-  @override
-  $EpisodeCopyWith<$Res>? get episode;
 }
 
 /// @nodoc

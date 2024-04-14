@@ -39,7 +39,7 @@ class AudioPlayableChecker {
     }
 
     final download =
-        await _ref.read(repositoryProvider).findDownload(episode.guid);
+        await _ref.read(repositoryProvider).findDownload(episode.id);
     if (download?.state == DownloadState.downloaded) {
       return true;
     }

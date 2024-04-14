@@ -200,8 +200,6 @@ abstract class $AudioPlayerStateCopyWith<$Res> {
       AudioState audioState,
       bool interrupted,
       int playbackError});
-
-  $EpisodeCopyWith<$Res> get episode;
 }
 
 /// @nodoc
@@ -251,14 +249,6 @@ class _$AudioPlayerStateCopyWithImpl<$Res, $Val extends AudioPlayerState>
               as int,
     ) as $Val);
   }
-
-  @override
-  @pragma('vm:prefer-inline')
-  $EpisodeCopyWith<$Res> get episode {
-    return $EpisodeCopyWith<$Res>(_value.episode, (value) {
-      return _then(_value.copyWith(episode: value) as $Val);
-    });
-  }
 }
 
 /// @nodoc
@@ -276,9 +266,6 @@ abstract class _$$AudioPlayerStateImplCopyWith<$Res>
       AudioState audioState,
       bool interrupted,
       int playbackError});
-
-  @override
-  $EpisodeCopyWith<$Res> get episode;
 }
 
 /// @nodoc

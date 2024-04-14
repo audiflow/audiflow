@@ -43,8 +43,8 @@ class AudioPositionSaver extends _$AudioPositionSaver {
           state = const AudioPositionSaverState();
           await repository.updateEpisodeStats(
             EpisodeStatsUpdateParam(
-              pguid: episode.pguid,
-              guid: episode.guid,
+              pid: episode.pid,
+              id: episode.id,
               lastPlayedAt: DateTime.now(),
             ),
           );
@@ -56,7 +56,7 @@ class AudioPositionSaver extends _$AudioPositionSaver {
           if ((episode.duration?.inSeconds ?? 0) < 1) {
             return;
           }
-          final stats = await repository.findEpisodeStats(episode.guid);
+          final stats = await repository.findEpisodeStats(episode.id);
           final playedDuration =
               stats!.playTotal - episode.duration! * stats.playCount;
           if (episode.duration! * 0.95 <= playedDuration) {
@@ -64,10 +64,10 @@ class AudioPositionSaver extends _$AudioPositionSaver {
                 '${episode.title}');
             await repository.updateEpisodeStats(
               EpisodeStatsUpdateParam(
-                pguid: episode.pguid,
-                guid: episode.guid,
+                pid: episode.pid,
+                id: episode.id,
                 position: episode.duration,
-                completeCountDelta: 1,
+                completed: true,
               ),
             );
           }
@@ -98,9 +98,9 @@ class AudioPositionSaver extends _$AudioPositionSaver {
 
       // Save playing episode's guid
       if (phase == PlayerPhase.stop) {
-        repository.clearPlayingEpisodeGuid();
+        repository.clearPlayingEpisodeId();
       } else if (prevEpisode != episode) {
-        repository.savePlayingEpisodeGuid(episode.guid);
+        repository.savePlayingEpisodeId(episode.id);
       }
 
       final played = episode.duration == null
@@ -111,8 +111,8 @@ class AudioPositionSaver extends _$AudioPositionSaver {
 
       repository.updateEpisodeStats(
         EpisodeStatsUpdateParam(
-          pguid: episode.pguid,
-          guid: episode.guid,
+          pid: episode.pid,
+          id: episode.id,
           position: position,
           played: played,
           playTotalDelta: state.lastSavedPosition != null &&

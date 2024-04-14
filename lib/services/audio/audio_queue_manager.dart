@@ -27,7 +27,7 @@ class AudioQueueManager extends _$AudioQueueManager {
 
   List<QueueItem> get _queue => ref.read(queueManagerProvider).queue;
 
-  ConnectivityResult get _connectivityResult =>
+  List<ConnectivityResult> get _connectivityResult =>
       ref.read(connectivityStateProvider);
 
   @override
@@ -43,7 +43,7 @@ class AudioQueueManager extends _$AudioQueueManager {
             action: final action
           ):
           if (action == AudioPlayerAction.play) {
-            if (_queue.firstOrNull?.guid == episode.guid) {
+            if (_queue.firstOrNull?.eid == episode.id) {
               ref.read(queueManagerProvider.notifier).pop();
             }
           } else if (action == AudioPlayerAction.completed) {
@@ -59,8 +59,8 @@ class AudioQueueManager extends _$AudioQueueManager {
     while (_queue.isNotEmpty) {
       final queueItem = _queue.first;
       final ret = await Future.wait([
-        _repository.findEpisode(queueItem.guid),
-        _repository.findEpisodeStats(queueItem.guid),
+        _repository.findEpisode(queueItem.eid),
+        _repository.findEpisodeStats(queueItem.eid),
       ]);
       final episode = ret[0] as Episode?;
       final stats = ret[1] as EpisodeStats?;
