@@ -100,6 +100,10 @@ dependency_overrides:
   analyzer: ^6.3.0
   flutter_layout_grid: ^2.0.5
 
+global_options:
+  freezed:freezed:
+    runs_before:
+      - isar_generator:isar_generator
 
 flutter_launcher_icons:
   android: "ic_launcher"
