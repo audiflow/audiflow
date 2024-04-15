@@ -111,7 +111,7 @@ class _MiniPlayerContent extends StatelessWidget {
     final width = MediaQuery.of(context).size.width;
     final maxImgSize = width * 0.13;
     final img = Image.network(
-      episode.thumbImageUrl!,
+      episode.imageUrl!,
       errorBuilder: (context, error, stackTrace) {
         return const SizedBox.shrink();
       },

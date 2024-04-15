@@ -7,9 +7,10 @@
 // found in the LICENSE file.
 
 import 'package:audiflow/core/l10n.dart';
+import 'package:audiflow/entities/entities.dart';
 import 'package:audiflow/events/podcast_chart_event.dart';
 import 'package:audiflow/ui/pages/app_bars/basic_app_bar.dart';
-import 'package:audiflow/ui/podcast/podcast_list.dart';
+import 'package:audiflow/ui/podcast/chart_item_list.dart';
 import 'package:audiflow/ui/podcast/podcast_list_horz.dart';
 import 'package:audiflow/ui/providers/podcast_chart_provider.dart';
 import 'package:audiflow/ui/providers/podcast_subscriptions_provider.dart';
@@ -34,9 +35,8 @@ class PodcastHomePage extends HookConsumerWidget {
 
     useEffect(
       () {
-        ref
-            .read(podcastChartProvider.notifier)
-            .input(const NewPodcastChartEvent(size: 10, countryCode: 'jp'));
+        ref.read(podcastChartProvider.notifier).input(
+            const NewPodcastChartEvent(size: 50, country: Country.japan));
         return null;
       },
       [],
@@ -76,7 +76,7 @@ class PodcastHomePage extends HookConsumerWidget {
                   ),
                   SliverPadding(
                     padding: const EdgeInsets.only(top: 30),
-                    sliver: PodcastList(results: state.value!.podcasts),
+                    sliver: ChartItemList(items: state.value!.chartItems),
                   ),
                 ],
               ],
@@ -96,7 +96,7 @@ class _SubscribedPodcasts extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(podcastSubscriptionsProvider);
     return state.valueOrNull?.isNotEmpty == true
-        ? PodcastListHorz(metadataList: state.value!.map((e) => e.$1).toList())
+        ? PodcastListHorz(metadataList: state.value!)
         : const SliverToBoxAdapter(child: SizedBox.shrink());
   }
 }

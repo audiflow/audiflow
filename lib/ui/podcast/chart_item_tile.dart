@@ -11,13 +11,13 @@ import 'package:audiflow/ui/app/navigation_helper.dart';
 import 'package:audiflow/ui/widgets/tile_image.dart';
 import 'package:flutter/material.dart';
 
-class PodcastTile extends StatelessWidget {
-  const PodcastTile({
+class ChartItemTile extends StatelessWidget {
+  const ChartItemTile({
     super.key,
-    required this.podcast,
+    required this.chartItem,
   });
 
-  final Podcast podcast;
+  final ITunesChartItem chartItem;
   static const heroPrefix = 'tileHero';
 
   @override
@@ -25,10 +25,11 @@ class PodcastTile extends StatelessWidget {
     final theme = Theme.of(context);
     return InkWell(
       onTap: () {
-        // NavigationHelper.pushPodcastDetail(
-        //   podcast: podcast,
-        //   heroPrefix: heroPrefix,
-        // );
+        NavigationHelper.pushPodcastDetail(
+          collectionId: chartItem.collectionId,
+          imageUrl: chartItem.thumbnailArtworkUrl,
+          heroPrefix: heroPrefix,
+        );
       },
       child: Container(
         height: 77,
@@ -40,10 +41,11 @@ class PodcastTile extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.only(left: 20, right: 10),
                 child: Hero(
-                  key: Key('tileHero:${podcast.image}:${podcast.guid}'),
-                  tag: '$heroPrefix:${podcast.guid}',
+                  key: Key('tileHero:${chartItem.artworkUrl100}:'
+                      '${chartItem.collectionId}'),
+                  tag: '$heroPrefix:${chartItem.collectionId}',
                   child: TileImage(
-                    url: podcast.image,
+                    url: chartItem.thumbnailArtworkUrl,
                     size: 60,
                   ),
                 ),
@@ -54,7 +56,7 @@ class PodcastTile extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    podcast.title,
+                    chartItem.trackName,
                     maxLines: 2,
                     textHeightBehavior: const TextHeightBehavior(
                       applyHeightToFirstAscent: false,
@@ -63,7 +65,7 @@ class PodcastTile extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    podcast.copyright ?? podcast.author ?? '',
+                    chartItem.artistName,
                     maxLines: 1,
                     style: theme.textTheme.bodySmall!
                         .copyWith(color: theme.hintColor),

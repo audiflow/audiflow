@@ -8,6 +8,7 @@
 import 'dart:math' as math;
 
 import 'package:audiflow/core/utils.dart';
+import 'package:audiflow/entities/entities.dart';
 import 'package:audiflow/services/audio/audio_player_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';

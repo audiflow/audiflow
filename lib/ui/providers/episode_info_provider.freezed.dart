@@ -16,7 +16,7 @@ final _privateConstructorUsedError = UnsupportedError(
 
 /// @nodoc
 mixin _$EpisodeInfoState {
-  PodcastMetadata get podcastMetadata => throw _privateConstructorUsedError;
+  Podcast get podcast => throw _privateConstructorUsedError;
   Episode get episode => throw _privateConstructorUsedError;
   EpisodeStats? get stats => throw _privateConstructorUsedError;
   Downloadable? get download => throw _privateConstructorUsedError;
@@ -34,16 +34,11 @@ abstract class $EpisodeInfoStateCopyWith<$Res> {
       _$EpisodeInfoStateCopyWithImpl<$Res, EpisodeInfoState>;
   @useResult
   $Res call(
-      {PodcastMetadata podcastMetadata,
+      {Podcast podcast,
       Episode episode,
       EpisodeStats? stats,
       Downloadable? download,
       int? queueIndex});
-
-  $PodcastMetadataCopyWith<$Res> get podcastMetadata;
-  $EpisodeCopyWith<$Res> get episode;
-  $EpisodeStatsCopyWith<$Res>? get stats;
-  $DownloadableCopyWith<$Res>? get download;
 }
 
 /// @nodoc
@@ -59,17 +54,17 @@ class _$EpisodeInfoStateCopyWithImpl<$Res, $Val extends EpisodeInfoState>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? podcastMetadata = null,
+    Object? podcast = null,
     Object? episode = null,
     Object? stats = freezed,
     Object? download = freezed,
     Object? queueIndex = freezed,
   }) {
     return _then(_value.copyWith(
-      podcastMetadata: null == podcastMetadata
-          ? _value.podcastMetadata
-          : podcastMetadata // ignore: cast_nullable_to_non_nullable
-              as PodcastMetadata,
+      podcast: null == podcast
+          ? _value.podcast
+          : podcast // ignore: cast_nullable_to_non_nullable
+              as Podcast,
       episode: null == episode
           ? _value.episode
           : episode // ignore: cast_nullable_to_non_nullable
@@ -88,46 +83,6 @@ class _$EpisodeInfoStateCopyWithImpl<$Res, $Val extends EpisodeInfoState>
               as int?,
     ) as $Val);
   }
-
-  @override
-  @pragma('vm:prefer-inline')
-  $PodcastMetadataCopyWith<$Res> get podcastMetadata {
-    return $PodcastMetadataCopyWith<$Res>(_value.podcastMetadata, (value) {
-      return _then(_value.copyWith(podcastMetadata: value) as $Val);
-    });
-  }
-
-  @override
-  @pragma('vm:prefer-inline')
-  $EpisodeCopyWith<$Res> get episode {
-    return $EpisodeCopyWith<$Res>(_value.episode, (value) {
-      return _then(_value.copyWith(episode: value) as $Val);
-    });
-  }
-
-  @override
-  @pragma('vm:prefer-inline')
-  $EpisodeStatsCopyWith<$Res>? get stats {
-    if (_value.stats == null) {
-      return null;
-    }
-
-    return $EpisodeStatsCopyWith<$Res>(_value.stats!, (value) {
-      return _then(_value.copyWith(stats: value) as $Val);
-    });
-  }
-
-  @override
-  @pragma('vm:prefer-inline')
-  $DownloadableCopyWith<$Res>? get download {
-    if (_value.download == null) {
-      return null;
-    }
-
-    return $DownloadableCopyWith<$Res>(_value.download!, (value) {
-      return _then(_value.copyWith(download: value) as $Val);
-    });
-  }
 }
 
 /// @nodoc
@@ -139,20 +94,11 @@ abstract class _$$EpisodeStateImplCopyWith<$Res>
   @override
   @useResult
   $Res call(
-      {PodcastMetadata podcastMetadata,
+      {Podcast podcast,
       Episode episode,
       EpisodeStats? stats,
       Downloadable? download,
       int? queueIndex});
-
-  @override
-  $PodcastMetadataCopyWith<$Res> get podcastMetadata;
-  @override
-  $EpisodeCopyWith<$Res> get episode;
-  @override
-  $EpisodeStatsCopyWith<$Res>? get stats;
-  @override
-  $DownloadableCopyWith<$Res>? get download;
 }
 
 /// @nodoc
@@ -166,17 +112,17 @@ class __$$EpisodeStateImplCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? podcastMetadata = null,
+    Object? podcast = null,
     Object? episode = null,
     Object? stats = freezed,
     Object? download = freezed,
     Object? queueIndex = freezed,
   }) {
     return _then(_$EpisodeStateImpl(
-      podcastMetadata: null == podcastMetadata
-          ? _value.podcastMetadata
-          : podcastMetadata // ignore: cast_nullable_to_non_nullable
-              as PodcastMetadata,
+      podcast: null == podcast
+          ? _value.podcast
+          : podcast // ignore: cast_nullable_to_non_nullable
+              as Podcast,
       episode: null == episode
           ? _value.episode
           : episode // ignore: cast_nullable_to_non_nullable
@@ -201,14 +147,14 @@ class __$$EpisodeStateImplCopyWithImpl<$Res>
 
 class _$EpisodeStateImpl implements _EpisodeState {
   const _$EpisodeStateImpl(
-      {required this.podcastMetadata,
+      {required this.podcast,
       required this.episode,
       this.stats,
       this.download,
       this.queueIndex});
 
   @override
-  final PodcastMetadata podcastMetadata;
+  final Podcast podcast;
   @override
   final Episode episode;
   @override
@@ -220,7 +166,7 @@ class _$EpisodeStateImpl implements _EpisodeState {
 
   @override
   String toString() {
-    return 'EpisodeInfoState(podcastMetadata: $podcastMetadata, episode: $episode, stats: $stats, download: $download, queueIndex: $queueIndex)';
+    return 'EpisodeInfoState(podcast: $podcast, episode: $episode, stats: $stats, download: $download, queueIndex: $queueIndex)';
   }
 
   @override
@@ -228,8 +174,7 @@ class _$EpisodeStateImpl implements _EpisodeState {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$EpisodeStateImpl &&
-            (identical(other.podcastMetadata, podcastMetadata) ||
-                other.podcastMetadata == podcastMetadata) &&
+            (identical(other.podcast, podcast) || other.podcast == podcast) &&
             (identical(other.episode, episode) || other.episode == episode) &&
             (identical(other.stats, stats) || other.stats == stats) &&
             (identical(other.download, download) ||
@@ -239,8 +184,8 @@ class _$EpisodeStateImpl implements _EpisodeState {
   }
 
   @override
-  int get hashCode => Object.hash(
-      runtimeType, podcastMetadata, episode, stats, download, queueIndex);
+  int get hashCode =>
+      Object.hash(runtimeType, podcast, episode, stats, download, queueIndex);
 
   @JsonKey(ignore: true)
   @override
@@ -251,14 +196,14 @@ class _$EpisodeStateImpl implements _EpisodeState {
 
 abstract class _EpisodeState implements EpisodeInfoState {
   const factory _EpisodeState(
-      {required final PodcastMetadata podcastMetadata,
+      {required final Podcast podcast,
       required final Episode episode,
       final EpisodeStats? stats,
       final Downloadable? download,
       final int? queueIndex}) = _$EpisodeStateImpl;
 
   @override
-  PodcastMetadata get podcastMetadata;
+  Podcast get podcast;
   @override
   Episode get episode;
   @override

@@ -7,7 +7,6 @@
 // found in the LICENSE file.
 
 import 'package:audiflow/entities/entities.dart';
-import 'package:audiflow/ui/app/navigation_helper.dart';
 import 'package:audiflow/ui/providers/podcast_info_provider.dart';
 import 'package:audiflow/ui/widgets/tile_image.dart';
 import 'package:flutter/material.dart';
@@ -19,7 +18,7 @@ class PodcastListHorz extends ConsumerWidget {
     required this.metadataList,
   });
 
-  final List<PodcastMetadata> metadataList;
+  final List<Podcast> metadataList;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -58,13 +57,13 @@ class _ListTile extends ConsumerWidget {
     required this.metadata,
   });
 
-  final PodcastMetadata metadata;
+  final Podcast metadata;
   static const heroPrefix = 'subscription:';
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final podcastState =
-        ref.watch(podcastInfoProvider(metadata.guid, needsEpisodes: true));
+        ref.watch(podcastInfoProvider(metadata.id, needsEpisodes: true));
     if (!podcastState.hasValue) {
       return const SizedBox.shrink();
     }
@@ -73,10 +72,10 @@ class _ListTile extends ConsumerWidget {
     final theme = Theme.of(context);
     return GestureDetector(
       onTap: () {
-        NavigationHelper.pushPodcastDetail(
-          metadata: metadata,
-          heroPrefix: heroPrefix,
-        );
+        // NavigationHelper.pushPodcastDetail(
+        //   metadata: metadata,
+        //   heroPrefix: heroPrefix,
+        // );
       },
       child: GridTile(
         child: Container(
@@ -89,10 +88,10 @@ class _ListTile extends ConsumerWidget {
           child: Column(
             children: [
               Hero(
-                key: Key('tilehero${podcast.imageUrl}:${podcast.guid}'),
+                key: Key('tilehero${podcast.image}:${podcast.guid}'),
                 tag: '$heroPrefix:${podcast.guid}',
                 child: TileImage(
-                  url: podcast.imageUrl,
+                  url: podcast.image,
                   size: 150,
                 ),
               ),

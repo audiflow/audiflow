@@ -27,21 +27,21 @@ class PodcastInfo extends _$PodcastInfo {
 
   @override
   Future<PodcastInfoState> build(
-    String guid, {
+    int id, {
     required bool needsEpisodes,
   }) async {
-    _log.fine('build $guid');
+    _log.fine('build $id');
 
     final list = await Future.wait([
-      _repository.findPodcast(guid),
-      _repository.findPodcastStats(guid),
+      _repository.findPodcast(id: id),
+      _repository.findPodcastStats(id),
     ]);
     var podcast = list[0] as Podcast?;
     final podcastStats = list[1] as PodcastStats?;
-    if (needsEpisodes && podcast?.episodes.isEmpty == true) {
-      podcast =
-          await _podcastService.loadPodcast(podcast!.metadata, refresh: true);
-    }
+    // if (needsEpisodes && podcast?.episodes.isEmpty == true) {
+    //   podcast =
+    //       await _podcastService.loadPodcast(podcast!.metadata, refresh: true);
+    // }
     if (podcast == null) {
       throw NotFoundError();
     }
@@ -78,7 +78,7 @@ class PodcastInfo extends _$PodcastInfo {
               state = AsyncData(state.requireValue.copyWith(podcast: podcast));
             }
           case PodcastStatsUpdatedEvent(stats: final stats):
-            if (stats.guid == state.valueOrNull?.podcast.guid) {
+            if (stats.id == state.valueOrNull?.podcast.id) {
               state = AsyncData(state.requireValue.copyWith(stats: stats));
             }
           case PodcastViewStatsUpdatedEvent():

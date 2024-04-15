@@ -16,6 +16,7 @@ class IsarRepository implements Repository {
   bool _initialized = false;
   late Isar isar;
 
+  @override
   Future<void> ensureInitialized() async {
     if (_initialized) {
       return;

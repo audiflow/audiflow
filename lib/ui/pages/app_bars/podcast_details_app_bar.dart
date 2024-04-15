@@ -98,12 +98,12 @@ class PodcastDetailsAppBar extends ConsumerWidget {
                 Expanded(
                   child: Hero(
                     key: Key(
-                      'detailHero:${metadata.imageUrl}:${metadata.guid}',
+                      'detailHero:${metadata.artworkUrl}:${metadata.guid}',
                     ),
                     tag: '$heroPrefix:${metadata.guid}',
                     child: ExcludeSemantics(
                       child: PodcastHeaderImage(
-                        imageUrl: metadata.imageUrl,
+                        imageUrl: metadata.artworkUrl,
                         placeholderBuilder: placeholderBuilder,
                       ),
                     ),

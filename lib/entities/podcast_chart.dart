@@ -15,8 +15,8 @@ class PodcastChartState with _$PodcastChartState {
   const factory PodcastChartState({
     int? size,
     String? genre,
-    String? countryCode,
-    @Default([]) List<Podcast> podcasts,
+    Country? country,
+    @Default([]) List<ITunesChartItem> chartItems,
     DateTime? expiresAt,
   }) = _PodcastChartState;
 }

@@ -45,7 +45,7 @@ class SeasonTile extends StatelessWidget {
                   key: Key('seasonhero${season.guid}'),
                   tag: season.guid,
                   child: TileImage(
-                    url: season.thumbImageUrl ?? season.imageUrl!,
+                    url: season.thumbnailUrl ?? season.imageUrl!,
                     size: 60,
                   ),
                 ),

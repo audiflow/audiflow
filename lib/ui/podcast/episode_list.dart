@@ -89,7 +89,7 @@ class EpisodeList extends HookConsumerWidget {
               switch (thumbnailVisibility) {
                 case ThumbnailVisibility.auto:
                   showsThumbnail =
-                      episode.thumbImageUrl != metadata?.thumbImageUrl;
+                      episode.thumbnailUrl != metadata?.thumbnailUrl;
                 case ThumbnailVisibility.visible:
                   showsThumbnail = true;
                 case ThumbnailVisibility.hidden:
@@ -127,7 +127,7 @@ class _ScrollOffsetCalculator {
       if (episode.guid == guid) {
         break;
       }
-      final showsThumbnail = episode.thumbImageUrl != metadata?.thumbImageUrl;
+      final showsThumbnail = episode.thumbnailUrl != metadata?.thumbnailUrl;
       offset += (showsThumbnail
           ? episodeTileWithThumbnailHeight
           : episodeTileNotThumbnailHeight);

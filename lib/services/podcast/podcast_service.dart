@@ -47,7 +47,7 @@ abstract class PodcastService {
   //   bool refresh = false,
   // });
   //
-  // Future<Podcast?> loadPodcastById(int id);
+  Future<Podcast?> loadPodcastById(int id);
   //
   // Future<List<Episode>> loadEpisodesByPodcastId(int pid);
 

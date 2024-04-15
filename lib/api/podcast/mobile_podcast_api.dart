@@ -27,8 +27,9 @@ import 'package:podcast_search/podcast_search.dart' as podcast_search;
 class MobilePodcastApi extends PodcastApi {
   MobilePodcastApi(this._ref);
 
-  void ensureInitialized() {
+  Future<void> ensureInitialized() async {
     _http = _ref.read(cachedHttpProvider);
+    await _http.ensureInitialized();
   }
 
   final Ref _ref;
@@ -226,7 +227,7 @@ class MobilePodcastApi extends PodcastApi {
     }
 
     return list
-        .map((e) => ITunesChartItem.fromJson(json: e as Map<String, dynamic>))
+        .map((e) => ITunesChartItem.fromResponse(json: e as Map<String, dynamic>))
         .toList();
   }
 

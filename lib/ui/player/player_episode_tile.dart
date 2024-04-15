@@ -29,12 +29,12 @@ class PlayerEpisodeTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final thumbImageUrl = episode.thumbImageUrl ?? '';
+    final thumbnailUrl = episode.imageUrl ?? '';
     final state = ref.watch(episodeInfoProvider(episode));
     return Material(
       child: InkWell(
         onTap: () {
-          if (state.valueOrNull?.podcastMetadata != null) {
+          if (state.valueOrNull?.podcast != null) {
             NavigationHelper.pushEpisodeDetail(
               episode: episode,
               heroPrefix: 'episodeHero',
@@ -47,7 +47,7 @@ class PlayerEpisodeTile extends ConsumerWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              TileImage(url: thumbImageUrl, size: 50),
+              TileImage(url: thumbnailUrl, size: 50),
               const SizedBox(width: 12),
               Expanded(child: _Content(episode)),
             ],
@@ -80,7 +80,7 @@ class _Content extends ConsumerWidget {
         ),
         const SizedBox(height: 6),
         Text(
-          episodeInfo.valueOrNull?.podcastMetadata.title ?? '',
+          episodeInfo.valueOrNull?.podcast.title ?? '',
           overflow: TextOverflow.ellipsis,
           softWrap: false,
           style: Theme.of(context)

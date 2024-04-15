@@ -40,6 +40,7 @@ import 'package:isar/isar.dart';
 ///  - [EpisodeStats]
 abstract class Repository {
   // --- General
+  Future<void> ensureInitialized();
 
   Future<void> close();
 

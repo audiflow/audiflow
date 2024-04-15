@@ -159,14 +159,17 @@ class _ProvidersInitializer extends HookConsumerWidget {
           return;
         }
 
-        Future.wait([
-          ref.read(downloadManagerProvider).ensureInitialized(),
-          ref.read(queueManagerProvider.notifier).ensureInitialized(),
-          ref.read(audioPlayerServiceProvider.notifier).ensureInitialized(),
-          setupCertificateAuthority().then((ca) {
-            ref.read(podcastApiProvider).addClientAuthorityBytes(ca);
-          }),
-        ]).then((_) {
+        ref.read(repositoryProvider).ensureInitialized().then((_) {
+          return Future.wait([
+            ref.read(downloadManagerProvider).ensureInitialized(),
+            ref.read(queueManagerProvider.notifier).ensureInitialized(),
+            ref.read(audioPlayerServiceProvider.notifier).ensureInitialized(),
+            ref.read(podcastApiProvider).ensureInitialized(),
+            setupCertificateAuthority().then((ca) {
+              ref.read(podcastApiProvider).addClientAuthorityBytes(ca);
+            }),
+          ]);
+        }).then((_) {
           initState.value = true;
         });
         return;

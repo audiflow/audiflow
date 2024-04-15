@@ -7,12 +7,12 @@ part of 'podcast_subscriptions_provider.dart';
 // **************************************************************************
 
 String _$podcastSubscriptionsHash() =>
-    r'6875cca6f355bb95ceab5300a7ee5c00988292ae';
+    r'895204e48dca704684d2eccef2a154134975248f';
 
 /// See also [PodcastSubscriptions].
 @ProviderFor(PodcastSubscriptions)
-final podcastSubscriptionsProvider = AsyncNotifierProvider<PodcastSubscriptions,
-    List<(PodcastMetadata, PodcastStats)>>.internal(
+final podcastSubscriptionsProvider =
+    AsyncNotifierProvider<PodcastSubscriptions, List<Podcast>>.internal(
   PodcastSubscriptions.new,
   name: r'podcastSubscriptionsProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
@@ -22,7 +22,6 @@ final podcastSubscriptionsProvider = AsyncNotifierProvider<PodcastSubscriptions,
   allTransitiveDependencies: null,
 );
 
-typedef _$PodcastSubscriptions
-    = AsyncNotifier<List<(PodcastMetadata, PodcastStats)>>;
+typedef _$PodcastSubscriptions = AsyncNotifier<List<Podcast>>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

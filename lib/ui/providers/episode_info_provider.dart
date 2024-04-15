@@ -23,25 +23,25 @@ class EpisodeInfo extends _$EpisodeInfo {
     EpisodeStats? stats,
   }) async {
     final queue = ref.read(queueManagerProvider.select((value) => value.queue));
-    final queueIndex = queue.indexWhere((item) => item.guid == episode.guid);
+    final queueIndex = queue.indexWhere((item) => item.eid == episode.id);
 
     final values = await Future.wait([
-      ref.read(podcastServiceProvider).loadPodcastMetadata(episode.pguid),
+      ref.read(podcastServiceProvider).loadPodcastById(episode.pid),
       stats != null
           ? Future.value(stats)
           : ref.read(podcastServiceProvider).loadEpisodeStats(episode),
       ref.read(podcastServiceProvider).loadEpisodeStats(episode),
     ]);
 
-    final podcastMetadata = values[0] as PodcastMetadata?;
-    if (podcastMetadata == null) {
+    final podcast = values[0] as Podcast?;
+    if (podcast == null) {
       throw StateError(
-        'PodcastMetadata not found for episode: ${episode.guid}',
+        'podcast not found for episode: ${episode.guid}',
       );
     }
 
     final initial = EpisodeInfoState(
-      podcastMetadata: podcastMetadata,
+      podcast: podcast,
       episode: episode,
       stats: values[1] as EpisodeStats?,
       queueIndex: 0 <= queueIndex ? queueIndex : null,
@@ -58,7 +58,7 @@ class EpisodeInfo extends _$EpisodeInfo {
           return;
         }
         final index =
-            next.queue.indexWhere((item) => item.guid == episode.guid);
+            next.queue.indexWhere((item) => item.eid == episode.id);
         final queueIndex = 0 <= index ? index : null;
         if (state.requireValue.queueIndex != queueIndex) {
           state =
@@ -70,11 +70,11 @@ class EpisodeInfo extends _$EpisodeInfo {
         switch (event) {
           case EpisodeUpdatedEvent(episode: final episode) ||
                 EpisodeDeletedEvent(episode: final episode):
-            if (episode.guid == state.requireValue.episode.guid) {
+            if (episode.id == state.requireValue.episode.id) {
               state = AsyncData(state.requireValue.copyWith(episode: episode));
             }
           case EpisodeStatsUpdatedEvent(stats: final stats):
-            if (stats.guid == state.requireValue.episode.guid) {
+            if (stats.id == state.requireValue.episode.id) {
               state = AsyncData(state.requireValue.copyWith(stats: stats));
             }
           case null:
@@ -86,7 +86,7 @@ class EpisodeInfo extends _$EpisodeInfo {
 @freezed
 class EpisodeInfoState with _$EpisodeInfoState {
   const factory EpisodeInfoState({
-    required PodcastMetadata podcastMetadata,
+    required Podcast podcast,
     required Episode episode,
     EpisodeStats? stats,
     Downloadable? download,

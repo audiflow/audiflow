@@ -31,9 +31,6 @@ abstract class $PodcastInfoStateCopyWith<$Res> {
       _$PodcastInfoStateCopyWithImpl<$Res, PodcastInfoState>;
   @useResult
   $Res call({Podcast podcast, PodcastStats? stats});
-
-  $PodcastCopyWith<$Res> get podcast;
-  $PodcastStatsCopyWith<$Res>? get stats;
 }
 
 /// @nodoc
@@ -63,26 +60,6 @@ class _$PodcastInfoStateCopyWithImpl<$Res, $Val extends PodcastInfoState>
               as PodcastStats?,
     ) as $Val);
   }
-
-  @override
-  @pragma('vm:prefer-inline')
-  $PodcastCopyWith<$Res> get podcast {
-    return $PodcastCopyWith<$Res>(_value.podcast, (value) {
-      return _then(_value.copyWith(podcast: value) as $Val);
-    });
-  }
-
-  @override
-  @pragma('vm:prefer-inline')
-  $PodcastStatsCopyWith<$Res>? get stats {
-    if (_value.stats == null) {
-      return null;
-    }
-
-    return $PodcastStatsCopyWith<$Res>(_value.stats!, (value) {
-      return _then(_value.copyWith(stats: value) as $Val);
-    });
-  }
 }
 
 /// @nodoc
@@ -94,11 +71,6 @@ abstract class _$$PodcastInfoStateImplCopyWith<$Res>
   @override
   @useResult
   $Res call({Podcast podcast, PodcastStats? stats});
-
-  @override
-  $PodcastCopyWith<$Res> get podcast;
-  @override
-  $PodcastStatsCopyWith<$Res>? get stats;
 }
 
 /// @nodoc

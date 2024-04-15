@@ -35,7 +35,7 @@ class EpisodeTile extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final showsThumbnail = this.showsThumbnail && episode.thumbImageUrl != null;
+    final showsThumbnail = this.showsThumbnail && episode.thumbnailUrl != null;
     return showsThumbnail
         ? _EpisodeTileWithThumbnail(episode)
         : _EpisodeTileNoThumbnail(episode);
@@ -51,7 +51,7 @@ class _EpisodeTileWithThumbnail extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final thumbImageUrl = episode.thumbImageUrl ?? episode.imageUrl;
+    final thumbnailUrl = episode.thumbnailUrl ?? episode.imageUrl;
     final theme = Theme.of(context);
     return Material(
       child: Container(
@@ -100,7 +100,7 @@ class _EpisodeTileWithThumbnail extends HookConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       TileImage(
-                        url: thumbImageUrl!,
+                        url: thumbnailUrl!,
                         size: 60,
                       ),
                       const SizedBox(height: 6),

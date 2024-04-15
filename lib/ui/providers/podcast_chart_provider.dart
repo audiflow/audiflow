@@ -5,10 +5,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:audiflow/entities/podcast_chart.dart';
+import 'package:audiflow/entities/entities.dart';
 import 'package:audiflow/errors/errors.dart';
 import 'package:audiflow/events/podcast_chart_event.dart';
-import 'package:audiflow/repository/repository_provider.dart';
 import 'package:audiflow/services/error/error_manager.dart';
 import 'package:audiflow/services/podcast/podcast_service_provider.dart';
 import 'package:logging/logging.dart';
@@ -24,14 +23,9 @@ class PodcastChart extends _$PodcastChart {
 
   ErrorManager get _errorManager => ref.read(errorManagerProvider.notifier);
 
-  Repository get _repository => ref.read(repositoryProvider);
-
   @override
   Future<PodcastChartState> build() async {
-    final lastState = await _repository.loadPodcastChart();
-    return lastState?.isExpired == false
-        ? lastState!
-        : const PodcastChartState();
+    return const PodcastChartState();
   }
 
   Future<void> input(PodcastChartEvent event) async {
@@ -40,7 +34,7 @@ class PodcastChart extends _$PodcastChart {
         data: (data) {
           if (data.isExpired ||
               data.genre != event.genre ||
-              data.countryCode != event.countryCode) {
+              data.country != event.country) {
             return _searchNewChart(event);
           }
         },
@@ -63,22 +57,19 @@ class PodcastChart extends _$PodcastChart {
     _errorManager.unregisterRetry(_errorKey);
 
     try {
-      final podcasts = await ref.read(podcastServiceProvider).charts(
+      final chartItems = await ref.read(podcastServiceProvider).charts(
             size: event.size,
             genre: event.genre,
-            countryCode: event.countryCode,
+            country: event.country ?? Country.none,
           );
-
-      await _repository.savePodcastMetadataList(podcasts);
 
       final newState = PodcastChartState(
         size: event.size,
         genre: event.genre,
-        countryCode: event.countryCode,
-        podcasts: podcasts.toList(),
+        country: event.country,
+        chartItems: chartItems.toList(),
         expiresAt: DateTime.now().add(_ttl),
       );
-      await _repository.savePodcastChart(newState);
       state = AsyncData(newState);
     } on NetworkError catch (e) {
       _log.warning('Network error: ${e.type}');

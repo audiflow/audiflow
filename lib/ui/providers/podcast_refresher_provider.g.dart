@@ -6,7 +6,7 @@ part of 'podcast_refresher_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$podcastRefresherHash() => r'dfb8cde9da0ec422b59ec982ed2835731d8485f4';
+String _$podcastRefresherHash() => r'd7848bfc6853997cbe499f0bef906f8c3d070bb3';
 
 /// See also [PodcastRefresher].
 @ProviderFor(PodcastRefresher)

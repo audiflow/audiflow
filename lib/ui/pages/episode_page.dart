@@ -109,8 +109,8 @@ class _EpisodeHeader extends HookConsumerWidget {
             ),
             PodcastLink(
               title: metadata.title,
-              thumbnailUrl: metadata.thumbImageUrl != episode.thumbImageUrl
-                  ? metadata.thumbImageUrl
+              thumbnailUrl: metadata.thumbnailUrl != episode.thumbnailUrl
+                  ? metadata.thumbnailUrl
                   : null,
               onTap: () {
                 NavigationHelper.pushPodcastDetail(

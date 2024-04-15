@@ -54,14 +54,14 @@ class EpisodePageAppBar extends ConsumerWidget {
                 Expanded(
                   child: Hero(
                     key: Key(
-                      'episodeHero:${metadata.imageUrl}:${metadata.guid}',
+                      'episodeHero:${metadata.artworkUrl}:${metadata.guid}',
                     ),
                     tag: '$heroPrefix:${metadata.guid}',
                     child: ExcludeSemantics(
                       child: PodcastHeaderImage(
                         imageUrl: episode.imageUrl ??
-                            episode.thumbImageUrl ??
-                            metadata.imageUrl,
+                            episode.thumbnailUrl ??
+                            metadata.artworkUrl,
                         placeholderBuilder: placeholderBuilder,
                       ),
                     ),

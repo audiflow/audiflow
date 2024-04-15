@@ -3,39 +3,6 @@
 part of 'podcast_search_provider.dart';
 
 // **************************************************************************
-// JsonSerializableGenerator
-// **************************************************************************
-
-_$PodcastSearchStateImpl _$$PodcastSearchStateImplFromJson(
-        Map<String, dynamic> json) =>
-    _$PodcastSearchStateImpl(
-      term: json['term'] as String?,
-      country: json['country'] as String?,
-      attribute: json['attribute'] as String?,
-      limit: json['limit'] as int? ?? 20,
-      language: json['language'] as String?,
-      version: json['version'] as int? ?? 0,
-      explicit: json['explicit'] as bool? ?? false,
-      podcasts: (json['podcasts'] as List<dynamic>?)
-              ?.map((e) => PodcastMetadata.fromJson(e as Map<String, dynamic>))
-              .toList() ??
-          const [],
-    );
-
-Map<String, dynamic> _$$PodcastSearchStateImplToJson(
-        _$PodcastSearchStateImpl instance) =>
-    <String, dynamic>{
-      'term': instance.term,
-      'country': instance.country,
-      'attribute': instance.attribute,
-      'limit': instance.limit,
-      'language': instance.language,
-      'version': instance.version,
-      'explicit': instance.explicit,
-      'podcasts': instance.podcasts.map((e) => e.toJson()).toList(),
-    };
-
-// **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 

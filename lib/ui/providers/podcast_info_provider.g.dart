@@ -6,7 +6,7 @@ part of 'podcast_info_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$podcastInfoHash() => r'55b4063647b1371abfb843f1b66aa79b1a2eaf53';
+String _$podcastInfoHash() => r'1e62de1b5f904ed2f8f1de0ba6038fdacd4bd07c';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -31,11 +31,11 @@ class _SystemHash {
 
 abstract class _$PodcastInfo
     extends BuildlessAutoDisposeAsyncNotifier<PodcastInfoState> {
-  late final String guid;
+  late final int id;
   late final bool needsEpisodes;
 
   FutureOr<PodcastInfoState> build(
-    String guid, {
+    int id, {
     required bool needsEpisodes,
   });
 }
@@ -51,11 +51,11 @@ class PodcastInfoFamily extends Family<AsyncValue<PodcastInfoState>> {
 
   /// See also [PodcastInfo].
   PodcastInfoProvider call(
-    String guid, {
+    int id, {
     required bool needsEpisodes,
   }) {
     return PodcastInfoProvider(
-      guid,
+      id,
       needsEpisodes: needsEpisodes,
     );
   }
@@ -65,7 +65,7 @@ class PodcastInfoFamily extends Family<AsyncValue<PodcastInfoState>> {
     covariant PodcastInfoProvider provider,
   ) {
     return call(
-      provider.guid,
+      provider.id,
       needsEpisodes: provider.needsEpisodes,
     );
   }
@@ -90,11 +90,11 @@ class PodcastInfoProvider extends AutoDisposeAsyncNotifierProviderImpl<
     PodcastInfo, PodcastInfoState> {
   /// See also [PodcastInfo].
   PodcastInfoProvider(
-    String guid, {
+    int id, {
     required bool needsEpisodes,
   }) : this._internal(
           () => PodcastInfo()
-            ..guid = guid
+            ..id = id
             ..needsEpisodes = needsEpisodes,
           from: podcastInfoProvider,
           name: r'podcastInfoProvider',
@@ -105,7 +105,7 @@ class PodcastInfoProvider extends AutoDisposeAsyncNotifierProviderImpl<
           dependencies: PodcastInfoFamily._dependencies,
           allTransitiveDependencies:
               PodcastInfoFamily._allTransitiveDependencies,
-          guid: guid,
+          id: id,
           needsEpisodes: needsEpisodes,
         );
 
@@ -116,11 +116,11 @@ class PodcastInfoProvider extends AutoDisposeAsyncNotifierProviderImpl<
     required super.allTransitiveDependencies,
     required super.debugGetCreateSourceHash,
     required super.from,
-    required this.guid,
+    required this.id,
     required this.needsEpisodes,
   }) : super.internal();
 
-  final String guid;
+  final int id;
   final bool needsEpisodes;
 
   @override
@@ -128,7 +128,7 @@ class PodcastInfoProvider extends AutoDisposeAsyncNotifierProviderImpl<
     covariant PodcastInfo notifier,
   ) {
     return notifier.build(
-      guid,
+      id,
       needsEpisodes: needsEpisodes,
     );
   }
@@ -139,14 +139,14 @@ class PodcastInfoProvider extends AutoDisposeAsyncNotifierProviderImpl<
       origin: this,
       override: PodcastInfoProvider._internal(
         () => create()
-          ..guid = guid
+          ..id = id
           ..needsEpisodes = needsEpisodes,
         from: from,
         name: null,
         dependencies: null,
         allTransitiveDependencies: null,
         debugGetCreateSourceHash: null,
-        guid: guid,
+        id: id,
         needsEpisodes: needsEpisodes,
       ),
     );
@@ -161,14 +161,14 @@ class PodcastInfoProvider extends AutoDisposeAsyncNotifierProviderImpl<
   @override
   bool operator ==(Object other) {
     return other is PodcastInfoProvider &&
-        other.guid == guid &&
+        other.id == id &&
         other.needsEpisodes == needsEpisodes;
   }
 
   @override
   int get hashCode {
     var hash = _SystemHash.combine(0, runtimeType.hashCode);
-    hash = _SystemHash.combine(hash, guid.hashCode);
+    hash = _SystemHash.combine(hash, id.hashCode);
     hash = _SystemHash.combine(hash, needsEpisodes.hashCode);
 
     return _SystemHash.finish(hash);
@@ -176,8 +176,8 @@ class PodcastInfoProvider extends AutoDisposeAsyncNotifierProviderImpl<
 }
 
 mixin PodcastInfoRef on AutoDisposeAsyncNotifierProviderRef<PodcastInfoState> {
-  /// The parameter `guid` of this provider.
-  String get guid;
+  /// The parameter `id` of this provider.
+  int get id;
 
   /// The parameter `needsEpisodes` of this provider.
   bool get needsEpisodes;
@@ -189,7 +189,7 @@ class _PodcastInfoProviderElement
   _PodcastInfoProviderElement(super.provider);
 
   @override
-  String get guid => (origin as PodcastInfoProvider).guid;
+  int get id => (origin as PodcastInfoProvider).id;
   @override
   bool get needsEpisodes => (origin as PodcastInfoProvider).needsEpisodes;
 }

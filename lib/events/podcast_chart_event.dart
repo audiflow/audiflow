@@ -5,18 +5,20 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'package:audiflow/entities/country.dart';
+
 sealed class PodcastChartEvent {}
 
 class NewPodcastChartEvent implements PodcastChartEvent {
   const NewPodcastChartEvent({
     this.size = 20,
     this.genre,
-    this.countryCode,
+    this.country,
     this.refresh = false,
   });
 
   final int size;
   final String? genre;
-  final String? countryCode;
+  final Country? country;
   final bool refresh;
 }

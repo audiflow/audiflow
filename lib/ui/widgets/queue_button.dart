@@ -40,7 +40,7 @@ class QueueButton extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final queue = ref.watch(queueManagerProvider).queue;
-    final queueIndex = queue.indexWhere((e) => e.guid == episode.guid);
+    final queueIndex = queue.indexWhere((e) => e.eid == episode.id);
 
     final theme = Theme.of(context);
     final style = OutlinedButton.styleFrom(
@@ -62,11 +62,11 @@ class QueueButton extends HookConsumerWidget {
         switch (value) {
           case _Action.prepend:
             queueManager.prepend(
-              QueueItem.primary(pguid: episode.pguid, guid: episode.guid),
+              QueueItem.primary(pid: episode.pid, eid: episode.id),
             );
           case _Action.append:
             queueManager.append(
-              QueueItem.primary(pguid: episode.pguid, guid: episode.guid),
+              QueueItem.primary(pid: episode.pid, eid: episode.id),
             );
           case _Action.remove:
             queueManager.removeByIndex(queueIndex);
@@ -76,7 +76,7 @@ class QueueButton extends HookConsumerWidget {
         onPressed: () {
           if (queueIndex < 0) {
             ref.read(queueManagerProvider.notifier).append(
-                  QueueItem.primary(pguid: episode.pguid, guid: episode.guid),
+                  QueueItem.primary(pid: episode.pid, eid: episode.id),
                 );
           } else {
             ref.read(queueManagerProvider.notifier).removeByIndex(queueIndex);

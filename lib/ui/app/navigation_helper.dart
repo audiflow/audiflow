@@ -6,15 +6,15 @@
 
 import 'package:audiflow/entities/entities.dart';
 import 'package:audiflow/ui/app/app_bottom_navigation_bar.dart';
-import 'package:audiflow/ui/pages/episode_page.dart';
-import 'package:audiflow/ui/pages/latest_episodes_page.dart';
-import 'package:audiflow/ui/pages/library_page.dart';
-import 'package:audiflow/ui/pages/podcast_details_page.dart';
+// import 'package:audiflow/ui/pages/episode_page.dart';
+// import 'package:audiflow/ui/pages/latest_episodes_page.dart';
+// import 'package:audiflow/ui/pages/library_page.dart';
+// import 'package:audiflow/ui/pages/podcast_details_page.dart';
 import 'package:audiflow/ui/pages/podcast_home_page.dart';
-import 'package:audiflow/ui/pages/podcast_season_page.dart';
-import 'package:audiflow/ui/pages/recently_played_page.dart';
-import 'package:audiflow/ui/pages/search_page.dart';
-import 'package:audiflow/ui/pages/settings_page.dart';
+// import 'package:audiflow/ui/pages/podcast_season_page.dart';
+// import 'package:audiflow/ui/pages/recently_played_page.dart';
+// import 'package:audiflow/ui/pages/search_page.dart';
+// import 'package:audiflow/ui/pages/settings_page.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:palette_generator/palette_generator.dart';
@@ -38,128 +38,134 @@ class NavigationHelper {
                     child: const PodcastHomePage(),
                   );
                 },
-                routes: [
-                  GoRoute(
-                    path: 'season',
-                    name: 'season',
-                    parentNavigatorKey: homeTabNavigatorKey,
-                    pageBuilder: (context, state) {
-                      final (podcast, season, heroPrefix) =
-                          state.extra! as (Podcast, Season, String);
-                      return _getPage(
-                        child: PodcastSeasonPage(
-                          podcast: podcast,
-                          season: season,
-                          heroPrefix: heroPrefix,
-                        ),
-                        state: state,
-                      );
-                    },
-                  ),
-                  GoRoute(
-                    path: 'detail',
-                    name: 'detail',
-                    parentNavigatorKey: homeTabNavigatorKey,
-                    pageBuilder: (context, state) {
-                      final (metadata, heroPrefix, paletteGenerator) =
-                          state.extra! as (
-                        PodcastMetadata,
-                        String,
-                        PaletteGenerator
-                      );
-                      return _getPage(
-                        child: PodcastDetailsPage(
-                          metadata: metadata,
-                          heroPrefix: heroPrefix,
-                          paletteGenerator: paletteGenerator,
-                        ),
-                        state: state,
-                      );
-                    },
-                  ),
-                  GoRoute(
-                    path: 'episode',
-                    name: 'episode',
-                    parentNavigatorKey: homeTabNavigatorKey,
-                    pageBuilder: (context, state) {
-                      final (episode, heroPrefix) =
-                          state.extra! as (Episode, String);
-                      return _getPage(
-                        child: EpisodePage(
-                          episode: episode,
-                          heroPrefix: heroPrefix,
-                        ),
-                        state: state,
-                      );
-                    },
-                  ),
-                  GoRoute(
-                    path: 'settings',
-                    name: 'settings',
-                    parentNavigatorKey: homeTabNavigatorKey,
-                    pageBuilder: (context, state) {
-                      return _getPage(
-                        child: const SettingsPage(),
-                        state: state,
-                      );
-                    },
-                  ),
-                ],
+                // routes: [
+                  // GoRoute(
+                  //   path: 'season',
+                  //   name: 'season',
+                  //   parentNavigatorKey: homeTabNavigatorKey,
+                  //   pageBuilder: (context, state) {
+                  //     final (podcast, season, heroPrefix) =
+                  //         state.extra! as (Podcast, Season, String);
+                  //     return _getPage(
+                  //       child: PodcastSeasonPage(
+                  //         podcast: podcast,
+                  //         season: season,
+                  //         heroPrefix: heroPrefix,
+                  //       ),
+                  //       state: state,
+                  //     );
+                  //   },
+                  // ),
+                  // GoRoute(
+                  //   path: 'detail',
+                  //   name: 'detail',
+                  //   parentNavigatorKey: homeTabNavigatorKey,
+                  //   pageBuilder: (context, state) {
+                  //     final (
+                  //       feedUrl,
+                  //       collectionId,
+                  //       heroPrefix,
+                  //       paletteGenerator
+                  //     ) = state.extra! as (
+                  //       String,
+                  //       int,
+                  //       String,
+                  //       PaletteGenerator
+                  //     );
+                  //     return _getPage(
+                  //       child: PodcastDetailsPage(
+                  //         feedUrl: feedUrl,
+                  //         collectionId: collectionId,
+                  //         heroPrefix: heroPrefix,
+                  //         paletteGenerator: paletteGenerator,
+                  //       ),
+                  //       state: state,
+                  //     );
+                  //   },
+                  // ),
+                  // GoRoute(
+                  //   path: 'episode',
+                  //   name: 'episode',
+                  //   parentNavigatorKey: homeTabNavigatorKey,
+                  //   pageBuilder: (context, state) {
+                  //     final (episode, heroPrefix) =
+                  //         state.extra! as (Episode, String);
+                  //     return _getPage(
+                  //       child: EpisodePage(
+                  //         episode: episode,
+                  //         heroPrefix: heroPrefix,
+                  //       ),
+                  //       state: state,
+                  //     );
+                  //   },
+                  // ),
+                  // GoRoute(
+                  //   path: 'settings',
+                  //   name: 'settings',
+                  //   parentNavigatorKey: homeTabNavigatorKey,
+                  //   pageBuilder: (context, state) {
+                  //     return _getPage(
+                  //       child: const SettingsPage(),
+                  //       state: state,
+                  //     );
+                  //   },
+                  // ),
+          //       ],
               ),
             ],
           ),
-          StatefulShellBranch(
-            navigatorKey: searchTabNavigatorKey,
-            routes: [
-              GoRoute(
-                path: searchPath,
-                pageBuilder: (context, state) {
-                  return _getPage(
-                    child: const SearchPage(),
-                    state: state,
-                  );
-                },
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            navigatorKey: libraryTabNavigatorKey,
-            routes: [
-              GoRoute(
-                path: libraryPath,
-                pageBuilder: (context, state) {
-                  return _getPage(
-                    child: const LibraryPage(),
-                    state: state,
-                  );
-                },
-                routes: [
-                  GoRoute(
-                    path: 'latest',
-                    name: 'latestEpisodes',
-                    parentNavigatorKey: libraryTabNavigatorKey,
-                    pageBuilder: (context, state) {
-                      return _getPage(
-                        child: const LatestEpisodesPage(),
-                        state: state,
-                      );
-                    },
-                  ),
-                  GoRoute(
-                    path: 'recent',
-                    name: 'recentlyPlayed',
-                    parentNavigatorKey: libraryTabNavigatorKey,
-                    pageBuilder: (context, state) {
-                      return _getPage(
-                        child: const RecentlyPlayedPage(),
-                        state: state,
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ],
-          ),
+          // StatefulShellBranch(
+          //   navigatorKey: searchTabNavigatorKey,
+          //   routes: [
+          //     GoRoute(
+          //       path: searchPath,
+          //       pageBuilder: (context, state) {
+          //         return _getPage(
+          //           child: const SearchPage(),
+          //           state: state,
+          //         );
+          //       },
+          //     ),
+          //   ],
+          // ),
+          // StatefulShellBranch(
+          //   navigatorKey: libraryTabNavigatorKey,
+          //   routes: [
+          //     GoRoute(
+          //       path: libraryPath,
+          //       pageBuilder: (context, state) {
+          //         return _getPage(
+          //           child: const LibraryPage(),
+          //           state: state,
+          //         );
+          //       },
+          //       routes: [
+          //         GoRoute(
+          //           path: 'latest',
+          //           name: 'latestEpisodes',
+          //           parentNavigatorKey: libraryTabNavigatorKey,
+          //           pageBuilder: (context, state) {
+          //             return _getPage(
+          //               child: const LatestEpisodesPage(),
+          //               state: state,
+          //             );
+          //           },
+          //         ),
+          //         GoRoute(
+          //           path: 'recent',
+          //           name: 'recentlyPlayed',
+          //           parentNavigatorKey: libraryTabNavigatorKey,
+          //           pageBuilder: (context, state) {
+          //             return _getPage(
+          //               child: const RecentlyPlayedPage(),
+          //               state: state,
+          //             );
+          //           },
+          //         ),
+          //       ],
+          //     ),
+          //   ],
+          // ),
         ],
         builder: (context, state, navigationShell) {
           return AppBottomNavigationBar(
@@ -217,18 +223,20 @@ class NavigationHelper {
   }
 
   static Future<void> pushPodcastDetail({
-    required PodcastMetadata metadata,
+    String? feedUrl,
+    int? collectionId,
+    required String imageUrl,
     required String heroPrefix,
   }) async {
     final paletteGenerator = await PaletteGenerator.fromImageProvider(
-      Image.network(metadata.thumbImageUrl, cacheWidth: 480).image,
+      Image.network(imageUrl, cacheWidth: 480).image,
       size: const Size.fromWidth(480),
       maximumColorCount: 20,
     );
 
     await router.pushNamed(
       'detail',
-      extra: (metadata, heroPrefix, paletteGenerator),
+      extra: (feedUrl, collectionId, heroPrefix, paletteGenerator),
     );
   }
 

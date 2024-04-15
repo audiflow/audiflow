@@ -16,6 +16,8 @@ import 'package:podcast_search/podcast_search.dart' as pslib;
 ///
 // TODO(unknown): Make this more generic so it's not tied to podcast_search
 abstract class PodcastApi {
+  Future<void> ensureInitialized();
+
   /// Search for podcasts matching the search criteria.
   Future<List<ITunesSearchItem>> search(
     String term, {

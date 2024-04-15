@@ -181,10 +181,10 @@ class MobilePodcastService implements PodcastService {
   //       await _lookupPodcast(metadata: metadata);
   // }
   //
-  // @override
-  // Future<Podcast?> loadPodcastById(int id) async {
-  //   return _repository.findPodcast(id: id);
-  // }
+  @override
+  Future<Podcast?> loadPodcastById(int id) async {
+    return _repository.findPodcast(id: id);
+  }
   //
   // Future<Podcast?> _lookupPodcast({
   //   String? feedUrl,

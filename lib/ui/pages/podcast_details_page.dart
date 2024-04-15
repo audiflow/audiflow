@@ -37,13 +37,15 @@ import 'package:scrolls_to_top/scrolls_to_top.dart';
 /// directly from a search result.
 class PodcastDetailsPage extends HookConsumerWidget {
   const PodcastDetailsPage({
-    required this.metadata,
+    required this.feedUrl,
+    required this.collectionId,
     required this.heroPrefix,
     required this.paletteGenerator,
     super.key,
   });
 
-  final PodcastMetadata metadata;
+  final String? feedUrl;
+  final int? collectionId;
   final String heroPrefix;
   final PaletteGenerator paletteGenerator;
 

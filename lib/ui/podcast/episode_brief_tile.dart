@@ -35,8 +35,8 @@ class EpisodeBriefTile extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final episodeInfo = ref.watch(episodeInfoProvider(episode));
-    final thumbImageUrl = episodeInfo.hasValue
-        ? episodeInfo.value!.podcastMetadata.thumbImageUrl
+    final thumbnailUrl = episodeInfo.hasValue
+        ? episodeInfo.value!.podcast.image
         : '';
 
     return Material(
@@ -54,7 +54,7 @@ class EpisodeBriefTile extends HookConsumerWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                TileImage(url: thumbImageUrl, size: 50),
+                TileImage(url: thumbnailUrl, size: 50),
                 const SizedBox(width: 12),
                 Expanded(child: _Content(episode)),
                 if (sortableIndex != null)

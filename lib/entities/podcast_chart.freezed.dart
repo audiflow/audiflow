@@ -18,8 +18,8 @@ final _privateConstructorUsedError = UnsupportedError(
 mixin _$PodcastChartState {
   int? get size => throw _privateConstructorUsedError;
   String? get genre => throw _privateConstructorUsedError;
-  String? get countryCode => throw _privateConstructorUsedError;
-  List<Podcast> get podcasts => throw _privateConstructorUsedError;
+  Country? get country => throw _privateConstructorUsedError;
+  List<ITunesChartItem> get chartItems => throw _privateConstructorUsedError;
   DateTime? get expiresAt => throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
@@ -36,8 +36,8 @@ abstract class $PodcastChartStateCopyWith<$Res> {
   $Res call(
       {int? size,
       String? genre,
-      String? countryCode,
-      List<Podcast> podcasts,
+      Country? country,
+      List<ITunesChartItem> chartItems,
       DateTime? expiresAt});
 }
 
@@ -56,8 +56,8 @@ class _$PodcastChartStateCopyWithImpl<$Res, $Val extends PodcastChartState>
   $Res call({
     Object? size = freezed,
     Object? genre = freezed,
-    Object? countryCode = freezed,
-    Object? podcasts = null,
+    Object? country = freezed,
+    Object? chartItems = null,
     Object? expiresAt = freezed,
   }) {
     return _then(_value.copyWith(
@@ -69,14 +69,14 @@ class _$PodcastChartStateCopyWithImpl<$Res, $Val extends PodcastChartState>
           ? _value.genre
           : genre // ignore: cast_nullable_to_non_nullable
               as String?,
-      countryCode: freezed == countryCode
-          ? _value.countryCode
-          : countryCode // ignore: cast_nullable_to_non_nullable
-              as String?,
-      podcasts: null == podcasts
-          ? _value.podcasts
-          : podcasts // ignore: cast_nullable_to_non_nullable
-              as List<Podcast>,
+      country: freezed == country
+          ? _value.country
+          : country // ignore: cast_nullable_to_non_nullable
+              as Country?,
+      chartItems: null == chartItems
+          ? _value.chartItems
+          : chartItems // ignore: cast_nullable_to_non_nullable
+              as List<ITunesChartItem>,
       expiresAt: freezed == expiresAt
           ? _value.expiresAt
           : expiresAt // ignore: cast_nullable_to_non_nullable
@@ -96,8 +96,8 @@ abstract class _$$PodcastChartStateImplCopyWith<$Res>
   $Res call(
       {int? size,
       String? genre,
-      String? countryCode,
-      List<Podcast> podcasts,
+      Country? country,
+      List<ITunesChartItem> chartItems,
       DateTime? expiresAt});
 }
 
@@ -114,8 +114,8 @@ class __$$PodcastChartStateImplCopyWithImpl<$Res>
   $Res call({
     Object? size = freezed,
     Object? genre = freezed,
-    Object? countryCode = freezed,
-    Object? podcasts = null,
+    Object? country = freezed,
+    Object? chartItems = null,
     Object? expiresAt = freezed,
   }) {
     return _then(_$PodcastChartStateImpl(
@@ -127,14 +127,14 @@ class __$$PodcastChartStateImplCopyWithImpl<$Res>
           ? _value.genre
           : genre // ignore: cast_nullable_to_non_nullable
               as String?,
-      countryCode: freezed == countryCode
-          ? _value.countryCode
-          : countryCode // ignore: cast_nullable_to_non_nullable
-              as String?,
-      podcasts: null == podcasts
-          ? _value._podcasts
-          : podcasts // ignore: cast_nullable_to_non_nullable
-              as List<Podcast>,
+      country: freezed == country
+          ? _value.country
+          : country // ignore: cast_nullable_to_non_nullable
+              as Country?,
+      chartItems: null == chartItems
+          ? _value._chartItems
+          : chartItems // ignore: cast_nullable_to_non_nullable
+              as List<ITunesChartItem>,
       expiresAt: freezed == expiresAt
           ? _value.expiresAt
           : expiresAt // ignore: cast_nullable_to_non_nullable
@@ -149,24 +149,24 @@ class _$PodcastChartStateImpl implements _PodcastChartState {
   const _$PodcastChartStateImpl(
       {this.size,
       this.genre,
-      this.countryCode,
-      final List<Podcast> podcasts = const [],
+      this.country,
+      final List<ITunesChartItem> chartItems = const [],
       this.expiresAt})
-      : _podcasts = podcasts;
+      : _chartItems = chartItems;
 
   @override
   final int? size;
   @override
   final String? genre;
   @override
-  final String? countryCode;
-  final List<Podcast> _podcasts;
+  final Country? country;
+  final List<ITunesChartItem> _chartItems;
   @override
   @JsonKey()
-  List<Podcast> get podcasts {
-    if (_podcasts is EqualUnmodifiableListView) return _podcasts;
+  List<ITunesChartItem> get chartItems {
+    if (_chartItems is EqualUnmodifiableListView) return _chartItems;
     // ignore: implicit_dynamic_type
-    return EqualUnmodifiableListView(_podcasts);
+    return EqualUnmodifiableListView(_chartItems);
   }
 
   @override
@@ -174,7 +174,7 @@ class _$PodcastChartStateImpl implements _PodcastChartState {
 
   @override
   String toString() {
-    return 'PodcastChartState(size: $size, genre: $genre, countryCode: $countryCode, podcasts: $podcasts, expiresAt: $expiresAt)';
+    return 'PodcastChartState(size: $size, genre: $genre, country: $country, chartItems: $chartItems, expiresAt: $expiresAt)';
   }
 
   @override
@@ -184,16 +184,16 @@ class _$PodcastChartStateImpl implements _PodcastChartState {
             other is _$PodcastChartStateImpl &&
             (identical(other.size, size) || other.size == size) &&
             (identical(other.genre, genre) || other.genre == genre) &&
-            (identical(other.countryCode, countryCode) ||
-                other.countryCode == countryCode) &&
-            const DeepCollectionEquality().equals(other._podcasts, _podcasts) &&
+            (identical(other.country, country) || other.country == country) &&
+            const DeepCollectionEquality()
+                .equals(other._chartItems, _chartItems) &&
             (identical(other.expiresAt, expiresAt) ||
                 other.expiresAt == expiresAt));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, size, genre, countryCode,
-      const DeepCollectionEquality().hash(_podcasts), expiresAt);
+  int get hashCode => Object.hash(runtimeType, size, genre, country,
+      const DeepCollectionEquality().hash(_chartItems), expiresAt);
 
   @JsonKey(ignore: true)
   @override
@@ -207,8 +207,8 @@ abstract class _PodcastChartState implements PodcastChartState {
   const factory _PodcastChartState(
       {final int? size,
       final String? genre,
-      final String? countryCode,
-      final List<Podcast> podcasts,
+      final Country? country,
+      final List<ITunesChartItem> chartItems,
       final DateTime? expiresAt}) = _$PodcastChartStateImpl;
 
   @override
@@ -216,9 +216,9 @@ abstract class _PodcastChartState implements PodcastChartState {
   @override
   String? get genre;
   @override
-  String? get countryCode;
+  Country? get country;
   @override
-  List<Podcast> get podcasts;
+  List<ITunesChartItem> get chartItems;
   @override
   DateTime? get expiresAt;
   @override

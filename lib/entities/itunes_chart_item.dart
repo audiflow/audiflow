@@ -27,7 +27,7 @@ class ITunesChartItem {
     required this.summary,
   });
 
-  factory ITunesChartItem.fromJson({
+  factory ITunesChartItem.fromResponse({
     required Map<String, dynamic> json,
   }) {
     final images = <(int, String)>[];
