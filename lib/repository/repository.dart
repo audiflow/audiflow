@@ -44,9 +44,24 @@ abstract class Repository {
 
   Future<void> close();
 
+  // --- feedUrl
+
+  Future<String?> findFeedUrl({required int collectionId});
+
+  Future<void> saveFeedUrl({
+    required int collectionId,
+    required String feedUrl,
+  });
+
+  // --- collectionId
+
+  Future<int?> findCollectionId({required String feedUrl});
+
   // --- Podcast
 
-  Future<Podcast?> findPodcast({Id? id, int? collectionId});
+  Future<Podcast?> findPodcast(Id id);
+
+  Future<Podcast?> findPodcastBy({required String feedUrl});
 
   Future<void> savePodcasts(Iterable<Podcast> podcasts);
 

@@ -30,6 +30,7 @@ class IsarRepository implements Repository {
         DownloadableSchema,
         EpisodeSchema,
         EpisodeStatsSchema,
+        FeedUrlSchema,
         FundingSchema,
         LockedSchema,
         PersonSchema,
@@ -53,21 +54,60 @@ class IsarRepository implements Repository {
     await isar.close();
   }
 
+  // --- feedUrl
+
+  @override
+  Future<String?> findFeedUrl({required int collectionId}) async {
+    final podcast = await isar.podcasts
+        .where()
+        .filter()
+        .collectionIdEqualTo(collectionId)
+        .findFirst();
+    if (podcast != null) {
+      return podcast.feedUrl;
+    }
+
+    final record = await isar.feedUrls
+        .where()
+        .filter()
+        .collectionIdEqualTo(collectionId)
+        .findFirst();
+    if (record != null) {
+      return record.feedUrl;
+    }
+
+    return null;
+  }
+
+  @override
+  Future<int?> findCollectionId({required String feedUrl}) async {
+    final podcast = await isar.podcasts
+        .where()
+        .filter()
+        .feedUrlEqualTo(feedUrl)
+        .findFirst();
+    return podcast?.collectionId;
+  }
+
+  @override
+  Future<void> saveFeedUrl({
+    required int collectionId,
+    required String feedUrl,
+  }) async {
+    final record = FeedUrl(collectionId: collectionId, feedUrl: feedUrl);
+    await isar.feedUrls.put(record);
+  }
+
   // --- Podcast
 
   @override
-  Future<Podcast?> findPodcast({Id? id, int? collectionId}) {
-    if (id != null) {
-      return isar.podcasts.get(id);
-    }
-    if (collectionId != null) {
-      return isar.podcasts
-          .where()
-          .filter()
-          .collectionIdEqualTo(collectionId)
-          .findFirst();
-    }
-    throw ArgumentError('pid or collectionId must be provided');
+  Future<Podcast?> findPodcast(Id id) {
+    return isar.podcasts.get(id);
+  }
+
+  @override
+  Future<Podcast?> findPodcastBy({required String feedUrl}) async {
+    return isar.podcasts.where().filter().feedUrlEqualTo(feedUrl).findFirst();
   }
 
   @override
