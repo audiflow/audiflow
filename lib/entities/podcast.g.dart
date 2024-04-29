@@ -4552,3 +4552,796 @@ extension PodcastViewStatsQueryProperty
     });
   }
 }
+
+// coverage:ignore-file
+// ignore_for_file: duplicate_ignore, non_constant_identifier_names, constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast, prefer_const_constructors, lines_longer_than_80_chars, require_trailing_commas, inference_failure_on_function_invocation, unnecessary_parenthesis, unnecessary_raw_strings, unnecessary_null_checks, join_return_with_assignment, prefer_final_locals, avoid_js_rounded_ints, avoid_positional_boolean_parameters, always_specify_types
+
+extension GetFeedUrlCollection on Isar {
+  IsarCollection<FeedUrl> get feedUrls => this.collection();
+}
+
+const FeedUrlSchema = CollectionSchema(
+  name: r'FeedUrl',
+  id: -8378702976844546042,
+  properties: {
+    r'collectionId': PropertySchema(
+      id: 0,
+      name: r'collectionId',
+      type: IsarType.long,
+    ),
+    r'feedUrl': PropertySchema(
+      id: 1,
+      name: r'feedUrl',
+      type: IsarType.string,
+    )
+  },
+  estimateSize: _feedUrlEstimateSize,
+  serialize: _feedUrlSerialize,
+  deserialize: _feedUrlDeserialize,
+  deserializeProp: _feedUrlDeserializeProp,
+  idName: r'id',
+  indexes: {
+    r'collectionId': IndexSchema(
+      id: -7489395134515229581,
+      name: r'collectionId',
+      unique: true,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'collectionId',
+          type: IndexType.value,
+          caseSensitive: false,
+        )
+      ],
+    ),
+    r'feedUrl': IndexSchema(
+      id: 2504832307170622621,
+      name: r'feedUrl',
+      unique: true,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'feedUrl',
+          type: IndexType.hash,
+          caseSensitive: true,
+        )
+      ],
+    )
+  },
+  links: {},
+  embeddedSchemas: {},
+  getId: _feedUrlGetId,
+  getLinks: _feedUrlGetLinks,
+  attach: _feedUrlAttach,
+  version: '3.1.0+1',
+);
+
+int _feedUrlEstimateSize(
+  FeedUrl object,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  var bytesCount = offsets.last;
+  bytesCount += 3 + object.feedUrl.length * 3;
+  return bytesCount;
+}
+
+void _feedUrlSerialize(
+  FeedUrl object,
+  IsarWriter writer,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  writer.writeLong(offsets[0], object.collectionId);
+  writer.writeString(offsets[1], object.feedUrl);
+}
+
+FeedUrl _feedUrlDeserialize(
+  Id id,
+  IsarReader reader,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  final object = FeedUrl(
+    collectionId: reader.readLong(offsets[0]),
+    feedUrl: reader.readString(offsets[1]),
+  );
+  return object;
+}
+
+P _feedUrlDeserializeProp<P>(
+  IsarReader reader,
+  int propertyId,
+  int offset,
+  Map<Type, List<int>> allOffsets,
+) {
+  switch (propertyId) {
+    case 0:
+      return (reader.readLong(offset)) as P;
+    case 1:
+      return (reader.readString(offset)) as P;
+    default:
+      throw IsarError('Unknown property with id $propertyId');
+  }
+}
+
+Id _feedUrlGetId(FeedUrl object) {
+  return object.id;
+}
+
+List<IsarLinkBase<dynamic>> _feedUrlGetLinks(FeedUrl object) {
+  return [];
+}
+
+void _feedUrlAttach(IsarCollection<dynamic> col, Id id, FeedUrl object) {}
+
+extension FeedUrlByIndex on IsarCollection<FeedUrl> {
+  Future<FeedUrl?> getByCollectionId(int collectionId) {
+    return getByIndex(r'collectionId', [collectionId]);
+  }
+
+  FeedUrl? getByCollectionIdSync(int collectionId) {
+    return getByIndexSync(r'collectionId', [collectionId]);
+  }
+
+  Future<bool> deleteByCollectionId(int collectionId) {
+    return deleteByIndex(r'collectionId', [collectionId]);
+  }
+
+  bool deleteByCollectionIdSync(int collectionId) {
+    return deleteByIndexSync(r'collectionId', [collectionId]);
+  }
+
+  Future<List<FeedUrl?>> getAllByCollectionId(List<int> collectionIdValues) {
+    final values = collectionIdValues.map((e) => [e]).toList();
+    return getAllByIndex(r'collectionId', values);
+  }
+
+  List<FeedUrl?> getAllByCollectionIdSync(List<int> collectionIdValues) {
+    final values = collectionIdValues.map((e) => [e]).toList();
+    return getAllByIndexSync(r'collectionId', values);
+  }
+
+  Future<int> deleteAllByCollectionId(List<int> collectionIdValues) {
+    final values = collectionIdValues.map((e) => [e]).toList();
+    return deleteAllByIndex(r'collectionId', values);
+  }
+
+  int deleteAllByCollectionIdSync(List<int> collectionIdValues) {
+    final values = collectionIdValues.map((e) => [e]).toList();
+    return deleteAllByIndexSync(r'collectionId', values);
+  }
+
+  Future<Id> putByCollectionId(FeedUrl object) {
+    return putByIndex(r'collectionId', object);
+  }
+
+  Id putByCollectionIdSync(FeedUrl object, {bool saveLinks = true}) {
+    return putByIndexSync(r'collectionId', object, saveLinks: saveLinks);
+  }
+
+  Future<List<Id>> putAllByCollectionId(List<FeedUrl> objects) {
+    return putAllByIndex(r'collectionId', objects);
+  }
+
+  List<Id> putAllByCollectionIdSync(List<FeedUrl> objects,
+      {bool saveLinks = true}) {
+    return putAllByIndexSync(r'collectionId', objects, saveLinks: saveLinks);
+  }
+
+  Future<FeedUrl?> getByFeedUrl(String feedUrl) {
+    return getByIndex(r'feedUrl', [feedUrl]);
+  }
+
+  FeedUrl? getByFeedUrlSync(String feedUrl) {
+    return getByIndexSync(r'feedUrl', [feedUrl]);
+  }
+
+  Future<bool> deleteByFeedUrl(String feedUrl) {
+    return deleteByIndex(r'feedUrl', [feedUrl]);
+  }
+
+  bool deleteByFeedUrlSync(String feedUrl) {
+    return deleteByIndexSync(r'feedUrl', [feedUrl]);
+  }
+
+  Future<List<FeedUrl?>> getAllByFeedUrl(List<String> feedUrlValues) {
+    final values = feedUrlValues.map((e) => [e]).toList();
+    return getAllByIndex(r'feedUrl', values);
+  }
+
+  List<FeedUrl?> getAllByFeedUrlSync(List<String> feedUrlValues) {
+    final values = feedUrlValues.map((e) => [e]).toList();
+    return getAllByIndexSync(r'feedUrl', values);
+  }
+
+  Future<int> deleteAllByFeedUrl(List<String> feedUrlValues) {
+    final values = feedUrlValues.map((e) => [e]).toList();
+    return deleteAllByIndex(r'feedUrl', values);
+  }
+
+  int deleteAllByFeedUrlSync(List<String> feedUrlValues) {
+    final values = feedUrlValues.map((e) => [e]).toList();
+    return deleteAllByIndexSync(r'feedUrl', values);
+  }
+
+  Future<Id> putByFeedUrl(FeedUrl object) {
+    return putByIndex(r'feedUrl', object);
+  }
+
+  Id putByFeedUrlSync(FeedUrl object, {bool saveLinks = true}) {
+    return putByIndexSync(r'feedUrl', object, saveLinks: saveLinks);
+  }
+
+  Future<List<Id>> putAllByFeedUrl(List<FeedUrl> objects) {
+    return putAllByIndex(r'feedUrl', objects);
+  }
+
+  List<Id> putAllByFeedUrlSync(List<FeedUrl> objects, {bool saveLinks = true}) {
+    return putAllByIndexSync(r'feedUrl', objects, saveLinks: saveLinks);
+  }
+}
+
+extension FeedUrlQueryWhereSort on QueryBuilder<FeedUrl, FeedUrl, QWhere> {
+  QueryBuilder<FeedUrl, FeedUrl, QAfterWhere> anyId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(const IdWhereClause.any());
+    });
+  }
+
+  QueryBuilder<FeedUrl, FeedUrl, QAfterWhere> anyCollectionId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'collectionId'),
+      );
+    });
+  }
+}
+
+extension FeedUrlQueryWhere on QueryBuilder<FeedUrl, FeedUrl, QWhereClause> {
+  QueryBuilder<FeedUrl, FeedUrl, QAfterWhereClause> idEqualTo(Id id) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IdWhereClause.between(
+        lower: id,
+        upper: id,
+      ));
+    });
+  }
+
+  QueryBuilder<FeedUrl, FeedUrl, QAfterWhereClause> idNotEqualTo(Id id) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(
+              IdWhereClause.lessThan(upper: id, includeUpper: false),
+            )
+            .addWhereClause(
+              IdWhereClause.greaterThan(lower: id, includeLower: false),
+            );
+      } else {
+        return query
+            .addWhereClause(
+              IdWhereClause.greaterThan(lower: id, includeLower: false),
+            )
+            .addWhereClause(
+              IdWhereClause.lessThan(upper: id, includeUpper: false),
+            );
+      }
+    });
+  }
+
+  QueryBuilder<FeedUrl, FeedUrl, QAfterWhereClause> idGreaterThan(Id id,
+      {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IdWhereClause.greaterThan(lower: id, includeLower: include),
+      );
+    });
+  }
+
+  QueryBuilder<FeedUrl, FeedUrl, QAfterWhereClause> idLessThan(Id id,
+      {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IdWhereClause.lessThan(upper: id, includeUpper: include),
+      );
+    });
+  }
+
+  QueryBuilder<FeedUrl, FeedUrl, QAfterWhereClause> idBetween(
+    Id lowerId,
+    Id upperId, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IdWhereClause.between(
+        lower: lowerId,
+        includeLower: includeLower,
+        upper: upperId,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<FeedUrl, FeedUrl, QAfterWhereClause> collectionIdEqualTo(
+      int collectionId) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'collectionId',
+        value: [collectionId],
+      ));
+    });
+  }
+
+  QueryBuilder<FeedUrl, FeedUrl, QAfterWhereClause> collectionIdNotEqualTo(
+      int collectionId) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'collectionId',
+              lower: [],
+              upper: [collectionId],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'collectionId',
+              lower: [collectionId],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'collectionId',
+              lower: [collectionId],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'collectionId',
+              lower: [],
+              upper: [collectionId],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<FeedUrl, FeedUrl, QAfterWhereClause> collectionIdGreaterThan(
+    int collectionId, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'collectionId',
+        lower: [collectionId],
+        includeLower: include,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<FeedUrl, FeedUrl, QAfterWhereClause> collectionIdLessThan(
+    int collectionId, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'collectionId',
+        lower: [],
+        upper: [collectionId],
+        includeUpper: include,
+      ));
+    });
+  }
+
+  QueryBuilder<FeedUrl, FeedUrl, QAfterWhereClause> collectionIdBetween(
+    int lowerCollectionId,
+    int upperCollectionId, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'collectionId',
+        lower: [lowerCollectionId],
+        includeLower: includeLower,
+        upper: [upperCollectionId],
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<FeedUrl, FeedUrl, QAfterWhereClause> feedUrlEqualTo(
+      String feedUrl) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'feedUrl',
+        value: [feedUrl],
+      ));
+    });
+  }
+
+  QueryBuilder<FeedUrl, FeedUrl, QAfterWhereClause> feedUrlNotEqualTo(
+      String feedUrl) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'feedUrl',
+              lower: [],
+              upper: [feedUrl],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'feedUrl',
+              lower: [feedUrl],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'feedUrl',
+              lower: [feedUrl],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'feedUrl',
+              lower: [],
+              upper: [feedUrl],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+}
+
+extension FeedUrlQueryFilter
+    on QueryBuilder<FeedUrl, FeedUrl, QFilterCondition> {
+  QueryBuilder<FeedUrl, FeedUrl, QAfterFilterCondition> collectionIdEqualTo(
+      int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'collectionId',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<FeedUrl, FeedUrl, QAfterFilterCondition> collectionIdGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'collectionId',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<FeedUrl, FeedUrl, QAfterFilterCondition> collectionIdLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'collectionId',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<FeedUrl, FeedUrl, QAfterFilterCondition> collectionIdBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'collectionId',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<FeedUrl, FeedUrl, QAfterFilterCondition> feedUrlEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'feedUrl',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<FeedUrl, FeedUrl, QAfterFilterCondition> feedUrlGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'feedUrl',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<FeedUrl, FeedUrl, QAfterFilterCondition> feedUrlLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'feedUrl',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<FeedUrl, FeedUrl, QAfterFilterCondition> feedUrlBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'feedUrl',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<FeedUrl, FeedUrl, QAfterFilterCondition> feedUrlStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'feedUrl',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<FeedUrl, FeedUrl, QAfterFilterCondition> feedUrlEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'feedUrl',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<FeedUrl, FeedUrl, QAfterFilterCondition> feedUrlContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'feedUrl',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<FeedUrl, FeedUrl, QAfterFilterCondition> feedUrlMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'feedUrl',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<FeedUrl, FeedUrl, QAfterFilterCondition> feedUrlIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'feedUrl',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<FeedUrl, FeedUrl, QAfterFilterCondition> feedUrlIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'feedUrl',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<FeedUrl, FeedUrl, QAfterFilterCondition> idEqualTo(Id value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'id',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<FeedUrl, FeedUrl, QAfterFilterCondition> idGreaterThan(
+    Id value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'id',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<FeedUrl, FeedUrl, QAfterFilterCondition> idLessThan(
+    Id value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'id',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<FeedUrl, FeedUrl, QAfterFilterCondition> idBetween(
+    Id lower,
+    Id upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'id',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+}
+
+extension FeedUrlQueryObject
+    on QueryBuilder<FeedUrl, FeedUrl, QFilterCondition> {}
+
+extension FeedUrlQueryLinks
+    on QueryBuilder<FeedUrl, FeedUrl, QFilterCondition> {}
+
+extension FeedUrlQuerySortBy on QueryBuilder<FeedUrl, FeedUrl, QSortBy> {
+  QueryBuilder<FeedUrl, FeedUrl, QAfterSortBy> sortByCollectionId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'collectionId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<FeedUrl, FeedUrl, QAfterSortBy> sortByCollectionIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'collectionId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<FeedUrl, FeedUrl, QAfterSortBy> sortByFeedUrl() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'feedUrl', Sort.asc);
+    });
+  }
+
+  QueryBuilder<FeedUrl, FeedUrl, QAfterSortBy> sortByFeedUrlDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'feedUrl', Sort.desc);
+    });
+  }
+}
+
+extension FeedUrlQuerySortThenBy
+    on QueryBuilder<FeedUrl, FeedUrl, QSortThenBy> {
+  QueryBuilder<FeedUrl, FeedUrl, QAfterSortBy> thenByCollectionId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'collectionId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<FeedUrl, FeedUrl, QAfterSortBy> thenByCollectionIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'collectionId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<FeedUrl, FeedUrl, QAfterSortBy> thenByFeedUrl() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'feedUrl', Sort.asc);
+    });
+  }
+
+  QueryBuilder<FeedUrl, FeedUrl, QAfterSortBy> thenByFeedUrlDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'feedUrl', Sort.desc);
+    });
+  }
+
+  QueryBuilder<FeedUrl, FeedUrl, QAfterSortBy> thenById() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'id', Sort.asc);
+    });
+  }
+
+  QueryBuilder<FeedUrl, FeedUrl, QAfterSortBy> thenByIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'id', Sort.desc);
+    });
+  }
+}
+
+extension FeedUrlQueryWhereDistinct
+    on QueryBuilder<FeedUrl, FeedUrl, QDistinct> {
+  QueryBuilder<FeedUrl, FeedUrl, QDistinct> distinctByCollectionId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'collectionId');
+    });
+  }
+
+  QueryBuilder<FeedUrl, FeedUrl, QDistinct> distinctByFeedUrl(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'feedUrl', caseSensitive: caseSensitive);
+    });
+  }
+}
+
+extension FeedUrlQueryProperty
+    on QueryBuilder<FeedUrl, FeedUrl, QQueryProperty> {
+  QueryBuilder<FeedUrl, int, QQueryOperations> idProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'id');
+    });
+  }
+
+  QueryBuilder<FeedUrl, int, QQueryOperations> collectionIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'collectionId');
+    });
+  }
+
+  QueryBuilder<FeedUrl, String, QQueryOperations> feedUrlProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'feedUrl');
+    });
+  }
+}

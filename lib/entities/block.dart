@@ -7,6 +7,7 @@
 // found in the LICENSE file.
 
 import 'package:isar/isar.dart';
+import 'package:podcast_feed/podcast_feed.dart' as feed;
 
 part 'block.g.dart';
 
@@ -17,6 +18,13 @@ class Block {
     required this.block,
     this.blockId,
   });
+
+  factory Block.fromFeed(feed.Block block) {
+    return Block(
+      block: block.block,
+      blockId: block.id,
+    );
+  }
 
   Id? id;
   final bool block;

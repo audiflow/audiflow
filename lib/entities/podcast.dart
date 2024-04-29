@@ -9,6 +9,7 @@
 import 'package:audiflow/core/hash.dart';
 import 'package:audiflow/entities/entities.dart';
 import 'package:isar/isar.dart';
+import 'package:podcast_feed/parsers/channel_parser.dart';
 import 'package:podcast_feed/podcast_feed.dart' show ShowType;
 
 part 'podcast.g.dart';
@@ -34,6 +35,44 @@ class Podcast {
     this.complete = false,
     this.type = ShowType.episodic,
   });
+
+  factory Podcast.fromFeed(ChannelValues values, { required int collectionId }) {
+    final podcast = Podcast(
+      feedUrl: values.feedUrl,
+      collectionId: collectionId,
+      newFeedUrl: values.newFeedUrl,
+      title: values.title,
+      description: values.description,
+      language: values.language,
+      category: values.category,
+      subcategory: values.subcategory,
+      explicit: values.explicit,
+      image: values.imageUrl,
+      link: values.link,
+      guid: values.guid,
+      author: values.author,
+      copyright: values.copyright,
+      complete: values.complete,
+      type: values.type,
+    );
+    if (values.locked != null) {
+      podcast.locked.add(Locked.fromFeed(values.locked!));
+    }
+    if (values.funding.isNotEmpty) {
+      podcast.funding.addAll(values.funding.map(Funding.fromFeed));
+    }
+    if (values.value!=null) {
+      podcast.value.add(Value.fromFeed(values.value!));
+    }
+    if (values.block.isNotEmpty) {
+      podcast.block.addAll(values.block.map(Block.fromFeed));
+    }
+    if (values.person.isNotEmpty) {
+      podcast.person.addAll(values.person.map(Person.fromFeed));
+    }
+
+    return podcast;
+  }
 
   static int pidFrom(String feedUrl) => fastHash(feedUrl);
 
@@ -242,4 +281,18 @@ class PodcastViewStatsUpdateParam {
       listenedEpisodes: listenedEpisodes,
     );
   }
+}
+
+@collection
+class FeedUrl {
+  FeedUrl({
+    required this.collectionId,
+    required this.feedUrl,
+  });
+
+  Id get id => collectionId;
+  @Index(unique: true)
+  final int collectionId;
+  @Index(unique: true)
+  final String feedUrl;
 }
