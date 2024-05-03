@@ -15,4 +15,4 @@ part 'podcast_api_provider.g.dart';
 
 @Riverpod(keepAlive: true)
 PodcastApi podcastApi(PodcastApiRef ref) =>
-    MobilePodcastApi(ref)..ensureInitialized();
+    MobilePodcastApi()..ensureInitialized();

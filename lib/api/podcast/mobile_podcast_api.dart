@@ -13,10 +13,11 @@ import 'package:audiflow/api/podcast/podcast_api.dart';
 import 'package:audiflow/core/environment.dart';
 import 'package:audiflow/entities/entities.dart';
 import 'package:audiflow/services/http/cached_http.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:logging/logging.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:podcast_feed/parsers/channel_item_parser.dart';
-import 'package:podcast_feed/parsers/channel_parser.dart';
 import 'package:podcast_feed/parsers/create_parsers.dart';
 import 'package:podcast_search/podcast_search.dart' as podcast_search;
 
@@ -25,15 +26,21 @@ import 'package:podcast_search/podcast_search.dart' as podcast_search;
 /// A simple wrapper class that interacts with the iTunes/PodcastIndex search API
 /// via the podcast_search package.
 class MobilePodcastApi extends PodcastApi {
-  MobilePodcastApi(this._ref);
+  MobilePodcastApi();
 
+  @override
   Future<void> ensureInitialized() async {
-    _http = _ref.read(cachedHttpProvider);
-    await _http.ensureInitialized();
+    if (_initialized) {
+      return;
+    }
+    _initialized = true;
+    final dir = await getTemporaryDirectory();
+    _cacheDir = dir.path;
   }
 
-  final Ref _ref;
-  late CachedHttp _http;
+  bool _initialized = false;
+  late final String _cacheDir;
+  final _log = Logger('MobilePodcastApi');
 
   static String feedApiEndpoint = 'https://itunes.apple.com';
   static String searchApiEndpoint = 'https://itunes.apple.com/search';
@@ -68,6 +75,17 @@ class MobilePodcastApi extends PodcastApi {
   List<int> _certificateAuthorityBytes = [];
 
   @override
+  Future<ITunesSearchItem?> lookup({required int collectionId}) async {
+    final url = _buildLookupUrl(iTunesId: collectionId);
+    final message = <String, dynamic>{
+      'url': url,
+      'cacheDir': _cacheDir,
+    };
+    final list = await compute(_search, message);
+    return list.firstOrNull;
+  }
+
+  @override
   Future<List<ITunesSearchItem>> search(
     String term, {
     int limit = 20,
@@ -87,17 +105,11 @@ class MobilePodcastApi extends PodcastApi {
       version: version,
     );
 
-    final json = await _http.fetch(url).timeout(const Duration(seconds: 30));
-    if (json == null) {
-      debugPrint('json is null, url=$url');
-      return [];
-    }
-
-    final message = <String, String>{
+    final message = <String, dynamic>{
       'url': url,
-      'json': json as String,
+      'cacheDir': _cacheDir,
     };
-    return compute(_parseSearchResult, message);
+    return compute(_search, message);
   }
 
   @override
@@ -112,34 +124,11 @@ class MobilePodcastApi extends PodcastApi {
       genre: genre,
     );
 
-    final json = await _http.fetch(url).timeout(const Duration(seconds: 30));
-    if (json == null) {
-      debugPrint('json is null, url=$url');
-      return [];
-    }
-
-    final message = <String, String>{
+    final message = <String, dynamic>{
       'url': url,
-      'json': json as String,
+      'cacheDir': _cacheDir,
     };
-    return compute(_parseCharts, message);
-  }
-
-  @override
-  Future<ITunesSearchItem?> lookup({required int collectionId}) async {
-    final url = _buildLookupUrl(iTunesId: collectionId);
-    final json = await _http.fetch(url).timeout(const Duration(seconds: 30));
-    if (json == null) {
-      debugPrint('json is null, url=$url');
-      return null;
-    }
-
-    final message = <String, String>{
-      'url': url,
-      'json': json as String,
-    };
-    final list = await compute(_parseSearchResult, message);
-    return list.firstOrNull;
+    return compute(_charts, message);
   }
 
   @override
@@ -158,22 +147,21 @@ class MobilePodcastApi extends PodcastApi {
   }
 
   @override
-  Future<(ChannelValues?, ItemParser?)> loadFeed(String url) async {
+  Future<(Podcast?, ItemParser?)> loadFeed({
+    required String url,
+    required int collectionId,
+  }) async {
     _setupSecurityContext();
-    final rss = await _http.fetch(url).timeout(const Duration(seconds: 30));
-    if (rss == null) {
-      debugPrint('json is null, url=$url');
-      return (null, null);
-    }
-
-    final message = <String, String>{
+    final message = <String, dynamic>{
       'url': url,
-      'rss': rss as String,
+      'collectionId': collectionId,
+      'cacheDir': _cacheDir,
     };
     try {
-      return compute(_parseFeed, message);
+      final ret = await compute(_loadFeed, message);
+      return ret;
     } on Exception catch (e) {
-      debugPrint('Failed to parse feed: $e\n$url\n$rss');
+      _log.warning('Failed to load feed: $url\n$e');
       return (null, null);
     }
   }
@@ -204,9 +192,18 @@ class MobilePodcastApi extends PodcastApi {
     );
   }
 
-  static List<ITunesChartItem> _parseCharts(Map<String, String> message) {
-    final url = message['url']!;
-    final json = message['json']!;
+  static Future<List<ITunesChartItem>> _charts(
+    Map<String, dynamic> message,
+  ) async {
+    final url = message['url'] as String;
+    final cacheDir = message['cacheDir'] as String;
+    final http = CachedHttp(cacheDir);
+    final json =
+        await http.fetch<String>(url).timeout(const Duration(seconds: 30));
+    if (json == null) {
+      debugPrint('json is null, url=$url');
+      return [];
+    }
 
     final decoded = jsonDecode(json) as Map<String, dynamic>?;
     if (decoded == null) {
@@ -227,16 +224,32 @@ class MobilePodcastApi extends PodcastApi {
     }
 
     return list
-        .map((e) => ITunesChartItem.fromResponse(json: e as Map<String, dynamic>))
+        .map(
+          (e) => ITunesChartItem.fromResponse(json: e as Map<String, dynamic>),
+        )
         .toList();
   }
 
-  static List<ITunesSearchItem> _parseSearchResult(
-    Map<String, String> message,
-  ) {
-    final url = message['url']!;
-    final json = message['json']!;
+  static Future<List<ITunesSearchItem>> _search(
+    Map<String, dynamic> message,
+  ) async {
+    final url = message['url'] as String;
+    final cacheDir = message['cacheDir'] as String;
+    final http = CachedHttp(cacheDir);
+    final json =
+        await http.fetch<String>(url).timeout(const Duration(seconds: 30));
+    if (json == null) {
+      debugPrint('json is null, url=$url');
+      return [];
+    }
 
+    return _parseSearchResult(url: url, json: json);
+  }
+
+  static List<ITunesSearchItem> _parseSearchResult({
+    required String url,
+    required String json,
+  }) {
     final decoded = jsonDecode(json) as Map<String, dynamic>?;
     if (decoded == null) {
       debugPrint('decoded is null, url=$url');
@@ -253,18 +266,32 @@ class MobilePodcastApi extends PodcastApi {
         .toList();
   }
 
-  static Future<(ChannelValues, ItemParser)> _parseFeed(
-    Map<String, String> message,
+  static Future<(Podcast?, ItemParser?)> _loadFeed(
+    Map<String, dynamic> message,
   ) async {
-    final rss = message['rss']!;
+    final url = message['url'] as String;
+    final collectionId = message['collectionId'] as int;
+    final cacheDir = message['cacheDir'] as String;
+    final http = CachedHttp(cacheDir);
+    final rss = await http
+        .fetch<String>(url, responseType: ResponseType.plain)
+        .timeout(const Duration(seconds: 30));
+    if (rss == null) {
+      debugPrint('rss is null, url=$url');
+      return (null, null);
+    }
+
     final (channelParser, itemParser) = await createPodcastFeedParsers(rss);
     final channelValue = await channelParser.parseWith((value) => value).first;
-    return (channelValue, itemParser);
+    return (
+      Podcast.fromFeed(channelValue, collectionId: collectionId),
+      itemParser
+    );
   }
 
   void _setupSecurityContext() {
-    if (_certificateAuthorityBytes.isNotEmpty &&
-        _defaultSecurityContext == null) {
+    if (_defaultSecurityContext == null &&
+        _certificateAuthorityBytes.isNotEmpty) {
       SecurityContext.defaultContext
           .setTrustedCertificatesBytes(_certificateAuthorityBytes);
       _defaultSecurityContext = SecurityContext.defaultContext;
@@ -340,6 +367,6 @@ class MobilePodcastApi extends PodcastApi {
   }
 
   static String _buildLookupUrl({required int iTunesId}) {
-    return Uri.parse('$searchApiEndpoint/lookup?id=$iTunesId').toString();
+    return Uri.parse('$feedApiEndpoint/lookup?id=$iTunesId').toString();
   }
 }

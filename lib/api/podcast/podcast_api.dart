@@ -8,7 +8,6 @@
 
 import 'package:audiflow/entities/entities.dart';
 import 'package:podcast_feed/parsers/channel_item_parser.dart';
-import 'package:podcast_feed/parsers/channel_parser.dart';
 import 'package:podcast_search/podcast_search.dart' as pslib;
 
 /// A simple wrapper class that interacts with the search API via
@@ -43,7 +42,10 @@ abstract class PodcastApi {
   );
 
   /// URL representing the RSS feed for a podcast.
-  Future<(ChannelValues?, ItemParser?)> loadFeed(String url);
+  Future<(Podcast?, ItemParser?)> loadFeed({
+    required String url,
+    required int collectionId,
+  });
 
   /// Load episode chapters via JSON file.
   Future<pslib.Chapters> loadChapters(String url);

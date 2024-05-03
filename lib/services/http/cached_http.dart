@@ -7,29 +7,17 @@
 
 import 'package:dio/dio.dart';
 import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
-import 'package:dio_cache_interceptor_isar_store/dio_cache_interceptor_isar_store.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:dio_cache_interceptor_file_store/dio_cache_interceptor_file_store.dart';
 
-part 'cached_http.g.dart';
+// part 'cached_http.g.dart';
 
-@Riverpod(keepAlive: true)
-CachedHttp cachedHttp(CachedHttpRef ref) => CachedHttp();
+// @Riverpod(keepAlive: true)
+// CachedHttp cachedHttp(CachedHttpRef ref) => CachedHttp();
 
 class CachedHttp {
-  late Dio dio;
-  late CacheOptions cacheOptions;
-  bool _initialized = false;
-
-  Future<void> ensureInitialized() async {
-    if (_initialized) {
-      return;
-    }
-    _initialized = true;
-
-    final dir = await getApplicationDocumentsDirectory();
+  CachedHttp(String cacheDir) {
     cacheOptions = CacheOptions(
-      store: IsarCacheStore(dir.path),
+      store: FileCacheStore(cacheDir),
 
       // Returns a cached response on error but for statuses 401 & 403.
       // Also allows to return a cached response on network errors
@@ -37,8 +25,8 @@ class CachedHttp {
       // Defaults to [null].
       hitCacheOnErrorExcept: [401, 403],
       // Overrides any HTTP directive to delete entry past this duration.
-      // Useful only when origin server has no cache config or custom behaviour is
-      // desired.
+      // Useful only when origin server has no cache config or custom behaviour
+      // is desired.
       // Defaults to [null].
       maxStale: const Duration(days: 7),
     );
@@ -48,15 +36,19 @@ class CachedHttp {
       BaseOptions(
         headers: {
           'User-Agent':
-              'podcast_search/0.4.0 https://github.com/amugofjava/anytime_podcast_player',
+              'podcast_search/0.4.0 https://github.com/reedom/audiflow',
         },
+        validateStatus: (status) => status != null && status < 400,
       ),
     )
       ..interceptors.add(LogInterceptor())
       ..interceptors.add(DioCacheInterceptor(options: cacheOptions));
   }
 
-  Future<dynamic> fetch(
+  late final Dio dio;
+  late final CacheOptions cacheOptions;
+
+  Future<T?> fetch<T>(
     String uri, {
     bool loadFromCache = true,
     ResponseType responseType = ResponseType.json,
@@ -66,7 +58,7 @@ class CachedHttp {
         .copyWith(policy: policy)
         .toOptions()
         .copyWith(responseType: responseType);
-    final res = await dio.get<dynamic>(uri, options: options);
+    final res = await dio.get<T>(uri, options: options);
     return res.data;
   }
 }

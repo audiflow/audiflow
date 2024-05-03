@@ -6,7 +6,7 @@ part of 'podcast_api_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$podcastApiHash() => r'081ab4d8f8dfcb49751c75d5dff2349e56d5ae34';
+String _$podcastApiHash() => r'3bd1c7ff4ac08a9f38fe6c6451c7b621ee328057';
 
 /// See also [podcastApi].
 @ProviderFor(podcastApi)
