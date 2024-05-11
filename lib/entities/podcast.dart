@@ -1,11 +1,3 @@
-// Copyright (c) 2024 by HANAI, Tohru.
-// Copyright (c) 2024 Reedom, Inc.
-// Additional contributions from project contributors.
-// Originally (c) 2020 Ben Hills and the project contributors.
-// All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
 import 'package:audiflow/core/hash.dart';
 import 'package:audiflow/entities/entities.dart';
 import 'package:isar/isar.dart';
@@ -36,7 +28,7 @@ class Podcast {
     this.type = ShowType.episodic,
   });
 
-  factory Podcast.fromFeed(ChannelValues values, { required int collectionId }) {
+  factory Podcast.fromFeed(ChannelValues values, {required int collectionId}) {
     final podcast = Podcast(
       feedUrl: values.feedUrl,
       collectionId: collectionId,
@@ -61,7 +53,7 @@ class Podcast {
     if (values.funding.isNotEmpty) {
       podcast.funding.addAll(values.funding.map(Funding.fromFeed));
     }
-    if (values.value!=null) {
+    if (values.value != null) {
       podcast.value.add(Value.fromFeed(values.value!));
     }
     if (values.block.isNotEmpty) {

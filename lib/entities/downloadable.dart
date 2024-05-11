@@ -1,11 +1,3 @@
-// Copyright (c) 2024 by HANAI, Tohru.
-// Copyright (c) 2024 Reedom, Inc.
-// Additional contributions from project contributors.
-// Originally (c) 2020 Ben Hills and the project contributors.
-// All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
 import 'package:audiflow/core/hash.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:isar/isar.dart';
@@ -67,7 +59,8 @@ class Downloadable {
   final DownloadState state;
 
   /// Percentage of MP3 downloaded
-  @Default(0) int percentage;
+  @Default(0)
+  int percentage;
 
   Downloadable copyWith({
     String? url,
