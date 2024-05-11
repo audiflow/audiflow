@@ -1,29 +1,60 @@
-// Copyright (c) 2024 by HANAI, Tohru.
-// Copyright (c) 2024 Reedom, Inc.
-// Additional contributions from project contributors.
-// Originally (c) 2020 Ben Hills and the project contributors.
-// All rights reserved.
-
 import 'package:audiflow/entities/entities.dart';
+import 'package:audiflow/stopwatch.dart';
 import 'package:audiflow/ui/app/app_bottom_navigation_bar.dart';
-// import 'package:audiflow/ui/pages/episode_page.dart';
-// import 'package:audiflow/ui/pages/latest_episodes_page.dart';
-// import 'package:audiflow/ui/pages/library_page.dart';
-// import 'package:audiflow/ui/pages/podcast_details_page.dart';
 import 'package:audiflow/ui/pages/podcast_home_page.dart';
-// import 'package:audiflow/ui/pages/podcast_season_page.dart';
-// import 'package:audiflow/ui/pages/recently_played_page.dart';
-// import 'package:audiflow/ui/pages/search_page.dart';
-// import 'package:audiflow/ui/pages/settings_page.dart';
+import 'package:audiflow/ui/pages/podcast_intro_page.dart';
+import 'package:audiflow/ui/providers/app_wide_providers.dart';
+import 'package:audiflow/ui/widgets/error_notifier.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:palette_generator/palette_generator.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-class NavigationHelper {
-  factory NavigationHelper.setup() => _instance;
+part 'router.g.dart';
 
-  NavigationHelper._internal() {
-    final routes = [
+@Riverpod(keepAlive: true)
+AppRouter router(RouterRef ref) {
+  return AppRouter(ref);
+}
+
+class AppRouter {
+  AppRouter(this._ref) {
+    _router = GoRouter(
+      navigatorKey: parentNavigatorKey,
+      initialLocation: homePath,
+      routes: _routes,
+    );
+  }
+
+  static const String homePath = '/home';
+  static const String searchPath = '/search';
+  static const String libraryPath = '/library';
+
+  final Ref _ref;
+  late final GoRouter _router;
+
+  final GlobalKey<NavigatorState> parentNavigatorKey =
+      GlobalKey<NavigatorState>();
+  final GlobalKey<NavigatorState> homeTabNavigatorKey =
+      GlobalKey<NavigatorState>();
+  final GlobalKey<NavigatorState> searchTabNavigatorKey =
+      GlobalKey<NavigatorState>();
+  final GlobalKey<NavigatorState> libraryTabNavigatorKey =
+      GlobalKey<NavigatorState>();
+  final GlobalKey<NavigatorState> settingsTabNavigatorKey =
+      GlobalKey<NavigatorState>();
+
+  BuildContext get context =>
+      _router.routerDelegate.navigatorKey.currentContext!;
+
+  GoRouterDelegate get routerDelegate => _router.routerDelegate;
+
+  GoRouteInformationParser get routeInformationParser =>
+      _router.routeInformationParser;
+
+  List<RouteBase> get _routes {
+    return [
       StatefulShellRoute.indexedStack(
         parentNavigatorKey: parentNavigatorKey,
         branches: [
@@ -38,7 +69,7 @@ class NavigationHelper {
                     child: const PodcastHomePage(),
                   );
                 },
-                // routes: [
+                routes: [
                   // GoRoute(
                   //   path: 'season',
                   //   name: 'season',
@@ -56,27 +87,32 @@ class NavigationHelper {
                   //     );
                   //   },
                   // ),
+                  GoRoute(
+                    path: 'intro',
+                    name: 'intro',
+                    parentNavigatorKey: homeTabNavigatorKey,
+                    pageBuilder: (context, state) {
+                      final collectionId = state.extra! as int;
+                      elapsedTime('navi: show PodcastIntroPage');
+                      return _getPage(
+                        child: PodcastIntroPage(
+                          collectionId: collectionId,
+                        ),
+                        state: state,
+                      );
+                    },
+                  )
                   // GoRoute(
                   //   path: 'detail',
                   //   name: 'detail',
                   //   parentNavigatorKey: homeTabNavigatorKey,
                   //   pageBuilder: (context, state) {
-                  //     final (
-                  //       feedUrl,
-                  //       collectionId,
-                  //       heroPrefix,
-                  //       paletteGenerator
-                  //     ) = state.extra! as (
-                  //       String,
-                  //       int,
-                  //       String,
-                  //       PaletteGenerator
-                  //     );
+                  //     final (feedUrl, collectionId, paletteGenerator) =
+                  //         state.extra! as (String?, int?, PaletteGenerator);
                   //     return _getPage(
                   //       child: PodcastDetailsPage(
                   //         feedUrl: feedUrl,
                   //         collectionId: collectionId,
-                  //         heroPrefix: heroPrefix,
                   //         paletteGenerator: paletteGenerator,
                   //       ),
                   //       state: state,
@@ -110,7 +146,7 @@ class NavigationHelper {
                   //     );
                   //   },
                   // ),
-          //       ],
+                ],
               ),
             ],
           ),
@@ -168,51 +204,22 @@ class NavigationHelper {
           // ),
         ],
         builder: (context, state, navigationShell) {
-          return AppBottomNavigationBar(
-            navigationShell: navigationShell,
+          return AppWideProvidersInitializer(
+            child: Stack(
+              children: [
+                const ErrorNotifier(),
+                AppBottomNavigationBar(
+                  navigationShell: navigationShell,
+                ),
+              ],
+            ),
           );
         },
       ),
     ];
-
-    router = GoRouter(
-      navigatorKey: parentNavigatorKey,
-      initialLocation: homePath,
-      routes: routes,
-    );
   }
 
-  static final NavigationHelper _instance = NavigationHelper._internal();
-
-  static late final GoRouter router;
-
-  static final GlobalKey<NavigatorState> parentNavigatorKey =
-      GlobalKey<NavigatorState>();
-  static final GlobalKey<NavigatorState> homeTabNavigatorKey =
-      GlobalKey<NavigatorState>();
-  static final GlobalKey<NavigatorState> searchTabNavigatorKey =
-      GlobalKey<NavigatorState>();
-  static final GlobalKey<NavigatorState> libraryTabNavigatorKey =
-      GlobalKey<NavigatorState>();
-  static final GlobalKey<NavigatorState> settingsTabNavigatorKey =
-      GlobalKey<NavigatorState>();
-
-  static BuildContext get context =>
-      router.routerDelegate.navigatorKey.currentContext!;
-
-  GoRouterDelegate get routerDelegate => router.routerDelegate;
-
-  GoRouteInformationParser get routeInformationParser =>
-      router.routeInformationParser;
-
-  static const String signUpPath = '/signUp';
-  static const String signInPath = '/signIn';
-
-  static const String homePath = '/home';
-  static const String searchPath = '/search';
-  static const String libraryPath = '/library';
-
-  static Page<Widget> _getPage({
+  Page<Widget> _getPage({
     required Widget child,
     required GoRouterState state,
   }) {
@@ -222,48 +229,50 @@ class NavigationHelper {
     );
   }
 
-  static Future<void> pushPodcastDetail({
-    String? feedUrl,
-    int? collectionId,
-    required String imageUrl,
-    required String heroPrefix,
-  }) async {
+  Future<void> pushPodcastDetail(Podcast podcast) async {
     final paletteGenerator = await PaletteGenerator.fromImageProvider(
-      Image.network(imageUrl, cacheWidth: 480).image,
+      Image.network(podcast.image, cacheWidth: 480).image,
       size: const Size.fromWidth(480),
       maximumColorCount: 20,
     );
 
-    await router.pushNamed(
+    await _router.pushNamed(
       'detail',
-      extra: (feedUrl, collectionId, heroPrefix, paletteGenerator),
+      extra: (podcast, paletteGenerator),
     );
   }
 
-  static Future<void> pushEpisodeDetail({
+  Future<void> pushPodcastIntro(int collectionId) async {
+    await _router.pushNamed(
+      'intro',
+      extra: collectionId,
+    );
+  }
+
+  Future<void> pushEpisodeDetail({
     required Episode episode,
     required String heroPrefix,
   }) async {
-    await NavigationHelper.router.pushNamed(
+    await _router.pushNamed(
       'episode',
       extra: (episode, heroPrefix),
     );
   }
 
-  static Future<void> pushSettings() async {
-    await NavigationHelper.router.pushNamed(
+  Future<void> pushSettings() async {
+    await _router.pushNamed(
       'settings',
     );
   }
 
-  static Future<void> pushLatestEpisodes() async {
-    await NavigationHelper.router.pushNamed(
+  Future<void> pushLatestEpisodes() async {
+    await _router.pushNamed(
       'latestEpisodes',
     );
   }
 
-  static Future<void> pushRecentlyPlayed() async {
-    await NavigationHelper.router.pushNamed(
+  Future<void> pushRecentlyPlayed() async {
+    await _router.pushNamed(
       'recentlyPlayed',
     );
   }
