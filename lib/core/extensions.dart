@@ -1,11 +1,3 @@
-// Copyright (c) 2024 by HANAI, Tohru.
-// Copyright (c) 2024 Reedom, Inc.
-// Additional contributions from project contributors.
-// Originally (c) 2020 Ben Hills and the project contributors.
-// All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
 import 'package:collection/collection.dart';
 
 extension IterableExtensions<E> on Iterable<E> {
@@ -27,17 +19,5 @@ extension IterableExtensions<E> on Iterable<E> {
 }
 
 extension ExtString on String? {
-  String get forceHttps {
-    if (this != null) {
-      final url = Uri.tryParse(this!);
-
-      if (url == null || !url.isScheme('http')) {
-        return this!;
-      }
-
-      return url.replace(scheme: 'https').toString();
-    }
-
-    return this ?? '';
-  }
+  String? get forceHttps => this?.replaceFirst(RegExp(r'^http://'), 'https://');
 }
