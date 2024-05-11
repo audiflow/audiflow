@@ -1,11 +1,3 @@
-// Copyright (c) 2024 by HANAI, Tohru.
-// Copyright (c) 2024 Reedom, Inc.
-// Additional contributions from project contributors.
-// Originally (c) 2020 Ben Hills and the project contributors.
-// All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
 import 'dart:io';
 
 import 'package:audiflow/repository/repository_provider.dart';
@@ -54,12 +46,12 @@ class MobileOPMLService extends OPMLService {
         break;
       }
       _opmlEventStream.add(
-            OPMLLoadingEvent(
-              current: ++current,
-              total: total,
-              podcastTitle: p.text ?? '',
-            ),
-          );
+        OPMLLoadingEvent(
+          current: ++current,
+          total: total,
+          podcastTitle: p.text ?? '',
+        ),
+      );
 
       try {
         _log.fine('Importing podcast ${p.xmlUrl}');

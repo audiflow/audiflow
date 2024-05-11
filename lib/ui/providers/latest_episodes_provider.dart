@@ -1,12 +1,6 @@
-// Copyright (c) 2024 by HANAI, Tohru.
-// Copyright (c) 2024 Reedom, Inc.
-// Additional contributions from project contributors.
-// All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
 import 'dart:async';
 
+import 'package:audiflow/core/logger.dart';
 import 'package:audiflow/entities/entities.dart';
 import 'package:audiflow/repository/episode_event.dart';
 import 'package:audiflow/repository/repository_provider.dart';
@@ -15,7 +9,6 @@ import 'package:audiflow/ui/providers/podcast_subscriptions_provider.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:logging/logging.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'latest_episodes_provider.freezed.dart';
@@ -23,7 +16,6 @@ part 'latest_episodes_provider.g.dart';
 
 @Riverpod(keepAlive: true)
 class LatestEpisodes extends _$LatestEpisodes {
-  final _log = Logger('LatestEpisodes');
   final _subscriptions = <String, ProviderSubscription<dynamic>>{};
 
   Repository get _repository => ref.read(repositoryProvider);
@@ -34,7 +26,7 @@ class LatestEpisodes extends _$LatestEpisodes {
 
   @override
   LatestEpisodesState build() {
-    _log.fine('build');
+    logger.d('build');
     unawaited(_listen());
     return const LatestEpisodesState();
   }

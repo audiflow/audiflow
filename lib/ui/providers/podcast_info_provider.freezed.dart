@@ -18,6 +18,7 @@ final _privateConstructorUsedError = UnsupportedError(
 mixin _$PodcastInfoState {
   Podcast get podcast => throw _privateConstructorUsedError;
   PodcastStats? get stats => throw _privateConstructorUsedError;
+  List<Episode> get episodes => throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
   $PodcastInfoStateCopyWith<PodcastInfoState> get copyWith =>
@@ -30,7 +31,7 @@ abstract class $PodcastInfoStateCopyWith<$Res> {
           PodcastInfoState value, $Res Function(PodcastInfoState) then) =
       _$PodcastInfoStateCopyWithImpl<$Res, PodcastInfoState>;
   @useResult
-  $Res call({Podcast podcast, PodcastStats? stats});
+  $Res call({Podcast podcast, PodcastStats? stats, List<Episode> episodes});
 }
 
 /// @nodoc
@@ -48,6 +49,7 @@ class _$PodcastInfoStateCopyWithImpl<$Res, $Val extends PodcastInfoState>
   $Res call({
     Object? podcast = null,
     Object? stats = freezed,
+    Object? episodes = null,
   }) {
     return _then(_value.copyWith(
       podcast: null == podcast
@@ -58,6 +60,10 @@ class _$PodcastInfoStateCopyWithImpl<$Res, $Val extends PodcastInfoState>
           ? _value.stats
           : stats // ignore: cast_nullable_to_non_nullable
               as PodcastStats?,
+      episodes: null == episodes
+          ? _value.episodes
+          : episodes // ignore: cast_nullable_to_non_nullable
+              as List<Episode>,
     ) as $Val);
   }
 }
@@ -70,7 +76,7 @@ abstract class _$$PodcastInfoStateImplCopyWith<$Res>
       __$$PodcastInfoStateImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({Podcast podcast, PodcastStats? stats});
+  $Res call({Podcast podcast, PodcastStats? stats, List<Episode> episodes});
 }
 
 /// @nodoc
@@ -86,6 +92,7 @@ class __$$PodcastInfoStateImplCopyWithImpl<$Res>
   $Res call({
     Object? podcast = null,
     Object? stats = freezed,
+    Object? episodes = null,
   }) {
     return _then(_$PodcastInfoStateImpl(
       podcast: null == podcast
@@ -96,6 +103,10 @@ class __$$PodcastInfoStateImplCopyWithImpl<$Res>
           ? _value.stats
           : stats // ignore: cast_nullable_to_non_nullable
               as PodcastStats?,
+      episodes: null == episodes
+          ? _value._episodes
+          : episodes // ignore: cast_nullable_to_non_nullable
+              as List<Episode>,
     ));
   }
 }
@@ -103,16 +114,27 @@ class __$$PodcastInfoStateImplCopyWithImpl<$Res>
 /// @nodoc
 
 class _$PodcastInfoStateImpl implements _PodcastInfoState {
-  const _$PodcastInfoStateImpl({required this.podcast, this.stats});
+  const _$PodcastInfoStateImpl(
+      {required this.podcast,
+      this.stats,
+      required final List<Episode> episodes})
+      : _episodes = episodes;
 
   @override
   final Podcast podcast;
   @override
   final PodcastStats? stats;
+  final List<Episode> _episodes;
+  @override
+  List<Episode> get episodes {
+    if (_episodes is EqualUnmodifiableListView) return _episodes;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_episodes);
+  }
 
   @override
   String toString() {
-    return 'PodcastInfoState(podcast: $podcast, stats: $stats)';
+    return 'PodcastInfoState(podcast: $podcast, stats: $stats, episodes: $episodes)';
   }
 
   @override
@@ -121,11 +143,13 @@ class _$PodcastInfoStateImpl implements _PodcastInfoState {
         (other.runtimeType == runtimeType &&
             other is _$PodcastInfoStateImpl &&
             (identical(other.podcast, podcast) || other.podcast == podcast) &&
-            (identical(other.stats, stats) || other.stats == stats));
+            (identical(other.stats, stats) || other.stats == stats) &&
+            const DeepCollectionEquality().equals(other._episodes, _episodes));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, podcast, stats);
+  int get hashCode => Object.hash(runtimeType, podcast, stats,
+      const DeepCollectionEquality().hash(_episodes));
 
   @JsonKey(ignore: true)
   @override
@@ -138,12 +162,15 @@ class _$PodcastInfoStateImpl implements _PodcastInfoState {
 abstract class _PodcastInfoState implements PodcastInfoState {
   const factory _PodcastInfoState(
       {required final Podcast podcast,
-      final PodcastStats? stats}) = _$PodcastInfoStateImpl;
+      final PodcastStats? stats,
+      required final List<Episode> episodes}) = _$PodcastInfoStateImpl;
 
   @override
   Podcast get podcast;
   @override
   PodcastStats? get stats;
+  @override
+  List<Episode> get episodes;
   @override
   @JsonKey(ignore: true)
   _$$PodcastInfoStateImplCopyWith<_$PodcastInfoStateImpl> get copyWith =>

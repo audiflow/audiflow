@@ -1,19 +1,11 @@
-// Copyright (c) 2024 by HANAI, Tohru.
-// Copyright (c) 2024 Reedom, Inc.
-// Additional contributions from project contributors.
-// All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
 import 'dart:async';
 
-import 'package:audiflow/core/utils.dart';
+import 'package:audiflow/core/exception/app_exception.dart';
+import 'package:audiflow/core/logger.dart';
 import 'package:audiflow/entities/podcast.dart';
-import 'package:audiflow/errors/errors.dart';
 import 'package:audiflow/repository/repository_provider.dart';
 import 'package:audiflow/services/error/error_manager.dart';
 import 'package:audiflow/ui/providers/podcast_subscriptions_provider.dart';
-import 'package:logging/logging.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:rxdart/rxdart.dart';
 
@@ -21,8 +13,6 @@ part 'podcast_refresher_provider.g.dart';
 
 @Riverpod(keepAlive: true)
 class PodcastRefresher extends _$PodcastRefresher {
-  final _log = Logger('PodcastRefresher');
-
   final _inputState = PublishSubject<List<Podcast>>();
   Timer? _timer;
   (Podcast, PodcastStats)? _nextRefreshTarget;
@@ -100,7 +90,7 @@ class PodcastRefresher extends _$PodcastRefresher {
     }
 
     final podcast = _nextRefreshTarget!.$1;
-    _log.fine('refresh target: ${podcast.title}');
+    logger.d('refresh target: ${podcast.title}');
 
     try {
       // final loaded = await ref
@@ -117,9 +107,9 @@ class PodcastRefresher extends _$PodcastRefresher {
       //     ),
       //   );
       // }
-    } on NetworkError catch (e) {
-      _log.warning('Network error: ${e.type}');
-      if (e is NoConnectivityError) {
+    } on NetworkException catch (e) {
+      logger.w('Network error: e');
+      if (e is NoConnectivityException) {
         _errorManager.retryOnReconnect(
           key: 'refresh/${podcast.guid}',
           retry: _refreshTarget,

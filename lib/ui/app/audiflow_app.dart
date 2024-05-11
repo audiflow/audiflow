@@ -1,35 +1,42 @@
-// Copyright (c) 2024 by HANAI, Tohru.
-// Copyright (c) 2024 Reedom, Inc.
-// Additional contributions from project contributors.
-// Originally (c) 2020 Ben Hills and the project contributors.
-// All rights reserved.
-
-import 'package:audiflow/ui/app/navigation_helper.dart';
-import 'package:audiflow/ui/color_schemes.g.dart';
+import 'package:audiflow/core/exception/index.dart';
+import 'package:audiflow/gen/l10n/l10n.dart';
+import 'package:audiflow/ui/app/router/router_provider.dart';
+import 'package:audiflow/ui/app/themes/themes.dart';
+import 'package:audiflow/ui/util/snack_bar_manager.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/messages_all.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-class AudiflowApp extends StatelessWidget {
+class AudiflowApp extends ConsumerWidget {
   const AudiflowApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final themeMode = ref.watch(themeModeNotifierProvider);
+
+    ref.listen<AppException?>(
+      appExceptionNotifierProvider,
+      (_, appException) {
+        if (appException != null) {
+          SnackBarManager.showSnackBar(
+            'An error occurred: ${appException.message}',
+          );
+          ref.read(appExceptionNotifierProvider.notifier).consume();
+        }
+      },
+    );
+
     return MaterialApp.router(
-      debugShowCheckedModeBanner: false,
-      routerConfig: NavigationHelper.router,
-      localizationsDelegates: const <LocalizationsDelegate<Object>>[
-        AppLocalizations.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
+      localizationsDelegates: const [
+        ...L10n.localizationsDelegates,
       ],
       supportedLocales: const [
-        Locale('en'),
-        Locale('ja'),
+        ...L10n.supportedLocales,
       ],
+      scaffoldMessengerKey: SnackBarManager.rootScaffoldMessengerKey,
+      routerConfig: ref.watch(routerProvider).router,
       theme: ThemeData(useMaterial3: true, colorScheme: lightColorScheme),
       darkTheme: ThemeData(useMaterial3: true, colorScheme: darkColorScheme),
+      themeMode: themeMode,
     );
   }
 }

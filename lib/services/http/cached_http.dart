@@ -1,10 +1,3 @@
-//  Copyright (c) 2024 by HANAI, Tohru.
-//  Copyright (c) 2024 Reedom, Inc.
-//  Additional contributions from project contributors.
-//  All rights reserved.
-//  Use of this source code is governed by a BSD-style license that can be
-//  found in the LICENSE file.
-
 import 'package:dio/dio.dart';
 import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
 import 'package:dio_cache_interceptor_file_store/dio_cache_interceptor_file_store.dart';

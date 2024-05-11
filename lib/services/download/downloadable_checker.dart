@@ -1,15 +1,8 @@
-// Copyright (c) 2024 by HANAI, Tohru.
-// Copyright (c) 2024 Reedom, Inc.
-// Additional contributions from project contributors.
-// All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
-import 'package:audiflow/core/l10n.dart';
 import 'package:audiflow/entities/entities.dart';
+import 'package:audiflow/gen/l10n/l10n.dart';
 import 'package:audiflow/services/connectivity/connectivity.dart';
 import 'package:audiflow/services/settings/settings_service.dart';
-import 'package:audiflow/ui/app/navigation_helper.dart';
+import 'package:audiflow/ui/app/router/router_provider.dart';
 import 'package:audiflow/ui/dialogs/warn_no_wifi.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -36,13 +29,15 @@ class DownloadableChecker {
       return true;
     }
 
-    assert(NavigationHelper.context.mounted);
-    if (!NavigationHelper.context.mounted) {
+    final router = _ref.read(routerProvider);
+    assert(router.context.mounted);
+    if (!router.context.mounted) {
       return false;
     }
 
-    final l10n = L10n.of(NavigationHelper.context)!;
+    final l10n = L10n.of(router.context);
     return await warnNoWifi(
+          router.context,
           caption: l10n.captionDownloadNoWifi,
           proceedCaption: l10n.proceedDownload,
         ) ??

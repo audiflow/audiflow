@@ -1,11 +1,4 @@
-// Copyright (c) 2024 by HANAI, Tohru.
-// Copyright (c) 2024 Reedom, Inc.
-// Additional contributions from project contributors.
-// All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
-import 'package:audiflow/core/l10n.dart';
+import 'package:audiflow/gen/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -21,7 +14,7 @@ class DateTimeString {
   }
 
   static String relativeDateTime(BuildContext context, Duration elapsed) {
-    final l10n = L10n.of(context)!;
+    final l10n = L10n.of(context);
 
     if (1 <= elapsed.inDays) {
       return l10n.nDaysAgo(elapsed.inDays);

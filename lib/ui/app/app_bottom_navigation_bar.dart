@@ -1,16 +1,11 @@
-// Copyright (c) 2024 by HANAI, Tohru.
-// Copyright (c) 2024 Reedom, Inc.
-// Additional contributions from project contributors.
-// Originally (c) 2020 Ben Hills and the project contributors.
-// All rights reserved.
-
 import 'dart:math' as math;
 
-import 'package:audiflow/core/l10n.dart';
+import 'package:audiflow/gen/l10n/l10n.dart';
 import 'package:audiflow/services/audio/audio_player_service.dart';
 import 'package:audiflow/services/podcast/podcast_service_provider.dart';
 import 'package:audiflow/ui/mini_player/utils.dart';
 import 'package:audiflow/ui/player/player.dart';
+import 'package:audiflow/ui/providers/app_wide_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
@@ -26,6 +21,20 @@ double playerMaxHeight(BuildContext content) {
 
 const miniPlayerPercentageDeclaration = 0.2;
 const kAppBottomNavigationBarHeight = 89.0;
+
+class Wrapper extends ConsumerWidget {
+  const Wrapper({
+    required this.child,
+    super.key,
+  });
+
+  final Widget child;
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(appWideProvider);
+    return child;
+  }
+}
 
 class AppBottomNavigationBar extends HookConsumerWidget {
   const AppBottomNavigationBar({
@@ -49,7 +58,7 @@ class AppBottomNavigationBar extends HookConsumerWidget {
     final playingEpisode = ref.watch(
       audioPlayerServiceProvider.select((state) => state?.episode),
     );
-    final l10n = L10n.of(context)!;
+    final l10n = L10n.of(context);
     final theme = Theme.of(context);
     return Scaffold(
       body: SafeArea(

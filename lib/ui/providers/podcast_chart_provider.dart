@@ -1,16 +1,9 @@
-// Copyright (c) 2024 by HANAI, Tohru.
-// Copyright (c) 2024 Reedom, Inc.
-// Additional contributions from project contributors.
-// All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
+import 'package:audiflow/core/exception/app_exception.dart';
+import 'package:audiflow/core/logger.dart';
 import 'package:audiflow/entities/entities.dart';
-import 'package:audiflow/errors/errors.dart';
 import 'package:audiflow/events/podcast_chart_event.dart';
 import 'package:audiflow/services/error/error_manager.dart';
 import 'package:audiflow/services/podcast/podcast_service_provider.dart';
-import 'package:logging/logging.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'podcast_chart_provider.g.dart';
@@ -19,7 +12,6 @@ part 'podcast_chart_provider.g.dart';
 class PodcastChart extends _$PodcastChart {
   static const _ttl = Duration(hours: 3);
   static const _errorKey = 'podcastChart';
-  final _log = Logger('PodcastChart');
 
   ErrorManager get _errorManager => ref.read(errorManagerProvider.notifier);
 
@@ -53,7 +45,7 @@ class PodcastChart extends _$PodcastChart {
   }
 
   Future<void> _searchNewChart(NewPodcastChartEvent event) async {
-    _log.fine('_searchNewChart $event');
+    logger.d('_searchNewChart $event');
     _errorManager.unregisterRetry(_errorKey);
 
     try {
@@ -71,9 +63,9 @@ class PodcastChart extends _$PodcastChart {
         expiresAt: DateTime.now().add(_ttl),
       );
       state = AsyncData(newState);
-    } on NetworkError catch (e) {
-      _log.warning('Network error: ${e.type}');
-      if (e is NoConnectivityError) {
+    } on NetworkException catch (e) {
+      logger.w('Network error: $e');
+      if (e is NoConnectivityException) {
         _errorManager.retryOnReconnect(
           key: _errorKey,
           retry: () => _searchNewChart(event),

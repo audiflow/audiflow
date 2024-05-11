@@ -1,14 +1,8 @@
-// Copyright (c) 2024 by HANAI, Tohru.
-// Copyright (c) 2024 Reedom, Inc.
-// Additional contributions from project contributors.
-// All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
 import 'package:audiflow/entities/entities.dart';
 import 'package:audiflow/services/audio/audio_player_service.dart';
 import 'package:audiflow/services/podcast/podcast_service_provider.dart';
 import 'package:audiflow/ui/app/navigation_helper.dart';
+import 'package:audiflow/ui/app/router/router_provider.dart';
 import 'package:audiflow/ui/pages/app_bars/episode_page_app_bar.dart';
 import 'package:audiflow/ui/providers/episode_info_provider.dart';
 import 'package:audiflow/ui/providers/podcast_info_provider.dart';
@@ -113,10 +107,10 @@ class _EpisodeHeader extends HookConsumerWidget {
                   ? metadata.thumbnailUrl
                   : null,
               onTap: () {
-                NavigationHelper.pushPodcastDetail(
-                  metadata: metadata,
-                  heroPrefix: '',
-                );
+                // ref.read(routerProvider).pushPodcastDetail(
+                //   metadata: metadata,
+                //   heroPrefix: '',
+                // );
               },
             ),
             _EpisodePlayButton(episode: episode),

@@ -1,10 +1,3 @@
-// Copyright (c) 2024 by HANAI, Tohru.
-// Copyright (c) 2024 Reedom, Inc.
-// Additional contributions from project contributors.
-// All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
 import 'dart:async';
 
 import 'package:audiflow/entities/entities.dart';
@@ -95,9 +88,9 @@ class PodcastSearch extends _$PodcastSearch {
       );
       await _repository.savePodcastMetadataList(metadataList);
       state = AsyncData(newState);
-    } on NetworkError catch (e) {
+    } on NetworkException catch (e) {
       _log.warning('Network error: ${e.type}');
-      if (e is NoConnectivityError) {
+      if (e is NoConnectivityException) {
         _errorManager.retryOnReconnect(
           key: _errorKey,
           retry: () => _search(event),

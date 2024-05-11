@@ -1,11 +1,4 @@
-// Copyright (c) 2024 by HANAI, Tohru.
-// Copyright (c) 2024 Reedom, Inc.
-// Additional contributions from project contributors.
-// All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
-import 'package:audiflow/errors/errors.dart';
+import 'package:audiflow/core/exception/app_exception.dart';
 import 'package:audiflow/services/connectivity/connectivity_state.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/cupertino.dart';
@@ -18,10 +11,12 @@ class ErrorManager extends _$ErrorManager {
   final Map<String, VoidCallback> _retries = {};
 
   @override
-  Stream<NetworkError> build() async* {
+  Stream<AppException> build() async* {
     ref.listen(
-        connectivityStateProvider
-            .select((state) => state != ConnectivityResult.none), (_, active) {
+        connectivityStateProvider.select(
+          (state) =>
+              state.where((c) => c != ConnectivityResult.none).isNotEmpty,
+        ), (_, active) {
       if (active) {
         _runRetries();
       }
@@ -54,19 +49,19 @@ class ErrorManager extends _$ErrorManager {
     _retries.clear();
   }
 
-  void noticeError(NetworkError error) {
+  void noticeError(NetworkException error) {
     state = AsyncData(error);
   }
 
   void noticeConnectivityError() {
-    state = AsyncData(NoConnectivityError());
+    state = AsyncData(NoConnectivityException());
   }
 
   void noticeNetworkTimeoutError() {
-    state = AsyncData(NetworkTimeoutError());
+    state = AsyncData(NetworkTimeoutException());
   }
 
   void noticeNetworkUnknownError() {
-    state = AsyncData(NetworkUnknownError());
+    state = const AsyncData(UnknownException());
   }
 }

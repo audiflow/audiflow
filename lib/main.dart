@@ -11,7 +11,6 @@ void main() async {
 
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
-  // NavigationHelper.setup();
   // await SettingsService.setup();
 
   runApp(

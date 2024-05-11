@@ -1,20 +1,13 @@
-// Copyright (c) 2024 by HANAI, Tohru.
-// Copyright (c) 2024 Reedom, Inc.
-// Additional contributions from project contributors.
-// All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
-import 'package:audiflow/core/l10n.dart';
 import 'package:audiflow/entities/entities.dart';
-import 'package:audiflow/ui/app/navigation_helper.dart';
+import 'package:audiflow/gen/l10n/l10n.dart';
+import 'package:audiflow/ui/app/router/router_provider.dart';
 import 'package:audiflow/ui/providers/podcast_season_info_provider.dart';
 import 'package:audiflow/ui/util/datetime.dart';
 import 'package:audiflow/ui/widgets/tile_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class SeasonTile extends StatelessWidget {
+class SeasonTile extends ConsumerWidget {
   const SeasonTile({
     super.key,
     required this.podcast,
@@ -25,11 +18,13 @@ class SeasonTile extends StatelessWidget {
   final Season season;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return InkWell(
       key: Key('PT${season.guid}'),
       onTap: () {
-        NavigationHelper.router
+        ref
+            .read(routerProvider)
+            .router
             .pushNamed('season', extra: (podcast, season, 'season'));
       },
       child: Container(

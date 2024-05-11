@@ -1,12 +1,14 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
+// ignore_for_file: type=lint, duplicate_ignore
+
 part of 'podcast_refresher_provider.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$podcastRefresherHash() => r'd7848bfc6853997cbe499f0bef906f8c3d070bb3';
+String _$podcastRefresherHash() => r'671da05f490ae24462b9ee3ba1a5c5d41f5ee383';
 
 /// See also [PodcastRefresher].
 @ProviderFor(PodcastRefresher)

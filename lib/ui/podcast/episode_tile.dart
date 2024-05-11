@@ -1,13 +1,6 @@
-// Copyright (c) 2024 by HANAI, Tohru.
-// Copyright (c) 2024 Reedom, Inc.
-// Additional contributions from project contributors.
-// All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
 import 'package:audiflow/core/types.dart';
 import 'package:audiflow/entities/entities.dart';
-import 'package:audiflow/ui/app/navigation_helper.dart';
+import 'package:audiflow/ui/app/router/router_provider.dart';
 import 'package:audiflow/ui/podcast/episode_date.dart';
 import 'package:audiflow/ui/widgets/download_button.dart';
 import 'package:audiflow/ui/widgets/queue_button.dart';
@@ -73,7 +66,7 @@ class _EpisodeTileWithThumbnail extends HookConsumerWidget {
               right: 0,
               child: InkWell(
                 onTap: () {
-                  NavigationHelper.pushEpisodeDetail(
+                  ref.read(routerProvider).pushEpisodeDetail(
                     episode: episode,
                     heroPrefix: 'episodeHero',
                   );
@@ -164,7 +157,7 @@ class _EpisodeTileNoThumbnail extends HookConsumerWidget {
           children: [
             InkWell(
               onTap: () {
-                NavigationHelper.pushEpisodeDetail(
+                ref.read(routerProvider).pushEpisodeDetail(
                   episode: episode,
                   heroPrefix: 'episodeHero',
                 );
@@ -208,20 +201,20 @@ class _EpisodeTileNoThumbnail extends HookConsumerWidget {
   }
 }
 
-class _Content extends StatelessWidget {
+class _Content extends ConsumerWidget {
   const _Content(this.episode);
 
   final Episode episode;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final textTheme = theme.textTheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         GestureDetector(
-          onTap: () => NavigationHelper.pushEpisodeDetail(
+          onTap: () => ref.read(routerProvider).pushEpisodeDetail(
             episode: episode,
             heroPrefix: 'episodeHero',
           ),

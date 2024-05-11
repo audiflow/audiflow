@@ -1,17 +1,10 @@
-// Copyright (c) 2024 by HANAI, Tohru.
-// Copyright (c) 2024 Reedom, Inc.
-// Additional contributions from project contributors.
-// Originally (c) 2020 Ben Hills and the project contributors.
-// All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
 import 'package:audiflow/entities/entities.dart';
-import 'package:audiflow/ui/app/navigation_helper.dart';
+import 'package:audiflow/ui/app/router/router_provider.dart';
 import 'package:audiflow/ui/widgets/tile_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class PodcastTile extends StatelessWidget {
+class PodcastTile extends ConsumerWidget {
   const PodcastTile({
     super.key,
     required this.podcast,
@@ -21,11 +14,11 @@ class PodcastTile extends StatelessWidget {
   static const heroPrefix = 'tileHero';
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     return InkWell(
       onTap: () {
-        // NavigationHelper.pushPodcastDetail(
+        // ref.read(routerProvider).pushPodcastDetail(
         //   podcast: podcast,
         //   heroPrefix: heroPrefix,
         // );

@@ -1,14 +1,7 @@
-// Copyright (c) 2024 by HANAI, Tohru.
-// Copyright (c) 2024 Reedom, Inc.
-// Additional contributions from project contributors.
-// Originally (c) 2020 Ben Hills and the project contributors.
-// All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
 import 'dart:ui';
 
 import 'package:audiflow/entities/entities.dart';
+import 'package:podcast_feed/podcast_feed.dart' show ItemParser;
 
 part 'podcast_genres.dart';
 
@@ -40,6 +33,20 @@ abstract class PodcastService {
 
   // --- Podcast ---
 
+  Future<(Podcast?, ItemParser?)> fetchPodcastBy({
+    required String feedUrl,
+    required int collectionId,
+  });
+
+  Future<String?> findOrFetchFeedUrlBy({required int collectionId});
+
+  Future<int?> findOrFetchCollectionIdBy({required String feedUrl});
+
+  Future<Podcast?> findPodcastBy({
+    String? feedUrl,
+    int? collectionId,
+  });
+
   // Future<Podcast?> lookupPodcast(String feedUrl);
   //
   // Future<Podcast?> loadPodcast(
@@ -48,6 +55,7 @@ abstract class PodcastService {
   // });
   //
   Future<Podcast?> loadPodcastById(int id);
+
   //
   // Future<List<Episode>> loadEpisodesByPodcastId(int pid);
 

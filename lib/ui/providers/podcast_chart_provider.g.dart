@@ -1,12 +1,14 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
+// ignore_for_file: type=lint, duplicate_ignore
+
 part of 'podcast_chart_provider.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$podcastChartHash() => r'6fa29ab994860d416a2400f94aca0e9f856a7f0f';
+String _$podcastChartHash() => r'dbe0cc84ab15b82344f9a6b932767ef86dad7e48';
 
 /// See also [PodcastChart].
 @ProviderFor(PodcastChart)

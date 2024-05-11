@@ -1,17 +1,12 @@
-// Copyright (c) 2024 by HANAI, Tohru.
-// Copyright (c) 2024 Reedom, Inc.
-// Additional contributions from project contributors.
-// Originally (c) 2020 Ben Hills and the project contributors.
-// All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
 import 'package:audiflow/entities/entities.dart';
-import 'package:audiflow/ui/app/navigation_helper.dart';
+import 'package:audiflow/services/podcast/podcast_service_provider.dart';
+import 'package:audiflow/stopwatch.dart';
+import 'package:audiflow/ui/app/router/router_provider.dart';
 import 'package:audiflow/ui/widgets/tile_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class ChartItemTile extends StatelessWidget {
+class ChartItemTile extends ConsumerWidget {
   const ChartItemTile({
     super.key,
     required this.chartItem,
@@ -21,15 +16,24 @@ class ChartItemTile extends StatelessWidget {
   static const heroPrefix = 'tileHero';
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     return InkWell(
       onTap: () {
-        NavigationHelper.pushPodcastDetail(
-          collectionId: chartItem.collectionId,
-          imageUrl: chartItem.thumbnailArtworkUrl,
-          heroPrefix: heroPrefix,
-        );
+        sw
+          ..reset()
+          ..start();
+        elapsedTime('start');
+        ref
+            .read(podcastServiceProvider)
+            .findPodcastBy(collectionId: chartItem.collectionId)
+            .then((podcast) {
+          if (podcast != null) {
+            ref.read(routerProvider).pushPodcastDetail(podcast);
+          } else {
+            ref.read(routerProvider).pushPodcastIntro(chartItem.collectionId);
+          }
+        });
       },
       child: Container(
         height: 77,
@@ -41,7 +45,7 @@ class ChartItemTile extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.only(left: 20, right: 10),
                 child: Hero(
-                  key: Key('tileHero:${chartItem.artworkUrl100}:'
+                  key: Key('$heroPrefix:${chartItem.artworkUrl100}:'
                       '${chartItem.collectionId}'),
                   tag: '$heroPrefix:${chartItem.collectionId}',
                   child: TileImage(

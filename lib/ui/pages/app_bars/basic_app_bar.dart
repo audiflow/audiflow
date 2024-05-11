@@ -1,12 +1,5 @@
-// Copyright (c) 2024 by HANAI, Tohru.
-// Copyright (c) 2024 Reedom, Inc.
-// Additional contributions from project contributors.
-// All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
-import 'package:audiflow/core/l10n.dart';
-import 'package:audiflow/ui/app/navigation_helper.dart';
+import 'package:audiflow/gen/l10n/l10n.dart';
+import 'package:audiflow/ui/app/router/router_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
@@ -39,7 +32,7 @@ class BasicAppBar extends HookConsumerWidget {
       actions: [
         PopupMenuButton<String>(
           onSelected: (_) {
-            NavigationHelper.router.pushNamed('settings');
+            ref.read(routerProvider).router.pushNamed('settings');
           },
           itemBuilder: (BuildContext context) {
             return ['settings'].map((String choice) {

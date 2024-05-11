@@ -1,17 +1,9 @@
-// Copyright (c) 2024 by HANAI, Tohru.
-// Copyright (c) 2024 Reedom, Inc.
-// Additional contributions from project contributors.
-// Originally (c) 2020 Ben Hills and the project contributors.
-// All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
-import 'package:audiflow/core/l10n.dart';
 import 'package:audiflow/entities/entities.dart';
 import 'package:audiflow/events/podcast_chart_event.dart';
+import 'package:audiflow/gen/l10n/l10n.dart';
 import 'package:audiflow/ui/pages/app_bars/basic_app_bar.dart';
 import 'package:audiflow/ui/podcast/chart_item_list.dart';
-import 'package:audiflow/ui/podcast/podcast_list_horz.dart';
+// import 'package:audiflow/ui/podcast/podcast_list_horz.dart';
 import 'package:audiflow/ui/providers/podcast_chart_provider.dart';
 import 'package:audiflow/ui/providers/podcast_subscriptions_provider.dart';
 import 'package:audiflow/ui/widgets/error_notifier.dart';
@@ -58,7 +50,7 @@ class PodcastHomePage extends HookConsumerWidget {
             CustomScrollView(
               controller: controller,
               slivers: <Widget>[
-                BasicAppBar(title: L10n.of(context)!.home),
+                BasicAppBar(title: L10n.of(context).home),
                 const _SubscribedPodcasts(),
                 if (state.isLoading)
                   const FillRemainingLoading()
@@ -69,7 +61,7 @@ class PodcastHomePage extends HookConsumerWidget {
                     child: Padding(
                       padding: const EdgeInsets.only(top: 40, left: 20),
                       child: Text(
-                        L10n.of(context)!.popularPodcasts,
+                        L10n.of(context).popularPodcasts,
                         style: Theme.of(context).textTheme.titleLarge,
                       ),
                     ),
@@ -95,8 +87,10 @@ class _SubscribedPodcasts extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(podcastSubscriptionsProvider);
-    return state.valueOrNull?.isNotEmpty == true
-        ? PodcastListHorz(metadataList: state.value!)
-        : const SliverToBoxAdapter(child: SizedBox.shrink());
+    return
+        // state.valueOrNull?.isNotEmpty == true
+        //   ? PodcastListHorz(metadataList: state.value!)
+        //   :
+        const SliverToBoxAdapter(child: SizedBox.shrink());
   }
 }

@@ -1,11 +1,5 @@
-// Copyright (c) 2024 by HANAI, Tohru.
-// Copyright (c) 2024 Reedom, Inc.
-// Additional contributions from project contributors.
-// All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
 import 'package:audiflow/core/environment.dart';
+import 'package:audiflow/core/shared_preferences.dart';
 import 'package:audiflow/entities/entities.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -62,11 +56,8 @@ class SettingsService extends _$SettingsService {
     );
   }
 
-  static late SharedPreferences _sharedPreferences;
-
-  static Future<void> setup() async {
-    _sharedPreferences = await SharedPreferences.getInstance();
-  }
+  SharedPreferences get _sharedPreferences =>
+      ref.read(sharedPreferencesProvider);
 
   // ignore: avoid_setters_without_getters
   set streamWarnMobileData(bool value) {

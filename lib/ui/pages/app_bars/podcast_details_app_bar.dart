@@ -1,11 +1,4 @@
-// Copyright (c) 2024 by HANAI, Tohru.
-// Copyright (c) 2024 Reedom, Inc.
-// Additional contributions from project contributors.
-// All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
-import 'package:audiflow/core/l10n.dart';
+import 'package:audiflow/gen/l10n/l10n.dart';
 import 'package:audiflow/entities/podcast.dart';
 import 'package:audiflow/services/podcast/podcast_service_provider.dart';
 import 'package:audiflow/ui/pages/app_bars/podcast_page_header_image.dart';
@@ -19,13 +12,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 class PodcastDetailsAppBar extends ConsumerWidget {
   const PodcastDetailsAppBar({
     super.key,
-    required this.metadata,
+    required this.pid,
     required this.heroPrefix,
     required this.foregroundColor,
     required this.backgroundColor,
   });
 
-  final PodcastMetadata metadata;
+  final int pid;
   final String heroPrefix;
   final Color? foregroundColor;
   final Color? backgroundColor;
@@ -33,8 +26,7 @@ class PodcastDetailsAppBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final placeholderBuilder = PlaceholderBuilder.of(context);
-    final podcastState =
-        ref.watch(podcastInfoProvider(metadata.guid, needsEpisodes: true));
+    final podcastState = ref.watch(podcastInfoProvider(metadata.guid));
     final subscribed = podcastState.value?.stats?.subscribed;
     final theme = Theme.of(context);
     final textTheme = theme.textTheme;

@@ -1,12 +1,14 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
+// ignore_for_file: type=lint, duplicate_ignore
+
 part of 'podcast_search_provider.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$podcastSearchHash() => r'47171cfd4ce5537520490011c24378636b7e02b1';
+String _$podcastSearchHash() => r'b413fc5b330b1080c68de90b9b210ad506cf8915';
 
 /// See also [PodcastSearch].
 @ProviderFor(PodcastSearch)

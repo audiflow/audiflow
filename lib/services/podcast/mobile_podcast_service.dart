@@ -1,14 +1,13 @@
 // Copyright 2019 Ben Hills. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
 
 import 'dart:io';
 import 'dart:ui';
 
 import 'package:audiflow/api/podcast/podcast_api_provider.dart';
+import 'package:audiflow/core/exception/app_exception.dart';
+import 'package:audiflow/core/logger.dart';
 import 'package:audiflow/core/utils.dart';
 import 'package:audiflow/entities/entities.dart';
-import 'package:audiflow/errors/errors.dart';
 import 'package:audiflow/repository/repository_provider.dart';
 import 'package:audiflow/services/audio/audio_playable_checker.dart';
 import 'package:audiflow/services/audio/audio_player_service.dart';
@@ -19,10 +18,8 @@ import 'package:audiflow/services/settings/settings_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:logging/logging.dart';
 import 'package:path/path.dart';
 import 'package:podcast_feed/parsers/channel_item_parser.dart';
-import 'package:podcast_feed/parsers/channel_parser.dart';
 import 'package:podcast_search/podcast_search.dart' as podcast_search;
 
 class MobilePodcastService implements PodcastService {
@@ -41,7 +38,6 @@ class MobilePodcastService implements PodcastService {
   AudioPlayerService get _audioService =>
       _ref.read(audioPlayerServiceProvider.notifier);
 
-  final _log = Logger('MobilePodcastService');
   late var _categories = <String>[];
   late var _intlCategories = <String>[];
   late var _intlCategoriesSorted = <String>[];
@@ -123,8 +119,8 @@ class MobilePodcastService implements PodcastService {
     bool explicit = false,
   }) async {
     if (!await hasConnectivity()) {
-      _log.fine('no network');
-      throw NoConnectivityError();
+      logger.d('no network');
+      throw NoConnectivityException();
     }
 
     return _api.search(
@@ -144,8 +140,8 @@ class MobilePodcastService implements PodcastService {
     Country country = Country.none,
   }) async {
     if (!await hasConnectivity()) {
-      _log.fine('no network');
-      throw NoConnectivityError();
+      logger.d('no network');
+      throw NoConnectivityException();
     }
 
     return _api.charts(
@@ -158,6 +154,48 @@ class MobilePodcastService implements PodcastService {
   @override
   List<String> genres() {
     return _intlCategoriesSorted;
+  }
+
+  @override
+  Future<(Podcast?, ItemParser?)> fetchPodcastBy({
+    required String feedUrl,
+    required int collectionId,
+  }) async {
+    return _lookupPodcastBy(feedUrl: feedUrl, collectionId: collectionId);
+  }
+
+  @override
+  Future<String?> findOrFetchFeedUrlBy({required int collectionId}) async {
+    final feedUrl = await _repository.findFeedUrl(collectionId: collectionId);
+    if (feedUrl != null) {
+      return feedUrl;
+    }
+
+    final itunesSearchItem = await _api.lookup(collectionId: collectionId);
+    if (itunesSearchItem != null) {
+      await _repository.saveFeedUrl(
+        collectionId: collectionId,
+        feedUrl: itunesSearchItem.feedUrl,
+      );
+      return itunesSearchItem.feedUrl;
+    }
+    return null;
+  }
+
+  @override
+  Future<Podcast?> findPodcastBy({
+    String? feedUrl,
+    int? collectionId,
+  }) async {
+    return _repository.findPodcastBy(
+      feedUrl: feedUrl,
+      collectionId: collectionId,
+    );
+  }
+
+  @override
+  Future<int?> findOrFetchCollectionIdBy({required String feedUrl}) async {
+    return _repository.findCollectionId(feedUrl: feedUrl);
   }
 
   // @override
@@ -183,180 +221,160 @@ class MobilePodcastService implements PodcastService {
   //
   @override
   Future<Podcast?> loadPodcastById(int id) async {
-    return _repository.findPodcast(id: id);
+    return _repository.findPodcast(id);
   }
-  //
-  // Future<Podcast?> _lookupPodcast({
-  //   String? feedUrl,
-  //   PodcastMetadata? metadata,
-  // }) async {
-  //   assert(metadata != null || feedUrl?.isNotEmpty == true);
-  //   _log.fine('Reloading podcast ${metadata?.title ?? feedUrl}');
-  //
-  //   if (!await hasConnectivity()) {
-  //     _log.fine('no network');
-  //     throw NoConnectivityError();
-  //   }
-  //
-  //   var url = feedUrl ?? metadata?.feedUrl ?? '';
-  //   if (url.isEmpty && metadata != null) {
-  //     url = (await _repository.findFeedUrl(metadata.guid)) ?? '';
-  //   }
-  //   if (url.isEmpty && metadata != null) {
-  //     final itunesSearchItem =
-  //         await _lookupItunesSearchItem(collectionId: metadata.collectionId);
-  //     if (itunesSearchItem?.feedUrl == null) {
-  //       _log.info('No way to determine feed URL for ${metadata.title}');
-  //       return null;
-  //     }
-  //     url = itunesSearchItem!.feedUrl;
-  //     await _repository.savePodcast(itunesSearchItem.toPartialPodcast());
-  //   }
-  //   if (url.isEmpty) {
-  //     _log.info('No feed URL for ${metadata!.title}');
-  //     return null;
-  //   }
-  //
-  //   final feedPodcast = await _lookupPodcastBy(url: url);
-  //   final podcast = Podcast.fromSearch(feedPodcast, metadata);
-  //
-  //   final saved = await _repository.findPodcast(podcast.guid);
-  //   final updateParam = PodcastStatsUpdateParam(
-  //     guid: podcast.guid,
-  //     lastCheckedAt: DateTime.now(),
-  //   );
-  //   if (saved != podcast) {
-  //     await _repository.savePodcast(podcast, param: updateParam);
-  //   } else {
-  //     await _repository.updatePodcastStats(updateParam);
-  //   }
-  //   await _repository.saveEpisodes(podcast.episodes);
-  //
-  //   return podcast;
-  // }
-  //
-  // @override
-  // Future<List<Chapter>> loadChaptersByUrl(String url) async {
-  //   final c = await _loadChaptersByUrl(url);
-  //   final chapters = <Chapter>[];
-  //
-  //   if (c != null) {
-  //     for (final chapter in c.chapters) {
-  //       chapters.add(
-  //         Chapter(
-  //           title: chapter.title,
-  //           url: chapter.url,
-  //           imageUrl: chapter.imageUrl,
-  //           startTime: chapter.startTime,
-  //           endTime: chapter.endTime,
-  //           toc: chapter.toc,
-  //         ),
-  //       );
-  //     }
-  //   }
-  //
-  //   return chapters;
-  // }
-  //
-  // /// This method will load either of the supported transcript types. Currently,
-  // /// we do not support word level highlighting of transcripts, therefore this
-  // /// routine will also group transcript lines together by speaker and/or
-  // /// timeframe.
-  // @override
-  // Future<Transcript> loadTranscriptByUrl({
-  //   required Episode episode,
-  //   required TranscriptUrl transcriptUrl,
-  // }) async {
-  //   final subtitles = <Subtitle>[];
-  //   final result = await _loadTranscriptByUrl(transcriptUrl);
-  //   if (result == null) {
-  //     return Transcript(
-  //       pid: episode.pid,
-  //       guid: episode.guid,
-  //     );
-  //   }
-  //
-  //   const threshold = Duration(seconds: 5);
-  //   Subtitle? groupSubtitle;
-  //
-  //   for (var index = 0; index < result.subtitles.length; index++) {
-  //     final subtitle = result.subtitles[index];
-  //     var completeGroup = true;
-  //     var data = subtitle.data;
-  //
-  //     if (groupSubtitle != null) {
-  //       if (transcriptUrl.type == TranscriptFormat.json) {
-  //         if (groupSubtitle.speaker == subtitle.speaker &&
-  //             (subtitle.start.compareTo(groupSubtitle.start + threshold) < 0 ||
-  //                 subtitle.data.length == 1)) {
-  //           /// We need to handle transcripts that have spaces between
-  //           /// sentences, and those which do not.
-  //           if (groupSubtitle.data != null &&
-  //               (groupSubtitle.data!.endsWith(' ') ||
-  //                   subtitle.data.startsWith(' ') ||
-  //                   subtitle.data.length == 1)) {
-  //             data = '${groupSubtitle.data}${subtitle.data}';
-  //           } else {
-  //             data = '${groupSubtitle.data} ${subtitle.data.trim()}';
-  //           }
-  //           completeGroup = false;
-  //         }
-  //       } else {
-  //         if (groupSubtitle.start == subtitle.start) {
-  //           if (groupSubtitle.data != null &&
-  //               (groupSubtitle.data!.endsWith(' ') ||
-  //                   subtitle.data.startsWith(' ') ||
-  //                   subtitle.data.length == 1)) {
-  //             data = '${groupSubtitle.data}${subtitle.data}';
-  //           } else {
-  //             data = '${groupSubtitle.data} ${subtitle.data.trim()}';
-  //           }
-  //           completeGroup = false;
-  //         }
-  //       }
-  //     } else {
-  //       completeGroup = false;
-  //       groupSubtitle = Subtitle(
-  //         data: subtitle.data,
-  //         speaker: subtitle.speaker,
-  //         startMS: subtitle.start.inMilliseconds,
-  //         endMS: subtitle.end.inMilliseconds,
-  //         index: subtitle.index,
-  //       );
-  //     }
-  //
-  //     /// If we have a complete group, or we're the very last subtitle -
-  //     /// add it.
-  //     if (completeGroup || index == result.subtitles.length - 1) {
-  //       groupSubtitle =
-  //           groupSubtitle.copyWith(data: groupSubtitle.data?.trim());
-  //
-  //       subtitles.add(groupSubtitle);
-  //
-  //       groupSubtitle = Subtitle(
-  //         data: subtitle.data,
-  //         speaker: subtitle.speaker,
-  //         start: subtitle.start,
-  //         end: subtitle.end,
-  //         index: subtitle.index,
-  //       );
-  //     } else {
-  //       groupSubtitle = Subtitle(
-  //         data: data,
-  //         speaker: subtitle.speaker,
-  //         start: groupSubtitle.start,
-  //         end: subtitle.end,
-  //         index: groupSubtitle.index,
-  //       );
-  //     }
-  //   }
-  //
-  //   return Transcript(
-  //     pguid: episode.pguid,
-  //     guid: episode.guid,
-  //     subtitles: subtitles,
-  //   );
-  // }
+
+  Future<Podcast?> _lookupPodcast({
+    required String feedUrl,
+  }) async {
+    assert(feedUrl.isNotEmpty);
+    logger.d('lookup podcast $feedUrl');
+
+    if (!await hasConnectivity()) {
+      logger.d('no network');
+      throw NoConnectivityException();
+    }
+
+    // final (podcast, itemParser) = await _lookupPodcastBy(feedUrl: feedUrl);
+    //   final podcast = Podcast.fromSearch(feedPodcast, metadata);
+    //
+    //   final saved = await _repository.findPodcast(podcast.guid);
+    //   final updateParam = PodcastStatsUpdateParam(
+    //     guid: podcast.guid,
+    //     lastCheckedAt: DateTime.now(),
+    //   );
+    //   if (saved != podcast) {
+    //     await _repository.savePodcast(podcast, param: updateParam);
+    //   } else {
+    //     await _repository.updatePodcastStats(updateParam);
+    //   }
+    //   await _repository.saveEpisodes(podcast.episodes);
+    //
+    //   return podcast;
+    // }
+    //
+    // @override
+    // Future<List<Chapter>> loadChaptersByUrl(String url) async {
+    //   final c = await _loadChaptersByUrl(url);
+    //   final chapters = <Chapter>[];
+    //
+    //   if (c != null) {
+    //     for (final chapter in c.chapters) {
+    //       chapters.add(
+    //         Chapter(
+    //           title: chapter.title,
+    //           url: chapter.url,
+    //           imageUrl: chapter.imageUrl,
+    //           startTime: chapter.startTime,
+    //           endTime: chapter.endTime,
+    //           toc: chapter.toc,
+    //         ),
+    //       );
+    //     }
+    //   }
+    //
+    //   return chapters;
+    // }
+    //
+    // /// This method will load either of the supported transcript types. Currently,
+    // /// we do not support word level highlighting of transcripts, therefore this
+    // /// routine will also group transcript lines together by speaker and/or
+    // /// timeframe.
+    // @override
+    // Future<Transcript> loadTranscriptByUrl({
+    //   required Episode episode,
+    //   required TranscriptUrl transcriptUrl,
+    // }) async {
+    //   final subtitles = <Subtitle>[];
+    //   final result = await _loadTranscriptByUrl(transcriptUrl);
+    //   if (result == null) {
+    //     return Transcript(
+    //       pid: episode.pid,
+    //       guid: episode.guid,
+    //     );
+    //   }
+    //
+    //   const threshold = Duration(seconds: 5);
+    //   Subtitle? groupSubtitle;
+    //
+    //   for (var index = 0; index < result.subtitles.length; index++) {
+    //     final subtitle = result.subtitles[index];
+    //     var completeGroup = true;
+    //     var data = subtitle.data;
+    //
+    //     if (groupSubtitle != null) {
+    //       if (transcriptUrl.type == TranscriptFormat.json) {
+    //         if (groupSubtitle.speaker == subtitle.speaker &&
+    //             (subtitle.start.compareTo(groupSubtitle.start + threshold) < 0 ||
+    //                 subtitle.data.length == 1)) {
+    //           /// We need to handle transcripts that have spaces between
+    //           /// sentences, and those which do not.
+    //           if (groupSubtitle.data != null &&
+    //               (groupSubtitle.data!.endsWith(' ') ||
+    //                   subtitle.data.startsWith(' ') ||
+    //                   subtitle.data.length == 1)) {
+    //             data = '${groupSubtitle.data}${subtitle.data}';
+    //           } else {
+    //             data = '${groupSubtitle.data} ${subtitle.data.trim()}';
+    //           }
+    //           completeGroup = false;
+    //         }
+    //       } else {
+    //         if (groupSubtitle.start == subtitle.start) {
+    //           if (groupSubtitle.data != null &&
+    //               (groupSubtitle.data!.endsWith(' ') ||
+    //                   subtitle.data.startsWith(' ') ||
+    //                   subtitle.data.length == 1)) {
+    //             data = '${groupSubtitle.data}${subtitle.data}';
+    //           } else {
+    //             data = '${groupSubtitle.data} ${subtitle.data.trim()}';
+    //           }
+    //           completeGroup = false;
+    //         }
+    //       }
+    //     } else {
+    //       completeGroup = false;
+    //       groupSubtitle = Subtitle(
+    //         data: subtitle.data,
+    //         speaker: subtitle.speaker,
+    //         startMS: subtitle.start.inMilliseconds,
+    //         endMS: subtitle.end.inMilliseconds,
+    //         index: subtitle.index,
+    //       );
+    //     }
+    //
+    //     /// If we have a complete group, or we're the very last subtitle -
+    //     /// add it.
+    //     if (completeGroup || index == result.subtitles.length - 1) {
+    //       groupSubtitle =
+    //           groupSubtitle.copyWith(data: groupSubtitle.data?.trim());
+    //
+    //       subtitles.add(groupSubtitle);
+    //
+    //       groupSubtitle = Subtitle(
+    //         data: subtitle.data,
+    //         speaker: subtitle.speaker,
+    //         start: subtitle.start,
+    //         end: subtitle.end,
+    //         index: subtitle.index,
+    //       );
+    //     } else {
+    //       groupSubtitle = Subtitle(
+    //         data: data,
+    //         speaker: subtitle.speaker,
+    //         start: groupSubtitle.start,
+    //         end: subtitle.end,
+    //         index: groupSubtitle.index,
+    //       );
+    //     }
+    //   }
+    //
+    //   return Transcript(
+    //     pguid: episode.pguid,
+    //     guid: episode.guid,
+    //     subtitles: subtitles,
+    //   );
+  }
 
   @override
   Future<List<Episode>> loadEpisodesByPodcastId(int pid) async {
@@ -501,42 +519,38 @@ class MobilePodcastService implements PodcastService {
     );
   }
 
-  Future<ITunesSearchItem?> _lookupItunesSearchItem({
+  Future<(Podcast?, ItemParser?)> _lookupPodcastBy({
+    required String feedUrl,
     required int collectionId,
-  }) async {
-    return _api.lookup(collectionId: collectionId);
-  }
-
-  Future<(ChannelValues?, ItemParser?)> _lookupPodcastBy({
-    required String url,
   }) async {
     // If we didn't get a cache hit load the podcast feed.
     var tries = 2;
+    var url = feedUrl.replaceFirst('http:', 'https:');
     while (0 < tries--) {
       try {
-        _log.fine('Loading podcast from feed $url');
-        return _loadPodcastFeed(url: url);
+        logger.d('Loading podcast from feed $url');
+        return _loadPodcastFeed(feedUrl: url, collectionId: collectionId);
       } on Exception {
         if (tries <= 0 || !url.startsWith('https')) {
           rethrow;
         }
         // Try the http only version - flesh out to setting later on
-        _log.fine(
+        logger.d(
           'Failed to load podcast. Fallback to http and try again',
         );
-        url = url.replaceFirst('https', 'http');
+        url = url.replaceFirst('https:', 'http:');
       }
     }
 
     throw UnimplementedError();
   }
 
-  Future<podcast_search.Chapters?> _loadChaptersByUrl(String url) {
-    return compute<_FeedComputer, podcast_search.Chapters?>(
-      _loadChaptersByUrlCompute,
-      _FeedComputer(api: _api, url: url),
-    );
-  }
+  // Future<podcast_search.Chapters?> _loadChaptersByUrl(String url) {
+  //   return compute<_FeedComputer, podcast_search.Chapters?>(
+  //     _loadChaptersByUrlCompute
+  //      _FeedComputer(api: _api, url: url),
+  //   );
+  // }
 
   static Future<podcast_search.Chapters?> _loadChaptersByUrlCompute(
     _FeedComputer c,
@@ -547,9 +561,9 @@ class MobilePodcastService implements PodcastService {
       result = await c.api.loadChapters(c.url);
       // ignore: avoid_catches_without_on_clauses
     } catch (e) {
-      Logger('MobilePodcastService')
-        ..fine('Failed to download chapters')
-        ..fine(e);
+      logger
+        ..w('Failed to download chapters')
+        ..w(e);
     }
 
     return result;
@@ -573,9 +587,9 @@ class MobilePodcastService implements PodcastService {
       result = await c.api.loadTranscript(c.transcriptUrl);
       // ignore: avoid_catches_without_on_clauses
     } catch (e) {
-      Logger('MobilePodcastService')
-        ..fine('Failed to download transcript')
-        ..fine(e);
+      logger
+        ..w('Failed to download transcript')
+        ..w(e);
     }
 
     return result;
@@ -585,22 +599,20 @@ class MobilePodcastService implements PodcastService {
   /// can end up blocking the UI thread. We perform our feed load in a
   /// separate isolate so that the UI can continue to present a loading
   /// indicator whilst the data is fetched without locking the UI.
-  Future<(ChannelValues?, ItemParser?)> _loadPodcastFeed({
-    required String url,
+  Future<(Podcast?, ItemParser?)> _loadPodcastFeed({
+    required String feedUrl,
+    required int collectionId,
   }) {
-    return compute<_FeedComputer, (ChannelValues?, ItemParser?)>(
-      _loadPodcastFeedCompute,
-      _FeedComputer(api: _api, url: url),
-    );
+    return _api.loadFeed(url: feedUrl, collectionId: collectionId);
   }
 
   /// We have to separate the process of calling compute as you cannot use
   /// named parameters with compute. The podcast feed load API uses named
   /// parameters so we need to change it to a single, positional parameter.
-  static Future<(ChannelValues?, ItemParser?)> _loadPodcastFeedCompute(
+  static Future<(Podcast?, ItemParser?)> _loadPodcastFeedCompute(
     _FeedComputer c,
   ) {
-    return c.api.loadFeed(c.url);
+    return c.api.loadFeed(url: c.url, collectionId: c.collectionId);
   }
 
   /// The service providers expect the genre to be passed in English.
@@ -616,10 +628,15 @@ class MobilePodcastService implements PodcastService {
 }
 
 class _FeedComputer {
-  _FeedComputer({required this.api, required this.url});
+  _FeedComputer({
+    required this.api,
+    required this.url,
+    required this.collectionId,
+  });
 
   final PodcastApi api;
   final String url;
+  final int collectionId;
 }
 
 class _TranscriptComputer {

@@ -1,10 +1,3 @@
-//  Copyright (c) 2024 by HANAI, Tohru.
-//  Copyright (c) 2024 Reedom, Inc.
-//  Additional contributions from project contributors.
-//  All rights reserved.
-//  Use of this source code is governed by a BSD-style license that can be
-//  found in the LICENSE file.
-
 import 'package:audiflow/entities/entities.dart';
 import 'package:audiflow/entities/playing_episode.dart';
 import 'package:audiflow/repository/repository.dart';
@@ -95,7 +88,7 @@ class IsarRepository implements Repository {
     required String feedUrl,
   }) async {
     final record = FeedUrl(collectionId: collectionId, feedUrl: feedUrl);
-    await isar.feedUrls.put(record);
+    await isar.writeTxn(() => isar.feedUrls.put(record));
   }
 
   // --- Podcast
@@ -106,13 +99,26 @@ class IsarRepository implements Repository {
   }
 
   @override
-  Future<Podcast?> findPodcastBy({required String feedUrl}) async {
-    return isar.podcasts.where().filter().feedUrlEqualTo(feedUrl).findFirst();
+  Future<Podcast?> findPodcastBy({
+    String? feedUrl,
+    int? collectionId,
+  }) async {
+    if (feedUrl != null) {
+      return isar.podcasts.where().filter().feedUrlEqualTo(feedUrl).findFirst();
+    }
+    if (collectionId != null) {
+      return isar.podcasts
+          .where()
+          .filter()
+          .collectionIdEqualTo(collectionId)
+          .findFirst();
+    }
+    return null;
   }
 
   @override
   Future<void> savePodcasts(Iterable<Podcast> podcasts) async {
-    await isar.podcasts.putAll(podcasts.toList());
+    await isar.writeTxn(() => isar.podcasts.putAll(podcasts.toList()));
   }
 
   @override
@@ -215,7 +221,7 @@ class IsarRepository implements Repository {
             ascend: param.ascend ?? false,
             ascendSeasonEpisodes: param.ascendSeasonEpisodes ?? true,
           );
-    await isar.podcastViewStats.put(newStats);
+    await isar.writeTxn(() => isar.podcastViewStats.put(newStats));
     return newStats;
   }
 
@@ -238,16 +244,12 @@ class IsarRepository implements Repository {
 
   @override
   Future<void> saveEpisode(Episode episode) async {
-    await isar.writeTxn(() async {
-      await isar.episodes.put(episode);
-    });
+    await isar.writeTxn(() => isar.episodes.put(episode));
   }
 
   @override
   Future<void> saveEpisodes(Iterable<Episode> episodes) async {
-    await isar.writeTxn(() async {
-      await isar.episodes.putAll(episodes.toList());
-    });
+    await isar.writeTxn(() => isar.episodes.putAll(episodes.toList()));
   }
 
   // --- EpisodeStats
@@ -398,16 +400,12 @@ class IsarRepository implements Repository {
 
   @override
   Future<void> saveDownload(Downloadable download) async {
-    await isar.writeTxn(() async {
-      await isar.downloadables.put(download);
-    });
+    await isar.writeTxn(() => isar.downloadables.put(download));
   }
 
   @override
   Future<void> deleteDownload(Downloadable download) async {
-    await isar.writeTxn(() async {
-      await isar.downloadables.delete(download.id);
-    });
+    await isar.writeTxn(() => isar.downloadables.delete(download.id));
   }
 
   // --- Transcript
@@ -448,9 +446,7 @@ class IsarRepository implements Repository {
 
   @override
   Future<void> saveQueue(Queue queue) async {
-    await isar.writeTxn(() async {
-      await isar.queues.put(queue);
-    });
+    await isar.writeTxn(() => isar.queues.put(queue));
   }
 
   // --- Player
@@ -463,15 +459,12 @@ class IsarRepository implements Repository {
 
   @override
   Future<void> savePlayingEpisodeId(int eid) async {
-    await isar.writeTxn(() async {
-      await isar.playingEpisodes.put(PlayingEpisode(eid: eid));
-    });
+    await isar
+        .writeTxn(() => isar.playingEpisodes.put(PlayingEpisode(eid: eid)));
   }
 
   @override
   Future<void> clearPlayingEpisodeId() async {
-    await isar.writeTxn(() async {
-      await isar.playingEpisodes.delete(1);
-    });
+    await isar.writeTxn(() => isar.playingEpisodes.delete(1));
   }
 }

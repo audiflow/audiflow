@@ -1,13 +1,6 @@
-// Copyright (c) 2024 by HANAI, Tohru.
-// Copyright (c) 2024 Reedom, Inc.
-// Additional contributions from project contributors.
-// All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
-import 'package:audiflow/core/l10n.dart';
 import 'package:audiflow/events/podcast_search_event.dart';
-import 'package:audiflow/ui/app/navigation_helper.dart';
+import 'package:audiflow/gen/l10n/l10n.dart';
+import 'package:audiflow/ui/app/router/router_provider.dart';
 import 'package:audiflow/ui/pages/app_bars/basic_app_bar.dart';
 import 'package:audiflow/ui/providers/podcast_search_provider.dart';
 import 'package:audiflow/ui/widgets/error_notifier.dart';
@@ -60,13 +53,13 @@ class LibraryPage extends HookConsumerWidget {
                           leading: const Icon(Symbols.fiber_new),
                           title: Text(l10n.latestEpisodes),
                           trailing: const Icon(Symbols.chevron_right),
-                          onTap: NavigationHelper.pushLatestEpisodes,
+                          onTap: ref.read(routerProvider).pushLatestEpisodes,
                         ),
                         ListTile(
                           leading: const Icon(Symbols.history),
                           title: Text(l10n.recentlyPlayed),
                           trailing: const Icon(Symbols.chevron_right),
-                          onTap: NavigationHelper.pushRecentlyPlayed,
+                          onTap: ref.read(routerProvider).pushRecentlyPlayed,
                         ),
                       ],
                     ),

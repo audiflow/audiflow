@@ -1,17 +1,10 @@
-// Copyright (c) 2024 by HANAI, Tohru.
-// Copyright (c) 2024 Reedom, Inc.
-// Additional contributions from project contributors.
-// All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
+import 'package:audiflow/core/exception/app_exception.dart';
+import 'package:audiflow/core/logger.dart';
 import 'package:audiflow/entities/entities.dart';
-import 'package:audiflow/errors/errors.dart';
 import 'package:audiflow/repository/podcast_event.dart';
 import 'package:audiflow/repository/repository_provider.dart';
 import 'package:audiflow/services/podcast/podcast_service_provider.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:logging/logging.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'podcast_info_provider.freezed.dart';
@@ -19,37 +12,44 @@ part 'podcast_info_provider.g.dart';
 
 @riverpod
 class PodcastInfo extends _$PodcastInfo {
-  final _log = Logger('PodcastInfo');
 
   Repository get _repository => ref.read(repositoryProvider);
 
   PodcastService get _podcastService => ref.read(podcastServiceProvider);
 
   @override
-  Future<PodcastInfoState> build(
-    int id, {
-    required bool needsEpisodes,
+  Future<PodcastInfoState> build({
+    String? feedUrl,
+    int? collectionId,
   }) async {
-    _log.fine('build $id');
-
-    final list = await Future.wait([
-      _repository.findPodcast(id: id),
-      _repository.findPodcastStats(id),
-    ]);
-    var podcast = list[0] as Podcast?;
-    final podcastStats = list[1] as PodcastStats?;
-    // if (needsEpisodes && podcast?.episodes.isEmpty == true) {
-    //   podcast =
-    //       await _podcastService.loadPodcast(podcast!.metadata, refresh: true);
-    // }
-    if (podcast == null) {
-      throw NotFoundError();
+    if (feedUrl != null) {
+      logger.d('build: feedUrl="$feedUrl"');
+    } else if (collectionId != null) {
+      logger.d('build: collectionId=$collectionId');
+    } else {
+      throw ArgumentError('feedUrl or collectionId is required');
     }
+
+    feedUrl ??= await _podcastService.findOrFetchFeedUrlBy(
+      collectionId: collectionId!,
+    );
+    if (feedUrl == null) {
+      throw NotFoundException();
+    }
+
+    final (podcast, episodes) =
+        await _podcastService.findOrFetchPodcastBy(feedUrl: feedUrl);
+    if (podcast == null) {
+      throw NotFoundException();
+    }
+
+    final podcastStats = await _repository.findPodcastStats(podcast.id);
 
     _listen();
     return PodcastInfoState(
       podcast: podcast,
       stats: podcastStats,
+      episodes: episodes,
     );
   }
 
@@ -65,11 +65,12 @@ class PodcastInfo extends _$PodcastInfo {
                   podcast: final podcast,
                   stats: final stats
                 ):
-            if (podcast.guid == state.valueOrNull?.podcast.guid) {
+            if (podcast.id == state.valueOrNull?.podcast.id) {
               state = AsyncData(
                 PodcastInfoState(
                   podcast: podcast,
                   stats: stats,
+                  episodes: state.requireValue.episodes,
                 ),
               );
             }
@@ -93,5 +94,6 @@ class PodcastInfoState with _$PodcastInfoState {
   const factory PodcastInfoState({
     required Podcast podcast,
     PodcastStats? stats,
+    required List<Episode> episodes,
   }) = _PodcastInfoState;
 }

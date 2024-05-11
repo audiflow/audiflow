@@ -1,12 +1,4 @@
-// Copyright (c) 2024 by HANAI, Tohru.
-// Copyright (c) 2024 Reedom, Inc.
-// Additional contributions from project contributors.
-// Originally (c) 2020 Ben Hills and the project contributors.
-// All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
-import 'package:audiflow/core/l10n.dart';
+import 'package:audiflow/gen/l10n/l10n.dart';
 import 'package:audiflow/entities/entities.dart';
 import 'package:audiflow/services/podcast/podcast_service_provider.dart';
 import 'package:audiflow/services/settings/settings_service.dart';
@@ -37,28 +29,40 @@ import 'package:scrolls_to_top/scrolls_to_top.dart';
 /// directly from a search result.
 class PodcastDetailsPage extends HookConsumerWidget {
   const PodcastDetailsPage({
-    required this.feedUrl,
-    required this.collectionId,
-    required this.heroPrefix,
+    this.feedUrl,
+    this.collectionId,
     required this.paletteGenerator,
     super.key,
   });
 
   final String? feedUrl;
   final int? collectionId;
-  final String heroPrefix;
   final PaletteGenerator paletteGenerator;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final podcastState =
-        ref.watch(podcastInfoProvider(metadata.guid, needsEpisodes: true));
+    final podcastState = ref.watch(podcastInfoProvider(
+      feedUrl: feedUrl,
+      collectionId: collectionId,
+    ));
     final podcast = podcastState.value?.podcast;
-    final seasonsState = podcast == null
-        ? const AsyncLoading<List<Season>>()
-        : ref.watch(
-            podcastSeasonsProvider(podcast),
-          );
+  }
+}
+
+class _PodcastDetailsPage extends HookConsumerWidget {
+  const _PodcastDetailsPage({
+    required this.podcast,
+    required this.episodes,
+    required this.paletteGenerator,
+  });
+
+  final Podcast podcast;
+  final List<Episode> episodes;
+  final PaletteGenerator paletteGenerator;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final seasonsState = ref.watch(podcastSeasonsProvider(podcast));
 
     final podcastViewState = ref.watch(podcastViewInfoProvider(metadata.guid));
     final viewMode =

@@ -1,10 +1,3 @@
-// Copyright (c) 2024 by HANAI, Tohru.
-// Copyright (c) 2024 Reedom, Inc.
-// Additional contributions from project contributors.
-// All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
 import 'dart:async';
 
 import 'package:audiflow/entities/entities.dart';
@@ -27,10 +20,10 @@ class PodcastViewInfo extends _$PodcastViewInfo {
   Repository get _repository => ref.read(repositoryProvider);
 
   @override
-  Future<PodcastViewStats> build(String guid) async {
-    _log.fine('build $guid');
+  Future<PodcastViewStats> build(int id) async {
+    _log.fine('build $id');
 
-    final viewStats = await _repository.findPodcastViewStats(guid);
+    final viewStats = await _repository.findPodcastViewStats(id);
 
     _listen();
     if (viewStats != null) {
@@ -39,18 +32,17 @@ class PodcastViewInfo extends _$PodcastViewInfo {
 
     // If the viewStats is not found, determine the default viewMode by the
     // existence of seasons.
-    return _determineDefaultViewMode(guid);
+    return _determineDefaultViewMode(id);
   }
 
-  Future<PodcastViewStats> _determineDefaultViewMode(String guid) async {
-    final podcastState =
-        ref.watch(podcastInfoProvider(guid, needsEpisodes: true));
+  Future<PodcastViewStats> _determineDefaultViewMode(int id) async {
+    final podcastState = ref.watch(podcastInfoProvider(guid));
     final podcast = podcastState.valueOrNull?.podcast;
 
     final completer = Completer<PodcastViewStats>();
     if (podcast == null) {
       ref.onDispose(() {
-        completer.complete(PodcastViewStats(guid: guid));
+        completer.complete(PodcastViewStats(id: id));
       });
       return completer.future;
     }
@@ -58,7 +50,7 @@ class PodcastViewInfo extends _$PodcastViewInfo {
     final seasonState = ref.watch(podcastSeasonsProvider(podcast));
     if (seasonState.valueOrNull == null) {
       ref.onDispose(() {
-        completer.complete(PodcastViewStats(guid: guid));
+        completer.complete(PodcastViewStats(id: id));
       });
       return completer.future;
     }
@@ -67,9 +59,9 @@ class PodcastViewInfo extends _$PodcastViewInfo {
         ? PodcastDetailViewMode.seasons
         : PodcastDetailViewMode.episodes;
     await _repository.updatePodcastViewStats(
-      PodcastViewStatsUpdateParam(guid: guid, viewMode: viewMode),
+      PodcastViewStatsUpdateParam(id: id, viewMode: viewMode),
     );
-    return PodcastViewStats(guid: guid, viewMode: viewMode);
+    return PodcastViewStats(id: id, viewMode: viewMode);
   }
 
   void _listen() {
@@ -89,7 +81,7 @@ class PodcastViewInfo extends _$PodcastViewInfo {
                 action: final action,
               )) {
             if (action == AudioPlayerAction.play &&
-                episode.pguid == state.requireValue.guid) {
+                episode.id == state.requireValue.id) {
               _onEpisodeStartsPlaying(episode);
             }
           }
@@ -104,7 +96,7 @@ class PodcastViewInfo extends _$PodcastViewInfo {
 
     _repository.updatePodcastViewStats(
       PodcastViewStatsUpdateParam(
-        guid: state.requireValue.guid,
+        id: state.requireValue.id,
         viewMode: viewMode,
       ),
     );
@@ -117,7 +109,7 @@ class PodcastViewInfo extends _$PodcastViewInfo {
 
     _repository.updatePodcastViewStats(
       PodcastViewStatsUpdateParam(
-        guid: state.requireValue.guid,
+        id: state.requireValue.id,
         ascend: !state.requireValue.ascend,
       ),
     );
@@ -130,7 +122,7 @@ class PodcastViewInfo extends _$PodcastViewInfo {
 
     _repository.updatePodcastViewStats(
       PodcastViewStatsUpdateParam(
-        guid: state.requireValue.guid,
+        id: state.requireValue.id,
         ascendSeasonEpisodes: !state.requireValue.ascendSeasonEpisodes,
       ),
     );
@@ -143,7 +135,7 @@ class PodcastViewInfo extends _$PodcastViewInfo {
 
     _repository.updatePodcastViewStats(
       PodcastViewStatsUpdateParam(
-        guid: state.requireValue.guid,
+        id: state.requireValue.id,
         listenedEpisodes: listenedEpisodes,
       ),
     );

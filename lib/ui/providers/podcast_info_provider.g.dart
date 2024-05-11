@@ -1,12 +1,14 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
+// ignore_for_file: type=lint, duplicate_ignore
+
 part of 'podcast_info_provider.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$podcastInfoHash() => r'1e62de1b5f904ed2f8f1de0ba6038fdacd4bd07c';
+String _$podcastInfoHash() => r'5924e12d9379a1673c6a1213b7baf2e119f9a8b8';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -31,12 +33,12 @@ class _SystemHash {
 
 abstract class _$PodcastInfo
     extends BuildlessAutoDisposeAsyncNotifier<PodcastInfoState> {
-  late final int id;
-  late final bool needsEpisodes;
+  late final String? feedUrl;
+  late final int? collectionId;
 
-  FutureOr<PodcastInfoState> build(
-    int id, {
-    required bool needsEpisodes,
+  FutureOr<PodcastInfoState> build({
+    String? feedUrl,
+    int? collectionId,
   });
 }
 
@@ -50,13 +52,13 @@ class PodcastInfoFamily extends Family<AsyncValue<PodcastInfoState>> {
   const PodcastInfoFamily();
 
   /// See also [PodcastInfo].
-  PodcastInfoProvider call(
-    int id, {
-    required bool needsEpisodes,
+  PodcastInfoProvider call({
+    String? feedUrl,
+    int? collectionId,
   }) {
     return PodcastInfoProvider(
-      id,
-      needsEpisodes: needsEpisodes,
+      feedUrl: feedUrl,
+      collectionId: collectionId,
     );
   }
 
@@ -65,8 +67,8 @@ class PodcastInfoFamily extends Family<AsyncValue<PodcastInfoState>> {
     covariant PodcastInfoProvider provider,
   ) {
     return call(
-      provider.id,
-      needsEpisodes: provider.needsEpisodes,
+      feedUrl: provider.feedUrl,
+      collectionId: provider.collectionId,
     );
   }
 
@@ -89,13 +91,13 @@ class PodcastInfoFamily extends Family<AsyncValue<PodcastInfoState>> {
 class PodcastInfoProvider extends AutoDisposeAsyncNotifierProviderImpl<
     PodcastInfo, PodcastInfoState> {
   /// See also [PodcastInfo].
-  PodcastInfoProvider(
-    int id, {
-    required bool needsEpisodes,
+  PodcastInfoProvider({
+    String? feedUrl,
+    int? collectionId,
   }) : this._internal(
           () => PodcastInfo()
-            ..id = id
-            ..needsEpisodes = needsEpisodes,
+            ..feedUrl = feedUrl
+            ..collectionId = collectionId,
           from: podcastInfoProvider,
           name: r'podcastInfoProvider',
           debugGetCreateSourceHash:
@@ -105,8 +107,8 @@ class PodcastInfoProvider extends AutoDisposeAsyncNotifierProviderImpl<
           dependencies: PodcastInfoFamily._dependencies,
           allTransitiveDependencies:
               PodcastInfoFamily._allTransitiveDependencies,
-          id: id,
-          needsEpisodes: needsEpisodes,
+          feedUrl: feedUrl,
+          collectionId: collectionId,
         );
 
   PodcastInfoProvider._internal(
@@ -116,20 +118,20 @@ class PodcastInfoProvider extends AutoDisposeAsyncNotifierProviderImpl<
     required super.allTransitiveDependencies,
     required super.debugGetCreateSourceHash,
     required super.from,
-    required this.id,
-    required this.needsEpisodes,
+    required this.feedUrl,
+    required this.collectionId,
   }) : super.internal();
 
-  final int id;
-  final bool needsEpisodes;
+  final String? feedUrl;
+  final int? collectionId;
 
   @override
   FutureOr<PodcastInfoState> runNotifierBuild(
     covariant PodcastInfo notifier,
   ) {
     return notifier.build(
-      id,
-      needsEpisodes: needsEpisodes,
+      feedUrl: feedUrl,
+      collectionId: collectionId,
     );
   }
 
@@ -139,15 +141,15 @@ class PodcastInfoProvider extends AutoDisposeAsyncNotifierProviderImpl<
       origin: this,
       override: PodcastInfoProvider._internal(
         () => create()
-          ..id = id
-          ..needsEpisodes = needsEpisodes,
+          ..feedUrl = feedUrl
+          ..collectionId = collectionId,
         from: from,
         name: null,
         dependencies: null,
         allTransitiveDependencies: null,
         debugGetCreateSourceHash: null,
-        id: id,
-        needsEpisodes: needsEpisodes,
+        feedUrl: feedUrl,
+        collectionId: collectionId,
       ),
     );
   }
@@ -161,26 +163,26 @@ class PodcastInfoProvider extends AutoDisposeAsyncNotifierProviderImpl<
   @override
   bool operator ==(Object other) {
     return other is PodcastInfoProvider &&
-        other.id == id &&
-        other.needsEpisodes == needsEpisodes;
+        other.feedUrl == feedUrl &&
+        other.collectionId == collectionId;
   }
 
   @override
   int get hashCode {
     var hash = _SystemHash.combine(0, runtimeType.hashCode);
-    hash = _SystemHash.combine(hash, id.hashCode);
-    hash = _SystemHash.combine(hash, needsEpisodes.hashCode);
+    hash = _SystemHash.combine(hash, feedUrl.hashCode);
+    hash = _SystemHash.combine(hash, collectionId.hashCode);
 
     return _SystemHash.finish(hash);
   }
 }
 
 mixin PodcastInfoRef on AutoDisposeAsyncNotifierProviderRef<PodcastInfoState> {
-  /// The parameter `id` of this provider.
-  int get id;
+  /// The parameter `feedUrl` of this provider.
+  String? get feedUrl;
 
-  /// The parameter `needsEpisodes` of this provider.
-  bool get needsEpisodes;
+  /// The parameter `collectionId` of this provider.
+  int? get collectionId;
 }
 
 class _PodcastInfoProviderElement
@@ -189,9 +191,9 @@ class _PodcastInfoProviderElement
   _PodcastInfoProviderElement(super.provider);
 
   @override
-  int get id => (origin as PodcastInfoProvider).id;
+  String? get feedUrl => (origin as PodcastInfoProvider).feedUrl;
   @override
-  bool get needsEpisodes => (origin as PodcastInfoProvider).needsEpisodes;
+  int? get collectionId => (origin as PodcastInfoProvider).collectionId;
 }
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member
