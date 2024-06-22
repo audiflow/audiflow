@@ -61,29 +61,27 @@ class AppBottomNavigationBar extends HookConsumerWidget {
     final l10n = L10n.of(context);
     final theme = Theme.of(context);
     return Scaffold(
-      body: SafeArea(
-        child: Stack(
-          children: [
-            LayoutBuilder(
-              builder: (context, constraints) {
-                return SizedBox(
-                  height: playingEpisode == null
-                      ? null
-                      : constraints.maxHeight - playerMinHeight,
-                  child: navigationShell,
-                );
-              },
-            ),
-            if (playingEpisode != null)
-              Align(
-                alignment: Alignment.bottomCenter,
-                child: DetailedPlayer(
-                  minHeight: playerMinHeight,
-                  maxHeight: playerMaxHeight(context),
-                ),
+      body: Stack(
+        children: [
+          LayoutBuilder(
+            builder: (context, constraints) {
+              return SizedBox(
+                height: playingEpisode == null
+                    ? null
+                    : constraints.maxHeight - playerMinHeight,
+                child: navigationShell,
+              );
+            },
+          ),
+          if (playingEpisode != null)
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: DetailedPlayer(
+                minHeight: playerMinHeight,
+                maxHeight: playerMaxHeight(context),
               ),
-          ],
-        ),
+            ),
+        ],
       ),
       bottomNavigationBar: ValueListenableBuilder(
         valueListenable: playerExpandProgress,

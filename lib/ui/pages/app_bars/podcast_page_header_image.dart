@@ -8,17 +8,31 @@ class PodcastHeaderImage extends StatelessWidget {
     super.key,
     required this.imageUrl,
     required this.placeholderBuilder,
+    required this.size,
   });
+
+  const PodcastHeaderImage.large({
+    super.key,
+    required this.imageUrl,
+    required this.placeholderBuilder,
+  }) : size = 560;
+
+  const PodcastHeaderImage.middle({
+    super.key,
+    required this.imageUrl,
+    required this.placeholderBuilder,
+  }) : size = 240;
 
   final String imageUrl;
   final PlaceholderBuilder? placeholderBuilder;
+  final double size;
 
   @override
   Widget build(BuildContext context) {
     if (imageUrl.isEmpty) {
-      return const SizedBox(
-        height: 560,
-        width: 560,
+      return  SizedBox(
+        height: size,
+        width: size,
       );
     }
 
@@ -26,14 +40,16 @@ class PodcastHeaderImage extends StatelessWidget {
       key: Key('details:$imageUrl'),
       url: imageUrl,
       fit: BoxFit.contain,
+      width: size,
+      height: size,
       placeholder: placeholderBuilder != null
           ? placeholderBuilder?.builder()(context)
           : DelayedCircularProgressIndicator(),
       errorPlaceholder: placeholderBuilder != null
           ? placeholderBuilder?.errorBuilder()(context)
           : Container(
-              width: 560,
-              height: 560,
+              width: size,
+              height: size,
               decoration: BoxDecoration(
                 color: Colors.grey[300],
                 borderRadius: BorderRadius.circular(16),

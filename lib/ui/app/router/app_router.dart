@@ -84,11 +84,15 @@ class AppRouter {
                     name: 'intro',
                     parentNavigatorKey: homeTabNavigatorKey,
                     pageBuilder: (context, state) {
-                      final collectionId = state.extra! as int;
+                      final (collectionId, title, author, thumbnailUrl) =
+                          state.extra! as (int, String, String, String);
                       elapsedTime('navi: show PodcastIntroPage');
                       return _getPage(
                         child: PodcastIntroPage(
                           collectionId: collectionId,
+                          title: title,
+                          author: author,
+                          thumbnailUrl: thumbnailUrl,
                         ),
                         state: state,
                       );
@@ -234,10 +238,15 @@ class AppRouter {
     );
   }
 
-  Future<void> pushPodcastIntro(int collectionId) async {
+  Future<void> pushPodcastIntro({
+    required int collectionId,
+    required String title,
+    required String author,
+    required String thumbnailUrl,
+  }) async {
     await router.pushNamed(
       'intro',
-      extra: collectionId,
+      extra: (collectionId, title, author, thumbnailUrl),
     );
   }
 

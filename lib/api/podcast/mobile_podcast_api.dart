@@ -3,11 +3,11 @@ import 'dart:io';
 
 import 'package:audiflow/api/podcast/podcast_api.dart';
 import 'package:audiflow/core/environment.dart';
+import 'package:audiflow/core/logger.dart';
 import 'package:audiflow/entities/entities.dart';
 import 'package:audiflow/services/http/cached_http.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:logging/logging.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:podcast_feed/parsers/channel_item_parser.dart';
 import 'package:podcast_feed/parsers/create_parsers.dart';
@@ -32,7 +32,6 @@ class MobilePodcastApi extends PodcastApi {
 
   bool _initialized = false;
   late final String _cacheDir;
-  final _log = Logger('MobilePodcastApi');
 
   static String feedApiEndpoint = 'https://itunes.apple.com';
   static String searchApiEndpoint = 'https://itunes.apple.com/search';
@@ -153,7 +152,7 @@ class MobilePodcastApi extends PodcastApi {
       final ret = await compute(_loadFeed, message);
       return ret;
     } on Exception catch (e) {
-      _log.warning('Failed to load feed: $url\n$e');
+      logger.w('Failed to load feed: $url\n$e');
       return (null, null);
     }
   }

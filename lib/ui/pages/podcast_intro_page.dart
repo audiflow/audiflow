@@ -1,10 +1,10 @@
-import 'package:audiflow/gen/l10n/l10n.dart';
 import 'package:audiflow/entities/entities.dart';
+import 'package:audiflow/gen/l10n/l10n.dart';
 import 'package:audiflow/services/settings/settings_service.dart';
 import 'package:audiflow/stopwatch.dart';
+import 'package:audiflow/ui/pages/app_bars/podcast_intro_app_bar.dart';
 import 'package:audiflow/ui/providers/episodes_list_event_provider.dart';
 import 'package:audiflow/ui/providers/podcast_intro_provider.dart';
-import 'package:audiflow/ui/widgets/fill_remaining_error.dart';
 import 'package:audiflow/ui/widgets/fill_remaining_loading.dart';
 import 'package:audiflow/ui/widgets/podcast_html.dart';
 import 'package:flutter/material.dart';
@@ -16,16 +16,79 @@ import 'package:scrolls_to_top/scrolls_to_top.dart';
 class PodcastIntroPage extends HookConsumerWidget {
   const PodcastIntroPage({
     required this.collectionId,
+    required this.title,
+    required this.author,
+    required this.thumbnailUrl,
     super.key,
   });
 
   final int collectionId;
+  final String title;
+  final String author;
+  final String thumbnailUrl;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    elapsedTime('PodcastIntroPage.build');
     final state = ref.watch(podcastIntroProvider(collectionId: collectionId));
+    return state.hasValue
+        ? _PodcastIntroPageContent(
+            thumbnailUrl: thumbnailUrl,
+            podcast: state.requireValue.podcast,
+            episodes: state.requireValue.episodes,
+          )
+        : _PodcastIntroPageLoading(
+            title: title,
+            author: author,
+            thumbnailUrl: thumbnailUrl,
+          );
+  }
+}
 
+class _PodcastIntroPageLoading extends StatelessWidget {
+  const _PodcastIntroPageLoading({
+    required this.title,
+    required this.author,
+    required this.thumbnailUrl,
+  });
+
+  final String title;
+  final String author;
+  final String thumbnailUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    elapsedTime('_PodcastIntroPageLoading.build');
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      body: CustomScrollView(
+        physics: const NeverScrollableScrollPhysics(),
+        slivers: <Widget>[
+          PodcastIntroAppBar(
+            title: title,
+            author: author,
+            thumbnailUrl: thumbnailUrl,
+          ),
+          const FillRemainingLoading(),
+        ],
+      ),
+    );
+  }
+}
+
+class _PodcastIntroPageContent extends HookConsumerWidget {
+  const _PodcastIntroPageContent({
+    required this.thumbnailUrl,
+    required this.podcast,
+    required this.episodes,
+  });
+
+  final String thumbnailUrl;
+  final Podcast podcast;
+  final List<Episode> episodes;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    elapsedTime('_PodcastIntroPageContent.build');
     final controller = useScrollController();
     return ProviderScope(
       overrides: [
@@ -34,7 +97,7 @@ class PodcastIntroPage extends HookConsumerWidget {
       ],
       child: Semantics(
         header: false,
-        label: L10n.of(context)!.semantics_podcast_details_header,
+        label: L10n.of(context).semantics_podcast_details_header,
         child: ScrollsToTop(
           onScrollsToTop: (event) async {
             await controller.animateTo(
@@ -56,18 +119,11 @@ class PodcastIntroPage extends HookConsumerWidget {
                 controller: controller,
                 physics: const AlwaysScrollableScrollPhysics(),
                 slivers: <Widget>[
-                  // PodcastDetailsAppBar(
-                  //   metadata: metadata,
-                  //   foregroundColor:
-                  //   backgroundColor: paletteGenerator.lightMutedColor?.color,
-                  // ),
-                  if (state.isLoading)
-                    const FillRemainingLoading()
-                  else if (state.hasError)
-                    FillRemainingError.podcastNoResults()
-                  else ...[
-                    _PodcastTitle(state.requireValue.podcast),
-                  ],
+                  PodcastIntroAppBar(
+                    thumbnailUrl: thumbnailUrl,
+                    podcast: podcast,
+                  ),
+                  _PodcastTitle(podcast),
                 ],
               ),
             ),

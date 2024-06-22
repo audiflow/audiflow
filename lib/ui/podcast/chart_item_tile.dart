@@ -13,7 +13,6 @@ class ChartItemTile extends ConsumerWidget {
   });
 
   final ITunesChartItem chartItem;
-  static const heroPrefix = 'tileHero';
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -31,7 +30,12 @@ class ChartItemTile extends ConsumerWidget {
           if (podcast != null) {
             ref.read(routerProvider).pushPodcastDetail(podcast);
           } else {
-            ref.read(routerProvider).pushPodcastIntro(chartItem.collectionId);
+            ref.read(routerProvider).pushPodcastIntro(
+                  collectionId: chartItem.collectionId,
+                  title: chartItem.collectionName,
+                  author: chartItem.artistName,
+                  thumbnailUrl: chartItem.artworkUrl100,
+                );
           }
         });
       },
@@ -44,14 +48,9 @@ class ChartItemTile extends ConsumerWidget {
             ExcludeSemantics(
               child: Padding(
                 padding: const EdgeInsets.only(left: 20, right: 10),
-                child: Hero(
-                  key: Key('$heroPrefix:${chartItem.artworkUrl100}:'
-                      '${chartItem.collectionId}'),
-                  tag: '$heroPrefix:${chartItem.collectionId}',
-                  child: TileImage(
-                    url: chartItem.thumbnailArtworkUrl,
-                    size: 60,
-                  ),
+                child: TileImage(
+                  url: chartItem.thumbnailArtworkUrl,
+                  size: 60,
                 ),
               ),
             ),

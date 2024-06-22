@@ -61,7 +61,7 @@ dependencies:
   permission_handler: ^11.3.1
   podcast_feed:
     git:
-      url: git@github.com:reedom/podcast_feed.git
+      url: ../flutter/podcast_feed
       ref: develop
   podcast_search:
     git:

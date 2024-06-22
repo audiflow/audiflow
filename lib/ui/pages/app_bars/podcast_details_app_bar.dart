@@ -1,5 +1,5 @@
-import 'package:audiflow/gen/l10n/l10n.dart';
 import 'package:audiflow/entities/podcast.dart';
+import 'package:audiflow/gen/l10n/l10n.dart';
 import 'package:audiflow/services/podcast/podcast_service_provider.dart';
 import 'package:audiflow/ui/pages/app_bars/podcast_page_header_image.dart';
 import 'package:audiflow/ui/providers/episodes_list_event_provider.dart';
