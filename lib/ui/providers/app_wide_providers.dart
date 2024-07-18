@@ -28,16 +28,19 @@ part 'app_wide_providers.g.dart';
 bool appWide(AppWideRef ref) {
   ref
     ..listen(repositoryProvider, (_, __) {})
+    ..listen(podcastApiProvider, (_, __) {})
     ..listen(settingsServiceProvider, (_, __) {})
+    ..listen(connectivityStateProvider, (_, __) {})
     ..listen(audioPlayerServiceProvider, (_, __) {})
     ..listen(audioPlayerEventStreamProvider, (_, __) {})
-    ..listen(connectivityStateProvider, (_, __) {})
     ..listen(audioQueueManagerProvider, (_, __) {})
     ..listen(audioPositionSaverProvider, (_, __) {})
+    ..listen(downloadManagerProvider, (_, __) {})
     ..listen(podcastEventStreamProvider, (_, __) {})
     ..listen(podcastRefresherProvider, (_, __) {})
     ..listen(episodeEventStreamProvider, (_, __) {})
     ..listen(downloadEventStreamProvider, (_, __) {})
+    ..listen(queueManagerProvider, (_, __) {})
     ..listen(transcriptEventStreamProvider, (_, __) {});
   return true;
 }
@@ -64,7 +67,6 @@ class AppWideProvidersInitializer extends HookConsumerWidget {
             ref.read(downloadManagerProvider).ensureInitialized(),
             ref.read(queueManagerProvider.notifier).ensureInitialized(),
             ref.read(audioPlayerServiceProvider.notifier).ensureInitialized(),
-            ref.read(podcastApiProvider).ensureInitialized(),
             _setupCertificateAuthority().then((ca) {
               ref.read(podcastApiProvider).addClientAuthorityBytes(ca);
             }),

@@ -1,14 +1,12 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-// ignore_for_file: type=lint, duplicate_ignore
-
 part of 'app_wide_providers.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$appWideHash() => r'a4d8179c3276297b31e86406ee88d9cc76f40eea';
+String _$appWideHash() => r'a4522d48f81f038beab28af3bd4e65248f820612';
 
 /// See also [appWide].
 @ProviderFor(appWide)
