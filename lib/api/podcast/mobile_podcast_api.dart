@@ -224,8 +224,10 @@ class MobilePodcastApi extends PodcastApi {
   @override
   void addClientAuthorityBytes(List<int> certificateAuthorityBytes) {
     _certificateAuthorityBytes = certificateAuthorityBytes;
-    SecurityContext.defaultContext
-        .setTrustedCertificatesBytes(_certificateAuthorityBytes);
+    if (certificateAuthorityBytes.isNotEmpty) {
+      SecurityContext.defaultContext
+          .setTrustedCertificatesBytes(_certificateAuthorityBytes);
+    }
   }
 
   static String _buildChartsUrl({
