@@ -1,5 +1,4 @@
 import 'package:audiflow/entities/entities.dart';
-import 'package:podcast_feed/parsers/channel_item_parser.dart';
 import 'package:podcast_search/podcast_search.dart' as pslib;
 
 /// A simple wrapper class that interacts with the search API via
@@ -7,8 +6,6 @@ import 'package:podcast_search/podcast_search.dart' as pslib;
 ///
 // TODO(unknown): Make this more generic so it's not tied to podcast_search
 abstract class PodcastApi {
-  Future<void> ensureInitialized();
-
   /// Search for podcasts matching the search criteria.
   Future<List<ITunesSearchItem>> search(
     String term, {
@@ -32,12 +29,6 @@ abstract class PodcastApi {
   List<String> genres(
     String searchProvider,
   );
-
-  /// URL representing the RSS feed for a podcast.
-  Future<(Podcast?, ItemParser?)> loadFeed({
-    required String url,
-    required int collectionId,
-  });
 
   /// Load episode chapters via JSON file.
   Future<pslib.Chapters> loadChapters(String url);

@@ -2,15 +2,12 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:audiflow/api/podcast/podcast_api.dart';
+import 'package:audiflow/core/api_cache_dir.dart';
 import 'package:audiflow/core/environment.dart';
-import 'package:audiflow/core/logger.dart';
 import 'package:audiflow/entities/entities.dart';
 import 'package:audiflow/services/http/cached_http.dart';
-import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:podcast_feed/parsers/channel_item_parser.dart';
-import 'package:podcast_feed/parsers/create_parsers.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:podcast_search/podcast_search.dart' as podcast_search;
 
 /// An implementation of the [PodcastApi].
@@ -18,21 +15,9 @@ import 'package:podcast_search/podcast_search.dart' as podcast_search;
 /// A simple wrapper class that interacts with the iTunes/PodcastIndex search API
 /// via the podcast_search package.
 class MobilePodcastApi extends PodcastApi {
-  MobilePodcastApi();
+  MobilePodcastApi(this._ref);
 
-  @override
-  Future<void> ensureInitialized() async {
-    if (_initialized) {
-      return;
-    }
-    _initialized = true;
-    final dir = await getTemporaryDirectory();
-    _cacheDir = dir.path;
-  }
-
-  bool _initialized = false;
-  late final String _cacheDir;
-
+  final Ref _ref;
   static String feedApiEndpoint = 'https://itunes.apple.com';
   static String searchApiEndpoint = 'https://itunes.apple.com/search';
 
@@ -59,11 +44,10 @@ class MobilePodcastApi extends PodcastApi {
     'True Crime': 1488,
   };
 
-  /// Set when using a custom certificate authority.
-  SecurityContext? _defaultSecurityContext;
-
   /// Bytes containing a custom certificate authority.
   List<int> _certificateAuthorityBytes = [];
+
+  String get _cacheDir => _ref.read(apiCacheDirProvider);
 
   @override
   Future<ITunesSearchItem?> lookup({required int collectionId}) async {
@@ -135,26 +119,6 @@ class MobilePodcastApi extends PodcastApi {
       userAgent: Environment.userAgent(),
       searchProvider: provider,
     ).genres();
-  }
-
-  @override
-  Future<(Podcast?, ItemParser?)> loadFeed({
-    required String url,
-    required int collectionId,
-  }) async {
-    _setupSecurityContext();
-    final message = <String, dynamic>{
-      'url': url,
-      'collectionId': collectionId,
-      'cacheDir': _cacheDir,
-    };
-    try {
-      final ret = await compute(_loadFeed, message);
-      return ret;
-    } on Exception catch (e) {
-      logger.w('Failed to load feed: $url\n$e');
-      return (null, null);
-    }
   }
 
   @override
@@ -257,41 +221,11 @@ class MobilePodcastApi extends PodcastApi {
         .toList();
   }
 
-  static Future<(Podcast?, ItemParser?)> _loadFeed(
-    Map<String, dynamic> message,
-  ) async {
-    final url = message['url'] as String;
-    final collectionId = message['collectionId'] as int;
-    final cacheDir = message['cacheDir'] as String;
-    final http = CachedHttp(cacheDir);
-    final rss = await http
-        .fetch<String>(url, responseType: ResponseType.plain)
-        .timeout(const Duration(seconds: 30));
-    if (rss == null) {
-      debugPrint('rss is null, url=$url');
-      return (null, null);
-    }
-
-    final (channelParser, itemParser) = await createPodcastFeedParsers(rss);
-    final channelValue = await channelParser.parseWith((value) => value).first;
-    return (
-      Podcast.fromFeed(channelValue, collectionId: collectionId),
-      itemParser
-    );
-  }
-
-  void _setupSecurityContext() {
-    if (_defaultSecurityContext == null &&
-        _certificateAuthorityBytes.isNotEmpty) {
-      SecurityContext.defaultContext
-          .setTrustedCertificatesBytes(_certificateAuthorityBytes);
-      _defaultSecurityContext = SecurityContext.defaultContext;
-    }
-  }
-
   @override
   void addClientAuthorityBytes(List<int> certificateAuthorityBytes) {
     _certificateAuthorityBytes = certificateAuthorityBytes;
+    SecurityContext.defaultContext
+        .setTrustedCertificatesBytes(_certificateAuthorityBytes);
   }
 
   static String _buildChartsUrl({
