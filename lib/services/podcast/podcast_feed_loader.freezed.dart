@@ -20,6 +20,10 @@ mixin _$PodcastFeedLoaderState {
   int get collectionId => throw _privateConstructorUsedError;
   Podcast? get podcast => throw _privateConstructorUsedError;
   List<Episode> get episodes => throw _privateConstructorUsedError;
+  bool get reachedLastPubDate => throw _privateConstructorUsedError;
+  bool get loadedAllEpisodes => throw _privateConstructorUsedError;
+  bool get readingPodcast => throw _privateConstructorUsedError;
+  bool get readingEpisodes => throw _privateConstructorUsedError;
 
   /// Create a copy of PodcastFeedLoaderState
   /// with the given fields replaced by the non-null parameter values.
@@ -38,7 +42,11 @@ abstract class $PodcastFeedLoaderStateCopyWith<$Res> {
       {String feedUrl,
       int collectionId,
       Podcast? podcast,
-      List<Episode> episodes});
+      List<Episode> episodes,
+      bool reachedLastPubDate,
+      bool loadedAllEpisodes,
+      bool readingPodcast,
+      bool readingEpisodes});
 }
 
 /// @nodoc
@@ -61,6 +69,10 @@ class _$PodcastFeedLoaderStateCopyWithImpl<$Res,
     Object? collectionId = null,
     Object? podcast = freezed,
     Object? episodes = null,
+    Object? reachedLastPubDate = null,
+    Object? loadedAllEpisodes = null,
+    Object? readingPodcast = null,
+    Object? readingEpisodes = null,
   }) {
     return _then(_value.copyWith(
       feedUrl: null == feedUrl
@@ -79,6 +91,22 @@ class _$PodcastFeedLoaderStateCopyWithImpl<$Res,
           ? _value.episodes
           : episodes // ignore: cast_nullable_to_non_nullable
               as List<Episode>,
+      reachedLastPubDate: null == reachedLastPubDate
+          ? _value.reachedLastPubDate
+          : reachedLastPubDate // ignore: cast_nullable_to_non_nullable
+              as bool,
+      loadedAllEpisodes: null == loadedAllEpisodes
+          ? _value.loadedAllEpisodes
+          : loadedAllEpisodes // ignore: cast_nullable_to_non_nullable
+              as bool,
+      readingPodcast: null == readingPodcast
+          ? _value.readingPodcast
+          : readingPodcast // ignore: cast_nullable_to_non_nullable
+              as bool,
+      readingEpisodes: null == readingEpisodes
+          ? _value.readingEpisodes
+          : readingEpisodes // ignore: cast_nullable_to_non_nullable
+              as bool,
     ) as $Val);
   }
 }
@@ -96,7 +124,11 @@ abstract class _$$PodcastFeedLoaderStateImplCopyWith<$Res>
       {String feedUrl,
       int collectionId,
       Podcast? podcast,
-      List<Episode> episodes});
+      List<Episode> episodes,
+      bool reachedLastPubDate,
+      bool loadedAllEpisodes,
+      bool readingPodcast,
+      bool readingEpisodes});
 }
 
 /// @nodoc
@@ -118,6 +150,10 @@ class __$$PodcastFeedLoaderStateImplCopyWithImpl<$Res>
     Object? collectionId = null,
     Object? podcast = freezed,
     Object? episodes = null,
+    Object? reachedLastPubDate = null,
+    Object? loadedAllEpisodes = null,
+    Object? readingPodcast = null,
+    Object? readingEpisodes = null,
   }) {
     return _then(_$PodcastFeedLoaderStateImpl(
       feedUrl: null == feedUrl
@@ -136,6 +172,22 @@ class __$$PodcastFeedLoaderStateImplCopyWithImpl<$Res>
           ? _value._episodes
           : episodes // ignore: cast_nullable_to_non_nullable
               as List<Episode>,
+      reachedLastPubDate: null == reachedLastPubDate
+          ? _value.reachedLastPubDate
+          : reachedLastPubDate // ignore: cast_nullable_to_non_nullable
+              as bool,
+      loadedAllEpisodes: null == loadedAllEpisodes
+          ? _value.loadedAllEpisodes
+          : loadedAllEpisodes // ignore: cast_nullable_to_non_nullable
+              as bool,
+      readingPodcast: null == readingPodcast
+          ? _value.readingPodcast
+          : readingPodcast // ignore: cast_nullable_to_non_nullable
+              as bool,
+      readingEpisodes: null == readingEpisodes
+          ? _value.readingEpisodes
+          : readingEpisodes // ignore: cast_nullable_to_non_nullable
+              as bool,
     ));
   }
 }
@@ -147,7 +199,11 @@ class _$PodcastFeedLoaderStateImpl implements _PodcastFeedLoaderState {
       {required this.feedUrl,
       required this.collectionId,
       this.podcast,
-      final List<Episode> episodes = const []})
+      final List<Episode> episodes = const [],
+      this.reachedLastPubDate = false,
+      this.loadedAllEpisodes = false,
+      this.readingPodcast = true,
+      this.readingEpisodes = false})
       : _episodes = episodes;
 
   @override
@@ -166,8 +222,21 @@ class _$PodcastFeedLoaderStateImpl implements _PodcastFeedLoaderState {
   }
 
   @override
+  @JsonKey()
+  final bool reachedLastPubDate;
+  @override
+  @JsonKey()
+  final bool loadedAllEpisodes;
+  @override
+  @JsonKey()
+  final bool readingPodcast;
+  @override
+  @JsonKey()
+  final bool readingEpisodes;
+
+  @override
   String toString() {
-    return 'PodcastFeedLoaderState(feedUrl: $feedUrl, collectionId: $collectionId, podcast: $podcast, episodes: $episodes)';
+    return 'PodcastFeedLoaderState(feedUrl: $feedUrl, collectionId: $collectionId, podcast: $podcast, episodes: $episodes, reachedLastPubDate: $reachedLastPubDate, loadedAllEpisodes: $loadedAllEpisodes, readingPodcast: $readingPodcast, readingEpisodes: $readingEpisodes)';
   }
 
   @override
@@ -179,12 +248,28 @@ class _$PodcastFeedLoaderStateImpl implements _PodcastFeedLoaderState {
             (identical(other.collectionId, collectionId) ||
                 other.collectionId == collectionId) &&
             (identical(other.podcast, podcast) || other.podcast == podcast) &&
-            const DeepCollectionEquality().equals(other._episodes, _episodes));
+            const DeepCollectionEquality().equals(other._episodes, _episodes) &&
+            (identical(other.reachedLastPubDate, reachedLastPubDate) ||
+                other.reachedLastPubDate == reachedLastPubDate) &&
+            (identical(other.loadedAllEpisodes, loadedAllEpisodes) ||
+                other.loadedAllEpisodes == loadedAllEpisodes) &&
+            (identical(other.readingPodcast, readingPodcast) ||
+                other.readingPodcast == readingPodcast) &&
+            (identical(other.readingEpisodes, readingEpisodes) ||
+                other.readingEpisodes == readingEpisodes));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, feedUrl, collectionId, podcast,
-      const DeepCollectionEquality().hash(_episodes));
+  int get hashCode => Object.hash(
+      runtimeType,
+      feedUrl,
+      collectionId,
+      podcast,
+      const DeepCollectionEquality().hash(_episodes),
+      reachedLastPubDate,
+      loadedAllEpisodes,
+      readingPodcast,
+      readingEpisodes);
 
   /// Create a copy of PodcastFeedLoaderState
   /// with the given fields replaced by the non-null parameter values.
@@ -201,7 +286,11 @@ abstract class _PodcastFeedLoaderState implements PodcastFeedLoaderState {
       {required final String feedUrl,
       required final int collectionId,
       final Podcast? podcast,
-      final List<Episode> episodes}) = _$PodcastFeedLoaderStateImpl;
+      final List<Episode> episodes,
+      final bool reachedLastPubDate,
+      final bool loadedAllEpisodes,
+      final bool readingPodcast,
+      final bool readingEpisodes}) = _$PodcastFeedLoaderStateImpl;
 
   @override
   String get feedUrl;
@@ -211,6 +300,14 @@ abstract class _PodcastFeedLoaderState implements PodcastFeedLoaderState {
   Podcast? get podcast;
   @override
   List<Episode> get episodes;
+  @override
+  bool get reachedLastPubDate;
+  @override
+  bool get loadedAllEpisodes;
+  @override
+  bool get readingPodcast;
+  @override
+  bool get readingEpisodes;
 
   /// Create a copy of PodcastFeedLoaderState
   /// with the given fields replaced by the non-null parameter values.

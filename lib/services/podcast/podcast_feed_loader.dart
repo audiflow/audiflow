@@ -10,6 +10,7 @@ import 'package:dio/dio.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:podcast_feed/parsers/podcast_feed_parser.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:rxdart/rxdart.dart';
 import 'package:worker_manager/worker_manager.dart';
 
 part 'podcast_feed_loader.freezed.dart';
@@ -35,20 +36,32 @@ class PodcastFeedLoader extends _$PodcastFeedLoader {
   }
 
   Future<void> _setupWorker() async {
-    void onWorkerMessage(dynamic message) {
-      if (message is _SendPortEvent) {
-        logger.d('received worker port');
-        _workerPort = message.sendPort;
-        _loadFeed();
-      } else if (message is _GotPodcastEvent) {
-        logger.d(() => 'received podcast ${message.podcast}');
-        state = state.copyWith(podcast: message.podcast);
-      } else if (message is List<Episode>) {
-        state = state.copyWith(episodes: [...state.episodes, ...message]);
+    void onWorkerMessage(_Result result) {
+      logger.d('received $result');
+      switch (result) {
+        case _SendPortEvent():
+          _workerPort = result.sendPort;
+          _loadFeed();
+        case _LoadFeedResult():
+          state = state.copyWith(
+            podcast: result.podcast,
+            readingPodcast: false,
+          );
+          _workerPort!.send(_ReadEpisodesCommand(maxReadCount: 10));
+        case _ReadEpisodesResult():
+          state = state.copyWith(
+            episodes: [...state.episodes, ...result.episodes],
+            reachedLastPubDate:
+                state.reachedLastPubDate || result.reachedLastPubDate,
+            loadedAllEpisodes:
+                state.loadedAllEpisodes || result.loadedAllEpisodes,
+            readingEpisodes: false,
+          );
+        case _ErrorResult():
       }
     }
 
-    final cancellable = workerManager.executeGentleWithPort<void, dynamic>(
+    final cancellable = workerManager.executeGentleWithPort<void, _Result>(
       (sendPort, isCancelled) async {
         logger.d('start worker');
         await _Worker(sendPort, isCancelled).listen();
@@ -66,10 +79,27 @@ class PodcastFeedLoader extends _$PodcastFeedLoader {
 
   void _loadFeed() {
     _workerPort?.send(
-      _LoadFeedEvent(
+      _LoadFeedCommand(
         feedUrl: state.feedUrl,
         collectionId: state.collectionId,
         cacheDir: _cacheDir,
+      ),
+    );
+  }
+
+  void readEpisodes({
+    int? maxReadCount,
+    DateTime? lastPubDate,
+  }) {
+    if (state.readingEpisodes) {
+      logger.d('skip readEpisodes due to readingEpisodes is true');
+      return;
+    }
+    state = state.copyWith(readingEpisodes: true);
+    _workerPort?.send(
+      _ReadEpisodesCommand(
+        maxReadCount: maxReadCount,
+        lastPubDate: lastPubDate,
       ),
     );
   }
@@ -82,6 +112,10 @@ class PodcastFeedLoaderState with _$PodcastFeedLoaderState {
     required int collectionId,
     Podcast? podcast,
     @Default([]) List<Episode> episodes,
+    @Default(false) bool reachedLastPubDate,
+    @Default(false) bool loadedAllEpisodes,
+    @Default(true) bool readingPodcast,
+    @Default(false) bool readingEpisodes,
   }) = _PodcastFeedLoaderState;
 }
 
@@ -93,28 +127,47 @@ class _Worker {
     _uiPort.send(_SendPortEvent(_workerPort.sendPort));
   }
 
-  final _logger = createLogger();
-  final _completer = Completer<void>();
   final SendPort _uiPort;
   final ReceivePort _workerPort = ReceivePort();
   final bool Function() _isCancelled;
+  final _commandStreamController = StreamController<_Command>();
+  final _completer = Completer<void>();
   PodcastFeedParser<Uint8List, Podcast, Episode>? _feedParser;
   Podcast? _podcast;
 
+  void dispose() {
+    _commandStreamController.close();
+  }
+
   Future<void> listen() async {
-    _workerPort.listen(_onMessage);
+    _listenCommandStream();
+    _workerPort
+        .listen((event) => _commandStreamController.add(event as _Command));
     return _completer.future;
   }
 
-  void _onMessage(dynamic message) {
-    switch (message) {
-      case _LoadFeedEvent():
-        _handleLoadFeedEvent(
-          feedUrl: message.feedUrl,
-          collectionId: message.collectionId,
-          cacheDir: message.cacheDir,
-        );
-    }
+  void _listenCommandStream() {
+    _commandStreamController.stream.flatMap(
+      (command) async* {
+        logger.d('received command $command');
+        switch (command) {
+          case _LoadFeedCommand():
+            await _handleLoadFeedEvent(
+              feedUrl: command.feedUrl,
+              collectionId: command.collectionId,
+              cacheDir: command.cacheDir,
+            );
+          case _ReadEpisodesCommand():
+            await _handleReadEpisodesEvent(
+              maxReadCount: command.maxReadCount,
+              lastPubDate: command.lastPubDate,
+            );
+          case _CancelledCommand():
+            _completer.complete();
+        }
+      },
+      maxConcurrent: 1,
+    ).drain<void>();
   }
 
   Future<void> _handleLoadFeedEvent({
@@ -137,12 +190,6 @@ class _Worker {
       _completer.complete();
       return;
     }
-
-    var  i = 0;
-    while (await _readEpisode()) {
-      i++;
-    }
-    logger.d('loaded $i episodes');
   }
 
   Future<bool> _loadFeed({
@@ -150,62 +197,92 @@ class _Worker {
     required int collectionId,
     required String cacheDir,
   }) async {
-    _logger.d(() => 'loadFeed $feedUrl, collectionId=$collectionId');
+    for (final url in [
+      feedUrl.replaceFirst(RegExp('^http:'), 'https:'),
+      feedUrl.replaceFirst(RegExp('^https:'), 'http:'),
+    ]) {
+      logger.d(() => 'loadFeed $url, collectionId=$collectionId');
+      try {
+        final http = CachedHttp(cacheDir);
+        final rs = await http
+            .fetch<ResponseBody>(url, responseType: ResponseType.stream)
+            .timeout(const Duration(seconds: 30));
+        if (rs == null) {
+          logger.d(() => 'rss is null, url=$feedUrl');
+          return false;
+        }
 
-    ResponseBody? rs;
-    try {
-      final http = CachedHttp(cacheDir);
-      rs = await http
-          .fetch<ResponseBody>(feedUrl, responseType: ResponseType.stream)
-          .timeout(const Duration(seconds: 30));
-      if (rs == null) {
-        logger.d(() => 'rss is null, url=$feedUrl');
+        _feedParser = PodcastFeedParser(
+          rs.stream,
+          channelBuilder: (channelValues) => Podcast.fromFeed(
+            channelValues,
+            collectionId: collectionId,
+          ),
+          channelItemBuilder: (channelItemValues) {
+            if (_podcast == null) {
+              throw StateError('cannot build Episode due to podcast is null');
+            }
+            return Episode.fromChannelItem(_podcast!.id, channelItemValues);
+          },
+        );
+        return true;
+      } on DioException catch (err) {
+        logger.e('type: $err');
+        return false;
+        // ignore: avoid_catches_without_on_clauses
+      } catch (err) {
+        logger.e(err);
         return false;
       }
-
-      _feedParser = PodcastFeedParser(
-        rs.stream,
-        channelBuilder: (channelValues) => Podcast.fromFeed(
-          channelValues,
-          collectionId: collectionId,
-        ),
-        channelItemBuilder: (channelItemValues) {
-          if (_podcast == null) {
-            throw StateError('cannot build Episode due to podcast is null');
-          }
-          return Episode.fromChannelItem(_podcast!.id, channelItemValues);
-        },
-      );
-      return true;
-      // ignore: avoid_catches_without_on_clauses
-    } catch (err) {
-      _logger.e(err);
-      return false;
     }
+    return false;
   }
 
   Future<bool> _readPodcast() async {
     try {
       _podcast = await _feedParser!.readChannel();
-      _uiPort.send(_GotPodcastEvent(_podcast!));
+      _uiPort.send(_LoadFeedResult(_podcast!));
       return true;
       // ignore: avoid_catches_without_on_clauses
     } catch (err) {
-      _logger.e(err);
+      logger.e(err);
       return false;
     }
   }
 
-  Future<bool> _readEpisode() async {
-    try {
+  Future<void> _handleReadEpisodesEvent({
+    int? maxReadCount,
+    DateTime? lastPubDate,
+  }) async {
+    final episodes = <Episode>[];
+    var loadedAllEpisodes = true;
+    var reachedLastPubDate = false;
+    while (true) {
       final episode = await _feedParser!.readChannelItem();
-      // _logger.d(() => 'readEpisode $episode');
-      return episode != null;
-      // ignore: avoid_catches_without_on_clauses
-    } catch (err) {
-      _logger.e(err);
-      return false;
+      if (episode == null) {
+        return;
+      }
+      episodes.add(episode);
+
+      if (lastPubDate != null && episode.publicationDate != null) {
+        if (!lastPubDate.isBefore(episode.publicationDate!)) {
+          loadedAllEpisodes = false;
+          reachedLastPubDate = true;
+          break;
+        }
+      } else if (maxReadCount != null && maxReadCount <= episodes.length) {
+        loadedAllEpisodes = false;
+        break;
+      }
     }
+
+    _uiPort.send(
+      _ReadEpisodesResult(
+        episodes,
+        reachedLastPubDate: reachedLastPubDate,
+        loadedAllEpisodes: loadedAllEpisodes,
+      ),
+    );
   }
 
 // Future<(Podcast?, ItemParser?)> _lookupPodcastBy({
@@ -235,16 +312,23 @@ class _Worker {
 // }
 }
 
-sealed class _Event {}
+sealed class _Command {}
 
-class _SendPortEvent extends _Event {
+sealed class _Result {}
+
+class _SendPortEvent extends _Result {
   _SendPortEvent(this.sendPort);
 
   final SendPort sendPort;
+
+  @override
+  String toString() {
+    return '_SendPortEvent{sendPort}';
+  }
 }
 
-class _LoadFeedEvent extends _Event {
-  _LoadFeedEvent({
+class _LoadFeedCommand extends _Command {
+  _LoadFeedCommand({
     required this.feedUrl,
     required this.collectionId,
     required this.cacheDir,
@@ -253,16 +337,80 @@ class _LoadFeedEvent extends _Event {
   final String feedUrl;
   final int collectionId;
   final String cacheDir;
+
+  @override
+  String toString() {
+    return '_LoadFeedCommand{'
+        'feedUrl: $feedUrl, '
+        'collectionId: $collectionId, '
+        'cacheDir: $cacheDir}';
+  }
 }
 
-class _GotPodcastEvent extends _Event {
-  _GotPodcastEvent(this.podcast);
+class _LoadFeedResult extends _Result {
+  _LoadFeedResult(this.podcast);
 
   final Podcast podcast;
+
+  @override
+  String toString() {
+    return '_LoadFeedResult{podcast: $podcast}';
+  }
 }
 
-class _GotEpisodesEvent extends _Event {
-  _GotEpisodesEvent(this.podcast);
+class _ReadEpisodesCommand extends _Command {
+  _ReadEpisodesCommand({
+    this.maxReadCount,
+    this.lastPubDate,
+  });
 
-  final Podcast podcast;
+  final int? maxReadCount;
+  final DateTime? lastPubDate;
+
+  @override
+  String toString() {
+    return '_ReadEpisodesCommand{'
+        'maxReadCount: $maxReadCount, '
+        'lastPubDate: $lastPubDate}';
+  }
+}
+
+class _ReadEpisodesResult extends _Result {
+  _ReadEpisodesResult(
+    this.episodes, {
+    this.reachedLastPubDate = false,
+    this.loadedAllEpisodes = false,
+  });
+
+  final List<Episode> episodes;
+  final bool reachedLastPubDate;
+  final bool loadedAllEpisodes;
+
+  @override
+  String toString() {
+    return '_ReadEpisodesResult{'
+        'episodes: ${episodes.length} episodes, '
+        'reachedLastPubDate: $reachedLastPubDate, '
+        'loadedAllEpisodes: $loadedAllEpisodes}';
+  }
+}
+
+class _CancelledCommand extends _Command {
+  _CancelledCommand();
+
+  @override
+  String toString() {
+    return '_CancelledCommand{}';
+  }
+}
+
+class _ErrorResult extends _Result {
+  _ErrorResult(this.message);
+
+  final String message;
+
+  @override
+  String toString() {
+    return '_ErrorResult{message: $message}';
+  }
 }
