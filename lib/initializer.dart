@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:audiflow/core/api_cache_dir.dart';
 import 'package:audiflow/core/build_config/app_build_config.dart';
 import 'package:audiflow/core/logger.dart';
 import 'package:audiflow/core/shared_preferences.dart';
@@ -9,6 +10,7 @@ import 'package:audiflow/services/queue/default_queue_manager.dart';
 import 'package:audiflow/services/queue/queue_manager.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 typedef InitializedValues = ({
@@ -44,9 +46,11 @@ Future<List<Override>> initializeProviders() async {
   final overrides = <Override>[];
 
   final preferences = await SharedPreferences.getInstance();
+  final dir = await getTemporaryDirectory();
   overrides.addAll(
     [
       sharedPreferencesProvider.overrideWithValue(preferences),
+      apiCacheDirProvider.overrideWithValue(dir.path),
       audioPlayerServiceProvider.overrideWith(MobileAudioPlayerService.new),
       queueManagerProvider.overrideWith(DefaultQueueManager.new),
     ],
