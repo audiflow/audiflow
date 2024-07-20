@@ -1,7 +1,5 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-// ignore_for_file: type=lint, duplicate_ignore
-
 part of 'podcast.dart';
 
 // **************************************************************************
@@ -119,19 +117,6 @@ const PodcastSchema = CollectionSchema(
           caseSensitive: true,
         )
       ],
-    ),
-    r'collectionId': IndexSchema(
-      id: -7489395134515229581,
-      name: r'collectionId',
-      unique: true,
-      replace: false,
-      properties: [
-        IndexPropertySchema(
-          name: r'collectionId',
-          type: IndexType.value,
-          caseSensitive: false,
-        )
-      ],
     )
   },
   links: {
@@ -170,7 +155,7 @@ const PodcastSchema = CollectionSchema(
   getId: _podcastGetId,
   getLinks: _podcastGetLinks,
   attach: _podcastAttach,
-  version: '3.1.0+1',
+  version: '3.1.7',
 );
 
 int _podcastEstimateSize(
@@ -257,7 +242,7 @@ Podcast _podcastDeserialize(
   final object = Podcast(
     author: reader.readStringOrNull(offsets[0]),
     category: reader.readString(offsets[1]),
-    collectionId: reader.readLong(offsets[2]),
+    collectionId: reader.readLongOrNull(offsets[2]),
     complete: reader.readBoolOrNull(offsets[3]) ?? false,
     copyright: reader.readStringOrNull(offsets[4]),
     description: reader.readString(offsets[5]),
@@ -288,7 +273,7 @@ P _podcastDeserializeProp<P>(
     case 1:
       return (reader.readString(offset)) as P;
     case 2:
-      return (reader.readLong(offset)) as P;
+      return (reader.readLongOrNull(offset)) as P;
     case 3:
       return (reader.readBoolOrNull(offset) ?? false) as P;
     case 4:
@@ -404,73 +389,12 @@ extension PodcastByIndex on IsarCollection<Podcast> {
   List<Id> putAllByFeedUrlSync(List<Podcast> objects, {bool saveLinks = true}) {
     return putAllByIndexSync(r'feedUrl', objects, saveLinks: saveLinks);
   }
-
-  Future<Podcast?> getByCollectionId(int collectionId) {
-    return getByIndex(r'collectionId', [collectionId]);
-  }
-
-  Podcast? getByCollectionIdSync(int collectionId) {
-    return getByIndexSync(r'collectionId', [collectionId]);
-  }
-
-  Future<bool> deleteByCollectionId(int collectionId) {
-    return deleteByIndex(r'collectionId', [collectionId]);
-  }
-
-  bool deleteByCollectionIdSync(int collectionId) {
-    return deleteByIndexSync(r'collectionId', [collectionId]);
-  }
-
-  Future<List<Podcast?>> getAllByCollectionId(List<int> collectionIdValues) {
-    final values = collectionIdValues.map((e) => [e]).toList();
-    return getAllByIndex(r'collectionId', values);
-  }
-
-  List<Podcast?> getAllByCollectionIdSync(List<int> collectionIdValues) {
-    final values = collectionIdValues.map((e) => [e]).toList();
-    return getAllByIndexSync(r'collectionId', values);
-  }
-
-  Future<int> deleteAllByCollectionId(List<int> collectionIdValues) {
-    final values = collectionIdValues.map((e) => [e]).toList();
-    return deleteAllByIndex(r'collectionId', values);
-  }
-
-  int deleteAllByCollectionIdSync(List<int> collectionIdValues) {
-    final values = collectionIdValues.map((e) => [e]).toList();
-    return deleteAllByIndexSync(r'collectionId', values);
-  }
-
-  Future<Id> putByCollectionId(Podcast object) {
-    return putByIndex(r'collectionId', object);
-  }
-
-  Id putByCollectionIdSync(Podcast object, {bool saveLinks = true}) {
-    return putByIndexSync(r'collectionId', object, saveLinks: saveLinks);
-  }
-
-  Future<List<Id>> putAllByCollectionId(List<Podcast> objects) {
-    return putAllByIndex(r'collectionId', objects);
-  }
-
-  List<Id> putAllByCollectionIdSync(List<Podcast> objects,
-      {bool saveLinks = true}) {
-    return putAllByIndexSync(r'collectionId', objects, saveLinks: saveLinks);
-  }
 }
 
 extension PodcastQueryWhereSort on QueryBuilder<Podcast, Podcast, QWhere> {
   QueryBuilder<Podcast, Podcast, QAfterWhere> anyId() {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(const IdWhereClause.any());
-    });
-  }
-
-  QueryBuilder<Podcast, Podcast, QAfterWhere> anyCollectionId() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        const IndexWhereClause.any(indexName: r'collectionId'),
-      );
     });
   }
 }
@@ -583,96 +507,6 @@ extension PodcastQueryWhere on QueryBuilder<Podcast, Podcast, QWhereClause> {
               includeUpper: false,
             ));
       }
-    });
-  }
-
-  QueryBuilder<Podcast, Podcast, QAfterWhereClause> collectionIdEqualTo(
-      int collectionId) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'collectionId',
-        value: [collectionId],
-      ));
-    });
-  }
-
-  QueryBuilder<Podcast, Podcast, QAfterWhereClause> collectionIdNotEqualTo(
-      int collectionId) {
-    return QueryBuilder.apply(this, (query) {
-      if (query.whereSort == Sort.asc) {
-        return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'collectionId',
-              lower: [],
-              upper: [collectionId],
-              includeUpper: false,
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'collectionId',
-              lower: [collectionId],
-              includeLower: false,
-              upper: [],
-            ));
-      } else {
-        return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'collectionId',
-              lower: [collectionId],
-              includeLower: false,
-              upper: [],
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'collectionId',
-              lower: [],
-              upper: [collectionId],
-              includeUpper: false,
-            ));
-      }
-    });
-  }
-
-  QueryBuilder<Podcast, Podcast, QAfterWhereClause> collectionIdGreaterThan(
-    int collectionId, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'collectionId',
-        lower: [collectionId],
-        includeLower: include,
-        upper: [],
-      ));
-    });
-  }
-
-  QueryBuilder<Podcast, Podcast, QAfterWhereClause> collectionIdLessThan(
-    int collectionId, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'collectionId',
-        lower: [],
-        upper: [collectionId],
-        includeUpper: include,
-      ));
-    });
-  }
-
-  QueryBuilder<Podcast, Podcast, QAfterWhereClause> collectionIdBetween(
-    int lowerCollectionId,
-    int upperCollectionId, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'collectionId',
-        lower: [lowerCollectionId],
-        includeLower: includeLower,
-        upper: [upperCollectionId],
-        includeUpper: includeUpper,
-      ));
     });
   }
 }
@@ -955,8 +789,25 @@ extension PodcastQueryFilter
     });
   }
 
+  QueryBuilder<Podcast, Podcast, QAfterFilterCondition> collectionIdIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'collectionId',
+      ));
+    });
+  }
+
+  QueryBuilder<Podcast, Podcast, QAfterFilterCondition>
+      collectionIdIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'collectionId',
+      ));
+    });
+  }
+
   QueryBuilder<Podcast, Podcast, QAfterFilterCondition> collectionIdEqualTo(
-      int value) {
+      int? value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'collectionId',
@@ -966,7 +817,7 @@ extension PodcastQueryFilter
   }
 
   QueryBuilder<Podcast, Podcast, QAfterFilterCondition> collectionIdGreaterThan(
-    int value, {
+    int? value, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -979,7 +830,7 @@ extension PodcastQueryFilter
   }
 
   QueryBuilder<Podcast, Podcast, QAfterFilterCondition> collectionIdLessThan(
-    int value, {
+    int? value, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -992,8 +843,8 @@ extension PodcastQueryFilter
   }
 
   QueryBuilder<Podcast, Podcast, QAfterFilterCondition> collectionIdBetween(
-    int lower,
-    int upper, {
+    int? lower,
+    int? upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
@@ -3335,7 +3186,7 @@ extension PodcastQueryProperty
     });
   }
 
-  QueryBuilder<Podcast, int, QQueryOperations> collectionIdProperty() {
+  QueryBuilder<Podcast, int?, QQueryOperations> collectionIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'collectionId');
     });
@@ -3467,7 +3318,7 @@ const PodcastStatsSchema = CollectionSchema(
   getId: _podcastStatsGetId,
   getLinks: _podcastStatsGetLinks,
   attach: _podcastStatsAttach,
-  version: '3.1.0+1',
+  version: '3.1.7',
 );
 
 int _podcastStatsEstimateSize(
@@ -4093,7 +3944,7 @@ const PodcastViewStatsSchema = CollectionSchema(
   getId: _podcastViewStatsGetId,
   getLinks: _podcastViewStatsGetLinks,
   attach: _podcastViewStatsAttach,
-  version: '3.1.0+1',
+  version: '3.1.7',
 );
 
 int _podcastViewStatsEstimateSize(
@@ -4615,7 +4466,7 @@ const FeedUrlSchema = CollectionSchema(
   getId: _feedUrlGetId,
   getLinks: _feedUrlGetLinks,
   attach: _feedUrlAttach,
-  version: '3.1.0+1',
+  version: '3.1.7',
 );
 
 int _feedUrlEstimateSize(

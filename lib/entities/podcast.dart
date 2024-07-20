@@ -1,7 +1,7 @@
 import 'package:audiflow/core/hash.dart';
 import 'package:audiflow/entities/entities.dart';
 import 'package:isar/isar.dart';
-import 'package:podcast_feed/parsers/channel_parser.dart';
+import 'package:podcast_feed/parsers/feed_entity_parser.dart';
 import 'package:podcast_feed/podcast_feed.dart' show ShowType;
 
 part 'podcast.g.dart';
@@ -11,7 +11,7 @@ part 'podcast.g.dart';
 class Podcast {
   Podcast({
     required this.feedUrl,
-    required this.collectionId,
+    this.collectionId,
     this.newFeedUrl,
     required this.title,
     required this.description,
@@ -28,7 +28,7 @@ class Podcast {
     this.type = ShowType.episodic,
   });
 
-  factory Podcast.fromFeed(ChannelValues values, {required int collectionId}) {
+  factory Podcast.fromFeed(ChannelValues values, {int? collectionId}) {
     final podcast = Podcast(
       feedUrl: values.feedUrl,
       collectionId: collectionId,
@@ -75,8 +75,7 @@ class Podcast {
   final String feedUrl;
 
   /// The collection ID(iTunesID).
-  @Index(unique: true)
-  final int collectionId;
+  final int? collectionId;
 
   /// The new podcast RSS Feed URL.
   final String? newFeedUrl;
