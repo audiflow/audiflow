@@ -25,7 +25,7 @@ class PodcastFeedLoader extends _$PodcastFeedLoader {
   @override
   PodcastFeedLoaderState build({
     required String feedUrl,
-    required int collectionId,
+    int? collectionId,
   }) {
     logger.d(() => 'build($feedUrl, $collectionId)');
     _setupWorker();
@@ -109,7 +109,7 @@ class PodcastFeedLoader extends _$PodcastFeedLoader {
 class PodcastFeedLoaderState with _$PodcastFeedLoaderState {
   const factory PodcastFeedLoaderState({
     required String feedUrl,
-    required int collectionId,
+    int? collectionId,
     Podcast? podcast,
     @Default([]) List<Episode> episodes,
     @Default(false) bool reachedLastPubDate,
@@ -172,7 +172,7 @@ class _Worker {
 
   Future<void> _handleLoadFeedEvent({
     required String feedUrl,
-    required int collectionId,
+    required int? collectionId,
     required String cacheDir,
   }) async {
     final loaded = await _loadFeed(
@@ -194,7 +194,7 @@ class _Worker {
 
   Future<bool> _loadFeed({
     required String feedUrl,
-    required int collectionId,
+    required int? collectionId,
     required String cacheDir,
   }) async {
     for (final url in [
@@ -284,32 +284,6 @@ class _Worker {
       ),
     );
   }
-
-// Future<(Podcast?, ItemParser?)> _lookupPodcastBy({
-//   required String feedUrl,
-//   required int collectionId,
-// }) async {
-//   // If we didn't get a cache hit load the podcast feed.
-//   var tries = 2;
-//   var url = feedUrl.replaceFirst('http:', 'https:');
-//   while (0 < tries--) {
-//     try {
-//       logger.d('Loading podcast from feed $url');
-//       return _loadPodcastFeed(feedUrl: url, collectionId: collectionId);
-//     } on Exception {
-//       if (tries <= 0 || !url.startsWith('https')) {
-//         rethrow;
-//       }
-//       // Try the http only version - flesh out to setting later on
-//       logger.d(
-//         'Failed to load podcast. Fallback to http and try again',
-//       );
-//       url = url.replaceFirst('https:', 'http:');
-//     }
-//   }
-//
-//   throw UnimplementedError();
-// }
 }
 
 sealed class _Command {}
@@ -335,7 +309,7 @@ class _LoadFeedCommand extends _Command {
   });
 
   final String feedUrl;
-  final int collectionId;
+  final int? collectionId;
   final String cacheDir;
 
   @override

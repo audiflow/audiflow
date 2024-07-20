@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:audiflow/api/podcast/podcast_api.dart';
 import 'package:audiflow/core/api_cache_dir.dart';
 import 'package:audiflow/core/environment.dart';
 import 'package:audiflow/entities/entities.dart';
@@ -9,13 +8,19 @@ import 'package:audiflow/services/http/cached_http.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:podcast_search/podcast_search.dart' as podcast_search;
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+part 'podcast_api.g.dart';
+
+@Riverpod(keepAlive: true)
+PodcastApi podcastApi(PodcastApiRef ref) => PodcastApi(ref);
 
 /// An implementation of the [PodcastApi].
 ///
 /// A simple wrapper class that interacts with the iTunes/PodcastIndex search API
 /// via the podcast_search package.
-class MobilePodcastApi extends PodcastApi {
-  MobilePodcastApi(this._ref);
+class PodcastApi {
+  PodcastApi(this._ref);
 
   final Ref _ref;
   static String feedApiEndpoint = 'https://itunes.apple.com';
@@ -49,7 +54,6 @@ class MobilePodcastApi extends PodcastApi {
 
   String get _cacheDir => _ref.read(apiCacheDirProvider);
 
-  @override
   Future<ITunesSearchItem?> lookup({required int collectionId}) async {
     final url = _buildLookupUrl(iTunesId: collectionId);
     final message = <String, dynamic>{
@@ -60,7 +64,7 @@ class MobilePodcastApi extends PodcastApi {
     return list.firstOrNull;
   }
 
-  @override
+  /// Search for podcasts matching the search criteria.
   Future<List<ITunesSearchItem>> search(
     String term, {
     int limit = 20,
@@ -87,7 +91,7 @@ class MobilePodcastApi extends PodcastApi {
     return compute(_search, message);
   }
 
-  @override
+  /// Request the top podcast charts from iTunes, and at most [size] records.
   Future<List<ITunesChartItem>> charts({
     int size = 20,
     String genre = '',
@@ -121,12 +125,12 @@ class MobilePodcastApi extends PodcastApi {
     ).genres();
   }
 
-  @override
+  /// Load episode chapters via JSON file.
   Future<podcast_search.Chapters> loadChapters(String url) async {
     return podcast_search.Podcast.loadChaptersByUrl(url: url);
   }
 
-  @override
+  /// Load episode transcript via SRT or JSON file.
   Future<podcast_search.Transcript> loadTranscript(
     TranscriptUrl transcriptUrl,
   ) async {
@@ -221,7 +225,8 @@ class MobilePodcastApi extends PodcastApi {
         .toList();
   }
 
-  @override
+  /// Allow adding of custom certificates. Required as default context
+  /// does not apply when running in separate Isolate.
   void addClientAuthorityBytes(List<int> certificateAuthorityBytes) {
     _certificateAuthorityBytes = certificateAuthorityBytes;
     if (certificateAuthorityBytes.isNotEmpty) {

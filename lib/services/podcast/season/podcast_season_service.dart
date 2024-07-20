@@ -1,14 +1,17 @@
 import 'package:audiflow/entities/entities.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'jp/jp1450522865.dart';
 import 'jp/jp1567192930.dart';
 import 'podcast_season_extractor.dart';
 
-class PodcastSeasonService {
-  factory PodcastSeasonService() {
-    return _instance;
-  }
+part 'podcast_season_service.g.dart';
 
+@Riverpod(keepAlive: true)
+PodcastSeasonService podcastSeasonService(PodcastSeasonServiceRef ref) =>
+    PodcastSeasonService._();
+
+class PodcastSeasonService {
   PodcastSeasonService._() {
     final extractors = [
       JP1450522865(),
@@ -19,8 +22,6 @@ class PodcastSeasonService {
       _extractors[extractor.guid] = extractor;
     }
   }
-
-  static final _instance = PodcastSeasonService._();
 
   final _extractors = <String, PodcastSeasonExtractor>{};
 

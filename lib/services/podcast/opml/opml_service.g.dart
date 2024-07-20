@@ -1,24 +1,24 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'podcast_api_provider.dart';
+part of 'opml_service.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$podcastApiHash() => r'4c6455c1639d75bedde1a87f26069f813dc4de4d';
+String _$opmlServiceHash() => r'96182306b2c6e1a00b0befc33e1099e698c90d26';
 
-/// See also [podcastApi].
-@ProviderFor(podcastApi)
-final podcastApiProvider = Provider<PodcastApi>.internal(
-  podcastApi,
-  name: r'podcastApiProvider',
+/// See also [opmlService].
+@ProviderFor(opmlService)
+final opmlServiceProvider = AutoDisposeProvider<OPMLService>.internal(
+  opmlService,
+  name: r'opmlServiceProvider',
   debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product') ? null : _$podcastApiHash,
+      const bool.fromEnvironment('dart.vm.product') ? null : _$opmlServiceHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
 
-typedef PodcastApiRef = ProviderRef<PodcastApi>;
+typedef OpmlServiceRef = AutoDisposeProviderRef<OPMLService>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

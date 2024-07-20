@@ -1,27 +1,26 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-// ignore_for_file: type=lint, duplicate_ignore
-
-part of 'podcast_service_provider.dart';
+part of 'podcast_season_service.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$podcastServiceHash() => r'1dc9ae3b0c711959f2625805eca452ba5cb853af';
+String _$podcastSeasonServiceHash() =>
+    r'4b0d83265be79617f086a50978e7facd7de71a46';
 
-/// See also [podcastService].
-@ProviderFor(podcastService)
-final podcastServiceProvider = Provider<PodcastService>.internal(
-  podcastService,
-  name: r'podcastServiceProvider',
+/// See also [podcastSeasonService].
+@ProviderFor(podcastSeasonService)
+final podcastSeasonServiceProvider = Provider<PodcastSeasonService>.internal(
+  podcastSeasonService,
+  name: r'podcastSeasonServiceProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
       ? null
-      : _$podcastServiceHash,
+      : _$podcastSeasonServiceHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
 
-typedef PodcastServiceRef = ProviderRef<PodcastService>;
+typedef PodcastSeasonServiceRef = ProviderRef<PodcastSeasonService>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

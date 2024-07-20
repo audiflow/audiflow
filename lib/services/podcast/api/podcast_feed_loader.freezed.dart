@@ -17,7 +17,7 @@ final _privateConstructorUsedError = UnsupportedError(
 /// @nodoc
 mixin _$PodcastFeedLoaderState {
   String get feedUrl => throw _privateConstructorUsedError;
-  int get collectionId => throw _privateConstructorUsedError;
+  int? get collectionId => throw _privateConstructorUsedError;
   Podcast? get podcast => throw _privateConstructorUsedError;
   List<Episode> get episodes => throw _privateConstructorUsedError;
   bool get reachedLastPubDate => throw _privateConstructorUsedError;
@@ -40,7 +40,7 @@ abstract class $PodcastFeedLoaderStateCopyWith<$Res> {
   @useResult
   $Res call(
       {String feedUrl,
-      int collectionId,
+      int? collectionId,
       Podcast? podcast,
       List<Episode> episodes,
       bool reachedLastPubDate,
@@ -66,7 +66,7 @@ class _$PodcastFeedLoaderStateCopyWithImpl<$Res,
   @override
   $Res call({
     Object? feedUrl = null,
-    Object? collectionId = null,
+    Object? collectionId = freezed,
     Object? podcast = freezed,
     Object? episodes = null,
     Object? reachedLastPubDate = null,
@@ -79,10 +79,10 @@ class _$PodcastFeedLoaderStateCopyWithImpl<$Res,
           ? _value.feedUrl
           : feedUrl // ignore: cast_nullable_to_non_nullable
               as String,
-      collectionId: null == collectionId
+      collectionId: freezed == collectionId
           ? _value.collectionId
           : collectionId // ignore: cast_nullable_to_non_nullable
-              as int,
+              as int?,
       podcast: freezed == podcast
           ? _value.podcast
           : podcast // ignore: cast_nullable_to_non_nullable
@@ -122,7 +122,7 @@ abstract class _$$PodcastFeedLoaderStateImplCopyWith<$Res>
   @useResult
   $Res call(
       {String feedUrl,
-      int collectionId,
+      int? collectionId,
       Podcast? podcast,
       List<Episode> episodes,
       bool reachedLastPubDate,
@@ -147,7 +147,7 @@ class __$$PodcastFeedLoaderStateImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? feedUrl = null,
-    Object? collectionId = null,
+    Object? collectionId = freezed,
     Object? podcast = freezed,
     Object? episodes = null,
     Object? reachedLastPubDate = null,
@@ -160,10 +160,10 @@ class __$$PodcastFeedLoaderStateImplCopyWithImpl<$Res>
           ? _value.feedUrl
           : feedUrl // ignore: cast_nullable_to_non_nullable
               as String,
-      collectionId: null == collectionId
+      collectionId: freezed == collectionId
           ? _value.collectionId
           : collectionId // ignore: cast_nullable_to_non_nullable
-              as int,
+              as int?,
       podcast: freezed == podcast
           ? _value.podcast
           : podcast // ignore: cast_nullable_to_non_nullable
@@ -197,7 +197,7 @@ class __$$PodcastFeedLoaderStateImplCopyWithImpl<$Res>
 class _$PodcastFeedLoaderStateImpl implements _PodcastFeedLoaderState {
   const _$PodcastFeedLoaderStateImpl(
       {required this.feedUrl,
-      required this.collectionId,
+      this.collectionId,
       this.podcast,
       final List<Episode> episodes = const [],
       this.reachedLastPubDate = false,
@@ -209,7 +209,7 @@ class _$PodcastFeedLoaderStateImpl implements _PodcastFeedLoaderState {
   @override
   final String feedUrl;
   @override
-  final int collectionId;
+  final int? collectionId;
   @override
   final Podcast? podcast;
   final List<Episode> _episodes;
@@ -284,7 +284,7 @@ class _$PodcastFeedLoaderStateImpl implements _PodcastFeedLoaderState {
 abstract class _PodcastFeedLoaderState implements PodcastFeedLoaderState {
   const factory _PodcastFeedLoaderState(
       {required final String feedUrl,
-      required final int collectionId,
+      final int? collectionId,
       final Podcast? podcast,
       final List<Episode> episodes,
       final bool reachedLastPubDate,
@@ -295,7 +295,7 @@ abstract class _PodcastFeedLoaderState implements PodcastFeedLoaderState {
   @override
   String get feedUrl;
   @override
-  int get collectionId;
+  int? get collectionId;
   @override
   Podcast? get podcast;
   @override

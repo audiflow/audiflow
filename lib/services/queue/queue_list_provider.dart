@@ -1,5 +1,5 @@
 import 'package:audiflow/entities/entities.dart';
-import 'package:audiflow/services/podcast/podcast_service_provider.dart';
+import 'package:audiflow/services/podcast/podcast_service.dart';
 import 'package:audiflow/services/queue/queue_manager.dart';
 import 'package:collection/collection.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';

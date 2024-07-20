@@ -6,7 +6,7 @@ part of 'podcast_feed_loader.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$podcastFeedLoaderHash() => r'7d5d43c6e3742a4ace9a53e774353bf9fa4724ee';
+String _$podcastFeedLoaderHash() => r'496866fcc35fed1fac15c830a7dfdc185719ae8c';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -32,11 +32,11 @@ class _SystemHash {
 abstract class _$PodcastFeedLoader
     extends BuildlessAutoDisposeNotifier<PodcastFeedLoaderState> {
   late final String feedUrl;
-  late final int collectionId;
+  late final int? collectionId;
 
   PodcastFeedLoaderState build({
     required String feedUrl,
-    required int collectionId,
+    int? collectionId,
   });
 }
 
@@ -52,7 +52,7 @@ class PodcastFeedLoaderFamily extends Family<PodcastFeedLoaderState> {
   /// See also [PodcastFeedLoader].
   PodcastFeedLoaderProvider call({
     required String feedUrl,
-    required int collectionId,
+    int? collectionId,
   }) {
     return PodcastFeedLoaderProvider(
       feedUrl: feedUrl,
@@ -91,7 +91,7 @@ class PodcastFeedLoaderProvider extends AutoDisposeNotifierProviderImpl<
   /// See also [PodcastFeedLoader].
   PodcastFeedLoaderProvider({
     required String feedUrl,
-    required int collectionId,
+    int? collectionId,
   }) : this._internal(
           () => PodcastFeedLoader()
             ..feedUrl = feedUrl
@@ -121,7 +121,7 @@ class PodcastFeedLoaderProvider extends AutoDisposeNotifierProviderImpl<
   }) : super.internal();
 
   final String feedUrl;
-  final int collectionId;
+  final int? collectionId;
 
   @override
   PodcastFeedLoaderState runNotifierBuild(
@@ -181,7 +181,7 @@ mixin PodcastFeedLoaderRef
   String get feedUrl;
 
   /// The parameter `collectionId` of this provider.
-  int get collectionId;
+  int? get collectionId;
 }
 
 class _PodcastFeedLoaderProviderElement
@@ -192,7 +192,7 @@ class _PodcastFeedLoaderProviderElement
   @override
   String get feedUrl => (origin as PodcastFeedLoaderProvider).feedUrl;
   @override
-  int get collectionId => (origin as PodcastFeedLoaderProvider).collectionId;
+  int? get collectionId => (origin as PodcastFeedLoaderProvider).collectionId;
 }
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

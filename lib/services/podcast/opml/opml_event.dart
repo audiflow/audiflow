@@ -1,6 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-part 'opml_event_stream_provider.g.dart';
+part 'opml_event.g.dart';
 
 @Riverpod(dependencies: [])
 class OpmlEventStream extends _$OpmlEventStream {

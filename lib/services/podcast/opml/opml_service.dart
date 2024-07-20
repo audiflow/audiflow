@@ -1,20 +1,30 @@
 import 'dart:io';
 
+import 'package:audiflow/core/logger.dart';
 import 'package:audiflow/repository/repository_provider.dart';
-import 'package:audiflow/services/podcast/opml_event_stream_provider.dart';
-import 'package:audiflow/services/podcast/opml_service.dart';
-import 'package:audiflow/services/podcast/podcast_service_provider.dart';
+import 'package:audiflow/services/podcast/opml/opml_event.dart';
+import 'package:audiflow/services/podcast/podcast_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:logging/logging.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:xml/xml.dart';
 
-class MobileOPMLService extends OPMLService {
-  MobileOPMLService(this._ref);
+export 'package:audiflow/services/podcast/opml/opml_service.dart';
 
-  final _log = Logger('MobileOPMLService');
+part 'opml_service.g.dart';
+
+@riverpod
+OPMLService opmlService(OpmlServiceRef ref) {
+  return OPMLService(ref);
+}
+
+/// This service handles the import and export of Podcasts via
+/// the OPML format.
+class OPMLService {
+  OPMLService(this._ref);
+
   final Ref _ref;
   bool _process = false;
 
@@ -25,7 +35,6 @@ class MobileOPMLService extends OPMLService {
   OpmlEventStream get _opmlEventStream =>
       _ref.read(opmlEventStreamProvider.notifier);
 
-  @override
   Future<void> loadOPMLFile(String file) async {
     _process = true;
 
@@ -54,21 +63,20 @@ class MobileOPMLService extends OPMLService {
       );
 
       try {
-        _log.fine('Importing podcast ${p.xmlUrl}');
+        logger.d(() => 'Importing podcast ${p.xmlUrl}');
 
         // final result = await _podcastService.lookupPodcast(p.xmlUrl!);
         // if (result != null) {
         //   await _repository.subscribePodcast(result);
         // }
       } on Exception {
-        _log.fine('Failed to load podcast ${p.xmlUrl}');
+        logger.e(() => 'Failed to load podcast ${p.xmlUrl}');
       }
     }
 
     _opmlEventStream.add(OPMLCompletedEvent());
   }
 
-  @override
   Future<void> saveOPMLFile() async {
     final subs = await _repository.subscriptions();
 
@@ -133,7 +141,6 @@ class MobileOPMLService extends OPMLService {
     _opmlEventStream.add(OPMLCompletedEvent());
   }
 
-  @override
   void cancel() {
     _process = false;
   }
