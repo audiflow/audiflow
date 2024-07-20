@@ -3,11 +3,15 @@ import 'package:audiflow/entities/playing_episode.dart';
 import 'package:audiflow/repository/repository.dart';
 import 'package:collection/collection.dart';
 import 'package:isar/isar.dart';
-import 'package:path_provider/path_provider.dart';
 
 class IsarRepository implements Repository {
-  bool _initialized = false;
+  IsarRepository({
+    required String storageDir,
+  }) : _storageDir = storageDir;
+
+  final String _storageDir;
   late Isar isar;
+  bool _initialized = false;
 
   @override
   Future<void> ensureInitialized() async {
@@ -16,7 +20,6 @@ class IsarRepository implements Repository {
     }
     _initialized = true;
 
-    final dir = await getApplicationDocumentsDirectory();
     isar = await Isar.open(
       [
         BlockSchema,
@@ -38,7 +41,7 @@ class IsarRepository implements Repository {
         ValueSchema,
         ValueRecipientSchema,
       ],
-      directory: dir.path,
+      directory: _storageDir,
     );
   }
 

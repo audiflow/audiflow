@@ -1,14 +1,12 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-// ignore_for_file: type=lint, duplicate_ignore
-
 part of 'repository_provider.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$repositoryHash() => r'34983c08077e61a0e4adb179dd0fc6dae6dfd28a';
+String _$repositoryHash() => r'758d2acc55826f313772890cd58dfbedee6708cb';
 
 /// See also [repository].
 @ProviderFor(repository)

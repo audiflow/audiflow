@@ -46,11 +46,13 @@ Future<List<Override>> initializeProviders() async {
   final overrides = <Override>[];
 
   final preferences = await SharedPreferences.getInstance();
-  final dir = await getTemporaryDirectory();
+  final tempDir = await getTemporaryDirectory();
+  final appDocDir = await getApplicationDocumentsDirectory();
   overrides.addAll(
     [
       sharedPreferencesProvider.overrideWithValue(preferences),
-      apiCacheDirProvider.overrideWithValue(dir.path),
+      apiCacheDirProvider.overrideWithValue(tempDir.path),
+      appDocDirProvider.overrideWithValue(appDocDir.path),
       audioPlayerServiceProvider.overrideWith(MobileAudioPlayerService.new),
       queueManagerProvider.overrideWith(DefaultQueueManager.new),
     ],

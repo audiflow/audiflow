@@ -6,3 +6,8 @@ part 'api_cache_dir.g.dart';
 String apiCacheDir(ApiCacheDirRef ref) {
   throw UnimplementedError();
 }
+
+@Riverpod(keepAlive: true)
+String appDocDir(AppDocDirRef ref) {
+  throw UnimplementedError();
+}
