@@ -19,30 +19,30 @@ class IsarRepository implements Repository {
       return;
     }
     _initialized = true;
-
-    isar = await Isar.open(
-      [
-        BlockSchema,
-        DownloadableSchema,
-        EpisodeSchema,
-        EpisodeStatsSchema,
-        FeedUrlSchema,
-        FundingSchema,
-        LockedSchema,
-        PersonSchema,
-        PlayingEpisodeSchema,
-        PodcastSchema,
-        PodcastStatsSchema,
-        PodcastViewStatsSchema,
-        QueueSchema,
-        TranscriptUrlSchema,
-        TranscriptSchema,
-        SubtitleSchema,
-        ValueSchema,
-        ValueRecipientSchema,
-      ],
-      directory: _storageDir,
-    );
+    isar = Isar.getInstance() ??
+        await Isar.open(
+          [
+            BlockSchema,
+            DownloadableSchema,
+            EpisodeSchema,
+            EpisodeStatsSchema,
+            FeedUrlSchema,
+            FundingSchema,
+            LockedSchema,
+            PersonSchema,
+            PlayingEpisodeSchema,
+            PodcastSchema,
+            PodcastStatsSchema,
+            PodcastViewStatsSchema,
+            QueueSchema,
+            TranscriptUrlSchema,
+            TranscriptSchema,
+            SubtitleSchema,
+            ValueSchema,
+            ValueRecipientSchema,
+          ],
+          directory: _storageDir,
+        );
   }
 
   @override
