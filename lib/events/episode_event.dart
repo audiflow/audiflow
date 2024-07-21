@@ -11,6 +11,12 @@ class EpisodeUpdatedEvent implements EpisodeEvent {
   final Episode episode;
 }
 
+class EpisodesUpdatedEvent implements EpisodeEvent {
+  const EpisodesUpdatedEvent(this.episodes);
+
+  final List<Episode> episodes;
+}
+
 class EpisodeDeletedEvent implements EpisodeEvent {
   const EpisodeDeletedEvent(this.episode);
 
