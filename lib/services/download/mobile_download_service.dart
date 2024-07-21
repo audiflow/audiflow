@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:audiflow/core/logger.dart';
 import 'package:audiflow/core/utils.dart';
 import 'package:audiflow/entities/app_settings.dart';
 import 'package:audiflow/entities/downloadable.dart';
@@ -10,12 +11,11 @@ import 'package:audiflow/repository/repository_provider.dart';
 import 'package:audiflow/services/download/download_manager_provider.dart';
 import 'package:audiflow/services/download/download_service.dart';
 import 'package:audiflow/services/download/downloadable_checker.dart';
-import 'package:audiflow/services/podcast/podcast_service_provider.dart';
+import 'package:audiflow/services/podcast/podcast_service.dart';
 import 'package:audiflow/services/settings/settings_service.dart';
 import 'package:collection/collection.dart' show IterableExtension;
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:logging/logging.dart';
 import 'package:mp3_info/mp3_info.dart';
 import 'package:rxdart/rxdart.dart';
 
@@ -39,8 +39,6 @@ class MobileDownloadService extends DownloadService {
 
   BehaviorSubject<DownloadProgress> downloadProgress =
       BehaviorSubject<DownloadProgress>();
-
-  final _log = Logger('MobileDownloadService');
 
   @override
   void dispose() {
@@ -75,7 +73,7 @@ class MobileDownloadService extends DownloadService {
       final f =
           File.fromUri(Uri.file(await resolvePath(_appSettings, download)));
       if (f.existsSync()) {
-        _log.fine('Deleting file ${f.path}');
+        logger.d('Deleting file ${f.path}');
         await f.delete();
       }
     }
@@ -206,7 +204,7 @@ class MobileDownloadService extends DownloadService {
       ].join('-');
       filename = '$prefix$filename';
 
-      _log.fine(
+      logger.d(
         'Download episode (${episode.title}) $filename to $directory/$filename',
       );
 
@@ -237,7 +235,7 @@ class MobileDownloadService extends DownloadService {
       return true;
       // ignore: avoid_catches_without_on_clauses
     } catch (e, stack) {
-      _log.warning('Episode download failed (${episode.title})', e, stack);
+      logger.w(() => 'Episode download failed (${episode.title}) $e');
       return false;
     }
   }

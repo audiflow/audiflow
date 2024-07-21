@@ -1,5 +1,5 @@
 import 'package:audiflow/entities/entities.dart';
-import 'package:audiflow/repository/download_event.dart';
+import 'package:audiflow/events/download_event.dart';
 import 'package:audiflow/services/download/download_service_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
