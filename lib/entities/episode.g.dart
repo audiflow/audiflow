@@ -1,7 +1,5 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-// ignore_for_file: type=lint, duplicate_ignore
-
 part of 'episode.dart';
 
 // **************************************************************************
@@ -135,7 +133,7 @@ const EpisodeSchema = CollectionSchema(
   getId: _episodeGetId,
   getLinks: _episodeGetLinks,
   attach: _episodeAttach,
-  version: '3.1.0+1',
+  version: '3.1.7',
 );
 
 int _episodeEstimateSize(
@@ -2743,7 +2741,7 @@ const EpisodeStatsSchema = CollectionSchema(
   getId: _episodeStatsGetId,
   getLinks: _episodeStatsGetLinks,
   attach: _episodeStatsAttach,
-  version: '3.1.0+1',
+  version: '3.1.7',
 );
 
 int _episodeStatsEstimateSize(

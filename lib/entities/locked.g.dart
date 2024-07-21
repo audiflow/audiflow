@@ -1,7 +1,5 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-// ignore_for_file: type=lint, duplicate_ignore
-
 part of 'locked.dart';
 
 // **************************************************************************
@@ -41,7 +39,7 @@ const LockedSchema = CollectionSchema(
   getId: _lockedGetId,
   getLinks: _lockedGetLinks,
   attach: _lockedAttach,
-  version: '3.1.0+1',
+  version: '3.1.7',
 );
 
 int _lockedEstimateSize(

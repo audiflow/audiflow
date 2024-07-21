@@ -1,7 +1,5 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-// ignore_for_file: type=lint, duplicate_ignore
-
 part of 'queue.dart';
 
 // **************************************************************************
@@ -36,7 +34,7 @@ const QueueSchema = CollectionSchema(
   getId: _queueGetId,
   getLinks: _queueGetLinks,
   attach: _queueAttach,
-  version: '3.1.0+1',
+  version: '3.1.7',
 );
 
 int _queueEstimateSize(
@@ -427,8 +425,8 @@ extension QueueQueryProperty on QueryBuilder<Queue, Queue, QQueryProperty> {
 _$QueueItemImpl _$$QueueItemImplFromJson(Map<String, dynamic> json) =>
     _$QueueItemImpl(
       id: json['id'] as String,
-      pid: json['pid'] as int,
-      eid: json['eid'] as int,
+      pid: (json['pid'] as num).toInt(),
+      eid: (json['eid'] as num).toInt(),
       type: $enumDecode(_$QueueTypeEnumMap, json['type']),
     );
 

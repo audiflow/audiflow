@@ -1,7 +1,5 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-// ignore_for_file: type=lint, duplicate_ignore
-
 part of 'value.dart';
 
 // **************************************************************************
@@ -53,7 +51,7 @@ const ValueSchema = CollectionSchema(
   getId: _valueGetId,
   getLinks: _valueGetLinks,
   attach: _valueAttach,
-  version: '3.1.0+1',
+  version: '3.1.7',
 );
 
 int _valueEstimateSize(
@@ -859,7 +857,7 @@ const ValueRecipientSchema = CollectionSchema(
   getId: _valueRecipientGetId,
   getLinks: _valueRecipientGetLinks,
   attach: _valueRecipientAttach,
-  version: '3.1.0+1',
+  version: '3.1.7',
 );
 
 int _valueRecipientEstimateSize(

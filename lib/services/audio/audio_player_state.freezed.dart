@@ -20,7 +20,9 @@ mixin _$AudioPlayerSetting {
   bool get trimSilence => throw _privateConstructorUsedError;
   bool get volumeBoost => throw _privateConstructorUsedError;
 
-  @JsonKey(ignore: true)
+  /// Create a copy of AudioPlayerSetting
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   $AudioPlayerSettingCopyWith<AudioPlayerSetting> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -44,6 +46,8 @@ class _$AudioPlayerSettingCopyWithImpl<$Res, $Val extends AudioPlayerSetting>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
+  /// Create a copy of AudioPlayerSetting
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -87,6 +91,8 @@ class __$$AudioPlayerSettingImplCopyWithImpl<$Res>
       $Res Function(_$AudioPlayerSettingImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of AudioPlayerSetting
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -147,7 +153,9 @@ class _$AudioPlayerSettingImpl implements _AudioPlayerSetting {
   @override
   int get hashCode => Object.hash(runtimeType, speed, trimSilence, volumeBoost);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of AudioPlayerSetting
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$AudioPlayerSettingImplCopyWith<_$AudioPlayerSettingImpl> get copyWith =>
@@ -167,8 +175,11 @@ abstract class _AudioPlayerSetting implements AudioPlayerSetting {
   bool get trimSilence;
   @override
   bool get volumeBoost;
+
+  /// Create a copy of AudioPlayerSetting
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$AudioPlayerSettingImplCopyWith<_$AudioPlayerSettingImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -182,7 +193,9 @@ mixin _$AudioPlayerState {
   bool get interrupted => throw _privateConstructorUsedError;
   int get playbackError => throw _privateConstructorUsedError;
 
-  @JsonKey(ignore: true)
+  /// Create a copy of AudioPlayerState
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   $AudioPlayerStateCopyWith<AudioPlayerState> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -212,6 +225,8 @@ class _$AudioPlayerStateCopyWithImpl<$Res, $Val extends AudioPlayerState>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
+  /// Create a copy of AudioPlayerState
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -276,6 +291,8 @@ class __$$AudioPlayerStateImplCopyWithImpl<$Res>
       $Res Function(_$AudioPlayerStateImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of AudioPlayerState
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -367,7 +384,9 @@ class _$AudioPlayerStateImpl implements _AudioPlayerState {
   int get hashCode => Object.hash(runtimeType, episode, position, phase,
       audioState, interrupted, playbackError);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of AudioPlayerState
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$AudioPlayerStateImplCopyWith<_$AudioPlayerStateImpl> get copyWith =>
@@ -396,8 +415,11 @@ abstract class _AudioPlayerState implements AudioPlayerState {
   bool get interrupted;
   @override
   int get playbackError;
+
+  /// Create a copy of AudioPlayerState
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$AudioPlayerStateImplCopyWith<_$AudioPlayerStateImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

@@ -1,7 +1,5 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-// ignore_for_file: type=lint, duplicate_ignore
-
 part of 'block.dart';
 
 // **************************************************************************
@@ -41,7 +39,7 @@ const BlockSchema = CollectionSchema(
   getId: _blockGetId,
   getLinks: _blockGetLinks,
   attach: _blockAttach,
-  version: '3.1.0+1',
+  version: '3.1.7',
 );
 
 int _blockEstimateSize(

@@ -19,7 +19,9 @@ mixin _$AudioPositionSaverState {
   Episode? get episode => throw _privateConstructorUsedError;
   Duration? get lastSavedPosition => throw _privateConstructorUsedError;
 
-  @JsonKey(ignore: true)
+  /// Create a copy of AudioPositionSaverState
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   $AudioPositionSaverStateCopyWith<AudioPositionSaverState> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -44,6 +46,8 @@ class _$AudioPositionSaverStateCopyWithImpl<$Res,
   // ignore: unused_field
   final $Res Function($Val) _then;
 
+  /// Create a copy of AudioPositionSaverState
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -85,6 +89,8 @@ class __$$AudioPositionSaverStateImplCopyWithImpl<$Res>
       $Res Function(_$AudioPositionSaverStateImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of AudioPositionSaverState
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -132,7 +138,9 @@ class _$AudioPositionSaverStateImpl implements _AudioPositionSaverState {
   @override
   int get hashCode => Object.hash(runtimeType, episode, lastSavedPosition);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of AudioPositionSaverState
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$AudioPositionSaverStateImplCopyWith<_$AudioPositionSaverStateImpl>
@@ -149,8 +157,11 @@ abstract class _AudioPositionSaverState implements AudioPositionSaverState {
   Episode? get episode;
   @override
   Duration? get lastSavedPosition;
+
+  /// Create a copy of AudioPositionSaverState
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$AudioPositionSaverStateImplCopyWith<_$AudioPositionSaverStateImpl>
       get copyWith => throw _privateConstructorUsedError;
 }

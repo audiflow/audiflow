@@ -23,8 +23,12 @@ mixin _$Sleep {
   SleepType get type => throw _privateConstructorUsedError;
   Duration get duration => throw _privateConstructorUsedError;
 
+  /// Serializes this Sleep to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of Sleep
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   $SleepCopyWith<Sleep> get copyWith => throw _privateConstructorUsedError;
 }
 
@@ -46,6 +50,8 @@ class _$SleepCopyWithImpl<$Res, $Val extends Sleep>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
+  /// Create a copy of Sleep
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -83,6 +89,8 @@ class __$$SleepImplCopyWithImpl<$Res>
       _$SleepImpl _value, $Res Function(_$SleepImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of Sleep
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -131,11 +139,13 @@ class _$SleepImpl implements _Sleep {
                 other.duration == duration));
   }
 
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(runtimeType, type, duration);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of Sleep
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$SleepImplCopyWith<_$SleepImpl> get copyWith =>
@@ -159,8 +169,11 @@ abstract class _Sleep implements Sleep {
   SleepType get type;
   @override
   Duration get duration;
+
+  /// Create a copy of Sleep
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$SleepImplCopyWith<_$SleepImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

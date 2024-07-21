@@ -39,8 +39,12 @@ mixin _$Chapter {
   /// The optional end time of the chapter in seconds.
   double? get endTime => throw _privateConstructorUsedError;
 
+  /// Serializes this Chapter to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of Chapter
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   $ChapterCopyWith<Chapter> get copyWith => throw _privateConstructorUsedError;
 }
 
@@ -68,6 +72,8 @@ class _$ChapterCopyWithImpl<$Res, $Val extends Chapter>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
+  /// Create a copy of Chapter
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -131,6 +137,8 @@ class __$$ChapterImplCopyWithImpl<$Res>
       _$ChapterImpl _value, $Res Function(_$ChapterImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of Chapter
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -230,12 +238,14 @@ class _$ChapterImpl implements _Chapter {
             (identical(other.endTime, endTime) || other.endTime == endTime));
   }
 
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode =>
       Object.hash(runtimeType, title, imageUrl, url, toc, startTime, endTime);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of Chapter
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$ChapterImplCopyWith<_$ChapterImpl> get copyWith =>
@@ -260,33 +270,35 @@ abstract class _Chapter implements Chapter {
 
   factory _Chapter.fromJson(Map<String, dynamic> json) = _$ChapterImpl.fromJson;
 
-  @override
-
   /// Title of this chapter.
-  String get title;
   @override
+  String get title;
 
   /// URL for the chapter image if one is available.
-  String? get imageUrl;
   @override
+  String? get imageUrl;
 
   /// URL of an external link for this chapter if available.
-  String? get url;
   @override
+  String? get url;
 
   /// Table of contents flag. If this is false the chapter should be treated
   /// as meta data only and not be displayed.
+  @override
   bool get toc;
-  @override
 
   /// The optional end time of the chapter in seconds.
+  @override
   double get startTime;
-  @override
 
   /// The optional end time of the chapter in seconds.
-  double? get endTime;
   @override
-  @JsonKey(ignore: true)
+  double? get endTime;
+
+  /// Create a copy of Chapter
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$ChapterImplCopyWith<_$ChapterImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

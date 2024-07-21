@@ -32,7 +32,9 @@ mixin _$Season {
   /// The season number.
   int? get seasonNum => throw _privateConstructorUsedError;
 
-  @JsonKey(ignore: true)
+  /// Create a copy of Season
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   $SeasonCopyWith<Season> get copyWith => throw _privateConstructorUsedError;
 }
 
@@ -59,6 +61,8 @@ class _$SeasonCopyWithImpl<$Res, $Val extends Season>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
+  /// Create a copy of Season
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -116,6 +120,8 @@ class __$$SeasonImplCopyWithImpl<$Res>
       _$SeasonImpl _value, $Res Function(_$SeasonImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of Season
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -211,7 +217,9 @@ class _$SeasonImpl implements _Season {
   int get hashCode => Object.hash(runtimeType, guid, pid,
       const DeepCollectionEquality().hash(_episodes), title, seasonNum);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of Season
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$SeasonImplCopyWith<_$SeasonImpl> get copyWith =>
@@ -226,29 +234,31 @@ abstract class _Season implements Season {
       final String? title,
       final int? seasonNum}) = _$SeasonImpl;
 
-  @override
-
   /// A String GUID for the season.
-  String get guid;
   @override
+  String get guid;
 
   /// The GUID for an associated podcast. If an episode has been downloaded
   /// without subscribing to a podcast this may be null.
-  int get pid;
   @override
+  int get pid;
 
   /// Episodes under the season.
-  List<Episode> get episodes;
   @override
+  List<Episode> get episodes;
 
   /// The season title.
-  String? get title;
   @override
+  String? get title;
 
   /// The season number.
-  int? get seasonNum;
   @override
-  @JsonKey(ignore: true)
+  int? get seasonNum;
+
+  /// Create a copy of Season
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$SeasonImplCopyWith<_$SeasonImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

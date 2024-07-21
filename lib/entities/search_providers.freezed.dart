@@ -23,8 +23,12 @@ mixin _$SearchProvider {
   String get key => throw _privateConstructorUsedError;
   String get name => throw _privateConstructorUsedError;
 
+  /// Serializes this SearchProvider to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of SearchProvider
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   $SearchProviderCopyWith<SearchProvider> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -48,6 +52,8 @@ class _$SearchProviderCopyWithImpl<$Res, $Val extends SearchProvider>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
+  /// Create a copy of SearchProvider
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -86,6 +92,8 @@ class __$$SearchProviderImplCopyWithImpl<$Res>
       _$SearchProviderImpl _value, $Res Function(_$SearchProviderImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of SearchProvider
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -132,11 +140,13 @@ class _$SearchProviderImpl implements _SearchProvider {
             (identical(other.name, name) || other.name == name));
   }
 
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(runtimeType, key, name);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of SearchProvider
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$SearchProviderImplCopyWith<_$SearchProviderImpl> get copyWith =>
@@ -163,8 +173,11 @@ abstract class _SearchProvider implements SearchProvider {
   String get key;
   @override
   String get name;
+
+  /// Create a copy of SearchProvider
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$SearchProviderImplCopyWith<_$SearchProviderImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

@@ -25,8 +25,12 @@ mixin _$QueueItem {
   int get eid => throw _privateConstructorUsedError;
   QueueType get type => throw _privateConstructorUsedError;
 
+  /// Serializes this QueueItem to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of QueueItem
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   $QueueItemCopyWith<QueueItem> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -49,6 +53,8 @@ class _$QueueItemCopyWithImpl<$Res, $Val extends QueueItem>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
+  /// Create a copy of QueueItem
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -97,6 +103,8 @@ class __$$QueueItemImplCopyWithImpl<$Res>
       _$QueueItemImpl _value, $Res Function(_$QueueItemImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of QueueItem
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -163,11 +171,13 @@ class _$QueueItemImpl implements _QueueItem {
             (identical(other.type, type) || other.type == type));
   }
 
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(runtimeType, id, pid, eid, type);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of QueueItem
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$QueueItemImplCopyWith<_$QueueItemImpl> get copyWith =>
@@ -199,8 +209,11 @@ abstract class _QueueItem implements QueueItem {
   int get eid;
   @override
   QueueType get type;
+
+  /// Create a copy of QueueItem
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$QueueItemImplCopyWith<_$QueueItemImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

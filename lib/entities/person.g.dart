@@ -1,7 +1,5 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-// ignore_for_file: type=lint, duplicate_ignore
-
 part of 'person.dart';
 
 // **************************************************************************
@@ -56,7 +54,7 @@ const PersonSchema = CollectionSchema(
   getId: _personGetId,
   getLinks: _personGetLinks,
   attach: _personAttach,
-  version: '3.1.0+1',
+  version: '3.1.7',
 );
 
 int _personEstimateSize(

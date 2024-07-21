@@ -65,8 +65,12 @@ mixin _$AppSettings {
   /// If 0, list view; else grid view
   int get layout => throw _privateConstructorUsedError;
 
+  /// Serializes this AppSettings to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of AppSettings
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   $AppSettingsCopyWith<AppSettings> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -107,6 +111,8 @@ class _$AppSettingsCopyWithImpl<$Res, $Val extends AppSettings>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
+  /// Create a copy of AppSettings
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -237,6 +243,8 @@ class __$$AppSettingsImplCopyWithImpl<$Res>
       _$AppSettingsImpl _value, $Res Function(_$AppSettingsImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of AppSettings
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -472,7 +480,7 @@ class _$AppSettingsImpl implements _AppSettings {
             (identical(other.layout, layout) || other.layout == layout));
   }
 
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(
       runtimeType,
@@ -494,7 +502,9 @@ class _$AppSettingsImpl implements _AppSettings {
       volumeBoost,
       layout);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of AppSettings
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$AppSettingsImplCopyWith<_$AppSettingsImpl> get copyWith =>
@@ -538,60 +548,63 @@ abstract class _AppSettings implements AppSettings {
   @override
   bool get autoDownloadOnlyOnWifi;
   @override
-  bool get autoDeleteEpisodes;
-  @override //----------------
+  bool get autoDeleteEpisodes; //----------------
   /// The current theme name.
-  BrightnessMode get theme;
   @override
+  BrightnessMode get theme;
 
   /// True if episodes are marked as played when deleted.
-  bool get markDeletedEpisodesAsPlayed;
   @override
+  bool get markDeletedEpisodesAsPlayed;
 
   /// True if downloads should be saved to the SD card.
-  bool get storeDownloadsSDCard;
   @override
+  bool get storeDownloadsSDCard;
 
   /// The default playback speed.
-  double get playbackSpeed;
   @override
+  double get playbackSpeed;
 
   /// The search provider: itunes or podcastindex.
-  String get searchProvider;
   @override
+  String get searchProvider;
 
   /// List of search providers: currently itunes or podcastindex.
-  List<SearchProvider> get searchProviders;
   @override
+  List<SearchProvider> get searchProviders;
 
   /// True if the user has confirmed dialog accepting funding links.
-  bool get externalLinkConsent;
   @override
+  bool get externalLinkConsent;
 
   /// If true the main player window will open as soon as an episode starts.
-  bool get autoOpenNowPlaying;
   @override
+  bool get autoOpenNowPlaying;
 
   /// If true the funding link icon will appear (if the podcast supports it).
-  bool get showFunding;
   @override
+  bool get showFunding;
 
   /// If -1 never; 0 always; otherwise time in minutes.
-  int get autoUpdateEpisodePeriod;
   @override
+  int get autoUpdateEpisodePeriod;
 
   /// If true, silence in audio playback is trimmed. Currently Android only.
-  bool get trimSilence;
   @override
+  bool get trimSilence;
 
   /// If true, volume is boosted. Currently Android only.
-  bool get volumeBoost;
   @override
+  bool get volumeBoost;
 
   /// If 0, list view; else grid view
-  int get layout;
   @override
-  @JsonKey(ignore: true)
+  int get layout;
+
+  /// Create a copy of AppSettings
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$AppSettingsImplCopyWith<_$AppSettingsImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

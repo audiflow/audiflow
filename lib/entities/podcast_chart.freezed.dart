@@ -22,7 +22,9 @@ mixin _$PodcastChartState {
   List<ITunesChartItem> get chartItems => throw _privateConstructorUsedError;
   DateTime? get expiresAt => throw _privateConstructorUsedError;
 
-  @JsonKey(ignore: true)
+  /// Create a copy of PodcastChartState
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   $PodcastChartStateCopyWith<PodcastChartState> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -51,6 +53,8 @@ class _$PodcastChartStateCopyWithImpl<$Res, $Val extends PodcastChartState>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
+  /// Create a copy of PodcastChartState
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -109,6 +113,8 @@ class __$$PodcastChartStateImplCopyWithImpl<$Res>
       $Res Function(_$PodcastChartStateImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of PodcastChartState
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -195,7 +201,9 @@ class _$PodcastChartStateImpl implements _PodcastChartState {
   int get hashCode => Object.hash(runtimeType, size, genre, country,
       const DeepCollectionEquality().hash(_chartItems), expiresAt);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of PodcastChartState
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$PodcastChartStateImplCopyWith<_$PodcastChartStateImpl> get copyWith =>
@@ -221,8 +229,11 @@ abstract class _PodcastChartState implements PodcastChartState {
   List<ITunesChartItem> get chartItems;
   @override
   DateTime? get expiresAt;
+
+  /// Create a copy of PodcastChartState
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$PodcastChartStateImplCopyWith<_$PodcastChartStateImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

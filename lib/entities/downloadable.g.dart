@@ -1,7 +1,5 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-// ignore_for_file: type=lint, duplicate_ignore
-
 part of 'downloadable.dart';
 
 // **************************************************************************
@@ -72,7 +70,7 @@ const DownloadableSchema = CollectionSchema(
   getId: _downloadableGetId,
   getLinks: _downloadableGetLinks,
   attach: _downloadableAttach,
-  version: '3.1.0+1',
+  version: '3.1.7',
 );
 
 int _downloadableEstimateSize(

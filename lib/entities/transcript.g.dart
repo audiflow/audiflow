@@ -1,7 +1,5 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-// ignore_for_file: type=lint, duplicate_ignore
-
 part of 'transcript.dart';
 
 // **************************************************************************
@@ -52,7 +50,7 @@ const TranscriptUrlSchema = CollectionSchema(
   getId: _transcriptUrlGetId,
   getLinks: _transcriptUrlGetLinks,
   attach: _transcriptUrlAttach,
-  version: '3.1.0+1',
+  version: '3.1.7',
 );
 
 int _transcriptUrlEstimateSize(
@@ -991,7 +989,7 @@ const TranscriptSchema = CollectionSchema(
   getId: _transcriptGetId,
   getLinks: _transcriptGetLinks,
   attach: _transcriptAttach,
-  version: '3.1.0+1',
+  version: '3.1.7',
 );
 
 int _transcriptEstimateSize(
@@ -1754,7 +1752,7 @@ const SubtitleSchema = CollectionSchema(
   getId: _subtitleGetId,
   getLinks: _subtitleGetLinks,
   attach: _subtitleAttach,
-  version: '3.1.0+1',
+  version: '3.1.7',
 );
 
 int _subtitleEstimateSize(

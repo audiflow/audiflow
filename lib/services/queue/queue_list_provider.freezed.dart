@@ -18,7 +18,9 @@ final _privateConstructorUsedError = UnsupportedError(
 mixin _$QueueListState {
   List<QueuedEpisode> get queue => throw _privateConstructorUsedError;
 
-  @JsonKey(ignore: true)
+  /// Create a copy of QueueListState
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   $QueueListStateCopyWith<QueueListState> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -42,6 +44,8 @@ class _$QueueListStateCopyWithImpl<$Res, $Val extends QueueListState>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
+  /// Create a copy of QueueListState
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -75,6 +79,8 @@ class __$$QueueListStateImplCopyWithImpl<$Res>
       _$QueueListStateImpl _value, $Res Function(_$QueueListStateImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of QueueListState
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -122,7 +128,9 @@ class _$QueueListStateImpl implements _QueueListState {
   int get hashCode =>
       Object.hash(runtimeType, const DeepCollectionEquality().hash(_queue));
 
-  @JsonKey(ignore: true)
+  /// Create a copy of QueueListState
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$QueueListStateImplCopyWith<_$QueueListStateImpl> get copyWith =>
@@ -136,8 +144,11 @@ abstract class _QueueListState implements QueueListState {
 
   @override
   List<QueuedEpisode> get queue;
+
+  /// Create a copy of QueueListState
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$QueueListStateImplCopyWith<_$QueueListStateImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -147,7 +158,9 @@ mixin _$QueuedEpisode {
   QueueItem get item => throw _privateConstructorUsedError;
   Episode get episode => throw _privateConstructorUsedError;
 
-  @JsonKey(ignore: true)
+  /// Create a copy of QueuedEpisode
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   $QueuedEpisodeCopyWith<QueuedEpisode> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -173,6 +186,8 @@ class _$QueuedEpisodeCopyWithImpl<$Res, $Val extends QueuedEpisode>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
+  /// Create a copy of QueuedEpisode
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -191,6 +206,8 @@ class _$QueuedEpisodeCopyWithImpl<$Res, $Val extends QueuedEpisode>
     ) as $Val);
   }
 
+  /// Create a copy of QueuedEpisode
+  /// with the given fields replaced by the non-null parameter values.
   @override
   @pragma('vm:prefer-inline')
   $QueueItemCopyWith<$Res> get item {
@@ -222,6 +239,8 @@ class __$$QueuedEpisodeImplCopyWithImpl<$Res>
       _$QueuedEpisodeImpl _value, $Res Function(_$QueuedEpisodeImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of QueuedEpisode
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -268,7 +287,9 @@ class _$QueuedEpisodeImpl implements _QueuedEpisode {
   @override
   int get hashCode => Object.hash(runtimeType, item, episode);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of QueuedEpisode
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$QueuedEpisodeImplCopyWith<_$QueuedEpisodeImpl> get copyWith =>
@@ -284,8 +305,11 @@ abstract class _QueuedEpisode implements QueuedEpisode {
   QueueItem get item;
   @override
   Episode get episode;
+
+  /// Create a copy of QueuedEpisode
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$QueuedEpisodeImplCopyWith<_$QueuedEpisodeImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

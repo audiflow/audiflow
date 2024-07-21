@@ -1,14 +1,12 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-// ignore_for_file: type=lint, duplicate_ignore
-
 part of 'settings_service.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$settingsServiceHash() => r'61ed7ce7cc9b545864e0e1366688ca6bc52d1d05';
+String _$settingsServiceHash() => r'f8a348e457bbb8c70cee208b60bf05dabba2817f';
 
 /// See also [SettingsService].
 @ProviderFor(SettingsService)

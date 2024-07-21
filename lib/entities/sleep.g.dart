@@ -1,7 +1,5 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-// ignore_for_file: type=lint, duplicate_ignore
-
 part of 'sleep.dart';
 
 // **************************************************************************
@@ -12,7 +10,7 @@ _$SleepImpl _$$SleepImplFromJson(Map<String, dynamic> json) => _$SleepImpl(
       type: $enumDecode(_$SleepTypeEnumMap, json['type']),
       duration: json['duration'] == null
           ? Duration.zero
-          : Duration(microseconds: json['duration'] as int),
+          : Duration(microseconds: (json['duration'] as num).toInt()),
     );
 
 Map<String, dynamic> _$$SleepImplToJson(_$SleepImpl instance) =>

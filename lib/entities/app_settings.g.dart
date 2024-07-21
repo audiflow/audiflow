@@ -1,7 +1,5 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-// ignore_for_file: type=lint, duplicate_ignore
-
 part of 'app_settings.dart';
 
 // **************************************************************************
@@ -25,10 +23,10 @@ _$AppSettingsImpl _$$AppSettingsImplFromJson(Map<String, dynamic> json) =>
       externalLinkConsent: json['externalLinkConsent'] as bool,
       autoOpenNowPlaying: json['autoOpenNowPlaying'] as bool,
       showFunding: json['showFunding'] as bool,
-      autoUpdateEpisodePeriod: json['autoUpdateEpisodePeriod'] as int,
+      autoUpdateEpisodePeriod: (json['autoUpdateEpisodePeriod'] as num).toInt(),
       trimSilence: json['trimSilence'] as bool,
       volumeBoost: json['volumeBoost'] as bool,
-      layout: json['layout'] as int,
+      layout: (json['layout'] as num).toInt(),
     );
 
 Map<String, dynamic> _$$AppSettingsImplToJson(_$AppSettingsImpl instance) =>
@@ -42,8 +40,7 @@ Map<String, dynamic> _$$AppSettingsImplToJson(_$AppSettingsImpl instance) =>
       'storeDownloadsSDCard': instance.storeDownloadsSDCard,
       'playbackSpeed': instance.playbackSpeed,
       'searchProvider': instance.searchProvider,
-      'searchProviders':
-          instance.searchProviders.map((e) => e.toJson()).toList(),
+      'searchProviders': instance.searchProviders,
       'externalLinkConsent': instance.externalLinkConsent,
       'autoOpenNowPlaying': instance.autoOpenNowPlaying,
       'showFunding': instance.showFunding,
