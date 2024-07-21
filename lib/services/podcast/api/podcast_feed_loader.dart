@@ -65,12 +65,15 @@ class PodcastFeedLoader extends _$PodcastFeedLoader {
       },
       onMessage: _onWorkerMessage,
     );
+    unawaited(cancellable.whenComplete(() => _workerPort = null));
 
     ref.onDispose(() {
       logger.d('dispose');
-      // _workerPort?.send(_CancelledCommand());
-      _workerPort = null;
-      cancellable.cancel();
+      if (_workerPort != null) {
+        _workerPort!.send(_CancelledCommand());
+        _workerPort = null;
+        cancellable.cancel();
+      }
     });
   }
 
