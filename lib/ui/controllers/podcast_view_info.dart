@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:audiflow/core/logger.dart';
 import 'package:audiflow/entities/entities.dart';
-import 'package:audiflow/repository/podcast_event.dart';
+import 'package:audiflow/events/podcast_event.dart';
 import 'package:audiflow/repository/repository_provider.dart';
 import 'package:audiflow/services/audio/audio_player_event.dart';
 import 'package:audiflow/ui/controllers/podcast_details.dart';

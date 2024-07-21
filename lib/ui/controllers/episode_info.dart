@@ -1,5 +1,5 @@
 import 'package:audiflow/entities/entities.dart';
-import 'package:audiflow/repository/episode_event.dart';
+import 'package:audiflow/events/episode_event.dart';
 import 'package:audiflow/services/podcast/podcast_service.dart';
 import 'package:audiflow/services/queue/queue_manager.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
@@ -65,6 +65,11 @@ class EpisodeInfo extends _$EpisodeInfo {
             if (episode.id == state.requireValue.episode.id) {
               state = AsyncData(state.requireValue.copyWith(episode: episode));
             }
+          case EpisodesUpdatedEvent(episodes: final episodes):
+            break;
+            // if (episode.id == state.requireValue.episode.id) {
+            //   state = AsyncData(state.requireValue.copyWith(episode: episode));
+            // }
           case EpisodeStatsUpdatedEvent(stats: final stats):
             if (stats.id == state.requireValue.episode.id) {
               state = AsyncData(state.requireValue.copyWith(stats: stats));

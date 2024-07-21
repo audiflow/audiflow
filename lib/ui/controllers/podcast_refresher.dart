@@ -5,7 +5,7 @@ import 'package:audiflow/core/logger.dart';
 import 'package:audiflow/entities/podcast.dart';
 import 'package:audiflow/repository/repository_provider.dart';
 import 'package:audiflow/services/error/error_manager.dart';
-import 'package:audiflow/ui/controllers/podcast_subscriptions_provider.dart';
+import 'package:audiflow/ui/controllers/podcast_subscriptions.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:rxdart/rxdart.dart';
 

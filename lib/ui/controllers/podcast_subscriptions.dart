@@ -1,6 +1,6 @@
 import 'package:audiflow/core/logger.dart';
 import 'package:audiflow/entities/entities.dart';
-import 'package:audiflow/repository/podcast_event.dart';
+import 'package:audiflow/events/podcast_event.dart';
 import 'package:audiflow/repository/repository_provider.dart';
 import 'package:collection/collection.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';

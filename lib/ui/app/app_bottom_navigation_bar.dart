@@ -2,10 +2,10 @@ import 'dart:math' as math;
 
 import 'package:audiflow/gen/l10n/l10n.dart';
 import 'package:audiflow/services/audio/audio_player_service.dart';
-import 'package:audiflow/services/podcast/podcast_service_provider.dart';
+import 'package:audiflow/services/podcast/podcast_service.dart';
+import 'package:audiflow/ui/controllers/app_wide.dart';
 import 'package:audiflow/ui/mini_player/utils.dart';
 import 'package:audiflow/ui/player/player.dart';
-import 'package:audiflow/ui/providers/app_wide_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';

@@ -1,10 +1,10 @@
 import 'dart:io';
 
-import 'package:audiflow/repository/download_event.dart';
-import 'package:audiflow/repository/episode_event.dart';
-import 'package:audiflow/repository/podcast_event.dart';
+import 'package:audiflow/events/download_event.dart';
+import 'package:audiflow/events/episode_event.dart';
+import 'package:audiflow/events/podcast_event.dart';
+import 'package:audiflow/events/transcript_event.dart';
 import 'package:audiflow/repository/repository_provider.dart';
-import 'package:audiflow/repository/transcript_event.dart';
 import 'package:audiflow/services/audio/audio_player_event.dart';
 import 'package:audiflow/services/audio/audio_player_service.dart';
 import 'package:audiflow/services/audio/audio_position_saver.dart';
