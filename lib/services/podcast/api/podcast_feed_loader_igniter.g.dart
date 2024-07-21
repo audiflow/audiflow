@@ -7,7 +7,7 @@ part of 'podcast_feed_loader_igniter.dart';
 // **************************************************************************
 
 String _$podcastFeedLoaderIgniterHash() =>
-    r'ba75790ad9f181113c9545dca73434214400f6e7';
+    r'af74e35493cf942a5a1f99ea102c2df839d42911';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -30,17 +30,28 @@ class _SystemHash {
   }
 }
 
-/// See also [podcastFeedLoaderIgniter].
-@ProviderFor(podcastFeedLoaderIgniter)
+abstract class _$PodcastFeedLoaderIgniter
+    extends BuildlessAutoDisposeAsyncNotifier<PodcastFeedLoaderState> {
+  late final String? feedUrl;
+  late final int? collectionId;
+
+  FutureOr<PodcastFeedLoaderState> build({
+    String? feedUrl,
+    int? collectionId,
+  });
+}
+
+/// See also [PodcastFeedLoaderIgniter].
+@ProviderFor(PodcastFeedLoaderIgniter)
 const podcastFeedLoaderIgniterProvider = PodcastFeedLoaderIgniterFamily();
 
-/// See also [podcastFeedLoaderIgniter].
+/// See also [PodcastFeedLoaderIgniter].
 class PodcastFeedLoaderIgniterFamily
     extends Family<AsyncValue<PodcastFeedLoaderState>> {
-  /// See also [podcastFeedLoaderIgniter].
+  /// See also [PodcastFeedLoaderIgniter].
   const PodcastFeedLoaderIgniterFamily();
 
-  /// See also [podcastFeedLoaderIgniter].
+  /// See also [PodcastFeedLoaderIgniter].
   PodcastFeedLoaderIgniterProvider call({
     String? feedUrl,
     int? collectionId,
@@ -76,19 +87,18 @@ class PodcastFeedLoaderIgniterFamily
   String? get name => r'podcastFeedLoaderIgniterProvider';
 }
 
-/// See also [podcastFeedLoaderIgniter].
+/// See also [PodcastFeedLoaderIgniter].
 class PodcastFeedLoaderIgniterProvider
-    extends AutoDisposeFutureProvider<PodcastFeedLoaderState> {
-  /// See also [podcastFeedLoaderIgniter].
+    extends AutoDisposeAsyncNotifierProviderImpl<PodcastFeedLoaderIgniter,
+        PodcastFeedLoaderState> {
+  /// See also [PodcastFeedLoaderIgniter].
   PodcastFeedLoaderIgniterProvider({
     String? feedUrl,
     int? collectionId,
   }) : this._internal(
-          (ref) => podcastFeedLoaderIgniter(
-            ref as PodcastFeedLoaderIgniterRef,
-            feedUrl: feedUrl,
-            collectionId: collectionId,
-          ),
+          () => PodcastFeedLoaderIgniter()
+            ..feedUrl = feedUrl
+            ..collectionId = collectionId,
           from: podcastFeedLoaderIgniterProvider,
           name: r'podcastFeedLoaderIgniterProvider',
           debugGetCreateSourceHash:
@@ -117,15 +127,23 @@ class PodcastFeedLoaderIgniterProvider
   final int? collectionId;
 
   @override
-  Override overrideWith(
-    FutureOr<PodcastFeedLoaderState> Function(
-            PodcastFeedLoaderIgniterRef provider)
-        create,
+  FutureOr<PodcastFeedLoaderState> runNotifierBuild(
+    covariant PodcastFeedLoaderIgniter notifier,
   ) {
+    return notifier.build(
+      feedUrl: feedUrl,
+      collectionId: collectionId,
+    );
+  }
+
+  @override
+  Override overrideWith(PodcastFeedLoaderIgniter Function() create) {
     return ProviderOverride(
       origin: this,
       override: PodcastFeedLoaderIgniterProvider._internal(
-        (ref) => create(ref as PodcastFeedLoaderIgniterRef),
+        () => create()
+          ..feedUrl = feedUrl
+          ..collectionId = collectionId,
         from: from,
         name: null,
         dependencies: null,
@@ -138,7 +156,8 @@ class PodcastFeedLoaderIgniterProvider
   }
 
   @override
-  AutoDisposeFutureProviderElement<PodcastFeedLoaderState> createElement() {
+  AutoDisposeAsyncNotifierProviderElement<PodcastFeedLoaderIgniter,
+      PodcastFeedLoaderState> createElement() {
     return _PodcastFeedLoaderIgniterProviderElement(this);
   }
 
@@ -160,7 +179,7 @@ class PodcastFeedLoaderIgniterProvider
 }
 
 mixin PodcastFeedLoaderIgniterRef
-    on AutoDisposeFutureProviderRef<PodcastFeedLoaderState> {
+    on AutoDisposeAsyncNotifierProviderRef<PodcastFeedLoaderState> {
   /// The parameter `feedUrl` of this provider.
   String? get feedUrl;
 
@@ -169,8 +188,8 @@ mixin PodcastFeedLoaderIgniterRef
 }
 
 class _PodcastFeedLoaderIgniterProviderElement
-    extends AutoDisposeFutureProviderElement<PodcastFeedLoaderState>
-    with PodcastFeedLoaderIgniterRef {
+    extends AutoDisposeAsyncNotifierProviderElement<PodcastFeedLoaderIgniter,
+        PodcastFeedLoaderState> with PodcastFeedLoaderIgniterRef {
   _PodcastFeedLoaderIgniterProviderElement(super.provider);
 
   @override

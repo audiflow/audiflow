@@ -6,7 +6,7 @@ part of 'podcast_feed_loader.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$podcastFeedLoaderHash() => r'496866fcc35fed1fac15c830a7dfdc185719ae8c';
+String _$podcastFeedLoaderHash() => r'000f7d5aa0f007d76fdc7c35305551649559ed3d';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -32,11 +32,9 @@ class _SystemHash {
 abstract class _$PodcastFeedLoader
     extends BuildlessAutoDisposeNotifier<PodcastFeedLoaderState> {
   late final String feedUrl;
-  late final int? collectionId;
 
   PodcastFeedLoaderState build({
     required String feedUrl,
-    int? collectionId,
   });
 }
 
@@ -52,11 +50,9 @@ class PodcastFeedLoaderFamily extends Family<PodcastFeedLoaderState> {
   /// See also [PodcastFeedLoader].
   PodcastFeedLoaderProvider call({
     required String feedUrl,
-    int? collectionId,
   }) {
     return PodcastFeedLoaderProvider(
       feedUrl: feedUrl,
-      collectionId: collectionId,
     );
   }
 
@@ -66,7 +62,6 @@ class PodcastFeedLoaderFamily extends Family<PodcastFeedLoaderState> {
   ) {
     return call(
       feedUrl: provider.feedUrl,
-      collectionId: provider.collectionId,
     );
   }
 
@@ -91,11 +86,8 @@ class PodcastFeedLoaderProvider extends AutoDisposeNotifierProviderImpl<
   /// See also [PodcastFeedLoader].
   PodcastFeedLoaderProvider({
     required String feedUrl,
-    int? collectionId,
   }) : this._internal(
-          () => PodcastFeedLoader()
-            ..feedUrl = feedUrl
-            ..collectionId = collectionId,
+          () => PodcastFeedLoader()..feedUrl = feedUrl,
           from: podcastFeedLoaderProvider,
           name: r'podcastFeedLoaderProvider',
           debugGetCreateSourceHash:
@@ -106,7 +98,6 @@ class PodcastFeedLoaderProvider extends AutoDisposeNotifierProviderImpl<
           allTransitiveDependencies:
               PodcastFeedLoaderFamily._allTransitiveDependencies,
           feedUrl: feedUrl,
-          collectionId: collectionId,
         );
 
   PodcastFeedLoaderProvider._internal(
@@ -117,11 +108,9 @@ class PodcastFeedLoaderProvider extends AutoDisposeNotifierProviderImpl<
     required super.debugGetCreateSourceHash,
     required super.from,
     required this.feedUrl,
-    required this.collectionId,
   }) : super.internal();
 
   final String feedUrl;
-  final int? collectionId;
 
   @override
   PodcastFeedLoaderState runNotifierBuild(
@@ -129,7 +118,6 @@ class PodcastFeedLoaderProvider extends AutoDisposeNotifierProviderImpl<
   ) {
     return notifier.build(
       feedUrl: feedUrl,
-      collectionId: collectionId,
     );
   }
 
@@ -138,16 +126,13 @@ class PodcastFeedLoaderProvider extends AutoDisposeNotifierProviderImpl<
     return ProviderOverride(
       origin: this,
       override: PodcastFeedLoaderProvider._internal(
-        () => create()
-          ..feedUrl = feedUrl
-          ..collectionId = collectionId,
+        () => create()..feedUrl = feedUrl,
         from: from,
         name: null,
         dependencies: null,
         allTransitiveDependencies: null,
         debugGetCreateSourceHash: null,
         feedUrl: feedUrl,
-        collectionId: collectionId,
       ),
     );
   }
@@ -160,16 +145,13 @@ class PodcastFeedLoaderProvider extends AutoDisposeNotifierProviderImpl<
 
   @override
   bool operator ==(Object other) {
-    return other is PodcastFeedLoaderProvider &&
-        other.feedUrl == feedUrl &&
-        other.collectionId == collectionId;
+    return other is PodcastFeedLoaderProvider && other.feedUrl == feedUrl;
   }
 
   @override
   int get hashCode {
     var hash = _SystemHash.combine(0, runtimeType.hashCode);
     hash = _SystemHash.combine(hash, feedUrl.hashCode);
-    hash = _SystemHash.combine(hash, collectionId.hashCode);
 
     return _SystemHash.finish(hash);
   }
@@ -179,9 +161,6 @@ mixin PodcastFeedLoaderRef
     on AutoDisposeNotifierProviderRef<PodcastFeedLoaderState> {
   /// The parameter `feedUrl` of this provider.
   String get feedUrl;
-
-  /// The parameter `collectionId` of this provider.
-  int? get collectionId;
 }
 
 class _PodcastFeedLoaderProviderElement
@@ -191,8 +170,6 @@ class _PodcastFeedLoaderProviderElement
 
   @override
   String get feedUrl => (origin as PodcastFeedLoaderProvider).feedUrl;
-  @override
-  int? get collectionId => (origin as PodcastFeedLoaderProvider).collectionId;
 }
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

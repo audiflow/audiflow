@@ -6,46 +6,75 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 part 'podcast_feed_loader_igniter.g.dart';
 
 @riverpod
-Future<PodcastFeedLoaderState> podcastFeedLoaderIgniter(
-  PodcastFeedLoaderIgniterRef ref, {
-  String? feedUrl,
-  int? collectionId,
-}) async {
-  assert(feedUrl != null || collectionId != null);
+class PodcastFeedLoaderIgniter extends _$PodcastFeedLoaderIgniter {
+  @override
+  Future<PodcastFeedLoaderState> build({
+    String? feedUrl,
+    int? collectionId,
+  }) async {
+    assert(feedUrl != null || collectionId != null);
 
-  if (feedUrl != null) {
-    return ref.watch(
-      podcastFeedLoaderProvider(feedUrl: feedUrl, collectionId: collectionId),
+    if (feedUrl != null) {
+      ref.listen(
+        podcastFeedLoaderProvider(feedUrl: feedUrl),
+        (_, next) => state = AsyncValue.data(next),
+      );
+      return _setupLoader(feedUrl, collectionId);
+    }
+
+    final podcast = await ref
+        .read(podcastServiceProvider)
+        .findPodcastBy(collectionId: collectionId);
+    if (podcast != null) {
+      ref.listen(
+        podcastFeedLoaderProvider(feedUrl: podcast.feedUrl),
+        (_, next) => state = AsyncValue.data(next),
+      );
+      return _setupLoader(
+        podcast.feedUrl,
+        collectionId ?? podcast.collectionId,
+      );
+    }
+
+    if (collectionId == null) {
+      throw ArgumentError('collectionId is required');
+    }
+
+    final foundFeedUrl = await ref
+        .read(podcastServiceProvider)
+        .findOrFetchFeedUrlBy(collectionId: collectionId);
+    if (foundFeedUrl == null) {
+      throw NotFoundException();
+    }
+
+    ref.listen(
+      podcastFeedLoaderProvider(feedUrl: foundFeedUrl),
+      (_, next) => state = AsyncValue.data(next),
     );
+    return _setupLoader(foundFeedUrl, collectionId);
   }
 
-  final podcast = await ref
-      .read(podcastServiceProvider)
-      .findPodcastBy(collectionId: collectionId);
-  if (podcast != null) {
-    return ref.watch(
-      podcastFeedLoaderProvider(
-        feedUrl: podcast.feedUrl,
-        collectionId: podcast.collectionId ?? collectionId,
-      ),
-    );
-  }
+  Future<PodcastFeedLoaderState> _setupLoader(
+    String feedUrl,
+    int? collectionId,
+  ) async {
+    final loaderState = ref.read(podcastFeedLoaderProvider(feedUrl: feedUrl));
+    if (loaderState.collectionId != null ||
+        loaderState.loadingState != LoadingState.loadingPodcast) {
+      return loaderState;
+    }
 
-  if (collectionId == null) {
-    throw ArgumentError('collectionId is required');
-  }
+    final loader =
+        ref.read(podcastFeedLoaderProvider(feedUrl: feedUrl).notifier);
+    if (collectionId != null) {
+      loader.setup(collectionId: collectionId);
+    } else {
+      final podcast = await ref
+          .read(podcastServiceProvider)
+          .findPodcastBy(feedUrl: feedUrl);
+      loader.setup(collectionId: podcast?.collectionId);
+    }
 
-  final foundFeedUrl = await ref
-      .read(podcastServiceProvider)
-      .findOrFetchFeedUrlBy(collectionId: collectionId);
-  if (foundFeedUrl == null) {
-    throw NotFoundException();
+    return ref.read(podcastFeedLoaderProvider(feedUrl: feedUrl));
   }
-
-  return ref.watch(
-    podcastFeedLoaderProvider(
-      feedUrl: foundFeedUrl,
-      collectionId: collectionId,
-    ),
-  );
 }
