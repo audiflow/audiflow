@@ -98,16 +98,13 @@ class PodcastFeedLoader extends _$PodcastFeedLoader {
             .add(PodcastUpdatedEvent(podcast!));
         state = state.copyWith(loadingState: LoadingState.loadingEpisodes);
       case _LoadedEpisodesMessage(
-          ids: final ids,
+          episodes: final episodes,
           loadingState: final loadingState
         ):
-        final episodes = await _repository.findEpisodes(ids).then(
-              (episodes) => episodes.where((e) => e != null).cast<Episode>(),
-            );
         if (episodes.isNotEmpty) {
           ref
               .read(episodeEventStreamProvider.notifier)
-              .add(EpisodesUpdatedEvent(episodes.toList()));
+              .add(EpisodesAddedEvent(episodes));
         }
         state = state.copyWith(loadingState: loadingState);
       case _GotErrorMessage(message: final message):
@@ -324,7 +321,7 @@ class _Worker {
         await _repository.saveEpisodes(episodes);
         _uiPort.send(
           _LoadedEpisodesMessage(
-            ids: episodes.map((e) => e.id).toList(growable: false),
+            episodes: episodes.map(PartialEpisode.fromEpisode).toList(),
             loadingState: loadingState,
           ),
         );
@@ -334,7 +331,7 @@ class _Worker {
 
     _uiPort.send(
       _LoadedEpisodesMessage(
-        ids: episodes.map((e) => e.id).toList(growable: false),
+        episodes: episodes.map(PartialEpisode.fromEpisode).toList(),
         loadingState: loadingState,
       ),
     );
@@ -390,17 +387,17 @@ class _LoadedPodcastMessage extends _Message {
 
 class _LoadedEpisodesMessage extends _Message {
   _LoadedEpisodesMessage({
-    required this.ids,
+    required this.episodes,
     required this.loadingState,
   });
 
-  final List<int> ids;
+  final List<PartialEpisode> episodes;
   final LoadingState loadingState;
 
   @override
   String toString() {
     return '_ReadEpisodesResult('
-        'episodes: ${ids.length} episodes, '
+        'episodes: ${episodes.length} episodes, '
         'loadingState: $loadingState)';
   }
 }

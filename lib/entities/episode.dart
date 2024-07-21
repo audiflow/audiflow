@@ -92,7 +92,7 @@ class Episode {
   /// 3000 x 3000 pixels, in JPEG or PNG format, 72 dpi, with appropriate file
   /// extensions (.jpg, .png), and in the sRGB color-space. File type extension
   /// must match the actual file type of the image file.
-  String? imageUrl;
+  final String? imageUrl;
 
   /// The parental advisory information for a podcast.
   final bool explicit;
@@ -102,15 +102,15 @@ class Episode {
 
   /// The chronological number that is associated with a podcast episode.
   /// Must be a non-zero integer. This is required for serial podcasts.
-  int? episode;
+  final int? episode;
 
   /// The chronological number associated with a podcast episode's season.
   /// Must be a non-zero integer.
-  int? season;
+  final int? season;
 
   /// The type of episode.
   @enumerated
-  EpisodeType type;
+  final EpisodeType type;
 
   /// A list of [Block] tags.
   final block = IsarLinks<Block>();
@@ -122,6 +122,40 @@ class Episode {
   String toString() {
     return '''Episode(guid: '$guid', title: '$title')''';
   }
+}
+
+class PartialEpisode {
+  PartialEpisode({
+    required this.id,
+    required this.pid,
+    required this.title,
+    required this.guid,
+    this.publicationDate,
+    this.episode,
+    this.season,
+    required this.type,
+  });
+
+  PartialEpisode.fromEpisode(Episode episode)
+      : this(
+          id: episode.id,
+          pid: episode.pid,
+          title: episode.title,
+          guid: episode.guid,
+          publicationDate: episode.publicationDate,
+          episode: episode.episode,
+          season: episode.season,
+          type: episode.type,
+        );
+
+  final int id;
+  final int pid;
+  final String title;
+  final String guid;
+  final DateTime? publicationDate;
+  final int? episode;
+  final int? season;
+  final EpisodeType type;
 }
 
 extension EpisodeExtension on Episode {
