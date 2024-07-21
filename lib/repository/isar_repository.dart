@@ -246,6 +246,19 @@ class IsarRepository implements Repository {
   }
 
   @override
+  Future<List<Episode>> findLatestEpisodes(
+    Id pid, {
+    DateTime? lastPubDate,
+    required int limit,
+  }) async {
+    var filter = isar.episodes.where().filter().pidEqualTo(pid);
+    if (lastPubDate != null) {
+      filter = filter.publicationDateGreaterThan(lastPubDate);
+    }
+    return filter.sortByPublicationDateDesc().limit(limit).findAll();
+  }
+
+  @override
   Future<void> saveEpisode(Episode episode) async {
     await isar.writeTxn(() => isar.episodes.put(episode));
   }

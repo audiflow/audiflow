@@ -93,6 +93,12 @@ abstract class Repository {
 
   Future<List<Episode>> findEpisodesByPodcastId(Id pid);
 
+  Future<List<Episode>> findLatestEpisodes(
+    Id pid, {
+    DateTime? lastPubDate,
+    required int limit,
+  });
+
   Future<void> saveEpisode(Episode episode);
 
   Future<void> saveEpisodes(Iterable<Episode> episodes);

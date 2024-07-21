@@ -144,6 +144,18 @@ class RepositoryEventAdapter implements Repository {
       inner.findEpisodesByPodcastId(pid);
 
   @override
+  Future<List<Episode>> findLatestEpisodes(
+    Id pid, {
+    DateTime? lastPubDate,
+    required int limit,
+  }) =>
+      inner.findLatestEpisodes(
+        pid,
+        lastPubDate: lastPubDate,
+        limit: limit,
+      );
+
+  @override
   Future<void> saveEpisode(Episode episode) async {
     await inner.saveEpisode(episode);
     _ref
