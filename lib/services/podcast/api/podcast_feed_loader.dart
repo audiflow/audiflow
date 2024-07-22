@@ -78,7 +78,7 @@ class PodcastFeedLoader extends _$PodcastFeedLoader {
   }
 
   Future<void> _onWorkerMessage(_Message message) async {
-    logger.d('received $message');
+    logger.d(() => 'received $message');
     switch (message) {
       case _SendPortMessage(sendPort: final sendPort):
         _workerPort = sendPort;
@@ -172,24 +172,28 @@ class _Worker {
   void _listenCommandStream() {
     _commandStreamController.stream.flatMap(
       (command) async* {
-        logger.d('received command $command');
-        switch (command) {
-          case _LoadFeedCommand(
-              feedUrl: final feedUrl,
-              collectionId: final collectionId,
-              cacheDir: final cacheDir,
-              storageDir: final storageDir
-            ):
-            logger.d('open repository');
-            await _setupRepository(storageDir);
-            logger.d('start loading feed');
-            await _handleLoadFeedEvent(
-              feedUrl: feedUrl,
-              collectionId: collectionId,
-              cacheDir: cacheDir,
-            );
-          case _CancelledCommand():
-            _complete();
+        logger.d(() => 'received command $command');
+        try {
+          switch (command) {
+            case _LoadFeedCommand(
+                feedUrl: final feedUrl,
+                collectionId: final collectionId,
+                cacheDir: final cacheDir,
+                storageDir: final storageDir
+              ):
+              await _setupRepository(storageDir);
+              await _handleLoadFeedEvent(
+                feedUrl: feedUrl,
+                collectionId: collectionId,
+                cacheDir: cacheDir,
+              );
+            case _CancelledCommand():
+              _complete();
+          }
+          // ignore: avoid_catches_without_on_clauses
+        } catch (err) {
+          logger.e(err);
+          _uiPort.send(_GotErrorMessage(message: err.toString()));
         }
       },
       maxConcurrent: 1,
@@ -249,7 +253,7 @@ class _Worker {
             .fetch<ResponseBody>(url, responseType: ResponseType.stream)
             .timeout(const Duration(seconds: 30));
         if (rs == null) {
-          logger.d(() => 'rss is null, url=$feedUrl');
+          logger.w(() => 'rss is null, url=$feedUrl');
           return false;
         }
 
@@ -268,7 +272,13 @@ class _Worker {
         );
         return true;
       } on DioException catch (err) {
-        logger.e('type: $err');
+        if (err.type == DioExceptionType.connectionError) {
+          if (url.startsWith('https:')) {
+            logger.e('connectionError; retry');
+            continue;
+          }
+        }
+        logger.e(() => 'loadFeed failed: $err');
         return false;
         // ignore: avoid_catches_without_on_clauses
       } catch (err) {
@@ -293,11 +303,12 @@ class _Worker {
   }
 
   Future<void> _readEpisodes() async {
-    logger.d('read episodes for ${_podcast!.feedUrl}');
+    logger.d(() => 'read episodes for ${_podcast!.feedUrl}');
     final latest = await _repository.findLatestEpisodes(_podcast!.id, limit: 1);
     final lastPubDate = latest.firstOrNull?.publicationDate;
 
     final episodes = <Episode>[];
+    var batchLength = 20;
     var loadingState = LoadingState.loadingEpisodes;
     while (true) {
       final episode = await _feedParser!.readChannelItem();
@@ -317,7 +328,7 @@ class _Worker {
         }
       }
       episodes.add(episode);
-      if (20 <= episodes.length) {
+      if (batchLength <= episodes.length) {
         await _repository.saveEpisodes(episodes);
         _uiPort.send(
           _LoadedEpisodesMessage(
@@ -326,6 +337,7 @@ class _Worker {
           ),
         );
         episodes.clear();
+        batchLength = 200;
       }
     }
 
