@@ -1,5 +1,5 @@
 import 'package:audiflow/core/hash.dart';
-import 'package:audiflow/entities/entities.dart';
+import 'package:audiflow/features/feed/model/model.dart';
 import 'package:isar/isar.dart';
 import 'package:podcast_feed/parsers/feed_entity_parser.dart';
 import 'package:podcast_feed/podcast_feed.dart' show ShowType;

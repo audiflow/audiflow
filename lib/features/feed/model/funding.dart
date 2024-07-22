@@ -1,11 +1,8 @@
-import 'package:audiflow/entities/entities.dart';
 import 'package:isar/isar.dart';
 import 'package:podcast_feed/podcast_feed.dart' as feed;
 
 part 'funding.g.dart';
 
-/// part of a [Podcast].
-///
 /// Part of the [podcast namespace](https://github.com/Podcastindex-org/podcast-namespace)
 @collection
 class Funding {

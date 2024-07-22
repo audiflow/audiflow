@@ -1,6 +1,6 @@
 import 'package:audiflow/core/hash.dart';
 import 'package:audiflow/core/utils.dart';
-import 'package:audiflow/entities/entities.dart';
+import 'package:audiflow/features/feed/model/model.dart';
 import 'package:html/parser.dart' show parseFragment;
 import 'package:isar/isar.dart';
 import 'package:podcast_feed/podcast_feed.dart'
@@ -9,10 +9,6 @@ import 'package:podcast_feed/podcast_feed.dart'
 part 'episode.g.dart';
 
 /// An object that represents an individual episode of a Podcast.
-///
-/// An Episode can be used in conjunction with a [Downloadable] to
-/// determine if the Episode is available on the local filesystem.
-
 @collection
 class Episode {
   Episode({
