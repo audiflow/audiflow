@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:audiflow/entities/episode.dart';
+import 'package:audiflow/features/feed/model/model.dart';
 import 'package:collection/collection.dart';
 import 'package:crypto/crypto.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';

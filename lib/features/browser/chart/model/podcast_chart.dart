@@ -1,6 +1,8 @@
 import 'package:audiflow/entities/entities.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import 'itunes_chart_item.dart';
+
 part 'podcast_chart.freezed.dart';
 
 @freezed
