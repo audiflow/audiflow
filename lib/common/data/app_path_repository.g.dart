@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'api_cache_dir.dart';
+part of 'app_path_repository.dart';
 
 // **************************************************************************
 // RiverpodGenerator
