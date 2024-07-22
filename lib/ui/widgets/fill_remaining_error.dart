@@ -12,7 +12,7 @@ class FillRemainingError extends StatelessWidget {
       : this(
           icon: Icons.search,
           messageBuilder: (context) =>
-              L10n.of(context)!.no_search_results_message,
+              L10n.of(context).no_search_results_message,
           key: key,
         );
 
@@ -20,7 +20,7 @@ class FillRemainingError extends StatelessWidget {
       : this(
           icon: Icons.search,
           messageBuilder: (context) =>
-              L10n.of(context)!.no_search_results_message,
+              L10n.of(context).no_search_results_message,
           key: key,
         );
 

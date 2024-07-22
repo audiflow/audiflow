@@ -1,7 +1,7 @@
-import 'package:audiflow/gen/l10n/l10n.dart';
 import 'package:audiflow/core/types.dart';
 import 'package:audiflow/entities/entities.dart';
-import 'package:audiflow/services/podcast/podcast_service_provider.dart';
+import 'package:audiflow/gen/l10n/l10n.dart';
+import 'package:audiflow/services/podcast/podcast_service.dart';
 import 'package:audiflow/services/queue/queue_list_provider.dart';
 import 'package:audiflow/services/queue/queue_manager.dart';
 import 'package:audiflow/ui/podcast/episode_brief_tile.dart';
@@ -19,7 +19,7 @@ class QueueListBlock extends ConsumerWidget {
       return const SliverToBoxAdapter(child: SizedBox.shrink());
     }
 
-    final l10n = L10n.of(context)!;
+    final l10n = L10n.of(context);
     return NotificationListener<PlayButtonTappedNotification>(
       onNotification: (notification) {
         final episode = notification.episode;

@@ -1,13 +1,14 @@
 import 'dart:async';
 
-import 'package:audiflow/gen/l10n/l10n.dart';
 import 'package:audiflow/entities/funding.dart';
+import 'package:audiflow/gen/l10n/l10n.dart';
 import 'package:audiflow/services/settings/settings_service.dart';
 import 'package:audiflow/ui/widgets/action_text.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dialogs/flutter_dialogs.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:isar/isar.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 /// This class is responsible for rendering the funding menu on the podcast
@@ -20,7 +21,7 @@ class FundingMenu extends StatelessWidget {
     super.key,
   });
 
-  final List<Funding>? funding;
+  final IsarLinks<Funding>? funding;
 
   @override
   Widget build(BuildContext context) {
@@ -44,7 +45,7 @@ class FundingMenu extends StatelessWidget {
 class _MaterialFundingMenu extends ConsumerWidget {
   const _MaterialFundingMenu(this.funding);
 
-  final List<Funding>? funding;
+  final IsarLinks<Funding>? funding;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -53,7 +54,7 @@ class _MaterialFundingMenu extends ConsumerWidget {
     return funding == null || funding!.isEmpty
         ? const SizedBox.shrink()
         : Semantics(
-            label: L10n.of(context)!.podcast_funding_dialog_header,
+            label: L10n.of(context).podcast_funding_dialog_header,
             child: PopupMenuButton<String>(
               onSelected: (url) {
                 FundingLink.fundingLink(
@@ -72,9 +73,10 @@ class _MaterialFundingMenu extends ConsumerWidget {
               itemBuilder: (BuildContext context) {
                 return List<PopupMenuEntry<String>>.generate(funding!.length,
                     (index) {
+                  final item = funding!.elementAt(index);
                   return PopupMenuItem<String>(
-                    value: funding![index].url,
-                    child: Text(funding![index].value),
+                    value: item.url,
+                    child: Text(item.value),
                   );
                 });
               },
@@ -88,7 +90,7 @@ class _MaterialFundingMenu extends ConsumerWidget {
 class _CupertinoFundingMenu extends ConsumerWidget {
   const _CupertinoFundingMenu(this.funding);
 
-  final List<Funding>? funding;
+  final IsarLinks<Funding>? funding;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -97,7 +99,7 @@ class _CupertinoFundingMenu extends ConsumerWidget {
     return funding == null || funding!.isEmpty
         ? const SizedBox.shrink()
         : IconButton(
-            tooltip: L10n.of(context)!.podcast_funding_dialog_header,
+            tooltip: L10n.of(context).podcast_funding_dialog_header,
             icon: const Icon(Icons.payment),
             onPressed: () => showCupertinoModalPopup<void>(
               context: context,
@@ -106,10 +108,11 @@ class _CupertinoFundingMenu extends ConsumerWidget {
                   actions: <Widget>[
                     ...List<CupertinoActionSheetAction>.generate(
                         funding!.length, (index) {
+                      final item = funding!.elementAt(index);
                       return CupertinoActionSheetAction(
                         onPressed: () {
                           FundingLink.fundingLink(
-                            funding![index].url,
+                            item.url,
                             context,
                             consent: settings.externalLinkConsent,
                           ).then((value) {
@@ -119,7 +122,7 @@ class _CupertinoFundingMenu extends ConsumerWidget {
                             Navigator.pop(context, 'Cancel');
                           });
                         },
-                        child: Text(funding![index].value),
+                        child: Text(item.value),
                       );
                     }),
                   ],
@@ -128,7 +131,7 @@ class _CupertinoFundingMenu extends ConsumerWidget {
                     onPressed: () {
                       Navigator.pop(context, 'Cancel');
                     },
-                    child: Text(L10n.of(context)!.cancel),
+                    child: Text(L10n.of(context).cancel),
                   ),
                 );
               },
@@ -166,12 +169,12 @@ class FundingLink {
         context: context,
         useRootNavigator: false,
         builder: (_) => BasicDialogAlert(
-          title: Text(L10n.of(context)!.podcast_funding_dialog_header),
-          content: Text(L10n.of(context)!.podcast_funding_consent_message),
+          title: Text(L10n.of(context).podcast_funding_dialog_header),
+          content: Text(L10n.of(context).podcast_funding_consent_message),
           actions: <Widget>[
             BasicDialogAction(
               title: ActionText(
-                L10n.of(context)!.goBack,
+                L10n.of(context).goBack,
               ),
               onPressed: () {
                 Navigator.pop(context, false);
@@ -179,7 +182,7 @@ class FundingLink {
             ),
             BasicDialogAction(
               title: ActionText(
-                L10n.of(context)!.continues,
+                L10n.of(context).continues,
               ),
               iosIsDefaultAction: true,
               onPressed: () {

@@ -41,9 +41,9 @@ class EpisodesGroup extends _$EpisodesGroup {
             .sorted((a, b) => a.publicationDate!.compareTo(b.publicationDate!)),
       );
 
-  Future<String?> getLastListenedEpisode() async {
+  Future<int?> getLastListenedEpisode() async {
     final stats = await _lastPlayedStats();
-    return stats?.guid;
+    return stats?.id;
   }
 
   Future<EpisodeStats?> _lastPlayedStats() async {
@@ -54,7 +54,7 @@ class EpisodesGroup extends _$EpisodesGroup {
 
     final stats = await ref
         .read(repositoryProvider)
-        .findEpisodeStatsList(episodes.map((e) => e.guid));
+        .findEpisodeStatsList(episodes.map((e) => e.id));
 
     final playedStatsList =
         stats.where((s) => s?.lastPlayedAt != null).cast<EpisodeStats>();
@@ -78,7 +78,7 @@ class EpisodesGroup extends _$EpisodesGroup {
     final lastPlayedStats = await _lastPlayedStats();
     final lastPlayedEpisode = lastPlayedStats == null
         ? null
-        : episodes.firstWhereOrNull((e) => e.guid == lastPlayedStats.guid);
+        : episodes.firstWhereOrNull((e) => e.id == lastPlayedStats.id);
     if (lastPlayedStats == null ||
         lastPlayedEpisode == null ||
         lastPlayedEpisode.publicationDate == null) {

@@ -11,5 +11,5 @@ Future<List<Season>> podcastSeasons(
   PodcastSeasonsRef ref,
   Podcast podcast,
 ) async {
-  return ref.read(podcastSeasonServiceProvider).extractSeasons(podcast);
+  return ref.read(podcastSeasonServiceProvider).extractSeasons(podcast, []);
 }

@@ -1,9 +1,9 @@
 import 'package:audiflow/core/types.dart';
 import 'package:audiflow/entities/entities.dart';
+import 'package:audiflow/ui/controllers/episodes_group.dart';
+import 'package:audiflow/ui/controllers/episodes_list_event.dart';
 import 'package:audiflow/ui/podcast/episode_tile.dart';
 import 'package:audiflow/ui/podcast/types.dart';
-import 'package:audiflow/ui/providers/episodes_group_provider.dart';
-import 'package:audiflow/ui/providers/episodes_list_event_provider.dart';
 import 'package:audiflow/ui/widgets/fill_remaining_error.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -13,14 +13,14 @@ class EpisodeList extends HookConsumerWidget {
   const EpisodeList({
     super.key,
     required this.episodeGroupKey,
-    this.metadata,
+    this.podcast,
     required this.episodes,
     required this.scrollController,
     this.thumbnailVisibility = ThumbnailVisibility.auto,
   });
 
   final Key episodeGroupKey;
-  final PodcastMetadata? metadata;
+  final Podcast? podcast;
   final List<Episode> episodes;
   final ThumbnailVisibility thumbnailVisibility;
   final ScrollController scrollController;
@@ -44,19 +44,19 @@ class EpisodeList extends HookConsumerWidget {
     ref.listen(episodesListEventStreamProvider, (_, next) {
       next.whenData((event) async {
         if (event is MenuScrollToEpisodeEvent) {
-          final guid = await episodesGroup.getLastListenedEpisode();
-          if (guid == null) {
+          final id = await episodesGroup.getLastListenedEpisode();
+          if (id == null) {
             return;
           }
-          final i = episodes.indexWhere((episode) => episode.guid == guid);
+          final i = episodes.indexWhere((episode) => episode.id == id);
           if (i == -1) {
             return;
           }
 
           final offset = _ScrollOffsetCalculator.calcOffset(
-            metadata,
+            podcast,
             episodes.sublist(0, i + 1),
-            guid,
+            id,
           );
           await scrollController.animateTo(
             offset,
@@ -81,8 +81,7 @@ class EpisodeList extends HookConsumerWidget {
               final bool showsThumbnail;
               switch (thumbnailVisibility) {
                 case ThumbnailVisibility.auto:
-                  showsThumbnail =
-                      episode.thumbnailUrl != metadata?.thumbnailUrl;
+                  showsThumbnail = episode.imageUrl != podcast?.image;
                 case ThumbnailVisibility.visible:
                   showsThumbnail = true;
                 case ThumbnailVisibility.hidden:
@@ -111,16 +110,16 @@ class _ScrollOffsetCalculator {
   static const episodeTileNotThumbnailHeight = 124.0;
 
   static double calcOffset(
-    PodcastMetadata? metadata,
+    Podcast? podcast,
     List<Episode> episodes,
-    String guid,
+    int id,
   ) {
     var offset = pageHeaderOffset;
     for (final episode in episodes) {
-      if (episode.guid == guid) {
+      if (episode.id == id) {
         break;
       }
-      final showsThumbnail = episode.thumbnailUrl != metadata?.thumbnailUrl;
+      final showsThumbnail = episode.imageUrl != podcast?.image;
       offset += (showsThumbnail
           ? episodeTileWithThumbnailHeight
           : episodeTileNotThumbnailHeight);

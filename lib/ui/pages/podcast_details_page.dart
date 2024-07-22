@@ -1,16 +1,17 @@
-import 'package:audiflow/gen/l10n/l10n.dart';
+import 'package:audiflow/core/logger.dart';
 import 'package:audiflow/entities/entities.dart';
-import 'package:audiflow/services/podcast/podcast_service_provider.dart';
+import 'package:audiflow/gen/l10n/l10n.dart';
 import 'package:audiflow/services/settings/settings_service.dart';
+import 'package:audiflow/ui/controllers/episodes_list_event.dart';
+import 'package:audiflow/ui/controllers/podcast_info.dart';
+import 'package:audiflow/ui/controllers/podcast_seasons.dart';
+import 'package:audiflow/ui/controllers/podcast_view_episodes.dart';
+import 'package:audiflow/ui/controllers/podcast_view_info.dart';
+import 'package:audiflow/ui/pages/app_bars/basic_app_bar.dart';
 import 'package:audiflow/ui/pages/app_bars/podcast_details_app_bar.dart';
 import 'package:audiflow/ui/podcast/episode_list.dart';
 import 'package:audiflow/ui/podcast/funding_menu.dart';
 import 'package:audiflow/ui/podcast/season_list.dart';
-import 'package:audiflow/ui/providers/episodes_list_event_provider.dart';
-import 'package:audiflow/ui/providers/podcast_info_provider.dart';
-import 'package:audiflow/ui/providers/podcast_seasons_provider.dart';
-import 'package:audiflow/ui/providers/podcast_view_episodes_provider.dart';
-import 'package:audiflow/ui/providers/podcast_view_info_provider.dart';
 import 'package:audiflow/ui/widgets/fill_remaining_error.dart';
 import 'package:audiflow/ui/widgets/fill_remaining_loading.dart';
 import 'package:audiflow/ui/widgets/podcast_html.dart';
@@ -19,7 +20,6 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
-import 'package:palette_generator/palette_generator.dart';
 import 'package:scrolls_to_top/scrolls_to_top.dart';
 
 /// This Widget takes a search result and builds a list of currently available
@@ -29,48 +29,95 @@ import 'package:scrolls_to_top/scrolls_to_top.dart';
 /// directly from a search result.
 class PodcastDetailsPage extends HookConsumerWidget {
   const PodcastDetailsPage({
-    this.feedUrl,
-    this.collectionId,
-    required this.paletteGenerator,
+    required this.collectionId,
+    required this.feedUrl,
+    required this.title,
+    required this.author,
+    required this.thumbnailUrl,
     super.key,
   });
 
-  final String? feedUrl;
   final int? collectionId;
-  final PaletteGenerator paletteGenerator;
+  final String? feedUrl;
+  final String? title;
+  final String? author;
+  final String? thumbnailUrl;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final podcastState = ref.watch(podcastInfoProvider(
-      feedUrl: feedUrl,
-      collectionId: collectionId,
-    ));
-    final podcast = podcastState.value?.podcast;
+    final podcastInfoState = ref.watch(
+      podcastInfoProvider(
+        feedUrl: feedUrl,
+        collectionId: collectionId,
+      ),
+    );
+    logger.d('podcastInfoState: $podcastInfoState');
+
+    final podcast = podcastInfoState.valueOrNull?.podcast;
+    return podcast == null
+        ? _PodcastDetailsLoadingPage(
+            title: title,
+            author: author,
+            thumbnailUrl: thumbnailUrl,
+          )
+        : _PodcastDetailsPage(
+            podcast: podcast,
+            stats: podcastInfoState.valueOrNull?.stats,
+          );
+  }
+}
+
+class _PodcastDetailsLoadingPage extends HookConsumerWidget {
+  const _PodcastDetailsLoadingPage({
+    required this.title,
+    required this.author,
+    required this.thumbnailUrl,
+  });
+
+  final String? title;
+  final String? author;
+  final String? thumbnailUrl;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Semantics(
+      header: false,
+      label: L10n.of(context).semantics_podcast_details_header,
+      child: Scaffold(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        body: CustomScrollView(
+          slivers: <Widget>[
+            title == null || thumbnailUrl == null
+                ? const BasicAppBar(title: '')
+                : PodcastDetailsLoadingAppBar(
+                    title: title!,
+                    thumbnailUrl: thumbnailUrl!,
+                  ),
+            const FillRemainingLoading()
+          ],
+        ),
+      ),
+    );
   }
 }
 
 class _PodcastDetailsPage extends HookConsumerWidget {
   const _PodcastDetailsPage({
     required this.podcast,
-    required this.episodes,
-    required this.paletteGenerator,
+    required this.stats,
   });
 
   final Podcast podcast;
-  final List<Episode> episodes;
-  final PaletteGenerator paletteGenerator;
+  final PodcastStats? stats;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final seasonsState = ref.watch(podcastSeasonsProvider(podcast));
-
-    final podcastViewState = ref.watch(podcastViewInfoProvider(metadata.guid));
-    final viewMode =
-        podcastViewState.valueOrNull?.viewMode ?? PodcastDetailViewMode.seasons;
+    final podcastViewState = ref.watch(podcastViewInfoProvider(podcast.id));
+    final viewMode = podcastViewState.valueOrNull?.viewMode;
     final ascend = podcastViewState.valueOrNull?.ascend ?? false;
-    final podcastViewEpisodesState = podcast == null
-        ? null
-        : ref.watch(podcastViewEpisodesProvider(podcast.guid));
+    final podcastViewEpisodesState =
+        ref.watch(podcastViewEpisodesProvider(podcast.id));
+    final seasonsState = ref.watch(podcastSeasonsProvider(podcast));
 
     final controller = useScrollController();
     return ProviderScope(
@@ -80,7 +127,7 @@ class _PodcastDetailsPage extends HookConsumerWidget {
       ],
       child: Semantics(
         header: false,
-        label: L10n.of(context)!.semantics_podcast_details_header,
+        label: L10n.of(context).semantics_podcast_details_header,
         child: ScrollsToTop(
           onScrollsToTop: (event) async {
             await controller.animateTo(
@@ -94,42 +141,37 @@ class _PodcastDetailsPage extends HookConsumerWidget {
             body: RefreshIndicator(
               displacement: 60,
               onRefresh: () async {
-                await ref
-                    .read(podcastServiceProvider)
-                    .loadPodcast(metadata, refresh: true);
+                //   await ref
+                //       .read(podcastServiceProvider)
+                //       .loadPodcast(metadata, refresh: true);
               },
               child: CustomScrollView(
                 controller: controller,
                 physics: const AlwaysScrollableScrollPhysics(),
                 slivers: <Widget>[
                   PodcastDetailsAppBar(
-                    metadata: metadata,
-                    heroPrefix: heroPrefix,
-                    foregroundColor:
-                        paletteGenerator.lightMutedColor?.titleTextColor,
-                    backgroundColor: paletteGenerator.lightMutedColor?.color,
+                    podcast: podcast,
+                    stats: stats,
                   ),
-                  if (podcastState.isLoading ||
-                      seasonsState.isLoading ||
-                      podcastViewState.isLoading ||
-                      podcastViewEpisodesState == null ||
-                      podcastViewEpisodesState.isLoading)
+                  if (podcastViewState.isLoading ||
+                      podcastViewEpisodesState.isLoading ||
+                      seasonsState.isLoading)
                     const FillRemainingLoading()
-                  else if (podcastState.hasError || podcast == null)
+                  else if (false)
                     FillRemainingError.podcastNoResults()
                   else ...[
                     _PodcastTitle(podcast),
                     _SwitchBar(
                       podcast: podcast,
-                      seasons: seasonsState.value!,
-                      viewMode: viewMode,
+                      seasons: const [], // seasonsState.value!,
+                      viewMode: viewMode ?? PodcastDetailViewMode.episodes,
                       ascend: ascend,
                     ),
                     viewMode == PodcastDetailViewMode.seasons
                         ? SeasonList(podcast: podcast)
                         : EpisodeList(
                             episodeGroupKey: ValueKey(podcast.guid),
-                            metadata: podcast.metadata,
+                            podcast: podcast,
                             episodes: podcastViewEpisodesState.requireValue,
                             scrollController: controller,
                           ),
@@ -174,11 +216,12 @@ class _PodcastTitle extends HookConsumerWidget {
               style: textTheme.titleMedium,
               textAlign: TextAlign.center,
             ),
-            Text(
-              podcast.copyright,
-              style: textTheme.bodySmall,
-              textAlign: TextAlign.center,
-            ),
+            if (podcast.copyright != null)
+              Text(
+                podcast.copyright!,
+                style: textTheme.bodySmall,
+                textAlign: TextAlign.center,
+              ),
             _PodcastDescription(
               key: descriptionKey,
               content: PodcastHtml(
@@ -277,12 +320,12 @@ class _SwitchBar extends ConsumerWidget {
               hasSeasons: seasons.isNotEmpty,
               onViewModeChanged: (mode) {
                 ref
-                    .read(podcastViewInfoProvider(podcast.guid).notifier)
+                    .read(podcastViewInfoProvider(podcast.id).notifier)
                     .setViewMode(mode);
               },
               onSortOrderChanged: () {
                 ref
-                    .read(podcastViewInfoProvider(podcast.guid).notifier)
+                    .read(podcastViewInfoProvider(podcast.id).notifier)
                     .toggleAscend();
               },
             ),
@@ -366,7 +409,7 @@ class _PodcastViewModeSwitch extends StatelessWidget {
                     : const SizedBox(width: 18),
                 const SizedBox(width: 4),
                 Text(
-                  L10n.of(context)!.viewSortOldestToNewest,
+                  L10n.of(context).viewSortOldestToNewest,
                   style: TextStyle(
                     color: theme.colorScheme.onSecondaryContainer,
                   ),
@@ -393,7 +436,7 @@ class _PodcastViewModeSwitch extends StatelessWidget {
   }
 
   String _labelOf(BuildContext context, PodcastDetailViewMode viewMode) {
-    final l10n = L10n.of(context)!;
+    final l10n = L10n.of(context);
     switch (viewMode) {
       case PodcastDetailViewMode.episodes:
         return l10n.viewModeEpisodes;

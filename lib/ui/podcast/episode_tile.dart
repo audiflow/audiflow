@@ -28,7 +28,7 @@ class EpisodeTile extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final showsThumbnail = this.showsThumbnail && episode.thumbnailUrl != null;
+    final showsThumbnail = this.showsThumbnail && episode.imageUrl != null;
     return showsThumbnail
         ? _EpisodeTileWithThumbnail(episode)
         : _EpisodeTileNoThumbnail(episode);
@@ -44,7 +44,7 @@ class _EpisodeTileWithThumbnail extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final thumbnailUrl = episode.thumbnailUrl ?? episode.imageUrl;
+    final thumbnailUrl = episode.imageUrl ?? episode.imageUrl;
     final theme = Theme.of(context);
     return Material(
       child: Container(

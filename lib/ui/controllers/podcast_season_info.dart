@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:audiflow/entities/entities.dart';
-import 'package:audiflow/repository/episode_event.dart';
+import 'package:audiflow/events/episode_event.dart';
 import 'package:audiflow/repository/repository_provider.dart';
 import 'package:collection/collection.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
@@ -17,7 +17,7 @@ class PodcastSeasonInfo extends _$PodcastSeasonInfo {
   @override
   Future<PodcastSeasonInfoState> build(Season season) async {
     final statsList = await _repository
-        .findEpisodeStatsList(season.episodes.map((e) => e.guid));
+        .findEpisodeStatsList(season.episodes.map((e) => e.id));
     _listen();
     return PodcastSeasonInfoState(
       episodes: season.episodes,
@@ -31,7 +31,7 @@ class PodcastSeasonInfo extends _$PodcastSeasonInfo {
       if (event case EpisodeUpdatedEvent(episode: final episode)) {
         final episodes = state.requireValue.episodes;
         if (!episodes.any(
-          (e) => e.pguid == episode.guid && e.season == episode.season,
+          (e) => e.pid == episode.pid && e.season == episode.season,
         )) {
           return;
         }
@@ -56,7 +56,7 @@ class PodcastSeasonInfo extends _$PodcastSeasonInfo {
       } else if (event case EpisodeStatsUpdatedEvent(stats: final stats)) {
         final statsList = state.requireValue.statsList;
         final oldStats =
-            statsList.firstWhereOrNull((s) => s.guid == stats.guid);
+            statsList.firstWhereOrNull((s) => s.pid == stats.pid);
         if (oldStats == null || oldStats.played == stats.played) {
           return;
         }
@@ -64,7 +64,7 @@ class PodcastSeasonInfo extends _$PodcastSeasonInfo {
         state = AsyncData(
           state.requireValue.copyWith(
             statsList: statsList
-                .map((s) => s.guid == stats.guid ? event.stats : s)
+                .map((s) => s.pid == stats.pid ? event.stats : s)
                 .toList(),
           ),
         );

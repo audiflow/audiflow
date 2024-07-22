@@ -1,7 +1,7 @@
 import 'package:audiflow/entities/entities.dart';
 import 'package:audiflow/gen/l10n/l10n.dart';
 import 'package:audiflow/ui/app/router/router_provider.dart';
-import 'package:audiflow/ui/providers/podcast_season_info_provider.dart';
+import 'package:audiflow/ui/controllers/podcast_season_info.dart';
 import 'package:audiflow/ui/util/datetime.dart';
 import 'package:audiflow/ui/widgets/tile_image.dart';
 import 'package:flutter/material.dart';
@@ -40,7 +40,7 @@ class SeasonTile extends ConsumerWidget {
                   key: Key('seasonhero${season.guid}'),
                   tag: season.guid,
                   child: TileImage(
-                    url: season.thumbnailUrl ?? season.imageUrl!,
+                    url: season.imageUrl ?? season.imageUrl!,
                     size: 60,
                   ),
                 ),
@@ -74,7 +74,7 @@ class _SeasonTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final l10n = L10n.of(context)!;
+    final l10n = L10n.of(context);
     return Text(
       season.title != null
           ? season.seasonNum != null
@@ -100,7 +100,7 @@ class _SeasonSubtitle extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final l10n = L10n.of(context)!;
+    final l10n = L10n.of(context);
 
     final firstDate =
         _dateString(context, season.episodes.first.publicationDate);
@@ -150,7 +150,7 @@ class _SeasonSubtitle extends ConsumerWidget {
       return '';
     }
 
-    final l10n = L10n.of(context)!;
+    final l10n = L10n.of(context);
     if (length.inSeconds < 60) {
       return '${length.inSeconds}${l10n.sec}';
     } else if (length.inMinutes < 120) {

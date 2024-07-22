@@ -1,6 +1,6 @@
 import 'package:audiflow/entities/entities.dart';
 import 'package:audiflow/ui/app/router/router_provider.dart';
-import 'package:audiflow/ui/providers/episode_info_provider.dart';
+import 'package:audiflow/ui/controllers/episode_info.dart';
 import 'package:audiflow/ui/widgets/tile_image.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';

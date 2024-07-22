@@ -1,7 +1,7 @@
 import 'package:audiflow/entities/entities.dart';
+import 'package:audiflow/ui/controllers/podcast_seasons.dart';
+import 'package:audiflow/ui/controllers/podcast_view_info.dart';
 import 'package:audiflow/ui/podcast/season_tile.dart';
-import 'package:audiflow/ui/providers/podcast_seasons_provider.dart';
-import 'package:audiflow/ui/providers/podcast_view_info_provider.dart';
 import 'package:audiflow/ui/widgets/fill_remaining_error.dart';
 import 'package:audiflow/ui/widgets/fill_remaining_loading.dart';
 import 'package:flutter/material.dart';
@@ -24,7 +24,7 @@ class SeasonList extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final seasonsState = ref.watch(podcastSeasonsProvider(podcast));
-    final podcastViewState = ref.watch(podcastViewInfoProvider(podcast.guid));
+    final podcastViewState = ref.watch(podcastViewInfoProvider(podcast.id));
     if (podcastViewState.isLoading || podcastViewState.isLoading) {
       return const FillRemainingLoading();
     } else if (seasonsState.hasError || seasonsState.value!.isEmpty) {

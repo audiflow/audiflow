@@ -115,6 +115,8 @@ class PodcastService {
     }
   }
 
+  // --- API services ---
+
   Future<List<ITunesSearchItem>> search({
     required String term,
     Country? country,
@@ -176,6 +178,8 @@ class PodcastService {
     }
     return null;
   }
+
+  // --- Podcast ---
 
   Future<Podcast?> findPodcastBy({
     String? feedUrl,
@@ -366,6 +370,17 @@ class PodcastService {
     //     guid: episode.guid,
     //     subtitles: subtitles,
     //   );
+  }
+
+  // --- PodcastStats ---
+
+  Future<PodcastStats?> findPodcastStatsBy({
+    int? pid,
+    String? feedUrl,
+  }) async {
+    assert(pid != null || feedUrl != null);
+    final id = pid ?? Podcast.pidFrom(feedUrl!);
+    return _repository.findPodcastStats(id);
   }
 
   Future<List<Episode>> loadEpisodesByPodcastId(int pid) async {

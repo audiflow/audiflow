@@ -1,9 +1,9 @@
 import 'dart:math' as math;
 
-import 'package:audiflow/gen/l10n/l10n.dart';
 import 'package:audiflow/entities/entities.dart';
+import 'package:audiflow/gen/l10n/l10n.dart';
 import 'package:audiflow/services/audio/audio_player_service.dart';
-import 'package:audiflow/ui/providers/episode_info_provider.dart';
+import 'package:audiflow/ui/controllers/episode_info.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -82,13 +82,13 @@ class SmallPlayButton extends ConsumerWidget {
   String _duration(BuildContext context, Duration remaining) {
     if (remaining.inSeconds < 60) {
       final seconds = math.max(0, remaining.inSeconds);
-      return '$seconds${L10n.of(context)!.sec}';
+      return '$seconds${L10n.of(context).sec}';
     }
     final minutes = math.max(
       0,
       remaining.inMinutes + (0 < remaining.inSeconds.remainder(60) ? 1 : 0),
     );
-    return '$minutes${L10n.of(context)!.min}';
+    return '$minutes${L10n.of(context).min}';
   }
 }
 

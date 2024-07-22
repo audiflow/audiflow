@@ -65,7 +65,7 @@ class EpisodeInfo extends _$EpisodeInfo {
             if (episode.id == state.requireValue.episode.id) {
               state = AsyncData(state.requireValue.copyWith(episode: episode));
             }
-          case EpisodesUpdatedEvent(episodes: final episodes):
+          case EpisodesAddedEvent(episodes: final episodes):
             break;
             // if (episode.id == state.requireValue.episode.id) {
             //   state = AsyncData(state.requireValue.copyWith(episode: episode));

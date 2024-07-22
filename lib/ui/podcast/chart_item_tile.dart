@@ -1,5 +1,5 @@
 import 'package:audiflow/entities/entities.dart';
-import 'package:audiflow/services/podcast/podcast_service_provider.dart';
+import 'package:audiflow/services/podcast/podcast_service.dart';
 import 'package:audiflow/stopwatch.dart';
 import 'package:audiflow/ui/app/router/router_provider.dart';
 import 'package:audiflow/ui/widgets/tile_image.dart';
@@ -30,12 +30,7 @@ class ChartItemTile extends ConsumerWidget {
           if (podcast != null) {
             ref.read(routerProvider).pushPodcastDetail(podcast);
           } else {
-            ref.read(routerProvider).pushPodcastIntro(
-                  collectionId: chartItem.collectionId,
-                  title: chartItem.collectionName,
-                  author: chartItem.artistName,
-                  thumbnailUrl: chartItem.artworkUrl100,
-                );
+            ref.read(routerProvider).pushPodcastDetailFromChart(chartItem);
           }
         });
       },

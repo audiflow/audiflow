@@ -1,12 +1,12 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'podcast_details.dart';
+part of 'podcast_info.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$podcastDetailsHash() => r'370f7496ebe3e528bb446914b23c58468cd809cf';
+String _$podcastInfoHash() => r'60b218a4b0af32f12804a791c8aa8bf7b3c71b17';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -29,40 +29,40 @@ class _SystemHash {
   }
 }
 
-abstract class _$PodcastDetails
-    extends BuildlessAutoDisposeNotifier<PodcastDetailsState> {
+abstract class _$PodcastInfo
+    extends BuildlessAutoDisposeAsyncNotifier<PodcastInfoState> {
   late final String? feedUrl;
   late final int? collectionId;
 
-  PodcastDetailsState build({
+  FutureOr<PodcastInfoState> build({
     String? feedUrl,
     int? collectionId,
   });
 }
 
-/// See also [PodcastDetails].
-@ProviderFor(PodcastDetails)
-const podcastDetailsProvider = PodcastDetailsFamily();
+/// See also [PodcastInfo].
+@ProviderFor(PodcastInfo)
+const podcastInfoProvider = PodcastInfoFamily();
 
-/// See also [PodcastDetails].
-class PodcastDetailsFamily extends Family<PodcastDetailsState> {
-  /// See also [PodcastDetails].
-  const PodcastDetailsFamily();
+/// See also [PodcastInfo].
+class PodcastInfoFamily extends Family<AsyncValue<PodcastInfoState>> {
+  /// See also [PodcastInfo].
+  const PodcastInfoFamily();
 
-  /// See also [PodcastDetails].
-  PodcastDetailsProvider call({
+  /// See also [PodcastInfo].
+  PodcastInfoProvider call({
     String? feedUrl,
     int? collectionId,
   }) {
-    return PodcastDetailsProvider(
+    return PodcastInfoProvider(
       feedUrl: feedUrl,
       collectionId: collectionId,
     );
   }
 
   @override
-  PodcastDetailsProvider getProviderOverride(
-    covariant PodcastDetailsProvider provider,
+  PodcastInfoProvider getProviderOverride(
+    covariant PodcastInfoProvider provider,
   ) {
     return call(
       feedUrl: provider.feedUrl,
@@ -82,34 +82,34 @@ class PodcastDetailsFamily extends Family<PodcastDetailsState> {
       _allTransitiveDependencies;
 
   @override
-  String? get name => r'podcastDetailsProvider';
+  String? get name => r'podcastInfoProvider';
 }
 
-/// See also [PodcastDetails].
-class PodcastDetailsProvider extends AutoDisposeNotifierProviderImpl<
-    PodcastDetails, PodcastDetailsState> {
-  /// See also [PodcastDetails].
-  PodcastDetailsProvider({
+/// See also [PodcastInfo].
+class PodcastInfoProvider extends AutoDisposeAsyncNotifierProviderImpl<
+    PodcastInfo, PodcastInfoState> {
+  /// See also [PodcastInfo].
+  PodcastInfoProvider({
     String? feedUrl,
     int? collectionId,
   }) : this._internal(
-          () => PodcastDetails()
+          () => PodcastInfo()
             ..feedUrl = feedUrl
             ..collectionId = collectionId,
-          from: podcastDetailsProvider,
-          name: r'podcastDetailsProvider',
+          from: podcastInfoProvider,
+          name: r'podcastInfoProvider',
           debugGetCreateSourceHash:
               const bool.fromEnvironment('dart.vm.product')
                   ? null
-                  : _$podcastDetailsHash,
-          dependencies: PodcastDetailsFamily._dependencies,
+                  : _$podcastInfoHash,
+          dependencies: PodcastInfoFamily._dependencies,
           allTransitiveDependencies:
-              PodcastDetailsFamily._allTransitiveDependencies,
+              PodcastInfoFamily._allTransitiveDependencies,
           feedUrl: feedUrl,
           collectionId: collectionId,
         );
 
-  PodcastDetailsProvider._internal(
+  PodcastInfoProvider._internal(
     super._createNotifier, {
     required super.name,
     required super.dependencies,
@@ -124,8 +124,8 @@ class PodcastDetailsProvider extends AutoDisposeNotifierProviderImpl<
   final int? collectionId;
 
   @override
-  PodcastDetailsState runNotifierBuild(
-    covariant PodcastDetails notifier,
+  FutureOr<PodcastInfoState> runNotifierBuild(
+    covariant PodcastInfo notifier,
   ) {
     return notifier.build(
       feedUrl: feedUrl,
@@ -134,10 +134,10 @@ class PodcastDetailsProvider extends AutoDisposeNotifierProviderImpl<
   }
 
   @override
-  Override overrideWith(PodcastDetails Function() create) {
+  Override overrideWith(PodcastInfo Function() create) {
     return ProviderOverride(
       origin: this,
-      override: PodcastDetailsProvider._internal(
+      override: PodcastInfoProvider._internal(
         () => create()
           ..feedUrl = feedUrl
           ..collectionId = collectionId,
@@ -153,14 +153,14 @@ class PodcastDetailsProvider extends AutoDisposeNotifierProviderImpl<
   }
 
   @override
-  AutoDisposeNotifierProviderElement<PodcastDetails, PodcastDetailsState>
+  AutoDisposeAsyncNotifierProviderElement<PodcastInfo, PodcastInfoState>
       createElement() {
-    return _PodcastDetailsProviderElement(this);
+    return _PodcastInfoProviderElement(this);
   }
 
   @override
   bool operator ==(Object other) {
-    return other is PodcastDetailsProvider &&
+    return other is PodcastInfoProvider &&
         other.feedUrl == feedUrl &&
         other.collectionId == collectionId;
   }
@@ -175,7 +175,7 @@ class PodcastDetailsProvider extends AutoDisposeNotifierProviderImpl<
   }
 }
 
-mixin PodcastDetailsRef on AutoDisposeNotifierProviderRef<PodcastDetailsState> {
+mixin PodcastInfoRef on AutoDisposeAsyncNotifierProviderRef<PodcastInfoState> {
   /// The parameter `feedUrl` of this provider.
   String? get feedUrl;
 
@@ -183,14 +183,15 @@ mixin PodcastDetailsRef on AutoDisposeNotifierProviderRef<PodcastDetailsState> {
   int? get collectionId;
 }
 
-class _PodcastDetailsProviderElement extends AutoDisposeNotifierProviderElement<
-    PodcastDetails, PodcastDetailsState> with PodcastDetailsRef {
-  _PodcastDetailsProviderElement(super.provider);
+class _PodcastInfoProviderElement
+    extends AutoDisposeAsyncNotifierProviderElement<PodcastInfo,
+        PodcastInfoState> with PodcastInfoRef {
+  _PodcastInfoProviderElement(super.provider);
 
   @override
-  String? get feedUrl => (origin as PodcastDetailsProvider).feedUrl;
+  String? get feedUrl => (origin as PodcastInfoProvider).feedUrl;
   @override
-  int? get collectionId => (origin as PodcastDetailsProvider).collectionId;
+  int? get collectionId => (origin as PodcastInfoProvider).collectionId;
 }
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member
