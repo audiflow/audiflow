@@ -22,7 +22,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-part 'app_wide.g.dart';
+part 'app_wide_initializer.g.dart';
 
 @Riverpod(keepAlive: true)
 bool appWide(AppWideRef ref) {
