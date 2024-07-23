@@ -1,9 +1,9 @@
 import 'dart:math' as math;
 
+import 'package:audiflow/common/service/app_wide_initializer.dart';
 import 'package:audiflow/gen/l10n/l10n.dart';
 import 'package:audiflow/services/audio/audio_player_service.dart';
 import 'package:audiflow/services/podcast/podcast_service.dart';
-import 'package:audiflow/ui/controllers/app_wide.dart';
 import 'package:audiflow/ui/mini_player/utils.dart';
 import 'package:audiflow/ui/player/player.dart';
 import 'package:flutter/material.dart';
