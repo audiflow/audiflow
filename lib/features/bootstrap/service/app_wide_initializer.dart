@@ -4,17 +4,16 @@ import 'package:audiflow/events/download_event.dart';
 import 'package:audiflow/events/episode_event.dart';
 import 'package:audiflow/events/podcast_event.dart';
 import 'package:audiflow/events/transcript_event.dart';
+import 'package:audiflow/features/browser/common/data/podcast_api_repository.dart';
+import 'package:audiflow/features/browser/common/ui/subscribed_podcast_refresher.dart';
 import 'package:audiflow/features/download/service/download_manager.dart';
+import 'package:audiflow/features/player/service/audio_player_service.dart';
+import 'package:audiflow/features/player/service/audio_position_recorder.dart';
+import 'package:audiflow/features/player/service/audio_queue_manager.dart';
 import 'package:audiflow/features/preference/data/app_preference_repository.dart';
 import 'package:audiflow/features/queue/service/queue_manager.dart';
-import 'package:audiflow/repository/repository_provider.dart';
 import 'package:audiflow/services/audio/audio_player_event.dart';
-import 'package:audiflow/services/audio/audio_player_service.dart';
-import 'package:audiflow/services/audio/audio_position_saver.dart';
-import 'package:audiflow/services/audio/audio_queue_manager.dart';
 import 'package:audiflow/services/connectivity/connectivity_state.dart';
-import 'package:audiflow/services/podcast/api/podcast_api.dart';
-import 'package:audiflow/ui/controllers/podcast_refresher.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -27,17 +26,16 @@ part 'app_wide_initializer.g.dart';
 @Riverpod(keepAlive: true)
 bool appWide(AppWideRef ref) {
   ref
-    ..listen(repositoryProvider, (_, __) {})
-    ..listen(podcastApiProvider, (_, __) {})
+    ..listen(podcastApiRepositoryProvider, (_, __) {})
     ..listen(appPreferenceRepositoryProvider, (_, __) {})
     ..listen(connectivityStateProvider, (_, __) {})
     ..listen(audioPlayerServiceProvider, (_, __) {})
     ..listen(audioPlayerEventStreamProvider, (_, __) {})
     ..listen(audioQueueManagerProvider, (_, __) {})
-    ..listen(audioPositionSaverProvider, (_, __) {})
+    ..listen(audioPositionRecorderProvider, (_, __) {})
     ..listen(downloadManagerProvider, (_, __) {})
     ..listen(podcastEventStreamProvider, (_, __) {})
-    ..listen(podcastRefresherProvider, (_, __) {})
+    ..listen(subscribedPodcastRefresherProvider, (_, __) {})
     ..listen(episodeEventStreamProvider, (_, __) {})
     ..listen(downloadEventStreamProvider, (_, __) {})
     ..listen(queueManagerProvider, (_, __) {})
@@ -62,16 +60,14 @@ class AppWideProvidersInitializer extends HookConsumerWidget {
           return;
         }
 
-        ref.read(repositoryProvider).ensureInitialized().then((_) {
-          return Future.wait([
-            ref.read(downloadManagerProvider).ensureInitialized(),
-            ref.read(queueManagerProvider.notifier).ensureInitialized(),
-            ref.read(audioPlayerServiceProvider.notifier).ensureInitialized(),
-            _setupCertificateAuthority().then((ca) {
-              ref.read(podcastApiProvider).addClientAuthorityBytes(ca);
-            }),
-          ]);
-        }).then((_) {
+        Future.wait([
+          ref.read(downloadManagerProvider).ensureInitialized(),
+          ref.read(queueManagerProvider.notifier).ensureInitialized(),
+          ref.read(audioPlayerServiceProvider.notifier).ensureInitialized(),
+          _setupCertificateAuthority().then((ca) {
+            ref.read(podcastApiRepositoryProvider).setClientAuthorityBytes(ca);
+          }),
+        ]).then((_) {
           initState.value = true;
         });
         return;
