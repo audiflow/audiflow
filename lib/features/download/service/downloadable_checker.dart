@@ -1,4 +1,4 @@
-import 'package:audiflow/entities/entities.dart';
+import 'package:audiflow/features/feed/model/model.dart';
 import 'package:audiflow/gen/l10n/l10n.dart';
 import 'package:audiflow/services/connectivity/connectivity.dart';
 import 'package:audiflow/services/settings/settings_service.dart';

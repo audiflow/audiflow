@@ -4,13 +4,13 @@ import 'dart:io';
 import 'package:audiflow/core/logger.dart';
 import 'package:audiflow/core/utils.dart';
 import 'package:audiflow/entities/app_settings.dart';
-import 'package:audiflow/entities/downloadable.dart';
-import 'package:audiflow/entities/episode.dart';
-import 'package:audiflow/entities/transcript.dart';
-import 'package:audiflow/repository/repository_provider.dart';
-import 'package:audiflow/services/download/download_manager_provider.dart';
-import 'package:audiflow/services/download/download_service.dart';
-import 'package:audiflow/services/download/downloadable_checker.dart';
+import 'package:audiflow/features/browser/common/data/stats_repository.dart';
+import 'package:audiflow/features/download/data/download_repository.dart';
+import 'package:audiflow/features/download/model/downloadable.dart';
+import 'package:audiflow/features/download/service/download_manager.dart';
+import 'package:audiflow/features/download/service/download_service.dart';
+import 'package:audiflow/features/feed/model/model.dart';
+import 'package:audiflow/features/download/service/downloadable_checker.dart';
 import 'package:audiflow/services/podcast/podcast_service.dart';
 import 'package:audiflow/services/settings/settings_service.dart';
 import 'package:collection/collection.dart' show IterableExtension;
@@ -29,13 +29,16 @@ class MobileDownloadService extends DownloadService {
 
   final Ref _ref;
 
-  Repository get _repository => _ref.watch(repositoryProvider);
+  StatsRepository get _statsRepository => _ref.read(statsRepositoryProvider);
 
-  DownloadManager get _downloadManager => _ref.watch(downloadManagerProvider);
+  DownloadRepository get _downloadRepository =>
+      _ref.read(downloadRepositoryProvider);
 
-  PodcastService get _podcastService => _ref.watch(podcastServiceProvider);
+  DownloadManager get _downloadManager => _ref.read(downloadManagerProvider);
 
-  AppSettings get _appSettings => _ref.watch(settingsServiceProvider);
+  PodcastService get _podcastService => _ref.read(podcastServiceProvider);
+
+  AppSettings get _appSettings => _ref.read(settingsServiceProvider);
 
   BehaviorSubject<DownloadProgress> downloadProgress =
       BehaviorSubject<DownloadProgress>();
@@ -47,12 +50,12 @@ class MobileDownloadService extends DownloadService {
 
   @override
   Future<List<Downloadable>> loadAllDownloads() async {
-    return _repository.findAllDownloads();
+    return _downloadRepository.findAllDownloads();
   }
 
   @override
   Future<void> deleteDownload(Episode episode) async {
-    final download = await _repository.findDownload(episode.id);
+    final download = await _downloadRepository.findDownload(episode.id);
     if (download == null) {
       return;
     }
@@ -67,7 +70,7 @@ class MobileDownloadService extends DownloadService {
       await FlutterDownloader.cancel(taskId: download.taskId);
     }
 
-    await _repository.deleteDownload(download);
+    await _downloadRepository.deleteDownload(download);
 
     if (await hasStoragePermission(_appSettings)) {
       final f =
@@ -89,10 +92,10 @@ class MobileDownloadService extends DownloadService {
     }
 
     final ids = episodes.map((e) => e.id);
-    final downloads = await _repository.findDownloads(ids);
+    final downloads = await _downloadRepository.findDownloads(ids);
     final statsList = unplayedOnly
         ? <EpisodeStats>[]
-        : await _repository.findEpisodeStatsList(ids);
+        : await _statsRepository.findEpisodeStatsList(ids);
 
     final toDownload = episodes.where((e) {
       final stats = statsList.firstWhereOrNull((s) => s?.id == e.id);
@@ -230,7 +233,7 @@ class MobileDownloadService extends DownloadService {
         state: DownloadState.downloading,
       );
 
-      await _repository.saveDownload(download);
+      await _downloadRepository.saveDownload(download);
 
       return true;
       // ignore: avoid_catches_without_on_clauses
@@ -242,11 +245,11 @@ class MobileDownloadService extends DownloadService {
 
   @override
   Future<Downloadable?> findDownload(Episode episode) {
-    return _repository.findDownload(episode.id);
+    return _downloadRepository.findDownload(episode.id);
   }
 
   Future<void> _updateDownloadProgress(DownloadProgress progress) async {
-    var download = await _repository.findDownloadByTaskId(progress.id);
+    var download = await _downloadRepository.findDownloadByTaskId(progress.id);
     if (download == null) {
       return;
     }
@@ -262,7 +265,7 @@ class MobileDownloadService extends DownloadService {
       percentage: progress.percentage,
       state: progress.status,
     );
-    await _repository.saveDownload(download);
+    await _downloadRepository.saveDownload(download);
 
     if (progress.status == DownloadState.downloaded &&
         await hasStoragePermission(_appSettings)) {
@@ -271,11 +274,11 @@ class MobileDownloadService extends DownloadService {
   }
 
   Future<void> _onDownloadComplete(Downloadable download) async {
-    final stats = await _repository.findEpisodeStats(download.id);
+    final stats = await _statsRepository.findEpisodeStats(download.id);
     if (stats?.durationMS == null) {
       final path = await resolvePath(_appSettings, download);
       final mp3Info = MP3Processor.fromFile(File(path));
-      await _repository.updateEpisodeStats(
+      await _statsRepository.updateEpisodeStats(
         EpisodeStatsUpdateParam(
           id: download.id,
           pid: download.pid,

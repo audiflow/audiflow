@@ -1,11 +1,10 @@
-import 'package:audiflow/entities/entities.dart';
 import 'package:audiflow/events/download_event.dart';
-import 'package:audiflow/services/download/download_service_provider.dart';
+import 'package:audiflow/features/download/model/downloadable.dart';
+import 'package:audiflow/features/download/service/download_service.dart';
+import 'package:audiflow/features/feed/model/model.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-export 'package:audiflow/services/download/download_service.dart';
-
-part 'download_progress_provider.g.dart';
+part 'download_progress.g.dart';
 
 @riverpod
 class DownloadProgress extends _$DownloadProgress {

@@ -1,6 +1,9 @@
 import 'dart:async';
 
-import 'package:audiflow/entities/downloadable.dart';
+import 'package:audiflow/features/download/model/downloadable.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+part 'download_manager.g.dart';
 
 class DownloadProgress {
   DownloadProgress(
@@ -22,4 +25,10 @@ abstract class DownloadManager {
   Stream<DownloadProgress> get downloadProgress;
 
   void dispose();
+}
+
+@Riverpod(keepAlive: true)
+DownloadManager downloadManager(DownloadManagerRef ref) {
+  // * Override this in the main method
+  throw UnimplementedError();
 }

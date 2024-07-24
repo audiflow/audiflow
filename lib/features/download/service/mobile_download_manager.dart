@@ -3,12 +3,11 @@ import 'dart:isolate';
 import 'dart:ui';
 
 import 'package:audiflow/core/environment.dart';
-import 'package:audiflow/entities/downloadable.dart';
-import 'package:audiflow/services/download/download_manager.dart';
-import 'package:audiflow/services/download/download_manager_provider.dart';
+import 'package:audiflow/core/logger.dart';
+import 'package:audiflow/features/download/model/downloadable.dart';
+import 'package:audiflow/features/download/service/download_manager.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:logging/logging.dart';
 
 /// A [DownloadManager] for handling downloading of podcasts on a mobile device.
 class MobileDownloaderManager implements DownloadManager {
@@ -16,7 +15,6 @@ class MobileDownloaderManager implements DownloadManager {
 
   final Ref ref;
   static const portName = 'downloader_send_port';
-  final log = Logger('MobileDownloaderManager');
   final ReceivePort _port = ReceivePort();
   final downloadController = StreamController<DownloadProgress>();
   var _lastUpdateTime = 0;
@@ -32,7 +30,7 @@ class MobileDownloaderManager implements DownloadManager {
     }
     _initialized = true;
 
-    log.fine('Initialising download manager');
+    logger.d('Initialising download manager');
 
     await FlutterDownloader.initialize();
     IsolateNameServer.removePortNameMapping(portName);
@@ -105,18 +103,21 @@ class MobileDownloaderManager implements DownloadManager {
     var state = DownloadState.none;
     final updateTime = DateTime.now().millisecondsSinceEpoch;
 
-    if (status == DownloadTaskStatus.enqueued) {
-      state = DownloadState.queued;
-    } else if (status == DownloadTaskStatus.canceled) {
-      state = DownloadState.cancelled;
-    } else if (status == DownloadTaskStatus.complete) {
-      state = DownloadState.downloaded;
-    } else if (status == DownloadTaskStatus.running) {
-      state = DownloadState.downloading;
-    } else if (status == DownloadTaskStatus.failed) {
-      state = DownloadState.failed;
-    } else if (status == DownloadTaskStatus.paused) {
-      state = DownloadState.paused;
+    switch (status) {
+      case DownloadTaskStatus.enqueued:
+        state = DownloadState.queued;
+      case DownloadTaskStatus.canceled:
+        state = DownloadState.cancelled;
+      case DownloadTaskStatus.complete:
+        state = DownloadState.downloaded;
+      case DownloadTaskStatus.running:
+        state = DownloadState.downloading;
+      case DownloadTaskStatus.failed:
+        state = DownloadState.failed;
+      case DownloadTaskStatus.paused:
+        state = DownloadState.paused;
+      case DownloadTaskStatus.undefined:
+        state = DownloadState.none;
     }
 
     /// If we are running, we want to limit notifications to 1 per second.
@@ -125,7 +126,7 @@ class MobileDownloaderManager implements DownloadManager {
     if (status != DownloadTaskStatus.running ||
         progress == 0 ||
         progress == 100 ||
-        updateTime > _lastUpdateTime + 1000) {
+        _lastUpdateTime + 1000 < updateTime) {
       downloadController.add(DownloadProgress(id, progress, state));
       _lastUpdateTime = updateTime;
     }
