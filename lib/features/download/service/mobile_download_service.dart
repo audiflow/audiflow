@@ -8,10 +8,10 @@ import 'package:audiflow/features/download/service/download_manager.dart';
 import 'package:audiflow/features/download/service/download_path.dart';
 import 'package:audiflow/features/download/service/download_service.dart';
 import 'package:audiflow/features/download/service/downloadable_checker.dart';
+import 'package:audiflow/features/feed/data/episode_repository.dart';
 import 'package:audiflow/features/feed/model/model.dart';
 import 'package:audiflow/features/preference/data/app_preference_repository.dart';
 import 'package:audiflow/features/preference/model/app_preference.dart';
-import 'package:audiflow/services/podcast/podcast_service.dart';
 import 'package:audiflow/utils/http.dart';
 import 'package:audiflow/utils/logger.dart';
 import 'package:collection/collection.dart' show IterableExtension;
@@ -30,6 +30,9 @@ class MobileDownloadService extends DownloadService {
 
   final Ref _ref;
 
+  EpisodeRepository get _episodeRepository =>
+      _ref.read(episodeRepositoryProvider);
+
   StatsRepository get _statsRepository => _ref.read(statsRepositoryProvider);
 
   DownloadRepository get _downloadRepository =>
@@ -38,8 +41,6 @@ class MobileDownloadService extends DownloadService {
   DownloadManager get _downloadManager => _ref.read(downloadManagerProvider);
 
   DownloadPath get _downloadPath => _ref.read(downloadPathProvider);
-
-  PodcastService get _podcastService => _ref.read(podcastServiceProvider);
 
   AppPreference get _appPreference =>
       _ref.read(appPreferenceRepositoryProvider);
@@ -169,7 +170,7 @@ class MobileDownloadService extends DownloadService {
       }
 
       if (episode != newEpisode) {
-        await _podcastService.saveEpisode(newEpisode);
+        await _episodeRepository.saveEpisode(newEpisode);
       }
 
       // Ensure the download directory exists
