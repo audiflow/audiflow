@@ -2,16 +2,17 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:audiflow/core/utils.dart';
-import 'package:audiflow/entities/app_settings.dart';
 import 'package:audiflow/features/browser/common/data/stats_repository.dart';
 import 'package:audiflow/features/download/data/download_repository.dart';
 import 'package:audiflow/features/download/model/downloadable.dart';
 import 'package:audiflow/features/download/service/download_manager.dart';
+import 'package:audiflow/features/download/service/download_path.dart';
 import 'package:audiflow/features/download/service/download_service.dart';
 import 'package:audiflow/features/download/service/downloadable_checker.dart';
 import 'package:audiflow/features/feed/model/model.dart';
+import 'package:audiflow/features/preference/data/app_preference_repository.dart';
+import 'package:audiflow/features/preference/model/app_preference.dart';
 import 'package:audiflow/services/podcast/podcast_service.dart';
-import 'package:audiflow/services/settings/settings_service.dart';
 import 'package:audiflow/utils/logger.dart';
 import 'package:collection/collection.dart' show IterableExtension;
 import 'package:flutter_downloader/flutter_downloader.dart';
@@ -36,9 +37,12 @@ class MobileDownloadService extends DownloadService {
 
   DownloadManager get _downloadManager => _ref.read(downloadManagerProvider);
 
+  DownloadPath get _downloadPath => _ref.read(downloadPathProvider);
+
   PodcastService get _podcastService => _ref.read(podcastServiceProvider);
 
-  AppSettings get _appSettings => _ref.read(settingsServiceProvider);
+  AppPreference get _appPreference =>
+      _ref.read(appPreferenceRepositoryProvider);
 
   BehaviorSubject<DownloadProgress> downloadProgress =
       BehaviorSubject<DownloadProgress>();
@@ -62,7 +66,7 @@ class MobileDownloadService extends DownloadService {
 
     // If this episode is currently downloading, cancel the download first.
     if (download.state == DownloadState.downloaded) {
-      if (_appSettings.markDeletedEpisodesAsPlayed) {
+      if (_appPreference.markDeletedEpisodesAsPlayed) {
         // episode.played = true;
       }
     } else if (download.state == DownloadState.downloading &&
@@ -72,9 +76,9 @@ class MobileDownloadService extends DownloadService {
 
     await _downloadRepository.deleteDownload(download);
 
-    if (await hasStoragePermission(_appSettings)) {
+    if (await _downloadPath.hasStoragePermission()) {
       final f =
-          File.fromUri(Uri.file(await resolvePath(_appSettings, download)));
+          File.fromUri(Uri.file(await _downloadPath.resolvePath(download)));
       if (f.existsSync()) {
         logger.d('Deleting file ${f.path}');
         await f.delete();
@@ -87,7 +91,7 @@ class MobileDownloadService extends DownloadService {
     Iterable<Episode> episodes, {
     bool unplayedOnly = false,
   }) async {
-    if (!await hasStoragePermission(_appSettings)) {
+    if (!await _downloadPath.hasStoragePermission()) {
       return;
     }
 
@@ -122,7 +126,7 @@ class MobileDownloadService extends DownloadService {
 
   @override
   Future<bool> downloadEpisode(Episode episode) async {
-    if (!await hasStoragePermission(_appSettings)) {
+    if (!await _downloadPath.hasStoragePermission()) {
       return false;
     }
 
@@ -169,7 +173,7 @@ class MobileDownloadService extends DownloadService {
       }
 
       // Ensure the download directory exists
-      final directory = await createDownloadDirectory(_appSettings, newEpisode);
+      final directory = await _downloadPath.createDownloadDirectory(newEpisode);
       var uri = Uri.parse(newEpisode.contentUrl);
 
       // Filename should be last segment of URI.
@@ -183,7 +187,7 @@ class MobileDownloadService extends DownloadService {
         return false;
       }
 
-      filename = safeFile(filename);
+      filename = _downloadPath.safeFile(filename);
 
       // The last segment could also be a full URL. Take a second pass.
       if (filename.contains('/')) {
@@ -227,7 +231,7 @@ class MobileDownloadService extends DownloadService {
         pid: episode.pid,
         guid: episode.guid,
         url: url,
-        directory: await directoryToRecord(_appSettings, newEpisode),
+        directory: await _downloadPath.directoryToRecord(newEpisode),
         filename: filename,
         taskId: taskId,
         state: DownloadState.downloading,
@@ -268,7 +272,7 @@ class MobileDownloadService extends DownloadService {
     await _downloadRepository.saveDownload(download);
 
     if (progress.status == DownloadState.downloaded &&
-        await hasStoragePermission(_appSettings)) {
+        await _downloadPath.hasStoragePermission()) {
       await _onDownloadComplete(download);
     }
   }
@@ -276,7 +280,7 @@ class MobileDownloadService extends DownloadService {
   Future<void> _onDownloadComplete(Downloadable download) async {
     final stats = await _statsRepository.findEpisodeStats(download.id);
     if (stats?.durationMS == null) {
-      final path = await resolvePath(_appSettings, download);
+      final path = await _downloadPath.resolvePath(download);
       final mp3Info = MP3Processor.fromFile(File(path));
       await _statsRepository.updateEpisodeStats(
         EpisodeStatsUpdateParam(
