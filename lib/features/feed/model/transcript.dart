@@ -1,4 +1,4 @@
-import 'package:audiflow/core/hash.dart';
+import 'package:audiflow/utils/hash.dart';
 import 'package:isar/isar.dart';
 import 'package:podcast_feed/podcast_feed.dart' as feed;
 

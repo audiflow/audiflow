@@ -1,6 +1,6 @@
-import 'package:audiflow/core/hash.dart';
 import 'package:audiflow/core/utils.dart';
 import 'package:audiflow/features/feed/model/model.dart';
+import 'package:audiflow/utils/hash.dart';
 import 'package:html/parser.dart' show parseFragment;
 import 'package:isar/isar.dart';
 import 'package:podcast_feed/podcast_feed.dart'

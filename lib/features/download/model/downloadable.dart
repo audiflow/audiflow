@@ -1,4 +1,4 @@
-import 'package:audiflow/core/hash.dart';
+import 'package:audiflow/utils/hash.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:isar/isar.dart';
 
