@@ -1,7 +1,7 @@
-import 'package:audiflow/core/logger.dart';
-import 'package:audiflow/entities/entities.dart';
 import 'package:audiflow/events/podcast_event.dart';
-import 'package:audiflow/repository/repository_provider.dart';
+import 'package:audiflow/features/browser/common/data/stats_repository.dart';
+import 'package:audiflow/features/feed/model/model.dart';
+import 'package:audiflow/utils/logger.dart';
 import 'package:collection/collection.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -11,7 +11,8 @@ part 'podcast_subscriptions.g.dart';
 class PodcastSubscriptions extends _$PodcastSubscriptions {
   @override
   Future<List<Podcast>> build() async {
-    final subscriptions = await ref.read(repositoryProvider).subscriptions();
+    final subscriptions =
+        await ref.read(statsRepositoryProvider).subscriptions();
     _listen();
     logger.d('${subscriptions.length} subscriptions');
     return subscriptions;

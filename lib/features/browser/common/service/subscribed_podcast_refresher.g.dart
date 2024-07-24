@@ -1,26 +1,27 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'podcast_refresher.dart';
+part of 'subscribed_podcast_refresher.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$podcastRefresherHash() => r'84b8ea7eb6ef2735bb979e8f1a29accd4484ccd2';
+String _$subscribedPodcastRefresherHash() =>
+    r'f39d21a72aa404da508ff2f7cfc7ae0e594acda7';
 
-/// See also [PodcastRefresher].
-@ProviderFor(PodcastRefresher)
-final podcastRefresherProvider =
-    NotifierProvider<PodcastRefresher, bool>.internal(
-  PodcastRefresher.new,
-  name: r'podcastRefresherProvider',
+/// See also [SubscribedPodcastRefresher].
+@ProviderFor(SubscribedPodcastRefresher)
+final subscribedPodcastRefresherProvider =
+    NotifierProvider<SubscribedPodcastRefresher, bool>.internal(
+  SubscribedPodcastRefresher.new,
+  name: r'subscribedPodcastRefresherProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
       ? null
-      : _$podcastRefresherHash,
+      : _$subscribedPodcastRefresherHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
 
-typedef _$PodcastRefresher = Notifier<bool>;
+typedef _$SubscribedPodcastRefresher = Notifier<bool>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

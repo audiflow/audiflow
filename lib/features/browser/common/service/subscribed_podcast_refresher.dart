@@ -1,23 +1,20 @@
 import 'dart:async';
 
 import 'package:audiflow/core/exception/app_exception.dart';
-import 'package:audiflow/core/logger.dart';
-import 'package:audiflow/entities/podcast.dart';
-import 'package:audiflow/repository/repository_provider.dart';
+import 'package:audiflow/features/browser/common/data/podcast_subscriptions.dart';
+import 'package:audiflow/features/feed/model/model.dart';
 import 'package:audiflow/services/error/error_manager.dart';
-import 'package:audiflow/ui/controllers/podcast_subscriptions.dart';
+import 'package:audiflow/utils/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:rxdart/rxdart.dart';
 
-part 'podcast_refresher.g.dart';
+part 'subscribed_podcast_refresher.g.dart';
 
 @Riverpod(keepAlive: true)
-class PodcastRefresher extends _$PodcastRefresher {
+class SubscribedPodcastRefresher extends _$SubscribedPodcastRefresher {
   final _inputState = PublishSubject<List<Podcast>>();
   Timer? _timer;
   (Podcast, PodcastStats)? _nextRefreshTarget;
-
-  Repository get _repository => ref.read(repositoryProvider);
 
   ErrorManager get _errorManager => ref.read(errorManagerProvider.notifier);
 
