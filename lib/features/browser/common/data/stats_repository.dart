@@ -5,6 +5,14 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 part 'stats_repository.g.dart';
 
 abstract class StatsRepository {
+  // -- Subscriptions
+
+  Future<List<Podcast>> subscriptions();
+
+  Future<void> subscribePodcast(Podcast podcast);
+
+  Future<void> unsubscribePodcast(Podcast podcast);
+
   // -- PodcastStats
 
   Future<PodcastStats?> findPodcastStats(int pid);

@@ -8,6 +8,40 @@ class IsarStatsRepository implements StatsRepository {
 
   final Isar isar;
 
+  // -- Subscriptions
+
+  @override
+  Future<List<Podcast>> subscriptions() async {
+    final statsList = await isar.podcastStats
+        .where()
+        .filter()
+        .subscribedDateIsNotNull()
+        .findAll();
+    return isar.podcasts
+        .getAll(statsList.map((e) => e.id).toList())
+        .then((value) => value.whereNotNull().toList());
+  }
+
+  @override
+  Future<void> subscribePodcast(Podcast podcast) async {
+    await updatePodcastStats(
+      PodcastStatsUpdateParam(
+        id: podcast.id,
+        subscribed: true,
+      ),
+    );
+  }
+
+  @override
+  Future<void> unsubscribePodcast(Podcast podcast) async {
+    await updatePodcastStats(
+      PodcastStatsUpdateParam(
+        id: podcast.id,
+        subscribed: false,
+      ),
+    );
+  }
+
   // -- PodcastStats
 
   @override
