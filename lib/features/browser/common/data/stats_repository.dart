@@ -36,6 +36,18 @@ abstract class StatsRepository {
   Future<List<EpisodeStats>> findPlayedEpisodeStatsList(Id pid);
 
   Future<List<EpisodeStats>> findUnplayedEpisodeStatsList(Id pid);
+
+  // --- Recently played episodes
+
+  Future<(List<Episode>, int?)> findRecentlyPlayedEpisodeList({
+    int? cursor,
+    int limit = 100,
+  });
+
+  Future<void> saveRecentlyPlayedEpisode(
+    Episode episode, {
+    DateTime? playedAt,
+  });
 }
 
 @Riverpod(keepAlive: true)

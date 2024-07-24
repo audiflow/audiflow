@@ -1,26 +1,27 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'audio_queue_manager.dart';
+part of 'audio_position_recorder.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$audioQueueManagerHash() => r'85dac821ea35f2e6ceb54ef0705afbade26602b6';
+String _$audioPositionRecorderHash() =>
+    r'14072a6307a175d05ded598a546df9de94c0641a';
 
-/// See also [AudioQueueManager].
-@ProviderFor(AudioQueueManager)
-final audioQueueManagerProvider =
-    NotifierProvider<AudioQueueManager, bool>.internal(
-  AudioQueueManager.new,
-  name: r'audioQueueManagerProvider',
+/// See also [AudioPositionRecorder].
+@ProviderFor(AudioPositionRecorder)
+final audioPositionRecorderProvider =
+    NotifierProvider<AudioPositionRecorder, AudioPositionSaverState>.internal(
+  AudioPositionRecorder.new,
+  name: r'audioPositionRecorderProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
       ? null
-      : _$audioQueueManagerHash,
+      : _$audioPositionRecorderHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
 
-typedef _$AudioQueueManager = Notifier<bool>;
+typedef _$AudioPositionRecorder = Notifier<AudioPositionSaverState>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

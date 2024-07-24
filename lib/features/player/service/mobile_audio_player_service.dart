@@ -2,14 +2,13 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:audiflow/core/environment.dart';
+import 'package:audiflow/features/download/data/download_repository.dart';
 import 'package:audiflow/features/download/model/downloadable.dart';
 import 'package:audiflow/features/download/service/download_path.dart';
 import 'package:audiflow/features/feed/model/model.dart';
-import 'package:audiflow/features/player/model/audio_state.dart';
 import 'package:audiflow/features/player/service/audio_player_service.dart';
 import 'package:audiflow/features/preference/data/app_preference_repository.dart';
 import 'package:audiflow/features/preference/model/app_preference.dart';
-import 'package:audiflow/repository/repository_provider.dart';
 import 'package:audiflow/services/audio/audio_player_event.dart';
 import 'package:audiflow/services/connectivity/connectivity.dart';
 import 'package:audiflow/services/error/error_manager.dart';
@@ -32,7 +31,8 @@ part 'mobile_audio_player_service.g.dart';
 @Riverpod(keepAlive: true)
 class MobileAudioPlayerService extends _$MobileAudioPlayerService
     implements AudioPlayerService {
-  Repository get _repository => ref.read(repositoryProvider);
+  DownloadRepository get _downloadRepository =>
+      ref.read(downloadRepositoryProvider);
 
   AppPreference get _appSettings => ref.read(appPreferenceRepositoryProvider);
 
@@ -81,7 +81,7 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
     _initialized = true;
     _audioHandler = await AudioService.init(
       builder: () => _DefaultAudioPlayerHandler(
-        repository: _repository,
+        downloadRepository: _downloadRepository,
         preference: _appSettings,
       ),
       config: const AudioServiceConfig(
@@ -293,7 +293,7 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
   }
 
   Future<(String, bool)> _generateEpisodeUri(Episode episode) async {
-    final download = await _repository.findDownload(episode.id);
+    final download = await _downloadRepository.findDownload(episode.id);
     if (download?.state != DownloadState.downloaded) {
       return (episode.contentUrl, false);
     }
@@ -499,13 +499,13 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
 /// package) and the underlying player.
 class _DefaultAudioPlayerHandler extends BaseAudioHandler with SeekHandler {
   _DefaultAudioPlayerHandler({
-    required this.repository,
+    required this.downloadRepository,
     required this.preference,
   }) {
     _initPlayer();
   }
 
-  final Repository repository;
+  final DownloadRepository downloadRepository;
   final AppPreference preference;
 
   static const rewindMillis = 10001;

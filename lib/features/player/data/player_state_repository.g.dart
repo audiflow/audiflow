@@ -1,27 +1,26 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'audio_position_saver.dart';
+part of 'player_state_repository.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$audioPositionSaverHash() =>
-    r'dbebe01cb007c89f039411fec2bb5f4824417719';
+String _$playerStateRepositoryHash() =>
+    r'e6f92e610e24f51568372c02a8403c972f303187';
 
-/// See also [AudioPositionSaver].
-@ProviderFor(AudioPositionSaver)
-final audioPositionSaverProvider =
-    NotifierProvider<AudioPositionSaver, AudioPositionSaverState>.internal(
-  AudioPositionSaver.new,
-  name: r'audioPositionSaverProvider',
+/// See also [playerStateRepository].
+@ProviderFor(playerStateRepository)
+final playerStateRepositoryProvider = Provider<PlayerStateRepository>.internal(
+  playerStateRepository,
+  name: r'playerStateRepositoryProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
       ? null
-      : _$audioPositionSaverHash,
+      : _$playerStateRepositoryHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
 
-typedef _$AudioPositionSaver = Notifier<AudioPositionSaverState>;
+typedef PlayerStateRepositoryRef = ProviderRef<PlayerStateRepository>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

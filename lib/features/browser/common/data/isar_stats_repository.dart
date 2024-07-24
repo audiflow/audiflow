@@ -1,5 +1,6 @@
 import 'package:audiflow/features/browser/common/data/stats_repository.dart';
 import 'package:audiflow/features/feed/model/model.dart';
+import 'package:collection/collection.dart';
 import 'package:isar/isar.dart';
 
 class IsarStatsRepository implements StatsRepository {
@@ -143,5 +144,40 @@ class IsarStatsRepository implements StatsRepository {
         .playedEqualTo(false)
         .downloadedTimeIsNotNull()
         .findAll();
+  }
+
+  // --- Recently played episodes
+
+  @override
+  Future<(List<Episode>, int?)> findRecentlyPlayedEpisodeList({
+    int? cursor,
+    int limit = 100,
+  }) async {
+    final ids = await isar.episodeStats
+        .where(sort: Sort.desc)
+        .sortByLastPlayedAtDesc()
+        .offset(cursor ?? 0)
+        .limit(limit)
+        .idProperty()
+        .findAll();
+    final nextCursor = ids.length < limit ? null : (cursor ?? 0) + limit;
+    final episodes = await isar.episodes
+        .getAll(ids)
+        .then((value) => value.whereNotNull().toList());
+    return (episodes, nextCursor);
+  }
+
+  @override
+  Future<void> saveRecentlyPlayedEpisode(
+    Episode episode, {
+    DateTime? playedAt,
+  }) async {
+    await updateEpisodeStats(
+      EpisodeStatsUpdateParam(
+        id: episode.id,
+        pid: episode.pid,
+        lastPlayedAt: playedAt ?? DateTime.now(),
+      ),
+    );
   }
 }
