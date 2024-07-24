@@ -1,5 +1,6 @@
 import 'package:audiflow/constants/color_schemes.g.dart';
 import 'package:audiflow/core/exception/index.dart';
+import 'package:audiflow/features/preference/data/app_locale.dart';
 import 'package:audiflow/features/preference/data/app_preference_repository.dart';
 import 'package:audiflow/localization/generated/l10n.dart';
 import 'package:audiflow/localization/string_hardcoded.dart';
@@ -13,10 +14,6 @@ class AudiflowApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final themeMode =
-        ref.watch(appPreferenceRepositoryProvider.select((pref) => pref.theme));
-    final router = ref.watch(appRouterProvider);
-
     ref.listen<AppException?>(
       appExceptionNotifierProvider,
       (_, appException) {
@@ -29,10 +26,16 @@ class AudiflowApp extends ConsumerWidget {
       },
     );
 
+    final themeMode =
+        ref.watch(appPreferenceRepositoryProvider.select((pref) => pref.theme));
+    final router = ref.watch(appRouterProvider);
+    final locale = ref.watch(appLocaleProvider);
+
     return MaterialApp.router(
       routerConfig: router,
       restorationScopeId: 'app',
       onGenerateTitle: (BuildContext context) => 'audiflow'.hardcoded,
+      locale: locale,
       localizationsDelegates: const [
         ...L10n.localizationsDelegates,
       ],

@@ -1,3 +1,4 @@
+import 'package:audiflow/constants/locale.dart';
 import 'package:audiflow/constants/search_providers.dart';
 import 'package:audiflow/core/environment.dart';
 import 'package:flutter/material.dart';
@@ -25,6 +26,7 @@ class AppPreference {
     required this.trimSilence,
     required this.volumeBoost,
     required this.layout,
+    required this.locale,
   });
 
   factory AppPreference.sensibleDefaults() {
@@ -50,6 +52,7 @@ class AppPreference {
       trimSilence: false,
       volumeBoost: false,
       layout: 0,
+      locale: undefinedLocale.toString(),
     );
   }
 
@@ -103,6 +106,9 @@ class AppPreference {
   /// If 0; list view; else grid view
   final int layout;
 
+  /// App locale
+  final String locale;
+
   AppPreference copyWith({
     bool? streamWarnMobileData,
     bool? downloadWarnMobileData,
@@ -121,6 +127,7 @@ class AppPreference {
     bool? trimSilence,
     bool? volumeBoost,
     int? layout,
+    String? locale,
   }) {
     return AppPreference(
       streamWarnMobileData: streamWarnMobileData ?? this.streamWarnMobileData,
@@ -144,6 +151,7 @@ class AppPreference {
       trimSilence: trimSilence ?? this.trimSilence,
       volumeBoost: volumeBoost ?? this.volumeBoost,
       layout: layout ?? this.layout,
+      locale: locale ?? this.locale,
     );
   }
 }

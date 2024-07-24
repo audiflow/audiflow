@@ -52,55 +52,60 @@ const AppPreferenceSchema = CollectionSchema(
       name: r'layout',
       type: IsarType.long,
     ),
-    r'markDeletedEpisodesAsPlayed': PropertySchema(
+    r'locale': PropertySchema(
       id: 7,
+      name: r'locale',
+      type: IsarType.string,
+    ),
+    r'markDeletedEpisodesAsPlayed': PropertySchema(
+      id: 8,
       name: r'markDeletedEpisodesAsPlayed',
       type: IsarType.bool,
     ),
     r'playbackSpeed': PropertySchema(
-      id: 8,
+      id: 9,
       name: r'playbackSpeed',
       type: IsarType.double,
     ),
     r'searchProvider': PropertySchema(
-      id: 9,
+      id: 10,
       name: r'searchProvider',
       type: IsarType.string,
     ),
     r'searchProviders': PropertySchema(
-      id: 10,
+      id: 11,
       name: r'searchProviders',
       type: IsarType.byteList,
       enumMap: _AppPreferencesearchProvidersEnumValueMap,
     ),
     r'showFunding': PropertySchema(
-      id: 11,
+      id: 12,
       name: r'showFunding',
       type: IsarType.bool,
     ),
     r'storeDownloadsSDCard': PropertySchema(
-      id: 12,
+      id: 13,
       name: r'storeDownloadsSDCard',
       type: IsarType.bool,
     ),
     r'streamWarnMobileData': PropertySchema(
-      id: 13,
+      id: 14,
       name: r'streamWarnMobileData',
       type: IsarType.bool,
     ),
     r'theme': PropertySchema(
-      id: 14,
+      id: 15,
       name: r'theme',
       type: IsarType.byte,
       enumMap: _AppPreferencethemeEnumValueMap,
     ),
     r'trimSilence': PropertySchema(
-      id: 15,
+      id: 16,
       name: r'trimSilence',
       type: IsarType.bool,
     ),
     r'volumeBoost': PropertySchema(
-      id: 16,
+      id: 17,
       name: r'volumeBoost',
       type: IsarType.bool,
     )
@@ -125,6 +130,7 @@ int _appPreferenceEstimateSize(
   Map<Type, List<int>> allOffsets,
 ) {
   var bytesCount = offsets.last;
+  bytesCount += 3 + object.locale.length * 3;
   bytesCount += 3 + object.searchProvider.length * 3;
   bytesCount += 3 + object.searchProviders.length;
   return bytesCount;
@@ -143,17 +149,18 @@ void _appPreferenceSerialize(
   writer.writeBool(offsets[4], object.downloadWarnMobileData);
   writer.writeBool(offsets[5], object.externalLinkConsent);
   writer.writeLong(offsets[6], object.layout);
-  writer.writeBool(offsets[7], object.markDeletedEpisodesAsPlayed);
-  writer.writeDouble(offsets[8], object.playbackSpeed);
-  writer.writeString(offsets[9], object.searchProvider);
+  writer.writeString(offsets[7], object.locale);
+  writer.writeBool(offsets[8], object.markDeletedEpisodesAsPlayed);
+  writer.writeDouble(offsets[9], object.playbackSpeed);
+  writer.writeString(offsets[10], object.searchProvider);
   writer.writeByteList(
-      offsets[10], object.searchProviders.map((e) => e.index).toList());
-  writer.writeBool(offsets[11], object.showFunding);
-  writer.writeBool(offsets[12], object.storeDownloadsSDCard);
-  writer.writeBool(offsets[13], object.streamWarnMobileData);
-  writer.writeByte(offsets[14], object.theme.index);
-  writer.writeBool(offsets[15], object.trimSilence);
-  writer.writeBool(offsets[16], object.volumeBoost);
+      offsets[11], object.searchProviders.map((e) => e.index).toList());
+  writer.writeBool(offsets[12], object.showFunding);
+  writer.writeBool(offsets[13], object.storeDownloadsSDCard);
+  writer.writeBool(offsets[14], object.streamWarnMobileData);
+  writer.writeByte(offsets[15], object.theme.index);
+  writer.writeBool(offsets[16], object.trimSilence);
+  writer.writeBool(offsets[17], object.volumeBoost);
 }
 
 AppPreference _appPreferenceDeserialize(
@@ -170,24 +177,25 @@ AppPreference _appPreferenceDeserialize(
     downloadWarnMobileData: reader.readBool(offsets[4]),
     externalLinkConsent: reader.readBool(offsets[5]),
     layout: reader.readLong(offsets[6]),
-    markDeletedEpisodesAsPlayed: reader.readBool(offsets[7]),
-    playbackSpeed: reader.readDouble(offsets[8]),
-    searchProvider: reader.readString(offsets[9]),
+    locale: reader.readString(offsets[7]),
+    markDeletedEpisodesAsPlayed: reader.readBool(offsets[8]),
+    playbackSpeed: reader.readDouble(offsets[9]),
+    searchProvider: reader.readString(offsets[10]),
     searchProviders: reader
-            .readByteList(offsets[10])
+            .readByteList(offsets[11])
             ?.map((e) =>
                 _AppPreferencesearchProvidersValueEnumMap[e] ??
                 SearchProvider.itunes)
             .toList() ??
         [],
-    showFunding: reader.readBool(offsets[11]),
-    storeDownloadsSDCard: reader.readBool(offsets[12]),
-    streamWarnMobileData: reader.readBool(offsets[13]),
+    showFunding: reader.readBool(offsets[12]),
+    storeDownloadsSDCard: reader.readBool(offsets[13]),
+    streamWarnMobileData: reader.readBool(offsets[14]),
     theme:
-        _AppPreferencethemeValueEnumMap[reader.readByteOrNull(offsets[14])] ??
+        _AppPreferencethemeValueEnumMap[reader.readByteOrNull(offsets[15])] ??
             ThemeMode.system,
-    trimSilence: reader.readBool(offsets[15]),
-    volumeBoost: reader.readBool(offsets[16]),
+    trimSilence: reader.readBool(offsets[16]),
+    volumeBoost: reader.readBool(offsets[17]),
   );
   return object;
 }
@@ -214,12 +222,14 @@ P _appPreferenceDeserializeProp<P>(
     case 6:
       return (reader.readLong(offset)) as P;
     case 7:
-      return (reader.readBool(offset)) as P;
-    case 8:
-      return (reader.readDouble(offset)) as P;
-    case 9:
       return (reader.readString(offset)) as P;
+    case 8:
+      return (reader.readBool(offset)) as P;
+    case 9:
+      return (reader.readDouble(offset)) as P;
     case 10:
+      return (reader.readString(offset)) as P;
+    case 11:
       return (reader
               .readByteList(offset)
               ?.map((e) =>
@@ -227,18 +237,18 @@ P _appPreferenceDeserializeProp<P>(
                   SearchProvider.itunes)
               .toList() ??
           []) as P;
-    case 11:
-      return (reader.readBool(offset)) as P;
     case 12:
       return (reader.readBool(offset)) as P;
     case 13:
       return (reader.readBool(offset)) as P;
     case 14:
+      return (reader.readBool(offset)) as P;
+    case 15:
       return (_AppPreferencethemeValueEnumMap[reader.readByteOrNull(offset)] ??
           ThemeMode.system) as P;
-    case 15:
-      return (reader.readBool(offset)) as P;
     case 16:
+      return (reader.readBool(offset)) as P;
+    case 17:
       return (reader.readBool(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -570,6 +580,142 @@ extension AppPreferenceQueryFilter
         includeLower: includeLower,
         upper: upper,
         includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
+      localeEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'locale',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
+      localeGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'locale',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
+      localeLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'locale',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
+      localeBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'locale',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
+      localeStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'locale',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
+      localeEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'locale',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
+      localeContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'locale',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
+      localeMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'locale',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
+      localeIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'locale',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
+      localeIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'locale',
+        value: '',
       ));
     });
   }
@@ -1142,6 +1288,18 @@ extension AppPreferenceQuerySortBy
     });
   }
 
+  QueryBuilder<AppPreference, AppPreference, QAfterSortBy> sortByLocale() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'locale', Sort.asc);
+    });
+  }
+
+  QueryBuilder<AppPreference, AppPreference, QAfterSortBy> sortByLocaleDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'locale', Sort.desc);
+    });
+  }
+
   QueryBuilder<AppPreference, AppPreference, QAfterSortBy>
       sortByMarkDeletedEpisodesAsPlayed() {
     return QueryBuilder.apply(this, (query) {
@@ -1374,6 +1532,18 @@ extension AppPreferenceQuerySortThenBy
     });
   }
 
+  QueryBuilder<AppPreference, AppPreference, QAfterSortBy> thenByLocale() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'locale', Sort.asc);
+    });
+  }
+
+  QueryBuilder<AppPreference, AppPreference, QAfterSortBy> thenByLocaleDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'locale', Sort.desc);
+    });
+  }
+
   QueryBuilder<AppPreference, AppPreference, QAfterSortBy>
       thenByMarkDeletedEpisodesAsPlayed() {
     return QueryBuilder.apply(this, (query) {
@@ -1546,6 +1716,13 @@ extension AppPreferenceQueryWhereDistinct
     });
   }
 
+  QueryBuilder<AppPreference, AppPreference, QDistinct> distinctByLocale(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'locale', caseSensitive: caseSensitive);
+    });
+  }
+
   QueryBuilder<AppPreference, AppPreference, QDistinct>
       distinctByMarkDeletedEpisodesAsPlayed() {
     return QueryBuilder.apply(this, (query) {
@@ -1670,6 +1847,12 @@ extension AppPreferenceQueryProperty
   QueryBuilder<AppPreference, int, QQueryOperations> layoutProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'layout');
+    });
+  }
+
+  QueryBuilder<AppPreference, String, QQueryOperations> localeProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'locale');
     });
   }
 
