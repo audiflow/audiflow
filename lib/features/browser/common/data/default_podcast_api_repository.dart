@@ -1,28 +1,24 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:audiflow/core/api_cache_dir.dart';
+import 'package:audiflow/constants/country.dart';
 import 'package:audiflow/core/environment.dart';
 import 'package:audiflow/entities/entities.dart';
+import 'package:audiflow/features/browser/common/data/podcast_api_repository.dart';
+import 'package:audiflow/features/browser/common/model/itunes_chart_item.dart';
+import 'package:audiflow/features/browser/common/model/itunes_search_item.dart';
+import 'package:audiflow/features/feed/model/model.dart';
 import 'package:audiflow/services/http/cached_http.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:podcast_search/podcast_search.dart' as podcast_search;
-import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-part 'podcast_api.g.dart';
-
-@Riverpod(keepAlive: true)
-PodcastApi podcastApi(PodcastApiRef ref) => PodcastApi(ref);
-
-/// An implementation of the [PodcastApi].
+/// An implementation of the [PodcastApiRepository].
 ///
 /// A simple wrapper class that interacts with the iTunes/PodcastIndex search API
 /// via the podcast_search package.
-class PodcastApi {
-  PodcastApi(this._ref);
+class DefaultPodcastApiRepository implements PodcastApiRepository {
+  DefaultPodcastApiRepository({required this.cacheDir});
 
-  final Ref _ref;
   static String feedApiEndpoint = 'https://itunes.apple.com';
   static String searchApiEndpoint = 'https://itunes.apple.com/search';
 
@@ -49,22 +45,32 @@ class PodcastApi {
     'True Crime': 1488,
   };
 
+  final String cacheDir;
+
   /// Bytes containing a custom certificate authority.
   List<int> _certificateAuthorityBytes = [];
 
-  String get _cacheDir => _ref.read(apiCacheDirProvider);
+  @override
+  void setClientAuthorityBytes(List<int> certificateAuthorityBytes) {
+    _certificateAuthorityBytes = certificateAuthorityBytes;
+    if (certificateAuthorityBytes.isNotEmpty) {
+      SecurityContext.defaultContext
+          .setTrustedCertificatesBytes(_certificateAuthorityBytes);
+    }
+  }
 
+  @override
   Future<ITunesSearchItem?> lookup({required int collectionId}) async {
     final url = _buildLookupUrl(iTunesId: collectionId);
     final message = <String, dynamic>{
       'url': url,
-      'cacheDir': _cacheDir,
+      'cacheDir': cacheDir,
     };
     final list = await compute(_search, message);
     return list.firstOrNull;
   }
 
-  /// Search for podcasts matching the search criteria.
+  @override
   Future<List<ITunesSearchItem>> search(
     String term, {
     int limit = 20,
@@ -86,12 +92,12 @@ class PodcastApi {
 
     final message = <String, dynamic>{
       'url': url,
-      'cacheDir': _cacheDir,
+      'cacheDir': cacheDir,
     };
     return compute(_search, message);
   }
 
-  /// Request the top podcast charts from iTunes, and at most [size] records.
+  @override
   Future<List<ITunesChartItem>> charts({
     int size = 20,
     String genre = '',
@@ -105,7 +111,7 @@ class PodcastApi {
 
     final message = <String, dynamic>{
       'url': url,
-      'cacheDir': _cacheDir,
+      'cacheDir': cacheDir,
     };
     return compute(_charts, message);
   }
@@ -126,11 +132,12 @@ class PodcastApi {
   }
 
   /// Load episode chapters via JSON file.
+  @override
   Future<podcast_search.Chapters> loadChapters(String url) async {
     return podcast_search.Podcast.loadChaptersByUrl(url: url);
   }
 
-  /// Load episode transcript via SRT or JSON file.
+  @override
   Future<podcast_search.Transcript> loadTranscript(
     TranscriptUrl transcriptUrl,
   ) async {
@@ -223,16 +230,6 @@ class PodcastApi {
     return results
         .map((e) => ITunesSearchItem.fromJson(e as Map<String, dynamic>))
         .toList();
-  }
-
-  /// Allow adding of custom certificates. Required as default context
-  /// does not apply when running in separate Isolate.
-  void addClientAuthorityBytes(List<int> certificateAuthorityBytes) {
-    _certificateAuthorityBytes = certificateAuthorityBytes;
-    if (certificateAuthorityBytes.isNotEmpty) {
-      SecurityContext.defaultContext
-          .setTrustedCertificatesBytes(_certificateAuthorityBytes);
-    }
   }
 
   static String _buildChartsUrl({
