@@ -1,4 +1,4 @@
-import 'package:audiflow/entities/entities.dart';
+import 'package:audiflow/features/feed/model/model.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'podcast_event.g.dart';

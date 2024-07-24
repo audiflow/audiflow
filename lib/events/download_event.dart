@@ -1,4 +1,4 @@
-import 'package:audiflow/entities/downloadable.dart';
+import 'package:audiflow/features/download/model/downloadable.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'download_event.g.dart';
