@@ -2,18 +2,22 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:audiflow/core/environment.dart';
-import 'package:audiflow/core/utils.dart';
-import 'package:audiflow/entities/entities.dart';
+import 'package:audiflow/features/download/model/downloadable.dart';
+import 'package:audiflow/features/download/service/download_path.dart';
+import 'package:audiflow/features/feed/model/model.dart';
+import 'package:audiflow/features/player/model/audio_state.dart';
+import 'package:audiflow/features/player/service/audio_player_service.dart';
+import 'package:audiflow/features/preference/data/app_preference_repository.dart';
+import 'package:audiflow/features/preference/model/app_preference.dart';
 import 'package:audiflow/repository/repository_provider.dart';
 import 'package:audiflow/services/audio/audio_player_event.dart';
-import 'package:audiflow/services/audio/audio_player_service.dart';
 import 'package:audiflow/services/connectivity/connectivity.dart';
 import 'package:audiflow/services/error/error_manager.dart';
-import 'package:audiflow/services/settings/settings_service.dart';
+import 'package:audiflow/utils/duration.dart';
+import 'package:audiflow/utils/logger.dart';
 import 'package:audio_service/audio_service.dart';
 import 'package:audio_session/audio_session.dart';
 import 'package:just_audio/just_audio.dart';
-import 'package:logging/logging.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:rxdart/rxdart.dart';
 
@@ -28,13 +32,13 @@ part 'mobile_audio_player_service.g.dart';
 @Riverpod(keepAlive: true)
 class MobileAudioPlayerService extends _$MobileAudioPlayerService
     implements AudioPlayerService {
-  final _log = Logger('MobileAudioPlayerService');
-
   Repository get _repository => ref.read(repositoryProvider);
 
-  AppSettings get _appSettings => ref.read(settingsServiceProvider);
+  AppPreference get _appSettings => ref.read(appPreferenceRepositoryProvider);
 
   ErrorManager get _errorManager => ref.read(errorManagerProvider.notifier);
+
+  DownloadPath get _downloadPath => ref.read(downloadPathProvider);
 
   late AudioHandler _audioHandler;
   var _sleep = const Sleep(type: SleepType.none);
@@ -78,7 +82,7 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
     _audioHandler = await AudioService.init(
       builder: () => _DefaultAudioPlayerHandler(
         repository: _repository,
-        settings: _appSettings,
+        preference: _appSettings,
       ),
       config: const AudioServiceConfig(
         androidNotificationChannelName: 'Seasoning Podcast Player',
@@ -133,7 +137,7 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
     required bool autoPlay,
   }) async {
     if (episode.guid.isEmpty) {
-      _log.warning('ERROR: Attempting to play an empty episode');
+      logger.w('ERROR: Attempting to play an empty episode');
       return;
     }
 
@@ -150,8 +154,10 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
             ? Duration.zero
             : position;
 
-    _log.info('Playing episode ${episode.guid} - '
-        '${episode.title} from position $playPosition');
+    logger.i(
+      () => 'Playing episode ${episode.guid} - '
+          '${episode.title} from position $playPosition',
+    );
 
     if (state?.phase == PlayerPhase.play && state?.episode != episode) {
       state = state!.copyWith(phase: PlayerPhase.pause);
@@ -184,9 +190,9 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
       }
       // ignore: avoid_catches_without_on_clauses
     } catch (e) {
-      _log
-        ..fine('Error during playback')
-        ..fine(e.toString());
+      logger
+        ..d('Error during playback')
+        ..d(e.toString());
 
       state = AudioPlayerState(
         episode: episode,
@@ -289,14 +295,14 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
   Future<(String, bool)> _generateEpisodeUri(Episode episode) async {
     final download = await _repository.findDownload(episode.id);
     if (download?.state != DownloadState.downloaded) {
-      return (episode.contentUrl!, false);
+      return (episode.contentUrl, false);
     }
 
-    if (!await hasStoragePermission(_appSettings)) {
+    if (!await _downloadPath.hasStoragePermission()) {
       throw Exception('Insufficient storage permissions');
     }
 
-    return (await resolvePath(_appSettings, download!), true);
+    return (await _downloadPath.resolvePath(download!), true);
   }
 
   @override
@@ -342,8 +348,9 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
           previous.processingState == current.processingState;
     }).listen((PlaybackState playbackState) {
       final audioState = AudioState.from(playbackState.processingState);
-      _log.fine(
-        'Audio state is $audioState - playing is ${playbackState.playing}',
+      logger.d(
+        () =>
+            'Audio state is $audioState - playing is ${playbackState.playing}',
       );
       if (audioState == AudioState.ready) {
         if (playbackState.playing) {
@@ -390,25 +397,25 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
   Future<void> _completed() async {
     if (state != null) {
       _notifyAudioPlayerEvent(AudioPlayerAction.completed);
-      // log.fine('We have completed episode ${state?.episode.guid}');
+      // logger.d('We have completed episode ${state?.episode.guid}');
       //
       // await _stopPositionTicker();
       //
       // if (_queue.isEmpty) {
-      //   log.fine('Queue is empty so we will stop');
+      //   logger.d('Queue is empty so we will stop');
       //   _queue = <Episode>[];
       //   _currentEpisode = null;
       //   _audioState.add(AudioState.stopped);
       //
       //   await _audioHandler.customAction('queueend');
       // } else if (_sleep.type == SleepType.episode) {
-      //   log.fine('Sleeping at end of episode');
+      //   logger.d('Sleeping at end of episode');
       //
       //   await _audioHandler.customAction('sleep');
       //   _audioState.add(AudioState.pausing);
       //   await _stopSleepTicker();
       // } else {
-      //   log.fine('Queue has ${_queue.length} episodes left');
+      //   logger.d('Queue has ${_queue.length} episodes left');
       //   _currentEpisode = null;
       //   final ep = _queue.removeAt(0);
       //
@@ -493,14 +500,13 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
 class _DefaultAudioPlayerHandler extends BaseAudioHandler with SeekHandler {
   _DefaultAudioPlayerHandler({
     required this.repository,
-    required this.settings,
+    required this.preference,
   }) {
     _initPlayer();
   }
 
-  final log = Logger('DefaultAudioPlayerHandler');
   final Repository repository;
-  final AppSettings settings;
+  final AppPreference preference;
 
   static const rewindMillis = 10001;
   static const fastForwardMillis = 30000;
@@ -552,14 +558,14 @@ class _DefaultAudioPlayerHandler extends BaseAudioHandler with SeekHandler {
     /// and hand it off to the playback state stream to inform our client(s).
     _player.playbackEventStream.map(_transformEvent).listen((data) {
       if (playbackState.isClosed) {
-        log.warning('WARN: Playback state is already closed.');
+        logger.w('WARN: Playback state is already closed.');
       } else {
         playbackState.add(data);
       }
     }).onError((dynamic error) {
-      log
-        ..fine('Playback error received')
-        ..fine(error.toString());
+      logger
+        ..d('Playback error received')
+        ..d(error.toString());
 
       _player.stop();
     });
@@ -579,9 +585,10 @@ class _DefaultAudioPlayerHandler extends BaseAudioHandler with SeekHandler {
     // Commented out until just audio position bug is fixed
     // var trim = mediaItem.extras['trim'] as bool ?? true;
 
-    log.fine(
-      'loading new track ${mediaItem.id} - from position ${start.inSeconds}'
-      ' ($start)',
+    logger.d(
+      () =>
+          'loading new track ${mediaItem.id} - from position ${start.inSeconds}'
+          ' ($start)',
     );
 
     final source = downloaded
@@ -591,7 +598,7 @@ class _DefaultAudioPlayerHandler extends BaseAudioHandler with SeekHandler {
           )
         : AudioSource.uri(Uri.parse(mediaItem.id), tag: mediaItem.id);
 
-    log.fine('url: ${source.uri}');
+    logger.d(() => 'url: ${source.uri}');
     try {
       final duration =
           await _player.setAudioSource(source, initialPosition: start);
@@ -624,22 +631,22 @@ class _DefaultAudioPlayerHandler extends BaseAudioHandler with SeekHandler {
           unawaited(_player.play());
           // ignore: avoid_catches_without_on_clauses
         } catch (e) {
-          log.fine('State error $e');
+          logger.e(() => 'State error $e');
         }
       }
     } on PlayerException catch (e) {
-      log.fine('PlayerException - Error code ${e.code} - ${e.message}');
+      logger.d(() => 'PlayerException - Error code ${e.code} - ${e.message}');
       await stop();
-      log.fine(e);
+      logger.e(e);
     } on PlayerInterruptedException catch (e) {
-      log.fine('PlayerInterruptedException');
+      logger.d('PlayerInterruptedException');
       await stop();
-      log.fine(e);
+      logger.e(e);
       // ignore: avoid_catches_without_on_clauses
     } catch (e) {
-      log.fine('General playback exception');
+      logger.d('General playback exception');
       await stop();
-      log.fine(e);
+      logger.e(e);
     }
 
     super.mediaItem.add(_currentItem);
@@ -652,13 +659,13 @@ class _DefaultAudioPlayerHandler extends BaseAudioHandler with SeekHandler {
 
   @override
   Future<void> pause() async {
-    log.fine('pause() triggered');
+    logger.d('pause() triggered');
     await _player.pause();
   }
 
   @override
   Future<void> stop() async {
-    log.fine('stop() triggered');
+    logger.d('stop() triggered');
 
     await _player.stop();
   }
@@ -704,11 +711,11 @@ class _DefaultAudioPlayerHandler extends BaseAudioHandler with SeekHandler {
         final t = extras!['value'] as bool?;
         return volumeBoost(boost: t);
       case 'queueend':
-        log.fine('Received custom action: queue end');
+        logger.d('Received custom action: queue end');
         await _player.stop();
         await super.stop();
       case 'sleep':
-        log.fine('Received custom action: sleep end of episode');
+        logger.d('Received custom action: sleep end of episode');
         // We need to wind back a several milliseconds to stop just_audio
         // from sending more complete events on iOS when we pause.
         var position = _player.position.inMilliseconds - 200;
@@ -740,7 +747,7 @@ class _DefaultAudioPlayerHandler extends BaseAudioHandler with SeekHandler {
   }
 
   PlaybackState _transformEvent(PlaybackEvent event) {
-    log.fine('_transformEvent Sending state ${_player.processingState}');
+    logger.d(() => '_transformEvent Sending state ${_player.processingState}');
 
     return PlaybackState(
       controls: [

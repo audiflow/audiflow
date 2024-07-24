@@ -1,49 +1,16 @@
-import 'package:audiflow/entities/episode.dart';
-import 'package:audiflow/entities/sleep.dart';
-import 'package:audiflow/services/audio/audio_player_state.dart';
-import 'package:audio_service/audio_service.dart';
+import 'package:audiflow/features/feed/model/model.dart';
+import 'package:audiflow/features/player/model/audio_state.dart';
+import 'package:audiflow/features/player/model/player_phase.dart';
+import 'package:audiflow/features/player/model/sleep.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-export 'package:audiflow/services/audio/audio_player_state.dart';
+export 'package:audiflow/features/player/model/audio_state.dart';
+export 'package:audiflow/features/player/model/player_phase.dart';
+export 'package:audiflow/features/player/model/sleep.dart';
 
+part 'audio_player_service.freezed.dart';
 part 'audio_player_service.g.dart';
-
-enum AudioState {
-  /// There hasn't been any resource loaded yet.
-  idle,
-
-  /// Resource is being loaded.
-  loading,
-
-  /// Resource is being buffered.
-  buffering,
-
-  /// Resource is buffered enough and available for playback.
-  ready,
-
-  /// The end of resource was reached.
-  completed,
-
-  /// There was an error loading resource.
-  error;
-
-  static AudioState from(AudioProcessingState state) {
-    switch (state) {
-      case AudioProcessingState.idle:
-        return AudioState.idle;
-      case AudioProcessingState.loading:
-        return AudioState.loading;
-      case AudioProcessingState.buffering:
-        return AudioState.buffering;
-      case AudioProcessingState.ready:
-        return AudioState.ready;
-      case AudioProcessingState.completed:
-        return AudioState.completed;
-      case AudioProcessingState.error:
-        return AudioState.error;
-    }
-  }
-}
 
 /// This class defines the audio playback options supported by Anytime.
 ///
@@ -100,4 +67,31 @@ class AudioPlayerService extends _$AudioPlayerService {
   Future<void> resume() => throw UnimplementedError();
 
   void sleep(Sleep sleep) => throw UnimplementedError();
+}
+
+@freezed
+class AudioPlayerState with _$AudioPlayerState {
+  const factory AudioPlayerState({
+    required Episode episode,
+    required Duration position,
+    required PlayerPhase phase,
+    required AudioState audioState,
+    @Default(false) bool interrupted,
+    @Default(0) int playbackError,
+  }) = _AudioPlayerState;
+}
+
+extension AudioPlayerStateExt on AudioPlayerState {
+  double get percentagePlayed => episode.duration == null
+      ? 0.0
+      : position.inMilliseconds / episode.duration!.inMilliseconds;
+}
+
+@freezed
+class AudioPlayerSetting with _$AudioPlayerSetting {
+  const factory AudioPlayerSetting({
+    @Default(1.0) double speed,
+    @Default(false) bool trimSilence,
+    @Default(false) bool volumeBoost,
+  }) = _AudioPlayerSetting;
 }

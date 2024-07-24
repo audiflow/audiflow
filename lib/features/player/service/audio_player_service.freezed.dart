@@ -3,7 +3,7 @@
 // ignore_for_file: type=lint
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
-part of 'audio_player_state.dart';
+part of 'audio_player_service.dart';
 
 // **************************************************************************
 // FreezedGenerator
@@ -13,176 +13,6 @@ T _$identity<T>(T value) => value;
 
 final _privateConstructorUsedError = UnsupportedError(
     'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
-
-/// @nodoc
-mixin _$AudioPlayerSetting {
-  double get speed => throw _privateConstructorUsedError;
-  bool get trimSilence => throw _privateConstructorUsedError;
-  bool get volumeBoost => throw _privateConstructorUsedError;
-
-  /// Create a copy of AudioPlayerSetting
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  $AudioPlayerSettingCopyWith<AudioPlayerSetting> get copyWith =>
-      throw _privateConstructorUsedError;
-}
-
-/// @nodoc
-abstract class $AudioPlayerSettingCopyWith<$Res> {
-  factory $AudioPlayerSettingCopyWith(
-          AudioPlayerSetting value, $Res Function(AudioPlayerSetting) then) =
-      _$AudioPlayerSettingCopyWithImpl<$Res, AudioPlayerSetting>;
-  @useResult
-  $Res call({double speed, bool trimSilence, bool volumeBoost});
-}
-
-/// @nodoc
-class _$AudioPlayerSettingCopyWithImpl<$Res, $Val extends AudioPlayerSetting>
-    implements $AudioPlayerSettingCopyWith<$Res> {
-  _$AudioPlayerSettingCopyWithImpl(this._value, this._then);
-
-  // ignore: unused_field
-  final $Val _value;
-  // ignore: unused_field
-  final $Res Function($Val) _then;
-
-  /// Create a copy of AudioPlayerSetting
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({
-    Object? speed = null,
-    Object? trimSilence = null,
-    Object? volumeBoost = null,
-  }) {
-    return _then(_value.copyWith(
-      speed: null == speed
-          ? _value.speed
-          : speed // ignore: cast_nullable_to_non_nullable
-              as double,
-      trimSilence: null == trimSilence
-          ? _value.trimSilence
-          : trimSilence // ignore: cast_nullable_to_non_nullable
-              as bool,
-      volumeBoost: null == volumeBoost
-          ? _value.volumeBoost
-          : volumeBoost // ignore: cast_nullable_to_non_nullable
-              as bool,
-    ) as $Val);
-  }
-}
-
-/// @nodoc
-abstract class _$$AudioPlayerSettingImplCopyWith<$Res>
-    implements $AudioPlayerSettingCopyWith<$Res> {
-  factory _$$AudioPlayerSettingImplCopyWith(_$AudioPlayerSettingImpl value,
-          $Res Function(_$AudioPlayerSettingImpl) then) =
-      __$$AudioPlayerSettingImplCopyWithImpl<$Res>;
-  @override
-  @useResult
-  $Res call({double speed, bool trimSilence, bool volumeBoost});
-}
-
-/// @nodoc
-class __$$AudioPlayerSettingImplCopyWithImpl<$Res>
-    extends _$AudioPlayerSettingCopyWithImpl<$Res, _$AudioPlayerSettingImpl>
-    implements _$$AudioPlayerSettingImplCopyWith<$Res> {
-  __$$AudioPlayerSettingImplCopyWithImpl(_$AudioPlayerSettingImpl _value,
-      $Res Function(_$AudioPlayerSettingImpl) _then)
-      : super(_value, _then);
-
-  /// Create a copy of AudioPlayerSetting
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({
-    Object? speed = null,
-    Object? trimSilence = null,
-    Object? volumeBoost = null,
-  }) {
-    return _then(_$AudioPlayerSettingImpl(
-      speed: null == speed
-          ? _value.speed
-          : speed // ignore: cast_nullable_to_non_nullable
-              as double,
-      trimSilence: null == trimSilence
-          ? _value.trimSilence
-          : trimSilence // ignore: cast_nullable_to_non_nullable
-              as bool,
-      volumeBoost: null == volumeBoost
-          ? _value.volumeBoost
-          : volumeBoost // ignore: cast_nullable_to_non_nullable
-              as bool,
-    ));
-  }
-}
-
-/// @nodoc
-
-class _$AudioPlayerSettingImpl implements _AudioPlayerSetting {
-  const _$AudioPlayerSettingImpl(
-      {this.speed = 1.0, this.trimSilence = false, this.volumeBoost = false});
-
-  @override
-  @JsonKey()
-  final double speed;
-  @override
-  @JsonKey()
-  final bool trimSilence;
-  @override
-  @JsonKey()
-  final bool volumeBoost;
-
-  @override
-  String toString() {
-    return 'AudioPlayerSetting(speed: $speed, trimSilence: $trimSilence, volumeBoost: $volumeBoost)';
-  }
-
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$AudioPlayerSettingImpl &&
-            (identical(other.speed, speed) || other.speed == speed) &&
-            (identical(other.trimSilence, trimSilence) ||
-                other.trimSilence == trimSilence) &&
-            (identical(other.volumeBoost, volumeBoost) ||
-                other.volumeBoost == volumeBoost));
-  }
-
-  @override
-  int get hashCode => Object.hash(runtimeType, speed, trimSilence, volumeBoost);
-
-  /// Create a copy of AudioPlayerSetting
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$AudioPlayerSettingImplCopyWith<_$AudioPlayerSettingImpl> get copyWith =>
-      __$$AudioPlayerSettingImplCopyWithImpl<_$AudioPlayerSettingImpl>(
-          this, _$identity);
-}
-
-abstract class _AudioPlayerSetting implements AudioPlayerSetting {
-  const factory _AudioPlayerSetting(
-      {final double speed,
-      final bool trimSilence,
-      final bool volumeBoost}) = _$AudioPlayerSettingImpl;
-
-  @override
-  double get speed;
-  @override
-  bool get trimSilence;
-  @override
-  bool get volumeBoost;
-
-  /// Create a copy of AudioPlayerSetting
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$AudioPlayerSettingImplCopyWith<_$AudioPlayerSettingImpl> get copyWith =>
-      throw _privateConstructorUsedError;
-}
 
 /// @nodoc
 mixin _$AudioPlayerState {
@@ -421,5 +251,175 @@ abstract class _AudioPlayerState implements AudioPlayerState {
   @override
   @JsonKey(includeFromJson: false, includeToJson: false)
   _$$AudioPlayerStateImplCopyWith<_$AudioPlayerStateImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+mixin _$AudioPlayerSetting {
+  double get speed => throw _privateConstructorUsedError;
+  bool get trimSilence => throw _privateConstructorUsedError;
+  bool get volumeBoost => throw _privateConstructorUsedError;
+
+  /// Create a copy of AudioPlayerSetting
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  $AudioPlayerSettingCopyWith<AudioPlayerSetting> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $AudioPlayerSettingCopyWith<$Res> {
+  factory $AudioPlayerSettingCopyWith(
+          AudioPlayerSetting value, $Res Function(AudioPlayerSetting) then) =
+      _$AudioPlayerSettingCopyWithImpl<$Res, AudioPlayerSetting>;
+  @useResult
+  $Res call({double speed, bool trimSilence, bool volumeBoost});
+}
+
+/// @nodoc
+class _$AudioPlayerSettingCopyWithImpl<$Res, $Val extends AudioPlayerSetting>
+    implements $AudioPlayerSettingCopyWith<$Res> {
+  _$AudioPlayerSettingCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  /// Create a copy of AudioPlayerSetting
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? speed = null,
+    Object? trimSilence = null,
+    Object? volumeBoost = null,
+  }) {
+    return _then(_value.copyWith(
+      speed: null == speed
+          ? _value.speed
+          : speed // ignore: cast_nullable_to_non_nullable
+              as double,
+      trimSilence: null == trimSilence
+          ? _value.trimSilence
+          : trimSilence // ignore: cast_nullable_to_non_nullable
+              as bool,
+      volumeBoost: null == volumeBoost
+          ? _value.volumeBoost
+          : volumeBoost // ignore: cast_nullable_to_non_nullable
+              as bool,
+    ) as $Val);
+  }
+}
+
+/// @nodoc
+abstract class _$$AudioPlayerSettingImplCopyWith<$Res>
+    implements $AudioPlayerSettingCopyWith<$Res> {
+  factory _$$AudioPlayerSettingImplCopyWith(_$AudioPlayerSettingImpl value,
+          $Res Function(_$AudioPlayerSettingImpl) then) =
+      __$$AudioPlayerSettingImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({double speed, bool trimSilence, bool volumeBoost});
+}
+
+/// @nodoc
+class __$$AudioPlayerSettingImplCopyWithImpl<$Res>
+    extends _$AudioPlayerSettingCopyWithImpl<$Res, _$AudioPlayerSettingImpl>
+    implements _$$AudioPlayerSettingImplCopyWith<$Res> {
+  __$$AudioPlayerSettingImplCopyWithImpl(_$AudioPlayerSettingImpl _value,
+      $Res Function(_$AudioPlayerSettingImpl) _then)
+      : super(_value, _then);
+
+  /// Create a copy of AudioPlayerSetting
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? speed = null,
+    Object? trimSilence = null,
+    Object? volumeBoost = null,
+  }) {
+    return _then(_$AudioPlayerSettingImpl(
+      speed: null == speed
+          ? _value.speed
+          : speed // ignore: cast_nullable_to_non_nullable
+              as double,
+      trimSilence: null == trimSilence
+          ? _value.trimSilence
+          : trimSilence // ignore: cast_nullable_to_non_nullable
+              as bool,
+      volumeBoost: null == volumeBoost
+          ? _value.volumeBoost
+          : volumeBoost // ignore: cast_nullable_to_non_nullable
+              as bool,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$AudioPlayerSettingImpl implements _AudioPlayerSetting {
+  const _$AudioPlayerSettingImpl(
+      {this.speed = 1.0, this.trimSilence = false, this.volumeBoost = false});
+
+  @override
+  @JsonKey()
+  final double speed;
+  @override
+  @JsonKey()
+  final bool trimSilence;
+  @override
+  @JsonKey()
+  final bool volumeBoost;
+
+  @override
+  String toString() {
+    return 'AudioPlayerSetting(speed: $speed, trimSilence: $trimSilence, volumeBoost: $volumeBoost)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$AudioPlayerSettingImpl &&
+            (identical(other.speed, speed) || other.speed == speed) &&
+            (identical(other.trimSilence, trimSilence) ||
+                other.trimSilence == trimSilence) &&
+            (identical(other.volumeBoost, volumeBoost) ||
+                other.volumeBoost == volumeBoost));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, speed, trimSilence, volumeBoost);
+
+  /// Create a copy of AudioPlayerSetting
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$AudioPlayerSettingImplCopyWith<_$AudioPlayerSettingImpl> get copyWith =>
+      __$$AudioPlayerSettingImplCopyWithImpl<_$AudioPlayerSettingImpl>(
+          this, _$identity);
+}
+
+abstract class _AudioPlayerSetting implements AudioPlayerSetting {
+  const factory _AudioPlayerSetting(
+      {final double speed,
+      final bool trimSilence,
+      final bool volumeBoost}) = _$AudioPlayerSettingImpl;
+
+  @override
+  double get speed;
+  @override
+  bool get trimSilence;
+  @override
+  bool get volumeBoost;
+
+  /// Create a copy of AudioPlayerSetting
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$AudioPlayerSettingImplCopyWith<_$AudioPlayerSettingImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
