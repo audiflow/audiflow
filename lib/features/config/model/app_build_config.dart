@@ -1,3 +1,5 @@
+import 'package:package_info_plus/package_info_plus.dart';
+
 /// Product Flavor
 enum Flavor {
   dev,
@@ -21,6 +23,19 @@ final class BuildConfig {
           // default flavor
           _ => Flavor.dev,
         };
+
+  BuildConfig.fromPackageInfo({
+    required PackageInfo packageInfo,
+    required String appFlavor,
+  }) : this(
+          appFlavor: appFlavor,
+          appName: packageInfo.appName,
+          packageName: packageInfo.packageName,
+          version: packageInfo.version,
+          buildNumber: packageInfo.buildNumber,
+          buildSignature: packageInfo.buildSignature,
+          installerStore: packageInfo.installerStore,
+        );
 
   String appName;
 
