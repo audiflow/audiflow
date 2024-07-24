@@ -1,26 +1,27 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'theme_mode_notifier.dart';
+part of 'theme_mode_controller.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$themeModeNotifierHash() => r'a54688d378a143288a88d0dd117d65822e11c8b9';
+String _$themeModeControllerHash() =>
+    r'55fd7852481380283275266627a17a162581ebd0';
 
-/// See also [ThemeModeNotifier].
-@ProviderFor(ThemeModeNotifier)
-final themeModeNotifierProvider =
-    NotifierProvider<ThemeModeNotifier, ThemeMode>.internal(
-  ThemeModeNotifier.new,
-  name: r'themeModeNotifierProvider',
+/// See also [ThemeModeController].
+@ProviderFor(ThemeModeController)
+final themeModeControllerProvider =
+    NotifierProvider<ThemeModeController, ThemeMode>.internal(
+  ThemeModeController.new,
+  name: r'themeModeControllerProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
       ? null
-      : _$themeModeNotifierHash,
+      : _$themeModeControllerHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
 
-typedef _$ThemeModeNotifier = Notifier<ThemeMode>;
+typedef _$ThemeModeController = Notifier<ThemeMode>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

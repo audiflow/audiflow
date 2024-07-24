@@ -1,7 +1,9 @@
+import 'package:audiflow/constants/color_schemes.g.dart';
 import 'package:audiflow/core/exception/index.dart';
+import 'package:audiflow/features/config/ui/theme_mode_controller.dart';
 import 'package:audiflow/gen/l10n/l10n.dart';
-import 'package:audiflow/ui/app/router/router_provider.dart';
-import 'package:audiflow/ui/app/themes/themes.dart';
+import 'package:audiflow/localization/string_hardcoded.dart';
+import 'package:audiflow/routing/app_router.dart';
 import 'package:audiflow/ui/util/snack_bar_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -11,7 +13,8 @@ class AudiflowApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final themeMode = ref.watch(themeModeNotifierProvider);
+    final themeMode = ref.watch(themeModeControllerProvider);
+    final router = ref.watch(appRouterProvider);
 
     ref.listen<AppException?>(
       appExceptionNotifierProvider,
@@ -26,6 +29,9 @@ class AudiflowApp extends ConsumerWidget {
     );
 
     return MaterialApp.router(
+      routerConfig: router,
+      restorationScopeId: 'app',
+      onGenerateTitle: (BuildContext context) => 'audiflow'.hardcoded,
       localizationsDelegates: const [
         ...L10n.localizationsDelegates,
       ],
@@ -33,7 +39,6 @@ class AudiflowApp extends ConsumerWidget {
         ...L10n.supportedLocales,
       ],
       scaffoldMessengerKey: SnackBarManager.rootScaffoldMessengerKey,
-      routerConfig: ref.watch(routerProvider).router,
       theme: ThemeData(useMaterial3: true, colorScheme: lightColorScheme),
       darkTheme: ThemeData(useMaterial3: true, colorScheme: darkColorScheme),
       themeMode: themeMode,
