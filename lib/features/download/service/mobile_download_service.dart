@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:audiflow/core/logger.dart';
 import 'package:audiflow/core/utils.dart';
 import 'package:audiflow/entities/app_settings.dart';
 import 'package:audiflow/features/browser/common/data/stats_repository.dart';
@@ -9,10 +8,11 @@ import 'package:audiflow/features/download/data/download_repository.dart';
 import 'package:audiflow/features/download/model/downloadable.dart';
 import 'package:audiflow/features/download/service/download_manager.dart';
 import 'package:audiflow/features/download/service/download_service.dart';
-import 'package:audiflow/features/feed/model/model.dart';
 import 'package:audiflow/features/download/service/downloadable_checker.dart';
+import 'package:audiflow/features/feed/model/model.dart';
 import 'package:audiflow/services/podcast/podcast_service.dart';
 import 'package:audiflow/services/settings/settings_service.dart';
+import 'package:audiflow/utils/logger.dart';
 import 'package:collection/collection.dart' show IterableExtension;
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -214,7 +214,7 @@ class MobileDownloadService extends DownloadService {
       /// If we get a redirect to an http endpoint the download will fail.
       /// Let's fully resolve the URL before calling download and ensure it
       /// is https.
-      final url = await resolveUrl(episode.contentUrl!, forceHttps: true);
+      final url = await resolveUrl(episode.contentUrl, forceHttps: true);
 
       final taskId =
           await _downloadManager.enqueueTask(url, directory, filename);
@@ -237,7 +237,7 @@ class MobileDownloadService extends DownloadService {
 
       return true;
       // ignore: avoid_catches_without_on_clauses
-    } catch (e, stack) {
+    } catch (e) {
       logger.w(() => 'Episode download failed (${episode.title}) $e');
       return false;
     }

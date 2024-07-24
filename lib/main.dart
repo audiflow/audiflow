@@ -2,7 +2,6 @@ import 'dart:ui';
 
 import 'package:audiflow/common/data/app_path_repository.dart';
 import 'package:audiflow/common/data/isar_factory.dart';
-import 'package:audiflow/core/logger.dart';
 import 'package:audiflow/core/shared_preferences.dart';
 import 'package:audiflow/exceptions/async_error_logger.dart';
 import 'package:audiflow/exceptions/error_logger.dart';
@@ -10,6 +9,7 @@ import 'package:audiflow/features/browser/common/data/isar_stats_repository.dart
 import 'package:audiflow/features/browser/common/data/stats_repository.dart';
 import 'package:audiflow/features/config/data/build_config.dart';
 import 'package:audiflow/features/config/model/app_build_config.dart';
+import 'package:audiflow/features/config/ui/audiflow_app.dart';
 import 'package:audiflow/features/download/data/download_repository.dart';
 import 'package:audiflow/features/download/data/isar_download_repository.dart';
 import 'package:audiflow/features/feed/data/episode_repository.dart';
@@ -25,7 +25,7 @@ import 'package:audiflow/features/queue/service/queue_manager.dart';
 import 'package:audiflow/localization/string_hardcoded.dart';
 import 'package:audiflow/services/audio/audio_player_service.dart';
 import 'package:audiflow/services/audio/mobile_audio_player_service.dart';
-import 'package:audiflow/ui/app/audiflow_app.dart';
+import 'package:audiflow/utils/logger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';

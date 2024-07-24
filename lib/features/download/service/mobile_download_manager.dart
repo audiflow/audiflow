@@ -3,9 +3,9 @@ import 'dart:isolate';
 import 'dart:ui';
 
 import 'package:audiflow/core/environment.dart';
-import 'package:audiflow/core/logger.dart';
 import 'package:audiflow/features/download/model/downloadable.dart';
 import 'package:audiflow/features/download/service/download_manager.dart';
+import 'package:audiflow/utils/logger.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
