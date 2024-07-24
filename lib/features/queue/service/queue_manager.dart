@@ -1,4 +1,4 @@
-import 'package:audiflow/entities/entities.dart';
+import 'package:audiflow/features/queue/model/queue.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'queue_manager.g.dart';

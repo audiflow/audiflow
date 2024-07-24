@@ -1,8 +1,9 @@
 import 'dart:async';
 
-import 'package:audiflow/entities/entities.dart';
+import 'package:audiflow/features/feed/model/model.dart';
+import 'package:audiflow/features/queue/model/queue.dart';
+import 'package:audiflow/features/queue/service/queue_manager.dart';
 import 'package:audiflow/repository/repository_provider.dart';
-import 'package:audiflow/services/queue/queue_manager.dart';
 import 'package:collection/collection.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 

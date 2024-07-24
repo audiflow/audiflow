@@ -1,6 +1,7 @@
-import 'package:audiflow/entities/entities.dart';
+import 'package:audiflow/features/feed/model/model.dart';
+import 'package:audiflow/features/queue/model/queue.dart';
+import 'package:audiflow/features/queue/service/queue_manager.dart';
 import 'package:audiflow/services/podcast/podcast_service.dart';
-import 'package:audiflow/services/queue/queue_manager.dart';
 import 'package:collection/collection.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
