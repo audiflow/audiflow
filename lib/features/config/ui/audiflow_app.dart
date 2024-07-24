@@ -1,7 +1,7 @@
 import 'package:audiflow/constants/color_schemes.g.dart';
 import 'package:audiflow/core/exception/index.dart';
 import 'package:audiflow/features/config/ui/theme_mode_controller.dart';
-import 'package:audiflow/gen/l10n/l10n.dart';
+import 'package:audiflow/localization/generated/l10n.dart';
 import 'package:audiflow/localization/string_hardcoded.dart';
 import 'package:audiflow/routing/app_router.dart';
 import 'package:audiflow/ui/util/snack_bar_manager.dart';

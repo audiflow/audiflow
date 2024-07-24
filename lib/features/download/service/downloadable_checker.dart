@@ -1,5 +1,5 @@
 import 'package:audiflow/features/feed/model/model.dart';
-import 'package:audiflow/gen/l10n/l10n.dart';
+import 'package:audiflow/localization/generated/l10n.dart';
 import 'package:audiflow/services/connectivity/connectivity.dart';
 import 'package:audiflow/services/settings/settings_service.dart';
 import 'package:audiflow/ui/app/router/router_provider.dart';
