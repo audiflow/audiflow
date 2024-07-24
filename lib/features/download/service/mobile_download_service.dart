@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:audiflow/core/utils.dart';
 import 'package:audiflow/features/browser/common/data/stats_repository.dart';
 import 'package:audiflow/features/download/data/download_repository.dart';
 import 'package:audiflow/features/download/model/downloadable.dart';
@@ -13,6 +12,7 @@ import 'package:audiflow/features/feed/model/model.dart';
 import 'package:audiflow/features/preference/data/app_preference_repository.dart';
 import 'package:audiflow/features/preference/model/app_preference.dart';
 import 'package:audiflow/services/podcast/podcast_service.dart';
+import 'package:audiflow/utils/http.dart';
 import 'package:audiflow/utils/logger.dart';
 import 'package:collection/collection.dart' show IterableExtension;
 import 'package:flutter_downloader/flutter_downloader.dart';
