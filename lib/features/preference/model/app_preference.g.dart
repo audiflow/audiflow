@@ -185,7 +185,7 @@ AppPreference _appPreferenceDeserialize(
     streamWarnMobileData: reader.readBool(offsets[13]),
     theme:
         _AppPreferencethemeValueEnumMap[reader.readByteOrNull(offsets[14])] ??
-            BrightnessMode.system,
+            ThemeMode.system,
     trimSilence: reader.readBool(offsets[15]),
     volumeBoost: reader.readBool(offsets[16]),
   );
@@ -235,7 +235,7 @@ P _appPreferenceDeserializeProp<P>(
       return (reader.readBool(offset)) as P;
     case 14:
       return (_AppPreferencethemeValueEnumMap[reader.readByteOrNull(offset)] ??
-          BrightnessMode.system) as P;
+          ThemeMode.system) as P;
     case 15:
       return (reader.readBool(offset)) as P;
     case 16:
@@ -259,9 +259,9 @@ const _AppPreferencethemeEnumValueMap = {
   'dark': 2,
 };
 const _AppPreferencethemeValueEnumMap = {
-  0: BrightnessMode.system,
-  1: BrightnessMode.light,
-  2: BrightnessMode.dark,
+  0: ThemeMode.system,
+  1: ThemeMode.light,
+  2: ThemeMode.dark,
 };
 
 Id _appPreferenceGetId(AppPreference object) {
@@ -962,7 +962,7 @@ extension AppPreferenceQueryFilter
   }
 
   QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
-      themeEqualTo(BrightnessMode value) {
+      themeEqualTo(ThemeMode value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'theme',
@@ -973,7 +973,7 @@ extension AppPreferenceQueryFilter
 
   QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
       themeGreaterThan(
-    BrightnessMode value, {
+    ThemeMode value, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -987,7 +987,7 @@ extension AppPreferenceQueryFilter
 
   QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
       themeLessThan(
-    BrightnessMode value, {
+    ThemeMode value, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -1001,8 +1001,8 @@ extension AppPreferenceQueryFilter
 
   QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
       themeBetween(
-    BrightnessMode lower,
-    BrightnessMode upper, {
+    ThemeMode lower,
+    ThemeMode upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
@@ -1721,8 +1721,7 @@ extension AppPreferenceQueryProperty
     });
   }
 
-  QueryBuilder<AppPreference, BrightnessMode, QQueryOperations>
-      themeProperty() {
+  QueryBuilder<AppPreference, ThemeMode, QQueryOperations> themeProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'theme');
     });

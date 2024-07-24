@@ -1,6 +1,6 @@
 import 'package:audiflow/constants/color_schemes.g.dart';
 import 'package:audiflow/core/exception/index.dart';
-import 'package:audiflow/features/config/ui/theme_mode_controller.dart';
+import 'package:audiflow/features/preference/data/app_preference_repository.dart';
 import 'package:audiflow/localization/generated/l10n.dart';
 import 'package:audiflow/localization/string_hardcoded.dart';
 import 'package:audiflow/routing/app_router.dart';
@@ -13,7 +13,8 @@ class AudiflowApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final themeMode = ref.watch(themeModeControllerProvider);
+    final themeMode =
+        ref.watch(appPreferenceRepositoryProvider.select((pref) => pref.theme));
     final router = ref.watch(appRouterProvider);
 
     ref.listen<AppException?>(

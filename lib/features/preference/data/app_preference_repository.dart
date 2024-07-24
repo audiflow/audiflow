@@ -1,5 +1,5 @@
-import 'package:audiflow/constants/brightness_mode.dart';
 import 'package:audiflow/features/preference/model/app_preference.dart';
+import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'app_preference_repository.g.dart';
@@ -32,7 +32,7 @@ class AppPreferenceRepository extends _$AppPreferenceRepository {
   Future<void> setStoreDownloadsSDCard(bool value) =>
       throw UnimplementedError();
 
-  Future<void> setTheme(BrightnessMode mode) => throw UnimplementedError();
+  Future<void> setTheme(ThemeMode mode) => throw UnimplementedError();
 
   Future<void> setPlaybackSpeed(double playbackSpeed) =>
       throw UnimplementedError();

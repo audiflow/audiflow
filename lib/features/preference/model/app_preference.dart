@@ -1,6 +1,6 @@
-import 'package:audiflow/constants/brightness_mode.dart';
 import 'package:audiflow/constants/search_providers.dart';
 import 'package:audiflow/core/environment.dart';
+import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
 
 part 'app_preference.g.dart';
@@ -34,7 +34,7 @@ class AppPreference {
       autoDownloadOnlyOnWifi: true,
       autoDeleteEpisodes: true,
       // --------
-      theme: BrightnessMode.system,
+      theme: ThemeMode.system,
       markDeletedEpisodesAsPlayed: false,
       storeDownloadsSDCard: false,
       playbackSpeed: 1,
@@ -64,7 +64,7 @@ class AppPreference {
 
   /// The current theme name.
   @enumerated
-  final BrightnessMode theme;
+  final ThemeMode theme;
 
   /// True if episodes are marked as played when deleted.
   final bool markDeletedEpisodesAsPlayed;
@@ -108,7 +108,7 @@ class AppPreference {
     bool? downloadWarnMobileData,
     bool? autoDownloadOnlyOnWifi,
     bool? autoDeleteEpisodes,
-    BrightnessMode? theme,
+    ThemeMode? theme,
     bool? markDeletedEpisodesAsPlayed,
     bool? storeDownloadsSDCard,
     double? playbackSpeed,

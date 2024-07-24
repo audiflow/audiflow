@@ -1,7 +1,7 @@
 import 'package:audiflow/common/data/isar_repository.dart';
-import 'package:audiflow/constants/brightness_mode.dart';
 import 'package:audiflow/features/preference/data/app_preference_repository.dart';
 import 'package:audiflow/features/preference/model/app_preference.dart';
+import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -78,7 +78,7 @@ class IsarAppPreferenceRepository extends _$IsarAppPreferenceRepository
   }
 
   @override
-  Future<void> setTheme(BrightnessMode mode) async {
+  Future<void> setTheme(ThemeMode mode) async {
     final record =
         (await isar.appPreferences.get(1) ?? AppPreference.sensibleDefaults())
             .copyWith(theme: mode);

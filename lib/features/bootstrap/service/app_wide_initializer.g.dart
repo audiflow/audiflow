@@ -6,7 +6,7 @@ part of 'app_wide_initializer.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$appWideHash() => r'a4522d48f81f038beab28af3bd4e65248f820612';
+String _$appWideHash() => r'feee6a1b9fb8af5281f1ff0db88b19b9e2ce0dc0';
 
 /// See also [appWide].
 @ProviderFor(appWide)
