@@ -1,6 +1,8 @@
-import 'package:audiflow/common/service/app_wide_initializer.dart';
+import 'package:audiflow/features/bootstrap/service/app_wide_initializer.dart';
+import 'package:audiflow/features/browser/chart/ui/podcast_chart_page.dart';
+import 'package:audiflow/features/browser/common/model/itunes_chart_item.dart';
+import 'package:audiflow/features/feed/model/model.dart';
 import 'package:audiflow/routing/app_bottom_navigation_bar.dart';
-import 'package:audiflow/ui/pages/podcast_home_page.dart';
 import 'package:audiflow/ui/widgets/error_notifier.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -41,9 +43,6 @@ class AppRouter extends _$AppRouter {
   final GlobalKey<NavigatorState> settingsTabNavigatorKey =
       GlobalKey<NavigatorState>();
 
-  // BuildContext get context =>
-  //     router.routerDelegate.navigatorKey.currentContext!;
-  //
   // GoRouterDelegate get routerDelegate => router.routerDelegate;
   //
   // GoRouteInformationParser get routeInformationParser =>
@@ -62,84 +61,84 @@ class AppRouter extends _$AppRouter {
                 pageBuilder: (context, state) {
                   return NoTransitionPage(
                     key: state.pageKey,
-                    child: const PodcastHomePage(),
+                    child: const PodcastChartPage(),
                   );
                 },
                 // routes: [
-                  // GoRoute(
-                  //   path: 'season',
-                  //   name: 'season',
-                  //   parentNavigatorKey: homeTabNavigatorKey,
-                  //   pageBuilder: (context, state) {
-                  //     final (podcast, season, heroPrefix) =
-                  //         state.extra! as (Podcast, Season, String);
-                  //     return _getPage(
-                  //       child: PodcastSeasonPage(
-                  //         podcast: podcast,
-                  //         season: season,
-                  //         heroPrefix: heroPrefix,
-                  //       ),
-                  //       state: state,
-                  //     );
-                  //   },
-                  // ),
-                  // GoRoute(
-                  //   path: 'detail',
-                  //   name: 'detail',
-                  //   parentNavigatorKey: homeTabNavigatorKey,
-                  //   pageBuilder: (context, state) {
-                  //     final (
-                  //     feedUrl,
-                  //     collectionId,
-                  //     title,
-                  //     author,
-                  //     thumbnailUrl
-                  //     ) = state.extra! as (
-                  //     String?,
-                  //     int?,
-                  //     String?,
-                  //     String?,
-                  //     String?
-                  //     );
-                  //     return _getPage(
-                  //       child: PodcastDetailsPage(
-                  //         collectionId: collectionId,
-                  //         feedUrl: feedUrl,
-                  //         title: title,
-                  //         author: author,
-                  //         thumbnailUrl: thumbnailUrl,
-                  //       ),
-                  //       state: state,
-                  //     );
-                  //   },
-                  // ),
-                  // GoRoute(
-                  //   path: 'episode',
-                  //   name: 'episode',
-                  //   parentNavigatorKey: homeTabNavigatorKey,
-                  //   pageBuilder: (context, state) {
-                  //     final (episode, heroPrefix) =
-                  //         state.extra! as (Episode, String);
-                  //     return _getPage(
-                  //       child: EpisodePage(
-                  //         episode: episode,
-                  //         heroPrefix: heroPrefix,
-                  //       ),
-                  //       state: state,
-                  //     );
-                  //   },
-                  // ),
-                  // GoRoute(
-                  //   path: 'settings',
-                  //   name: 'settings',
-                  //   parentNavigatorKey: homeTabNavigatorKey,
-                  //   pageBuilder: (context, state) {
-                  //     return _getPage(
-                  //       child: const SettingsPage(),
-                  //       state: state,
-                  //     );
-                  //   },
-                  // ),
+                // GoRoute(
+                //   path: 'season',
+                //   name: 'season',
+                //   parentNavigatorKey: homeTabNavigatorKey,
+                //   pageBuilder: (context, state) {
+                //     final (podcast, season, heroPrefix) =
+                //         state.extra! as (Podcast, Season, String);
+                //     return _getPage(
+                //       child: PodcastSeasonPage(
+                //         podcast: podcast,
+                //         season: season,
+                //         heroPrefix: heroPrefix,
+                //       ),
+                //       state: state,
+                //     );
+                //   },
+                // ),
+                // GoRoute(
+                //   path: 'detail',
+                //   name: 'detail',
+                //   parentNavigatorKey: homeTabNavigatorKey,
+                //   pageBuilder: (context, state) {
+                //     final (
+                //     feedUrl,
+                //     collectionId,
+                //     title,
+                //     author,
+                //     thumbnailUrl
+                //     ) = state.extra! as (
+                //     String?,
+                //     int?,
+                //     String?,
+                //     String?,
+                //     String?
+                //     );
+                //     return _getPage(
+                //       child: PodcastDetailsPage(
+                //         collectionId: collectionId,
+                //         feedUrl: feedUrl,
+                //         title: title,
+                //         author: author,
+                //         thumbnailUrl: thumbnailUrl,
+                //       ),
+                //       state: state,
+                //     );
+                //   },
+                // ),
+                // GoRoute(
+                //   path: 'episode',
+                //   name: 'episode',
+                //   parentNavigatorKey: homeTabNavigatorKey,
+                //   pageBuilder: (context, state) {
+                //     final (episode, heroPrefix) =
+                //         state.extra! as (Episode, String);
+                //     return _getPage(
+                //       child: EpisodePage(
+                //         episode: episode,
+                //         heroPrefix: heroPrefix,
+                //       ),
+                //       state: state,
+                //     );
+                //   },
+                // ),
+                // GoRoute(
+                //   path: 'settings',
+                //   name: 'settings',
+                //   parentNavigatorKey: homeTabNavigatorKey,
+                //   pageBuilder: (context, state) {
+                //     return _getPage(
+                //       child: const SettingsPage(),
+                //       state: state,
+                //     );
+                //   },
+                // ),
                 // ],
               ),
             ],
@@ -222,4 +221,64 @@ class AppRouter extends _$AppRouter {
       child: child,
     );
   }
+
+  Future<void> pushPodcastDetail(Podcast podcast) async {
+    await state.pushNamed('detail', extra: (
+      podcast.feedUrl,
+      podcast.collectionId,
+      podcast.title,
+      podcast.author,
+      podcast.image,
+    ));
+  }
+
+  Future<void> pushPodcastDetailFromChart(ITunesChartItem chartItem) async {
+    await state.pushNamed(
+      'detail',
+      extra: (
+        null,
+        chartItem.collectionId,
+        chartItem.collectionName,
+        chartItem.artistName,
+        chartItem.thumbnailArtworkUrl,
+      ),
+    );
+  }
+
+  Future<void> pushEpisodeDetail({
+    required Episode episode,
+    required String heroPrefix,
+  }) async {
+    await state.pushNamed(
+      'episode',
+      extra: (episode, heroPrefix),
+    );
+  }
+
+  Future<void> pushSettings() async {
+    await state.pushNamed(
+      'settings',
+    );
+  }
+
+  Future<void> pushLatestEpisodes() async {
+    await state.pushNamed(
+      'latestEpisodes',
+    );
+  }
+
+  Future<void> pushRecentlyPlayed() async {
+    await state.pushNamed(
+      'recentlyPlayed',
+    );
+  }
+}
+
+@riverpod
+BuildContext rooterContext(RooterContextRef ref) {
+  return ref
+      .read(appRouterProvider)
+      .routerDelegate
+      .navigatorKey
+      .currentContext!;
 }

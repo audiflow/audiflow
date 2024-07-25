@@ -1,13 +1,11 @@
 import 'dart:math' as math;
 
-import 'package:audiflow/common/service/app_wide_initializer.dart';
-import 'package:audiflow/gen/l10n/l10n.dart';
-import 'package:audiflow/services/audio/audio_player_service.dart';
-import 'package:audiflow/services/podcast/podcast_service.dart';
+import 'package:audiflow/features/bootstrap/service/app_wide_initializer.dart';
+// import 'package:audiflow/features/player/service/audio_player_service.dart';
+// import 'package:audiflow/features/player/ui/player.dart';
+import 'package:audiflow/localization/generated/l10n.dart';
 import 'package:audiflow/ui/mini_player/utils.dart';
-import 'package:audiflow/ui/player/player.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
@@ -29,6 +27,7 @@ class Wrapper extends ConsumerWidget {
   });
 
   final Widget child;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     ref.watch(appWideProvider);
@@ -46,18 +45,9 @@ class AppBottomNavigationBar extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final locale = Localizations.localeOf(context);
-    useEffect(
-      () {
-        ref.read(podcastServiceProvider).setup(locale);
-        return null;
-      },
-      [],
-    );
-
-    final playingEpisode = ref.watch(
-      audioPlayerServiceProvider.select((state) => state?.episode),
-    );
+    // final playingEpisode = ref.watch(
+    //   audioPlayerServiceProvider.select((state) => state?.episode),
+    // );
     final l10n = L10n.of(context);
     final theme = Theme.of(context);
     return Scaffold(
@@ -66,25 +56,25 @@ class AppBottomNavigationBar extends HookConsumerWidget {
           LayoutBuilder(
             builder: (context, constraints) {
               return SizedBox(
-                height: playingEpisode == null
-                    ? null
-                    : constraints.maxHeight - playerMinHeight,
+                // height: playingEpisode == null
+                //     ? null
+                //     : constraints.maxHeight - playerMinHeight,
                 child: navigationShell,
               );
             },
           ),
-          if (playingEpisode != null)
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: DetailedPlayer(
-                minHeight: playerMinHeight,
-                maxHeight: playerMaxHeight(context),
-              ),
-            ),
+          // if (playingEpisode != null)
+          //   Align(
+          //     alignment: Alignment.bottomCenter,
+          //     child: DetailedPlayer(
+          //       minHeight: playerMinHeight,
+          //       maxHeight: playerMaxHeight(context),
+          //     ),
+          //   ),
         ],
       ),
       bottomNavigationBar: ValueListenableBuilder(
-        valueListenable: playerExpandProgress,
+        valueListenable: ValueNotifier(0.toDouble()), // playerExpandProgress,
         builder: (BuildContext context, double playerHeight, Widget? child) {
           final value = percentageFromValueInRange(
             min: playerMinHeight,
@@ -116,8 +106,7 @@ class AppBottomNavigationBar extends HookConsumerWidget {
           );
         },
         child: BottomNavigationBar(
-          // FIXME(reedom): replace with surface container
-          backgroundColor: theme.colorScheme.surfaceVariant,
+          backgroundColor: theme.colorScheme.surfaceContainer,
           type: BottomNavigationBarType.fixed,
           currentIndex: navigationShell.currentIndex,
           onTap: (index) {

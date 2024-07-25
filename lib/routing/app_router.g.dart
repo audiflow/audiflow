@@ -6,7 +6,22 @@ part of 'app_router.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$appRouterHash() => r'66f2c141563ebb862d150528f58424f3e2dfbdf7';
+String _$rooterContextHash() => r'7b50a2de2b8aa6c8c7a7c8c234138e1edb7c82ea';
+
+/// See also [rooterContext].
+@ProviderFor(rooterContext)
+final rooterContextProvider = AutoDisposeProvider<BuildContext>.internal(
+  rooterContext,
+  name: r'rooterContextProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$rooterContextHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+typedef RooterContextRef = AutoDisposeProviderRef<BuildContext>;
+String _$appRouterHash() => r'ef9a8ed1b00a98feff8a4e5547d28476e5faa54e';
 
 /// See also [AppRouter].
 @ProviderFor(AppRouter)
