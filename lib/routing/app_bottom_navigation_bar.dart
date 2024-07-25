@@ -1,10 +1,10 @@
 import 'dart:math' as math;
 
 import 'package:audiflow/features/bootstrap/service/app_wide_initializer.dart';
+import 'package:audiflow/features/player/ui/mini_player/utils.dart';
 // import 'package:audiflow/features/player/service/audio_player_service.dart';
 // import 'package:audiflow/features/player/ui/player.dart';
 import 'package:audiflow/localization/generated/l10n.dart';
-import 'package:audiflow/ui/mini_player/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
