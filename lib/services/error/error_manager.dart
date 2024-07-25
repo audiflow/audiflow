@@ -1,5 +1,5 @@
+import 'package:audiflow/common/data/connectivity.dart';
 import 'package:audiflow/core/exception/app_exception.dart';
-import 'package:audiflow/services/connectivity/connectivity_state.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -13,7 +13,7 @@ class ErrorManager extends _$ErrorManager {
   @override
   Stream<AppException> build() async* {
     ref.listen(
-        connectivityStateProvider.select(
+        connectivityProvider.select(
           (state) =>
               state.where((c) => c != ConnectivityResult.none).isNotEmpty,
         ), (_, active) {
