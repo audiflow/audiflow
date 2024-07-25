@@ -1,6 +1,7 @@
 import 'package:audiflow/entities/playing_episode.dart';
 import 'package:audiflow/features/download/model/downloadable.dart';
 import 'package:audiflow/features/feed/model/model.dart';
+import 'package:audiflow/features/preference/model/app_preference.dart';
 import 'package:audiflow/features/queue/model/queue.dart';
 import 'package:isar/isar.dart';
 
@@ -11,6 +12,7 @@ class IsarFactory {
     return Isar.getInstance() ??
         await Isar.open(
           [
+            AppPreferenceSchema,
             BlockSchema,
             DownloadableSchema,
             EpisodeSchema,
