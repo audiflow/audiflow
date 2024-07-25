@@ -1,8 +1,8 @@
+import 'package:audiflow/common/data/connectivity.dart';
 import 'package:audiflow/features/feed/model/model.dart';
 import 'package:audiflow/features/preference/data/app_preference_repository.dart';
 import 'package:audiflow/localization/generated/l10n.dart';
-import 'package:audiflow/services/connectivity/connectivity.dart';
-import 'package:audiflow/ui/app/router/router_provider.dart';
+import 'package:audiflow/routing/app_router.dart';
 import 'package:audiflow/ui/dialogs/warn_no_wifi.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -28,15 +28,14 @@ class DownloadableChecker {
       return true;
     }
 
-    final router = _ref.read(routerProvider);
-    assert(router.context.mounted);
-    if (!router.context.mounted) {
+    final rooterContext = _ref.read(rooterContextProvider);
+    if (!rooterContext.mounted) {
       return false;
     }
 
-    final l10n = L10n.of(router.context);
+    final l10n = L10n.of(rooterContext);
     return await warnNoWifi(
-          router.context,
+          rooterContext,
           caption: l10n.captionDownloadNoWifi,
           proceedCaption: l10n.proceedDownload,
         ) ??
