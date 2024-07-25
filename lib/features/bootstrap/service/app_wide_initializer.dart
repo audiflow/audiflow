@@ -1,11 +1,12 @@
 import 'dart:io';
 
+import 'package:audiflow/common/data/connectivity.dart';
 import 'package:audiflow/events/download_event.dart';
 import 'package:audiflow/events/episode_event.dart';
 import 'package:audiflow/events/podcast_event.dart';
 import 'package:audiflow/events/transcript_event.dart';
 import 'package:audiflow/features/browser/common/data/podcast_api_repository.dart';
-import 'package:audiflow/features/browser/common/ui/subscribed_podcast_refresher.dart';
+import 'package:audiflow/features/browser/common/service/subscribed_podcast_refresher.dart';
 import 'package:audiflow/features/download/service/download_manager.dart';
 import 'package:audiflow/features/player/service/audio_player_service.dart';
 import 'package:audiflow/features/player/service/audio_position_recorder.dart';
@@ -13,7 +14,6 @@ import 'package:audiflow/features/player/service/audio_queue_manager.dart';
 import 'package:audiflow/features/preference/data/app_preference_repository.dart';
 import 'package:audiflow/features/queue/service/queue_manager.dart';
 import 'package:audiflow/services/audio/audio_player_event.dart';
-import 'package:audiflow/services/connectivity/connectivity_state.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -28,7 +28,7 @@ bool appWide(AppWideRef ref) {
   ref
     ..listen(podcastApiRepositoryProvider, (_, __) {})
     ..listen(appPreferenceRepositoryProvider, (_, __) {})
-    ..listen(connectivityStateProvider, (_, __) {})
+    ..listen(connectivityProvider, (_, __) {})
     ..listen(audioPlayerServiceProvider, (_, __) {})
     ..listen(audioPlayerEventStreamProvider, (_, __) {})
     ..listen(audioQueueManagerProvider, (_, __) {})
