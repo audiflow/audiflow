@@ -1,8 +1,7 @@
 import 'dart:math' as math;
 
-import 'package:audiflow/entities/entities.dart';
-import 'package:audiflow/gen/l10n/l10n.dart';
-import 'package:audiflow/services/audio/audio_player_service.dart';
+import 'package:audiflow/features/player/service/audio_player_service.dart';
+import 'package:audiflow/localization/generated/l10n.dart';
 import 'package:audiflow/ui/controllers/episode_info.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

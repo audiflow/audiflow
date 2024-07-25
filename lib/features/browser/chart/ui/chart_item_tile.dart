@@ -1,8 +1,6 @@
-import 'package:audiflow/entities/entities.dart';
-import 'package:audiflow/services/podcast/podcast_service.dart';
-import 'package:audiflow/stopwatch.dart';
-import 'package:audiflow/ui/app/router/router_provider.dart';
-import 'package:audiflow/ui/widgets/tile_image.dart';
+import 'package:audiflow/features/browser/chart/ui/tile_image.dart';
+import 'package:audiflow/features/browser/common/model/itunes_chart_item.dart';
+import 'package:audiflow/routing/app_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -19,20 +17,9 @@ class ChartItemTile extends ConsumerWidget {
     final theme = Theme.of(context);
     return InkWell(
       onTap: () {
-        sw
-          ..reset()
-          ..start();
-        elapsedTime('start');
         ref
-            .read(podcastServiceProvider)
-            .findPodcastBy(collectionId: chartItem.collectionId)
-            .then((podcast) {
-          if (podcast != null) {
-            ref.read(routerProvider).pushPodcastDetail(podcast);
-          } else {
-            ref.read(routerProvider).pushPodcastDetailFromChart(chartItem);
-          }
-        });
+            .read(appRouterProvider.notifier)
+            .pushPodcastDetailFromChart(chartItem);
       },
       child: Container(
         height: 77,

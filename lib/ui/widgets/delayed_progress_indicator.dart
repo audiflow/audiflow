@@ -1,4 +1,4 @@
-import 'package:audiflow/ui/widgets/platform_progress_indicator.dart';
+import 'package:audiflow/common/ui/platform_progress_indicator.dart';
 import 'package:flutter/material.dart';
 
 /// This class returns a platform-specific spinning indicator after a time

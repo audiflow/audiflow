@@ -1,5 +1,5 @@
-import 'package:audiflow/gen/l10n/l10n.dart';
-import 'package:audiflow/ui/app/router/router_provider.dart';
+import 'package:audiflow/localization/generated/l10n.dart';
+import 'package:audiflow/routing/app_router.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
@@ -32,7 +32,7 @@ class BasicAppBar extends HookConsumerWidget {
       actions: [
         PopupMenuButton<String>(
           onSelected: (_) {
-            ref.read(routerProvider).router.pushNamed('settings');
+            ref.read(appRouterProvider).pushNamed('settings');
           },
           itemBuilder: (BuildContext context) {
             return ['settings'].map((String choice) {

@@ -1,4 +1,4 @@
-import 'package:audiflow/gen/l10n/l10n.dart';
+import 'package:audiflow/localization/generated/l10n.dart';
 import 'package:flutter/material.dart';
 
 class FillRemainingError extends StatelessWidget {

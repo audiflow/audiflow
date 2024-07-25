@@ -1,5 +1,5 @@
-import 'package:audiflow/entities/entities.dart';
-import 'package:audiflow/ui/podcast/chart_item_tile.dart';
+import 'package:audiflow/features/browser/chart/ui/chart_item_tile.dart';
+import 'package:audiflow/features/browser/common/model/itunes_chart_item.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

@@ -1,8 +1,8 @@
-import 'package:audiflow/gen/l10n/l10n.dart';
+import 'package:audiflow/localization/generated/l10n.dart';
 import 'package:audiflow/core/types.dart';
 import 'package:audiflow/entities/entities.dart';
-import 'package:audiflow/services/audio/audio_player_service.dart';
-import 'package:audiflow/ui/providers/episode_info_provider.dart';
+import 'package:audiflow/features/player/service/audio_player_service.dart';
+import 'package:audiflow/ui/controllers/episode_info_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
@@ -47,8 +47,8 @@ class AnimatedPlayButton extends HookConsumerWidget {
           ),
         Tooltip(
           message: playing
-              ? L10n.of(context)!.tooltipPause
-              : L10n.of(context)!.tooltipPlay,
+              ? L10n.of(context).tooltipPause
+              : L10n.of(context).tooltipPlay,
           child: TextButton(
             style: TextButton.styleFrom(
               shape: CircleBorder(
@@ -70,8 +70,8 @@ class AnimatedPlayButton extends HookConsumerWidget {
             },
             child: AnimatedIcon(
               semanticLabel: playing
-                  ? L10n.of(context)!.tooltipPause
-                  : L10n.of(context)!.tooltipPlay,
+                  ? L10n.of(context).tooltipPause
+                  : L10n.of(context).tooltipPlay,
               icon:
                   playing ? AnimatedIcons.pause_play : AnimatedIcons.play_pause,
               color: Colors.white,
