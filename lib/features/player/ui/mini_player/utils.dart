@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 
-import 'package:audiflow/ui/mini_player/mini_player.dart';
+import 'package:audiflow/features/player/ui/mini_player/mini_player.dart';
 
 extension SelectedColorExtension on PanelState {
   int get heightCode {

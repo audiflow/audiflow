@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:audiflow/ui/mini_player/utils.dart';
+import 'package:audiflow/features/player/ui/mini_player/utils.dart';
 import 'package:flutter/material.dart';
 
 ///Type definition for the builder function
