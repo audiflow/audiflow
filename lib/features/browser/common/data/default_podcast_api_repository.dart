@@ -8,7 +8,7 @@ import 'package:audiflow/features/browser/common/data/podcast_api_repository.dar
 import 'package:audiflow/features/browser/common/model/itunes_chart_item.dart';
 import 'package:audiflow/features/browser/common/model/itunes_search_item.dart';
 import 'package:audiflow/features/feed/model/model.dart';
-import 'package:audiflow/services/http/cached_http.dart';
+import 'package:audiflow/utils/cached_http.dart';
 import 'package:flutter/foundation.dart';
 import 'package:podcast_search/podcast_search.dart' as podcast_search;
 

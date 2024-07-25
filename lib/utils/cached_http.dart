@@ -2,11 +2,6 @@ import 'package:dio/dio.dart';
 import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
 import 'package:dio_cache_interceptor_file_store/dio_cache_interceptor_file_store.dart';
 
-// part 'cached_http.g.dart';
-
-// @Riverpod(keepAlive: true)
-// CachedHttp cachedHttp(CachedHttpRef ref) => CachedHttp();
-
 class CachedHttp {
   CachedHttp(String cacheDir) {
     cacheOptions = CacheOptions(
