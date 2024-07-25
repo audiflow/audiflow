@@ -1,31 +1,42 @@
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:audiflow/common/data/app_path_repository.dart';
+import 'package:audiflow/common/data/connectivity.dart'
+    show initialConnectivityProvider;
 import 'package:audiflow/common/data/isar_factory.dart';
+import 'package:audiflow/common/data/isar_repository.dart';
 import 'package:audiflow/core/shared_preferences.dart';
 import 'package:audiflow/exceptions/async_error_logger.dart';
 import 'package:audiflow/exceptions/error_logger.dart';
+import 'package:audiflow/features/bootstrap/ui/audiflow_app.dart';
+import 'package:audiflow/features/browser/common/data/default_podcast_api_repository.dart';
 import 'package:audiflow/features/browser/common/data/isar_stats_repository.dart';
+import 'package:audiflow/features/browser/common/data/podcast_api_repository.dart';
 import 'package:audiflow/features/browser/common/data/stats_repository.dart';
 import 'package:audiflow/features/config/data/build_config.dart';
 import 'package:audiflow/features/config/model/app_build_config.dart';
-import 'package:audiflow/features/config/ui/audiflow_app.dart';
 import 'package:audiflow/features/download/data/download_repository.dart';
 import 'package:audiflow/features/download/data/isar_download_repository.dart';
+import 'package:audiflow/features/download/service/download_manager.dart';
+import 'package:audiflow/features/download/service/mobile_download_manager.dart';
 import 'package:audiflow/features/feed/data/episode_repository.dart';
 import 'package:audiflow/features/feed/data/isar_episode_repository.dart';
 import 'package:audiflow/features/feed/data/isar_podcast_repository.dart';
 import 'package:audiflow/features/feed/data/isar_rss_repository.dart';
 import 'package:audiflow/features/feed/data/podcast_repository.dart';
 import 'package:audiflow/features/feed/data/rss_repository.dart';
+import 'package:audiflow/features/player/service/audio_player_service.dart';
+import 'package:audiflow/features/player/service/mobile_audio_player_service.dart';
+import 'package:audiflow/features/preference/data/app_preference_repository.dart';
+import 'package:audiflow/features/preference/data/isar_app_preference_repository.dart';
 import 'package:audiflow/features/queue/data/isar_queue_repository.dart';
 import 'package:audiflow/features/queue/data/queue_repository.dart';
 import 'package:audiflow/features/queue/service/default_queue_manager.dart';
 import 'package:audiflow/features/queue/service/queue_manager.dart';
 import 'package:audiflow/localization/string_hardcoded.dart';
-import 'package:audiflow/services/audio/audio_player_service.dart';
-import 'package:audiflow/services/audio/mobile_audio_player_service.dart';
 import 'package:audiflow/utils/logger.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -43,25 +54,43 @@ void main() async {
   );
   logger.t(buildConfig);
 
-  final preferences = await SharedPreferences.getInstance();
-  final tempDir = await getTemporaryDirectory();
-  final appDocDir = await getApplicationDocumentsDirectory();
+  final v = await Future.wait([
+    Connectivity().checkConnectivity(),
+    SharedPreferences.getInstance(),
+    getTemporaryDirectory(),
+    getApplicationDocumentsDirectory(),
+  ]);
+  final connectivity = v[0] as List<ConnectivityResult>;
+  final preferences = v[1] as SharedPreferences;
+  final tempDir = v[2] as Directory;
+  final appDocDir = v[3] as Directory;
+
   final isar = await IsarFactory.create(appDocDir.path);
   final container = ProviderContainer(
     overrides: [
-      buildConfigProvider.overrideWithValue(buildConfig),
-      sharedPreferencesProvider.overrideWithValue(preferences),
+      // foundations
+      appPreferenceRepositoryProvider
+          .overrideWith(IsarAppPreferenceRepository.new),
       apiCacheDirProvider.overrideWithValue(tempDir.path),
       appDocDirProvider.overrideWithValue(appDocDir.path),
+      buildConfigProvider.overrideWithValue(buildConfig),
+      initialConnectivityProvider.overrideWithValue(connectivity),
+      isarRepositoryProvider.overrideWithValue(isar),
+      sharedPreferencesProvider.overrideWithValue(preferences),
+      // app
       audioPlayerServiceProvider.overrideWith(MobileAudioPlayerService.new),
-      queueManagerProvider.overrideWith(DefaultQueueManager.new),
-      statsRepositoryProvider.overrideWithValue(IsarStatsRepository(isar)),
-      episodeRepositoryProvider.overrideWithValue(IsarEpisodeRepository(isar)),
-      podcastRepositoryProvider.overrideWithValue(IsarPodcastRepository(isar)),
-      rssRepositoryProvider.overrideWithValue(IsarRssRepository(isar)),
+      downloadManagerProvider.overrideWith(MobileDownloaderManager.new),
       downloadRepositoryProvider
           .overrideWithValue(IsarDownloadRepository(isar)),
+      episodeRepositoryProvider.overrideWithValue(IsarEpisodeRepository(isar)),
+      podcastApiRepositoryProvider.overrideWithValue(
+        DefaultPodcastApiRepository(cacheDir: tempDir.path),
+      ),
+      podcastRepositoryProvider.overrideWithValue(IsarPodcastRepository(isar)),
+      queueManagerProvider.overrideWith(DefaultQueueManager.new),
       queueRepositoryProvider.overrideWithValue(IsarQueueRepository(isar)),
+      rssRepositoryProvider.overrideWithValue(IsarRssRepository(isar)),
+      statsRepositoryProvider.overrideWithValue(IsarStatsRepository(isar)),
     ],
     observers: [AsyncErrorLogger()],
   );
