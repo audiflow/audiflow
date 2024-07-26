@@ -1,6 +1,7 @@
-import 'package:audiflow/entities/entities.dart';
-import 'package:audiflow/features/download/service/download_progress_provider.dart';
-import 'package:audiflow/services/download/download_service_provider.dart';
+import 'package:audiflow/features/download/model/downloadable.dart';
+import 'package:audiflow/features/download/service/download_progress.dart';
+import 'package:audiflow/features/download/service/download_service.dart';
+import 'package:audiflow/features/feed/model/model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';

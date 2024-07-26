@@ -5,6 +5,7 @@ import 'package:audiflow/features/player/model/sleep.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+export 'package:audiflow/features/feed/model/model.dart';
 export 'package:audiflow/features/player/model/audio_state.dart';
 export 'package:audiflow/features/player/model/player_phase.dart';
 export 'package:audiflow/features/player/model/sleep.dart';

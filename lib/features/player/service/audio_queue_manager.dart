@@ -1,11 +1,10 @@
+import 'package:audiflow/common/data/connectivity.dart';
 import 'package:audiflow/features/browser/common/data/stats_repository.dart';
 import 'package:audiflow/features/feed/data/episode_repository.dart';
-import 'package:audiflow/features/feed/model/model.dart';
 import 'package:audiflow/features/player/service/audio_player_service.dart';
 import 'package:audiflow/features/queue/model/queue.dart';
 import 'package:audiflow/features/queue/service/queue_manager.dart';
-import 'package:audiflow/services/audio/audio_player_event.dart';
-import 'package:audiflow/services/connectivity/connectivity_state.dart';
+import 'package:audiflow/events/audio_player_event.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -26,7 +25,7 @@ class AudioQueueManager extends _$AudioQueueManager {
   List<QueueItem> get _queue => ref.read(queueManagerProvider).queue;
 
   List<ConnectivityResult> get _connectivityResult =>
-      ref.read(connectivityStateProvider);
+      ref.read(connectivityProvider);
 
   @override
   bool build() {
@@ -67,7 +66,7 @@ class AudioQueueManager extends _$AudioQueueManager {
         continue;
       }
 
-      if (stats?.downloaded == true || _connectivityResult.isConnected) {
+      if (stats?.downloaded == true || _connectivityResult.hasConnectivity) {
         await _audioPlayerService.loadEpisode(
           episode: episode,
           position: stats?.position ?? Duration.zero,

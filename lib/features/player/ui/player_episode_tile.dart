@@ -1,7 +1,7 @@
 import 'package:audiflow/features/browser/chart/ui/tile_image.dart';
 import 'package:audiflow/features/feed/model/model.dart';
 import 'package:audiflow/routing/app_router.dart';
-import 'package:audiflow/ui/controllers/episode_info.dart';
+import 'package:audiflow/features/browser/episode/ui/episode_info.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 

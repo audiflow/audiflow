@@ -13,7 +13,7 @@ import 'package:audiflow/features/player/service/audio_position_recorder.dart';
 import 'package:audiflow/features/player/service/audio_queue_manager.dart';
 import 'package:audiflow/features/preference/data/app_preference_repository.dart';
 import 'package:audiflow/features/queue/service/queue_manager.dart';
-import 'package:audiflow/services/audio/audio_player_event.dart';
+import 'package:audiflow/events/audio_player_event.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';

@@ -2,7 +2,7 @@ import 'package:audiflow/features/browser/common/data/stats_repository.dart';
 import 'package:audiflow/features/feed/model/model.dart';
 import 'package:audiflow/features/player/data/player_state_repository.dart';
 import 'package:audiflow/features/player/service/audio_player_service.dart';
-import 'package:audiflow/services/audio/audio_player_event.dart';
+import 'package:audiflow/events/audio_player_event.dart';
 import 'package:audiflow/utils/logger.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';

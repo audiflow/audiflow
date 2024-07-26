@@ -50,6 +50,11 @@ class IsarStatsRepository implements StatsRepository {
   }
 
   @override
+  Future<PodcastStats?> findPodcastStatsBy({required String feedUrl}) async {
+    return isar.podcastStats.get(Podcast.pidFrom(feedUrl));
+  }
+
+  @override
   Future<PodcastStats> updatePodcastStats(PodcastStatsUpdateParam param) async {
     return isar.writeTxn(() => _updatePodcastStats(param));
   }

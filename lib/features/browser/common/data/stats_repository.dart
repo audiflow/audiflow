@@ -17,6 +17,8 @@ abstract class StatsRepository {
 
   Future<PodcastStats?> findPodcastStats(int pid);
 
+  Future<PodcastStats?> findPodcastStatsBy({required String feedUrl});
+
   Future<PodcastStats> updatePodcastStats(PodcastStatsUpdateParam param);
 
   // -- PodcastViewStats

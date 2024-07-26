@@ -5,7 +5,7 @@ import 'package:audiflow/features/preference/data/app_preference_repository.dart
 import 'package:audiflow/localization/generated/l10n.dart';
 import 'package:audiflow/localization/string_hardcoded.dart';
 import 'package:audiflow/routing/app_router.dart';
-import 'package:audiflow/ui/util/snack_bar_manager.dart';
+import 'package:audiflow/common/ui/snack_bar_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
