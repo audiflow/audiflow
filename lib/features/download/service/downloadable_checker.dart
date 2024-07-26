@@ -28,14 +28,14 @@ class DownloadableChecker {
       return true;
     }
 
-    final rooterContext = _ref.read(rooterContextProvider);
-    if (!rooterContext.mounted) {
+    final routerContext = _ref.read(routerContextProvider);
+    if (!routerContext.mounted) {
       return false;
     }
 
-    final l10n = L10n.of(rooterContext);
+    final l10n = L10n.of(routerContext);
     return await warnNoWifi(
-          rooterContext,
+          routerContext,
           caption: l10n.captionDownloadNoWifi,
           proceedCaption: l10n.proceedDownload,
         ) ??

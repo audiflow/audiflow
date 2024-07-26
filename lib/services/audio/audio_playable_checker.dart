@@ -1,10 +1,10 @@
-import 'package:audiflow/entities/entities.dart';
-import 'package:audiflow/gen/l10n/l10n.dart';
-import 'package:audiflow/repository/repository_provider.dart';
-import 'package:audiflow/services/audio/audio_player_service.dart';
-import 'package:audiflow/services/connectivity/connectivity.dart';
-import 'package:audiflow/services/settings/settings_service.dart';
-import 'package:audiflow/ui/app/router/router_provider.dart';
+import 'package:audiflow/common/data/connectivity.dart';
+import 'package:audiflow/features/download/data/download_repository.dart';
+import 'package:audiflow/features/download/model/downloadable.dart';
+import 'package:audiflow/features/player/service/audio_player_service.dart';
+import 'package:audiflow/features/preference/data/app_preference_repository.dart';
+import 'package:audiflow/localization/generated/l10n.dart';
+import 'package:audiflow/routing/app_router.dart';
 import 'package:audiflow/ui/dialogs/warn_no_wifi.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -32,25 +32,25 @@ class AudioPlayableChecker {
     }
 
     final download =
-        await _ref.read(repositoryProvider).findDownload(episode.id);
+        await _ref.read(downloadRepositoryProvider).findDownload(episode.id);
     if (download?.state == DownloadState.downloaded) {
       return true;
     }
 
-    final settings = _ref.read(settingsServiceProvider);
-    if (!settings.streamWarnMobileData) {
+    final prefs = _ref.read(appPreferenceRepositoryProvider);
+    if (!prefs.streamWarnMobileData) {
       return true;
     }
 
-    final router = _ref.read(routerProvider);
-    assert(router.context.mounted);
-    if (!router.context.mounted) {
+    final routerContext = _ref.read(routerContextProvider);
+    assert(routerContext.mounted);
+    if (!routerContext.mounted) {
       return false;
     }
 
-    final l10n = L10n.of(router.context);
+    final l10n = L10n.of(routerContext);
     return await warnNoWifi(
-          router.context,
+          routerContext,
           caption: l10n.captionStreamingNoWifi,
           proceedCaption: l10n.proceedPlaying,
         ) ??

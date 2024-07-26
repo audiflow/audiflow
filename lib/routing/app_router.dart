@@ -1,11 +1,14 @@
 import 'package:audiflow/features/bootstrap/service/app_wide_initializer.dart';
 import 'package:audiflow/features/browser/chart/ui/podcast_chart_page.dart';
 import 'package:audiflow/features/browser/common/model/itunes_chart_item.dart';
+import 'package:audiflow/features/browser/podcast/model/season.dart';
+import 'package:audiflow/features/browser/podcast/ui/podcast_details_page.dart';
 import 'package:audiflow/features/feed/model/model.dart';
 import 'package:audiflow/routing/app_bottom_navigation_bar.dart';
 import 'package:audiflow/ui/widgets/error_notifier.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nanoid/nanoid.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'app_router.g.dart';
@@ -64,82 +67,81 @@ class AppRouter extends _$AppRouter {
                     child: const PodcastChartPage(),
                   );
                 },
-                // routes: [
-                // GoRoute(
-                //   path: 'season',
-                //   name: 'season',
-                //   parentNavigatorKey: homeTabNavigatorKey,
-                //   pageBuilder: (context, state) {
-                //     final (podcast, season, heroPrefix) =
-                //         state.extra! as (Podcast, Season, String);
-                //     return _getPage(
-                //       child: PodcastSeasonPage(
-                //         podcast: podcast,
-                //         season: season,
-                //         heroPrefix: heroPrefix,
-                //       ),
-                //       state: state,
-                //     );
-                //   },
-                // ),
-                // GoRoute(
-                //   path: 'detail',
-                //   name: 'detail',
-                //   parentNavigatorKey: homeTabNavigatorKey,
-                //   pageBuilder: (context, state) {
-                //     final (
-                //     feedUrl,
-                //     collectionId,
-                //     title,
-                //     author,
-                //     thumbnailUrl
-                //     ) = state.extra! as (
-                //     String?,
-                //     int?,
-                //     String?,
-                //     String?,
-                //     String?
-                //     );
-                //     return _getPage(
-                //       child: PodcastDetailsPage(
-                //         collectionId: collectionId,
-                //         feedUrl: feedUrl,
-                //         title: title,
-                //         author: author,
-                //         thumbnailUrl: thumbnailUrl,
-                //       ),
-                //       state: state,
-                //     );
-                //   },
-                // ),
-                // GoRoute(
-                //   path: 'episode',
-                //   name: 'episode',
-                //   parentNavigatorKey: homeTabNavigatorKey,
-                //   pageBuilder: (context, state) {
-                //     final (episode, heroPrefix) =
-                //         state.extra! as (Episode, String);
-                //     return _getPage(
-                //       child: EpisodePage(
-                //         episode: episode,
-                //         heroPrefix: heroPrefix,
-                //       ),
-                //       state: state,
-                //     );
-                //   },
-                // ),
-                // GoRoute(
-                //   path: 'settings',
-                //   name: 'settings',
-                //   parentNavigatorKey: homeTabNavigatorKey,
-                //   pageBuilder: (context, state) {
-                //     return _getPage(
-                //       child: const SettingsPage(),
-                //       state: state,
-                //     );
-                //   },
-                // ),
-                // ],
+                routes: [
+                  // GoRoute(
+                  //   path: 'season',
+                  //   name: 'season',
+                  //   parentNavigatorKey: homeTabNavigatorKey,
+                  //   pageBuilder: (context, state) {
+                  //     final (podcast, season, heroPrefix) =
+                  //         state.extra! as (Podcast, Season, String);
+                  //     return _getPage(
+                  //       child: PodcastSeasonPage(
+                  //         podcast: podcast,
+                  //         season: season,
+                  //         heroPrefix: heroPrefix,
+                  //       ),
+                  //       state: state,
+                  //     );
+                  //   },
+                  // ),
+                  GoRoute(
+                    path: 'podcast/:collectionId/:random',
+                    parentNavigatorKey: homeTabNavigatorKey,
+                    pageBuilder: (context, state) {
+                      final (
+                        feedUrl,
+                        collectionId,
+                        title,
+                        author,
+                        thumbnailUrl
+                      ) = state.extra! as (
+                        String?,
+                        int?,
+                        String?,
+                        String?,
+                        String?
+                      );
+                      return _getPage(
+                        child: PodcastDetailsPage(
+                          collectionId: collectionId,
+                          feedUrl: feedUrl,
+                          title: title,
+                          author: author,
+                          thumbnailUrl: thumbnailUrl,
+                        ),
+                        state: state,
+                      );
+                    },
+                  ),
+                  // GoRoute(
+                  //   path: 'episode',
+                  //   name: 'episode',
+                  //   parentNavigatorKey: homeTabNavigatorKey,
+                  //   pageBuilder: (context, state) {
+                  //     final (episode, heroPrefix) =
+                  //         state.extra! as (Episode, String);
+                  //     return _getPage(
+                  //       child: EpisodePage(
+                  //         episode: episode,
+                  //         heroPrefix: heroPrefix,
+                  //       ),
+                  //       state: state,
+                  //     );
+                  //   },
+                  // ),
+                  // GoRoute(
+                  //   path: 'settings',
+                  //   name: 'settings',
+                  //   parentNavigatorKey: homeTabNavigatorKey,
+                  //   pageBuilder: (context, state) {
+                  //     return _getPage(
+                  //       child: const SettingsPage(),
+                  //       state: state,
+                  //     );
+                  //   },
+                  // ),
+                ],
               ),
             ],
           ),
@@ -223,18 +225,21 @@ class AppRouter extends _$AppRouter {
   }
 
   Future<void> pushPodcastDetail(Podcast podcast) async {
-    await state.pushNamed('detail', extra: (
-      podcast.feedUrl,
-      podcast.collectionId,
-      podcast.title,
-      podcast.author,
-      podcast.image,
-    ));
+    await state.push(
+      '/podcast/${podcast.collectionId}/${nanoid()}',
+      extra: (
+        podcast.feedUrl,
+        podcast.collectionId,
+        podcast.title,
+        podcast.author,
+        podcast.image,
+      ),
+    );
   }
 
   Future<void> pushPodcastDetailFromChart(ITunesChartItem chartItem) async {
-    await state.pushNamed(
-      'detail',
+    await state.push(
+      '/podcast/${chartItem.collectionId}/${nanoid()}',
       extra: (
         null,
         chartItem.collectionId,
@@ -272,10 +277,17 @@ class AppRouter extends _$AppRouter {
       'recentlyPlayed',
     );
   }
+
+  Future<void> pushSeason(Podcast podcast, Season season) async {
+    await state.pushNamed(
+      'season',
+      extra: (podcast, season, 'season'),
+    );
+  }
 }
 
 @riverpod
-BuildContext rooterContext(RooterContextRef ref) {
+BuildContext routerContext(RouterContextRef ref) {
   return ref
       .read(appRouterProvider)
       .routerDelegate
