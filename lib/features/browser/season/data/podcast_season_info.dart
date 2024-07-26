@@ -2,7 +2,8 @@ import 'dart:async';
 
 import 'package:audiflow/events/episode_event.dart';
 import 'package:audiflow/features/browser/common/data/stats_repository.dart';
-import 'package:audiflow/features/browser/podcast/model/season.dart';
+import 'package:audiflow/features/browser/season/model/season.dart';
+import 'package:audiflow/features/feed/data/episode_repository.dart';
 import 'package:audiflow/features/feed/model/model.dart';
 import 'package:collection/collection.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
@@ -13,15 +14,21 @@ part 'podcast_season_info.g.dart';
 
 @riverpod
 class PodcastSeasonInfo extends _$PodcastSeasonInfo {
+  EpisodeRepository get _episodeRepository =>
+      ref.read(episodeRepositoryProvider);
+
   StatsRepository get _statsRepository => ref.read(statsRepositoryProvider);
 
   @override
   Future<PodcastSeasonInfoState> build(Season season) async {
-    final statsList = await _statsRepository
-        .findEpisodeStatsList(season.episodes.map((e) => e.id));
+    final statsList =
+        await _statsRepository.findEpisodeStatsList(season.episodeIds);
+    final episodes = await _episodeRepository
+        .findEpisodes(season.episodeIds)
+        .then((episodes) => episodes.whereNotNull().toList());
     _listen();
     return PodcastSeasonInfoState(
-      episodes: season.episodes,
+      episodes: episodes,
       statsList: statsList.whereNotNull().toList(),
     );
   }
@@ -29,32 +36,31 @@ class PodcastSeasonInfo extends _$PodcastSeasonInfo {
   void _listen() {
     ref.listen(episodeEventStreamProvider, (_, next) {
       final event = next.requireValue;
-      if (event case EpisodeUpdatedEvent(episode: final episode)) {
-        final episodes = state.requireValue.episodes;
-        if (!episodes.any(
-          (e) => e.pid == episode.pid && e.season == episode.season,
-        )) {
-          return;
-        }
-        final oldEpisode = episodes.firstWhereOrNull(
-          (e) => e.guid == episode.guid,
-        );
-        if (oldEpisode != null) {
-          state = AsyncData(
-            state.requireValue.copyWith(
-              episodes: episodes
-                  .map((e) => e.guid == episode.guid ? episode : e)
-                  .toList(),
-            ),
-          );
-        } else {
-          state = AsyncData(
-            state.requireValue.copyWith(
-              episodes: [...episodes, episode],
-            ),
-          );
-        }
-      } else if (event case EpisodeStatsUpdatedEvent(stats: final stats)) {
+      // if (event case EpisodeUpdatedEvent(episode: final episode)) {
+      //   final episodes = state.requireValue.episodes;
+      //   if (!episodes.any((e) => e.id == episode.id)) {
+      //     return;
+      //   }
+      //   final oldEpisode = episodes.firstWhereOrNull(
+      //     (e) => e.guid == episode.guid,
+      //   );
+      //   if (oldEpisode != null) {
+      //     state = AsyncData(
+      //       state.requireValue.copyWith(
+      //         episodes: episodes
+      //             .map((e) => e.guid == episode.guid ? episode : e)
+      //             .toList(),
+      //       ),
+      //     );
+      //   } else {
+      //     state = AsyncData(
+      //       state.requireValue.copyWith(
+      //         episodes: [...episodes, episode],
+      //       ),
+      //     );
+      //   }
+      // } else
+      if (event case EpisodeStatsUpdatedEvent(stats: final stats)) {
         final statsList = state.requireValue.statsList;
         final oldStats = statsList.firstWhereOrNull((s) => s.pid == stats.pid);
         if (oldStats == null || oldStats.played == stats.played) {

@@ -14,6 +14,8 @@ import 'package:audiflow/features/browser/common/data/default_podcast_api_reposi
 import 'package:audiflow/features/browser/common/data/isar_stats_repository.dart';
 import 'package:audiflow/features/browser/common/data/podcast_api_repository.dart';
 import 'package:audiflow/features/browser/common/data/stats_repository.dart';
+import 'package:audiflow/features/browser/season/data/isar_season_repository.dart';
+import 'package:audiflow/features/browser/season/data/season_repository.dart';
 import 'package:audiflow/features/config/data/build_config.dart';
 import 'package:audiflow/features/config/model/app_build_config.dart';
 import 'package:audiflow/features/download/data/download_repository.dart';
@@ -90,6 +92,7 @@ void main() async {
       queueManagerProvider.overrideWith(DefaultQueueManager.new),
       queueRepositoryProvider.overrideWithValue(IsarQueueRepository(isar)),
       rssRepositoryProvider.overrideWithValue(IsarRssRepository(isar)),
+      seasonRepositoryProvider.overrideWithValue(IsarSeasonRepository(isar)),
       statsRepositoryProvider.overrideWithValue(IsarStatsRepository(isar)),
     ],
     observers: [AsyncErrorLogger()],

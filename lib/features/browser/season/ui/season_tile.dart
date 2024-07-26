@@ -1,9 +1,9 @@
 import 'package:audiflow/features/browser/chart/ui/tile_image.dart';
-import 'package:audiflow/features/browser/podcast/model/season.dart';
+import 'package:audiflow/features/browser/season/data/podcast_season_info.dart';
+import 'package:audiflow/features/browser/season/model/season.dart';
 import 'package:audiflow/features/feed/model/model.dart';
 import 'package:audiflow/localization/generated/l10n.dart';
 import 'package:audiflow/routing/app_router.dart';
-import 'package:audiflow/features/browser/season/data/podcast_season_info.dart';
 import 'package:audiflow/utils/datetime.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -100,23 +100,22 @@ class _SeasonSubtitle extends ConsumerWidget {
     final theme = Theme.of(context);
     final l10n = L10n.of(context);
 
-    final firstDate =
-        _dateString(context, season.episodes.first.publicationDate);
-    final lastDate = _dateString(context, season.episodes.last.publicationDate);
+    final firstDate = _dateString(context, season.firstPublicationDate);
+    final latestDate = _dateString(context, season.latestPublicationDate);
     final duration = _durationString(context, season.totalDuration);
 
     final seasonState = ref.watch(podcastSeasonInfoProvider(season));
     final playedEpisodes = seasonState.valueOrNull?.playedCount;
     final episodes =
-        '$playedEpisodes/${l10n.nEpisodes(season.episodes.length)}';
+        '$playedEpisodes/${l10n.nEpisodes(season.episodeIds.length)}';
 
-    final firstLine = firstDate == null && lastDate == null
+    final firstLine = firstDate == null && latestDate == null
         ? null
-        : firstDate == lastDate
+        : firstDate == latestDate
             ? firstDate
-            : (firstDate == null || lastDate == null)
-                ? (firstDate ?? lastDate)
-                : '$firstDate 〜 $lastDate';
+            : (firstDate == null || latestDate == null)
+                ? (firstDate ?? latestDate)
+                : '$firstDate 〜 $latestDate';
     final secondLine = duration.isNotEmpty ? '$episodes $duration' : episodes;
     final title = firstLine != null ? '$firstLine\n$secondLine' : secondLine;
 

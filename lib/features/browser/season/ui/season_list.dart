@@ -1,6 +1,6 @@
 import 'package:audiflow/common/ui/fill_remaining_error.dart';
 import 'package:audiflow/common/ui/fill_remaining_loading.dart';
-import 'package:audiflow/features/browser/podcast/ui/podcast_seasons.dart';
+import 'package:audiflow/features/browser/season/data/podcast_seasons.dart';
 import 'package:audiflow/features/browser/podcast/ui/podcast_view_info_controller.dart';
 import 'package:audiflow/features/browser/season/ui/season_tile.dart';
 import 'package:audiflow/features/feed/model/model.dart';

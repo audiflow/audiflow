@@ -8,6 +8,9 @@ import 'package:audiflow/events/episode_event.dart';
 import 'package:audiflow/events/podcast_event.dart';
 import 'package:audiflow/features/browser/common/data/isar_stats_repository.dart';
 import 'package:audiflow/features/browser/common/data/stats_repository.dart';
+import 'package:audiflow/features/browser/season/data/isar_season_repository.dart';
+import 'package:audiflow/features/browser/season/data/season_repository.dart';
+import 'package:audiflow/features/browser/season/service/podcast_season_service.dart';
 import 'package:audiflow/features/feed/data/episode_repository.dart';
 import 'package:audiflow/features/feed/data/isar_episode_repository.dart';
 import 'package:audiflow/features/feed/data/isar_podcast_repository.dart';
@@ -163,10 +166,12 @@ class _Worker {
   late final PodcastRepository _podcastRepository;
   late final EpisodeRepository _episodeRepository;
   late final StatsRepository _statsRepository;
+  late final SeasonRepository _seasonRepository;
   final _commandStreamController = StreamController<_Command>();
   final _completer = Completer<void>();
   PodcastFeedParser<Uint8List, Podcast, Episode>? _feedParser;
   Podcast? _podcast;
+  final _newEpisodes = <Episode>[];
 
   void dispose() {
     _commandStreamController.close();
@@ -222,6 +227,7 @@ class _Worker {
     _podcastRepository = IsarPodcastRepository(_isar);
     _episodeRepository = IsarEpisodeRepository(_isar);
     _statsRepository = IsarStatsRepository(_isar);
+    _seasonRepository = IsarSeasonRepository(_isar);
   }
 
   Future<void> _handleLoadFeedEvent({
@@ -328,6 +334,7 @@ class _Worker {
     while (true) {
       final episode = await _feedParser!.readChannelItem();
       if (_isCancelled()) {
+        await _updateSeasons(loadingState);
         return;
       }
 
@@ -343,6 +350,7 @@ class _Worker {
         }
       }
       episodes.add(episode);
+      _newEpisodes.add(episode);
       if (batchLength <= episodes.length) {
         await _episodeRepository.saveEpisodes(episodes);
         _uiPort.send(
@@ -356,12 +364,47 @@ class _Worker {
       }
     }
 
+    await _updateSeasons(loadingState);
     _uiPort.send(
       _LoadedEpisodesMessage(
         episodes: episodes.map(PartialEpisode.fromEpisode).toList(),
         loadingState: loadingState,
       ),
     );
+  }
+
+  Future<void> _updateSeasons(LoadingState loadingState) async {
+    if (_podcast == null || _newEpisodes.isEmpty) {
+      return;
+    }
+
+    final seasons = await _seasonRepository.findPodcastSeasons(_podcast!.id);
+    final seasonService = PodcastSeasonService();
+    var updatedSeasons = seasonService.extractSeasons(
+      _podcast!,
+      _newEpisodes,
+      seasons,
+    );
+
+    if (seasons.isEmpty &&
+        updatedSeasons.isNotEmpty &&
+        loadingState == LoadingState.reachedLastPubDate) {
+      // The podcast turned supporting "season".
+      final allEpisodes = await _episodeRepository.findEpisodesByPodcastId(
+        _podcast!.id,
+      );
+      updatedSeasons = seasonService.extractSeasons(
+        _podcast!,
+        allEpisodes,
+        seasons,
+      );
+      return;
+    }
+
+    if (updatedSeasons.isNotEmpty) {
+      final seasons = updatedSeasons.toList();
+      await _seasonRepository.saveSeasons(updatedSeasons);
+    }
   }
 }
 
