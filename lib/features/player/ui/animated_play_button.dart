@@ -1,8 +1,7 @@
-import 'package:audiflow/localization/generated/l10n.dart';
 import 'package:audiflow/core/types.dart';
-import 'package:audiflow/entities/entities.dart';
+import 'package:audiflow/features/browser/episode/data/episode_info.dart';
 import 'package:audiflow/features/player/service/audio_player_service.dart';
-import 'package:audiflow/ui/controllers/episode_info_provider.dart';
+import 'package:audiflow/localization/generated/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
