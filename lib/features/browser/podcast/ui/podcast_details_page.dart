@@ -1,20 +1,22 @@
 import 'package:audiflow/common/ui/fill_remaining_error.dart';
 import 'package:audiflow/common/ui/fill_remaining_loading.dart';
-import 'package:audiflow/features/browser/common/ui/basic_app_bar.dart';
+import 'package:audiflow/common/ui/placeholder_builder.dart';
+import 'package:audiflow/constants/app_sizes.dart';
 import 'package:audiflow/features/browser/common/ui/podcast_html.dart';
 import 'package:audiflow/features/browser/episode/ui/episode_list.dart';
 import 'package:audiflow/features/browser/episode/ui/episodes_list_event.dart';
-import 'package:audiflow/features/browser/podcast/model/season.dart';
+import 'package:audiflow/features/browser/podcast/data/podcast_info.dart';
 import 'package:audiflow/features/browser/podcast/ui/funding_menu.dart';
 import 'package:audiflow/features/browser/podcast/ui/podcast_details_app_bar.dart';
-import 'package:audiflow/features/browser/podcast/ui/podcast_seasons.dart';
+import 'package:audiflow/features/browser/podcast/ui/podcast_page_header_image.dart';
 import 'package:audiflow/features/browser/podcast/ui/podcast_view_episodes.dart';
 import 'package:audiflow/features/browser/podcast/ui/podcast_view_info_controller.dart';
+import 'package:audiflow/features/browser/season/data/podcast_seasons.dart';
+import 'package:audiflow/features/browser/season/model/season.dart';
 import 'package:audiflow/features/browser/season/ui/season_list.dart';
 import 'package:audiflow/features/feed/model/model.dart';
 import 'package:audiflow/features/preference/data/app_preference_repository.dart';
 import 'package:audiflow/localization/generated/l10n.dart';
-import 'package:audiflow/features/browser/podcast/data/podcast_info.dart';
 import 'package:audiflow/utils/logger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -52,19 +54,19 @@ class PodcastDetailsPage extends HookConsumerWidget {
         collectionId: collectionId,
       ),
     );
-    logger.d('podcastInfoState: $podcastInfoState');
-
-    final podcast = podcastInfoState.valueOrNull?.podcast;
-    return podcast == null
-        ? _PodcastDetailsLoadingPage(
-            title: title,
-            author: author,
-            thumbnailUrl: thumbnailUrl,
-          )
-        : _PodcastDetailsPage(
-            podcast: podcast,
-            stats: podcastInfoState.valueOrNull?.stats,
-          );
+    logger.d(() => 'podcastInfoState: $podcastInfoState');
+    //
+    // final podcast = podcastInfoState.valueOrNull?.podcast;
+    // return podcast == null
+    return _PodcastDetailsLoadingPage(
+      title: title,
+      author: author,
+      thumbnailUrl: thumbnailUrl,
+    );
+    // : _PodcastDetailsPage(
+    //     podcast: podcast,
+    //     stats: podcastInfoState.valueOrNull?.stats,
+    //   );
   }
 }
 
@@ -87,14 +89,68 @@ class _PodcastDetailsLoadingPage extends HookConsumerWidget {
       child: Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         body: CustomScrollView(
+          physics: const NeverScrollableScrollPhysics(),
           slivers: <Widget>[
-            title == null || thumbnailUrl == null
-                ? const BasicAppBar(title: '')
-                : PodcastDetailsLoadingAppBar(
-                    title: title!,
-                    thumbnailUrl: thumbnailUrl!,
-                  ),
+            PodcastDetailsAppBar(title: title),
+            _ImageAndTitle(
+              title: title ?? '',
+              author: author,
+              thumbnailUrl: thumbnailUrl,
+            ),
             const FillRemainingLoading()
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ImageAndTitle extends StatelessWidget {
+  const _ImageAndTitle({
+    required this.title,
+    required this.author,
+    required this.thumbnailUrl,
+  });
+
+  final String title;
+  final String? author;
+  final String? thumbnailUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final placeholderBuilder = PlaceholderBuilder.of(context);
+    return SliverPadding(
+      padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
+      sliver: SliverToBoxAdapter(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            PodcastHeaderImage.small(
+              imageUrl: thumbnailUrl ?? '',
+              placeholderBuilder: placeholderBuilder,
+            ),
+            gapW8,
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: textTheme.titleMedium,
+                    textAlign: TextAlign.left,
+                  ),
+                  gapH12,
+                  if (author != null)
+                    Text(
+                      author!,
+                      style: textTheme.bodySmall,
+                      textAlign: TextAlign.left,
+                    ),
+                ],
+              ),
+            ),
           ],
         ),
       ),

@@ -23,6 +23,12 @@ class PodcastHeaderImage extends StatelessWidget {
     required this.placeholderBuilder,
   }) : size = 240;
 
+  const PodcastHeaderImage.small({
+    super.key,
+    required this.imageUrl,
+    required this.placeholderBuilder,
+  }) : size = 100;
+
   final String imageUrl;
   final PlaceholderBuilder? placeholderBuilder;
   final double size;
