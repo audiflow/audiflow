@@ -70,7 +70,10 @@ class IsarStatsRepository implements StatsRepository {
           : param.subscribed!
               ? DateTime.now()
               : null,
-      lastCheckedAt: param.lastCheckedAt ?? stats?.lastCheckedAt,
+      lastCheckedAt:
+          param.lastCheckedAt ?? stats?.lastCheckedAt ?? DateTime.now(),
+      latestPubDate: param.latestPubDate ?? stats?.latestPubDate,
+      hasLoadedAll: param.hasLoadedAll ?? stats?.hasLoadedAll ?? false,
     );
     await isar.podcastStats.put(newStats);
     return newStats;

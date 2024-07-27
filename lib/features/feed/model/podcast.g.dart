@@ -117,6 +117,19 @@ const PodcastSchema = CollectionSchema(
           caseSensitive: true,
         )
       ],
+    ),
+    r'collectionId': IndexSchema(
+      id: -7489395134515229581,
+      name: r'collectionId',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'collectionId',
+          type: IndexType.value,
+          caseSensitive: false,
+        )
+      ],
     )
   },
   links: {
@@ -397,6 +410,14 @@ extension PodcastQueryWhereSort on QueryBuilder<Podcast, Podcast, QWhere> {
       return query.addWhereClause(const IdWhereClause.any());
     });
   }
+
+  QueryBuilder<Podcast, Podcast, QAfterWhere> anyCollectionId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'collectionId'),
+      );
+    });
+  }
 }
 
 extension PodcastQueryWhere on QueryBuilder<Podcast, Podcast, QWhereClause> {
@@ -507,6 +528,116 @@ extension PodcastQueryWhere on QueryBuilder<Podcast, Podcast, QWhereClause> {
               includeUpper: false,
             ));
       }
+    });
+  }
+
+  QueryBuilder<Podcast, Podcast, QAfterWhereClause> collectionIdIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'collectionId',
+        value: [null],
+      ));
+    });
+  }
+
+  QueryBuilder<Podcast, Podcast, QAfterWhereClause> collectionIdIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'collectionId',
+        lower: [null],
+        includeLower: false,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<Podcast, Podcast, QAfterWhereClause> collectionIdEqualTo(
+      int? collectionId) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'collectionId',
+        value: [collectionId],
+      ));
+    });
+  }
+
+  QueryBuilder<Podcast, Podcast, QAfterWhereClause> collectionIdNotEqualTo(
+      int? collectionId) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'collectionId',
+              lower: [],
+              upper: [collectionId],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'collectionId',
+              lower: [collectionId],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'collectionId',
+              lower: [collectionId],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'collectionId',
+              lower: [],
+              upper: [collectionId],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<Podcast, Podcast, QAfterWhereClause> collectionIdGreaterThan(
+    int? collectionId, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'collectionId',
+        lower: [collectionId],
+        includeLower: include,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<Podcast, Podcast, QAfterWhereClause> collectionIdLessThan(
+    int? collectionId, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'collectionId',
+        lower: [],
+        upper: [collectionId],
+        includeUpper: include,
+      ));
+    });
+  }
+
+  QueryBuilder<Podcast, Podcast, QAfterWhereClause> collectionIdBetween(
+    int? lowerCollectionId,
+    int? upperCollectionId, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'collectionId',
+        lower: [lowerCollectionId],
+        includeLower: includeLower,
+        upper: [upperCollectionId],
+        includeUpper: includeUpper,
+      ));
     });
   }
 }
@@ -3282,13 +3413,23 @@ const PodcastStatsSchema = CollectionSchema(
   name: r'PodcastStats',
   id: 7298669046056592682,
   properties: {
-    r'lastCheckedAt': PropertySchema(
+    r'hasLoadedAll': PropertySchema(
       id: 0,
+      name: r'hasLoadedAll',
+      type: IsarType.bool,
+    ),
+    r'lastCheckedAt': PropertySchema(
+      id: 1,
       name: r'lastCheckedAt',
       type: IsarType.dateTime,
     ),
+    r'latestPubDate': PropertySchema(
+      id: 2,
+      name: r'latestPubDate',
+      type: IsarType.dateTime,
+    ),
     r'subscribedDate': PropertySchema(
-      id: 1,
+      id: 3,
       name: r'subscribedDate',
       type: IsarType.dateTime,
     )
@@ -3307,6 +3448,19 @@ const PodcastStatsSchema = CollectionSchema(
       properties: [
         IndexPropertySchema(
           name: r'subscribedDate',
+          type: IndexType.value,
+          caseSensitive: false,
+        )
+      ],
+    ),
+    r'latestPubDate': IndexSchema(
+      id: 9018955546118508988,
+      name: r'latestPubDate',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'latestPubDate',
           type: IndexType.value,
           caseSensitive: false,
         )
@@ -3336,8 +3490,10 @@ void _podcastStatsSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeDateTime(offsets[0], object.lastCheckedAt);
-  writer.writeDateTime(offsets[1], object.subscribedDate);
+  writer.writeBool(offsets[0], object.hasLoadedAll);
+  writer.writeDateTime(offsets[1], object.lastCheckedAt);
+  writer.writeDateTime(offsets[2], object.latestPubDate);
+  writer.writeDateTime(offsets[3], object.subscribedDate);
 }
 
 PodcastStats _podcastStatsDeserialize(
@@ -3347,9 +3503,11 @@ PodcastStats _podcastStatsDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = PodcastStats(
+    hasLoadedAll: reader.readBool(offsets[0]),
     id: id,
-    lastCheckedAt: reader.readDateTimeOrNull(offsets[0]),
-    subscribedDate: reader.readDateTimeOrNull(offsets[1]),
+    lastCheckedAt: reader.readDateTime(offsets[1]),
+    latestPubDate: reader.readDateTimeOrNull(offsets[2]),
+    subscribedDate: reader.readDateTimeOrNull(offsets[3]),
   );
   return object;
 }
@@ -3362,8 +3520,12 @@ P _podcastStatsDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readDateTimeOrNull(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 1:
+      return (reader.readDateTime(offset)) as P;
+    case 2:
+      return (reader.readDateTimeOrNull(offset)) as P;
+    case 3:
       return (reader.readDateTimeOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -3393,6 +3555,14 @@ extension PodcastStatsQueryWhereSort
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         const IndexWhereClause.any(indexName: r'subscribedDate'),
+      );
+    });
+  }
+
+  QueryBuilder<PodcastStats, PodcastStats, QAfterWhere> anyLatestPubDate() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'latestPubDate'),
       );
     });
   }
@@ -3581,10 +3751,135 @@ extension PodcastStatsQueryWhere
       ));
     });
   }
+
+  QueryBuilder<PodcastStats, PodcastStats, QAfterWhereClause>
+      latestPubDateIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'latestPubDate',
+        value: [null],
+      ));
+    });
+  }
+
+  QueryBuilder<PodcastStats, PodcastStats, QAfterWhereClause>
+      latestPubDateIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'latestPubDate',
+        lower: [null],
+        includeLower: false,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<PodcastStats, PodcastStats, QAfterWhereClause>
+      latestPubDateEqualTo(DateTime? latestPubDate) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'latestPubDate',
+        value: [latestPubDate],
+      ));
+    });
+  }
+
+  QueryBuilder<PodcastStats, PodcastStats, QAfterWhereClause>
+      latestPubDateNotEqualTo(DateTime? latestPubDate) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'latestPubDate',
+              lower: [],
+              upper: [latestPubDate],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'latestPubDate',
+              lower: [latestPubDate],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'latestPubDate',
+              lower: [latestPubDate],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'latestPubDate',
+              lower: [],
+              upper: [latestPubDate],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<PodcastStats, PodcastStats, QAfterWhereClause>
+      latestPubDateGreaterThan(
+    DateTime? latestPubDate, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'latestPubDate',
+        lower: [latestPubDate],
+        includeLower: include,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<PodcastStats, PodcastStats, QAfterWhereClause>
+      latestPubDateLessThan(
+    DateTime? latestPubDate, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'latestPubDate',
+        lower: [],
+        upper: [latestPubDate],
+        includeUpper: include,
+      ));
+    });
+  }
+
+  QueryBuilder<PodcastStats, PodcastStats, QAfterWhereClause>
+      latestPubDateBetween(
+    DateTime? lowerLatestPubDate,
+    DateTime? upperLatestPubDate, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'latestPubDate',
+        lower: [lowerLatestPubDate],
+        includeLower: includeLower,
+        upper: [upperLatestPubDate],
+        includeUpper: includeUpper,
+      ));
+    });
+  }
 }
 
 extension PodcastStatsQueryFilter
     on QueryBuilder<PodcastStats, PodcastStats, QFilterCondition> {
+  QueryBuilder<PodcastStats, PodcastStats, QAfterFilterCondition>
+      hasLoadedAllEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'hasLoadedAll',
+        value: value,
+      ));
+    });
+  }
+
   QueryBuilder<PodcastStats, PodcastStats, QAfterFilterCondition> idEqualTo(
       Id value) {
     return QueryBuilder.apply(this, (query) {
@@ -3639,25 +3934,7 @@ extension PodcastStatsQueryFilter
   }
 
   QueryBuilder<PodcastStats, PodcastStats, QAfterFilterCondition>
-      lastCheckedAtIsNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'lastCheckedAt',
-      ));
-    });
-  }
-
-  QueryBuilder<PodcastStats, PodcastStats, QAfterFilterCondition>
-      lastCheckedAtIsNotNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'lastCheckedAt',
-      ));
-    });
-  }
-
-  QueryBuilder<PodcastStats, PodcastStats, QAfterFilterCondition>
-      lastCheckedAtEqualTo(DateTime? value) {
+      lastCheckedAtEqualTo(DateTime value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'lastCheckedAt',
@@ -3668,7 +3945,7 @@ extension PodcastStatsQueryFilter
 
   QueryBuilder<PodcastStats, PodcastStats, QAfterFilterCondition>
       lastCheckedAtGreaterThan(
-    DateTime? value, {
+    DateTime value, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -3682,7 +3959,7 @@ extension PodcastStatsQueryFilter
 
   QueryBuilder<PodcastStats, PodcastStats, QAfterFilterCondition>
       lastCheckedAtLessThan(
-    DateTime? value, {
+    DateTime value, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -3696,6 +3973,80 @@ extension PodcastStatsQueryFilter
 
   QueryBuilder<PodcastStats, PodcastStats, QAfterFilterCondition>
       lastCheckedAtBetween(
+    DateTime lower,
+    DateTime upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'lastCheckedAt',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<PodcastStats, PodcastStats, QAfterFilterCondition>
+      latestPubDateIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'latestPubDate',
+      ));
+    });
+  }
+
+  QueryBuilder<PodcastStats, PodcastStats, QAfterFilterCondition>
+      latestPubDateIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'latestPubDate',
+      ));
+    });
+  }
+
+  QueryBuilder<PodcastStats, PodcastStats, QAfterFilterCondition>
+      latestPubDateEqualTo(DateTime? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'latestPubDate',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<PodcastStats, PodcastStats, QAfterFilterCondition>
+      latestPubDateGreaterThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'latestPubDate',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<PodcastStats, PodcastStats, QAfterFilterCondition>
+      latestPubDateLessThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'latestPubDate',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<PodcastStats, PodcastStats, QAfterFilterCondition>
+      latestPubDateBetween(
     DateTime? lower,
     DateTime? upper, {
     bool includeLower = true,
@@ -3703,7 +4054,7 @@ extension PodcastStatsQueryFilter
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
-        property: r'lastCheckedAt',
+        property: r'latestPubDate',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
@@ -3795,6 +4146,19 @@ extension PodcastStatsQueryLinks
 
 extension PodcastStatsQuerySortBy
     on QueryBuilder<PodcastStats, PodcastStats, QSortBy> {
+  QueryBuilder<PodcastStats, PodcastStats, QAfterSortBy> sortByHasLoadedAll() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'hasLoadedAll', Sort.asc);
+    });
+  }
+
+  QueryBuilder<PodcastStats, PodcastStats, QAfterSortBy>
+      sortByHasLoadedAllDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'hasLoadedAll', Sort.desc);
+    });
+  }
+
   QueryBuilder<PodcastStats, PodcastStats, QAfterSortBy> sortByLastCheckedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'lastCheckedAt', Sort.asc);
@@ -3805,6 +4169,19 @@ extension PodcastStatsQuerySortBy
       sortByLastCheckedAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'lastCheckedAt', Sort.desc);
+    });
+  }
+
+  QueryBuilder<PodcastStats, PodcastStats, QAfterSortBy> sortByLatestPubDate() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'latestPubDate', Sort.asc);
+    });
+  }
+
+  QueryBuilder<PodcastStats, PodcastStats, QAfterSortBy>
+      sortByLatestPubDateDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'latestPubDate', Sort.desc);
     });
   }
 
@@ -3825,6 +4202,19 @@ extension PodcastStatsQuerySortBy
 
 extension PodcastStatsQuerySortThenBy
     on QueryBuilder<PodcastStats, PodcastStats, QSortThenBy> {
+  QueryBuilder<PodcastStats, PodcastStats, QAfterSortBy> thenByHasLoadedAll() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'hasLoadedAll', Sort.asc);
+    });
+  }
+
+  QueryBuilder<PodcastStats, PodcastStats, QAfterSortBy>
+      thenByHasLoadedAllDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'hasLoadedAll', Sort.desc);
+    });
+  }
+
   QueryBuilder<PodcastStats, PodcastStats, QAfterSortBy> thenById() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.asc);
@@ -3850,6 +4240,19 @@ extension PodcastStatsQuerySortThenBy
     });
   }
 
+  QueryBuilder<PodcastStats, PodcastStats, QAfterSortBy> thenByLatestPubDate() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'latestPubDate', Sort.asc);
+    });
+  }
+
+  QueryBuilder<PodcastStats, PodcastStats, QAfterSortBy>
+      thenByLatestPubDateDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'latestPubDate', Sort.desc);
+    });
+  }
+
   QueryBuilder<PodcastStats, PodcastStats, QAfterSortBy>
       thenBySubscribedDate() {
     return QueryBuilder.apply(this, (query) {
@@ -3867,10 +4270,23 @@ extension PodcastStatsQuerySortThenBy
 
 extension PodcastStatsQueryWhereDistinct
     on QueryBuilder<PodcastStats, PodcastStats, QDistinct> {
+  QueryBuilder<PodcastStats, PodcastStats, QDistinct> distinctByHasLoadedAll() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'hasLoadedAll');
+    });
+  }
+
   QueryBuilder<PodcastStats, PodcastStats, QDistinct>
       distinctByLastCheckedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'lastCheckedAt');
+    });
+  }
+
+  QueryBuilder<PodcastStats, PodcastStats, QDistinct>
+      distinctByLatestPubDate() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'latestPubDate');
     });
   }
 
@@ -3890,10 +4306,23 @@ extension PodcastStatsQueryProperty
     });
   }
 
-  QueryBuilder<PodcastStats, DateTime?, QQueryOperations>
+  QueryBuilder<PodcastStats, bool, QQueryOperations> hasLoadedAllProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'hasLoadedAll');
+    });
+  }
+
+  QueryBuilder<PodcastStats, DateTime, QQueryOperations>
       lastCheckedAtProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'lastCheckedAt');
+    });
+  }
+
+  QueryBuilder<PodcastStats, DateTime?, QQueryOperations>
+      latestPubDateProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'latestPubDate');
     });
   }
 

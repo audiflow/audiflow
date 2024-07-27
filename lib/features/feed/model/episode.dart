@@ -52,6 +52,7 @@ class Episode {
   Id get id => idFrom(guid);
 
   /// The Isar ID of the parent podcast.
+  @Index()
   final int pid;
 
   /// The URL of the media file.
@@ -71,6 +72,7 @@ class Episode {
   String? link;
 
   /// The release date and time of an episode.
+  @Index(unique: true)
   final DateTime? publicationDate;
 
   /// The episode description.
@@ -98,10 +100,12 @@ class Episode {
 
   /// The chronological number that is associated with a podcast episode.
   /// Must be a non-zero integer. This is required for serial podcasts.
+  @Index(unique: true)
   final int? episode;
 
   /// The chronological number associated with a podcast episode's season.
   /// Must be a non-zero integer.
+  @Index(unique: true)
   final int? season;
 
   /// The type of episode.

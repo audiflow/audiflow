@@ -6,7 +6,6 @@ import 'package:podcast_feed/podcast_feed.dart' show ShowType;
 
 part 'podcast.g.dart';
 
-/// A class that represents an instance of a podcast search result item.
 @collection
 class Podcast {
   Podcast({
@@ -75,6 +74,7 @@ class Podcast {
   final String feedUrl;
 
   /// The collection ID(iTunesID).
+  @Index()
   final int? collectionId;
 
   /// The new podcast RSS Feed URL.
@@ -159,22 +159,47 @@ class PodcastStats {
   PodcastStats({
     required this.id,
     this.subscribedDate,
-    this.lastCheckedAt,
+    this.latestPubDate,
+    required this.lastCheckedAt,
+    required this.hasLoadedAll,
   });
 
   final Id id;
+
+  /// The date the podcast was subscribed to.
+  ///
+  /// null means the podcast is not subscribed.
   @Index()
   final DateTime? subscribedDate;
-  final DateTime? lastCheckedAt;
+
+  /// The latest published date of the podcast episodes.
+  ///
+  /// This could be null if the podcast has not been loaded any episodes yet.
+  @Index()
+  final DateTime? latestPubDate;
+
+  /// The last time the podcast was checked for new episodes.
+  final DateTime lastCheckedAt;
+
+  /// Flag indicating if all episodes have been loaded at least once.
+  ///
+  /// This is used to determine if a full feed read is needed in cases where
+  /// the initial load was interrupted, ensuring incremental updates can be
+  /// applied correctly in future loads.
+  final bool hasLoadedAll;
 
   PodcastStats copyWith({
     DateTime? subscribedDate,
+    DateTime? latestPubDate,
     DateTime? lastCheckedAt,
+    bool? hasLoadedAll,
   }) {
     return PodcastStats(
       id: id,
       subscribedDate: subscribedDate ?? this.subscribedDate,
+      latestPubDate: latestPubDate ?? this.latestPubDate,
       lastCheckedAt: lastCheckedAt ?? this.lastCheckedAt,
+      hasLoadedAll: hasLoadedAll ?? this.hasLoadedAll,
     );
   }
 }
@@ -187,21 +212,29 @@ class PodcastStatsUpdateParam {
   const PodcastStatsUpdateParam({
     required this.id,
     this.subscribed,
+    this.latestPubDate,
     this.lastCheckedAt,
+    this.hasLoadedAll,
   });
 
   final Id id;
   final bool? subscribed;
+  final DateTime? latestPubDate;
   final DateTime? lastCheckedAt;
+  final bool? hasLoadedAll;
 
   PodcastStatsUpdateParam copyWith({
     bool? subscribed,
     DateTime? lastCheckedAt,
+    DateTime? latestPubDate,
+    bool? hasLoadedAll,
   }) {
     return PodcastStatsUpdateParam(
       id: id,
       subscribed: subscribed ?? this.subscribed,
+      latestPubDate: latestPubDate ?? this.latestPubDate,
       lastCheckedAt: lastCheckedAt ?? this.lastCheckedAt,
+      hasLoadedAll: hasLoadedAll ?? this.hasLoadedAll,
     );
   }
 }

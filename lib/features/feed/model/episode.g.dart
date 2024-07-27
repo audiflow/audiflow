@@ -95,6 +95,19 @@ const EpisodeSchema = CollectionSchema(
   deserializeProp: _episodeDeserializeProp,
   idName: r'id',
   indexes: {
+    r'pid': IndexSchema(
+      id: 2970402811525951487,
+      name: r'pid',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'pid',
+          type: IndexType.value,
+          caseSensitive: false,
+        )
+      ],
+    ),
     r'guid': IndexSchema(
       id: 4245463075130215835,
       name: r'guid',
@@ -105,6 +118,45 @@ const EpisodeSchema = CollectionSchema(
           name: r'guid',
           type: IndexType.hash,
           caseSensitive: true,
+        )
+      ],
+    ),
+    r'publicationDate': IndexSchema(
+      id: 5092957953251450645,
+      name: r'publicationDate',
+      unique: true,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'publicationDate',
+          type: IndexType.value,
+          caseSensitive: false,
+        )
+      ],
+    ),
+    r'episode': IndexSchema(
+      id: 5077628722353948045,
+      name: r'episode',
+      unique: true,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'episode',
+          type: IndexType.value,
+          caseSensitive: false,
+        )
+      ],
+    ),
+    r'season': IndexSchema(
+      id: 6094185357012972874,
+      name: r'season',
+      unique: true,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'season',
+          type: IndexType.value,
+          caseSensitive: false,
         )
       ],
     )
@@ -339,12 +391,204 @@ extension EpisodeByIndex on IsarCollection<Episode> {
   List<Id> putAllByGuidSync(List<Episode> objects, {bool saveLinks = true}) {
     return putAllByIndexSync(r'guid', objects, saveLinks: saveLinks);
   }
+
+  Future<Episode?> getByPublicationDate(DateTime? publicationDate) {
+    return getByIndex(r'publicationDate', [publicationDate]);
+  }
+
+  Episode? getByPublicationDateSync(DateTime? publicationDate) {
+    return getByIndexSync(r'publicationDate', [publicationDate]);
+  }
+
+  Future<bool> deleteByPublicationDate(DateTime? publicationDate) {
+    return deleteByIndex(r'publicationDate', [publicationDate]);
+  }
+
+  bool deleteByPublicationDateSync(DateTime? publicationDate) {
+    return deleteByIndexSync(r'publicationDate', [publicationDate]);
+  }
+
+  Future<List<Episode?>> getAllByPublicationDate(
+      List<DateTime?> publicationDateValues) {
+    final values = publicationDateValues.map((e) => [e]).toList();
+    return getAllByIndex(r'publicationDate', values);
+  }
+
+  List<Episode?> getAllByPublicationDateSync(
+      List<DateTime?> publicationDateValues) {
+    final values = publicationDateValues.map((e) => [e]).toList();
+    return getAllByIndexSync(r'publicationDate', values);
+  }
+
+  Future<int> deleteAllByPublicationDate(
+      List<DateTime?> publicationDateValues) {
+    final values = publicationDateValues.map((e) => [e]).toList();
+    return deleteAllByIndex(r'publicationDate', values);
+  }
+
+  int deleteAllByPublicationDateSync(List<DateTime?> publicationDateValues) {
+    final values = publicationDateValues.map((e) => [e]).toList();
+    return deleteAllByIndexSync(r'publicationDate', values);
+  }
+
+  Future<Id> putByPublicationDate(Episode object) {
+    return putByIndex(r'publicationDate', object);
+  }
+
+  Id putByPublicationDateSync(Episode object, {bool saveLinks = true}) {
+    return putByIndexSync(r'publicationDate', object, saveLinks: saveLinks);
+  }
+
+  Future<List<Id>> putAllByPublicationDate(List<Episode> objects) {
+    return putAllByIndex(r'publicationDate', objects);
+  }
+
+  List<Id> putAllByPublicationDateSync(List<Episode> objects,
+      {bool saveLinks = true}) {
+    return putAllByIndexSync(r'publicationDate', objects, saveLinks: saveLinks);
+  }
+
+  Future<Episode?> getByEpisode(int? episode) {
+    return getByIndex(r'episode', [episode]);
+  }
+
+  Episode? getByEpisodeSync(int? episode) {
+    return getByIndexSync(r'episode', [episode]);
+  }
+
+  Future<bool> deleteByEpisode(int? episode) {
+    return deleteByIndex(r'episode', [episode]);
+  }
+
+  bool deleteByEpisodeSync(int? episode) {
+    return deleteByIndexSync(r'episode', [episode]);
+  }
+
+  Future<List<Episode?>> getAllByEpisode(List<int?> episodeValues) {
+    final values = episodeValues.map((e) => [e]).toList();
+    return getAllByIndex(r'episode', values);
+  }
+
+  List<Episode?> getAllByEpisodeSync(List<int?> episodeValues) {
+    final values = episodeValues.map((e) => [e]).toList();
+    return getAllByIndexSync(r'episode', values);
+  }
+
+  Future<int> deleteAllByEpisode(List<int?> episodeValues) {
+    final values = episodeValues.map((e) => [e]).toList();
+    return deleteAllByIndex(r'episode', values);
+  }
+
+  int deleteAllByEpisodeSync(List<int?> episodeValues) {
+    final values = episodeValues.map((e) => [e]).toList();
+    return deleteAllByIndexSync(r'episode', values);
+  }
+
+  Future<Id> putByEpisode(Episode object) {
+    return putByIndex(r'episode', object);
+  }
+
+  Id putByEpisodeSync(Episode object, {bool saveLinks = true}) {
+    return putByIndexSync(r'episode', object, saveLinks: saveLinks);
+  }
+
+  Future<List<Id>> putAllByEpisode(List<Episode> objects) {
+    return putAllByIndex(r'episode', objects);
+  }
+
+  List<Id> putAllByEpisodeSync(List<Episode> objects, {bool saveLinks = true}) {
+    return putAllByIndexSync(r'episode', objects, saveLinks: saveLinks);
+  }
+
+  Future<Episode?> getBySeason(int? season) {
+    return getByIndex(r'season', [season]);
+  }
+
+  Episode? getBySeasonSync(int? season) {
+    return getByIndexSync(r'season', [season]);
+  }
+
+  Future<bool> deleteBySeason(int? season) {
+    return deleteByIndex(r'season', [season]);
+  }
+
+  bool deleteBySeasonSync(int? season) {
+    return deleteByIndexSync(r'season', [season]);
+  }
+
+  Future<List<Episode?>> getAllBySeason(List<int?> seasonValues) {
+    final values = seasonValues.map((e) => [e]).toList();
+    return getAllByIndex(r'season', values);
+  }
+
+  List<Episode?> getAllBySeasonSync(List<int?> seasonValues) {
+    final values = seasonValues.map((e) => [e]).toList();
+    return getAllByIndexSync(r'season', values);
+  }
+
+  Future<int> deleteAllBySeason(List<int?> seasonValues) {
+    final values = seasonValues.map((e) => [e]).toList();
+    return deleteAllByIndex(r'season', values);
+  }
+
+  int deleteAllBySeasonSync(List<int?> seasonValues) {
+    final values = seasonValues.map((e) => [e]).toList();
+    return deleteAllByIndexSync(r'season', values);
+  }
+
+  Future<Id> putBySeason(Episode object) {
+    return putByIndex(r'season', object);
+  }
+
+  Id putBySeasonSync(Episode object, {bool saveLinks = true}) {
+    return putByIndexSync(r'season', object, saveLinks: saveLinks);
+  }
+
+  Future<List<Id>> putAllBySeason(List<Episode> objects) {
+    return putAllByIndex(r'season', objects);
+  }
+
+  List<Id> putAllBySeasonSync(List<Episode> objects, {bool saveLinks = true}) {
+    return putAllByIndexSync(r'season', objects, saveLinks: saveLinks);
+  }
 }
 
 extension EpisodeQueryWhereSort on QueryBuilder<Episode, Episode, QWhere> {
   QueryBuilder<Episode, Episode, QAfterWhere> anyId() {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(const IdWhereClause.any());
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterWhere> anyPid() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'pid'),
+      );
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterWhere> anyPublicationDate() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'publicationDate'),
+      );
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterWhere> anyEpisode() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'episode'),
+      );
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterWhere> anySeason() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'season'),
+      );
     });
   }
 }
@@ -415,6 +659,94 @@ extension EpisodeQueryWhere on QueryBuilder<Episode, Episode, QWhereClause> {
     });
   }
 
+  QueryBuilder<Episode, Episode, QAfterWhereClause> pidEqualTo(int pid) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'pid',
+        value: [pid],
+      ));
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterWhereClause> pidNotEqualTo(int pid) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'pid',
+              lower: [],
+              upper: [pid],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'pid',
+              lower: [pid],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'pid',
+              lower: [pid],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'pid',
+              lower: [],
+              upper: [pid],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterWhereClause> pidGreaterThan(
+    int pid, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'pid',
+        lower: [pid],
+        includeLower: include,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterWhereClause> pidLessThan(
+    int pid, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'pid',
+        lower: [],
+        upper: [pid],
+        includeUpper: include,
+      ));
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterWhereClause> pidBetween(
+    int lowerPid,
+    int upperPid, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'pid',
+        lower: [lowerPid],
+        includeLower: includeLower,
+        upper: [upperPid],
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
   QueryBuilder<Episode, Episode, QAfterWhereClause> guidEqualTo(String guid) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IndexWhereClause.equalTo(
@@ -456,6 +788,335 @@ extension EpisodeQueryWhere on QueryBuilder<Episode, Episode, QWhereClause> {
               includeUpper: false,
             ));
       }
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterWhereClause> publicationDateIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'publicationDate',
+        value: [null],
+      ));
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterWhereClause> publicationDateIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'publicationDate',
+        lower: [null],
+        includeLower: false,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterWhereClause> publicationDateEqualTo(
+      DateTime? publicationDate) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'publicationDate',
+        value: [publicationDate],
+      ));
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterWhereClause> publicationDateNotEqualTo(
+      DateTime? publicationDate) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'publicationDate',
+              lower: [],
+              upper: [publicationDate],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'publicationDate',
+              lower: [publicationDate],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'publicationDate',
+              lower: [publicationDate],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'publicationDate',
+              lower: [],
+              upper: [publicationDate],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterWhereClause> publicationDateGreaterThan(
+    DateTime? publicationDate, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'publicationDate',
+        lower: [publicationDate],
+        includeLower: include,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterWhereClause> publicationDateLessThan(
+    DateTime? publicationDate, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'publicationDate',
+        lower: [],
+        upper: [publicationDate],
+        includeUpper: include,
+      ));
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterWhereClause> publicationDateBetween(
+    DateTime? lowerPublicationDate,
+    DateTime? upperPublicationDate, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'publicationDate',
+        lower: [lowerPublicationDate],
+        includeLower: includeLower,
+        upper: [upperPublicationDate],
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterWhereClause> episodeIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'episode',
+        value: [null],
+      ));
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterWhereClause> episodeIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'episode',
+        lower: [null],
+        includeLower: false,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterWhereClause> episodeEqualTo(
+      int? episode) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'episode',
+        value: [episode],
+      ));
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterWhereClause> episodeNotEqualTo(
+      int? episode) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'episode',
+              lower: [],
+              upper: [episode],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'episode',
+              lower: [episode],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'episode',
+              lower: [episode],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'episode',
+              lower: [],
+              upper: [episode],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterWhereClause> episodeGreaterThan(
+    int? episode, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'episode',
+        lower: [episode],
+        includeLower: include,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterWhereClause> episodeLessThan(
+    int? episode, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'episode',
+        lower: [],
+        upper: [episode],
+        includeUpper: include,
+      ));
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterWhereClause> episodeBetween(
+    int? lowerEpisode,
+    int? upperEpisode, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'episode',
+        lower: [lowerEpisode],
+        includeLower: includeLower,
+        upper: [upperEpisode],
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterWhereClause> seasonIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'season',
+        value: [null],
+      ));
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterWhereClause> seasonIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'season',
+        lower: [null],
+        includeLower: false,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterWhereClause> seasonEqualTo(int? season) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'season',
+        value: [season],
+      ));
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterWhereClause> seasonNotEqualTo(
+      int? season) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'season',
+              lower: [],
+              upper: [season],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'season',
+              lower: [season],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'season',
+              lower: [season],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'season',
+              lower: [],
+              upper: [season],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterWhereClause> seasonGreaterThan(
+    int? season, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'season',
+        lower: [season],
+        includeLower: include,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterWhereClause> seasonLessThan(
+    int? season, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'season',
+        lower: [],
+        upper: [season],
+        includeUpper: include,
+      ));
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterWhereClause> seasonBetween(
+    int? lowerSeason,
+    int? upperSeason, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'season',
+        lower: [lowerSeason],
+        includeLower: includeLower,
+        upper: [upperSeason],
+        includeUpper: includeUpper,
+      ));
     });
   }
 }

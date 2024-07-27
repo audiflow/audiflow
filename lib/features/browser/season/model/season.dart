@@ -28,13 +28,15 @@ class Season {
 
   Id get id => fastHash(guid);
 
-  /// The GUID for an associated podcast.
+  /// The GUID of the season.
   final String guid;
 
   /// The Isar ID of the parent podcast.
+  @Index()
   final int pid;
 
   /// The season number.
+  @Index()
   final int? seasonNum;
 
   /// The season title.

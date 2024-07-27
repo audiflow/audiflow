@@ -6,10 +6,12 @@ import 'package:audiflow/common/data/app_path_repository.dart';
 import 'package:audiflow/common/data/isar_factory.dart';
 import 'package:audiflow/events/episode_event.dart';
 import 'package:audiflow/events/podcast_event.dart';
+import 'package:audiflow/events/season_event.dart';
 import 'package:audiflow/features/browser/common/data/isar_stats_repository.dart';
 import 'package:audiflow/features/browser/common/data/stats_repository.dart';
 import 'package:audiflow/features/browser/season/data/isar_season_repository.dart';
 import 'package:audiflow/features/browser/season/data/season_repository.dart';
+import 'package:audiflow/features/browser/season/model/season.dart';
 import 'package:audiflow/features/browser/season/service/podcast_season_service.dart';
 import 'package:audiflow/features/feed/data/episode_repository.dart';
 import 'package:audiflow/features/feed/data/isar_episode_repository.dart';
@@ -118,6 +120,12 @@ class PodcastFeedLoader extends _$PodcastFeedLoader {
               .add(EpisodesAddedEvent(episodes));
         }
         state = state.copyWith(loadingState: loadingState);
+      case _LoadedSeasonMessage(seasons: final seasons):
+        if (seasons.isNotEmpty) {
+          ref
+              .read(seasonEventStreamProvider.notifier)
+              .add(SeasonsUpdatedEvent(seasons));
+        }
       case _GotErrorMessage(message: final message):
         logger.w(message);
         state = state.copyWith(loadingState: LoadingState.error);
@@ -324,8 +332,13 @@ class _Worker {
 
   Future<void> _readEpisodes() async {
     logger.d(() => 'read episodes for ${_podcast!.feedUrl}');
-    final latest =
-        await _episodeRepository.findLatestEpisodes(_podcast!.id, limit: 1);
+    // Get the latest episode to determine the last publication date.
+    // If the podcast has loaded all episodes, we don't need to read the entire
+    // feed.
+    final podcastStats = await _statsRepository.findPodcastStats(_podcast!.id);
+    final latest = podcastStats?.hasLoadedAll == true
+        ? await _episodeRepository.findLatestEpisodes(_podcast!.id, limit: 1)
+        : <Episode>[];
     final lastPubDate = latest.firstOrNull?.publicationDate;
 
     final episodes = <Episode>[];
@@ -364,6 +377,16 @@ class _Worker {
       }
     }
 
+    await _episodeRepository.saveEpisodes(episodes);
+    await _statsRepository.updatePodcastStats(
+      PodcastStatsUpdateParam(
+        id: _podcast!.id,
+        lastCheckedAt: DateTime.now(),
+        latestPubDate: _newEpisodes.firstOrNull?.publicationDate,
+        hasLoadedAll: true,
+      ),
+    );
+
     await _updateSeasons(loadingState);
     _uiPort.send(
       _LoadedEpisodesMessage(
@@ -371,6 +394,7 @@ class _Worker {
         loadingState: loadingState,
       ),
     );
+    logger.d(() => 'read ${_newEpisodes.length} episodes, $loadingState');
   }
 
   Future<void> _updateSeasons(LoadingState loadingState) async {
@@ -389,7 +413,7 @@ class _Worker {
     if (seasons.isEmpty &&
         updatedSeasons.isNotEmpty &&
         loadingState == LoadingState.reachedLastPubDate) {
-      // The podcast turned supporting "season".
+      logger.d('the podcast turned supporting "season"');
       final allEpisodes = await _episodeRepository.findEpisodesByPodcastId(
         _podcast!.id,
       );
@@ -398,12 +422,11 @@ class _Worker {
         allEpisodes,
         seasons,
       );
-      return;
     }
 
     if (updatedSeasons.isNotEmpty) {
-      final seasons = updatedSeasons.toList();
       await _seasonRepository.saveSeasons(updatedSeasons);
+      _uiPort.send(_LoadedSeasonMessage(seasons: updatedSeasons.toList()));
     }
   }
 }
@@ -451,7 +474,7 @@ class _LoadedPodcastMessage extends _Message {
 
   @override
   String toString() {
-    return '_LoadFeedResult()';
+    return '_LoadedPodcastMessage()';
   }
 }
 
@@ -466,9 +489,22 @@ class _LoadedEpisodesMessage extends _Message {
 
   @override
   String toString() {
-    return '_ReadEpisodesResult('
+    return '_LoadedEpisodesMessage('
         'episodes: ${episodes.length} episodes, '
         'loadingState: $loadingState)';
+  }
+}
+
+class _LoadedSeasonMessage extends _Message {
+  _LoadedSeasonMessage({
+    required this.seasons,
+  });
+
+  final List<Season> seasons;
+
+  @override
+  String toString() {
+    return '_LoadedSeasonMessage(seasons: ${seasons.length} seasons)';
   }
 }
 

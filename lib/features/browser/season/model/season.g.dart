@@ -68,7 +68,34 @@ const SeasonSchema = CollectionSchema(
   deserialize: _seasonDeserialize,
   deserializeProp: _seasonDeserializeProp,
   idName: r'id',
-  indexes: {},
+  indexes: {
+    r'pid': IndexSchema(
+      id: 2970402811525951487,
+      name: r'pid',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'pid',
+          type: IndexType.value,
+          caseSensitive: false,
+        )
+      ],
+    ),
+    r'seasonNum': IndexSchema(
+      id: -1172615417979280991,
+      name: r'seasonNum',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'seasonNum',
+          type: IndexType.value,
+          caseSensitive: false,
+        )
+      ],
+    )
+  },
   links: {},
   embeddedSchemas: {},
   getId: _seasonGetId,
@@ -183,6 +210,22 @@ extension SeasonQueryWhereSort on QueryBuilder<Season, Season, QWhere> {
       return query.addWhereClause(const IdWhereClause.any());
     });
   }
+
+  QueryBuilder<Season, Season, QAfterWhere> anyPid() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'pid'),
+      );
+    });
+  }
+
+  QueryBuilder<Season, Season, QAfterWhere> anySeasonNum() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'seasonNum'),
+      );
+    });
+  }
 }
 
 extension SeasonQueryWhere on QueryBuilder<Season, Season, QWhereClause> {
@@ -246,6 +289,204 @@ extension SeasonQueryWhere on QueryBuilder<Season, Season, QWhereClause> {
         lower: lowerId,
         includeLower: includeLower,
         upper: upperId,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<Season, Season, QAfterWhereClause> pidEqualTo(int pid) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'pid',
+        value: [pid],
+      ));
+    });
+  }
+
+  QueryBuilder<Season, Season, QAfterWhereClause> pidNotEqualTo(int pid) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'pid',
+              lower: [],
+              upper: [pid],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'pid',
+              lower: [pid],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'pid',
+              lower: [pid],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'pid',
+              lower: [],
+              upper: [pid],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<Season, Season, QAfterWhereClause> pidGreaterThan(
+    int pid, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'pid',
+        lower: [pid],
+        includeLower: include,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<Season, Season, QAfterWhereClause> pidLessThan(
+    int pid, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'pid',
+        lower: [],
+        upper: [pid],
+        includeUpper: include,
+      ));
+    });
+  }
+
+  QueryBuilder<Season, Season, QAfterWhereClause> pidBetween(
+    int lowerPid,
+    int upperPid, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'pid',
+        lower: [lowerPid],
+        includeLower: includeLower,
+        upper: [upperPid],
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<Season, Season, QAfterWhereClause> seasonNumIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'seasonNum',
+        value: [null],
+      ));
+    });
+  }
+
+  QueryBuilder<Season, Season, QAfterWhereClause> seasonNumIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'seasonNum',
+        lower: [null],
+        includeLower: false,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<Season, Season, QAfterWhereClause> seasonNumEqualTo(
+      int? seasonNum) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'seasonNum',
+        value: [seasonNum],
+      ));
+    });
+  }
+
+  QueryBuilder<Season, Season, QAfterWhereClause> seasonNumNotEqualTo(
+      int? seasonNum) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'seasonNum',
+              lower: [],
+              upper: [seasonNum],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'seasonNum',
+              lower: [seasonNum],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'seasonNum',
+              lower: [seasonNum],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'seasonNum',
+              lower: [],
+              upper: [seasonNum],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<Season, Season, QAfterWhereClause> seasonNumGreaterThan(
+    int? seasonNum, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'seasonNum',
+        lower: [seasonNum],
+        includeLower: include,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<Season, Season, QAfterWhereClause> seasonNumLessThan(
+    int? seasonNum, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'seasonNum',
+        lower: [],
+        upper: [seasonNum],
+        includeUpper: include,
+      ));
+    });
+  }
+
+  QueryBuilder<Season, Season, QAfterWhereClause> seasonNumBetween(
+    int? lowerSeasonNum,
+    int? upperSeasonNum, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'seasonNum',
+        lower: [lowerSeasonNum],
+        includeLower: includeLower,
+        upper: [upperSeasonNum],
         includeUpper: includeUpper,
       ));
     });
