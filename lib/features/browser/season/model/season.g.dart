@@ -94,6 +94,32 @@ const SeasonSchema = CollectionSchema(
           caseSensitive: false,
         )
       ],
+    ),
+    r'firstPublicationDate': IndexSchema(
+      id: 1198948471628739562,
+      name: r'firstPublicationDate',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'firstPublicationDate',
+          type: IndexType.value,
+          caseSensitive: false,
+        )
+      ],
+    ),
+    r'latestPublicationDate': IndexSchema(
+      id: -8044242539089769840,
+      name: r'latestPublicationDate',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'latestPublicationDate',
+          type: IndexType.value,
+          caseSensitive: false,
+        )
+      ],
     )
   },
   links: {},
@@ -223,6 +249,22 @@ extension SeasonQueryWhereSort on QueryBuilder<Season, Season, QWhere> {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         const IndexWhereClause.any(indexName: r'seasonNum'),
+      );
+    });
+  }
+
+  QueryBuilder<Season, Season, QAfterWhere> anyFirstPublicationDate() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'firstPublicationDate'),
+      );
+    });
+  }
+
+  QueryBuilder<Season, Season, QAfterWhere> anyLatestPublicationDate() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'latestPublicationDate'),
       );
     });
   }
@@ -487,6 +529,231 @@ extension SeasonQueryWhere on QueryBuilder<Season, Season, QWhereClause> {
         lower: [lowerSeasonNum],
         includeLower: includeLower,
         upper: [upperSeasonNum],
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<Season, Season, QAfterWhereClause> firstPublicationDateIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'firstPublicationDate',
+        value: [null],
+      ));
+    });
+  }
+
+  QueryBuilder<Season, Season, QAfterWhereClause>
+      firstPublicationDateIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'firstPublicationDate',
+        lower: [null],
+        includeLower: false,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<Season, Season, QAfterWhereClause> firstPublicationDateEqualTo(
+      DateTime? firstPublicationDate) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'firstPublicationDate',
+        value: [firstPublicationDate],
+      ));
+    });
+  }
+
+  QueryBuilder<Season, Season, QAfterWhereClause>
+      firstPublicationDateNotEqualTo(DateTime? firstPublicationDate) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'firstPublicationDate',
+              lower: [],
+              upper: [firstPublicationDate],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'firstPublicationDate',
+              lower: [firstPublicationDate],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'firstPublicationDate',
+              lower: [firstPublicationDate],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'firstPublicationDate',
+              lower: [],
+              upper: [firstPublicationDate],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<Season, Season, QAfterWhereClause>
+      firstPublicationDateGreaterThan(
+    DateTime? firstPublicationDate, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'firstPublicationDate',
+        lower: [firstPublicationDate],
+        includeLower: include,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<Season, Season, QAfterWhereClause> firstPublicationDateLessThan(
+    DateTime? firstPublicationDate, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'firstPublicationDate',
+        lower: [],
+        upper: [firstPublicationDate],
+        includeUpper: include,
+      ));
+    });
+  }
+
+  QueryBuilder<Season, Season, QAfterWhereClause> firstPublicationDateBetween(
+    DateTime? lowerFirstPublicationDate,
+    DateTime? upperFirstPublicationDate, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'firstPublicationDate',
+        lower: [lowerFirstPublicationDate],
+        includeLower: includeLower,
+        upper: [upperFirstPublicationDate],
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<Season, Season, QAfterWhereClause>
+      latestPublicationDateIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'latestPublicationDate',
+        value: [null],
+      ));
+    });
+  }
+
+  QueryBuilder<Season, Season, QAfterWhereClause>
+      latestPublicationDateIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'latestPublicationDate',
+        lower: [null],
+        includeLower: false,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<Season, Season, QAfterWhereClause> latestPublicationDateEqualTo(
+      DateTime? latestPublicationDate) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'latestPublicationDate',
+        value: [latestPublicationDate],
+      ));
+    });
+  }
+
+  QueryBuilder<Season, Season, QAfterWhereClause>
+      latestPublicationDateNotEqualTo(DateTime? latestPublicationDate) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'latestPublicationDate',
+              lower: [],
+              upper: [latestPublicationDate],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'latestPublicationDate',
+              lower: [latestPublicationDate],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'latestPublicationDate',
+              lower: [latestPublicationDate],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'latestPublicationDate',
+              lower: [],
+              upper: [latestPublicationDate],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<Season, Season, QAfterWhereClause>
+      latestPublicationDateGreaterThan(
+    DateTime? latestPublicationDate, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'latestPublicationDate',
+        lower: [latestPublicationDate],
+        includeLower: include,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<Season, Season, QAfterWhereClause> latestPublicationDateLessThan(
+    DateTime? latestPublicationDate, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'latestPublicationDate',
+        lower: [],
+        upper: [latestPublicationDate],
+        includeUpper: include,
+      ));
+    });
+  }
+
+  QueryBuilder<Season, Season, QAfterWhereClause> latestPublicationDateBetween(
+    DateTime? lowerLatestPublicationDate,
+    DateTime? upperLatestPublicationDate, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'latestPublicationDate',
+        lower: [lowerLatestPublicationDate],
+        includeLower: includeLower,
+        upper: [upperLatestPublicationDate],
         includeUpper: includeUpper,
       ));
     });

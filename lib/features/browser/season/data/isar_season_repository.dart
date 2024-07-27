@@ -14,7 +14,12 @@ class IsarSeasonRepository implements SeasonRepository {
 
   @override
   Future<List<Season>> findPodcastSeasons(Id pid) {
-    return isar.seasons.where().filter().pidEqualTo(pid).findAll();
+    return isar.seasons
+        .where()
+        .filter()
+        .pidEqualTo(pid)
+        .sortByLatestPublicationDateDesc()
+        .findAll();
   }
 
   @override

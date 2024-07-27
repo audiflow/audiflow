@@ -49,9 +49,11 @@ class Season {
   final List<Id> episodeIds;
 
   /// The publication date of the first episode in the season.
+  @Index()
   final DateTime? firstPublicationDate;
 
   /// The publication date of the last episode in the season.
+  @Index()
   final DateTime? latestPublicationDate;
 
   /// Total duration of all episodes in the season.
