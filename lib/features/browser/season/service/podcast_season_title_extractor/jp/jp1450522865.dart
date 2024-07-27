@@ -6,7 +6,9 @@ class JP1450522865 extends PodcastSeasonTitleExtractor {
   @override
   final label = 'COTENラジオ';
 
-  final re = RegExp(r'【COTEN RADIO\S*\s+(.*?)\d+】');
+  final re = RegExp(
+    r'【(?<coten>COTEN RADIO)(?<short>ショート)?\s+(?<season>.*?)((?<seq>\d+)|(?<part>[前中後]編))】',
+  );
 
   @override
   String? extractSeasonTitle({
@@ -16,7 +18,8 @@ class JP1450522865 extends PodcastSeasonTitleExtractor {
     required int? seasonNum,
   }) {
     final m = re.firstMatch(title);
-    return m?.group(1)!.replaceFirst(RegExp(r'\s+編$'), '編') ?? '番外編';
+    return m?.namedGroup('season')?.replaceFirst(RegExp(r'\s*編?$'), '') ??
+        '番外編';
   }
 
   @override
