@@ -3,8 +3,8 @@ import 'package:audiflow/features/browser/season/service/podcast_season_extracto
 import 'package:audiflow/features/browser/season/service/podcast_season_title_extractor/podcast_season_title_extractor.dart';
 import 'package:audiflow/features/feed/model/model.dart';
 
-import 'podcast_season_title_extractor/jp/jp1450522865.dart';
-import 'podcast_season_title_extractor/jp/jp1567192930.dart';
+import 'podcast_season_title_extractor/ja/jp1450522865.dart';
+import 'podcast_season_title_extractor/ja/jp1567192930.dart';
 
 class PodcastSeasonService {
   PodcastSeasonService() {
