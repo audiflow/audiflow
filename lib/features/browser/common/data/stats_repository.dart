@@ -21,14 +21,6 @@ abstract class StatsRepository {
 
   Future<PodcastStats> updatePodcastStats(PodcastStatsUpdateParam param);
 
-  // -- PodcastViewStats
-
-  Future<PodcastViewStats?> findPodcastViewStats(int pid);
-
-  Future<PodcastViewStats> updatePodcastViewStats(
-    PodcastViewStatsUpdateParam param,
-  );
-
   // --- EpisodeStats
 
   Future<EpisodeStats?> findEpisodeStats(Id id);

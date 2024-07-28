@@ -102,7 +102,6 @@ class PodcastInfo extends _$PodcastInfo {
             if (podcast?.id == stats.id) {
               state = copyStateWith(null, stats);
             }
-          case PodcastViewStatsUpdatedEvent():
         }
       });
     });

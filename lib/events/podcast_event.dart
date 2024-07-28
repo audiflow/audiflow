@@ -32,12 +32,6 @@ class PodcastStatsUpdatedEvent implements PodcastEvent {
   final PodcastStats stats;
 }
 
-class PodcastViewStatsUpdatedEvent implements PodcastEvent {
-  const PodcastViewStatsUpdatedEvent(this.viewStats);
-
-  final PodcastViewStats viewStats;
-}
-
 @Riverpod(keepAlive: true)
 class PodcastEventStream extends _$PodcastEventStream {
   @override

@@ -79,35 +79,6 @@ class IsarStatsRepository implements StatsRepository {
     return newStats;
   }
 
-  // -- PodcastViewStats
-
-  @override
-  Future<PodcastViewStats?> findPodcastViewStats(int pid) async {
-    return isar.podcastViewStats.get(pid);
-  }
-
-  @override
-  Future<PodcastViewStats> updatePodcastViewStats(
-    PodcastViewStatsUpdateParam param,
-  ) async {
-    final stats = await isar.podcastViewStats.get(param.id);
-    final newStats = stats != null
-        ? stats.copyWith(
-            viewMode: param.viewMode ?? stats.viewMode,
-            ascend: param.ascend ?? stats.ascend,
-            ascendSeasonEpisodes:
-                param.ascendSeasonEpisodes ?? stats.ascendSeasonEpisodes,
-          )
-        : PodcastViewStats(
-            id: param.id,
-            viewMode: param.viewMode ?? PodcastDetailViewMode.seasons,
-            ascend: param.ascend ?? false,
-            ascendSeasonEpisodes: param.ascendSeasonEpisodes ?? true,
-          );
-    await isar.writeTxn(() => isar.podcastViewStats.put(newStats));
-    return newStats;
-  }
-
   // --- EpisodeStats
 
   @override

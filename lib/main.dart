@@ -11,7 +11,9 @@ import 'package:audiflow/exceptions/async_error_logger.dart';
 import 'package:audiflow/exceptions/error_logger.dart';
 import 'package:audiflow/features/bootstrap/ui/audiflow_app.dart';
 import 'package:audiflow/features/browser/common/data/default_podcast_api_repository.dart';
+import 'package:audiflow/features/browser/common/data/isar_page_models_repository.dart';
 import 'package:audiflow/features/browser/common/data/isar_stats_repository.dart';
+import 'package:audiflow/features/browser/common/data/page_models_repository.dart';
 import 'package:audiflow/features/browser/common/data/podcast_api_repository.dart';
 import 'package:audiflow/features/browser/common/data/stats_repository.dart';
 import 'package:audiflow/features/browser/season/data/isar_season_repository.dart';
@@ -85,6 +87,8 @@ void main() async {
       downloadRepositoryProvider
           .overrideWithValue(IsarDownloadRepository(isar)),
       episodeRepositoryProvider.overrideWithValue(IsarEpisodeRepository(isar)),
+      pageModelsRepositoryProvider
+          .overrideWithValue(IsarPageModelsRepository(isar)),
       podcastApiRepositoryProvider.overrideWithValue(
         DefaultPodcastApiRepository(cacheDir: tempDir.path),
       ),

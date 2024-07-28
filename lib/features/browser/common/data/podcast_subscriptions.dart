@@ -42,7 +42,6 @@ class PodcastSubscriptions extends _$PodcastSubscriptions {
               .toList();
           state = AsyncData(list);
         case PodcastStatsUpdatedEvent():
-        case PodcastViewStatsUpdatedEvent():
       }
     });
   }

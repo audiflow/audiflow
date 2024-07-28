@@ -1,4 +1,6 @@
 import 'package:audiflow/entities/playing_episode.dart';
+import 'package:audiflow/features/browser/podcast/model/podcast_details_page_model.dart';
+import 'package:audiflow/features/browser/season/model/season.dart';
 import 'package:audiflow/features/download/model/downloadable.dart';
 import 'package:audiflow/features/feed/model/model.dart';
 import 'package:audiflow/features/preference/model/app_preference.dart';
@@ -24,8 +26,9 @@ class IsarFactory {
             PlayingEpisodeSchema,
             PodcastSchema,
             PodcastStatsSchema,
-            PodcastViewStatsSchema,
+            PodcastDetailsPageModelSchema,
             QueueSchema,
+            SeasonSchema,
             TranscriptUrlSchema,
             TranscriptSchema,
             SubtitleSchema,

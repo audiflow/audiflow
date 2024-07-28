@@ -4,17 +4,15 @@ import 'package:audiflow/constants/app_sizes.dart';
 import 'package:audiflow/features/browser/common/ui/podcast_html.dart';
 import 'package:audiflow/features/browser/episode/ui/episodes_list_event.dart';
 import 'package:audiflow/features/browser/podcast/data/podcast_info.dart';
+import 'package:audiflow/features/browser/podcast/model/podcast_details_page_model.dart';
 import 'package:audiflow/features/browser/podcast/ui/funding_menu.dart';
-import 'package:audiflow/features/browser/podcast/ui/podcast_details_app_bar.dart';
+import 'package:audiflow/features/browser/podcast/ui/podcast_details_page/podcast_details_app_bar.dart';
+import 'package:audiflow/features/browser/podcast/ui/podcast_details_page/podcast_details_page_controller.dart';
 import 'package:audiflow/features/browser/podcast/ui/podcast_page_header_image.dart';
-import 'package:audiflow/features/browser/podcast/ui/podcast_view_episodes.dart';
-import 'package:audiflow/features/browser/podcast/ui/podcast_view_info_controller.dart';
 import 'package:audiflow/features/browser/season/data/podcast_seasons.dart';
-import 'package:audiflow/features/browser/season/model/season.dart';
 import 'package:audiflow/features/feed/model/model.dart';
 import 'package:audiflow/features/preference/data/app_preference_repository.dart';
 import 'package:audiflow/localization/generated/l10n.dart';
-import 'package:audiflow/localization/string_hardcoded.dart';
 import 'package:audiflow/utils/logger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -55,7 +53,11 @@ class PodcastDetailsPage extends HookConsumerWidget {
     logger.d(() => 'podcastInfoState: $podcastInfoState');
 
     final podcast = podcastInfoState.valueOrNull?.podcast;
-    return podcast == null
+    final pageState = podcast == null
+        ? null
+        : ref.watch(podcastDetailsPageControllerProvider(podcast.id));
+
+    return podcast == null || pageState?.hasValue != true
         ? _PodcastDetailsLoadingPage(
             title: title,
             author: author,
@@ -90,10 +92,12 @@ class _PodcastDetailsLoadingPage extends HookConsumerWidget {
           physics: const NeverScrollableScrollPhysics(),
           slivers: <Widget>[
             PodcastDetailsAppBar(title: title),
-            _PodcastImageAndTitle(
-              title: title ?? '',
-              author: author,
-              thumbnailUrl: thumbnailUrl,
+            SliverToBoxAdapter(
+              child: _PodcastImageAndTitle(
+                title: title ?? '',
+                author: author,
+                thumbnailUrl: thumbnailUrl,
+              ),
             ),
             const FillRemainingLoading()
           ],
@@ -114,12 +118,13 @@ class _PodcastDetailsPage extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final podcastViewState =
-        ref.watch(podcastViewInfoControllerProvider(podcast.id));
-    final viewMode = podcastViewState.valueOrNull?.viewMode;
-    final ascend = podcastViewState.valueOrNull?.ascend ?? false;
-    final podcastViewEpisodesState =
-        ref.watch(podcastViewEpisodesProvider(podcast.id));
+    final pageState = ref
+        .watch(podcastDetailsPageControllerProvider(podcast.id))
+        .requireValue;
+    // final viewMode = pageState.valueOrNull?.viewMode;
+    // final ascend = pageState.valueOrNull?.ascend ?? false;
+    // final podcastViewEpisodesState =
+    //     ref.watch(podcastViewEpisodesProvider(podcast.id));
     final seasonsState = ref.watch(podcastSeasonsProvider(podcast));
 
     final controller = useScrollController();
@@ -162,7 +167,8 @@ class _PodcastDetailsPage extends HookConsumerWidget {
                         author: podcast.author,
                         thumbnailUrl: podcast.image,
                       ),
-                      _SwitchTabBar(),
+                      if (seasonsState.valueOrNull?.isNotEmpty == true)
+                        _ViewModeSwitchBar(podcast: podcast),
                     ],
                   ),
                   // _SwitchBar(
@@ -345,71 +351,89 @@ class _PodcastDescription extends StatelessWidget {
   }
 }
 
-class _SwitchTabBar extends HookConsumerWidget {
-  const _SwitchTabBar();
+class _ViewModeSwitchBar extends HookConsumerWidget {
+  const _ViewModeSwitchBar({
+    required this.podcast,
+  });
+
+  final Podcast podcast;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final controller = useTabController(initialLength: 2);
+    final pageState = ref
+        .watch(podcastDetailsPageControllerProvider(podcast.id))
+        .requireValue;
+    final controller = useTabController(
+      initialLength: 2,
+      initialIndex:
+          PodcastDetailsPageViewMode.values.indexOf(pageState.viewMode),
+    );
+    final l10n = L10n.of(context);
     return TabBar.secondary(
       controller: controller,
       dividerColor: Colors.transparent,
+      onTap: (index) {
+        final viewMode = PodcastDetailsPageViewMode.values[index];
+        ref
+            .watch(podcastDetailsPageControllerProvider(podcast.id).notifier)
+            .setViewMode(viewMode);
+      },
       tabs: <Widget>[
-        Tab(text: 'Episodes'.hardcoded),
-        Tab(text: 'Seasons'.hardcoded),
+        Tab(text: l10n.viewModeEpisodes),
+        Tab(text: l10n.viewModeSeasons),
       ],
     );
   }
 }
 
-class _SwitchBar extends ConsumerWidget {
-  const _SwitchBar({
-    required this.podcast,
-    required this.seasons,
-    required this.viewMode,
-    required this.ascend,
-  });
-
-  final Podcast podcast;
-  final List<Season> seasons;
-  final PodcastDetailViewMode viewMode;
-  final bool ascend;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    return SliverToBoxAdapter(
-      child: Container(
-        color: theme.colorScheme.surfaceVariant,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            _PodcastViewModeSwitch(
-              viewMode: viewMode,
-              ascend: ascend,
-              hasSeasons: seasons.isNotEmpty,
-              onViewModeChanged: (mode) {
-                ref
-                    .read(
-                      podcastViewInfoControllerProvider(podcast.id).notifier,
-                    )
-                    .setViewMode(mode);
-              },
-              onSortOrderChanged: () {
-                ref
-                    .read(
-                      podcastViewInfoControllerProvider(podcast.id).notifier,
-                    )
-                    .toggleAscend();
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
+// class _SwitchBar extends ConsumerWidget {
+//   const _SwitchBar({
+//     required this.podcast,
+//     required this.seasons,
+//     required this.viewMode,
+//     required this.ascend,
+//   });
+//
+//   final Podcast podcast;
+//   final List<Season> seasons;
+//   final EpisodeFilterMode viewMode;
+//   final bool ascend;
+//
+//   @override
+//   Widget build(BuildContext context, WidgetRef ref) {
+//     final theme = Theme.of(context);
+//     return SliverToBoxAdapter(
+//       child: Container(
+//         color: theme.colorScheme.surfaceVariant,
+//         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+//         child: Row(
+//           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//           children: [
+//             _PodcastViewModeSwitch(
+//               viewMode: viewMode,
+//               ascend: ascend,
+//               hasSeasons: seasons.isNotEmpty,
+//               onViewModeChanged: (mode) {
+//                 ref
+//                     .read(
+//                       podcastViewInfoControllerProvider(podcast.id).notifier,
+//                     )
+//                     .setViewMode(mode);
+//               },
+//               onSortOrderChanged: () {
+//                 ref
+//                     .read(
+//                       podcastViewInfoControllerProvider(podcast.id).notifier,
+//                     )
+//                     .toggleAscend();
+//               },
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+// }
 
 class _PodcastViewModeSwitch extends StatelessWidget {
   const _PodcastViewModeSwitch({
@@ -420,10 +444,10 @@ class _PodcastViewModeSwitch extends StatelessWidget {
     required this.onSortOrderChanged,
   });
 
-  final PodcastDetailViewMode viewMode;
+  final EpisodeFilterMode viewMode;
   final bool ascend;
   final bool hasSeasons;
-  final ValueChanged<PodcastDetailViewMode> onViewModeChanged;
+  final ValueChanged<EpisodeFilterMode> onViewModeChanged;
   final VoidCallback onSortOrderChanged;
 
   @override
@@ -431,7 +455,7 @@ class _PodcastViewModeSwitch extends StatelessWidget {
     final theme = Theme.of(context);
     return PopupMenuButton<dynamic>(
       onSelected: (value) {
-        if (value is PodcastDetailViewMode) {
+        if (value is EpisodeFilterMode) {
           onViewModeChanged(value);
         } else if (value is bool) {
           onSortOrderChanged();
@@ -440,34 +464,30 @@ class _PodcastViewModeSwitch extends StatelessWidget {
       position: PopupMenuPosition.under,
       itemBuilder: (context) {
         return [
-          ...PodcastDetailViewMode.values
-              .where(
-                (viewMode) => viewMode != PodcastDetailViewMode.seasons,
-              )
-              .map(
-                (mode) => PopupMenuItem(
-                  value: mode,
-                  height: 40,
-                  child: Row(
-                    children: [
-                      mode == viewMode
-                          ? Icon(
-                              Symbols.check,
-                              color: theme.colorScheme.onSecondaryContainer,
-                              size: 18,
-                            )
-                          : const SizedBox(width: 18),
-                      const SizedBox(width: 4),
-                      Text(
-                        _labelOf(context, mode),
-                        style: TextStyle(
+          ...EpisodeFilterMode.values.map(
+            (mode) => PopupMenuItem(
+              value: mode,
+              height: 40,
+              child: Row(
+                children: [
+                  mode == viewMode
+                      ? Icon(
+                          Symbols.check,
                           color: theme.colorScheme.onSecondaryContainer,
-                        ),
-                      ),
-                    ],
+                          size: 18,
+                        )
+                      : const SizedBox(width: 18),
+                  const SizedBox(width: 4),
+                  Text(
+                    _labelOf(context, mode),
+                    style: TextStyle(
+                      color: theme.colorScheme.onSecondaryContainer,
+                    ),
                   ),
-                ),
+                ],
               ),
+            ),
+          ),
           const PopupMenuDivider(),
           PopupMenuItem(
             value: ascend,
@@ -509,18 +529,16 @@ class _PodcastViewModeSwitch extends StatelessWidget {
     );
   }
 
-  String _labelOf(BuildContext context, PodcastDetailViewMode viewMode) {
+  String _labelOf(BuildContext context, EpisodeFilterMode viewMode) {
     final l10n = L10n.of(context);
     switch (viewMode) {
-      case PodcastDetailViewMode.episodes:
+      case EpisodeFilterMode.none:
         return l10n.viewModeEpisodes;
-      case PodcastDetailViewMode.seasons:
-        return l10n.viewModeSeasons;
-      case PodcastDetailViewMode.played:
+      case EpisodeFilterMode.played:
         return l10n.viewModePlayed;
-      case PodcastDetailViewMode.unplayed:
+      case EpisodeFilterMode.unplayed:
         return l10n.viewModeUnplayed;
-      case PodcastDetailViewMode.downloaded:
+      case EpisodeFilterMode.downloaded:
         return l10n.viewModeDownloaded;
     }
   }

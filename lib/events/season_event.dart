@@ -1,49 +1,28 @@
-import 'package:audiflow/features/feed/model/model.dart';
+import 'package:audiflow/features/browser/season/model/season.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-part 'podcast_event.g.dart';
+part 'season_event.g.dart';
 
-sealed class PodcastEvent {}
+sealed class SeasonEvent {}
 
-class PodcastSubscribedEvent implements PodcastEvent {
-  const PodcastSubscribedEvent(this.podcast, this.stats);
+class SeasonUpdatedEvent implements SeasonEvent {
+  const SeasonUpdatedEvent(this.season);
 
-  final Podcast podcast;
-  final PodcastStats stats;
+  final Season season;
 }
 
-class PodcastUnsubscribedEvent implements PodcastEvent {
-  const PodcastUnsubscribedEvent(this.podcast, this.stats);
+class SeasonsUpdatedEvent implements SeasonEvent {
+  const SeasonsUpdatedEvent(this.seasons);
 
-  final Podcast podcast;
-  final PodcastStats stats;
-}
-
-class PodcastUpdatedEvent implements PodcastEvent {
-  const PodcastUpdatedEvent(this.podcast, {this.stats});
-
-  final Podcast podcast;
-  final PodcastStats? stats;
-}
-
-class PodcastStatsUpdatedEvent implements PodcastEvent {
-  const PodcastStatsUpdatedEvent(this.stats);
-
-  final PodcastStats stats;
-}
-
-class PodcastViewStatsUpdatedEvent implements PodcastEvent {
-  const PodcastViewStatsUpdatedEvent(this.viewStats);
-
-  final PodcastViewStats viewStats;
+  final List<Season> seasons;
 }
 
 @Riverpod(keepAlive: true)
-class PodcastEventStream extends _$PodcastEventStream {
+class SeasonEventStream extends _$SeasonEventStream {
   @override
-  Stream<PodcastEvent> build() async* {}
+  Stream<SeasonEvent> build() async* {}
 
-  void add(PodcastEvent event) {
+  void add(SeasonEvent event) {
     state = AsyncData(event);
   }
 }
