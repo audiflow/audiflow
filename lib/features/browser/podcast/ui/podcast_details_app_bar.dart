@@ -1,4 +1,3 @@
-import 'package:audiflow/constants/app_sizes.dart';
 import 'package:audiflow/features/browser/common/data/stats_repository.dart';
 import 'package:audiflow/features/browser/episode/ui/episodes_list_event.dart';
 import 'package:audiflow/features/feed/model/model.dart';
@@ -78,28 +77,5 @@ class PodcastDetailsAppBar extends ConsumerWidget {
         },
       ),
     ];
-  }
-}
-
-class PodcastDetailsLoadingAppBar extends ConsumerWidget {
-  const PodcastDetailsLoadingAppBar({
-    super.key,
-    required this.title,
-  });
-
-  final String title;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return SliverLayoutBuilder(
-      builder: (BuildContext context, SliverConstraints constraints) {
-        return const SliverAppBar(
-          pinned: true,
-          title: Padding(
-            padding: EdgeInsets.symmetric(horizontal: Sizes.p8),
-          ),
-        );
-      },
-    );
   }
 }
