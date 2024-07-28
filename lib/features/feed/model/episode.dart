@@ -72,7 +72,7 @@ class Episode {
   String? link;
 
   /// The release date and time of an episode.
-  @Index(unique: true)
+  @Index()
   final DateTime? publicationDate;
 
   /// The episode description.
@@ -100,12 +100,12 @@ class Episode {
 
   /// The chronological number that is associated with a podcast episode.
   /// Must be a non-zero integer. This is required for serial podcasts.
-  @Index(unique: true)
+  @Index()
   final int? episode;
 
   /// The chronological number associated with a podcast episode's season.
   /// Must be a non-zero integer.
-  @Index(unique: true)
+  @Index()
   final int? season;
 
   /// The type of episode.
