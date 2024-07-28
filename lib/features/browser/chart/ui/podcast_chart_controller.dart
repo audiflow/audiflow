@@ -39,8 +39,6 @@ class PodcastChartController extends _$PodcastChartController
     required Country? country,
     required int size,
   }) async {
-    await waitForConnectivity();
-
     try {
       final chartItems = await ref.read(podcastApiRepositoryProvider).charts(
             size: size,
