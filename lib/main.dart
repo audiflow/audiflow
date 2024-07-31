@@ -16,6 +16,8 @@ import 'package:audiflow/features/browser/common/data/isar_stats_repository.dart
 import 'package:audiflow/features/browser/common/data/page_models_repository.dart';
 import 'package:audiflow/features/browser/common/data/podcast_api_repository.dart';
 import 'package:audiflow/features/browser/common/data/stats_repository.dart';
+import 'package:audiflow/features/browser/episode/data/episode_list_entry_repository.dart';
+import 'package:audiflow/features/browser/episode/data/isar_episode_list_repository.dart';
 import 'package:audiflow/features/browser/season/data/isar_season_repository.dart';
 import 'package:audiflow/features/browser/season/data/season_repository.dart';
 import 'package:audiflow/features/config/data/build_config.dart';
@@ -23,7 +25,9 @@ import 'package:audiflow/features/config/model/app_build_config.dart';
 import 'package:audiflow/features/download/data/download_repository.dart';
 import 'package:audiflow/features/download/data/isar_download_repository.dart';
 import 'package:audiflow/features/download/service/download_manager.dart';
+import 'package:audiflow/features/download/service/download_service.dart';
 import 'package:audiflow/features/download/service/mobile_download_manager.dart';
+import 'package:audiflow/features/download/service/mobile_download_service.dart';
 import 'package:audiflow/features/feed/data/episode_repository.dart';
 import 'package:audiflow/features/feed/data/isar_episode_repository.dart';
 import 'package:audiflow/features/feed/data/isar_podcast_repository.dart';
@@ -86,6 +90,9 @@ void main() async {
       downloadManagerProvider.overrideWith(MobileDownloaderManager.new),
       downloadRepositoryProvider
           .overrideWithValue(IsarDownloadRepository(isar)),
+      downloadServiceProvider.overrideWith(MobileDownloadService.new),
+      episodeListEntryRepositoryProvider
+          .overrideWithValue(IsarEpisodeListEntryRepository(isar)),
       episodeRepositoryProvider.overrideWithValue(IsarEpisodeRepository(isar)),
       pageModelsRepositoryProvider
           .overrideWithValue(IsarPageModelsRepository(isar)),
