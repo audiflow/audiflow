@@ -81,11 +81,8 @@ class PodcastFeedLoader extends _$PodcastFeedLoader {
 
     ref.onDispose(() {
       logger.d('dispose');
-      if (_workerPort != null) {
-        _workerPort!.send(_CancelledCommand());
-        _workerPort = null;
-        cancellable.cancel();
-      }
+      _workerPort?.send(_CancelledCommand());
+      _workerPort = null;
     });
   }
 
@@ -94,14 +91,19 @@ class PodcastFeedLoader extends _$PodcastFeedLoader {
     switch (message) {
       case _SendPortMessage(sendPort: final sendPort):
         _workerPort = sendPort;
-        _workerPort?.send(
-          _LoadFeedCommand(
-            feedUrl: state.feedUrl,
-            collectionId: state.collectionId,
-            cacheDir: _cacheDir,
-            storageDir: _appDocDir,
-          ),
-        );
+        _workerPort
+          ?..send(
+            _SetupCommand(
+              cacheDir: _cacheDir,
+              storageDir: _appDocDir,
+            ),
+          )
+          ..send(
+            _LoadFeedCommand(
+              feedUrl: state.feedUrl,
+              collectionId: state.collectionId,
+            ),
+          );
       case _LoadedPodcastMessage():
         final podcast =
             await _podcastRepository.findPodcastBy(feedUrl: state.feedUrl);
@@ -163,9 +165,7 @@ class _Worker {
   _Worker(
     this._uiPort,
     this._isCancelled,
-  ) {
-    _uiPort.send(_SendPortMessage(_workerPort.sendPort));
-  }
+  );
 
   final SendPort _uiPort;
   final ReceivePort _workerPort = ReceivePort();
@@ -175,6 +175,7 @@ class _Worker {
   late final EpisodeRepository _episodeRepository;
   late final StatsRepository _statsRepository;
   late final SeasonRepository _seasonRepository;
+  late final String _cacheDir;
   final _commandStreamController = StreamController<_Command>();
   final _completer = Completer<void>();
   PodcastFeedParser<Uint8List, Podcast, Episode>? _feedParser;
@@ -190,7 +191,10 @@ class _Worker {
     _listenCommandStream();
     _workerPort
         .listen((event) => _commandStreamController.add(event as _Command));
-    return _completer.future;
+    _uiPort.send(_SendPortMessage(_workerPort.sendPort));
+    return _completer.future.whenComplete(() {
+      logger.d('worker done');
+    });
   }
 
   void _listenCommandStream() {
@@ -199,17 +203,19 @@ class _Worker {
         logger.d(() => 'received command $command');
         try {
           switch (command) {
+            case _SetupCommand(
+                storageDir: final storageDir,
+                cacheDir: final cacheDir
+              ):
+              await _setupRepository(storageDir);
+              _cacheDir = cacheDir;
             case _LoadFeedCommand(
                 feedUrl: final feedUrl,
                 collectionId: final collectionId,
-                cacheDir: final cacheDir,
-                storageDir: final storageDir
               ):
-              await _setupRepository(storageDir);
               await _handleLoadFeedEvent(
                 feedUrl: feedUrl,
                 collectionId: collectionId,
-                cacheDir: cacheDir,
               );
             case _CancelledCommand():
               _complete();
@@ -241,14 +247,13 @@ class _Worker {
   Future<void> _handleLoadFeedEvent({
     required String feedUrl,
     required int? collectionId,
-    required String cacheDir,
   }) async {
     final loaded = await _loadFeed(
       feedUrl: feedUrl,
       collectionId: collectionId ??
           (await _podcastRepository.findPodcastBy(feedUrl: feedUrl))
               ?.collectionId,
-      cacheDir: cacheDir,
+      cacheDir: _cacheDir,
     );
     if (!loaded || _isCancelled()) {
       _complete();
@@ -366,6 +371,13 @@ class _Worker {
       _newEpisodes.add(episode);
       if (batchLength <= episodes.length) {
         await _episodeRepository.saveEpisodes(episodes);
+        await _statsRepository.updatePodcastStats(
+          PodcastStatsUpdateParam(
+            id: _podcast!.id,
+            deltaTotalEpisodes: episodes.length,
+            latestPubDate: _newEpisodes.firstOrNull?.publicationDate,
+          ),
+        );
         _uiPort.send(
           _LoadedEpisodesMessage(
             episodes: episodes.map(PartialEpisode.fromEpisode).toList(),
@@ -381,6 +393,7 @@ class _Worker {
     await _statsRepository.updatePodcastStats(
       PodcastStatsUpdateParam(
         id: _podcast!.id,
+        deltaTotalEpisodes: episodes.length,
         lastCheckedAt: DateTime.now(),
         latestPubDate: _newEpisodes.firstOrNull?.publicationDate,
         hasLoadedAll: true,
@@ -414,8 +427,8 @@ class _Worker {
         updatedSeasons.isNotEmpty &&
         loadingState == LoadingState.reachedLastPubDate) {
       logger.d('the podcast turned supporting "season"');
-      final allEpisodes = await _episodeRepository.findEpisodesByPodcastId(
-        _podcast!.id,
+      final allEpisodes = await _episodeRepository.findEpisodesBy(
+        pid: _podcast!.id,
       );
       updatedSeasons = seasonService.extractSeasons(
         _podcast!,
@@ -446,26 +459,35 @@ class _SendPortMessage extends _Message {
   }
 }
 
-class _LoadFeedCommand extends _Command {
-  _LoadFeedCommand({
-    required this.feedUrl,
-    required this.collectionId,
+class _SetupCommand extends _Command {
+  _SetupCommand({
     required this.cacheDir,
     required this.storageDir,
   });
 
-  final String feedUrl;
-  final int? collectionId;
   final String cacheDir;
   final String storageDir;
 
   @override
   String toString() {
+    return '_SetupCommand(cacheDir: $cacheDir, storageDir: $storageDir)';
+  }
+}
+
+class _LoadFeedCommand extends _Command {
+  _LoadFeedCommand({
+    required this.feedUrl,
+    required this.collectionId,
+  });
+
+  final String feedUrl;
+  final int? collectionId;
+
+  @override
+  String toString() {
     return '_LoadFeedCommand('
         'feedUrl: $feedUrl, '
-        'collectionId: $collectionId, '
-        'cacheDir: $cacheDir, '
-        'storageDir: $storageDir)';
+        'collectionId: $collectionId)';
   }
 }
 
