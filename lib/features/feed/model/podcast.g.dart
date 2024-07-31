@@ -3432,6 +3432,16 @@ const PodcastStatsSchema = CollectionSchema(
       id: 3,
       name: r'subscribedDate',
       type: IsarType.dateTime,
+    ),
+    r'totalEpisodes': PropertySchema(
+      id: 4,
+      name: r'totalEpisodes',
+      type: IsarType.long,
+    ),
+    r'totalPlayed': PropertySchema(
+      id: 5,
+      name: r'totalPlayed',
+      type: IsarType.long,
     )
   },
   estimateSize: _podcastStatsEstimateSize,
@@ -3494,6 +3504,8 @@ void _podcastStatsSerialize(
   writer.writeDateTime(offsets[1], object.lastCheckedAt);
   writer.writeDateTime(offsets[2], object.latestPubDate);
   writer.writeDateTime(offsets[3], object.subscribedDate);
+  writer.writeLong(offsets[4], object.totalEpisodes);
+  writer.writeLong(offsets[5], object.totalPlayed);
 }
 
 PodcastStats _podcastStatsDeserialize(
@@ -3508,6 +3520,8 @@ PodcastStats _podcastStatsDeserialize(
     lastCheckedAt: reader.readDateTime(offsets[1]),
     latestPubDate: reader.readDateTimeOrNull(offsets[2]),
     subscribedDate: reader.readDateTimeOrNull(offsets[3]),
+    totalEpisodes: reader.readLong(offsets[4]),
+    totalPlayed: reader.readLong(offsets[5]),
   );
   return object;
 }
@@ -3527,6 +3541,10 @@ P _podcastStatsDeserializeProp<P>(
       return (reader.readDateTimeOrNull(offset)) as P;
     case 3:
       return (reader.readDateTimeOrNull(offset)) as P;
+    case 4:
+      return (reader.readLong(offset)) as P;
+    case 5:
+      return (reader.readLong(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
@@ -4136,6 +4154,118 @@ extension PodcastStatsQueryFilter
       ));
     });
   }
+
+  QueryBuilder<PodcastStats, PodcastStats, QAfterFilterCondition>
+      totalEpisodesEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'totalEpisodes',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<PodcastStats, PodcastStats, QAfterFilterCondition>
+      totalEpisodesGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'totalEpisodes',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<PodcastStats, PodcastStats, QAfterFilterCondition>
+      totalEpisodesLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'totalEpisodes',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<PodcastStats, PodcastStats, QAfterFilterCondition>
+      totalEpisodesBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'totalEpisodes',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<PodcastStats, PodcastStats, QAfterFilterCondition>
+      totalPlayedEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'totalPlayed',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<PodcastStats, PodcastStats, QAfterFilterCondition>
+      totalPlayedGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'totalPlayed',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<PodcastStats, PodcastStats, QAfterFilterCondition>
+      totalPlayedLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'totalPlayed',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<PodcastStats, PodcastStats, QAfterFilterCondition>
+      totalPlayedBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'totalPlayed',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
 }
 
 extension PodcastStatsQueryObject
@@ -4196,6 +4326,32 @@ extension PodcastStatsQuerySortBy
       sortBySubscribedDateDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'subscribedDate', Sort.desc);
+    });
+  }
+
+  QueryBuilder<PodcastStats, PodcastStats, QAfterSortBy> sortByTotalEpisodes() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'totalEpisodes', Sort.asc);
+    });
+  }
+
+  QueryBuilder<PodcastStats, PodcastStats, QAfterSortBy>
+      sortByTotalEpisodesDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'totalEpisodes', Sort.desc);
+    });
+  }
+
+  QueryBuilder<PodcastStats, PodcastStats, QAfterSortBy> sortByTotalPlayed() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'totalPlayed', Sort.asc);
+    });
+  }
+
+  QueryBuilder<PodcastStats, PodcastStats, QAfterSortBy>
+      sortByTotalPlayedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'totalPlayed', Sort.desc);
     });
   }
 }
@@ -4266,6 +4422,32 @@ extension PodcastStatsQuerySortThenBy
       return query.addSortBy(r'subscribedDate', Sort.desc);
     });
   }
+
+  QueryBuilder<PodcastStats, PodcastStats, QAfterSortBy> thenByTotalEpisodes() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'totalEpisodes', Sort.asc);
+    });
+  }
+
+  QueryBuilder<PodcastStats, PodcastStats, QAfterSortBy>
+      thenByTotalEpisodesDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'totalEpisodes', Sort.desc);
+    });
+  }
+
+  QueryBuilder<PodcastStats, PodcastStats, QAfterSortBy> thenByTotalPlayed() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'totalPlayed', Sort.asc);
+    });
+  }
+
+  QueryBuilder<PodcastStats, PodcastStats, QAfterSortBy>
+      thenByTotalPlayedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'totalPlayed', Sort.desc);
+    });
+  }
 }
 
 extension PodcastStatsQueryWhereDistinct
@@ -4294,6 +4476,19 @@ extension PodcastStatsQueryWhereDistinct
       distinctBySubscribedDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'subscribedDate');
+    });
+  }
+
+  QueryBuilder<PodcastStats, PodcastStats, QDistinct>
+      distinctByTotalEpisodes() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'totalEpisodes');
+    });
+  }
+
+  QueryBuilder<PodcastStats, PodcastStats, QDistinct> distinctByTotalPlayed() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'totalPlayed');
     });
   }
 }
@@ -4332,505 +4527,16 @@ extension PodcastStatsQueryProperty
       return query.addPropertyName(r'subscribedDate');
     });
   }
-}
 
-// coverage:ignore-file
-// ignore_for_file: duplicate_ignore, non_constant_identifier_names, constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast, prefer_const_constructors, lines_longer_than_80_chars, require_trailing_commas, inference_failure_on_function_invocation, unnecessary_parenthesis, unnecessary_raw_strings, unnecessary_null_checks, join_return_with_assignment, prefer_final_locals, avoid_js_rounded_ints, avoid_positional_boolean_parameters, always_specify_types
-
-extension GetPodcastViewStatsCollection on Isar {
-  IsarCollection<PodcastViewStats> get podcastViewStats => this.collection();
-}
-
-const PodcastViewStatsSchema = CollectionSchema(
-  name: r'PodcastViewStats',
-  id: -6481807344989111892,
-  properties: {
-    r'ascend': PropertySchema(
-      id: 0,
-      name: r'ascend',
-      type: IsarType.bool,
-    ),
-    r'ascendSeasonEpisodes': PropertySchema(
-      id: 1,
-      name: r'ascendSeasonEpisodes',
-      type: IsarType.bool,
-    ),
-    r'viewMode': PropertySchema(
-      id: 2,
-      name: r'viewMode',
-      type: IsarType.byte,
-      enumMap: _PodcastViewStatsviewModeEnumValueMap,
-    )
-  },
-  estimateSize: _podcastViewStatsEstimateSize,
-  serialize: _podcastViewStatsSerialize,
-  deserialize: _podcastViewStatsDeserialize,
-  deserializeProp: _podcastViewStatsDeserializeProp,
-  idName: r'id',
-  indexes: {},
-  links: {},
-  embeddedSchemas: {},
-  getId: _podcastViewStatsGetId,
-  getLinks: _podcastViewStatsGetLinks,
-  attach: _podcastViewStatsAttach,
-  version: '3.1.7',
-);
-
-int _podcastViewStatsEstimateSize(
-  PodcastViewStats object,
-  List<int> offsets,
-  Map<Type, List<int>> allOffsets,
-) {
-  var bytesCount = offsets.last;
-  return bytesCount;
-}
-
-void _podcastViewStatsSerialize(
-  PodcastViewStats object,
-  IsarWriter writer,
-  List<int> offsets,
-  Map<Type, List<int>> allOffsets,
-) {
-  writer.writeBool(offsets[0], object.ascend);
-  writer.writeBool(offsets[1], object.ascendSeasonEpisodes);
-  writer.writeByte(offsets[2], object.viewMode.index);
-}
-
-PodcastViewStats _podcastViewStatsDeserialize(
-  Id id,
-  IsarReader reader,
-  List<int> offsets,
-  Map<Type, List<int>> allOffsets,
-) {
-  final object = PodcastViewStats(
-    ascend: reader.readBoolOrNull(offsets[0]) ?? false,
-    ascendSeasonEpisodes: reader.readBoolOrNull(offsets[1]) ?? true,
-    id: id,
-    viewMode: _PodcastViewStatsviewModeValueEnumMap[
-            reader.readByteOrNull(offsets[2])] ??
-        PodcastDetailViewMode.seasons,
-  );
-  return object;
-}
-
-P _podcastViewStatsDeserializeProp<P>(
-  IsarReader reader,
-  int propertyId,
-  int offset,
-  Map<Type, List<int>> allOffsets,
-) {
-  switch (propertyId) {
-    case 0:
-      return (reader.readBoolOrNull(offset) ?? false) as P;
-    case 1:
-      return (reader.readBoolOrNull(offset) ?? true) as P;
-    case 2:
-      return (_PodcastViewStatsviewModeValueEnumMap[
-              reader.readByteOrNull(offset)] ??
-          PodcastDetailViewMode.seasons) as P;
-    default:
-      throw IsarError('Unknown property with id $propertyId');
-  }
-}
-
-const _PodcastViewStatsviewModeEnumValueMap = {
-  'episodes': 0,
-  'seasons': 1,
-  'played': 2,
-  'unplayed': 3,
-  'downloaded': 4,
-};
-const _PodcastViewStatsviewModeValueEnumMap = {
-  0: PodcastDetailViewMode.episodes,
-  1: PodcastDetailViewMode.seasons,
-  2: PodcastDetailViewMode.played,
-  3: PodcastDetailViewMode.unplayed,
-  4: PodcastDetailViewMode.downloaded,
-};
-
-Id _podcastViewStatsGetId(PodcastViewStats object) {
-  return object.id;
-}
-
-List<IsarLinkBase<dynamic>> _podcastViewStatsGetLinks(PodcastViewStats object) {
-  return [];
-}
-
-void _podcastViewStatsAttach(
-    IsarCollection<dynamic> col, Id id, PodcastViewStats object) {}
-
-extension PodcastViewStatsQueryWhereSort
-    on QueryBuilder<PodcastViewStats, PodcastViewStats, QWhere> {
-  QueryBuilder<PodcastViewStats, PodcastViewStats, QAfterWhere> anyId() {
+  QueryBuilder<PodcastStats, int, QQueryOperations> totalEpisodesProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(const IdWhereClause.any());
-    });
-  }
-}
-
-extension PodcastViewStatsQueryWhere
-    on QueryBuilder<PodcastViewStats, PodcastViewStats, QWhereClause> {
-  QueryBuilder<PodcastViewStats, PodcastViewStats, QAfterWhereClause> idEqualTo(
-      Id id) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IdWhereClause.between(
-        lower: id,
-        upper: id,
-      ));
+      return query.addPropertyName(r'totalEpisodes');
     });
   }
 
-  QueryBuilder<PodcastViewStats, PodcastViewStats, QAfterWhereClause>
-      idNotEqualTo(Id id) {
+  QueryBuilder<PodcastStats, int, QQueryOperations> totalPlayedProperty() {
     return QueryBuilder.apply(this, (query) {
-      if (query.whereSort == Sort.asc) {
-        return query
-            .addWhereClause(
-              IdWhereClause.lessThan(upper: id, includeUpper: false),
-            )
-            .addWhereClause(
-              IdWhereClause.greaterThan(lower: id, includeLower: false),
-            );
-      } else {
-        return query
-            .addWhereClause(
-              IdWhereClause.greaterThan(lower: id, includeLower: false),
-            )
-            .addWhereClause(
-              IdWhereClause.lessThan(upper: id, includeUpper: false),
-            );
-      }
-    });
-  }
-
-  QueryBuilder<PodcastViewStats, PodcastViewStats, QAfterWhereClause>
-      idGreaterThan(Id id, {bool include = false}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IdWhereClause.greaterThan(lower: id, includeLower: include),
-      );
-    });
-  }
-
-  QueryBuilder<PodcastViewStats, PodcastViewStats, QAfterWhereClause>
-      idLessThan(Id id, {bool include = false}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IdWhereClause.lessThan(upper: id, includeUpper: include),
-      );
-    });
-  }
-
-  QueryBuilder<PodcastViewStats, PodcastViewStats, QAfterWhereClause> idBetween(
-    Id lowerId,
-    Id upperId, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IdWhereClause.between(
-        lower: lowerId,
-        includeLower: includeLower,
-        upper: upperId,
-        includeUpper: includeUpper,
-      ));
-    });
-  }
-}
-
-extension PodcastViewStatsQueryFilter
-    on QueryBuilder<PodcastViewStats, PodcastViewStats, QFilterCondition> {
-  QueryBuilder<PodcastViewStats, PodcastViewStats, QAfterFilterCondition>
-      ascendEqualTo(bool value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'ascend',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<PodcastViewStats, PodcastViewStats, QAfterFilterCondition>
-      ascendSeasonEpisodesEqualTo(bool value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'ascendSeasonEpisodes',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<PodcastViewStats, PodcastViewStats, QAfterFilterCondition>
-      idEqualTo(Id value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'id',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<PodcastViewStats, PodcastViewStats, QAfterFilterCondition>
-      idGreaterThan(
-    Id value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'id',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<PodcastViewStats, PodcastViewStats, QAfterFilterCondition>
-      idLessThan(
-    Id value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'id',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<PodcastViewStats, PodcastViewStats, QAfterFilterCondition>
-      idBetween(
-    Id lower,
-    Id upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'id',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
-    });
-  }
-
-  QueryBuilder<PodcastViewStats, PodcastViewStats, QAfterFilterCondition>
-      viewModeEqualTo(PodcastDetailViewMode value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'viewMode',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<PodcastViewStats, PodcastViewStats, QAfterFilterCondition>
-      viewModeGreaterThan(
-    PodcastDetailViewMode value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'viewMode',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<PodcastViewStats, PodcastViewStats, QAfterFilterCondition>
-      viewModeLessThan(
-    PodcastDetailViewMode value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'viewMode',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<PodcastViewStats, PodcastViewStats, QAfterFilterCondition>
-      viewModeBetween(
-    PodcastDetailViewMode lower,
-    PodcastDetailViewMode upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'viewMode',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
-    });
-  }
-}
-
-extension PodcastViewStatsQueryObject
-    on QueryBuilder<PodcastViewStats, PodcastViewStats, QFilterCondition> {}
-
-extension PodcastViewStatsQueryLinks
-    on QueryBuilder<PodcastViewStats, PodcastViewStats, QFilterCondition> {}
-
-extension PodcastViewStatsQuerySortBy
-    on QueryBuilder<PodcastViewStats, PodcastViewStats, QSortBy> {
-  QueryBuilder<PodcastViewStats, PodcastViewStats, QAfterSortBy>
-      sortByAscend() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'ascend', Sort.asc);
-    });
-  }
-
-  QueryBuilder<PodcastViewStats, PodcastViewStats, QAfterSortBy>
-      sortByAscendDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'ascend', Sort.desc);
-    });
-  }
-
-  QueryBuilder<PodcastViewStats, PodcastViewStats, QAfterSortBy>
-      sortByAscendSeasonEpisodes() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'ascendSeasonEpisodes', Sort.asc);
-    });
-  }
-
-  QueryBuilder<PodcastViewStats, PodcastViewStats, QAfterSortBy>
-      sortByAscendSeasonEpisodesDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'ascendSeasonEpisodes', Sort.desc);
-    });
-  }
-
-  QueryBuilder<PodcastViewStats, PodcastViewStats, QAfterSortBy>
-      sortByViewMode() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'viewMode', Sort.asc);
-    });
-  }
-
-  QueryBuilder<PodcastViewStats, PodcastViewStats, QAfterSortBy>
-      sortByViewModeDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'viewMode', Sort.desc);
-    });
-  }
-}
-
-extension PodcastViewStatsQuerySortThenBy
-    on QueryBuilder<PodcastViewStats, PodcastViewStats, QSortThenBy> {
-  QueryBuilder<PodcastViewStats, PodcastViewStats, QAfterSortBy>
-      thenByAscend() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'ascend', Sort.asc);
-    });
-  }
-
-  QueryBuilder<PodcastViewStats, PodcastViewStats, QAfterSortBy>
-      thenByAscendDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'ascend', Sort.desc);
-    });
-  }
-
-  QueryBuilder<PodcastViewStats, PodcastViewStats, QAfterSortBy>
-      thenByAscendSeasonEpisodes() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'ascendSeasonEpisodes', Sort.asc);
-    });
-  }
-
-  QueryBuilder<PodcastViewStats, PodcastViewStats, QAfterSortBy>
-      thenByAscendSeasonEpisodesDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'ascendSeasonEpisodes', Sort.desc);
-    });
-  }
-
-  QueryBuilder<PodcastViewStats, PodcastViewStats, QAfterSortBy> thenById() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'id', Sort.asc);
-    });
-  }
-
-  QueryBuilder<PodcastViewStats, PodcastViewStats, QAfterSortBy>
-      thenByIdDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'id', Sort.desc);
-    });
-  }
-
-  QueryBuilder<PodcastViewStats, PodcastViewStats, QAfterSortBy>
-      thenByViewMode() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'viewMode', Sort.asc);
-    });
-  }
-
-  QueryBuilder<PodcastViewStats, PodcastViewStats, QAfterSortBy>
-      thenByViewModeDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'viewMode', Sort.desc);
-    });
-  }
-}
-
-extension PodcastViewStatsQueryWhereDistinct
-    on QueryBuilder<PodcastViewStats, PodcastViewStats, QDistinct> {
-  QueryBuilder<PodcastViewStats, PodcastViewStats, QDistinct>
-      distinctByAscend() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'ascend');
-    });
-  }
-
-  QueryBuilder<PodcastViewStats, PodcastViewStats, QDistinct>
-      distinctByAscendSeasonEpisodes() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'ascendSeasonEpisodes');
-    });
-  }
-
-  QueryBuilder<PodcastViewStats, PodcastViewStats, QDistinct>
-      distinctByViewMode() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'viewMode');
-    });
-  }
-}
-
-extension PodcastViewStatsQueryProperty
-    on QueryBuilder<PodcastViewStats, PodcastViewStats, QQueryProperty> {
-  QueryBuilder<PodcastViewStats, int, QQueryOperations> idProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'id');
-    });
-  }
-
-  QueryBuilder<PodcastViewStats, bool, QQueryOperations> ascendProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'ascend');
-    });
-  }
-
-  QueryBuilder<PodcastViewStats, bool, QQueryOperations>
-      ascendSeasonEpisodesProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'ascendSeasonEpisodes');
-    });
-  }
-
-  QueryBuilder<PodcastViewStats, PodcastDetailViewMode, QQueryOperations>
-      viewModeProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'viewMode');
+      return query.addPropertyName(r'totalPlayed');
     });
   }
 }

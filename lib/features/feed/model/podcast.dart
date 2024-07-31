@@ -162,6 +162,8 @@ class PodcastStats {
     this.latestPubDate,
     required this.lastCheckedAt,
     required this.hasLoadedAll,
+    required this.totalEpisodes,
+    required this.totalPlayed,
   });
 
   final Id id;
@@ -188,11 +190,19 @@ class PodcastStats {
   /// applied correctly in future loads.
   final bool hasLoadedAll;
 
+  /// The total number of episodes in the podcast.
+  final int totalEpisodes;
+
+  /// The total number of episodes played.
+  final int totalPlayed;
+
   PodcastStats copyWith({
     DateTime? subscribedDate,
     DateTime? latestPubDate,
     DateTime? lastCheckedAt,
     bool? hasLoadedAll,
+    int? totalEpisodes,
+    int? totalPlayed,
   }) {
     return PodcastStats(
       id: id,
@@ -200,6 +210,8 @@ class PodcastStats {
       latestPubDate: latestPubDate ?? this.latestPubDate,
       lastCheckedAt: lastCheckedAt ?? this.lastCheckedAt,
       hasLoadedAll: hasLoadedAll ?? this.hasLoadedAll,
+      totalEpisodes: totalEpisodes ?? this.totalEpisodes,
+      totalPlayed: totalPlayed ?? this.totalPlayed,
     );
   }
 }
@@ -215,6 +227,8 @@ class PodcastStatsUpdateParam {
     this.latestPubDate,
     this.lastCheckedAt,
     this.hasLoadedAll,
+    this.deltaTotalEpisodes,
+    this.deltaTotalPlayed,
   });
 
   final Id id;
@@ -222,12 +236,16 @@ class PodcastStatsUpdateParam {
   final DateTime? latestPubDate;
   final DateTime? lastCheckedAt;
   final bool? hasLoadedAll;
+  final int? deltaTotalEpisodes;
+  final int? deltaTotalPlayed;
 
   PodcastStatsUpdateParam copyWith({
     bool? subscribed,
     DateTime? lastCheckedAt,
     DateTime? latestPubDate,
     bool? hasLoadedAll,
+    int? deltaTotalEpisodes,
+    int? deltaTotalPlayed,
   }) {
     return PodcastStatsUpdateParam(
       id: id,
@@ -235,74 +253,8 @@ class PodcastStatsUpdateParam {
       latestPubDate: latestPubDate ?? this.latestPubDate,
       lastCheckedAt: lastCheckedAt ?? this.lastCheckedAt,
       hasLoadedAll: hasLoadedAll ?? this.hasLoadedAll,
-    );
-  }
-}
-
-enum PodcastDetailViewMode {
-  episodes,
-  seasons,
-  played,
-  unplayed,
-  downloaded;
-}
-
-@collection
-class PodcastViewStats {
-  PodcastViewStats({
-    required this.id,
-    this.viewMode = PodcastDetailViewMode.seasons,
-    this.ascend = false,
-    this.ascendSeasonEpisodes = true,
-  });
-
-  final Id id;
-  @enumerated
-  final PodcastDetailViewMode viewMode;
-  final bool ascend;
-  final bool ascendSeasonEpisodes;
-
-  PodcastViewStats copyWith({
-    PodcastDetailViewMode? viewMode,
-    bool? ascend,
-    bool? ascendSeasonEpisodes,
-  }) {
-    return PodcastViewStats(
-      id: id,
-      viewMode: viewMode ?? this.viewMode,
-      ascend: ascend ?? this.ascend,
-      ascendSeasonEpisodes: ascendSeasonEpisodes ?? this.ascendSeasonEpisodes,
-    );
-  }
-}
-
-class PodcastViewStatsUpdateParam {
-  const PodcastViewStatsUpdateParam({
-    required this.id,
-    this.viewMode,
-    this.ascend,
-    this.ascendSeasonEpisodes,
-    this.listenedEpisodes,
-  });
-
-  final Id id;
-  final PodcastDetailViewMode? viewMode;
-  final bool? ascend;
-  final bool? ascendSeasonEpisodes;
-  final Map<String, DateTime>? listenedEpisodes;
-
-  PodcastViewStatsUpdateParam copyWith({
-    PodcastDetailViewMode? viewMode,
-    bool? ascend,
-    bool? ascendSeasonEpisodes,
-    Map<String, DateTime>? listenedEpisodes,
-  }) {
-    return PodcastViewStatsUpdateParam(
-      id: id,
-      viewMode: viewMode ?? this.viewMode,
-      ascend: ascend ?? this.ascend,
-      ascendSeasonEpisodes: ascendSeasonEpisodes ?? this.ascendSeasonEpisodes,
-      listenedEpisodes: listenedEpisodes,
+      deltaTotalEpisodes: deltaTotalEpisodes ?? this.deltaTotalEpisodes,
+      deltaTotalPlayed: deltaTotalPlayed ?? this.deltaTotalPlayed,
     );
   }
 }
