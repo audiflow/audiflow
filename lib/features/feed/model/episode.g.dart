@@ -124,7 +124,7 @@ const EpisodeSchema = CollectionSchema(
     r'publicationDate': IndexSchema(
       id: 5092957953251450645,
       name: r'publicationDate',
-      unique: true,
+      unique: false,
       replace: false,
       properties: [
         IndexPropertySchema(
@@ -137,7 +137,7 @@ const EpisodeSchema = CollectionSchema(
     r'episode': IndexSchema(
       id: 5077628722353948045,
       name: r'episode',
-      unique: true,
+      unique: false,
       replace: false,
       properties: [
         IndexPropertySchema(
@@ -150,7 +150,7 @@ const EpisodeSchema = CollectionSchema(
     r'season': IndexSchema(
       id: 6094185357012972874,
       name: r'season',
-      unique: true,
+      unique: false,
       replace: false,
       properties: [
         IndexPropertySchema(
@@ -390,166 +390,6 @@ extension EpisodeByIndex on IsarCollection<Episode> {
 
   List<Id> putAllByGuidSync(List<Episode> objects, {bool saveLinks = true}) {
     return putAllByIndexSync(r'guid', objects, saveLinks: saveLinks);
-  }
-
-  Future<Episode?> getByPublicationDate(DateTime? publicationDate) {
-    return getByIndex(r'publicationDate', [publicationDate]);
-  }
-
-  Episode? getByPublicationDateSync(DateTime? publicationDate) {
-    return getByIndexSync(r'publicationDate', [publicationDate]);
-  }
-
-  Future<bool> deleteByPublicationDate(DateTime? publicationDate) {
-    return deleteByIndex(r'publicationDate', [publicationDate]);
-  }
-
-  bool deleteByPublicationDateSync(DateTime? publicationDate) {
-    return deleteByIndexSync(r'publicationDate', [publicationDate]);
-  }
-
-  Future<List<Episode?>> getAllByPublicationDate(
-      List<DateTime?> publicationDateValues) {
-    final values = publicationDateValues.map((e) => [e]).toList();
-    return getAllByIndex(r'publicationDate', values);
-  }
-
-  List<Episode?> getAllByPublicationDateSync(
-      List<DateTime?> publicationDateValues) {
-    final values = publicationDateValues.map((e) => [e]).toList();
-    return getAllByIndexSync(r'publicationDate', values);
-  }
-
-  Future<int> deleteAllByPublicationDate(
-      List<DateTime?> publicationDateValues) {
-    final values = publicationDateValues.map((e) => [e]).toList();
-    return deleteAllByIndex(r'publicationDate', values);
-  }
-
-  int deleteAllByPublicationDateSync(List<DateTime?> publicationDateValues) {
-    final values = publicationDateValues.map((e) => [e]).toList();
-    return deleteAllByIndexSync(r'publicationDate', values);
-  }
-
-  Future<Id> putByPublicationDate(Episode object) {
-    return putByIndex(r'publicationDate', object);
-  }
-
-  Id putByPublicationDateSync(Episode object, {bool saveLinks = true}) {
-    return putByIndexSync(r'publicationDate', object, saveLinks: saveLinks);
-  }
-
-  Future<List<Id>> putAllByPublicationDate(List<Episode> objects) {
-    return putAllByIndex(r'publicationDate', objects);
-  }
-
-  List<Id> putAllByPublicationDateSync(List<Episode> objects,
-      {bool saveLinks = true}) {
-    return putAllByIndexSync(r'publicationDate', objects, saveLinks: saveLinks);
-  }
-
-  Future<Episode?> getByEpisode(int? episode) {
-    return getByIndex(r'episode', [episode]);
-  }
-
-  Episode? getByEpisodeSync(int? episode) {
-    return getByIndexSync(r'episode', [episode]);
-  }
-
-  Future<bool> deleteByEpisode(int? episode) {
-    return deleteByIndex(r'episode', [episode]);
-  }
-
-  bool deleteByEpisodeSync(int? episode) {
-    return deleteByIndexSync(r'episode', [episode]);
-  }
-
-  Future<List<Episode?>> getAllByEpisode(List<int?> episodeValues) {
-    final values = episodeValues.map((e) => [e]).toList();
-    return getAllByIndex(r'episode', values);
-  }
-
-  List<Episode?> getAllByEpisodeSync(List<int?> episodeValues) {
-    final values = episodeValues.map((e) => [e]).toList();
-    return getAllByIndexSync(r'episode', values);
-  }
-
-  Future<int> deleteAllByEpisode(List<int?> episodeValues) {
-    final values = episodeValues.map((e) => [e]).toList();
-    return deleteAllByIndex(r'episode', values);
-  }
-
-  int deleteAllByEpisodeSync(List<int?> episodeValues) {
-    final values = episodeValues.map((e) => [e]).toList();
-    return deleteAllByIndexSync(r'episode', values);
-  }
-
-  Future<Id> putByEpisode(Episode object) {
-    return putByIndex(r'episode', object);
-  }
-
-  Id putByEpisodeSync(Episode object, {bool saveLinks = true}) {
-    return putByIndexSync(r'episode', object, saveLinks: saveLinks);
-  }
-
-  Future<List<Id>> putAllByEpisode(List<Episode> objects) {
-    return putAllByIndex(r'episode', objects);
-  }
-
-  List<Id> putAllByEpisodeSync(List<Episode> objects, {bool saveLinks = true}) {
-    return putAllByIndexSync(r'episode', objects, saveLinks: saveLinks);
-  }
-
-  Future<Episode?> getBySeason(int? season) {
-    return getByIndex(r'season', [season]);
-  }
-
-  Episode? getBySeasonSync(int? season) {
-    return getByIndexSync(r'season', [season]);
-  }
-
-  Future<bool> deleteBySeason(int? season) {
-    return deleteByIndex(r'season', [season]);
-  }
-
-  bool deleteBySeasonSync(int? season) {
-    return deleteByIndexSync(r'season', [season]);
-  }
-
-  Future<List<Episode?>> getAllBySeason(List<int?> seasonValues) {
-    final values = seasonValues.map((e) => [e]).toList();
-    return getAllByIndex(r'season', values);
-  }
-
-  List<Episode?> getAllBySeasonSync(List<int?> seasonValues) {
-    final values = seasonValues.map((e) => [e]).toList();
-    return getAllByIndexSync(r'season', values);
-  }
-
-  Future<int> deleteAllBySeason(List<int?> seasonValues) {
-    final values = seasonValues.map((e) => [e]).toList();
-    return deleteAllByIndex(r'season', values);
-  }
-
-  int deleteAllBySeasonSync(List<int?> seasonValues) {
-    final values = seasonValues.map((e) => [e]).toList();
-    return deleteAllByIndexSync(r'season', values);
-  }
-
-  Future<Id> putBySeason(Episode object) {
-    return putByIndex(r'season', object);
-  }
-
-  Id putBySeasonSync(Episode object, {bool saveLinks = true}) {
-    return putByIndexSync(r'season', object, saveLinks: saveLinks);
-  }
-
-  Future<List<Id>> putAllBySeason(List<Episode> objects) {
-    return putAllByIndex(r'season', objects);
-  }
-
-  List<Id> putAllBySeasonSync(List<Episode> objects, {bool saveLinks = true}) {
-    return putAllByIndexSync(r'season', objects, saveLinks: saveLinks);
   }
 }
 
@@ -3279,48 +3119,38 @@ const EpisodeStatsSchema = CollectionSchema(
       name: r'completeCount',
       type: IsarType.long,
     ),
-    r'downloadedTime': PropertySchema(
-      id: 1,
-      name: r'downloadedTime',
-      type: IsarType.dateTime,
-    ),
     r'durationMS': PropertySchema(
-      id: 2,
+      id: 1,
       name: r'durationMS',
       type: IsarType.long,
     ),
-    r'inQueue': PropertySchema(
-      id: 3,
-      name: r'inQueue',
-      type: IsarType.bool,
-    ),
     r'lastPlayedAt': PropertySchema(
-      id: 4,
+      id: 2,
       name: r'lastPlayedAt',
       type: IsarType.dateTime,
     ),
     r'pid': PropertySchema(
-      id: 5,
+      id: 3,
       name: r'pid',
       type: IsarType.long,
     ),
     r'playCount': PropertySchema(
-      id: 6,
+      id: 4,
       name: r'playCount',
       type: IsarType.long,
     ),
     r'playTotalMS': PropertySchema(
-      id: 7,
+      id: 5,
       name: r'playTotalMS',
       type: IsarType.long,
     ),
     r'played': PropertySchema(
-      id: 8,
+      id: 6,
       name: r'played',
       type: IsarType.bool,
     ),
     r'positionMS': PropertySchema(
-      id: 9,
+      id: 7,
       name: r'positionMS',
       type: IsarType.long,
     )
@@ -3357,27 +3187,14 @@ const EpisodeStatsSchema = CollectionSchema(
         )
       ],
     ),
-    r'inQueue': IndexSchema(
-      id: 8111862656609435752,
-      name: r'inQueue',
+    r'completeCount': IndexSchema(
+      id: -8282809319823640885,
+      name: r'completeCount',
       unique: false,
       replace: false,
       properties: [
         IndexPropertySchema(
-          name: r'inQueue',
-          type: IndexType.value,
-          caseSensitive: false,
-        )
-      ],
-    ),
-    r'downloadedTime': IndexSchema(
-      id: -2690293643392173367,
-      name: r'downloadedTime',
-      unique: false,
-      replace: false,
-      properties: [
-        IndexPropertySchema(
-          name: r'downloadedTime',
+          name: r'completeCount',
           type: IndexType.value,
           caseSensitive: false,
         )
@@ -3421,15 +3238,13 @@ void _episodeStatsSerialize(
   Map<Type, List<int>> allOffsets,
 ) {
   writer.writeLong(offsets[0], object.completeCount);
-  writer.writeDateTime(offsets[1], object.downloadedTime);
-  writer.writeLong(offsets[2], object.durationMS);
-  writer.writeBool(offsets[3], object.inQueue);
-  writer.writeDateTime(offsets[4], object.lastPlayedAt);
-  writer.writeLong(offsets[5], object.pid);
-  writer.writeLong(offsets[6], object.playCount);
-  writer.writeLong(offsets[7], object.playTotalMS);
-  writer.writeBool(offsets[8], object.played);
-  writer.writeLong(offsets[9], object.positionMS);
+  writer.writeLong(offsets[1], object.durationMS);
+  writer.writeDateTime(offsets[2], object.lastPlayedAt);
+  writer.writeLong(offsets[3], object.pid);
+  writer.writeLong(offsets[4], object.playCount);
+  writer.writeLong(offsets[5], object.playTotalMS);
+  writer.writeBool(offsets[6], object.played);
+  writer.writeLong(offsets[7], object.positionMS);
 }
 
 EpisodeStats _episodeStatsDeserialize(
@@ -3440,16 +3255,14 @@ EpisodeStats _episodeStatsDeserialize(
 ) {
   final object = EpisodeStats(
     completeCount: reader.readLongOrNull(offsets[0]) ?? 0,
-    downloadedTime: reader.readDateTimeOrNull(offsets[1]),
-    durationMS: reader.readLongOrNull(offsets[2]),
+    durationMS: reader.readLongOrNull(offsets[1]),
     id: id,
-    inQueue: reader.readBoolOrNull(offsets[3]) ?? false,
-    lastPlayedAt: reader.readDateTimeOrNull(offsets[4]),
-    pid: reader.readLong(offsets[5]),
-    playCount: reader.readLongOrNull(offsets[6]) ?? 0,
-    playTotalMS: reader.readLongOrNull(offsets[7]) ?? 0,
-    played: reader.readBoolOrNull(offsets[8]) ?? false,
-    positionMS: reader.readLongOrNull(offsets[9]) ?? 0,
+    lastPlayedAt: reader.readDateTimeOrNull(offsets[2]),
+    pid: reader.readLong(offsets[3]),
+    playCount: reader.readLongOrNull(offsets[4]) ?? 0,
+    playTotalMS: reader.readLongOrNull(offsets[5]) ?? 0,
+    played: reader.readBoolOrNull(offsets[6]) ?? false,
+    positionMS: reader.readLongOrNull(offsets[7]) ?? 0,
   );
   return object;
 }
@@ -3464,22 +3277,18 @@ P _episodeStatsDeserializeProp<P>(
     case 0:
       return (reader.readLongOrNull(offset) ?? 0) as P;
     case 1:
-      return (reader.readDateTimeOrNull(offset)) as P;
-    case 2:
       return (reader.readLongOrNull(offset)) as P;
-    case 3:
-      return (reader.readBoolOrNull(offset) ?? false) as P;
-    case 4:
+    case 2:
       return (reader.readDateTimeOrNull(offset)) as P;
-    case 5:
+    case 3:
       return (reader.readLong(offset)) as P;
+    case 4:
+      return (reader.readLongOrNull(offset) ?? 0) as P;
+    case 5:
+      return (reader.readLongOrNull(offset) ?? 0) as P;
     case 6:
-      return (reader.readLongOrNull(offset) ?? 0) as P;
-    case 7:
-      return (reader.readLongOrNull(offset) ?? 0) as P;
-    case 8:
       return (reader.readBoolOrNull(offset) ?? false) as P;
-    case 9:
+    case 7:
       return (reader.readLongOrNull(offset) ?? 0) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -3521,18 +3330,10 @@ extension EpisodeStatsQueryWhereSort
     });
   }
 
-  QueryBuilder<EpisodeStats, EpisodeStats, QAfterWhere> anyInQueue() {
+  QueryBuilder<EpisodeStats, EpisodeStats, QAfterWhere> anyCompleteCount() {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
-        const IndexWhereClause.any(indexName: r'inQueue'),
-      );
-    });
-  }
-
-  QueryBuilder<EpisodeStats, EpisodeStats, QAfterWhere> anyDownloadedTime() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        const IndexWhereClause.any(indexName: r'downloadedTime'),
+        const IndexWhereClause.any(indexName: r'completeCount'),
       );
     });
   }
@@ -3750,45 +3551,45 @@ extension EpisodeStatsQueryWhere
     });
   }
 
-  QueryBuilder<EpisodeStats, EpisodeStats, QAfterWhereClause> inQueueEqualTo(
-      bool inQueue) {
+  QueryBuilder<EpisodeStats, EpisodeStats, QAfterWhereClause>
+      completeCountEqualTo(int completeCount) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'inQueue',
-        value: [inQueue],
+        indexName: r'completeCount',
+        value: [completeCount],
       ));
     });
   }
 
-  QueryBuilder<EpisodeStats, EpisodeStats, QAfterWhereClause> inQueueNotEqualTo(
-      bool inQueue) {
+  QueryBuilder<EpisodeStats, EpisodeStats, QAfterWhereClause>
+      completeCountNotEqualTo(int completeCount) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'inQueue',
+              indexName: r'completeCount',
               lower: [],
-              upper: [inQueue],
+              upper: [completeCount],
               includeUpper: false,
             ))
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'inQueue',
-              lower: [inQueue],
+              indexName: r'completeCount',
+              lower: [completeCount],
               includeLower: false,
               upper: [],
             ));
       } else {
         return query
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'inQueue',
-              lower: [inQueue],
+              indexName: r'completeCount',
+              lower: [completeCount],
               includeLower: false,
               upper: [],
             ))
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'inQueue',
+              indexName: r'completeCount',
               lower: [],
-              upper: [inQueue],
+              upper: [completeCount],
               includeUpper: false,
             ));
       }
@@ -3796,81 +3597,14 @@ extension EpisodeStatsQueryWhere
   }
 
   QueryBuilder<EpisodeStats, EpisodeStats, QAfterWhereClause>
-      downloadedTimeIsNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'downloadedTime',
-        value: [null],
-      ));
-    });
-  }
-
-  QueryBuilder<EpisodeStats, EpisodeStats, QAfterWhereClause>
-      downloadedTimeIsNotNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'downloadedTime',
-        lower: [null],
-        includeLower: false,
-        upper: [],
-      ));
-    });
-  }
-
-  QueryBuilder<EpisodeStats, EpisodeStats, QAfterWhereClause>
-      downloadedTimeEqualTo(DateTime? downloadedTime) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'downloadedTime',
-        value: [downloadedTime],
-      ));
-    });
-  }
-
-  QueryBuilder<EpisodeStats, EpisodeStats, QAfterWhereClause>
-      downloadedTimeNotEqualTo(DateTime? downloadedTime) {
-    return QueryBuilder.apply(this, (query) {
-      if (query.whereSort == Sort.asc) {
-        return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'downloadedTime',
-              lower: [],
-              upper: [downloadedTime],
-              includeUpper: false,
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'downloadedTime',
-              lower: [downloadedTime],
-              includeLower: false,
-              upper: [],
-            ));
-      } else {
-        return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'downloadedTime',
-              lower: [downloadedTime],
-              includeLower: false,
-              upper: [],
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'downloadedTime',
-              lower: [],
-              upper: [downloadedTime],
-              includeUpper: false,
-            ));
-      }
-    });
-  }
-
-  QueryBuilder<EpisodeStats, EpisodeStats, QAfterWhereClause>
-      downloadedTimeGreaterThan(
-    DateTime? downloadedTime, {
+      completeCountGreaterThan(
+    int completeCount, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'downloadedTime',
-        lower: [downloadedTime],
+        indexName: r'completeCount',
+        lower: [completeCount],
         includeLower: include,
         upper: [],
       ));
@@ -3878,33 +3612,33 @@ extension EpisodeStatsQueryWhere
   }
 
   QueryBuilder<EpisodeStats, EpisodeStats, QAfterWhereClause>
-      downloadedTimeLessThan(
-    DateTime? downloadedTime, {
+      completeCountLessThan(
+    int completeCount, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'downloadedTime',
+        indexName: r'completeCount',
         lower: [],
-        upper: [downloadedTime],
+        upper: [completeCount],
         includeUpper: include,
       ));
     });
   }
 
   QueryBuilder<EpisodeStats, EpisodeStats, QAfterWhereClause>
-      downloadedTimeBetween(
-    DateTime? lowerDownloadedTime,
-    DateTime? upperDownloadedTime, {
+      completeCountBetween(
+    int lowerCompleteCount,
+    int upperCompleteCount, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'downloadedTime',
-        lower: [lowerDownloadedTime],
+        indexName: r'completeCount',
+        lower: [lowerCompleteCount],
         includeLower: includeLower,
-        upper: [upperDownloadedTime],
+        upper: [upperCompleteCount],
         includeUpper: includeUpper,
       ));
     });
@@ -4085,80 +3819,6 @@ extension EpisodeStatsQueryFilter
   }
 
   QueryBuilder<EpisodeStats, EpisodeStats, QAfterFilterCondition>
-      downloadedTimeIsNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'downloadedTime',
-      ));
-    });
-  }
-
-  QueryBuilder<EpisodeStats, EpisodeStats, QAfterFilterCondition>
-      downloadedTimeIsNotNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'downloadedTime',
-      ));
-    });
-  }
-
-  QueryBuilder<EpisodeStats, EpisodeStats, QAfterFilterCondition>
-      downloadedTimeEqualTo(DateTime? value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'downloadedTime',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<EpisodeStats, EpisodeStats, QAfterFilterCondition>
-      downloadedTimeGreaterThan(
-    DateTime? value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'downloadedTime',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<EpisodeStats, EpisodeStats, QAfterFilterCondition>
-      downloadedTimeLessThan(
-    DateTime? value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'downloadedTime',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<EpisodeStats, EpisodeStats, QAfterFilterCondition>
-      downloadedTimeBetween(
-    DateTime? lower,
-    DateTime? upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'downloadedTime',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
-    });
-  }
-
-  QueryBuilder<EpisodeStats, EpisodeStats, QAfterFilterCondition>
       durationMSIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNull(
@@ -4281,16 +3941,6 @@ extension EpisodeStatsQueryFilter
         includeLower: includeLower,
         upper: upper,
         includeUpper: includeUpper,
-      ));
-    });
-  }
-
-  QueryBuilder<EpisodeStats, EpisodeStats, QAfterFilterCondition>
-      inQueueEqualTo(bool value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'inQueue',
-        value: value,
       ));
     });
   }
@@ -4623,20 +4273,6 @@ extension EpisodeStatsQuerySortBy
     });
   }
 
-  QueryBuilder<EpisodeStats, EpisodeStats, QAfterSortBy>
-      sortByDownloadedTime() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'downloadedTime', Sort.asc);
-    });
-  }
-
-  QueryBuilder<EpisodeStats, EpisodeStats, QAfterSortBy>
-      sortByDownloadedTimeDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'downloadedTime', Sort.desc);
-    });
-  }
-
   QueryBuilder<EpisodeStats, EpisodeStats, QAfterSortBy> sortByDurationMS() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'durationMS', Sort.asc);
@@ -4647,18 +4283,6 @@ extension EpisodeStatsQuerySortBy
       sortByDurationMSDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'durationMS', Sort.desc);
-    });
-  }
-
-  QueryBuilder<EpisodeStats, EpisodeStats, QAfterSortBy> sortByInQueue() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'inQueue', Sort.asc);
-    });
-  }
-
-  QueryBuilder<EpisodeStats, EpisodeStats, QAfterSortBy> sortByInQueueDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'inQueue', Sort.desc);
     });
   }
 
@@ -4753,20 +4377,6 @@ extension EpisodeStatsQuerySortThenBy
     });
   }
 
-  QueryBuilder<EpisodeStats, EpisodeStats, QAfterSortBy>
-      thenByDownloadedTime() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'downloadedTime', Sort.asc);
-    });
-  }
-
-  QueryBuilder<EpisodeStats, EpisodeStats, QAfterSortBy>
-      thenByDownloadedTimeDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'downloadedTime', Sort.desc);
-    });
-  }
-
   QueryBuilder<EpisodeStats, EpisodeStats, QAfterSortBy> thenByDurationMS() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'durationMS', Sort.asc);
@@ -4789,18 +4399,6 @@ extension EpisodeStatsQuerySortThenBy
   QueryBuilder<EpisodeStats, EpisodeStats, QAfterSortBy> thenByIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.desc);
-    });
-  }
-
-  QueryBuilder<EpisodeStats, EpisodeStats, QAfterSortBy> thenByInQueue() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'inQueue', Sort.asc);
-    });
-  }
-
-  QueryBuilder<EpisodeStats, EpisodeStats, QAfterSortBy> thenByInQueueDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'inQueue', Sort.desc);
     });
   }
 
@@ -4889,22 +4487,9 @@ extension EpisodeStatsQueryWhereDistinct
     });
   }
 
-  QueryBuilder<EpisodeStats, EpisodeStats, QDistinct>
-      distinctByDownloadedTime() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'downloadedTime');
-    });
-  }
-
   QueryBuilder<EpisodeStats, EpisodeStats, QDistinct> distinctByDurationMS() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'durationMS');
-    });
-  }
-
-  QueryBuilder<EpisodeStats, EpisodeStats, QDistinct> distinctByInQueue() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'inQueue');
     });
   }
 
@@ -4959,22 +4544,9 @@ extension EpisodeStatsQueryProperty
     });
   }
 
-  QueryBuilder<EpisodeStats, DateTime?, QQueryOperations>
-      downloadedTimeProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'downloadedTime');
-    });
-  }
-
   QueryBuilder<EpisodeStats, int?, QQueryOperations> durationMSProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'durationMS');
-    });
-  }
-
-  QueryBuilder<EpisodeStats, bool, QQueryOperations> inQueueProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'inQueue');
     });
   }
 

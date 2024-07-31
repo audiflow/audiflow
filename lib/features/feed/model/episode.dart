@@ -187,8 +187,6 @@ class EpisodeStats {
     this.playTotalMS = 0,
     this.played = false,
     this.completeCount = 0,
-    this.inQueue = false,
-    this.downloadedTime,
     this.lastPlayedAt,
   });
 
@@ -215,15 +213,8 @@ class EpisodeStats {
   final bool played;
 
   /// Number of times of complete playing
+  @Index()
   final int completeCount;
-
-  /// Whether the episode is in the queue
-  @Index()
-  final bool inQueue;
-
-  /// Downloaded time
-  @Index()
-  final DateTime? downloadedTime;
 
   /// Latest playing start time
   @Index()
@@ -231,8 +222,6 @@ class EpisodeStats {
 }
 
 extension EpisodeStatsExt on EpisodeStats {
-  bool get downloaded => downloadedTime != null;
-
   Duration? get duration =>
       durationMS == null ? null : Duration(milliseconds: durationMS!);
 
@@ -260,8 +249,6 @@ class EpisodeStatsUpdateParam {
     this.played,
     this.playTotalDelta,
     this.completed,
-    this.inQueue,
-    this.downloaded,
     this.lastPlayedAt,
   });
 
@@ -272,8 +259,6 @@ class EpisodeStatsUpdateParam {
   final bool? played;
   final Duration? playTotalDelta;
   final bool? completed;
-  final bool? inQueue;
-  final bool? downloaded;
   final DateTime? lastPlayedAt;
 
   EpisodeStatsUpdateParam copyWith({
@@ -283,8 +268,6 @@ class EpisodeStatsUpdateParam {
     bool? played,
     Duration? playTotalDelta,
     bool? completed,
-    bool? inQueue,
-    bool? downloaded,
     DateTime? lastPlayedAt,
   }) {
     return EpisodeStatsUpdateParam(
@@ -295,8 +278,6 @@ class EpisodeStatsUpdateParam {
       played: played ?? this.played,
       playTotalDelta: playTotalDelta ?? this.playTotalDelta,
       completed: completed ?? this.completed,
-      inQueue: inQueue ?? this.inQueue,
-      downloaded: downloaded ?? this.downloaded,
       lastPlayedAt: lastPlayedAt ?? this.lastPlayedAt,
     );
   }
@@ -307,7 +288,5 @@ class EpisodeStatsUpdateParam {
       played == null &&
       playTotalDelta == null &&
       completed == null &&
-      inQueue == null &&
-      downloaded == null &&
       lastPlayedAt == null;
 }

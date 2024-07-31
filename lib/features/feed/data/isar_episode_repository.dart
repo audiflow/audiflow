@@ -18,8 +18,33 @@ class IsarEpisodeRepository implements EpisodeRepository {
   }
 
   @override
-  Future<List<Episode>> findEpisodesByPodcastId(Id pid) async {
-    return isar.episodes.where().filter().pidEqualTo(pid).findAll();
+  Future<List<Episode>> findEpisodesBy({
+    required Id pid,
+    EpisodeSortBy? sortBy,
+    DateTime? lastPubDate,
+    bool ascending = false,
+    int? offset,
+    int? limit,
+  }) async {
+    return isar.episodes
+        .where()
+        .filter()
+        .pidEqualTo(pid)
+        .optional(
+          lastPubDate != null,
+          (q) => ascending
+              ? q.publicationDateGreaterThan(lastPubDate)
+              : q.publicationDateLessThan(lastPubDate),
+        )
+        .optional(
+          sortBy != null,
+          (q) => ascending
+              ? q.sortByPublicationDate()
+              : q.sortByPublicationDateDesc(),
+        )
+        .optional(offset != null, (q) => q.offset(offset!))
+        .optional(limit != null, (q) => q.limit(limit!))
+        .findAll();
   }
 
   @override
