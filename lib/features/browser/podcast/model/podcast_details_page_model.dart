@@ -1,15 +1,9 @@
+import 'package:audiflow/features/browser/common/model/episode_filter_mode.dart';
 import 'package:isar/isar.dart';
 
 part 'podcast_details_page_model.g.dart';
 
 enum PodcastDetailsPageViewMode { episodes, seasons }
-
-enum EpisodeFilterMode {
-  none,
-  played,
-  unplayed,
-  downloaded;
-}
 
 @collection
 class PodcastDetailsPageModel {
