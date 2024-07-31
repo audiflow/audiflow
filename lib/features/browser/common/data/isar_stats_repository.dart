@@ -55,6 +55,70 @@ class IsarStatsRepository implements StatsRepository {
   }
 
   @override
+  Future<List<EpisodeStats?>> findEpisodeStatsListBy({
+    required int pid,
+    EpisodeStatsFilterBy? filterBy,
+    required EpisodeStatsSortBy sortBy,
+    DateTime? lastPlayedDate,
+    bool ascending = false,
+    int? offset,
+    int? limit,
+  }) async {
+    return isar.episodeStats
+        .where()
+        .filter()
+        .pidEqualTo(pid)
+        .optional(
+          lastPlayedDate != null,
+          (q) => ascending
+              ? q.lastPlayedAtGreaterThan(lastPlayedDate)
+              : q.lastPlayedAtLessThan(lastPlayedDate),
+        )
+        .optional(filterBy != null, (q) {
+          switch (filterBy!) {
+            case EpisodeStatsFilterBy.played:
+              return q.playedEqualTo(true);
+            case EpisodeStatsFilterBy.completed:
+              return q.completeCountGreaterThan(0);
+            case EpisodeStatsFilterBy.incomplete:
+              return q.completeCountEqualTo(0);
+          }
+        })
+        .optional(true, (q) {
+          switch (sortBy) {
+            case EpisodeStatsSortBy.playedDate:
+              return ascending
+                  ? q.sortByLastPlayedAt()
+                  : q.sortByLastPlayedAtDesc();
+          }
+        })
+        .optional(offset != null, (q) => q.offset(offset!))
+        .optional(limit != null, (q) => q.limit(limit!))
+        .findAll();
+  }
+
+  @override
+  Future<int> countEpisodeStatsBy({
+    required int pid,
+    EpisodeStatsFilterBy? filterBy,
+  }) async {
+    return isar.episodeStats
+        .where()
+        .filter()
+        .pidEqualTo(pid)
+        .optional(filterBy != null, (q) {
+      switch (filterBy!) {
+        case EpisodeStatsFilterBy.played:
+          return q.playedEqualTo(true);
+        case EpisodeStatsFilterBy.completed:
+          return q.completeCountGreaterThan(0);
+        case EpisodeStatsFilterBy.incomplete:
+          return q.completeCountEqualTo(0);
+      }
+    }).count();
+  }
+
+  @override
   Future<PodcastStats> updatePodcastStats(PodcastStatsUpdateParam param) async {
     return isar.writeTxn(() => _updatePodcastStats(param));
   }
@@ -113,12 +177,6 @@ class IsarStatsRepository implements StatsRepository {
       played: (stats?.played ?? false) || (param.played ?? false),
       completeCount:
           (stats?.completeCount ?? 0) + (param.completed == true ? 1 : 0),
-      inQueue: (stats?.inQueue ?? false) || (param.inQueue ?? false),
-      downloadedTime: param.downloaded == null
-          ? stats?.downloadedTime
-          : param.downloaded!
-              ? DateTime.now()
-              : null,
       lastPlayedAt: param.lastPlayedAt ?? stats?.lastPlayedAt,
     );
     await isar.episodeStats.put(newStats);
@@ -133,33 +191,13 @@ class IsarStatsRepository implements StatsRepository {
   }
 
   @override
-  Future<List<EpisodeStats>> findDownloadedEpisodeStatsList(Id pid) async {
-    return isar.episodeStats
-        .where()
-        .filter()
-        .pidEqualTo(pid)
-        .downloadedTimeIsNotNull()
-        .findAll();
-  }
-
-  @override
   Future<List<EpisodeStats>> findPlayedEpisodeStatsList(Id pid) async {
-    return isar.episodeStats
-        .where()
-        .filter()
-        .playedEqualTo(true)
-        .downloadedTimeIsNotNull()
-        .findAll();
+    return isar.episodeStats.where().filter().playedEqualTo(true).findAll();
   }
 
   @override
   Future<List<EpisodeStats>> findUnplayedEpisodeStatsList(Id pid) async {
-    return isar.episodeStats
-        .where()
-        .filter()
-        .playedEqualTo(false)
-        .downloadedTimeIsNotNull()
-        .findAll();
+    return isar.episodeStats.where().filter().playedEqualTo(false).findAll();
   }
 
   // --- Recently played episodes

@@ -4,6 +4,16 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'stats_repository.g.dart';
 
+enum EpisodeStatsFilterBy {
+  played,
+  completed,
+  incomplete,
+}
+
+enum EpisodeStatsSortBy {
+  playedDate,
+}
+
 abstract class StatsRepository {
   // -- Subscriptions
 
@@ -27,13 +37,26 @@ abstract class StatsRepository {
 
   Future<List<EpisodeStats?>> findEpisodeStatsList(Iterable<Id> ids);
 
+  Future<List<EpisodeStats?>> findEpisodeStatsListBy({
+    required int pid,
+    EpisodeStatsFilterBy? filterBy,
+    required EpisodeStatsSortBy sortBy,
+    DateTime? lastPlayedDate,
+    bool ascending = false,
+    int? offset,
+    int? limit,
+  });
+
+  Future<int> countEpisodeStatsBy({
+    required int pid,
+    EpisodeStatsFilterBy? filterBy,
+  });
+
   Future<EpisodeStats> updateEpisodeStats(EpisodeStatsUpdateParam param);
 
   Future<List<EpisodeStats>> updateEpisodeStatsList(
     Iterable<EpisodeStatsUpdateParam> params,
   );
-
-  Future<List<EpisodeStats>> findDownloadedEpisodeStatsList(Id pid);
 
   Future<List<EpisodeStats>> findPlayedEpisodeStatsList(Id pid);
 

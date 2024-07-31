@@ -1,4 +1,5 @@
 import 'package:audiflow/features/browser/common/data/page_models_repository.dart';
+import 'package:audiflow/features/browser/common/model/episode_filter_mode.dart';
 import 'package:audiflow/features/browser/podcast/model/podcast_details_page_model.dart';
 import 'package:isar/isar.dart';
 
