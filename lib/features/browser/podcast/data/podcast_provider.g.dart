@@ -1,13 +1,12 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'podcast_view_episodes.dart';
+part of 'podcast_provider.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$podcastViewEpisodesHash() =>
-    r'0813f991bfcd4f0464c1de9d812551b4de451a49';
+String _$podcastHash() => r'9ebe85a402b2e565fde069b5014c6740e5575731';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -30,36 +29,27 @@ class _SystemHash {
   }
 }
 
-abstract class _$PodcastViewEpisodes
-    extends BuildlessAutoDisposeAsyncNotifier<List<Episode>> {
-  late final int pid;
+/// See also [podcast].
+@ProviderFor(podcast)
+const podcastProvider = PodcastFamily();
 
-  FutureOr<List<Episode>> build(
-    int pid,
-  );
-}
+/// See also [podcast].
+class PodcastFamily extends Family<AsyncValue<Podcast?>> {
+  /// See also [podcast].
+  const PodcastFamily();
 
-/// See also [PodcastViewEpisodes].
-@ProviderFor(PodcastViewEpisodes)
-const podcastViewEpisodesProvider = PodcastViewEpisodesFamily();
-
-/// See also [PodcastViewEpisodes].
-class PodcastViewEpisodesFamily extends Family<AsyncValue<List<Episode>>> {
-  /// See also [PodcastViewEpisodes].
-  const PodcastViewEpisodesFamily();
-
-  /// See also [PodcastViewEpisodes].
-  PodcastViewEpisodesProvider call(
+  /// See also [podcast].
+  PodcastProvider call(
     int pid,
   ) {
-    return PodcastViewEpisodesProvider(
+    return PodcastProvider(
       pid,
     );
   }
 
   @override
-  PodcastViewEpisodesProvider getProviderOverride(
-    covariant PodcastViewEpisodesProvider provider,
+  PodcastProvider getProviderOverride(
+    covariant PodcastProvider provider,
   ) {
     return call(
       provider.pid,
@@ -78,30 +68,31 @@ class PodcastViewEpisodesFamily extends Family<AsyncValue<List<Episode>>> {
       _allTransitiveDependencies;
 
   @override
-  String? get name => r'podcastViewEpisodesProvider';
+  String? get name => r'podcastProvider';
 }
 
-/// See also [PodcastViewEpisodes].
-class PodcastViewEpisodesProvider extends AutoDisposeAsyncNotifierProviderImpl<
-    PodcastViewEpisodes, List<Episode>> {
-  /// See also [PodcastViewEpisodes].
-  PodcastViewEpisodesProvider(
+/// See also [podcast].
+class PodcastProvider extends AutoDisposeFutureProvider<Podcast?> {
+  /// See also [podcast].
+  PodcastProvider(
     int pid,
   ) : this._internal(
-          () => PodcastViewEpisodes()..pid = pid,
-          from: podcastViewEpisodesProvider,
-          name: r'podcastViewEpisodesProvider',
+          (ref) => podcast(
+            ref as PodcastRef,
+            pid,
+          ),
+          from: podcastProvider,
+          name: r'podcastProvider',
           debugGetCreateSourceHash:
               const bool.fromEnvironment('dart.vm.product')
                   ? null
-                  : _$podcastViewEpisodesHash,
-          dependencies: PodcastViewEpisodesFamily._dependencies,
-          allTransitiveDependencies:
-              PodcastViewEpisodesFamily._allTransitiveDependencies,
+                  : _$podcastHash,
+          dependencies: PodcastFamily._dependencies,
+          allTransitiveDependencies: PodcastFamily._allTransitiveDependencies,
           pid: pid,
         );
 
-  PodcastViewEpisodesProvider._internal(
+  PodcastProvider._internal(
     super._createNotifier, {
     required super.name,
     required super.dependencies,
@@ -114,20 +105,13 @@ class PodcastViewEpisodesProvider extends AutoDisposeAsyncNotifierProviderImpl<
   final int pid;
 
   @override
-  FutureOr<List<Episode>> runNotifierBuild(
-    covariant PodcastViewEpisodes notifier,
+  Override overrideWith(
+    FutureOr<Podcast?> Function(PodcastRef provider) create,
   ) {
-    return notifier.build(
-      pid,
-    );
-  }
-
-  @override
-  Override overrideWith(PodcastViewEpisodes Function() create) {
     return ProviderOverride(
       origin: this,
-      override: PodcastViewEpisodesProvider._internal(
-        () => create()..pid = pid,
+      override: PodcastProvider._internal(
+        (ref) => create(ref as PodcastRef),
         from: from,
         name: null,
         dependencies: null,
@@ -139,14 +123,13 @@ class PodcastViewEpisodesProvider extends AutoDisposeAsyncNotifierProviderImpl<
   }
 
   @override
-  AutoDisposeAsyncNotifierProviderElement<PodcastViewEpisodes, List<Episode>>
-      createElement() {
-    return _PodcastViewEpisodesProviderElement(this);
+  AutoDisposeFutureProviderElement<Podcast?> createElement() {
+    return _PodcastProviderElement(this);
   }
 
   @override
   bool operator ==(Object other) {
-    return other is PodcastViewEpisodesProvider && other.pid == pid;
+    return other is PodcastProvider && other.pid == pid;
   }
 
   @override
@@ -158,19 +141,17 @@ class PodcastViewEpisodesProvider extends AutoDisposeAsyncNotifierProviderImpl<
   }
 }
 
-mixin PodcastViewEpisodesRef
-    on AutoDisposeAsyncNotifierProviderRef<List<Episode>> {
+mixin PodcastRef on AutoDisposeFutureProviderRef<Podcast?> {
   /// The parameter `pid` of this provider.
   int get pid;
 }
 
-class _PodcastViewEpisodesProviderElement
-    extends AutoDisposeAsyncNotifierProviderElement<PodcastViewEpisodes,
-        List<Episode>> with PodcastViewEpisodesRef {
-  _PodcastViewEpisodesProviderElement(super.provider);
+class _PodcastProviderElement extends AutoDisposeFutureProviderElement<Podcast?>
+    with PodcastRef {
+  _PodcastProviderElement(super.provider);
 
   @override
-  int get pid => (origin as PodcastViewEpisodesProvider).pid;
+  int get pid => (origin as PodcastProvider).pid;
 }
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member
