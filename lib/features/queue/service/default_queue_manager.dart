@@ -1,11 +1,8 @@
 import 'dart:async';
 
-import 'package:audiflow/features/browser/common/data/stats_repository.dart';
-import 'package:audiflow/features/feed/model/model.dart';
 import 'package:audiflow/features/queue/data/queue_repository.dart';
 import 'package:audiflow/features/queue/model/queue.dart';
 import 'package:audiflow/features/queue/service/queue_manager.dart';
-import 'package:collection/collection.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'default_queue_manager.g.dart';
@@ -17,8 +14,6 @@ class DefaultQueueManager extends _$DefaultQueueManager
   Queue build() => Queue.empty();
 
   QueueRepository get _queueRepository => ref.read(queueRepositoryProvider);
-
-  StatsRepository get _statsRepository => ref.read(statsRepositoryProvider);
 
   @override
   Future<void> ensureInitialized() async {
@@ -32,18 +27,12 @@ class DefaultQueueManager extends _$DefaultQueueManager
 
   @override
   Future<void> prepend(QueueItem item) async {
-    final isNewEpisode = !state.containsEpisode(eid: item.eid);
     state = state.copyWith(queue: [item, ...state.queue]);
     await _queueRepository.saveQueue(state);
-    if (isNewEpisode) {
-      await _markEpisodeAsQueued(_Item.from(item));
-    }
   }
 
   @override
   Future<void> append(QueueItem item) async {
-    final isNewEpisode = !state.containsEpisode(eid: item.eid);
-
     final i = state.queue.lastIndexWhere((q) => q.type == item.type);
     if (0 <= i) {
       final newQueue = List.of(state.queue)..insert(i + 1, item);
@@ -55,9 +44,6 @@ class DefaultQueueManager extends _$DefaultQueueManager
     }
 
     await _queueRepository.saveQueue(state);
-    if (isNewEpisode) {
-      await _markEpisodeAsQueued(_Item.from(item));
-    }
   }
 
   @override
@@ -83,7 +69,6 @@ class DefaultQueueManager extends _$DefaultQueueManager
     }
 
     await _queueRepository.saveQueue(state);
-    await _markEpisodesAsQueued(items.map(_Item.from));
   }
 
   @override
@@ -94,23 +79,12 @@ class DefaultQueueManager extends _$DefaultQueueManager
 
     final type = items.first.type;
     final remaining = state.queue.where((q) => q.type != type);
-    final removing = state.queue.where((q) => q.type == type);
-    final newEpisodes = items
-        .where((item) => state.containsEpisode(eid: item.eid))
-        .map(_Item.from);
-
     state = state.copyWith(
       queue: type == QueueType.primary
           ? [...items, ...remaining]
           : [...remaining, ...items],
     );
     await _queueRepository.saveQueue(state);
-
-    final purgingEpisodes = removing
-        .whereNot((item) => state.containsEpisode(eid: item.eid))
-        .map(_Item.from);
-    await _unmarkEpisodesAsQueued(purgingEpisodes);
-    await _markEpisodesAsQueued(newEpisodes);
   }
 
   @override
@@ -120,10 +94,6 @@ class DefaultQueueManager extends _$DefaultQueueManager
     final removedItem = state.queue[index];
     state = state.copyWith(queue: List.of(state.queue)..removeAt(index));
     await _queueRepository.saveQueue(state);
-
-    if (!state.containsEpisode(eid: removedItem.eid)) {
-      await _unmarkEpisodeAsQueued(_Item.from(removedItem));
-    }
     return removedItem;
   }
 
@@ -132,7 +102,6 @@ class DefaultQueueManager extends _$DefaultQueueManager
     final i = state.queue.indexOf(to);
     assert(0 <= i, 'Queue item not found');
 
-    final oldQueue = state.queue;
     final primary = (to.type == QueueType.primary
             ? state.queue.sublist(i + 1)
             : state.queue)
@@ -146,10 +115,6 @@ class DefaultQueueManager extends _$DefaultQueueManager
     state = state.copyWith(queue: newQueue);
 
     await _queueRepository.saveQueue(state);
-    final purgingEpisodes = oldQueue
-        .where((item) => !state.queue.any((q) => q.eid == item.eid))
-        .map(_Item.from);
-    await _unmarkEpisodesAsQueued(purgingEpisodes);
   }
 
   @override
@@ -164,11 +129,6 @@ class DefaultQueueManager extends _$DefaultQueueManager
 
   @override
   Future<void> clear({QueueType? type}) async {
-    final removing = type == QueueType.primary
-        ? state.queue.where((q) => q.type != QueueType.primary)
-        : type == QueueType.adhoc
-            ? state.queue.where((q) => q.type != QueueType.adhoc)
-            : [...state.queue];
     final newQueue = type == QueueType.primary
         ? state.queue.where((q) => q.type == QueueType.primary)
         : type == QueueType.adhoc
@@ -177,64 +137,5 @@ class DefaultQueueManager extends _$DefaultQueueManager
 
     state = state.copyWith(queue: newQueue.toList());
     await _queueRepository.saveQueue(state);
-
-    final purgingEpisodes = removing
-        .whereNot((item) => state.containsEpisode(eid: item.eid))
-        .map(_Item.from);
-
-    await _unmarkEpisodesAsQueued(purgingEpisodes);
   }
-
-  Future<void> _markEpisodeAsQueued(_Item item) async {
-    final param = EpisodeStatsUpdateParam(
-      pid: item.pid,
-      id: item.eid,
-      inQueue: true,
-    );
-    await _statsRepository.updateEpisodeStats(param);
-  }
-
-  Future<void> _unmarkEpisodeAsQueued(_Item item) async {
-    final param = EpisodeStatsUpdateParam(
-      pid: item.pid,
-      id: item.eid,
-      inQueue: false,
-    );
-    await _statsRepository.updateEpisodeStats(param);
-  }
-
-  Future<void> _markEpisodesAsQueued(Iterable<_Item> items) async {
-    final params = items.map(
-      (item) => EpisodeStatsUpdateParam(
-        pid: item.pid,
-        id: item.eid,
-        inQueue: true,
-      ),
-    );
-    await _statsRepository.updateEpisodeStatsList(params);
-  }
-
-  Future<void> _unmarkEpisodesAsQueued(Iterable<_Item> items) async {
-    final params = items.map(
-      (item) => EpisodeStatsUpdateParam(
-        pid: item.pid,
-        id: item.eid,
-        inQueue: false,
-      ),
-    );
-    await _statsRepository.updateEpisodeStatsList(params);
-  }
-}
-
-class _Item {
-  _Item({
-    required this.pid,
-    required this.eid,
-  });
-
-  _Item.from(QueueItem item)
-      : pid = item.pid,
-        eid = item.eid;
-  final int pid;
-  final int eid;
 }

@@ -1,10 +1,12 @@
 import 'package:audiflow/common/data/connectivity.dart';
+import 'package:audiflow/events/audio_player_event.dart';
 import 'package:audiflow/features/browser/common/data/stats_repository.dart';
+import 'package:audiflow/features/download/data/download_repository.dart';
+import 'package:audiflow/features/download/model/downloadable.dart';
 import 'package:audiflow/features/feed/data/episode_repository.dart';
 import 'package:audiflow/features/player/service/audio_player_service.dart';
 import 'package:audiflow/features/queue/model/queue.dart';
 import 'package:audiflow/features/queue/service/queue_manager.dart';
-import 'package:audiflow/events/audio_player_event.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -16,6 +18,9 @@ class AudioQueueManager extends _$AudioQueueManager {
       ref.read(episodeRepositoryProvider);
 
   StatsRepository get _statsRepository => ref.read(statsRepositoryProvider);
+
+  DownloadRepository get _downloadRepository =>
+      ref.read(downloadRepositoryProvider);
 
   AudioPlayerService get _audioPlayerService =>
       ref.read(audioPlayerServiceProvider.notifier);
@@ -58,15 +63,17 @@ class AudioQueueManager extends _$AudioQueueManager {
       final ret = await Future.wait([
         _episodeRepository.findEpisode(queueItem.eid),
         _statsRepository.findEpisodeStats(queueItem.eid),
+        _downloadRepository.findDownload(queueItem.eid),
       ]);
       final episode = ret[0] as Episode?;
       final stats = ret[1] as EpisodeStats?;
+      final download = ret[2] as Downloadable?;
       if (episode == null) {
         await _queueManager.pop();
         continue;
       }
 
-      if (stats?.downloaded == true || _connectivityResult.hasConnectivity) {
+      if (download?.downloaded == true || _connectivityResult.hasConnectivity) {
         await _audioPlayerService.loadEpisode(
           episode: episode,
           position: stats?.position ?? Duration.zero,
