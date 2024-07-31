@@ -4,16 +4,27 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'download_repository.g.dart';
 
+enum DownloadSortBy {
+  downloadStartedAt,
+}
+
 abstract class DownloadRepository {
-  Future<List<Downloadable>> findDownloadsByPodcastId(int pid);
+  Future<Downloadable?> findDownload(Id eid);
 
-  Future<List<Downloadable>> findAllDownloads();
+  Future<List<Downloadable?>> findDownloads(Iterable<Id> eids);
 
-  Future<List<Downloadable?>> findDownloads(Iterable<Id> ids);
-
-  Future<Downloadable?> findDownload(Id id);
+  Future<List<Downloadable>> findDownloadsBy({
+    int? pid,
+    DateTime? lastDownloadStartedAt,
+    DownloadSortBy? sortBy,
+    bool ascending = false,
+    int? offset,
+    int? limit,
+  });
 
   Future<Downloadable?> findDownloadByTaskId(String taskId);
+
+  Future<int> countDownloaded({int? pid});
 
   Future<void> saveDownload(Downloadable download);
 

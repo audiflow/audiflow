@@ -6,7 +6,7 @@ part of 'download_progress.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$downloadProgressHash() => r'3b3493bc3224c2646c82543e537088b984a94be5';
+String _$downloadProgressHash() => r'ef3523127e470d6f53318cb7a89edb150c4ef4d3';
 
 /// Copied from Dart SDK
 class _SystemHash {

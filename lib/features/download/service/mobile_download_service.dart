@@ -55,7 +55,7 @@ class MobileDownloadService extends DownloadService {
 
   @override
   Future<List<Downloadable>> loadAllDownloads() async {
-    return _downloadRepository.findAllDownloads();
+    return _downloadRepository.findDownloadsBy();
   }
 
   @override
@@ -230,12 +230,13 @@ class MobileDownloadService extends DownloadService {
       // Update the episode with download data
       final download = Downloadable(
         pid: episode.pid,
-        guid: episode.guid,
+        eid: episode.id,
         url: url,
         directory: await _downloadPath.directoryToRecord(newEpisode),
         filename: filename,
         taskId: taskId,
         state: DownloadState.downloading,
+        downloadStartedAt: DateTime.now(),
       );
 
       await _downloadRepository.saveDownload(download);

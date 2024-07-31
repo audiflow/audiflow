@@ -22,39 +22,44 @@ const DownloadableSchema = CollectionSchema(
       name: r'directory',
       type: IsarType.string,
     ),
-    r'filename': PropertySchema(
+    r'downloadStartedAt': PropertySchema(
       id: 1,
+      name: r'downloadStartedAt',
+      type: IsarType.dateTime,
+    ),
+    r'eid': PropertySchema(
+      id: 2,
+      name: r'eid',
+      type: IsarType.long,
+    ),
+    r'filename': PropertySchema(
+      id: 3,
       name: r'filename',
       type: IsarType.string,
     ),
-    r'guid': PropertySchema(
-      id: 2,
-      name: r'guid',
-      type: IsarType.string,
-    ),
     r'percentage': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'percentage',
       type: IsarType.long,
     ),
     r'pid': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'pid',
       type: IsarType.long,
     ),
     r'state': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'state',
       type: IsarType.byte,
       enumMap: _DownloadablestateEnumValueMap,
     ),
     r'taskId': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'taskId',
       type: IsarType.string,
     ),
     r'url': PropertySchema(
-      id: 7,
+      id: 8,
       name: r'url',
       type: IsarType.string,
     )
@@ -64,7 +69,60 @@ const DownloadableSchema = CollectionSchema(
   deserialize: _downloadableDeserialize,
   deserializeProp: _downloadableDeserializeProp,
   idName: r'id',
-  indexes: {},
+  indexes: {
+    r'pid': IndexSchema(
+      id: 2970402811525951487,
+      name: r'pid',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'pid',
+          type: IndexType.value,
+          caseSensitive: false,
+        )
+      ],
+    ),
+    r'eid': IndexSchema(
+      id: 1807959901880566148,
+      name: r'eid',
+      unique: true,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'eid',
+          type: IndexType.value,
+          caseSensitive: false,
+        )
+      ],
+    ),
+    r'taskId': IndexSchema(
+      id: -6391211041487498726,
+      name: r'taskId',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'taskId',
+          type: IndexType.hash,
+          caseSensitive: true,
+        )
+      ],
+    ),
+    r'downloadStartedAt': IndexSchema(
+      id: 8625968445939495747,
+      name: r'downloadStartedAt',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'downloadStartedAt',
+          type: IndexType.value,
+          caseSensitive: false,
+        )
+      ],
+    )
+  },
   links: {},
   embeddedSchemas: {},
   getId: _downloadableGetId,
@@ -81,7 +139,6 @@ int _downloadableEstimateSize(
   var bytesCount = offsets.last;
   bytesCount += 3 + object.directory.length * 3;
   bytesCount += 3 + object.filename.length * 3;
-  bytesCount += 3 + object.guid.length * 3;
   bytesCount += 3 + object.taskId.length * 3;
   bytesCount += 3 + object.url.length * 3;
   return bytesCount;
@@ -94,13 +151,14 @@ void _downloadableSerialize(
   Map<Type, List<int>> allOffsets,
 ) {
   writer.writeString(offsets[0], object.directory);
-  writer.writeString(offsets[1], object.filename);
-  writer.writeString(offsets[2], object.guid);
-  writer.writeLong(offsets[3], object.percentage);
-  writer.writeLong(offsets[4], object.pid);
-  writer.writeByte(offsets[5], object.state.index);
-  writer.writeString(offsets[6], object.taskId);
-  writer.writeString(offsets[7], object.url);
+  writer.writeDateTime(offsets[1], object.downloadStartedAt);
+  writer.writeLong(offsets[2], object.eid);
+  writer.writeString(offsets[3], object.filename);
+  writer.writeLong(offsets[4], object.percentage);
+  writer.writeLong(offsets[5], object.pid);
+  writer.writeByte(offsets[6], object.state.index);
+  writer.writeString(offsets[7], object.taskId);
+  writer.writeString(offsets[8], object.url);
 }
 
 Downloadable _downloadableDeserialize(
@@ -111,14 +169,15 @@ Downloadable _downloadableDeserialize(
 ) {
   final object = Downloadable(
     directory: reader.readString(offsets[0]),
-    filename: reader.readString(offsets[1]),
-    guid: reader.readString(offsets[2]),
-    percentage: reader.readLongOrNull(offsets[3]) ?? 0,
-    pid: reader.readLong(offsets[4]),
-    state: _DownloadablestateValueEnumMap[reader.readByteOrNull(offsets[5])] ??
+    downloadStartedAt: reader.readDateTime(offsets[1]),
+    eid: reader.readLong(offsets[2]),
+    filename: reader.readString(offsets[3]),
+    percentage: reader.readLongOrNull(offsets[4]) ?? 0,
+    pid: reader.readLong(offsets[5]),
+    state: _DownloadablestateValueEnumMap[reader.readByteOrNull(offsets[6])] ??
         DownloadState.none,
-    taskId: reader.readString(offsets[6]),
-    url: reader.readString(offsets[7]),
+    taskId: reader.readString(offsets[7]),
+    url: reader.readString(offsets[8]),
   );
   return object;
 }
@@ -133,19 +192,21 @@ P _downloadableDeserializeProp<P>(
     case 0:
       return (reader.readString(offset)) as P;
     case 1:
-      return (reader.readString(offset)) as P;
+      return (reader.readDateTime(offset)) as P;
     case 2:
-      return (reader.readString(offset)) as P;
-    case 3:
-      return (reader.readLongOrNull(offset) ?? 0) as P;
-    case 4:
       return (reader.readLong(offset)) as P;
+    case 3:
+      return (reader.readString(offset)) as P;
+    case 4:
+      return (reader.readLongOrNull(offset) ?? 0) as P;
     case 5:
+      return (reader.readLong(offset)) as P;
+    case 6:
       return (_DownloadablestateValueEnumMap[reader.readByteOrNull(offset)] ??
           DownloadState.none) as P;
-    case 6:
-      return (reader.readString(offset)) as P;
     case 7:
+      return (reader.readString(offset)) as P;
+    case 8:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -182,11 +243,90 @@ List<IsarLinkBase<dynamic>> _downloadableGetLinks(Downloadable object) {
 void _downloadableAttach(
     IsarCollection<dynamic> col, Id id, Downloadable object) {}
 
+extension DownloadableByIndex on IsarCollection<Downloadable> {
+  Future<Downloadable?> getByEid(int eid) {
+    return getByIndex(r'eid', [eid]);
+  }
+
+  Downloadable? getByEidSync(int eid) {
+    return getByIndexSync(r'eid', [eid]);
+  }
+
+  Future<bool> deleteByEid(int eid) {
+    return deleteByIndex(r'eid', [eid]);
+  }
+
+  bool deleteByEidSync(int eid) {
+    return deleteByIndexSync(r'eid', [eid]);
+  }
+
+  Future<List<Downloadable?>> getAllByEid(List<int> eidValues) {
+    final values = eidValues.map((e) => [e]).toList();
+    return getAllByIndex(r'eid', values);
+  }
+
+  List<Downloadable?> getAllByEidSync(List<int> eidValues) {
+    final values = eidValues.map((e) => [e]).toList();
+    return getAllByIndexSync(r'eid', values);
+  }
+
+  Future<int> deleteAllByEid(List<int> eidValues) {
+    final values = eidValues.map((e) => [e]).toList();
+    return deleteAllByIndex(r'eid', values);
+  }
+
+  int deleteAllByEidSync(List<int> eidValues) {
+    final values = eidValues.map((e) => [e]).toList();
+    return deleteAllByIndexSync(r'eid', values);
+  }
+
+  Future<Id> putByEid(Downloadable object) {
+    return putByIndex(r'eid', object);
+  }
+
+  Id putByEidSync(Downloadable object, {bool saveLinks = true}) {
+    return putByIndexSync(r'eid', object, saveLinks: saveLinks);
+  }
+
+  Future<List<Id>> putAllByEid(List<Downloadable> objects) {
+    return putAllByIndex(r'eid', objects);
+  }
+
+  List<Id> putAllByEidSync(List<Downloadable> objects,
+      {bool saveLinks = true}) {
+    return putAllByIndexSync(r'eid', objects, saveLinks: saveLinks);
+  }
+}
+
 extension DownloadableQueryWhereSort
     on QueryBuilder<Downloadable, Downloadable, QWhere> {
   QueryBuilder<Downloadable, Downloadable, QAfterWhere> anyId() {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(const IdWhereClause.any());
+    });
+  }
+
+  QueryBuilder<Downloadable, Downloadable, QAfterWhere> anyPid() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'pid'),
+      );
+    });
+  }
+
+  QueryBuilder<Downloadable, Downloadable, QAfterWhere> anyEid() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'eid'),
+      );
+    });
+  }
+
+  QueryBuilder<Downloadable, Downloadable, QAfterWhere> anyDownloadStartedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'downloadStartedAt'),
+      );
     });
   }
 }
@@ -255,6 +395,324 @@ extension DownloadableQueryWhere
         lower: lowerId,
         includeLower: includeLower,
         upper: upperId,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<Downloadable, Downloadable, QAfterWhereClause> pidEqualTo(
+      int pid) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'pid',
+        value: [pid],
+      ));
+    });
+  }
+
+  QueryBuilder<Downloadable, Downloadable, QAfterWhereClause> pidNotEqualTo(
+      int pid) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'pid',
+              lower: [],
+              upper: [pid],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'pid',
+              lower: [pid],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'pid',
+              lower: [pid],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'pid',
+              lower: [],
+              upper: [pid],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<Downloadable, Downloadable, QAfterWhereClause> pidGreaterThan(
+    int pid, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'pid',
+        lower: [pid],
+        includeLower: include,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<Downloadable, Downloadable, QAfterWhereClause> pidLessThan(
+    int pid, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'pid',
+        lower: [],
+        upper: [pid],
+        includeUpper: include,
+      ));
+    });
+  }
+
+  QueryBuilder<Downloadable, Downloadable, QAfterWhereClause> pidBetween(
+    int lowerPid,
+    int upperPid, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'pid',
+        lower: [lowerPid],
+        includeLower: includeLower,
+        upper: [upperPid],
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<Downloadable, Downloadable, QAfterWhereClause> eidEqualTo(
+      int eid) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'eid',
+        value: [eid],
+      ));
+    });
+  }
+
+  QueryBuilder<Downloadable, Downloadable, QAfterWhereClause> eidNotEqualTo(
+      int eid) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'eid',
+              lower: [],
+              upper: [eid],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'eid',
+              lower: [eid],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'eid',
+              lower: [eid],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'eid',
+              lower: [],
+              upper: [eid],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<Downloadable, Downloadable, QAfterWhereClause> eidGreaterThan(
+    int eid, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'eid',
+        lower: [eid],
+        includeLower: include,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<Downloadable, Downloadable, QAfterWhereClause> eidLessThan(
+    int eid, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'eid',
+        lower: [],
+        upper: [eid],
+        includeUpper: include,
+      ));
+    });
+  }
+
+  QueryBuilder<Downloadable, Downloadable, QAfterWhereClause> eidBetween(
+    int lowerEid,
+    int upperEid, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'eid',
+        lower: [lowerEid],
+        includeLower: includeLower,
+        upper: [upperEid],
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<Downloadable, Downloadable, QAfterWhereClause> taskIdEqualTo(
+      String taskId) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'taskId',
+        value: [taskId],
+      ));
+    });
+  }
+
+  QueryBuilder<Downloadable, Downloadable, QAfterWhereClause> taskIdNotEqualTo(
+      String taskId) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'taskId',
+              lower: [],
+              upper: [taskId],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'taskId',
+              lower: [taskId],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'taskId',
+              lower: [taskId],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'taskId',
+              lower: [],
+              upper: [taskId],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<Downloadable, Downloadable, QAfterWhereClause>
+      downloadStartedAtEqualTo(DateTime downloadStartedAt) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'downloadStartedAt',
+        value: [downloadStartedAt],
+      ));
+    });
+  }
+
+  QueryBuilder<Downloadable, Downloadable, QAfterWhereClause>
+      downloadStartedAtNotEqualTo(DateTime downloadStartedAt) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'downloadStartedAt',
+              lower: [],
+              upper: [downloadStartedAt],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'downloadStartedAt',
+              lower: [downloadStartedAt],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'downloadStartedAt',
+              lower: [downloadStartedAt],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'downloadStartedAt',
+              lower: [],
+              upper: [downloadStartedAt],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<Downloadable, Downloadable, QAfterWhereClause>
+      downloadStartedAtGreaterThan(
+    DateTime downloadStartedAt, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'downloadStartedAt',
+        lower: [downloadStartedAt],
+        includeLower: include,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<Downloadable, Downloadable, QAfterWhereClause>
+      downloadStartedAtLessThan(
+    DateTime downloadStartedAt, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'downloadStartedAt',
+        lower: [],
+        upper: [downloadStartedAt],
+        includeUpper: include,
+      ));
+    });
+  }
+
+  QueryBuilder<Downloadable, Downloadable, QAfterWhereClause>
+      downloadStartedAtBetween(
+    DateTime lowerDownloadStartedAt,
+    DateTime upperDownloadStartedAt, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'downloadStartedAt',
+        lower: [lowerDownloadStartedAt],
+        includeLower: includeLower,
+        upper: [upperDownloadStartedAt],
         includeUpper: includeUpper,
       ));
     });
@@ -400,6 +858,116 @@ extension DownloadableQueryFilter
   }
 
   QueryBuilder<Downloadable, Downloadable, QAfterFilterCondition>
+      downloadStartedAtEqualTo(DateTime value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'downloadStartedAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Downloadable, Downloadable, QAfterFilterCondition>
+      downloadStartedAtGreaterThan(
+    DateTime value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'downloadStartedAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Downloadable, Downloadable, QAfterFilterCondition>
+      downloadStartedAtLessThan(
+    DateTime value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'downloadStartedAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Downloadable, Downloadable, QAfterFilterCondition>
+      downloadStartedAtBetween(
+    DateTime lower,
+    DateTime upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'downloadStartedAt',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<Downloadable, Downloadable, QAfterFilterCondition> eidEqualTo(
+      int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'eid',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Downloadable, Downloadable, QAfterFilterCondition>
+      eidGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'eid',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Downloadable, Downloadable, QAfterFilterCondition> eidLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'eid',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Downloadable, Downloadable, QAfterFilterCondition> eidBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'eid',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<Downloadable, Downloadable, QAfterFilterCondition>
       filenameEqualTo(
     String value, {
     bool caseSensitive = true,
@@ -530,140 +1098,6 @@ extension DownloadableQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         property: r'filename',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<Downloadable, Downloadable, QAfterFilterCondition> guidEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'guid',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Downloadable, Downloadable, QAfterFilterCondition>
-      guidGreaterThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'guid',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Downloadable, Downloadable, QAfterFilterCondition> guidLessThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'guid',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Downloadable, Downloadable, QAfterFilterCondition> guidBetween(
-    String lower,
-    String upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'guid',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Downloadable, Downloadable, QAfterFilterCondition>
-      guidStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'guid',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Downloadable, Downloadable, QAfterFilterCondition> guidEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'guid',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Downloadable, Downloadable, QAfterFilterCondition> guidContains(
-      String value,
-      {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'guid',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Downloadable, Downloadable, QAfterFilterCondition> guidMatches(
-      String pattern,
-      {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'guid',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Downloadable, Downloadable, QAfterFilterCondition>
-      guidIsEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'guid',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<Downloadable, Downloadable, QAfterFilterCondition>
-      guidIsNotEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'guid',
         value: '',
       ));
     });
@@ -1174,6 +1608,32 @@ extension DownloadableQuerySortBy
     });
   }
 
+  QueryBuilder<Downloadable, Downloadable, QAfterSortBy>
+      sortByDownloadStartedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'downloadStartedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Downloadable, Downloadable, QAfterSortBy>
+      sortByDownloadStartedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'downloadStartedAt', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Downloadable, Downloadable, QAfterSortBy> sortByEid() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'eid', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Downloadable, Downloadable, QAfterSortBy> sortByEidDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'eid', Sort.desc);
+    });
+  }
+
   QueryBuilder<Downloadable, Downloadable, QAfterSortBy> sortByFilename() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'filename', Sort.asc);
@@ -1183,18 +1643,6 @@ extension DownloadableQuerySortBy
   QueryBuilder<Downloadable, Downloadable, QAfterSortBy> sortByFilenameDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'filename', Sort.desc);
-    });
-  }
-
-  QueryBuilder<Downloadable, Downloadable, QAfterSortBy> sortByGuid() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'guid', Sort.asc);
-    });
-  }
-
-  QueryBuilder<Downloadable, Downloadable, QAfterSortBy> sortByGuidDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'guid', Sort.desc);
     });
   }
 
@@ -1274,6 +1722,32 @@ extension DownloadableQuerySortThenBy
     });
   }
 
+  QueryBuilder<Downloadable, Downloadable, QAfterSortBy>
+      thenByDownloadStartedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'downloadStartedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Downloadable, Downloadable, QAfterSortBy>
+      thenByDownloadStartedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'downloadStartedAt', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Downloadable, Downloadable, QAfterSortBy> thenByEid() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'eid', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Downloadable, Downloadable, QAfterSortBy> thenByEidDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'eid', Sort.desc);
+    });
+  }
+
   QueryBuilder<Downloadable, Downloadable, QAfterSortBy> thenByFilename() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'filename', Sort.asc);
@@ -1283,18 +1757,6 @@ extension DownloadableQuerySortThenBy
   QueryBuilder<Downloadable, Downloadable, QAfterSortBy> thenByFilenameDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'filename', Sort.desc);
-    });
-  }
-
-  QueryBuilder<Downloadable, Downloadable, QAfterSortBy> thenByGuid() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'guid', Sort.asc);
-    });
-  }
-
-  QueryBuilder<Downloadable, Downloadable, QAfterSortBy> thenByGuidDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'guid', Sort.desc);
     });
   }
 
@@ -1381,17 +1843,23 @@ extension DownloadableQueryWhereDistinct
     });
   }
 
+  QueryBuilder<Downloadable, Downloadable, QDistinct>
+      distinctByDownloadStartedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'downloadStartedAt');
+    });
+  }
+
+  QueryBuilder<Downloadable, Downloadable, QDistinct> distinctByEid() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'eid');
+    });
+  }
+
   QueryBuilder<Downloadable, Downloadable, QDistinct> distinctByFilename(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'filename', caseSensitive: caseSensitive);
-    });
-  }
-
-  QueryBuilder<Downloadable, Downloadable, QDistinct> distinctByGuid(
-      {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'guid', caseSensitive: caseSensitive);
     });
   }
 
@@ -1442,15 +1910,22 @@ extension DownloadableQueryProperty
     });
   }
 
-  QueryBuilder<Downloadable, String, QQueryOperations> filenameProperty() {
+  QueryBuilder<Downloadable, DateTime, QQueryOperations>
+      downloadStartedAtProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'filename');
+      return query.addPropertyName(r'downloadStartedAt');
     });
   }
 
-  QueryBuilder<Downloadable, String, QQueryOperations> guidProperty() {
+  QueryBuilder<Downloadable, int, QQueryOperations> eidProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'guid');
+      return query.addPropertyName(r'eid');
+    });
+  }
+
+  QueryBuilder<Downloadable, String, QQueryOperations> filenameProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'filename');
     });
   }
 

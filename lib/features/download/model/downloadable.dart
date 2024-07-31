@@ -23,24 +23,27 @@ enum DownloadState {
 class Downloadable {
   Downloadable({
     required this.pid,
-    required this.guid,
+    required this.eid,
     required this.url,
     required this.directory,
     required this.filename,
     required this.taskId,
     required this.state,
+    required this.downloadStartedAt,
     this.percentage = 0,
   });
 
   static Id fromGuid(String guid) => fastHash(guid);
 
-  Id get id => fastHash(guid);
+  Id get id => eid;
 
-  /// The GUID for an associated podcast.
+  /// The podcast id.
+  @Index()
   final int pid;
 
   /// Unique identifier for the episode.
-  final String guid;
+  @Index(unique: true)
+  final int eid;
 
   /// Unique identifier for the download
   final String url;
@@ -52,7 +55,12 @@ class Downloadable {
   final String filename;
 
   /// Current task ID for the download
+  @Index()
   final String taskId;
+
+  /// Time when the download started
+  @Index()
+  final DateTime downloadStartedAt;
 
   /// Current state of the download
   @enumerated
@@ -68,16 +76,18 @@ class Downloadable {
     String? filename,
     String? taskId,
     DownloadState? state,
+    DateTime? downloadStartedAt,
     int? percentage,
   }) {
     return Downloadable(
       pid: pid,
-      guid: guid,
+      eid: eid,
       url: url ?? this.url,
       directory: directory ?? this.directory,
       filename: filename ?? this.filename,
       taskId: taskId ?? this.taskId,
       state: state ?? this.state,
+      downloadStartedAt: downloadStartedAt ?? this.downloadStartedAt,
       percentage: percentage ?? this.percentage,
     );
   }

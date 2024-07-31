@@ -20,11 +20,11 @@ class DownloadProgress extends _$DownloadProgress {
       final event = next.valueOrNull;
       switch (event) {
         case DownloadUpdatedEvent(download: final download):
-          if (download.guid == episode.guid) {
+          if (download.eid == episode.id) {
             state = AsyncData(download);
           }
         case DownloadDeletedEvent(download: final download):
-          if (download.guid == episode.guid) {
+          if (download.eid == episode.id) {
             state = const AsyncData(null);
           }
         case null:
