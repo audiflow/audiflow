@@ -54,12 +54,12 @@ class PodcastFeedLoader extends _$PodcastFeedLoader {
   void setup({int? collectionId}) {
     if (!_initialized) {
       _initialized = true;
-      if (collectionId != null) {
-        SchedulerBinding.instance.addPostFrameCallback((_) {
+      SchedulerBinding.instance.addPostFrameCallback((_) {
+        if (collectionId != null) {
           state = state.copyWith(collectionId: collectionId);
-        });
-      }
-      _setupWorker();
+        }
+        _setupWorker();
+      });
     }
   }
 
