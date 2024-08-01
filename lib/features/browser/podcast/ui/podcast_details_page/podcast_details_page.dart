@@ -1,9 +1,12 @@
 import 'package:audiflow/common/ui/fill_remaining_loading.dart';
 import 'package:audiflow/common/ui/placeholder_builder.dart';
 import 'package:audiflow/constants/app_sizes.dart';
+import 'package:audiflow/features/browser/common/model/episode_filter_mode.dart';
 import 'package:audiflow/features/browser/common/ui/podcast_html.dart';
+import 'package:audiflow/features/browser/episode/ui/episode_list.dart';
 import 'package:audiflow/features/browser/episode/ui/episodes_list_event.dart';
-import 'package:audiflow/features/browser/podcast/data/podcast_info.dart';
+import 'package:audiflow/features/browser/podcast/data/podcast_auto_loader.dart';
+import 'package:audiflow/features/browser/podcast/data/podcast_stats_provider.dart';
 import 'package:audiflow/features/browser/podcast/model/podcast_details_page_model.dart';
 import 'package:audiflow/features/browser/podcast/ui/funding_menu.dart';
 import 'package:audiflow/features/browser/podcast/ui/podcast_details_page/podcast_details_app_bar.dart';
@@ -44,15 +47,15 @@ class PodcastDetailsPage extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final podcastInfoState = ref.watch(
-      podcastInfoProvider(
+    final podcastState = ref.watch(
+      podcastAutoLoaderProvider(
         feedUrl: feedUrl,
         collectionId: collectionId,
       ),
     );
-    logger.d(() => 'podcastInfoState: $podcastInfoState');
+    logger.d('podcastState: $podcastState');
 
-    final podcast = podcastInfoState.valueOrNull?.podcast;
+    final podcast = podcastState.valueOrNull;
     final pageState = podcast == null
         ? null
         : ref.watch(podcastDetailsPageControllerProvider(podcast.id));
@@ -63,10 +66,7 @@ class PodcastDetailsPage extends HookConsumerWidget {
             author: author,
             thumbnailUrl: thumbnailUrl,
           )
-        : _PodcastDetailsPage(
-            podcast: podcast,
-            stats: podcastInfoState.valueOrNull?.stats,
-          );
+        : _PodcastDetailsPage(podcast: podcast);
   }
 }
 
@@ -110,14 +110,14 @@ class _PodcastDetailsLoadingPage extends HookConsumerWidget {
 class _PodcastDetailsPage extends HookConsumerWidget {
   const _PodcastDetailsPage({
     required this.podcast,
-    required this.stats,
   });
 
   final Podcast podcast;
-  final PodcastStats? stats;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final statsState = ref.watch(podcastStatsProvider(podcast.id));
+    final podcastStats = statsState.valueOrNull;
     final pageState = ref
         .watch(podcastDetailsPageControllerProvider(podcast.id))
         .requireValue;
@@ -127,7 +127,7 @@ class _PodcastDetailsPage extends HookConsumerWidget {
     //     ref.watch(podcastViewEpisodesProvider(podcast.id));
     final seasonsState = ref.watch(podcastSeasonsProvider(podcast));
 
-    final controller = useScrollController();
+    final scrollController = useScrollController();
     return ProviderScope(
       overrides: [
         episodesListEventStreamProvider
@@ -138,7 +138,7 @@ class _PodcastDetailsPage extends HookConsumerWidget {
         label: L10n.of(context).semantics_podcast_details_header,
         child: ScrollsToTop(
           onScrollsToTop: (event) async {
-            await controller.animateTo(
+            await scrollController.animateTo(
               event.to,
               duration: event.duration,
               curve: event.curve,
@@ -154,11 +154,11 @@ class _PodcastDetailsPage extends HookConsumerWidget {
                 //       .loadPodcast(metadata, refresh: true);
               },
               child: CustomScrollView(
-                controller: controller,
+                controller: scrollController,
                 slivers: <Widget>[
                   PodcastDetailsAppBar(
                     podcast: podcast,
-                    stats: stats,
+                    stats: podcastStats,
                   ),
                   SliverList.list(
                     children: [
@@ -171,6 +171,11 @@ class _PodcastDetailsPage extends HookConsumerWidget {
                         _ViewModeSwitchBar(podcast: podcast),
                     ],
                   ),
+                  if (0 < (podcastStats?.totalEpisodes ?? 0))
+                    EpisodeList(
+                      podcast: podcast,
+                      scrollController: scrollController,
+                    )
                   // _SwitchBar(
                   //   podcast: podcast,
                   //   seasons: const [], // seasonsState.value!,
@@ -534,7 +539,7 @@ class _PodcastViewModeSwitch extends StatelessWidget {
     switch (viewMode) {
       case EpisodeFilterMode.none:
         return l10n.viewModeEpisodes;
-      case EpisodeFilterMode.played:
+      case EpisodeFilterMode.completed:
         return l10n.viewModePlayed;
       case EpisodeFilterMode.unplayed:
         return l10n.viewModeUnplayed;
