@@ -34,9 +34,9 @@ class PodcastAutoLoader extends _$PodcastAutoLoader {
     _listenRepository();
     _listenFeedLoader();
     final podcast = feedUrl != null
-        ? _setupWithFeedUrl(feedUrl, collectionId)
+        ? await _setupWithFeedUrl(feedUrl, collectionId)
         : collectionId != null
-            ? _setupWithCollectionId(collectionId)
+            ? await _setupWithCollectionId(collectionId)
             : null;
     return podcast ?? _completer.future;
   }
