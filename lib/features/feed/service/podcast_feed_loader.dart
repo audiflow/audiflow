@@ -120,6 +120,18 @@ class PodcastFeedLoader extends _$PodcastFeedLoader {
           ref
               .read(episodeEventStreamProvider.notifier)
               .add(EpisodesAddedEvent(episodes));
+          unawaited(
+            ref
+                .read(statsRepositoryProvider)
+                .findPodcastStats(episodes.first.pid)
+                .then((stats) {
+              if (stats != null) {
+                ref
+                    .read(podcastEventStreamProvider.notifier)
+                    .add(PodcastStatsUpdatedEvent(stats));
+              }
+            }),
+          );
         }
         state = state.copyWith(loadingState: loadingState);
       case _LoadedSeasonMessage(seasons: final seasons):
@@ -193,7 +205,7 @@ class _Worker {
         .listen((event) => _commandStreamController.add(event as _Command));
     _uiPort.send(_SendPortMessage(_workerPort.sendPort));
     return _completer.future.whenComplete(() {
-      logger.d('worker done');
+      logger.d('ending worker');
     });
   }
 
