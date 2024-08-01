@@ -18,7 +18,13 @@ class IsarPodcastRepository implements PodcastRepository {
     int? collectionId,
   }) async {
     if (feedUrl != null) {
-      return isar.podcasts.where().filter().feedUrlEqualTo(feedUrl).findFirst();
+      return isar.podcasts
+          .where()
+          .filter()
+          .newFeedUrlEqualTo(feedUrl)
+          .or()
+          .feedUrlEqualTo(feedUrl)
+          .findFirst();
     }
     if (collectionId != null) {
       return isar.podcasts
