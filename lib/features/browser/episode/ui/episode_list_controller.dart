@@ -278,7 +278,7 @@ class _Worker {
   late EpisodeFilterMode _filterMode;
   late bool _ascending;
   late int _firstReadCount;
-  static const int _batchReadCount = 100;
+  static const int _batchReadCount = 3000;
 
   late final Isar _isar;
   late final EpisodeRepository _episodeRepository;
@@ -380,39 +380,46 @@ class _Worker {
 
     final total = (podcastStats as PodcastStats?)?.totalEpisodes ?? 0;
 
-    final episodes = await _findEpisodes(limit: _firstReadCount);
+    var episodes = await _findEpisodes(limit: _firstReadCount);
     await _saveEpisodeEntries(episodes);
     if (_isCancelled()) {
       return;
     }
+
+    var loadedCount = episodes.length;
     _uiPort.send(
-      _LoadedMessage(total: total, loadedCount: episodes.length),
+      _LoadedMessage(total: total, loadedCount: loadedCount),
     );
 
-    while (!_isCancelled() && episodes.length < total) {
-      final more = await _findEpisodes(
+    while (!_isCancelled() && loadedCount < total) {
+      episodes = await _findEpisodes(
         limit: _batchReadCount,
-        lastPubDate: episodes.last.publicationDate,
+        offset: loadedCount,
       );
-      await _saveEpisodeEntries(more, baseIndex: episodes.length);
-      episodes.addAll(more);
+      await _saveEpisodeEntries(episodes, baseIndex: loadedCount);
+      loadedCount += episodes.length;
 
       _uiPort.send(
-        _LoadedMessage(total: total, loadedCount: episodes.length),
+        _LoadedMessage(total: total, loadedCount: loadedCount),
       );
+      if (episodes.length < _batchReadCount) {
+        break;
+      }
     }
   }
 
   Future<List<Episode>> _findEpisodes({
     required int limit,
     DateTime? lastPubDate,
+    int offset = 0,
   }) {
     return _episodeRepository.findEpisodesBy(
       pid: _pid,
       lastPubDate: lastPubDate,
       sortBy: EpisodeSortBy.pubDate,
       ascending: _ascending,
-      limit: 1000,
+      offset: offset,
+      limit: limit,
     );
   }
 
@@ -438,44 +445,46 @@ class _Worker {
       return;
     }
 
-    final (statsList, episodes) =
-        await _findCompletedEpisodes(limit: _firstReadCount);
+    final episodes = await _findCompletedEpisodes(limit: _firstReadCount);
     await _saveEpisodeEntries(episodes);
     if (_isCancelled()) {
       return;
     }
 
+    var loadedCount = episodes.length;
     _uiPort.send(
-      _LoadedMessage(total: total, loadedCount: episodes.length),
+      _LoadedMessage(total: total, loadedCount: loadedCount),
     );
 
-    while (!_isCancelled() && episodes.length < total) {
-      final (moreStatsList, moreEpisodes) = await _findCompletedEpisodes(
+    while (!_isCancelled() && loadedCount < total) {
+      final moreEpisodes = await _findCompletedEpisodes(
         limit: _batchReadCount,
-        lastPlayedDate: statsList.last.lastPlayedAt,
+        offset: loadedCount,
       );
-      await _saveEpisodeEntries(moreEpisodes, baseIndex: episodes.length);
-      statsList.addAll(moreStatsList);
-      episodes.addAll(moreEpisodes);
+      await _saveEpisodeEntries(moreEpisodes, baseIndex: loadedCount);
+      loadedCount += moreEpisodes.length;
 
       _uiPort.send(
-        _LoadedMessage(total: total, loadedCount: episodes.length),
+        _LoadedMessage(total: total, loadedCount: loadedCount),
       );
+      if (episodes.length < _batchReadCount) {
+        break;
+      }
     }
   }
 
-  Future<(List<EpisodeStats>, List<Episode>)> _findCompletedEpisodes({
+  Future<List<Episode>> _findCompletedEpisodes({
     required int limit,
-    DateTime? lastPlayedDate,
+    int offset = 0,
   }) async {
     final statsList = await _statsRepository
         .findEpisodeStatsListBy(
           pid: _pid,
           filterBy: EpisodeStatsFilterBy.completed,
           sortBy: EpisodeStatsSortBy.playedDate,
-          lastPlayedDate: lastPlayedDate,
           ascending: _ascending,
           limit: limit,
+          offset: offset,
         )
         .then((list) => list.whereNotNull().toList());
 
@@ -489,7 +498,7 @@ class _Worker {
             return ia - ib;
           }),
         );
-    return (statsList, episodes);
+    return episodes;
   }
 
   // -- unplayed episodes
@@ -516,55 +525,60 @@ class _Worker {
       return;
     }
 
-    final episodes = await _findUnplayedEpisodes(limit: _firstReadCount);
+    var episodes = await _findUnplayedEpisodes(limit: _firstReadCount);
     await _saveEpisodeEntries(episodes);
     if (_isCancelled()) {
       return;
     }
 
+    var loadedCount = episodes.length;
     _uiPort.send(
-      _LoadedMessage(total: total, loadedCount: episodes.length),
+      _LoadedMessage(total: total, loadedCount: loadedCount),
     );
     if (total == 0) {
       return;
     }
 
-    while (!_isCancelled() && episodes.length < total) {
-      final more = await _findUnplayedEpisodes(
+    while (!_isCancelled() && loadedCount < total) {
+      episodes = await _findUnplayedEpisodes(
         limit: _batchReadCount,
-        lastPubDate: episodes.lastOrNull?.publicationDate,
+        offset: loadedCount,
       );
-      await _saveEpisodeEntries(more, baseIndex: episodes.length);
-      episodes.addAll(more);
+      await _saveEpisodeEntries(episodes, baseIndex: loadedCount);
+      loadedCount += episodes.length;
 
       _uiPort.send(
-        _LoadedMessage(total: total, loadedCount: episodes.length),
+        _LoadedMessage(total: total, loadedCount: loadedCount),
       );
+      if (episodes.length < _batchReadCount) {
+        break;
+      }
     }
   }
 
   Future<List<Episode>> _findUnplayedEpisodes({
     required int limit,
-    DateTime? lastPubDate,
+    int offset = 0,
   }) async {
     final result = <Episode>[];
     var episodes = <Episode>[];
+    var n = 0;
     while (result.length < limit) {
       episodes = await _findEpisodes(
-        limit: _batchReadCount,
-        lastPubDate: episodes.lastOrNull?.publicationDate ?? lastPubDate,
+        limit: limit,
+        offset: offset + n,
       );
       if (episodes.isEmpty) {
         break;
       }
+      n += episodes.length;
       final statsList = await _statsRepository
           .findEpisodeStatsList(episodes.map((e) => e.id));
       final filtered = episodes
           .whereIndexed((i, e) => (statsList[i]?.completeCount ?? 0) < 1);
       result.addAll(filtered);
 
-      if (episodes.length < _batchReadCount) {
-        // shortcut
+      if (episodes.length < limit) {
         break;
       }
     }
@@ -590,42 +604,41 @@ class _Worker {
       return;
     }
 
-    final (downloadedList, episodes) =
-        await _findDownloadedEpisodes(limit: _firstReadCount);
+    var episodes = await _findDownloadedEpisodes(limit: _firstReadCount);
     await _saveEpisodeEntries(episodes);
     if (_isCancelled()) {
       return;
     }
 
+    var loadedCount = episodes.length;
     _uiPort.send(
-      _LoadedMessage(total: total, loadedCount: episodes.length),
+      _LoadedMessage(total: total, loadedCount: loadedCount),
     );
 
-    while (!_isCancelled() && episodes.length < total) {
-      final (moreStatsList, moreEpisodes) = await _findDownloadedEpisodes(
+    while (!_isCancelled() && loadedCount < total) {
+      episodes = await _findDownloadedEpisodes(
         limit: _batchReadCount,
-        lastDownloadStartedAt: downloadedList.last.downloadStartedAt,
+        offset: loadedCount,
       );
-      await _saveEpisodeEntries(moreEpisodes, baseIndex: episodes.length);
-      downloadedList.addAll(moreStatsList);
-      episodes.addAll(moreEpisodes);
+      await _saveEpisodeEntries(episodes, baseIndex: loadedCount);
 
+      loadedCount += episodes.length;
       _uiPort.send(
-        _LoadedMessage(total: total, loadedCount: episodes.length),
+        _LoadedMessage(total: total, loadedCount: loadedCount),
       );
     }
   }
 
-  Future<(List<Downloadable>, List<Episode>)> _findDownloadedEpisodes({
+  Future<List<Episode>> _findDownloadedEpisodes({
     required int limit,
-    DateTime? lastDownloadStartedAt,
+    int offset = 0,
   }) async {
     final downloads = await _downloadRepository.findDownloadsBy(
       pid: _pid,
-      lastDownloadStartedAt: lastDownloadStartedAt,
       sortBy: DownloadSortBy.downloadStartedAt,
       ascending: _ascending,
       limit: limit,
+      offset: offset,
     );
     final episodes = await _episodeRepository
         .findEpisodes(downloads.map((e) => e.eid).whereNotNull())
@@ -637,7 +650,7 @@ class _Worker {
             return ia - ib;
           }),
         );
-    return (downloads, episodes);
+    return episodes;
   }
 }
 
