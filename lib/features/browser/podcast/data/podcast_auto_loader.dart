@@ -88,7 +88,6 @@ class PodcastAutoLoader extends _$PodcastAutoLoader {
   }
 
   Future<Podcast?> _setupWithCollectionId(int collectionId) async {
-    return await _podcastRepository.findPodcastBy(collectionId: collectionId) ??
-        await _podcastRepository.findPodcastBy(collectionId: collectionId);
+    return _podcastRepository.findPodcastBy(collectionId: collectionId);
   }
 }
