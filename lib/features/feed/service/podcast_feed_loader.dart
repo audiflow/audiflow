@@ -107,10 +107,14 @@ class PodcastFeedLoader extends _$PodcastFeedLoader {
       case _LoadedPodcastMessage():
         final podcast =
             await _podcastRepository.findPodcastBy(feedUrl: state.feedUrl);
+        if (podcast == null) {
+          logger.w(() => 'podcast is null');
+          return;
+        }
         logger.d(() => 'loaded new podcast $podcast');
         ref
             .read(podcastEventStreamProvider.notifier)
-            .add(PodcastUpdatedEvent(podcast!));
+            .add(PodcastUpdatedEvent(podcast));
         state = state.copyWith(loadingState: LoadingState.loadingEpisodes);
       case _LoadedEpisodesMessage(
           episodes: final episodes,
@@ -306,6 +310,7 @@ class _Worker {
           rs.stream,
           channelBuilder: (channelValues) => Podcast.fromFeed(
             channelValues,
+            newFeedUrl: feedUrl,
             collectionId: collectionId,
           ),
           channelItemBuilder: (channelItemValues) {

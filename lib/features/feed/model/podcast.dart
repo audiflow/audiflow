@@ -27,11 +27,15 @@ class Podcast {
     this.type = ShowType.episodic,
   });
 
-  factory Podcast.fromFeed(ChannelValues values, {int? collectionId}) {
+  factory Podcast.fromFeed(
+    ChannelValues values, {
+    String? newFeedUrl,
+    int? collectionId,
+  }) {
     final podcast = Podcast(
       feedUrl: values.feedUrl,
       collectionId: collectionId,
-      newFeedUrl: values.newFeedUrl,
+      newFeedUrl: values.newFeedUrl ?? newFeedUrl,
       title: values.title,
       description: values.description,
       language: values.language,
