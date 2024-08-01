@@ -14,11 +14,11 @@ Future<PodcastStats?> podcastStats(PodcastStatsRef ref, int pid) {
               PodcastUnsubscribedEvent(stats: final stats) ||
               PodcastStatsUpdatedEvent(stats: final stats):
           if (stats.id == pid) {
-            ref.invalidateSelf();
+            ref.state = AsyncData(stats);
           }
         case PodcastUpdatedEvent(stats: final stats):
           if (stats?.id == pid) {
-            ref.invalidateSelf();
+            ref.state = AsyncData(stats);
           }
       }
     });

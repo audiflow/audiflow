@@ -11,7 +11,7 @@ Future<Podcast?> podcast(PodcastRef ref, int pid) {
     next.whenData((event) {
       if (event case PodcastUpdatedEvent(podcast: final podcast)) {
         if (podcast.id == pid) {
-          ref.invalidateSelf();
+          ref.state = AsyncData(podcast);
         }
       }
     });
