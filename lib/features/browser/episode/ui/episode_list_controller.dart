@@ -274,10 +274,10 @@ class _Worker {
   final ReceivePort _workerPort = ReceivePort();
   final bool Function() _isCancelled;
 
-  late final int _pid;
-  late final EpisodeFilterMode _filterMode;
-  late final bool _ascending;
-  late final int _firstReadCount;
+  late int _pid;
+  late EpisodeFilterMode _filterMode;
+  late bool _ascending;
+  late int _firstReadCount;
   static const int _batchReadCount = 100;
 
   late final Isar _isar;
