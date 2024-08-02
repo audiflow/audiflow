@@ -7,6 +7,7 @@ import 'package:audiflow/features/browser/podcast/data/podcast_stats_provider.da
 import 'package:audiflow/features/browser/podcast/model/podcast_details_page_model.dart';
 import 'package:audiflow/features/browser/podcast/ui/funding_menu.dart';
 import 'package:audiflow/features/browser/podcast/ui/podcast_details_page/podcast_details_app_bar.dart';
+import 'package:audiflow/features/browser/podcast/ui/podcast_details_page/podcast_details_filter_mode_switch.dart';
 import 'package:audiflow/features/browser/podcast/ui/podcast_details_page/podcast_details_loading_page.dart';
 import 'package:audiflow/features/browser/podcast/ui/podcast_details_page/podcast_details_page_controller.dart';
 import 'package:audiflow/features/browser/podcast/ui/podcast_details_page/podcast_image_and_title.dart';
@@ -143,13 +144,19 @@ class _PodcastDetailsPage extends HookConsumerWidget {
                         imageUrl: podcast?.image,
                       ),
                       if (podcast != null && seasonsState?.isNotEmpty == true)
-                        _ViewModeSwitchBar(podcast: podcast),
+                        _ListingModeSwitchBar(podcast: podcast),
+                      if (podcast != null)
+                        PodcastDetailsFilterModeSwitch(podcast: podcast),
                     ],
                   ),
-                  if (podcast != null && 0 < (podcastStats?.totalEpisodes ?? 0))
+                  if (podcast != null &&
+                      pageState != null &&
+                      0 < (podcastStats?.totalEpisodes ?? 0))
                     EpisodeList(
                       podcast: podcast,
                       scrollController: scrollController,
+                      filterMode: pageState.episodeFilterMode,
+                      ascending: pageState.episodesAscending,
                     )
                   // _SwitchBar(
                   //   podcast: podcast,
@@ -280,8 +287,8 @@ class _PodcastDescription extends StatelessWidget {
   }
 }
 
-class _ViewModeSwitchBar extends HookConsumerWidget {
-  const _ViewModeSwitchBar({
+class _ListingModeSwitchBar extends HookConsumerWidget {
+  const _ListingModeSwitchBar({
     required this.podcast,
   });
 
@@ -308,8 +315,8 @@ class _ViewModeSwitchBar extends HookConsumerWidget {
             .setViewMode(viewMode);
       },
       tabs: <Widget>[
-        Tab(text: l10n.viewModeEpisodes),
-        Tab(text: l10n.viewModeSeasons),
+        Tab(text: l10n.episodes),
+        Tab(text: l10n.seasons),
       ],
     );
   }
@@ -408,7 +415,7 @@ class _PodcastViewModeSwitch extends StatelessWidget {
                       : const SizedBox(width: 18),
                   const SizedBox(width: 4),
                   Text(
-                    _labelOf(context, mode),
+                    mode.labelOf(L10n.of(context)),
                     style: TextStyle(
                       color: theme.colorScheme.onSecondaryContainer,
                     ),
@@ -445,7 +452,7 @@ class _PodcastViewModeSwitch extends StatelessWidget {
       child: Row(
         children: [
           Text(
-            _labelOf(context, viewMode),
+            viewMode.labelOf(L10n.of(context)),
             style: theme.textTheme.titleMedium!
                 .copyWith(color: theme.colorScheme.onSecondaryContainer),
           ),
@@ -456,19 +463,5 @@ class _PodcastViewModeSwitch extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  String _labelOf(BuildContext context, EpisodeFilterMode viewMode) {
-    final l10n = L10n.of(context);
-    switch (viewMode) {
-      case EpisodeFilterMode.none:
-        return l10n.viewModeEpisodes;
-      case EpisodeFilterMode.completed:
-        return l10n.viewModePlayed;
-      case EpisodeFilterMode.unplayed:
-        return l10n.viewModeUnplayed;
-      case EpisodeFilterMode.downloaded:
-        return l10n.viewModeDownloaded;
-    }
   }
 }

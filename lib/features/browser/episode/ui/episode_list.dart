@@ -14,20 +14,24 @@ class EpisodeList extends HookConsumerWidget {
     super.key,
     required this.podcast,
     required this.scrollController,
+    required this.filterMode,
+    required this.ascending,
     this.thumbnailVisibility = ThumbnailVisibility.auto,
   });
 
   final Podcast podcast;
   final ScrollController scrollController;
   final ThumbnailVisibility thumbnailVisibility;
+  final EpisodeFilterMode filterMode;
+  final bool ascending;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final episodeListState = ref.watch(
       episodeListControllerProvider(
         pid: podcast.id,
-        filterMode: EpisodeFilterMode.none,
-        ascending: false,
+        filterMode: filterMode,
+        ascending: ascending,
       ),
     );
     logger.d(episodeListState);
@@ -57,17 +61,15 @@ class EpisodeList extends HookConsumerWidget {
     final controller = ref.watch(
       episodeListControllerProvider(
         pid: podcast.id,
-        filterMode: EpisodeFilterMode.none,
-        ascending: false,
+        filterMode: filterMode,
+        ascending: ascending,
       ).notifier,
     );
 
     return FutureBuilder(
       future: controller.getEpisodeAt(index),
       builder: (context, data) {
-        if (!data.hasData) {
-          return const SizedBox(height: 140);
-        } else if (data.data == null) {
+        if (data.data == null) {
           return const SizedBox(height: 140);
         }
 

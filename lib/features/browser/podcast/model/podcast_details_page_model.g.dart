@@ -139,14 +139,14 @@ P _podcastDetailsPageModelDeserializeProp<P>(
 
 const _PodcastDetailsPageModelepisodeFilterModeEnumValueMap = {
   'none': 0,
-  'completed': 1,
-  'unplayed': 2,
+  'unplayed': 1,
+  'completed': 2,
   'downloaded': 3,
 };
 const _PodcastDetailsPageModelepisodeFilterModeValueEnumMap = {
   0: EpisodeFilterMode.none,
-  1: EpisodeFilterMode.completed,
-  2: EpisodeFilterMode.unplayed,
+  1: EpisodeFilterMode.unplayed,
+  2: EpisodeFilterMode.completed,
   3: EpisodeFilterMode.downloaded,
 };
 const _PodcastDetailsPageModelviewModeEnumValueMap = {

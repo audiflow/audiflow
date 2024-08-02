@@ -18,7 +18,7 @@ final _privateConstructorUsedError = UnsupportedError(
 mixin _$EpisodeListState {
   int get pid => throw _privateConstructorUsedError;
   EpisodeFilterMode get filterMode => throw _privateConstructorUsedError;
-  bool get ascend => throw _privateConstructorUsedError;
+  bool get ascending => throw _privateConstructorUsedError;
   int get episodesPerPage => throw _privateConstructorUsedError;
   int get totalEpisodes => throw _privateConstructorUsedError;
   int get loadedCount => throw _privateConstructorUsedError;
@@ -40,7 +40,7 @@ abstract class $EpisodeListStateCopyWith<$Res> {
   $Res call(
       {int pid,
       EpisodeFilterMode filterMode,
-      bool ascend,
+      bool ascending,
       int episodesPerPage,
       int totalEpisodes,
       int loadedCount,
@@ -64,7 +64,7 @@ class _$EpisodeListStateCopyWithImpl<$Res, $Val extends EpisodeListState>
   $Res call({
     Object? pid = null,
     Object? filterMode = null,
-    Object? ascend = null,
+    Object? ascending = null,
     Object? episodesPerPage = null,
     Object? totalEpisodes = null,
     Object? loadedCount = null,
@@ -79,9 +79,9 @@ class _$EpisodeListStateCopyWithImpl<$Res, $Val extends EpisodeListState>
           ? _value.filterMode
           : filterMode // ignore: cast_nullable_to_non_nullable
               as EpisodeFilterMode,
-      ascend: null == ascend
-          ? _value.ascend
-          : ascend // ignore: cast_nullable_to_non_nullable
+      ascending: null == ascending
+          ? _value.ascending
+          : ascending // ignore: cast_nullable_to_non_nullable
               as bool,
       episodesPerPage: null == episodesPerPage
           ? _value.episodesPerPage
@@ -114,7 +114,7 @@ abstract class _$$EpisodeListStateImplCopyWith<$Res>
   $Res call(
       {int pid,
       EpisodeFilterMode filterMode,
-      bool ascend,
+      bool ascending,
       int episodesPerPage,
       int totalEpisodes,
       int loadedCount,
@@ -136,7 +136,7 @@ class __$$EpisodeListStateImplCopyWithImpl<$Res>
   $Res call({
     Object? pid = null,
     Object? filterMode = null,
-    Object? ascend = null,
+    Object? ascending = null,
     Object? episodesPerPage = null,
     Object? totalEpisodes = null,
     Object? loadedCount = null,
@@ -151,9 +151,9 @@ class __$$EpisodeListStateImplCopyWithImpl<$Res>
           ? _value.filterMode
           : filterMode // ignore: cast_nullable_to_non_nullable
               as EpisodeFilterMode,
-      ascend: null == ascend
-          ? _value.ascend
-          : ascend // ignore: cast_nullable_to_non_nullable
+      ascending: null == ascending
+          ? _value.ascending
+          : ascending // ignore: cast_nullable_to_non_nullable
               as bool,
       episodesPerPage: null == episodesPerPage
           ? _value.episodesPerPage
@@ -181,7 +181,7 @@ class _$EpisodeListStateImpl implements _EpisodeListState {
   const _$EpisodeListStateImpl(
       {required this.pid,
       required this.filterMode,
-      required this.ascend,
+      required this.ascending,
       required this.episodesPerPage,
       required this.totalEpisodes,
       this.loadedCount = 0,
@@ -192,7 +192,7 @@ class _$EpisodeListStateImpl implements _EpisodeListState {
   @override
   final EpisodeFilterMode filterMode;
   @override
-  final bool ascend;
+  final bool ascending;
   @override
   final int episodesPerPage;
   @override
@@ -205,7 +205,7 @@ class _$EpisodeListStateImpl implements _EpisodeListState {
 
   @override
   String toString() {
-    return 'EpisodeListState(pid: $pid, filterMode: $filterMode, ascend: $ascend, episodesPerPage: $episodesPerPage, totalEpisodes: $totalEpisodes, loadedCount: $loadedCount, errorMessage: $errorMessage)';
+    return 'EpisodeListState(pid: $pid, filterMode: $filterMode, ascending: $ascending, episodesPerPage: $episodesPerPage, totalEpisodes: $totalEpisodes, loadedCount: $loadedCount, errorMessage: $errorMessage)';
   }
 
   @override
@@ -216,7 +216,8 @@ class _$EpisodeListStateImpl implements _EpisodeListState {
             (identical(other.pid, pid) || other.pid == pid) &&
             (identical(other.filterMode, filterMode) ||
                 other.filterMode == filterMode) &&
-            (identical(other.ascend, ascend) || other.ascend == ascend) &&
+            (identical(other.ascending, ascending) ||
+                other.ascending == ascending) &&
             (identical(other.episodesPerPage, episodesPerPage) ||
                 other.episodesPerPage == episodesPerPage) &&
             (identical(other.totalEpisodes, totalEpisodes) ||
@@ -228,7 +229,7 @@ class _$EpisodeListStateImpl implements _EpisodeListState {
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, pid, filterMode, ascend,
+  int get hashCode => Object.hash(runtimeType, pid, filterMode, ascending,
       episodesPerPage, totalEpisodes, loadedCount, errorMessage);
 
   /// Create a copy of EpisodeListState
@@ -245,7 +246,7 @@ abstract class _EpisodeListState implements EpisodeListState {
   const factory _EpisodeListState(
       {required final int pid,
       required final EpisodeFilterMode filterMode,
-      required final bool ascend,
+      required final bool ascending,
       required final int episodesPerPage,
       required final int totalEpisodes,
       final int loadedCount,
@@ -256,7 +257,7 @@ abstract class _EpisodeListState implements EpisodeListState {
   @override
   EpisodeFilterMode get filterMode;
   @override
-  bool get ascend;
+  bool get ascending;
   @override
   int get episodesPerPage;
   @override

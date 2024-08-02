@@ -64,7 +64,7 @@ class EpisodeListController extends _$EpisodeListController {
       return EpisodeListState(
         pid: pid,
         filterMode: filterMode,
-        ascend: ascending,
+        ascending: ascending,
         episodesPerPage: episodesPerPage,
         totalEpisodes: totalEpisodes,
         loadedCount: loadedCount,
@@ -252,7 +252,7 @@ class EpisodeListState with _$EpisodeListState {
   const factory EpisodeListState({
     required int pid,
     required EpisodeFilterMode filterMode,
-    required bool ascend,
+    required bool ascending,
     required int episodesPerPage,
     required int totalEpisodes,
     @Default(0) int loadedCount,
