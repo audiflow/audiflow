@@ -54,19 +54,18 @@ class PodcastDetailsPage extends HookConsumerWidget {
       ),
     );
     logger.d('podcastState: $podcastState');
-
-    final podcast = podcastState.valueOrNull;
-    final pageState = podcast == null
-        ? null
-        : ref.watch(podcastDetailsPageControllerProvider(podcast.id));
-
-    return podcast == null || pageState?.hasValue != true
+    return podcastState is AsyncLoading
         ? _PodcastDetailsLoadingPage(
             title: title,
             author: author,
             thumbnailUrl: thumbnailUrl,
           )
-        : _PodcastDetailsPage(podcast: podcast);
+        : _PodcastDetailsPage(
+            podcast: podcastState.valueOrNull,
+            title: title,
+            author: author,
+            thumbnailUrl: thumbnailUrl,
+          );
   }
 }
 
@@ -110,22 +109,37 @@ class _PodcastDetailsLoadingPage extends HookConsumerWidget {
 class _PodcastDetailsPage extends HookConsumerWidget {
   const _PodcastDetailsPage({
     required this.podcast,
+    required this.title,
+    required this.author,
+    required this.thumbnailUrl,
+    super.key,
   });
 
-  final Podcast podcast;
+  final Podcast? podcast;
+  final String? title;
+  final String? author;
+  final String? thumbnailUrl;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final statsState = ref.watch(podcastStatsProvider(podcast.id));
-    final podcastStats = statsState.valueOrNull;
-    final pageState = ref
-        .watch(podcastDetailsPageControllerProvider(podcast.id))
-        .requireValue;
+    final podcast = this.podcast;
+    final pageState = podcast == null
+        ? null
+        : ref
+            .watch(podcastDetailsPageControllerProvider(podcast.id))
+            .valueOrNull;
+
+    final podcastStats = podcast == null
+        ? null
+        : ref.watch(podcastStatsProvider(podcast.id)).valueOrNull;
+
     // final viewMode = pageState.valueOrNull?.viewMode;
     // final ascend = pageState.valueOrNull?.ascend ?? false;
     // final podcastViewEpisodesState =
     //     ref.watch(podcastViewEpisodesProvider(podcast.id));
-    final seasonsState = ref.watch(podcastSeasonsProvider(podcast));
+    final seasonsState = podcast == null
+        ? null
+        : ref.watch(podcastSeasonsProvider(podcast)).valueOrNull;
 
     final scrollController = useScrollController();
     return ProviderScope(
@@ -163,15 +177,16 @@ class _PodcastDetailsPage extends HookConsumerWidget {
                   SliverList.list(
                     children: [
                       _PodcastImageAndTitle(
-                        title: podcast.title,
-                        author: podcast.author,
-                        thumbnailUrl: podcast.image,
+                        title: podcast?.title ?? title ?? '',
+                        author: podcast?.author ?? author,
+                        thumbnailUrl: thumbnailUrl,
+                        imageUrl: podcast?.image,
                       ),
-                      if (seasonsState.valueOrNull?.isNotEmpty == true)
+                      if (podcast != null && seasonsState?.isNotEmpty == true)
                         _ViewModeSwitchBar(podcast: podcast),
                     ],
                   ),
-                  if (0 < (podcastStats?.totalEpisodes ?? 0))
+                  if (podcast != null && 0 < (podcastStats?.totalEpisodes ?? 0))
                     EpisodeList(
                       podcast: podcast,
                       scrollController: scrollController,
@@ -205,11 +220,13 @@ class _PodcastImageAndTitle extends StatelessWidget {
     required this.title,
     required this.author,
     required this.thumbnailUrl,
+    this.imageUrl,
   });
 
   final String title;
   final String? author;
   final String? thumbnailUrl;
+  final String? imageUrl;
 
   @override
   Widget build(BuildContext context) {
@@ -220,9 +237,21 @@ class _PodcastImageAndTitle extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          PodcastHeaderImage.small(
-            imageUrl: thumbnailUrl ?? '',
-            placeholderBuilder: placeholderBuilder,
+          Stack(
+            children: [
+              PodcastHeaderImage.small(
+                imageUrl: thumbnailUrl ?? '',
+                placeholderBuilder: placeholderBuilder,
+              ),
+              AnimatedOpacity(
+                opacity: imageUrl?.isNotEmpty == true ? 1 : 0,
+                duration: const Duration(milliseconds: 300),
+                child: PodcastHeaderImage.small(
+                  imageUrl: imageUrl ?? '',
+                  placeholderBuilder: placeholderBuilder,
+                ),
+              ),
+            ],
           ),
           gapW8,
           Expanded(
