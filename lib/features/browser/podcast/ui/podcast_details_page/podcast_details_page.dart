@@ -1,6 +1,3 @@
-import 'package:audiflow/common/ui/fill_remaining_loading.dart';
-import 'package:audiflow/common/ui/placeholder_builder.dart';
-import 'package:audiflow/constants/app_sizes.dart';
 import 'package:audiflow/features/browser/common/model/episode_filter_mode.dart';
 import 'package:audiflow/features/browser/common/ui/podcast_html.dart';
 import 'package:audiflow/features/browser/episode/ui/episode_list.dart';
@@ -10,8 +7,9 @@ import 'package:audiflow/features/browser/podcast/data/podcast_stats_provider.da
 import 'package:audiflow/features/browser/podcast/model/podcast_details_page_model.dart';
 import 'package:audiflow/features/browser/podcast/ui/funding_menu.dart';
 import 'package:audiflow/features/browser/podcast/ui/podcast_details_page/podcast_details_app_bar.dart';
+import 'package:audiflow/features/browser/podcast/ui/podcast_details_page/podcast_details_loading_page.dart';
 import 'package:audiflow/features/browser/podcast/ui/podcast_details_page/podcast_details_page_controller.dart';
-import 'package:audiflow/features/browser/podcast/ui/podcast_page_header_image.dart';
+import 'package:audiflow/features/browser/podcast/ui/podcast_details_page/podcast_image_and_title.dart';
 import 'package:audiflow/features/browser/season/data/podcast_seasons.dart';
 import 'package:audiflow/features/feed/model/model.dart';
 import 'package:audiflow/features/preference/data/app_preference_repository.dart';
@@ -55,7 +53,7 @@ class PodcastDetailsPage extends HookConsumerWidget {
     );
     logger.d('podcastState: $podcastState');
     return podcastState is AsyncLoading
-        ? _PodcastDetailsLoadingPage(
+        ? PodcastDetailsLoadingPage(
             title: title,
             author: author,
             thumbnailUrl: thumbnailUrl,
@@ -69,50 +67,12 @@ class PodcastDetailsPage extends HookConsumerWidget {
   }
 }
 
-class _PodcastDetailsLoadingPage extends HookConsumerWidget {
-  const _PodcastDetailsLoadingPage({
-    required this.title,
-    required this.author,
-    required this.thumbnailUrl,
-  });
-
-  final String? title;
-  final String? author;
-  final String? thumbnailUrl;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return Semantics(
-      header: false,
-      label: L10n.of(context).semantics_podcast_details_header,
-      child: Scaffold(
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        body: CustomScrollView(
-          physics: const NeverScrollableScrollPhysics(),
-          slivers: <Widget>[
-            PodcastDetailsAppBar(title: title),
-            SliverToBoxAdapter(
-              child: _PodcastImageAndTitle(
-                title: title ?? '',
-                author: author,
-                thumbnailUrl: thumbnailUrl,
-              ),
-            ),
-            const FillRemainingLoading()
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _PodcastDetailsPage extends HookConsumerWidget {
   const _PodcastDetailsPage({
     required this.podcast,
     required this.title,
     required this.author,
     required this.thumbnailUrl,
-    super.key,
   });
 
   final Podcast? podcast;
@@ -176,7 +136,7 @@ class _PodcastDetailsPage extends HookConsumerWidget {
                   ),
                   SliverList.list(
                     children: [
-                      _PodcastImageAndTitle(
+                      PodcastImageAndTitle(
                         title: podcast?.title ?? title ?? '',
                         author: podcast?.author ?? author,
                         thumbnailUrl: thumbnailUrl,
@@ -210,71 +170,6 @@ class _PodcastDetailsPage extends HookConsumerWidget {
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _PodcastImageAndTitle extends StatelessWidget {
-  const _PodcastImageAndTitle({
-    required this.title,
-    required this.author,
-    required this.thumbnailUrl,
-    this.imageUrl,
-  });
-
-  final String title;
-  final String? author;
-  final String? thumbnailUrl;
-  final String? imageUrl;
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    final placeholderBuilder = PlaceholderBuilder.of(context);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Stack(
-            children: [
-              PodcastHeaderImage.small(
-                imageUrl: thumbnailUrl ?? '',
-                placeholderBuilder: placeholderBuilder,
-              ),
-              AnimatedOpacity(
-                opacity: imageUrl?.isNotEmpty == true ? 1 : 0,
-                duration: const Duration(milliseconds: 300),
-                child: PodcastHeaderImage.small(
-                  imageUrl: imageUrl ?? '',
-                  placeholderBuilder: placeholderBuilder,
-                ),
-              ),
-            ],
-          ),
-          gapW8,
-          Expanded(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: textTheme.titleMedium,
-                  textAlign: TextAlign.left,
-                ),
-                gapH12,
-                if (author != null)
-                  Text(
-                    author!,
-                    style: textTheme.bodySmall,
-                    textAlign: TextAlign.left,
-                  ),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }
