@@ -44,23 +44,25 @@ class PodcastImageAndTitle extends StatelessWidget {
           ),
           gapW8,
           Expanded(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: textTheme.titleMedium,
-                  textAlign: TextAlign.left,
-                ),
-                gapH12,
-                if (author != null)
+            child: SelectionArea(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   Text(
-                    author!,
-                    style: textTheme.bodySmall,
+                    title,
+                    style: textTheme.titleMedium,
                     textAlign: TextAlign.left,
                   ),
-              ],
+                  gapH12,
+                  if (author != null)
+                    Text(
+                      author!,
+                      style: textTheme.bodySmall,
+                      textAlign: TextAlign.left,
+                    ),
+                ],
+              ),
             ),
           ),
         ],
