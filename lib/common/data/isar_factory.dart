@@ -31,6 +31,7 @@ class IsarFactory {
             PodcastDetailsPageModelSchema,
             QueueSchema,
             SeasonSchema,
+            SeasonStatsSchema,
             TranscriptUrlSchema,
             TranscriptSchema,
             SubtitleSchema,

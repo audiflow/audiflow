@@ -10,6 +10,12 @@ abstract class SeasonRepository {
   Future<List<Season>> findPodcastSeasons(Id pid);
 
   Future<void> saveSeasons(Iterable<Season> seasons);
+
+  Future<SeasonStats?> findSeasonStats(Id id);
+
+  Future<List<SeasonStats?>> findSeasonStatsList(Iterable<int> seasonIds);
+
+  Future<SeasonStats> updateSeasonStat(SeasonStatsUpdateParam param);
 }
 
 @Riverpod(keepAlive: true)

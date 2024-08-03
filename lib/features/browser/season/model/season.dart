@@ -85,23 +85,51 @@ class Season {
 
 extension SeasonExt on Season {
   Duration get totalDuration => Duration(milliseconds: totalDurationMS);
-// bool get playedAll =>
-//     episodes.map((e) => e.$2).every((stats) => stats?.played == true);
-
-// Duration get timeRemaining {
-//   final playedTotal =
-//       episodes.map((e) => e.$2).fold(Duration.zero, (total, stats) {
-//     final maxPosition = stats == null
-//         ? Duration.zero
-//         : stats.played
-//             ? stats.duration
-//             : stats.position;
-//     return total + maxPosition;
-//   });
-//   return totalDuration - playedTotal;
-// }
 }
 
 String calcSeasonGuid({required String feedUrl, required int? seasonNum}) {
   return md5.convert(utf8.encode('$feedUrl/$seasonNum')).toString();
+}
+
+@collection
+class SeasonStats {
+  SeasonStats({
+    required this.id,
+    required this.completedEpisodeIds,
+  });
+
+  final Id id;
+
+  /// List of episode IDs that have been played to the end.
+  final List<Id> completedEpisodeIds;
+
+  SeasonStats copyWith({
+    List<Id>? completedEpisodeIds,
+  }) {
+    return SeasonStats(
+      id: id,
+      completedEpisodeIds: completedEpisodeIds ?? this.completedEpisodeIds,
+    );
+  }
+}
+
+class SeasonStatsUpdateParam {
+  SeasonStatsUpdateParam({
+    required this.id,
+    this.completedEpisodeIds,
+  });
+
+  final Id id;
+  List<Id>? completedEpisodeIds;
+
+  SeasonStatsUpdateParam copyWith({
+    List<Id>? completedEpisodeIds,
+  }) {
+    return SeasonStatsUpdateParam(
+      id: id,
+      completedEpisodeIds: completedEpisodeIds ?? this.completedEpisodeIds,
+    );
+  }
+
+  bool get isEmpty => completedEpisodeIds == null;
 }

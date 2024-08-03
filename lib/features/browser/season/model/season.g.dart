@@ -2031,3 +2031,420 @@ extension SeasonQueryProperty on QueryBuilder<Season, Season, QQueryProperty> {
     });
   }
 }
+
+// coverage:ignore-file
+// ignore_for_file: duplicate_ignore, non_constant_identifier_names, constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast, prefer_const_constructors, lines_longer_than_80_chars, require_trailing_commas, inference_failure_on_function_invocation, unnecessary_parenthesis, unnecessary_raw_strings, unnecessary_null_checks, join_return_with_assignment, prefer_final_locals, avoid_js_rounded_ints, avoid_positional_boolean_parameters, always_specify_types
+
+extension GetSeasonStatsCollection on Isar {
+  IsarCollection<SeasonStats> get seasonStats => this.collection();
+}
+
+const SeasonStatsSchema = CollectionSchema(
+  name: r'SeasonStats',
+  id: -355638763968639406,
+  properties: {
+    r'completedEpisodeIds': PropertySchema(
+      id: 0,
+      name: r'completedEpisodeIds',
+      type: IsarType.longList,
+    )
+  },
+  estimateSize: _seasonStatsEstimateSize,
+  serialize: _seasonStatsSerialize,
+  deserialize: _seasonStatsDeserialize,
+  deserializeProp: _seasonStatsDeserializeProp,
+  idName: r'id',
+  indexes: {},
+  links: {},
+  embeddedSchemas: {},
+  getId: _seasonStatsGetId,
+  getLinks: _seasonStatsGetLinks,
+  attach: _seasonStatsAttach,
+  version: '3.1.7',
+);
+
+int _seasonStatsEstimateSize(
+  SeasonStats object,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  var bytesCount = offsets.last;
+  bytesCount += 3 + object.completedEpisodeIds.length * 8;
+  return bytesCount;
+}
+
+void _seasonStatsSerialize(
+  SeasonStats object,
+  IsarWriter writer,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  writer.writeLongList(offsets[0], object.completedEpisodeIds);
+}
+
+SeasonStats _seasonStatsDeserialize(
+  Id id,
+  IsarReader reader,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  final object = SeasonStats(
+    completedEpisodeIds: reader.readLongList(offsets[0]) ?? [],
+    id: id,
+  );
+  return object;
+}
+
+P _seasonStatsDeserializeProp<P>(
+  IsarReader reader,
+  int propertyId,
+  int offset,
+  Map<Type, List<int>> allOffsets,
+) {
+  switch (propertyId) {
+    case 0:
+      return (reader.readLongList(offset) ?? []) as P;
+    default:
+      throw IsarError('Unknown property with id $propertyId');
+  }
+}
+
+Id _seasonStatsGetId(SeasonStats object) {
+  return object.id;
+}
+
+List<IsarLinkBase<dynamic>> _seasonStatsGetLinks(SeasonStats object) {
+  return [];
+}
+
+void _seasonStatsAttach(
+    IsarCollection<dynamic> col, Id id, SeasonStats object) {}
+
+extension SeasonStatsQueryWhereSort
+    on QueryBuilder<SeasonStats, SeasonStats, QWhere> {
+  QueryBuilder<SeasonStats, SeasonStats, QAfterWhere> anyId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(const IdWhereClause.any());
+    });
+  }
+}
+
+extension SeasonStatsQueryWhere
+    on QueryBuilder<SeasonStats, SeasonStats, QWhereClause> {
+  QueryBuilder<SeasonStats, SeasonStats, QAfterWhereClause> idEqualTo(Id id) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IdWhereClause.between(
+        lower: id,
+        upper: id,
+      ));
+    });
+  }
+
+  QueryBuilder<SeasonStats, SeasonStats, QAfterWhereClause> idNotEqualTo(
+      Id id) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(
+              IdWhereClause.lessThan(upper: id, includeUpper: false),
+            )
+            .addWhereClause(
+              IdWhereClause.greaterThan(lower: id, includeLower: false),
+            );
+      } else {
+        return query
+            .addWhereClause(
+              IdWhereClause.greaterThan(lower: id, includeLower: false),
+            )
+            .addWhereClause(
+              IdWhereClause.lessThan(upper: id, includeUpper: false),
+            );
+      }
+    });
+  }
+
+  QueryBuilder<SeasonStats, SeasonStats, QAfterWhereClause> idGreaterThan(Id id,
+      {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IdWhereClause.greaterThan(lower: id, includeLower: include),
+      );
+    });
+  }
+
+  QueryBuilder<SeasonStats, SeasonStats, QAfterWhereClause> idLessThan(Id id,
+      {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IdWhereClause.lessThan(upper: id, includeUpper: include),
+      );
+    });
+  }
+
+  QueryBuilder<SeasonStats, SeasonStats, QAfterWhereClause> idBetween(
+    Id lowerId,
+    Id upperId, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IdWhereClause.between(
+        lower: lowerId,
+        includeLower: includeLower,
+        upper: upperId,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+}
+
+extension SeasonStatsQueryFilter
+    on QueryBuilder<SeasonStats, SeasonStats, QFilterCondition> {
+  QueryBuilder<SeasonStats, SeasonStats, QAfterFilterCondition>
+      completedEpisodeIdsElementEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'completedEpisodeIds',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<SeasonStats, SeasonStats, QAfterFilterCondition>
+      completedEpisodeIdsElementGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'completedEpisodeIds',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<SeasonStats, SeasonStats, QAfterFilterCondition>
+      completedEpisodeIdsElementLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'completedEpisodeIds',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<SeasonStats, SeasonStats, QAfterFilterCondition>
+      completedEpisodeIdsElementBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'completedEpisodeIds',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<SeasonStats, SeasonStats, QAfterFilterCondition>
+      completedEpisodeIdsLengthEqualTo(int length) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'completedEpisodeIds',
+        length,
+        true,
+        length,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<SeasonStats, SeasonStats, QAfterFilterCondition>
+      completedEpisodeIdsIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'completedEpisodeIds',
+        0,
+        true,
+        0,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<SeasonStats, SeasonStats, QAfterFilterCondition>
+      completedEpisodeIdsIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'completedEpisodeIds',
+        0,
+        false,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<SeasonStats, SeasonStats, QAfterFilterCondition>
+      completedEpisodeIdsLengthLessThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'completedEpisodeIds',
+        0,
+        true,
+        length,
+        include,
+      );
+    });
+  }
+
+  QueryBuilder<SeasonStats, SeasonStats, QAfterFilterCondition>
+      completedEpisodeIdsLengthGreaterThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'completedEpisodeIds',
+        length,
+        include,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<SeasonStats, SeasonStats, QAfterFilterCondition>
+      completedEpisodeIdsLengthBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'completedEpisodeIds',
+        lower,
+        includeLower,
+        upper,
+        includeUpper,
+      );
+    });
+  }
+
+  QueryBuilder<SeasonStats, SeasonStats, QAfterFilterCondition> idEqualTo(
+      Id value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'id',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<SeasonStats, SeasonStats, QAfterFilterCondition> idGreaterThan(
+    Id value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'id',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<SeasonStats, SeasonStats, QAfterFilterCondition> idLessThan(
+    Id value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'id',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<SeasonStats, SeasonStats, QAfterFilterCondition> idBetween(
+    Id lower,
+    Id upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'id',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+}
+
+extension SeasonStatsQueryObject
+    on QueryBuilder<SeasonStats, SeasonStats, QFilterCondition> {}
+
+extension SeasonStatsQueryLinks
+    on QueryBuilder<SeasonStats, SeasonStats, QFilterCondition> {}
+
+extension SeasonStatsQuerySortBy
+    on QueryBuilder<SeasonStats, SeasonStats, QSortBy> {}
+
+extension SeasonStatsQuerySortThenBy
+    on QueryBuilder<SeasonStats, SeasonStats, QSortThenBy> {
+  QueryBuilder<SeasonStats, SeasonStats, QAfterSortBy> thenById() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'id', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SeasonStats, SeasonStats, QAfterSortBy> thenByIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'id', Sort.desc);
+    });
+  }
+}
+
+extension SeasonStatsQueryWhereDistinct
+    on QueryBuilder<SeasonStats, SeasonStats, QDistinct> {
+  QueryBuilder<SeasonStats, SeasonStats, QDistinct>
+      distinctByCompletedEpisodeIds() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'completedEpisodeIds');
+    });
+  }
+}
+
+extension SeasonStatsQueryProperty
+    on QueryBuilder<SeasonStats, SeasonStats, QQueryProperty> {
+  QueryBuilder<SeasonStats, int, QQueryOperations> idProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'id');
+    });
+  }
+
+  QueryBuilder<SeasonStats, List<int>, QQueryOperations>
+      completedEpisodeIdsProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'completedEpisodeIds');
+    });
+  }
+}

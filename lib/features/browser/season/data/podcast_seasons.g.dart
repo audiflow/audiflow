@@ -6,7 +6,7 @@ part of 'podcast_seasons.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$podcastSeasonsHash() => r'c67cd1dc3976b3d3aa890e01ea6240be02e27ffc';
+String _$podcastSeasonsHash() => r'599b6c872d6c1347144c82327234bf6947cbddef';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -39,11 +39,11 @@ class PodcastSeasonsFamily extends Family<AsyncValue<List<Season>>> {
   const PodcastSeasonsFamily();
 
   /// See also [podcastSeasons].
-  PodcastSeasonsProvider call(
-    Podcast podcast,
-  ) {
+  PodcastSeasonsProvider call({
+    required int pid,
+  }) {
     return PodcastSeasonsProvider(
-      podcast,
+      pid: pid,
     );
   }
 
@@ -52,7 +52,7 @@ class PodcastSeasonsFamily extends Family<AsyncValue<List<Season>>> {
     covariant PodcastSeasonsProvider provider,
   ) {
     return call(
-      provider.podcast,
+      pid: provider.pid,
     );
   }
 
@@ -74,12 +74,12 @@ class PodcastSeasonsFamily extends Family<AsyncValue<List<Season>>> {
 /// See also [podcastSeasons].
 class PodcastSeasonsProvider extends AutoDisposeFutureProvider<List<Season>> {
   /// See also [podcastSeasons].
-  PodcastSeasonsProvider(
-    Podcast podcast,
-  ) : this._internal(
+  PodcastSeasonsProvider({
+    required int pid,
+  }) : this._internal(
           (ref) => podcastSeasons(
             ref as PodcastSeasonsRef,
-            podcast,
+            pid: pid,
           ),
           from: podcastSeasonsProvider,
           name: r'podcastSeasonsProvider',
@@ -90,7 +90,7 @@ class PodcastSeasonsProvider extends AutoDisposeFutureProvider<List<Season>> {
           dependencies: PodcastSeasonsFamily._dependencies,
           allTransitiveDependencies:
               PodcastSeasonsFamily._allTransitiveDependencies,
-          podcast: podcast,
+          pid: pid,
         );
 
   PodcastSeasonsProvider._internal(
@@ -100,10 +100,10 @@ class PodcastSeasonsProvider extends AutoDisposeFutureProvider<List<Season>> {
     required super.allTransitiveDependencies,
     required super.debugGetCreateSourceHash,
     required super.from,
-    required this.podcast,
+    required this.pid,
   }) : super.internal();
 
-  final Podcast podcast;
+  final int pid;
 
   @override
   Override overrideWith(
@@ -118,7 +118,7 @@ class PodcastSeasonsProvider extends AutoDisposeFutureProvider<List<Season>> {
         dependencies: null,
         allTransitiveDependencies: null,
         debugGetCreateSourceHash: null,
-        podcast: podcast,
+        pid: pid,
       ),
     );
   }
@@ -130,21 +130,21 @@ class PodcastSeasonsProvider extends AutoDisposeFutureProvider<List<Season>> {
 
   @override
   bool operator ==(Object other) {
-    return other is PodcastSeasonsProvider && other.podcast == podcast;
+    return other is PodcastSeasonsProvider && other.pid == pid;
   }
 
   @override
   int get hashCode {
     var hash = _SystemHash.combine(0, runtimeType.hashCode);
-    hash = _SystemHash.combine(hash, podcast.hashCode);
+    hash = _SystemHash.combine(hash, pid.hashCode);
 
     return _SystemHash.finish(hash);
   }
 }
 
 mixin PodcastSeasonsRef on AutoDisposeFutureProviderRef<List<Season>> {
-  /// The parameter `podcast` of this provider.
-  Podcast get podcast;
+  /// The parameter `pid` of this provider.
+  int get pid;
 }
 
 class _PodcastSeasonsProviderElement
@@ -153,7 +153,7 @@ class _PodcastSeasonsProviderElement
   _PodcastSeasonsProviderElement(super.provider);
 
   @override
-  Podcast get podcast => (origin as PodcastSeasonsProvider).podcast;
+  int get pid => (origin as PodcastSeasonsProvider).pid;
 }
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member
