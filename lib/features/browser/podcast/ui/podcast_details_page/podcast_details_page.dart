@@ -8,6 +8,7 @@ import 'package:audiflow/features/browser/podcast/ui/podcast_details_page/podcas
 import 'package:audiflow/features/browser/podcast/ui/podcast_details_page/podcast_details_filter_mode_switch.dart';
 import 'package:audiflow/features/browser/podcast/ui/podcast_details_page/podcast_details_loading_page.dart';
 import 'package:audiflow/features/browser/podcast/ui/podcast_details_page/podcast_details_page_controller.dart';
+import 'package:audiflow/features/browser/podcast/ui/podcast_details_page/podcast_episodes_controller.dart';
 import 'package:audiflow/features/browser/podcast/ui/podcast_details_page/podcast_image_and_title.dart';
 import 'package:audiflow/features/browser/season/data/podcast_seasons_and_stats.dart';
 import 'package:audiflow/features/browser/season/ui/season_list.dart';
@@ -90,10 +91,6 @@ class _PodcastDetailsPage extends HookConsumerWidget {
         ? null
         : ref.watch(podcastStatsProvider(podcast.id)).valueOrNull;
 
-    // final viewMode = pageState.valueOrNull?.viewMode;
-    // final ascend = pageState.valueOrNull?.ascend ?? false;
-    // final podcastViewEpisodesState =
-    //     ref.watch(podcastViewEpisodesProvider(podcast.id));
     final seasons = podcast == null
         ? null
         : ref.watch(podcastSeasonsAndStatsProvider(podcast.id)).valueOrNull;
@@ -103,6 +100,16 @@ class _PodcastDetailsPage extends HookConsumerWidget {
                 !supportsSeasons
             ? PodcastDetailsPageViewMode.episodes
             : PodcastDetailsPageViewMode.seasons;
+
+    final podcastEpisodesState = pageState == null
+        ? null
+        : ref.watch(
+            podcastEpisodesControllerProvider(
+              pid: podcast!.id,
+              filterMode: pageState.episodeFilterMode,
+              ascending: pageState.episodesAscending,
+            ),
+          );
 
     final scrollController = useScrollController();
     return ProviderScope(
@@ -164,10 +171,21 @@ class _PodcastDetailsPage extends HookConsumerWidget {
                       0 < (podcastStats?.totalEpisodes ?? 0))
                     if (viewMode == PodcastDetailsPageViewMode.episodes)
                       EpisodeList(
-                        podcast: podcast!,
+                        getEpisodeAt: (index) async {
+                          return ref
+                              .read(
+                                podcastEpisodesControllerProvider(
+                                  pid: podcast!.id,
+                                  filterMode: pageState.episodeFilterMode,
+                                  ascending: pageState.episodesAscending,
+                                ).notifier,
+                              )
+                              .getEpisodeAt(index);
+                        },
                         scrollController: scrollController,
-                        filterMode: pageState.episodeFilterMode,
-                        ascending: pageState.episodesAscending,
+                        episodeCount:
+                            podcastEpisodesState!.valueOrNull?.loadedCount ?? 0,
+                        parentThumbnailUrl: podcast?.image,
                       )
                     else if (viewMode == PodcastDetailsPageViewMode.seasons)
                       SeasonList(podcast: podcast!),

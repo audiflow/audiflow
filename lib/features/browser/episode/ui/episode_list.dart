@@ -1,94 +1,95 @@
-import 'package:audiflow/common/ui/fill_remaining_loading.dart';
+import 'dart:async';
+
 import 'package:audiflow/constants/types.dart';
 import 'package:audiflow/core/types.dart';
-import 'package:audiflow/features/browser/common/model/episode_filter_mode.dart';
-import 'package:audiflow/features/browser/episode/ui/episode_list_controller.dart';
 import 'package:audiflow/features/browser/episode/ui/episode_tile.dart';
 import 'package:audiflow/features/feed/model/model.dart';
-import 'package:audiflow/utils/logger.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 class EpisodeList extends HookConsumerWidget {
   const EpisodeList({
     super.key,
-    required this.podcast,
+    required this.episodeCount,
+    required this.getEpisodeAt,
     required this.scrollController,
-    required this.filterMode,
-    required this.ascending,
     this.thumbnailVisibility = ThumbnailVisibility.auto,
+    this.parentThumbnailUrl,
   });
 
-  final Podcast podcast;
+  factory EpisodeList.fixed({
+    Key? key,
+    required List<Episode> episodes,
+    required ScrollController scrollController,
+    ThumbnailVisibility thumbnailVisibility = ThumbnailVisibility.auto,
+    String? parentThumbnailUrl,
+  }) {
+    return EpisodeList(
+      key: key,
+      episodeCount: episodes.length,
+      getEpisodeAt: (index) => episodes[index],
+      scrollController: scrollController,
+      thumbnailVisibility: thumbnailVisibility,
+      parentThumbnailUrl: parentThumbnailUrl,
+    );
+  }
+
+  final int episodeCount;
+  final FutureOr<Episode?> Function(int index) getEpisodeAt;
   final ScrollController scrollController;
   final ThumbnailVisibility thumbnailVisibility;
-  final EpisodeFilterMode filterMode;
-  final bool ascending;
+  final String? parentThumbnailUrl;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final episodeListState = ref.watch(
-      episodeListControllerProvider(
-        pid: podcast.id,
-        filterMode: filterMode,
-        ascending: ascending,
-      ),
-    );
-    logger.d(episodeListState);
-
-    return episodeListState.when(
-      loading: FillRemainingLoading.new,
-      error: (_, __) => const FillRemainingLoading(),
-      data: (episodeListState) {
-        return NotificationListener<PlayButtonTappedNotification>(
-          onNotification: (notification) {
-            // episodesGroup.togglePlayState(episode: notification.episode);
-            return false;
-          },
-          child: SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (context, index) => _episodeTileAt(context, ref, index),
-              childCount: episodeListState.loadedCount,
-              addAutomaticKeepAlives: false,
-            ),
-          ),
-        );
+    return NotificationListener<PlayButtonTappedNotification>(
+      onNotification: (notification) {
+        // episodesGroup.togglePlayState(episode: notification.episode);
+        return false;
       },
+      child: SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) => _episodeTileAt(context, ref, index),
+          childCount: episodeCount,
+          addAutomaticKeepAlives: false,
+        ),
+      ),
     );
   }
 
   Widget _episodeTileAt(BuildContext context, WidgetRef ref, int index) {
-    final controller = ref.watch(
-      episodeListControllerProvider(
-        pid: podcast.id,
-        filterMode: filterMode,
-        ascending: ascending,
-      ).notifier,
-    );
+    Widget createEpisodeTile(Episode episode) {
+      final bool showsThumbnail;
+      switch (thumbnailVisibility) {
+        case ThumbnailVisibility.auto:
+          showsThumbnail = episode.imageUrl != parentThumbnailUrl;
+        case ThumbnailVisibility.visible:
+          showsThumbnail = true;
+        case ThumbnailVisibility.hidden:
+          showsThumbnail = false;
+      }
 
-    return FutureBuilder(
-      future: controller.getEpisodeAt(index),
-      builder: (context, data) {
-        if (data.data == null) {
-          return const SizedBox(height: 140);
-        }
+      return EpisodeTile(
+        showsThumbnail: showsThumbnail,
+        episode: episode,
+      );
+    }
 
-        final episode = data.data!;
-        final bool showsThumbnail;
-        switch (thumbnailVisibility) {
-          case ThumbnailVisibility.auto:
-            showsThumbnail = episode.imageUrl != podcast.image;
-          case ThumbnailVisibility.visible:
-            showsThumbnail = true;
-          case ThumbnailVisibility.hidden:
-            showsThumbnail = false;
-        }
-
-        return EpisodeTile(
-          showsThumbnail: showsThumbnail,
-          episode: episode,
+    final episode = getEpisodeAt(index);
+    switch (episode) {
+      case Episode():
+        return createEpisodeTile(episode);
+      case Future<Episode?>():
+        return FutureBuilder(
+          future: episode,
+          builder: (context, data) {
+            return data.data == null
+                ? const SizedBox(height: 140)
+                : createEpisodeTile(data.data!);
+          },
         );
-      },
-    );
+      default:
+        return const SizedBox(height: 140);
+    }
   }
 }

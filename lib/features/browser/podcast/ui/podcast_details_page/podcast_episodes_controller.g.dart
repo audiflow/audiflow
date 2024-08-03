@@ -1,13 +1,13 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'episode_list_controller.dart';
+part of 'podcast_episodes_controller.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$episodeListControllerHash() =>
-    r'e39607f66718eb3845b2f295edebcddd6dff9d54';
+String _$podcastEpisodesControllerHash() =>
+    r'444f2668e5deb220351d6d37b32013f4af9c4c4e';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -30,7 +30,7 @@ class _SystemHash {
   }
 }
 
-abstract class _$EpisodeListController
+abstract class _$PodcastEpisodesController
     extends BuildlessAutoDisposeAsyncNotifier<EpisodeListState> {
   late final int pid;
   late final EpisodeFilterMode filterMode;
@@ -45,23 +45,24 @@ abstract class _$EpisodeListController
   });
 }
 
-/// See also [EpisodeListController].
-@ProviderFor(EpisodeListController)
-const episodeListControllerProvider = EpisodeListControllerFamily();
+/// See also [PodcastEpisodesController].
+@ProviderFor(PodcastEpisodesController)
+const podcastEpisodesControllerProvider = PodcastEpisodesControllerFamily();
 
-/// See also [EpisodeListController].
-class EpisodeListControllerFamily extends Family<AsyncValue<EpisodeListState>> {
-  /// See also [EpisodeListController].
-  const EpisodeListControllerFamily();
+/// See also [PodcastEpisodesController].
+class PodcastEpisodesControllerFamily
+    extends Family<AsyncValue<EpisodeListState>> {
+  /// See also [PodcastEpisodesController].
+  const PodcastEpisodesControllerFamily();
 
-  /// See also [EpisodeListController].
-  EpisodeListControllerProvider call({
+  /// See also [PodcastEpisodesController].
+  PodcastEpisodesControllerProvider call({
     required int pid,
     required EpisodeFilterMode filterMode,
     required bool ascending,
     int episodesPerPage = 10,
   }) {
-    return EpisodeListControllerProvider(
+    return PodcastEpisodesControllerProvider(
       pid: pid,
       filterMode: filterMode,
       ascending: ascending,
@@ -70,8 +71,8 @@ class EpisodeListControllerFamily extends Family<AsyncValue<EpisodeListState>> {
   }
 
   @override
-  EpisodeListControllerProvider getProviderOverride(
-    covariant EpisodeListControllerProvider provider,
+  PodcastEpisodesControllerProvider getProviderOverride(
+    covariant PodcastEpisodesControllerProvider provider,
   ) {
     return call(
       pid: provider.pid,
@@ -93,41 +94,41 @@ class EpisodeListControllerFamily extends Family<AsyncValue<EpisodeListState>> {
       _allTransitiveDependencies;
 
   @override
-  String? get name => r'episodeListControllerProvider';
+  String? get name => r'podcastEpisodesControllerProvider';
 }
 
-/// See also [EpisodeListController].
-class EpisodeListControllerProvider
-    extends AutoDisposeAsyncNotifierProviderImpl<EpisodeListController,
+/// See also [PodcastEpisodesController].
+class PodcastEpisodesControllerProvider
+    extends AutoDisposeAsyncNotifierProviderImpl<PodcastEpisodesController,
         EpisodeListState> {
-  /// See also [EpisodeListController].
-  EpisodeListControllerProvider({
+  /// See also [PodcastEpisodesController].
+  PodcastEpisodesControllerProvider({
     required int pid,
     required EpisodeFilterMode filterMode,
     required bool ascending,
     int episodesPerPage = 10,
   }) : this._internal(
-          () => EpisodeListController()
+          () => PodcastEpisodesController()
             ..pid = pid
             ..filterMode = filterMode
             ..ascending = ascending
             ..episodesPerPage = episodesPerPage,
-          from: episodeListControllerProvider,
-          name: r'episodeListControllerProvider',
+          from: podcastEpisodesControllerProvider,
+          name: r'podcastEpisodesControllerProvider',
           debugGetCreateSourceHash:
               const bool.fromEnvironment('dart.vm.product')
                   ? null
-                  : _$episodeListControllerHash,
-          dependencies: EpisodeListControllerFamily._dependencies,
+                  : _$podcastEpisodesControllerHash,
+          dependencies: PodcastEpisodesControllerFamily._dependencies,
           allTransitiveDependencies:
-              EpisodeListControllerFamily._allTransitiveDependencies,
+              PodcastEpisodesControllerFamily._allTransitiveDependencies,
           pid: pid,
           filterMode: filterMode,
           ascending: ascending,
           episodesPerPage: episodesPerPage,
         );
 
-  EpisodeListControllerProvider._internal(
+  PodcastEpisodesControllerProvider._internal(
     super._createNotifier, {
     required super.name,
     required super.dependencies,
@@ -147,7 +148,7 @@ class EpisodeListControllerProvider
 
   @override
   FutureOr<EpisodeListState> runNotifierBuild(
-    covariant EpisodeListController notifier,
+    covariant PodcastEpisodesController notifier,
   ) {
     return notifier.build(
       pid: pid,
@@ -158,10 +159,10 @@ class EpisodeListControllerProvider
   }
 
   @override
-  Override overrideWith(EpisodeListController Function() create) {
+  Override overrideWith(PodcastEpisodesController Function() create) {
     return ProviderOverride(
       origin: this,
-      override: EpisodeListControllerProvider._internal(
+      override: PodcastEpisodesControllerProvider._internal(
         () => create()
           ..pid = pid
           ..filterMode = filterMode
@@ -181,14 +182,14 @@ class EpisodeListControllerProvider
   }
 
   @override
-  AutoDisposeAsyncNotifierProviderElement<EpisodeListController,
+  AutoDisposeAsyncNotifierProviderElement<PodcastEpisodesController,
       EpisodeListState> createElement() {
-    return _EpisodeListControllerProviderElement(this);
+    return _PodcastEpisodesControllerProviderElement(this);
   }
 
   @override
   bool operator ==(Object other) {
-    return other is EpisodeListControllerProvider &&
+    return other is PodcastEpisodesControllerProvider &&
         other.pid == pid &&
         other.filterMode == filterMode &&
         other.ascending == ascending &&
@@ -207,7 +208,7 @@ class EpisodeListControllerProvider
   }
 }
 
-mixin EpisodeListControllerRef
+mixin PodcastEpisodesControllerRef
     on AutoDisposeAsyncNotifierProviderRef<EpisodeListState> {
   /// The parameter `pid` of this provider.
   int get pid;
@@ -222,21 +223,21 @@ mixin EpisodeListControllerRef
   int get episodesPerPage;
 }
 
-class _EpisodeListControllerProviderElement
-    extends AutoDisposeAsyncNotifierProviderElement<EpisodeListController,
-        EpisodeListState> with EpisodeListControllerRef {
-  _EpisodeListControllerProviderElement(super.provider);
+class _PodcastEpisodesControllerProviderElement
+    extends AutoDisposeAsyncNotifierProviderElement<PodcastEpisodesController,
+        EpisodeListState> with PodcastEpisodesControllerRef {
+  _PodcastEpisodesControllerProviderElement(super.provider);
 
   @override
-  int get pid => (origin as EpisodeListControllerProvider).pid;
+  int get pid => (origin as PodcastEpisodesControllerProvider).pid;
   @override
   EpisodeFilterMode get filterMode =>
-      (origin as EpisodeListControllerProvider).filterMode;
+      (origin as PodcastEpisodesControllerProvider).filterMode;
   @override
-  bool get ascending => (origin as EpisodeListControllerProvider).ascending;
+  bool get ascending => (origin as PodcastEpisodesControllerProvider).ascending;
   @override
   int get episodesPerPage =>
-      (origin as EpisodeListControllerProvider).episodesPerPage;
+      (origin as PodcastEpisodesControllerProvider).episodesPerPage;
 }
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

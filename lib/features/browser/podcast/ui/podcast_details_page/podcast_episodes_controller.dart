@@ -25,11 +25,11 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:worker_manager/worker_manager.dart';
 
-part 'episode_list_controller.freezed.dart';
-part 'episode_list_controller.g.dart';
+part 'podcast_episodes_controller.freezed.dart';
+part 'podcast_episodes_controller.g.dart';
 
 @riverpod
-class EpisodeListController extends _$EpisodeListController {
+class PodcastEpisodesController extends _$PodcastEpisodesController {
   SendPort? _workerPort;
 
   String get _appDocDir => ref.read(appDocDirProvider);
