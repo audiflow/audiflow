@@ -1,6 +1,7 @@
 import 'package:audiflow/features/browser/common/data/page_models_event.dart';
 import 'package:audiflow/features/browser/common/data/page_models_repository.dart';
 import 'package:audiflow/features/browser/common/model/episode_filter_mode.dart';
+import 'package:audiflow/features/browser/common/model/season_filter_mode.dart';
 import 'package:audiflow/features/browser/podcast/model/podcast_details_page_model.dart';
 import 'package:audiflow/utils/logger.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
@@ -84,6 +85,20 @@ class PodcastDetailsPageController extends _$PodcastDetailsPageController {
     state = AsyncData(state.requireValue.copyWith(episodesAscending: newValue));
   }
 
+  Future<void> setSeasonFilter(SeasonFilterMode model) async {
+    if (!state.hasValue) {
+      return;
+    }
+
+    await _pageModelsRepository.updatePodcastDetailsPageModel(
+      PodcastDetailsPageModelUpdateParam(
+        pid: pid,
+        seasonFilterMode: model,
+      ),
+    );
+    state = AsyncData(state.requireValue.copyWith(seasonFilterMode: model));
+  }
+
   Future<void> toggleSeasonsAscending() async {
     if (!state.hasValue) {
       return;
@@ -123,6 +138,7 @@ class PodcastDetailsPageState with _$PodcastDetailsPageState {
     required PodcastDetailsPageViewMode viewMode,
     required EpisodeFilterMode episodeFilterMode,
     required bool episodesAscending,
+    required SeasonFilterMode seasonFilterMode,
     required bool seasonsAscending,
     required bool seasonEpisodesAscending,
   }) = _PodcastDetailsPageState;
@@ -132,6 +148,7 @@ class PodcastDetailsPageState with _$PodcastDetailsPageState {
       viewMode: model.viewMode,
       episodeFilterMode: model.episodeFilterMode,
       episodesAscending: model.episodesAscending,
+      seasonFilterMode: model.seasonFilterMode,
       seasonsAscending: model.seasonsAscending,
       seasonEpisodesAscending: model.seasonEpisodesAscending,
     );

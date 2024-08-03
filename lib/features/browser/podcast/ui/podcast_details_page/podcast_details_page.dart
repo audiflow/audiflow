@@ -9,7 +9,8 @@ import 'package:audiflow/features/browser/podcast/ui/podcast_details_page/podcas
 import 'package:audiflow/features/browser/podcast/ui/podcast_details_page/podcast_details_loading_page.dart';
 import 'package:audiflow/features/browser/podcast/ui/podcast_details_page/podcast_details_page_controller.dart';
 import 'package:audiflow/features/browser/podcast/ui/podcast_details_page/podcast_image_and_title.dart';
-import 'package:audiflow/features/browser/season/data/podcast_seasons.dart';
+import 'package:audiflow/features/browser/season/data/podcast_seasons_and_stats.dart';
+import 'package:audiflow/features/browser/season/ui/season_list.dart';
 import 'package:audiflow/features/feed/model/model.dart';
 import 'package:audiflow/localization/generated/l10n.dart';
 import 'package:audiflow/utils/logger.dart';
@@ -93,9 +94,15 @@ class _PodcastDetailsPage extends HookConsumerWidget {
     // final ascend = pageState.valueOrNull?.ascend ?? false;
     // final podcastViewEpisodesState =
     //     ref.watch(podcastViewEpisodesProvider(podcast.id));
-    final seasonsState = podcast == null
+    final seasons = podcast == null
         ? null
-        : ref.watch(podcastSeasonsProvider(podcast)).valueOrNull;
+        : ref.watch(podcastSeasonsAndStatsProvider(podcast.id)).valueOrNull;
+    final supportsSeasons = seasons?.isNotEmpty == true;
+    final viewMode =
+        pageState?.viewMode == PodcastDetailsPageViewMode.episodes ||
+                !supportsSeasons
+            ? PodcastDetailsPageViewMode.episodes
+            : PodcastDetailsPageViewMode.seasons;
 
     final scrollController = useScrollController();
     return ProviderScope(
@@ -140,35 +147,30 @@ class _PodcastDetailsPage extends HookConsumerWidget {
                       ),
                       if (podcast?.description.isNotEmpty == true)
                         ExpandableTextBlock(text: podcast!.description),
-                      if (podcast != null && seasonsState?.isNotEmpty == true)
-                        _ListingModeSwitchBar(podcast: podcast),
-                      if (podcast != null)
-                        PodcastDetailsFilterModeSwitch(podcast: podcast),
+                      if (pageState != null && supportsSeasons)
+                        _ListingModeSwitchBar(podcast: podcast!),
+                      if (pageState != null)
+                        if (viewMode == PodcastDetailsPageViewMode.episodes)
+                          PodcastDetailsEpisodesFilterModeSwitch(
+                            podcast: podcast!,
+                          )
+                        else if (viewMode == PodcastDetailsPageViewMode.seasons)
+                          PodcastDetailsSeasonsFilterModeSwitch(
+                            podcast: podcast!,
+                          ),
                     ],
                   ),
-                  if (podcast != null &&
-                      pageState != null &&
+                  if (pageState != null &&
                       0 < (podcastStats?.totalEpisodes ?? 0))
-                    EpisodeList(
-                      podcast: podcast,
-                      scrollController: scrollController,
-                      filterMode: pageState.episodeFilterMode,
-                      ascending: pageState.episodesAscending,
-                    )
-                  // _SwitchBar(
-                  //   podcast: podcast,
-                  //   seasons: const [], // seasonsState.value!,
-                  //   viewMode: viewMode ?? PodcastDetailViewMode.episodes,
-                  //   ascend: ascend,
-                  // ),
-                  // viewMode == PodcastDetailViewMode.seasons
-                  //     ? SeasonList(podcast: podcast)
-                  //     : EpisodeList(
-                  //         episodeGroupKey: ValueKey(podcast.guid),
-                  //         podcast: podcast,
-                  //         episodes: podcastViewEpisodesState.requireValue,
-                  //         scrollController: controller,
-                  //       ),
+                    if (viewMode == PodcastDetailsPageViewMode.episodes)
+                      EpisodeList(
+                        podcast: podcast!,
+                        scrollController: scrollController,
+                        filterMode: pageState.episodeFilterMode,
+                        ascending: pageState.episodesAscending,
+                      )
+                    else if (viewMode == PodcastDetailsPageViewMode.seasons)
+                      SeasonList(podcast: podcast!),
                 ],
               ),
             ),

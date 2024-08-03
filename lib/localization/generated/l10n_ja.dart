@@ -24,6 +24,12 @@ class L10nJa extends L10n {
   String get continues => '続行';
 
   @override
+  String get showMore => 'もっと見る';
+
+  @override
+  String get showLess => 'たたむ';
+
+  @override
   String get clearSearchButton => 'クリア';
 
   @override
@@ -60,7 +66,16 @@ class L10nJa extends L10n {
   String get clear => 'クリア';
 
   @override
+  String get episode => 'エピソード';
+
+  @override
+  String get episodes => 'エピソード';
+
+  @override
   String get season => 'シーズン';
+
+  @override
+  String get seasons => 'シーズン';
 
   @override
   String get settings => 'Settings';
@@ -109,19 +124,28 @@ class L10nJa extends L10n {
   String get justNow => 'たった今';
 
   @override
-  String get viewModeEpisodes => 'エピソード';
+  String get episodeFilterMode => '表示するエピソード';
 
   @override
-  String get viewModeSeasons => 'シーズン';
+  String get episodeFilterModeAll => 'すべてのエピソード';
 
   @override
-  String get viewModePlayed => '再生済み';
+  String get episodeFilterModePlayed => '再生済み';
 
   @override
-  String get viewModeUnplayed => '未再生';
+  String get episodeFilterModeUnplayed => '未再生';
 
   @override
-  String get viewModeDownloaded => 'ダウンロード済み';
+  String get episodeFilterModeDownloaded => 'ダウンロード済み';
+
+  @override
+  String get seasonFilterMode => 'Filter Seasons';
+
+  @override
+  String get seasonFilterModeAll => 'All seasons';
+
+  @override
+  String get seasonFilterModeUnplayed => '未再生あり';
 
   @override
   String get viewSortOldestToNewest => '古い順に並び替え';

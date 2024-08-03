@@ -316,7 +316,7 @@ class _Worker {
               _ascending = command.ascending;
               _firstReadCount = command.firstReadCount;
               switch (_filterMode) {
-                case EpisodeFilterMode.none:
+                case EpisodeFilterMode.all:
                   await _loadAllEpisodes();
                 case EpisodeFilterMode.completed:
                   await _loadCompletedEpisodes();

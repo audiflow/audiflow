@@ -1,7 +1,7 @@
 import 'package:audiflow/localization/generated/l10n.dart';
 
 enum EpisodeFilterMode {
-  none,
+  all,
   unplayed,
   completed,
   downloaded;
@@ -10,14 +10,14 @@ enum EpisodeFilterMode {
 extension EpisodeFilterModeExt on EpisodeFilterMode {
   String labelOf(L10n l10n) {
     switch (this) {
-      case EpisodeFilterMode.none:
-        return l10n.viewModeEpisodes;
+      case EpisodeFilterMode.all:
+        return l10n.episodeFilterModeAll;
       case EpisodeFilterMode.unplayed:
-        return l10n.viewModeUnplayed;
+        return l10n.episodeFilterModeUnplayed;
       case EpisodeFilterMode.completed:
-        return l10n.viewModePlayed;
+        return l10n.episodeFilterModePlayed;
       case EpisodeFilterMode.downloaded:
-        return l10n.viewModeDownloaded;
+        return l10n.episodeFilterModeDownloaded;
     }
   }
 }

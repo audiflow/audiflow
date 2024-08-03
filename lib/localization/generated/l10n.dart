@@ -124,6 +124,18 @@ abstract class L10n {
   /// **'Continue'**
   String get continues;
 
+  /// No description provided for @showMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Show more'**
+  String get showMore;
+
+  /// No description provided for @showLess.
+  ///
+  /// In en, this message translates to:
+  /// **'Show less'**
+  String get showLess;
+
   /// No description provided for @clearSearchButton.
   ///
   /// In en, this message translates to:
@@ -196,11 +208,29 @@ abstract class L10n {
   /// **'clear'**
   String get clear;
 
+  /// No description provided for @episode.
+  ///
+  /// In en, this message translates to:
+  /// **'Episode'**
+  String get episode;
+
+  /// No description provided for @episodes.
+  ///
+  /// In en, this message translates to:
+  /// **'Episodes'**
+  String get episodes;
+
   /// No description provided for @season.
   ///
   /// In en, this message translates to:
   /// **'Season'**
   String get season;
+
+  /// No description provided for @seasons.
+  ///
+  /// In en, this message translates to:
+  /// **'Seasons'**
+  String get seasons;
 
   /// No description provided for @settings.
   ///
@@ -274,35 +304,53 @@ abstract class L10n {
   /// **'Just now'**
   String get justNow;
 
-  /// No description provided for @viewModeEpisodes.
+  /// No description provided for @episodeFilterMode.
   ///
   /// In en, this message translates to:
-  /// **'Episodes'**
-  String get viewModeEpisodes;
+  /// **'Filter Episodes'**
+  String get episodeFilterMode;
 
-  /// No description provided for @viewModeSeasons.
+  /// No description provided for @episodeFilterModeAll.
   ///
   /// In en, this message translates to:
-  /// **'Seasons'**
-  String get viewModeSeasons;
+  /// **'All episodes'**
+  String get episodeFilterModeAll;
 
-  /// No description provided for @viewModePlayed.
+  /// No description provided for @episodeFilterModePlayed.
   ///
   /// In en, this message translates to:
   /// **'Played'**
-  String get viewModePlayed;
+  String get episodeFilterModePlayed;
 
-  /// No description provided for @viewModeUnplayed.
+  /// No description provided for @episodeFilterModeUnplayed.
   ///
   /// In en, this message translates to:
   /// **'Unplayed'**
-  String get viewModeUnplayed;
+  String get episodeFilterModeUnplayed;
 
-  /// No description provided for @viewModeDownloaded.
+  /// No description provided for @episodeFilterModeDownloaded.
   ///
   /// In en, this message translates to:
   /// **'Downloaded'**
-  String get viewModeDownloaded;
+  String get episodeFilterModeDownloaded;
+
+  /// No description provided for @seasonFilterMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter Seasons'**
+  String get seasonFilterMode;
+
+  /// No description provided for @seasonFilterModeAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All seasons'**
+  String get seasonFilterModeAll;
+
+  /// No description provided for @seasonFilterModeUnplayed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unplayed'**
+  String get seasonFilterModeUnplayed;
 
   /// No description provided for @viewSortOldestToNewest.
   ///

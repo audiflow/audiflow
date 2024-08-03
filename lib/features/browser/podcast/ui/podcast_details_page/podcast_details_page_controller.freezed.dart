@@ -19,6 +19,7 @@ mixin _$PodcastDetailsPageState {
   PodcastDetailsPageViewMode get viewMode => throw _privateConstructorUsedError;
   EpisodeFilterMode get episodeFilterMode => throw _privateConstructorUsedError;
   bool get episodesAscending => throw _privateConstructorUsedError;
+  SeasonFilterMode get seasonFilterMode => throw _privateConstructorUsedError;
   bool get seasonsAscending => throw _privateConstructorUsedError;
   bool get seasonEpisodesAscending => throw _privateConstructorUsedError;
 
@@ -39,6 +40,7 @@ abstract class $PodcastDetailsPageStateCopyWith<$Res> {
       {PodcastDetailsPageViewMode viewMode,
       EpisodeFilterMode episodeFilterMode,
       bool episodesAscending,
+      SeasonFilterMode seasonFilterMode,
       bool seasonsAscending,
       bool seasonEpisodesAscending});
 }
@@ -62,6 +64,7 @@ class _$PodcastDetailsPageStateCopyWithImpl<$Res,
     Object? viewMode = null,
     Object? episodeFilterMode = null,
     Object? episodesAscending = null,
+    Object? seasonFilterMode = null,
     Object? seasonsAscending = null,
     Object? seasonEpisodesAscending = null,
   }) {
@@ -78,6 +81,10 @@ class _$PodcastDetailsPageStateCopyWithImpl<$Res,
           ? _value.episodesAscending
           : episodesAscending // ignore: cast_nullable_to_non_nullable
               as bool,
+      seasonFilterMode: null == seasonFilterMode
+          ? _value.seasonFilterMode
+          : seasonFilterMode // ignore: cast_nullable_to_non_nullable
+              as SeasonFilterMode,
       seasonsAscending: null == seasonsAscending
           ? _value.seasonsAscending
           : seasonsAscending // ignore: cast_nullable_to_non_nullable
@@ -103,6 +110,7 @@ abstract class _$$PodcastDetailsPageStateImplCopyWith<$Res>
       {PodcastDetailsPageViewMode viewMode,
       EpisodeFilterMode episodeFilterMode,
       bool episodesAscending,
+      SeasonFilterMode seasonFilterMode,
       bool seasonsAscending,
       bool seasonEpisodesAscending});
 }
@@ -125,6 +133,7 @@ class __$$PodcastDetailsPageStateImplCopyWithImpl<$Res>
     Object? viewMode = null,
     Object? episodeFilterMode = null,
     Object? episodesAscending = null,
+    Object? seasonFilterMode = null,
     Object? seasonsAscending = null,
     Object? seasonEpisodesAscending = null,
   }) {
@@ -141,6 +150,10 @@ class __$$PodcastDetailsPageStateImplCopyWithImpl<$Res>
           ? _value.episodesAscending
           : episodesAscending // ignore: cast_nullable_to_non_nullable
               as bool,
+      seasonFilterMode: null == seasonFilterMode
+          ? _value.seasonFilterMode
+          : seasonFilterMode // ignore: cast_nullable_to_non_nullable
+              as SeasonFilterMode,
       seasonsAscending: null == seasonsAscending
           ? _value.seasonsAscending
           : seasonsAscending // ignore: cast_nullable_to_non_nullable
@@ -160,6 +173,7 @@ class _$PodcastDetailsPageStateImpl implements _PodcastDetailsPageState {
       {required this.viewMode,
       required this.episodeFilterMode,
       required this.episodesAscending,
+      required this.seasonFilterMode,
       required this.seasonsAscending,
       required this.seasonEpisodesAscending});
 
@@ -170,13 +184,15 @@ class _$PodcastDetailsPageStateImpl implements _PodcastDetailsPageState {
   @override
   final bool episodesAscending;
   @override
+  final SeasonFilterMode seasonFilterMode;
+  @override
   final bool seasonsAscending;
   @override
   final bool seasonEpisodesAscending;
 
   @override
   String toString() {
-    return 'PodcastDetailsPageState(viewMode: $viewMode, episodeFilterMode: $episodeFilterMode, episodesAscending: $episodesAscending, seasonsAscending: $seasonsAscending, seasonEpisodesAscending: $seasonEpisodesAscending)';
+    return 'PodcastDetailsPageState(viewMode: $viewMode, episodeFilterMode: $episodeFilterMode, episodesAscending: $episodesAscending, seasonFilterMode: $seasonFilterMode, seasonsAscending: $seasonsAscending, seasonEpisodesAscending: $seasonEpisodesAscending)';
   }
 
   @override
@@ -190,6 +206,8 @@ class _$PodcastDetailsPageStateImpl implements _PodcastDetailsPageState {
                 other.episodeFilterMode == episodeFilterMode) &&
             (identical(other.episodesAscending, episodesAscending) ||
                 other.episodesAscending == episodesAscending) &&
+            (identical(other.seasonFilterMode, seasonFilterMode) ||
+                other.seasonFilterMode == seasonFilterMode) &&
             (identical(other.seasonsAscending, seasonsAscending) ||
                 other.seasonsAscending == seasonsAscending) &&
             (identical(
@@ -198,8 +216,14 @@ class _$PodcastDetailsPageStateImpl implements _PodcastDetailsPageState {
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, viewMode, episodeFilterMode,
-      episodesAscending, seasonsAscending, seasonEpisodesAscending);
+  int get hashCode => Object.hash(
+      runtimeType,
+      viewMode,
+      episodeFilterMode,
+      episodesAscending,
+      seasonFilterMode,
+      seasonsAscending,
+      seasonEpisodesAscending);
 
   /// Create a copy of PodcastDetailsPageState
   /// with the given fields replaced by the non-null parameter values.
@@ -216,6 +240,7 @@ abstract class _PodcastDetailsPageState implements PodcastDetailsPageState {
           {required final PodcastDetailsPageViewMode viewMode,
           required final EpisodeFilterMode episodeFilterMode,
           required final bool episodesAscending,
+          required final SeasonFilterMode seasonFilterMode,
           required final bool seasonsAscending,
           required final bool seasonEpisodesAscending}) =
       _$PodcastDetailsPageStateImpl;
@@ -226,6 +251,8 @@ abstract class _PodcastDetailsPageState implements PodcastDetailsPageState {
   EpisodeFilterMode get episodeFilterMode;
   @override
   bool get episodesAscending;
+  @override
+  SeasonFilterMode get seasonFilterMode;
   @override
   bool get seasonsAscending;
   @override

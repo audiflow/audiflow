@@ -24,6 +24,12 @@ class L10nEn extends L10n {
   String get continues => 'Continue';
 
   @override
+  String get showMore => 'Show more';
+
+  @override
+  String get showLess => 'Show less';
+
+  @override
   String get clearSearchButton => 'Clear search text';
 
   @override
@@ -60,7 +66,16 @@ class L10nEn extends L10n {
   String get clear => 'clear';
 
   @override
+  String get episode => 'Episode';
+
+  @override
+  String get episodes => 'Episodes';
+
+  @override
   String get season => 'Season';
+
+  @override
+  String get seasons => 'Seasons';
 
   @override
   String get settings => 'Settings';
@@ -139,19 +154,28 @@ class L10nEn extends L10n {
   String get justNow => 'Just now';
 
   @override
-  String get viewModeEpisodes => 'Episodes';
+  String get episodeFilterMode => 'Filter Episodes';
 
   @override
-  String get viewModeSeasons => 'Seasons';
+  String get episodeFilterModeAll => 'All episodes';
 
   @override
-  String get viewModePlayed => 'Played';
+  String get episodeFilterModePlayed => 'Played';
 
   @override
-  String get viewModeUnplayed => 'Unplayed';
+  String get episodeFilterModeUnplayed => 'Unplayed';
 
   @override
-  String get viewModeDownloaded => 'Downloaded';
+  String get episodeFilterModeDownloaded => 'Downloaded';
+
+  @override
+  String get seasonFilterMode => 'Filter Seasons';
+
+  @override
+  String get seasonFilterModeAll => 'All seasons';
+
+  @override
+  String get seasonFilterModeUnplayed => 'Unplayed';
 
   @override
   String get viewSortOldestToNewest => 'Sort Oldest to Newest';

@@ -1,13 +1,13 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'podcast_view_episodes.dart';
+part of 'season_list_controller.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$podcastViewEpisodesHash() =>
-    r'0813f991bfcd4f0464c1de9d812551b4de451a49';
+String _$seasonListControllerHash() =>
+    r'38bf61b80fdee0f31337a744815e33b2797ac446';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -30,36 +30,36 @@ class _SystemHash {
   }
 }
 
-abstract class _$PodcastViewEpisodes
-    extends BuildlessAutoDisposeAsyncNotifier<List<Episode>> {
+abstract class _$SeasonListController
+    extends BuildlessAutoDisposeNotifier<SeasonListState> {
   late final int pid;
 
-  FutureOr<List<Episode>> build(
+  SeasonListState build(
     int pid,
   );
 }
 
-/// See also [PodcastViewEpisodes].
-@ProviderFor(PodcastViewEpisodes)
-const podcastViewEpisodesProvider = PodcastViewEpisodesFamily();
+/// See also [SeasonListController].
+@ProviderFor(SeasonListController)
+const seasonListControllerProvider = SeasonListControllerFamily();
 
-/// See also [PodcastViewEpisodes].
-class PodcastViewEpisodesFamily extends Family<AsyncValue<List<Episode>>> {
-  /// See also [PodcastViewEpisodes].
-  const PodcastViewEpisodesFamily();
+/// See also [SeasonListController].
+class SeasonListControllerFamily extends Family<SeasonListState> {
+  /// See also [SeasonListController].
+  const SeasonListControllerFamily();
 
-  /// See also [PodcastViewEpisodes].
-  PodcastViewEpisodesProvider call(
+  /// See also [SeasonListController].
+  SeasonListControllerProvider call(
     int pid,
   ) {
-    return PodcastViewEpisodesProvider(
+    return SeasonListControllerProvider(
       pid,
     );
   }
 
   @override
-  PodcastViewEpisodesProvider getProviderOverride(
-    covariant PodcastViewEpisodesProvider provider,
+  SeasonListControllerProvider getProviderOverride(
+    covariant SeasonListControllerProvider provider,
   ) {
     return call(
       provider.pid,
@@ -78,30 +78,30 @@ class PodcastViewEpisodesFamily extends Family<AsyncValue<List<Episode>>> {
       _allTransitiveDependencies;
 
   @override
-  String? get name => r'podcastViewEpisodesProvider';
+  String? get name => r'seasonListControllerProvider';
 }
 
-/// See also [PodcastViewEpisodes].
-class PodcastViewEpisodesProvider extends AutoDisposeAsyncNotifierProviderImpl<
-    PodcastViewEpisodes, List<Episode>> {
-  /// See also [PodcastViewEpisodes].
-  PodcastViewEpisodesProvider(
+/// See also [SeasonListController].
+class SeasonListControllerProvider extends AutoDisposeNotifierProviderImpl<
+    SeasonListController, SeasonListState> {
+  /// See also [SeasonListController].
+  SeasonListControllerProvider(
     int pid,
   ) : this._internal(
-          () => PodcastViewEpisodes()..pid = pid,
-          from: podcastViewEpisodesProvider,
-          name: r'podcastViewEpisodesProvider',
+          () => SeasonListController()..pid = pid,
+          from: seasonListControllerProvider,
+          name: r'seasonListControllerProvider',
           debugGetCreateSourceHash:
               const bool.fromEnvironment('dart.vm.product')
                   ? null
-                  : _$podcastViewEpisodesHash,
-          dependencies: PodcastViewEpisodesFamily._dependencies,
+                  : _$seasonListControllerHash,
+          dependencies: SeasonListControllerFamily._dependencies,
           allTransitiveDependencies:
-              PodcastViewEpisodesFamily._allTransitiveDependencies,
+              SeasonListControllerFamily._allTransitiveDependencies,
           pid: pid,
         );
 
-  PodcastViewEpisodesProvider._internal(
+  SeasonListControllerProvider._internal(
     super._createNotifier, {
     required super.name,
     required super.dependencies,
@@ -114,8 +114,8 @@ class PodcastViewEpisodesProvider extends AutoDisposeAsyncNotifierProviderImpl<
   final int pid;
 
   @override
-  FutureOr<List<Episode>> runNotifierBuild(
-    covariant PodcastViewEpisodes notifier,
+  SeasonListState runNotifierBuild(
+    covariant SeasonListController notifier,
   ) {
     return notifier.build(
       pid,
@@ -123,10 +123,10 @@ class PodcastViewEpisodesProvider extends AutoDisposeAsyncNotifierProviderImpl<
   }
 
   @override
-  Override overrideWith(PodcastViewEpisodes Function() create) {
+  Override overrideWith(SeasonListController Function() create) {
     return ProviderOverride(
       origin: this,
-      override: PodcastViewEpisodesProvider._internal(
+      override: SeasonListControllerProvider._internal(
         () => create()..pid = pid,
         from: from,
         name: null,
@@ -139,14 +139,14 @@ class PodcastViewEpisodesProvider extends AutoDisposeAsyncNotifierProviderImpl<
   }
 
   @override
-  AutoDisposeAsyncNotifierProviderElement<PodcastViewEpisodes, List<Episode>>
+  AutoDisposeNotifierProviderElement<SeasonListController, SeasonListState>
       createElement() {
-    return _PodcastViewEpisodesProviderElement(this);
+    return _SeasonListControllerProviderElement(this);
   }
 
   @override
   bool operator ==(Object other) {
-    return other is PodcastViewEpisodesProvider && other.pid == pid;
+    return other is SeasonListControllerProvider && other.pid == pid;
   }
 
   @override
@@ -158,19 +158,19 @@ class PodcastViewEpisodesProvider extends AutoDisposeAsyncNotifierProviderImpl<
   }
 }
 
-mixin PodcastViewEpisodesRef
-    on AutoDisposeAsyncNotifierProviderRef<List<Episode>> {
+mixin SeasonListControllerRef
+    on AutoDisposeNotifierProviderRef<SeasonListState> {
   /// The parameter `pid` of this provider.
   int get pid;
 }
 
-class _PodcastViewEpisodesProviderElement
-    extends AutoDisposeAsyncNotifierProviderElement<PodcastViewEpisodes,
-        List<Episode>> with PodcastViewEpisodesRef {
-  _PodcastViewEpisodesProviderElement(super.provider);
+class _SeasonListControllerProviderElement
+    extends AutoDisposeNotifierProviderElement<SeasonListController,
+        SeasonListState> with SeasonListControllerRef {
+  _SeasonListControllerProviderElement(super.provider);
 
   @override
-  int get pid => (origin as PodcastViewEpisodesProvider).pid;
+  int get pid => (origin as SeasonListControllerProvider).pid;
 }
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

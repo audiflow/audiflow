@@ -1,4 +1,5 @@
 import 'package:audiflow/features/browser/common/model/episode_filter_mode.dart';
+import 'package:audiflow/features/browser/common/model/season_filter_mode.dart';
 import 'package:isar/isar.dart';
 
 part 'podcast_details_page_model.g.dart';
@@ -10,8 +11,9 @@ class PodcastDetailsPageModel {
   PodcastDetailsPageModel({
     required int pid,
     this.viewMode = PodcastDetailsPageViewMode.episodes,
-    this.episodeFilterMode = EpisodeFilterMode.none,
+    this.episodeFilterMode = EpisodeFilterMode.all,
     this.episodesAscending = false,
+    this.seasonFilterMode = SeasonFilterMode.all,
     this.seasonsAscending = false,
     this.seasonEpisodesAscending = true,
   }) : id = pid;
@@ -24,6 +26,8 @@ class PodcastDetailsPageModel {
   @enumerated
   final EpisodeFilterMode episodeFilterMode;
   final bool episodesAscending;
+  @enumerated
+  final SeasonFilterMode seasonFilterMode;
   final bool seasonsAscending;
   final bool seasonEpisodesAscending;
 
@@ -31,6 +35,7 @@ class PodcastDetailsPageModel {
     PodcastDetailsPageViewMode? viewMode,
     EpisodeFilterMode? episodeFilterMode,
     bool? episodesAscending,
+    SeasonFilterMode? seasonFilterMode,
     bool? seasonsAscending,
     bool? seasonEpisodesAscending,
   }) {
@@ -39,6 +44,7 @@ class PodcastDetailsPageModel {
       viewMode: viewMode ?? this.viewMode,
       episodeFilterMode: episodeFilterMode ?? this.episodeFilterMode,
       episodesAscending: episodesAscending ?? this.episodesAscending,
+      seasonFilterMode: seasonFilterMode ?? this.seasonFilterMode,
       seasonsAscending: seasonsAscending ?? this.seasonsAscending,
       seasonEpisodesAscending:
           seasonEpisodesAscending ?? this.seasonEpisodesAscending,
@@ -52,6 +58,7 @@ class PodcastDetailsPageModelUpdateParam {
     this.viewMode,
     this.episodeFilterMode,
     this.episodesAscending,
+    this.seasonFilterMode,
     this.seasonsAscending,
     this.seasonEpisodesAscending,
   }) : id = pid;
@@ -62,6 +69,7 @@ class PodcastDetailsPageModelUpdateParam {
   final PodcastDetailsPageViewMode? viewMode;
   final EpisodeFilterMode? episodeFilterMode;
   final bool? episodesAscending;
+  final SeasonFilterMode? seasonFilterMode;
   final bool? seasonsAscending;
   final bool? seasonEpisodesAscending;
 
@@ -69,6 +77,7 @@ class PodcastDetailsPageModelUpdateParam {
     PodcastDetailsPageViewMode? viewMode,
     EpisodeFilterMode? episodeFilterMode,
     bool? episodesAscending,
+    SeasonFilterMode? seasonFilterMode,
     bool? seasonsAscending,
     bool? seasonEpisodesAscending,
   }) {
@@ -77,6 +86,7 @@ class PodcastDetailsPageModelUpdateParam {
       viewMode: viewMode ?? this.viewMode,
       episodeFilterMode: episodeFilterMode ?? this.episodeFilterMode,
       episodesAscending: episodesAscending ?? this.episodesAscending,
+      seasonFilterMode: seasonFilterMode ?? this.seasonFilterMode,
       seasonsAscending: seasonsAscending ?? this.seasonsAscending,
       seasonEpisodesAscending:
           seasonEpisodesAscending ?? this.seasonEpisodesAscending,

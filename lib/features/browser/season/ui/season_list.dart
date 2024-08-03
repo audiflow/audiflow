@@ -1,7 +1,4 @@
-import 'package:audiflow/common/ui/fill_remaining_error.dart';
-import 'package:audiflow/common/ui/fill_remaining_loading.dart';
-import 'package:audiflow/features/browser/season/data/podcast_seasons.dart';
-import 'package:audiflow/features/browser/podcast/ui/podcast_view_info_controller.dart';
+import 'package:audiflow/features/browser/season/ui/season_list_controller.dart';
 import 'package:audiflow/features/browser/season/ui/season_tile.dart';
 import 'package:audiflow/features/feed/model/model.dart';
 import 'package:flutter/material.dart';
@@ -23,30 +20,18 @@ class SeasonList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final seasonsState = ref.watch(podcastSeasonsProvider(podcast));
-    final podcastViewState =
-        ref.watch(podcastViewInfoControllerProvider(podcast.id));
-    if (podcastViewState.isLoading || podcastViewState.isLoading) {
-      return const FillRemainingLoading();
-    } else if (seasonsState.hasError || seasonsState.value!.isEmpty) {
-      return FillRemainingError.podcastNoResults();
-    }
+    final pairs = ref.watch(seasonListControllerProvider(podcast.id)).pairs;
 
-    final ascend = podcastViewState.valueOrNull?.ascend ?? false;
-    final seasons =
-        ascend ? seasonsState.value!.reversed.toList() : seasonsState.value!;
-    return SliverSafeArea(
-      sliver: SliverList(
-        delegate: SliverChildBuilderDelegate(
-          (BuildContext context, int index) {
-            return SeasonTile(
-              podcast: podcast,
-              season: seasons[index],
-            );
-          },
-          childCount: seasons.length,
-          addAutomaticKeepAlives: false,
-        ),
+    return SliverList(
+      delegate: SliverChildBuilderDelegate(
+        (BuildContext context, int index) {
+          return SeasonTile(
+            podcast: podcast,
+            season: pairs[index].season,
+          );
+        },
+        childCount: pairs.length,
+        addAutomaticKeepAlives: false,
       ),
     );
   }
