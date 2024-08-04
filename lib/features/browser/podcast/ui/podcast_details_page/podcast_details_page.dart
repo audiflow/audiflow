@@ -86,6 +86,9 @@ class _PodcastDetailsPage extends HookConsumerWidget {
         : ref
             .watch(podcastDetailsPageControllerProvider(podcast.id))
             .valueOrNull;
+    final pageController = podcast == null
+        ? null
+        : ref.watch(podcastDetailsPageControllerProvider(podcast.id).notifier);
 
     final podcastStats = podcast == null
         ? null
@@ -109,6 +112,15 @@ class _PodcastDetailsPage extends HookConsumerWidget {
               filterMode: pageState.episodeFilterMode,
               ascending: pageState.episodesAscending,
             ),
+          );
+    final podcastEpisodesController = pageState == null
+        ? null
+        : ref.watch(
+            podcastEpisodesControllerProvider(
+              pid: podcast!.id,
+              filterMode: pageState.episodeFilterMode,
+              ascending: pageState.episodesAscending,
+            ).notifier,
           );
 
     final scrollController = useScrollController();
@@ -159,11 +171,19 @@ class _PodcastDetailsPage extends HookConsumerWidget {
                       if (pageState != null)
                         if (viewMode == PodcastDetailsPageViewMode.episodes)
                           PodcastDetailsEpisodesFilterModeSwitch(
-                            podcast: podcast!,
+                            filterMode: pageState.episodeFilterMode,
+                            onFilterModeChanged:
+                                pageController!.setEpisodeFilter,
+                            onToggleAscending:
+                                pageController.toggleEpisodesAscending,
                           )
                         else if (viewMode == PodcastDetailsPageViewMode.seasons)
                           PodcastDetailsSeasonsFilterModeSwitch(
-                            podcast: podcast!,
+                            filterMode: pageState.seasonFilterMode,
+                            onFilterModeChanged:
+                                pageController!.setSeasonFilter,
+                            onToggleAscending:
+                                pageController.toggleSeasonsAscending,
                           ),
                     ],
                   ),
@@ -171,17 +191,8 @@ class _PodcastDetailsPage extends HookConsumerWidget {
                       0 < (podcastStats?.totalEpisodes ?? 0))
                     if (viewMode == PodcastDetailsPageViewMode.episodes)
                       EpisodeList(
-                        getEpisodeAt: (index) async {
-                          return ref
-                              .read(
-                                podcastEpisodesControllerProvider(
-                                  pid: podcast!.id,
-                                  filterMode: pageState.episodeFilterMode,
-                                  ascending: pageState.episodesAscending,
-                                ).notifier,
-                              )
-                              .getEpisodeAt(index);
-                        },
+                        getEpisodeAt: (index) async =>
+                            podcastEpisodesController!.getEpisodeAt(index),
                         scrollController: scrollController,
                         episodeCount:
                             podcastEpisodesState!.valueOrNull?.loadedCount ?? 0,

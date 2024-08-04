@@ -3,8 +3,6 @@ import 'dart:async';
 import 'package:audiflow/constants/app_sizes.dart';
 import 'package:audiflow/features/browser/common/model/episode_filter_mode.dart';
 import 'package:audiflow/features/browser/common/model/season_filter_mode.dart';
-import 'package:audiflow/features/browser/podcast/ui/podcast_details_page/podcast_details_page_controller.dart';
-import 'package:audiflow/features/feed/model/model.dart';
 import 'package:audiflow/localization/generated/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -12,49 +10,38 @@ import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 class PodcastDetailsEpisodesFilterModeSwitch extends ConsumerWidget {
   const PodcastDetailsEpisodesFilterModeSwitch({
-    required this.podcast,
+    required this.filterMode,
+    required this.onFilterModeChanged,
+    required this.onToggleAscending,
     super.key,
   });
 
-  final Podcast podcast;
+  final EpisodeFilterMode filterMode;
+  final FutureOr<void> Function(EpisodeFilterMode) onFilterModeChanged;
+  final VoidCallback onToggleAscending;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final pid = podcast.id;
-    final pageState = ref.watch(podcastDetailsPageControllerProvider(pid));
-
     final l10n = L10n.of(context);
-    return pageState.maybeMap(
-      data: (data) => Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          TextButton(
-            onPressed: () async {
-              final mode = await _showFilterModeSelector(
-                context,
-                data.value.episodeFilterMode,
-              );
-              if (mode != null) {
-                unawaited(
-                  ref
-                      .read(podcastDetailsPageControllerProvider(pid).notifier)
-                      .setEpisodeFilter(mode),
-                );
-              }
-            },
-            child: Text(data.value.episodeFilterMode.labelOf(l10n)),
-          ),
-          IconButton(
-            onPressed: () => ref
-                .read(podcastDetailsPageControllerProvider(pid).notifier)
-                .toggleEpisodesAscending(),
-            icon: const Icon(Symbols.swap_vert),
-          ),
-          gapW4,
-        ],
-      ),
-      orElse: SizedBox.shrink,
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        TextButton(
+          onPressed: () async {
+            final mode = await _showFilterModeSelector(context, filterMode);
+            if (mode != null) {
+              onFilterModeChanged(mode);
+            }
+          },
+          child: Text(filterMode.labelOf(l10n)),
+        ),
+        IconButton(
+          onPressed: onToggleAscending,
+          icon: const Icon(Symbols.swap_vert),
+        ),
+        gapW4,
+      ],
     );
   }
 
@@ -96,56 +83,45 @@ class PodcastDetailsEpisodesFilterModeSwitch extends ConsumerWidget {
 
 class PodcastDetailsSeasonsFilterModeSwitch extends ConsumerWidget {
   const PodcastDetailsSeasonsFilterModeSwitch({
-    required this.podcast,
+    required this.filterMode,
+    required this.onFilterModeChanged,
+    required this.onToggleAscending,
     super.key,
   });
 
-  final Podcast podcast;
+  final SeasonFilterMode filterMode;
+  final FutureOr<void> Function(SeasonFilterMode) onFilterModeChanged;
+  final VoidCallback onToggleAscending;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final pid = podcast.id;
-    final pageState = ref.watch(podcastDetailsPageControllerProvider(pid));
-
     final l10n = L10n.of(context);
-    return pageState.maybeMap(
-      data: (data) => Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          TextButton(
-            onPressed: () async {
-              final mode = await _showFilterModeSelector(
-                context,
-                data.value.seasonFilterMode,
-              );
-              if (mode != null) {
-                unawaited(
-                  ref
-                      .read(podcastDetailsPageControllerProvider(pid).notifier)
-                      .setSeasonFilter(mode),
-                );
-              }
-            },
-            child: Text(data.value.seasonFilterMode.labelOf(l10n)),
-          ),
-          IconButton(
-            onPressed: () => ref
-                .read(podcastDetailsPageControllerProvider(pid).notifier)
-                .toggleSeasonsAscending(),
-            icon: const Icon(Symbols.swap_vert),
-          ),
-          gapW4,
-        ],
-      ),
-      orElse: SizedBox.shrink,
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        TextButton(
+          onPressed: () async {
+            final mode = await _showFilterModeSelector(context, filterMode);
+            if (mode != null) {
+              onFilterModeChanged(mode);
+            }
+          },
+          child: Text(filterMode.labelOf(l10n)),
+        ),
+        IconButton(
+          onPressed: onToggleAscending,
+          icon: const Icon(Symbols.swap_vert),
+        ),
+        gapW4,
+      ],
     );
   }
 
   Future<SeasonFilterMode?> _showFilterModeSelector(
-      BuildContext context,
-      SeasonFilterMode current,
-      ) async {
+    BuildContext context,
+    SeasonFilterMode current,
+  ) async {
     final l10n = L10n.of(context);
     return showModalBottomSheet(
       context: context,

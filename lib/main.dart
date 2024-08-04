@@ -14,6 +14,7 @@ import 'package:audiflow/features/browser/common/data/default_podcast_api_reposi
 import 'package:audiflow/features/browser/common/data/isar_page_models_repository.dart';
 import 'package:audiflow/features/browser/common/data/isar_stats_repository.dart';
 import 'package:audiflow/features/browser/common/data/page_models_repository.dart';
+import 'package:audiflow/features/browser/common/data/page_models_repository_change_handler.dart';
 import 'package:audiflow/features/browser/common/data/podcast_api_repository.dart';
 import 'package:audiflow/features/browser/common/data/stats_repository.dart';
 import 'package:audiflow/features/browser/episode/data/episode_list_entry_repository.dart';
@@ -74,6 +75,7 @@ void main() async {
   final appDocDir = v[3] as Directory;
 
   final isar = await IsarFactory.create(appDocDir.path);
+  await isar.writeTxn(isar.clear);
   final container = ProviderContainer(
     overrides: [
       // foundations
@@ -94,8 +96,12 @@ void main() async {
       episodeListEntryRepositoryProvider
           .overrideWithValue(IsarEpisodeListEntryRepository(isar)),
       episodeRepositoryProvider.overrideWithValue(IsarEpisodeRepository(isar)),
-      pageModelsRepositoryProvider
-          .overrideWithValue(IsarPageModelsRepository(isar)),
+      pageModelsRepositoryProvider.overrideWith(
+        (ref) => PageModelsRepositoryChangeHandler(
+          ref,
+          IsarPageModelsRepository(isar),
+        ),
+      ),
       podcastApiRepositoryProvider.overrideWithValue(
         DefaultPodcastApiRepository(cacheDir: tempDir.path),
       ),

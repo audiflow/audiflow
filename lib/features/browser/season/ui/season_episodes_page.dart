@@ -2,6 +2,7 @@ import 'package:audiflow/common/ui/fill_remaining_error.dart';
 import 'package:audiflow/common/ui/fill_remaining_loading.dart';
 import 'package:audiflow/constants/types.dart';
 import 'package:audiflow/features/browser/episode/ui/episode_list.dart';
+import 'package:audiflow/features/browser/podcast/ui/podcast_details_page/podcast_details_filter_mode_switch.dart';
 import 'package:audiflow/features/browser/season/model/season.dart';
 import 'package:audiflow/features/browser/season/ui/podcast_season_app_bar.dart';
 import 'package:audiflow/features/browser/season/ui/season_episodes_page_controller.dart';
@@ -28,8 +29,9 @@ class SeasonEpisodesPage extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final scaffoldMessengerKey =
         useState(GlobalKey<ScaffoldMessengerState>()).value;
-    final seasonEpisodesState =
-        ref.watch(seasonEpisodesPageControllerProvider(season));
+    final pageState = ref.watch(seasonEpisodesPageControllerProvider(season));
+    final pageController =
+        ref.watch(seasonEpisodesPageControllerProvider(season).notifier);
 
     final controller = useScrollController();
     return Semantics(
@@ -59,9 +61,9 @@ class SeasonEpisodesPage extends HookConsumerWidget {
                 physics: const AlwaysScrollableScrollPhysics(),
                 slivers: <Widget>[
                   PodcastSeasonAppBar(season: season, heroPrefix: heroPrefix),
-                  if (seasonEpisodesState.isLoading)
+                  if (pageState.isLoading)
                     const FillRemainingLoading()
-                  else if (seasonEpisodesState.hasError)
+                  else if (pageState.hasError)
                     FillRemainingError.podcastNoResults()
                   else ...[
                     // SliverToBoxAdapter(
@@ -94,8 +96,15 @@ class SeasonEpisodesPage extends HookConsumerWidget {
                     //     ],
                     //   ),
                     // ),
+                    SliverToBoxAdapter(
+                      child: PodcastDetailsEpisodesFilterModeSwitch(
+                        filterMode: pageState.requireValue.filterMode,
+                        onFilterModeChanged: pageController.setFilterMode,
+                        onToggleAscending: pageController.toggleAscending,
+                      ),
+                    ),
                     EpisodeList.fixed(
-                      episodes: seasonEpisodesState.requireValue.episodes,
+                      episodes: pageState.requireValue.episodes,
                       scrollController: controller,
                       thumbnailVisibility: ThumbnailVisibility.hidden,
                     ),

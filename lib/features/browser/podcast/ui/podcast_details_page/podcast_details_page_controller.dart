@@ -53,10 +53,9 @@ class PodcastDetailsPageController extends _$PodcastDetailsPageController {
         viewMode: viewMode,
       ),
     );
-    state = AsyncData(state.requireValue.copyWith(viewMode: viewMode));
   }
 
-  Future<void> setEpisodeFilter(EpisodeFilterMode model) async {
+  Future<void> setEpisodeFilter(EpisodeFilterMode mode) async {
     if (!state.hasValue) {
       return;
     }
@@ -64,10 +63,9 @@ class PodcastDetailsPageController extends _$PodcastDetailsPageController {
     await _pageModelsRepository.updatePodcastDetailsPageModel(
       PodcastDetailsPageModelUpdateParam(
         pid: pid,
-        episodeFilterMode: model,
+        episodeFilterMode: mode,
       ),
     );
-    state = AsyncData(state.requireValue.copyWith(episodeFilterMode: model));
   }
 
   Future<void> toggleEpisodesAscending() async {
@@ -75,17 +73,15 @@ class PodcastDetailsPageController extends _$PodcastDetailsPageController {
       return;
     }
 
-    final newValue = !state.requireValue.episodesAscending;
     await _pageModelsRepository.updatePodcastDetailsPageModel(
       PodcastDetailsPageModelUpdateParam(
         pid: pid,
-        episodesAscending: newValue,
+        episodesAscending: !state.requireValue.episodesAscending,
       ),
     );
-    state = AsyncData(state.requireValue.copyWith(episodesAscending: newValue));
   }
 
-  Future<void> setSeasonFilter(SeasonFilterMode model) async {
+  Future<void> setSeasonFilter(SeasonFilterMode mode) async {
     if (!state.hasValue) {
       return;
     }
@@ -93,10 +89,9 @@ class PodcastDetailsPageController extends _$PodcastDetailsPageController {
     await _pageModelsRepository.updatePodcastDetailsPageModel(
       PodcastDetailsPageModelUpdateParam(
         pid: pid,
-        seasonFilterMode: model,
+        seasonFilterMode: mode,
       ),
     );
-    state = AsyncData(state.requireValue.copyWith(seasonFilterMode: model));
   }
 
   Future<void> toggleSeasonsAscending() async {
@@ -104,30 +99,11 @@ class PodcastDetailsPageController extends _$PodcastDetailsPageController {
       return;
     }
 
-    final newValue = !state.requireValue.seasonsAscending;
     await _pageModelsRepository.updatePodcastDetailsPageModel(
       PodcastDetailsPageModelUpdateParam(
         pid: pid,
-        seasonsAscending: newValue,
+        seasonsAscending: !state.requireValue.seasonsAscending,
       ),
-    );
-    state = AsyncData(state.requireValue.copyWith(seasonsAscending: newValue));
-  }
-
-  Future<void> toggleSeasonEpisodesAscending() async {
-    if (!state.hasValue) {
-      return;
-    }
-
-    final newValue = !state.requireValue.seasonEpisodesAscending;
-    await _pageModelsRepository.updatePodcastDetailsPageModel(
-      PodcastDetailsPageModelUpdateParam(
-        pid: pid,
-        seasonEpisodesAscending: newValue,
-      ),
-    );
-    state = AsyncData(
-      state.requireValue.copyWith(seasonEpisodesAscending: newValue),
     );
   }
 }
@@ -140,7 +116,6 @@ class PodcastDetailsPageState with _$PodcastDetailsPageState {
     required bool episodesAscending,
     required SeasonFilterMode seasonFilterMode,
     required bool seasonsAscending,
-    required bool seasonEpisodesAscending,
   }) = _PodcastDetailsPageState;
 
   factory PodcastDetailsPageState.fromModel(PodcastDetailsPageModel model) {
@@ -150,7 +125,6 @@ class PodcastDetailsPageState with _$PodcastDetailsPageState {
       episodesAscending: model.episodesAscending,
       seasonFilterMode: model.seasonFilterMode,
       seasonsAscending: model.seasonsAscending,
-      seasonEpisodesAscending: model.seasonEpisodesAscending,
     );
   }
 }
@@ -161,8 +135,8 @@ extension PodcastDetailsPageStateExt on PodcastDetailsPageState {
       viewMode: model.viewMode,
       episodeFilterMode: model.episodeFilterMode,
       episodesAscending: model.episodesAscending,
+      seasonFilterMode: model.seasonFilterMode,
       seasonsAscending: model.seasonsAscending,
-      seasonEpisodesAscending: model.seasonEpisodesAscending,
     );
   }
 }

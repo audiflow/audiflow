@@ -21,7 +21,6 @@ mixin _$PodcastDetailsPageState {
   bool get episodesAscending => throw _privateConstructorUsedError;
   SeasonFilterMode get seasonFilterMode => throw _privateConstructorUsedError;
   bool get seasonsAscending => throw _privateConstructorUsedError;
-  bool get seasonEpisodesAscending => throw _privateConstructorUsedError;
 
   /// Create a copy of PodcastDetailsPageState
   /// with the given fields replaced by the non-null parameter values.
@@ -41,8 +40,7 @@ abstract class $PodcastDetailsPageStateCopyWith<$Res> {
       EpisodeFilterMode episodeFilterMode,
       bool episodesAscending,
       SeasonFilterMode seasonFilterMode,
-      bool seasonsAscending,
-      bool seasonEpisodesAscending});
+      bool seasonsAscending});
 }
 
 /// @nodoc
@@ -66,7 +64,6 @@ class _$PodcastDetailsPageStateCopyWithImpl<$Res,
     Object? episodesAscending = null,
     Object? seasonFilterMode = null,
     Object? seasonsAscending = null,
-    Object? seasonEpisodesAscending = null,
   }) {
     return _then(_value.copyWith(
       viewMode: null == viewMode
@@ -89,10 +86,6 @@ class _$PodcastDetailsPageStateCopyWithImpl<$Res,
           ? _value.seasonsAscending
           : seasonsAscending // ignore: cast_nullable_to_non_nullable
               as bool,
-      seasonEpisodesAscending: null == seasonEpisodesAscending
-          ? _value.seasonEpisodesAscending
-          : seasonEpisodesAscending // ignore: cast_nullable_to_non_nullable
-              as bool,
     ) as $Val);
   }
 }
@@ -111,8 +104,7 @@ abstract class _$$PodcastDetailsPageStateImplCopyWith<$Res>
       EpisodeFilterMode episodeFilterMode,
       bool episodesAscending,
       SeasonFilterMode seasonFilterMode,
-      bool seasonsAscending,
-      bool seasonEpisodesAscending});
+      bool seasonsAscending});
 }
 
 /// @nodoc
@@ -135,7 +127,6 @@ class __$$PodcastDetailsPageStateImplCopyWithImpl<$Res>
     Object? episodesAscending = null,
     Object? seasonFilterMode = null,
     Object? seasonsAscending = null,
-    Object? seasonEpisodesAscending = null,
   }) {
     return _then(_$PodcastDetailsPageStateImpl(
       viewMode: null == viewMode
@@ -158,10 +149,6 @@ class __$$PodcastDetailsPageStateImplCopyWithImpl<$Res>
           ? _value.seasonsAscending
           : seasonsAscending // ignore: cast_nullable_to_non_nullable
               as bool,
-      seasonEpisodesAscending: null == seasonEpisodesAscending
-          ? _value.seasonEpisodesAscending
-          : seasonEpisodesAscending // ignore: cast_nullable_to_non_nullable
-              as bool,
     ));
   }
 }
@@ -174,8 +161,7 @@ class _$PodcastDetailsPageStateImpl implements _PodcastDetailsPageState {
       required this.episodeFilterMode,
       required this.episodesAscending,
       required this.seasonFilterMode,
-      required this.seasonsAscending,
-      required this.seasonEpisodesAscending});
+      required this.seasonsAscending});
 
   @override
   final PodcastDetailsPageViewMode viewMode;
@@ -187,12 +173,10 @@ class _$PodcastDetailsPageStateImpl implements _PodcastDetailsPageState {
   final SeasonFilterMode seasonFilterMode;
   @override
   final bool seasonsAscending;
-  @override
-  final bool seasonEpisodesAscending;
 
   @override
   String toString() {
-    return 'PodcastDetailsPageState(viewMode: $viewMode, episodeFilterMode: $episodeFilterMode, episodesAscending: $episodesAscending, seasonFilterMode: $seasonFilterMode, seasonsAscending: $seasonsAscending, seasonEpisodesAscending: $seasonEpisodesAscending)';
+    return 'PodcastDetailsPageState(viewMode: $viewMode, episodeFilterMode: $episodeFilterMode, episodesAscending: $episodesAscending, seasonFilterMode: $seasonFilterMode, seasonsAscending: $seasonsAscending)';
   }
 
   @override
@@ -209,21 +193,12 @@ class _$PodcastDetailsPageStateImpl implements _PodcastDetailsPageState {
             (identical(other.seasonFilterMode, seasonFilterMode) ||
                 other.seasonFilterMode == seasonFilterMode) &&
             (identical(other.seasonsAscending, seasonsAscending) ||
-                other.seasonsAscending == seasonsAscending) &&
-            (identical(
-                    other.seasonEpisodesAscending, seasonEpisodesAscending) ||
-                other.seasonEpisodesAscending == seasonEpisodesAscending));
+                other.seasonsAscending == seasonsAscending));
   }
 
   @override
-  int get hashCode => Object.hash(
-      runtimeType,
-      viewMode,
-      episodeFilterMode,
-      episodesAscending,
-      seasonFilterMode,
-      seasonsAscending,
-      seasonEpisodesAscending);
+  int get hashCode => Object.hash(runtimeType, viewMode, episodeFilterMode,
+      episodesAscending, seasonFilterMode, seasonsAscending);
 
   /// Create a copy of PodcastDetailsPageState
   /// with the given fields replaced by the non-null parameter values.
@@ -237,13 +212,11 @@ class _$PodcastDetailsPageStateImpl implements _PodcastDetailsPageState {
 
 abstract class _PodcastDetailsPageState implements PodcastDetailsPageState {
   const factory _PodcastDetailsPageState(
-          {required final PodcastDetailsPageViewMode viewMode,
-          required final EpisodeFilterMode episodeFilterMode,
-          required final bool episodesAscending,
-          required final SeasonFilterMode seasonFilterMode,
-          required final bool seasonsAscending,
-          required final bool seasonEpisodesAscending}) =
-      _$PodcastDetailsPageStateImpl;
+      {required final PodcastDetailsPageViewMode viewMode,
+      required final EpisodeFilterMode episodeFilterMode,
+      required final bool episodesAscending,
+      required final SeasonFilterMode seasonFilterMode,
+      required final bool seasonsAscending}) = _$PodcastDetailsPageStateImpl;
 
   @override
   PodcastDetailsPageViewMode get viewMode;
@@ -255,8 +228,6 @@ abstract class _PodcastDetailsPageState implements PodcastDetailsPageState {
   SeasonFilterMode get seasonFilterMode;
   @override
   bool get seasonsAscending;
-  @override
-  bool get seasonEpisodesAscending;
 
   /// Create a copy of PodcastDetailsPageState
   /// with the given fields replaced by the non-null parameter values.

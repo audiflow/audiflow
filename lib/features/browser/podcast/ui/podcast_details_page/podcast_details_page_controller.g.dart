@@ -7,7 +7,7 @@ part of 'podcast_details_page_controller.dart';
 // **************************************************************************
 
 String _$podcastDetailsPageControllerHash() =>
-    r'a6995fee6d2ed0a795a523a4aeeb22abd2f67f64';
+    r'd23a88752dff5e3061027f23409d7e1bfc5d296d';
 
 /// Copied from Dart SDK
 class _SystemHash {
