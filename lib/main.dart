@@ -6,7 +6,7 @@ import 'package:audiflow/common/data/connectivity.dart'
     show initialConnectivityProvider;
 import 'package:audiflow/common/data/isar_factory.dart';
 import 'package:audiflow/common/data/isar_repository.dart';
-import 'package:audiflow/core/shared_preferences.dart';
+import 'package:audiflow/common/data/shared_preferences.dart';
 import 'package:audiflow/exceptions/async_error_logger.dart';
 import 'package:audiflow/exceptions/error_logger.dart';
 import 'package:audiflow/features/bootstrap/ui/audiflow_app.dart';
