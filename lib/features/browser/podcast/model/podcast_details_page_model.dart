@@ -9,18 +9,19 @@ enum PodcastDetailsPageViewMode { episodes, seasons }
 @collection
 class PodcastDetailsPageModel {
   PodcastDetailsPageModel({
-    required int pid,
+    required this.pid,
     this.viewMode = PodcastDetailsPageViewMode.episodes,
     this.episodeFilterMode = EpisodeFilterMode.all,
     this.episodesAscending = false,
     this.seasonFilterMode = SeasonFilterMode.all,
     this.seasonsAscending = false,
+    this.seasonEpisodeFilterMode = EpisodeFilterMode.all,
     this.seasonEpisodesAscending = true,
-  }) : id = pid;
+  });
 
-  int get pid => id;
+  Id get id => pid;
 
-  final Id id;
+  final int pid;
   @enumerated
   final PodcastDetailsPageViewMode viewMode;
   @enumerated
@@ -29,6 +30,8 @@ class PodcastDetailsPageModel {
   @enumerated
   final SeasonFilterMode seasonFilterMode;
   final bool seasonsAscending;
+  @enumerated
+  final EpisodeFilterMode seasonEpisodeFilterMode;
   final bool seasonEpisodesAscending;
 
   PodcastDetailsPageModel copyWith({
@@ -37,6 +40,7 @@ class PodcastDetailsPageModel {
     bool? episodesAscending,
     SeasonFilterMode? seasonFilterMode,
     bool? seasonsAscending,
+    EpisodeFilterMode? seasonEpisodeFilterMode,
     bool? seasonEpisodesAscending,
   }) {
     return PodcastDetailsPageModel(
@@ -46,9 +50,24 @@ class PodcastDetailsPageModel {
       episodesAscending: episodesAscending ?? this.episodesAscending,
       seasonFilterMode: seasonFilterMode ?? this.seasonFilterMode,
       seasonsAscending: seasonsAscending ?? this.seasonsAscending,
+      seasonEpisodeFilterMode:
+          seasonEpisodeFilterMode ?? this.seasonEpisodeFilterMode,
       seasonEpisodesAscending:
           seasonEpisodesAscending ?? this.seasonEpisodesAscending,
     );
+  }
+
+  @override
+  String toString() {
+    return 'PodcastDetailsPageModel('
+        'pid: $pid, '
+        'viewMode: $viewMode, '
+        'episodeFilterMode: $episodeFilterMode, '
+        'episodesAscending: $episodesAscending, '
+        'seasonFilterMode: $seasonFilterMode, '
+        'seasonsAscending: $seasonsAscending, '
+        'seasonEpisodeFilterMode: $seasonEpisodeFilterMode, '
+        'seasonEpisodesAscending: $seasonEpisodesAscending)';
   }
 }
 
@@ -60,6 +79,7 @@ class PodcastDetailsPageModelUpdateParam {
     this.episodesAscending,
     this.seasonFilterMode,
     this.seasonsAscending,
+    this.seasonEpisodeFilterMode,
     this.seasonEpisodesAscending,
   }) : id = pid;
 
@@ -71,6 +91,7 @@ class PodcastDetailsPageModelUpdateParam {
   final bool? episodesAscending;
   final SeasonFilterMode? seasonFilterMode;
   final bool? seasonsAscending;
+  final EpisodeFilterMode? seasonEpisodeFilterMode;
   final bool? seasonEpisodesAscending;
 
   PodcastDetailsPageModelUpdateParam copyWith({
@@ -79,6 +100,7 @@ class PodcastDetailsPageModelUpdateParam {
     bool? episodesAscending,
     SeasonFilterMode? seasonFilterMode,
     bool? seasonsAscending,
+    EpisodeFilterMode? seasonEpisodeFilterMode,
     bool? seasonEpisodesAscending,
   }) {
     return PodcastDetailsPageModelUpdateParam(
@@ -88,6 +110,8 @@ class PodcastDetailsPageModelUpdateParam {
       episodesAscending: episodesAscending ?? this.episodesAscending,
       seasonFilterMode: seasonFilterMode ?? this.seasonFilterMode,
       seasonsAscending: seasonsAscending ?? this.seasonsAscending,
+      seasonEpisodeFilterMode:
+          seasonEpisodeFilterMode ?? this.seasonEpisodeFilterMode,
       seasonEpisodesAscending:
           seasonEpisodesAscending ?? this.seasonEpisodesAscending,
     );

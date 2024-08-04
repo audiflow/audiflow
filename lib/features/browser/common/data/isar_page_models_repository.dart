@@ -21,27 +21,28 @@ class IsarPageModelsRepository implements PageModelsRepository {
     PodcastDetailsPageModelUpdateParam param,
   ) async {
     final stats = await isar.podcastDetailsPageModels.get(param.id);
-    final newStats = stats != null
-        ? stats.copyWith(
-            viewMode: param.viewMode ?? stats.viewMode,
-            episodeFilterMode:
-                param.episodeFilterMode ?? stats.episodeFilterMode,
-            episodesAscending:
-                param.episodesAscending ?? stats.episodesAscending,
-            seasonFilterMode: param.seasonFilterMode ?? stats.seasonFilterMode,
-            seasonsAscending: param.seasonsAscending ?? stats.seasonsAscending,
-            seasonEpisodesAscending:
-                param.seasonEpisodesAscending ?? stats.seasonEpisodesAscending,
-          )
-        : PodcastDetailsPageModel(
-            pid: param.id,
-            viewMode: param.viewMode ?? PodcastDetailsPageViewMode.episodes,
-            episodeFilterMode: param.episodeFilterMode ?? EpisodeFilterMode.all,
-            episodesAscending: param.episodesAscending ?? false,
-            seasonFilterMode: param.seasonFilterMode ?? SeasonFilterMode.all,
-            seasonsAscending: param.seasonsAscending ?? false,
-            seasonEpisodesAscending: param.seasonEpisodesAscending ?? true,
-          );
+    final newStats = PodcastDetailsPageModel(
+      pid: param.id,
+      viewMode: param.viewMode ??
+          stats?.viewMode ??
+          PodcastDetailsPageViewMode.episodes,
+      episodeFilterMode: param.episodeFilterMode ??
+          stats?.episodeFilterMode ??
+          EpisodeFilterMode.all,
+      episodesAscending:
+          param.episodesAscending ?? stats?.episodesAscending ?? false,
+      seasonFilterMode: param.seasonFilterMode ??
+          stats?.seasonFilterMode ??
+          SeasonFilterMode.all,
+      seasonsAscending:
+          param.seasonsAscending ?? stats?.seasonsAscending ?? false,
+      seasonEpisodeFilterMode: param.seasonEpisodeFilterMode ??
+          stats?.seasonEpisodeFilterMode ??
+          EpisodeFilterMode.all,
+      seasonEpisodesAscending: param.seasonEpisodesAscending ??
+          stats?.seasonEpisodesAscending ??
+          true,
+    );
     await isar.writeTxn(() => isar.podcastDetailsPageModels.put(newStats));
     return newStats;
   }

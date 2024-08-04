@@ -10,7 +10,7 @@ part 'episode.g.dart';
 
 /// An object that represents an individual episode of a Podcast.
 @collection
-class Episode {
+class Episode implements Comparable<Episode> {
   Episode({
     required this.pid,
     required this.guid,
@@ -121,6 +121,25 @@ class Episode {
   @override
   String toString() {
     return '''Episode(guid: '$guid', title: '$title')''';
+  }
+
+  @override
+  int compareTo(Episode other) {
+    if (episode != null && other.episode != null) {
+      return episode!.compareTo(other.episode!);
+    }
+
+    if (publicationDate != null) {
+      if (other.publicationDate != null) {
+        return publicationDate!.compareTo(other.publicationDate!);
+      } else {
+        return 1;
+      }
+    } else if (other.publicationDate != null) {
+      return -1;
+    }
+
+    return title.compareTo(other.title);
   }
 }
 

@@ -34,24 +34,30 @@ const PodcastDetailsPageModelSchema = CollectionSchema(
       name: r'pid',
       type: IsarType.long,
     ),
-    r'seasonEpisodesAscending': PropertySchema(
+    r'seasonEpisodeFilterMode': PropertySchema(
       id: 3,
+      name: r'seasonEpisodeFilterMode',
+      type: IsarType.byte,
+      enumMap: _PodcastDetailsPageModelseasonEpisodeFilterModeEnumValueMap,
+    ),
+    r'seasonEpisodesAscending': PropertySchema(
+      id: 4,
       name: r'seasonEpisodesAscending',
       type: IsarType.bool,
     ),
     r'seasonFilterMode': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'seasonFilterMode',
       type: IsarType.byte,
       enumMap: _PodcastDetailsPageModelseasonFilterModeEnumValueMap,
     ),
     r'seasonsAscending': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'seasonsAscending',
       type: IsarType.bool,
     ),
     r'viewMode': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'viewMode',
       type: IsarType.byte,
       enumMap: _PodcastDetailsPageModelviewModeEnumValueMap,
@@ -89,10 +95,11 @@ void _podcastDetailsPageModelSerialize(
   writer.writeByte(offsets[0], object.episodeFilterMode.index);
   writer.writeBool(offsets[1], object.episodesAscending);
   writer.writeLong(offsets[2], object.pid);
-  writer.writeBool(offsets[3], object.seasonEpisodesAscending);
-  writer.writeByte(offsets[4], object.seasonFilterMode.index);
-  writer.writeBool(offsets[5], object.seasonsAscending);
-  writer.writeByte(offsets[6], object.viewMode.index);
+  writer.writeByte(offsets[3], object.seasonEpisodeFilterMode.index);
+  writer.writeBool(offsets[4], object.seasonEpisodesAscending);
+  writer.writeByte(offsets[5], object.seasonFilterMode.index);
+  writer.writeBool(offsets[6], object.seasonsAscending);
+  writer.writeByte(offsets[7], object.viewMode.index);
 }
 
 PodcastDetailsPageModel _podcastDetailsPageModelDeserialize(
@@ -107,13 +114,17 @@ PodcastDetailsPageModel _podcastDetailsPageModelDeserialize(
         EpisodeFilterMode.all,
     episodesAscending: reader.readBoolOrNull(offsets[1]) ?? false,
     pid: reader.readLong(offsets[2]),
-    seasonEpisodesAscending: reader.readBoolOrNull(offsets[3]) ?? true,
+    seasonEpisodeFilterMode:
+        _PodcastDetailsPageModelseasonEpisodeFilterModeValueEnumMap[
+                reader.readByteOrNull(offsets[3])] ??
+            EpisodeFilterMode.all,
+    seasonEpisodesAscending: reader.readBoolOrNull(offsets[4]) ?? true,
     seasonFilterMode: _PodcastDetailsPageModelseasonFilterModeValueEnumMap[
-            reader.readByteOrNull(offsets[4])] ??
+            reader.readByteOrNull(offsets[5])] ??
         SeasonFilterMode.all,
-    seasonsAscending: reader.readBoolOrNull(offsets[5]) ?? false,
+    seasonsAscending: reader.readBoolOrNull(offsets[6]) ?? false,
     viewMode: _PodcastDetailsPageModelviewModeValueEnumMap[
-            reader.readByteOrNull(offsets[6])] ??
+            reader.readByteOrNull(offsets[7])] ??
         PodcastDetailsPageViewMode.episodes,
   );
   return object;
@@ -135,14 +146,18 @@ P _podcastDetailsPageModelDeserializeProp<P>(
     case 2:
       return (reader.readLong(offset)) as P;
     case 3:
-      return (reader.readBoolOrNull(offset) ?? true) as P;
+      return (_PodcastDetailsPageModelseasonEpisodeFilterModeValueEnumMap[
+              reader.readByteOrNull(offset)] ??
+          EpisodeFilterMode.all) as P;
     case 4:
+      return (reader.readBoolOrNull(offset) ?? true) as P;
+    case 5:
       return (_PodcastDetailsPageModelseasonFilterModeValueEnumMap[
               reader.readByteOrNull(offset)] ??
           SeasonFilterMode.all) as P;
-    case 5:
-      return (reader.readBoolOrNull(offset) ?? false) as P;
     case 6:
+      return (reader.readBoolOrNull(offset) ?? false) as P;
+    case 7:
       return (_PodcastDetailsPageModelviewModeValueEnumMap[
               reader.readByteOrNull(offset)] ??
           PodcastDetailsPageViewMode.episodes) as P;
@@ -158,6 +173,18 @@ const _PodcastDetailsPageModelepisodeFilterModeEnumValueMap = {
   'downloaded': 3,
 };
 const _PodcastDetailsPageModelepisodeFilterModeValueEnumMap = {
+  0: EpisodeFilterMode.all,
+  1: EpisodeFilterMode.unplayed,
+  2: EpisodeFilterMode.completed,
+  3: EpisodeFilterMode.downloaded,
+};
+const _PodcastDetailsPageModelseasonEpisodeFilterModeEnumValueMap = {
+  'all': 0,
+  'unplayed': 1,
+  'completed': 2,
+  'downloaded': 3,
+};
+const _PodcastDetailsPageModelseasonEpisodeFilterModeValueEnumMap = {
   0: EpisodeFilterMode.all,
   1: EpisodeFilterMode.unplayed,
   2: EpisodeFilterMode.completed,
@@ -454,6 +481,63 @@ extension PodcastDetailsPageModelQueryFilter on QueryBuilder<
   }
 
   QueryBuilder<PodcastDetailsPageModel, PodcastDetailsPageModel,
+          QAfterFilterCondition>
+      seasonEpisodeFilterModeEqualTo(EpisodeFilterMode value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'seasonEpisodeFilterMode',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<PodcastDetailsPageModel, PodcastDetailsPageModel,
+      QAfterFilterCondition> seasonEpisodeFilterModeGreaterThan(
+    EpisodeFilterMode value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'seasonEpisodeFilterMode',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<PodcastDetailsPageModel, PodcastDetailsPageModel,
+      QAfterFilterCondition> seasonEpisodeFilterModeLessThan(
+    EpisodeFilterMode value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'seasonEpisodeFilterMode',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<PodcastDetailsPageModel, PodcastDetailsPageModel,
+      QAfterFilterCondition> seasonEpisodeFilterModeBetween(
+    EpisodeFilterMode lower,
+    EpisodeFilterMode upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'seasonEpisodeFilterMode',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<PodcastDetailsPageModel, PodcastDetailsPageModel,
       QAfterFilterCondition> seasonEpisodesAscendingEqualTo(bool value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -637,6 +721,20 @@ extension PodcastDetailsPageModelQuerySortBy
   }
 
   QueryBuilder<PodcastDetailsPageModel, PodcastDetailsPageModel, QAfterSortBy>
+      sortBySeasonEpisodeFilterMode() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'seasonEpisodeFilterMode', Sort.asc);
+    });
+  }
+
+  QueryBuilder<PodcastDetailsPageModel, PodcastDetailsPageModel, QAfterSortBy>
+      sortBySeasonEpisodeFilterModeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'seasonEpisodeFilterMode', Sort.desc);
+    });
+  }
+
+  QueryBuilder<PodcastDetailsPageModel, PodcastDetailsPageModel, QAfterSortBy>
       sortBySeasonEpisodesAscending() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'seasonEpisodesAscending', Sort.asc);
@@ -752,6 +850,20 @@ extension PodcastDetailsPageModelQuerySortThenBy on QueryBuilder<
   }
 
   QueryBuilder<PodcastDetailsPageModel, PodcastDetailsPageModel, QAfterSortBy>
+      thenBySeasonEpisodeFilterMode() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'seasonEpisodeFilterMode', Sort.asc);
+    });
+  }
+
+  QueryBuilder<PodcastDetailsPageModel, PodcastDetailsPageModel, QAfterSortBy>
+      thenBySeasonEpisodeFilterModeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'seasonEpisodeFilterMode', Sort.desc);
+    });
+  }
+
+  QueryBuilder<PodcastDetailsPageModel, PodcastDetailsPageModel, QAfterSortBy>
       thenBySeasonEpisodesAscending() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'seasonEpisodesAscending', Sort.asc);
@@ -832,6 +944,13 @@ extension PodcastDetailsPageModelQueryWhereDistinct on QueryBuilder<
   }
 
   QueryBuilder<PodcastDetailsPageModel, PodcastDetailsPageModel, QDistinct>
+      distinctBySeasonEpisodeFilterMode() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'seasonEpisodeFilterMode');
+    });
+  }
+
+  QueryBuilder<PodcastDetailsPageModel, PodcastDetailsPageModel, QDistinct>
       distinctBySeasonEpisodesAscending() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'seasonEpisodesAscending');
@@ -885,6 +1004,13 @@ extension PodcastDetailsPageModelQueryProperty on QueryBuilder<
   QueryBuilder<PodcastDetailsPageModel, int, QQueryOperations> pidProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'pid');
+    });
+  }
+
+  QueryBuilder<PodcastDetailsPageModel, EpisodeFilterMode, QQueryOperations>
+      seasonEpisodeFilterModeProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'seasonEpisodeFilterMode');
     });
   }
 

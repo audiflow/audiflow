@@ -1,11 +1,13 @@
 import 'package:audiflow/features/bootstrap/service/app_wide_initializer.dart';
 import 'package:audiflow/features/browser/chart/ui/podcast_chart_page.dart';
 import 'package:audiflow/features/browser/common/model/itunes_chart_item.dart';
-import 'package:audiflow/features/browser/podcast/model/season.dart';
-import 'package:audiflow/features/browser/podcast/ui/podcast_details_page.dart';
+import 'package:audiflow/features/browser/podcast/ui/podcast_details_page/podcast_details_page.dart';
+import 'package:audiflow/features/browser/season/model/season.dart';
+import 'package:audiflow/features/browser/season/ui/season_episodes_page.dart';
 import 'package:audiflow/features/feed/model/model.dart';
 import 'package:audiflow/routing/app_bottom_navigation_bar.dart';
 import 'package:audiflow/ui/widgets/error_notifier.dart';
+import 'package:audiflow/utils/hash.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nanoid/nanoid.dart';
@@ -68,25 +70,8 @@ class AppRouter extends _$AppRouter {
                   );
                 },
                 routes: [
-                  // GoRoute(
-                  //   path: 'season',
-                  //   name: 'season',
-                  //   parentNavigatorKey: homeTabNavigatorKey,
-                  //   pageBuilder: (context, state) {
-                  //     final (podcast, season, heroPrefix) =
-                  //         state.extra! as (Podcast, Season, String);
-                  //     return _getPage(
-                  //       child: PodcastSeasonPage(
-                  //         podcast: podcast,
-                  //         season: season,
-                  //         heroPrefix: heroPrefix,
-                  //       ),
-                  //       state: state,
-                  //     );
-                  //   },
-                  // ),
                   GoRoute(
-                    path: 'podcast/:collectionId/:random',
+                    path: 'podcasts/:titleHash/:random',
                     parentNavigatorKey: homeTabNavigatorKey,
                     pageBuilder: (context, state) {
                       final (
@@ -109,6 +94,23 @@ class AppRouter extends _$AppRouter {
                           title: title,
                           author: author,
                           thumbnailUrl: thumbnailUrl,
+                        ),
+                        state: state,
+                      );
+                    },
+                  ),
+                  GoRoute(
+                    path: 'podcasts/seasons/:id/:random',
+                    name: 'season',
+                    parentNavigatorKey: homeTabNavigatorKey,
+                    pageBuilder: (context, state) {
+                      final (podcast, season, heroPrefix) =
+                          state.extra! as (Podcast, Season, String);
+                      return _getPage(
+                        child: SeasonEpisodesPage(
+                          podcast: podcast,
+                          season: season,
+                          heroPrefix: heroPrefix,
                         ),
                         state: state,
                       );
@@ -225,8 +227,9 @@ class AppRouter extends _$AppRouter {
   }
 
   Future<void> pushPodcastDetail(Podcast podcast) async {
+    final hash = fastHash(podcast.title);
     await state.push(
-      '/podcast/${podcast.collectionId}/${nanoid()}',
+      '/podcasts/$hash/${nanoid()}',
       extra: (
         podcast.feedUrl,
         podcast.collectionId,
@@ -238,8 +241,9 @@ class AppRouter extends _$AppRouter {
   }
 
   Future<void> pushPodcastDetailFromChart(ITunesChartItem chartItem) async {
+    final hash = fastHash(chartItem.collectionName);
     await state.push(
-      '/podcast/${chartItem.collectionId}/${nanoid()}',
+      '/podcasts/$hash/${nanoid()}',
       extra: (
         null,
         chartItem.collectionId,
@@ -279,9 +283,9 @@ class AppRouter extends _$AppRouter {
   }
 
   Future<void> pushSeason(Podcast podcast, Season season) async {
-    await state.pushNamed(
-      'season',
-      extra: (podcast, season, 'season'),
+    await state.push(
+      '/podcasts/seasons/${season.id}/${nanoid()}',
+      extra: (podcast, season, ''),
     );
   }
 }

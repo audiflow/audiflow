@@ -1,8 +1,7 @@
-import 'package:audiflow/gen/l10n/l10n.dart';
-import 'package:audiflow/entities/entities.dart';
-import 'package:audiflow/services/download/download_service_provider.dart';
-import 'package:audiflow/ui/pages/app_bars/podcast_page_header_image.dart';
-import 'package:audiflow/ui/widgets/placeholder_builder.dart';
+import 'package:audiflow/common/ui/placeholder_builder.dart';
+import 'package:audiflow/features/browser/podcast/ui/podcast_page_header_image.dart';
+import 'package:audiflow/features/browser/season/model/season.dart';
+import 'package:audiflow/localization/generated/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -23,23 +22,25 @@ class PodcastSeasonAppBar extends ConsumerWidget {
 
     final menus = <_MenuItem>[
       _MenuItem(
-        L10n.of(context)!.downloadAllEpisodes,
+        L10n.of(context).downloadAllEpisodes,
         Icons.download,
         onSelected: () {
-          ref.read(downloadServiceProvider).downloadEpisodes(season.episodes);
+          // ref.read(downloadServiceProvider)
+          // .downloadEpisodes(season.episodes);
         },
       ),
       _MenuItem(
-        L10n.of(context)!.downloadUnplayedEpisodes,
+        L10n.of(context).downloadUnplayedEpisodes,
         Icons.download,
         onSelected: () {
-          ref
-              .read(downloadServiceProvider)
-              .downloadEpisodes(season.episodes, unplayedOnly: true);
+          // ref
+          //     .read(downloadServiceProvider)
+          //     .downloadEpisodes(season.episodes, unplayedOnly: true);
         },
       ),
     ];
 
+    final safeAreaTop = MediaQuery.of(context).viewPadding.top;
     return SliverLayoutBuilder(
       builder: (BuildContext context, SliverConstraints constraints) {
         return SliverAppBar(
@@ -48,7 +49,7 @@ class PodcastSeasonAppBar extends ConsumerWidget {
           title: AnimatedOpacity(
             opacity: 300 < constraints.scrollOffset ? 1.0 : 0.0,
             duration: const Duration(milliseconds: 200),
-            child: Text(season.title ?? season.episodes.first.title),
+            child: Text(season.title ?? ''),
           ),
           actions: [
             PopupMenuButton<_MenuItem>(
@@ -69,17 +70,20 @@ class PodcastSeasonAppBar extends ConsumerWidget {
             background: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const SizedBox(height: 46),
                 Expanded(
                   child: Hero(
                     key: Key(
                       'seasonHero:${season.imageUrl}:${season.guid}',
                     ),
-                    tag: '$heroPrefix:${season.guid}',
+                    tag: '$heroPrefix:${season.id}',
                     child: ExcludeSemantics(
-                      child: PodcastHeaderImage(
-                        imageUrl: season.imageUrl!,
-                        placeholderBuilder: placeholderBuilder,
+                      child: Padding(
+                        padding:
+                            EdgeInsets.only(top: safeAreaTop + kToolbarHeight),
+                        child: PodcastHeaderImage.large(
+                          imageUrl: season.imageUrl!,
+                          placeholderBuilder: placeholderBuilder,
+                        ),
                       ),
                     ),
                   ),
