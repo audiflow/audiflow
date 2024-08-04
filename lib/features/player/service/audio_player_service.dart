@@ -34,7 +34,7 @@ class AudioPlayerService extends _$AudioPlayerService {
       throw UnimplementedError();
 
   /// Resume playing of current episode
-  Future<void> play() => throw UnimplementedError();
+  FutureOr<void> play() => throw UnimplementedError();
 
   /// Stop playing of current episode. Set update to false to stop
   /// playback without saving any episode or positional updates.
@@ -42,6 +42,8 @@ class AudioPlayerService extends _$AudioPlayerService {
 
   /// Pause the current episode.
   Future<void> pause() => throw UnimplementedError();
+
+  Future<void> togglePlayPause() => throw UnimplementedError();
 
   /// Rewind the current episode by pre-set number of seconds.
   Future<void> rewind() => throw UnimplementedError();

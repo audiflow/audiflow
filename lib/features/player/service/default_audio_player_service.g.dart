@@ -1,13 +1,13 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'mobile_audio_player_service.dart';
+part of 'default_audio_player_service.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$mobileAudioPlayerServiceHash() =>
-    r'9cdb305a92337c42272a85e05848a7641a0136a6';
+String _$defaultAudioPlayerServiceHash() =>
+    r'de8edb55cd9db140fcd0acb8e56212edac744006';
 
 /// This is the default implementation of [AudioPlayerService].
 ///
@@ -16,19 +16,19 @@ String _$mobileAudioPlayerServiceHash() =>
 /// playback is handled by the [just_audio](https://pub.dev/packages/just_audio)
 /// package.
 ///
-/// Copied from [MobileAudioPlayerService].
-@ProviderFor(MobileAudioPlayerService)
-final mobileAudioPlayerServiceProvider =
-    NotifierProvider<MobileAudioPlayerService, AudioPlayerState?>.internal(
-  MobileAudioPlayerService.new,
-  name: r'mobileAudioPlayerServiceProvider',
+/// Copied from [DefaultAudioPlayerService].
+@ProviderFor(DefaultAudioPlayerService)
+final defaultAudioPlayerServiceProvider =
+    NotifierProvider<DefaultAudioPlayerService, AudioPlayerState?>.internal(
+  DefaultAudioPlayerService.new,
+  name: r'defaultAudioPlayerServiceProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
       ? null
-      : _$mobileAudioPlayerServiceHash,
+      : _$defaultAudioPlayerServiceHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
 
-typedef _$MobileAudioPlayerService = Notifier<AudioPlayerState?>;
+typedef _$DefaultAudioPlayerService = Notifier<AudioPlayerState?>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

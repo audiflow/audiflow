@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 
-import 'package:audiflow/features/browser/episode/data/episode_info.dart';
+import 'package:audiflow/features/browser/episode/data/episode_stats_provider.dart';
 import 'package:audiflow/features/player/service/audio_player_service.dart';
 import 'package:audiflow/localization/generated/l10n.dart';
 import 'package:flutter/material.dart';
@@ -38,7 +38,9 @@ class SmallPlayButton extends ConsumerWidget {
         },
       ),
     );
-    final stats = ref.watch(episodeInfoProvider(episode)).value?.stats;
+    final stats = ref
+        .watch(episodeStatsProvider(eid: episode.id))
+        .mapOrNull(data: (data) => data.valueOrNull);
     final duration = episode.duration ?? Duration.zero;
     final position = playerPosition ?? stats?.position ?? Duration.zero;
     final finished = duration - position <= Duration.zero;

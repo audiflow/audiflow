@@ -1,5 +1,5 @@
 import 'package:audiflow/features/browser/chart/ui/tile_image.dart';
-import 'package:audiflow/features/browser/episode/data/episode_info.dart';
+import 'package:audiflow/features/browser/podcast/data/podcast_provider.dart';
 import 'package:audiflow/features/feed/model/model.dart';
 import 'package:audiflow/routing/app_router.dart';
 import 'package:flutter/material.dart';
@@ -23,11 +23,11 @@ class PlayerEpisodeTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final thumbnailUrl = episode.imageUrl ?? '';
-    final state = ref.watch(episodeInfoProvider(episode));
+    final podcast = ref.watch(podcastProvider(episode.pid)).valueOrNull;
     return Material(
       child: InkWell(
         onTap: () {
-          if (state.valueOrNull?.podcast != null) {
+          if (podcast != null) {
             ref.read(appRouterProvider.notifier).pushEpisodeDetail(
                   episode: episode,
                   heroPrefix: 'episodeHero',
@@ -42,7 +42,7 @@ class PlayerEpisodeTile extends ConsumerWidget {
             children: [
               TileImage(url: thumbnailUrl, size: 50),
               const SizedBox(width: 12),
-              Expanded(child: _Content(episode)),
+              Expanded(child: _Content(podcast, episode)),
             ],
           ),
         ),
@@ -52,14 +52,14 @@ class PlayerEpisodeTile extends ConsumerWidget {
 }
 
 class _Content extends ConsumerWidget {
-  const _Content(this.episode);
+  const _Content(this.podcast, this.episode);
 
+  final Podcast? podcast;
   final Episode episode;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final episodeInfo = ref.watch(episodeInfoProvider(episode));
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -73,7 +73,7 @@ class _Content extends ConsumerWidget {
         ),
         const SizedBox(height: 6),
         Text(
-          episodeInfo.valueOrNull?.podcast.title ?? '',
+          podcast?.title ?? '',
           overflow: TextOverflow.ellipsis,
           softWrap: false,
           style: Theme.of(context)

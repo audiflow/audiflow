@@ -1,5 +1,4 @@
-import 'package:audiflow/core/types.dart';
-import 'package:audiflow/features/browser/episode/data/episode_info.dart';
+import 'package:audiflow/events/play_button_notification.dart';
 import 'package:audiflow/features/player/service/audio_player_service.dart';
 import 'package:audiflow/localization/generated/l10n.dart';
 import 'package:flutter/material.dart';
@@ -21,11 +20,9 @@ class AnimatedPlayButton extends HookConsumerWidget {
       duration: const Duration(milliseconds: 300),
     );
 
-    final episodeState = ref.watch(episodeInfoProvider(episode));
     final playerState = ref.watch(audioPlayerServiceProvider);
 
-    final isTarget =
-        episodeState.hasValue && playerState?.episode.guid == episode.guid;
+    final isTarget = playerState?.episode.guid == episode.guid;
     final playing = isTarget && playerState?.phase == PlayerPhase.play;
     final buffering =
         isTarget && playerState?.audioState == AudioState.buffering;

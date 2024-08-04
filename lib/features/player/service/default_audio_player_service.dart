@@ -1,16 +1,15 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:audiflow/common/data/connectivity.dart';
 import 'package:audiflow/core/environment.dart';
+import 'package:audiflow/events/audio_player_event.dart';
 import 'package:audiflow/features/download/data/download_repository.dart';
 import 'package:audiflow/features/download/model/downloadable.dart';
 import 'package:audiflow/features/download/service/download_path.dart';
-import 'package:audiflow/features/feed/model/model.dart';
 import 'package:audiflow/features/player/service/audio_player_service.dart';
 import 'package:audiflow/features/preference/data/app_preference_repository.dart';
 import 'package:audiflow/features/preference/model/app_preference.dart';
-import 'package:audiflow/events/audio_player_event.dart';
-import 'package:audiflow/common/data/connectivity.dart';
 import 'package:audiflow/services/error/error_manager.dart';
 import 'package:audiflow/utils/duration.dart';
 import 'package:audiflow/utils/logger.dart';
@@ -20,7 +19,7 @@ import 'package:just_audio/just_audio.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:rxdart/rxdart.dart';
 
-part 'mobile_audio_player_service.g.dart';
+part 'default_audio_player_service.g.dart';
 
 /// This is the default implementation of [AudioPlayerService].
 ///
@@ -29,7 +28,7 @@ part 'mobile_audio_player_service.g.dart';
 /// playback is handled by the [just_audio](https://pub.dev/packages/just_audio)
 /// package.
 @Riverpod(keepAlive: true)
-class MobileAudioPlayerService extends _$MobileAudioPlayerService
+class DefaultAudioPlayerService extends _$DefaultAudioPlayerService
     implements AudioPlayerService {
   DownloadRepository get _downloadRepository =>
       ref.read(downloadRepositoryProvider);
@@ -103,15 +102,19 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
   }
 
   @override
-  Future<void> play() {
-    if (state != null) {
-      return loadEpisode(
-        episode: state!.episode,
-        position: state!.position,
-        autoPlay: true,
-      );
-    } else {
+  FutureOr<void> play() {
+    if (state?.phase == PlayerPhase.pause) {
+      state = state!.copyWith(phase: PlayerPhase.play);
       return _audioHandler.play();
+    }
+
+    if (state != null) {
+    //   return loadEpisode(
+    //     episode: state!.episode,
+    //     position: state!.position,
+    //     autoPlay: true,
+    //   );
+    // } else {
     }
   }
 
@@ -123,6 +126,15 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
     }
 
     await _audioHandler.stop();
+  }
+
+  @override
+  Future<void> togglePlayPause()async {
+    if (state?.phase == PlayerPhase.play) {
+      return pause();
+    } else if (state?.phase == PlayerPhase.pause) {
+      return play();
+    }
   }
 
   /// Called by the client (UI), or when we move to a different episode within
@@ -207,6 +219,14 @@ class MobileAudioPlayerService extends _$MobileAudioPlayerService
 
   @override
   Future<void> pause({bool interrupted = false}) async {
+    if (state?.phase == PlayerPhase.play) {
+      state = state!.copyWith(
+        phase: PlayerPhase.pause,
+        interrupted: interrupted,
+      );
+      return _audioHandler.pause();
+    }
+
     if (state != null) {
       state = state!.copyWith(
         phase: PlayerPhase.pause,

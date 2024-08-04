@@ -36,7 +36,7 @@ import 'package:audiflow/features/feed/data/isar_rss_repository.dart';
 import 'package:audiflow/features/feed/data/podcast_repository.dart';
 import 'package:audiflow/features/feed/data/rss_repository.dart';
 import 'package:audiflow/features/player/service/audio_player_service.dart';
-import 'package:audiflow/features/player/service/mobile_audio_player_service.dart';
+import 'package:audiflow/features/player/service/default_audio_player_service.dart';
 import 'package:audiflow/features/preference/data/app_preference_repository.dart';
 import 'package:audiflow/features/preference/data/isar_app_preference_repository.dart';
 import 'package:audiflow/features/queue/data/isar_queue_repository.dart';
@@ -88,7 +88,7 @@ void main() async {
       isarRepositoryProvider.overrideWithValue(isar),
       sharedPreferencesProvider.overrideWithValue(preferences),
       // app
-      audioPlayerServiceProvider.overrideWith(MobileAudioPlayerService.new),
+      audioPlayerServiceProvider.overrideWith(DefaultAudioPlayerService.new),
       downloadManagerProvider.overrideWith(MobileDownloaderManager.new),
       downloadRepositoryProvider
           .overrideWithValue(IsarDownloadRepository(isar)),

@@ -1,10 +1,8 @@
-import 'package:audiflow/core/types.dart';
-import 'package:audiflow/entities/entities.dart';
+import 'package:audiflow/events/play_button_notification.dart';
 import 'package:audiflow/features/queue/model/queue.dart';
 import 'package:audiflow/features/queue/service/queue_list_provider.dart';
 import 'package:audiflow/features/queue/service/queue_manager.dart';
 import 'package:audiflow/localization/generated/l10n.dart';
-import 'package:audiflow/services/podcast/podcast_service.dart';
 import 'package:audiflow/ui/podcast/episode_brief_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

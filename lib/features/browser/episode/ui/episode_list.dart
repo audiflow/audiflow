@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:audiflow/constants/types.dart';
-import 'package:audiflow/core/types.dart';
 import 'package:audiflow/features/browser/episode/ui/episode_tile.dart';
 import 'package:audiflow/features/feed/model/model.dart';
 import 'package:flutter/material.dart';
@@ -42,17 +41,11 @@ class EpisodeList extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return NotificationListener<PlayButtonTappedNotification>(
-      onNotification: (notification) {
-        // episodesGroup.togglePlayState(episode: notification.episode);
-        return false;
-      },
-      child: SliverList(
-        delegate: SliverChildBuilderDelegate(
-          (context, index) => _episodeTileAt(context, ref, index),
-          childCount: episodeCount,
-          addAutomaticKeepAlives: false,
-        ),
+    return SliverList(
+      delegate: SliverChildBuilderDelegate(
+        (context, index) => _episodeTileAt(context, ref, index),
+        childCount: episodeCount,
+        addAutomaticKeepAlives: false,
       ),
     );
   }

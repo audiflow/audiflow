@@ -1,10 +1,10 @@
 import 'package:audiflow/common/ui/fill_remaining_error.dart';
 import 'package:audiflow/constants/types.dart';
-import 'package:audiflow/core/types.dart';
+import 'package:audiflow/events/play_button_notification.dart';
 import 'package:audiflow/features/browser/episode/ui/episode_tile.dart';
+import 'package:audiflow/features/browser/episode/ui/episodes_group.dart';
 import 'package:audiflow/features/browser/episode/ui/episodes_list_event.dart';
 import 'package:audiflow/features/feed/model/model.dart';
-import 'package:audiflow/features/browser/episode/ui/episodes_group.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';

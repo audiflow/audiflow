@@ -1,3 +1,4 @@
+import 'package:audiflow/events/play_button_notification.dart';
 import 'package:audiflow/features/browser/common/ui/expandable_text_block.dart';
 import 'package:audiflow/features/browser/episode/ui/episode_list.dart';
 import 'package:audiflow/features/browser/episode/ui/episodes_list_event.dart';
@@ -190,13 +191,20 @@ class _PodcastDetailsPage extends HookConsumerWidget {
                   if (pageState != null &&
                       0 < (podcastStats?.totalEpisodes ?? 0))
                     if (viewMode == PodcastDetailsPageViewMode.episodes)
-                      EpisodeList(
-                        getEpisodeAt: (index) async =>
-                            podcastEpisodesController!.getEpisodeAt(index),
-                        scrollController: scrollController,
-                        episodeCount:
-                            podcastEpisodesState!.valueOrNull?.loadedCount ?? 0,
-                        parentThumbnailUrl: podcast?.image,
+                      NotificationListener<PlayButtonTappedNotification>(
+                        onNotification: (notification) {
+                          pageController!.togglePlayState(notification.episode);
+                          return false;
+                        },
+                        child: EpisodeList(
+                          getEpisodeAt: (index) async =>
+                              podcastEpisodesController!.getEpisodeAt(index),
+                          scrollController: scrollController,
+                          episodeCount:
+                              podcastEpisodesState!.valueOrNull?.loadedCount ??
+                                  0,
+                          parentThumbnailUrl: podcast?.image,
+                        ),
                       )
                     else if (viewMode == PodcastDetailsPageViewMode.seasons)
                       SeasonList(podcast: podcast!),
