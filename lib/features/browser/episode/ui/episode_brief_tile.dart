@@ -1,8 +1,8 @@
-import 'package:audiflow/core/types.dart';
-import 'package:audiflow/entities/entities.dart';
-import 'package:audiflow/ui/controllers/episode_info.dart';
-import 'package:audiflow/ui/podcast/episode_date.dart';
-import 'package:audiflow/ui/widgets/tile_image.dart';
+import 'package:audiflow/events/play_button_notification.dart';
+import 'package:audiflow/features/browser/chart/ui/tile_image.dart';
+import 'package:audiflow/features/browser/episode/ui/episode_date.dart';
+import 'package:audiflow/features/browser/podcast/data/podcast_provider.dart';
+import 'package:audiflow/features/feed/model/model.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
@@ -11,8 +11,6 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 ///
 /// It can then be expanded to present addition information about the episode
 /// and further controls.
-///
-
 class EpisodeBriefTile extends HookConsumerWidget {
   const EpisodeBriefTile({
     super.key,
@@ -27,9 +25,8 @@ class EpisodeBriefTile extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final episodeInfo = ref.watch(episodeInfoProvider(episode));
-    final thumbnailUrl =
-        episodeInfo.hasValue ? episodeInfo.value!.podcast.image : '';
+    final podcast = ref.watch(podcastProvider(episode.pid));
+    final thumbnailUrl = episode.imageUrl ?? podcast.valueOrNull?.image ?? '';
 
     return Material(
       child: InkWell(
