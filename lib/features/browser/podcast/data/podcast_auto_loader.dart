@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:audiflow/core/exception/app_exception.dart';
 import 'package:audiflow/events/podcast_event.dart';
+import 'package:audiflow/exceptions/app_exception.dart';
 import 'package:audiflow/features/feed/data/podcast_repository.dart';
 import 'package:audiflow/features/feed/model/model.dart';
 import 'package:audiflow/features/feed/service/podcast_feed_loader_igniter.dart';
@@ -27,7 +27,7 @@ class PodcastAutoLoader extends _$PodcastAutoLoader {
 
     ref.onCancel(() {
       if (!_completer.isCompleted) {
-        _completer.completeError(NotFoundException());
+        _completer.completeError(const NotFoundException());
       }
     });
 

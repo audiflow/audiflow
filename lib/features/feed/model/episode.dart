@@ -16,6 +16,7 @@ class Episode implements Comparable<Episode> {
     required this.guid,
     required this.contentUrl,
     required this.title,
+    required this.ordinal,
     this.author,
     this.link,
     this.publicationDate,
@@ -28,11 +29,16 @@ class Episode implements Comparable<Episode> {
     this.type = EpisodeType.full,
   });
 
-  factory Episode.fromChannelItem(int pid, ChannelItemValues item) {
+  factory Episode.fromChannelItem({
+    required int pid,
+    required int ordinal,
+    required ChannelItemValues item,
+  }) {
     return Episode(
       pid: pid,
       guid: item.guid,
       contentUrl: item.enclosure.url,
+      ordinal: ordinal,
       title: removeHtmlPadding(item.title),
       author: item.author?.replaceAll('\n', ', ').trim() ?? '',
       link: item.link,
@@ -52,8 +58,11 @@ class Episode implements Comparable<Episode> {
   Id get id => idFrom(guid);
 
   /// The Isar ID of the parent podcast.
-  @Index()
+  @Index(composite: [CompositeIndex('ordinal')])
   final int pid;
+
+  /// The ordinal number of the episode.
+  final int ordinal;
 
   /// The URL of the media file.
   final String contentUrl;

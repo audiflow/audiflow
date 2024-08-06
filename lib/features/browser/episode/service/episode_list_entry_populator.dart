@@ -238,10 +238,11 @@ class _Worker {
       _LoadedMessage(total: total, loadedCount: loadedCount),
     );
 
+    var lastOrdinal = episodes.last.ordinal;
     while (!_isCancelled() && loadedCount < total) {
       episodes = await _findEpisodes(
         limit: _batchReadCount,
-        offset: loadedCount,
+        lastOrdinal: lastOrdinal,
       );
       await _saveEpisodeEntries(episodes, baseIndex: loadedCount);
       loadedCount += episodes.length;
@@ -255,20 +256,18 @@ class _Worker {
       if (episodes.length < _batchReadCount) {
         break;
       }
+      lastOrdinal = episodes.last.ordinal;
     }
   }
 
   Future<List<Episode>> _findEpisodes({
     required int limit,
-    DateTime? lastPubDate,
-    int offset = 0,
+    int? lastOrdinal,
   }) {
-    return _episodeRepository.findEpisodesBy(
+    return _episodeRepository.queryEpisodes(
       pid: _pid,
-      lastPubDate: lastPubDate,
-      sortBy: EpisodeSortBy.pubDate,
+      lastOrdinal: lastOrdinal,
       ascending: _ascending,
-      offset: offset,
       limit: limit,
     );
   }
@@ -392,10 +391,11 @@ class _Worker {
       return;
     }
 
+    var lastOrdinal = episodes.last.ordinal;
     while (!_isCancelled() && loadedCount < total) {
       episodes = await _findUnplayedEpisodes(
         limit: _batchReadCount,
-        offset: loadedCount,
+        lastOrdinal: lastOrdinal,
       );
       await _saveEpisodeEntries(episodes, baseIndex: loadedCount);
       loadedCount += episodes.length;
@@ -410,24 +410,25 @@ class _Worker {
         break;
       }
     }
+    lastOrdinal = episodes.last.ordinal;
   }
 
   Future<List<Episode>> _findUnplayedEpisodes({
     required int limit,
-    int offset = 0,
+    int? lastOrdinal,
   }) async {
     final result = <Episode>[];
     var episodes = <Episode>[];
-    var n = 0;
+    var ordinal = lastOrdinal;
     while (result.length < limit) {
       episodes = await _findEpisodes(
         limit: limit,
-        offset: offset + n,
+        lastOrdinal: ordinal,
       );
       if (episodes.isEmpty) {
         break;
       }
-      n += episodes.length;
+      ordinal = episodes.last.ordinal;
       final statsList = await _statsRepository
           .findEpisodeStatsList(episodes.map((e) => e.id));
       final filtered = episodes

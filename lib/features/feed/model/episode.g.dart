@@ -62,28 +62,33 @@ const EpisodeSchema = CollectionSchema(
       name: r'link',
       type: IsarType.string,
     ),
-    r'pid': PropertySchema(
+    r'ordinal': PropertySchema(
       id: 9,
+      name: r'ordinal',
+      type: IsarType.long,
+    ),
+    r'pid': PropertySchema(
+      id: 10,
       name: r'pid',
       type: IsarType.long,
     ),
     r'publicationDate': PropertySchema(
-      id: 10,
+      id: 11,
       name: r'publicationDate',
       type: IsarType.dateTime,
     ),
     r'season': PropertySchema(
-      id: 11,
+      id: 12,
       name: r'season',
       type: IsarType.long,
     ),
     r'title': PropertySchema(
-      id: 12,
+      id: 13,
       name: r'title',
       type: IsarType.string,
     ),
     r'type': PropertySchema(
-      id: 13,
+      id: 14,
       name: r'type',
       type: IsarType.byte,
       enumMap: _EpisodetypeEnumValueMap,
@@ -95,14 +100,19 @@ const EpisodeSchema = CollectionSchema(
   deserializeProp: _episodeDeserializeProp,
   idName: r'id',
   indexes: {
-    r'pid': IndexSchema(
-      id: 2970402811525951487,
-      name: r'pid',
+    r'pid_ordinal': IndexSchema(
+      id: 1952239099776043382,
+      name: r'pid_ordinal',
       unique: false,
       replace: false,
       properties: [
         IndexPropertySchema(
           name: r'pid',
+          type: IndexType.value,
+          caseSensitive: false,
+        ),
+        IndexPropertySchema(
+          name: r'ordinal',
           type: IndexType.value,
           caseSensitive: false,
         )
@@ -239,11 +249,12 @@ void _episodeSerialize(
   writer.writeString(offsets[6], object.guid);
   writer.writeString(offsets[7], object.imageUrl);
   writer.writeString(offsets[8], object.link);
-  writer.writeLong(offsets[9], object.pid);
-  writer.writeDateTime(offsets[10], object.publicationDate);
-  writer.writeLong(offsets[11], object.season);
-  writer.writeString(offsets[12], object.title);
-  writer.writeByte(offsets[13], object.type.index);
+  writer.writeLong(offsets[9], object.ordinal);
+  writer.writeLong(offsets[10], object.pid);
+  writer.writeDateTime(offsets[11], object.publicationDate);
+  writer.writeLong(offsets[12], object.season);
+  writer.writeString(offsets[13], object.title);
+  writer.writeByte(offsets[14], object.type.index);
 }
 
 Episode _episodeDeserialize(
@@ -262,11 +273,12 @@ Episode _episodeDeserialize(
     guid: reader.readString(offsets[6]),
     imageUrl: reader.readStringOrNull(offsets[7]),
     link: reader.readStringOrNull(offsets[8]),
-    pid: reader.readLong(offsets[9]),
-    publicationDate: reader.readDateTimeOrNull(offsets[10]),
-    season: reader.readLongOrNull(offsets[11]),
-    title: reader.readString(offsets[12]),
-    type: _EpisodetypeValueEnumMap[reader.readByteOrNull(offsets[13])] ??
+    ordinal: reader.readLong(offsets[9]),
+    pid: reader.readLong(offsets[10]),
+    publicationDate: reader.readDateTimeOrNull(offsets[11]),
+    season: reader.readLongOrNull(offsets[12]),
+    title: reader.readString(offsets[13]),
+    type: _EpisodetypeValueEnumMap[reader.readByteOrNull(offsets[14])] ??
         EpisodeType.full,
   );
   return object;
@@ -300,12 +312,14 @@ P _episodeDeserializeProp<P>(
     case 9:
       return (reader.readLong(offset)) as P;
     case 10:
-      return (reader.readDateTimeOrNull(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 11:
-      return (reader.readLongOrNull(offset)) as P;
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 12:
-      return (reader.readString(offset)) as P;
+      return (reader.readLongOrNull(offset)) as P;
     case 13:
+      return (reader.readString(offset)) as P;
+    case 14:
       return (_EpisodetypeValueEnumMap[reader.readByteOrNull(offset)] ??
           EpisodeType.full) as P;
     default:
@@ -400,10 +414,10 @@ extension EpisodeQueryWhereSort on QueryBuilder<Episode, Episode, QWhere> {
     });
   }
 
-  QueryBuilder<Episode, Episode, QAfterWhere> anyPid() {
+  QueryBuilder<Episode, Episode, QAfterWhere> anyPidOrdinal() {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
-        const IndexWhereClause.any(indexName: r'pid'),
+        const IndexWhereClause.any(indexName: r'pid_ordinal'),
       );
     });
   }
@@ -499,27 +513,29 @@ extension EpisodeQueryWhere on QueryBuilder<Episode, Episode, QWhereClause> {
     });
   }
 
-  QueryBuilder<Episode, Episode, QAfterWhereClause> pidEqualTo(int pid) {
+  QueryBuilder<Episode, Episode, QAfterWhereClause> pidEqualToAnyOrdinal(
+      int pid) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'pid',
+        indexName: r'pid_ordinal',
         value: [pid],
       ));
     });
   }
 
-  QueryBuilder<Episode, Episode, QAfterWhereClause> pidNotEqualTo(int pid) {
+  QueryBuilder<Episode, Episode, QAfterWhereClause> pidNotEqualToAnyOrdinal(
+      int pid) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'pid',
+              indexName: r'pid_ordinal',
               lower: [],
               upper: [pid],
               includeUpper: false,
             ))
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'pid',
+              indexName: r'pid_ordinal',
               lower: [pid],
               includeLower: false,
               upper: [],
@@ -527,13 +543,13 @@ extension EpisodeQueryWhere on QueryBuilder<Episode, Episode, QWhereClause> {
       } else {
         return query
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'pid',
+              indexName: r'pid_ordinal',
               lower: [pid],
               includeLower: false,
               upper: [],
             ))
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'pid',
+              indexName: r'pid_ordinal',
               lower: [],
               upper: [pid],
               includeUpper: false,
@@ -542,13 +558,13 @@ extension EpisodeQueryWhere on QueryBuilder<Episode, Episode, QWhereClause> {
     });
   }
 
-  QueryBuilder<Episode, Episode, QAfterWhereClause> pidGreaterThan(
+  QueryBuilder<Episode, Episode, QAfterWhereClause> pidGreaterThanAnyOrdinal(
     int pid, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'pid',
+        indexName: r'pid_ordinal',
         lower: [pid],
         includeLower: include,
         upper: [],
@@ -556,13 +572,13 @@ extension EpisodeQueryWhere on QueryBuilder<Episode, Episode, QWhereClause> {
     });
   }
 
-  QueryBuilder<Episode, Episode, QAfterWhereClause> pidLessThan(
+  QueryBuilder<Episode, Episode, QAfterWhereClause> pidLessThanAnyOrdinal(
     int pid, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'pid',
+        indexName: r'pid_ordinal',
         lower: [],
         upper: [pid],
         includeUpper: include,
@@ -570,7 +586,7 @@ extension EpisodeQueryWhere on QueryBuilder<Episode, Episode, QWhereClause> {
     });
   }
 
-  QueryBuilder<Episode, Episode, QAfterWhereClause> pidBetween(
+  QueryBuilder<Episode, Episode, QAfterWhereClause> pidBetweenAnyOrdinal(
     int lowerPid,
     int upperPid, {
     bool includeLower = true,
@@ -578,10 +594,104 @@ extension EpisodeQueryWhere on QueryBuilder<Episode, Episode, QWhereClause> {
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'pid',
+        indexName: r'pid_ordinal',
         lower: [lowerPid],
         includeLower: includeLower,
         upper: [upperPid],
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterWhereClause> pidOrdinalEqualTo(
+      int pid, int ordinal) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'pid_ordinal',
+        value: [pid, ordinal],
+      ));
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterWhereClause> pidEqualToOrdinalNotEqualTo(
+      int pid, int ordinal) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'pid_ordinal',
+              lower: [pid],
+              upper: [pid, ordinal],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'pid_ordinal',
+              lower: [pid, ordinal],
+              includeLower: false,
+              upper: [pid],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'pid_ordinal',
+              lower: [pid, ordinal],
+              includeLower: false,
+              upper: [pid],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'pid_ordinal',
+              lower: [pid],
+              upper: [pid, ordinal],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterWhereClause>
+      pidEqualToOrdinalGreaterThan(
+    int pid,
+    int ordinal, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'pid_ordinal',
+        lower: [pid, ordinal],
+        includeLower: include,
+        upper: [pid],
+      ));
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterWhereClause> pidEqualToOrdinalLessThan(
+    int pid,
+    int ordinal, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'pid_ordinal',
+        lower: [pid],
+        upper: [pid, ordinal],
+        includeUpper: include,
+      ));
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterWhereClause> pidEqualToOrdinalBetween(
+    int pid,
+    int lowerOrdinal,
+    int upperOrdinal, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'pid_ordinal',
+        lower: [pid, lowerOrdinal],
+        includeLower: includeLower,
+        upper: [pid, upperOrdinal],
         includeUpper: includeUpper,
       ));
     });
@@ -2008,6 +2118,59 @@ extension EpisodeQueryFilter
     });
   }
 
+  QueryBuilder<Episode, Episode, QAfterFilterCondition> ordinalEqualTo(
+      int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'ordinal',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterFilterCondition> ordinalGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'ordinal',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterFilterCondition> ordinalLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'ordinal',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterFilterCondition> ordinalBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'ordinal',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
   QueryBuilder<Episode, Episode, QAfterFilterCondition> pidEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -2672,6 +2835,18 @@ extension EpisodeQuerySortBy on QueryBuilder<Episode, Episode, QSortBy> {
     });
   }
 
+  QueryBuilder<Episode, Episode, QAfterSortBy> sortByOrdinal() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'ordinal', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterSortBy> sortByOrdinalDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'ordinal', Sort.desc);
+    });
+  }
+
   QueryBuilder<Episode, Episode, QAfterSortBy> sortByPid() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'pid', Sort.asc);
@@ -2855,6 +3030,18 @@ extension EpisodeQuerySortThenBy
     });
   }
 
+  QueryBuilder<Episode, Episode, QAfterSortBy> thenByOrdinal() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'ordinal', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterSortBy> thenByOrdinalDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'ordinal', Sort.desc);
+    });
+  }
+
   QueryBuilder<Episode, Episode, QAfterSortBy> thenByPid() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'pid', Sort.asc);
@@ -2978,6 +3165,12 @@ extension EpisodeQueryWhereDistinct
     });
   }
 
+  QueryBuilder<Episode, Episode, QDistinct> distinctByOrdinal() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'ordinal');
+    });
+  }
+
   QueryBuilder<Episode, Episode, QDistinct> distinctByPid() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'pid');
@@ -3069,6 +3262,12 @@ extension EpisodeQueryProperty
   QueryBuilder<Episode, String?, QQueryOperations> linkProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'link');
+    });
+  }
+
+  QueryBuilder<Episode, int, QQueryOperations> ordinalProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'ordinal');
     });
   }
 

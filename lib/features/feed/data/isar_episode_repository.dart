@@ -18,46 +18,36 @@ class IsarEpisodeRepository implements EpisodeRepository {
   }
 
   @override
-  Future<List<Episode>> findEpisodesBy({
+  Future<List<Episode>> queryEpisodes({
     required Id pid,
-    EpisodeSortBy? sortBy,
-    DateTime? lastPubDate,
+    int? lastOrdinal,
     bool ascending = false,
-    int? offset,
     int? limit,
   }) async {
     return isar.episodes
         .where()
-        .filter()
-        .pidEqualTo(pid)
         .optional(
-          lastPubDate != null,
-          (q) => ascending
-              ? q.publicationDateGreaterThan(lastPubDate)
-              : q.publicationDateLessThan(lastPubDate),
-        )
+            true,
+            (q) => lastOrdinal == null
+                ? q.pidEqualToAnyOrdinal(pid)
+                : ascending
+                    ? q.pidEqualToOrdinalGreaterThan(pid, lastOrdinal)
+                    : q.pidEqualToOrdinalLessThan(pid, lastOrdinal))
         .optional(
-          sortBy != null,
-          (q) => ascending
-              ? q.sortByPublicationDate()
-              : q.sortByPublicationDateDesc(),
+          true,
+          (q) => ascending ? q.sortByOrdinal() : q.sortByOrdinalDesc(),
         )
-        .optional(offset != null, (q) => q.offset(offset!))
         .optional(limit != null, (q) => q.limit(limit!))
         .findAll();
   }
 
   @override
-  Future<List<Episode>> findLatestEpisodes(
-    Id pid, {
-    DateTime? lastPubDate,
-    required int limit,
-  }) async {
-    var filter = isar.episodes.where().filter().pidEqualTo(pid);
-    if (lastPubDate != null) {
-      filter = filter.publicationDateGreaterThan(lastPubDate);
-    }
-    return filter.sortByPublicationDateDesc().limit(limit).findAll();
+  Future<Episode?> findLatestEpisode(Id pid) async {
+    return isar.episodes
+        .where()
+        .pidEqualToAnyOrdinal(pid)
+        .sortByOrdinalDesc()
+        .findFirst();
   }
 
   @override

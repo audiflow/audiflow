@@ -4,27 +4,19 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'episode_repository.g.dart';
 
-enum EpisodeSortBy { pubDate }
-
 abstract class EpisodeRepository {
   Future<Episode?> findEpisode(Id id);
 
   Future<List<Episode?>> findEpisodes(Iterable<Id> ids);
 
-  Future<List<Episode>> findEpisodesBy({
+  Future<List<Episode>> queryEpisodes({
     required Id pid,
-    EpisodeSortBy? sortBy,
-    DateTime? lastPubDate,
+    int? lastOrdinal,
     bool ascending = false,
-    int? offset,
     int? limit,
   });
 
-  Future<List<Episode>> findLatestEpisodes(
-    Id pid, {
-    DateTime? lastPubDate,
-    required int limit,
-  });
+  Future<Episode?> findLatestEpisode(Id pid);
 
   Future<void> saveEpisode(Episode episode);
 
