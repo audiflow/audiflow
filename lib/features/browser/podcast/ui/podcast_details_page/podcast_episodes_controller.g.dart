@@ -7,7 +7,7 @@ part of 'podcast_episodes_controller.dart';
 // **************************************************************************
 
 String _$podcastEpisodesControllerHash() =>
-    r'444f2668e5deb220351d6d37b32013f4af9c4c4e';
+    r'd95b1aac0c8f3b408e3ae8e908c69eb57cbef278';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -36,12 +36,14 @@ abstract class _$PodcastEpisodesController
   late final EpisodeFilterMode filterMode;
   late final bool ascending;
   late final int episodesPerPage;
+  late final EpisodeListEntryRole role;
 
   FutureOr<EpisodeListState> build({
     required int pid,
     required EpisodeFilterMode filterMode,
     required bool ascending,
     int episodesPerPage = 10,
+    EpisodeListEntryRole role = EpisodeListEntryRole.page,
   });
 }
 
@@ -61,12 +63,14 @@ class PodcastEpisodesControllerFamily
     required EpisodeFilterMode filterMode,
     required bool ascending,
     int episodesPerPage = 10,
+    EpisodeListEntryRole role = EpisodeListEntryRole.page,
   }) {
     return PodcastEpisodesControllerProvider(
       pid: pid,
       filterMode: filterMode,
       ascending: ascending,
       episodesPerPage: episodesPerPage,
+      role: role,
     );
   }
 
@@ -79,6 +83,7 @@ class PodcastEpisodesControllerFamily
       filterMode: provider.filterMode,
       ascending: provider.ascending,
       episodesPerPage: provider.episodesPerPage,
+      role: provider.role,
     );
   }
 
@@ -107,12 +112,14 @@ class PodcastEpisodesControllerProvider
     required EpisodeFilterMode filterMode,
     required bool ascending,
     int episodesPerPage = 10,
+    EpisodeListEntryRole role = EpisodeListEntryRole.page,
   }) : this._internal(
           () => PodcastEpisodesController()
             ..pid = pid
             ..filterMode = filterMode
             ..ascending = ascending
-            ..episodesPerPage = episodesPerPage,
+            ..episodesPerPage = episodesPerPage
+            ..role = role,
           from: podcastEpisodesControllerProvider,
           name: r'podcastEpisodesControllerProvider',
           debugGetCreateSourceHash:
@@ -126,6 +133,7 @@ class PodcastEpisodesControllerProvider
           filterMode: filterMode,
           ascending: ascending,
           episodesPerPage: episodesPerPage,
+          role: role,
         );
 
   PodcastEpisodesControllerProvider._internal(
@@ -139,12 +147,14 @@ class PodcastEpisodesControllerProvider
     required this.filterMode,
     required this.ascending,
     required this.episodesPerPage,
+    required this.role,
   }) : super.internal();
 
   final int pid;
   final EpisodeFilterMode filterMode;
   final bool ascending;
   final int episodesPerPage;
+  final EpisodeListEntryRole role;
 
   @override
   FutureOr<EpisodeListState> runNotifierBuild(
@@ -155,6 +165,7 @@ class PodcastEpisodesControllerProvider
       filterMode: filterMode,
       ascending: ascending,
       episodesPerPage: episodesPerPage,
+      role: role,
     );
   }
 
@@ -167,7 +178,8 @@ class PodcastEpisodesControllerProvider
           ..pid = pid
           ..filterMode = filterMode
           ..ascending = ascending
-          ..episodesPerPage = episodesPerPage,
+          ..episodesPerPage = episodesPerPage
+          ..role = role,
         from: from,
         name: null,
         dependencies: null,
@@ -177,6 +189,7 @@ class PodcastEpisodesControllerProvider
         filterMode: filterMode,
         ascending: ascending,
         episodesPerPage: episodesPerPage,
+        role: role,
       ),
     );
   }
@@ -193,7 +206,8 @@ class PodcastEpisodesControllerProvider
         other.pid == pid &&
         other.filterMode == filterMode &&
         other.ascending == ascending &&
-        other.episodesPerPage == episodesPerPage;
+        other.episodesPerPage == episodesPerPage &&
+        other.role == role;
   }
 
   @override
@@ -203,6 +217,7 @@ class PodcastEpisodesControllerProvider
     hash = _SystemHash.combine(hash, filterMode.hashCode);
     hash = _SystemHash.combine(hash, ascending.hashCode);
     hash = _SystemHash.combine(hash, episodesPerPage.hashCode);
+    hash = _SystemHash.combine(hash, role.hashCode);
 
     return _SystemHash.finish(hash);
   }
@@ -221,6 +236,9 @@ mixin PodcastEpisodesControllerRef
 
   /// The parameter `episodesPerPage` of this provider.
   int get episodesPerPage;
+
+  /// The parameter `role` of this provider.
+  EpisodeListEntryRole get role;
 }
 
 class _PodcastEpisodesControllerProviderElement
@@ -238,6 +256,9 @@ class _PodcastEpisodesControllerProviderElement
   @override
   int get episodesPerPage =>
       (origin as PodcastEpisodesControllerProvider).episodesPerPage;
+  @override
+  EpisodeListEntryRole get role =>
+      (origin as PodcastEpisodesControllerProvider).role;
 }
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member
