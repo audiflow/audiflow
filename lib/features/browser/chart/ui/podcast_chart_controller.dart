@@ -1,12 +1,12 @@
 import 'dart:async';
 
 import 'package:audiflow/common/data/connectivity.dart';
+import 'package:audiflow/common/service/error_manager.dart';
 import 'package:audiflow/constants/country.dart';
-import 'package:audiflow/core/exception/app_exception.dart';
+import 'package:audiflow/exceptions/app_exception.dart';
 import 'package:audiflow/features/browser/common/data/podcast_api_repository.dart';
 import 'package:audiflow/features/browser/common/data/podcast_genres.dart';
 import 'package:audiflow/features/browser/common/model/itunes_chart_item.dart';
-import 'package:audiflow/services/error/error_manager.dart';
 import 'package:audiflow/utils/logger.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:audiflow/common/data/connectivity.dart';
+import 'package:audiflow/common/service/error_manager.dart';
 import 'package:audiflow/core/environment.dart';
 import 'package:audiflow/events/audio_player_event.dart';
 import 'package:audiflow/features/download/data/download_repository.dart';
@@ -10,7 +11,6 @@ import 'package:audiflow/features/download/service/download_path.dart';
 import 'package:audiflow/features/player/service/audio_player_service.dart';
 import 'package:audiflow/features/preference/data/app_preference_repository.dart';
 import 'package:audiflow/features/preference/model/app_preference.dart';
-import 'package:audiflow/services/error/error_manager.dart';
 import 'package:audiflow/utils/duration.dart';
 import 'package:audiflow/utils/logger.dart';
 import 'package:audio_service/audio_service.dart';

@@ -1,9 +1,9 @@
 import 'dart:async';
 
-import 'package:audiflow/core/exception/app_exception.dart';
+import 'package:audiflow/common/service/error_manager.dart';
+import 'package:audiflow/exceptions/app_exception.dart';
 import 'package:audiflow/features/browser/common/data/podcast_subscriptions.dart';
 import 'package:audiflow/features/feed/model/model.dart';
-import 'package:audiflow/services/error/error_manager.dart';
 import 'package:audiflow/utils/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:rxdart/rxdart.dart';

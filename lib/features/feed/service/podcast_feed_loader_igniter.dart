@@ -1,4 +1,4 @@
-import 'package:audiflow/core/exception/app_exception.dart';
+import 'package:audiflow/exceptions/app_exception.dart';
 import 'package:audiflow/features/feed/data/podcast_repository.dart';
 import 'package:audiflow/features/feed/service/podcast_feed_loader.dart';
 import 'package:audiflow/features/feed/service/podcast_service.dart';
@@ -45,7 +45,7 @@ class PodcastFeedLoaderIgniter extends _$PodcastFeedLoaderIgniter {
         .read(podcastServiceProvider)
         .findOrFetchFeedUrlBy(collectionId: collectionId);
     if (foundFeedUrl == null) {
-      throw NotFoundException();
+      throw const NotFoundException();
     }
 
     ref.listen(

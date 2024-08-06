@@ -1,11 +1,12 @@
+import 'package:audiflow/common/data/app_exception_notifier_provider.dart';
+import 'package:audiflow/common/ui/snack_bar_manager.dart';
 import 'package:audiflow/constants/color_schemes.g.dart';
-import 'package:audiflow/core/exception/index.dart';
+import 'package:audiflow/exceptions/app_exception.dart';
 import 'package:audiflow/features/preference/data/app_locale.dart';
 import 'package:audiflow/features/preference/data/app_preference_repository.dart';
 import 'package:audiflow/localization/generated/l10n.dart';
 import 'package:audiflow/localization/string_hardcoded.dart';
 import 'package:audiflow/routing/app_router.dart';
-import 'package:audiflow/common/ui/snack_bar_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
