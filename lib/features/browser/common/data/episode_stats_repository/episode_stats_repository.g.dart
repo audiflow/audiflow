@@ -1,27 +1,27 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'podcast_subscriptions.dart';
+part of 'episode_stats_repository.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$podcastSubscriptionsHash() =>
-    r'd4c0f90738794c9c161ab1cb01c26fd946eac4d0';
+String _$episodeStatsRepositoryHash() =>
+    r'021b16001eb16efdbe1c0b16df8bd1f8d9e05efb';
 
-/// See also [PodcastSubscriptions].
-@ProviderFor(PodcastSubscriptions)
-final podcastSubscriptionsProvider =
-    AsyncNotifierProvider<PodcastSubscriptions, List<Podcast>>.internal(
-  PodcastSubscriptions.new,
-  name: r'podcastSubscriptionsProvider',
+/// See also [episodeStatsRepository].
+@ProviderFor(episodeStatsRepository)
+final episodeStatsRepositoryProvider =
+    Provider<EpisodeStatsRepository>.internal(
+  episodeStatsRepository,
+  name: r'episodeStatsRepositoryProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
       ? null
-      : _$podcastSubscriptionsHash,
+      : _$episodeStatsRepositoryHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
 
-typedef _$PodcastSubscriptions = AsyncNotifier<List<Podcast>>;
+typedef EpisodeStatsRepositoryRef = ProviderRef<EpisodeStatsRepository>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member
