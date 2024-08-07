@@ -7,7 +7,7 @@ part of 'podcast_subscriptions.dart';
 // **************************************************************************
 
 String _$podcastSubscriptionsHash() =>
-    r'584f617e21147345364a577ea6835680b6ef3485';
+    r'9959a561488ae1d254686244f069240fec51fef7';
 
 /// See also [PodcastSubscriptions].
 @ProviderFor(PodcastSubscriptions)

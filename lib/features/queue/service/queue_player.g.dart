@@ -1,25 +1,24 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'error_manager.dart';
+part of 'queue_player.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$errorManagerHash() => r'51f340b2462239778d03e51337804e1eb4275400';
+String _$queuePlayerHash() => r'709d4dbdeef7a444f8ce655e2ee826179b1fbc38';
 
-/// See also [ErrorManager].
-@ProviderFor(ErrorManager)
-final errorManagerProvider =
-    StreamNotifierProvider<ErrorManager, AppException>.internal(
-  ErrorManager.new,
-  name: r'errorManagerProvider',
+/// See also [queuePlayer].
+@ProviderFor(queuePlayer)
+final queuePlayerProvider = Provider<QueuePlayer>.internal(
+  queuePlayer,
+  name: r'queuePlayerProvider',
   debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product') ? null : _$errorManagerHash,
+      const bool.fromEnvironment('dart.vm.product') ? null : _$queuePlayerHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
 
-typedef _$ErrorManager = StreamNotifier<AppException>;
+typedef QueuePlayerRef = ProviderRef<QueuePlayer>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

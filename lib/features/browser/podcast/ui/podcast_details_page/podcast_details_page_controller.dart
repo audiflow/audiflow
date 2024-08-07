@@ -4,6 +4,7 @@ import 'package:audiflow/features/browser/common/model/episode_filter_mode.dart'
 import 'package:audiflow/features/browser/common/model/season_filter_mode.dart';
 import 'package:audiflow/features/browser/podcast/model/podcast_details_page_model.dart';
 import 'package:audiflow/features/player/service/audio_player_service.dart';
+import 'package:audiflow/features/queue/service/queue_player.dart';
 import 'package:audiflow/utils/logger.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -115,17 +116,19 @@ class PodcastDetailsPageController extends _$PodcastDetailsPageController {
   }
 
   Future<void> togglePlayState(Episode episode) async {
-    logger.d('_audioPlayerState: $_audioPlayerState');
-    if (_audioPlayerState?.episode == episode) {
-      logger.d('togglePlayState episode=$episode');
+    if (_audioPlayerState?.episode.id == episode.id) {
       await _audioPlayerService.togglePlayPause();
-      return;
+    } else {
+      await ref.read(queuePlayerProvider).playFromPodcastDetailsPage(
+            start: episode,
+            filterMode: state.requireValue.episodeFilterMode,
+          );
+      await _audioPlayerService.loadEpisode(
+        episode: episode,
+        position: Duration.zero,
+        autoPlay: true,
+      );
     }
-    await _audioPlayerService.loadEpisode(
-      episode: episode,
-      position: Duration.zero,
-      autoPlay: true,
-    );
   }
 }
 

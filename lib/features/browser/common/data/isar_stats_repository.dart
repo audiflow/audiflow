@@ -55,6 +55,33 @@ class IsarStatsRepository implements StatsRepository {
   }
 
   @override
+  Future<List<EpisodeStats>> queryCompletedEpisodeStatsList({
+    required int pid,
+    int? lastOrdinal,
+    bool ascending = false,
+    int? limit,
+  }) async {
+    return isar.episodeStats
+        .where()
+        .optional(
+          true,
+          (q) => lastOrdinal == null
+              ? q.pidEqualToAnyOrdinal(pid)
+              : ascending
+                  ? q.pidEqualToOrdinalGreaterThan(pid, lastOrdinal)
+                  : q.pidEqualToOrdinalLessThan(pid, lastOrdinal),
+        )
+        .filter()
+        .completeCountGreaterThan(0)
+        .optional(
+          true,
+          (q) => ascending ? q.sortByOrdinal() : q.sortByOrdinalDesc(),
+        )
+        .optional(limit != null, (q) => q.limit(limit!))
+        .findAll();
+  }
+
+  @override
   Future<List<EpisodeStats?>> findEpisodeStatsListBy({
     required int pid,
     EpisodeStatsFilterBy? filterBy,
@@ -166,10 +193,11 @@ class IsarStatsRepository implements StatsRepository {
   Future<EpisodeStats> _updateEpisodeStats(
     EpisodeStatsUpdateParam param,
   ) async {
-    final stats = await isar.episodeStats.get(param.id);
+    final stats = await isar.episodeStats.get(param.eid);
     final newStats = EpisodeStats(
-      id: param.id,
+      eid: param.eid,
       pid: param.pid,
+      ordinal: param.ordinal,
       positionMS: param.position?.inMilliseconds ?? stats?.positionMS ?? 0,
       playCount: (stats?.playCount ?? 0) + (param.played == true ? 1 : 0),
       playTotalMS: (stats?.playTotalMS ?? 0) +
@@ -228,8 +256,9 @@ class IsarStatsRepository implements StatsRepository {
   }) async {
     await updateEpisodeStats(
       EpisodeStatsUpdateParam(
-        id: episode.id,
+        eid: episode.id,
         pid: episode.pid,
+        ordinal: episode.ordinal,
         lastPlayedAt: playedAt ?? DateTime.now(),
       ),
     );

@@ -149,7 +149,7 @@ class PodcastEpisodesController extends _$PodcastEpisodesController {
     final entry = await _episodeListEntryRepository.findBy(
       pid: pid,
       role: role,
-      eid: episodes.first!.id,
+      eid: episodes.first!.eid,
     );
     return entry?.order;
   }

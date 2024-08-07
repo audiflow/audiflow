@@ -37,6 +37,13 @@ abstract class StatsRepository {
 
   Future<List<EpisodeStats?>> findEpisodeStatsList(Iterable<Id> ids);
 
+  Future<List<EpisodeStats>> queryCompletedEpisodeStatsList({
+    required int pid,
+    int? lastOrdinal,
+    bool ascending = false,
+    int? limit,
+  });
+
   Future<List<EpisodeStats?>> findEpisodeStatsListBy({
     required int pid,
     EpisodeStatsFilterBy? filterBy,

@@ -55,7 +55,7 @@ class MobileDownloadService extends DownloadService {
 
   @override
   Future<List<Downloadable>> loadAllDownloads() async {
-    return _downloadRepository.findDownloadsBy();
+    return _downloadRepository.queryDownloads();
   }
 
   @override
@@ -103,7 +103,7 @@ class MobileDownloadService extends DownloadService {
         : await _statsRepository.findEpisodeStatsList(ids);
 
     final toDownload = episodes.where((e) {
-      final stats = statsList.firstWhereOrNull((s) => s?.id == e.id);
+      final stats = statsList.firstWhereOrNull((s) => s?.eid == e.id);
       return stats?.played != true;
     }).where((e) {
       final download = downloads.firstWhereOrNull((d) => d?.id == e.id);
@@ -231,6 +231,7 @@ class MobileDownloadService extends DownloadService {
       final download = Downloadable(
         pid: episode.pid,
         eid: episode.id,
+        ordinal: episode.ordinal,
         url: url,
         directory: await _downloadPath.directoryToRecord(newEpisode),
         filename: filename,
@@ -286,8 +287,9 @@ class MobileDownloadService extends DownloadService {
       final mp3Info = MP3Processor.fromFile(File(path));
       await _statsRepository.updateEpisodeStats(
         EpisodeStatsUpdateParam(
-          id: download.id,
+          eid: download.id,
           pid: download.pid,
+          ordinal: download.ordinal,
           duration: mp3Info.duration,
         ),
       );

@@ -37,29 +37,34 @@ const DownloadableSchema = CollectionSchema(
       name: r'filename',
       type: IsarType.string,
     ),
-    r'percentage': PropertySchema(
+    r'ordinal': PropertySchema(
       id: 4,
+      name: r'ordinal',
+      type: IsarType.long,
+    ),
+    r'percentage': PropertySchema(
+      id: 5,
       name: r'percentage',
       type: IsarType.long,
     ),
     r'pid': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'pid',
       type: IsarType.long,
     ),
     r'state': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'state',
       type: IsarType.byte,
       enumMap: _DownloadablestateEnumValueMap,
     ),
     r'taskId': PropertySchema(
-      id: 7,
+      id: 8,
       name: r'taskId',
       type: IsarType.string,
     ),
     r'url': PropertySchema(
-      id: 8,
+      id: 9,
       name: r'url',
       type: IsarType.string,
     )
@@ -70,14 +75,19 @@ const DownloadableSchema = CollectionSchema(
   deserializeProp: _downloadableDeserializeProp,
   idName: r'id',
   indexes: {
-    r'pid': IndexSchema(
-      id: 2970402811525951487,
-      name: r'pid',
+    r'pid_ordinal': IndexSchema(
+      id: 1952239099776043382,
+      name: r'pid_ordinal',
       unique: false,
       replace: false,
       properties: [
         IndexPropertySchema(
           name: r'pid',
+          type: IndexType.value,
+          caseSensitive: false,
+        ),
+        IndexPropertySchema(
+          name: r'ordinal',
           type: IndexType.value,
           caseSensitive: false,
         )
@@ -154,11 +164,12 @@ void _downloadableSerialize(
   writer.writeDateTime(offsets[1], object.downloadStartedAt);
   writer.writeLong(offsets[2], object.eid);
   writer.writeString(offsets[3], object.filename);
-  writer.writeLong(offsets[4], object.percentage);
-  writer.writeLong(offsets[5], object.pid);
-  writer.writeByte(offsets[6], object.state.index);
-  writer.writeString(offsets[7], object.taskId);
-  writer.writeString(offsets[8], object.url);
+  writer.writeLong(offsets[4], object.ordinal);
+  writer.writeLong(offsets[5], object.percentage);
+  writer.writeLong(offsets[6], object.pid);
+  writer.writeByte(offsets[7], object.state.index);
+  writer.writeString(offsets[8], object.taskId);
+  writer.writeString(offsets[9], object.url);
 }
 
 Downloadable _downloadableDeserialize(
@@ -172,12 +183,13 @@ Downloadable _downloadableDeserialize(
     downloadStartedAt: reader.readDateTime(offsets[1]),
     eid: reader.readLong(offsets[2]),
     filename: reader.readString(offsets[3]),
-    percentage: reader.readLongOrNull(offsets[4]) ?? 0,
-    pid: reader.readLong(offsets[5]),
-    state: _DownloadablestateValueEnumMap[reader.readByteOrNull(offsets[6])] ??
+    ordinal: reader.readLong(offsets[4]),
+    percentage: reader.readLongOrNull(offsets[5]) ?? 0,
+    pid: reader.readLong(offsets[6]),
+    state: _DownloadablestateValueEnumMap[reader.readByteOrNull(offsets[7])] ??
         DownloadState.none,
-    taskId: reader.readString(offsets[7]),
-    url: reader.readString(offsets[8]),
+    taskId: reader.readString(offsets[8]),
+    url: reader.readString(offsets[9]),
   );
   return object;
 }
@@ -198,15 +210,17 @@ P _downloadableDeserializeProp<P>(
     case 3:
       return (reader.readString(offset)) as P;
     case 4:
-      return (reader.readLongOrNull(offset) ?? 0) as P;
-    case 5:
       return (reader.readLong(offset)) as P;
+    case 5:
+      return (reader.readLongOrNull(offset) ?? 0) as P;
     case 6:
+      return (reader.readLong(offset)) as P;
+    case 7:
       return (_DownloadablestateValueEnumMap[reader.readByteOrNull(offset)] ??
           DownloadState.none) as P;
-    case 7:
-      return (reader.readString(offset)) as P;
     case 8:
+      return (reader.readString(offset)) as P;
+    case 9:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -306,10 +320,10 @@ extension DownloadableQueryWhereSort
     });
   }
 
-  QueryBuilder<Downloadable, Downloadable, QAfterWhere> anyPid() {
+  QueryBuilder<Downloadable, Downloadable, QAfterWhere> anyPidOrdinal() {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
-        const IndexWhereClause.any(indexName: r'pid'),
+        const IndexWhereClause.any(indexName: r'pid_ordinal'),
       );
     });
   }
@@ -400,29 +414,29 @@ extension DownloadableQueryWhere
     });
   }
 
-  QueryBuilder<Downloadable, Downloadable, QAfterWhereClause> pidEqualTo(
-      int pid) {
+  QueryBuilder<Downloadable, Downloadable, QAfterWhereClause>
+      pidEqualToAnyOrdinal(int pid) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'pid',
+        indexName: r'pid_ordinal',
         value: [pid],
       ));
     });
   }
 
-  QueryBuilder<Downloadable, Downloadable, QAfterWhereClause> pidNotEqualTo(
-      int pid) {
+  QueryBuilder<Downloadable, Downloadable, QAfterWhereClause>
+      pidNotEqualToAnyOrdinal(int pid) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'pid',
+              indexName: r'pid_ordinal',
               lower: [],
               upper: [pid],
               includeUpper: false,
             ))
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'pid',
+              indexName: r'pid_ordinal',
               lower: [pid],
               includeLower: false,
               upper: [],
@@ -430,13 +444,13 @@ extension DownloadableQueryWhere
       } else {
         return query
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'pid',
+              indexName: r'pid_ordinal',
               lower: [pid],
               includeLower: false,
               upper: [],
             ))
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'pid',
+              indexName: r'pid_ordinal',
               lower: [],
               upper: [pid],
               includeUpper: false,
@@ -445,13 +459,14 @@ extension DownloadableQueryWhere
     });
   }
 
-  QueryBuilder<Downloadable, Downloadable, QAfterWhereClause> pidGreaterThan(
+  QueryBuilder<Downloadable, Downloadable, QAfterWhereClause>
+      pidGreaterThanAnyOrdinal(
     int pid, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'pid',
+        indexName: r'pid_ordinal',
         lower: [pid],
         includeLower: include,
         upper: [],
@@ -459,13 +474,14 @@ extension DownloadableQueryWhere
     });
   }
 
-  QueryBuilder<Downloadable, Downloadable, QAfterWhereClause> pidLessThan(
+  QueryBuilder<Downloadable, Downloadable, QAfterWhereClause>
+      pidLessThanAnyOrdinal(
     int pid, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'pid',
+        indexName: r'pid_ordinal',
         lower: [],
         upper: [pid],
         includeUpper: include,
@@ -473,7 +489,8 @@ extension DownloadableQueryWhere
     });
   }
 
-  QueryBuilder<Downloadable, Downloadable, QAfterWhereClause> pidBetween(
+  QueryBuilder<Downloadable, Downloadable, QAfterWhereClause>
+      pidBetweenAnyOrdinal(
     int lowerPid,
     int upperPid, {
     bool includeLower = true,
@@ -481,10 +498,106 @@ extension DownloadableQueryWhere
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'pid',
+        indexName: r'pid_ordinal',
         lower: [lowerPid],
         includeLower: includeLower,
         upper: [upperPid],
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<Downloadable, Downloadable, QAfterWhereClause> pidOrdinalEqualTo(
+      int pid, int ordinal) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'pid_ordinal',
+        value: [pid, ordinal],
+      ));
+    });
+  }
+
+  QueryBuilder<Downloadable, Downloadable, QAfterWhereClause>
+      pidEqualToOrdinalNotEqualTo(int pid, int ordinal) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'pid_ordinal',
+              lower: [pid],
+              upper: [pid, ordinal],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'pid_ordinal',
+              lower: [pid, ordinal],
+              includeLower: false,
+              upper: [pid],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'pid_ordinal',
+              lower: [pid, ordinal],
+              includeLower: false,
+              upper: [pid],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'pid_ordinal',
+              lower: [pid],
+              upper: [pid, ordinal],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<Downloadable, Downloadable, QAfterWhereClause>
+      pidEqualToOrdinalGreaterThan(
+    int pid,
+    int ordinal, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'pid_ordinal',
+        lower: [pid, ordinal],
+        includeLower: include,
+        upper: [pid],
+      ));
+    });
+  }
+
+  QueryBuilder<Downloadable, Downloadable, QAfterWhereClause>
+      pidEqualToOrdinalLessThan(
+    int pid,
+    int ordinal, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'pid_ordinal',
+        lower: [pid],
+        upper: [pid, ordinal],
+        includeUpper: include,
+      ));
+    });
+  }
+
+  QueryBuilder<Downloadable, Downloadable, QAfterWhereClause>
+      pidEqualToOrdinalBetween(
+    int pid,
+    int lowerOrdinal,
+    int upperOrdinal, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'pid_ordinal',
+        lower: [pid, lowerOrdinal],
+        includeLower: includeLower,
+        upper: [pid, upperOrdinal],
         includeUpper: includeUpper,
       ));
     });
@@ -1157,6 +1270,62 @@ extension DownloadableQueryFilter
   }
 
   QueryBuilder<Downloadable, Downloadable, QAfterFilterCondition>
+      ordinalEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'ordinal',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Downloadable, Downloadable, QAfterFilterCondition>
+      ordinalGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'ordinal',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Downloadable, Downloadable, QAfterFilterCondition>
+      ordinalLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'ordinal',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Downloadable, Downloadable, QAfterFilterCondition>
+      ordinalBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'ordinal',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<Downloadable, Downloadable, QAfterFilterCondition>
       percentageEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -1646,6 +1815,18 @@ extension DownloadableQuerySortBy
     });
   }
 
+  QueryBuilder<Downloadable, Downloadable, QAfterSortBy> sortByOrdinal() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'ordinal', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Downloadable, Downloadable, QAfterSortBy> sortByOrdinalDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'ordinal', Sort.desc);
+    });
+  }
+
   QueryBuilder<Downloadable, Downloadable, QAfterSortBy> sortByPercentage() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'percentage', Sort.asc);
@@ -1772,6 +1953,18 @@ extension DownloadableQuerySortThenBy
     });
   }
 
+  QueryBuilder<Downloadable, Downloadable, QAfterSortBy> thenByOrdinal() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'ordinal', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Downloadable, Downloadable, QAfterSortBy> thenByOrdinalDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'ordinal', Sort.desc);
+    });
+  }
+
   QueryBuilder<Downloadable, Downloadable, QAfterSortBy> thenByPercentage() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'percentage', Sort.asc);
@@ -1863,6 +2056,12 @@ extension DownloadableQueryWhereDistinct
     });
   }
 
+  QueryBuilder<Downloadable, Downloadable, QDistinct> distinctByOrdinal() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'ordinal');
+    });
+  }
+
   QueryBuilder<Downloadable, Downloadable, QDistinct> distinctByPercentage() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'percentage');
@@ -1926,6 +2125,12 @@ extension DownloadableQueryProperty
   QueryBuilder<Downloadable, String, QQueryOperations> filenameProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'filename');
+    });
+  }
+
+  QueryBuilder<Downloadable, int, QQueryOperations> ordinalProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'ordinal');
     });
   }
 

@@ -301,6 +301,7 @@ class _Worker {
     }
 
     var loadedCount = episodes.length;
+    var lastOrdinal = episodes.last.ordinal;
     _uiPort.send(
       _LoadedMessage(total: total, loadedCount: loadedCount),
     );
@@ -308,7 +309,7 @@ class _Worker {
     while (!_isCancelled() && loadedCount < total) {
       final moreEpisodes = await _findCompletedEpisodes(
         limit: _batchReadCount,
-        offset: loadedCount,
+        lastOrdinal: lastOrdinal,
       );
       await _saveEpisodeEntries(moreEpisodes, baseIndex: loadedCount);
       loadedCount += moreEpisodes.length;
@@ -322,31 +323,30 @@ class _Worker {
       if (episodes.length < _batchReadCount) {
         break;
       }
+      lastOrdinal = episodes.last.ordinal;
     }
   }
 
   Future<List<Episode>> _findCompletedEpisodes({
     required int limit,
-    int offset = 0,
+    int? lastOrdinal,
   }) async {
     final statsList = await _statsRepository
-        .findEpisodeStatsListBy(
+        .queryCompletedEpisodeStatsList(
           pid: _pid,
-          filterBy: EpisodeStatsFilterBy.completed,
-          sortBy: EpisodeStatsSortBy.playedDate,
+          lastOrdinal: lastOrdinal,
           ascending: _ascending,
           limit: limit,
-          offset: offset,
         )
         .then((list) => list.whereNotNull().toList());
 
     final episodes = await _episodeRepository
-        .findEpisodes(statsList.map((e) => e.id))
+        .findEpisodes(statsList.map((e) => e.eid))
         .then((list) => list.whereNotNull())
         .then(
           (list) => list.sorted((a, b) {
-            final ia = statsList.indexWhere((e) => e.id == a.id);
-            final ib = statsList.indexWhere((e) => e.id == a.id);
+            final ia = statsList.indexWhere((e) => e.eid == a.id);
+            final ib = statsList.indexWhere((e) => e.eid == a.id);
             return ia - ib;
           }),
         );
@@ -471,11 +471,11 @@ class _Worker {
     _uiPort.send(
       _LoadedMessage(total: total, loadedCount: loadedCount),
     );
-
+    var lastOrdinal = episodes.last.ordinal;
     while (!_isCancelled() && loadedCount < total) {
       episodes = await _findDownloadedEpisodes(
         limit: _batchReadCount,
-        offset: loadedCount,
+        lastOrdinal: lastOrdinal,
       );
       await _saveEpisodeEntries(episodes, baseIndex: loadedCount);
 
@@ -486,29 +486,30 @@ class _Worker {
           loadedCount: loadedCount,
         ),
       );
+      if (episodes.length < _batchReadCount) {
+        break;
+      }
+      lastOrdinal = episodes.last.ordinal;
     }
   }
 
   Future<List<Episode>> _findDownloadedEpisodes({
     required int limit,
-    int offset = 0,
+    int? lastOrdinal,
   }) async {
-    final downloads = await _downloadRepository.findDownloadsBy(
+    final downloads = await _downloadRepository.queryDownloaded(
       pid: _pid,
-      sortBy: DownloadSortBy.downloadStartedAt,
+      lastOrdinal: lastOrdinal,
       ascending: _ascending,
       limit: limit,
-      offset: offset,
     );
     final episodes = await _episodeRepository
-        .findEpisodes(downloads.map((e) => e.eid).whereNotNull())
+        .findEpisodes(downloads.map((e) => e.eid))
         .then((list) => list.whereNotNull())
         .then(
-          (list) => list.sorted((a, b) {
-            final ia = downloads.indexWhere((e) => e.eid == a.id);
-            final ib = downloads.indexWhere((e) => e.eid == a.id);
-            return ia - ib;
-          }),
+          (list) => _ascending
+              ? list.sorted((a, b) => a.ordinal - b.ordinal)
+              : list.sorted((a, b) => b.ordinal - a.ordinal),
         );
     return episodes;
   }

@@ -43,7 +43,7 @@ class EpisodesGroup extends _$EpisodesGroup {
 
   Future<int?> getLastListenedEpisode() async {
     final stats = await _lastPlayedStats();
-    return stats?.id;
+    return stats?.eid;
   }
 
   Future<EpisodeStats?> _lastPlayedStats() async {
@@ -78,7 +78,7 @@ class EpisodesGroup extends _$EpisodesGroup {
     final lastPlayedStats = await _lastPlayedStats();
     final lastPlayedEpisode = lastPlayedStats == null
         ? null
-        : episodes.firstWhereOrNull((e) => e.id == lastPlayedStats.id);
+        : episodes.firstWhereOrNull((e) => e.id == lastPlayedStats.eid);
     if (lastPlayedStats == null ||
         lastPlayedEpisode == null ||
         lastPlayedEpisode.publicationDate == null) {

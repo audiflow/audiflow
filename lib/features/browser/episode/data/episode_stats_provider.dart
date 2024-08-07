@@ -14,7 +14,7 @@ Future<EpisodeStats?> episodeStats(
     final event = next.valueOrNull;
     switch (event) {
       case EpisodeStatsUpdatedEvent(stats: final stats):
-        if (stats.id == eid) {
+        if (stats.eid == eid) {
           ref.state = AsyncData(stats);
         }
       case EpisodeUpdatedEvent() ||

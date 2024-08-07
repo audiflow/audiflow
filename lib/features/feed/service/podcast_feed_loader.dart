@@ -291,6 +291,7 @@ class _Worker {
     required int? collectionId,
     required String cacheDir,
   }) async {
+    var ordinal = DateTime.now().microsecondsSinceEpoch;
     for (final url in [
       feedUrl.replaceFirst(RegExp('^http:'), 'https:'),
       feedUrl.replaceFirst(RegExp('^https:'), 'http:'),
@@ -317,7 +318,11 @@ class _Worker {
             if (_podcast == null) {
               throw StateError('cannot build Episode due to podcast is null');
             }
-            return Episode.fromChannelItem(_podcast!.id, channelItemValues);
+            return Episode.fromChannelItem(
+              pid: _podcast!.id,
+              ordinal: ordinal--,
+              item: channelItemValues,
+            );
           },
         );
         return true;
@@ -359,9 +364,9 @@ class _Worker {
     // feed.
     final podcastStats = await _statsRepository.findPodcastStats(_podcast!.id);
     final latest = podcastStats?.hasLoadedAll == true
-        ? await _episodeRepository.findLatestEpisodes(_podcast!.id, limit: 1)
-        : <Episode>[];
-    final lastPubDate = latest.firstOrNull?.publicationDate;
+        ? await _episodeRepository.findLatestEpisode(_podcast!.id)
+        : null;
+    final lastPubDate = latest?.publicationDate;
 
     final episodes = <Episode>[];
     var batchLength = 20;
@@ -444,7 +449,7 @@ class _Worker {
         updatedSeasons.isNotEmpty &&
         loadingState == LoadingState.reachedLastPubDate) {
       logger.d('the podcast turned supporting "season"');
-      final allEpisodes = await _episodeRepository.findEpisodesBy(
+      final allEpisodes = await _episodeRepository.queryEpisodes(
         pid: _podcast!.id,
       );
       updatedSeasons = seasonService.extractSeasons(

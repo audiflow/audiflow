@@ -18,44 +18,45 @@ class IsarDownloadRepository implements DownloadRepository {
   }
 
   @override
-  Future<List<Downloadable>> findDownloadsBy({
-    int? pid,
-    DateTime? lastDownloadStartedAt,
-    DownloadSortBy? sortBy,
+  Future<List<Downloadable>> queryDownloads({int? pid}) async {
+    return isar.downloadables
+        .where()
+        .optional(pid != null, (q) => q.pidEqualToAnyOrdinal(pid!))
+        .findAll();
+  }
+
+  @override
+  Future<List<Downloadable>> queryDownloaded({
+    required int pid,
+    int? lastOrdinal,
     bool ascending = false,
-    int? offset,
     int? limit,
   }) async {
     return isar.downloadables
         .where()
-        .filter()
-        .optional(pid != null, (q) => q.pidEqualTo(pid!))
         .optional(
-          lastDownloadStartedAt != null,
-          (q) => ascending
-              ? q.downloadStartedAtGreaterThan(lastDownloadStartedAt!)
-              : q.downloadStartedAtLessThan(lastDownloadStartedAt!),
+          true,
+          (q) => lastOrdinal == null
+              ? q.pidEqualToAnyOrdinal(pid)
+              : ascending
+                  ? q.pidEqualToOrdinalGreaterThan(pid, lastOrdinal)
+                  : q.pidEqualToOrdinalLessThan(pid, lastOrdinal),
         )
-        .optional(sortBy != null, (q) {
-          switch (sortBy!) {
-            case DownloadSortBy.downloadStartedAt:
-              return ascending
-                  ? q.sortByDownloadStartedAt()
-                  : q.sortByDownloadStartedAtDesc();
-          }
-        })
-        .optional(offset != null, (q) => q.offset(offset!))
+        .filter()
+        .stateEqualTo(DownloadState.downloaded)
+        .optional(
+          true,
+          (q) => ascending
+              ? q.sortByDownloadStartedAt()
+              : q.sortByDownloadStartedAtDesc(),
+        )
         .optional(limit != null, (q) => q.limit(limit!))
         .findAll();
   }
 
   @override
   Future<Downloadable?> findDownloadByTaskId(String taskId) async {
-    return isar.downloadables
-        .where()
-        .filter()
-        .taskIdEqualTo(taskId)
-        .findFirst();
+    return isar.downloadables.where().taskIdEqualTo(taskId).findFirst();
   }
 
   @override
@@ -64,7 +65,7 @@ class IsarDownloadRepository implements DownloadRepository {
   }) async {
     return isar.downloadables
         .where()
-        .optional(pid != null, (q) => q.pidEqualTo(pid!))
+        .optional(pid != null, (q) => q.pidEqualToAnyOrdinal(pid!))
         .count();
   }
 

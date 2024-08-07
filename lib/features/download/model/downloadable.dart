@@ -24,6 +24,7 @@ class Downloadable {
   Downloadable({
     required this.pid,
     required this.eid,
+    required this.ordinal,
     required this.url,
     required this.directory,
     required this.filename,
@@ -38,12 +39,15 @@ class Downloadable {
   Id get id => eid;
 
   /// The podcast id.
-  @Index()
+  @Index(composite: [CompositeIndex('ordinal')])
   final int pid;
 
   /// Unique identifier for the episode.
   @Index(unique: true)
   final int eid;
+
+  /// The ordinal number of the episode.
+  final int ordinal;
 
   /// Unique identifier for the download
   final String url;
@@ -82,6 +86,7 @@ class Downloadable {
     return Downloadable(
       pid: pid,
       eid: eid,
+      ordinal: ordinal,
       url: url ?? this.url,
       directory: directory ?? this.directory,
       filename: filename ?? this.filename,

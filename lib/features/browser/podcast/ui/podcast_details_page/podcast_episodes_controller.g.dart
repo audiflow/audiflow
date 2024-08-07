@@ -7,7 +7,7 @@ part of 'podcast_episodes_controller.dart';
 // **************************************************************************
 
 String _$podcastEpisodesControllerHash() =>
-    r'd95b1aac0c8f3b408e3ae8e908c69eb57cbef278';
+    r'5af858331ee9b21bad137ba5ca85a7b32d86152d';
 
 /// Copied from Dart SDK
 class _SystemHash {

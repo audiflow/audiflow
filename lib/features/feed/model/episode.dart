@@ -207,8 +207,9 @@ extension EpisodeExtension on Episode {
 @collection
 class EpisodeStats {
   EpisodeStats({
-    required this.id,
+    required this.eid,
     required this.pid,
+    required this.ordinal,
     this.durationMS,
     this.positionMS = 0,
     this.playCount = 0,
@@ -218,11 +219,16 @@ class EpisodeStats {
     this.lastPlayedAt,
   });
 
-  final Id id;
+  Id get id => eid;
+
+  final int eid;
 
   /// The Isar ID of the parent podcast.
-  @Index()
+  @Index(composite: [CompositeIndex('ordinal')])
   final int pid;
+
+  /// The ordinal number of the episode.
+  final int ordinal;
 
   /// Actual duration of the episode.
   final int? durationMS;
@@ -270,8 +276,9 @@ extension EpisodeStatsExt on EpisodeStats {
 
 class EpisodeStatsUpdateParam {
   const EpisodeStatsUpdateParam({
-    required this.id,
+    required this.eid,
     required this.pid,
+    required this.ordinal,
     this.duration,
     this.position,
     this.played,
@@ -280,8 +287,9 @@ class EpisodeStatsUpdateParam {
     this.lastPlayedAt,
   });
 
-  final Id id;
+  final Id eid;
   final int pid;
+  final int ordinal;
   final Duration? duration;
   final Duration? position;
   final bool? played;
@@ -290,6 +298,7 @@ class EpisodeStatsUpdateParam {
   final DateTime? lastPlayedAt;
 
   EpisodeStatsUpdateParam copyWith({
+    int? ordinal,
     Duration? duration,
     Duration? position,
     bool? startPlaying,
@@ -299,8 +308,9 @@ class EpisodeStatsUpdateParam {
     DateTime? lastPlayedAt,
   }) {
     return EpisodeStatsUpdateParam(
-      id: id,
+      eid: eid,
       pid: pid,
+      ordinal: ordinal ?? this.ordinal,
       duration: duration ?? this.duration,
       position: position ?? this.position,
       played: played ?? this.played,
@@ -311,6 +321,7 @@ class EpisodeStatsUpdateParam {
   }
 
   bool get isEmpty =>
+      ordinal == null &&
       duration == null &&
       position == null &&
       played == null &&

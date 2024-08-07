@@ -109,12 +109,12 @@ class DefaultAudioPlayerService extends _$DefaultAudioPlayerService
     }
 
     if (state != null) {
-    //   return loadEpisode(
-    //     episode: state!.episode,
-    //     position: state!.position,
-    //     autoPlay: true,
-    //   );
-    // } else {
+      //   return loadEpisode(
+      //     episode: state!.episode,
+      //     position: state!.position,
+      //     autoPlay: true,
+      //   );
+      // } else {
     }
   }
 
@@ -129,7 +129,7 @@ class DefaultAudioPlayerService extends _$DefaultAudioPlayerService
   }
 
   @override
-  Future<void> togglePlayPause()async {
+  Future<void> togglePlayPause() async {
     if (state?.phase == PlayerPhase.play) {
       return pause();
     } else if (state?.phase == PlayerPhase.pause) {

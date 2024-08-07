@@ -1,8 +1,7 @@
+import 'package:audiflow/events/audio_player_event.dart';
 import 'package:audiflow/features/browser/common/data/stats_repository.dart';
-import 'package:audiflow/features/feed/model/model.dart';
 import 'package:audiflow/features/player/data/player_state_repository.dart';
 import 'package:audiflow/features/player/service/audio_player_service.dart';
-import 'package:audiflow/events/audio_player_event.dart';
 import 'package:audiflow/utils/logger.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -36,7 +35,8 @@ class AudioPositionRecorder extends _$AudioPositionRecorder {
           await statsRepository.updateEpisodeStats(
             EpisodeStatsUpdateParam(
               pid: episode.pid,
-              id: episode.id,
+              eid: episode.id,
+              ordinal: episode.ordinal,
               lastPlayedAt: DateTime.now(),
             ),
           );
@@ -58,7 +58,8 @@ class AudioPositionRecorder extends _$AudioPositionRecorder {
             await statsRepository.updateEpisodeStats(
               EpisodeStatsUpdateParam(
                 pid: episode.pid,
-                id: episode.id,
+                eid: episode.id,
+                ordinal: episode.ordinal,
                 position: episode.duration,
                 completed: true,
               ),
@@ -105,7 +106,8 @@ class AudioPositionRecorder extends _$AudioPositionRecorder {
       ref.read(statsRepositoryProvider).updateEpisodeStats(
             EpisodeStatsUpdateParam(
               pid: episode.pid,
-              id: episode.id,
+              eid: episode.id,
+              ordinal: episode.ordinal,
               position: position,
               played: played,
               playTotalDelta: state.lastSavedPosition != null &&
