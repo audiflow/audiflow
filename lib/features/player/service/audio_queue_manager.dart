@@ -1,11 +1,16 @@
 import 'package:audiflow/common/data/connectivity.dart';
 import 'package:audiflow/events/audio_player_event.dart';
 import 'package:audiflow/features/browser/common/data/stats_repository.dart';
+import 'package:audiflow/features/browser/common/model/episode_filter_mode.dart';
 import 'package:audiflow/features/download/data/download_repository.dart';
 import 'package:audiflow/features/download/model/downloadable.dart';
 import 'package:audiflow/features/feed/data/episode_repository.dart';
 import 'package:audiflow/features/player/service/audio_player_service.dart';
+import 'package:audiflow/features/queue/data/queue_repository.dart';
+import 'package:audiflow/features/queue/model/auto_queue_builder_info.dart';
 import 'package:audiflow/features/queue/model/queue.dart';
+import 'package:audiflow/features/queue/service/auto_queue_builder/auto_queue_builder.dart';
+import 'package:audiflow/features/queue/service/auto_queue_builder/auto_queue_from_podcast_details_page.dart';
 import 'package:audiflow/features/queue/service/queue_manager.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -32,6 +37,8 @@ class AudioQueueManager extends _$AudioQueueManager {
   List<ConnectivityResult> get _connectivityResult =>
       ref.read(connectivityProvider);
 
+  AutoQueueBuilder? _autoQueueBuilder;
+
   @override
   bool build() {
     ref.listen(audioPlayerEventStreamProvider, (_, next) {
@@ -55,6 +62,47 @@ class AudioQueueManager extends _$AudioQueueManager {
     });
 
     return true;
+  }
+
+  Future<void> playFromPodcastDetailsPage({
+    required Episode start,
+    required EpisodeFilterMode filterMode,
+  }) async {
+    final builder = ref.read(autoQueueFromPodcastDetailsPageProvider.notifier)
+      ..setup(start: start, filterMode: filterMode);
+    _autoQueueBuilder?.clear();
+    _autoQueueBuilder = builder;
+
+    final json = builder.encodeState();
+    await ref
+        .read(queueRepositoryProvider)
+        .saveAutoQueueBuilderData(AutoQueueBuilderType.detailsPage, json);
+    await _play(eid: start.id);
+  }
+
+  Future<bool> _play({ required int eid}) async {
+    final ret = await Future.wait([
+      _episodeRepository.findEpisode(eid),
+      _statsRepository.findEpisodeStats(eid),
+      _downloadRepository.findDownload(eid),
+    ]);
+
+    final episode = ret[0] as Episode?;
+    final stats = ret[1] as EpisodeStats?;
+    final download = ret[2] as Downloadable?;
+    if (episode == null) {
+      return false;
+    }
+
+    if (download?.downloaded == true || _connectivityResult.hasConnectivity) {
+      await _audioPlayerService.loadEpisode(
+        episode: episode,
+        position: stats?.position ?? Duration.zero,
+        autoPlay: true,
+      );
+      return true;
+    }
+    return false;
   }
 
   Future<void> _playNext() async {

@@ -31,7 +31,7 @@ const _$EpisodeFilterModeEnumMap = {
 // **************************************************************************
 
 String _$autoQueueFromPodcastDetailsPageHash() =>
-    r'b87445e4b2f24242961c38eddc54bbb464e2f45c';
+    r'8285ec647786cf157f774d32b1de507b868b80fa';
 
 /// See also [AutoQueueFromPodcastDetailsPage].
 @ProviderFor(AutoQueueFromPodcastDetailsPage)

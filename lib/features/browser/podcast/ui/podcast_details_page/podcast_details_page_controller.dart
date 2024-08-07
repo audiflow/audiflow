@@ -4,7 +4,7 @@ import 'package:audiflow/features/browser/common/model/episode_filter_mode.dart'
 import 'package:audiflow/features/browser/common/model/season_filter_mode.dart';
 import 'package:audiflow/features/browser/podcast/model/podcast_details_page_model.dart';
 import 'package:audiflow/features/player/service/audio_player_service.dart';
-import 'package:audiflow/features/queue/service/queue_player.dart';
+import 'package:audiflow/features/player/service/audio_queue_manager.dart';
 import 'package:audiflow/utils/logger.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -22,6 +22,9 @@ class PodcastDetailsPageController extends _$PodcastDetailsPageController {
 
   AudioPlayerService get _audioPlayerService =>
       ref.read(audioPlayerServiceProvider.notifier);
+
+  AudioQueueManager get _audioQueueManager =>
+      ref.read(audioQueueManagerProvider.notifier);
 
   @override
   Future<PodcastDetailsPageState> build(int pid) async {
@@ -119,14 +122,9 @@ class PodcastDetailsPageController extends _$PodcastDetailsPageController {
     if (_audioPlayerState?.episode.id == episode.id) {
       await _audioPlayerService.togglePlayPause();
     } else {
-      await ref.read(queuePlayerProvider).playFromPodcastDetailsPage(
-            start: episode,
-            filterMode: state.requireValue.episodeFilterMode,
-          );
-      await _audioPlayerService.loadEpisode(
-        episode: episode,
-        position: Duration.zero,
-        autoPlay: true,
+      await _audioQueueManager.playFromPodcastDetailsPage(
+        start: episode,
+        filterMode: state.requireValue.episodeFilterMode,
       );
     }
   }

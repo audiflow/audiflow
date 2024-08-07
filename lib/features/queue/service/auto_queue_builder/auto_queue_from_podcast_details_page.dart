@@ -50,6 +50,9 @@ class AutoQueueFromPodcastDetailsPage extends _$AutoQueueFromPodcastDetailsPage
   }
 
   @override
+  QueueItem? get current => state;
+
+  @override
   FutureOr<List<QueueItem>> getQueuedItems({required int limit}) async {
     if (state == null || _ordinal == null) {
       return [];

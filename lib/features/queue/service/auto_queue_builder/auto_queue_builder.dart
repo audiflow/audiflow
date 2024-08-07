@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:audiflow/features/queue/model/queue.dart';
 
 abstract class AutoQueueBuilder {
+  QueueItem? get current;
+
   FutureOr<List<QueueItem>> getQueuedItems({required int limit});
 
   FutureOr<bool> moveNext();
