@@ -37,11 +37,6 @@ class IsarPodcastRepository implements PodcastRepository {
   }
 
   @override
-  Future<void> savePodcasts(Iterable<Podcast> podcasts) async {
-    await isar.writeTxn(() => isar.podcasts.putAll(podcasts.toList()));
-  }
-
-  @override
   Future<void> savePodcast(Podcast podcast) async {
     await isar.writeTxn(() async {
       await isar.podcasts.put(podcast);

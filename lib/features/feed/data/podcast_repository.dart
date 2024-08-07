@@ -12,8 +12,6 @@ abstract class PodcastRepository {
     int? collectionId,
   });
 
-  Future<void> savePodcasts(Iterable<Podcast> podcasts);
-
   Future<void> savePodcast(Podcast podcast);
 }
 
