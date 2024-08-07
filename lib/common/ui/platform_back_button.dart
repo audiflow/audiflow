@@ -40,7 +40,7 @@ class PlatformBackButton extends StatelessWidget {
                 child: Icon(
                   Platform.isIOS ? Icons.arrow_back_ios : Icons.close,
                   size: Platform.isIOS ? 20.0 : 26.0,
-                  semanticLabel: L10n.of(context)?.goBack,
+                  semanticLabel: L10n.of(context).goBack,
                 ),
               ),
             ),

@@ -54,11 +54,11 @@ class ErrorManager extends _$ErrorManager {
   }
 
   void noticeConnectivityError() {
-    state = AsyncData(NoConnectivityException());
+    state = const AsyncData(NoConnectivityException());
   }
 
   void noticeNetworkTimeoutError() {
-    state = AsyncData(NetworkTimeoutException());
+    state = const AsyncData(NetworkTimeoutException());
   }
 
   void noticeNetworkUnknownError() {

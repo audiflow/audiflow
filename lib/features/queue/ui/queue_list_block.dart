@@ -21,8 +21,8 @@ class QueueListBlock extends ConsumerWidget {
     final l10n = L10n.of(context);
     return NotificationListener<PlayButtonTappedNotification>(
       onNotification: (notification) {
-        final episode = notification.episode;
-        final index = notification.index;
+        // final episode = notification.episode;
+        // final index = notification.index;
         // if (index == null || queue.length <= index) {
         //   ref.read(podcastServiceProvider).handlePlay(episode);
         // } else {
@@ -67,7 +67,8 @@ class Section extends MultiSliver {
               child: Builder(
                 builder: (context) {
                   return ColoredBox(
-                    color: Theme.of(context).colorScheme.background,
+                    color:
+                        Theme.of(context).colorScheme.surfaceContainerHighest,
                     child: ListTile(
                       title: Text(title),
                       trailing: trailing,

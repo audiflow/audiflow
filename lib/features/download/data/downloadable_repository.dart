@@ -7,7 +7,9 @@ part 'downloadable_repository.g.dart';
 
 @riverpod
 Future<Downloadable?> episodeDownloadable(
-    EpisodeDownloadableRef ref, int eid) async {
+  EpisodeDownloadableRef ref,
+  int eid,
+) async {
   ref.listen(downloadEventStreamProvider, (_, next) {
     switch (next.valueOrNull) {
       case DownloadUpdatedEvent(download: final download):

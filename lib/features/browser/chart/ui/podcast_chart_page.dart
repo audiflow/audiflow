@@ -3,7 +3,6 @@ import 'package:audiflow/common/ui/fill_remaining_loading.dart';
 import 'package:audiflow/constants/country.dart';
 import 'package:audiflow/features/browser/chart/ui/chart_item_list.dart';
 import 'package:audiflow/features/browser/chart/ui/podcast_chart_controller.dart';
-import 'package:audiflow/features/browser/common/data/podcast_subscriptions.dart';
 import 'package:audiflow/features/browser/common/ui/basic_app_bar.dart';
 import 'package:audiflow/localization/generated/l10n.dart';
 import 'package:audiflow/ui/widgets/error_notifier.dart';
@@ -76,7 +75,7 @@ class _SubscribedPodcasts extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(podcastSubscriptionsProvider);
+    // final state = ref.watch(podcastSubscriptionsProvider);
     return
         // state.valueOrNull?.isNotEmpty == true
         //   ? PodcastListHorz(metadataList: state.value!)

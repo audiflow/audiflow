@@ -37,7 +37,8 @@ class EpisodesGroup extends _$EpisodesGroup {
     // return _podcastService.handlePlay(
     //     episode,
     //     group: state.requireValue.episodes
-    //         .sorted((a, b) => a.publicationDate!.compareTo(b.publicationDate!)),
+    //         .sorted((a, b) =>
+    //         a.publicationDate!.compareTo(b.publicationDate!)),
     //   );
   }
 

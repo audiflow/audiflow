@@ -27,12 +27,13 @@ class IsarEpisodeRepository implements EpisodeRepository {
     return isar.episodes
         .where()
         .optional(
-            true,
-            (q) => lastOrdinal == null
-                ? q.pidEqualToAnyOrdinal(pid)
-                : ascending
-                    ? q.pidEqualToOrdinalGreaterThan(pid, lastOrdinal)
-                    : q.pidEqualToOrdinalLessThan(pid, lastOrdinal))
+          true,
+          (q) => lastOrdinal == null
+              ? q.pidEqualToAnyOrdinal(pid)
+              : ascending
+                  ? q.pidEqualToOrdinalGreaterThan(pid, lastOrdinal)
+                  : q.pidEqualToOrdinalLessThan(pid, lastOrdinal),
+        )
         .optional(
           true,
           (q) => ascending ? q.sortByOrdinal() : q.sortByOrdinalDesc(),

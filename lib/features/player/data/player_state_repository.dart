@@ -1,4 +1,3 @@
-import 'package:audiflow/features/feed/model/model.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'player_state_repository.g.dart';

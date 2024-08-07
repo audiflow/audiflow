@@ -321,7 +321,6 @@ class EpisodeStatsUpdateParam {
   }
 
   bool get isEmpty =>
-      ordinal == null &&
       duration == null &&
       position == null &&
       played == null &&

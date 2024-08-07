@@ -65,7 +65,8 @@ class SubscribedPodcastRefresher extends _$SubscribedPodcastRefresher {
     //   }
     // });
     //
-    // if (nextTarget.$1.guid == _nextRefreshTarget?.$1.guid && _timer == null) {
+    // if (nextTarget.$1.guid == _nextRefreshTarget?.$1.guid &&
+    // _timer == null) {
     //   return;
     // }
     //

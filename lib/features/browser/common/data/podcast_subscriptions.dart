@@ -34,7 +34,7 @@ class PodcastSubscriptions extends _$PodcastSubscriptions {
         case PodcastUnsubscribedEvent(stats: final stats):
           final list = state.value!.where((e) => e.id != stats.id).toList();
           state = AsyncData(list);
-        case PodcastUpdatedEvent(podcast: final podcast, stats: final stats):
+        case PodcastUpdatedEvent(podcast: final podcast):
           final list = state.value!
               .map(
                 (e) => e.id == podcast.id ? podcast : e,

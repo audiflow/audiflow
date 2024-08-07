@@ -140,7 +140,7 @@ class MobileDownloadService extends DownloadService {
 
   Future<bool> _downloadEpisode(Episode episode) async {
     try {
-      var newEpisode = episode;
+      final newEpisode = episode;
 
       // If this episode contains chapter, fetch them first.
       // if (episode.hasChapters) {
