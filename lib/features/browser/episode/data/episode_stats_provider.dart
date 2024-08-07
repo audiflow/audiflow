@@ -18,6 +18,7 @@ Future<EpisodeStats?> episodeStats(
           ref.state = AsyncData(stats);
         }
       case EpisodeUpdatedEvent() ||
+            EpisodesUpdatedEvent() ||
             EpisodesAddedEvent() ||
             EpisodeDeletedEvent() ||
             null:

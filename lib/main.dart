@@ -30,6 +30,7 @@ import 'package:audiflow/features/download/service/download_service.dart';
 import 'package:audiflow/features/download/service/mobile_download_manager.dart';
 import 'package:audiflow/features/download/service/mobile_download_service.dart';
 import 'package:audiflow/features/feed/data/episode_repository.dart';
+import 'package:audiflow/features/feed/data/episode_repository_change_handler.dart';
 import 'package:audiflow/features/feed/data/isar_episode_repository.dart';
 import 'package:audiflow/features/feed/data/isar_podcast_repository.dart';
 import 'package:audiflow/features/feed/data/isar_rss_repository.dart';
@@ -96,7 +97,10 @@ void main() async {
       downloadServiceProvider.overrideWith(MobileDownloadService.new),
       episodeListEntryRepositoryProvider
           .overrideWithValue(IsarEpisodeListEntryRepository(isar)),
-      episodeRepositoryProvider.overrideWithValue(IsarEpisodeRepository(isar)),
+      episodeRepositoryProvider.overrideWith(
+        (ref) =>
+            EpisodeRepositoryHandleHandler(ref, IsarEpisodeRepository(isar)),
+      ),
       pageModelsRepositoryProvider.overrideWith(
         (ref) => PageModelsRepositoryChangeHandler(
           ref,
