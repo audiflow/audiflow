@@ -6,13 +6,15 @@ publish_to: none
 environment:
   sdk: '>=3.4.3 <4.0.0'
   flutter: 3.22.2
+isar_version: &isar_version 3.1.7
 
 dependencies:
-  accessibility_tools: ^1.0.1
+  accessibility_tools: ^2.2.1
   audio_service: ^0.18.13
   audio_session: ^0.1.19
   auto_size_text: ^3.0.0
   collection: ^1.18.0
+  conditional_wrap: ^3.0.0
   connectivity_plus: ^6.0.1
   crypto: ^3.0.3
   cupertino_icons: ^1.0.6
@@ -39,12 +41,16 @@ dependencies:
   flutter_riverpod: ^2.5.1
   flutter_spinkit: ^5.2.1
   freezed_annotation: ^2.4.1
-  go_router: ^13.2.2
+  go_router: ^14.2.1
   hooks_riverpod: ^2.5.1
   html: ^0.15.4
   intl: ^0.19.0
-  isar: ^3.1.0+1
-  isar_flutter_libs: ^3.1.0+1
+  isar:
+    version: *isar_version
+    hosted: https://pub.isar-community.dev/
+  isar_flutter_libs:
+    version: *isar_version
+    hosted: https://pub.isar-community.dev/
   json_annotation: ^4.8.1
   just_audio: ^0.9.37
   logger: ^2.2.0
@@ -61,7 +67,7 @@ dependencies:
   permission_handler: ^11.3.1
   podcast_feed:
     git:
-      url: ../podcast_feed
+      url: git@github.com:reedom/podcast_feed.git
       ref: develop
   podcast_search:
     git:
@@ -75,12 +81,13 @@ dependencies:
   scrolls_to_top:
     git:
       url: git@github.com:reedom/scrolls_to_top.git
-  share_plus: ^8.0.2
+  share_plus: ^9.0.0
   shared_preferences: ^2.2.2
   sliver_tools: ^0.2.12
   theme_extensions_builder_annotation: ^3.1.0
   uni_links: ^0.5.1
   url_launcher: ^6.2.5
+  worker_manager: ^7.0.3
   xml: 6.5.0
 
 dev_dependencies:
@@ -89,10 +96,12 @@ dev_dependencies:
   flutter_lints: ^3.0.2
   flutter_test:
     sdk: flutter
-  freezed: ^2.5.0
+  freezed: ^2.0.0
   go_router_builder: ^2.6.1
   http_mock_adapter: ^0.6.1
-  isar_generator: ^3.1.0+1
+  isar_generator:
+    version: *isar_version
+    hosted: https://pub.isar-community.dev/
   json_serializable: ^6.7.1
   mockito: ^5.4.4
   pedantic_mono: ^1.26.0
@@ -101,8 +110,15 @@ dev_dependencies:
 
 dependency_overrides:
   # Override layout grid to fix dependency issue with flutter_html_table
-  analyzer: ^6.3.0
+  analyzer: ^6.5.0
   flutter_layout_grid: ^2.0.5
+  isar:
+    version: *isar_version
+    hosted: https://pub.isar-community.dev/
+  isar_flutter_libs:
+    version: *isar_version
+    hosted: https://pub.isar-community.dev/
+  meta: ^1.15.0
 
 global_options:
   freezed:freezed:
