@@ -84,9 +84,9 @@ class DefaultAudioPlayerService extends _$DefaultAudioPlayerService
         preference: _appSettings,
       ),
       config: const AudioServiceConfig(
-        androidNotificationChannelName: 'Seasoning Podcast Player',
-        androidNotificationIcon: 'drawable/ic_stat_name',
+        androidNotificationChannelName: 'Audiflow Podcast Player',
         fastForwardInterval: Duration(seconds: 30),
+        androidStopForegroundOnPause: false,
       ),
     );
     _handleAudioServiceTransitions();
