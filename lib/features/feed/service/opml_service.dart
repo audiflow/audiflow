@@ -1,9 +1,9 @@
 import 'dart:io';
 
-import 'package:audiflow/core/logger.dart';
-import 'package:audiflow/repository/repository_provider.dart';
-import 'package:audiflow/services/podcast/opml/opml_event.dart';
-import 'package:audiflow/services/podcast/podcast_service.dart';
+import 'package:audiflow/events/opml_event.dart';
+import 'package:audiflow/features/browser/common/data/podcast_stats_repository/podcast_stats_repository.dart';
+import 'package:audiflow/features/feed/service/podcast_service.dart';
+import 'package:audiflow/utils/logger.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
@@ -11,7 +11,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:xml/xml.dart';
 
-export 'package:audiflow/services/podcast/opml/opml_service.dart';
+export 'package:audiflow/features/feed/service/opml_service.dart';
 
 part 'opml_service.g.dart';
 
@@ -30,7 +30,8 @@ class OPMLService {
 
   PodcastService get _podcastService => _ref.read(podcastServiceProvider);
 
-  Repository get _repository => _ref.read(repositoryProvider);
+  PodcastStatsRepository get _podcastStatsRepository =>
+      _ref.read(podcastStatsRepositoryProvider);
 
   OpmlEventStream get _opmlEventStream =>
       _ref.read(opmlEventStreamProvider.notifier);
@@ -78,7 +79,7 @@ class OPMLService {
   }
 
   Future<void> saveOPMLFile() async {
-    final subs = await _repository.subscriptions();
+    final subs = await _podcastStatsRepository.subscriptions();
 
     final builder = XmlBuilder()..processing('xml', 'version="1.0"');
     builder.element(
