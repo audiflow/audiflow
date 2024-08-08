@@ -50,3 +50,8 @@ gen-loc:
 format: ## Format Dart code.
 format:
 	@dart format $(shell find . -name "*.dart" -not \( -name "*.*freezed.dart" -o -name "*.*g.dart" -o -path "./lib/l10n/*" \))
+
+.PHONY: icon
+icon: ## Generate app icons.
+icon:
+	@flutter pub run flutter_launcher_icons
