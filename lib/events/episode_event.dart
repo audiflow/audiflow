@@ -11,6 +11,12 @@ class EpisodeUpdatedEvent implements EpisodeEvent {
   final Episode episode;
 }
 
+class EpisodesUpdatedEvent implements EpisodeEvent {
+  const EpisodesUpdatedEvent(this.episodes);
+
+  final List<Episode> episodes;
+}
+
 class EpisodesAddedEvent implements EpisodeEvent {
   const EpisodesAddedEvent(this.episodes);
 
@@ -27,6 +33,12 @@ class EpisodeStatsUpdatedEvent implements EpisodeEvent {
   const EpisodeStatsUpdatedEvent(this.stats);
 
   final EpisodeStats stats;
+}
+
+class EpisodeStatsListUpdatedEvent implements EpisodeEvent {
+  const EpisodeStatsListUpdatedEvent(this.statsList);
+
+  final List<EpisodeStats> statsList;
 }
 
 @Riverpod(keepAlive: true)
