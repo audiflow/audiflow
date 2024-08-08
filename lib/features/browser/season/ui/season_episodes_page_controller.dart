@@ -1,6 +1,6 @@
+import 'package:audiflow/features/browser/common/data/episode_stats_repository/episode_stats_repository.dart';
 import 'package:audiflow/features/browser/common/data/page_models_event.dart';
 import 'package:audiflow/features/browser/common/data/page_models_repository.dart';
-import 'package:audiflow/features/browser/common/data/stats_repository.dart';
 import 'package:audiflow/features/browser/common/model/episode_filter_mode.dart';
 import 'package:audiflow/features/browser/podcast/model/podcast_details_page_model.dart';
 import 'package:audiflow/features/browser/season/model/season.dart';
@@ -26,7 +26,8 @@ class SeasonEpisodesPageController extends _$SeasonEpisodesPageController {
   EpisodeRepository get _episodeRepository =>
       ref.read(episodeRepositoryProvider);
 
-  StatsRepository get _statsRepository => ref.read(statsRepositoryProvider);
+  EpisodeStatsRepository get _episodeStatsRepository =>
+      ref.read(episodeStatsRepositoryProvider);
 
   DownloadRepository get _downloadRepository =>
       ref.read(downloadRepositoryProvider);
@@ -73,8 +74,8 @@ class SeasonEpisodesPageController extends _$SeasonEpisodesPageController {
   }
 
   Future<void> _onPodcastDetailsPageModelChanged(
-      PodcastDetailsPageModel model,
-      ) async {
+    PodcastDetailsPageModel model,
+  ) async {
     final current = state.requireValue;
     if (model.seasonEpisodeFilterMode == current.filterMode &&
         model.seasonEpisodesAscending == current.ascending) {
@@ -109,13 +110,13 @@ class SeasonEpisodesPageController extends _$SeasonEpisodesPageController {
       case EpisodeFilterMode.all:
         return episodes;
       case EpisodeFilterMode.unplayed:
-        final episodeStatsList = await _statsRepository
+        final episodeStatsList = await _episodeStatsRepository
             .findEpisodeStatsList(episodes.map((e) => e.id));
         return episodes.whereIndexed((i, e) {
           return (episodeStatsList[i]?.completeCount ?? 0) < 1;
         }).toList();
       case EpisodeFilterMode.completed:
-        final episodeStatsList = await _statsRepository
+        final episodeStatsList = await _episodeStatsRepository
             .findEpisodeStatsList(episodes.map((e) => e.id));
         return episodes.whereIndexed((i, e) {
           return 0 < (episodeStatsList[i]?.completeCount ?? 0);

@@ -1,6 +1,6 @@
 import 'package:audiflow/common/data/connectivity.dart';
 import 'package:audiflow/events/audio_player_event.dart';
-import 'package:audiflow/features/browser/common/data/stats_repository.dart';
+import 'package:audiflow/features/browser/common/data/episode_stats_repository/episode_stats_repository.dart';
 import 'package:audiflow/features/browser/common/model/episode_filter_mode.dart';
 import 'package:audiflow/features/download/data/download_repository.dart';
 import 'package:audiflow/features/download/model/downloadable.dart';
@@ -22,7 +22,8 @@ class AudioQueueManager extends _$AudioQueueManager {
   EpisodeRepository get _episodeRepository =>
       ref.read(episodeRepositoryProvider);
 
-  StatsRepository get _statsRepository => ref.read(statsRepositoryProvider);
+  EpisodeStatsRepository get _episodeStatsRepository =>
+      ref.read(episodeStatsRepositoryProvider);
 
   DownloadRepository get _downloadRepository =>
       ref.read(downloadRepositoryProvider);
@@ -80,10 +81,10 @@ class AudioQueueManager extends _$AudioQueueManager {
     await _play(eid: start.id);
   }
 
-  Future<bool> _play({ required int eid}) async {
+  Future<bool> _play({required int eid}) async {
     final ret = await Future.wait([
       _episodeRepository.findEpisode(eid),
-      _statsRepository.findEpisodeStats(eid),
+      _episodeStatsRepository.findEpisodeStats(eid),
       _downloadRepository.findDownload(eid),
     ]);
 
@@ -110,7 +111,7 @@ class AudioQueueManager extends _$AudioQueueManager {
       final queueItem = _queue.first;
       final ret = await Future.wait([
         _episodeRepository.findEpisode(queueItem.eid),
-        _statsRepository.findEpisodeStats(queueItem.eid),
+        _episodeStatsRepository.findEpisodeStats(queueItem.eid),
         _downloadRepository.findDownload(queueItem.eid),
       ]);
       final episode = ret[0] as Episode?;

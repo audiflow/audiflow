@@ -1,4 +1,4 @@
-import 'package:audiflow/features/browser/common/data/stats_repository.dart';
+import 'package:audiflow/features/browser/common/data/podcast_stats_repository/podcast_stats_repository.dart';
 import 'package:audiflow/features/browser/episode/ui/episodes_list_event.dart';
 import 'package:audiflow/features/feed/model/model.dart';
 import 'package:audiflow/localization/generated/l10n.dart';
@@ -52,13 +52,17 @@ class PodcastDetailsAppBar extends ConsumerWidget {
           ? IconButton(
               icon: const Icon(Icons.check),
               onPressed: () {
-                ref.read(statsRepositoryProvider).unsubscribePodcast(podcast!);
+                ref
+                    .read(podcastStatsRepositoryProvider)
+                    .unsubscribePodcast(podcast!);
               },
             )
           : IconButton(
               icon: const Icon(Icons.bookmark_add),
               onPressed: () {
-                ref.read(statsRepositoryProvider).subscribePodcast(podcast!);
+                ref
+                    .read(podcastStatsRepositoryProvider)
+                    .subscribePodcast(podcast!);
               },
             ),
       PopupMenuButton<String>(

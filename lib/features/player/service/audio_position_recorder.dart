@@ -1,5 +1,5 @@
 import 'package:audiflow/events/audio_player_event.dart';
-import 'package:audiflow/features/browser/common/data/stats_repository.dart';
+import 'package:audiflow/features/browser/common/data/episode_stats_repository/episode_stats_repository.dart';
 import 'package:audiflow/features/player/data/player_state_repository.dart';
 import 'package:audiflow/features/player/service/audio_player_service.dart';
 import 'package:audiflow/utils/logger.dart';
@@ -11,6 +11,9 @@ part 'audio_position_recorder.g.dart';
 
 @Riverpod(keepAlive: true)
 class AudioPositionRecorder extends _$AudioPositionRecorder {
+  EpisodeStatsRepository get _episodeStatsRepository =>
+      ref.read(episodeStatsRepositoryProvider);
+
   @override
   AudioPositionSaverState build() {
     _listenAudioPlayerEvent();
@@ -24,7 +27,6 @@ class AudioPositionRecorder extends _$AudioPositionRecorder {
         return;
       }
 
-      final statsRepository = ref.read(statsRepositoryProvider);
       switch (next.requireValue) {
         case AudioPlayerActionEvent(
             episode: final episode,
@@ -32,7 +34,7 @@ class AudioPositionRecorder extends _$AudioPositionRecorder {
           ):
           logger.d(() => 'save EpisodeStats.lastPlayedAt:${episode.title}');
           state = const AudioPositionSaverState();
-          await statsRepository.updateEpisodeStats(
+          await _episodeStatsRepository.updateEpisodeStats(
             EpisodeStatsUpdateParam(
               pid: episode.pid,
               eid: episode.id,
@@ -40,7 +42,7 @@ class AudioPositionRecorder extends _$AudioPositionRecorder {
               lastPlayedAt: DateTime.now(),
             ),
           );
-          await statsRepository.saveRecentlyPlayedEpisode(episode);
+          await _episodeStatsRepository.saveRecentlyPlayedEpisode(episode);
         case AudioPlayerActionEvent(
             episode: final episode,
             action: AudioPlayerAction.completed,
@@ -48,14 +50,15 @@ class AudioPositionRecorder extends _$AudioPositionRecorder {
           if ((episode.duration?.inSeconds ?? 0) < 1) {
             return;
           }
-          final stats = await statsRepository.findEpisodeStats(episode.id);
+          final stats =
+              await _episodeStatsRepository.findEpisodeStats(episode.id);
           final playedDuration =
               stats!.playTotal - episode.duration! * stats.playCount;
           if (episode.duration! * 0.95 <= playedDuration) {
             logger.d(
               () => 'save EpisodeStats.completeCountDelta +1: ${episode.title}',
             );
-            await statsRepository.updateEpisodeStats(
+            await _episodeStatsRepository.updateEpisodeStats(
               EpisodeStatsUpdateParam(
                 pid: episode.pid,
                 eid: episode.id,
@@ -103,19 +106,19 @@ class AudioPositionRecorder extends _$AudioPositionRecorder {
               ? true
               : null;
 
-      ref.read(statsRepositoryProvider).updateEpisodeStats(
-            EpisodeStatsUpdateParam(
-              pid: episode.pid,
-              eid: episode.id,
-              ordinal: episode.ordinal,
-              position: position,
-              played: played,
-              playTotalDelta: state.lastSavedPosition != null &&
-                      state.lastSavedPosition! < position
-                  ? position - state.lastSavedPosition!
-                  : null,
-            ),
-          );
+      _episodeStatsRepository.updateEpisodeStats(
+        EpisodeStatsUpdateParam(
+          pid: episode.pid,
+          eid: episode.id,
+          ordinal: episode.ordinal,
+          position: position,
+          played: played,
+          playTotalDelta: state.lastSavedPosition != null &&
+                  state.lastSavedPosition! < position
+              ? position - state.lastSavedPosition!
+              : null,
+        ),
+      );
 
       state = state.copyWith(
         episode: episode,

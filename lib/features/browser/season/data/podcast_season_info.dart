@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:audiflow/events/episode_event.dart';
-import 'package:audiflow/features/browser/common/data/stats_repository.dart';
+import 'package:audiflow/features/browser/common/data/episode_stats_repository/episode_stats_repository.dart';
 import 'package:audiflow/features/browser/season/model/season.dart';
 import 'package:audiflow/features/feed/data/episode_repository.dart';
 import 'package:audiflow/features/feed/model/model.dart';
@@ -17,12 +17,13 @@ class PodcastSeasonInfo extends _$PodcastSeasonInfo {
   EpisodeRepository get _episodeRepository =>
       ref.read(episodeRepositoryProvider);
 
-  StatsRepository get _statsRepository => ref.read(statsRepositoryProvider);
+  EpisodeStatsRepository get _episodeStatsRepository =>
+      ref.read(episodeStatsRepositoryProvider);
 
   @override
   Future<PodcastSeasonInfoState> build(Season season) async {
     final statsList =
-        await _statsRepository.findEpisodeStatsList(season.episodeIds);
+        await _episodeStatsRepository.findEpisodeStatsList(season.episodeIds);
     final episodes = await _episodeRepository
         .findEpisodes(season.episodeIds)
         .then((episodes) => episodes.whereNotNull().toList());

@@ -3,8 +3,10 @@ import 'dart:isolate';
 
 import 'package:audiflow/common/data/isar_factory.dart';
 import 'package:audiflow/exceptions/app_exception.dart';
-import 'package:audiflow/features/browser/common/data/isar_stats_repository.dart';
-import 'package:audiflow/features/browser/common/data/stats_repository.dart';
+import 'package:audiflow/features/browser/common/data/episode_stats_repository/episode_stats_repository.dart';
+import 'package:audiflow/features/browser/common/data/episode_stats_repository/isar_episode_stats_repository.dart';
+import 'package:audiflow/features/browser/common/data/podcast_stats_repository/isar_podcast_stats_repository.dart';
+import 'package:audiflow/features/browser/common/data/podcast_stats_repository/podcast_stats_repository.dart';
 import 'package:audiflow/features/browser/common/model/episode_filter_mode.dart';
 import 'package:audiflow/features/browser/episode/data/episode_list_entry_repository.dart';
 import 'package:audiflow/features/browser/episode/data/isar_episode_list_repository.dart';
@@ -127,7 +129,8 @@ class _Worker {
 
   late final Isar _isar;
   late final EpisodeRepository _episodeRepository;
-  late final StatsRepository _statsRepository;
+  late final PodcastStatsRepository _podcastStatsRepository;
+  late final EpisodeStatsRepository _episodeStatsRepository;
   late final DownloadRepository _downloadRepository;
   late final EpisodeListEntryRepository _episodeListRepository;
   final _commandStreamController = StreamController<_Command>();
@@ -193,7 +196,8 @@ class _Worker {
   Future<void> _setupRepository(String storageDir) async {
     _isar = await IsarFactory.create(storageDir);
     _episodeRepository = IsarEpisodeRepository(_isar);
-    _statsRepository = IsarStatsRepository(_isar);
+    _podcastStatsRepository = IsarPodcastStatsRepository(_isar);
+    _episodeStatsRepository = IsarEpisodeStatsRepository(_isar);
     _episodeListRepository = IsarEpisodeListEntryRepository(_isar);
   }
 
@@ -218,7 +222,7 @@ class _Worker {
 
   Future<void> _loadAllEpisodes() async {
     final [podcastStats, _] = await Future.wait<dynamic>([
-      _statsRepository.findPodcastStats(_pid),
+      _podcastStatsRepository.findPodcastStats(_pid),
       _episodeListRepository.clear(_pid, _role),
     ]);
     if (_isCancelled()) {
@@ -276,7 +280,7 @@ class _Worker {
 
   Future<void> _loadCompletedEpisodes() async {
     final [count, _] = await Future.wait<dynamic>([
-      _statsRepository.countEpisodeStatsBy(
+      _episodeStatsRepository.countEpisodeStatsBy(
         pid: _pid,
         filterBy: EpisodeStatsFilterBy.completed,
       ),
@@ -331,7 +335,7 @@ class _Worker {
     required int limit,
     int? lastOrdinal,
   }) async {
-    final statsList = await _statsRepository
+    final statsList = await _episodeStatsRepository
         .queryCompletedEpisodeStatsList(
           pid: _pid,
           lastOrdinal: lastOrdinal,
@@ -357,8 +361,8 @@ class _Worker {
 
   Future<void> _loadUnplayedEpisodes() async {
     final [podcastStats, count, _] = await Future.wait<dynamic>([
-      _statsRepository.findPodcastStats(_pid),
-      _statsRepository.countEpisodeStatsBy(
+      _podcastStatsRepository.findPodcastStats(_pid),
+      _episodeStatsRepository.countEpisodeStatsBy(
         pid: _pid,
         filterBy: EpisodeStatsFilterBy.incomplete,
       ),
@@ -429,7 +433,7 @@ class _Worker {
         break;
       }
       ordinal = episodes.last.ordinal;
-      final statsList = await _statsRepository
+      final statsList = await _episodeStatsRepository
           .findEpisodeStatsList(episodes.map((e) => e.id));
       final filtered = episodes
           .whereIndexed((i, e) => (statsList[i]?.completeCount ?? 0) < 1);

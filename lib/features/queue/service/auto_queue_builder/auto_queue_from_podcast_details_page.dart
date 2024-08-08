@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:audiflow/features/browser/common/data/stats_repository.dart';
+import 'package:audiflow/features/browser/common/data/episode_stats_repository/episode_stats_repository.dart';
 import 'package:audiflow/features/browser/common/model/episode_filter_mode.dart';
 import 'package:audiflow/features/download/data/download_repository.dart';
 import 'package:audiflow/features/feed/data/episode_repository.dart';
@@ -25,7 +25,8 @@ class AutoQueueFromPodcastDetailsPage extends _$AutoQueueFromPodcastDetailsPage
   EpisodeRepository get _episodeRepository =>
       ref.read(episodeRepositoryProvider);
 
-  StatsRepository get _statsRepository => ref.read(statsRepositoryProvider);
+  EpisodeStatsRepository get _episodeStatsRepository =>
+      ref.read(episodeStatsRepositoryProvider);
 
   DownloadRepository get _downloadRepository =>
       ref.read(downloadRepositoryProvider);
@@ -140,7 +141,7 @@ class AutoQueueFromPodcastDetailsPage extends _$AutoQueueFromPodcastDetailsPage
         break;
       }
 
-      final statsList = await _statsRepository
+      final statsList = await _episodeStatsRepository
           .findEpisodeStatsList(episodes.map((e) => e.id));
       final unplayed = episodes
           .whereIndexed((i, e) => (statsList[i]?.completeCount ?? 0) < 1)
@@ -155,7 +156,8 @@ class AutoQueueFromPodcastDetailsPage extends _$AutoQueueFromPodcastDetailsPage
   }
 
   Future<(List<QueueItem>, int?)> _queryCompletedEpisodes(int limit) async {
-    final statsList = await _statsRepository.queryCompletedEpisodeStatsList(
+    final statsList =
+        await _episodeStatsRepository.queryCompletedEpisodeStatsList(
       pid: _pid,
       lastOrdinal: _ordinal,
       ascending: true,

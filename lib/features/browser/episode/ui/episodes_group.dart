@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:audiflow/features/browser/common/data/stats_repository.dart';
+import 'package:audiflow/features/browser/common/data/episode_stats_repository/episode_stats_repository.dart';
 import 'package:audiflow/features/feed/model/model.dart';
 import 'package:audiflow/features/player/model/play_order.dart';
 import 'package:collection/collection.dart';
@@ -54,7 +54,7 @@ class EpisodesGroup extends _$EpisodesGroup {
     }
 
     final stats = await ref
-        .read(statsRepositoryProvider)
+        .read(episodeStatsRepositoryProvider)
         .findEpisodeStatsList(episodes.map((e) => e.id));
 
     final playedStatsList =

@@ -1,5 +1,5 @@
 import 'package:audiflow/events/podcast_event.dart';
-import 'package:audiflow/features/browser/common/data/stats_repository.dart';
+import 'package:audiflow/features/browser/common/data/podcast_stats_repository/podcast_stats_repository.dart';
 import 'package:audiflow/features/feed/model/model.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -24,5 +24,5 @@ Future<PodcastStats?> podcastStats(PodcastStatsRef ref, int pid) {
     });
   });
 
-  return ref.read(statsRepositoryProvider).findPodcastStats(pid);
+  return ref.read(podcastStatsRepositoryProvider).findPodcastStats(pid);
 }

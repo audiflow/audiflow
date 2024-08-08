@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:audiflow/common/data/app_path_repository.dart';
-import 'package:audiflow/features/browser/common/data/stats_repository.dart';
+import 'package:audiflow/features/browser/common/data/episode_stats_repository/episode_stats_repository.dart';
 import 'package:audiflow/features/browser/common/model/episode_filter_mode.dart';
 import 'package:audiflow/features/browser/episode/data/episode_list_entry_repository.dart';
 import 'package:audiflow/features/browser/episode/model/episode_list_entry.dart';
@@ -22,7 +22,8 @@ class PodcastEpisodesController extends _$PodcastEpisodesController {
   EpisodeRepository get _episodeRepository =>
       ref.read(episodeRepositoryProvider);
 
-  StatsRepository get _statsRepository => ref.read(statsRepositoryProvider);
+  EpisodeStatsRepository get _episodeStatsRepository =>
+      ref.read(episodeStatsRepositoryProvider);
 
   EpisodeListEntryRepository get _episodeListEntryRepository =>
       ref.read(episodeListEntryRepositoryProvider);
@@ -138,7 +139,7 @@ class PodcastEpisodesController extends _$PodcastEpisodesController {
   }
 
   Future<int?> getLastPlayedIndex() async {
-    final episodes = await _statsRepository.findEpisodeStatsListBy(
+    final episodes = await _episodeStatsRepository.findEpisodeStatsListBy(
       pid: pid,
       sortBy: EpisodeStatsSortBy.playedDate,
       limit: 1,

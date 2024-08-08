@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:audiflow/features/browser/common/data/stats_repository.dart';
+import 'package:audiflow/features/browser/common/data/episode_stats_repository/episode_stats_repository.dart';
 import 'package:audiflow/features/download/data/download_repository.dart';
 import 'package:audiflow/features/download/model/downloadable.dart';
 import 'package:audiflow/features/download/service/download_manager.dart';
@@ -33,7 +33,8 @@ class MobileDownloadService extends DownloadService {
   EpisodeRepository get _episodeRepository =>
       _ref.read(episodeRepositoryProvider);
 
-  StatsRepository get _statsRepository => _ref.read(statsRepositoryProvider);
+  EpisodeStatsRepository get _episodeStatsRepository =>
+      _ref.read(episodeStatsRepositoryProvider);
 
   DownloadRepository get _downloadRepository =>
       _ref.read(downloadRepositoryProvider);
@@ -100,7 +101,7 @@ class MobileDownloadService extends DownloadService {
     final downloads = await _downloadRepository.findDownloads(ids);
     final statsList = unplayedOnly
         ? <EpisodeStats>[]
-        : await _statsRepository.findEpisodeStatsList(ids);
+        : await _episodeStatsRepository.findEpisodeStatsList(ids);
 
     final toDownload = episodes.where((e) {
       final stats = statsList.firstWhereOrNull((s) => s?.eid == e.id);
@@ -281,11 +282,11 @@ class MobileDownloadService extends DownloadService {
   }
 
   Future<void> _onDownloadComplete(Downloadable download) async {
-    final stats = await _statsRepository.findEpisodeStats(download.id);
+    final stats = await _episodeStatsRepository.findEpisodeStats(download.id);
     if (stats?.durationMS == null) {
       final path = await _downloadPath.resolvePath(download);
       final mp3Info = MP3Processor.fromFile(File(path));
-      await _statsRepository.updateEpisodeStats(
+      await _episodeStatsRepository.updateEpisodeStats(
         EpisodeStatsUpdateParam(
           eid: download.id,
           pid: download.pid,

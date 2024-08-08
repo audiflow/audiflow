@@ -7,8 +7,8 @@ import 'package:audiflow/common/data/isar_factory.dart';
 import 'package:audiflow/events/episode_event.dart';
 import 'package:audiflow/events/podcast_event.dart';
 import 'package:audiflow/events/season_event.dart';
-import 'package:audiflow/features/browser/common/data/isar_stats_repository.dart';
-import 'package:audiflow/features/browser/common/data/stats_repository.dart';
+import 'package:audiflow/features/browser/common/data/podcast_stats_repository/isar_podcast_stats_repository.dart';
+import 'package:audiflow/features/browser/common/data/podcast_stats_repository/podcast_stats_repository.dart';
 import 'package:audiflow/features/browser/season/data/isar_season_repository.dart';
 import 'package:audiflow/features/browser/season/data/season_repository.dart';
 import 'package:audiflow/features/browser/season/model/season.dart';
@@ -126,7 +126,7 @@ class PodcastFeedLoader extends _$PodcastFeedLoader {
               .add(EpisodesAddedEvent(episodes));
           unawaited(
             ref
-                .read(statsRepositoryProvider)
+                .read(podcastStatsRepositoryProvider)
                 .findPodcastStats(episodes.first.pid)
                 .then((stats) {
               if (stats != null) {
@@ -189,7 +189,7 @@ class _Worker {
   late final Isar _isar;
   late final PodcastRepository _podcastRepository;
   late final EpisodeRepository _episodeRepository;
-  late final StatsRepository _statsRepository;
+  late final PodcastStatsRepository _podcastStatsRepository;
   late final SeasonRepository _seasonRepository;
   late final String _cacheDir;
   final _commandStreamController = StreamController<_Command>();
@@ -255,8 +255,8 @@ class _Worker {
   Future<void> _setupRepository(String storageDir) async {
     _isar = await IsarFactory.create(storageDir);
     _podcastRepository = IsarPodcastRepository(_isar);
+    _podcastStatsRepository = IsarPodcastStatsRepository(_isar);
     _episodeRepository = IsarEpisodeRepository(_isar);
-    _statsRepository = IsarStatsRepository(_isar);
     _seasonRepository = IsarSeasonRepository(_isar);
   }
 
@@ -362,7 +362,8 @@ class _Worker {
     // Get the latest episode to determine the last publication date.
     // If the podcast has loaded all episodes, we don't need to read the entire
     // feed.
-    final podcastStats = await _statsRepository.findPodcastStats(_podcast!.id);
+    final podcastStats =
+        await _podcastStatsRepository.findPodcastStats(_podcast!.id);
     final latest = podcastStats?.hasLoadedAll == true
         ? await _episodeRepository.findLatestEpisode(_podcast!.id)
         : null;
@@ -393,7 +394,7 @@ class _Worker {
       _newEpisodes.add(episode);
       if (batchLength <= episodes.length) {
         await _episodeRepository.saveEpisodes(episodes);
-        await _statsRepository.updatePodcastStats(
+        await _podcastStatsRepository.updatePodcastStats(
           PodcastStatsUpdateParam(
             id: _podcast!.id,
             deltaTotalEpisodes: episodes.length,
@@ -412,7 +413,7 @@ class _Worker {
     }
 
     await _episodeRepository.saveEpisodes(episodes);
-    await _statsRepository.updatePodcastStats(
+    await _podcastStatsRepository.updatePodcastStats(
       PodcastStatsUpdateParam(
         id: _podcast!.id,
         deltaTotalEpisodes: episodes.length,

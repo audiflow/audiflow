@@ -11,12 +11,16 @@ import 'package:audiflow/exceptions/async_error_logger.dart';
 import 'package:audiflow/exceptions/error_logger.dart';
 import 'package:audiflow/features/bootstrap/ui/audiflow_app.dart';
 import 'package:audiflow/features/browser/common/data/default_podcast_api_repository.dart';
+import 'package:audiflow/features/browser/common/data/episode_stats_repository/episode_stats_repository.dart';
+import 'package:audiflow/features/browser/common/data/episode_stats_repository/episode_stats_repository_change_handler.dart';
+import 'package:audiflow/features/browser/common/data/episode_stats_repository/isar_episode_stats_repository.dart';
 import 'package:audiflow/features/browser/common/data/isar_page_models_repository.dart';
-import 'package:audiflow/features/browser/common/data/isar_stats_repository.dart';
 import 'package:audiflow/features/browser/common/data/page_models_repository.dart';
 import 'package:audiflow/features/browser/common/data/page_models_repository_change_handler.dart';
 import 'package:audiflow/features/browser/common/data/podcast_api_repository.dart';
-import 'package:audiflow/features/browser/common/data/stats_repository.dart';
+import 'package:audiflow/features/browser/common/data/podcast_stats_repository/isar_podcast_stats_repository.dart';
+import 'package:audiflow/features/browser/common/data/podcast_stats_repository/podcast_stats_repository.dart';
+import 'package:audiflow/features/browser/common/data/podcast_stats_repository/podcast_stats_repository_change_handler.dart';
 import 'package:audiflow/features/browser/episode/data/episode_list_entry_repository.dart';
 import 'package:audiflow/features/browser/episode/data/isar_episode_list_repository.dart';
 import 'package:audiflow/features/browser/season/data/isar_season_repository.dart';
@@ -101,6 +105,12 @@ void main() async {
         (ref) =>
             EpisodeRepositoryHandleHandler(ref, IsarEpisodeRepository(isar)),
       ),
+      episodeStatsRepositoryProvider.overrideWith(
+        (ref) => EpisodeStatsRepositoryChangeHandler(
+          ref,
+          IsarEpisodeStatsRepository(isar),
+        ),
+      ),
       pageModelsRepositoryProvider.overrideWith(
         (ref) => PageModelsRepositoryChangeHandler(
           ref,
@@ -114,11 +124,16 @@ void main() async {
         (ref) =>
             PodcastRepositoryChangeHandler(ref, IsarPodcastRepository(isar)),
       ),
+      podcastStatsRepositoryProvider.overrideWith(
+        (ref) => PodcastStatsRepositoryChangeHandler(
+          ref,
+          IsarPodcastStatsRepository(isar),
+        ),
+      ),
       queueManagerProvider.overrideWith(DefaultQueueManager.new),
       queueRepositoryProvider.overrideWithValue(IsarQueueRepository(isar)),
       rssRepositoryProvider.overrideWithValue(IsarRssRepository(isar)),
       seasonRepositoryProvider.overrideWithValue(IsarSeasonRepository(isar)),
-      statsRepositoryProvider.overrideWithValue(IsarStatsRepository(isar)),
     ],
     observers: [AsyncErrorLogger()],
   );
