@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:audiflow/constants/attribute.dart';
 import 'package:audiflow/constants/country.dart';
 import 'package:audiflow/core/environment.dart';
-import 'package:audiflow/entities/entities.dart';
 import 'package:audiflow/features/browser/common/data/podcast_api_repository.dart';
 import 'package:audiflow/features/browser/common/model/itunes_chart_item.dart';
 import 'package:audiflow/features/browser/common/model/itunes_search_item.dart';

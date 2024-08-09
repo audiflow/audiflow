@@ -1,5 +1,5 @@
-import 'package:audiflow/entities/playing_episode.dart';
 import 'package:audiflow/features/player/data/player_state_repository.dart';
+import 'package:audiflow/features/player/model/playing_episode.dart';
 import 'package:isar/isar.dart';
 
 class IsarPlayerStateRepository implements PlayerStateRepository {

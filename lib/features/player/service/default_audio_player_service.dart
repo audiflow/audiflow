@@ -513,7 +513,7 @@ class DefaultAudioPlayerService extends _$DefaultAudioPlayerService
           );
 }
 
-/// This is the default audio handler used by the [MobileAudioPlayerService]
+/// This is the default audio handler used by the [DefaultAudioPlayerService]
 /// service.
 /// This handles the interaction between the service (via the audio service
 /// package) and the underlying player.

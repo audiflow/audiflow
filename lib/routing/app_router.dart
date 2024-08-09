@@ -1,3 +1,4 @@
+import 'package:audiflow/common/ui/error_notifier.dart';
 import 'package:audiflow/features/bootstrap/service/app_wide_initializer.dart';
 import 'package:audiflow/features/browser/chart/ui/podcast_chart_page.dart';
 import 'package:audiflow/features/browser/common/model/itunes_chart_item.dart';
@@ -6,7 +7,6 @@ import 'package:audiflow/features/browser/season/model/season.dart';
 import 'package:audiflow/features/browser/season/ui/season_episodes_page.dart';
 import 'package:audiflow/features/feed/model/model.dart';
 import 'package:audiflow/routing/app_bottom_navigation_bar.dart';
-import 'package:audiflow/ui/widgets/error_notifier.dart';
 import 'package:audiflow/utils/hash.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
