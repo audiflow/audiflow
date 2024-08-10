@@ -1,6 +1,12 @@
 include: package:pedantic_mono/analysis_options.yaml
 
 analyzer:
-  exclude: [ build/**, lib/**/*.g.dart, lib/**/*.freezed.dart, lib/l10n/** ]
+  exclude:
+    - build/**
+    - lib/**/*.g.dart
+    - lib/**/*.freezed.dart
+    - lib/localization/**
+    - lib/services/**
+    - lib/ui/**
   plugins:
     - custom_lint

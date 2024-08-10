@@ -1,3 +1,11 @@
-arb-dir: lib/l10n
+arb-dir: lib/localization
 template-arb-file: intl_en.arb
-output-localization-file: messages_all.dart
+output-localization-file: l10n.dart
+output-dir: lib/localization/generated
+output-class: L10n
+synthetic-package: false
+preferred-supported-locales:
+  - ja
+  - en
+header: '// ignore_for_file: type=lint'
+nullable-getter: false

@@ -1,0 +1,94 @@
+{
+  "feed": {
+    "author": {
+      "name": {
+        "label": "iTunes Store"
+      },
+      "uri": {
+        "label": "https://www.apple.com/itunes/"
+      }
+    },
+    "entry": [
+      {
+        "im:name": {
+          "label": "Short name1"
+        },
+        "im:image": [
+          {
+            "label": "https://example.com/55.png",
+            "attributes": {
+              "height": "55"
+            }
+          },
+          {
+            "label": "https://example.com/60.png",
+            "attributes": {
+              "height": "60"
+            }
+          },
+          {
+            "label": "https://example.com/170.png",
+            "attributes": {
+              "height": "170"
+            }
+          }
+        ],
+        "summary": {
+          "label": "A summary line."
+        },
+        "im:price": {
+          "label": "Get",
+          "attributes": {
+            "amount": "0",
+            "currency": "USD"
+          }
+        },
+        "im:contentType": {
+          "attributes": {
+            "term": "Podcast",
+            "label": "Podcast"
+          }
+        },
+        "rights": {
+          "label": "© Copyright 2024 FooBar"
+        },
+        "title": {
+          "label": "A Longer Title"
+        },
+        "link": {
+          "attributes": {
+            "rel": "alternate",
+            "type": "text/html",
+            "href": "https://podcasts.apple.com/us/podcast/example-1"
+          }
+        },
+        "id": {
+          "label": "https://podcasts.apple.com/us/podcast/example/id12345678",
+          "attributes": {
+            "im:id": "12345678"
+          }
+        },
+        "im:artist": {
+          "label": "Creator Name",
+          "attributes": {
+            "href": "https://podcasts.apple.com/us/artist/wbez/12345678"
+          }
+        },
+        "category": {
+          "attributes": {
+            "im:id": "1489",
+            "term": "News",
+            "scheme": "https://podcasts.apple.com/us/genre/podcasts-news/id1489?uo=2",
+            "label": "News"
+          }
+        },
+        "im:releaseDate": {
+          "label": "2024-04-04T03:00:00-07:00",
+          "attributes": {
+            "label": "April 4, 2024"
+          }
+        }
+      }
+    ]
+  }
+}

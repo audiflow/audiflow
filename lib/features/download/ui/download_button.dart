@@ -1,0 +1,97 @@
+import 'package:audiflow/features/download/model/downloadable.dart';
+import 'package:audiflow/features/download/service/download_progress.dart';
+import 'package:audiflow/features/download/service/download_service.dart';
+import 'package:audiflow/features/feed/model/model.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:material_symbols_icons/material_symbols_icons.dart';
+
+/// Displays a download button for an episode.
+///
+/// Can be passed a percentage representing the download progress which
+/// the button will then animate to show progress.
+class DownloadButton extends ConsumerWidget {
+  const DownloadButton(
+    this.episode, {
+    super.key,
+  });
+
+  final Episode episode;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final downloadableState = ref.watch(downloadProgressProvider(episode));
+    final downloads = downloadableState.valueOrNull != null;
+    final downloadState =
+        downloadableState.valueOrNull?.state ?? DownloadState.none;
+    final downloaded = downloadState == DownloadState.downloaded;
+
+    final double? percent;
+    switch (downloadState) {
+      case DownloadState.none:
+      case DownloadState.failed:
+      case DownloadState.cancelled:
+        percent = null;
+      case DownloadState.downloaded:
+        percent = 1;
+      case DownloadState.queued:
+      case DownloadState.downloading:
+      case DownloadState.paused:
+        final base = downloadableState.requireValue?.percentage ?? 0;
+        percent = base == 0 ? null : base.toDouble() / 100;
+    }
+
+    final downloading = [
+      DownloadState.queued,
+      DownloadState.downloading,
+      DownloadState.paused,
+    ].contains(downloadState);
+
+    final theme = Theme.of(context);
+    final style = OutlinedButton.styleFrom(
+      shape: const StadiumBorder(),
+      foregroundColor: theme.hintColor,
+      minimumSize: const Size(30, 26),
+      padding: const EdgeInsets.only(left: 6, right: 6),
+      side: BorderSide(color: theme.hintColor),
+    );
+
+    return OutlinedButton(
+      style: style,
+      onPressed: () => downloads
+          ? ref.read(downloadServiceProvider).deleteDownload(episode)
+          : ref.read(downloadServiceProvider).downloadEpisode(episode),
+      child: SizedBox(
+        width: 26,
+        height: 26,
+        child: Stack(
+          children: [
+            if (downloading)
+              Center(
+                child: SizedBox(
+                  width: 12,
+                  height: 12,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    key: ValueKey(downloads),
+                    value: percent,
+                    color: theme.colorScheme.tertiary,
+                    // backgroundColor: theme.colorScheme.secondaryContainer,
+                  ),
+                ),
+              ),
+            if (!downloading)
+              Center(
+                child: Icon(
+                  downloaded || percent == 1
+                      ? Symbols.download_done
+                      : Symbols.download,
+                  size: 18,
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}

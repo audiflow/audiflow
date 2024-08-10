@@ -1,0 +1,139 @@
+{
+  "locale": "ja",
+  "ok": "OK",
+  "cancel": "キャンセル",
+  "goBack": "戻る",
+  "continues": "続行",
+  "showMore": "もっと見る",
+  "showLess": "たたむ",
+  "clearSearchButton": "クリア",
+  "subscriptions": "フォロー中",
+  "popularPodcasts": "人気ポッドキャスト",
+  "recentlyPlayed": "再生履歴",
+  "latestEpisodes": "最新エピソード",
+  "home": "ホーム",
+  "chart": "チャート",
+  "search": "検索",
+  "library": "Library",
+  "queue": "連続再生キュー",
+  "nullSeason": "その他",
+  "clear": "クリア",
+  "episode": "エピソード",
+  "episodes": "エピソード",
+  "season": "シーズン",
+  "seasons": "シーズン",
+  "settings": "Settings",
+  "wifi": "Wi-Fi",
+  "mobileData": "モバイル回線",
+  "nEpisodes": "{count}エピソード",
+  "@nEpisodes": {
+    "description": "エピソード数",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sec": "秒",
+  "min": "分",
+  "hour": "時間",
+  "nDaysAgo": "{count}日前",
+  "@nDaysAgo": {
+    "description": "日数",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "nHoursAgo": "{count}時間前",
+  "@nHoursAgo": {
+    "description": "時間数",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "nMinutesAgo": "{count}分前",
+  "@nMinutesAgo": {
+    "description": "分数",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "nSecondsAgo": "{count}秒前",
+  "@nSecondsAgo": {
+    "description": "秒数",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "justNow": "たった今",
+  "episodeFilterMode": "表示するエピソード",
+  "episodeFilterModeAll": "すべてのエピソード",
+  "episodeFilterModePlayed": "再生済み",
+  "episodeFilterModeUnplayed": "未再生",
+  "episodeFilterModeDownloaded": "ダウンロード済み",
+  "seasonFilterMode": "Filter Seasons",
+  "seasonFilterModeAll": "All seasons",
+  "seasonFilterModeUnplayed": "未再生あり",
+  "viewSortOldestToNewest": "古い順に並び替え",
+  "jumpToLastEpisode": "最後に聴いたエピソードへ",
+  "resume": "再開",
+  "play": "再生",
+  "pause": "一時停止",
+  "playFromStart": "最初から再生",
+  "playLatest": "最新のエピソードを再生",
+  "playAgain": "再生",
+  "tooltipPlay": "エピソードを再生",
+  "tooltipPause": "エピソード再生を一時停止",
+  "settingsOnDemandDownloadOnPlayback": "再生時の音源取得",
+  "settingsOnDemandDownloadOnPlaybackDescription": "事前ダウンロードがない場合、再生開始時に音源を取得します",
+  "settingsManualDownload": "手動ダウンロード",
+  "settingsManualDownloadDescription": "エピソードを手動でダウンロードするとき",
+  "settingsAutoDownload": "自動ダウンロード",
+  "settingsAutoDownloadDescription": "様々な場面で自動的にダウンロードすることで、待ち時間や煩わしさを軽減します",
+  "settingsAutoDownloadEnabled": "有効",
+  "settingsAutoDownloadRecent": "直近公開エピソード取得件数",
+  "settingsAutoDownloadSubject": "",
+  "settingsAutoDownloadQueuedEpisodes": "キューに手動で追加したエピソード",
+  "settingsAutoDownloadIncludesAdhoc": "キューに自動追加されたエピソードも対象",
+  "settingsAutoDelete": "自動削除",
+  "settingsAutoDeleteDescription": "再生後にエピソードを自動で削除",
+  "settingsAutoDeleteAfter": "再生後",
+  "settingsAutoDeleteAfterDescription": "再生後にエピソードを自動で削除",
+  "settingsAutoDeleteAfterNever": "しない",
+  "settingsAutoDeleteAfter1day": "1日",
+  "settingsAutoDeleteAfter3days": "3日",
+  "settingsAutoDeleteAfter7days": "7日",
+  "settingsAutoDeleteAfter14days": "14日",
+  "settingsAutoDeleteAfter30days": "30日",
+  "settingsWarnMobileData": "モバイル回線接続時は警告を表示",
+  "settingsWarnMobileDataDescription": "従量課金制など通信量が気になる方に",
+  "settingsWarnWifi": "Wi-Fi未接続時に警告を表示",
+  "settingsWifiOnly": "Wi-Fi接続時のみ",
+  "settingsOpml": "OPML Import/Export",
+  "settingsOpmlDescription": "OPMLファイルを使ってポッドキャストをインポート/エクスポート",
+  "settingsOpmlImport": "Import Podcasts via OPML File",
+  "settingsOpmlExport": "Export Podcasts to OPML File",
+  "titleNoFiFi": "Wi-Fi未接続",
+  "titleCellularConnection": "モバイル回線接続中",
+  "captionStreamingNoWifi": "WiFiが接続されていないため、モバイル回線で音声データを取得します。",
+  "captionDownloadNoWifi": "'WiFiが接続されていないため、モバイル回線でエピソードをダウンロードします。'",
+  "captionWarnSettingNavigation": "この警告表示有無は設定で変更できます",
+  "proceedPlaying": "再生する",
+  "proceedDownload": "続行",
+  "downloadAllEpisodes": "すべてのエピソードをダウンロード",
+  "downloadUnplayedEpisodes": "未再生のエピソードをダウンロード",
+  "semantics_podcast_details_header": "ポッドキャスト詳細",
+  "search_for_podcasts_hint": "ポッドキャストを検索…",
+  "semantic_announce_searching": "検索しています…",
+  "no_search_results_message": "該当するポッドキャストが見つかりませんでした",
+  "podcast_funding_dialog_header": "ポッドキャストへのサポート",
+  "podcast_funding_consent_message": "このポッドキャストをサポートするために、以下のリンクからサポートを行うことができます。"
+}

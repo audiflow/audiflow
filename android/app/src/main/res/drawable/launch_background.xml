@@ -1,23 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-  ~ Copyright (c) 2024 by HANAI, Tohru.
-  ~ Copyright (c) 2024 Reedom, Inc.
-  ~ Additional contributions from project contributors.
-  ~ Originally (c) 2020 Ben Hills.
-  ~ All rights reserved.
-  ~ Use of this source code is governed by a BSD-style license that can be
-  ~ found in the LICENSE file.
-  -->
-
 <!-- Modify this file to customize your launch splash screen -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-<!--    <item android:drawable="@android:color/white" />-->
-    <item android:drawable="@color/splash" />
+    <item android:drawable="@android:color/white" />
 
     <!-- You can insert your own image assets here -->
-    <item>
+    <!-- <item>
         <bitmap
             android:gravity="center"
-            android:src="@mipmap/ic_launcher_foreground" />
-    </item>
+            android:src="@mipmap/launch_image" />
+    </item> -->
 </layer-list>

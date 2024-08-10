@@ -1,79 +1,71 @@
-// Copyright (c) 2024 by HANAI, Tohru.
-// Copyright (c) 2024 Reedom, Inc.
-// Additional contributions from project contributors.
-// Originally (c) 2020 Ben Hills and the project contributors.
-// All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
-import 'package:audiflow/entities/entities.dart';
-import 'package:audiflow/ui/app/navigation_helper.dart';
-import 'package:audiflow/ui/widgets/tile_image.dart';
-import 'package:flutter/material.dart';
-
-class PodcastTile extends StatelessWidget {
-  const PodcastTile({
-    super.key,
-    required this.metadata,
-  });
-
-  final PodcastMetadata metadata;
-  static const heroPrefix = 'tileHero';
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return InkWell(
-      onTap: () {
-        NavigationHelper.pushPodcastDetail(
-          metadata: metadata,
-          heroPrefix: heroPrefix,
-        );
-      },
-      child: Container(
-        height: 77,
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        child: Row(
-          children: [
-            ExcludeSemantics(
-              child: Padding(
-                padding: const EdgeInsets.only(left: 20, right: 10),
-                child: Hero(
-                  key: Key('tileHero:${metadata.imageUrl}:${metadata.guid}'),
-                  tag: '$heroPrefix:${metadata.guid}',
-                  child: TileImage(
-                    url: metadata.thumbImageUrl,
-                    size: 60,
-                  ),
-                ),
-              ),
-            ),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    metadata.title,
-                    maxLines: 2,
-                    textHeightBehavior: const TextHeightBehavior(
-                      applyHeightToFirstAscent: false,
-                    ),
-                    style: theme.textTheme.titleSmall!.copyWith(height: 1.3),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    metadata.copyright,
-                    maxLines: 1,
-                    style: theme.textTheme.bodySmall!
-                        .copyWith(color: theme.hintColor),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
+// import 'package:audiflow/entities/entities.dart';
+// import 'package:audiflow/features/browser/chart/ui/tile_image.dart';
+// import 'package:flutter/material.dart';
+// import 'package:flutter_riverpod/flutter_riverpod.dart';
+//
+// class PodcastTile extends ConsumerWidget {
+//   const PodcastTile({
+//     super.key,
+//     required this.podcast,
+//   });
+//
+//   final Podcast podcast;
+//   static const heroPrefix = 'tileHero';
+//
+//   @override
+//   Widget build(BuildContext context, WidgetRef ref) {
+//     final theme = Theme.of(context);
+//     return InkWell(
+//       onTap: () {
+//         // ref.read(routerProvider).pushPodcastDetail(
+//         //   podcast: podcast,
+//         //   heroPrefix: heroPrefix,
+//         // );
+//       },
+//       child: Container(
+//         height: 77,
+//         width: double.infinity,
+//         padding: const EdgeInsets.symmetric(vertical: 8),
+//         child: Row(
+//           children: [
+//             ExcludeSemantics(
+//               child: Padding(
+//                 padding: const EdgeInsets.only(left: 20, right: 10),
+//                 child: Hero(
+//                   key: Key('tileHero:${podcast.image}:${podcast.guid}'),
+//                   tag: '$heroPrefix:${podcast.guid}',
+//                   child: TileImage(
+//                     url: podcast.image,
+//                     size: 60,
+//                   ),
+//                 ),
+//               ),
+//             ),
+//             Expanded(
+//               child: Column(
+//                 crossAxisAlignment: CrossAxisAlignment.start,
+//                 children: [
+//                   Text(
+//                     podcast.title,
+//                     maxLines: 2,
+//                     textHeightBehavior: const TextHeightBehavior(
+//                       applyHeightToFirstAscent: false,
+//                     ),
+//                     style: theme.textTheme.titleSmall!.copyWith(height: 1.3),
+//                   ),
+//                   const SizedBox(height: 2),
+//                   Text(
+//                     podcast.copyright ?? podcast.author ?? '',
+//                     maxLines: 1,
+//                     style: theme.textTheme.bodySmall!
+//                         .copyWith(color: theme.hintColor),
+//                   ),
+//                 ],
+//               ),
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+// }

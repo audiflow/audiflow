@@ -1,187 +1,175 @@
-// Copyright (c) 2024 by HANAI, Tohru.
-// Copyright (c) 2024 Reedom, Inc.
-// Additional contributions from project contributors.
-// Originally (c) 2020 Ben Hills and the project contributors.
-// All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
 import 'dart:io';
+import 'dart:ui';
 
-import 'package:audiflow/api/podcast/podcast_api_provider.dart';
-import 'package:audiflow/repository/download_event.dart';
-import 'package:audiflow/repository/episode_event.dart';
-import 'package:audiflow/repository/podcast_event.dart';
-import 'package:audiflow/repository/repository_provider.dart';
-import 'package:audiflow/repository/transcript_event.dart';
-import 'package:audiflow/services/audio/audio_player_event.dart';
-import 'package:audiflow/services/audio/audio_player_service.dart';
-import 'package:audiflow/services/audio/audio_position_saver.dart';
-import 'package:audiflow/services/audio/audio_queue_manager.dart';
-import 'package:audiflow/services/audio/mobile_audio_player_service.dart';
-import 'package:audiflow/services/connectivity/connectivity_state.dart';
-import 'package:audiflow/services/download/download_manager_provider.dart';
-import 'package:audiflow/services/queue/default_queue_manager.dart';
-import 'package:audiflow/services/queue/queue_manager.dart';
-import 'package:audiflow/services/settings/settings_service.dart';
-import 'package:audiflow/ui/app/audiflow_app.dart';
-import 'package:audiflow/ui/app/navigation_helper.dart';
-import 'package:audiflow/ui/color_schemes.g.dart';
-import 'package:audiflow/ui/providers/podcast_refresher_provider.dart';
-import 'package:audiflow/ui/widgets/error_notifier.dart';
-import 'package:device_info_plus/device_info_plus.dart';
+import 'package:audiflow/common/data/app_path_repository.dart';
+import 'package:audiflow/common/data/connectivity.dart'
+    show initialConnectivityProvider;
+import 'package:audiflow/common/data/isar_factory.dart';
+import 'package:audiflow/common/data/isar_repository.dart';
+import 'package:audiflow/common/data/shared_preferences.dart';
+import 'package:audiflow/exceptions/async_error_logger.dart';
+import 'package:audiflow/exceptions/error_logger.dart';
+import 'package:audiflow/features/bootstrap/ui/audiflow_app.dart';
+import 'package:audiflow/features/browser/common/data/default_podcast_api_repository.dart';
+import 'package:audiflow/features/browser/common/data/episode_stats_repository/episode_stats_repository.dart';
+import 'package:audiflow/features/browser/common/data/episode_stats_repository/episode_stats_repository_change_handler.dart';
+import 'package:audiflow/features/browser/common/data/episode_stats_repository/isar_episode_stats_repository.dart';
+import 'package:audiflow/features/browser/common/data/isar_page_models_repository.dart';
+import 'package:audiflow/features/browser/common/data/page_models_repository.dart';
+import 'package:audiflow/features/browser/common/data/page_models_repository_change_handler.dart';
+import 'package:audiflow/features/browser/common/data/podcast_api_repository.dart';
+import 'package:audiflow/features/browser/common/data/podcast_stats_repository/isar_podcast_stats_repository.dart';
+import 'package:audiflow/features/browser/common/data/podcast_stats_repository/podcast_stats_repository.dart';
+import 'package:audiflow/features/browser/common/data/podcast_stats_repository/podcast_stats_repository_change_handler.dart';
+import 'package:audiflow/features/browser/episode/data/episode_list_entry_repository.dart';
+import 'package:audiflow/features/browser/episode/data/isar_episode_list_repository.dart';
+import 'package:audiflow/features/browser/season/data/isar_season_repository.dart';
+import 'package:audiflow/features/browser/season/data/season_repository.dart';
+import 'package:audiflow/features/config/data/build_config.dart';
+import 'package:audiflow/features/config/model/app_build_config.dart';
+import 'package:audiflow/features/download/data/download_repository.dart';
+import 'package:audiflow/features/download/data/isar_download_repository.dart';
+import 'package:audiflow/features/download/service/download_manager.dart';
+import 'package:audiflow/features/download/service/download_service.dart';
+import 'package:audiflow/features/download/service/mobile_download_manager.dart';
+import 'package:audiflow/features/download/service/mobile_download_service.dart';
+import 'package:audiflow/features/feed/data/episode_repository.dart';
+import 'package:audiflow/features/feed/data/episode_repository_change_handler.dart';
+import 'package:audiflow/features/feed/data/isar_episode_repository.dart';
+import 'package:audiflow/features/feed/data/isar_podcast_repository.dart';
+import 'package:audiflow/features/feed/data/isar_rss_repository.dart';
+import 'package:audiflow/features/feed/data/podcast_repository.dart';
+import 'package:audiflow/features/feed/data/podcast_repository_change_handler.dart';
+import 'package:audiflow/features/feed/data/rss_repository.dart';
+import 'package:audiflow/features/player/service/audio_player_service.dart';
+import 'package:audiflow/features/player/service/default_audio_player_service.dart';
+import 'package:audiflow/features/preference/data/app_preference_repository.dart';
+import 'package:audiflow/features/preference/data/isar_app_preference_repository.dart';
+import 'package:audiflow/features/queue/data/isar_queue_repository.dart';
+import 'package:audiflow/features/queue/data/queue_repository.dart';
+import 'package:audiflow/features/queue/service/default_queue_manager.dart';
+import 'package:audiflow/features/queue/service/queue_manager.dart';
+import 'package:audiflow/localization/string_hardcoded.dart';
+import 'package:audiflow/utils/logger.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_gen/gen_l10n/messages_all.dart';
-import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:logging/logging.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-// ignore_for_file: avoid_print
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  SystemChrome.setSystemUIOverlayStyle(
-    const SystemUiOverlayStyle(
-      statusBarIconBrightness: Brightness.dark,
-      statusBarBrightness: Brightness.light,
-    ),
-  );
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
-  Logger.root.level = Level.FINE;
+  final buildConfig = BuildConfig.fromPackageInfo(
+    packageInfo: await PackageInfo.fromPlatform(),
+    appFlavor: const String.fromEnvironment('flavor'),
+  );
+  logger.t(buildConfig);
 
-  Logger.root.onRecord.listen((record) {
-    print(
-      '${record.level.name}: - ${record.time}: ${record.loggerName}: '
-      '${record.message}',
-    );
-  });
+  final v = await Future.wait([
+    Connectivity().checkConnectivity(),
+    SharedPreferences.getInstance(),
+    getTemporaryDirectory(),
+    getApplicationDocumentsDirectory(),
+  ]);
+  final connectivity = v[0] as List<ConnectivityResult>;
+  final preferences = v[1] as SharedPreferences;
+  final tempDir = v[2] as Directory;
+  final appDocDir = v[3] as Directory;
 
-  NavigationHelper.setup();
-  await SettingsService.setup();
-
-  runApp(
-    ProviderScope(
-      overrides: [
-        audioPlayerServiceProvider.overrideWith(MobileAudioPlayerService.new),
-        queueManagerProvider.overrideWith(DefaultQueueManager.new),
-      ],
-      child: MaterialApp(
-        theme: ThemeData(useMaterial3: true, colorScheme: lightColorScheme),
-        darkTheme: ThemeData(useMaterial3: true, colorScheme: darkColorScheme),
-        debugShowCheckedModeBanner: false,
-        localizationsDelegates: const <LocalizationsDelegate<Object>>[
-          AppLocalizations.delegate,
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-        supportedLocales: const [
-          Locale('en'),
-          Locale('ja'),
-        ],
-        home: const Stack(
-          children: [
-            ErrorNotifier(),
-            _GlobalProviders(),
-            _ProvidersInitializer(
-              child: AudiflowApp(
-                key: Key('AudiflowApp'),
-              ),
-            ),
-          ],
+  final isar = await IsarFactory.create(appDocDir.path);
+  await isar.writeTxn(isar.clear);
+  final container = ProviderContainer(
+    overrides: [
+      // foundations
+      appPreferenceRepositoryProvider
+          .overrideWith(IsarAppPreferenceRepository.new),
+      apiCacheDirProvider.overrideWithValue(tempDir.path),
+      appDocDirProvider.overrideWithValue(appDocDir.path),
+      buildConfigProvider.overrideWithValue(buildConfig),
+      initialConnectivityProvider.overrideWithValue(connectivity),
+      isarRepositoryProvider.overrideWithValue(isar),
+      sharedPreferencesProvider.overrideWithValue(preferences),
+      // app
+      audioPlayerServiceProvider.overrideWith(DefaultAudioPlayerService.new),
+      downloadManagerProvider.overrideWith(MobileDownloaderManager.new),
+      downloadRepositoryProvider
+          .overrideWithValue(IsarDownloadRepository(isar)),
+      downloadServiceProvider.overrideWith(MobileDownloadService.new),
+      episodeListEntryRepositoryProvider
+          .overrideWithValue(IsarEpisodeListEntryRepository(isar)),
+      episodeRepositoryProvider.overrideWith(
+        (ref) =>
+            EpisodeRepositoryHandleHandler(ref, IsarEpisodeRepository(isar)),
+      ),
+      episodeStatsRepositoryProvider.overrideWith(
+        (ref) => EpisodeStatsRepositoryChangeHandler(
+          ref,
+          IsarEpisodeStatsRepository(isar),
         ),
       ),
+      pageModelsRepositoryProvider.overrideWith(
+        (ref) => PageModelsRepositoryChangeHandler(
+          ref,
+          IsarPageModelsRepository(isar),
+        ),
+      ),
+      podcastApiRepositoryProvider.overrideWithValue(
+        DefaultPodcastApiRepository(cacheDir: tempDir.path),
+      ),
+      podcastRepositoryProvider.overrideWith(
+        (ref) =>
+            PodcastRepositoryChangeHandler(ref, IsarPodcastRepository(isar)),
+      ),
+      podcastStatsRepositoryProvider.overrideWith(
+        (ref) => PodcastStatsRepositoryChangeHandler(
+          ref,
+          IsarPodcastStatsRepository(isar),
+        ),
+      ),
+      queueManagerProvider.overrideWith(DefaultQueueManager.new),
+      queueRepositoryProvider.overrideWithValue(IsarQueueRepository(isar)),
+      rssRepositoryProvider.overrideWithValue(IsarRssRepository(isar)),
+      seasonRepositoryProvider.overrideWithValue(IsarSeasonRepository(isar)),
+    ],
+    observers: [AsyncErrorLogger()],
+  );
+
+  final errorLogger = container.read(errorLoggerProvider);
+  // * Register error handlers. For more info, see:
+  // * https://docs.flutter.dev/testing/errors
+  registerErrorHandlers(errorLogger);
+
+  runApp(
+    UncontrolledProviderScope(
+      container: container,
+      child: const AudiflowApp(),
     ),
   );
 }
 
-/// The Let's Encrypt certificate authority expired at the end of September
-/// 2021.
-/// Android devices running v7.1.1 or earlier will no longer trust their root
-/// certificate which will cause issues when trying to fetch feeds and images
-/// from sites secured with LE. This routine is called to add the new CA to the
-/// trusted list at app start.
-Future<List<int>> setupCertificateAuthority() async {
-  var ca = <int>[];
-
-  if (Platform.isAndroid) {
-    final deviceInfo = DeviceInfoPlugin();
-    final androidInfo = await deviceInfo.androidInfo;
-    final major = androidInfo.version.release.split('.');
-
-    if ((int.tryParse(major[0]) ?? 100.0) < 8.0) {
-      final data =
-          await PlatformAssetBundle().load('assets/ca/lets-encrypt-r3.pem');
-      ca = data.buffer.asUint8List();
-      SecurityContext.defaultContext.setTrustedCertificatesBytes(ca);
-    }
-  }
-
-  return ca;
-}
-
-class _GlobalProviders extends HookConsumerWidget {
-  const _GlobalProviders();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    ref
-      ..watch(repositoryProvider)
-      ..watch(settingsServiceProvider)
-      ..watch(audioPlayerServiceProvider)
-      ..watch(audioPlayerEventStreamProvider)
-      ..watch(connectivityStateProvider)
-      ..watch(audioQueueManagerProvider)
-      ..watch(audioPositionSaverProvider)
-      ..watch(podcastEventStreamProvider)
-      ..watch(podcastRefresherProvider)
-      ..watch(episodeEventStreamProvider)
-      ..watch(downloadEventStreamProvider)
-      ..watch(transcriptEventStreamProvider);
-
-    return const SizedBox();
-  }
-}
-
-class _ProvidersInitializer extends HookConsumerWidget {
-  const _ProvidersInitializer({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final initState = useState(false);
-    useEffect(
-      () {
-        if (initState.value) {
-          return;
-        }
-
-        Future.wait([
-          ref.read(downloadManagerProvider).ensureInitialized(),
-          ref.read(queueManagerProvider.notifier).ensureInitialized(),
-          ref.read(audioPlayerServiceProvider.notifier).ensureInitialized(),
-          setupCertificateAuthority().then((ca) {
-            ref.read(podcastApiProvider).addClientAuthorityBytes(ca);
-          }),
-        ]).then((_) {
-          initState.value = true;
-        });
-        return;
-      },
-      [],
+void registerErrorHandlers(ErrorLogger errorLogger) {
+  // * Show some error UI if any uncaught exception happens
+  FlutterError.onError = (FlutterErrorDetails details) {
+    FlutterError.presentError(details);
+    errorLogger.logError(details.exception, details.stack);
+  };
+  // * Handle errors from the underlying platform/OS
+  PlatformDispatcher.instance.onError = (Object error, StackTrace stack) {
+    errorLogger.logError(error, stack);
+    return true;
+  };
+  // * Show some error UI when any widget in the app fails to build
+  ErrorWidget.builder = (FlutterErrorDetails details) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.red,
+        title: Text('An error occurred'.hardcoded),
+      ),
+      body: Center(child: Text(details.toString())),
     );
-    return initState.value ? child : const _Blank();
-  }
-}
-
-class _Blank extends StatelessWidget {
-  const _Blank();
-
-  @override
-  Widget build(BuildContext context) {
-    return ColoredBox(color: Theme.of(context).scaffoldBackgroundColor);
-  }
+  };
 }

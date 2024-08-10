@@ -1,18 +1,11 @@
-// Copyright (c) 2024 by HANAI, Tohru.
-// Copyright (c) 2024 Reedom, Inc.
-// Additional contributions from project contributors.
-// All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
-import 'package:audiflow/core/l10n.dart';
-import 'package:audiflow/entities/entities.dart';
-import 'package:audiflow/repository/repository_provider.dart';
-import 'package:audiflow/services/audio/audio_player_service.dart';
-import 'package:audiflow/services/connectivity/connectivity.dart';
-import 'package:audiflow/services/settings/settings_service.dart';
-import 'package:audiflow/ui/app/navigation_helper.dart';
-import 'package:audiflow/ui/dialogs/warn_no_wifi.dart';
+import 'package:audiflow/common/data/connectivity.dart';
+import 'package:audiflow/common/ui/warn_no_wifi.dart';
+import 'package:audiflow/features/download/data/download_repository.dart';
+import 'package:audiflow/features/download/model/downloadable.dart';
+import 'package:audiflow/features/player/service/audio_player_service.dart';
+import 'package:audiflow/features/preference/data/app_preference_repository.dart';
+import 'package:audiflow/localization/generated/l10n.dart';
+import 'package:audiflow/routing/app_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -39,23 +32,25 @@ class AudioPlayableChecker {
     }
 
     final download =
-        await _ref.read(repositoryProvider).findDownload(episode.guid);
+        await _ref.read(downloadRepositoryProvider).findDownload(episode.id);
     if (download?.state == DownloadState.downloaded) {
       return true;
     }
 
-    final settings = _ref.read(settingsServiceProvider);
-    if (!settings.streamWarnMobileData) {
+    final prefs = _ref.read(appPreferenceRepositoryProvider);
+    if (!prefs.streamWarnMobileData) {
       return true;
     }
 
-    assert(NavigationHelper.context.mounted);
-    if (!NavigationHelper.context.mounted) {
+    final routerContext = _ref.read(routerContextProvider);
+    assert(routerContext.mounted);
+    if (!routerContext.mounted) {
       return false;
     }
 
-    final l10n = L10n.of(NavigationHelper.context)!;
+    final l10n = L10n.of(routerContext);
     return await warnNoWifi(
+          routerContext,
           caption: l10n.captionStreamingNoWifi,
           proceedCaption: l10n.proceedPlaying,
         ) ??

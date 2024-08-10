@@ -1,12 +1,5 @@
-// Copyright (c) 2024 by HANAI, Tohru.
-// Copyright (c) 2024 Reedom, Inc.
-// Additional contributions from project contributors.
-// Originally (c) 2020 Ben Hills and the project contributors.
-// All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
 import 'package:audiflow/entities/entities.dart';
+import 'package:isar/isar.dart';
 
 /// An abstract class that represent the actions supported by the chosen
 /// database or storage implementation.
@@ -39,41 +32,40 @@ import 'package:audiflow/entities/entities.dart';
 ///  - [EpisodeStats]
 abstract class Repository {
   // --- General
+  Future<void> ensureInitialized();
 
   Future<void> close();
 
-  // --- charts
+  // --- feedUrl
 
-  Future<void> savePodcastChart(PodcastChartState chart);
+  Future<String?> findFeedUrl({required int collectionId});
 
-  Future<PodcastChartState?> loadPodcastChart();
+  Future<void> saveFeedUrl({
+    required int collectionId,
+    required String feedUrl,
+  });
 
-  // --- PodcastMetadata
+  // --- collectionId
 
-  Future<void> savePodcastMetadataList(Iterable<PodcastMetadata> list);
-
-  Future<void> savePodcastMetadata(PodcastMetadata metadata);
-
-  Future<PodcastMetadata?> findPodcastMetadata(String guid);
-
-  Future<List<PodcastMetadata>> populatePodcastFeedUrl(
-    Iterable<PodcastMetadata> items,
-  );
-
-  Future<String?> findFeedUrl(String guid);
-
-  Future<List<(PodcastMetadata, PodcastStats)>> subscriptions();
+  Future<int?> findCollectionId({required String feedUrl});
 
   // --- Podcast
+
+  Future<Podcast?> findPodcast(Id id);
+
+  Future<Podcast?> findPodcastBy({
+    String? feedUrl,
+    int? collectionId,
+  });
 
   Future<void> savePodcasts(Iterable<Podcast> podcasts);
 
   Future<void> savePodcast(
     Podcast podcast, {
-    PodcastStatsUpdateParam? statsParam,
+    PodcastStatsUpdateParam? param,
   });
 
-  Future<Podcast?> findPodcast(String guid);
+  Future<List<Podcast>> subscriptions();
 
   Future<void> subscribePodcast(Podcast podcast);
 
@@ -81,13 +73,13 @@ abstract class Repository {
 
   // -- PodcastStats
 
-  Future<PodcastStats?> findPodcastStats(String guid);
+  Future<PodcastStats?> findPodcastStats(int pid);
 
   Future<PodcastStats> updatePodcastStats(PodcastStatsUpdateParam param);
 
   // -- PodcastViewStats
 
-  Future<PodcastViewStats?> findPodcastViewStats(String guid);
+  Future<PodcastViewStats?> findPodcastViewStats(int pid);
 
   Future<PodcastViewStats> updatePodcastViewStats(
     PodcastViewStatsUpdateParam param,
@@ -95,17 +87,27 @@ abstract class Repository {
 
   // --- Episode
 
-  Future<void> saveEpisodes(Iterable<Episode> episodes);
+  Future<Episode?> findEpisode(Id id);
+
+  Future<List<Episode?>> findEpisodes(Iterable<Id> ids);
+
+  Future<List<Episode>> findEpisodesByPodcastId(Id pid);
+
+  Future<List<Episode>> findLatestEpisodes(
+    Id pid, {
+    DateTime? lastPubDate,
+    required int limit,
+  });
 
   Future<void> saveEpisode(Episode episode);
 
-  Future<Episode?> findEpisode(String guid);
-
-  Future<List<Episode?>> findEpisodes(Iterable<String> guids);
-
-  Future<List<Episode>> findEpisodesByPodcastGuid(String pguid);
+  Future<void> saveEpisodes(Iterable<Episode> episodes);
 
   // --- EpisodeStats
+
+  Future<EpisodeStats?> findEpisodeStats(Id id);
+
+  Future<List<EpisodeStats?>> findEpisodeStatsList(Iterable<Id> ids);
 
   Future<EpisodeStats> updateEpisodeStats(EpisodeStatsUpdateParam param);
 
@@ -113,65 +115,61 @@ abstract class Repository {
     Iterable<EpisodeStatsUpdateParam> params,
   );
 
-  Future<EpisodeStats?> findEpisodeStats(String guid);
+  Future<List<EpisodeStats>> findDownloadedEpisodeStatsList(Id pid);
 
-  Future<List<EpisodeStats?>> findEpisodeStatsList(Iterable<String> guids);
+  Future<List<EpisodeStats>> findPlayedEpisodeStatsList(Id pid);
 
-  Future<List<EpisodeStats>> findDownloadedEpisodeStatsList(String pguid);
-
-  Future<List<EpisodeStats>> findPlayedEpisodeStatsList(String pguid);
-
-  Future<List<EpisodeStats>> findUnplayedEpisodeStatsList(String pguid);
+  Future<List<EpisodeStats>> findUnplayedEpisodeStatsList(Id pid);
 
   // --- Recently played episodes
-
-  Future<void> saveRecentlyPlayedEpisode(
-    Episode episode, {
-    DateTime? playedAt,
-  });
 
   Future<(List<Episode>, int?)> findRecentlyPlayedEpisodeList({
     int? cursor,
     int limit = 100,
   });
 
+  Future<void> saveRecentlyPlayedEpisode(
+    Episode episode, {
+    DateTime? playedAt,
+  });
+
   // --- Downloads
+
+  Future<List<Downloadable>> findDownloadsByPodcastId(int pid);
+
+  Future<List<Downloadable>> findAllDownloads();
+
+  Future<List<Downloadable?>> findDownloads(Iterable<Id> ids);
+
+  Future<Downloadable?> findDownload(Id id);
+
+  Future<Downloadable?> findDownloadByTaskId(String taskId);
 
   Future<void> saveDownload(Downloadable download);
 
   Future<void> deleteDownload(Downloadable download);
 
-  Future<List<Downloadable>> findDownloadsByPodcastGuid(String pguid);
-
-  Future<List<Downloadable>> findAllDownloads();
-
-  Future<List<Downloadable>> findDownloads(Iterable<String> guids);
-
-  Future<Downloadable?> findDownload(String guid);
-
-  Future<Downloadable?> findDownloadByTaskId(String taskId);
-
   // --- Transcript
+
+  Future<Transcript?> findTranscriptById(int id);
 
   Future<Transcript> saveTranscript(Transcript transcript);
 
   Future<void> deleteTranscriptById(int id);
 
-  Future<void> deleteTranscriptsById(List<int> id);
-
-  Future<Transcript?> findTranscriptById(int id);
+  Future<void> deleteTranscriptsById(List<int> ids);
 
   // --- Queue
 
-  Future<void> saveQueue(Queue queue);
-
   Future<Queue> loadQueue();
+
+  Future<void> saveQueue(Queue queue);
 
   // --- Player
 
-  Future<void> savePlayingEpisodeGuid(String guid);
+  Future<int?> playingEpisodeId();
 
-  Future<void> clearPlayingEpisodeGuid();
+  Future<void> savePlayingEpisodeId(int eid);
 
-  Future<String?> playingEpisodeGuid();
+  Future<void> clearPlayingEpisodeId();
 }
