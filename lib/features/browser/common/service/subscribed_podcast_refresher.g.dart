@@ -7,7 +7,7 @@ part of 'subscribed_podcast_refresher.dart';
 // **************************************************************************
 
 String _$subscribedPodcastRefresherHash() =>
-    r'f39d21a72aa404da508ff2f7cfc7ae0e594acda7';
+    r'135458704ff9a638e666df2e0c7b2d42dc56e1d9';
 
 /// See also [SubscribedPodcastRefresher].
 @ProviderFor(SubscribedPodcastRefresher)

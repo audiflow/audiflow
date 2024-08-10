@@ -1,10 +1,7 @@
 import 'dart:async';
 
-import 'package:audiflow/common/service/error_manager.dart';
-import 'package:audiflow/exceptions/app_exception.dart';
 import 'package:audiflow/features/browser/common/data/podcast_subscriptions.dart';
 import 'package:audiflow/features/feed/model/model.dart';
-import 'package:audiflow/utils/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:rxdart/rxdart.dart';
 
@@ -13,10 +10,11 @@ part 'subscribed_podcast_refresher.g.dart';
 @Riverpod(keepAlive: true)
 class SubscribedPodcastRefresher extends _$SubscribedPodcastRefresher {
   final _inputState = PublishSubject<List<Podcast>>();
-  Timer? _timer;
-  (Podcast, PodcastStats)? _nextRefreshTarget;
 
-  ErrorManager get _errorManager => ref.read(errorManagerProvider.notifier);
+  // Timer? _timer;
+  // (Podcast, PodcastStats)? _nextRefreshTarget;
+  //
+  // ErrorManager get _errorManager => ref.read(errorManagerProvider.notifier);
 
   void dispose() {
     _inputState.close();
@@ -81,40 +79,40 @@ class SubscribedPodcastRefresher extends _$SubscribedPodcastRefresher {
     // _log.fine('Next refresh target: ${nextTarget.$1.title} in $delay');
   }
 
-  Future<void> _refreshTarget() async {
-    _timer = null;
-    if (_nextRefreshTarget == null) {
-      return;
-    }
-
-    final podcast = _nextRefreshTarget!.$1;
-    logger.d('refresh target: ${podcast.title}');
-
-    try {
-      // final loaded = await ref
-      //     .read(podcastServiceProvider)
-      //     .loadPodcast(podcast, refresh: true);
-      // if (loaded != null) {
-      //   _log.fine('Podcast refreshed: ${podcast.title}');
-      // } else {
-      //   _log.warning('Failed to load podcast: ${podcast.title}');
-      //   await _repository.updatePodcastStats(
-      //     PodcastStatsUpdateParam(
-      //       id: podcast.id,
-      //       lastCheckedAt: DateTime.now(),
-      //     ),
-      //   );
-      // }
-    } on NetworkException catch (e) {
-      logger.w('Network error: e');
-      if (e is NoConnectivityException) {
-        _errorManager.retryOnReconnect(
-          key: 'refresh/${podcast.guid}',
-          retry: _refreshTarget,
-        );
-      } else {
-        _timer = Timer(const Duration(minutes: 5), _refreshTarget);
-      }
-    }
-  }
+// Future<void> _refreshTarget() async {
+//   // _timer = null;
+//   if (_nextRefreshTarget == null) {
+//     return;
+//   }
+//
+//   final podcast = _nextRefreshTarget!.$1;
+//   logger.d('refresh target: ${podcast.title}');
+//
+//   try {
+//     // final loaded = await ref
+//     //     .read(podcastServiceProvider)
+//     //     .loadPodcast(podcast, refresh: true);
+//     // if (loaded != null) {
+//     //   _log.fine('Podcast refreshed: ${podcast.title}');
+//     // } else {
+//     //   _log.warning('Failed to load podcast: ${podcast.title}');
+//     //   await _repository.updatePodcastStats(
+//     //     PodcastStatsUpdateParam(
+//     //       id: podcast.id,
+//     //       lastCheckedAt: DateTime.now(),
+//     //     ),
+//     //   );
+//     // }
+//   } on NetworkException catch (e) {
+//     logger.w('Network error: e');
+//     if (e is NoConnectivityException) {
+//       _errorManager.retryOnReconnect(
+//         key: 'refresh/${podcast.guid}',
+//         retry: _refreshTarget,
+//       );
+//     // } else {
+//     //   _timer = Timer(const Duration(minutes: 5), _refreshTarget);
+//     }
+//   }
+// }
 }

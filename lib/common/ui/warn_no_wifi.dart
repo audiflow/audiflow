@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:audiflow/localization/generated/l10n.dart';
+import 'package:audiflow/routing/app_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
@@ -55,7 +56,7 @@ Future<bool?> warnNoWifi(
                 GestureDetector(
                   onTap: () {
                     cancelled();
-                    // ref.read(appRouterProvider).pushSettings();
+                    ref.read(appRouterProvider.notifier).pushSettings();
                   },
                   child: Text(
                     l10n.captionWarnSettingNavigation,

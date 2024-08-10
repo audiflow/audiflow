@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:audiflow/events/opml_event.dart';
 import 'package:audiflow/features/browser/common/data/podcast_stats_repository/podcast_stats_repository.dart';
-import 'package:audiflow/features/feed/service/podcast_service.dart';
 import 'package:audiflow/utils/logger.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -28,7 +27,7 @@ class OPMLService {
   final Ref _ref;
   bool _process = false;
 
-  PodcastService get _podcastService => _ref.read(podcastServiceProvider);
+  // PodcastService get _podcastService => _ref.read(podcastServiceProvider);
 
   PodcastStatsRepository get _podcastStatsRepository =>
       _ref.read(podcastStatsRepositoryProvider);
@@ -115,9 +114,9 @@ class OPMLService {
                 builder.element(
                   'outline',
                   nest: () {
-                    // builder
-                    //   ..attribute('text', sub.$1.title)
-                    //   ..attribute('xmlUrl', sub.$1.feedUrl);
+                    builder
+                      ..attribute('text', sub.title)
+                      ..attribute('xmlUrl', sub.feedUrl);
                   },
                 );
               }
