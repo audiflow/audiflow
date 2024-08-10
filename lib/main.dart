@@ -41,6 +41,8 @@ import 'package:audiflow/features/feed/data/isar_rss_repository.dart';
 import 'package:audiflow/features/feed/data/podcast_repository.dart';
 import 'package:audiflow/features/feed/data/podcast_repository_change_handler.dart';
 import 'package:audiflow/features/feed/data/rss_repository.dart';
+import 'package:audiflow/features/player/data/isar_player_state_repository.dart';
+import 'package:audiflow/features/player/data/player_state_repository.dart';
 import 'package:audiflow/features/player/service/audio_player_service.dart';
 import 'package:audiflow/features/player/service/default_audio_player_service.dart';
 import 'package:audiflow/features/preference/data/app_preference_repository.dart';
@@ -107,6 +109,14 @@ void main() async {
           IsarEpisodeStatsRepository(isar),
         ),
       ),
+      pageModelsRepositoryProvider.overrideWith(
+        (ref) => PageModelsRepositoryChangeHandler(
+          ref,
+          IsarPageModelsRepository(isar),
+        ),
+      ),
+      playerStateRepositoryProvider
+          .overrideWithValue(IsarPlayerStateRepository(isar)),
       podcastApiRepositoryProvider.overrideWithValue(
         DefaultPodcastApiRepository(cacheDir: tempDir.path),
       ),
