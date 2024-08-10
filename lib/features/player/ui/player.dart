@@ -190,58 +190,60 @@ class _DetailedPlayerContent extends ConsumerWidget {
 
     final queue = ref.watch(queueListProvider).queue;
 
-    return Opacity(
-      opacity: percentageExpandedPlayer,
-      child: Stack(
-        children: [
-          Align(
-            alignment: Alignment.topCenter,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const SizedBox(
-                  width: 50,
-                  height: 50,
-                  child: Divider(
-                    thickness: 5,
-                  ),
-                ),
-                PlayerEpisodeTile(episode: episode),
-                if (queue.isNotEmpty)
-                  SizedBox(
-                    height: max(0, min(maxHeight - 300, height - 350)),
-                    child: const CustomScrollView(
-                      slivers: [
-                        QueueListBlock(),
-                      ],
+    return SafeArea(
+      child: Opacity(
+        opacity: percentageExpandedPlayer,
+        child: Stack(
+          children: [
+            Align(
+              alignment: Alignment.topCenter,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(
+                    width: 50,
+                    height: 50,
+                    child: Divider(
+                      thickness: 5,
                     ),
                   ),
-              ],
+                  PlayerEpisodeTile(episode: episode),
+                  if (queue.isNotEmpty)
+                    SizedBox(
+                      height: max(0, min(maxHeight - 300, height - 350)),
+                      child: const CustomScrollView(
+                        slivers: [
+                          QueueListBlock(),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
             ),
-          ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const SeekBar(),
-                const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _SkipButton(forward: false),
-                    _PlayButton.large(),
-                    _SkipButton(forward: true),
-                  ],
-                ),
-                SizedBox(
-                  height: MediaQueryData.fromView(
-                    ui.PlatformDispatcher.instance.implicitView!,
-                  ).padding.bottom,
-                ),
-              ],
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SeekBar(),
+                  const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _SkipButton(forward: false),
+                      _PlayButton.large(),
+                      _SkipButton(forward: true),
+                    ],
+                  ),
+                  SizedBox(
+                    height: MediaQueryData.fromView(
+                      ui.PlatformDispatcher.instance.implicitView!,
+                    ).padding.bottom,
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
