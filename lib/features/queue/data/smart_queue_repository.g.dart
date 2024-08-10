@@ -1,25 +1,26 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'queue_repository.dart';
+part of 'smart_queue_repository.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$queueRepositoryHash() => r'52b047cabb242b971bfbdb3dc88a00d4e644b291';
+String _$smartQueueRepositoryHash() =>
+    r'd90a7336bb71c0e576a6bd0fab7d22c354b6b1ec';
 
-/// See also [queueRepository].
-@ProviderFor(queueRepository)
-final queueRepositoryProvider = Provider<QueueRepository>.internal(
-  queueRepository,
-  name: r'queueRepositoryProvider',
+/// See also [smartQueueRepository].
+@ProviderFor(smartQueueRepository)
+final smartQueueRepositoryProvider = Provider<SmartQueueRepository>.internal(
+  smartQueueRepository,
+  name: r'smartQueueRepositoryProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
       ? null
-      : _$queueRepositoryHash,
+      : _$smartQueueRepositoryHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
 
-typedef QueueRepositoryRef = ProviderRef<QueueRepository>;
+typedef SmartQueueRepositoryRef = ProviderRef<SmartQueueRepository>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

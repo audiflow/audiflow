@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'auto_queue_builder_info.dart';
+part of 'smart_queue.dart';
 
 // **************************************************************************
 // IsarCollectionGenerator
@@ -9,14 +9,13 @@ part of 'auto_queue_builder_info.dart';
 // coverage:ignore-file
 // ignore_for_file: duplicate_ignore, non_constant_identifier_names, constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast, prefer_const_constructors, lines_longer_than_80_chars, require_trailing_commas, inference_failure_on_function_invocation, unnecessary_parenthesis, unnecessary_raw_strings, unnecessary_null_checks, join_return_with_assignment, prefer_final_locals, avoid_js_rounded_ints, avoid_positional_boolean_parameters, always_specify_types
 
-extension GetAutoQueueBuilderInfoCollection on Isar {
-  IsarCollection<AutoQueueBuilderInfo> get autoQueueBuilderInfos =>
-      this.collection();
+extension GetSmartQueueInfoCollection on Isar {
+  IsarCollection<SmartQueueInfo> get smartQueueInfos => this.collection();
 }
 
-const AutoQueueBuilderInfoSchema = CollectionSchema(
-  name: r'AutoQueueBuilderInfo',
-  id: 8832518747618792917,
+const SmartQueueInfoSchema = CollectionSchema(
+  name: r'SmartQueueInfo',
+  id: 3338004753092901979,
   properties: {
     r'json': PropertySchema(
       id: 0,
@@ -27,25 +26,25 @@ const AutoQueueBuilderInfoSchema = CollectionSchema(
       id: 1,
       name: r'type',
       type: IsarType.byte,
-      enumMap: _AutoQueueBuilderInfotypeEnumValueMap,
+      enumMap: _SmartQueueInfotypeEnumValueMap,
     )
   },
-  estimateSize: _autoQueueBuilderInfoEstimateSize,
-  serialize: _autoQueueBuilderInfoSerialize,
-  deserialize: _autoQueueBuilderInfoDeserialize,
-  deserializeProp: _autoQueueBuilderInfoDeserializeProp,
+  estimateSize: _smartQueueInfoEstimateSize,
+  serialize: _smartQueueInfoSerialize,
+  deserialize: _smartQueueInfoDeserialize,
+  deserializeProp: _smartQueueInfoDeserializeProp,
   idName: r'id',
   indexes: {},
   links: {},
   embeddedSchemas: {},
-  getId: _autoQueueBuilderInfoGetId,
-  getLinks: _autoQueueBuilderInfoGetLinks,
-  attach: _autoQueueBuilderInfoAttach,
+  getId: _smartQueueInfoGetId,
+  getLinks: _smartQueueInfoGetLinks,
+  attach: _smartQueueInfoAttach,
   version: '3.1.7',
 );
 
-int _autoQueueBuilderInfoEstimateSize(
-  AutoQueueBuilderInfo object,
+int _smartQueueInfoEstimateSize(
+  SmartQueueInfo object,
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
@@ -54,8 +53,8 @@ int _autoQueueBuilderInfoEstimateSize(
   return bytesCount;
 }
 
-void _autoQueueBuilderInfoSerialize(
-  AutoQueueBuilderInfo object,
+void _smartQueueInfoSerialize(
+  SmartQueueInfo object,
   IsarWriter writer,
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
@@ -64,22 +63,21 @@ void _autoQueueBuilderInfoSerialize(
   writer.writeByte(offsets[1], object.type.index);
 }
 
-AutoQueueBuilderInfo _autoQueueBuilderInfoDeserialize(
+SmartQueueInfo _smartQueueInfoDeserialize(
   Id id,
   IsarReader reader,
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  final object = AutoQueueBuilderInfo(
+  final object = SmartQueueInfo(
     json: reader.readString(offsets[0]),
-    type: _AutoQueueBuilderInfotypeValueEnumMap[
-            reader.readByteOrNull(offsets[1])] ??
-        AutoQueueBuilderType.detailsPage,
+    type: _SmartQueueInfotypeValueEnumMap[reader.readByteOrNull(offsets[1])] ??
+        SmartQueueType.detailsPage,
   );
   return object;
 }
 
-P _autoQueueBuilderInfoDeserializeProp<P>(
+P _smartQueueInfoDeserializeProp<P>(
   IsarReader reader,
   int propertyId,
   int offset,
@@ -89,47 +87,44 @@ P _autoQueueBuilderInfoDeserializeProp<P>(
     case 0:
       return (reader.readString(offset)) as P;
     case 1:
-      return (_AutoQueueBuilderInfotypeValueEnumMap[
-              reader.readByteOrNull(offset)] ??
-          AutoQueueBuilderType.detailsPage) as P;
+      return (_SmartQueueInfotypeValueEnumMap[reader.readByteOrNull(offset)] ??
+          SmartQueueType.detailsPage) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
 }
 
-const _AutoQueueBuilderInfotypeEnumValueMap = {
+const _SmartQueueInfotypeEnumValueMap = {
   'detailsPage': 0,
 };
-const _AutoQueueBuilderInfotypeValueEnumMap = {
-  0: AutoQueueBuilderType.detailsPage,
+const _SmartQueueInfotypeValueEnumMap = {
+  0: SmartQueueType.detailsPage,
 };
 
-Id _autoQueueBuilderInfoGetId(AutoQueueBuilderInfo object) {
+Id _smartQueueInfoGetId(SmartQueueInfo object) {
   return object.id;
 }
 
-List<IsarLinkBase<dynamic>> _autoQueueBuilderInfoGetLinks(
-    AutoQueueBuilderInfo object) {
+List<IsarLinkBase<dynamic>> _smartQueueInfoGetLinks(SmartQueueInfo object) {
   return [];
 }
 
-void _autoQueueBuilderInfoAttach(
-    IsarCollection<dynamic> col, Id id, AutoQueueBuilderInfo object) {}
+void _smartQueueInfoAttach(
+    IsarCollection<dynamic> col, Id id, SmartQueueInfo object) {}
 
-extension AutoQueueBuilderInfoQueryWhereSort
-    on QueryBuilder<AutoQueueBuilderInfo, AutoQueueBuilderInfo, QWhere> {
-  QueryBuilder<AutoQueueBuilderInfo, AutoQueueBuilderInfo, QAfterWhere>
-      anyId() {
+extension SmartQueueInfoQueryWhereSort
+    on QueryBuilder<SmartQueueInfo, SmartQueueInfo, QWhere> {
+  QueryBuilder<SmartQueueInfo, SmartQueueInfo, QAfterWhere> anyId() {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(const IdWhereClause.any());
     });
   }
 }
 
-extension AutoQueueBuilderInfoQueryWhere
-    on QueryBuilder<AutoQueueBuilderInfo, AutoQueueBuilderInfo, QWhereClause> {
-  QueryBuilder<AutoQueueBuilderInfo, AutoQueueBuilderInfo, QAfterWhereClause>
-      idEqualTo(Id id) {
+extension SmartQueueInfoQueryWhere
+    on QueryBuilder<SmartQueueInfo, SmartQueueInfo, QWhereClause> {
+  QueryBuilder<SmartQueueInfo, SmartQueueInfo, QAfterWhereClause> idEqualTo(
+      Id id) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IdWhereClause.between(
         lower: id,
@@ -138,8 +133,8 @@ extension AutoQueueBuilderInfoQueryWhere
     });
   }
 
-  QueryBuilder<AutoQueueBuilderInfo, AutoQueueBuilderInfo, QAfterWhereClause>
-      idNotEqualTo(Id id) {
+  QueryBuilder<SmartQueueInfo, SmartQueueInfo, QAfterWhereClause> idNotEqualTo(
+      Id id) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
@@ -161,8 +156,9 @@ extension AutoQueueBuilderInfoQueryWhere
     });
   }
 
-  QueryBuilder<AutoQueueBuilderInfo, AutoQueueBuilderInfo, QAfterWhereClause>
-      idGreaterThan(Id id, {bool include = false}) {
+  QueryBuilder<SmartQueueInfo, SmartQueueInfo, QAfterWhereClause> idGreaterThan(
+      Id id,
+      {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         IdWhereClause.greaterThan(lower: id, includeLower: include),
@@ -170,8 +166,9 @@ extension AutoQueueBuilderInfoQueryWhere
     });
   }
 
-  QueryBuilder<AutoQueueBuilderInfo, AutoQueueBuilderInfo, QAfterWhereClause>
-      idLessThan(Id id, {bool include = false}) {
+  QueryBuilder<SmartQueueInfo, SmartQueueInfo, QAfterWhereClause> idLessThan(
+      Id id,
+      {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         IdWhereClause.lessThan(upper: id, includeUpper: include),
@@ -179,8 +176,7 @@ extension AutoQueueBuilderInfoQueryWhere
     });
   }
 
-  QueryBuilder<AutoQueueBuilderInfo, AutoQueueBuilderInfo, QAfterWhereClause>
-      idBetween(
+  QueryBuilder<SmartQueueInfo, SmartQueueInfo, QAfterWhereClause> idBetween(
     Id lowerId,
     Id upperId, {
     bool includeLower = true,
@@ -197,10 +193,10 @@ extension AutoQueueBuilderInfoQueryWhere
   }
 }
 
-extension AutoQueueBuilderInfoQueryFilter on QueryBuilder<AutoQueueBuilderInfo,
-    AutoQueueBuilderInfo, QFilterCondition> {
-  QueryBuilder<AutoQueueBuilderInfo, AutoQueueBuilderInfo,
-      QAfterFilterCondition> idEqualTo(Id value) {
+extension SmartQueueInfoQueryFilter
+    on QueryBuilder<SmartQueueInfo, SmartQueueInfo, QFilterCondition> {
+  QueryBuilder<SmartQueueInfo, SmartQueueInfo, QAfterFilterCondition> idEqualTo(
+      Id value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'id',
@@ -209,8 +205,8 @@ extension AutoQueueBuilderInfoQueryFilter on QueryBuilder<AutoQueueBuilderInfo,
     });
   }
 
-  QueryBuilder<AutoQueueBuilderInfo, AutoQueueBuilderInfo,
-      QAfterFilterCondition> idGreaterThan(
+  QueryBuilder<SmartQueueInfo, SmartQueueInfo, QAfterFilterCondition>
+      idGreaterThan(
     Id value, {
     bool include = false,
   }) {
@@ -223,8 +219,8 @@ extension AutoQueueBuilderInfoQueryFilter on QueryBuilder<AutoQueueBuilderInfo,
     });
   }
 
-  QueryBuilder<AutoQueueBuilderInfo, AutoQueueBuilderInfo,
-      QAfterFilterCondition> idLessThan(
+  QueryBuilder<SmartQueueInfo, SmartQueueInfo, QAfterFilterCondition>
+      idLessThan(
     Id value, {
     bool include = false,
   }) {
@@ -237,8 +233,7 @@ extension AutoQueueBuilderInfoQueryFilter on QueryBuilder<AutoQueueBuilderInfo,
     });
   }
 
-  QueryBuilder<AutoQueueBuilderInfo, AutoQueueBuilderInfo,
-      QAfterFilterCondition> idBetween(
+  QueryBuilder<SmartQueueInfo, SmartQueueInfo, QAfterFilterCondition> idBetween(
     Id lower,
     Id upper, {
     bool includeLower = true,
@@ -255,8 +250,8 @@ extension AutoQueueBuilderInfoQueryFilter on QueryBuilder<AutoQueueBuilderInfo,
     });
   }
 
-  QueryBuilder<AutoQueueBuilderInfo, AutoQueueBuilderInfo,
-      QAfterFilterCondition> jsonEqualTo(
+  QueryBuilder<SmartQueueInfo, SmartQueueInfo, QAfterFilterCondition>
+      jsonEqualTo(
     String value, {
     bool caseSensitive = true,
   }) {
@@ -269,8 +264,8 @@ extension AutoQueueBuilderInfoQueryFilter on QueryBuilder<AutoQueueBuilderInfo,
     });
   }
 
-  QueryBuilder<AutoQueueBuilderInfo, AutoQueueBuilderInfo,
-      QAfterFilterCondition> jsonGreaterThan(
+  QueryBuilder<SmartQueueInfo, SmartQueueInfo, QAfterFilterCondition>
+      jsonGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
@@ -285,8 +280,8 @@ extension AutoQueueBuilderInfoQueryFilter on QueryBuilder<AutoQueueBuilderInfo,
     });
   }
 
-  QueryBuilder<AutoQueueBuilderInfo, AutoQueueBuilderInfo,
-      QAfterFilterCondition> jsonLessThan(
+  QueryBuilder<SmartQueueInfo, SmartQueueInfo, QAfterFilterCondition>
+      jsonLessThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
@@ -301,8 +296,8 @@ extension AutoQueueBuilderInfoQueryFilter on QueryBuilder<AutoQueueBuilderInfo,
     });
   }
 
-  QueryBuilder<AutoQueueBuilderInfo, AutoQueueBuilderInfo,
-      QAfterFilterCondition> jsonBetween(
+  QueryBuilder<SmartQueueInfo, SmartQueueInfo, QAfterFilterCondition>
+      jsonBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -321,8 +316,8 @@ extension AutoQueueBuilderInfoQueryFilter on QueryBuilder<AutoQueueBuilderInfo,
     });
   }
 
-  QueryBuilder<AutoQueueBuilderInfo, AutoQueueBuilderInfo,
-      QAfterFilterCondition> jsonStartsWith(
+  QueryBuilder<SmartQueueInfo, SmartQueueInfo, QAfterFilterCondition>
+      jsonStartsWith(
     String value, {
     bool caseSensitive = true,
   }) {
@@ -335,8 +330,8 @@ extension AutoQueueBuilderInfoQueryFilter on QueryBuilder<AutoQueueBuilderInfo,
     });
   }
 
-  QueryBuilder<AutoQueueBuilderInfo, AutoQueueBuilderInfo,
-      QAfterFilterCondition> jsonEndsWith(
+  QueryBuilder<SmartQueueInfo, SmartQueueInfo, QAfterFilterCondition>
+      jsonEndsWith(
     String value, {
     bool caseSensitive = true,
   }) {
@@ -349,8 +344,7 @@ extension AutoQueueBuilderInfoQueryFilter on QueryBuilder<AutoQueueBuilderInfo,
     });
   }
 
-  QueryBuilder<AutoQueueBuilderInfo, AutoQueueBuilderInfo,
-          QAfterFilterCondition>
+  QueryBuilder<SmartQueueInfo, SmartQueueInfo, QAfterFilterCondition>
       jsonContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.contains(
@@ -361,8 +355,7 @@ extension AutoQueueBuilderInfoQueryFilter on QueryBuilder<AutoQueueBuilderInfo,
     });
   }
 
-  QueryBuilder<AutoQueueBuilderInfo, AutoQueueBuilderInfo,
-          QAfterFilterCondition>
+  QueryBuilder<SmartQueueInfo, SmartQueueInfo, QAfterFilterCondition>
       jsonMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.matches(
@@ -373,8 +366,8 @@ extension AutoQueueBuilderInfoQueryFilter on QueryBuilder<AutoQueueBuilderInfo,
     });
   }
 
-  QueryBuilder<AutoQueueBuilderInfo, AutoQueueBuilderInfo,
-      QAfterFilterCondition> jsonIsEmpty() {
+  QueryBuilder<SmartQueueInfo, SmartQueueInfo, QAfterFilterCondition>
+      jsonIsEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'json',
@@ -383,8 +376,8 @@ extension AutoQueueBuilderInfoQueryFilter on QueryBuilder<AutoQueueBuilderInfo,
     });
   }
 
-  QueryBuilder<AutoQueueBuilderInfo, AutoQueueBuilderInfo,
-      QAfterFilterCondition> jsonIsNotEmpty() {
+  QueryBuilder<SmartQueueInfo, SmartQueueInfo, QAfterFilterCondition>
+      jsonIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         property: r'json',
@@ -393,8 +386,8 @@ extension AutoQueueBuilderInfoQueryFilter on QueryBuilder<AutoQueueBuilderInfo,
     });
   }
 
-  QueryBuilder<AutoQueueBuilderInfo, AutoQueueBuilderInfo,
-      QAfterFilterCondition> typeEqualTo(AutoQueueBuilderType value) {
+  QueryBuilder<SmartQueueInfo, SmartQueueInfo, QAfterFilterCondition>
+      typeEqualTo(SmartQueueType value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'type',
@@ -403,9 +396,9 @@ extension AutoQueueBuilderInfoQueryFilter on QueryBuilder<AutoQueueBuilderInfo,
     });
   }
 
-  QueryBuilder<AutoQueueBuilderInfo, AutoQueueBuilderInfo,
-      QAfterFilterCondition> typeGreaterThan(
-    AutoQueueBuilderType value, {
+  QueryBuilder<SmartQueueInfo, SmartQueueInfo, QAfterFilterCondition>
+      typeGreaterThan(
+    SmartQueueType value, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -417,9 +410,9 @@ extension AutoQueueBuilderInfoQueryFilter on QueryBuilder<AutoQueueBuilderInfo,
     });
   }
 
-  QueryBuilder<AutoQueueBuilderInfo, AutoQueueBuilderInfo,
-      QAfterFilterCondition> typeLessThan(
-    AutoQueueBuilderType value, {
+  QueryBuilder<SmartQueueInfo, SmartQueueInfo, QAfterFilterCondition>
+      typeLessThan(
+    SmartQueueType value, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -431,10 +424,10 @@ extension AutoQueueBuilderInfoQueryFilter on QueryBuilder<AutoQueueBuilderInfo,
     });
   }
 
-  QueryBuilder<AutoQueueBuilderInfo, AutoQueueBuilderInfo,
-      QAfterFilterCondition> typeBetween(
-    AutoQueueBuilderType lower,
-    AutoQueueBuilderType upper, {
+  QueryBuilder<SmartQueueInfo, SmartQueueInfo, QAfterFilterCondition>
+      typeBetween(
+    SmartQueueType lower,
+    SmartQueueType upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
@@ -450,120 +443,109 @@ extension AutoQueueBuilderInfoQueryFilter on QueryBuilder<AutoQueueBuilderInfo,
   }
 }
 
-extension AutoQueueBuilderInfoQueryObject on QueryBuilder<AutoQueueBuilderInfo,
-    AutoQueueBuilderInfo, QFilterCondition> {}
+extension SmartQueueInfoQueryObject
+    on QueryBuilder<SmartQueueInfo, SmartQueueInfo, QFilterCondition> {}
 
-extension AutoQueueBuilderInfoQueryLinks on QueryBuilder<AutoQueueBuilderInfo,
-    AutoQueueBuilderInfo, QFilterCondition> {}
+extension SmartQueueInfoQueryLinks
+    on QueryBuilder<SmartQueueInfo, SmartQueueInfo, QFilterCondition> {}
 
-extension AutoQueueBuilderInfoQuerySortBy
-    on QueryBuilder<AutoQueueBuilderInfo, AutoQueueBuilderInfo, QSortBy> {
-  QueryBuilder<AutoQueueBuilderInfo, AutoQueueBuilderInfo, QAfterSortBy>
-      sortByJson() {
+extension SmartQueueInfoQuerySortBy
+    on QueryBuilder<SmartQueueInfo, SmartQueueInfo, QSortBy> {
+  QueryBuilder<SmartQueueInfo, SmartQueueInfo, QAfterSortBy> sortByJson() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'json', Sort.asc);
     });
   }
 
-  QueryBuilder<AutoQueueBuilderInfo, AutoQueueBuilderInfo, QAfterSortBy>
-      sortByJsonDesc() {
+  QueryBuilder<SmartQueueInfo, SmartQueueInfo, QAfterSortBy> sortByJsonDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'json', Sort.desc);
     });
   }
 
-  QueryBuilder<AutoQueueBuilderInfo, AutoQueueBuilderInfo, QAfterSortBy>
-      sortByType() {
+  QueryBuilder<SmartQueueInfo, SmartQueueInfo, QAfterSortBy> sortByType() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'type', Sort.asc);
     });
   }
 
-  QueryBuilder<AutoQueueBuilderInfo, AutoQueueBuilderInfo, QAfterSortBy>
-      sortByTypeDesc() {
+  QueryBuilder<SmartQueueInfo, SmartQueueInfo, QAfterSortBy> sortByTypeDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'type', Sort.desc);
     });
   }
 }
 
-extension AutoQueueBuilderInfoQuerySortThenBy
-    on QueryBuilder<AutoQueueBuilderInfo, AutoQueueBuilderInfo, QSortThenBy> {
-  QueryBuilder<AutoQueueBuilderInfo, AutoQueueBuilderInfo, QAfterSortBy>
-      thenById() {
+extension SmartQueueInfoQuerySortThenBy
+    on QueryBuilder<SmartQueueInfo, SmartQueueInfo, QSortThenBy> {
+  QueryBuilder<SmartQueueInfo, SmartQueueInfo, QAfterSortBy> thenById() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.asc);
     });
   }
 
-  QueryBuilder<AutoQueueBuilderInfo, AutoQueueBuilderInfo, QAfterSortBy>
-      thenByIdDesc() {
+  QueryBuilder<SmartQueueInfo, SmartQueueInfo, QAfterSortBy> thenByIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.desc);
     });
   }
 
-  QueryBuilder<AutoQueueBuilderInfo, AutoQueueBuilderInfo, QAfterSortBy>
-      thenByJson() {
+  QueryBuilder<SmartQueueInfo, SmartQueueInfo, QAfterSortBy> thenByJson() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'json', Sort.asc);
     });
   }
 
-  QueryBuilder<AutoQueueBuilderInfo, AutoQueueBuilderInfo, QAfterSortBy>
-      thenByJsonDesc() {
+  QueryBuilder<SmartQueueInfo, SmartQueueInfo, QAfterSortBy> thenByJsonDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'json', Sort.desc);
     });
   }
 
-  QueryBuilder<AutoQueueBuilderInfo, AutoQueueBuilderInfo, QAfterSortBy>
-      thenByType() {
+  QueryBuilder<SmartQueueInfo, SmartQueueInfo, QAfterSortBy> thenByType() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'type', Sort.asc);
     });
   }
 
-  QueryBuilder<AutoQueueBuilderInfo, AutoQueueBuilderInfo, QAfterSortBy>
-      thenByTypeDesc() {
+  QueryBuilder<SmartQueueInfo, SmartQueueInfo, QAfterSortBy> thenByTypeDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'type', Sort.desc);
     });
   }
 }
 
-extension AutoQueueBuilderInfoQueryWhereDistinct
-    on QueryBuilder<AutoQueueBuilderInfo, AutoQueueBuilderInfo, QDistinct> {
-  QueryBuilder<AutoQueueBuilderInfo, AutoQueueBuilderInfo, QDistinct>
-      distinctByJson({bool caseSensitive = true}) {
+extension SmartQueueInfoQueryWhereDistinct
+    on QueryBuilder<SmartQueueInfo, SmartQueueInfo, QDistinct> {
+  QueryBuilder<SmartQueueInfo, SmartQueueInfo, QDistinct> distinctByJson(
+      {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'json', caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<AutoQueueBuilderInfo, AutoQueueBuilderInfo, QDistinct>
-      distinctByType() {
+  QueryBuilder<SmartQueueInfo, SmartQueueInfo, QDistinct> distinctByType() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'type');
     });
   }
 }
 
-extension AutoQueueBuilderInfoQueryProperty on QueryBuilder<
-    AutoQueueBuilderInfo, AutoQueueBuilderInfo, QQueryProperty> {
-  QueryBuilder<AutoQueueBuilderInfo, int, QQueryOperations> idProperty() {
+extension SmartQueueInfoQueryProperty
+    on QueryBuilder<SmartQueueInfo, SmartQueueInfo, QQueryProperty> {
+  QueryBuilder<SmartQueueInfo, int, QQueryOperations> idProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'id');
     });
   }
 
-  QueryBuilder<AutoQueueBuilderInfo, String, QQueryOperations> jsonProperty() {
+  QueryBuilder<SmartQueueInfo, String, QQueryOperations> jsonProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'json');
     });
   }
 
-  QueryBuilder<AutoQueueBuilderInfo, AutoQueueBuilderType, QQueryOperations>
+  QueryBuilder<SmartQueueInfo, SmartQueueType, QQueryOperations>
       typeProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'type');

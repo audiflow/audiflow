@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'auto_queue_from_podcast_details_page.dart';
+part of 'smart_queue_from_podcast_details_page.dart';
 
 // **************************************************************************
 // JsonSerializableGenerator
@@ -30,22 +30,22 @@ const _$EpisodeFilterModeEnumMap = {
 // RiverpodGenerator
 // **************************************************************************
 
-String _$autoQueueFromPodcastDetailsPageHash() =>
-    r'3b587f622bb70ee9e56ffb392e32a0a29e4e452c';
+String _$smartQueueFromPodcastDetailsPageHash() =>
+    r'8964013bf96ded67b04c2ce3deeacb5479c0fa05';
 
-/// See also [AutoQueueFromPodcastDetailsPage].
-@ProviderFor(AutoQueueFromPodcastDetailsPage)
-final autoQueueFromPodcastDetailsPageProvider =
-    NotifierProvider<AutoQueueFromPodcastDetailsPage, QueueItem?>.internal(
-  AutoQueueFromPodcastDetailsPage.new,
-  name: r'autoQueueFromPodcastDetailsPageProvider',
+/// See also [SmartQueueFromPodcastDetailsPage].
+@ProviderFor(SmartQueueFromPodcastDetailsPage)
+final smartQueueFromPodcastDetailsPageProvider =
+    NotifierProvider<SmartQueueFromPodcastDetailsPage, QueueItem?>.internal(
+  SmartQueueFromPodcastDetailsPage.new,
+  name: r'smartQueueFromPodcastDetailsPageProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
       ? null
-      : _$autoQueueFromPodcastDetailsPageHash,
+      : _$smartQueueFromPodcastDetailsPageHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
 
-typedef _$AutoQueueFromPodcastDetailsPage = Notifier<QueueItem?>;
+typedef _$SmartQueueFromPodcastDetailsPage = Notifier<QueueItem?>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member
