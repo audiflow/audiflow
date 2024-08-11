@@ -130,9 +130,9 @@ class DefaultQueueController extends _$DefaultQueueController
   @override
   Future<void> clear({QueueType? type}) async {
     final newQueue = type == QueueType.primary
-        ? state.queue.where((q) => q.type == QueueType.primary)
+        ? state.queue.where((q) => q.type != QueueType.primary)
         : type == QueueType.adhoc
-            ? state.queue.where((q) => q.type == QueueType.adhoc)
+            ? state.queue.where((q) => q.type != QueueType.adhoc)
             : <QueueItem>[];
 
     state = state.copyWith(queue: newQueue.toList());

@@ -193,7 +193,8 @@ class _PodcastDetailsPage extends HookConsumerWidget {
                     if (viewMode == PodcastDetailsPageViewMode.episodes)
                       NotificationListener<PlayButtonTappedNotification>(
                         onNotification: (notification) {
-                          pageController!.togglePlayState(notification.episode);
+                          podcastEpisodesController!
+                              .togglePlayState(notification.episode);
                           return false;
                         },
                         child: EpisodeList(

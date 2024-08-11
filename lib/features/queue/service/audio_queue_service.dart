@@ -1,16 +1,13 @@
+import 'dart:async';
+
 import 'package:audiflow/common/data/connectivity.dart';
 import 'package:audiflow/events/audio_player_event.dart';
 import 'package:audiflow/features/browser/common/data/episode_stats_repository/episode_stats_repository.dart';
-import 'package:audiflow/features/browser/common/model/episode_filter_mode.dart';
 import 'package:audiflow/features/download/data/download_repository.dart';
 import 'package:audiflow/features/download/model/downloadable.dart';
 import 'package:audiflow/features/feed/data/episode_repository.dart';
 import 'package:audiflow/features/player/service/audio_player_service.dart';
-import 'package:audiflow/features/queue/data/queue_repository.dart';
-import 'package:audiflow/features/queue/model/auto_queue_builder_info.dart';
 import 'package:audiflow/features/queue/model/queue.dart';
-import 'package:audiflow/features/queue/service/auto_queue_builder/auto_queue_builder.dart';
-import 'package:audiflow/features/queue/service/auto_queue_builder/auto_queue_from_podcast_details_page.dart';
 import 'package:audiflow/features/queue/service/queue_controller.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -51,7 +48,22 @@ class AudioQueueService {
   List<ConnectivityResult> get _connectivityResult =>
       ref.read(connectivityProvider);
 
-  AutoQueueBuilder? _autoQueueBuilder;
+  Future<void> buildAndPlay({
+    required int pid,
+    required int eid,
+    required Iterable<int> queueingEpisodeIds,
+  }) async {
+    Future<void> rebuildQueue() async {
+      await _queueController.clear(type: QueueType.adhoc);
+      await _queueController.appendAll(
+        queueingEpisodeIds
+            .map((eid) => QueueItem.adhoc(pid: pid, eid: eid)),
+      );
+    }
+
+    await _play(eid: eid);
+    unawaited(rebuildQueue());
+  }
 
   void _listen() {
     ref.listen(audioPlayerEventStreamProvider, (_, next) {
@@ -70,22 +82,6 @@ class AudioQueueService {
         case null:
       }
     });
-  }
-
-  Future<void> playFromPodcastDetailsPage({
-    required Episode start,
-    required EpisodeFilterMode filterMode,
-  }) async {
-    final builder = ref.read(autoQueueFromPodcastDetailsPageProvider.notifier)
-      ..setup(start: start, filterMode: filterMode);
-    _autoQueueBuilder?.clear();
-    _autoQueueBuilder = builder;
-
-    final json = builder.encodeState();
-    await ref
-        .read(queueRepositoryProvider)
-        .saveAutoQueueBuilderData(AutoQueueBuilderType.detailsPage, json);
-    await _play(eid: start.id);
   }
 
   Future<bool> _play({required int eid}) async {

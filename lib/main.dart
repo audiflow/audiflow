@@ -45,6 +45,8 @@ import 'package:audiflow/features/player/service/audio_player_service.dart';
 import 'package:audiflow/features/player/service/default_audio_player_service.dart';
 import 'package:audiflow/features/preference/data/app_preference_repository.dart';
 import 'package:audiflow/features/preference/data/isar_app_preference_repository.dart';
+import 'package:audiflow/features/queue/data/isar_queue_repository.dart';
+import 'package:audiflow/features/queue/data/queue_repository.dart';
 import 'package:audiflow/features/queue/service/audio_queue_service.dart';
 import 'package:audiflow/features/queue/service/default_queue_controller.dart';
 import 'package:audiflow/features/queue/service/queue_controller.dart';
@@ -127,6 +129,7 @@ void main() async {
       downloadServiceProvider.overrideWith(MobileDownloadService.new),
       // queue
       queueControllerProvider.overrideWith(DefaultQueueController.new),
+      queueRepositoryProvider.overrideWithValue(IsarQueueRepository(isar)),
       // player
       audioPlayerServiceProvider.overrideWith(DefaultAudioPlayerService.new),
       audioQueueServiceProvider.overrideWith(AudioQueueService.new),

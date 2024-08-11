@@ -31,12 +31,6 @@ const EpisodeListEntrySchema = CollectionSchema(
       id: 2,
       name: r'pid',
       type: IsarType.long,
-    ),
-    r'role': PropertySchema(
-      id: 3,
-      name: r'role',
-      type: IsarType.byte,
-      enumMap: _EpisodeListEntryroleEnumValueMap,
     )
   },
   estimateSize: _episodeListEntryEstimateSize,
@@ -45,19 +39,14 @@ const EpisodeListEntrySchema = CollectionSchema(
   deserializeProp: _episodeListEntryDeserializeProp,
   idName: r'id',
   indexes: {
-    r'pid_role_order': IndexSchema(
-      id: -7891615254324960812,
-      name: r'pid_role_order',
+    r'pid_order': IndexSchema(
+      id: -3914495480043641717,
+      name: r'pid_order',
       unique: false,
       replace: false,
       properties: [
         IndexPropertySchema(
           name: r'pid',
-          type: IndexType.value,
-          caseSensitive: false,
-        ),
-        IndexPropertySchema(
-          name: r'role',
           type: IndexType.value,
           caseSensitive: false,
         ),
@@ -95,7 +84,6 @@ void _episodeListEntrySerialize(
   writer.writeLong(offsets[0], object.eid);
   writer.writeLong(offsets[1], object.order);
   writer.writeLong(offsets[2], object.pid);
-  writer.writeByte(offsets[3], object.role.index);
 }
 
 EpisodeListEntry _episodeListEntryDeserialize(
@@ -108,9 +96,6 @@ EpisodeListEntry _episodeListEntryDeserialize(
     eid: reader.readLong(offsets[0]),
     order: reader.readLong(offsets[1]),
     pid: reader.readLong(offsets[2]),
-    role:
-        _EpisodeListEntryroleValueEnumMap[reader.readByteOrNull(offsets[3])] ??
-            EpisodeListEntryRole.page,
   );
   return object;
 }
@@ -128,23 +113,10 @@ P _episodeListEntryDeserializeProp<P>(
       return (reader.readLong(offset)) as P;
     case 2:
       return (reader.readLong(offset)) as P;
-    case 3:
-      return (_EpisodeListEntryroleValueEnumMap[
-              reader.readByteOrNull(offset)] ??
-          EpisodeListEntryRole.page) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
 }
-
-const _EpisodeListEntryroleEnumValueMap = {
-  'page': 0,
-  'queue': 1,
-};
-const _EpisodeListEntryroleValueEnumMap = {
-  0: EpisodeListEntryRole.page,
-  1: EpisodeListEntryRole.queue,
-};
 
 Id _episodeListEntryGetId(EpisodeListEntry object) {
   return object.id;
@@ -165,11 +137,10 @@ extension EpisodeListEntryQueryWhereSort
     });
   }
 
-  QueryBuilder<EpisodeListEntry, EpisodeListEntry, QAfterWhere>
-      anyPidRoleOrder() {
+  QueryBuilder<EpisodeListEntry, EpisodeListEntry, QAfterWhere> anyPidOrder() {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
-        const IndexWhereClause.any(indexName: r'pid_role_order'),
+        const IndexWhereClause.any(indexName: r'pid_order'),
       );
     });
   }
@@ -245,28 +216,28 @@ extension EpisodeListEntryQueryWhere
   }
 
   QueryBuilder<EpisodeListEntry, EpisodeListEntry, QAfterWhereClause>
-      pidEqualToAnyRoleOrder(int pid) {
+      pidEqualToAnyOrder(int pid) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'pid_role_order',
+        indexName: r'pid_order',
         value: [pid],
       ));
     });
   }
 
   QueryBuilder<EpisodeListEntry, EpisodeListEntry, QAfterWhereClause>
-      pidNotEqualToAnyRoleOrder(int pid) {
+      pidNotEqualToAnyOrder(int pid) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'pid_role_order',
+              indexName: r'pid_order',
               lower: [],
               upper: [pid],
               includeUpper: false,
             ))
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'pid_role_order',
+              indexName: r'pid_order',
               lower: [pid],
               includeLower: false,
               upper: [],
@@ -274,13 +245,13 @@ extension EpisodeListEntryQueryWhere
       } else {
         return query
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'pid_role_order',
+              indexName: r'pid_order',
               lower: [pid],
               includeLower: false,
               upper: [],
             ))
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'pid_role_order',
+              indexName: r'pid_order',
               lower: [],
               upper: [pid],
               includeUpper: false,
@@ -290,13 +261,13 @@ extension EpisodeListEntryQueryWhere
   }
 
   QueryBuilder<EpisodeListEntry, EpisodeListEntry, QAfterWhereClause>
-      pidGreaterThanAnyRoleOrder(
+      pidGreaterThanAnyOrder(
     int pid, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'pid_role_order',
+        indexName: r'pid_order',
         lower: [pid],
         includeLower: include,
         upper: [],
@@ -305,13 +276,13 @@ extension EpisodeListEntryQueryWhere
   }
 
   QueryBuilder<EpisodeListEntry, EpisodeListEntry, QAfterWhereClause>
-      pidLessThanAnyRoleOrder(
+      pidLessThanAnyOrder(
     int pid, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'pid_role_order',
+        indexName: r'pid_order',
         lower: [],
         upper: [pid],
         includeUpper: include,
@@ -320,7 +291,7 @@ extension EpisodeListEntryQueryWhere
   }
 
   QueryBuilder<EpisodeListEntry, EpisodeListEntry, QAfterWhereClause>
-      pidBetweenAnyRoleOrder(
+      pidBetweenAnyOrder(
     int lowerPid,
     int upperPid, {
     bool includeLower = true,
@@ -328,7 +299,7 @@ extension EpisodeListEntryQueryWhere
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'pid_role_order',
+        indexName: r'pid_order',
         lower: [lowerPid],
         includeLower: includeLower,
         upper: [upperPid],
@@ -338,44 +309,44 @@ extension EpisodeListEntryQueryWhere
   }
 
   QueryBuilder<EpisodeListEntry, EpisodeListEntry, QAfterWhereClause>
-      pidRoleEqualToAnyOrder(int pid, EpisodeListEntryRole role) {
+      pidOrderEqualTo(int pid, int order) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'pid_role_order',
-        value: [pid, role],
+        indexName: r'pid_order',
+        value: [pid, order],
       ));
     });
   }
 
   QueryBuilder<EpisodeListEntry, EpisodeListEntry, QAfterWhereClause>
-      pidEqualToRoleNotEqualToAnyOrder(int pid, EpisodeListEntryRole role) {
+      pidEqualToOrderNotEqualTo(int pid, int order) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'pid_role_order',
+              indexName: r'pid_order',
               lower: [pid],
-              upper: [pid, role],
+              upper: [pid, order],
               includeUpper: false,
             ))
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'pid_role_order',
-              lower: [pid, role],
+              indexName: r'pid_order',
+              lower: [pid, order],
               includeLower: false,
               upper: [pid],
             ));
       } else {
         return query
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'pid_role_order',
-              lower: [pid, role],
+              indexName: r'pid_order',
+              lower: [pid, order],
               includeLower: false,
               upper: [pid],
             ))
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'pid_role_order',
+              indexName: r'pid_order',
               lower: [pid],
-              upper: [pid, role],
+              upper: [pid, order],
               includeUpper: false,
             ));
       }
@@ -383,15 +354,15 @@ extension EpisodeListEntryQueryWhere
   }
 
   QueryBuilder<EpisodeListEntry, EpisodeListEntry, QAfterWhereClause>
-      pidEqualToRoleGreaterThanAnyOrder(
+      pidEqualToOrderGreaterThan(
     int pid,
-    EpisodeListEntryRole role, {
+    int order, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'pid_role_order',
-        lower: [pid, role],
+        indexName: r'pid_order',
+        lower: [pid, order],
         includeLower: include,
         upper: [pid],
       ));
@@ -399,124 +370,24 @@ extension EpisodeListEntryQueryWhere
   }
 
   QueryBuilder<EpisodeListEntry, EpisodeListEntry, QAfterWhereClause>
-      pidEqualToRoleLessThanAnyOrder(
+      pidEqualToOrderLessThan(
     int pid,
-    EpisodeListEntryRole role, {
+    int order, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'pid_role_order',
+        indexName: r'pid_order',
         lower: [pid],
-        upper: [pid, role],
+        upper: [pid, order],
         includeUpper: include,
       ));
     });
   }
 
   QueryBuilder<EpisodeListEntry, EpisodeListEntry, QAfterWhereClause>
-      pidEqualToRoleBetweenAnyOrder(
+      pidEqualToOrderBetween(
     int pid,
-    EpisodeListEntryRole lowerRole,
-    EpisodeListEntryRole upperRole, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'pid_role_order',
-        lower: [pid, lowerRole],
-        includeLower: includeLower,
-        upper: [pid, upperRole],
-        includeUpper: includeUpper,
-      ));
-    });
-  }
-
-  QueryBuilder<EpisodeListEntry, EpisodeListEntry, QAfterWhereClause>
-      pidRoleOrderEqualTo(int pid, EpisodeListEntryRole role, int order) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'pid_role_order',
-        value: [pid, role, order],
-      ));
-    });
-  }
-
-  QueryBuilder<EpisodeListEntry, EpisodeListEntry, QAfterWhereClause>
-      pidRoleEqualToOrderNotEqualTo(
-          int pid, EpisodeListEntryRole role, int order) {
-    return QueryBuilder.apply(this, (query) {
-      if (query.whereSort == Sort.asc) {
-        return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'pid_role_order',
-              lower: [pid, role],
-              upper: [pid, role, order],
-              includeUpper: false,
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'pid_role_order',
-              lower: [pid, role, order],
-              includeLower: false,
-              upper: [pid, role],
-            ));
-      } else {
-        return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'pid_role_order',
-              lower: [pid, role, order],
-              includeLower: false,
-              upper: [pid, role],
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'pid_role_order',
-              lower: [pid, role],
-              upper: [pid, role, order],
-              includeUpper: false,
-            ));
-      }
-    });
-  }
-
-  QueryBuilder<EpisodeListEntry, EpisodeListEntry, QAfterWhereClause>
-      pidRoleEqualToOrderGreaterThan(
-    int pid,
-    EpisodeListEntryRole role,
-    int order, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'pid_role_order',
-        lower: [pid, role, order],
-        includeLower: include,
-        upper: [pid, role],
-      ));
-    });
-  }
-
-  QueryBuilder<EpisodeListEntry, EpisodeListEntry, QAfterWhereClause>
-      pidRoleEqualToOrderLessThan(
-    int pid,
-    EpisodeListEntryRole role,
-    int order, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'pid_role_order',
-        lower: [pid, role],
-        upper: [pid, role, order],
-        includeUpper: include,
-      ));
-    });
-  }
-
-  QueryBuilder<EpisodeListEntry, EpisodeListEntry, QAfterWhereClause>
-      pidRoleEqualToOrderBetween(
-    int pid,
-    EpisodeListEntryRole role,
     int lowerOrder,
     int upperOrder, {
     bool includeLower = true,
@@ -524,10 +395,10 @@ extension EpisodeListEntryQueryWhere
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'pid_role_order',
-        lower: [pid, role, lowerOrder],
+        indexName: r'pid_order',
+        lower: [pid, lowerOrder],
         includeLower: includeLower,
-        upper: [pid, role, upperOrder],
+        upper: [pid, upperOrder],
         includeUpper: includeUpper,
       ));
     });
@@ -759,62 +630,6 @@ extension EpisodeListEntryQueryFilter
       ));
     });
   }
-
-  QueryBuilder<EpisodeListEntry, EpisodeListEntry, QAfterFilterCondition>
-      roleEqualTo(EpisodeListEntryRole value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'role',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<EpisodeListEntry, EpisodeListEntry, QAfterFilterCondition>
-      roleGreaterThan(
-    EpisodeListEntryRole value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'role',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<EpisodeListEntry, EpisodeListEntry, QAfterFilterCondition>
-      roleLessThan(
-    EpisodeListEntryRole value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'role',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<EpisodeListEntry, EpisodeListEntry, QAfterFilterCondition>
-      roleBetween(
-    EpisodeListEntryRole lower,
-    EpisodeListEntryRole upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'role',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
-    });
-  }
 }
 
 extension EpisodeListEntryQueryObject
@@ -861,19 +676,6 @@ extension EpisodeListEntryQuerySortBy
       sortByPidDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'pid', Sort.desc);
-    });
-  }
-
-  QueryBuilder<EpisodeListEntry, EpisodeListEntry, QAfterSortBy> sortByRole() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'role', Sort.asc);
-    });
-  }
-
-  QueryBuilder<EpisodeListEntry, EpisodeListEntry, QAfterSortBy>
-      sortByRoleDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'role', Sort.desc);
     });
   }
 }
@@ -931,19 +733,6 @@ extension EpisodeListEntryQuerySortThenBy
       return query.addSortBy(r'pid', Sort.desc);
     });
   }
-
-  QueryBuilder<EpisodeListEntry, EpisodeListEntry, QAfterSortBy> thenByRole() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'role', Sort.asc);
-    });
-  }
-
-  QueryBuilder<EpisodeListEntry, EpisodeListEntry, QAfterSortBy>
-      thenByRoleDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'role', Sort.desc);
-    });
-  }
 }
 
 extension EpisodeListEntryQueryWhereDistinct
@@ -964,12 +753,6 @@ extension EpisodeListEntryQueryWhereDistinct
   QueryBuilder<EpisodeListEntry, EpisodeListEntry, QDistinct> distinctByPid() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'pid');
-    });
-  }
-
-  QueryBuilder<EpisodeListEntry, EpisodeListEntry, QDistinct> distinctByRole() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'role');
     });
   }
 }
@@ -997,13 +780,6 @@ extension EpisodeListEntryQueryProperty
   QueryBuilder<EpisodeListEntry, int, QQueryOperations> pidProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'pid');
-    });
-  }
-
-  QueryBuilder<EpisodeListEntry, EpisodeListEntryRole, QQueryOperations>
-      roleProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'role');
     });
   }
 }
