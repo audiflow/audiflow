@@ -23,11 +23,7 @@ class AudioPositionRecorder extends _$AudioPositionRecorder {
 
   void _listenAudioPlayerEvent() {
     ref.listen(audioPlayerEventStreamProvider, (_, next) async {
-      if (next.valueOrNull == null) {
-        return;
-      }
-
-      switch (next.requireValue) {
+      switch (next.valueOrNull!) {
         case AudioPlayerActionEvent(
             episode: final episode,
             action: AudioPlayerAction.play

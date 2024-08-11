@@ -201,6 +201,7 @@ class AppRouter extends _$AppRouter {
           // ),
         ],
         builder: (context, state, navigationShell) {
+          ref.listen(appWideProvider, (_, __) {});
           return AppWideProvidersInitializer(
             child: Stack(
               children: [
