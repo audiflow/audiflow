@@ -3,7 +3,7 @@
 // ignore_for_file: type=lint
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
-part of 'queue_item.dart';
+part of 'auto_queue_from_podcast_details_page.dart';
 
 // **************************************************************************
 // FreezedGenerator
@@ -14,169 +14,184 @@ T _$identity<T>(T value) => value;
 final _privateConstructorUsedError = UnsupportedError(
     'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
 
-/// @nodoc
-mixin _$SmartQueueItem {
-  int get pid => throw _privateConstructorUsedError;
-  int get eid => throw _privateConstructorUsedError;
-  int get ordinal => throw _privateConstructorUsedError;
+_Info _$InfoFromJson(Map<String, dynamic> json) {
+  return __Info.fromJson(json);
+}
 
-  /// Create a copy of SmartQueueItem
+/// @nodoc
+mixin _$Info {
+  int get pid => throw _privateConstructorUsedError;
+  int get ordinal => throw _privateConstructorUsedError;
+  EpisodeFilterMode get filterMode => throw _privateConstructorUsedError;
+
+  /// Serializes this _Info to a JSON map.
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+
+  /// Create a copy of _Info
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
-  $SmartQueueItemCopyWith<SmartQueueItem> get copyWith =>
-      throw _privateConstructorUsedError;
+  _$InfoCopyWith<_Info> get copyWith => throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class $SmartQueueItemCopyWith<$Res> {
-  factory $SmartQueueItemCopyWith(
-          SmartQueueItem value, $Res Function(SmartQueueItem) then) =
-      _$SmartQueueItemCopyWithImpl<$Res, SmartQueueItem>;
+abstract class _$InfoCopyWith<$Res> {
+  factory _$InfoCopyWith(_Info value, $Res Function(_Info) then) =
+      __$InfoCopyWithImpl<$Res, _Info>;
   @useResult
-  $Res call({int pid, int eid, int ordinal});
+  $Res call({int pid, int ordinal, EpisodeFilterMode filterMode});
 }
 
 /// @nodoc
-class _$SmartQueueItemCopyWithImpl<$Res, $Val extends SmartQueueItem>
-    implements $SmartQueueItemCopyWith<$Res> {
-  _$SmartQueueItemCopyWithImpl(this._value, this._then);
+class __$InfoCopyWithImpl<$Res, $Val extends _Info>
+    implements _$InfoCopyWith<$Res> {
+  __$InfoCopyWithImpl(this._value, this._then);
 
   // ignore: unused_field
   final $Val _value;
   // ignore: unused_field
   final $Res Function($Val) _then;
 
-  /// Create a copy of SmartQueueItem
+  /// Create a copy of _Info
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
     Object? pid = null,
-    Object? eid = null,
     Object? ordinal = null,
+    Object? filterMode = null,
   }) {
     return _then(_value.copyWith(
       pid: null == pid
           ? _value.pid
           : pid // ignore: cast_nullable_to_non_nullable
               as int,
-      eid: null == eid
-          ? _value.eid
-          : eid // ignore: cast_nullable_to_non_nullable
-              as int,
       ordinal: null == ordinal
           ? _value.ordinal
           : ordinal // ignore: cast_nullable_to_non_nullable
               as int,
+      filterMode: null == filterMode
+          ? _value.filterMode
+          : filterMode // ignore: cast_nullable_to_non_nullable
+              as EpisodeFilterMode,
     ) as $Val);
   }
 }
 
 /// @nodoc
-abstract class _$$SmartQueueItemImplCopyWith<$Res>
-    implements $SmartQueueItemCopyWith<$Res> {
-  factory _$$SmartQueueItemImplCopyWith(_$SmartQueueItemImpl value,
-          $Res Function(_$SmartQueueItemImpl) then) =
-      __$$SmartQueueItemImplCopyWithImpl<$Res>;
+abstract class _$$_InfoImplCopyWith<$Res> implements _$InfoCopyWith<$Res> {
+  factory _$$_InfoImplCopyWith(
+          _$_InfoImpl value, $Res Function(_$_InfoImpl) then) =
+      __$$_InfoImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({int pid, int eid, int ordinal});
+  $Res call({int pid, int ordinal, EpisodeFilterMode filterMode});
 }
 
 /// @nodoc
-class __$$SmartQueueItemImplCopyWithImpl<$Res>
-    extends _$SmartQueueItemCopyWithImpl<$Res, _$SmartQueueItemImpl>
-    implements _$$SmartQueueItemImplCopyWith<$Res> {
-  __$$SmartQueueItemImplCopyWithImpl(
-      _$SmartQueueItemImpl _value, $Res Function(_$SmartQueueItemImpl) _then)
+class __$$_InfoImplCopyWithImpl<$Res>
+    extends __$InfoCopyWithImpl<$Res, _$_InfoImpl>
+    implements _$$_InfoImplCopyWith<$Res> {
+  __$$_InfoImplCopyWithImpl(
+      _$_InfoImpl _value, $Res Function(_$_InfoImpl) _then)
       : super(_value, _then);
 
-  /// Create a copy of SmartQueueItem
+  /// Create a copy of _Info
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
     Object? pid = null,
-    Object? eid = null,
     Object? ordinal = null,
+    Object? filterMode = null,
   }) {
-    return _then(_$SmartQueueItemImpl(
+    return _then(_$_InfoImpl(
       pid: null == pid
           ? _value.pid
           : pid // ignore: cast_nullable_to_non_nullable
-              as int,
-      eid: null == eid
-          ? _value.eid
-          : eid // ignore: cast_nullable_to_non_nullable
               as int,
       ordinal: null == ordinal
           ? _value.ordinal
           : ordinal // ignore: cast_nullable_to_non_nullable
               as int,
+      filterMode: null == filterMode
+          ? _value.filterMode
+          : filterMode // ignore: cast_nullable_to_non_nullable
+              as EpisodeFilterMode,
     ));
   }
 }
 
 /// @nodoc
+@JsonSerializable()
+class _$_InfoImpl implements __Info {
+  const _$_InfoImpl(
+      {required this.pid, required this.ordinal, required this.filterMode});
 
-class _$SmartQueueItemImpl extends _SmartQueueItem {
-  const _$SmartQueueItemImpl(
-      {required this.pid, required this.eid, required this.ordinal})
-      : super._();
+  factory _$_InfoImpl.fromJson(Map<String, dynamic> json) =>
+      _$$_InfoImplFromJson(json);
 
   @override
   final int pid;
   @override
-  final int eid;
-  @override
   final int ordinal;
+  @override
+  final EpisodeFilterMode filterMode;
 
   @override
   String toString() {
-    return 'SmartQueueItem(pid: $pid, eid: $eid, ordinal: $ordinal)';
+    return '_Info(pid: $pid, ordinal: $ordinal, filterMode: $filterMode)';
   }
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$SmartQueueItemImpl &&
+            other is _$_InfoImpl &&
             (identical(other.pid, pid) || other.pid == pid) &&
-            (identical(other.eid, eid) || other.eid == eid) &&
-            (identical(other.ordinal, ordinal) || other.ordinal == ordinal));
+            (identical(other.ordinal, ordinal) || other.ordinal == ordinal) &&
+            (identical(other.filterMode, filterMode) ||
+                other.filterMode == filterMode));
   }
 
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(runtimeType, pid, eid, ordinal);
+  int get hashCode => Object.hash(runtimeType, pid, ordinal, filterMode);
 
-  /// Create a copy of SmartQueueItem
+  /// Create a copy of _Info
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
-  _$$SmartQueueItemImplCopyWith<_$SmartQueueItemImpl> get copyWith =>
-      __$$SmartQueueItemImplCopyWithImpl<_$SmartQueueItemImpl>(
-          this, _$identity);
+  _$$_InfoImplCopyWith<_$_InfoImpl> get copyWith =>
+      __$$_InfoImplCopyWithImpl<_$_InfoImpl>(this, _$identity);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$_InfoImplToJson(
+      this,
+    );
+  }
 }
 
-abstract class _SmartQueueItem extends SmartQueueItem {
-  const factory _SmartQueueItem(
+abstract class __Info implements _Info {
+  const factory __Info(
       {required final int pid,
-      required final int eid,
-      required final int ordinal}) = _$SmartQueueItemImpl;
-  const _SmartQueueItem._() : super._();
+      required final int ordinal,
+      required final EpisodeFilterMode filterMode}) = _$_InfoImpl;
+
+  factory __Info.fromJson(Map<String, dynamic> json) = _$_InfoImpl.fromJson;
 
   @override
   int get pid;
   @override
-  int get eid;
-  @override
   int get ordinal;
+  @override
+  EpisodeFilterMode get filterMode;
 
-  /// Create a copy of SmartQueueItem
+  /// Create a copy of _Info
   /// with the given fields replaced by the non-null parameter values.
   @override
   @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$SmartQueueItemImplCopyWith<_$SmartQueueItemImpl> get copyWith =>
+  _$$_InfoImplCopyWith<_$_InfoImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
