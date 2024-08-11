@@ -1,19 +1,26 @@
-import 'package:audiflow/features/queue/service/queue_manager.dart';
+import 'package:audiflow/features/queue/service/manual_queue_controller.dart';
+import 'package:audiflow/features/queue/service/smart_queue_controller.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'episode_queue_index_provider.g.dart';
 
 @riverpod
 int? episodeQueueIndex(EpisodeQueueIndexRef ref, int eid) {
-  ref.listen(queueManagerProvider, (_, next) {
-    final index = next.queue.indexWhere((item) => item.eid == eid);
-    final queueIndex = 0 <= index ? index : null;
-    if (ref.state != queueIndex) {
-      ref.state = queueIndex;
-    }
-  });
+  final manualQueueIndex = ref.watch(
+    manualQueueControllerProvider
+        .select((items) => items.indexWhere((item) => item.eid == eid)),
+  );
+  if (0 <= manualQueueIndex) {
+    return manualQueueIndex + 1;
+  }
 
-  final queue = ref.read(queueManagerProvider).queue;
-  final index = queue.indexWhere((item) => item.eid == eid);
-  return 0 <= index ? index : null;
+  final smartQueueIndex = ref.watch(
+    smartQueueControllerProvider
+        .select((items) => items.indexWhere((item) => item.eid == eid)),
+  );
+  if (0 <= smartQueueIndex) {
+    return ref.read(manualQueueControllerProvider).length + smartQueueIndex + 1;
+  }
+
+  return null;
 }
