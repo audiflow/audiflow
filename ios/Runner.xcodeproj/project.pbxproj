@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		07417B2F2C69103800ED2D7D /* libsqlite3.0.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 07417B2E2C69103100ED2D7D /* libsqlite3.0.tbd */; };
+		07C118582C68C11300B51D4B /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 07C118572C68C10900B51D4B /* libsqlite3.tbd */; };
 		1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */ = {isa = PBXBuildFile; fileRef = 1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */; };
 		331C808B294A63AB00263BE5 /* RunnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 331C807B294A618700263BE5 /* RunnerTests.swift */; };
 		3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */; };
@@ -42,6 +44,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		07417B2E2C69103100ED2D7D /* libsqlite3.0.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.0.tbd; path = usr/lib/libsqlite3.0.tbd; sourceTree = SDKROOT; };
+		07C118572C68C10900B51D4B /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
 		0B3D1FCCB141C568ACE7A850 /* Pods-RunnerTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.debug.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.debug.xcconfig"; sourceTree = "<group>"; };
 		1498D2321E8E86230040F4C2 /* GeneratedPluginRegistrant.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GeneratedPluginRegistrant.h; sourceTree = "<group>"; };
 		1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GeneratedPluginRegistrant.m; sourceTree = "<group>"; };
@@ -80,7 +84,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				07C118582C68C11300B51D4B /* libsqlite3.tbd in Frameworks */,
 				ECF621B6E7FB82AB168401D1 /* Pods_Runner.framework in Frameworks */,
+				07417B2F2C69103800ED2D7D /* libsqlite3.0.tbd in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -97,13 +103,14 @@
 				16E4FA2F57FC807DC61B020E /* Pods-RunnerTests.release.xcconfig */,
 				73E66E4B4584AC4F7B933688 /* Pods-RunnerTests.profile.xcconfig */,
 			);
-			name = Pods;
 			path = Pods;
 			sourceTree = "<group>";
 		};
 		0F75922AE79184D3D0C7E062 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				07417B2E2C69103100ED2D7D /* libsqlite3.0.tbd */,
+				07C118572C68C10900B51D4B /* libsqlite3.tbd */,
 				3D0769BA228F5EDBE2F249F9 /* Pods_Runner.framework */,
 				22288D2B398D992BB28730C9 /* Pods_RunnerTests.framework */,
 			);
