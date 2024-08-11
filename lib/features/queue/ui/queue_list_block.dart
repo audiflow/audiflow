@@ -1,8 +1,8 @@
 import 'package:audiflow/events/play_button_notification.dart';
-import 'package:audiflow/features/browser/episode/data/episode_provider.dart';
 import 'package:audiflow/features/browser/episode/ui/episode_brief_tile.dart';
-import 'package:audiflow/features/queue/model/queue_item.dart';
-import 'package:audiflow/features/queue/service/manual_queue_controller.dart';
+import 'package:audiflow/features/queue/model/queue.dart';
+import 'package:audiflow/features/queue/service/queue_list_provider.dart';
+import 'package:audiflow/features/queue/service/queue_manager.dart';
 import 'package:audiflow/localization/generated/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,12 +13,10 @@ class QueueListBlock extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final manualQueueItems = ref.watch(manualQueueControllerProvider);
-    if (manualQueueItems.isEmpty) {
+    final queue = ref.watch(queueListProvider).queue;
+    if (queue.isEmpty) {
       return const SliverToBoxAdapter(child: SizedBox.shrink());
     }
-
-    final queueController = ref.read(manualQueueControllerProvider.notifier);
 
     final l10n = L10n.of(context);
     return NotificationListener<PlayButtonTappedNotification>(
@@ -36,20 +34,18 @@ class QueueListBlock extends ConsumerWidget {
       },
       child: Section(
         title: l10n.queue,
-        queueItems: manualQueueItems,
+        queuedEpisodes: queue,
         trailing: TextButton(
-          onPressed: queueController.clear,
           child: Text(l10n.clear),
+          onPressed: () {
+            ref.read(queueManagerProvider.notifier).clear();
+          },
         ),
         onReorder: (oldIndex, newIndex) {
-          queueController.move(
-            manualQueueItems[oldIndex],
-            before: newIndex < oldIndex ? manualQueueItems[newIndex] : null,
-            after: oldIndex < newIndex ? manualQueueItems[newIndex] : null,
-          );
+          ref.read(queueManagerProvider.notifier).reorder(oldIndex, newIndex);
         },
         onRemove: (index) {
-          queueController.remove(manualQueueItems[index]);
+          ref.read(queueManagerProvider.notifier).removeByIndex(index);
         },
       ),
     );
@@ -60,7 +56,7 @@ class Section extends MultiSliver {
   Section({
     super.key,
     required String title,
-    required List<QueueItem> queueItems,
+    required List<QueuedEpisode> queuedEpisodes,
     required ReorderCallback onReorder,
     required ValueChanged<int> onRemove,
     Widget? trailing,
@@ -84,7 +80,7 @@ class Section extends MultiSliver {
             ),
             SliverReorderableList(
               itemBuilder: (context, index) => Dismissible(
-                key: ValueKey(queueItems[index].id),
+                key: ValueKey(queuedEpisodes[index].item.id),
                 onDismissed: (_) {
                   onRemove(index);
                 },
@@ -98,30 +94,17 @@ class Section extends MultiSliver {
                     color: Theme.of(context).colorScheme.onError,
                   ),
                 ),
-                child: Consumer(
-                  builder: (context, ref, child) {
-                    final episode = ref
-                        .watch(episodeProvider(eid: queueItems[index].eid))
-                        .maybeMap(
-                          data: (data) => data.value,
-                          orElse: () => null,
-                        );
-                    return episode == null
-                        ? const SizedBox.shrink()
-                        : EpisodeBriefTile(
-                            key: ValueKey(queueItems[index].id),
-                            episode: episode,
-                            sortableIndex: index,
-                            backgroundColor: Colors.transparent,
-                            // queuedEpisodes[index].item.type ==
-                            // QueueType.primary
-                            //     ? Colors.transparent
-                            //     : Colors.grey[200],
-                          );
-                  },
+                child: EpisodeBriefTile(
+                  key: ValueKey(queuedEpisodes[index].item.id),
+                  episode: queuedEpisodes[index].episode,
+                  sortableIndex: index,
+                  backgroundColor:
+                      queuedEpisodes[index].item.type == QueueType.primary
+                          ? Colors.transparent
+                          : Colors.grey[200],
                 ),
               ),
-              itemCount: queueItems.length,
+              itemCount: queuedEpisodes.length,
               onReorder: onReorder,
             ),
           ],

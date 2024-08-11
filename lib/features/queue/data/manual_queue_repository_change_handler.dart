@@ -50,14 +50,6 @@ class ManualQueueRepositoryChangeHandler implements ManualQueueRepository {
   }
 
   @override
-  Future<void> remove(ManualQueueItem item) async {
-    await _inner.remove(item);
-    _ref
-        .read(manualQueueEventStreamProvider.notifier)
-        .add(ManualQueueItemsRemovedEvent(item));
-  }
-
-  @override
   Future<ManualQueueItem?> pop() async {
     final item = await _inner.pop();
     if (item != null) {
