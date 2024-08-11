@@ -4,16 +4,15 @@ import 'dart:ui';
 
 import 'package:audiflow/core/environment.dart';
 import 'package:audiflow/features/download/model/downloadable.dart';
-import 'package:audiflow/features/download/service/download_manager.dart';
-import 'package:audiflow/utils/logger.dart';
+import 'package:audiflow/features/download/service/download_task_controller.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-/// A [DownloadManager] for handling downloading of podcasts on a mobile device.
-class DefaultDownloaderManager implements DownloadManager {
-  DefaultDownloaderManager(this.ref);
+part 'default_download_task_controller.g.dart';
 
-  final Ref ref;
+@Riverpod(keepAlive: true)
+class DefaultDownloaderTaskController extends _$DefaultDownloaderTaskController
+    implements DownloadTaskController {
   static const portName = 'downloader_send_port';
   final ReceivePort _port = ReceivePort();
   final downloadController = StreamController<DownloadProgress>();
@@ -21,7 +20,9 @@ class DefaultDownloaderManager implements DownloadManager {
   var _initialized = false;
 
   @override
-  Stream<DownloadProgress> get downloadProgress => downloadController.stream;
+  Stream<DownloadProgress> build() {
+    return downloadController.stream;
+  }
 
   @override
   Future<void> ensureInitialized() async {
@@ -29,8 +30,6 @@ class DefaultDownloaderManager implements DownloadManager {
       return;
     }
     _initialized = true;
-
-    logger.d('Initialising download manager');
 
     await FlutterDownloader.initialize();
     IsolateNameServer.removePortNameMapping(portName);
@@ -51,21 +50,16 @@ class DefaultDownloaderManager implements DownloadManager {
         /// If we are not queued or running we can safely clean up this event
         if (t.status != DownloadTaskStatus.enqueued &&
             t.status != DownloadTaskStatus.running) {
-          await FlutterDownloader.remove(
-            taskId: t.taskId,
-          );
+          await FlutterDownloader.remove(taskId: t.taskId);
         }
       }
     }
 
-    _port.listen((dynamic data) {
-      // ignore: avoid_dynamic_calls
-      final id = data[0] as String;
-      // ignore: avoid_dynamic_calls
-      final status = DownloadTaskStatus.values[data[1] as int];
-      // ignore: avoid_dynamic_calls
-      final progress = data[2] as int;
-
+    _port.listen((data) {
+      final args = data as List<dynamic>;
+      final id = args[0] as String;
+      final status = DownloadTaskStatus.values[args[1] as int];
+      final progress = args[2] as int;
       _updateDownloadState(id: id, progress: progress, status: status);
     });
 
@@ -87,12 +81,6 @@ class DefaultDownloaderManager implements DownloadManager {
         'User-Agent': Environment.userAgent(),
       },
     );
-  }
-
-  @override
-  void dispose() {
-    IsolateNameServer.removePortNameMapping(portName);
-    downloadController.close();
   }
 
   void _updateDownloadState({

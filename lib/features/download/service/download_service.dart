@@ -17,8 +17,6 @@ abstract class DownloadService {
   Future<void> deleteDownload(Episode episode);
 
   Future<Downloadable?> findDownload(Episode episode);
-
-  void dispose();
 }
 
 @Riverpod(keepAlive: true)

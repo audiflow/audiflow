@@ -1,6 +1,6 @@
 import 'package:audiflow/features/download/model/downloadable.dart';
-import 'package:audiflow/features/download/service/download_progress.dart';
 import 'package:audiflow/features/download/service/download_service.dart';
+import 'package:audiflow/features/download/service/downloadable_provider.dart';
 import 'package:audiflow/features/feed/model/model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -20,10 +20,9 @@ class DownloadButton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final downloadableState = ref.watch(downloadProgressProvider(episode));
-    final downloads = downloadableState.valueOrNull != null;
-    final downloadState =
-        downloadableState.valueOrNull?.state ?? DownloadState.none;
+    final downloadable = ref.watch(downloadableProvider(episode));
+    final downloads = downloadable != null;
+    final downloadState = downloadable?.state ?? DownloadState.none;
     final downloaded = downloadState == DownloadState.downloaded;
 
     final double? percent;
@@ -37,7 +36,7 @@ class DownloadButton extends ConsumerWidget {
       case DownloadState.queued:
       case DownloadState.downloading:
       case DownloadState.paused:
-        final base = downloadableState.requireValue?.percentage ?? 0;
+        final base = downloadable?.percentage ?? 0;
         percent = base == 0 ? null : base.toDouble() / 100;
     }
 

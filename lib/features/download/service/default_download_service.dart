@@ -4,9 +4,9 @@ import 'dart:io';
 import 'package:audiflow/features/browser/common/data/episode_stats_repository/episode_stats_repository.dart';
 import 'package:audiflow/features/download/data/download_repository.dart';
 import 'package:audiflow/features/download/model/downloadable.dart';
-import 'package:audiflow/features/download/service/download_manager.dart';
 import 'package:audiflow/features/download/service/download_path.dart';
 import 'package:audiflow/features/download/service/download_service.dart';
+import 'package:audiflow/features/download/service/download_task_controller.dart';
 import 'package:audiflow/features/download/service/downloadable_checker.dart';
 import 'package:audiflow/features/feed/data/episode_repository.dart';
 import 'package:audiflow/features/feed/model/model.dart';
@@ -18,14 +18,14 @@ import 'package:collection/collection.dart' show IterableExtension;
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mp3_info/mp3_info.dart';
-import 'package:rxdart/rxdart.dart';
 
 /// An implementation of a [DownloadService] that handles downloading
 /// of episodes on mobile.
 class DefaultDownloadService extends DownloadService {
   DefaultDownloadService(this._ref) {
-    _downloadManager.downloadProgress.pipe(downloadProgress);
-    downloadProgress.listen(_updateDownloadProgress);
+    _ref.listen(downloadTaskControllerProvider, (_, next) {
+      _updateDownloadProgress(next.requireValue);
+    });
   }
 
   final Ref _ref;
@@ -39,20 +39,13 @@ class DefaultDownloadService extends DownloadService {
   DownloadRepository get _downloadRepository =>
       _ref.read(downloadRepositoryProvider);
 
-  DownloadManager get _downloadManager => _ref.read(downloadManagerProvider);
+  DownloadTaskController get _downloadTaskController =>
+      _ref.read(downloadTaskControllerProvider.notifier);
 
   DownloadPath get _downloadPath => _ref.read(downloadPathProvider);
 
   AppPreference get _appPreference =>
       _ref.read(appPreferenceRepositoryProvider);
-
-  BehaviorSubject<DownloadProgress> downloadProgress =
-      BehaviorSubject<DownloadProgress>();
-
-  @override
-  void dispose() {
-    _downloadManager.dispose();
-  }
 
   @override
   Future<List<Downloadable>> loadAllDownloads() async {
@@ -222,8 +215,11 @@ class DefaultDownloadService extends DownloadService {
       /// is https.
       final url = await resolveUrl(episode.contentUrl, forceHttps: true);
 
-      final taskId =
-          await _downloadManager.enqueueTask(url, directory, filename);
+      final taskId = await _downloadTaskController.enqueueTask(
+        url,
+        directory,
+        filename,
+      );
       if (taskId == null) {
         return false;
       }

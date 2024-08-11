@@ -1,12 +1,12 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'download_progress.dart';
+part of 'downloadable_provider.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$downloadProgressHash() => r'ef3523127e470d6f53318cb7a89edb150c4ef4d3';
+String _$downloadableHash() => r'7d6a335b38880416f1e42b8fe761516d46f4f916';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -29,36 +29,27 @@ class _SystemHash {
   }
 }
 
-abstract class _$DownloadProgress
-    extends BuildlessAutoDisposeAsyncNotifier<Downloadable?> {
-  late final Episode episode;
+/// See also [downloadable].
+@ProviderFor(downloadable)
+const downloadableProvider = DownloadableFamily();
 
-  FutureOr<Downloadable?> build(
-    Episode episode,
-  );
-}
+/// See also [downloadable].
+class DownloadableFamily extends Family<Downloadable?> {
+  /// See also [downloadable].
+  const DownloadableFamily();
 
-/// See also [DownloadProgress].
-@ProviderFor(DownloadProgress)
-const downloadProgressProvider = DownloadProgressFamily();
-
-/// See also [DownloadProgress].
-class DownloadProgressFamily extends Family<AsyncValue<Downloadable?>> {
-  /// See also [DownloadProgress].
-  const DownloadProgressFamily();
-
-  /// See also [DownloadProgress].
-  DownloadProgressProvider call(
+  /// See also [downloadable].
+  DownloadableProvider call(
     Episode episode,
   ) {
-    return DownloadProgressProvider(
+    return DownloadableProvider(
       episode,
     );
   }
 
   @override
-  DownloadProgressProvider getProviderOverride(
-    covariant DownloadProgressProvider provider,
+  DownloadableProvider getProviderOverride(
+    covariant DownloadableProvider provider,
   ) {
     return call(
       provider.episode,
@@ -77,30 +68,32 @@ class DownloadProgressFamily extends Family<AsyncValue<Downloadable?>> {
       _allTransitiveDependencies;
 
   @override
-  String? get name => r'downloadProgressProvider';
+  String? get name => r'downloadableProvider';
 }
 
-/// See also [DownloadProgress].
-class DownloadProgressProvider extends AutoDisposeAsyncNotifierProviderImpl<
-    DownloadProgress, Downloadable?> {
-  /// See also [DownloadProgress].
-  DownloadProgressProvider(
+/// See also [downloadable].
+class DownloadableProvider extends AutoDisposeProvider<Downloadable?> {
+  /// See also [downloadable].
+  DownloadableProvider(
     Episode episode,
   ) : this._internal(
-          () => DownloadProgress()..episode = episode,
-          from: downloadProgressProvider,
-          name: r'downloadProgressProvider',
+          (ref) => downloadable(
+            ref as DownloadableRef,
+            episode,
+          ),
+          from: downloadableProvider,
+          name: r'downloadableProvider',
           debugGetCreateSourceHash:
               const bool.fromEnvironment('dart.vm.product')
                   ? null
-                  : _$downloadProgressHash,
-          dependencies: DownloadProgressFamily._dependencies,
+                  : _$downloadableHash,
+          dependencies: DownloadableFamily._dependencies,
           allTransitiveDependencies:
-              DownloadProgressFamily._allTransitiveDependencies,
+              DownloadableFamily._allTransitiveDependencies,
           episode: episode,
         );
 
-  DownloadProgressProvider._internal(
+  DownloadableProvider._internal(
     super._createNotifier, {
     required super.name,
     required super.dependencies,
@@ -113,20 +106,13 @@ class DownloadProgressProvider extends AutoDisposeAsyncNotifierProviderImpl<
   final Episode episode;
 
   @override
-  FutureOr<Downloadable?> runNotifierBuild(
-    covariant DownloadProgress notifier,
+  Override overrideWith(
+    Downloadable? Function(DownloadableRef provider) create,
   ) {
-    return notifier.build(
-      episode,
-    );
-  }
-
-  @override
-  Override overrideWith(DownloadProgress Function() create) {
     return ProviderOverride(
       origin: this,
-      override: DownloadProgressProvider._internal(
-        () => create()..episode = episode,
+      override: DownloadableProvider._internal(
+        (ref) => create(ref as DownloadableRef),
         from: from,
         name: null,
         dependencies: null,
@@ -138,14 +124,13 @@ class DownloadProgressProvider extends AutoDisposeAsyncNotifierProviderImpl<
   }
 
   @override
-  AutoDisposeAsyncNotifierProviderElement<DownloadProgress, Downloadable?>
-      createElement() {
-    return _DownloadProgressProviderElement(this);
+  AutoDisposeProviderElement<Downloadable?> createElement() {
+    return _DownloadableProviderElement(this);
   }
 
   @override
   bool operator ==(Object other) {
-    return other is DownloadProgressProvider && other.episode == episode;
+    return other is DownloadableProvider && other.episode == episode;
   }
 
   @override
@@ -157,19 +142,17 @@ class DownloadProgressProvider extends AutoDisposeAsyncNotifierProviderImpl<
   }
 }
 
-mixin DownloadProgressRef
-    on AutoDisposeAsyncNotifierProviderRef<Downloadable?> {
+mixin DownloadableRef on AutoDisposeProviderRef<Downloadable?> {
   /// The parameter `episode` of this provider.
   Episode get episode;
 }
 
-class _DownloadProgressProviderElement
-    extends AutoDisposeAsyncNotifierProviderElement<DownloadProgress,
-        Downloadable?> with DownloadProgressRef {
-  _DownloadProgressProviderElement(super.provider);
+class _DownloadableProviderElement
+    extends AutoDisposeProviderElement<Downloadable?> with DownloadableRef {
+  _DownloadableProviderElement(super.provider);
 
   @override
-  Episode get episode => (origin as DownloadProgressProvider).episode;
+  Episode get episode => (origin as DownloadableProvider).episode;
 }
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member
