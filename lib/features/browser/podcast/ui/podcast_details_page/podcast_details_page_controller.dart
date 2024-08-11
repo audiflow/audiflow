@@ -24,7 +24,7 @@ class PodcastDetailsPageController extends _$PodcastDetailsPageController {
       ref.read(audioPlayerServiceProvider.notifier);
 
   AudioQueueService get _audioQueueService =>
-      ref.read(audioQueueServiceProvider.notifier);
+      ref.read(audioQueueServiceProvider);
 
   @override
   Future<PodcastDetailsPageState> build(int pid) async {

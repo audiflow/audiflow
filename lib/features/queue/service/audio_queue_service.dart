@@ -13,12 +13,24 @@ import 'package:audiflow/features/queue/service/auto_queue_builder/auto_queue_bu
 import 'package:audiflow/features/queue/service/auto_queue_builder/auto_queue_from_podcast_details_page.dart';
 import 'package:audiflow/features/queue/service/queue_controller.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'audio_queue_service.g.dart';
 
 @Riverpod(keepAlive: true)
-class AudioQueueService extends _$AudioQueueService {
+AudioQueueService audioQueueService(AudioQueueServiceRef ref) {
+  // * Override this in the main method
+  throw UnimplementedError();
+}
+
+class AudioQueueService {
+  AudioQueueService(this.ref) {
+    _listen();
+  }
+
+  final Ref ref;
+
   EpisodeRepository get _episodeRepository =>
       ref.read(episodeRepositoryProvider);
 
@@ -41,14 +53,9 @@ class AudioQueueService extends _$AudioQueueService {
 
   AutoQueueBuilder? _autoQueueBuilder;
 
-  @override
-  bool build() {
+  void _listen() {
     ref.listen(audioPlayerEventStreamProvider, (_, next) {
-      if (next.valueOrNull == null) {
-        return;
-      }
-
-      switch (next.requireValue) {
+      switch (next.valueOrNull) {
         case AudioPlayerActionEvent(
             episode: final episode,
             action: final action
@@ -60,10 +67,9 @@ class AudioQueueService extends _$AudioQueueService {
           } else if (action == AudioPlayerAction.completed) {
             _playNext();
           }
+        case null:
       }
     });
-
-    return true;
   }
 
   Future<void> playFromPodcastDetailsPage({
