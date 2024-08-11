@@ -11,7 +11,7 @@ import 'package:audiflow/features/queue/model/auto_queue_builder_info.dart';
 import 'package:audiflow/features/queue/model/queue.dart';
 import 'package:audiflow/features/queue/service/auto_queue_builder/auto_queue_builder.dart';
 import 'package:audiflow/features/queue/service/auto_queue_builder/auto_queue_from_podcast_details_page.dart';
-import 'package:audiflow/features/queue/service/queue_manager.dart';
+import 'package:audiflow/features/queue/service/queue_controller.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -31,9 +31,10 @@ class AudioQueueService extends _$AudioQueueService {
   AudioPlayerService get _audioPlayerService =>
       ref.read(audioPlayerServiceProvider.notifier);
 
-  QueueManager get _queueManager => ref.read(queueManagerProvider.notifier);
+  QueueController get _queueController =>
+      ref.read(queueControllerProvider.notifier);
 
-  List<QueueItem> get _queue => ref.read(queueManagerProvider).queue;
+  List<QueueItem> get _queue => ref.read(queueControllerProvider).queue;
 
   List<ConnectivityResult> get _connectivityResult =>
       ref.read(connectivityProvider);
@@ -54,7 +55,7 @@ class AudioQueueService extends _$AudioQueueService {
           ):
           if (action == AudioPlayerAction.play) {
             if (_queue.firstOrNull?.eid == episode.id) {
-              ref.read(queueManagerProvider.notifier).pop();
+              _queueController.pop();
             }
           } else if (action == AudioPlayerAction.completed) {
             _playNext();
@@ -118,7 +119,7 @@ class AudioQueueService extends _$AudioQueueService {
       final stats = ret[1] as EpisodeStats?;
       final download = ret[2] as Downloadable?;
       if (episode == null) {
-        await _queueManager.pop();
+        await _queueController.pop();
         continue;
       }
 

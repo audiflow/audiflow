@@ -45,10 +45,8 @@ import 'package:audiflow/features/player/service/audio_player_service.dart';
 import 'package:audiflow/features/player/service/default_audio_player_service.dart';
 import 'package:audiflow/features/preference/data/app_preference_repository.dart';
 import 'package:audiflow/features/preference/data/isar_app_preference_repository.dart';
-import 'package:audiflow/features/queue/data/isar_queue_repository.dart';
-import 'package:audiflow/features/queue/data/queue_repository.dart';
-import 'package:audiflow/features/queue/service/default_queue_manager.dart';
-import 'package:audiflow/features/queue/service/queue_manager.dart';
+import 'package:audiflow/features/queue/service/default_queue_controller.dart';
+import 'package:audiflow/features/queue/service/queue_controller.dart';
 import 'package:audiflow/localization/string_hardcoded.dart';
 import 'package:audiflow/utils/logger.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -93,12 +91,7 @@ void main() async {
       initialConnectivityProvider.overrideWithValue(connectivity),
       isarRepositoryProvider.overrideWithValue(isar),
       sharedPreferencesProvider.overrideWithValue(preferences),
-      // app
-      audioPlayerServiceProvider.overrideWith(DefaultAudioPlayerService.new),
-      downloadManagerProvider.overrideWith(MobileDownloaderManager.new),
-      downloadRepositoryProvider
-          .overrideWithValue(IsarDownloadRepository(isar)),
-      downloadServiceProvider.overrideWith(MobileDownloadService.new),
+      // core repositories
       episodeListEntryRepositoryProvider
           .overrideWithValue(IsarEpisodeListEntryRepository(isar)),
       episodeRepositoryProvider.overrideWith(
@@ -109,12 +102,6 @@ void main() async {
         (ref) => EpisodeStatsRepositoryChangeHandler(
           ref,
           IsarEpisodeStatsRepository(isar),
-        ),
-      ),
-      pageModelsRepositoryProvider.overrideWith(
-        (ref) => PageModelsRepositoryChangeHandler(
-          ref,
-          IsarPageModelsRepository(isar),
         ),
       ),
       podcastApiRepositoryProvider.overrideWithValue(
@@ -130,10 +117,24 @@ void main() async {
           IsarPodcastStatsRepository(isar),
         ),
       ),
-      queueManagerProvider.overrideWith(DefaultQueueManager.new),
-      queueRepositoryProvider.overrideWithValue(IsarQueueRepository(isar)),
       rssRepositoryProvider.overrideWithValue(IsarRssRepository(isar)),
       seasonRepositoryProvider.overrideWithValue(IsarSeasonRepository(isar)),
+      // download
+      downloadManagerProvider.overrideWith(MobileDownloaderManager.new),
+      downloadRepositoryProvider
+          .overrideWithValue(IsarDownloadRepository(isar)),
+      downloadServiceProvider.overrideWith(MobileDownloadService.new),
+      // queue
+      queueControllerProvider.overrideWith(DefaultQueueController.new),
+      // player
+      audioPlayerServiceProvider.overrideWith(DefaultAudioPlayerService.new),
+      // pages
+      pageModelsRepositoryProvider.overrideWith(
+        (ref) => PageModelsRepositoryChangeHandler(
+          ref,
+          IsarPageModelsRepository(isar),
+        ),
+      ),
     ],
     observers: [AsyncErrorLogger()],
   );

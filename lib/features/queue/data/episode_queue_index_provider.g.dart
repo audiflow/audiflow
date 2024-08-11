@@ -6,7 +6,7 @@ part of 'episode_queue_index_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$episodeQueueIndexHash() => r'bb5cd4d26811ecb15dadfa82ed536a512fdc7f97';
+String _$episodeQueueIndexHash() => r'574a5fdde5c3a26406a68831118e7f3d228caa49';
 
 /// Copied from Dart SDK
 class _SystemHash {

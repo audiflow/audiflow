@@ -1,8 +1,8 @@
 import 'package:audiflow/events/play_button_notification.dart';
 import 'package:audiflow/features/browser/episode/ui/episode_brief_tile.dart';
 import 'package:audiflow/features/queue/model/queue.dart';
+import 'package:audiflow/features/queue/service/queue_controller.dart';
 import 'package:audiflow/features/queue/service/queue_list_provider.dart';
-import 'package:audiflow/features/queue/service/queue_manager.dart';
 import 'package:audiflow/localization/generated/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -38,14 +38,16 @@ class QueueListBlock extends ConsumerWidget {
         trailing: TextButton(
           child: Text(l10n.clear),
           onPressed: () {
-            ref.read(queueManagerProvider.notifier).clear();
+            ref.read(queueControllerProvider.notifier).clear();
           },
         ),
         onReorder: (oldIndex, newIndex) {
-          ref.read(queueManagerProvider.notifier).reorder(oldIndex, newIndex);
+          ref
+              .read(queueControllerProvider.notifier)
+              .reorder(oldIndex, newIndex);
         },
         onRemove: (index) {
-          ref.read(queueManagerProvider.notifier).removeByIndex(index);
+          ref.read(queueControllerProvider.notifier).removeByIndex(index);
         },
       ),
     );

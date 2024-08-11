@@ -1,7 +1,7 @@
 import 'package:audiflow/features/feed/data/episode_repository.dart';
 import 'package:audiflow/features/feed/model/model.dart';
 import 'package:audiflow/features/queue/model/queue.dart';
-import 'package:audiflow/features/queue/service/queue_manager.dart';
+import 'package:audiflow/features/queue/service/queue_controller.dart';
 import 'package:collection/collection.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -18,7 +18,7 @@ class QueueList extends _$QueueList {
   QueueListState build() {
     _listen();
     ref.listen(
-      queueManagerProvider,
+      queueControllerProvider,
       (_, next) => _queueInputState.add(next),
       fireImmediately: true,
     );

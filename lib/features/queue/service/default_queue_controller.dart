@@ -2,14 +2,14 @@ import 'dart:async';
 
 import 'package:audiflow/features/queue/data/queue_repository.dart';
 import 'package:audiflow/features/queue/model/queue.dart';
-import 'package:audiflow/features/queue/service/queue_manager.dart';
+import 'package:audiflow/features/queue/service/queue_controller.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-part 'default_queue_manager.g.dart';
+part 'default_queue_controller.g.dart';
 
 @Riverpod(keepAlive: true)
-class DefaultQueueManager extends _$DefaultQueueManager
-    implements QueueManager {
+class DefaultQueueController extends _$DefaultQueueController
+    implements QueueController {
   @override
   Queue build() => Queue.empty();
 

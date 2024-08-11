@@ -1,26 +1,27 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'audio_queue_service.dart';
+part of 'default_queue_controller.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$audioQueueServiceHash() => r'736b4db37a2cf3c82d0007be73d9d6dd33aa5448';
+String _$defaultQueueControllerHash() =>
+    r'0837101886c6e228e8b49283cc8682bc9195db35';
 
-/// See also [AudioQueueService].
-@ProviderFor(AudioQueueService)
-final audioQueueServiceProvider =
-    NotifierProvider<AudioQueueService, bool>.internal(
-  AudioQueueService.new,
-  name: r'audioQueueServiceProvider',
+/// See also [DefaultQueueController].
+@ProviderFor(DefaultQueueController)
+final defaultQueueControllerProvider =
+    NotifierProvider<DefaultQueueController, Queue>.internal(
+  DefaultQueueController.new,
+  name: r'defaultQueueControllerProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
       ? null
-      : _$audioQueueServiceHash,
+      : _$defaultQueueControllerHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
 
-typedef _$AudioQueueService = Notifier<bool>;
+typedef _$DefaultQueueController = Notifier<Queue>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member
