@@ -22,6 +22,8 @@ abstract class ManualQueueRepository {
     ManualQueueItem? after,
   });
 
+  Future<void> remove(ManualQueueItem item);
+
   Future<ManualQueueItem?> pop();
 
   Future<void> clear();

@@ -3,14 +3,18 @@ import 'package:audiflow/features/browser/common/data/episode_stats_repository/e
 import 'package:audiflow/features/browser/common/model/episode_filter_mode.dart';
 import 'package:audiflow/features/feed/data/episode_repository.dart';
 import 'package:audiflow/features/player/service/audio_player_service.dart';
+import 'package:audiflow/features/queue/service/audio_queue_service.dart';
 import 'package:audiflow/features/queue/service/manual_queue_controller.dart';
 import 'package:audiflow/features/queue/service/smart_queue_controller.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-part 'audio_queue_controller.g.dart';
+class DefaultAudioQueueService implements AudioQueueService {
+  DefaultAudioQueueService(this.ref) {
+    _listen();
+  }
 
-@Riverpod(keepAlive: true)
-class AudioQueueController extends _$AudioQueueController {
+  final Ref ref;
+
   EpisodeRepository get _episodeRepository =>
       ref.read(episodeRepositoryProvider);
 
@@ -26,8 +30,7 @@ class AudioQueueController extends _$AudioQueueController {
   SmartQueueController get _smartQueueController =>
       ref.read(smartQueueControllerProvider.notifier);
 
-  @override
-  bool build() {
+  void _listen() {
     ref.listen(audioPlayerEventStreamProvider, (_, next) {
       if (next.valueOrNull == null) {
         return;
@@ -40,8 +43,6 @@ class AudioQueueController extends _$AudioQueueController {
           }
       }
     });
-
-    return true;
   }
 
   Future<void> playFromPodcastDetailsPage({

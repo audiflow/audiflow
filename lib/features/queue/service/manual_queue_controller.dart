@@ -29,6 +29,8 @@ class ManualQueueController extends _$ManualQueueController {
   }) =>
       throw UnimplementedError();
 
+  Future<List<QueueItem>> remove(QueueItem item) => throw UnimplementedError();
+
   Future<QueueItem?> pop() => throw UnimplementedError();
 
   Future<void> clear() => throw UnimplementedError();

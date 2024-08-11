@@ -89,6 +89,11 @@ class DefaultManualQueueController extends _$DefaultManualQueueController
   }
 
   @override
+  Future<List<QueueItem>> remove(QueueItem item) {
+    return _repository.remove(item));
+  }
+
+  @override
   Future<ManualQueueItem?> pop() {
     return _repository.pop();
   }

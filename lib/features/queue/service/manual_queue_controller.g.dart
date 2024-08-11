@@ -7,7 +7,7 @@ part of 'manual_queue_controller.dart';
 // **************************************************************************
 
 String _$manualQueueControllerHash() =>
-    r'57845bcf1068f916d62ab74b5fa28a5d8bc65864';
+    r'704485da03e59b9cb5d4738cae64c44e269d60ce';
 
 /// See also [ManualQueueController].
 @ProviderFor(ManualQueueController)

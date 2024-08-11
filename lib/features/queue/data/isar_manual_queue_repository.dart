@@ -67,6 +67,13 @@ class IsarManualQueueRepository implements ManualQueueRepository {
   }
 
   @override
+  Future<void> remove(ManualQueueItem item) async {
+    await isar.writeTxn(() async {
+      await isar.manualQueueItems.delete(item.id!);
+    });
+  }
+
+  @override
   Future<ManualQueueItem?> pop() async {
     return isar.writeTxn(() async {
       final first =

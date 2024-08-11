@@ -24,6 +24,12 @@ class ManualQueueItemsUpdatedEvent implements ManualQueueEvent {
   final List<ManualQueueItem> items;
 }
 
+class ManualQueueItemsRemovedEvent implements ManualQueueEvent {
+  const ManualQueueItemsRemovedEvent(this.item);
+
+  final ManualQueueItem item;
+}
+
 class ManualQueueItemClearedEvent implements ManualQueueEvent {
   const ManualQueueItemClearedEvent();
 }
