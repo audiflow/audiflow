@@ -15,10 +15,10 @@ import 'package:audiflow/features/queue/service/queue_manager.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-part 'audio_queue_manager.g.dart';
+part 'audio_queue_service.g.dart';
 
 @Riverpod(keepAlive: true)
-class AudioQueueManager extends _$AudioQueueManager {
+class AudioQueueService extends _$AudioQueueService {
   EpisodeRepository get _episodeRepository =>
       ref.read(episodeRepositoryProvider);
 
