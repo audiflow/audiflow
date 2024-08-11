@@ -11,9 +11,7 @@ import 'package:audiflow/features/browser/common/service/subscribed_podcast_refr
 import 'package:audiflow/features/download/service/download_manager.dart';
 import 'package:audiflow/features/player/service/audio_player_service.dart';
 import 'package:audiflow/features/player/service/audio_position_recorder.dart';
-import 'package:audiflow/features/player/service/audio_queue_manager.dart';
 import 'package:audiflow/features/preference/data/app_preference_repository.dart';
-import 'package:audiflow/features/queue/service/queue_manager.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -26,19 +24,17 @@ part 'app_wide_initializer.g.dart';
 @Riverpod(keepAlive: true)
 bool appWide(AppWideRef ref) {
   ref
-    ..listen(podcastApiRepositoryProvider, (_, __) {})
     ..listen(appPreferenceRepositoryProvider, (_, __) {})
-    ..listen(connectivityProvider, (_, __) {})
-    ..listen(audioPlayerServiceProvider, (_, __) {})
     ..listen(audioPlayerEventStreamProvider, (_, __) {})
-    ..listen(audioQueueManagerProvider, (_, __) {})
+    ..listen(audioPlayerServiceProvider, (_, __) {})
     ..listen(audioPositionRecorderProvider, (_, __) {})
+    ..listen(connectivityProvider, (_, __) {})
+    ..listen(downloadEventStreamProvider, (_, __) {})
     ..listen(downloadManagerProvider, (_, __) {})
+    ..listen(episodeEventStreamProvider, (_, __) {})
+    ..listen(podcastApiRepositoryProvider, (_, __) {})
     ..listen(podcastEventStreamProvider, (_, __) {})
     ..listen(subscribedPodcastRefresherProvider, (_, __) {})
-    ..listen(episodeEventStreamProvider, (_, __) {})
-    ..listen(downloadEventStreamProvider, (_, __) {})
-    ..listen(queueManagerProvider, (_, __) {})
     ..listen(transcriptEventStreamProvider, (_, __) {});
   return true;
 }
@@ -62,7 +58,6 @@ class AppWideProvidersInitializer extends HookConsumerWidget {
 
         Future.wait([
           ref.read(downloadManagerProvider).ensureInitialized(),
-          ref.read(queueManagerProvider.notifier).ensureInitialized(),
           ref.read(audioPlayerServiceProvider.notifier).ensureInitialized(),
           _setupCertificateAuthority().then((ca) {
             ref.read(podcastApiRepositoryProvider).setClientAuthorityBytes(ca);

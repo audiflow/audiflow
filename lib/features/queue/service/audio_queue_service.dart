@@ -1,24 +1,33 @@
+import 'dart:async';
+
 import 'package:audiflow/common/data/connectivity.dart';
 import 'package:audiflow/events/audio_player_event.dart';
 import 'package:audiflow/features/browser/common/data/episode_stats_repository/episode_stats_repository.dart';
-import 'package:audiflow/features/browser/common/model/episode_filter_mode.dart';
 import 'package:audiflow/features/download/data/download_repository.dart';
 import 'package:audiflow/features/download/model/downloadable.dart';
 import 'package:audiflow/features/feed/data/episode_repository.dart';
 import 'package:audiflow/features/player/service/audio_player_service.dart';
-import 'package:audiflow/features/queue/data/queue_repository.dart';
-import 'package:audiflow/features/queue/model/auto_queue_builder_info.dart';
 import 'package:audiflow/features/queue/model/queue.dart';
-import 'package:audiflow/features/queue/service/auto_queue_builder/auto_queue_builder.dart';
-import 'package:audiflow/features/queue/service/auto_queue_builder/auto_queue_from_podcast_details_page.dart';
-import 'package:audiflow/features/queue/service/queue_manager.dart';
+import 'package:audiflow/features/queue/service/queue_controller.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-part 'audio_queue_manager.g.dart';
+part 'audio_queue_service.g.dart';
 
 @Riverpod(keepAlive: true)
-class AudioQueueManager extends _$AudioQueueManager {
+AudioQueueService audioQueueService(AudioQueueServiceRef ref) {
+  // * Override this in the main method
+  throw UnimplementedError();
+}
+
+class AudioQueueService {
+  AudioQueueService(this.ref) {
+    _listen();
+  }
+
+  final Ref ref;
+
   EpisodeRepository get _episodeRepository =>
       ref.read(episodeRepositoryProvider);
 
@@ -31,54 +40,48 @@ class AudioQueueManager extends _$AudioQueueManager {
   AudioPlayerService get _audioPlayerService =>
       ref.read(audioPlayerServiceProvider.notifier);
 
-  QueueManager get _queueManager => ref.read(queueManagerProvider.notifier);
+  QueueController get _queueController =>
+      ref.read(queueControllerProvider.notifier);
 
-  List<QueueItem> get _queue => ref.read(queueManagerProvider).queue;
+  List<QueueItem> get _queue => ref.read(queueControllerProvider).queue;
 
   List<ConnectivityResult> get _connectivityResult =>
       ref.read(connectivityProvider);
 
-  AutoQueueBuilder? _autoQueueBuilder;
+  Future<void> buildAndPlay({
+    required int pid,
+    required int eid,
+    required Iterable<int> queueingEpisodeIds,
+  }) async {
+    Future<void> rebuildQueue() async {
+      await _queueController.clear(type: QueueType.adhoc);
+      await _queueController.appendAll(
+        queueingEpisodeIds
+            .map((eid) => QueueItem.adhoc(pid: pid, eid: eid)),
+      );
+    }
 
-  @override
-  bool build() {
+    await _play(eid: eid);
+    unawaited(rebuildQueue());
+  }
+
+  void _listen() {
     ref.listen(audioPlayerEventStreamProvider, (_, next) {
-      if (next.valueOrNull == null) {
-        return;
-      }
-
-      switch (next.requireValue) {
+      switch (next.valueOrNull) {
         case AudioPlayerActionEvent(
             episode: final episode,
             action: final action
           ):
           if (action == AudioPlayerAction.play) {
             if (_queue.firstOrNull?.eid == episode.id) {
-              ref.read(queueManagerProvider.notifier).pop();
+              _queueController.pop();
             }
           } else if (action == AudioPlayerAction.completed) {
             _playNext();
           }
+        case null:
       }
     });
-
-    return true;
-  }
-
-  Future<void> playFromPodcastDetailsPage({
-    required Episode start,
-    required EpisodeFilterMode filterMode,
-  }) async {
-    final builder = ref.read(autoQueueFromPodcastDetailsPageProvider.notifier)
-      ..setup(start: start, filterMode: filterMode);
-    _autoQueueBuilder?.clear();
-    _autoQueueBuilder = builder;
-
-    final json = builder.encodeState();
-    await ref
-        .read(queueRepositoryProvider)
-        .saveAutoQueueBuilderData(AutoQueueBuilderType.detailsPage, json);
-    await _play(eid: start.id);
   }
 
   Future<bool> _play({required int eid}) async {
@@ -118,7 +121,7 @@ class AudioQueueManager extends _$AudioQueueManager {
       final stats = ret[1] as EpisodeStats?;
       final download = ret[2] as Downloadable?;
       if (episode == null) {
-        await _queueManager.pop();
+        await _queueController.pop();
         continue;
       }
 

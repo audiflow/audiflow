@@ -1,6 +1,6 @@
 import 'package:audiflow/features/feed/model/model.dart';
 import 'package:audiflow/features/queue/model/queue.dart';
-import 'package:audiflow/features/queue/service/queue_manager.dart';
+import 'package:audiflow/features/queue/service/queue_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -33,7 +33,7 @@ class QueueButton extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final queue = ref.watch(queueManagerProvider).queue;
+    final queue = ref.watch(queueControllerProvider).queue;
     final queueIndex = queue.indexWhere((e) => e.eid == episode.id);
 
     final theme = Theme.of(context);
@@ -51,7 +51,7 @@ class QueueButton extends HookConsumerWidget {
       enabled: false,
       tooltip: '',
       onSelected: (_Action value) {
-        final queueManager = ref.read(queueManagerProvider.notifier);
+        final queueManager = ref.read(queueControllerProvider.notifier);
 
         switch (value) {
           case _Action.prepend:
@@ -69,11 +69,13 @@ class QueueButton extends HookConsumerWidget {
       child: OutlinedButton(
         onPressed: () {
           if (queueIndex < 0) {
-            ref.read(queueManagerProvider.notifier).append(
+            ref.read(queueControllerProvider.notifier).append(
                   QueueItem.primary(pid: episode.pid, eid: episode.id),
                 );
           } else {
-            ref.read(queueManagerProvider.notifier).removeByIndex(queueIndex);
+            ref
+                .read(queueControllerProvider.notifier)
+                .removeByIndex(queueIndex);
           }
         },
         onLongPress: () {

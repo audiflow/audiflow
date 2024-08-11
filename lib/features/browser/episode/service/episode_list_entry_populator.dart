@@ -36,7 +36,6 @@ class EpisodeListEntryPopulator {
     required this.pid,
     required this.filterMode,
     required this.ascending,
-    required this.role,
     required this.appDocDir,
     this.firstReadCount = 10,
   }) {
@@ -48,7 +47,6 @@ class EpisodeListEntryPopulator {
   final EpisodeFilterMode filterMode;
   final bool ascending;
   final int firstReadCount;
-  final EpisodeListEntryRole role;
   final _streamController = StreamController<EpisodeListEntryPopulatorEvent>();
 
   SendPort? _workerPort;
@@ -87,7 +85,6 @@ class EpisodeListEntryPopulator {
           ..send(
             _LoadCommand(
               pid: pid,
-              role: role,
               ascending: ascending,
               filterMode: filterMode,
               firstReadCount: firstReadCount,
@@ -121,7 +118,6 @@ class _Worker {
   final bool Function() _isCancelled;
 
   late int _pid;
-  late EpisodeListEntryRole _role;
   late EpisodeFilterMode _filterMode;
   late bool _ascending;
   late int _firstReadCount;
@@ -160,7 +156,6 @@ class _Worker {
               await _setupRepository(storageDir);
             case _LoadCommand():
               _pid = command.pid;
-              _role = command.role;
               _filterMode = command.filterMode;
               _ascending = command.ascending;
               _firstReadCount = command.firstReadCount;
@@ -209,7 +204,6 @@ class _Worker {
         .mapIndexed(
           (i, e) => EpisodeListEntry(
             pid: _pid,
-            role: _role,
             eid: e.id,
             order: baseIndex + i,
           ),
@@ -223,7 +217,7 @@ class _Worker {
   Future<void> _loadAllEpisodes() async {
     final [podcastStats, _] = await Future.wait<dynamic>([
       _podcastStatsRepository.findPodcastStats(_pid),
-      _episodeListRepository.clear(_pid, _role),
+      _episodeListRepository.clear(_pid),
     ]);
     if (_isCancelled()) {
       return;
@@ -284,7 +278,7 @@ class _Worker {
         pid: _pid,
         filterBy: EpisodeStatsFilterBy.completed,
       ),
-      _episodeListRepository.clear(_pid, _role),
+      _episodeListRepository.clear(_pid),
     ]);
     if (_isCancelled()) {
       return;
@@ -366,7 +360,7 @@ class _Worker {
         pid: _pid,
         filterBy: EpisodeStatsFilterBy.incomplete,
       ),
-      _episodeListRepository.clear(_pid, _role),
+      _episodeListRepository.clear(_pid),
     ]);
     if (_isCancelled()) {
       return;
@@ -451,7 +445,7 @@ class _Worker {
   Future<void> _loadDownloadedEpisodes() async {
     final [count, _] = await Future.wait<dynamic>([
       _downloadRepository.countDownloaded(pid: _pid),
-      _episodeListRepository.clear(_pid, _role),
+      _episodeListRepository.clear(_pid),
     ]);
     if (_isCancelled()) {
       return;
@@ -550,14 +544,12 @@ class _SetupCommand extends _Command {
 class _LoadCommand extends _Command {
   _LoadCommand({
     required this.pid,
-    required this.role,
     required this.filterMode,
     required this.ascending,
     required this.firstReadCount,
   });
 
   final int pid;
-  final EpisodeListEntryRole role;
   final EpisodeFilterMode filterMode;
   final bool ascending;
   final int firstReadCount;
@@ -566,7 +558,6 @@ class _LoadCommand extends _Command {
   String toString() {
     return '_LoadCommand('
         'pid: $pid, '
-        'role: $role, '
         'filterMode: $filterMode, '
         'ascending: $ascending, '
         'firstReadCount: $firstReadCount)';

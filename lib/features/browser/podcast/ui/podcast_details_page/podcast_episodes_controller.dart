@@ -4,10 +4,10 @@ import 'package:audiflow/common/data/app_path_repository.dart';
 import 'package:audiflow/features/browser/common/data/episode_stats_repository/episode_stats_repository.dart';
 import 'package:audiflow/features/browser/common/model/episode_filter_mode.dart';
 import 'package:audiflow/features/browser/episode/data/episode_list_entry_repository.dart';
-import 'package:audiflow/features/browser/episode/model/episode_list_entry.dart';
 import 'package:audiflow/features/browser/episode/service/episode_list_entry_populator.dart';
 import 'package:audiflow/features/feed/data/episode_repository.dart';
-import 'package:audiflow/features/feed/model/model.dart';
+import 'package:audiflow/features/player/service/audio_player_service.dart';
+import 'package:audiflow/features/queue/service/audio_queue_service.dart';
 import 'package:audiflow/utils/logger.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -28,6 +28,15 @@ class PodcastEpisodesController extends _$PodcastEpisodesController {
   EpisodeListEntryRepository get _episodeListEntryRepository =>
       ref.read(episodeListEntryRepositoryProvider);
 
+  AudioPlayerState? get _audioPlayerState =>
+      ref.read(audioPlayerServiceProvider);
+
+  AudioPlayerService get _audioPlayerService =>
+      ref.read(audioPlayerServiceProvider.notifier);
+
+  AudioQueueService get _audioQueueService =>
+      ref.read(audioQueueServiceProvider);
+
   late Completer<(int, int, String?)> _completer;
   late EpisodeListEntryPopulator _populator;
 
@@ -37,11 +46,10 @@ class PodcastEpisodesController extends _$PodcastEpisodesController {
     required EpisodeFilterMode filterMode,
     required bool ascending,
     int episodesPerPage = 10,
-    EpisodeListEntryRole role = EpisodeListEntryRole.page,
   }) async {
     logger.d(
       () => 'build (pid: $pid, filterMode: $filterMode, ascend: $ascending,'
-          ' episodesPerPage: $episodesPerPage, role: $role)',
+          ' episodesPerPage: $episodesPerPage)',
     );
 
     _completer = Completer<(int, int, String?)>();
@@ -49,7 +57,6 @@ class PodcastEpisodesController extends _$PodcastEpisodesController {
       pid: pid,
       filterMode: filterMode,
       ascending: ascending,
-      role: role,
       firstReadCount: episodesPerPage,
       appDocDir: _appDocDir,
     );
@@ -98,7 +105,6 @@ class PodcastEpisodesController extends _$PodcastEpisodesController {
     if (index < (state.valueOrNull?.loadedCount ?? 0)) {
       final entry = await _episodeListEntryRepository.findBy(
         pid: pid,
-        role: role,
         order: index,
       );
       return entry == null ? null : _episodeRepository.findEpisode(entry.eid);
@@ -117,7 +123,6 @@ class PodcastEpisodesController extends _$PodcastEpisodesController {
             if (index < value.loadedCount) {
               final entry = await _episodeListEntryRepository.findBy(
                 pid: pid,
-                role: role,
                 order: index,
               );
               final episode = entry == null
@@ -149,10 +154,34 @@ class PodcastEpisodesController extends _$PodcastEpisodesController {
     }
     final entry = await _episodeListEntryRepository.findBy(
       pid: pid,
-      role: role,
       eid: episodes.first!.eid,
     );
     return entry?.order;
+  }
+
+  Future<void> togglePlayState(Episode episode) async {
+    if (_audioPlayerState?.episode.id == episode.id) {
+      return _audioPlayerService.togglePlayPause();
+    } else {
+      final entry = await _episodeListEntryRepository.findBy(
+        pid: pid,
+        eid: episode.id,
+      );
+      if (entry == null) {
+        return;
+      }
+
+      final entries = await _episodeListEntryRepository.query(
+        pid,
+        lastOrdinal: entry.order,
+        ascending: ascending,
+      );
+      await _audioQueueService.buildAndPlay(
+        pid: pid,
+        eid: episode.id,
+        queueingEpisodeIds: entries.map((e) => e.eid),
+      );
+    }
   }
 }
 

@@ -1,10 +1,10 @@
 import 'package:audiflow/features/queue/model/queue.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-part 'queue_manager.g.dart';
+part 'queue_controller.g.dart';
 
 @Riverpod(keepAlive: true)
-class QueueManager extends _$QueueManager {
+class QueueController extends _$QueueController {
   @override
   Queue build() => Queue.empty();
 

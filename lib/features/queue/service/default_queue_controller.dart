@@ -2,14 +2,14 @@ import 'dart:async';
 
 import 'package:audiflow/features/queue/data/queue_repository.dart';
 import 'package:audiflow/features/queue/model/queue.dart';
-import 'package:audiflow/features/queue/service/queue_manager.dart';
+import 'package:audiflow/features/queue/service/queue_controller.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-part 'default_queue_manager.g.dart';
+part 'default_queue_controller.g.dart';
 
 @Riverpod(keepAlive: true)
-class DefaultQueueManager extends _$DefaultQueueManager
-    implements QueueManager {
+class DefaultQueueController extends _$DefaultQueueController
+    implements QueueController {
   @override
   Queue build() => Queue.empty();
 
@@ -130,9 +130,9 @@ class DefaultQueueManager extends _$DefaultQueueManager
   @override
   Future<void> clear({QueueType? type}) async {
     final newQueue = type == QueueType.primary
-        ? state.queue.where((q) => q.type == QueueType.primary)
+        ? state.queue.where((q) => q.type != QueueType.primary)
         : type == QueueType.adhoc
-            ? state.queue.where((q) => q.type == QueueType.adhoc)
+            ? state.queue.where((q) => q.type != QueueType.adhoc)
             : <QueueItem>[];
 
     state = state.copyWith(queue: newQueue.toList());

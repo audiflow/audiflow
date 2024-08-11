@@ -1,12 +1,12 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'episode_queue_index_provider.dart';
+part of 'episode_provider.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$episodeQueueIndexHash() => r'574a5fdde5c3a26406a68831118e7f3d228caa49';
+String _$episodeHash() => r'd5e0f55b25fc3c9c779321c836b14859b403ec0e';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -29,30 +29,30 @@ class _SystemHash {
   }
 }
 
-/// See also [episodeQueueIndex].
-@ProviderFor(episodeQueueIndex)
-const episodeQueueIndexProvider = EpisodeQueueIndexFamily();
+/// See also [episode].
+@ProviderFor(episode)
+const episodeProvider = EpisodeFamily();
 
-/// See also [episodeQueueIndex].
-class EpisodeQueueIndexFamily extends Family<int?> {
-  /// See also [episodeQueueIndex].
-  const EpisodeQueueIndexFamily();
+/// See also [episode].
+class EpisodeFamily extends Family<AsyncValue<Episode?>> {
+  /// See also [episode].
+  const EpisodeFamily();
 
-  /// See also [episodeQueueIndex].
-  EpisodeQueueIndexProvider call(
-    int eid,
-  ) {
-    return EpisodeQueueIndexProvider(
-      eid,
+  /// See also [episode].
+  EpisodeProvider call({
+    required int eid,
+  }) {
+    return EpisodeProvider(
+      eid: eid,
     );
   }
 
   @override
-  EpisodeQueueIndexProvider getProviderOverride(
-    covariant EpisodeQueueIndexProvider provider,
+  EpisodeProvider getProviderOverride(
+    covariant EpisodeProvider provider,
   ) {
     return call(
-      provider.eid,
+      eid: provider.eid,
     );
   }
 
@@ -68,32 +68,31 @@ class EpisodeQueueIndexFamily extends Family<int?> {
       _allTransitiveDependencies;
 
   @override
-  String? get name => r'episodeQueueIndexProvider';
+  String? get name => r'episodeProvider';
 }
 
-/// See also [episodeQueueIndex].
-class EpisodeQueueIndexProvider extends AutoDisposeProvider<int?> {
-  /// See also [episodeQueueIndex].
-  EpisodeQueueIndexProvider(
-    int eid,
-  ) : this._internal(
-          (ref) => episodeQueueIndex(
-            ref as EpisodeQueueIndexRef,
-            eid,
+/// See also [episode].
+class EpisodeProvider extends AutoDisposeFutureProvider<Episode?> {
+  /// See also [episode].
+  EpisodeProvider({
+    required int eid,
+  }) : this._internal(
+          (ref) => episode(
+            ref as EpisodeRef,
+            eid: eid,
           ),
-          from: episodeQueueIndexProvider,
-          name: r'episodeQueueIndexProvider',
+          from: episodeProvider,
+          name: r'episodeProvider',
           debugGetCreateSourceHash:
               const bool.fromEnvironment('dart.vm.product')
                   ? null
-                  : _$episodeQueueIndexHash,
-          dependencies: EpisodeQueueIndexFamily._dependencies,
-          allTransitiveDependencies:
-              EpisodeQueueIndexFamily._allTransitiveDependencies,
+                  : _$episodeHash,
+          dependencies: EpisodeFamily._dependencies,
+          allTransitiveDependencies: EpisodeFamily._allTransitiveDependencies,
           eid: eid,
         );
 
-  EpisodeQueueIndexProvider._internal(
+  EpisodeProvider._internal(
     super._createNotifier, {
     required super.name,
     required super.dependencies,
@@ -107,12 +106,12 @@ class EpisodeQueueIndexProvider extends AutoDisposeProvider<int?> {
 
   @override
   Override overrideWith(
-    int? Function(EpisodeQueueIndexRef provider) create,
+    FutureOr<Episode?> Function(EpisodeRef provider) create,
   ) {
     return ProviderOverride(
       origin: this,
-      override: EpisodeQueueIndexProvider._internal(
-        (ref) => create(ref as EpisodeQueueIndexRef),
+      override: EpisodeProvider._internal(
+        (ref) => create(ref as EpisodeRef),
         from: from,
         name: null,
         dependencies: null,
@@ -124,13 +123,13 @@ class EpisodeQueueIndexProvider extends AutoDisposeProvider<int?> {
   }
 
   @override
-  AutoDisposeProviderElement<int?> createElement() {
-    return _EpisodeQueueIndexProviderElement(this);
+  AutoDisposeFutureProviderElement<Episode?> createElement() {
+    return _EpisodeProviderElement(this);
   }
 
   @override
   bool operator ==(Object other) {
-    return other is EpisodeQueueIndexProvider && other.eid == eid;
+    return other is EpisodeProvider && other.eid == eid;
   }
 
   @override
@@ -142,17 +141,17 @@ class EpisodeQueueIndexProvider extends AutoDisposeProvider<int?> {
   }
 }
 
-mixin EpisodeQueueIndexRef on AutoDisposeProviderRef<int?> {
+mixin EpisodeRef on AutoDisposeFutureProviderRef<Episode?> {
   /// The parameter `eid` of this provider.
   int get eid;
 }
 
-class _EpisodeQueueIndexProviderElement extends AutoDisposeProviderElement<int?>
-    with EpisodeQueueIndexRef {
-  _EpisodeQueueIndexProviderElement(super.provider);
+class _EpisodeProviderElement extends AutoDisposeFutureProviderElement<Episode?>
+    with EpisodeRef {
+  _EpisodeProviderElement(super.provider);
 
   @override
-  int get eid => (origin as EpisodeQueueIndexProvider).eid;
+  int get eid => (origin as EpisodeProvider).eid;
 }
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

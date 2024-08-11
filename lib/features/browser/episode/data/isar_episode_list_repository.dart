@@ -9,32 +9,44 @@ class IsarEpisodeListEntryRepository implements EpisodeListEntryRepository {
   final Isar _isar;
 
   @override
-  Future<int> count(int pid, EpisodeListEntryRole role) {
-    return _isar.episodeListEntrys
-        .where()
-        .pidRoleEqualToAnyOrder(pid, role)
-        .count();
+  Future<int> count(int pid) {
+    return _isar.episodeListEntrys.where().pidEqualToAnyOrder(pid).count();
   }
 
   @override
-  Future<List<EpisodeListEntry>> findAllOf(int pid, EpisodeListEntryRole role) {
+  Future<List<EpisodeListEntry>> query(
+    int pid, {
+    int? lastOrdinal,
+    bool ascending = true,
+    int? limit,
+  }) {
     return _isar.episodeListEntrys
         .where()
-        .pidRoleEqualToAnyOrder(pid, role)
-        .sortByOrder()
+        .pidEqualToAnyOrder(pid)
+        .filter()
+        .optional(
+          lastOrdinal != null,
+          (q) => ascending
+              ? q.orderGreaterThan(lastOrdinal!)
+              : q.orderLessThan(lastOrdinal!),
+        )
+        .optional(
+          true,
+          (q) => ascending ? q.sortByOrder() : q.sortByOrderDesc(),
+        )
+        .optional(limit != null, (q) => q.limit(limit!))
         .findAll();
   }
 
   @override
   Future<EpisodeListEntry?> findBy({
     required int pid,
-    required EpisodeListEntryRole role,
     int? eid,
     int? order,
   }) =>
       _isar.episodeListEntrys
           .where()
-          .pidRoleEqualToAnyOrder(pid, role)
+          .pidEqualToAnyOrder(pid)
           .filter()
           .optional(eid != null, (q) => q.eidEqualTo(eid!))
           .optional(order != null, (q) => q.orderEqualTo(order!))
@@ -43,14 +55,12 @@ class IsarEpisodeListEntryRepository implements EpisodeListEntryRepository {
   @override
   Future<List<EpisodeListEntry>> populate(
     int pid,
-    EpisodeListEntryRole role,
     List<int> episodeIds,
   ) async {
     final entries = episodeIds
         .mapIndexed(
           (index, eid) => EpisodeListEntry(
             pid: pid,
-            role: role,
             eid: eid,
             order: index,
           ),
@@ -67,12 +77,12 @@ class IsarEpisodeListEntryRepository implements EpisodeListEntryRepository {
   }
 
   @override
-  Future<void> clear(int pid, EpisodeListEntryRole role) async {
+  Future<void> clear(int pid) async {
     await _isar.writeTxn(
       () {
         return _isar.episodeListEntrys
             .where()
-            .pidRoleEqualToAnyOrder(pid, role)
+            .pidEqualToAnyOrder(pid)
             .deleteAll();
       },
     );
