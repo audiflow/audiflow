@@ -6,7 +6,7 @@ import 'package:audiflow/features/player/ui/mini_player/mini_player.dart';
 import 'package:audiflow/features/player/ui/mini_player/utils.dart';
 import 'package:audiflow/features/player/ui/player_episode_tile.dart';
 import 'package:audiflow/features/player/ui/seek_bar.dart';
-import 'package:audiflow/features/queue/service/queue_list_provider.dart';
+import 'package:audiflow/features/queue/service/queue_controller.dart';
 import 'package:audiflow/features/queue/ui/queue_list_block.dart';
 import 'package:audiflow/routing/app_bottom_navigation_bar.dart';
 import 'package:flutter/material.dart';
@@ -188,7 +188,7 @@ class _DetailedPlayerContent extends ConsumerWidget {
       value: height,
     );
 
-    final queue = ref.watch(queueListProvider).queue;
+    final queue = ref.watch(queueControllerProvider).queue;
 
     return SafeArea(
       child: Opacity(

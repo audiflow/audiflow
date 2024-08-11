@@ -23,6 +23,8 @@ class EpisodeBriefTile extends HookConsumerWidget {
   final int? sortableIndex;
   final Color? backgroundColor;
 
+  static const tileHeight = 70.0;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final podcast = ref.watch(podcastProvider(episode.pid));
@@ -33,7 +35,7 @@ class EpisodeBriefTile extends HookConsumerWidget {
         child: Container(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
           color: backgroundColor,
-          height: 70,
+          height: tileHeight,
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
             onTap: () {
