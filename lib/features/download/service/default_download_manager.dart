@@ -10,8 +10,8 @@ import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// A [DownloadManager] for handling downloading of podcasts on a mobile device.
-class MobileDownloaderManager implements DownloadManager {
-  MobileDownloaderManager(this.ref);
+class DefaultDownloaderManager implements DownloadManager {
+  DefaultDownloaderManager(this.ref);
 
   final Ref ref;
   static const portName = 'downloader_send_port';

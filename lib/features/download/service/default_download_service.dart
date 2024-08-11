@@ -22,8 +22,8 @@ import 'package:rxdart/rxdart.dart';
 
 /// An implementation of a [DownloadService] that handles downloading
 /// of episodes on mobile.
-class MobileDownloadService extends DownloadService {
-  MobileDownloadService(this._ref) {
+class DefaultDownloadService extends DownloadService {
+  DefaultDownloadService(this._ref) {
     _downloadManager.downloadProgress.pipe(downloadProgress);
     downloadProgress.listen(_updateDownloadProgress);
   }

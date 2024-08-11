@@ -29,10 +29,10 @@ import 'package:audiflow/features/config/data/build_config.dart';
 import 'package:audiflow/features/config/model/app_build_config.dart';
 import 'package:audiflow/features/download/data/download_repository.dart';
 import 'package:audiflow/features/download/data/isar_download_repository.dart';
+import 'package:audiflow/features/download/service/default_download_manager.dart';
+import 'package:audiflow/features/download/service/default_download_service.dart';
 import 'package:audiflow/features/download/service/download_manager.dart';
 import 'package:audiflow/features/download/service/download_service.dart';
-import 'package:audiflow/features/download/service/mobile_download_manager.dart';
-import 'package:audiflow/features/download/service/mobile_download_service.dart';
 import 'package:audiflow/features/feed/data/episode_repository.dart';
 import 'package:audiflow/features/feed/data/episode_repository_change_handler.dart';
 import 'package:audiflow/features/feed/data/isar_episode_repository.dart';
@@ -133,10 +133,10 @@ void main() async {
       rssRepositoryProvider.overrideWithValue(IsarRssRepository(isar)),
       seasonRepositoryProvider.overrideWithValue(IsarSeasonRepository(isar)),
       // download
-      downloadManagerProvider.overrideWith(MobileDownloaderManager.new),
+      downloadManagerProvider.overrideWith(DefaultDownloaderManager.new),
       downloadRepositoryProvider
           .overrideWithValue(IsarDownloadRepository(isar)),
-      downloadServiceProvider.overrideWith(MobileDownloadService.new),
+      downloadServiceProvider.overrideWith(DefaultDownloadService.new),
       // queue
       queueControllerProvider.overrideWith(DefaultQueueController.new),
       queueRepositoryProvider.overrideWithValue(IsarQueueRepository(isar)),
