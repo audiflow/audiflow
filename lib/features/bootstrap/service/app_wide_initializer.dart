@@ -8,7 +8,7 @@ import 'package:audiflow/events/podcast_event.dart';
 import 'package:audiflow/events/transcript_event.dart';
 import 'package:audiflow/features/browser/common/data/podcast_api_repository.dart';
 import 'package:audiflow/features/browser/common/service/subscribed_podcast_refresher.dart';
-import 'package:audiflow/features/download/service/download_manager.dart';
+import 'package:audiflow/features/download/service/download_task_controller.dart';
 import 'package:audiflow/features/player/service/audio_player_service.dart';
 import 'package:audiflow/features/player/service/audio_position_recorder.dart';
 import 'package:audiflow/features/preference/data/app_preference_repository.dart';
@@ -30,7 +30,7 @@ bool appWide(AppWideRef ref) {
     ..listen(audioPositionRecorderProvider, (_, __) {})
     ..listen(connectivityProvider, (_, __) {})
     ..listen(downloadEventStreamProvider, (_, __) {})
-    ..listen(downloadManagerProvider, (_, __) {})
+    ..listen(downloadTaskControllerProvider, (_, __) {})
     ..listen(episodeEventStreamProvider, (_, __) {})
     ..listen(podcastApiRepositoryProvider, (_, __) {})
     ..listen(podcastEventStreamProvider, (_, __) {})
@@ -57,7 +57,7 @@ class AppWideProvidersInitializer extends HookConsumerWidget {
         }
 
         Future.wait([
-          ref.read(downloadManagerProvider).ensureInitialized(),
+          ref.read(downloadTaskControllerProvider.notifier).ensureInitialized(),
           ref.read(audioPlayerServiceProvider.notifier).ensureInitialized(),
           _setupCertificateAuthority().then((ca) {
             ref.read(podcastApiRepositoryProvider).setClientAuthorityBytes(ca);

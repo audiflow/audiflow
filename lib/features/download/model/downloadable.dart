@@ -96,6 +96,17 @@ class Downloadable {
       percentage: percentage ?? this.percentage,
     );
   }
+
+  @override
+  String toString() {
+    return 'Downloadable('
+        'pid: $pid, '
+        'eid: $eid,'
+        'taskId: $taskId,'
+        ' state: $state,'
+        ' downloadStartedAt: $downloadStartedAt,'
+        ' percentage: $percentage)';
+  }
 }
 
 extension DownloadableExt on Downloadable {
