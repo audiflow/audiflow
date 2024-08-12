@@ -44,3 +44,6 @@ app.*.map.json
 
 .env
 libisar.dylib
+
+# FVM Version Cache
+.fvm/
