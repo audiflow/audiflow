@@ -85,7 +85,6 @@ void main() async {
   final appDocDir = v[3] as Directory;
 
   final isar = await IsarFactory.create(appDocDir.path);
-  await isar.writeTxn(isar.clear);
   final container = ProviderContainer(
     overrides: [
       // foundations
