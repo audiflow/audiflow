@@ -180,7 +180,6 @@ class _PodcastBannerImageState extends State<PodcastBannerImage>
   @override
   Widget build(BuildContext context) {
     return ExtendedImage.network(
-      enableMemoryCache: false,
       widget.url,
       key: widget.key,
       width: widget.height,

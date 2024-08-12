@@ -32,6 +32,7 @@ class PodcastDetailsLoadingPage extends StatelessWidget {
                 title: title ?? '',
                 author: author,
                 thumbnailUrl: thumbnailUrl,
+                imageUrl: thumbnailUrl,
               ),
             ),
             const FillRemainingLoading(),
