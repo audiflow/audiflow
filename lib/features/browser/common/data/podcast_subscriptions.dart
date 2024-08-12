@@ -18,9 +18,7 @@ class PodcastSubscriptions extends _$PodcastSubscriptions {
     return subscriptions;
   }
 
-  List<Podcast> _sorted(
-    List<Podcast> subscriptions,
-  ) {
+  List<Podcast> _sorted(List<Podcast> subscriptions) {
     return subscriptions.sorted((a, b) => b.id.compareTo(b.id)).toList();
   }
 
