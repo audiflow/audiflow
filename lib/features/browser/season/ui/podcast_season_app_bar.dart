@@ -1,4 +1,3 @@
-import 'package:audiflow/common/ui/placeholder_builder.dart';
 import 'package:audiflow/features/browser/podcast/ui/podcast_page_header_image.dart';
 import 'package:audiflow/features/browser/season/model/season.dart';
 import 'package:audiflow/localization/generated/l10n.dart';
@@ -18,8 +17,6 @@ class PodcastSeasonAppBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final placeholderBuilder = PlaceholderBuilder.of(context);
-
     final menus = <_MenuItem>[
       _MenuItem(
         L10n.of(context).downloadAllEpisodes,
@@ -82,7 +79,6 @@ class PodcastSeasonAppBar extends ConsumerWidget {
                             EdgeInsets.only(top: safeAreaTop + kToolbarHeight),
                         child: PodcastHeaderImage.large(
                           imageUrl: season.imageUrl!,
-                          placeholderBuilder: placeholderBuilder,
                         ),
                       ),
                     ),
