@@ -180,6 +180,7 @@ class _PodcastBannerImageState extends State<PodcastBannerImage>
   @override
   Widget build(BuildContext context) {
     return ExtendedImage.network(
+      enableMemoryCache: false,
       widget.url,
       key: widget.key,
       width: widget.height,
@@ -211,7 +212,8 @@ class _PodcastBannerImageState extends State<PodcastBannerImage>
               : CrossFadeState.showFirst,
           duration: const Duration(seconds: 1),
           firstChild: widget.placeholder ??
-              SizedBox(
+              Container(
+                color: Colors.black,
                 width: widget.width,
                 height: widget.height,
               ),
