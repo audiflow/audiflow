@@ -153,7 +153,7 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
 
     return PopScope(
       canPop: widget.minHeight < heightNotifier.value,
-      onPopInvoked: (didPop) {
+      onPopInvokedWithResult: (didPop, _) {
         if (didPop) {
           _snapToPosition(PanelState.min);
         }
