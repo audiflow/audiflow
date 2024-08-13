@@ -92,6 +92,8 @@
   "playAgain": "Play again",
   "tooltipPlay": "Play episode",
   "tooltipPause": "Pause episode",
+  "primaryQueue": "Queue (manual)",
+  "adhocQueue": "Queue (auto)",
   "settingsOnDemandDownloadOnPlayback": "Download Audio on Playback",
   "settingsOnDemandDownloadOnPlaybackDescription": "If not pre-downloaded, audio will be fetched at the start of playback",
   "settingsManualDownload": "Manual Download",

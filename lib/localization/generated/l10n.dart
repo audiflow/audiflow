@@ -414,6 +414,18 @@ abstract class L10n {
   /// **'Pause episode'**
   String get tooltipPause;
 
+  /// No description provided for @primaryQueue.
+  ///
+  /// In en, this message translates to:
+  /// **'Queue (manual)'**
+  String get primaryQueue;
+
+  /// No description provided for @adhocQueue.
+  ///
+  /// In en, this message translates to:
+  /// **'Queue (auto)'**
+  String get adhocQueue;
+
   /// No description provided for @settingsOnDemandDownloadOnPlayback.
   ///
   /// In en, this message translates to:

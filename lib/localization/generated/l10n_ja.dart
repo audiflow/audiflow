@@ -180,6 +180,12 @@ class L10nJa extends L10n {
   String get tooltipPause => 'エピソード再生を一時停止';
 
   @override
+  String get primaryQueue => '再生キュー（手動）';
+
+  @override
+  String get adhocQueue => '再生キュー（自動）';
+
+  @override
   String get settingsOnDemandDownloadOnPlayback => '再生時の音源取得';
 
   @override

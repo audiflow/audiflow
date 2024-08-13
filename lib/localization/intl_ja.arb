@@ -92,6 +92,8 @@
   "playAgain": "再生",
   "tooltipPlay": "エピソードを再生",
   "tooltipPause": "エピソード再生を一時停止",
+  "primaryQueue": "再生キュー（手動）",
+  "adhocQueue": "再生キュー（自動）",
   "settingsOnDemandDownloadOnPlayback": "再生時の音源取得",
   "settingsOnDemandDownloadOnPlaybackDescription": "事前ダウンロードがない場合、再生開始時に音源を取得します",
   "settingsManualDownload": "手動ダウンロード",
