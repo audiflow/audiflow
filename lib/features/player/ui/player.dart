@@ -62,9 +62,6 @@ class DetailedPlayer extends HookConsumerWidget {
       maxHeight: maxHeight,
       controller: controller,
       elevation: 4,
-      onDismissed: () {
-        ref.read(audioPlayerServiceProvider.notifier).stop();
-      },
       builder: (height, percentage) {
         final showsMiniPlayer = percentage < miniPlayerPercentageDeclaration;
         return showsMiniPlayer
