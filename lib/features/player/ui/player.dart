@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 
 import 'package:audiflow/features/player/service/audio_player_service.dart';
 import 'package:audiflow/features/player/ui/expandable_player_frame/expandable_player_frame.dart';
+import 'package:audiflow/features/player/ui/expandable_player_frame/expandable_player_frame_controller.dart';
 import 'package:audiflow/features/player/ui/expandable_player_frame/utils.dart';
 import 'package:audiflow/features/player/ui/player_episode_tile.dart';
 import 'package:audiflow/features/player/ui/seek_bar.dart';
@@ -23,7 +24,7 @@ double valueFromPercentageInRange({
   return percentage * (max - min) + min;
 }
 
-final controller = MiniPlayerController();
+final controller = ExpandablePlayerFrameController();
 
 final _expandProgressResettingProvider = Provider((ref) {
   ref.listen(audioPlayerServiceProvider.select((state) => state?.phase),
