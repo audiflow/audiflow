@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:audiflow/features/player/ui/expandable_player_frame/expandable_player_frame_controller.dart';
+import 'package:audiflow/features/player/ui/expandable_player_frame/expandable_player_frame_state.dart';
 import 'package:audiflow/features/player/ui/expandable_player_frame/utils.dart';
 import 'package:flutter/material.dart';
 
@@ -157,7 +158,7 @@ class _ExpandablePlayerFrameState extends State<ExpandablePlayerFrame>
       canPop: widget.minHeight < heightNotifier.value,
       onPopInvokedWithResult: (didPop, _) {
         if (didPop) {
-          _snapToPosition(PanelState.min);
+          _snapToPosition(ExpandablePlayerFrameState.min);
         }
       },
       child: ValueListenableBuilder(
@@ -214,8 +215,8 @@ class _ExpandablePlayerFrameState extends State<ExpandablePlayerFrame>
                     ),
                     onTap: () => _snapToPosition(
                       _dragHeight != widget.maxHeight
-                          ? PanelState.max
-                          : PanelState.min,
+                          ? ExpandablePlayerFrameState.max
+                          : ExpandablePlayerFrameState.min,
                     ),
                     onPanStart: (details) {
                       _startHeight = _dragHeight;
@@ -246,7 +247,7 @@ class _ExpandablePlayerFrameState extends State<ExpandablePlayerFrame>
                       }
 
                       // Determine to which SnapPosition the widget should snap
-                      var snap = PanelState.min;
+                      var snap = ExpandablePlayerFrameState.min;
 
                       final percentageMax = percentageFromValueInRange(
                         min: widget.minHeight,
@@ -257,14 +258,14 @@ class _ExpandablePlayerFrameState extends State<ExpandablePlayerFrame>
                       // Started from expanded state
                       if (_startHeight > widget.minHeight) {
                         if (percentageMax > 1 - snapPercentage) {
-                          snap = PanelState.max;
+                          snap = ExpandablePlayerFrameState.max;
                         }
                       }
 
                       // Started from minified state
                       else {
                         if (percentageMax > snapPercentage) {
-                          snap = PanelState.max;
+                          snap = ExpandablePlayerFrameState.max;
                         }
 
                         // DismissedPercentage > 0.2 -> dismiss
@@ -275,7 +276,7 @@ class _ExpandablePlayerFrameState extends State<ExpandablePlayerFrame>
                                   value: _dragHeight,
                                 ) >
                                 snapPercentage) {
-                          snap = PanelState.dismiss;
+                          snap = ExpandablePlayerFrameState.dismiss;
                         }
                       }
 
@@ -341,15 +342,15 @@ class _ExpandablePlayerFrameState extends State<ExpandablePlayerFrame>
   }
 
   ///Animates the panel height according to a SnapPoint
-  void _snapToPosition(PanelState snapPosition) {
+  void _snapToPosition(ExpandablePlayerFrameState snapPosition) {
     switch (snapPosition) {
-      case PanelState.max:
+      case ExpandablePlayerFrameState.max:
         _animateToHeight(widget.maxHeight);
         return;
-      case PanelState.min:
+      case ExpandablePlayerFrameState.min:
         _animateToHeight(widget.minHeight);
         return;
-      case PanelState.dismiss:
+      case ExpandablePlayerFrameState.dismiss:
         _animateToHeight(0);
         return;
     }
@@ -418,23 +419,6 @@ class _ExpandablePlayerFrameState extends State<ExpandablePlayerFrame>
           duration: widget.controller!.value!.duration,
         );
         break;
-    }
-  }
-}
-
-enum PanelState {
-  max,
-  min,
-  dismiss;
-
-  int get heightCode {
-    switch (this) {
-      case PanelState.min:
-        return -1;
-      case PanelState.max:
-        return -2;
-      case PanelState.dismiss:
-        return -3;
     }
   }
 }

@@ -1,4 +1,4 @@
-import 'package:audiflow/features/player/ui/expandable_player_frame/expandable_player_frame.dart';
+import 'package:audiflow/features/player/ui/expandable_player_frame/expandable_player_frame_state.dart';
 import 'package:flutter/material.dart';
 
 //ControllerData class. Used for the controller
@@ -17,7 +17,7 @@ class ExpandablePlayerFrameController
   //Animates to a given height or state(expanded, dismissed, ...)
   void animateToHeight({
     double? height,
-    PanelState? state,
+    ExpandablePlayerFrameState? state,
     Duration? duration,
   }) {
     if (height == null && state == null) {
