@@ -1,8 +1,8 @@
 import 'dart:math' as math;
 
 import 'package:audiflow/features/bootstrap/service/app_wide_initializer.dart';
-import 'package:audiflow/features/player/service/audio_player_service.dart';
-import 'package:audiflow/features/player/ui/mini_player/utils.dart';
+import 'package:audiflow/features/player/ui/expandable_player/mini_player_height_provider.dart';
+import 'package:audiflow/features/player/ui/expandable_player_frame/utils.dart';
 import 'package:audiflow/features/player/ui/player.dart';
 import 'package:audiflow/localization/generated/l10n.dart';
 import 'package:flutter/material.dart';
@@ -10,14 +10,11 @@ import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
-const double playerMinHeight = 80;
-
 double playerMaxHeight(BuildContext content) {
   final mediaQuery = MediaQuery.of(content);
   return mediaQuery.size.height - mediaQuery.padding.horizontal;
 }
 
-const miniPlayerPercentageDeclaration = 0.2;
 const kAppBottomNavigationBarHeight = 89.0;
 
 class Wrapper extends ConsumerWidget {
@@ -45,9 +42,7 @@ class AppBottomNavigationBar extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final playingEpisode = ref.watch(
-      audioPlayerServiceProvider.select((state) => state?.episode),
-    );
+    final miniPlayerHeight = ref.watch(miniPlayerHeightProvider);
     final l10n = L10n.of(context);
     final theme = Theme.of(context);
     return Scaffold(
@@ -56,21 +51,18 @@ class AppBottomNavigationBar extends HookConsumerWidget {
           LayoutBuilder(
             builder: (context, constraints) {
               return SizedBox(
-                height: playingEpisode == null
-                    ? null
-                    : constraints.maxHeight - playerMinHeight,
+                height: constraints.maxHeight - miniPlayerHeight,
                 child: navigationShell,
               );
             },
           ),
-          if (playingEpisode != null)
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: DetailedPlayer(
-                minHeight: playerMinHeight,
-                maxHeight: playerMaxHeight(context),
-              ),
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: DetailedPlayer(
+              minHeight: playerMinHeight,
+              maxHeight: playerMaxHeight(context),
             ),
+          ),
         ],
       ),
       bottomNavigationBar: ValueListenableBuilder(

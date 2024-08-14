@@ -6,7 +6,7 @@ part of 'mini_player_height_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$miniPlayerHeightHash() => r'0ac874452cf824473aecbb928f6063620634ffa4';
+String _$miniPlayerHeightHash() => r'95c0488e0fc96827a826c8dd7cf7f6d83a137aa6';
 
 /// See also [miniPlayerHeight].
 @ProviderFor(miniPlayerHeight)

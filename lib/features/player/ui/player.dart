@@ -2,14 +2,17 @@ import 'dart:math';
 import 'dart:ui' as ui;
 
 import 'package:audiflow/features/player/service/audio_player_service.dart';
+import 'package:audiflow/features/player/ui/expandable_player/last_played_episode_provider.dart';
+import 'package:audiflow/features/player/ui/expandable_player/mini_player_height_provider.dart';
 import 'package:audiflow/features/player/ui/expandable_player_frame/expandable_player_frame.dart';
 import 'package:audiflow/features/player/ui/expandable_player_frame/expandable_player_frame_controller.dart';
 import 'package:audiflow/features/player/ui/expandable_player_frame/utils.dart';
 import 'package:audiflow/features/player/ui/player_episode_tile.dart';
 import 'package:audiflow/features/player/ui/seek_bar.dart';
+import 'package:audiflow/features/queue/data/queue_top_episode_provider.dart';
+import 'package:audiflow/features/queue/model/queue.dart';
 import 'package:audiflow/features/queue/service/queue_controller.dart';
 import 'package:audiflow/features/queue/ui/queue_list_block.dart';
-import 'package:audiflow/routing/app_bottom_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
@@ -26,18 +29,6 @@ double valueFromPercentageInRange({
 
 final controller = ExpandablePlayerFrameController();
 
-final _expandProgressResettingProvider = Provider((ref) {
-  ref.listen(audioPlayerServiceProvider.select((state) => state?.phase),
-      (_, phase) {
-    if (phase == PlayerPhase.stop || phase == null) {
-      if (playerExpandProgress.value != playerMinHeight) {
-        playerExpandProgress.value = playerMinHeight;
-      }
-    }
-  });
-  return true;
-});
-
 class DetailedPlayer extends HookConsumerWidget {
   const DetailedPlayer({
     super.key,
@@ -50,10 +41,12 @@ class DetailedPlayer extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    ref.watch(_expandProgressResettingProvider);
-    final episode =
-        ref.watch(audioPlayerServiceProvider.select((state) => state?.episode));
-    if (episode == null) {
+    final playerEpisode = ref.watch(
+      audioPlayerServiceProvider.select((state) => state?.episode),
+    );
+    final queueTopEpisode = ref.watch(queueTopEpisodeProvider);
+    final lastPlayedEpisode = ref.watch(lastPlayedEpisodeProvider);
+    if ((playerEpisode ?? queueTopEpisode ?? lastPlayedEpisode) == null) {
       return const SizedBox.shrink();
     }
 
@@ -67,13 +60,14 @@ class DetailedPlayer extends HookConsumerWidget {
         final showsMiniPlayer = percentage < miniPlayerPercentageDeclaration;
         return showsMiniPlayer
             ? _MiniPlayerContent(
-                episode: episode,
+                episode: playerEpisode ?? queueTopEpisode ?? lastPlayedEpisode!,
                 height: height,
                 minHeight: minHeight,
                 maxHeight: maxHeight,
               )
             : _DetailedPlayerContent(
-                episode: episode,
+                playerEpisode: playerEpisode ?? lastPlayedEpisode,
+                queueTopEpisode: queueTopEpisode,
                 height: height,
                 minHeight: minHeight,
                 maxHeight: maxHeight,
@@ -100,12 +94,6 @@ class _MiniPlayerContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
     final maxImgSize = width * 0.13;
-    final img = Image.network(
-      episode.imageUrl!,
-      errorBuilder: (context, error, stackTrace) {
-        return const SizedBox.shrink();
-      },
-    );
 
     //MiniPlayer
     final percentageMiniPlayer = percentageFromValueInRange(
@@ -126,7 +114,12 @@ class _MiniPlayerContent extends StatelessWidget {
                   padding: const EdgeInsets.only(left: 16, right: 10),
                   child: ConstrainedBox(
                     constraints: BoxConstraints(maxHeight: maxImgSize),
-                    child: img,
+                    child: Image.network(
+                      episode.imageUrl!,
+                      errorBuilder: (context, error, stackTrace) {
+                        return const SizedBox.shrink();
+                      },
+                    ),
                   ),
                 ),
                 Expanded(
@@ -167,13 +160,15 @@ class _MiniPlayerContent extends StatelessWidget {
 
 class _DetailedPlayerContent extends ConsumerWidget {
   const _DetailedPlayerContent({
-    required this.episode,
+    required this.playerEpisode,
+    required this.queueTopEpisode,
     required this.height,
     required this.minHeight,
     required this.maxHeight,
   });
 
-  final Episode episode;
+  final Episode? playerEpisode;
+  final Episode? queueTopEpisode;
   final double height;
   final double minHeight;
   final double maxHeight;
@@ -205,13 +200,15 @@ class _DetailedPlayerContent extends ConsumerWidget {
                       thickness: 5,
                     ),
                   ),
-                  PlayerEpisodeTile(episode: episode),
+                  if (playerEpisode != null)
+                    PlayerEpisodeTile(episode: playerEpisode!),
                   if (queue.isNotEmpty)
                     SizedBox(
                       height: max(0, min(maxHeight - 300, height - 350)),
                       child: const CustomScrollView(
                         slivers: [
-                          QueueListBlock(),
+                          QueueListBlock(queueType: QueueType.primary),
+                          QueueListBlock(queueType: QueueType.adhoc),
                         ],
                       ),
                     ),

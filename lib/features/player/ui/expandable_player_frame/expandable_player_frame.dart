@@ -31,7 +31,7 @@ class ExpandablePlayerFrame extends StatefulWidget {
     this.backgroundBoxShadow = Colors.black45,
   });
 
-  ///Required option to set the minimum and maximum height
+  ///Required option to set the height for mini/full heights
   final double miniHeight;
   final double fullHeight;
 
