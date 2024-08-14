@@ -2,8 +2,8 @@ import 'dart:math';
 import 'dart:ui' as ui;
 
 import 'package:audiflow/features/player/service/audio_player_service.dart';
-import 'package:audiflow/features/player/ui/mini_player/mini_player.dart';
-import 'package:audiflow/features/player/ui/mini_player/utils.dart';
+import 'package:audiflow/features/player/ui/expandable_player_frame/expandable_player_frame.dart';
+import 'package:audiflow/features/player/ui/expandable_player_frame/utils.dart';
 import 'package:audiflow/features/player/ui/player_episode_tile.dart';
 import 'package:audiflow/features/player/ui/seek_bar.dart';
 import 'package:audiflow/features/queue/service/queue_controller.dart';
@@ -56,7 +56,7 @@ class DetailedPlayer extends HookConsumerWidget {
       return const SizedBox.shrink();
     }
 
-    return MiniPlayer(
+    return ExpandablePlayerFrame(
       valueNotifier: playerExpandProgress,
       minHeight: minHeight,
       maxHeight: maxHeight,
