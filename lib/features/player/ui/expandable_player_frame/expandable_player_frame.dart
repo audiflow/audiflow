@@ -6,7 +6,10 @@ import 'package:audiflow/features/player/ui/expandable_player_frame/utils.dart';
 import 'package:flutter/material.dart';
 
 ///Type definition for the builder function
-typedef MiniPlayerBuilder = Widget Function(double height, double percentage);
+typedef ExpandablePlayerBuilder = Widget Function(
+  double height,
+  double percentage,
+);
 
 ///Type definition for onDismiss. Will be used in a future version.
 typedef DismissCallback = void Function(double percentage);
@@ -37,7 +40,7 @@ class ExpandablePlayerFrame extends StatefulWidget {
 
   ///Central API-Element
   ///Provides a builder with useful information
-  final MiniPlayerBuilder builder;
+  final ExpandablePlayerBuilder builder;
 
   ///Option to set the animation curve
   final Curve curve;
