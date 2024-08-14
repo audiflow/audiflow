@@ -59,8 +59,8 @@ class DetailedPlayer extends HookConsumerWidget {
 
     return ExpandablePlayerFrame(
       valueNotifier: playerExpandProgress,
-      minHeight: minHeight,
-      maxHeight: maxHeight,
+      miniHeight: minHeight,
+      fullHeight: maxHeight,
       controller: controller,
       elevation: 4,
       builder: (height, percentage) {

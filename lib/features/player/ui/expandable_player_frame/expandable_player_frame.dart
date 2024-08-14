@@ -15,8 +15,8 @@ typedef DismissCallback = void Function(double percentage);
 class ExpandablePlayerFrame extends StatefulWidget {
   const ExpandablePlayerFrame({
     super.key,
-    required this.minHeight,
-    required this.maxHeight,
+    required this.miniHeight,
+    required this.fullHeight,
     required this.builder,
     this.curve = Curves.easeOut,
     this.elevation = 0,
@@ -29,8 +29,8 @@ class ExpandablePlayerFrame extends StatefulWidget {
   });
 
   ///Required option to set the minimum and maximum height
-  final double minHeight;
-  final double maxHeight;
+  final double miniHeight;
+  final double fullHeight;
 
   ///Option to enable and set elevation for the miniPlayer
   final double elevation;
@@ -113,7 +113,7 @@ class _ExpandablePlayerFrameState extends State<ExpandablePlayerFrame>
   @override
   void initState() {
     if (widget.valueNotifier == null) {
-      heightNotifier = ValueNotifier(widget.minHeight);
+      heightNotifier = ValueNotifier(widget.miniHeight);
     } else {
       heightNotifier = widget.valueNotifier!;
     }
@@ -155,7 +155,7 @@ class _ExpandablePlayerFrameState extends State<ExpandablePlayerFrame>
     }
 
     return PopScope(
-      canPop: widget.minHeight < heightNotifier.value,
+      canPop: widget.miniHeight < heightNotifier.value,
       onPopInvokedWithResult: (didPop, _) {
         if (didPop) {
           _snapToPosition(ExpandablePlayerFrameState.min);
@@ -164,15 +164,15 @@ class _ExpandablePlayerFrameState extends State<ExpandablePlayerFrame>
       child: ValueListenableBuilder(
         valueListenable: heightNotifier,
         builder: (BuildContext context, double height, Widget? _) {
-          final percentage = (height - widget.minHeight) /
-              (widget.maxHeight - widget.minHeight);
+          final percentage = (height - widget.miniHeight) /
+              (widget.fullHeight - widget.miniHeight);
 
           return Stack(
             alignment: Alignment.bottomCenter,
             children: [
               if (0 < percentage)
                 GestureDetector(
-                  onTap: () => _animateToHeight(widget.minHeight),
+                  onTap: () => _animateToHeight(widget.miniHeight),
                   child: Opacity(
                     opacity: borderDouble(percentage),
                     child: Container(color: widget.backgroundColor),
@@ -190,7 +190,7 @@ class _ExpandablePlayerFrameState extends State<ExpandablePlayerFrame>
                         return Opacity(
                           opacity: borderDouble(1 - value * 0.8),
                           child: Transform.translate(
-                            offset: Offset(0, widget.minHeight * value * 0.5),
+                            offset: Offset(0, widget.miniHeight * value * 0.5),
                             child: child,
                           ),
                         );
@@ -214,7 +214,7 @@ class _ExpandablePlayerFrameState extends State<ExpandablePlayerFrame>
                       ),
                     ),
                     onTap: () => _snapToPosition(
-                      _dragHeight != widget.maxHeight
+                      _dragHeight != widget.fullHeight
                           ? ExpandablePlayerFrameState.max
                           : ExpandablePlayerFrameState.min,
                     ),
@@ -250,13 +250,13 @@ class _ExpandablePlayerFrameState extends State<ExpandablePlayerFrame>
                       var snap = ExpandablePlayerFrameState.min;
 
                       final percentageMax = percentageFromValueInRange(
-                        min: widget.minHeight,
-                        max: widget.maxHeight,
+                        min: widget.miniHeight,
+                        max: widget.fullHeight,
                         value: _dragHeight,
                       );
 
                       // Started from expanded state
-                      if (_startHeight > widget.minHeight) {
+                      if (_startHeight > widget.miniHeight) {
                         if (percentageMax > 1 - snapPercentage) {
                           snap = ExpandablePlayerFrameState.max;
                         }
@@ -271,7 +271,7 @@ class _ExpandablePlayerFrameState extends State<ExpandablePlayerFrame>
                         // DismissedPercentage > 0.2 -> dismiss
                         else if (onDismissed != null &&
                             percentageFromValueInRange(
-                                  min: widget.minHeight,
+                                  min: widget.miniHeight,
                                   max: 0,
                                   value: _dragHeight,
                                 ) >
@@ -306,12 +306,12 @@ class _ExpandablePlayerFrameState extends State<ExpandablePlayerFrame>
   /// Determines whether the panel should be updated in height or discarded
   void _handleHeightChange({bool animation = false}) {
     // Drag above minHeight
-    if (widget.minHeight <= _dragHeight) {
+    if (widget.miniHeight <= _dragHeight) {
       if (dragDownPercentage.value != 0) {
         dragDownPercentage.value = 0;
       }
 
-      if (widget.maxHeight < _dragHeight) {
+      if (widget.fullHeight < _dragHeight) {
         return;
       }
 
@@ -322,7 +322,7 @@ class _ExpandablePlayerFrameState extends State<ExpandablePlayerFrame>
     else if (onDismissed != null) {
       final percentageDown = borderDouble(
         percentageFromValueInRange(
-          min: widget.minHeight,
+          min: widget.miniHeight,
           max: 0,
           value: _dragHeight,
         ),
@@ -345,10 +345,10 @@ class _ExpandablePlayerFrameState extends State<ExpandablePlayerFrame>
   void _snapToPosition(ExpandablePlayerFrameState snapPosition) {
     switch (snapPosition) {
       case ExpandablePlayerFrameState.max:
-        _animateToHeight(widget.maxHeight);
+        _animateToHeight(widget.fullHeight);
         return;
       case ExpandablePlayerFrameState.min:
-        _animateToHeight(widget.minHeight);
+        _animateToHeight(widget.miniHeight);
         return;
       case ExpandablePlayerFrameState.dismiss:
         _animateToHeight(0);
@@ -400,12 +400,12 @@ class _ExpandablePlayerFrameState extends State<ExpandablePlayerFrame>
     switch (widget.controller!.value!.height) {
       case -1:
         _animateToHeight(
-          widget.minHeight,
+          widget.miniHeight,
           duration: widget.controller!.value!.duration,
         );
       case -2:
         _animateToHeight(
-          widget.maxHeight,
+          widget.fullHeight,
           duration: widget.controller!.value!.duration,
         );
       case -3:
