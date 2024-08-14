@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:audiflow/features/player/ui/mini_player/utils.dart';
+import 'package:audiflow/features/player/ui/expandable_player_frame/utils.dart';
 import 'package:flutter/material.dart';
 
 ///Type definition for the builder function
@@ -10,8 +10,8 @@ typedef MiniPlayerBuilder = Widget Function(double height, double percentage);
 typedef DismissCallback = void Function(double percentage);
 
 ///MiniPlayer class
-class MiniPlayer extends StatefulWidget {
-  const MiniPlayer({
+class ExpandablePlayerFrame extends StatefulWidget {
+  const ExpandablePlayerFrame({
     super.key,
     required this.minHeight,
     required this.maxHeight,
@@ -60,10 +60,11 @@ class MiniPlayer extends StatefulWidget {
   final Color backgroundBoxShadow;
 
   @override
-  State createState() => _MiniPlayerState();
+  State createState() => _ExpandablePlayerFrameState();
 }
 
-class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
+class _ExpandablePlayerFrameState extends State<ExpandablePlayerFrame>
+    with TickerProviderStateMixin {
   late ValueNotifier<double> heightNotifier;
   ValueNotifier<double> dragDownPercentage = ValueNotifier(0);
 
@@ -420,8 +421,22 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
   }
 }
 
-///-1 Min, -2 Max, -3 Dismiss
-enum PanelState { max, min, dismiss }
+enum PanelState {
+  max,
+  min,
+  dismiss;
+
+  int get heightCode {
+    switch (this) {
+      case PanelState.min:
+        return -1;
+      case PanelState.max:
+        return -2;
+      case PanelState.dismiss:
+        return -3;
+    }
+  }
+}
 
 //ControllerData class. Used for the controller
 class ControllerData {
