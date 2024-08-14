@@ -55,7 +55,7 @@ class ExpandablePlayerFrame extends StatefulWidget {
   final VoidCallback? onDismissed;
 
   //Allows you to manually control the miniPlayer in code
-  final MiniPlayerController? controller;
+  final ExpandablePlayerFrameController? controller;
 
   ///Used to set the color of the background box shadow
   final Color backgroundBoxShadow;

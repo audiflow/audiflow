@@ -2,16 +2,17 @@ import 'package:audiflow/features/player/ui/expandable_player_frame/expandable_p
 import 'package:flutter/material.dart';
 
 //ControllerData class. Used for the controller
-class ControllerData {
-  const ControllerData(this.height, this.duration);
+class ExpandablePlayerFrameControllerData {
+  const ExpandablePlayerFrameControllerData(this.height, this.duration);
 
   final int height;
   final Duration? duration;
 }
 
 //MiniPlayerController class
-class MiniPlayerController extends ValueNotifier<ControllerData?> {
-  MiniPlayerController() : super(null);
+class ExpandablePlayerFrameController
+    extends ValueNotifier<ExpandablePlayerFrameControllerData?> {
+  ExpandablePlayerFrameController() : super(null);
 
   //Animates to a given height or state(expanded, dismissed, ...)
   void animateToHeight({
@@ -35,13 +36,13 @@ class MiniPlayerController extends ValueNotifier<ControllerData?> {
     final valBefore = value;
 
     if (state != null) {
-      value = ControllerData(state.heightCode, duration);
+      value = ExpandablePlayerFrameControllerData(state.heightCode, duration);
     } else {
       if (height! < 0) {
         return;
       }
 
-      value = ControllerData(height.round(), duration);
+      value = ExpandablePlayerFrameControllerData(height.round(), duration);
     }
 
     if (valBefore == value) {
