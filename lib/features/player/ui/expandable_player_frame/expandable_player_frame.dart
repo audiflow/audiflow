@@ -158,7 +158,7 @@ class _ExpandablePlayerFrameState extends State<ExpandablePlayerFrame>
       canPop: widget.miniHeight < heightNotifier.value,
       onPopInvokedWithResult: (didPop, _) {
         if (didPop) {
-          _snapToPosition(ExpandablePlayerFrameState.min);
+          _snapToPosition(ExpandablePlayerFrameState.mini);
         }
       },
       child: ValueListenableBuilder(
@@ -215,8 +215,8 @@ class _ExpandablePlayerFrameState extends State<ExpandablePlayerFrame>
                     ),
                     onTap: () => _snapToPosition(
                       _dragHeight != widget.fullHeight
-                          ? ExpandablePlayerFrameState.max
-                          : ExpandablePlayerFrameState.min,
+                          ? ExpandablePlayerFrameState.full
+                          : ExpandablePlayerFrameState.mini,
                     ),
                     onPanStart: (details) {
                       _startHeight = _dragHeight;
@@ -247,7 +247,7 @@ class _ExpandablePlayerFrameState extends State<ExpandablePlayerFrame>
                       }
 
                       // Determine to which SnapPosition the widget should snap
-                      var snap = ExpandablePlayerFrameState.min;
+                      var snap = ExpandablePlayerFrameState.mini;
 
                       final percentageMax = percentageFromValueInRange(
                         min: widget.miniHeight,
@@ -258,14 +258,14 @@ class _ExpandablePlayerFrameState extends State<ExpandablePlayerFrame>
                       // Started from expanded state
                       if (_startHeight > widget.miniHeight) {
                         if (percentageMax > 1 - snapPercentage) {
-                          snap = ExpandablePlayerFrameState.max;
+                          snap = ExpandablePlayerFrameState.full;
                         }
                       }
 
                       // Started from minified state
                       else {
                         if (percentageMax > snapPercentage) {
-                          snap = ExpandablePlayerFrameState.max;
+                          snap = ExpandablePlayerFrameState.full;
                         }
 
                         // DismissedPercentage > 0.2 -> dismiss
@@ -344,10 +344,10 @@ class _ExpandablePlayerFrameState extends State<ExpandablePlayerFrame>
   ///Animates the panel height according to a SnapPoint
   void _snapToPosition(ExpandablePlayerFrameState snapPosition) {
     switch (snapPosition) {
-      case ExpandablePlayerFrameState.max:
+      case ExpandablePlayerFrameState.full:
         _animateToHeight(widget.fullHeight);
         return;
-      case ExpandablePlayerFrameState.min:
+      case ExpandablePlayerFrameState.mini:
         _animateToHeight(widget.miniHeight);
         return;
       case ExpandablePlayerFrameState.dismiss:

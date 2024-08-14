@@ -1,13 +1,13 @@
 enum ExpandablePlayerFrameState {
-  max,
-  min,
+  full,
+  mini,
   dismiss;
 
   int get heightCode {
     switch (this) {
-      case ExpandablePlayerFrameState.min:
+      case ExpandablePlayerFrameState.mini:
         return -1;
-      case ExpandablePlayerFrameState.max:
+      case ExpandablePlayerFrameState.full:
         return -2;
       case ExpandablePlayerFrameState.dismiss:
         return -3;
