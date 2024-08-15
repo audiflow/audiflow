@@ -1,9 +1,9 @@
 import 'dart:math' as math;
 
 import 'package:audiflow/features/bootstrap/service/app_wide_initializer.dart';
+import 'package:audiflow/features/player/ui/expandable_player/expandable_player.dart';
 import 'package:audiflow/features/player/ui/expandable_player/mini_player_height_provider.dart';
 import 'package:audiflow/features/player/ui/expandable_player_frame/utils.dart';
-import 'package:audiflow/features/player/ui/player.dart';
 import 'package:audiflow/localization/generated/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -58,7 +58,7 @@ class AppBottomNavigationBar extends HookConsumerWidget {
           ),
           Align(
             alignment: Alignment.bottomCenter,
-            child: DetailedPlayer(
+            child: ExpandablePlayer(
               minHeight: playerMinHeight,
               maxHeight: playerMaxHeight(context),
             ),

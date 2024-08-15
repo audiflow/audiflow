@@ -29,8 +29,8 @@ double valueFromPercentageInRange({
 
 final controller = ExpandablePlayerFrameController();
 
-class DetailedPlayer extends HookConsumerWidget {
-  const DetailedPlayer({
+class ExpandablePlayer extends HookConsumerWidget {
+  const ExpandablePlayer({
     super.key,
     required this.minHeight,
     required this.maxHeight,
