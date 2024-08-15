@@ -7,7 +7,7 @@ part of 'season_episodes_page_controller.dart';
 // **************************************************************************
 
 String _$seasonEpisodesPageControllerHash() =>
-    r'5e95ff1e2253676828d5c5b7b1e32b75249fbff4';
+    r'c3421b70882b799cdbce4ca72653d39d9575dbc0';
 
 /// Copied from Dart SDK
 class _SystemHash {

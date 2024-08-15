@@ -1,6 +1,7 @@
 import 'package:audiflow/common/ui/fill_remaining_error.dart';
 import 'package:audiflow/common/ui/fill_remaining_loading.dart';
 import 'package:audiflow/constants/types.dart';
+import 'package:audiflow/events/play_button_notification.dart';
 import 'package:audiflow/features/browser/episode/ui/episode_list.dart';
 import 'package:audiflow/features/browser/podcast/ui/podcast_details_page/podcast_details_filter_mode_switch.dart';
 import 'package:audiflow/features/browser/season/model/season.dart';
@@ -103,10 +104,17 @@ class SeasonEpisodesPage extends HookConsumerWidget {
                         onToggleAscending: pageController.toggleAscending,
                       ),
                     ),
-                    EpisodeList.fixed(
-                      episodes: pageState.requireValue.episodes,
-                      scrollController: controller,
-                      thumbnailVisibility: ThumbnailVisibility.hidden,
+                    NotificationListener<PlayButtonTappedNotification>(
+                      onNotification: (notification) {
+                        pageController
+                            .togglePlayState(notification.episode);
+                        return false;
+                      },
+                      child: EpisodeList.fixed(
+                        episodes: pageState.requireValue.episodes,
+                        scrollController: controller,
+                        thumbnailVisibility: ThumbnailVisibility.hidden,
+                      ),
                     ),
                   ],
                 ],
