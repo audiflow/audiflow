@@ -6,11 +6,11 @@ part of 'mini_player_height_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$miniPlayerHeightHash() => r'95c0488e0fc96827a826c8dd7cf7f6d83a137aa6';
+String _$miniPlayerHeightHash() => r'91f982a6ec773f1454144a41db1efad47652bac0';
 
 /// See also [miniPlayerHeight].
 @ProviderFor(miniPlayerHeight)
-final miniPlayerHeightProvider = Provider<double>.internal(
+final miniPlayerHeightProvider = AutoDisposeProvider<double>.internal(
   miniPlayerHeight,
   name: r'miniPlayerHeightProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
@@ -20,6 +20,6 @@ final miniPlayerHeightProvider = Provider<double>.internal(
   allTransitiveDependencies: null,
 );
 
-typedef MiniPlayerHeightRef = ProviderRef<double>;
+typedef MiniPlayerHeightRef = AutoDisposeProviderRef<double>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member
