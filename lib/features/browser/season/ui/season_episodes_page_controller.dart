@@ -7,7 +7,8 @@ import 'package:audiflow/features/browser/season/model/season.dart';
 import 'package:audiflow/features/download/data/download_repository.dart';
 import 'package:audiflow/features/download/model/downloadable.dart';
 import 'package:audiflow/features/feed/data/episode_repository.dart';
-import 'package:audiflow/features/feed/model/model.dart';
+import 'package:audiflow/features/player/service/audio_player_service.dart';
+import 'package:audiflow/features/queue/service/audio_queue_service.dart';
 import 'package:collection/collection.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -31,6 +32,15 @@ class SeasonEpisodesPageController extends _$SeasonEpisodesPageController {
 
   DownloadRepository get _downloadRepository =>
       ref.read(downloadRepositoryProvider);
+
+  AudioPlayerState? get _audioPlayerState =>
+      ref.read(audioPlayerServiceProvider);
+
+  AudioPlayerService get _audioPlayerService =>
+      ref.read(audioPlayerServiceProvider.notifier);
+
+  AudioQueueService get _audioQueueService =>
+      ref.read(audioQueueServiceProvider);
 
   @override
   Future<SeasonEpisodesState> build(Season season) async {
@@ -163,6 +173,24 @@ class SeasonEpisodesPageController extends _$SeasonEpisodesPageController {
         seasonEpisodesAscending: !state.requireValue.ascending,
       ),
     );
+  }
+
+  Future<void> togglePlayState(Episode episode) async {
+    if (_audioPlayerState?.episode.id == episode.id) {
+      return _audioPlayerService.togglePlayPause();
+    } else {
+      final episodes =
+          _sortEpisodes(state.requireValue.episodes, ascending: true);
+      final i = episodes.indexOf(episode);
+      if (i < 0) {
+        return;
+      }
+      await _audioQueueService.buildAndPlay(
+        pid: episode.pid,
+        eid: episode.id,
+        queueingEpisodeIds: episodes.slice(i + 1).map((e) => e.id),
+      );
+    }
   }
 }
 

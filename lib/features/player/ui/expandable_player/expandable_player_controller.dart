@@ -65,13 +65,13 @@ class ExpandablePlayerController extends _$ExpandablePlayerController {
     ref
       ..listen(audioPlayerServiceProvider.select((state) => state?.episode),
           (_, episode) {
-        state = ExpandablePlayerState(
+        state = state.copyWith(
           audioEpisode: episode,
           episode: episode ?? state.episode,
         );
       })
       ..listen(queueTopEpisodeProvider, (_, episode) {
-        state = ExpandablePlayerState(
+        state = state.copyWith(
           queueTopEpisode: episode,
           episode: state.audioEpisode ?? episode ?? state.episode,
         );
