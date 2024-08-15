@@ -1,20 +1,25 @@
 import 'dart:async';
 
-import 'package:audiflow/features/player/ui/mini_player/utils.dart';
+import 'package:audiflow/features/player/ui/expandable_player_frame/expandable_player_frame_controller.dart';
+import 'package:audiflow/features/player/ui/expandable_player_frame/expandable_player_frame_state.dart';
+import 'package:audiflow/features/player/ui/expandable_player_frame/utils.dart';
 import 'package:flutter/material.dart';
 
 ///Type definition for the builder function
-typedef MiniPlayerBuilder = Widget Function(double height, double percentage);
+typedef ExpandablePlayerBuilder = Widget Function(
+  double height,
+  double percentage,
+);
 
 ///Type definition for onDismiss. Will be used in a future version.
 typedef DismissCallback = void Function(double percentage);
 
 ///MiniPlayer class
-class MiniPlayer extends StatefulWidget {
-  const MiniPlayer({
+class ExpandablePlayerFrame extends StatefulWidget {
+  const ExpandablePlayerFrame({
     super.key,
-    required this.minHeight,
-    required this.maxHeight,
+    required this.miniHeight,
+    required this.fullHeight,
     required this.builder,
     this.curve = Curves.easeOut,
     this.elevation = 0,
@@ -26,16 +31,16 @@ class MiniPlayer extends StatefulWidget {
     this.backgroundBoxShadow = Colors.black45,
   });
 
-  ///Required option to set the minimum and maximum height
-  final double minHeight;
-  final double maxHeight;
+  ///Required option to set the height for mini/full heights
+  final double miniHeight;
+  final double fullHeight;
 
   ///Option to enable and set elevation for the miniPlayer
   final double elevation;
 
   ///Central API-Element
   ///Provides a builder with useful information
-  final MiniPlayerBuilder builder;
+  final ExpandablePlayerBuilder builder;
 
   ///Option to set the animation curve
   final Curve curve;
@@ -54,16 +59,17 @@ class MiniPlayer extends StatefulWidget {
   final VoidCallback? onDismissed;
 
   //Allows you to manually control the miniPlayer in code
-  final MiniPlayerController? controller;
+  final ExpandablePlayerFrameController? controller;
 
   ///Used to set the color of the background box shadow
   final Color backgroundBoxShadow;
 
   @override
-  State createState() => _MiniPlayerState();
+  State createState() => _ExpandablePlayerFrameState();
 }
 
-class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
+class _ExpandablePlayerFrameState extends State<ExpandablePlayerFrame>
+    with TickerProviderStateMixin {
   late ValueNotifier<double> heightNotifier;
   ValueNotifier<double> dragDownPercentage = ValueNotifier(0);
 
@@ -110,7 +116,7 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
   @override
   void initState() {
     if (widget.valueNotifier == null) {
-      heightNotifier = ValueNotifier(widget.minHeight);
+      heightNotifier = ValueNotifier(widget.miniHeight);
     } else {
       heightNotifier = widget.valueNotifier!;
     }
@@ -152,24 +158,24 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
     }
 
     return PopScope(
-      canPop: widget.minHeight < heightNotifier.value,
-      onPopInvoked: (didPop) {
+      canPop: widget.miniHeight < heightNotifier.value,
+      onPopInvokedWithResult: (didPop, _) {
         if (didPop) {
-          _snapToPosition(PanelState.min);
+          _snapToPosition(ExpandablePlayerFrameState.mini);
         }
       },
       child: ValueListenableBuilder(
         valueListenable: heightNotifier,
         builder: (BuildContext context, double height, Widget? _) {
-          final percentage = (height - widget.minHeight) /
-              (widget.maxHeight - widget.minHeight);
+          final percentage = (height - widget.miniHeight) /
+              (widget.fullHeight - widget.miniHeight);
 
           return Stack(
             alignment: Alignment.bottomCenter,
             children: [
               if (0 < percentage)
                 GestureDetector(
-                  onTap: () => _animateToHeight(widget.minHeight),
+                  onTap: () => _animateToHeight(widget.miniHeight),
                   child: Opacity(
                     opacity: borderDouble(percentage),
                     child: Container(color: widget.backgroundColor),
@@ -187,7 +193,7 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
                         return Opacity(
                           opacity: borderDouble(1 - value * 0.8),
                           child: Transform.translate(
-                            offset: Offset(0, widget.minHeight * value * 0.5),
+                            offset: Offset(0, widget.miniHeight * value * 0.5),
                             child: child,
                           ),
                         );
@@ -211,9 +217,9 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
                       ),
                     ),
                     onTap: () => _snapToPosition(
-                      _dragHeight != widget.maxHeight
-                          ? PanelState.max
-                          : PanelState.min,
+                      _dragHeight != widget.fullHeight
+                          ? ExpandablePlayerFrameState.full
+                          : ExpandablePlayerFrameState.mini,
                     ),
                     onPanStart: (details) {
                       _startHeight = _dragHeight;
@@ -244,36 +250,36 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
                       }
 
                       // Determine to which SnapPosition the widget should snap
-                      var snap = PanelState.min;
+                      var snap = ExpandablePlayerFrameState.mini;
 
                       final percentageMax = percentageFromValueInRange(
-                        min: widget.minHeight,
-                        max: widget.maxHeight,
+                        min: widget.miniHeight,
+                        max: widget.fullHeight,
                         value: _dragHeight,
                       );
 
                       // Started from expanded state
-                      if (_startHeight > widget.minHeight) {
+                      if (_startHeight > widget.miniHeight) {
                         if (percentageMax > 1 - snapPercentage) {
-                          snap = PanelState.max;
+                          snap = ExpandablePlayerFrameState.full;
                         }
                       }
 
                       // Started from minified state
                       else {
                         if (percentageMax > snapPercentage) {
-                          snap = PanelState.max;
+                          snap = ExpandablePlayerFrameState.full;
                         }
 
                         // DismissedPercentage > 0.2 -> dismiss
                         else if (onDismissed != null &&
                             percentageFromValueInRange(
-                                  min: widget.minHeight,
+                                  min: widget.miniHeight,
                                   max: 0,
                                   value: _dragHeight,
                                 ) >
                                 snapPercentage) {
-                          snap = PanelState.dismiss;
+                          snap = ExpandablePlayerFrameState.dismiss;
                         }
                       }
 
@@ -303,12 +309,12 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
   /// Determines whether the panel should be updated in height or discarded
   void _handleHeightChange({bool animation = false}) {
     // Drag above minHeight
-    if (widget.minHeight <= _dragHeight) {
+    if (widget.miniHeight <= _dragHeight) {
       if (dragDownPercentage.value != 0) {
         dragDownPercentage.value = 0;
       }
 
-      if (widget.maxHeight < _dragHeight) {
+      if (widget.fullHeight < _dragHeight) {
         return;
       }
 
@@ -319,7 +325,7 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
     else if (onDismissed != null) {
       final percentageDown = borderDouble(
         percentageFromValueInRange(
-          min: widget.minHeight,
+          min: widget.miniHeight,
           max: 0,
           value: _dragHeight,
         ),
@@ -339,15 +345,15 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
   }
 
   ///Animates the panel height according to a SnapPoint
-  void _snapToPosition(PanelState snapPosition) {
+  void _snapToPosition(ExpandablePlayerFrameState snapPosition) {
     switch (snapPosition) {
-      case PanelState.max:
-        _animateToHeight(widget.maxHeight);
+      case ExpandablePlayerFrameState.full:
+        _animateToHeight(widget.fullHeight);
         return;
-      case PanelState.min:
-        _animateToHeight(widget.minHeight);
+      case ExpandablePlayerFrameState.mini:
+        _animateToHeight(widget.miniHeight);
         return;
-      case PanelState.dismiss:
+      case ExpandablePlayerFrameState.dismiss:
         _animateToHeight(0);
         return;
     }
@@ -397,12 +403,12 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
     switch (widget.controller!.value!.height) {
       case -1:
         _animateToHeight(
-          widget.minHeight,
+          widget.miniHeight,
           duration: widget.controller!.value!.duration,
         );
       case -2:
         _animateToHeight(
-          widget.maxHeight,
+          widget.fullHeight,
           duration: widget.controller!.value!.duration,
         );
       case -3:
@@ -416,58 +422,6 @@ class _MiniPlayerState extends State<MiniPlayer> with TickerProviderStateMixin {
           duration: widget.controller!.value!.duration,
         );
         break;
-    }
-  }
-}
-
-///-1 Min, -2 Max, -3 Dismiss
-enum PanelState { max, min, dismiss }
-
-//ControllerData class. Used for the controller
-class ControllerData {
-  const ControllerData(this.height, this.duration);
-
-  final int height;
-  final Duration? duration;
-}
-
-//MiniPlayerController class
-class MiniPlayerController extends ValueNotifier<ControllerData?> {
-  MiniPlayerController() : super(null);
-
-  //Animates to a given height or state(expanded, dismissed, ...)
-  void animateToHeight({
-    double? height,
-    PanelState? state,
-    Duration? duration,
-  }) {
-    if (height == null && state == null) {
-      throw Exception(
-        'MiniPlayer: One of the two parameters, height or status, is required.',
-      );
-    }
-
-    if (height != null && state != null) {
-      throw Exception(
-        'MiniPlayer: Only one of the two parameters, height or'
-        ' status, can be specified.',
-      );
-    }
-
-    final valBefore = value;
-
-    if (state != null) {
-      value = ControllerData(state.heightCode, duration);
-    } else {
-      if (height! < 0) {
-        return;
-      }
-
-      value = ControllerData(height.round(), duration);
-    }
-
-    if (valBefore == value) {
-      notifyListeners();
     }
   }
 }

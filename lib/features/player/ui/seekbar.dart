@@ -1,24 +1,23 @@
 import 'dart:math' as math;
 
-import 'package:audiflow/features/player/service/audio_player_service.dart';
 import 'package:audiflow/utils/duration.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-class SeekBar extends HookConsumerWidget {
-  const SeekBar({
+class Seekbar extends HookWidget {
+  const Seekbar({
+    required this.position,
+    required this.duration,
+    required this.onSeek,
     super.key,
   });
 
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final (position, duration) = ref.watch(
-      audioPlayerServiceProvider.select(
-        (state) => (state?.position, state?.episode.duration),
-      ),
-    );
+  final Duration? position;
+  final Duration? duration;
+  final ValueChanged<Duration> onSeek;
 
+  @override
+  Widget build(BuildContext context) {
     final seekPosState = useState<Duration?>(null);
     final pos = normalizedDuration(
       position: seekPosState.value ?? position,
@@ -39,9 +38,7 @@ class SeekBar extends HookConsumerWidget {
               seekPosState.value = value;
             },
             onChangeEnd: (value) {
-              ref
-                  .read(audioPlayerServiceProvider.notifier)
-                  .seek(position: value);
+              onSeek(value);
               seekPosState.value = null;
             },
           ),
@@ -53,7 +50,8 @@ class SeekBar extends HookConsumerWidget {
             children: [
               _TimeLabel(time: pos),
               _TimeLabel(
-                time: pos == null || duration == null ? null : (pos - duration),
+                time:
+                    pos == null || duration == null ? null : (pos - duration!),
               ),
             ],
           ),
@@ -81,6 +79,7 @@ class _Bar extends HookWidget {
   @override
   Widget build(BuildContext context) {
     final state = useState<double?>(null);
+    final theme = Theme.of(context);
 
     return SliderTheme(
       data: SliderTheme.of(context).copyWith(
@@ -88,6 +87,7 @@ class _Bar extends HookWidget {
         thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 0),
         overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
         overlayColor: Colors.transparent,
+        inactiveTrackColor: theme.colorScheme.inversePrimary.withOpacity(0.5),
       ),
       child: (position == null || duration == null)
           ? const Slider(value: 0, onChanged: null)

@@ -9,11 +9,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sliver_tools/sliver_tools.dart';
 
 class QueueListBlock extends ConsumerWidget {
-  const QueueListBlock({super.key});
+  const QueueListBlock({
+    required this.queueType,
+    super.key,
+  });
+
+  final QueueType queueType;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final queue = ref.watch(queueControllerProvider).queue;
+    final queue = ref
+        .watch(queueControllerProvider)
+        .queue
+        .where((q) => q.type == queueType)
+        .toList();
     if (queue.isEmpty) {
       return const SliverToBoxAdapter(child: SizedBox.shrink());
     }
@@ -33,7 +42,7 @@ class QueueListBlock extends ConsumerWidget {
         return false;
       },
       child: Section(
-        title: l10n.queue,
+        title: queueType.label(context),
         queue: queue,
         trailing: TextButton(
           child: Text(l10n.clear),
@@ -123,4 +132,16 @@ class Section extends MultiSliver {
             ),
           ],
         );
+}
+
+extension QueueTypeExt on QueueType {
+  String label(BuildContext context) {
+    final l10n = L10n.of(context);
+    switch (this) {
+      case QueueType.primary:
+        return l10n.primaryQueue;
+      case QueueType.adhoc:
+        return l10n.adhocQueue;
+    }
+  }
 }

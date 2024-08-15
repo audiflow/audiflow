@@ -1,20 +1,5 @@
 import 'dart:math' as math;
 
-import 'package:audiflow/features/player/ui/mini_player/mini_player.dart';
-
-extension SelectedColorExtension on PanelState {
-  int get heightCode {
-    switch (this) {
-      case PanelState.min:
-        return -1;
-      case PanelState.max:
-        return -2;
-      case PanelState.dismiss:
-        return -3;
-    }
-  }
-}
-
 ///Calculates the percentage of a value within a given range of values
 double percentageFromValueInRange({
   required double min,

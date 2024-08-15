@@ -210,6 +210,12 @@ class L10nEn extends L10n {
   String get tooltipPause => 'Pause episode';
 
   @override
+  String get primaryQueue => 'Queue (manual)';
+
+  @override
+  String get adhocQueue => 'Queue (auto)';
+
+  @override
   String get settingsOnDemandDownloadOnPlayback => 'Download Audio on Playback';
 
   @override
