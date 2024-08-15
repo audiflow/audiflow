@@ -52,6 +52,11 @@ class FullPlayerContent extends ConsumerWidget {
         : ref.read(episodeSeekbarControllerProvider(episode).notifier)
             as SeekbarController;
 
+    final queueTopEpisode = ref.watch(
+      expandablePlayerControllerProvider
+          .select((state) => state.queueTopEpisode),
+    );
+    final showPlayerEpisode = hasPlayerAudio || queueTopEpisode == null;
     final queue = ref.watch(queueControllerProvider).queue;
 
     return SafeArea(
@@ -71,7 +76,7 @@ class FullPlayerContent extends ConsumerWidget {
                       thickness: 5,
                     ),
                   ),
-                  if (hasPlayerAudio) PlayerEpisodeTile(episode: episode),
+                  if (showPlayerEpisode) PlayerEpisodeTile(episode: episode),
                   if (queue.isNotEmpty)
                     SizedBox(
                       height: max(0, min(maxHeight - 300, height - 350)),
