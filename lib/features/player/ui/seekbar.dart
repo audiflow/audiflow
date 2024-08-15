@@ -79,6 +79,7 @@ class _Bar extends HookWidget {
   @override
   Widget build(BuildContext context) {
     final state = useState<double?>(null);
+    final theme = Theme.of(context);
 
     return SliderTheme(
       data: SliderTheme.of(context).copyWith(
@@ -86,6 +87,7 @@ class _Bar extends HookWidget {
         thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 0),
         overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
         overlayColor: Colors.transparent,
+        inactiveTrackColor: theme.colorScheme.inversePrimary.withOpacity(0.5),
       ),
       child: (position == null || duration == null)
           ? const Slider(value: 0, onChanged: null)
