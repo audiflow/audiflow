@@ -7,7 +7,7 @@ part of 'expandable_player_controller.dart';
 // **************************************************************************
 
 String _$expandablePlayerControllerHash() =>
-    r'86987ec93801e2a414a02312b846e91aa186ebfe';
+    r'35a21a313bddef0adfec44d2e7aee35bdd61bcc0';
 
 /// See also [ExpandablePlayerController].
 @ProviderFor(ExpandablePlayerController)
