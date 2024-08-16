@@ -21,7 +21,7 @@ final routerContextProvider = AutoDisposeProvider<BuildContext>.internal(
 );
 
 typedef RouterContextRef = AutoDisposeProviderRef<BuildContext>;
-String _$appRouterHash() => r'bf3b4aaf774988aa87a481957e5fb8fbde8f0820';
+String _$appRouterHash() => r'4d9569e6b9141d4cb66607d5d6c16d5c5eda6ba5';
 
 /// See also [AppRouter].
 @ProviderFor(AppRouter)
