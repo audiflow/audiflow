@@ -58,7 +58,7 @@ class FullPlayerContent extends ConsumerWidget {
     );
     final showPlayerEpisode = hasPlayerAudio || queueTopEpisode == null;
     final queue = ref.watch(queueControllerProvider).queue;
-
+    final theme = Theme.of(context);
     return SafeArea(
       child: Opacity(
         opacity: percentageExpandedPlayer,
@@ -92,39 +92,53 @@ class FullPlayerContent extends ConsumerWidget {
             ),
             Align(
               alignment: Alignment.bottomCenter,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Seekbar(
-                    position: seekbarState?.position,
-                    duration: seekbarState?.duration,
-                    onSeek: seekbarController.seekTo,
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      SkipButton(
-                        forward: false,
-                        onTap: seekbarController.rewind,
-                      ),
-                      PlayButton.large(
-                        isPlaying: isPlaying,
-                        onTap: () => ref
-                            .read(expandablePlayerControllerProvider.notifier)
-                            .togglePlayPause(),
-                      ),
-                      SkipButton(
-                        forward: true,
-                        onTap: seekbarController.fastForward,
-                      ),
+              child: Container(
+                padding: const EdgeInsets.only(top: 16),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    stops: const [0.0, 0.1],
+                    colors: [
+                      theme.colorScheme.surfaceContainerHighest.withOpacity(0),
+                      theme.colorScheme.surfaceContainerHighest,
                     ],
                   ),
-                  SizedBox(
-                    height: MediaQueryData.fromView(
-                      ui.PlatformDispatcher.instance.implicitView!,
-                    ).padding.bottom,
-                  ),
-                ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Seekbar(
+                      position: seekbarState?.position,
+                      duration: seekbarState?.duration,
+                      onSeek: seekbarController.seekTo,
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SkipButton(
+                          forward: false,
+                          onTap: seekbarController.rewind,
+                        ),
+                        PlayButton.large(
+                          isPlaying: isPlaying,
+                          onTap: () => ref
+                              .read(expandablePlayerControllerProvider.notifier)
+                              .togglePlayPause(),
+                        ),
+                        SkipButton(
+                          forward: true,
+                          onTap: seekbarController.fastForward,
+                        ),
+                      ],
+                    ),
+                    SizedBox(
+                      height: MediaQueryData.fromView(
+                        ui.PlatformDispatcher.instance.implicitView!,
+                      ).padding.bottom,
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
