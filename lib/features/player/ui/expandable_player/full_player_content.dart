@@ -52,56 +52,59 @@ class FullPlayerContent extends ConsumerWidget {
     final queue = ref.watch(queueControllerProvider).queue;
     final theme = Theme.of(context);
     return SafeArea(
-      child: Opacity(
-        opacity: percentageExpandedPlayer,
-        child: Column(
-          children: [
-            const SizedBox(
-              width: 50,
-              height: 50,
-              child: Divider(thickness: 5),
-            ),
-            if (showPlayerEpisode) PlayerEpisodeTile(episode: episode),
-            Expanded(
-              child: Stack(
-                children: [
-                  ColoredBox(color: theme.colorScheme.surface),
-                  if (queue.isNotEmpty)
-                    const CustomScrollView(
-                      slivers: [
-                        QueueListBlock(queueType: QueueType.primary),
-                        QueueListBlock(queueType: QueueType.adhoc),
-                      ],
-                    ),
-                  Align(
-                    alignment: Alignment.bottomCenter,
-                    child: Container(
-                      width: double.infinity,
-                      height: 8,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          stops: const [0, 1],
-                          colors: [
-                            theme.colorScheme.surface.withOpacity(0),
-                            theme.colorScheme.surface,
-                          ],
+      child: ColoredBox(
+        color: theme.colorScheme.surface,
+        child: Opacity(
+          opacity: percentageExpandedPlayer,
+          child: Column(
+            children: [
+              const SizedBox(
+                width: 50,
+                height: 50,
+                child: Divider(thickness: 5),
+              ),
+              if (showPlayerEpisode) PlayerEpisodeTile(episode: episode),
+              Expanded(
+                child: Stack(
+                  children: [
+                    ColoredBox(color: theme.colorScheme.surface),
+                    if (queue.isNotEmpty)
+                      const CustomScrollView(
+                        slivers: [
+                          QueueListBlock(queueType: QueueType.primary),
+                          QueueListBlock(queueType: QueueType.adhoc),
+                        ],
+                      ),
+                    Align(
+                      alignment: Alignment.bottomCenter,
+                      child: Container(
+                        width: double.infinity,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            stops: const [0, 1],
+                            colors: [
+                              theme.colorScheme.surface.withOpacity(0),
+                              theme.colorScheme.surface,
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            ClipRect(
-              child: Align(
-                alignment: Alignment.topCenter,
-                heightFactor: _panelHeightFactor,
-                child: _PlayerControlPanel(episode: episode),
+              ClipRect(
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  heightFactor: _panelHeightFactor,
+                  child: _PlayerControlPanel(episode: episode),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
