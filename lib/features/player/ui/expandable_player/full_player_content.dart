@@ -29,8 +29,8 @@ class FullPlayerContent extends ConsumerWidget {
   final double minHeight;
   final double maxHeight;
 
-  static const double _totalContentMinHeight = 310;
-  static const double _panelHeight = 130;
+  static const double _totalContentMinHeight = 340;
+  static const double _panelHeight = 160;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -162,7 +162,7 @@ class _PlayerControlPanel extends ConsumerWidget {
             ),
           ],
         ),
-        gapH16,
+        gapH48,
       ],
     );
   }
