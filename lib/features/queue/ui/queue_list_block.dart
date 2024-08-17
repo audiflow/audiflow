@@ -2,6 +2,7 @@ import 'package:audiflow/events/play_button_notification.dart';
 import 'package:audiflow/features/browser/episode/data/episode_provider.dart';
 import 'package:audiflow/features/browser/episode/ui/episode_brief_tile.dart';
 import 'package:audiflow/features/queue/model/queue.dart';
+import 'package:audiflow/features/queue/service/audio_queue_service.dart';
 import 'package:audiflow/features/queue/service/queue_controller.dart';
 import 'package:audiflow/localization/generated/l10n.dart';
 import 'package:flutter/material.dart';
@@ -33,15 +34,10 @@ class QueueListBlock extends ConsumerWidget {
     final theme = Theme.of(context);
     return NotificationListener<PlayButtonTappedNotification>(
       onNotification: (notification) {
-        // final episode = notification.episode;
-        // final index = notification.index;
-        // if (index == null || queue.length <= index) {
-        //   ref.read(podcastServiceProvider).handlePlay(episode);
-        // } else {
-        //   ref
-        //       .read(podcastServiceProvider)
-        //       .handlePlayFromQueue(queue[index].item, queue[index].episode);
-        // }
+        final index = notification.index!;
+        ref
+            .read(audioQueueServiceProvider)
+            .playFrom(type: queueType, index: index);
         return false;
       },
       child: _Section(

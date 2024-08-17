@@ -98,23 +98,27 @@ class DefaultQueueController extends _$DefaultQueueController
   }
 
   @override
-  Future<void> removeFromTop({required QueueItem to}) async {
-    final i = state.queue.indexOf(to);
-    assert(0 <= i, 'Queue item not found');
+  Future<List<QueueItem>> removeFromTop({
+    required QueueType type,
+    required int count,
+  }) async {
+    if (count <= 0) {
+      return [];
+    }
 
-    final primary = (to.type == QueueType.primary
-            ? state.queue.sublist(i + 1)
-            : state.queue)
-        .where((q) => q.type == QueueType.primary);
-    final adhoc =
-        (to.type == QueueType.adhoc ? state.queue.sublist(i + 1) : state.queue)
-            .where((q) => q.type == QueueType.adhoc);
-    final newQueue = to.type == QueueType.primary
-        ? [...primary, ...adhoc]
-        : [...adhoc, ...primary];
+    var n = count;
+    final removed = <QueueItem>[];
+    final newQueue = <QueueItem>[];
+    for (final item in state.queue) {
+      if (item.type == type && 0 < n--) {
+        removed.add(item);
+      } else {
+        newQueue.add(item);
+      }
+    }
     state = state.copyWith(queue: newQueue);
-
     await _queueRepository.saveQueue(state);
+    return removed;
   }
 
   @override

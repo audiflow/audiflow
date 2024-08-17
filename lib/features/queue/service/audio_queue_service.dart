@@ -56,13 +56,23 @@ class AudioQueueService {
     Future<void> rebuildQueue() async {
       await _queueController.clear(type: QueueType.adhoc);
       await _queueController.appendAll(
-        queueingEpisodeIds
-            .map((eid) => QueueItem.adhoc(pid: pid, eid: eid)),
+        queueingEpisodeIds.map((eid) => QueueItem.adhoc(pid: pid, eid: eid)),
       );
     }
 
     await _play(eid: eid);
     unawaited(rebuildQueue());
+  }
+
+  Future<void> playFrom({
+    required QueueType type,
+    required int index,
+  }) async {
+    final removedItems =
+        await _queueController.removeFromTop(type: type, count: index + 1);
+    if (removedItems.isNotEmpty) {
+      await _play(eid: removedItems.last.eid);
+    }
   }
 
   void _listen() {
