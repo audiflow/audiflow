@@ -1,6 +1,4 @@
-import 'dart:math';
-import 'dart:ui' as ui;
-
+import 'package:audiflow/constants/app_sizes.dart';
 import 'package:audiflow/features/player/service/audio_player_service.dart';
 import 'package:audiflow/features/player/ui/expandable_player/expandable_player_controller.dart';
 import 'package:audiflow/features/player/ui/expandable_player/mini_player_height_provider.dart';
@@ -62,85 +60,73 @@ class FullPlayerContent extends ConsumerWidget {
     return SafeArea(
       child: Opacity(
         opacity: percentageExpandedPlayer,
-        child: Stack(
+        child: Column(
           children: [
-            Align(
-              alignment: Alignment.topCenter,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
+            const SizedBox(
+              width: 50,
+              height: 50,
+              child: Divider(
+                thickness: 5,
+              ),
+            ),
+            if (showPlayerEpisode) PlayerEpisodeTile(episode: episode),
+            Expanded(
+              child: Stack(
                 children: [
-                  const SizedBox(
-                    width: 50,
-                    height: 50,
-                    child: Divider(
-                      thickness: 5,
-                    ),
-                  ),
-                  if (showPlayerEpisode) PlayerEpisodeTile(episode: episode),
+                  ColoredBox(color: theme.colorScheme.surface),
                   if (queue.isNotEmpty)
-                    SizedBox(
-                      height: max(0, min(maxHeight - 300, height - 350)),
-                      child: const CustomScrollView(
-                        slivers: [
-                          QueueListBlock(queueType: QueueType.primary),
-                          QueueListBlock(queueType: QueueType.adhoc),
-                        ],
+                    const CustomScrollView(
+                      slivers: [
+                        QueueListBlock(queueType: QueueType.primary),
+                        QueueListBlock(queueType: QueueType.adhoc),
+                      ],
+                    ),
+                  Align(
+                    alignment: Alignment.bottomCenter,
+                    child: Container(
+                      width: double.infinity,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          stops: const [0, 1],
+                          colors: [
+                            theme.colorScheme.surface.withOpacity(0),
+                            theme.colorScheme.surface,
+                          ],
+                        ),
                       ),
                     ),
+                  ),
                 ],
               ),
             ),
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: Container(
-                padding: const EdgeInsets.only(top: 16),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    stops: const [0.0, 0.1],
-                    colors: [
-                      theme.colorScheme.surfaceContainerHighest.withOpacity(0),
-                      theme.colorScheme.surfaceContainerHighest,
-                    ],
-                  ),
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Seekbar(
-                      position: seekbarState?.position,
-                      duration: seekbarState?.duration,
-                      onSeek: seekbarController.seekTo,
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        SkipButton(
-                          forward: false,
-                          onTap: seekbarController.rewind,
-                        ),
-                        PlayButton.large(
-                          isPlaying: isPlaying,
-                          onTap: () => ref
-                              .read(expandablePlayerControllerProvider.notifier)
-                              .togglePlayPause(),
-                        ),
-                        SkipButton(
-                          forward: true,
-                          onTap: seekbarController.fastForward,
-                        ),
-                      ],
-                    ),
-                    SizedBox(
-                      height: MediaQueryData.fromView(
-                        ui.PlatformDispatcher.instance.implicitView!,
-                      ).padding.bottom,
-                    ),
-                  ],
-                ),
-              ),
+            Seekbar(
+              position: seekbarState?.position,
+              duration: seekbarState?.duration,
+              onSeek: seekbarController.seekTo,
             ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SkipButton(
+                  forward: false,
+                  onTap: seekbarController.rewind,
+                ),
+                PlayButton.large(
+                  isPlaying: isPlaying,
+                  onTap: () => ref
+                      .read(expandablePlayerControllerProvider.notifier)
+                      .togglePlayPause(),
+                ),
+                SkipButton(
+                  forward: true,
+                  onTap: seekbarController.fastForward,
+                ),
+              ],
+            ),
+            gapH16,
           ],
         ),
       ),
