@@ -51,7 +51,7 @@ class AppBottomNavigationBar extends HookConsumerWidget {
           LayoutBuilder(
             builder: (context, constraints) {
               return SizedBox(
-                height: constraints.maxHeight - miniPlayerHeight,
+                height: constraints.maxHeight - (miniPlayerHeight - 8),
                 child: navigationShell,
               );
             },

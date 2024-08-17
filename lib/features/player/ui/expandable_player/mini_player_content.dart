@@ -1,3 +1,4 @@
+import 'package:audiflow/constants/app_sizes.dart';
 import 'package:audiflow/features/player/service/audio_player_service.dart';
 import 'package:audiflow/features/player/ui/expandable_player/expandable_player_controller.dart';
 import 'package:audiflow/features/player/ui/expandable_player/mini_player_height_provider.dart';
@@ -41,12 +42,24 @@ class MiniPlayerContent extends ConsumerWidget {
         : ref.watch(episodeSeekbarControllerProvider(episode));
 
     final elementOpacity = 1 - 1 * percentageMiniPlayer;
-    return ColoredBox(
-      color: Colors.grey[50]!,
+    final theme = Theme.of(context);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          stops: const [0, 0.1],
+          colors: [
+            theme.colorScheme.surfaceContainer.withOpacity(0),
+            theme.colorScheme.surfaceContainer,
+          ],
+        ),
+      ),
       child: Opacity(
         opacity: elementOpacity,
         child: Column(
           children: [
+            gapH8,
             _PositionBar(
               position: seekbarState?.position,
               duration: seekbarState?.duration,
@@ -54,18 +67,17 @@ class MiniPlayerContent extends ConsumerWidget {
             Expanded(
               child: Row(
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.only(left: 16, right: 10),
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(maxHeight: maxImgSize),
-                      child: Image.network(
-                        episode.imageUrl!,
-                        errorBuilder: (context, error, stackTrace) {
-                          return const SizedBox.shrink();
-                        },
-                      ),
+                  gapW12,
+                  ConstrainedBox(
+                    constraints: BoxConstraints(maxHeight: maxImgSize),
+                    child: Image.network(
+                      episode.imageUrl!,
+                      errorBuilder: (context, error, stackTrace) {
+                        return const SizedBox.shrink();
+                      },
                     ),
                   ),
+                  gapW8,
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -83,17 +95,11 @@ class MiniPlayerContent extends ConsumerWidget {
                       ],
                     ),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.only(right: 3),
-                    child: Opacity(
-                      opacity: elementOpacity,
-                      child: PlayButton.small(
-                        isPlaying: isPlaying,
-                        onTap: () => ref
-                            .read(expandablePlayerControllerProvider.notifier)
-                            .togglePlayPause(),
-                      ),
-                    ),
+                  PlayButton.small(
+                    isPlaying: isPlaying,
+                    onTap: () => ref
+                        .read(expandablePlayerControllerProvider.notifier)
+                        .togglePlayPause(),
                   ),
                 ],
               ),

@@ -199,6 +199,7 @@ class _ExpandablePlayerFrameState extends State<ExpandablePlayerFrame>
                         );
                       },
                       child: Material(
+                        color: Colors.transparent,
                         child: widget.builder(height, percentage),
                       ),
                     ),
