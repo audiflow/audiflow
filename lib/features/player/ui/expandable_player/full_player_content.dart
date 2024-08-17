@@ -29,6 +29,9 @@ class FullPlayerContent extends ConsumerWidget {
   final double minHeight;
   final double maxHeight;
 
+  static const double _totalContentMinHeight = 310;
+  static const double _panelHeight = 130;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final percentageExpandedPlayer = percentageFromValueInRange(
@@ -40,15 +43,6 @@ class FullPlayerContent extends ConsumerWidget {
     final playerPhase =
         ref.watch(audioPlayerServiceProvider.select((state) => state?.phase));
     final hasPlayerAudio = playerPhase != null;
-    final isPlaying = playerPhase == PlayerPhase.play;
-
-    final seekbarState = hasPlayerAudio
-        ? ref.watch(audioSeekbarControllerProvider)
-        : ref.watch(episodeSeekbarControllerProvider(episode));
-    final seekbarController = hasPlayerAudio
-        ? ref.read(audioSeekbarControllerProvider.notifier) as SeekbarController
-        : ref.read(episodeSeekbarControllerProvider(episode).notifier)
-            as SeekbarController;
 
     final queueTopEpisode = ref.watch(
       expandablePlayerControllerProvider
@@ -65,9 +59,7 @@ class FullPlayerContent extends ConsumerWidget {
             const SizedBox(
               width: 50,
               height: 50,
-              child: Divider(
-                thickness: 5,
-              ),
+              child: Divider(thickness: 5),
             ),
             if (showPlayerEpisode) PlayerEpisodeTile(episode: episode),
             Expanded(
@@ -102,34 +94,76 @@ class FullPlayerContent extends ConsumerWidget {
                 ],
               ),
             ),
-            Seekbar(
-              position: seekbarState?.position,
-              duration: seekbarState?.duration,
-              onSeek: seekbarController.seekTo,
+            ClipRect(
+              child: Align(
+                alignment: Alignment.topCenter,
+                heightFactor: _panelHeightFactor,
+                child: _PlayerControlPanel(episode: episode),
+              ),
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SkipButton(
-                  forward: false,
-                  onTap: seekbarController.rewind,
-                ),
-                PlayButton.large(
-                  isPlaying: isPlaying,
-                  onTap: () => ref
-                      .read(expandablePlayerControllerProvider.notifier)
-                      .togglePlayPause(),
-                ),
-                SkipButton(
-                  forward: true,
-                  onTap: seekbarController.fastForward,
-                ),
-              ],
-            ),
-            gapH16,
           ],
         ),
       ),
+    );
+  }
+
+  double get _panelHeightFactor {
+    return _totalContentMinHeight <= height
+        ? 1
+        : (height - (_totalContentMinHeight - _panelHeight)) / _panelHeight;
+  }
+}
+
+class _PlayerControlPanel extends ConsumerWidget {
+  const _PlayerControlPanel({
+    required this.episode,
+  });
+
+  final Episode episode;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final playerPhase =
+        ref.watch(audioPlayerServiceProvider.select((state) => state?.phase));
+    final hasPlayerAudio = playerPhase != null;
+    final isPlaying = playerPhase == PlayerPhase.play;
+
+    final seekbarState = hasPlayerAudio
+        ? ref.watch(audioSeekbarControllerProvider)
+        : ref.watch(episodeSeekbarControllerProvider(episode));
+    final seekbarController = hasPlayerAudio
+        ? ref.read(audioSeekbarControllerProvider.notifier) as SeekbarController
+        : ref.read(episodeSeekbarControllerProvider(episode).notifier)
+            as SeekbarController;
+
+    return Column(
+      children: [
+        Seekbar(
+          position: seekbarState?.position,
+          duration: seekbarState?.duration,
+          onSeek: seekbarController.seekTo,
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SkipButton(
+              forward: false,
+              onTap: seekbarController.rewind,
+            ),
+            PlayButton.large(
+              isPlaying: isPlaying,
+              onTap: () => ref
+                  .read(expandablePlayerControllerProvider.notifier)
+                  .togglePlayPause(),
+            ),
+            SkipButton(
+              forward: true,
+              onTap: seekbarController.fastForward,
+            ),
+          ],
+        ),
+        gapH16,
+      ],
     );
   }
 }
