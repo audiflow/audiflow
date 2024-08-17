@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:audiflow/events/play_button_notification.dart';
 import 'package:audiflow/features/browser/episode/data/episode_stats_provider.dart';
 import 'package:audiflow/features/player/service/audio_player_service.dart';
 import 'package:audiflow/localization/generated/l10n.dart';
@@ -10,23 +11,21 @@ import 'package:material_symbols_icons/symbols.dart';
 class SmallPlayButton extends ConsumerWidget {
   const SmallPlayButton({
     required this.episode,
-    required this.onPressed,
     super.key,
   });
 
   final Episode episode;
-  final VoidCallback? onPressed;
   static const size = Size(60, 26);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final style = ElevatedButton.styleFrom(
+    final style = OutlinedButton.styleFrom(
       shape: const StadiumBorder(),
-      backgroundColor: theme.colorScheme.surfaceContainerHighest,
-      foregroundColor: theme.colorScheme.onSurfaceVariant,
+      foregroundColor: theme.hintColor,
       minimumSize: size,
       padding: const EdgeInsets.only(left: 8, right: 12),
+      side: BorderSide(color: theme.hintColor),
     );
 
     final (isPlaying, playerPosition) = ref.watch(
@@ -49,8 +48,10 @@ class SmallPlayButton extends ConsumerWidget {
         position.inMilliseconds / math.max(duration.inMilliseconds, 1);
     return Column(
       children: [
-        FilledButton(
-          onPressed: onPressed,
+        OutlinedButton(
+          onPressed: () {
+            PlayButtonTappedNotification(episode).dispatch(context);
+          },
           style: style,
           child: DefaultTextStyle(
             style: theme.textTheme.labelSmall!
