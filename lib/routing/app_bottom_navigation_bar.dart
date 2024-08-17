@@ -12,7 +12,7 @@ import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 double playerMaxHeight(BuildContext content) {
   final mediaQuery = MediaQuery.of(content);
-  return mediaQuery.size.height - mediaQuery.padding.horizontal;
+  return mediaQuery.size.height - mediaQuery.padding.vertical;
 }
 
 const kAppBottomNavigationBarHeight = 89.0;

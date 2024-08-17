@@ -11,10 +11,12 @@ import 'package:sliver_tools/sliver_tools.dart';
 class QueueListBlock extends ConsumerWidget {
   const QueueListBlock({
     required this.queueType,
+    this.backgroundColor,
     super.key,
   });
 
   final QueueType queueType;
+  final Color? backgroundColor;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -28,6 +30,7 @@ class QueueListBlock extends ConsumerWidget {
     }
 
     final l10n = L10n.of(context);
+    final theme = Theme.of(context);
     return NotificationListener<PlayButtonTappedNotification>(
       onNotification: (notification) {
         // final episode = notification.episode;
@@ -41,8 +44,9 @@ class QueueListBlock extends ConsumerWidget {
         // }
         return false;
       },
-      child: Section(
+      child: _Section(
         title: queueType.label(context),
+        backgroundColor: backgroundColor ?? theme.colorScheme.surface,
         queue: queue,
         trailing: TextButton(
           child: Text(l10n.clear),
@@ -63,75 +67,95 @@ class QueueListBlock extends ConsumerWidget {
   }
 }
 
-class Section extends MultiSliver {
-  Section({
-    super.key,
-    required String title,
-    required List<QueueItem> queue,
-    required ReorderCallback onReorder,
-    required ValueChanged<int> onRemove,
-    Widget? trailing,
-  }) : super(
-          pushPinnedChildren: true,
-          children: [
-            SliverPinnedHeader(
-              child: Builder(
-                builder: (context) {
-                  return ColoredBox(
-                    color:
-                        Theme.of(context).colorScheme.surfaceContainerHighest,
-                    child: ListTile(
-                      title: Text(title),
-                      trailing: trailing,
-                      contentPadding: const EdgeInsets.only(left: 20, right: 8),
-                    ),
-                  );
-                },
-              ),
-            ),
-            SliverReorderableList(
-              itemBuilder: (context, index) => Dismissible(
-                key: ValueKey(queue[index].id),
-                onDismissed: (_) {
-                  onRemove(index);
-                },
-                direction: DismissDirection.endToStart,
-                background: Container(
-                  color: Theme.of(context).colorScheme.error,
-                  alignment: Alignment.centerRight,
-                  padding: const EdgeInsets.only(right: 20),
-                  child: Icon(
-                    Icons.delete,
-                    color: Theme.of(context).colorScheme.onError,
+class _Section extends StatelessWidget {
+  const _Section({
+    required this.title,
+    required this.queue,
+    required this.onReorder,
+    required this.onRemove,
+    required this.backgroundColor,
+    this.trailing,
+  });
+
+  final String title;
+  final List<QueueItem> queue;
+  final ReorderCallback onReorder;
+  final ValueChanged<int> onRemove;
+  final Color backgroundColor;
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return MultiSliver(
+      pushPinnedChildren: true,
+      children: [
+        SliverPinnedHeader(
+          child: Builder(
+            builder: (context) {
+              return DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    stops: const [0, 0.90, 1],
+                    colors: [
+                      backgroundColor,
+                      backgroundColor,
+                      theme.colorScheme.surfaceContainerHighest.withOpacity(0),
+                    ],
                   ),
                 ),
-                child: Consumer(
-                  builder: (context, ref, child) {
-                    final episode = ref
-                        .watch(episodeProvider(eid: queue[index].eid))
-                        .maybeMap(
+                child: ListTile(
+                  title: Text(title),
+                  trailing: trailing,
+                  contentPadding: const EdgeInsets.only(left: 20, right: 8),
+                  tileColor: backgroundColor,
+                ),
+              );
+            },
+          ),
+        ),
+        SliverReorderableList(
+          itemBuilder: (context, index) => Dismissible(
+            key: ValueKey(queue[index].id),
+            onDismissed: (_) {
+              onRemove(index);
+            },
+            direction: DismissDirection.endToStart,
+            background: Container(
+              color: Theme.of(context).colorScheme.error,
+              alignment: Alignment.centerRight,
+              padding: const EdgeInsets.only(right: 20),
+              child: Icon(
+                Icons.delete,
+                color: Theme.of(context).colorScheme.onError,
+              ),
+            ),
+            child: Consumer(
+              builder: (context, ref, child) {
+                final episode =
+                    ref.watch(episodeProvider(eid: queue[index].eid)).maybeMap(
                           data: (data) => data.value,
                           orElse: () => null,
                         );
-                    return episode == null
-                        ? const SizedBox(height: EpisodeBriefTile.tileHeight)
-                        : EpisodeBriefTile(
-                            key: ValueKey(queue[index].id),
-                            episode: episode,
-                            sortableIndex: index,
-                            backgroundColor:
-                                queue[index].type == QueueType.primary
-                                    ? Colors.transparent
-                                    : Colors.grey[200],
-                          );
-                  },
-                ),
-              ),
-              itemCount: queue.length,
-              onReorder: onReorder,
+                return episode == null
+                    ? const SizedBox(height: EpisodeBriefTile.tileHeight)
+                    : EpisodeBriefTile(
+                        key: ValueKey(queue[index].id),
+                        episode: episode,
+                        sortableIndex: index,
+                        backgroundColor: backgroundColor,
+                      );
+              },
             ),
-          ],
-        );
+          ),
+          itemCount: queue.length,
+          onReorder: onReorder,
+        ),
+      ],
+    );
+  }
 }
 
 extension QueueTypeExt on QueueType {

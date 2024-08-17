@@ -1,3 +1,4 @@
+import 'package:audiflow/constants/app_sizes.dart';
 import 'package:audiflow/events/play_button_notification.dart';
 import 'package:audiflow/features/browser/chart/ui/tile_image.dart';
 import 'package:audiflow/features/browser/episode/ui/episode_date.dart';
@@ -30,34 +31,37 @@ class EpisodeBriefTile extends HookConsumerWidget {
     final podcast = ref.watch(podcastProvider(episode.pid));
     final thumbnailUrl = episode.imageUrl ?? podcast.valueOrNull?.image ?? '';
 
-    return Material(
-      child: InkWell(
+    final style = TextButton.styleFrom(
+      shape: const RoundedRectangleBorder(),
+      padding: EdgeInsets.zero,
+    );
+
+    return ColoredBox(
+      color: backgroundColor ?? Colors.transparent,
+      child: TextButton(
+        style: style,
+        onPressed: () {
+          PlayButtonTappedNotification(episode, index: sortableIndex)
+              .dispatch(context);
+        },
         child: Container(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
-          color: backgroundColor,
           height: tileHeight,
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: () {
-              PlayButtonTappedNotification(episode, index: sortableIndex)
-                  .dispatch(context);
-            },
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                TileImage(url: thumbnailUrl, size: 50),
-                const SizedBox(width: 12),
-                Expanded(child: _Content(episode)),
-                if (sortableIndex != null)
-                  ReorderableDragStartListener(
-                    index: sortableIndex!,
-                    child: const Icon(
-                      Icons.drag_handle,
-                      color: Colors.grey,
-                    ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              TileImage(url: thumbnailUrl, size: 50),
+              const SizedBox(width: 12),
+              Expanded(child: _Content(episode)),
+              if (sortableIndex != null)
+                ReorderableDragStartListener(
+                  index: sortableIndex!,
+                  child: const Icon(
+                    Icons.drag_handle,
+                    color: Colors.grey,
                   ),
-              ],
-            ),
+                ),
+            ],
           ),
         ),
       ),
@@ -77,14 +81,14 @@ class _Content extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SizedBox(height: 4),
+        gapH4,
         Text(
           episode.title,
           overflow: TextOverflow.ellipsis,
           maxLines: 1,
           style: theme.textTheme.titleSmall,
         ),
-        const SizedBox(height: 6),
+        gapH8,
         EpisodeDate(episode, color: theme.disabledColor),
       ],
     );

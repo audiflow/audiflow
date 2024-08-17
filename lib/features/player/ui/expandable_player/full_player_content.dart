@@ -1,6 +1,4 @@
-import 'dart:math';
-import 'dart:ui' as ui;
-
+import 'package:audiflow/constants/app_sizes.dart';
 import 'package:audiflow/features/player/service/audio_player_service.dart';
 import 'package:audiflow/features/player/ui/expandable_player/expandable_player_controller.dart';
 import 'package:audiflow/features/player/ui/expandable_player/mini_player_height_provider.dart';
@@ -31,6 +29,9 @@ class FullPlayerContent extends ConsumerWidget {
   final double minHeight;
   final double maxHeight;
 
+  static const double _totalContentMinHeight = 310;
+  static const double _panelHeight = 130;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final percentageExpandedPlayer = percentageFromValueInRange(
@@ -39,6 +40,89 @@ class FullPlayerContent extends ConsumerWidget {
       value: height,
     );
 
+    final playerPhase =
+        ref.watch(audioPlayerServiceProvider.select((state) => state?.phase));
+    final hasPlayerAudio = playerPhase != null;
+
+    final queueTopEpisode = ref.watch(
+      expandablePlayerControllerProvider
+          .select((state) => state.queueTopEpisode),
+    );
+    final showPlayerEpisode = hasPlayerAudio || queueTopEpisode == null;
+    final queue = ref.watch(queueControllerProvider).queue;
+    final theme = Theme.of(context);
+    return SafeArea(
+      child: Opacity(
+        opacity: percentageExpandedPlayer,
+        child: Column(
+          children: [
+            const SizedBox(
+              width: 50,
+              height: 50,
+              child: Divider(thickness: 5),
+            ),
+            if (showPlayerEpisode) PlayerEpisodeTile(episode: episode),
+            Expanded(
+              child: Stack(
+                children: [
+                  ColoredBox(color: theme.colorScheme.surface),
+                  if (queue.isNotEmpty)
+                    const CustomScrollView(
+                      slivers: [
+                        QueueListBlock(queueType: QueueType.primary),
+                        QueueListBlock(queueType: QueueType.adhoc),
+                      ],
+                    ),
+                  Align(
+                    alignment: Alignment.bottomCenter,
+                    child: Container(
+                      width: double.infinity,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          stops: const [0, 1],
+                          colors: [
+                            theme.colorScheme.surface.withOpacity(0),
+                            theme.colorScheme.surface,
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            ClipRect(
+              child: Align(
+                alignment: Alignment.topCenter,
+                heightFactor: _panelHeightFactor,
+                child: _PlayerControlPanel(episode: episode),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  double get _panelHeightFactor {
+    return _totalContentMinHeight <= height
+        ? 1
+        : (height - (_totalContentMinHeight - _panelHeight)) / _panelHeight;
+  }
+}
+
+class _PlayerControlPanel extends ConsumerWidget {
+  const _PlayerControlPanel({
+    required this.episode,
+  });
+
+  final Episode episode;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
     final playerPhase =
         ref.watch(audioPlayerServiceProvider.select((state) => state?.phase));
     final hasPlayerAudio = playerPhase != null;
@@ -52,84 +136,34 @@ class FullPlayerContent extends ConsumerWidget {
         : ref.read(episodeSeekbarControllerProvider(episode).notifier)
             as SeekbarController;
 
-    final queueTopEpisode = ref.watch(
-      expandablePlayerControllerProvider
-          .select((state) => state.queueTopEpisode),
-    );
-    final showPlayerEpisode = hasPlayerAudio || queueTopEpisode == null;
-    final queue = ref.watch(queueControllerProvider).queue;
-
-    return SafeArea(
-      child: Opacity(
-        opacity: percentageExpandedPlayer,
-        child: Stack(
+    return Column(
+      children: [
+        Seekbar(
+          position: seekbarState?.position,
+          duration: seekbarState?.duration,
+          onSeek: seekbarController.seekTo,
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Align(
-              alignment: Alignment.topCenter,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const SizedBox(
-                    width: 50,
-                    height: 50,
-                    child: Divider(
-                      thickness: 5,
-                    ),
-                  ),
-                  if (showPlayerEpisode) PlayerEpisodeTile(episode: episode),
-                  if (queue.isNotEmpty)
-                    SizedBox(
-                      height: max(0, min(maxHeight - 300, height - 350)),
-                      child: const CustomScrollView(
-                        slivers: [
-                          QueueListBlock(queueType: QueueType.primary),
-                          QueueListBlock(queueType: QueueType.adhoc),
-                        ],
-                      ),
-                    ),
-                ],
-              ),
+            SkipButton(
+              forward: false,
+              onTap: seekbarController.rewind,
             ),
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Seekbar(
-                    position: seekbarState?.position,
-                    duration: seekbarState?.duration,
-                    onSeek: seekbarController.seekTo,
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      SkipButton(
-                        forward: false,
-                        onTap: seekbarController.rewind,
-                      ),
-                      PlayButton.large(
-                        isPlaying: isPlaying,
-                        onTap: () => ref
-                            .read(expandablePlayerControllerProvider.notifier)
-                            .togglePlayPause(),
-                      ),
-                      SkipButton(
-                        forward: true,
-                        onTap: seekbarController.fastForward,
-                      ),
-                    ],
-                  ),
-                  SizedBox(
-                    height: MediaQueryData.fromView(
-                      ui.PlatformDispatcher.instance.implicitView!,
-                    ).padding.bottom,
-                  ),
-                ],
-              ),
+            PlayButton.large(
+              isPlaying: isPlaying,
+              onTap: () => ref
+                  .read(expandablePlayerControllerProvider.notifier)
+                  .togglePlayPause(),
+            ),
+            SkipButton(
+              forward: true,
+              onTap: seekbarController.fastForward,
             ),
           ],
         ),
-      ),
+        gapH16,
+      ],
     );
   }
 }
