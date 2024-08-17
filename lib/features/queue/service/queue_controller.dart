@@ -24,7 +24,10 @@ class QueueController extends _$QueueController {
 
   Future<QueueItem> removeByIndex(int index) => throw UnimplementedError();
 
-  Future<void> removeFromTop({required QueueItem to}) =>
+  Future<List<QueueItem>> removeFromTop({
+    required QueueType type,
+    required int count,
+  }) =>
       throw UnimplementedError();
 
   Future<void> reorder(int oldIndex, int newIndex) =>
