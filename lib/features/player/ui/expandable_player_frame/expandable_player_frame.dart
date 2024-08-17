@@ -199,21 +199,7 @@ class _ExpandablePlayerFrameState extends State<ExpandablePlayerFrame>
                         );
                       },
                       child: Material(
-                        child: Container(
-                          constraints: const BoxConstraints.expand(),
-                          decoration: BoxDecoration(
-                            boxShadow: <BoxShadow>[
-                              BoxShadow(
-                                color: widget.backgroundBoxShadow,
-                                blurRadius: widget.elevation,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                            color: widget.backgroundColor ??
-                                Theme.of(context).scaffoldBackgroundColor,
-                          ),
-                          child: widget.builder(height, percentage),
-                        ),
+                        child: widget.builder(height, percentage),
                       ),
                     ),
                     onTap: () => _snapToPosition(

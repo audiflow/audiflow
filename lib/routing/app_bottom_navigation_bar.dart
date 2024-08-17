@@ -12,7 +12,7 @@ import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 double playerMaxHeight(BuildContext content) {
   final mediaQuery = MediaQuery.of(content);
-  return mediaQuery.size.height - mediaQuery.padding.vertical;
+  return mediaQuery.size.height;
 }
 
 const kAppBottomNavigationBarHeight = 89.0;
@@ -66,7 +66,7 @@ class AppBottomNavigationBar extends HookConsumerWidget {
         ],
       ),
       bottomNavigationBar: ValueListenableBuilder(
-        valueListenable: ValueNotifier(0.toDouble()), // playerExpandProgress,
+        valueListenable: playerExpandProgress,
         builder: (BuildContext context, double playerHeight, Widget? child) {
           final value = percentageFromValueInRange(
             min: playerMinHeight,
