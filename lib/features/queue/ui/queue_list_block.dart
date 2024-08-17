@@ -51,7 +51,7 @@ class QueueListBlock extends ConsumerWidget {
         trailing: TextButton(
           child: Text(l10n.clear),
           onPressed: () {
-            ref.read(queueControllerProvider.notifier).clear();
+            ref.read(queueControllerProvider.notifier).clear(type: queueType);
           },
         ),
         onReorder: (oldIndex, newIndex) {
