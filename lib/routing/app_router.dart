@@ -1,17 +1,16 @@
 import 'package:audiflow/common/ui/error_notifier.dart';
 import 'package:audiflow/features/bootstrap/service/app_wide_initializer.dart';
 import 'package:audiflow/features/browser/chart/ui/podcast_chart_page.dart';
-import 'package:audiflow/features/browser/common/model/itunes_chart_item.dart';
+import 'package:audiflow/features/browser/common/model/itunes_item.dart';
 import 'package:audiflow/features/browser/episode/ui/episode_page.dart';
 import 'package:audiflow/features/browser/podcast/ui/podcast_details_page/podcast_details_page.dart';
+import 'package:audiflow/features/browser/search/ui/search_page.dart';
 import 'package:audiflow/features/browser/season/model/season.dart';
 import 'package:audiflow/features/browser/season/ui/season_episodes_page.dart';
 import 'package:audiflow/features/feed/model/model.dart';
 import 'package:audiflow/routing/app_bottom_navigation_bar.dart';
-import 'package:audiflow/utils/hash.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:nanoid/nanoid.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'app_router.g.dart';
@@ -33,7 +32,7 @@ class AppRouter extends _$AppRouter {
   GoRouter build() {
     return GoRouter(
       navigatorKey: parentNavigatorKey,
-      initialLocation: '/',
+      initialLocation: '/chart',
       routes: _routes,
     );
   }
@@ -63,7 +62,7 @@ class AppRouter extends _$AppRouter {
             navigatorKey: homeTabNavigatorKey,
             routes: [
               GoRoute(
-                path: '/',
+                path: '/chart',
                 pageBuilder: (context, state) {
                   return NoTransitionPage(
                     key: state.pageKey,
@@ -72,7 +71,8 @@ class AppRouter extends _$AppRouter {
                 },
                 routes: [
                   GoRoute(
-                    path: 'podcasts/:titleHash/:random',
+                    path: 'podcasts',
+                    name: 'podcast',
                     parentNavigatorKey: homeTabNavigatorKey,
                     pageBuilder: (context, state) {
                       final (
@@ -101,7 +101,7 @@ class AppRouter extends _$AppRouter {
                     },
                   ),
                   GoRoute(
-                    path: 'podcasts/seasons/:id/:random',
+                    path: 'season',
                     name: 'season',
                     parentNavigatorKey: homeTabNavigatorKey,
                     pageBuilder: (context, state) {
@@ -118,7 +118,8 @@ class AppRouter extends _$AppRouter {
                     },
                   ),
                   GoRoute(
-                    path: 'podcasts/episodes/:id/:random',
+                    path: 'episode',
+                    name: 'episode',
                     parentNavigatorKey: homeTabNavigatorKey,
                     pageBuilder: (context, state) {
                       final (episode, heroPrefix) =
@@ -147,20 +148,21 @@ class AppRouter extends _$AppRouter {
               ),
             ],
           ),
-          // StatefulShellBranch(
-          //   navigatorKey: searchTabNavigatorKey,
-          //   routes: [
-          //     GoRoute(
-          //       path: searchPath,
-          //       pageBuilder: (context, state) {
-          //         return _getPage(
-          //           child: const SearchPage(),
-          //           state: state,
-          //         );
-          //       },
-          //     ),
-          //   ],
-          // ),
+          StatefulShellBranch(
+            navigatorKey: searchTabNavigatorKey,
+            routes: [
+              GoRoute(
+                path: '/search',
+                name: 'search',
+                pageBuilder: (context, state) {
+                  return _getPage(
+                    child: const SearchPage(),
+                    state: state,
+                  );
+                },
+              ),
+            ],
+          ),
           // StatefulShellBranch(
           //   navigatorKey: libraryTabNavigatorKey,
           //   routes: [
@@ -228,9 +230,8 @@ class AppRouter extends _$AppRouter {
   }
 
   Future<void> pushPodcastDetail(Podcast podcast) async {
-    final hash = fastHash(podcast.title);
-    await state.push(
-      '/podcasts/$hash/${nanoid()}',
+    await state.pushNamed(
+      'podcast',
       extra: (
         podcast.feedUrl,
         podcast.collectionId,
@@ -241,10 +242,9 @@ class AppRouter extends _$AppRouter {
     );
   }
 
-  Future<void> pushPodcastDetailFromChart(ITunesChartItem chartItem) async {
-    final hash = fastHash(chartItem.collectionName);
-    await state.push(
-      '/podcasts/$hash/${nanoid()}',
+  Future<void> pushPodcastDetailFromChart(ITunesItem chartItem) async {
+    await state.pushNamed(
+      'podcast',
       extra: (
         null,
         chartItem.collectionId,
@@ -255,12 +255,19 @@ class AppRouter extends _$AppRouter {
     );
   }
 
+  Future<void> pushSeason(Podcast podcast, Season season) async {
+    await state.pushNamed(
+      'season',
+      extra: (podcast, season, ''),
+    );
+  }
+
   Future<void> pushEpisodeDetail({
     required Episode episode,
     required String heroPrefix,
   }) async {
-    await state.push(
-      '/podcasts/episodes/${episode.id}/${nanoid()}',
+    await state.pushNamed(
+      'episode',
       extra: (episode, heroPrefix),
     );
   }
@@ -280,13 +287,6 @@ class AppRouter extends _$AppRouter {
   Future<void> pushRecentlyPlayed() async {
     await state.pushNamed(
       'recentlyPlayed',
-    );
-  }
-
-  Future<void> pushSeason(Podcast podcast, Season season) async {
-    await state.push(
-      '/podcasts/seasons/${season.id}/${nanoid()}',
-      extra: (podcast, season, ''),
     );
   }
 }

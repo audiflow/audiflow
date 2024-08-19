@@ -1,16 +1,16 @@
 import 'package:audiflow/features/browser/chart/ui/tile_image.dart';
-import 'package:audiflow/features/browser/common/model/itunes_chart_item.dart';
+import 'package:audiflow/features/browser/common/model/itunes_item.dart';
 import 'package:audiflow/routing/app_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class ChartItemTile extends ConsumerWidget {
-  const ChartItemTile({
+class ITunesItemTile extends ConsumerWidget {
+  const ITunesItemTile({
     super.key,
-    required this.chartItem,
+    required this.itunesItem,
   });
 
-  final ITunesChartItem chartItem;
+  final ITunesItem itunesItem;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -19,7 +19,7 @@ class ChartItemTile extends ConsumerWidget {
       onTap: () {
         ref
             .read(appRouterProvider.notifier)
-            .pushPodcastDetailFromChart(chartItem);
+            .pushPodcastDetailFromChart(itunesItem);
       },
       child: Container(
         height: 77,
@@ -31,7 +31,7 @@ class ChartItemTile extends ConsumerWidget {
               child: Padding(
                 padding: const EdgeInsets.only(left: 20, right: 10),
                 child: TileImage(
-                  url: chartItem.thumbnailArtworkUrl,
+                  url: itunesItem.thumbnailArtworkUrl,
                   size: 60,
                 ),
               ),
@@ -41,7 +41,7 @@ class ChartItemTile extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    chartItem.trackName,
+                    itunesItem.trackName,
                     maxLines: 2,
                     textHeightBehavior: const TextHeightBehavior(
                       applyHeightToFirstAscent: false,
@@ -50,7 +50,7 @@ class ChartItemTile extends ConsumerWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    chartItem.artistName,
+                    itunesItem.artistName,
                     maxLines: 1,
                     style: theme.textTheme.bodySmall!
                         .copyWith(color: theme.hintColor),

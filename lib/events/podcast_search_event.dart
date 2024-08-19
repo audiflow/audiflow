@@ -1,3 +1,6 @@
+import 'package:audiflow/constants/attribute.dart';
+import 'package:audiflow/constants/country.dart';
+
 sealed class PodcastSearchEvent {}
 
 class NewPodcastSearchEvent implements PodcastSearchEvent {
@@ -12,8 +15,8 @@ class NewPodcastSearchEvent implements PodcastSearchEvent {
   });
 
   final String term;
-  final String? country;
-  final String? attribute;
+  final Country? country;
+  final Attribute? attribute;
   final int limit;
   final String? language;
   final int version;

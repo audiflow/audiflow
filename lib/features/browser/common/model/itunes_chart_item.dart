@@ -1,9 +1,10 @@
 // https://itunes.apple.com/us/rss/toppodcasts/limit=10/explicit=false/json
 
+import 'package:audiflow/features/browser/common/model/itunes_item.dart';
 import 'package:collection/collection.dart';
 import 'package:podcast_feed/model/genre.dart';
 
-class ITunesChartItem {
+class ITunesChartItem implements ITunesItem {
   ITunesChartItem({
     required this.collectionId,
     required this.artistName,
@@ -59,15 +60,19 @@ class ITunesChartItem {
   }
 
   /// The iTunes ID of the collection.
+  @override
   final int collectionId;
 
   /// The name of the artist.
+  @override
   final String artistName;
 
   /// The name of the iTunes collection the Podcast is part of.
+  @override
   final String collectionName;
 
   /// The track name.
+  @override
   final String trackName;
 
   /// The URL of the iTunes page for the podcast.
@@ -106,6 +111,7 @@ class ITunesChartItem {
     return genres;
   }
 
+  @override
   String get thumbnailArtworkUrl => artworkUrl60;
 
   ITunesChartItem copyWith({
