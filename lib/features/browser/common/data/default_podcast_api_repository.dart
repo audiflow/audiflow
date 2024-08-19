@@ -283,12 +283,14 @@ class DefaultPodcastApiRepository implements PodcastApiRepository {
     if (language != null) {
       queryParams['language'] = language;
     }
-    if (version != null) {
+    if (version != null && 0 < version) {
       queryParams['version'] = version.toString();
     }
     if (explicit != null) {
       queryParams['explicit'] = explicit ? 'yes' : 'no';
     }
+    queryParams['media'] = 'podcast';
+    queryParams['entity'] = 'podcast';
 
     return Uri.parse(searchApiEndpoint)
         .replace(queryParameters: queryParams)

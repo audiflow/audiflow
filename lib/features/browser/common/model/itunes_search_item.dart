@@ -1,8 +1,9 @@
+import 'package:audiflow/features/browser/common/model/itunes_item.dart';
 import 'package:podcast_feed/model/genre.dart';
 
 /// A class that represents an individual Podcast within the search results.
 /// Not all properties may contain values for all search providers.
-class ITunesSearchItem {
+class ITunesSearchItem implements ITunesItem {
   ITunesSearchItem({
     this.artistId,
     required this.collectionId,
@@ -78,18 +79,22 @@ class ITunesSearchItem {
   final int? artistId;
 
   /// The iTunes ID of the collection.
+  @override
   final int collectionId;
 
   /// The iTunes ID of the track.
   final int trackId;
 
   /// The name of the artist.
+  @override
   final String artistName;
 
   /// The name of the iTunes collection the Podcast is part of.
+  @override
   final String collectionName;
 
   /// The track name.
+  @override
   final String trackName;
 
   /// The censored version of the collection name.
@@ -154,7 +159,8 @@ class ITunesSearchItem {
   /// Contains a URL for the thumbnail resolution artwork. If no thumbnail size
   /// artwork is available this could return a URL for the full size image.
   /// If no artwork is available this will return an empty string.
+  @override
   String get thumbnailArtworkUrl {
-    return artworkUrl60;
+    return artworkUrl600;
   }
 }

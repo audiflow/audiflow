@@ -1,15 +1,15 @@
-import 'package:audiflow/features/browser/chart/ui/chart_item_tile.dart';
-import 'package:audiflow/features/browser/common/model/itunes_chart_item.dart';
+import 'package:audiflow/features/browser/common/model/itunes_item.dart';
+import 'package:audiflow/features/browser/common/ui/chart_item_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class ChartItemList extends ConsumerWidget {
-  const ChartItemList({
+class ITunesItemList extends ConsumerWidget {
+  const ITunesItemList({
     super.key,
     required this.items,
   });
 
-  final List<ITunesChartItem> items;
+  final List<ITunesItem> items;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -20,7 +20,7 @@ class ChartItemList extends ConsumerWidget {
     return SliverList(
       delegate: SliverChildBuilderDelegate(
         (BuildContext context, int index) {
-          return ChartItemTile(chartItem: items[index]);
+          return ITunesItemTile(itunesItem: items[index]);
         },
         childCount: items.length,
         addAutomaticKeepAlives: false,
