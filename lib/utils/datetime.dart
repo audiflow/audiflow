@@ -21,7 +21,7 @@ class DateTimeString {
     } else if (1 <= elapsed.inHours) {
       return l10n.nHoursAgo(elapsed.inHours);
     } else if (1 <= elapsed.inMinutes) {
-      return l10n.nDaysAgo(elapsed.inMinutes);
+      return l10n.nMinutesAgo(elapsed.inMinutes);
     } else {
       return l10n.justNow;
     }
