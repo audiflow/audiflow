@@ -29,11 +29,12 @@ class Podcast {
 
   factory Podcast.fromFeed(
     ChannelValues values, {
+    required String feedUrl,
     String? newFeedUrl,
     int? collectionId,
   }) {
     final podcast = Podcast(
-      feedUrl: values.feedUrl,
+      feedUrl: values.feedUrl.isNotEmpty ? values.feedUrl : feedUrl,
       collectionId: collectionId,
       newFeedUrl: values.newFeedUrl ?? newFeedUrl,
       title: values.title,

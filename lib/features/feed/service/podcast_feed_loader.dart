@@ -311,6 +311,7 @@ class _Worker {
           rs.stream,
           channelBuilder: (channelValues) => Podcast.fromFeed(
             channelValues,
+            feedUrl: feedUrl,
             newFeedUrl: feedUrl,
             collectionId: collectionId,
           ),
