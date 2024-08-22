@@ -24,12 +24,12 @@ class ITunesItemTile extends ConsumerWidget {
       child: Container(
         height: 77,
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
         child: Row(
           children: [
             ExcludeSemantics(
               child: Padding(
-                padding: const EdgeInsets.only(left: 20, right: 10),
+                padding: const EdgeInsets.only(left: 4, right: 10),
                 child: TileImage(
                   url: itunesItem.thumbnailArtworkUrl,
                   size: 60,
