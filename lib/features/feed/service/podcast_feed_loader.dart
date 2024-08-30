@@ -194,7 +194,7 @@ class _Worker {
   late final String _cacheDir;
   final _commandStreamController = StreamController<_Command>();
   final _completer = Completer<void>();
-  PodcastFeedParser<Uint8List, Podcast, Episode>? _feedParser;
+  late PodcastFeedParser<Uint8List, Podcast, Episode>? _feedParser;
   Podcast? _podcast;
   final _newEpisodes = <Episode>[];
 

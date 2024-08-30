@@ -119,7 +119,9 @@ class _CupertinoFundingMenu extends ConsumerWidget {
                             ref
                                 .read(appPreferenceRepositoryProvider.notifier)
                                 .setExternalLinkConsent(value);
-                            Navigator.pop(context, 'Cancel');
+                            if (context.mounted) {
+                              Navigator.pop(context, 'Cancel');
+                            }
                           });
                         },
                         child: Text(item.value),
