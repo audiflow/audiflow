@@ -538,18 +538,6 @@ class _DefaultAudioPlayerHandler extends BaseAudioHandler with SeekHandler {
   late AudioPlayer _player;
   MediaItem? _currentItem;
 
-  static const MediaControl rewindControl = MediaControl(
-    androidIcon: 'drawable/ic_action_rewind_10',
-    label: 'Rewind',
-    action: MediaAction.rewind,
-  );
-
-  static const MediaControl fastforwardControl = MediaControl(
-    androidIcon: 'drawable/ic_action_fastforward_30',
-    label: 'Fastforward',
-    action: MediaAction.fastForward,
-  );
-
   void _initPlayer() {
     if (Platform.isAndroid) {
       _androidLoudnessEnhancer = AndroidLoudnessEnhancer();
@@ -771,9 +759,9 @@ class _DefaultAudioPlayerHandler extends BaseAudioHandler with SeekHandler {
 
     return PlaybackState(
       controls: [
-        rewindControl,
+        MediaControl.rewind,
         if (_player.playing) MediaControl.pause else MediaControl.play,
-        fastforwardControl,
+        MediaControl.fastForward,
       ],
       systemActions: const {
         MediaAction.seek,
