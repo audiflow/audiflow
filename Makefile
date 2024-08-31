@@ -49,7 +49,7 @@ gen-loc:
 .PHONY: format
 format: ## Format Dart code.
 format:
-	@dart format $(shell find . -name "*.dart" -not \( -name "*.*freezed.dart" -o -name "*.*g.dart" -o -path "./lib/l10n/*" \))
+	@dart format $(shell find . -name "*.dart" -not \( -name "*.*freezed.dart" -o -name "*.*g.dart" -o -path "./lib/localization/*" \))
 
 .PHONY: icon
 icon: ## Generate app icons.
