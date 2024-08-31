@@ -34,13 +34,9 @@ class SeasonTile extends ConsumerWidget {
             ExcludeSemantics(
               child: Padding(
                 padding: const EdgeInsets.only(left: 20, right: 10),
-                child: Hero(
-                  key: Key('seasonhero${season.guid}'),
-                  tag: season.guid,
-                  child: TileImage(
-                    url: season.imageUrl ?? season.imageUrl!,
-                    size: 60,
-                  ),
+                child: TileImage(
+                  url: season.imageUrl ?? season.imageUrl!,
+                  size: 60,
                 ),
               ),
             ),

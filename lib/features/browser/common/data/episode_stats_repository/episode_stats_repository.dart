@@ -44,8 +44,8 @@ abstract class EpisodeStatsRepository {
   Future<EpisodeStats> updateEpisodeStats(EpisodeStatsUpdateParam param);
 
   Future<List<EpisodeStats>> updateEpisodeStatsList(
-      Iterable<EpisodeStatsUpdateParam> params,
-      );
+    Iterable<EpisodeStatsUpdateParam> params,
+  );
 
   Future<List<EpisodeStats>> findPlayedEpisodeStatsList(Id pid);
 
@@ -59,9 +59,9 @@ abstract class EpisodeStatsRepository {
   });
 
   Future<void> saveRecentlyPlayedEpisode(
-      Episode episode, {
-        DateTime? playedAt,
-      });
+    Episode episode, {
+    DateTime? playedAt,
+  });
 }
 
 @Riverpod(keepAlive: true)

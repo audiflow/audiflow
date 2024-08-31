@@ -28,10 +28,9 @@ class PlayerEpisodeTile extends ConsumerWidget {
       child: InkWell(
         onTap: () {
           if (podcast != null) {
-            ref.read(appRouterProvider.notifier).pushEpisodeDetail(
-                  episode: episode,
-                  heroPrefix: 'episodeHero',
-                );
+            ref
+                .read(appRouterProvider.notifier)
+                .pushEpisodeDetail(episode: episode);
           }
         },
         child: Container(

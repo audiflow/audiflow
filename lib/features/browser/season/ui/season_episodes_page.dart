@@ -18,13 +18,11 @@ class SeasonEpisodesPage extends HookConsumerWidget {
   const SeasonEpisodesPage({
     required this.podcast,
     required this.season,
-    required this.heroPrefix,
     super.key,
   });
 
   final Podcast podcast;
   final Season season;
-  final String heroPrefix;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -61,7 +59,7 @@ class SeasonEpisodesPage extends HookConsumerWidget {
                 controller: controller,
                 physics: const AlwaysScrollableScrollPhysics(),
                 slivers: <Widget>[
-                  PodcastSeasonAppBar(season: season, heroPrefix: heroPrefix),
+                  PodcastSeasonAppBar(season: season),
                   if (pageState.isLoading)
                     const FillRemainingLoading()
                   else if (pageState.hasError)
@@ -106,8 +104,7 @@ class SeasonEpisodesPage extends HookConsumerWidget {
                     ),
                     NotificationListener<PlayButtonTappedNotification>(
                       onNotification: (notification) {
-                        pageController
-                            .togglePlayState(notification.episode);
+                        pageController.togglePlayState(notification.episode);
                         return false;
                       },
                       child: EpisodeList.fixed(

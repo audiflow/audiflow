@@ -20,19 +20,19 @@ class IsarEpisodeStatsRepository implements EpisodeStatsRepository {
     return isar.episodeStats
         .where()
         .optional(
-      true,
+          true,
           (q) => lastOrdinal == null
-          ? q.pidEqualToAnyOrdinal(pid)
-          : ascending
-          ? q.pidEqualToOrdinalGreaterThan(pid, lastOrdinal)
-          : q.pidEqualToOrdinalLessThan(pid, lastOrdinal),
-    )
+              ? q.pidEqualToAnyOrdinal(pid)
+              : ascending
+                  ? q.pidEqualToOrdinalGreaterThan(pid, lastOrdinal)
+                  : q.pidEqualToOrdinalLessThan(pid, lastOrdinal),
+        )
         .filter()
         .completeCountGreaterThan(0)
         .optional(
-      true,
+          true,
           (q) => ascending ? q.sortByOrdinal() : q.sortByOrdinalDesc(),
-    )
+        )
         .optional(limit != null, (q) => q.limit(limit!))
         .findAll();
   }
@@ -52,29 +52,29 @@ class IsarEpisodeStatsRepository implements EpisodeStatsRepository {
         .filter()
         .pidEqualTo(pid)
         .optional(
-      lastPlayedDate != null,
+          lastPlayedDate != null,
           (q) => ascending
-          ? q.lastPlayedAtGreaterThan(lastPlayedDate)
-          : q.lastPlayedAtLessThan(lastPlayedDate),
-    )
+              ? q.lastPlayedAtGreaterThan(lastPlayedDate)
+              : q.lastPlayedAtLessThan(lastPlayedDate),
+        )
         .optional(filterBy != null, (q) {
-      switch (filterBy!) {
-        case EpisodeStatsFilterBy.played:
-          return q.playedEqualTo(true);
-        case EpisodeStatsFilterBy.completed:
-          return q.completeCountGreaterThan(0);
-        case EpisodeStatsFilterBy.incomplete:
-          return q.completeCountEqualTo(0);
-      }
-    })
+          switch (filterBy!) {
+            case EpisodeStatsFilterBy.played:
+              return q.playedEqualTo(true);
+            case EpisodeStatsFilterBy.completed:
+              return q.completeCountGreaterThan(0);
+            case EpisodeStatsFilterBy.incomplete:
+              return q.completeCountEqualTo(0);
+          }
+        })
         .optional(true, (q) {
-      switch (sortBy) {
-        case EpisodeStatsSortBy.playedDate:
-          return ascending
-              ? q.sortByLastPlayedAt()
-              : q.sortByLastPlayedAtDesc();
-      }
-    })
+          switch (sortBy) {
+            case EpisodeStatsSortBy.playedDate:
+              return ascending
+                  ? q.sortByLastPlayedAt()
+                  : q.sortByLastPlayedAtDesc();
+          }
+        })
         .optional(offset != null, (q) => q.offset(offset!))
         .optional(limit != null, (q) => q.limit(limit!))
         .findAll();
@@ -117,8 +117,8 @@ class IsarEpisodeStatsRepository implements EpisodeStatsRepository {
   }
 
   Future<EpisodeStats> _updateEpisodeStats(
-      EpisodeStatsUpdateParam param,
-      ) async {
+    EpisodeStatsUpdateParam param,
+  ) async {
     final stats = await isar.episodeStats.get(param.eid);
     final newStats = EpisodeStats(
       eid: param.eid,
@@ -130,7 +130,7 @@ class IsarEpisodeStatsRepository implements EpisodeStatsRepository {
           (param.playTotalDelta?.inMilliseconds ?? 0),
       played: (stats?.played ?? false) || (param.played ?? false),
       completeCount:
-      (stats?.completeCount ?? 0) + (param.completed == true ? 1 : 0),
+          (stats?.completeCount ?? 0) + (param.completed == true ? 1 : 0),
       lastPlayedAt: param.lastPlayedAt ?? stats?.lastPlayedAt,
     );
     await isar.episodeStats.put(newStats);
@@ -139,8 +139,8 @@ class IsarEpisodeStatsRepository implements EpisodeStatsRepository {
 
   @override
   Future<List<EpisodeStats>> updateEpisodeStatsList(
-      Iterable<EpisodeStatsUpdateParam> params,
-      ) async {
+    Iterable<EpisodeStatsUpdateParam> params,
+  ) async {
     return isar.writeTxn(() => Future.wait(params.map(_updateEpisodeStats)));
   }
 
@@ -177,9 +177,9 @@ class IsarEpisodeStatsRepository implements EpisodeStatsRepository {
 
   @override
   Future<void> saveRecentlyPlayedEpisode(
-      Episode episode, {
-        DateTime? playedAt,
-      }) async {
+    Episode episode, {
+    DateTime? playedAt,
+  }) async {
     await updateEpisodeStats(
       EpisodeStatsUpdateParam(
         eid: episode.id,

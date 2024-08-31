@@ -1,6 +1,6 @@
 import 'package:isar/isar.dart';
 
-part  'episode_list_entry.g.dart';
+part 'episode_list_entry.g.dart';
 
 @collection
 class EpisodeListEntry {
