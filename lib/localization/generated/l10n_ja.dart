@@ -189,8 +189,7 @@ class L10nJa extends L10n {
   String get settingsOnDemandDownloadOnPlayback => '再生時の音源取得';
 
   @override
-  String get settingsOnDemandDownloadOnPlaybackDescription =>
-      '事前ダウンロードがない場合、再生開始時に音源を取得します';
+  String get settingsOnDemandDownloadOnPlaybackDescription => '事前ダウンロードがない場合、再生開始時に音源を取得します';
 
   @override
   String get settingsManualDownload => '手動ダウンロード';
@@ -202,8 +201,7 @@ class L10nJa extends L10n {
   String get settingsAutoDownload => '自動ダウンロード';
 
   @override
-  String get settingsAutoDownloadDescription =>
-      '様々な場面で自動的にダウンロードすることで、待ち時間や煩わしさを軽減します';
+  String get settingsAutoDownloadDescription => '様々な場面で自動的にダウンロードすることで、待ち時間や煩わしさを軽減します';
 
   @override
   String get settingsAutoDownloadEnabled => '有効';
@@ -284,8 +282,7 @@ class L10nJa extends L10n {
   String get captionStreamingNoWifi => 'WiFiが接続されていないため、モバイル回線で音声データを取得します。';
 
   @override
-  String get captionDownloadNoWifi =>
-      '\'WiFiが接続されていないため、モバイル回線でエピソードをダウンロードします。\'';
+  String get captionDownloadNoWifi => '\'WiFiが接続されていないため、モバイル回線でエピソードをダウンロードします。\'';
 
   @override
   String get captionWarnSettingNavigation => 'この警告表示有無は設定で変更できます';
@@ -318,6 +315,5 @@ class L10nJa extends L10n {
   String get podcast_funding_dialog_header => 'ポッドキャストへのサポート';
 
   @override
-  String get podcast_funding_consent_message =>
-      'このポッドキャストをサポートするために、以下のリンクからサポートを行うことができます。';
+  String get podcast_funding_consent_message => 'このポッドキャストをサポートするために、以下のリンクからサポートを行うことができます。';
 }

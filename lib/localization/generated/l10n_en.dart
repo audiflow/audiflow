@@ -219,54 +219,46 @@ class L10nEn extends L10n {
   String get settingsOnDemandDownloadOnPlayback => 'Download Audio on Playback';
 
   @override
-  String get settingsOnDemandDownloadOnPlaybackDescription =>
-      'If not pre-downloaded, audio will be fetched at the start of playback';
+  String get settingsOnDemandDownloadOnPlaybackDescription => 'If not pre-downloaded, audio will be fetched at the start of playback';
 
   @override
   String get settingsManualDownload => 'Manual Download';
 
   @override
-  String get settingsManualDownloadDescription =>
-      'When manually downloading episodes';
+  String get settingsManualDownloadDescription => 'When manually downloading episodes';
 
   @override
   String get settingsAutoDownload => 'Automatic Download';
 
   @override
-  String get settingsAutoDownloadDescription =>
-      'Automatically downloads in various situations to reduce wait times and hassle';
+  String get settingsAutoDownloadDescription => 'Automatically downloads in various situations to reduce wait times and hassle';
 
   @override
   String get settingsAutoDownloadEnabled => 'Enabled';
 
   @override
-  String get settingsAutoDownloadRecent =>
-      'Number of Recently Published Episodes to Fetch';
+  String get settingsAutoDownloadRecent => 'Number of Recently Published Episodes to Fetch';
 
   @override
   String get settingsAutoDownloadSubject => '';
 
   @override
-  String get settingsAutoDownloadQueuedEpisodes =>
-      'Episodes added to queue manually';
+  String get settingsAutoDownloadQueuedEpisodes => 'Episodes added to queue manually';
 
   @override
-  String get settingsAutoDownloadIncludesAdhoc =>
-      'Includes episodes automatically added to queue';
+  String get settingsAutoDownloadIncludesAdhoc => 'Includes episodes automatically added to queue';
 
   @override
   String get settingsAutoDelete => 'Automatic Deletion';
 
   @override
-  String get settingsAutoDeleteDescription =>
-      'Automatically delete episodes after playback';
+  String get settingsAutoDeleteDescription => 'Automatically delete episodes after playback';
 
   @override
   String get settingsAutoDeleteAfter => 'After Playback';
 
   @override
-  String get settingsAutoDeleteAfterDescription =>
-      'Automatically delete episodes after playback';
+  String get settingsAutoDeleteAfterDescription => 'Automatically delete episodes after playback';
 
   @override
   String get settingsAutoDeleteAfterNever => 'Never';
@@ -290,8 +282,7 @@ class L10nEn extends L10n {
   String get settingsWarnMobileData => 'Warn on Cellular Connection';
 
   @override
-  String get settingsWarnMobileDataDescription =>
-      'For those concerned about data usage, such as with metered plans';
+  String get settingsWarnMobileDataDescription => 'For those concerned about data usage, such as with metered plans';
 
   @override
   String get settingsWarnWifi => 'Warn when not connected to Wi-Fi';
@@ -303,8 +294,7 @@ class L10nEn extends L10n {
   String get settingsOpml => 'OPML Import/Export';
 
   @override
-  String get settingsOpmlDescription =>
-      'Import or export podcasts via OPML file, a de-facto standard file for podcast subscriptions';
+  String get settingsOpmlDescription => 'Import or export podcasts via OPML file, a de-facto standard file for podcast subscriptions';
 
   @override
   String get settingsOpmlImport => 'Import Podcasts via OPML File';
@@ -319,16 +309,13 @@ class L10nEn extends L10n {
   String get titleCellularConnection => 'Cellular Connection';
 
   @override
-  String get captionStreamingNoWifi =>
-      'Since Wi-Fi is not connected, audio data will be fetched over cellular data.';
+  String get captionStreamingNoWifi => 'Since Wi-Fi is not connected, audio data will be fetched over cellular data.';
 
   @override
-  String get captionDownloadNoWifi =>
-      '\'Since Wi-Fi is not connected, the episode will be downloaded over cellular data.\'';
+  String get captionDownloadNoWifi => '\'Since Wi-Fi is not connected, the episode will be downloaded over cellular data.\'';
 
   @override
-  String get captionWarnSettingNavigation =>
-      'You can change this warning in the settings';
+  String get captionWarnSettingNavigation => 'You can change this warning in the settings';
 
   @override
   String get proceedPlaying => 'Play anyway';
@@ -343,8 +330,7 @@ class L10nEn extends L10n {
   String get downloadUnplayedEpisodes => 'Download Unplayed Episodes';
 
   @override
-  String get semantics_podcast_details_header =>
-      'Podcast details and episodes page';
+  String get semantics_podcast_details_header => 'Podcast details and episodes page';
 
   @override
   String get search_for_podcasts_hint => 'Search for podcasts';
@@ -359,6 +345,5 @@ class L10nEn extends L10n {
   String get podcast_funding_dialog_header => 'Podcast Funding';
 
   @override
-  String get podcast_funding_consent_message =>
-      'This funding link will take you to an external site where you will be able to directly support the show. Links are provided by the podcast authors and is not controlled by Anytime.';
+  String get podcast_funding_consent_message => 'This funding link will take you to an external site where you will be able to directly support the show. Links are provided by the podcast authors and is not controlled by Anytime.';
 }
