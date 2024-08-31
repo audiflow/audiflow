@@ -103,18 +103,18 @@ class DefaultAudioPlayerService extends _$DefaultAudioPlayerService
 
   @override
   FutureOr<void> play() {
-    if (state?.phase == PlayerPhase.pause) {
+    if (state?.phase == PlayerPhase.pause &&
+        state?.audioState == AudioState.ready) {
       state = state!.copyWith(phase: PlayerPhase.play);
       return _audioHandler.play();
     }
 
     if (state != null) {
-      //   return loadEpisode(
-      //     episode: state!.episode,
-      //     position: state!.position,
-      //     autoPlay: true,
-      //   );
-      // } else {
+      return loadEpisode(
+        episode: state!.episode,
+        position: state!.position,
+        autoPlay: true,
+      );
     }
   }
 

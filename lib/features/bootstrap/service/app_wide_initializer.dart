@@ -11,6 +11,7 @@ import 'package:audiflow/features/browser/common/service/subscribed_podcast_refr
 import 'package:audiflow/features/download/service/download_task_controller.dart';
 import 'package:audiflow/features/player/service/audio_player_service.dart';
 import 'package:audiflow/features/player/service/audio_position_recorder.dart';
+import 'package:audiflow/features/player/service/last_episode_service.dart';
 import 'package:audiflow/features/preference/data/app_preference_repository.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
@@ -58,7 +59,12 @@ class AppWideProvidersInitializer extends HookConsumerWidget {
 
         Future.wait([
           ref.read(downloadTaskControllerProvider.notifier).ensureInitialized(),
-          ref.read(audioPlayerServiceProvider.notifier).ensureInitialized(),
+          ref
+              .read(audioPlayerServiceProvider.notifier)
+              .ensureInitialized()
+              .then(
+                (_) => ref.read(lastEpisodeServiceProvider).resumeEpisode(),
+              ),
           _setupCertificateAuthority().then((ca) {
             ref.read(podcastApiRepositoryProvider).setClientAuthorityBytes(ca);
           }),
