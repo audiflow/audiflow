@@ -46,7 +46,6 @@ class _ListTile extends ConsumerWidget {
   });
 
   final Podcast podcast;
-  static const heroPrefix = 'subscription:';
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -65,13 +64,9 @@ class _ListTile extends ConsumerWidget {
           ),
           child: Column(
             children: [
-              Hero(
-                key: Key('tilehero${podcast.image}:${podcast.guid}'),
-                tag: '$heroPrefix:${podcast.guid}',
-                child: TileImage(
-                  url: podcast.image,
-                  size: 150,
-                ),
+              TileImage(
+                url: podcast.image,
+                size: 150,
               ),
               const SizedBox(height: 10),
               Text(

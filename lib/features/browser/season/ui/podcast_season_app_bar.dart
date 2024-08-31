@@ -9,11 +9,9 @@ class PodcastSeasonAppBar extends ConsumerWidget {
   const PodcastSeasonAppBar({
     super.key,
     required this.season,
-    required this.heroPrefix,
   });
 
   final Season season;
-  final String heroPrefix;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -68,18 +66,12 @@ class PodcastSeasonAppBar extends ConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Expanded(
-                  child: Hero(
-                    key: Key(
-                      'seasonHero:${season.imageUrl}:${season.guid}',
-                    ),
-                    tag: '$heroPrefix:${season.id}',
-                    child: ExcludeSemantics(
-                      child: Padding(
-                        padding:
-                            EdgeInsets.only(top: safeAreaTop + kToolbarHeight),
-                        child: PodcastHeaderImage.large(
-                          imageUrl: season.imageUrl!,
-                        ),
+                  child: ExcludeSemantics(
+                    child: Padding(
+                      padding:
+                          EdgeInsets.only(top: safeAreaTop + kToolbarHeight),
+                      child: PodcastHeaderImage.large(
+                        imageUrl: season.imageUrl!,
                       ),
                     ),
                   ),

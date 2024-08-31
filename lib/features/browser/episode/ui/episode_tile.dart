@@ -43,10 +43,9 @@ class EpisodeTile extends HookConsumerWidget {
           children: [
             InkWell(
               onTap: () {
-                ref.read(appRouterProvider.notifier).pushEpisodeDetail(
-                      episode: episode,
-                      heroPrefix: 'episodeHero',
-                    );
+                ref
+                    .read(appRouterProvider.notifier)
+                    .pushEpisodeDetail(episode: episode);
               },
               child: Padding(
                 padding: const EdgeInsets.only(left: 12, right: 8),

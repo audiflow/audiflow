@@ -105,13 +105,12 @@ class AppRouter extends _$AppRouter {
                     name: 'season',
                     parentNavigatorKey: homeTabNavigatorKey,
                     pageBuilder: (context, state) {
-                      final (podcast, season, heroPrefix) =
-                          state.extra! as (Podcast, Season, String);
+                      final (podcast, season) =
+                          state.extra! as (Podcast, Season);
                       return _getPage(
                         child: SeasonEpisodesPage(
                           podcast: podcast,
                           season: season,
-                          heroPrefix: heroPrefix,
                         ),
                         state: state,
                       );
@@ -122,13 +121,9 @@ class AppRouter extends _$AppRouter {
                     name: 'episode',
                     parentNavigatorKey: homeTabNavigatorKey,
                     pageBuilder: (context, state) {
-                      final (episode, heroPrefix) =
-                          state.extra! as (Episode, String);
+                      final episode = state.extra! as Episode;
                       return _getPage(
-                        child: EpisodePage(
-                          episode: episode,
-                          heroPrefix: heroPrefix,
-                        ),
+                        child: EpisodePage(episode: episode),
                         state: state,
                       );
                     },
@@ -264,11 +259,10 @@ class AppRouter extends _$AppRouter {
 
   Future<void> pushEpisodeDetail({
     required Episode episode,
-    required String heroPrefix,
   }) async {
     await state.pushNamed(
       'episode',
-      extra: (episode, heroPrefix),
+      extra: episode,
     );
   }
 

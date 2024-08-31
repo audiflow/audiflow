@@ -20,12 +20,10 @@ import 'package:scrolls_to_top/scrolls_to_top.dart';
 class EpisodePage extends HookConsumerWidget {
   const EpisodePage({
     required this.episode,
-    required this.heroPrefix,
     super.key,
   });
 
   final Episode episode;
-  final String heroPrefix;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
