@@ -128,10 +128,11 @@ class IsarEpisodeStatsRepository implements EpisodeStatsRepository {
       playCount: (stats?.playCount ?? 0) + (param.played == true ? 1 : 0),
       playTotalMS: (stats?.playTotalMS ?? 0) +
           (param.playTotalDelta?.inMilliseconds ?? 0),
-      played: (stats?.played ?? false) || (param.played ?? false),
+      played: param.played ?? stats?.played ?? false,
       completeCount:
           (stats?.completeCount ?? 0) + (param.completed == true ? 1 : 0),
       lastPlayedAt: param.lastPlayedAt ?? stats?.lastPlayedAt,
+      downloaded: param.downloaded ?? stats?.downloaded ?? false,
     );
     await isar.episodeStats.put(newStats);
     return newStats;
