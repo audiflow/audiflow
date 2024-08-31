@@ -8,6 +8,7 @@ import 'package:audiflow/events/podcast_event.dart';
 import 'package:audiflow/events/transcript_event.dart';
 import 'package:audiflow/features/browser/common/data/podcast_api_repository.dart';
 import 'package:audiflow/features/browser/common/service/subscribed_podcast_refresher.dart';
+import 'package:audiflow/features/browser/episode/service/episode_stats_updater.dart';
 import 'package:audiflow/features/download/service/download_task_controller.dart';
 import 'package:audiflow/features/player/service/audio_player_service.dart';
 import 'package:audiflow/features/player/service/audio_position_recorder.dart';
@@ -36,6 +37,7 @@ bool appWide(AppWideRef ref) {
     ..listen(downloadEventStreamProvider, (_, __) {})
     ..listen(downloadTaskControllerProvider, (_, __) {})
     ..listen(episodeEventStreamProvider, (_, __) {})
+    ..listen(episodeStatsUpdaterProvider, (_, __) {})
     ..listen(podcastApiRepositoryProvider, (_, __) {})
     ..listen(podcastEventStreamProvider, (_, __) {})
     ..listen(subscribedPodcastRefresherProvider, (_, __) {})

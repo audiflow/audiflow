@@ -3318,48 +3318,53 @@ const EpisodeStatsSchema = CollectionSchema(
       name: r'completeCount',
       type: IsarType.long,
     ),
-    r'durationMS': PropertySchema(
+    r'downloaded': PropertySchema(
       id: 1,
+      name: r'downloaded',
+      type: IsarType.bool,
+    ),
+    r'durationMS': PropertySchema(
+      id: 2,
       name: r'durationMS',
       type: IsarType.long,
     ),
     r'eid': PropertySchema(
-      id: 2,
+      id: 3,
       name: r'eid',
       type: IsarType.long,
     ),
     r'lastPlayedAt': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'lastPlayedAt',
       type: IsarType.dateTime,
     ),
     r'ordinal': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'ordinal',
       type: IsarType.long,
     ),
     r'pid': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'pid',
       type: IsarType.long,
     ),
     r'playCount': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'playCount',
       type: IsarType.long,
     ),
     r'playTotalMS': PropertySchema(
-      id: 7,
+      id: 8,
       name: r'playTotalMS',
       type: IsarType.long,
     ),
     r'played': PropertySchema(
-      id: 8,
+      id: 9,
       name: r'played',
       type: IsarType.bool,
     ),
     r'positionMS': PropertySchema(
-      id: 9,
+      id: 10,
       name: r'positionMS',
       type: IsarType.long,
     )
@@ -3426,6 +3431,19 @@ const EpisodeStatsSchema = CollectionSchema(
           caseSensitive: false,
         )
       ],
+    ),
+    r'downloaded': IndexSchema(
+      id: -2573774225040300307,
+      name: r'downloaded',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'downloaded',
+          type: IndexType.value,
+          caseSensitive: false,
+        )
+      ],
     )
   },
   links: {},
@@ -3452,15 +3470,16 @@ void _episodeStatsSerialize(
   Map<Type, List<int>> allOffsets,
 ) {
   writer.writeLong(offsets[0], object.completeCount);
-  writer.writeLong(offsets[1], object.durationMS);
-  writer.writeLong(offsets[2], object.eid);
-  writer.writeDateTime(offsets[3], object.lastPlayedAt);
-  writer.writeLong(offsets[4], object.ordinal);
-  writer.writeLong(offsets[5], object.pid);
-  writer.writeLong(offsets[6], object.playCount);
-  writer.writeLong(offsets[7], object.playTotalMS);
-  writer.writeBool(offsets[8], object.played);
-  writer.writeLong(offsets[9], object.positionMS);
+  writer.writeBool(offsets[1], object.downloaded);
+  writer.writeLong(offsets[2], object.durationMS);
+  writer.writeLong(offsets[3], object.eid);
+  writer.writeDateTime(offsets[4], object.lastPlayedAt);
+  writer.writeLong(offsets[5], object.ordinal);
+  writer.writeLong(offsets[6], object.pid);
+  writer.writeLong(offsets[7], object.playCount);
+  writer.writeLong(offsets[8], object.playTotalMS);
+  writer.writeBool(offsets[9], object.played);
+  writer.writeLong(offsets[10], object.positionMS);
 }
 
 EpisodeStats _episodeStatsDeserialize(
@@ -3471,15 +3490,16 @@ EpisodeStats _episodeStatsDeserialize(
 ) {
   final object = EpisodeStats(
     completeCount: reader.readLongOrNull(offsets[0]) ?? 0,
-    durationMS: reader.readLongOrNull(offsets[1]),
-    eid: reader.readLong(offsets[2]),
-    lastPlayedAt: reader.readDateTimeOrNull(offsets[3]),
-    ordinal: reader.readLong(offsets[4]),
-    pid: reader.readLong(offsets[5]),
-    playCount: reader.readLongOrNull(offsets[6]) ?? 0,
-    playTotalMS: reader.readLongOrNull(offsets[7]) ?? 0,
-    played: reader.readBoolOrNull(offsets[8]) ?? false,
-    positionMS: reader.readLongOrNull(offsets[9]) ?? 0,
+    downloaded: reader.readBoolOrNull(offsets[1]) ?? false,
+    durationMS: reader.readLongOrNull(offsets[2]),
+    eid: reader.readLong(offsets[3]),
+    lastPlayedAt: reader.readDateTimeOrNull(offsets[4]),
+    ordinal: reader.readLong(offsets[5]),
+    pid: reader.readLong(offsets[6]),
+    playCount: reader.readLongOrNull(offsets[7]) ?? 0,
+    playTotalMS: reader.readLongOrNull(offsets[8]) ?? 0,
+    played: reader.readBoolOrNull(offsets[9]) ?? false,
+    positionMS: reader.readLongOrNull(offsets[10]) ?? 0,
   );
   return object;
 }
@@ -3494,22 +3514,24 @@ P _episodeStatsDeserializeProp<P>(
     case 0:
       return (reader.readLongOrNull(offset) ?? 0) as P;
     case 1:
-      return (reader.readLongOrNull(offset)) as P;
+      return (reader.readBoolOrNull(offset) ?? false) as P;
     case 2:
-      return (reader.readLong(offset)) as P;
+      return (reader.readLongOrNull(offset)) as P;
     case 3:
-      return (reader.readDateTimeOrNull(offset)) as P;
-    case 4:
       return (reader.readLong(offset)) as P;
+    case 4:
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 5:
       return (reader.readLong(offset)) as P;
     case 6:
-      return (reader.readLongOrNull(offset) ?? 0) as P;
+      return (reader.readLong(offset)) as P;
     case 7:
       return (reader.readLongOrNull(offset) ?? 0) as P;
     case 8:
-      return (reader.readBoolOrNull(offset) ?? false) as P;
+      return (reader.readLongOrNull(offset) ?? 0) as P;
     case 9:
+      return (reader.readBoolOrNull(offset) ?? false) as P;
+    case 10:
       return (reader.readLongOrNull(offset) ?? 0) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -3563,6 +3585,14 @@ extension EpisodeStatsQueryWhereSort
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         const IndexWhereClause.any(indexName: r'lastPlayedAt'),
+      );
+    });
+  }
+
+  QueryBuilder<EpisodeStats, EpisodeStats, QAfterWhere> anyDownloaded() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'downloaded'),
       );
     });
   }
@@ -4078,6 +4108,51 @@ extension EpisodeStatsQueryWhere
       ));
     });
   }
+
+  QueryBuilder<EpisodeStats, EpisodeStats, QAfterWhereClause> downloadedEqualTo(
+      bool downloaded) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'downloaded',
+        value: [downloaded],
+      ));
+    });
+  }
+
+  QueryBuilder<EpisodeStats, EpisodeStats, QAfterWhereClause>
+      downloadedNotEqualTo(bool downloaded) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'downloaded',
+              lower: [],
+              upper: [downloaded],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'downloaded',
+              lower: [downloaded],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'downloaded',
+              lower: [downloaded],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'downloaded',
+              lower: [],
+              upper: [downloaded],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
 }
 
 extension EpisodeStatsQueryFilter
@@ -4134,6 +4209,16 @@ extension EpisodeStatsQueryFilter
         includeLower: includeLower,
         upper: upper,
         includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<EpisodeStats, EpisodeStats, QAfterFilterCondition>
+      downloadedEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'downloaded',
+        value: value,
       ));
     });
   }
@@ -4703,6 +4788,19 @@ extension EpisodeStatsQuerySortBy
     });
   }
 
+  QueryBuilder<EpisodeStats, EpisodeStats, QAfterSortBy> sortByDownloaded() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'downloaded', Sort.asc);
+    });
+  }
+
+  QueryBuilder<EpisodeStats, EpisodeStats, QAfterSortBy>
+      sortByDownloadedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'downloaded', Sort.desc);
+    });
+  }
+
   QueryBuilder<EpisodeStats, EpisodeStats, QAfterSortBy> sortByDurationMS() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'durationMS', Sort.asc);
@@ -4828,6 +4926,19 @@ extension EpisodeStatsQuerySortThenBy
       thenByCompleteCountDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'completeCount', Sort.desc);
+    });
+  }
+
+  QueryBuilder<EpisodeStats, EpisodeStats, QAfterSortBy> thenByDownloaded() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'downloaded', Sort.asc);
+    });
+  }
+
+  QueryBuilder<EpisodeStats, EpisodeStats, QAfterSortBy>
+      thenByDownloadedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'downloaded', Sort.desc);
     });
   }
 
@@ -4965,6 +5076,12 @@ extension EpisodeStatsQueryWhereDistinct
     });
   }
 
+  QueryBuilder<EpisodeStats, EpisodeStats, QDistinct> distinctByDownloaded() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'downloaded');
+    });
+  }
+
   QueryBuilder<EpisodeStats, EpisodeStats, QDistinct> distinctByDurationMS() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'durationMS');
@@ -5031,6 +5148,12 @@ extension EpisodeStatsQueryProperty
   QueryBuilder<EpisodeStats, int, QQueryOperations> completeCountProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'completeCount');
+    });
+  }
+
+  QueryBuilder<EpisodeStats, bool, QQueryOperations> downloadedProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'downloaded');
     });
   }
 
