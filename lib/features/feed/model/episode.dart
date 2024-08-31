@@ -217,6 +217,7 @@ class EpisodeStats {
     this.played = false,
     this.completeCount = 0,
     this.lastPlayedAt,
+    this.downloaded = false,
   });
 
   Id get id => eid;
@@ -253,6 +254,10 @@ class EpisodeStats {
   /// Latest playing start time
   @Index()
   final DateTime? lastPlayedAt;
+
+  /// Whether the episode has been downloaded
+  @Index()
+  final bool downloaded;
 }
 
 extension EpisodeStatsExt on EpisodeStats {
@@ -285,6 +290,7 @@ class EpisodeStatsUpdateParam {
     this.playTotalDelta,
     this.completed,
     this.lastPlayedAt,
+    this.downloaded,
   });
 
   final Id eid;
@@ -296,6 +302,7 @@ class EpisodeStatsUpdateParam {
   final Duration? playTotalDelta;
   final bool? completed;
   final DateTime? lastPlayedAt;
+  final bool? downloaded;
 
   EpisodeStatsUpdateParam copyWith({
     int? ordinal,
@@ -306,6 +313,7 @@ class EpisodeStatsUpdateParam {
     Duration? playTotalDelta,
     bool? completed,
     DateTime? lastPlayedAt,
+    bool? downloaded,
   }) {
     return EpisodeStatsUpdateParam(
       eid: eid,
@@ -317,6 +325,7 @@ class EpisodeStatsUpdateParam {
       playTotalDelta: playTotalDelta ?? this.playTotalDelta,
       completed: completed ?? this.completed,
       lastPlayedAt: lastPlayedAt ?? this.lastPlayedAt,
+      downloaded: downloaded ?? this.downloaded,
     );
   }
 
@@ -326,5 +335,6 @@ class EpisodeStatsUpdateParam {
       played == null &&
       playTotalDelta == null &&
       completed == null &&
-      lastPlayedAt == null;
+      lastPlayedAt == null &&
+      downloaded == null;
 }
