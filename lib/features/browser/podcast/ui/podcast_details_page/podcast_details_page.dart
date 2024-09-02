@@ -201,9 +201,9 @@ class _PodcastDetailsPage extends HookConsumerWidget {
                           getEpisodeAt: (index) async =>
                               podcastEpisodesController!.getEpisodeAt(index),
                           scrollController: scrollController,
-                          episodeCount:
-                              podcastEpisodesState!.valueOrNull?.loadedCount ??
-                                  0,
+                          episodeCount: podcastEpisodesState!
+                                  .valueOrNull?.totalEpisodes ??
+                              0,
                           parentThumbnailUrl: podcast?.image,
                         ),
                       )

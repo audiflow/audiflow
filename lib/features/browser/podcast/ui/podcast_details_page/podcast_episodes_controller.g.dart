@@ -7,7 +7,7 @@ part of 'podcast_episodes_controller.dart';
 // **************************************************************************
 
 String _$podcastEpisodesControllerHash() =>
-    r'ed394ec81e4df4621f488bf7bd21ba44a59ffb3a';
+    r'cad7dfc418b56461a4ec3e022b93bd4efa4997fc';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -41,7 +41,7 @@ abstract class _$PodcastEpisodesController
     required int pid,
     required EpisodeFilterMode filterMode,
     required bool ascending,
-    int episodesPerPage = 10,
+    int episodesPerPage = 30,
   });
 }
 
@@ -60,7 +60,7 @@ class PodcastEpisodesControllerFamily
     required int pid,
     required EpisodeFilterMode filterMode,
     required bool ascending,
-    int episodesPerPage = 10,
+    int episodesPerPage = 30,
   }) {
     return PodcastEpisodesControllerProvider(
       pid: pid,
@@ -106,7 +106,7 @@ class PodcastEpisodesControllerProvider
     required int pid,
     required EpisodeFilterMode filterMode,
     required bool ascending,
-    int episodesPerPage = 10,
+    int episodesPerPage = 30,
   }) : this._internal(
           () => PodcastEpisodesController()
             ..pid = pid
