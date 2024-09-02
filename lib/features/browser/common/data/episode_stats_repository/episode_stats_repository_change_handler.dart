@@ -13,21 +13,23 @@ class EpisodeStatsRepositoryChangeHandler implements EpisodeStatsRepository {
   // --- EpisodeStats
 
   @override
-  Future<List<EpisodeStats>> queryCompletedEpisodeStatsList({
+  Future<List<EpisodeStats>> queryEpisodeStatsList({
     required int pid,
+    EpisodeStatsFilterBy? filterBy,
     int? lastOrdinal,
     bool ascending = false,
-    int? limit,
+    required int limit,
   }) =>
-      _inner.queryCompletedEpisodeStatsList(
+      _inner.queryEpisodeStatsList(
         pid: pid,
+        filterBy: filterBy,
         lastOrdinal: lastOrdinal,
         ascending: ascending,
         limit: limit,
       );
 
   @override
-  Future<List<EpisodeStats?>> findEpisodeStatsListBy({
+  Future<List<EpisodeStats>> findEpisodeStatsListBy({
     required int pid,
     EpisodeStatsFilterBy? filterBy,
     required EpisodeStatsSortBy sortBy,
@@ -47,11 +49,11 @@ class EpisodeStatsRepositoryChangeHandler implements EpisodeStatsRepository {
       );
 
   @override
-  Future<int> countEpisodeStatsBy({
+  Future<int> count({
     required int pid,
     EpisodeStatsFilterBy? filterBy,
   }) =>
-      _inner.countEpisodeStatsBy(
+      _inner.count(
         pid: pid,
         filterBy: filterBy,
       );
