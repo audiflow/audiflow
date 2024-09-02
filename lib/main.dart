@@ -21,8 +21,6 @@ import 'package:audiflow/features/browser/common/data/podcast_api_repository.dar
 import 'package:audiflow/features/browser/common/data/podcast_stats_repository/isar_podcast_stats_repository.dart';
 import 'package:audiflow/features/browser/common/data/podcast_stats_repository/podcast_stats_repository.dart';
 import 'package:audiflow/features/browser/common/data/podcast_stats_repository/podcast_stats_repository_change_handler.dart';
-import 'package:audiflow/features/browser/episode/data/episode_list_entry_repository.dart';
-import 'package:audiflow/features/browser/episode/data/isar_episode_list_repository.dart';
 import 'package:audiflow/features/browser/season/data/isar_season_repository.dart';
 import 'package:audiflow/features/browser/season/data/season_repository.dart';
 import 'package:audiflow/features/config/data/build_config.dart';
@@ -97,8 +95,6 @@ void main() async {
       isarRepositoryProvider.overrideWithValue(isar),
       sharedPreferencesProvider.overrideWithValue(preferences),
       // core repositories
-      episodeListEntryRepositoryProvider
-          .overrideWithValue(IsarEpisodeListEntryRepository(isar)),
       episodeRepositoryProvider.overrideWith(
         (ref) =>
             EpisodeRepositoryHandleHandler(ref, IsarEpisodeRepository(isar)),

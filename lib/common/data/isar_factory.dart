@@ -1,4 +1,3 @@
-import 'package:audiflow/features/browser/episode/model/episode_list_entry.dart';
 import 'package:audiflow/features/browser/podcast/model/podcast_details_page_model.dart';
 import 'package:audiflow/features/browser/season/model/season.dart';
 import 'package:audiflow/features/download/model/downloadable.dart';
@@ -20,7 +19,6 @@ class IsarFactory {
             AutoQueueBuilderInfoSchema,
             BlockSchema,
             DownloadableSchema,
-            EpisodeListEntrySchema,
             EpisodeSchema,
             EpisodeStatsSchema,
             FeedUrlSchema,
