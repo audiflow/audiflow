@@ -53,7 +53,7 @@ class IsarEpisodeRepository implements EpisodeRepository {
 
   @override
   Future<int> count({required Id pid}) async {
-    return isar.episodes.count();
+    return isar.episodes.where().pidEqualToAnyOrdinal(pid).count();
   }
 
   @override
