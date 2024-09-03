@@ -3,26 +3,30 @@ import 'dart:async';
 import 'package:audiflow/constants/app_sizes.dart';
 import 'package:audiflow/features/browser/common/model/episode_filter_mode.dart';
 import 'package:audiflow/features/browser/common/model/season_filter_mode.dart';
+import 'package:audiflow/features/browser/season/ui/season_list_controller.dart';
 import 'package:audiflow/localization/generated/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
-class PodcastDetailsEpisodesFilterModeSwitch extends ConsumerWidget {
+class PodcastDetailsEpisodesFilterModeSwitch extends StatelessWidget {
   const PodcastDetailsEpisodesFilterModeSwitch({
     required this.filterMode,
     required this.onFilterModeChanged,
     required this.onToggleAscending,
+    required this.count,
     super.key,
   });
 
   final EpisodeFilterMode filterMode;
   final FutureOr<void> Function(EpisodeFilterMode) onFilterModeChanged;
   final VoidCallback onToggleAscending;
+  final int? count;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final l10n = L10n.of(context);
+    final theme = Theme.of(context);
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
       crossAxisAlignment: CrossAxisAlignment.end,
@@ -34,7 +38,22 @@ class PodcastDetailsEpisodesFilterModeSwitch extends ConsumerWidget {
               onFilterModeChanged(mode);
             }
           },
-          child: Text(filterMode.labelOf(l10n)),
+          child: RichText(
+            textAlign: TextAlign.end,
+            text: TextSpan(
+              children: [
+                TextSpan(
+                  text: filterMode.labelOf(l10n),
+                  style: theme.textTheme.titleSmall
+                      ?.copyWith(color: theme.colorScheme.primary),
+                ),
+                TextSpan(
+                  text: count == null ? '\n' : '\n($count)',
+                  style: theme.textTheme.labelSmall,
+                ),
+              ],
+            ),
+          ),
         ),
         IconButton(
           onPressed: onToggleAscending,
@@ -83,12 +102,14 @@ class PodcastDetailsEpisodesFilterModeSwitch extends ConsumerWidget {
 
 class PodcastDetailsSeasonsFilterModeSwitch extends ConsumerWidget {
   const PodcastDetailsSeasonsFilterModeSwitch({
+    required this.pid,
     required this.filterMode,
     required this.onFilterModeChanged,
     required this.onToggleAscending,
     super.key,
   });
 
+  final int pid;
   final SeasonFilterMode filterMode;
   final FutureOr<void> Function(SeasonFilterMode) onFilterModeChanged;
   final VoidCallback onToggleAscending;
@@ -96,6 +117,9 @@ class PodcastDetailsSeasonsFilterModeSwitch extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = L10n.of(context);
+    final theme = Theme.of(context);
+    final pairs = ref.watch(seasonListControllerProvider(pid)).pairs;
+    final count = pairs.length;
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
       crossAxisAlignment: CrossAxisAlignment.end,
@@ -107,7 +131,22 @@ class PodcastDetailsSeasonsFilterModeSwitch extends ConsumerWidget {
               onFilterModeChanged(mode);
             }
           },
-          child: Text(filterMode.labelOf(l10n)),
+          child: RichText(
+            textAlign: TextAlign.end,
+            text: TextSpan(
+              children: [
+                TextSpan(
+                  text: filterMode.labelOf(l10n),
+                  style: theme.textTheme.titleSmall
+                      ?.copyWith(color: theme.colorScheme.primary),
+                ),
+                TextSpan(
+                  text: '\n($count)',
+                  style: theme.textTheme.labelSmall,
+                ),
+              ],
+            ),
+          ),
         ),
         IconButton(
           onPressed: onToggleAscending,

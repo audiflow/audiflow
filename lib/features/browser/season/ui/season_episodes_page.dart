@@ -100,6 +100,7 @@ class SeasonEpisodesPage extends HookConsumerWidget {
                         filterMode: pageState.requireValue.filterMode,
                         onFilterModeChanged: pageController.setFilterMode,
                         onToggleAscending: pageController.toggleAscending,
+                        count: pageState.valueOrNull?.episodes.length,
                       ),
                     ),
                     NotificationListener<PlayButtonTappedNotification>(

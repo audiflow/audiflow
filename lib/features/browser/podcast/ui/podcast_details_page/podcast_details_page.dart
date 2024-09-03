@@ -177,9 +177,12 @@ class _PodcastDetailsPage extends HookConsumerWidget {
                                 pageController!.setEpisodeFilter,
                             onToggleAscending:
                                 pageController.toggleEpisodesAscending,
+                            count: podcastEpisodesState
+                                ?.valueOrNull?.totalEpisodes,
                           )
                         else if (viewMode == PodcastDetailsPageViewMode.seasons)
                           PodcastDetailsSeasonsFilterModeSwitch(
+                            pid: podcast!.id,
                             filterMode: pageState.seasonFilterMode,
                             onFilterModeChanged:
                                 pageController!.setSeasonFilter,
