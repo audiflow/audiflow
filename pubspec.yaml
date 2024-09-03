@@ -1,11 +1,11 @@
 name: audiflow
 description: A podcast player for Android and iOS.
 
-version: 1.0.0+5
+version: 1.0.0+6
 publish_to: none
 environment:
   sdk: '>=3.4.3 <4.0.0'
-  flutter: 3.22.2
+  flutter: 3.24.1
 isar_version: &isar_version 3.1.7
 
 dependencies:
