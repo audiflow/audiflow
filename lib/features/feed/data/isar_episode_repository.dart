@@ -52,6 +52,11 @@ class IsarEpisodeRepository implements EpisodeRepository {
   }
 
   @override
+  Future<int> count({required Id pid}) async {
+    return isar.episodes.count();
+  }
+
+  @override
   Future<void> saveEpisode(Episode episode) async {
     await isar.writeTxn(() => isar.episodes.put(episode));
   }

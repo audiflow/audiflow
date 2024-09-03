@@ -3393,6 +3393,19 @@ const EpisodeStatsSchema = CollectionSchema(
         )
       ],
     ),
+    r'ordinal': IndexSchema(
+      id: -8402712707119853872,
+      name: r'ordinal',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'ordinal',
+          type: IndexType.value,
+          caseSensitive: false,
+        )
+      ],
+    ),
     r'played': IndexSchema(
       id: 2181219931364678477,
       name: r'played',
@@ -3561,6 +3574,14 @@ extension EpisodeStatsQueryWhereSort
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         const IndexWhereClause.any(indexName: r'pid_ordinal'),
+      );
+    });
+  }
+
+  QueryBuilder<EpisodeStats, EpisodeStats, QAfterWhere> anyOrdinal() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'ordinal'),
       );
     });
   }
@@ -3851,6 +3872,97 @@ extension EpisodeStatsQueryWhere
         lower: [pid, lowerOrdinal],
         includeLower: includeLower,
         upper: [pid, upperOrdinal],
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<EpisodeStats, EpisodeStats, QAfterWhereClause> ordinalEqualTo(
+      int ordinal) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'ordinal',
+        value: [ordinal],
+      ));
+    });
+  }
+
+  QueryBuilder<EpisodeStats, EpisodeStats, QAfterWhereClause> ordinalNotEqualTo(
+      int ordinal) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'ordinal',
+              lower: [],
+              upper: [ordinal],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'ordinal',
+              lower: [ordinal],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'ordinal',
+              lower: [ordinal],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'ordinal',
+              lower: [],
+              upper: [ordinal],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<EpisodeStats, EpisodeStats, QAfterWhereClause>
+      ordinalGreaterThan(
+    int ordinal, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'ordinal',
+        lower: [ordinal],
+        includeLower: include,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<EpisodeStats, EpisodeStats, QAfterWhereClause> ordinalLessThan(
+    int ordinal, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'ordinal',
+        lower: [],
+        upper: [ordinal],
+        includeUpper: include,
+      ));
+    });
+  }
+
+  QueryBuilder<EpisodeStats, EpisodeStats, QAfterWhereClause> ordinalBetween(
+    int lowerOrdinal,
+    int upperOrdinal, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'ordinal',
+        lower: [lowerOrdinal],
+        includeLower: includeLower,
+        upper: [upperOrdinal],
         includeUpper: includeUpper,
       ));
     });

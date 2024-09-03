@@ -21,8 +21,6 @@ mixin _$EpisodeListState {
   bool get ascending => throw _privateConstructorUsedError;
   int get episodesPerPage => throw _privateConstructorUsedError;
   int get totalEpisodes => throw _privateConstructorUsedError;
-  int get loadedCount => throw _privateConstructorUsedError;
-  String? get errorMessage => throw _privateConstructorUsedError;
 
   /// Create a copy of EpisodeListState
   /// with the given fields replaced by the non-null parameter values.
@@ -42,9 +40,7 @@ abstract class $EpisodeListStateCopyWith<$Res> {
       EpisodeFilterMode filterMode,
       bool ascending,
       int episodesPerPage,
-      int totalEpisodes,
-      int loadedCount,
-      String? errorMessage});
+      int totalEpisodes});
 }
 
 /// @nodoc
@@ -67,8 +63,6 @@ class _$EpisodeListStateCopyWithImpl<$Res, $Val extends EpisodeListState>
     Object? ascending = null,
     Object? episodesPerPage = null,
     Object? totalEpisodes = null,
-    Object? loadedCount = null,
-    Object? errorMessage = freezed,
   }) {
     return _then(_value.copyWith(
       pid: null == pid
@@ -91,14 +85,6 @@ class _$EpisodeListStateCopyWithImpl<$Res, $Val extends EpisodeListState>
           ? _value.totalEpisodes
           : totalEpisodes // ignore: cast_nullable_to_non_nullable
               as int,
-      loadedCount: null == loadedCount
-          ? _value.loadedCount
-          : loadedCount // ignore: cast_nullable_to_non_nullable
-              as int,
-      errorMessage: freezed == errorMessage
-          ? _value.errorMessage
-          : errorMessage // ignore: cast_nullable_to_non_nullable
-              as String?,
     ) as $Val);
   }
 }
@@ -116,9 +102,7 @@ abstract class _$$EpisodeListStateImplCopyWith<$Res>
       EpisodeFilterMode filterMode,
       bool ascending,
       int episodesPerPage,
-      int totalEpisodes,
-      int loadedCount,
-      String? errorMessage});
+      int totalEpisodes});
 }
 
 /// @nodoc
@@ -139,8 +123,6 @@ class __$$EpisodeListStateImplCopyWithImpl<$Res>
     Object? ascending = null,
     Object? episodesPerPage = null,
     Object? totalEpisodes = null,
-    Object? loadedCount = null,
-    Object? errorMessage = freezed,
   }) {
     return _then(_$EpisodeListStateImpl(
       pid: null == pid
@@ -163,29 +145,21 @@ class __$$EpisodeListStateImplCopyWithImpl<$Res>
           ? _value.totalEpisodes
           : totalEpisodes // ignore: cast_nullable_to_non_nullable
               as int,
-      loadedCount: null == loadedCount
-          ? _value.loadedCount
-          : loadedCount // ignore: cast_nullable_to_non_nullable
-              as int,
-      errorMessage: freezed == errorMessage
-          ? _value.errorMessage
-          : errorMessage // ignore: cast_nullable_to_non_nullable
-              as String?,
     ));
   }
 }
 
 /// @nodoc
 
-class _$EpisodeListStateImpl implements _EpisodeListState {
+class _$EpisodeListStateImpl
+    with DiagnosticableTreeMixin
+    implements _EpisodeListState {
   const _$EpisodeListStateImpl(
       {required this.pid,
       required this.filterMode,
       required this.ascending,
       required this.episodesPerPage,
-      required this.totalEpisodes,
-      this.loadedCount = 0,
-      this.errorMessage});
+      required this.totalEpisodes});
 
   @override
   final int pid;
@@ -197,15 +171,22 @@ class _$EpisodeListStateImpl implements _EpisodeListState {
   final int episodesPerPage;
   @override
   final int totalEpisodes;
-  @override
-  @JsonKey()
-  final int loadedCount;
-  @override
-  final String? errorMessage;
 
   @override
-  String toString() {
-    return 'EpisodeListState(pid: $pid, filterMode: $filterMode, ascending: $ascending, episodesPerPage: $episodesPerPage, totalEpisodes: $totalEpisodes, loadedCount: $loadedCount, errorMessage: $errorMessage)';
+  String toString({DiagnosticLevel minLevel = DiagnosticLevel.info}) {
+    return 'EpisodeListState(pid: $pid, filterMode: $filterMode, ascending: $ascending, episodesPerPage: $episodesPerPage, totalEpisodes: $totalEpisodes)';
+  }
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DiagnosticsProperty('type', 'EpisodeListState'))
+      ..add(DiagnosticsProperty('pid', pid))
+      ..add(DiagnosticsProperty('filterMode', filterMode))
+      ..add(DiagnosticsProperty('ascending', ascending))
+      ..add(DiagnosticsProperty('episodesPerPage', episodesPerPage))
+      ..add(DiagnosticsProperty('totalEpisodes', totalEpisodes));
   }
 
   @override
@@ -221,16 +202,12 @@ class _$EpisodeListStateImpl implements _EpisodeListState {
             (identical(other.episodesPerPage, episodesPerPage) ||
                 other.episodesPerPage == episodesPerPage) &&
             (identical(other.totalEpisodes, totalEpisodes) ||
-                other.totalEpisodes == totalEpisodes) &&
-            (identical(other.loadedCount, loadedCount) ||
-                other.loadedCount == loadedCount) &&
-            (identical(other.errorMessage, errorMessage) ||
-                other.errorMessage == errorMessage));
+                other.totalEpisodes == totalEpisodes));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, pid, filterMode, ascending,
-      episodesPerPage, totalEpisodes, loadedCount, errorMessage);
+  int get hashCode => Object.hash(
+      runtimeType, pid, filterMode, ascending, episodesPerPage, totalEpisodes);
 
   /// Create a copy of EpisodeListState
   /// with the given fields replaced by the non-null parameter values.
@@ -248,9 +225,7 @@ abstract class _EpisodeListState implements EpisodeListState {
       required final EpisodeFilterMode filterMode,
       required final bool ascending,
       required final int episodesPerPage,
-      required final int totalEpisodes,
-      final int loadedCount,
-      final String? errorMessage}) = _$EpisodeListStateImpl;
+      required final int totalEpisodes}) = _$EpisodeListStateImpl;
 
   @override
   int get pid;
@@ -262,10 +237,6 @@ abstract class _EpisodeListState implements EpisodeListState {
   int get episodesPerPage;
   @override
   int get totalEpisodes;
-  @override
-  int get loadedCount;
-  @override
-  String? get errorMessage;
 
   /// Create a copy of EpisodeListState
   /// with the given fields replaced by the non-null parameter values.

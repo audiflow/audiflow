@@ -11,34 +11,43 @@ class IsarEpisodeStatsRepository implements EpisodeStatsRepository {
   // --- EpisodeStats
 
   @override
-  Future<List<EpisodeStats>> queryCompletedEpisodeStatsList({
+  Future<List<EpisodeStats>> queryEpisodeStatsList({
     required int pid,
+    EpisodeStatsFilterBy? filterBy,
     int? lastOrdinal,
     bool ascending = false,
     int? limit,
   }) async {
     return isar.episodeStats
         .where()
-        .optional(
-          true,
-          (q) => lastOrdinal == null
-              ? q.pidEqualToAnyOrdinal(pid)
-              : ascending
-                  ? q.pidEqualToOrdinalGreaterThan(pid, lastOrdinal)
-                  : q.pidEqualToOrdinalLessThan(pid, lastOrdinal),
-        )
         .filter()
-        .completeCountGreaterThan(0)
+        .pidEqualTo(pid)
         .optional(
-          true,
-          (q) => ascending ? q.sortByOrdinal() : q.sortByOrdinalDesc(),
+          lastOrdinal != null,
+          (q) => ascending
+              ? q.ordinalGreaterThan(lastOrdinal!)
+              : q.ordinalLessThan(lastOrdinal!),
         )
-        .optional(limit != null, (q) => q.limit(limit!))
-        .findAll();
+        .optional(filterBy != null, (q) {
+      switch (filterBy!) {
+        case EpisodeStatsFilterBy.played:
+          return q.playedEqualTo(true);
+        case EpisodeStatsFilterBy.completed:
+          return q.completeCountGreaterThan(0);
+        case EpisodeStatsFilterBy.incomplete:
+          return q.completeCountEqualTo(0);
+        case EpisodeStatsFilterBy.downloaded:
+          return q.downloadedEqualTo(true);
+      }
+    }).optional(true, (q) {
+      return ascending ? q.sortByOrdinal() : q.sortByOrdinalDesc();
+    }).optional(limit != null, (q) {
+      return q.limit(limit!);
+    }).findAll();
   }
 
   @override
-  Future<List<EpisodeStats?>> findEpisodeStatsListBy({
+  Future<List<EpisodeStats>> findEpisodeStatsListBy({
     required int pid,
     EpisodeStatsFilterBy? filterBy,
     required EpisodeStatsSortBy sortBy,
@@ -65,6 +74,8 @@ class IsarEpisodeStatsRepository implements EpisodeStatsRepository {
               return q.completeCountGreaterThan(0);
             case EpisodeStatsFilterBy.incomplete:
               return q.completeCountEqualTo(0);
+            case EpisodeStatsFilterBy.downloaded:
+              return q.downloadedEqualTo(true);
           }
         })
         .optional(true, (q) {
@@ -81,7 +92,7 @@ class IsarEpisodeStatsRepository implements EpisodeStatsRepository {
   }
 
   @override
-  Future<int> countEpisodeStatsBy({
+  Future<int> count({
     required int pid,
     EpisodeStatsFilterBy? filterBy,
   }) async {
@@ -97,6 +108,8 @@ class IsarEpisodeStatsRepository implements EpisodeStatsRepository {
           return q.completeCountGreaterThan(0);
         case EpisodeStatsFilterBy.incomplete:
           return q.completeCountEqualTo(0);
+        case EpisodeStatsFilterBy.downloaded:
+          return q.downloadedEqualTo(true);
       }
     }).count();
   }
@@ -155,7 +168,7 @@ class IsarEpisodeStatsRepository implements EpisodeStatsRepository {
     return isar.episodeStats.where().filter().playedEqualTo(false).findAll();
   }
 
-  // --- Recently played episodes
+// --- Recently played episodes
 
   @override
   Future<(List<Episode>, int?)> findRecentlyPlayedEpisodeList({

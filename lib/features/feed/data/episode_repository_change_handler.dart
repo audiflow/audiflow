@@ -35,6 +35,9 @@ class EpisodeRepositoryHandleHandler implements EpisodeRepository {
   Future<Episode?> findLatestEpisode(Id pid) => _inner.findLatestEpisode(pid);
 
   @override
+  Future<int> count({required Id pid}) => _inner.count(pid: pid);
+
+  @override
   Future<void> saveEpisode(Episode episode) async {
     await _inner.saveEpisode(episode);
     _ref

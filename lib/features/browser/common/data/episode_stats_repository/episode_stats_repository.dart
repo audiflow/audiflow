@@ -8,6 +8,7 @@ enum EpisodeStatsFilterBy {
   played,
   completed,
   incomplete,
+  downloaded,
 }
 
 enum EpisodeStatsSortBy {
@@ -19,14 +20,15 @@ abstract class EpisodeStatsRepository {
 
   Future<List<EpisodeStats?>> findEpisodeStatsList(Iterable<Id> ids);
 
-  Future<List<EpisodeStats>> queryCompletedEpisodeStatsList({
+  Future<List<EpisodeStats>> queryEpisodeStatsList({
     required int pid,
+    EpisodeStatsFilterBy? filterBy,
     int? lastOrdinal,
     bool ascending = false,
     int? limit,
   });
 
-  Future<List<EpisodeStats?>> findEpisodeStatsListBy({
+  Future<List<EpisodeStats>> findEpisodeStatsListBy({
     required int pid,
     EpisodeStatsFilterBy? filterBy,
     required EpisodeStatsSortBy sortBy,
@@ -36,7 +38,7 @@ abstract class EpisodeStatsRepository {
     int? limit,
   });
 
-  Future<int> countEpisodeStatsBy({
+  Future<int> count({
     required int pid,
     EpisodeStatsFilterBy? filterBy,
   });

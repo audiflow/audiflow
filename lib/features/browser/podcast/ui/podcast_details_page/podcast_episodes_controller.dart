@@ -1,14 +1,15 @@
 import 'dart:async';
+import 'dart:math' as math;
 
-import 'package:audiflow/common/data/app_path_repository.dart';
 import 'package:audiflow/features/browser/common/data/episode_stats_repository/episode_stats_repository.dart';
 import 'package:audiflow/features/browser/common/model/episode_filter_mode.dart';
-import 'package:audiflow/features/browser/episode/data/episode_list_entry_repository.dart';
-import 'package:audiflow/features/browser/episode/service/episode_list_entry_populator.dart';
 import 'package:audiflow/features/feed/data/episode_repository.dart';
 import 'package:audiflow/features/player/service/audio_player_service.dart';
 import 'package:audiflow/features/queue/service/audio_queue_service.dart';
 import 'package:audiflow/utils/logger.dart';
+import 'package:collection/collection.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -17,16 +18,11 @@ part 'podcast_episodes_controller.g.dart';
 
 @riverpod
 class PodcastEpisodesController extends _$PodcastEpisodesController {
-  String get _appDocDir => ref.read(appDocDirProvider);
-
   EpisodeRepository get _episodeRepository =>
       ref.read(episodeRepositoryProvider);
 
   EpisodeStatsRepository get _episodeStatsRepository =>
       ref.read(episodeStatsRepositoryProvider);
-
-  EpisodeListEntryRepository get _episodeListEntryRepository =>
-      ref.read(episodeListEntryRepositoryProvider);
 
   AudioPlayerState? get _audioPlayerState =>
       ref.read(audioPlayerServiceProvider);
@@ -37,110 +33,136 @@ class PodcastEpisodesController extends _$PodcastEpisodesController {
   AudioQueueService get _audioQueueService =>
       ref.read(audioQueueServiceProvider);
 
-  late Completer<(int, int, String?)> _completer;
-  late EpisodeListEntryPopulator _populator;
+  late final _UnplayedEpisodesLoader _unplayedEpisodesLoader;
+
+  final _episodes = <Episode>[];
+  bool _loadedAllEpisodes = false;
+  Completer<void>? _loadNextCompleter;
 
   @override
   Future<EpisodeListState> build({
     required int pid,
     required EpisodeFilterMode filterMode,
     required bool ascending,
-    int episodesPerPage = 10,
+    int episodesPerPage = 30,
   }) async {
     logger.d(
       () => 'build (pid: $pid, filterMode: $filterMode, ascend: $ascending,'
           ' episodesPerPage: $episodesPerPage)',
     );
 
-    _completer = Completer<(int, int, String?)>();
-    _populator = EpisodeListEntryPopulator(
+    if (filterMode == EpisodeFilterMode.unplayed) {
+      _unplayedEpisodesLoader = _UnplayedEpisodesLoader(
+        ref,
+        pid: pid,
+        ascending: ascending,
+        episodesPerPage: episodesPerPage,
+      );
+      await _unplayedEpisodesLoader.countEpisodes();
+    }
+
+    final v = await Future.wait<dynamic>([
+      _countEpisodes(),
+      _loadMoreEpisodes(),
+    ]);
+
+    final totalEpisodes = v[0] as int;
+
+    return EpisodeListState(
       pid: pid,
       filterMode: filterMode,
       ascending: ascending,
-      firstReadCount: episodesPerPage,
-      appDocDir: _appDocDir,
+      episodesPerPage: episodesPerPage,
+      totalEpisodes: totalEpisodes,
     );
-
-    final subscription = _populator.stream.listen(
-      (event) {
-        if (!_completer.isCompleted) {
-          _completer.complete((event.total, event.loaded, null));
-        } else {
-          state = state.whenData(
-            (value) => value.copyWith(
-              loadedCount: event.loaded,
-              totalEpisodes: event.total,
-            ),
-          );
-        }
-      },
-      onError: (Object error) {
-        _completer.complete((0, 0, error.toString()));
-      },
-    );
-
-    ref.onDispose(() {
-      _populator.dispose();
-      subscription.cancel();
-      if (!_completer.isCompleted) {
-        _completer.complete((0, 0, null));
-      }
-    });
-
-    return _completer.future.then((message) {
-      final (totalEpisodes, loadedCount, errorMessage) = message;
-      return EpisodeListState(
-        pid: pid,
-        filterMode: filterMode,
-        ascending: ascending,
-        episodesPerPage: episodesPerPage,
-        totalEpisodes: totalEpisodes,
-        loadedCount: loadedCount,
-        errorMessage: errorMessage,
-      );
-    });
   }
 
-  Future<Episode?> getEpisodeAt(int index) async {
-    if (index < (state.valueOrNull?.loadedCount ?? 0)) {
-      final entry = await _episodeListEntryRepository.findBy(
-        pid: pid,
-        order: index,
-      );
-      return entry == null ? null : _episodeRepository.findEpisode(entry.eid);
-    } else if (state.requireValue.totalEpisodes <= index) {
-      return null;
+  Episode? getEpisodeAt(int index) {
+    _loadMoreIfNeeded(index);
+    if (index < _episodes.length) {
+      return _episodes[index];
     }
 
-    final completer = Completer<Episode?>();
-    ref
-      ..listenSelf((_, next) {
-        if (completer.isCompleted) {
-          return;
-        }
-        next.whenData(
-          (value) async {
-            if (index < value.loadedCount) {
-              final entry = await _episodeListEntryRepository.findBy(
-                pid: pid,
-                order: index,
-              );
-              final episode = entry == null
-                  ? null
-                  : _episodeRepository.findEpisode(entry.eid);
-              completer.complete(episode);
-            } else if (state.requireValue.totalEpisodes <= index) {
-              completer.complete(null);
-            }
-          },
+    logger.w('getEpisodeAt(index) - out of index. this should not be happen');
+    // TODO(reedom): replace with more better solution.
+    final oldState = state;
+    state = const AsyncValue.loading();
+    _loadNextCompleter?.future.then((_) {
+      state = oldState;
+    });
+    return null;
+  }
+
+  Future<void> _loadMoreIfNeeded(int index) async {
+    if (index < _episodes.length - episodesPerPage ~/ 2) {
+      return;
+    }
+    if (!state.hasValue ||
+        state.requireValue.totalEpisodes <= _episodes.length) {
+      return;
+    }
+    if (_loadNextCompleter?.isCompleted == false) {
+      // guard; it's loading.
+      return;
+    }
+
+    _loadNextCompleter = Completer();
+    await _loadMoreEpisodes();
+    _loadNextCompleter?.complete();
+    _loadNextCompleter = null;
+  }
+
+  Future<void> _loadMoreEpisodes() async {
+    final episodes =
+        await _loadEpisodes(lastOrdinal: _episodes.lastOrNull?.ordinal);
+    _episodes.addAll(episodes);
+    if (episodes.length < episodesPerPage ||
+        state.hasValue &&
+            state.requireValue.totalEpisodes <= _episodes.length) {
+      _loadedAllEpisodes = true;
+    }
+  }
+
+  Future<List<Episode>> _loadEpisodes({int? lastOrdinal}) async {
+    logger.d(() => '_loadEpisodes(lastOrdinal: $lastOrdinal)');
+    switch (filterMode) {
+      case EpisodeFilterMode.all:
+        return _episodeRepository.queryEpisodes(
+          pid: pid,
+          lastOrdinal: lastOrdinal,
+          ascending: ascending,
+          limit: episodesPerPage,
         );
-      })
-      ..onDispose(() {
-        if (!completer.isCompleted) {
-          completer.complete(null);
-        }
-      });
-    return completer.future;
+      case EpisodeFilterMode.completed || EpisodeFilterMode.downloaded:
+        final statsList = await _episodeStatsRepository.queryEpisodeStatsList(
+          pid: pid,
+          filterBy: filterMode.filterBy,
+          lastOrdinal: lastOrdinal,
+          ascending: ascending,
+          limit: episodesPerPage,
+        );
+        return statsList.isEmpty
+            ? []
+            : _episodeRepository
+                .findEpisodes(statsList.map((e) => e.eid))
+                .then((list) => list.whereNotNull().toList());
+      case EpisodeFilterMode.unplayed:
+        return _unplayedEpisodesLoader.loadEpisodes();
+    }
+  }
+
+  Future<int> _countEpisodes() async {
+    switch (filterMode) {
+      case EpisodeFilterMode.all:
+        return _episodeRepository.count(pid: pid);
+      case EpisodeFilterMode.completed || EpisodeFilterMode.downloaded:
+        return _episodeStatsRepository.count(
+          pid: pid,
+          filterBy: filterMode.filterBy,
+        );
+      case EpisodeFilterMode.unplayed:
+        return _episodeRepository.count(pid: pid);
+    }
   }
 
   Future<int?> getLastPlayedIndex() async {
@@ -152,34 +174,40 @@ class PodcastEpisodesController extends _$PodcastEpisodesController {
     if (episodes.isEmpty) {
       return null;
     }
-    final entry = await _episodeListEntryRepository.findBy(
-      pid: pid,
-      eid: episodes.first!.eid,
-    );
-    return entry?.order;
+
+    final eid = episodes.first.eid;
+    var index = _episodes.indexWhere((e) => e.id == eid);
+    while (index < 0 && !_loadedAllEpisodes) {
+      final len = _episodes.length;
+      await _loadMoreEpisodes();
+      index = _episodes.indexWhere((e) => e.id == eid, len);
+    }
+    if (0 <= index) {
+      await _loadMoreIfNeeded(index);
+      return index;
+    } else {
+      return null;
+    }
   }
 
   Future<void> togglePlayState(Episode episode) async {
     if (_audioPlayerState?.episode.id == episode.id) {
       return _audioPlayerService.togglePlayPause();
-    } else {
-      final entry = await _episodeListEntryRepository.findBy(
-        pid: pid,
-        eid: episode.id,
-      );
-      if (entry == null) {
-        return;
-      }
+    }
 
-      final entries = await _episodeListEntryRepository.query(
-        pid,
-        lastOrdinal: entry.order,
-        ascending: ascending,
-      );
+    final index = _episodes.indexWhere((e) => e.id == episode.id);
+    if (!ascending) {
       await _audioQueueService.buildAndPlay(
         pid: pid,
         eid: episode.id,
-        queueingEpisodeIds: entries.map((e) => e.eid),
+        queueingEpisodeIds: _episodes.slice(0, index).reversed.map((e) => e.id),
+      );
+    } else {
+      await _loadMoreIfNeeded(index);
+      await _audioQueueService.buildAndPlay(
+        pid: pid,
+        eid: episode.id,
+        queueingEpisodeIds: _episodes.slice(index + 1).map((e) => e.id),
       );
     }
   }
@@ -193,7 +221,95 @@ class EpisodeListState with _$EpisodeListState {
     required bool ascending,
     required int episodesPerPage,
     required int totalEpisodes,
-    @Default(0) int loadedCount,
-    String? errorMessage,
   }) = _EpisodeListState;
+}
+
+extension _EpisodeFilterModeExt on EpisodeFilterMode {
+  EpisodeStatsFilterBy? get filterBy {
+    switch (this) {
+      case EpisodeFilterMode.all:
+        return null;
+      case EpisodeFilterMode.unplayed:
+        return null;
+      case EpisodeFilterMode.completed:
+        return EpisodeStatsFilterBy.completed;
+      case EpisodeFilterMode.downloaded:
+        return EpisodeStatsFilterBy.downloaded;
+    }
+  }
+}
+
+class _UnplayedEpisodesLoader {
+  _UnplayedEpisodesLoader(
+    this.ref, {
+    required this.pid,
+    required this.ascending,
+    required this.episodesPerPage,
+  });
+
+  EpisodeRepository get _episodeRepository =>
+      ref.read(episodeRepositoryProvider);
+
+  EpisodeStatsRepository get _episodeStatsRepository =>
+      ref.read(episodeStatsRepositoryProvider);
+
+  final Ref ref;
+  final int pid;
+  final bool ascending;
+  final int episodesPerPage;
+
+  late final Set<int> _playedIds;
+  int? _totalEpisodes;
+  int? _lastOrdinal;
+  bool _readToEnd = false;
+  List<Episode> _remainingEpisodes = [];
+
+  Future<int> countEpisodes() async {
+    if (_totalEpisodes != null) {
+      return _totalEpisodes!;
+    }
+
+    final v = await Future.wait<dynamic>([
+      _episodeRepository.count(pid: pid),
+      _episodeStatsRepository.queryEpisodeStatsList(
+        pid: pid,
+        filterBy: EpisodeStatsFilterBy.played,
+        ascending: ascending,
+      )
+    ]);
+
+    final episodesCount = v[0] as int;
+    _playedIds = Set.from((v[1] as List<EpisodeStats>).map((s) => s.eid));
+    _totalEpisodes = math.max(0, episodesCount - _playedIds.length);
+    return _totalEpisodes!;
+  }
+
+  Future<List<Episode>> loadEpisodes() async {
+    if (episodesPerPage <= _remainingEpisodes.length) {
+      final episodes = _remainingEpisodes.slice(0, episodesPerPage);
+      _remainingEpisodes = _remainingEpisodes.slice(episodesPerPage).toList();
+      return episodes;
+    } else if (_readToEnd) {
+      final episodes = _remainingEpisodes;
+      _remainingEpisodes = [];
+      return episodes;
+    }
+
+    final uncheckedEpisodes = await _episodeRepository.queryEpisodes(
+      pid: pid,
+      lastOrdinal: _lastOrdinal,
+      ascending: ascending,
+      limit: episodesPerPage * 2,
+    );
+    if (uncheckedEpisodes.isEmpty) {
+      _readToEnd = true;
+      return [];
+    }
+
+    _lastOrdinal = uncheckedEpisodes.last.ordinal;
+    _readToEnd = uncheckedEpisodes.length < episodesPerPage * 2;
+    _remainingEpisodes
+        .addAll(uncheckedEpisodes.where((e) => !_playedIds.contains(e.id)));
+    return loadEpisodes();
+  }
 }

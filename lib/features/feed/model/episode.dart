@@ -229,6 +229,7 @@ class EpisodeStats {
   final int pid;
 
   /// The ordinal number of the episode.
+  @Index()
   final int ordinal;
 
   /// Actual duration of the episode.
