@@ -253,7 +253,7 @@ class AppRouter extends _$AppRouter {
   Future<void> pushSeason(Podcast podcast, Season season) async {
     await state.pushNamed(
       'season',
-      extra: (podcast, season, ''),
+      extra: (podcast, season),
     );
   }
 
