@@ -18,7 +18,7 @@ class EpisodeStatsRepositoryChangeHandler implements EpisodeStatsRepository {
     EpisodeStatsFilterBy? filterBy,
     int? lastOrdinal,
     bool ascending = false,
-    required int limit,
+    int? limit,
   }) =>
       _inner.queryEpisodeStatsList(
         pid: pid,

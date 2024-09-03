@@ -25,7 +25,7 @@ abstract class EpisodeStatsRepository {
     EpisodeStatsFilterBy? filterBy,
     int? lastOrdinal,
     bool ascending = false,
-    required int limit,
+    int? limit,
   });
 
   Future<List<EpisodeStats>> findEpisodeStatsListBy({

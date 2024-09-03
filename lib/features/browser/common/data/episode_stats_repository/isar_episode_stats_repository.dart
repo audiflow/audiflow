@@ -16,7 +16,7 @@ class IsarEpisodeStatsRepository implements EpisodeStatsRepository {
     EpisodeStatsFilterBy? filterBy,
     int? lastOrdinal,
     bool ascending = false,
-    required int limit,
+    int? limit,
   }) async {
     return isar.episodeStats
         .where()
@@ -29,22 +29,21 @@ class IsarEpisodeStatsRepository implements EpisodeStatsRepository {
               : q.ordinalLessThan(lastOrdinal!),
         )
         .optional(filterBy != null, (q) {
-          switch (filterBy!) {
-            case EpisodeStatsFilterBy.played:
-              return q.playedEqualTo(true);
-            case EpisodeStatsFilterBy.completed:
-              return q.completeCountGreaterThan(0);
-            case EpisodeStatsFilterBy.incomplete:
-              return q.completeCountEqualTo(0);
-            case EpisodeStatsFilterBy.downloaded:
-              return q.downloadedEqualTo(true);
-          }
-        })
-        .optional(true, (q) {
-          return ascending ? q.sortByOrdinal() : q.sortByOrdinalDesc();
-        })
-        .limit(limit)
-        .findAll();
+      switch (filterBy!) {
+        case EpisodeStatsFilterBy.played:
+          return q.playedEqualTo(true);
+        case EpisodeStatsFilterBy.completed:
+          return q.completeCountGreaterThan(0);
+        case EpisodeStatsFilterBy.incomplete:
+          return q.completeCountEqualTo(0);
+        case EpisodeStatsFilterBy.downloaded:
+          return q.downloadedEqualTo(true);
+      }
+    }).optional(true, (q) {
+      return ascending ? q.sortByOrdinal() : q.sortByOrdinalDesc();
+    }).optional(limit != null, (q) {
+      return q.limit(limit!);
+    }).findAll();
   }
 
   @override
@@ -169,7 +168,7 @@ class IsarEpisodeStatsRepository implements EpisodeStatsRepository {
     return isar.episodeStats.where().filter().playedEqualTo(false).findAll();
   }
 
-  // --- Recently played episodes
+// --- Recently played episodes
 
   @override
   Future<(List<Episode>, int?)> findRecentlyPlayedEpisodeList({

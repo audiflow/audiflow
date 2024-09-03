@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:audiflow/features/browser/common/data/episode_stats_repository/episode_stats_repository.dart';
 import 'package:audiflow/features/browser/common/model/episode_filter_mode.dart';
@@ -8,6 +9,7 @@ import 'package:audiflow/features/queue/service/audio_queue_service.dart';
 import 'package:audiflow/utils/logger.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -31,6 +33,8 @@ class PodcastEpisodesController extends _$PodcastEpisodesController {
   AudioQueueService get _audioQueueService =>
       ref.read(audioQueueServiceProvider);
 
+  late final _UnplayedEpisodesLoader _unplayedEpisodesLoader;
+
   final _episodes = <Episode>[];
   bool _loadedAllEpisodes = false;
   Completer<void>? _loadNextCompleter;
@@ -46,6 +50,16 @@ class PodcastEpisodesController extends _$PodcastEpisodesController {
       () => 'build (pid: $pid, filterMode: $filterMode, ascend: $ascending,'
           ' episodesPerPage: $episodesPerPage)',
     );
+
+    if (filterMode == EpisodeFilterMode.unplayed) {
+      _unplayedEpisodesLoader = _UnplayedEpisodesLoader(
+        ref,
+        pid: pid,
+        ascending: ascending,
+        episodesPerPage: episodesPerPage,
+      );
+      await _unplayedEpisodesLoader.countEpisodes();
+    }
 
     final v = await Future.wait<dynamic>([
       _countEpisodes(),
@@ -133,7 +147,7 @@ class PodcastEpisodesController extends _$PodcastEpisodesController {
                 .findEpisodes(statsList.map((e) => e.eid))
                 .then((list) => list.whereNotNull().toList());
       case EpisodeFilterMode.unplayed:
-        return [];
+        return _unplayedEpisodesLoader.loadEpisodes();
     }
   }
 
@@ -222,5 +236,80 @@ extension _EpisodeFilterModeExt on EpisodeFilterMode {
       case EpisodeFilterMode.downloaded:
         return EpisodeStatsFilterBy.downloaded;
     }
+  }
+}
+
+class _UnplayedEpisodesLoader {
+  _UnplayedEpisodesLoader(
+    this.ref, {
+    required this.pid,
+    required this.ascending,
+    required this.episodesPerPage,
+  });
+
+  EpisodeRepository get _episodeRepository =>
+      ref.read(episodeRepositoryProvider);
+
+  EpisodeStatsRepository get _episodeStatsRepository =>
+      ref.read(episodeStatsRepositoryProvider);
+
+  final Ref ref;
+  final int pid;
+  final bool ascending;
+  final int episodesPerPage;
+
+  late final Set<int> _playedIds;
+  int? _totalEpisodes;
+  int? _lastOrdinal;
+  bool _readToEnd = false;
+  List<Episode> _remainingEpisodes = [];
+
+  Future<int> countEpisodes() async {
+    if (_totalEpisodes != null) {
+      return _totalEpisodes!;
+    }
+
+    final v = await Future.wait<dynamic>([
+      _episodeRepository.count(pid: pid),
+      _episodeStatsRepository.queryEpisodeStatsList(
+        pid: pid,
+        filterBy: EpisodeStatsFilterBy.played,
+        ascending: ascending,
+      )
+    ]);
+
+    final episodesCount = v[0] as int;
+    _playedIds = Set.from((v[1] as List<EpisodeStats>).map((s) => s.eid));
+    _totalEpisodes = math.max(0, episodesCount - _playedIds.length);
+    return _totalEpisodes!;
+  }
+
+  Future<List<Episode>> loadEpisodes() async {
+    if (episodesPerPage <= _remainingEpisodes.length) {
+      final episodes = _remainingEpisodes.slice(0, episodesPerPage);
+      _remainingEpisodes = _remainingEpisodes.slice(episodesPerPage).toList();
+      return episodes;
+    } else if (_readToEnd) {
+      final episodes = _remainingEpisodes;
+      _remainingEpisodes = [];
+      return episodes;
+    }
+
+    final uncheckedEpisodes = await _episodeRepository.queryEpisodes(
+      pid: pid,
+      lastOrdinal: _lastOrdinal,
+      ascending: ascending,
+      limit: episodesPerPage * 2,
+    );
+    if (uncheckedEpisodes.isEmpty) {
+      _readToEnd = true;
+      return [];
+    }
+
+    _lastOrdinal = uncheckedEpisodes.last.ordinal;
+    _readToEnd = uncheckedEpisodes.length < episodesPerPage * 2;
+    _remainingEpisodes
+        .addAll(uncheckedEpisodes.where((e) => !_playedIds.contains(e.id)));
+    return loadEpisodes();
   }
 }
