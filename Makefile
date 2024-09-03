@@ -55,3 +55,8 @@ format:
 icon: ## Generate app icons.
 icon:
 	@flutter pub run flutter_launcher_icons
+
+.PHONY: build-aab
+build-aab: ## Build appbundle
+build-aab:
+	@flutter build appbundle
