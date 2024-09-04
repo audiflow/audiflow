@@ -138,6 +138,7 @@ class PodcastFeedLoader extends _$PodcastFeedLoader {
           );
         }
         state = state.copyWith(loadingState: loadingState);
+        _workerPort?.send(_ContinueEpisodeLoadingCommand());
       case _LoadedSeasonMessage(seasons: final seasons):
         if (seasons.isNotEmpty) {
           ref
@@ -197,6 +198,7 @@ class _Worker {
   late PodcastFeedParser<Uint8List, Podcast, Episode>? _feedParser;
   Podcast? _podcast;
   final _newEpisodes = <Episode>[];
+  final _ackCompleter = Completer<void>();
 
   void dispose() {
     _commandStreamController.close();
@@ -229,10 +231,16 @@ class _Worker {
                 feedUrl: final feedUrl,
                 collectionId: final collectionId,
               ):
-              await _handleLoadFeedEvent(
-                feedUrl: feedUrl,
-                collectionId: collectionId,
+              unawaited(
+                _handleLoadFeedEvent(
+                  feedUrl: feedUrl,
+                  collectionId: collectionId,
+                ),
               );
+            case _ContinueEpisodeLoadingCommand():
+              if (!_ackCompleter.isCompleted) {
+                _ackCompleter.complete(null);
+              }
             case _CancelledCommand():
               _complete();
           }
@@ -409,6 +417,7 @@ class _Worker {
           ),
         );
         episodes.clear();
+        await _ackCompleter.future;
         batchLength = 200;
       }
     }
@@ -512,6 +521,15 @@ class _LoadFeedCommand extends _Command {
     return '_LoadFeedCommand('
         'feedUrl: $feedUrl, '
         'collectionId: $collectionId)';
+  }
+}
+
+class _ContinueEpisodeLoadingCommand extends _Command {
+  _ContinueEpisodeLoadingCommand();
+
+  @override
+  String toString() {
+    return '_ContinueEpisodeLoadingCommand()';
   }
 }
 
