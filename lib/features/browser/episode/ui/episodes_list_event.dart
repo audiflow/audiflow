@@ -1,0 +1,38 @@
+import 'package:flutter/material.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+part 'episodes_list_event.g.dart';
+
+@Riverpod(dependencies: [])
+class EpisodesListEventStream extends _$EpisodesListEventStream {
+  @override
+  Stream<EpisodesListEvent> build() async* {}
+
+  void add(EpisodesListEvent event) {
+    state = AsyncData(event);
+  }
+}
+
+sealed class EpisodesListEvent {}
+
+class MenuScrollToEpisodeEvent implements EpisodesListEvent {
+  const MenuScrollToEpisodeEvent();
+}
+
+@riverpod
+class EpisodesListActionStream extends _$EpisodesListActionStream {
+  @override
+  Stream<EpisodesListAction> build() async* {}
+
+  void add(EpisodesListAction action) {
+    state = AsyncData(action);
+  }
+}
+
+sealed class EpisodesListAction {}
+
+class ScrollToWidgetAction implements EpisodesListAction {
+  const ScrollToWidgetAction(this.key);
+
+  final Key key;
+}

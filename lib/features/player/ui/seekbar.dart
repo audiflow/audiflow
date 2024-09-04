@@ -1,0 +1,160 @@
+import 'dart:math' as math;
+
+import 'package:audiflow/utils/duration.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
+
+class Seekbar extends HookWidget {
+  const Seekbar({
+    required this.position,
+    required this.duration,
+    required this.onSeek,
+    super.key,
+  });
+
+  final Duration? position;
+  final Duration? duration;
+  final ValueChanged<Duration> onSeek;
+
+  @override
+  Widget build(BuildContext context) {
+    final seekPosState = useState<Duration?>(null);
+    final pos = normalizedDuration(
+      position: seekPosState.value ?? position,
+      duration: duration,
+    );
+
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: _Bar(
+            position: pos,
+            duration: duration,
+            onChangeStart: (value) {
+              seekPosState.value = value;
+            },
+            onChanged: (value) {
+              seekPosState.value = value;
+            },
+            onChangeEnd: (value) {
+              onSeek(value);
+              seekPosState.value = null;
+            },
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _TimeLabel(time: pos),
+              _TimeLabel(
+                time:
+                    pos == null || duration == null ? null : (pos - duration!),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _Bar extends HookWidget {
+  const _Bar({
+    required this.position,
+    required this.duration,
+    required this.onChangeStart,
+    required this.onChanged,
+    required this.onChangeEnd,
+  });
+
+  final Duration? position;
+  final Duration? duration;
+  final ValueChanged<Duration> onChangeStart;
+  final ValueChanged<Duration> onChanged;
+  final ValueChanged<Duration> onChangeEnd;
+
+  @override
+  Widget build(BuildContext context) {
+    final state = useState<double?>(null);
+    final theme = Theme.of(context);
+
+    return SliderTheme(
+      data: SliderTheme.of(context).copyWith(
+        trackHeight: 4,
+        thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 0),
+        overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
+        overlayColor: Colors.transparent,
+        inactiveTrackColor: theme.colorScheme.inversePrimary.withOpacity(0.5),
+      ),
+      child: (position == null || duration == null)
+          ? const Slider(value: 0, onChanged: null)
+          : Slider(
+              value: position!.inMilliseconds.toDouble(),
+              max: duration!.inMilliseconds.toDouble(),
+              onChanged: (value) {
+                if (state.value == null) {
+                  state.value = value - position!.inMilliseconds.toDouble();
+                  onChangeStart(position!);
+                } else {
+                  onChanged(
+                    _normalizedPosition(milliseconds: value - state.value!),
+                  );
+                }
+              },
+              onChangeEnd: (value) {
+                if (state.value != null) {
+                  onChangeEnd(
+                    _normalizedPosition(milliseconds: value - state.value!),
+                  );
+                  state.value = null;
+                }
+              },
+            ),
+    );
+  }
+
+  Duration _normalizedPosition({
+    required double milliseconds,
+  }) {
+    final total = duration!.inMilliseconds.toDouble();
+    return Duration(
+      milliseconds: math.max(0, math.min(total, milliseconds).toInt()),
+    );
+  }
+}
+
+class _TimeLabel extends StatelessWidget {
+  const _TimeLabel({
+    required this.time,
+  });
+
+  final Duration? time;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      time?.format() ?? '',
+      style: Theme.of(context)
+          .textTheme
+          .labelMedium!
+          .copyWith(color: Colors.grey[600]),
+    );
+  }
+}
+
+extension _DurationExt on Duration {
+  String format() {
+    final milliseconds = inMilliseconds;
+    final totalSeconds =
+        milliseconds ~/ 1000 + (0 < milliseconds.remainder(1000) ? 1 : 0);
+    final minutes = (totalSeconds ~/ 60).abs();
+    final seconds = totalSeconds.remainder(60).abs();
+    final flag = isNegative ? '-' : '';
+    return 0 < minutes || 0 < seconds
+        ? '$flag$minutes:${seconds.toString().padLeft(2, '0')}'
+        : '0:00';
+  }
+}

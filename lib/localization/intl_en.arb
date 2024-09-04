@@ -1,0 +1,141 @@
+{
+  "locale": "en",
+  "ok": "OK",
+  "cancel": "Cancel",
+  "goBack": "Go Back",
+  "continues": "Continue",
+  "showMore": "Show more",
+  "showLess": "Show less",
+  "clearSearchButton": "Clear search text",
+  "subscriptions": "My Podcasts",
+  "popularPodcasts": "Popular Podcasts",
+  "recentlyPlayed": "Recently Played",
+  "latestEpisodes": "Latest Episodes",
+  "home": "Home",
+  "chart": "Chart",
+  "search": "Search",
+  "library": "Library",
+  "queue": "Queue",
+  "nullSeason": "Extras",
+  "clear": "clear",
+  "episode": "Episode",
+  "episodes": "Episodes",
+  "season": "Season",
+  "seasons": "Seasons",
+  "settings": "Settings",
+  "wifi": "Wi-Fi",
+  "mobileData": "Cellular Connection",
+  "nEpisodes": "{count, plural, =1{1 episodes} other{{count} episodes}}",
+  "@nEpisodes": {
+    "description": "Number of episodes",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sec": "s",
+  "min": "m",
+  "hour": "h",
+  "nDaysAgo": "{count, plural, =1{1 day ago} other{{count} days ago}}",
+  "@nDaysAgo": {
+    "description": "Number of days ago",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "nHoursAgo": "{count, plural, =1{1 hour ago} other{{count} hours ago}}",
+  "@nHoursAgo": {
+    "description": "Number of hours ago",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "nMinutesAgo": "{count, plural, =1{1 minute ago} other{{count} minutes ago}}",
+  "@nMinutesAgo": {
+    "description": "Number of minutes ago",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "nSecondsAgo": "{count, plural, =1{1 second ago} other{{count} seconds ago}}",
+  "@nSecondsAgo": {
+    "description": "Number of seconds ago",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "justNow": "Just now",
+  "episodeFilterMode": "Filter Episodes",
+  "episodeFilterModeAll": "All episodes",
+  "episodeFilterModePlayed": "Played",
+  "episodeFilterModeUnplayed": "Unplayed",
+  "episodeFilterModeDownloaded": "Downloaded",
+  "seasonFilterMode": "Filter Seasons",
+  "seasonFilterModeAll": "All seasons",
+  "seasonFilterModeUnplayed": "Unplayed",
+  "viewSortOldestToNewest": "Sort Oldest to Newest",
+  "jumpToLastEpisode": "Jump to last episode",
+  "resume": "Resume",
+  "play": "Play",
+  "pause": "Pause",
+  "playFromStart": "Play from start",
+  "playLatest": "Play latest",
+  "playAgain": "Play again",
+  "tooltipPlay": "Play episode",
+  "tooltipPause": "Pause episode",
+  "primaryQueue": "Queue (manual)",
+  "adhocQueue": "Queue (auto)",
+  "settingsOnDemandDownloadOnPlayback": "Download Audio on Playback",
+  "settingsOnDemandDownloadOnPlaybackDescription": "If not pre-downloaded, audio will be fetched at the start of playback",
+  "settingsManualDownload": "Manual Download",
+  "settingsManualDownloadDescription": "When manually downloading episodes",
+  "settingsAutoDownload": "Automatic Download",
+  "settingsAutoDownloadDescription": "Automatically downloads in various situations to reduce wait times and hassle",
+  "settingsAutoDownloadEnabled": "Enabled",
+  "settingsAutoDownloadRecent": "Number of Recently Published Episodes to Fetch",
+  "settingsAutoDownloadSubject": "",
+  "settingsAutoDownloadQueuedEpisodes": "Episodes added to queue manually",
+  "settingsAutoDownloadIncludesAdhoc": "Includes episodes automatically added to queue",
+  "settingsAutoDelete": "Automatic Deletion",
+  "settingsAutoDeleteDescription": "Automatically delete episodes after playback",
+  "settingsAutoDeleteAfter": "After Playback",
+  "settingsAutoDeleteAfterDescription": "Automatically delete episodes after playback",
+  "settingsAutoDeleteAfterNever": "Never",
+  "settingsAutoDeleteAfter1day": "1 day",
+  "settingsAutoDeleteAfter3days": "3 days",
+  "settingsAutoDeleteAfter7days": "7 days",
+  "settingsAutoDeleteAfter14days": "14 days",
+  "settingsAutoDeleteAfter30days": "30 days",
+  "settingsWarnMobileData": "Warn on Cellular Connection",
+  "settingsWarnMobileDataDescription": "For those concerned about data usage, such as with metered plans",
+  "settingsWarnWifi": "Warn when not connected to Wi-Fi",
+  "settingsWifiOnly": "Wi-Fi Connection Only",
+  "settingsOpml": "OPML Import/Export",
+  "settingsOpmlDescription": "Import or export podcasts via OPML file, a de-facto standard file for podcast subscriptions",
+  "settingsOpmlImport": "Import Podcasts via OPML File",
+  "settingsOpmlExport": "Export Podcasts to OPML File",
+  "titleNoFiFi": "Not Connected to Wi-Fi",
+  "titleCellularConnection": "Cellular Connection",
+  "captionStreamingNoWifi": "Since Wi-Fi is not connected, audio data will be fetched over cellular data.",
+  "captionDownloadNoWifi": "'Since Wi-Fi is not connected, the episode will be downloaded over cellular data.'",
+  "captionWarnSettingNavigation": "You can change this warning in the settings",
+  "proceedPlaying": "Play anyway",
+  "proceedDownload": "Proceed",
+  "downloadAllEpisodes": "Download All Episodes",
+  "downloadUnplayedEpisodes": "Download Unplayed Episodes",
+  "semantics_podcast_details_header": "Podcast details and episodes page",
+  "search_for_podcasts_hint": "Search for podcasts",
+  "semantic_announce_searching": "Searching, please wait.",
+  "no_search_results_message": "No podcasts found",
+  "podcast_funding_dialog_header": "Podcast Funding",
+  "podcast_funding_consent_message": "This funding link will take you to an external site where you will be able to directly support the show. Links are provided by the podcast authors and is not controlled by Anytime."
+}

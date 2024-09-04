@@ -1,4 +1,8 @@
-// Copyright 2020 Ben Hills and the project contributors. All rights reserved.
+// Copyright (c) 2024 by HANAI, Tohru.
+// Copyright (c) 2024 Reedom, Inc.
+// Additional contributions from project contributors.
+// Originally (c) 2020 Ben Hills and the project contributors.
+// All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -14,16 +18,15 @@ typedef DatabaseUpgrade = Future<void> Function(Database, int, int);
 /// Provides a database instance to other services and handles the opening
 /// of the Sembast DB.
 class DatabaseService {
-  Completer<Database>? _databaseCompleter;
-  String databaseName;
-  int? version = 1;
-  DatabaseUpgrade? upgraderCallback;
-
   DatabaseService(
     this.databaseName, {
     this.version,
     this.upgraderCallback,
   });
+  Completer<Database>? _databaseCompleter;
+  String databaseName;
+  int? version = 1;
+  DatabaseUpgrade? upgraderCallback;
 
   Future<Database> get database async {
     if (_databaseCompleter == null) {
@@ -34,7 +37,7 @@ class DatabaseService {
     return _databaseCompleter!.future;
   }
 
-  Future _openDatabase() async {
+  Future<void> _openDatabase() async {
     final appDocumentDir = await getApplicationDocumentsDirectory();
     final dbPath = join(appDocumentDir.path, databaseName);
     final database = await databaseFactoryIo.openDatabase(

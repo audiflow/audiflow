@@ -35,6 +35,9 @@ target 'Runner' do
   #pod 'DKImagePickerController', '4.3.4'
 
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
+  target 'RunnerTests' do
+    inherit! :search_paths
+  end
 end
 
 post_install do |installer|

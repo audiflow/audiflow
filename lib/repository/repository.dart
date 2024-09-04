@@ -1,59 +1,155 @@
-// Copyright 2020 Ben Hills and the project contributors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
-import 'package:coten_player/entities/episode.dart';
-import 'package:coten_player/entities/podcast.dart';
-import 'package:coten_player/entities/season.dart';
-import 'package:coten_player/entities/transcript.dart';
-import 'package:coten_player/state/episode_state.dart';
+import 'package:audiflow/entities/entities.dart';
+import 'package:isar/isar.dart';
 
 /// An abstract class that represent the actions supported by the chosen
 /// database or storage implementation.
+///
+/// An implementation of [Repository] that is backed by
+/// [Sembast](https://github.com/tekartik/sembast.dart/tree/master/sembast)
+///
+///
+/// <Data Management Rules>
+///
+/// It utilize [PodcastMetadata], [EpisodeMetadata] to reduce the data size.
+/// It stores in [Podcast] only for subscribed podcasts. Otherwise, it stores in
+/// [PodcastMetadata].
+/// Either [Podcast] or [PodcastMetadata] must be found if any of their episode
+/// is saved under the following state:
+///  - downloaded
+///  - queued
+///  - once played(for Recently Played feature)
+///
+/// It stores in [Episode] if the episode in the following state:
+///  - its podcast is subscribed
+///  - downloaded
+///  - queued
+/// Or it stores in [EpisodeMetadata] if the episode in the following state:
+///  - once played(for Recently Played feature)
+///
+/// xxxStats never get deleted.
+///  - [PodcastStats]
+///  - [PodcastViewStats]
+///  - [EpisodeStats]
 abstract class Repository {
-  /// General
+  // --- General
+  Future<void> ensureInitialized();
+
   Future<void> close();
 
-  /// Podcasts
-  Future<Podcast?> findPodcastById(num id);
+  // --- feedUrl
 
-  Future<Podcast?> findPodcastByGuid(String guid);
+  Future<String?> findFeedUrl({required int collectionId});
 
-  Future<Podcast> savePodcast(Podcast podcast);
+  Future<void> saveFeedUrl({
+    required int collectionId,
+    required String feedUrl,
+  });
 
-  Future<void> deletePodcast(Podcast podcast);
+  // --- collectionId
+
+  Future<int?> findCollectionId({required String feedUrl});
+
+  // --- Podcast
+
+  Future<Podcast?> findPodcast(Id id);
+
+  Future<Podcast?> findPodcastBy({
+    String? feedUrl,
+    int? collectionId,
+  });
+
+  Future<void> savePodcasts(Iterable<Podcast> podcasts);
+
+  Future<void> savePodcast(
+    Podcast podcast, {
+    PodcastStatsUpdateParam? param,
+  });
 
   Future<List<Podcast>> subscriptions();
 
-  /// Seasons
-  Future<List<Season>> findAllSeasons();
+  Future<void> subscribePodcast(Podcast podcast);
 
-  Future<Season?> findSeasonById(int id);
+  Future<void> unsubscribePodcast(Podcast podcast);
 
-  Future<List<Season>> findSeasonsByPodcastGuid(String? pguid);
+  // -- PodcastStats
 
-  Future<void> deleteSeasons(List<Season> seasons);
+  Future<PodcastStats?> findPodcastStats(int pid);
 
-  /// Episodes
-  Future<List<Episode>> findAllEpisodes();
+  Future<PodcastStats> updatePodcastStats(PodcastStatsUpdateParam param);
 
-  Future<Episode?> findEpisodeById(int id);
+  // -- PodcastViewStats
 
-  Future<Episode?> findEpisodeByGuid(String guid);
+  Future<PodcastViewStats?> findPodcastViewStats(int pid);
 
-  Future<List<Episode?>> findEpisodesByPodcastGuid(String pguid);
+  Future<PodcastViewStats> updatePodcastViewStats(
+    PodcastViewStatsUpdateParam param,
+  );
 
-  Future<Episode?> findEpisodeByTaskId(String taskId);
+  // --- Episode
 
-  Future<Episode> saveEpisode(Episode episode, [bool updateIfSame = false]);
+  Future<Episode?> findEpisode(Id id);
 
-  Future<void> deleteEpisode(Episode episode);
+  Future<List<Episode?>> findEpisodes(Iterable<Id> ids);
 
-  Future<void> deleteEpisodes(List<Episode> episodes);
+  Future<List<Episode>> findEpisodesByPodcastId(Id pid);
 
-  Future<List<Episode>> findDownloadsByPodcastGuid(String pguid);
+  Future<List<Episode>> findLatestEpisodes(
+    Id pid, {
+    DateTime? lastPubDate,
+    required int limit,
+  });
 
-  Future<List<Episode>> findDownloads();
+  Future<void> saveEpisode(Episode episode);
+
+  Future<void> saveEpisodes(Iterable<Episode> episodes);
+
+  // --- EpisodeStats
+
+  Future<EpisodeStats?> findEpisodeStats(Id id);
+
+  Future<List<EpisodeStats?>> findEpisodeStatsList(Iterable<Id> ids);
+
+  Future<EpisodeStats> updateEpisodeStats(EpisodeStatsUpdateParam param);
+
+  Future<List<EpisodeStats>> updateEpisodeStatsList(
+    Iterable<EpisodeStatsUpdateParam> params,
+  );
+
+  Future<List<EpisodeStats>> findDownloadedEpisodeStatsList(Id pid);
+
+  Future<List<EpisodeStats>> findPlayedEpisodeStatsList(Id pid);
+
+  Future<List<EpisodeStats>> findUnplayedEpisodeStatsList(Id pid);
+
+  // --- Recently played episodes
+
+  Future<(List<Episode>, int?)> findRecentlyPlayedEpisodeList({
+    int? cursor,
+    int limit = 100,
+  });
+
+  Future<void> saveRecentlyPlayedEpisode(
+    Episode episode, {
+    DateTime? playedAt,
+  });
+
+  // --- Downloads
+
+  Future<List<Downloadable>> findDownloadsByPodcastId(int pid);
+
+  Future<List<Downloadable>> findAllDownloads();
+
+  Future<List<Downloadable?>> findDownloads(Iterable<Id> ids);
+
+  Future<Downloadable?> findDownload(Id id);
+
+  Future<Downloadable?> findDownloadByTaskId(String taskId);
+
+  Future<void> saveDownload(Downloadable download);
+
+  Future<void> deleteDownload(Downloadable download);
+
+  // --- Transcript
 
   Future<Transcript?> findTranscriptById(int id);
 
@@ -61,14 +157,19 @@ abstract class Repository {
 
   Future<void> deleteTranscriptById(int id);
 
-  Future<void> deleteTranscriptsById(List<int> id);
+  Future<void> deleteTranscriptsById(List<int> ids);
 
-  /// Queue
-  Future<void> saveQueue(List<Episode> episodes);
+  // --- Queue
 
-  Future<List<Episode>> loadQueue();
+  Future<Queue> loadQueue();
 
-  /// Event listeners
-  Stream<Podcast>? podcastListener;
-  Stream<EpisodeState>? episodeListener;
+  Future<void> saveQueue(Queue queue);
+
+  // --- Player
+
+  Future<int?> playingEpisodeId();
+
+  Future<void> savePlayingEpisodeId(int eid);
+
+  Future<void> clearPlayingEpisodeId();
 }
