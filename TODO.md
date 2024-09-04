@@ -5,7 +5,7 @@ TODO
 - [ ] support opml
 - [ ] handle network error
 - [x] handle audio focus lost
-- [x] handle phone call interuption
+- [x] handle phone call interruption
 - [x] control center
 - [ ] purge files
 
@@ -23,7 +23,7 @@ TODO
   - [x] downloads & wifi
 
 ### Podcast / Season detail
-- [ ] show full description, etc
+- [x] show full description, etc
 - [x] resume from last played position
 - [x] adhoc playlist
 - [ ] automatic download
@@ -39,12 +39,9 @@ TODO
   - [ ] completed times
 - [x] position at the last played episode(menu)
 - [x] tap-to-top
-- [ ] optimize rss parser
-  - [ ] partial parsing
-    - [ ] newest 10 episodes
-    - [ ] oldest 10 episodes
-    - [ ] specific episode
-  - [ ] on memory cache
+- [x] optimize rss parser
+  - [x] incremental parsing
+- [ ] purge deprecated episodes/stats
 
 ### Queue
 - [x] order of adhoc queue registration
@@ -57,13 +54,13 @@ TODO
 ### Download
 - [ ] batch download
   - [x] from season episode page
-  - [ ] from episode page
+  - [x] from episode page
   - [ ] from podcast page?
 - [ ] limit cellular connection, include network switching in the middle
 - [ ] download one by one, at least it should care the episode the user is awaiting
 
 ### Library
-- [x] play history
+- [ ] play history
 - [ ] smart playlist
   - [ ] recently updated episodes
   - [ ] custom
