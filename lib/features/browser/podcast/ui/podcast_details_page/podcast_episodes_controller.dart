@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:audiflow/events/episode_event.dart';
 import 'package:audiflow/features/browser/common/data/episode_stats_repository/episode_stats_repository.dart';
 import 'package:audiflow/features/browser/common/model/episode_filter_mode.dart';
 import 'package:audiflow/features/feed/data/episode_repository.dart';
@@ -61,6 +62,7 @@ class PodcastEpisodesController extends _$PodcastEpisodesController {
       await _unplayedEpisodesLoader.countEpisodes();
     }
 
+    _listen();
     final v = await Future.wait<dynamic>([
       _countEpisodes(),
       _loadMoreEpisodes(),
@@ -211,6 +213,33 @@ class PodcastEpisodesController extends _$PodcastEpisodesController {
       );
     }
   }
+
+  void _listen() {
+    void addTotalEpisode(int delta) {
+      state = AsyncData(
+        state.requireValue
+            .copyWith(totalEpisodes: state.requireValue.totalEpisodes + delta),
+      );
+    }
+
+    var addedEpisodes = 0;
+    ref.listen(episodeEventStreamProvider, (_, next) {
+      if (next.requireValue case EpisodesAddedEvent(episodes: final episodes)) {
+        if (state.hasValue) {
+          addTotalEpisode(episodes.length);
+        } else {
+          addedEpisodes += episodes.length;
+          ref.listenSelf((_, next) {
+            if (0 < addedEpisodes && next.hasValue) {
+              final delta = addedEpisodes;
+              addedEpisodes = 0;
+              addTotalEpisode(delta);
+            }
+          });
+        }
+      }
+    });
+  }
 }
 
 @freezed
@@ -275,7 +304,7 @@ class _UnplayedEpisodesLoader {
         pid: pid,
         filterBy: EpisodeStatsFilterBy.played,
         ascending: ascending,
-      )
+      ),
     ]);
 
     final episodesCount = v[0] as int;
