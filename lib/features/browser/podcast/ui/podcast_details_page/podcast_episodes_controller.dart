@@ -304,7 +304,7 @@ class _UnplayedEpisodesLoader {
         pid: pid,
         filterBy: EpisodeStatsFilterBy.played,
         ascending: ascending,
-      )
+      ),
     ]);
 
     final episodesCount = v[0] as int;
