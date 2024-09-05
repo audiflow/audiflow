@@ -113,43 +113,61 @@ class PodcastFeedLoader extends _$PodcastFeedLoader {
           logger.w(() => 'podcast is null');
           return;
         }
-        logger.d(() => 'loaded new podcast $podcast');
-        ref
-            .read(podcastEventStreamProvider.notifier)
-            .add(PodcastUpdatedEvent(podcast));
+        _notifyPodcastUpdated(podcast);
         state = state.copyWith(loadingState: LoadingState.loadingEpisodes);
       case _LoadedEpisodesMessage(
           episodes: final episodes,
           loadingState: final loadingState
         ):
-        if (episodes.isNotEmpty) {
-          ref
-              .read(episodeEventStreamProvider.notifier)
-              .add(EpisodesAddedEvent(episodes));
-          unawaited(
-            ref
-                .read(podcastStatsRepositoryProvider)
-                .findPodcastStats(episodes.first.pid)
-                .then((stats) {
-              if (stats != null) {
-                ref
-                    .read(podcastEventStreamProvider.notifier)
-                    .add(PodcastStatsUpdatedEvent(stats));
-              }
-            }),
-          );
-        }
+        _notifyEpisodesAdded(episodes);
+        _notifyPodcastStatsUpdated(episodes.first.pid);
         state = state.copyWith(loadingState: loadingState);
-        _workerPort?.send(_ContinueEpisodeLoadingCommand());
-      case _LoadedSeasonMessage(seasons: final seasons):
-        if (seasons.isNotEmpty) {
-          ref
-              .read(seasonEventStreamProvider.notifier)
-              .add(SeasonsUpdatedEvent(seasons));
+        if (loadingState == LoadingState.loadingEpisodes) {
+          _workerPort?.send(_ContinueEpisodeLoadingCommand());
         }
+      case _LoadedSeasonMessage(seasons: final seasons):
+        _notifySeasonsUpdated(seasons);
       case _GotErrorMessage(message: final message):
         logger.w(message);
         state = state.copyWith(loadingState: LoadingState.error);
+    }
+  }
+
+  void _notifyPodcastUpdated(Podcast podcast) {
+    logger.d(() => 'loaded new podcast $podcast');
+    ref
+        .read(podcastEventStreamProvider.notifier)
+        .add(PodcastUpdatedEvent(podcast));
+  }
+
+  void _notifyEpisodesAdded(List<PartialEpisode> episodes) {
+    if (episodes.isEmpty) {
+      return;
+    }
+
+    ref
+        .read(episodeEventStreamProvider.notifier)
+        .add(EpisodesAddedEvent(episodes));
+  }
+
+  void _notifyPodcastStatsUpdated(int pid) {
+    ref
+        .read(podcastStatsRepositoryProvider)
+        .findPodcastStats(pid)
+        .then((stats) {
+      if (stats != null) {
+        ref
+            .read(podcastEventStreamProvider.notifier)
+            .add(PodcastStatsUpdatedEvent(stats));
+      }
+    });
+  }
+
+  void _notifySeasonsUpdated(List<Season> seasons) {
+    if (seasons.isNotEmpty) {
+      ref
+          .read(seasonEventStreamProvider.notifier)
+          .add(SeasonsUpdatedEvent(seasons));
     }
   }
 }
@@ -179,4 +197,3 @@ class PodcastFeedLoaderState with _$PodcastFeedLoaderState {
     @Default(LoadingState.loadingPodcast) LoadingState loadingState,
   }) = _PodcastFeedLoaderState;
 }
-
