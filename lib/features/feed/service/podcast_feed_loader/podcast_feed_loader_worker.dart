@@ -2,9 +2,9 @@ part of 'podcast_feed_loader.dart';
 
 class _Worker {
   _Worker(
-      this._uiPort,
-      this._isCancelled,
-      );
+    this._uiPort,
+    this._isCancelled,
+  );
 
   final SendPort _uiPort;
   final ReceivePort _workerPort = ReceivePort();
@@ -39,25 +39,25 @@ class _Worker {
 
   void _listenCommandStream() {
     _commandStreamController.stream.flatMap(
-          (command) async* {
+      (command) async* {
         logger.d(() => 'received command $command');
         try {
           switch (command) {
             case _SetupCommand(
-            storageDir: final storageDir,
-            cacheDir: final cacheDir
-            ):
+                storageDir: final storageDir,
+                cacheDir: final cacheDir
+              ):
               await _setupRepository(storageDir);
               _cacheDir = cacheDir;
             case _LoadFeedCommand(
-            feedUrl: final feedUrl,
-            collectionId: final collectionId,
-            ):
+                feedUrl: final feedUrl,
+                collectionId: final collectionId,
+              ):
               unawaited(
                 _handleLoadFeedEvent(
                   feedUrl: feedUrl,
                   collectionId: collectionId,
-                ),
+                ).then((_) => _complete()),
               );
             case _ContinueEpisodeLoadingCommand():
               if (!_ackCompleter.isCompleted) {
@@ -102,18 +102,15 @@ class _Worker {
       cacheDir: _cacheDir,
     );
     if (!loaded || _isCancelled()) {
-      _complete();
       return;
     }
 
     final sent = await _readPodcast();
     if (!sent || _isCancelled()) {
-      _complete();
       return;
     }
 
     await _readEpisodes();
-    _complete();
   }
 
   Future<bool> _loadFeed({
@@ -194,7 +191,7 @@ class _Worker {
     // If the podcast has loaded all episodes, we don't need to read the entire
     // feed.
     final podcastStats =
-    await _podcastStatsRepository.findPodcastStats(_podcast!.id);
+        await _podcastStatsRepository.findPodcastStats(_podcast!.id);
     final latest = podcastStats?.hasLoadedAll == true
         ? await _episodeRepository.findLatestEpisode(_podcast!.id)
         : null;
