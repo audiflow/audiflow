@@ -7,32 +7,41 @@ class PodcastSeasonExtractor {
   PodcastSeasonExtractor(
     this.titleExtractor,
     this.podcast,
-    this.episodes,
-    this.seasons,
+    this.knownSeasons,
   );
 
   final PodcastSeasonTitleExtractor titleExtractor;
   final Podcast podcast;
-  final List<Episode> episodes;
-  final List<Season> seasons;
+  final List<Season> knownSeasons;
+  final updatedSeasons = <Season>{};
 
-  Iterable<Season> extract() {
+  void process(Iterable<Episode> episodes) {
+    final seasons = <Season>{
+      ...updatedSeasons,
+      ...knownSeasons.where((k) => !updatedSeasons.any((s) => s.id == k.id)),
+    };
+
+    final Iterable<Season> allSeasons;
     switch (titleExtractor.distinction) {
       case SeasonDistinction.seasonNum:
-        return _extractSeasonsBySeasonNum(
+        allSeasons = _extractSeasonsBySeasonNum(
           titleExtractor,
           podcast,
           episodes,
           seasons,
         );
       case SeasonDistinction.title:
-        return _extractSeasonsWithTitles(
+        allSeasons = _extractSeasonsWithTitles(
           titleExtractor,
           podcast,
           episodes,
           seasons,
         );
     }
+
+    updatedSeasons
+      ..clear()
+      ..addAll(allSeasons.where((s) => !knownSeasons.any((k) => s == k)));
   }
 
   /// Compile new episodes into seasons based on Episode.seasonNum.
@@ -41,8 +50,8 @@ class PodcastSeasonExtractor {
   Iterable<Season> _extractSeasonsBySeasonNum(
     PodcastSeasonTitleExtractor titleExtractor,
     Podcast podcast,
-    List<Episode> episodes,
-    List<Season> seasons,
+    Iterable<Episode> episodes,
+    Iterable<Season> seasons,
   ) {
     // If there are no new episodes, return empty list.
     if (episodes.isEmpty) {
@@ -79,8 +88,8 @@ class PodcastSeasonExtractor {
   Iterable<Season> _extractSeasonsWithTitles(
     PodcastSeasonTitleExtractor titleExtractor,
     Podcast podcast,
-    List<Episode> episodes,
-    List<Season> seasons,
+    Iterable<Episode> episodes,
+    Iterable<Season> seasons,
   ) {
     // If there are no new episodes, return empty list.
     if (episodes.isEmpty) {
