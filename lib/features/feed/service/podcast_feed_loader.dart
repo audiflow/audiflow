@@ -12,7 +12,7 @@ import 'package:audiflow/features/browser/common/data/podcast_stats_repository/p
 import 'package:audiflow/features/browser/season/data/isar_season_repository.dart';
 import 'package:audiflow/features/browser/season/data/season_repository.dart';
 import 'package:audiflow/features/browser/season/model/season.dart';
-import 'package:audiflow/features/browser/season/service/podcast_season_service.dart';
+import 'package:audiflow/features/browser/season/service/podcast_season_extractor_factory.dart';
 import 'package:audiflow/features/feed/data/episode_repository.dart';
 import 'package:audiflow/features/feed/data/isar_episode_repository.dart';
 import 'package:audiflow/features/feed/data/isar_podcast_repository.dart';
@@ -449,27 +449,22 @@ class _Worker {
     }
 
     final seasons = await _seasonRepository.findPodcastSeasons(_podcast!.id);
-    final seasonService = PodcastSeasonService();
-    var updatedSeasons = seasonService.extractSeasons(
+    final seasonExtractor = PodcastSeasonExtractorFactor.create(
       _podcast!,
-      _newEpisodes,
-      seasons,
-    );
+      knownSeasons: seasons,
+    )..process(_newEpisodes);
 
     if (seasons.isEmpty &&
-        updatedSeasons.isNotEmpty &&
+        seasonExtractor.updatedSeasons.isNotEmpty &&
         loadingState == LoadingState.reachedLastPubDate) {
       logger.d('the podcast turned supporting "season"');
       final allEpisodes = await _episodeRepository.queryEpisodes(
         pid: _podcast!.id,
       );
-      updatedSeasons = seasonService.extractSeasons(
-        _podcast!,
-        allEpisodes,
-        seasons,
-      );
+      seasonExtractor.process(allEpisodes);
     }
 
+    final updatedSeasons = seasonExtractor.updatedSeasons.toList();
     if (updatedSeasons.isNotEmpty) {
       await _seasonRepository.saveSeasons(updatedSeasons);
       _uiPort.send(_LoadedSeasonMessage(seasons: updatedSeasons.toList()));

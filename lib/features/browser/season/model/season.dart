@@ -81,6 +81,22 @@ class Season {
       totalDurationMS: totalDurationMS ?? this.totalDurationMS,
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    return other is Season &&
+        id == other.id &&
+        guid == other.guid &&
+        title == other.title &&
+        imageUrl == other.imageUrl &&
+        episodeIds.length == other.episodeIds.length &&
+        episodeIds.every(other.episodeIds.contains);
+  }
+
+  @override
+  int get hashCode {
+    return Object.hash(id, guid, title, imageUrl, episodeIds);
+  }
 }
 
 extension SeasonExt on Season {
