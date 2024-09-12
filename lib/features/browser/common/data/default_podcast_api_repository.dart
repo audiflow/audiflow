@@ -9,6 +9,8 @@ import 'package:audiflow/features/browser/common/model/itunes_chart_item.dart';
 import 'package:audiflow/features/browser/common/model/itunes_search_item.dart';
 import 'package:audiflow/features/feed/model/model.dart';
 import 'package:audiflow/utils/cached_http.dart';
+import 'package:audiflow/utils/logger.dart';
+import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:podcast_search/podcast_search.dart' as podcast_search;
 
@@ -228,7 +230,16 @@ class DefaultPodcastApiRepository implements PodcastApiRepository {
       return [];
     }
     return results
-        .map((e) => ITunesSearchItem.fromJson(e as Map<String, dynamic>))
+        .map((e) {
+          try {
+            return ITunesSearchItem.fromJson(e as Map<String, dynamic>);
+            // ignore: avoid_catches_without_on_clauses
+          } catch (e) {
+            logger.w('$e: url=$url');
+            return null;
+          }
+        })
+        .whereNotNull()
         .toList();
   }
 
