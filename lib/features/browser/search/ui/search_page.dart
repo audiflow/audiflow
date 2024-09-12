@@ -77,8 +77,19 @@ class SearchBar extends HookConsumerWidget {
     return Semantics(
       label: L10n.of(context).search_for_podcasts_hint,
       textField: true,
-      child: Padding(
-        padding: const EdgeInsets.only(left: 20, right: 20, bottom: 20),
+      child: Container(
+        padding: const EdgeInsets.only(left: 10, right: 10, bottom: 10),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            stops: const [0.85, 1],
+            colors: [
+              theme.colorScheme.surface,
+              theme.colorScheme.surface.withOpacity(0),
+            ],
+          ),
+        ),
         child: Container(
           color: theme.colorScheme.surface,
           foregroundDecoration: BoxDecoration(
