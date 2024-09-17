@@ -120,6 +120,11 @@ class PodcastFeedLoader extends _$PodcastFeedLoader {
         state = state.copyWith(loadingState: loadingState);
         if (loadingState == LoadingState.loadingEpisodes) {
           _workerPort?.send(_ContinueEpisodeLoadingCommand());
+        } else if ([
+          LoadingState.reachedLastPubDate,
+          LoadingState.loadedAllEpisodes
+        ].contains(loadingState)) {
+          _workerPort?.send(_CancelledCommand());
         }
       case _LoadedSeasonMessage(seasons: final seasons):
         _notifySeasonsUpdated(seasons);

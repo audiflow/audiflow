@@ -53,7 +53,7 @@ class _Worker {
             await _handleLoadFeedEvent(
               feedUrl: feedUrl,
               collectionId: collectionId,
-            ).then((_) => _complete());
+            );
           case _ContinueEpisodeLoadingCommand():
             if (!_ackCompleter.isCompleted) {
               _ackCompleter.complete(null);
