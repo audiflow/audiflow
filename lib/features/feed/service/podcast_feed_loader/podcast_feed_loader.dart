@@ -26,7 +26,6 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:isar/isar.dart';
 import 'package:podcast_feed/parsers/podcast_feed_parser.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:rxdart/rxdart.dart';
 import 'package:worker_manager/worker_manager.dart';
 
 part 'podcast_feed_loader.freezed.dart';
@@ -93,19 +92,14 @@ class PodcastFeedLoader extends _$PodcastFeedLoader {
     switch (message) {
       case _SendPortMessage(sendPort: final sendPort):
         _workerPort = sendPort;
-        _workerPort
-          ?..send(
-            _SetupCommand(
-              cacheDir: _cacheDir,
-              storageDir: _appDocDir,
-            ),
-          )
-          ..send(
-            _LoadFeedCommand(
-              feedUrl: state.feedUrl,
-              collectionId: state.collectionId,
-            ),
-          );
+        sendPort.send(
+          _LoadFeedCommand(
+            cacheDir: _cacheDir,
+            storageDir: _appDocDir,
+            feedUrl: state.feedUrl,
+            collectionId: state.collectionId,
+          ),
+        );
       case _LoadedPodcastMessage():
         final podcast =
             await _podcastRepository.findPodcastBy(feedUrl: state.feedUrl);

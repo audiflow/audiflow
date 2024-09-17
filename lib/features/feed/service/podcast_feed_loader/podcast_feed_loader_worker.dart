@@ -38,42 +38,35 @@ class _Worker {
   }
 
   void _listenCommandStream() {
-    _commandStreamController.stream.flatMap(
-      (command) async* {
-        logger.d(() => 'received command $command');
-        try {
-          switch (command) {
-            case _SetupCommand(
-                storageDir: final storageDir,
-                cacheDir: final cacheDir
-              ):
-              await _setupRepository(storageDir);
-              _cacheDir = cacheDir;
-            case _LoadFeedCommand(
-                feedUrl: final feedUrl,
-                collectionId: final collectionId,
-              ):
-              unawaited(
-                _handleLoadFeedEvent(
-                  feedUrl: feedUrl,
-                  collectionId: collectionId,
-                ).then((_) => _complete()),
-              );
-            case _ContinueEpisodeLoadingCommand():
-              if (!_ackCompleter.isCompleted) {
-                _ackCompleter.complete(null);
-              }
-            case _CancelledCommand():
-              _complete();
-          }
-          // ignore: avoid_catches_without_on_clauses
-        } catch (err) {
-          logger.e(err);
-          _uiPort.send(_GotErrorMessage(message: err.toString()));
+    _commandStreamController.stream.listen((command) async {
+      logger.d(() => 'received command $command');
+      try {
+        switch (command) {
+          case _LoadFeedCommand(
+              storageDir: final storageDir,
+              cacheDir: final cacheDir,
+              feedUrl: final feedUrl,
+              collectionId: final collectionId,
+            ):
+            await _setupRepository(storageDir);
+            _cacheDir = cacheDir;
+            await _handleLoadFeedEvent(
+              feedUrl: feedUrl,
+              collectionId: collectionId,
+            ).then((_) => _complete());
+          case _ContinueEpisodeLoadingCommand():
+            if (!_ackCompleter.isCompleted) {
+              _ackCompleter.complete(null);
+            }
+          case _CancelledCommand():
+            _complete();
         }
-      },
-      maxConcurrent: 1,
-    ).drain<void>();
+        // ignore: avoid_catches_without_on_clauses
+      } catch (err) {
+        logger.e(err);
+        _uiPort.send(_GotErrorMessage(message: err.toString()));
+      }
+    });
   }
 
   void _complete() {

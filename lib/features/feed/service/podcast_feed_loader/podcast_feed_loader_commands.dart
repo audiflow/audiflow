@@ -15,27 +15,16 @@ class _SendPortMessage extends _Message {
   }
 }
 
-class _SetupCommand extends _Command {
-  _SetupCommand({
-    required this.cacheDir,
-    required this.storageDir,
-  });
-
-  final String cacheDir;
-  final String storageDir;
-
-  @override
-  String toString() {
-    return '_SetupCommand(cacheDir: $cacheDir, storageDir: $storageDir)';
-  }
-}
-
 class _LoadFeedCommand extends _Command {
   _LoadFeedCommand({
+    required this.cacheDir,
+    required this.storageDir,
     required this.feedUrl,
     required this.collectionId,
   });
 
+  final String cacheDir;
+  final String storageDir;
   final String feedUrl;
   final int? collectionId;
 
