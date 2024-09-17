@@ -119,8 +119,10 @@ class PodcastFeedLoader extends _$PodcastFeedLoader {
           episodes: final episodes,
           loadingState: final loadingState
         ):
-        _notifyEpisodesAdded(episodes);
-        _notifyPodcastStatsUpdated(episodes.first.pid);
+        if (episodes.isNotEmpty) {
+          _notifyEpisodesAdded(episodes);
+          _notifyPodcastStatsUpdated(episodes.first.pid);
+        }
         state = state.copyWith(loadingState: loadingState);
         if (loadingState == LoadingState.loadingEpisodes) {
           _workerPort?.send(_ContinueEpisodeLoadingCommand());
