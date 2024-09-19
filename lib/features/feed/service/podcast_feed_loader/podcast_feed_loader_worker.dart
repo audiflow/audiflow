@@ -48,7 +48,11 @@ class _Worker {
               feedUrl: final feedUrl,
               collectionId: final collectionId,
             ):
-            await _setupRepository(storageDir);
+            _isar = await IsarFactory.create(storageDir);
+            _podcastRepository = IsarPodcastRepository(_isar);
+            _podcastStatsRepository = IsarPodcastStatsRepository(_isar);
+            _episodeRepository = IsarEpisodeRepository(_isar);
+            _seasonRepository = IsarSeasonRepository(_isar);
             _cacheDir = cacheDir;
             await _handleLoadFeedEvent(
               feedUrl: feedUrl,
@@ -73,14 +77,6 @@ class _Worker {
     if (!_completer.isCompleted) {
       _completer.complete(null);
     }
-  }
-
-  Future<void> _setupRepository(String storageDir) async {
-    _isar = await IsarFactory.create(storageDir);
-    _podcastRepository = IsarPodcastRepository(_isar);
-    _podcastStatsRepository = IsarPodcastStatsRepository(_isar);
-    _episodeRepository = IsarEpisodeRepository(_isar);
-    _seasonRepository = IsarSeasonRepository(_isar);
   }
 
   Future<void> _handleLoadFeedEvent({
