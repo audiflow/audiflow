@@ -24,9 +24,15 @@ class EpisodesAddedEvent implements EpisodeEvent {
 }
 
 class EpisodeDeletedEvent implements EpisodeEvent {
-  const EpisodeDeletedEvent(this.episode);
+  const EpisodeDeletedEvent(this.eid);
 
-  final Episode episode;
+  final int eid;
+}
+
+class EpisodesDeletedEvent implements EpisodeEvent {
+  const EpisodesDeletedEvent(this.eids);
+
+  final List<int> eids;
 }
 
 class EpisodeStatsUpdatedEvent implements EpisodeEvent {

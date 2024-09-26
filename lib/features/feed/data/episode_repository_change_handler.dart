@@ -46,10 +46,18 @@ class EpisodeRepositoryHandleHandler implements EpisodeRepository {
   }
 
   @override
-  Future<void> saveEpisodes(Iterable<Episode> episodes) async {
+  Future<void> saveEpisodes(List<Episode> episodes) async {
     await _inner.saveEpisodes(episodes);
     _ref
         .read(episodeEventStreamProvider.notifier)
         .add(EpisodesUpdatedEvent(episodes.toList()));
+  }
+
+  @override
+  Future<void> deleteEpisodes(List<int> eids) async {
+    await _inner.deleteEpisodes(eids);
+    _ref
+        .read(episodeEventStreamProvider.notifier)
+        .add(EpisodesDeletedEvent(eids));
   }
 }

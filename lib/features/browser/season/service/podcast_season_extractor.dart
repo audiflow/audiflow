@@ -1,7 +1,11 @@
 import 'package:audiflow/features/browser/season/model/season.dart';
 import 'package:audiflow/features/browser/season/service/podcast_season_title_extractor/podcast_season_title_extractor.dart';
 import 'package:audiflow/features/feed/model/model.dart';
+import 'package:audiflow/utils/datetime.dart';
 import 'package:collection/collection.dart';
+
+export 'package:audiflow/features/browser/season/service/podcast_season_title_extractor/podcast_season_title_extractor.dart'
+    show SeasonDistinction;
 
 class PodcastSeasonExtractor {
   PodcastSeasonExtractor(
@@ -10,12 +14,24 @@ class PodcastSeasonExtractor {
     this.knownSeasons,
   );
 
+  /// Extractor for season title.
   final PodcastSeasonTitleExtractor titleExtractor;
+
+  /// The podcast to be processed.
   final Podcast podcast;
+
+  /// The list of seasons already processed earlier.
   final List<Season> knownSeasons;
+
+  /// The list of seasons updated in this session.
   final updatedSeasons = <Season>{};
 
+  /// Process new episodes.
   void process(Iterable<Episode> episodes) {
+    if (episodes.isEmpty) {
+      return;
+    }
+
     final seasons = <Season>{
       ...updatedSeasons,
       ...knownSeasons.where((k) => !updatedSeasons.any((s) => s.id == k.id)),
@@ -44,6 +60,44 @@ class PodcastSeasonExtractor {
       ..addAll(allSeasons.where((s) => !knownSeasons.any((k) => s == k)));
   }
 
+  void remove(Iterable<Episode> episodes) {
+    if (episodes.isEmpty) {
+      return;
+    }
+
+    final seasons = [
+      ...updatedSeasons,
+      ...knownSeasons.where((k) => !updatedSeasons.any((s) => s.id == k.id)),
+    ].map(
+      (season) {
+        if (season.episodeIds.any((id) => episodes.any((e) => e.id == id))) {
+          final episodeIds = season.episodeIds
+              .where((id) => !episodes.any((e) => e.id == id))
+              .toList();
+          return season.copyWith(episodeIds: episodeIds);
+        } else {
+          return season;
+        }
+      },
+    );
+
+    updatedSeasons
+      ..clear()
+      ..addAll(seasons.where((s) => !knownSeasons.any((k) => s == k)));
+  }
+
+  void flush() {
+    final seasons = <Season>{
+      ...updatedSeasons.where((s) => s.episodeIds.isNotEmpty),
+      ...knownSeasons.where((k) => !updatedSeasons.any((s) => s.id == k.id)),
+    };
+
+    knownSeasons
+      ..clear()
+      ..addAll(seasons);
+    updatedSeasons.clear();
+  }
+
   /// Compile new episodes into seasons based on Episode.seasonNum.
   ///
   /// It returns only new or updated seasons.
@@ -62,7 +116,9 @@ class PodcastSeasonExtractor {
     final map = <int?, List<Episode>>{};
     for (final episode in episodes) {
       if (map.containsKey(episode.season)) {
-        map[episode.season]!.add(episode);
+        map[episode.season]!
+          ..removeWhere((e) => e.id == episode.id)
+          ..add(episode);
       } else {
         map[episode.season] = [episode];
       }
@@ -76,9 +132,11 @@ class PodcastSeasonExtractor {
     // Return only new or updated seasons.
     return map.keys.map((seasonNum) {
       final season = seasons.firstWhereOrNull((s) => s.seasonNum == seasonNum);
+      final seasonEpisodes =
+          map[seasonNum]!.sorted((a, b) => a.ordinal - b.ordinal);
       return season == null
-          ? _createNewSeason(podcast, seasonNum, map[seasonNum]!)
-          : _updatedSeasonWith(season, map[seasonNum]!);
+          ? _createNewSeason(podcast, seasonNum, seasonEpisodes)
+          : _updatedSeasonWith(season, seasonEpisodes);
     });
   }
 
@@ -101,7 +159,9 @@ class PodcastSeasonExtractor {
     for (final episode in episodes) {
       final seasonTitle = _extractSeasonTitle(episode);
       if (map.containsKey(seasonTitle)) {
-        map[seasonTitle]!.add(episode);
+        map[seasonTitle]!
+          ..removeWhere((e) => e.id == episode.id)
+          ..add(episode);
       } else {
         map[seasonTitle] = [episode];
       }
@@ -115,9 +175,11 @@ class PodcastSeasonExtractor {
     // Create a list of new or updated seasons.
     final updatedSeasons = map.keys.map((seasonTitle) {
       final season = seasons.firstWhereOrNull((s) => s.title == seasonTitle);
+      final seasonEpisodes =
+          map[seasonTitle]!.sorted((a, b) => a.ordinal - b.ordinal);
       return season == null
-          ? _createNewSeason(podcast, -1, map[seasonTitle]!)
-          : _updatedSeasonWith(season, map[seasonTitle]!);
+          ? _createNewSeason(podcast, -1, seasonEpisodes)
+          : _updatedSeasonWith(season, seasonEpisodes);
     });
 
     // Return new or updated seasons as remapping season# of the original list.
@@ -172,34 +234,25 @@ class PodcastSeasonExtractor {
     int? seasonNum,
     List<Episode> episodes,
   ) {
-    final firstPublicationDate = episodes.fold<DateTime?>(null, (latest, e) {
-      return e.publicationDate == null
-          ? latest
-          : latest == null
-              ? e.publicationDate
-              : latest.isBefore(e.publicationDate!)
-                  ? latest
-                  : e.publicationDate;
+    final firstPublicationDate = episodes.fold<DateTime?>(null, (prev, e) {
+      return prev != null && e.publicationDate != null
+          ? minDateTime(prev, e.publicationDate!)
+          : prev ?? e.publicationDate;
     });
-    final latestPublicationDate = episodes.fold<DateTime?>(null, (latest, e) {
-      return e.publicationDate == null
-          ? latest
-          : latest == null
-              ? e.publicationDate
-              : latest.isBefore(e.publicationDate!)
-                  ? e.publicationDate
-                  : latest;
+    final latestPublicationDate = episodes.fold<DateTime?>(null, (prev, e) {
+      return prev != null && e.publicationDate != null
+          ? maxDateTime(prev, e.publicationDate!)
+          : prev ?? e.publicationDate;
     });
     final totalDurationMS = episodes.fold<int>(
       0,
       (total, e) => total + (e.duration?.inMilliseconds ?? 0),
     );
-    final firstEpisode = episodes.first;
     return Season(
       guid: calcSeasonGuid(feedUrl: podcast.feedUrl, seasonNum: seasonNum),
-      pid: firstEpisode.pid,
+      pid: episodes.first.pid,
       seasonNum: seasonNum,
-      title: _extractSeasonTitle(firstEpisode),
+      title: _extractSeasonTitle(episodes.first),
       imageUrl: episodes.first.imageUrl,
       episodeIds: episodes.map((v) => v.id).toList(),
       firstPublicationDate: firstPublicationDate,
@@ -214,24 +267,16 @@ class PodcastSeasonExtractor {
     List<Episode> episodes,
   ) {
     final firstPublicationDate =
-        episodes.fold(season.firstPublicationDate, (latest, e) {
-      return e.publicationDate == null
-          ? latest
-          : latest == null
-              ? e.publicationDate
-              : latest.isBefore(e.publicationDate!)
-                  ? latest
-                  : e.publicationDate;
+        episodes.fold(season.firstPublicationDate, (prev, e) {
+      return prev != null && e.publicationDate != null
+          ? minDateTime(prev, e.publicationDate!)
+          : prev ?? e.publicationDate;
     });
     final latestPublicationDate =
-        episodes.fold(season.latestPublicationDate, (latest, e) {
-      return e.publicationDate == null
-          ? latest
-          : latest == null
-              ? e.publicationDate
-              : latest.isBefore(e.publicationDate!)
-                  ? e.publicationDate
-                  : latest;
+        episodes.fold(season.latestPublicationDate, (prev, e) {
+      return prev != null && e.publicationDate != null
+          ? maxDateTime(prev, e.publicationDate!)
+          : prev ?? e.publicationDate;
     });
     final totalDurationMS =
         episodes.fold<int>(season.totalDurationMS, (total, e) {
@@ -239,6 +284,9 @@ class PodcastSeasonExtractor {
     });
     return season.copyWith(
       episodeIds: [...season.episodeIds, ...episodes.map((e) => e.id)],
+      title: firstPublicationDate != season.firstPublicationDate
+          ? _extractSeasonTitle(episodes.first)
+          : season.title,
       firstPublicationDate: firstPublicationDate,
       latestPublicationDate: latestPublicationDate,
       totalDurationMS: totalDurationMS,

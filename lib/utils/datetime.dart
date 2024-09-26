@@ -27,3 +27,11 @@ class DateTimeString {
     }
   }
 }
+
+DateTime minDateTime(DateTime a, DateTime b) {
+  return a.isBefore(b) ? a : b;
+}
+
+DateTime maxDateTime(DateTime a, DateTime b) {
+  return a.isBefore(b) ? b : a;
+}

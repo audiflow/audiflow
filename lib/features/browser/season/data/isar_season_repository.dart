@@ -51,4 +51,16 @@ class IsarSeasonRepository implements SeasonRepository {
     await isar.seasonStats.put(newStats);
     return newStats;
   }
+
+  @override
+  Future<void> deleteAll(Iterable<int> ids) async {
+    await isar.writeTxn(
+      () => Future.wait(
+        [
+          isar.seasons.deleteAll(ids.toList()),
+          isar.seasonStats.deleteAll(ids.toList()),
+        ],
+      ),
+    );
+  }
 }
