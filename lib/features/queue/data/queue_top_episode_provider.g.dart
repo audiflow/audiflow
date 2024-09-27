@@ -6,7 +6,7 @@ part of 'queue_top_episode_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$queueTopEpisodeHash() => r'e7f16ff6665be01c232442f69cef1e9a43c3e880';
+String _$queueTopEpisodeHash() => r'29e17ce2620424a5702f0e2e0bd9b6ce217ddcf3';
 
 /// See also [QueueTopEpisode].
 @ProviderFor(QueueTopEpisode)

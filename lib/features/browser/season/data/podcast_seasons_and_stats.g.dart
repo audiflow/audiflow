@@ -7,7 +7,7 @@ part of 'podcast_seasons_and_stats.dart';
 // **************************************************************************
 
 String _$podcastSeasonsAndStatsHash() =>
-    r'8a9616419b2d08b11fd7dc33999bfa5805c98b3e';
+    r'bd75f47a20093526c32bc8c71ec5cbb0b2438ca1';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -30,17 +30,26 @@ class _SystemHash {
   }
 }
 
-/// See also [podcastSeasonsAndStats].
-@ProviderFor(podcastSeasonsAndStats)
+abstract class _$PodcastSeasonsAndStats
+    extends BuildlessAutoDisposeAsyncNotifier<List<SeasonPair>> {
+  late final int pid;
+
+  FutureOr<List<SeasonPair>> build(
+    int pid,
+  );
+}
+
+/// See also [PodcastSeasonsAndStats].
+@ProviderFor(PodcastSeasonsAndStats)
 const podcastSeasonsAndStatsProvider = PodcastSeasonsAndStatsFamily();
 
-/// See also [podcastSeasonsAndStats].
+/// See also [PodcastSeasonsAndStats].
 class PodcastSeasonsAndStatsFamily
     extends Family<AsyncValue<List<SeasonPair>>> {
-  /// See also [podcastSeasonsAndStats].
+  /// See also [PodcastSeasonsAndStats].
   const PodcastSeasonsAndStatsFamily();
 
-  /// See also [podcastSeasonsAndStats].
+  /// See also [PodcastSeasonsAndStats].
   PodcastSeasonsAndStatsProvider call(
     int pid,
   ) {
@@ -73,17 +82,15 @@ class PodcastSeasonsAndStatsFamily
   String? get name => r'podcastSeasonsAndStatsProvider';
 }
 
-/// See also [podcastSeasonsAndStats].
+/// See also [PodcastSeasonsAndStats].
 class PodcastSeasonsAndStatsProvider
-    extends AutoDisposeFutureProvider<List<SeasonPair>> {
-  /// See also [podcastSeasonsAndStats].
+    extends AutoDisposeAsyncNotifierProviderImpl<PodcastSeasonsAndStats,
+        List<SeasonPair>> {
+  /// See also [PodcastSeasonsAndStats].
   PodcastSeasonsAndStatsProvider(
     int pid,
   ) : this._internal(
-          (ref) => podcastSeasonsAndStats(
-            ref as PodcastSeasonsAndStatsRef,
-            pid,
-          ),
+          () => PodcastSeasonsAndStats()..pid = pid,
           from: podcastSeasonsAndStatsProvider,
           name: r'podcastSeasonsAndStatsProvider',
           debugGetCreateSourceHash:
@@ -109,14 +116,20 @@ class PodcastSeasonsAndStatsProvider
   final int pid;
 
   @override
-  Override overrideWith(
-    FutureOr<List<SeasonPair>> Function(PodcastSeasonsAndStatsRef provider)
-        create,
+  FutureOr<List<SeasonPair>> runNotifierBuild(
+    covariant PodcastSeasonsAndStats notifier,
   ) {
+    return notifier.build(
+      pid,
+    );
+  }
+
+  @override
+  Override overrideWith(PodcastSeasonsAndStats Function() create) {
     return ProviderOverride(
       origin: this,
       override: PodcastSeasonsAndStatsProvider._internal(
-        (ref) => create(ref as PodcastSeasonsAndStatsRef),
+        () => create()..pid = pid,
         from: from,
         name: null,
         dependencies: null,
@@ -128,7 +141,8 @@ class PodcastSeasonsAndStatsProvider
   }
 
   @override
-  AutoDisposeFutureProviderElement<List<SeasonPair>> createElement() {
+  AutoDisposeAsyncNotifierProviderElement<PodcastSeasonsAndStats,
+      List<SeasonPair>> createElement() {
     return _PodcastSeasonsAndStatsProviderElement(this);
   }
 
@@ -147,14 +161,14 @@ class PodcastSeasonsAndStatsProvider
 }
 
 mixin PodcastSeasonsAndStatsRef
-    on AutoDisposeFutureProviderRef<List<SeasonPair>> {
+    on AutoDisposeAsyncNotifierProviderRef<List<SeasonPair>> {
   /// The parameter `pid` of this provider.
   int get pid;
 }
 
 class _PodcastSeasonsAndStatsProviderElement
-    extends AutoDisposeFutureProviderElement<List<SeasonPair>>
-    with PodcastSeasonsAndStatsRef {
+    extends AutoDisposeAsyncNotifierProviderElement<PodcastSeasonsAndStats,
+        List<SeasonPair>> with PodcastSeasonsAndStatsRef {
   _PodcastSeasonsAndStatsProviderElement(super.provider);
 
   @override

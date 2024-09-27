@@ -7,7 +7,6 @@ import 'package:audiflow/common/data/isar_factory.dart';
 import 'package:audiflow/events/episode_event.dart';
 import 'package:audiflow/events/podcast_event.dart';
 import 'package:audiflow/events/season_event.dart';
-import 'package:audiflow/features/browser/common/data/default_podcast_api_repository.dart';
 import 'package:audiflow/features/browser/common/data/episode_stats_repository/episode_stats_repository.dart';
 import 'package:audiflow/features/browser/common/data/episode_stats_repository/isar_episode_stats_repository.dart';
 import 'package:audiflow/features/browser/common/data/podcast_stats_repository/isar_podcast_stats_repository.dart';

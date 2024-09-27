@@ -16,8 +16,6 @@ Future<List<Season>> podcastSeasons(
     final relatesToPodcast = event.maybeMap(
       data: (event) {
         switch (event.value) {
-          case SeasonUpdatedEvent(season: final season):
-            return season.pid == pid;
           case SeasonsUpdatedEvent(seasons: final seasons):
             return seasons.any((season) => season.pid == pid);
         }

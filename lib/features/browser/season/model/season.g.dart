@@ -32,33 +32,38 @@ const SeasonSchema = CollectionSchema(
       name: r'guid',
       type: IsarType.string,
     ),
-    r'imageUrl': PropertySchema(
+    r'hashCode': PropertySchema(
       id: 3,
+      name: r'hashCode',
+      type: IsarType.long,
+    ),
+    r'imageUrl': PropertySchema(
+      id: 4,
       name: r'imageUrl',
       type: IsarType.string,
     ),
     r'latestPublicationDate': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'latestPublicationDate',
       type: IsarType.dateTime,
     ),
     r'pid': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'pid',
       type: IsarType.long,
     ),
     r'seasonNum': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'seasonNum',
       type: IsarType.long,
     ),
     r'title': PropertySchema(
-      id: 7,
+      id: 8,
       name: r'title',
       type: IsarType.string,
     ),
     r'totalDurationMS': PropertySchema(
-      id: 8,
+      id: 9,
       name: r'totalDurationMS',
       type: IsarType.long,
     )
@@ -162,12 +167,13 @@ void _seasonSerialize(
   writer.writeLongList(offsets[0], object.episodeIds);
   writer.writeDateTime(offsets[1], object.firstPublicationDate);
   writer.writeString(offsets[2], object.guid);
-  writer.writeString(offsets[3], object.imageUrl);
-  writer.writeDateTime(offsets[4], object.latestPublicationDate);
-  writer.writeLong(offsets[5], object.pid);
-  writer.writeLong(offsets[6], object.seasonNum);
-  writer.writeString(offsets[7], object.title);
-  writer.writeLong(offsets[8], object.totalDurationMS);
+  writer.writeLong(offsets[3], object.hashCode);
+  writer.writeString(offsets[4], object.imageUrl);
+  writer.writeDateTime(offsets[5], object.latestPublicationDate);
+  writer.writeLong(offsets[6], object.pid);
+  writer.writeLong(offsets[7], object.seasonNum);
+  writer.writeString(offsets[8], object.title);
+  writer.writeLong(offsets[9], object.totalDurationMS);
 }
 
 Season _seasonDeserialize(
@@ -180,12 +186,12 @@ Season _seasonDeserialize(
     episodeIds: reader.readLongList(offsets[0]) ?? [],
     firstPublicationDate: reader.readDateTimeOrNull(offsets[1]),
     guid: reader.readString(offsets[2]),
-    imageUrl: reader.readStringOrNull(offsets[3]),
-    latestPublicationDate: reader.readDateTimeOrNull(offsets[4]),
-    pid: reader.readLong(offsets[5]),
-    seasonNum: reader.readLongOrNull(offsets[6]),
-    title: reader.readStringOrNull(offsets[7]),
-    totalDurationMS: reader.readLong(offsets[8]),
+    imageUrl: reader.readStringOrNull(offsets[4]),
+    latestPublicationDate: reader.readDateTimeOrNull(offsets[5]),
+    pid: reader.readLong(offsets[6]),
+    seasonNum: reader.readLongOrNull(offsets[7]),
+    title: reader.readStringOrNull(offsets[8]),
+    totalDurationMS: reader.readLong(offsets[9]),
   );
   return object;
 }
@@ -204,16 +210,18 @@ P _seasonDeserializeProp<P>(
     case 2:
       return (reader.readString(offset)) as P;
     case 3:
-      return (reader.readStringOrNull(offset)) as P;
-    case 4:
-      return (reader.readDateTimeOrNull(offset)) as P;
-    case 5:
       return (reader.readLong(offset)) as P;
-    case 6:
-      return (reader.readLongOrNull(offset)) as P;
-    case 7:
+    case 4:
       return (reader.readStringOrNull(offset)) as P;
+    case 5:
+      return (reader.readDateTimeOrNull(offset)) as P;
+    case 6:
+      return (reader.readLong(offset)) as P;
+    case 7:
+      return (reader.readLongOrNull(offset)) as P;
     case 8:
+      return (reader.readStringOrNull(offset)) as P;
+    case 9:
       return (reader.readLong(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -1103,6 +1111,59 @@ extension SeasonQueryFilter on QueryBuilder<Season, Season, QFilterCondition> {
     });
   }
 
+  QueryBuilder<Season, Season, QAfterFilterCondition> hashCodeEqualTo(
+      int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'hashCode',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Season, Season, QAfterFilterCondition> hashCodeGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'hashCode',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Season, Season, QAfterFilterCondition> hashCodeLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'hashCode',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Season, Season, QAfterFilterCondition> hashCodeBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'hashCode',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
   QueryBuilder<Season, Season, QAfterFilterCondition> idEqualTo(Id value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -1726,6 +1787,18 @@ extension SeasonQuerySortBy on QueryBuilder<Season, Season, QSortBy> {
     });
   }
 
+  QueryBuilder<Season, Season, QAfterSortBy> sortByHashCode() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'hashCode', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Season, Season, QAfterSortBy> sortByHashCodeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'hashCode', Sort.desc);
+    });
+  }
+
   QueryBuilder<Season, Season, QAfterSortBy> sortByImageUrl() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'imageUrl', Sort.asc);
@@ -1821,6 +1894,18 @@ extension SeasonQuerySortThenBy on QueryBuilder<Season, Season, QSortThenBy> {
   QueryBuilder<Season, Season, QAfterSortBy> thenByGuidDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'guid', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Season, Season, QAfterSortBy> thenByHashCode() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'hashCode', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Season, Season, QAfterSortBy> thenByHashCodeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'hashCode', Sort.desc);
     });
   }
 
@@ -1929,6 +2014,12 @@ extension SeasonQueryWhereDistinct on QueryBuilder<Season, Season, QDistinct> {
     });
   }
 
+  QueryBuilder<Season, Season, QDistinct> distinctByHashCode() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'hashCode');
+    });
+  }
+
   QueryBuilder<Season, Season, QDistinct> distinctByImageUrl(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -1991,6 +2082,12 @@ extension SeasonQueryProperty on QueryBuilder<Season, Season, QQueryProperty> {
   QueryBuilder<Season, String, QQueryOperations> guidProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'guid');
+    });
+  }
+
+  QueryBuilder<Season, int, QQueryOperations> hashCodeProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'hashCode');
     });
   }
 
