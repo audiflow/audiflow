@@ -31,6 +31,7 @@ Future<Episode?> episode(
           });
         }
       case EpisodeDeletedEvent() ||
+            EpisodesDeletedEvent() ||
             EpisodeStatsUpdatedEvent() ||
             EpisodeStatsListUpdatedEvent() ||
             null:

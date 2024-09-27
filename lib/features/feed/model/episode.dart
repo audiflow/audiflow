@@ -150,6 +150,41 @@ class Episode implements Comparable<Episode> {
 
     return title.compareTo(other.title);
   }
+
+  Episode copyWith({
+    int? ordinal,
+    String? contentUrl,
+    String? title,
+    String? guid,
+    String? author,
+    String? link,
+    DateTime? publicationDate,
+    String? description,
+    int? durationMS,
+    String? imageUrl,
+    bool? explicit,
+    int? episode,
+    int? season,
+    EpisodeType? type,
+  }) {
+    return Episode(
+      pid: pid,
+      ordinal: ordinal ?? this.ordinal,
+      contentUrl: contentUrl ?? this.contentUrl,
+      title: title ?? this.title,
+      guid: guid ?? this.guid,
+      author: author ?? this.author,
+      link: link ?? this.link,
+      publicationDate: publicationDate ?? this.publicationDate,
+      description: description ?? this.description,
+      durationMS: durationMS ?? this.durationMS,
+      imageUrl: imageUrl ?? this.imageUrl,
+      explicit: explicit ?? this.explicit,
+      episode: episode ?? this.episode,
+      season: season ?? this.season,
+      type: type ?? this.type,
+    );
+  }
 }
 
 class PartialEpisode {

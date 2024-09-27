@@ -5,12 +5,6 @@ part 'season_event.g.dart';
 
 sealed class SeasonEvent {}
 
-class SeasonUpdatedEvent implements SeasonEvent {
-  const SeasonUpdatedEvent(this.season);
-
-  final Season season;
-}
-
 class SeasonsUpdatedEvent implements SeasonEvent {
   const SeasonsUpdatedEvent(this.seasons);
 

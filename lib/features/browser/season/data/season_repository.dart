@@ -16,6 +16,8 @@ abstract class SeasonRepository {
   Future<List<SeasonStats?>> findSeasonStatsList(Iterable<int> seasonIds);
 
   Future<SeasonStats> updateSeasonStat(SeasonStatsUpdateParam param);
+
+  Future<void> deleteAll(Iterable<int> ids);
 }
 
 @Riverpod(keepAlive: true)

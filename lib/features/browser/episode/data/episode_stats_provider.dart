@@ -27,6 +27,7 @@ Future<EpisodeStats?> episodeStats(
             EpisodesUpdatedEvent() ||
             EpisodesAddedEvent() ||
             EpisodeDeletedEvent() ||
+            EpisodesDeletedEvent() ||
             null:
         break;
     }

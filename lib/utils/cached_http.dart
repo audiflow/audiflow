@@ -25,15 +25,14 @@ class CachedHttp {
     dio = Dio(
       BaseOptions(
         headers: {
-          'User-Agent':
-              'podcast_search/0.4.0 https://github.com/reedom/audiflow',
+          'User-Agent': 'github.com/reedom/audiflow',
         },
         validateStatus: (status) => status != null && status < 400,
         connectTimeout: const Duration(seconds: 3),
       ),
     )
-      ..interceptors.add(LogInterceptor())
-      ..interceptors.add(DioCacheInterceptor(options: cacheOptions));
+      ..interceptors.add(DioCacheInterceptor(options: cacheOptions))
+      ..interceptors.add(LogInterceptor());
   }
 
   late final Dio dio;

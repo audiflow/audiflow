@@ -22,7 +22,9 @@ abstract class EpisodeRepository {
 
   Future<void> saveEpisode(Episode episode);
 
-  Future<void> saveEpisodes(Iterable<Episode> episodes);
+  Future<void> saveEpisodes(List<Episode> episodes);
+
+  Future<void> deleteEpisodes(List<int> eids);
 }
 
 @Riverpod(keepAlive: true)

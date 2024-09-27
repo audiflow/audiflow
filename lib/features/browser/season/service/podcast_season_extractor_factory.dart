@@ -5,10 +5,12 @@ import 'package:audiflow/features/browser/season/service/podcast_season_title_ex
 import 'package:audiflow/features/browser/season/service/podcast_season_title_extractor/podcast_season_title_extractor.dart';
 import 'package:audiflow/features/feed/model/model.dart';
 
-final _extractors = Map<String, PodcastSeasonTitleExtractor>.fromEntries([
-  JP1450522865(),
-  JP1567192930(),
-].map((e) => MapEntry(e.feedUrl, e)));
+final _extractors = Map<String, PodcastSeasonTitleExtractor>.fromEntries(
+  [
+    JP1450522865(),
+    JP1567192930(),
+  ].map((e) => MapEntry(e.feedUrl, e)),
+);
 
 class PodcastSeasonExtractorFactor {
   PodcastSeasonExtractorFactor._();

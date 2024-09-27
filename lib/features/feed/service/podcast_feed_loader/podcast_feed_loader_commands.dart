@@ -15,27 +15,16 @@ class _SendPortMessage extends _Message {
   }
 }
 
-class _SetupCommand extends _Command {
-  _SetupCommand({
-    required this.cacheDir,
-    required this.storageDir,
-  });
-
-  final String cacheDir;
-  final String storageDir;
-
-  @override
-  String toString() {
-    return '_SetupCommand(cacheDir: $cacheDir, storageDir: $storageDir)';
-  }
-}
-
 class _LoadFeedCommand extends _Command {
   _LoadFeedCommand({
+    required this.cacheDir,
+    required this.storageDir,
     required this.feedUrl,
     required this.collectionId,
   });
 
+  final String cacheDir;
+  final String storageDir;
   final String feedUrl;
   final int? collectionId;
 
@@ -67,31 +56,41 @@ class _LoadedPodcastMessage extends _Message {
 
 class _LoadedEpisodesMessage extends _Message {
   _LoadedEpisodesMessage({
-    required this.episodes,
+    required this.inserts,
+    required this.updates,
+    required this.deletes,
     required this.loadingState,
   });
 
-  final List<PartialEpisode> episodes;
+  final List<PartialEpisode> inserts;
+  final List<PartialEpisode> updates;
+  final List<PartialEpisode> deletes;
   final LoadingState loadingState;
 
   @override
   String toString() {
     return '_LoadedEpisodesMessage('
-        'episodes: ${episodes.length} episodes, '
+        'inserts: ${inserts.length} episodes, '
+        'updates: ${updates.length} episodes, '
+        'deletes: ${deletes.length} episodes, '
         'loadingState: $loadingState)';
   }
 }
 
 class _LoadedSeasonMessage extends _Message {
   _LoadedSeasonMessage({
-    required this.seasons,
+    required this.updates,
+    required this.deletes,
   });
 
-  final List<Season> seasons;
+  final List<Season> updates;
+  final List<Season> deletes;
 
   @override
   String toString() {
-    return '_LoadedSeasonMessage(seasons: ${seasons.length} seasons)';
+    return '_LoadedSeasonMessage('
+        'updates: ${updates.length} seasons, '
+        'deletes: ${deletes.length} seasons)';
   }
 }
 

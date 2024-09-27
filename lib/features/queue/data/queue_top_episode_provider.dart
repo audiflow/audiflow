@@ -36,6 +36,7 @@ class QueueTopEpisode extends _$QueueTopEpisode {
             }
           case EpisodesAddedEvent() ||
                 EpisodeDeletedEvent() ||
+                EpisodesDeletedEvent() ||
                 EpisodeStatsUpdatedEvent() ||
                 EpisodeStatsListUpdatedEvent():
             break;

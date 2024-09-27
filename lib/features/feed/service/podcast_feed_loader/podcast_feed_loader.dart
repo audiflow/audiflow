@@ -7,11 +7,14 @@ import 'package:audiflow/common/data/isar_factory.dart';
 import 'package:audiflow/events/episode_event.dart';
 import 'package:audiflow/events/podcast_event.dart';
 import 'package:audiflow/events/season_event.dart';
+import 'package:audiflow/features/browser/common/data/episode_stats_repository/episode_stats_repository.dart';
+import 'package:audiflow/features/browser/common/data/episode_stats_repository/isar_episode_stats_repository.dart';
 import 'package:audiflow/features/browser/common/data/podcast_stats_repository/isar_podcast_stats_repository.dart';
 import 'package:audiflow/features/browser/common/data/podcast_stats_repository/podcast_stats_repository.dart';
 import 'package:audiflow/features/browser/season/data/isar_season_repository.dart';
 import 'package:audiflow/features/browser/season/data/season_repository.dart';
 import 'package:audiflow/features/browser/season/model/season.dart';
+import 'package:audiflow/features/browser/season/service/podcast_season_extractor.dart';
 import 'package:audiflow/features/browser/season/service/podcast_season_extractor_factory.dart';
 import 'package:audiflow/features/feed/data/episode_repository.dart';
 import 'package:audiflow/features/feed/data/isar_episode_repository.dart';
@@ -20,13 +23,13 @@ import 'package:audiflow/features/feed/data/podcast_repository.dart';
 import 'package:audiflow/features/feed/model/model.dart';
 import 'package:audiflow/utils/cached_http.dart';
 import 'package:audiflow/utils/logger.dart';
+import 'package:collection/collection.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:isar/isar.dart';
 import 'package:podcast_feed/parsers/podcast_feed_parser.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:rxdart/rxdart.dart';
 import 'package:worker_manager/worker_manager.dart';
 
 part 'podcast_feed_loader.freezed.dart';
@@ -93,19 +96,14 @@ class PodcastFeedLoader extends _$PodcastFeedLoader {
     switch (message) {
       case _SendPortMessage(sendPort: final sendPort):
         _workerPort = sendPort;
-        _workerPort
-          ?..send(
-            _SetupCommand(
-              cacheDir: _cacheDir,
-              storageDir: _appDocDir,
-            ),
-          )
-          ..send(
-            _LoadFeedCommand(
-              feedUrl: state.feedUrl,
-              collectionId: state.collectionId,
-            ),
-          );
+        sendPort.send(
+          _LoadFeedCommand(
+            cacheDir: _cacheDir,
+            storageDir: _appDocDir,
+            feedUrl: state.feedUrl,
+            collectionId: state.collectionId,
+          ),
+        );
       case _LoadedPodcastMessage():
         final podcast =
             await _podcastRepository.findPodcastBy(feedUrl: state.feedUrl);
@@ -113,43 +111,78 @@ class PodcastFeedLoader extends _$PodcastFeedLoader {
           logger.w(() => 'podcast is null');
           return;
         }
-        logger.d(() => 'loaded new podcast $podcast');
-        ref
-            .read(podcastEventStreamProvider.notifier)
-            .add(PodcastUpdatedEvent(podcast));
+        _notifyPodcastUpdated(podcast);
         state = state.copyWith(loadingState: LoadingState.loadingEpisodes);
       case _LoadedEpisodesMessage(
-          episodes: final episodes,
+          inserts: final inserts,
+          updates: final updates,
+          deletes: final deletes,
           loadingState: final loadingState
         ):
-        if (episodes.isNotEmpty) {
-          ref
-              .read(episodeEventStreamProvider.notifier)
-              .add(EpisodesAddedEvent(episodes));
-          unawaited(
-            ref
-                .read(podcastStatsRepositoryProvider)
-                .findPodcastStats(episodes.first.pid)
-                .then((stats) {
-              if (stats != null) {
-                ref
-                    .read(podcastEventStreamProvider.notifier)
-                    .add(PodcastStatsUpdatedEvent(stats));
-              }
-            }),
-          );
+        if (inserts.isNotEmpty) {
+          _notifyEpisodesAdded(inserts);
+          _notifyPodcastStatsUpdated(inserts.first.pid);
         }
         state = state.copyWith(loadingState: loadingState);
-        _workerPort?.send(_ContinueEpisodeLoadingCommand());
-      case _LoadedSeasonMessage(seasons: final seasons):
-        if (seasons.isNotEmpty) {
-          ref
-              .read(seasonEventStreamProvider.notifier)
-              .add(SeasonsUpdatedEvent(seasons));
+        if (loadingState == LoadingState.loadingEpisodes) {
+          _workerPort?.send(_ContinueEpisodeLoadingCommand());
+        } else if ([
+          LoadingState.reachedLastPubDate,
+          LoadingState.loadedAllEpisodes,
+        ].contains(loadingState)) {
+          _workerPort?.send(_CancelledCommand());
         }
+      case _LoadedSeasonMessage(updates: final seasons):
+        _notifySeasonsUpdated(seasons);
       case _GotErrorMessage(message: final message):
         logger.w(message);
         state = state.copyWith(loadingState: LoadingState.error);
+    }
+  }
+
+  void _notifyPodcastUpdated(Podcast podcast) {
+    logger.d(() => 'loaded new podcast $podcast');
+    ref
+        .read(podcastEventStreamProvider.notifier)
+        .add(PodcastUpdatedEvent(podcast));
+  }
+
+  void _notifyEpisodesAdded(List<PartialEpisode> episodes) {
+    ref
+        .read(episodeEventStreamProvider.notifier)
+        .add(EpisodesAddedEvent(episodes));
+  }
+
+  void _notifyEpisodesUpdated(List<Episode> episodes) {
+    ref
+        .read(episodeEventStreamProvider.notifier)
+        .add(EpisodesUpdatedEvent(episodes));
+  }
+
+  void _notifyEpisodesDeleted(List<PartialEpisode> episodes) {
+    ref
+        .read(episodeEventStreamProvider.notifier)
+        .add(EpisodesDeletedEvent(episodes.map((e) => e.id).toList()));
+  }
+
+  void _notifyPodcastStatsUpdated(int pid) {
+    ref
+        .read(podcastStatsRepositoryProvider)
+        .findPodcastStats(pid)
+        .then((stats) {
+      if (stats != null) {
+        ref
+            .read(podcastEventStreamProvider.notifier)
+            .add(PodcastStatsUpdatedEvent(stats));
+      }
+    });
+  }
+
+  void _notifySeasonsUpdated(List<Season> seasons) {
+    if (seasons.isNotEmpty) {
+      ref
+          .read(seasonEventStreamProvider.notifier)
+          .add(SeasonsUpdatedEvent(seasons));
     }
   }
 }
@@ -179,4 +212,3 @@ class PodcastFeedLoaderState with _$PodcastFeedLoaderState {
     @Default(LoadingState.loadingPodcast) LoadingState loadingState,
   }) = _PodcastFeedLoaderState;
 }
-

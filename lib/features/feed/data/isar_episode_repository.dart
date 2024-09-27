@@ -62,7 +62,12 @@ class IsarEpisodeRepository implements EpisodeRepository {
   }
 
   @override
-  Future<void> saveEpisodes(Iterable<Episode> episodes) async {
-    await isar.writeTxn(() => isar.episodes.putAll(episodes.toList()));
+  Future<void> saveEpisodes(List<Episode> episodes) async {
+    await isar.writeTxn(() => isar.episodes.putAll(episodes));
+  }
+
+  @override
+  Future<void> deleteEpisodes(List<int> eids) async {
+    await isar.writeTxn(() => isar.episodes.deleteAll(eids));
   }
 }

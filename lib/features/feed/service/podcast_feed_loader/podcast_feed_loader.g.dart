@@ -6,7 +6,7 @@ part of 'podcast_feed_loader.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$podcastFeedLoaderHash() => r'92da218383ad86b3d63f0e09509f4eb56e847aaa';
+String _$podcastFeedLoaderHash() => r'46d5ddb197e11aad474fce5fe8a4481570fbe415';
 
 /// Copied from Dart SDK
 class _SystemHash {

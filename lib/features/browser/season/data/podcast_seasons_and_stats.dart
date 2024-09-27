@@ -5,76 +5,23 @@ import 'package:audiflow/features/browser/season/data/season_repository.dart';
 import 'package:audiflow/features/browser/season/model/season.dart';
 import 'package:collection/collection.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:rxdart/rxdart.dart';
 
 part 'podcast_seasons_and_stats.g.dart';
 
 @riverpod
-Future<List<SeasonPair>> podcastSeasonsAndStats(
-  PodcastSeasonsAndStatsRef ref,
-  int pid,
-) async {
-  Future<void> onSeasonUpdated(Season season) async {
-    final stats = ref.state.requireValue
-            .firstWhereOrNull(
-              (p) => p.season.id == season.id,
-            )
-            ?.stats ??
-        await ref.read(seasonRepositoryProvider).findSeasonStats(season.id);
-    ref.state = AsyncData([
-      ...ref.state.requireValue
-        ..removeWhere((p) => p.season.id == season.id)
-        ..add(SeasonPair(season, stats))
-        ..sorted(),
-    ]);
+class PodcastSeasonsAndStats extends _$PodcastSeasonsAndStats {
+  @override
+  Future<List<SeasonPair>> build(int pid) async {
+    final completer = Completer<void>();
+    _listen(completer.future);
+
+    final initialData = await _initialData();
+    completer.complete(null);
+    return initialData;
   }
 
-  Future<void> onSeasonsUpdated(List<Season> seasons) async {
-    final current = ref.state.requireValue;
-    final newSeasons =
-        seasons.where((s) => !current.any((p) => s.id == p.season.id));
-    final newStats = newSeasons.isEmpty
-        ? <SeasonStats?>[]
-        : await ref
-            .read(seasonRepositoryProvider)
-            .findSeasonStatsList(newSeasons.map((s) => s.id));
-    ref.state = AsyncData([
-      ...ref.state.requireValue
-        ..removeWhere((p) => newSeasons.any((s) => p.season.id == s.id))
-        ..addAll(
-          newSeasons.map(
-            (s) => SeasonPair(
-              s,
-              newStats.firstWhereOrNull((stats) => stats?.id == s.id),
-            ),
-          ),
-        )
-        ..sorted(),
-    ]);
-  }
-
-  void listen() {
-    ref.listen(seasonEventStreamProvider, (_, event) {
-      event.whenData(
-        (data) {
-          switch (event.valueOrNull) {
-            case SeasonUpdatedEvent(season: final season):
-              if (season.pid == pid) {
-                onSeasonUpdated(season);
-              }
-            case SeasonsUpdatedEvent(seasons: final seasons):
-              final podcastSeasons =
-                  seasons.where((s) => s.pid == pid).toList();
-              if (podcastSeasons.isNotEmpty) {
-                onSeasonsUpdated(podcastSeasons);
-              }
-            case null:
-          }
-        },
-      );
-    });
-  }
-
-  try {
+  Future<List<SeasonPair>> _initialData() async {
     final seasons =
         await ref.read(seasonRepositoryProvider).findPodcastSeasons(pid);
     if (seasons.isEmpty) {
@@ -87,8 +34,60 @@ Future<List<SeasonPair>> podcastSeasonsAndStats(
     return seasons
         .mapIndexed((i, season) => SeasonPair(season, statsList[i]))
         .toList();
-  } finally {
-    listen();
+  }
+
+  void _listen(Future<void> completer) {
+    final streamController = StreamController<SeasonEvent>();
+    ref.onDispose(streamController.close);
+
+    streamController.stream.flatMap(
+      (event) async* {
+        // Wait for populating the initial data.
+        await completer;
+
+        switch (event) {
+          case SeasonsUpdatedEvent(seasons: final seasons):
+            final podcastSeasons = seasons.where((s) => s.pid == pid).toList();
+            if (podcastSeasons.isNotEmpty) {
+              await _onSeasonsUpdated(podcastSeasons);
+            }
+        }
+      },
+      maxConcurrent: 1,
+    ).drain<void>();
+
+    ref.listen(seasonEventStreamProvider, (_, event) {
+      event.whenData(
+        (data) => streamController.add(event.requireValue),
+      );
+    });
+  }
+
+  Future<void> _onSeasonsUpdated(List<Season> seasons) async {
+    if (seasons.isEmpty) {
+      return;
+    }
+
+    final newStats = seasons.isEmpty
+        ? <SeasonStats?>[]
+        : await ref
+            .read(seasonRepositoryProvider)
+            .findSeasonStatsList(seasons.map((s) => s.id));
+    state = AsyncData([
+      ...state.requireValue
+        ..removeWhere(
+          (p) => seasons.any((s) => p.season.seasonNum == s.seasonNum),
+        )
+        ..addAll(
+          seasons.map(
+            (s) => SeasonPair(
+              s,
+              newStats.firstWhereOrNull((stats) => stats?.id == s.id),
+            ),
+          ),
+        )
+        ..sort(),
+    ]);
   }
 }
 
