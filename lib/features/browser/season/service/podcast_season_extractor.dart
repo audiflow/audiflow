@@ -208,7 +208,10 @@ class PodcastSeasonExtractor {
       final seasonNum = i + 1;
       if (season.seasonNum != seasonNum) {
         // Return rewrote season.
-        return season.copyWith(seasonNum: seasonNum);
+        return season.copyWith(
+          guid: calcSeasonGuid(feedUrl: podcast.feedUrl, seasonNum: seasonNum),
+          seasonNum: seasonNum,
+        );
       } else if (map.containsKey(season.title)) {
         // Return updated season.
         return season;

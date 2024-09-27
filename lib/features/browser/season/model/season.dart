@@ -60,6 +60,7 @@ class Season {
   final int totalDurationMS;
 
   Season copyWith({
+    String? guid,
     String? title,
     String? imageUrl,
     int? seasonNum,
@@ -69,7 +70,7 @@ class Season {
     int? totalDurationMS,
   }) {
     return Season(
-      guid: guid,
+      guid: guid ?? this.guid,
       pid: pid,
       seasonNum: seasonNum ?? this.seasonNum,
       title: title ?? this.title,
