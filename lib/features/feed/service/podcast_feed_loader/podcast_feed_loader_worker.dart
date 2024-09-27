@@ -209,21 +209,16 @@ class _Worker {
         );
       }
 
-      if (state.inserts.isNotEmpty ||
-          state.updates.isNotEmpty ||
-          state.deletes.isNotEmpty ||
-          isLast) {
-        _sendMessage(
-          _LoadedEpisodesMessage(
-            inserts: state.inserts.map(PartialEpisode.fromEpisode).toList(),
-            updates: state.updates.map(PartialEpisode.fromEpisode).toList(),
-            deletes: state.deletes.map(PartialEpisode.fromEpisode).toList(),
-            loadingState: isLast
-                ? LoadingState.loadedAllEpisodes
-                : LoadingState.loadingEpisodes,
-          ),
-        );
-      }
+      _sendMessage(
+        _LoadedEpisodesMessage(
+          inserts: state.inserts.map(PartialEpisode.fromEpisode).toList(),
+          updates: state.updates.map(PartialEpisode.fromEpisode).toList(),
+          deletes: state.deletes.map(PartialEpisode.fromEpisode).toList(),
+          loadingState: isLast
+              ? LoadingState.loadedAllEpisodes
+              : LoadingState.loadingEpisodes,
+        ),
+      );
 
       final seasonsState =
           await seasonUpdater.processParsedEpisodes(state, isLast: isLast);
