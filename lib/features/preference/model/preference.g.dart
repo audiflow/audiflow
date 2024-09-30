@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'app_preference.dart';
+part of 'preference.dart';
 
 // **************************************************************************
 // IsarCollectionGenerator
@@ -9,13 +9,13 @@ part of 'app_preference.dart';
 // coverage:ignore-file
 // ignore_for_file: duplicate_ignore, non_constant_identifier_names, constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast, prefer_const_constructors, lines_longer_than_80_chars, require_trailing_commas, inference_failure_on_function_invocation, unnecessary_parenthesis, unnecessary_raw_strings, unnecessary_null_checks, join_return_with_assignment, prefer_final_locals, avoid_js_rounded_ints, avoid_positional_boolean_parameters, always_specify_types
 
-extension GetAppPreferenceCollection on Isar {
-  IsarCollection<AppPreference> get appPreferences => this.collection();
+extension GetPreferenceCollection on Isar {
+  IsarCollection<Preference> get preferences => this.collection();
 }
 
-const AppPreferenceSchema = CollectionSchema(
-  name: r'AppPreference',
-  id: -632636125728214278,
+const PreferenceSchema = CollectionSchema(
+  name: r'Preference',
+  id: -2412535530476531349,
   properties: {
     r'autoDeleteEpisodes': PropertySchema(
       id: 0,
@@ -62,70 +62,81 @@ const AppPreferenceSchema = CollectionSchema(
       name: r'markDeletedEpisodesAsPlayed',
       type: IsarType.bool,
     ),
-    r'playbackSpeed': PropertySchema(
+    r'playbackSleepMinutes': PropertySchema(
       id: 9,
+      name: r'playbackSleepMinutes',
+      type: IsarType.long,
+    ),
+    r'playbackSleepType': PropertySchema(
+      id: 10,
+      name: r'playbackSleepType',
+      type: IsarType.byte,
+      enumMap: _PreferenceplaybackSleepTypeEnumValueMap,
+    ),
+    r'playbackSpeed': PropertySchema(
+      id: 11,
       name: r'playbackSpeed',
       type: IsarType.double,
     ),
     r'searchProvider': PropertySchema(
-      id: 10,
+      id: 12,
       name: r'searchProvider',
       type: IsarType.string,
     ),
     r'searchProviders': PropertySchema(
-      id: 11,
+      id: 13,
       name: r'searchProviders',
       type: IsarType.byteList,
-      enumMap: _AppPreferencesearchProvidersEnumValueMap,
+      enumMap: _PreferencesearchProvidersEnumValueMap,
     ),
     r'showFunding': PropertySchema(
-      id: 12,
+      id: 14,
       name: r'showFunding',
       type: IsarType.bool,
     ),
     r'storeDownloadsSDCard': PropertySchema(
-      id: 13,
+      id: 15,
       name: r'storeDownloadsSDCard',
       type: IsarType.bool,
     ),
     r'streamWarnMobileData': PropertySchema(
-      id: 14,
+      id: 16,
       name: r'streamWarnMobileData',
       type: IsarType.bool,
     ),
     r'theme': PropertySchema(
-      id: 15,
+      id: 17,
       name: r'theme',
       type: IsarType.byte,
-      enumMap: _AppPreferencethemeEnumValueMap,
+      enumMap: _PreferencethemeEnumValueMap,
     ),
     r'trimSilence': PropertySchema(
-      id: 16,
+      id: 18,
       name: r'trimSilence',
       type: IsarType.bool,
     ),
     r'volumeBoost': PropertySchema(
-      id: 17,
+      id: 19,
       name: r'volumeBoost',
       type: IsarType.bool,
     )
   },
-  estimateSize: _appPreferenceEstimateSize,
-  serialize: _appPreferenceSerialize,
-  deserialize: _appPreferenceDeserialize,
-  deserializeProp: _appPreferenceDeserializeProp,
+  estimateSize: _preferenceEstimateSize,
+  serialize: _preferenceSerialize,
+  deserialize: _preferenceDeserialize,
+  deserializeProp: _preferenceDeserializeProp,
   idName: r'id',
   indexes: {},
   links: {},
   embeddedSchemas: {},
-  getId: _appPreferenceGetId,
-  getLinks: _appPreferenceGetLinks,
-  attach: _appPreferenceAttach,
+  getId: _preferenceGetId,
+  getLinks: _preferenceGetLinks,
+  attach: _preferenceAttach,
   version: '3.1.7',
 );
 
-int _appPreferenceEstimateSize(
-  AppPreference object,
+int _preferenceEstimateSize(
+  Preference object,
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
@@ -136,8 +147,8 @@ int _appPreferenceEstimateSize(
   return bytesCount;
 }
 
-void _appPreferenceSerialize(
-  AppPreference object,
+void _preferenceSerialize(
+  Preference object,
   IsarWriter writer,
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
@@ -151,25 +162,27 @@ void _appPreferenceSerialize(
   writer.writeLong(offsets[6], object.layout);
   writer.writeString(offsets[7], object.locale);
   writer.writeBool(offsets[8], object.markDeletedEpisodesAsPlayed);
-  writer.writeDouble(offsets[9], object.playbackSpeed);
-  writer.writeString(offsets[10], object.searchProvider);
+  writer.writeLong(offsets[9], object.playbackSleepMinutes);
+  writer.writeByte(offsets[10], object.playbackSleepType.index);
+  writer.writeDouble(offsets[11], object.playbackSpeed);
+  writer.writeString(offsets[12], object.searchProvider);
   writer.writeByteList(
-      offsets[11], object.searchProviders.map((e) => e.index).toList());
-  writer.writeBool(offsets[12], object.showFunding);
-  writer.writeBool(offsets[13], object.storeDownloadsSDCard);
-  writer.writeBool(offsets[14], object.streamWarnMobileData);
-  writer.writeByte(offsets[15], object.theme.index);
-  writer.writeBool(offsets[16], object.trimSilence);
-  writer.writeBool(offsets[17], object.volumeBoost);
+      offsets[13], object.searchProviders.map((e) => e.index).toList());
+  writer.writeBool(offsets[14], object.showFunding);
+  writer.writeBool(offsets[15], object.storeDownloadsSDCard);
+  writer.writeBool(offsets[16], object.streamWarnMobileData);
+  writer.writeByte(offsets[17], object.theme.index);
+  writer.writeBool(offsets[18], object.trimSilence);
+  writer.writeBool(offsets[19], object.volumeBoost);
 }
 
-AppPreference _appPreferenceDeserialize(
+Preference _preferenceDeserialize(
   Id id,
   IsarReader reader,
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  final object = AppPreference(
+  final object = Preference(
     autoDeleteEpisodes: reader.readBool(offsets[0]),
     autoDownloadOnlyOnWifi: reader.readBool(offsets[1]),
     autoOpenNowPlaying: reader.readBool(offsets[2]),
@@ -179,28 +192,31 @@ AppPreference _appPreferenceDeserialize(
     layout: reader.readLong(offsets[6]),
     locale: reader.readString(offsets[7]),
     markDeletedEpisodesAsPlayed: reader.readBool(offsets[8]),
-    playbackSpeed: reader.readDouble(offsets[9]),
-    searchProvider: reader.readString(offsets[10]),
+    playbackSleepMinutes: reader.readLong(offsets[9]),
+    playbackSleepType: _PreferenceplaybackSleepTypeValueEnumMap[
+            reader.readByteOrNull(offsets[10])] ??
+        SleepType.none,
+    playbackSpeed: reader.readDouble(offsets[11]),
+    searchProvider: reader.readString(offsets[12]),
     searchProviders: reader
-            .readByteList(offsets[11])
+            .readByteList(offsets[13])
             ?.map((e) =>
-                _AppPreferencesearchProvidersValueEnumMap[e] ??
+                _PreferencesearchProvidersValueEnumMap[e] ??
                 SearchProvider.itunes)
             .toList() ??
         [],
-    showFunding: reader.readBool(offsets[12]),
-    storeDownloadsSDCard: reader.readBool(offsets[13]),
-    streamWarnMobileData: reader.readBool(offsets[14]),
-    theme:
-        _AppPreferencethemeValueEnumMap[reader.readByteOrNull(offsets[15])] ??
-            ThemeMode.system,
-    trimSilence: reader.readBool(offsets[16]),
-    volumeBoost: reader.readBool(offsets[17]),
+    showFunding: reader.readBool(offsets[14]),
+    storeDownloadsSDCard: reader.readBool(offsets[15]),
+    streamWarnMobileData: reader.readBool(offsets[16]),
+    theme: _PreferencethemeValueEnumMap[reader.readByteOrNull(offsets[17])] ??
+        ThemeMode.system,
+    trimSilence: reader.readBool(offsets[18]),
+    volumeBoost: reader.readBool(offsets[19]),
   );
   return object;
 }
 
-P _appPreferenceDeserializeProp<P>(
+P _preferenceDeserializeProp<P>(
   IsarReader reader,
   int propertyId,
   int offset,
@@ -226,78 +242,92 @@ P _appPreferenceDeserializeProp<P>(
     case 8:
       return (reader.readBool(offset)) as P;
     case 9:
-      return (reader.readDouble(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 10:
-      return (reader.readString(offset)) as P;
+      return (_PreferenceplaybackSleepTypeValueEnumMap[
+              reader.readByteOrNull(offset)] ??
+          SleepType.none) as P;
     case 11:
+      return (reader.readDouble(offset)) as P;
+    case 12:
+      return (reader.readString(offset)) as P;
+    case 13:
       return (reader
               .readByteList(offset)
               ?.map((e) =>
-                  _AppPreferencesearchProvidersValueEnumMap[e] ??
+                  _PreferencesearchProvidersValueEnumMap[e] ??
                   SearchProvider.itunes)
               .toList() ??
           []) as P;
-    case 12:
-      return (reader.readBool(offset)) as P;
-    case 13:
-      return (reader.readBool(offset)) as P;
     case 14:
       return (reader.readBool(offset)) as P;
     case 15:
-      return (_AppPreferencethemeValueEnumMap[reader.readByteOrNull(offset)] ??
-          ThemeMode.system) as P;
+      return (reader.readBool(offset)) as P;
     case 16:
       return (reader.readBool(offset)) as P;
     case 17:
+      return (_PreferencethemeValueEnumMap[reader.readByteOrNull(offset)] ??
+          ThemeMode.system) as P;
+    case 18:
+      return (reader.readBool(offset)) as P;
+    case 19:
       return (reader.readBool(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
 }
 
-const _AppPreferencesearchProvidersEnumValueMap = {
+const _PreferenceplaybackSleepTypeEnumValueMap = {
+  'none': 0,
+  'episode': 1,
+  'time': 2,
+};
+const _PreferenceplaybackSleepTypeValueEnumMap = {
+  0: SleepType.none,
+  1: SleepType.episode,
+  2: SleepType.time,
+};
+const _PreferencesearchProvidersEnumValueMap = {
   'itunes': 0,
   'podcastIndex': 1,
 };
-const _AppPreferencesearchProvidersValueEnumMap = {
+const _PreferencesearchProvidersValueEnumMap = {
   0: SearchProvider.itunes,
   1: SearchProvider.podcastIndex,
 };
-const _AppPreferencethemeEnumValueMap = {
+const _PreferencethemeEnumValueMap = {
   'system': 0,
   'light': 1,
   'dark': 2,
 };
-const _AppPreferencethemeValueEnumMap = {
+const _PreferencethemeValueEnumMap = {
   0: ThemeMode.system,
   1: ThemeMode.light,
   2: ThemeMode.dark,
 };
 
-Id _appPreferenceGetId(AppPreference object) {
+Id _preferenceGetId(Preference object) {
   return object.id;
 }
 
-List<IsarLinkBase<dynamic>> _appPreferenceGetLinks(AppPreference object) {
+List<IsarLinkBase<dynamic>> _preferenceGetLinks(Preference object) {
   return [];
 }
 
-void _appPreferenceAttach(
-    IsarCollection<dynamic> col, Id id, AppPreference object) {}
+void _preferenceAttach(IsarCollection<dynamic> col, Id id, Preference object) {}
 
-extension AppPreferenceQueryWhereSort
-    on QueryBuilder<AppPreference, AppPreference, QWhere> {
-  QueryBuilder<AppPreference, AppPreference, QAfterWhere> anyId() {
+extension PreferenceQueryWhereSort
+    on QueryBuilder<Preference, Preference, QWhere> {
+  QueryBuilder<Preference, Preference, QAfterWhere> anyId() {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(const IdWhereClause.any());
     });
   }
 }
 
-extension AppPreferenceQueryWhere
-    on QueryBuilder<AppPreference, AppPreference, QWhereClause> {
-  QueryBuilder<AppPreference, AppPreference, QAfterWhereClause> idEqualTo(
-      Id id) {
+extension PreferenceQueryWhere
+    on QueryBuilder<Preference, Preference, QWhereClause> {
+  QueryBuilder<Preference, Preference, QAfterWhereClause> idEqualTo(Id id) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IdWhereClause.between(
         lower: id,
@@ -306,8 +336,7 @@ extension AppPreferenceQueryWhere
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterWhereClause> idNotEqualTo(
-      Id id) {
+  QueryBuilder<Preference, Preference, QAfterWhereClause> idNotEqualTo(Id id) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
@@ -329,8 +358,7 @@ extension AppPreferenceQueryWhere
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterWhereClause> idGreaterThan(
-      Id id,
+  QueryBuilder<Preference, Preference, QAfterWhereClause> idGreaterThan(Id id,
       {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
@@ -339,8 +367,7 @@ extension AppPreferenceQueryWhere
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterWhereClause> idLessThan(
-      Id id,
+  QueryBuilder<Preference, Preference, QAfterWhereClause> idLessThan(Id id,
       {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
@@ -349,7 +376,7 @@ extension AppPreferenceQueryWhere
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterWhereClause> idBetween(
+  QueryBuilder<Preference, Preference, QAfterWhereClause> idBetween(
     Id lowerId,
     Id upperId, {
     bool includeLower = true,
@@ -366,9 +393,9 @@ extension AppPreferenceQueryWhere
   }
 }
 
-extension AppPreferenceQueryFilter
-    on QueryBuilder<AppPreference, AppPreference, QFilterCondition> {
-  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
+extension PreferenceQueryFilter
+    on QueryBuilder<Preference, Preference, QFilterCondition> {
+  QueryBuilder<Preference, Preference, QAfterFilterCondition>
       autoDeleteEpisodesEqualTo(bool value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -378,7 +405,7 @@ extension AppPreferenceQueryFilter
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
+  QueryBuilder<Preference, Preference, QAfterFilterCondition>
       autoDownloadOnlyOnWifiEqualTo(bool value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -388,7 +415,7 @@ extension AppPreferenceQueryFilter
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
+  QueryBuilder<Preference, Preference, QAfterFilterCondition>
       autoOpenNowPlayingEqualTo(bool value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -398,7 +425,7 @@ extension AppPreferenceQueryFilter
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
+  QueryBuilder<Preference, Preference, QAfterFilterCondition>
       autoUpdateEpisodePeriodEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -408,7 +435,7 @@ extension AppPreferenceQueryFilter
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
+  QueryBuilder<Preference, Preference, QAfterFilterCondition>
       autoUpdateEpisodePeriodGreaterThan(
     int value, {
     bool include = false,
@@ -422,7 +449,7 @@ extension AppPreferenceQueryFilter
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
+  QueryBuilder<Preference, Preference, QAfterFilterCondition>
       autoUpdateEpisodePeriodLessThan(
     int value, {
     bool include = false,
@@ -436,7 +463,7 @@ extension AppPreferenceQueryFilter
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
+  QueryBuilder<Preference, Preference, QAfterFilterCondition>
       autoUpdateEpisodePeriodBetween(
     int lower,
     int upper, {
@@ -454,7 +481,7 @@ extension AppPreferenceQueryFilter
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
+  QueryBuilder<Preference, Preference, QAfterFilterCondition>
       downloadWarnMobileDataEqualTo(bool value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -464,7 +491,7 @@ extension AppPreferenceQueryFilter
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
+  QueryBuilder<Preference, Preference, QAfterFilterCondition>
       externalLinkConsentEqualTo(bool value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -474,7 +501,7 @@ extension AppPreferenceQueryFilter
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition> idEqualTo(
+  QueryBuilder<Preference, Preference, QAfterFilterCondition> idEqualTo(
       Id value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -484,8 +511,7 @@ extension AppPreferenceQueryFilter
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
-      idGreaterThan(
+  QueryBuilder<Preference, Preference, QAfterFilterCondition> idGreaterThan(
     Id value, {
     bool include = false,
   }) {
@@ -498,7 +524,7 @@ extension AppPreferenceQueryFilter
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition> idLessThan(
+  QueryBuilder<Preference, Preference, QAfterFilterCondition> idLessThan(
     Id value, {
     bool include = false,
   }) {
@@ -511,7 +537,7 @@ extension AppPreferenceQueryFilter
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition> idBetween(
+  QueryBuilder<Preference, Preference, QAfterFilterCondition> idBetween(
     Id lower,
     Id upper, {
     bool includeLower = true,
@@ -528,8 +554,8 @@ extension AppPreferenceQueryFilter
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
-      layoutEqualTo(int value) {
+  QueryBuilder<Preference, Preference, QAfterFilterCondition> layoutEqualTo(
+      int value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'layout',
@@ -538,8 +564,7 @@ extension AppPreferenceQueryFilter
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
-      layoutGreaterThan(
+  QueryBuilder<Preference, Preference, QAfterFilterCondition> layoutGreaterThan(
     int value, {
     bool include = false,
   }) {
@@ -552,8 +577,7 @@ extension AppPreferenceQueryFilter
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
-      layoutLessThan(
+  QueryBuilder<Preference, Preference, QAfterFilterCondition> layoutLessThan(
     int value, {
     bool include = false,
   }) {
@@ -566,8 +590,7 @@ extension AppPreferenceQueryFilter
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
-      layoutBetween(
+  QueryBuilder<Preference, Preference, QAfterFilterCondition> layoutBetween(
     int lower,
     int upper, {
     bool includeLower = true,
@@ -584,8 +607,7 @@ extension AppPreferenceQueryFilter
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
-      localeEqualTo(
+  QueryBuilder<Preference, Preference, QAfterFilterCondition> localeEqualTo(
     String value, {
     bool caseSensitive = true,
   }) {
@@ -598,8 +620,7 @@ extension AppPreferenceQueryFilter
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
-      localeGreaterThan(
+  QueryBuilder<Preference, Preference, QAfterFilterCondition> localeGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
@@ -614,8 +635,7 @@ extension AppPreferenceQueryFilter
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
-      localeLessThan(
+  QueryBuilder<Preference, Preference, QAfterFilterCondition> localeLessThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
@@ -630,8 +650,7 @@ extension AppPreferenceQueryFilter
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
-      localeBetween(
+  QueryBuilder<Preference, Preference, QAfterFilterCondition> localeBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -650,8 +669,7 @@ extension AppPreferenceQueryFilter
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
-      localeStartsWith(
+  QueryBuilder<Preference, Preference, QAfterFilterCondition> localeStartsWith(
     String value, {
     bool caseSensitive = true,
   }) {
@@ -664,8 +682,7 @@ extension AppPreferenceQueryFilter
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
-      localeEndsWith(
+  QueryBuilder<Preference, Preference, QAfterFilterCondition> localeEndsWith(
     String value, {
     bool caseSensitive = true,
   }) {
@@ -678,8 +695,9 @@ extension AppPreferenceQueryFilter
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
-      localeContains(String value, {bool caseSensitive = true}) {
+  QueryBuilder<Preference, Preference, QAfterFilterCondition> localeContains(
+      String value,
+      {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.contains(
         property: r'locale',
@@ -689,8 +707,9 @@ extension AppPreferenceQueryFilter
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
-      localeMatches(String pattern, {bool caseSensitive = true}) {
+  QueryBuilder<Preference, Preference, QAfterFilterCondition> localeMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.matches(
         property: r'locale',
@@ -700,8 +719,7 @@ extension AppPreferenceQueryFilter
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
-      localeIsEmpty() {
+  QueryBuilder<Preference, Preference, QAfterFilterCondition> localeIsEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'locale',
@@ -710,7 +728,7 @@ extension AppPreferenceQueryFilter
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
+  QueryBuilder<Preference, Preference, QAfterFilterCondition>
       localeIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
@@ -720,7 +738,7 @@ extension AppPreferenceQueryFilter
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
+  QueryBuilder<Preference, Preference, QAfterFilterCondition>
       markDeletedEpisodesAsPlayedEqualTo(bool value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -730,7 +748,119 @@ extension AppPreferenceQueryFilter
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
+  QueryBuilder<Preference, Preference, QAfterFilterCondition>
+      playbackSleepMinutesEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'playbackSleepMinutes',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Preference, Preference, QAfterFilterCondition>
+      playbackSleepMinutesGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'playbackSleepMinutes',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Preference, Preference, QAfterFilterCondition>
+      playbackSleepMinutesLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'playbackSleepMinutes',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Preference, Preference, QAfterFilterCondition>
+      playbackSleepMinutesBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'playbackSleepMinutes',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<Preference, Preference, QAfterFilterCondition>
+      playbackSleepTypeEqualTo(SleepType value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'playbackSleepType',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Preference, Preference, QAfterFilterCondition>
+      playbackSleepTypeGreaterThan(
+    SleepType value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'playbackSleepType',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Preference, Preference, QAfterFilterCondition>
+      playbackSleepTypeLessThan(
+    SleepType value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'playbackSleepType',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Preference, Preference, QAfterFilterCondition>
+      playbackSleepTypeBetween(
+    SleepType lower,
+    SleepType upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'playbackSleepType',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<Preference, Preference, QAfterFilterCondition>
       playbackSpeedEqualTo(
     double value, {
     double epsilon = Query.epsilon,
@@ -744,7 +874,7 @@ extension AppPreferenceQueryFilter
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
+  QueryBuilder<Preference, Preference, QAfterFilterCondition>
       playbackSpeedGreaterThan(
     double value, {
     bool include = false,
@@ -760,7 +890,7 @@ extension AppPreferenceQueryFilter
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
+  QueryBuilder<Preference, Preference, QAfterFilterCondition>
       playbackSpeedLessThan(
     double value, {
     bool include = false,
@@ -776,7 +906,7 @@ extension AppPreferenceQueryFilter
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
+  QueryBuilder<Preference, Preference, QAfterFilterCondition>
       playbackSpeedBetween(
     double lower,
     double upper, {
@@ -796,7 +926,7 @@ extension AppPreferenceQueryFilter
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
+  QueryBuilder<Preference, Preference, QAfterFilterCondition>
       searchProviderEqualTo(
     String value, {
     bool caseSensitive = true,
@@ -810,7 +940,7 @@ extension AppPreferenceQueryFilter
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
+  QueryBuilder<Preference, Preference, QAfterFilterCondition>
       searchProviderGreaterThan(
     String value, {
     bool include = false,
@@ -826,7 +956,7 @@ extension AppPreferenceQueryFilter
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
+  QueryBuilder<Preference, Preference, QAfterFilterCondition>
       searchProviderLessThan(
     String value, {
     bool include = false,
@@ -842,7 +972,7 @@ extension AppPreferenceQueryFilter
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
+  QueryBuilder<Preference, Preference, QAfterFilterCondition>
       searchProviderBetween(
     String lower,
     String upper, {
@@ -862,7 +992,7 @@ extension AppPreferenceQueryFilter
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
+  QueryBuilder<Preference, Preference, QAfterFilterCondition>
       searchProviderStartsWith(
     String value, {
     bool caseSensitive = true,
@@ -876,7 +1006,7 @@ extension AppPreferenceQueryFilter
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
+  QueryBuilder<Preference, Preference, QAfterFilterCondition>
       searchProviderEndsWith(
     String value, {
     bool caseSensitive = true,
@@ -890,7 +1020,7 @@ extension AppPreferenceQueryFilter
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
+  QueryBuilder<Preference, Preference, QAfterFilterCondition>
       searchProviderContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.contains(
@@ -901,7 +1031,7 @@ extension AppPreferenceQueryFilter
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
+  QueryBuilder<Preference, Preference, QAfterFilterCondition>
       searchProviderMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.matches(
@@ -912,7 +1042,7 @@ extension AppPreferenceQueryFilter
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
+  QueryBuilder<Preference, Preference, QAfterFilterCondition>
       searchProviderIsEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -922,7 +1052,7 @@ extension AppPreferenceQueryFilter
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
+  QueryBuilder<Preference, Preference, QAfterFilterCondition>
       searchProviderIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
@@ -932,7 +1062,7 @@ extension AppPreferenceQueryFilter
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
+  QueryBuilder<Preference, Preference, QAfterFilterCondition>
       searchProvidersElementEqualTo(SearchProvider value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -942,7 +1072,7 @@ extension AppPreferenceQueryFilter
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
+  QueryBuilder<Preference, Preference, QAfterFilterCondition>
       searchProvidersElementGreaterThan(
     SearchProvider value, {
     bool include = false,
@@ -956,7 +1086,7 @@ extension AppPreferenceQueryFilter
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
+  QueryBuilder<Preference, Preference, QAfterFilterCondition>
       searchProvidersElementLessThan(
     SearchProvider value, {
     bool include = false,
@@ -970,7 +1100,7 @@ extension AppPreferenceQueryFilter
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
+  QueryBuilder<Preference, Preference, QAfterFilterCondition>
       searchProvidersElementBetween(
     SearchProvider lower,
     SearchProvider upper, {
@@ -988,7 +1118,7 @@ extension AppPreferenceQueryFilter
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
+  QueryBuilder<Preference, Preference, QAfterFilterCondition>
       searchProvidersLengthEqualTo(int length) {
     return QueryBuilder.apply(this, (query) {
       return query.listLength(
@@ -1001,7 +1131,7 @@ extension AppPreferenceQueryFilter
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
+  QueryBuilder<Preference, Preference, QAfterFilterCondition>
       searchProvidersIsEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.listLength(
@@ -1014,7 +1144,7 @@ extension AppPreferenceQueryFilter
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
+  QueryBuilder<Preference, Preference, QAfterFilterCondition>
       searchProvidersIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.listLength(
@@ -1027,7 +1157,7 @@ extension AppPreferenceQueryFilter
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
+  QueryBuilder<Preference, Preference, QAfterFilterCondition>
       searchProvidersLengthLessThan(
     int length, {
     bool include = false,
@@ -1043,7 +1173,7 @@ extension AppPreferenceQueryFilter
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
+  QueryBuilder<Preference, Preference, QAfterFilterCondition>
       searchProvidersLengthGreaterThan(
     int length, {
     bool include = false,
@@ -1059,7 +1189,7 @@ extension AppPreferenceQueryFilter
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
+  QueryBuilder<Preference, Preference, QAfterFilterCondition>
       searchProvidersLengthBetween(
     int lower,
     int upper, {
@@ -1077,7 +1207,7 @@ extension AppPreferenceQueryFilter
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
+  QueryBuilder<Preference, Preference, QAfterFilterCondition>
       showFundingEqualTo(bool value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -1087,7 +1217,7 @@ extension AppPreferenceQueryFilter
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
+  QueryBuilder<Preference, Preference, QAfterFilterCondition>
       storeDownloadsSDCardEqualTo(bool value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -1097,7 +1227,7 @@ extension AppPreferenceQueryFilter
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
+  QueryBuilder<Preference, Preference, QAfterFilterCondition>
       streamWarnMobileDataEqualTo(bool value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -1107,8 +1237,8 @@ extension AppPreferenceQueryFilter
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
-      themeEqualTo(ThemeMode value) {
+  QueryBuilder<Preference, Preference, QAfterFilterCondition> themeEqualTo(
+      ThemeMode value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'theme',
@@ -1117,8 +1247,7 @@ extension AppPreferenceQueryFilter
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
-      themeGreaterThan(
+  QueryBuilder<Preference, Preference, QAfterFilterCondition> themeGreaterThan(
     ThemeMode value, {
     bool include = false,
   }) {
@@ -1131,8 +1260,7 @@ extension AppPreferenceQueryFilter
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
-      themeLessThan(
+  QueryBuilder<Preference, Preference, QAfterFilterCondition> themeLessThan(
     ThemeMode value, {
     bool include = false,
   }) {
@@ -1145,8 +1273,7 @@ extension AppPreferenceQueryFilter
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
-      themeBetween(
+  QueryBuilder<Preference, Preference, QAfterFilterCondition> themeBetween(
     ThemeMode lower,
     ThemeMode upper, {
     bool includeLower = true,
@@ -1163,7 +1290,7 @@ extension AppPreferenceQueryFilter
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
+  QueryBuilder<Preference, Preference, QAfterFilterCondition>
       trimSilenceEqualTo(bool value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -1173,7 +1300,7 @@ extension AppPreferenceQueryFilter
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterFilterCondition>
+  QueryBuilder<Preference, Preference, QAfterFilterCondition>
       volumeBoostEqualTo(bool value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -1184,739 +1311,802 @@ extension AppPreferenceQueryFilter
   }
 }
 
-extension AppPreferenceQueryObject
-    on QueryBuilder<AppPreference, AppPreference, QFilterCondition> {}
+extension PreferenceQueryObject
+    on QueryBuilder<Preference, Preference, QFilterCondition> {}
 
-extension AppPreferenceQueryLinks
-    on QueryBuilder<AppPreference, AppPreference, QFilterCondition> {}
+extension PreferenceQueryLinks
+    on QueryBuilder<Preference, Preference, QFilterCondition> {}
 
-extension AppPreferenceQuerySortBy
-    on QueryBuilder<AppPreference, AppPreference, QSortBy> {
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy>
+extension PreferenceQuerySortBy
+    on QueryBuilder<Preference, Preference, QSortBy> {
+  QueryBuilder<Preference, Preference, QAfterSortBy>
       sortByAutoDeleteEpisodes() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'autoDeleteEpisodes', Sort.asc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy>
+  QueryBuilder<Preference, Preference, QAfterSortBy>
       sortByAutoDeleteEpisodesDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'autoDeleteEpisodes', Sort.desc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy>
+  QueryBuilder<Preference, Preference, QAfterSortBy>
       sortByAutoDownloadOnlyOnWifi() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'autoDownloadOnlyOnWifi', Sort.asc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy>
+  QueryBuilder<Preference, Preference, QAfterSortBy>
       sortByAutoDownloadOnlyOnWifiDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'autoDownloadOnlyOnWifi', Sort.desc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy>
+  QueryBuilder<Preference, Preference, QAfterSortBy>
       sortByAutoOpenNowPlaying() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'autoOpenNowPlaying', Sort.asc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy>
+  QueryBuilder<Preference, Preference, QAfterSortBy>
       sortByAutoOpenNowPlayingDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'autoOpenNowPlaying', Sort.desc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy>
+  QueryBuilder<Preference, Preference, QAfterSortBy>
       sortByAutoUpdateEpisodePeriod() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'autoUpdateEpisodePeriod', Sort.asc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy>
+  QueryBuilder<Preference, Preference, QAfterSortBy>
       sortByAutoUpdateEpisodePeriodDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'autoUpdateEpisodePeriod', Sort.desc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy>
+  QueryBuilder<Preference, Preference, QAfterSortBy>
       sortByDownloadWarnMobileData() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'downloadWarnMobileData', Sort.asc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy>
+  QueryBuilder<Preference, Preference, QAfterSortBy>
       sortByDownloadWarnMobileDataDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'downloadWarnMobileData', Sort.desc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy>
+  QueryBuilder<Preference, Preference, QAfterSortBy>
       sortByExternalLinkConsent() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'externalLinkConsent', Sort.asc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy>
+  QueryBuilder<Preference, Preference, QAfterSortBy>
       sortByExternalLinkConsentDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'externalLinkConsent', Sort.desc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy> sortByLayout() {
+  QueryBuilder<Preference, Preference, QAfterSortBy> sortByLayout() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'layout', Sort.asc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy> sortByLayoutDesc() {
+  QueryBuilder<Preference, Preference, QAfterSortBy> sortByLayoutDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'layout', Sort.desc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy> sortByLocale() {
+  QueryBuilder<Preference, Preference, QAfterSortBy> sortByLocale() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'locale', Sort.asc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy> sortByLocaleDesc() {
+  QueryBuilder<Preference, Preference, QAfterSortBy> sortByLocaleDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'locale', Sort.desc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy>
+  QueryBuilder<Preference, Preference, QAfterSortBy>
       sortByMarkDeletedEpisodesAsPlayed() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'markDeletedEpisodesAsPlayed', Sort.asc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy>
+  QueryBuilder<Preference, Preference, QAfterSortBy>
       sortByMarkDeletedEpisodesAsPlayedDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'markDeletedEpisodesAsPlayed', Sort.desc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy>
-      sortByPlaybackSpeed() {
+  QueryBuilder<Preference, Preference, QAfterSortBy>
+      sortByPlaybackSleepMinutes() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'playbackSleepMinutes', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Preference, Preference, QAfterSortBy>
+      sortByPlaybackSleepMinutesDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'playbackSleepMinutes', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Preference, Preference, QAfterSortBy> sortByPlaybackSleepType() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'playbackSleepType', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Preference, Preference, QAfterSortBy>
+      sortByPlaybackSleepTypeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'playbackSleepType', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Preference, Preference, QAfterSortBy> sortByPlaybackSpeed() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'playbackSpeed', Sort.asc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy>
-      sortByPlaybackSpeedDesc() {
+  QueryBuilder<Preference, Preference, QAfterSortBy> sortByPlaybackSpeedDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'playbackSpeed', Sort.desc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy>
-      sortBySearchProvider() {
+  QueryBuilder<Preference, Preference, QAfterSortBy> sortBySearchProvider() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'searchProvider', Sort.asc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy>
+  QueryBuilder<Preference, Preference, QAfterSortBy>
       sortBySearchProviderDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'searchProvider', Sort.desc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy> sortByShowFunding() {
+  QueryBuilder<Preference, Preference, QAfterSortBy> sortByShowFunding() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'showFunding', Sort.asc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy>
-      sortByShowFundingDesc() {
+  QueryBuilder<Preference, Preference, QAfterSortBy> sortByShowFundingDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'showFunding', Sort.desc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy>
+  QueryBuilder<Preference, Preference, QAfterSortBy>
       sortByStoreDownloadsSDCard() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'storeDownloadsSDCard', Sort.asc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy>
+  QueryBuilder<Preference, Preference, QAfterSortBy>
       sortByStoreDownloadsSDCardDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'storeDownloadsSDCard', Sort.desc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy>
+  QueryBuilder<Preference, Preference, QAfterSortBy>
       sortByStreamWarnMobileData() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'streamWarnMobileData', Sort.asc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy>
+  QueryBuilder<Preference, Preference, QAfterSortBy>
       sortByStreamWarnMobileDataDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'streamWarnMobileData', Sort.desc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy> sortByTheme() {
+  QueryBuilder<Preference, Preference, QAfterSortBy> sortByTheme() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'theme', Sort.asc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy> sortByThemeDesc() {
+  QueryBuilder<Preference, Preference, QAfterSortBy> sortByThemeDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'theme', Sort.desc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy> sortByTrimSilence() {
+  QueryBuilder<Preference, Preference, QAfterSortBy> sortByTrimSilence() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'trimSilence', Sort.asc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy>
-      sortByTrimSilenceDesc() {
+  QueryBuilder<Preference, Preference, QAfterSortBy> sortByTrimSilenceDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'trimSilence', Sort.desc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy> sortByVolumeBoost() {
+  QueryBuilder<Preference, Preference, QAfterSortBy> sortByVolumeBoost() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'volumeBoost', Sort.asc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy>
-      sortByVolumeBoostDesc() {
+  QueryBuilder<Preference, Preference, QAfterSortBy> sortByVolumeBoostDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'volumeBoost', Sort.desc);
     });
   }
 }
 
-extension AppPreferenceQuerySortThenBy
-    on QueryBuilder<AppPreference, AppPreference, QSortThenBy> {
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy>
+extension PreferenceQuerySortThenBy
+    on QueryBuilder<Preference, Preference, QSortThenBy> {
+  QueryBuilder<Preference, Preference, QAfterSortBy>
       thenByAutoDeleteEpisodes() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'autoDeleteEpisodes', Sort.asc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy>
+  QueryBuilder<Preference, Preference, QAfterSortBy>
       thenByAutoDeleteEpisodesDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'autoDeleteEpisodes', Sort.desc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy>
+  QueryBuilder<Preference, Preference, QAfterSortBy>
       thenByAutoDownloadOnlyOnWifi() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'autoDownloadOnlyOnWifi', Sort.asc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy>
+  QueryBuilder<Preference, Preference, QAfterSortBy>
       thenByAutoDownloadOnlyOnWifiDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'autoDownloadOnlyOnWifi', Sort.desc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy>
+  QueryBuilder<Preference, Preference, QAfterSortBy>
       thenByAutoOpenNowPlaying() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'autoOpenNowPlaying', Sort.asc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy>
+  QueryBuilder<Preference, Preference, QAfterSortBy>
       thenByAutoOpenNowPlayingDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'autoOpenNowPlaying', Sort.desc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy>
+  QueryBuilder<Preference, Preference, QAfterSortBy>
       thenByAutoUpdateEpisodePeriod() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'autoUpdateEpisodePeriod', Sort.asc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy>
+  QueryBuilder<Preference, Preference, QAfterSortBy>
       thenByAutoUpdateEpisodePeriodDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'autoUpdateEpisodePeriod', Sort.desc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy>
+  QueryBuilder<Preference, Preference, QAfterSortBy>
       thenByDownloadWarnMobileData() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'downloadWarnMobileData', Sort.asc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy>
+  QueryBuilder<Preference, Preference, QAfterSortBy>
       thenByDownloadWarnMobileDataDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'downloadWarnMobileData', Sort.desc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy>
+  QueryBuilder<Preference, Preference, QAfterSortBy>
       thenByExternalLinkConsent() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'externalLinkConsent', Sort.asc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy>
+  QueryBuilder<Preference, Preference, QAfterSortBy>
       thenByExternalLinkConsentDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'externalLinkConsent', Sort.desc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy> thenById() {
+  QueryBuilder<Preference, Preference, QAfterSortBy> thenById() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.asc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy> thenByIdDesc() {
+  QueryBuilder<Preference, Preference, QAfterSortBy> thenByIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.desc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy> thenByLayout() {
+  QueryBuilder<Preference, Preference, QAfterSortBy> thenByLayout() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'layout', Sort.asc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy> thenByLayoutDesc() {
+  QueryBuilder<Preference, Preference, QAfterSortBy> thenByLayoutDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'layout', Sort.desc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy> thenByLocale() {
+  QueryBuilder<Preference, Preference, QAfterSortBy> thenByLocale() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'locale', Sort.asc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy> thenByLocaleDesc() {
+  QueryBuilder<Preference, Preference, QAfterSortBy> thenByLocaleDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'locale', Sort.desc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy>
+  QueryBuilder<Preference, Preference, QAfterSortBy>
       thenByMarkDeletedEpisodesAsPlayed() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'markDeletedEpisodesAsPlayed', Sort.asc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy>
+  QueryBuilder<Preference, Preference, QAfterSortBy>
       thenByMarkDeletedEpisodesAsPlayedDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'markDeletedEpisodesAsPlayed', Sort.desc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy>
-      thenByPlaybackSpeed() {
+  QueryBuilder<Preference, Preference, QAfterSortBy>
+      thenByPlaybackSleepMinutes() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'playbackSleepMinutes', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Preference, Preference, QAfterSortBy>
+      thenByPlaybackSleepMinutesDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'playbackSleepMinutes', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Preference, Preference, QAfterSortBy> thenByPlaybackSleepType() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'playbackSleepType', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Preference, Preference, QAfterSortBy>
+      thenByPlaybackSleepTypeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'playbackSleepType', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Preference, Preference, QAfterSortBy> thenByPlaybackSpeed() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'playbackSpeed', Sort.asc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy>
-      thenByPlaybackSpeedDesc() {
+  QueryBuilder<Preference, Preference, QAfterSortBy> thenByPlaybackSpeedDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'playbackSpeed', Sort.desc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy>
-      thenBySearchProvider() {
+  QueryBuilder<Preference, Preference, QAfterSortBy> thenBySearchProvider() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'searchProvider', Sort.asc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy>
+  QueryBuilder<Preference, Preference, QAfterSortBy>
       thenBySearchProviderDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'searchProvider', Sort.desc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy> thenByShowFunding() {
+  QueryBuilder<Preference, Preference, QAfterSortBy> thenByShowFunding() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'showFunding', Sort.asc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy>
-      thenByShowFundingDesc() {
+  QueryBuilder<Preference, Preference, QAfterSortBy> thenByShowFundingDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'showFunding', Sort.desc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy>
+  QueryBuilder<Preference, Preference, QAfterSortBy>
       thenByStoreDownloadsSDCard() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'storeDownloadsSDCard', Sort.asc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy>
+  QueryBuilder<Preference, Preference, QAfterSortBy>
       thenByStoreDownloadsSDCardDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'storeDownloadsSDCard', Sort.desc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy>
+  QueryBuilder<Preference, Preference, QAfterSortBy>
       thenByStreamWarnMobileData() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'streamWarnMobileData', Sort.asc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy>
+  QueryBuilder<Preference, Preference, QAfterSortBy>
       thenByStreamWarnMobileDataDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'streamWarnMobileData', Sort.desc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy> thenByTheme() {
+  QueryBuilder<Preference, Preference, QAfterSortBy> thenByTheme() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'theme', Sort.asc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy> thenByThemeDesc() {
+  QueryBuilder<Preference, Preference, QAfterSortBy> thenByThemeDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'theme', Sort.desc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy> thenByTrimSilence() {
+  QueryBuilder<Preference, Preference, QAfterSortBy> thenByTrimSilence() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'trimSilence', Sort.asc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy>
-      thenByTrimSilenceDesc() {
+  QueryBuilder<Preference, Preference, QAfterSortBy> thenByTrimSilenceDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'trimSilence', Sort.desc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy> thenByVolumeBoost() {
+  QueryBuilder<Preference, Preference, QAfterSortBy> thenByVolumeBoost() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'volumeBoost', Sort.asc);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QAfterSortBy>
-      thenByVolumeBoostDesc() {
+  QueryBuilder<Preference, Preference, QAfterSortBy> thenByVolumeBoostDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'volumeBoost', Sort.desc);
     });
   }
 }
 
-extension AppPreferenceQueryWhereDistinct
-    on QueryBuilder<AppPreference, AppPreference, QDistinct> {
-  QueryBuilder<AppPreference, AppPreference, QDistinct>
+extension PreferenceQueryWhereDistinct
+    on QueryBuilder<Preference, Preference, QDistinct> {
+  QueryBuilder<Preference, Preference, QDistinct>
       distinctByAutoDeleteEpisodes() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'autoDeleteEpisodes');
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QDistinct>
+  QueryBuilder<Preference, Preference, QDistinct>
       distinctByAutoDownloadOnlyOnWifi() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'autoDownloadOnlyOnWifi');
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QDistinct>
+  QueryBuilder<Preference, Preference, QDistinct>
       distinctByAutoOpenNowPlaying() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'autoOpenNowPlaying');
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QDistinct>
+  QueryBuilder<Preference, Preference, QDistinct>
       distinctByAutoUpdateEpisodePeriod() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'autoUpdateEpisodePeriod');
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QDistinct>
+  QueryBuilder<Preference, Preference, QDistinct>
       distinctByDownloadWarnMobileData() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'downloadWarnMobileData');
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QDistinct>
+  QueryBuilder<Preference, Preference, QDistinct>
       distinctByExternalLinkConsent() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'externalLinkConsent');
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QDistinct> distinctByLayout() {
+  QueryBuilder<Preference, Preference, QDistinct> distinctByLayout() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'layout');
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QDistinct> distinctByLocale(
+  QueryBuilder<Preference, Preference, QDistinct> distinctByLocale(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'locale', caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QDistinct>
+  QueryBuilder<Preference, Preference, QDistinct>
       distinctByMarkDeletedEpisodesAsPlayed() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'markDeletedEpisodesAsPlayed');
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QDistinct>
-      distinctByPlaybackSpeed() {
+  QueryBuilder<Preference, Preference, QDistinct>
+      distinctByPlaybackSleepMinutes() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'playbackSleepMinutes');
+    });
+  }
+
+  QueryBuilder<Preference, Preference, QDistinct>
+      distinctByPlaybackSleepType() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'playbackSleepType');
+    });
+  }
+
+  QueryBuilder<Preference, Preference, QDistinct> distinctByPlaybackSpeed() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'playbackSpeed');
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QDistinct>
-      distinctBySearchProvider({bool caseSensitive = true}) {
+  QueryBuilder<Preference, Preference, QDistinct> distinctBySearchProvider(
+      {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'searchProvider',
           caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QDistinct>
-      distinctBySearchProviders() {
+  QueryBuilder<Preference, Preference, QDistinct> distinctBySearchProviders() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'searchProviders');
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QDistinct>
-      distinctByShowFunding() {
+  QueryBuilder<Preference, Preference, QDistinct> distinctByShowFunding() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'showFunding');
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QDistinct>
+  QueryBuilder<Preference, Preference, QDistinct>
       distinctByStoreDownloadsSDCard() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'storeDownloadsSDCard');
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QDistinct>
+  QueryBuilder<Preference, Preference, QDistinct>
       distinctByStreamWarnMobileData() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'streamWarnMobileData');
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QDistinct> distinctByTheme() {
+  QueryBuilder<Preference, Preference, QDistinct> distinctByTheme() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'theme');
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QDistinct>
-      distinctByTrimSilence() {
+  QueryBuilder<Preference, Preference, QDistinct> distinctByTrimSilence() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'trimSilence');
     });
   }
 
-  QueryBuilder<AppPreference, AppPreference, QDistinct>
-      distinctByVolumeBoost() {
+  QueryBuilder<Preference, Preference, QDistinct> distinctByVolumeBoost() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'volumeBoost');
     });
   }
 }
 
-extension AppPreferenceQueryProperty
-    on QueryBuilder<AppPreference, AppPreference, QQueryProperty> {
-  QueryBuilder<AppPreference, int, QQueryOperations> idProperty() {
+extension PreferenceQueryProperty
+    on QueryBuilder<Preference, Preference, QQueryProperty> {
+  QueryBuilder<Preference, int, QQueryOperations> idProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'id');
     });
   }
 
-  QueryBuilder<AppPreference, bool, QQueryOperations>
+  QueryBuilder<Preference, bool, QQueryOperations>
       autoDeleteEpisodesProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'autoDeleteEpisodes');
     });
   }
 
-  QueryBuilder<AppPreference, bool, QQueryOperations>
+  QueryBuilder<Preference, bool, QQueryOperations>
       autoDownloadOnlyOnWifiProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'autoDownloadOnlyOnWifi');
     });
   }
 
-  QueryBuilder<AppPreference, bool, QQueryOperations>
+  QueryBuilder<Preference, bool, QQueryOperations>
       autoOpenNowPlayingProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'autoOpenNowPlaying');
     });
   }
 
-  QueryBuilder<AppPreference, int, QQueryOperations>
+  QueryBuilder<Preference, int, QQueryOperations>
       autoUpdateEpisodePeriodProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'autoUpdateEpisodePeriod');
     });
   }
 
-  QueryBuilder<AppPreference, bool, QQueryOperations>
+  QueryBuilder<Preference, bool, QQueryOperations>
       downloadWarnMobileDataProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'downloadWarnMobileData');
     });
   }
 
-  QueryBuilder<AppPreference, bool, QQueryOperations>
+  QueryBuilder<Preference, bool, QQueryOperations>
       externalLinkConsentProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'externalLinkConsent');
     });
   }
 
-  QueryBuilder<AppPreference, int, QQueryOperations> layoutProperty() {
+  QueryBuilder<Preference, int, QQueryOperations> layoutProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'layout');
     });
   }
 
-  QueryBuilder<AppPreference, String, QQueryOperations> localeProperty() {
+  QueryBuilder<Preference, String, QQueryOperations> localeProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'locale');
     });
   }
 
-  QueryBuilder<AppPreference, bool, QQueryOperations>
+  QueryBuilder<Preference, bool, QQueryOperations>
       markDeletedEpisodesAsPlayedProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'markDeletedEpisodesAsPlayed');
     });
   }
 
-  QueryBuilder<AppPreference, double, QQueryOperations>
-      playbackSpeedProperty() {
+  QueryBuilder<Preference, int, QQueryOperations>
+      playbackSleepMinutesProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'playbackSleepMinutes');
+    });
+  }
+
+  QueryBuilder<Preference, SleepType, QQueryOperations>
+      playbackSleepTypeProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'playbackSleepType');
+    });
+  }
+
+  QueryBuilder<Preference, double, QQueryOperations> playbackSpeedProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'playbackSpeed');
     });
   }
 
-  QueryBuilder<AppPreference, String, QQueryOperations>
-      searchProviderProperty() {
+  QueryBuilder<Preference, String, QQueryOperations> searchProviderProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'searchProvider');
     });
   }
 
-  QueryBuilder<AppPreference, List<SearchProvider>, QQueryOperations>
+  QueryBuilder<Preference, List<SearchProvider>, QQueryOperations>
       searchProvidersProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'searchProviders');
     });
   }
 
-  QueryBuilder<AppPreference, bool, QQueryOperations> showFundingProperty() {
+  QueryBuilder<Preference, bool, QQueryOperations> showFundingProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'showFunding');
     });
   }
 
-  QueryBuilder<AppPreference, bool, QQueryOperations>
+  QueryBuilder<Preference, bool, QQueryOperations>
       storeDownloadsSDCardProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'storeDownloadsSDCard');
     });
   }
 
-  QueryBuilder<AppPreference, bool, QQueryOperations>
+  QueryBuilder<Preference, bool, QQueryOperations>
       streamWarnMobileDataProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'streamWarnMobileData');
     });
   }
 
-  QueryBuilder<AppPreference, ThemeMode, QQueryOperations> themeProperty() {
+  QueryBuilder<Preference, ThemeMode, QQueryOperations> themeProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'theme');
     });
   }
 
-  QueryBuilder<AppPreference, bool, QQueryOperations> trimSilenceProperty() {
+  QueryBuilder<Preference, bool, QQueryOperations> trimSilenceProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'trimSilence');
     });
   }
 
-  QueryBuilder<AppPreference, bool, QQueryOperations> volumeBoostProperty() {
+  QueryBuilder<Preference, bool, QQueryOperations> volumeBoostProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'volumeBoost');
     });

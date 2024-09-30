@@ -1,14 +1,15 @@
 import 'package:audiflow/constants/locale.dart';
 import 'package:audiflow/constants/search_providers.dart';
 import 'package:audiflow/core/environment.dart';
+import 'package:audiflow/features/player/model/sleep.dart';
 import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
 
-part 'app_preference.g.dart';
+part 'preference.g.dart';
 
 @collection
-class AppPreference {
-  const AppPreference({
+class Preference {
+  const Preference({
     required this.streamWarnMobileData,
     required this.downloadWarnMobileData,
     required this.autoDownloadOnlyOnWifi,
@@ -17,6 +18,8 @@ class AppPreference {
     required this.markDeletedEpisodesAsPlayed,
     required this.storeDownloadsSDCard,
     required this.playbackSpeed,
+    required this.playbackSleepType,
+    required this.playbackSleepMinutes,
     required this.searchProvider,
     required this.searchProviders,
     required this.externalLinkConsent,
@@ -29,8 +32,8 @@ class AppPreference {
     required this.locale,
   });
 
-  factory AppPreference.sensibleDefaults() {
-    return AppPreference(
+  factory Preference.sensibleDefaults() {
+    return Preference(
       streamWarnMobileData: true,
       downloadWarnMobileData: true,
       autoDownloadOnlyOnWifi: true,
@@ -40,6 +43,8 @@ class AppPreference {
       markDeletedEpisodesAsPlayed: false,
       storeDownloadsSDCard: false,
       playbackSpeed: 1,
+      playbackSleepType: SleepType.none,
+      playbackSleepMinutes: 0,
       searchProvider: 'itunes',
       searchProviders: <SearchProvider>[
         SearchProvider.itunes,
@@ -78,6 +83,13 @@ class AppPreference {
   /// The default playback speed.
   final double playbackSpeed;
 
+  /// The sleep type.
+  @enumerated
+  final SleepType playbackSleepType;
+
+  /// The sleep type.
+  final int playbackSleepMinutes;
+
   /// The search provider: itunes or podcastindex.
   final String searchProvider;
 
@@ -109,7 +121,7 @@ class AppPreference {
   /// App locale
   final String locale;
 
-  AppPreference copyWith({
+  Preference copyWith({
     bool? streamWarnMobileData,
     bool? downloadWarnMobileData,
     bool? autoDownloadOnlyOnWifi,
@@ -118,6 +130,8 @@ class AppPreference {
     bool? markDeletedEpisodesAsPlayed,
     bool? storeDownloadsSDCard,
     double? playbackSpeed,
+    SleepType? playbackSleepType,
+    int? playbackSleepMinutes,
     String? searchProvider,
     List<SearchProvider>? searchProviders,
     bool? externalLinkConsent,
@@ -129,7 +143,7 @@ class AppPreference {
     int? layout,
     String? locale,
   }) {
-    return AppPreference(
+    return Preference(
       streamWarnMobileData: streamWarnMobileData ?? this.streamWarnMobileData,
       downloadWarnMobileData:
           downloadWarnMobileData ?? this.downloadWarnMobileData,
@@ -141,6 +155,8 @@ class AppPreference {
           markDeletedEpisodesAsPlayed ?? this.markDeletedEpisodesAsPlayed,
       storeDownloadsSDCard: storeDownloadsSDCard ?? this.storeDownloadsSDCard,
       playbackSpeed: playbackSpeed ?? this.playbackSpeed,
+      playbackSleepType: playbackSleepType ?? this.playbackSleepType,
+      playbackSleepMinutes: playbackSleepMinutes ?? this.playbackSleepMinutes,
       searchProvider: searchProvider ?? this.searchProvider,
       searchProviders: searchProviders ?? this.searchProviders,
       externalLinkConsent: externalLinkConsent ?? this.externalLinkConsent,
@@ -154,4 +170,55 @@ class AppPreference {
       locale: locale ?? this.locale,
     );
   }
+}
+
+extension PreferenceExt on Preference {
+  Sleep get playbackSleep => Sleep(
+        type: playbackSleepType,
+        duration: Duration(minutes: playbackSleepMinutes),
+      );
+}
+
+class PreferenceUpdateParam {
+  const PreferenceUpdateParam({
+    this.streamWarnMobileData,
+    this.downloadWarnMobileData,
+    this.autoDownloadOnlyOnWifi,
+    this.autoDeleteEpisodes,
+    this.theme,
+    this.markDeletedEpisodesAsPlayed,
+    this.storeDownloadsSDCard,
+    this.playbackSpeed,
+    this.playbackSleep,
+    this.searchProvider,
+    this.searchProviders,
+    this.externalLinkConsent,
+    this.autoOpenNowPlaying,
+    this.showFunding,
+    this.autoUpdateEpisodePeriod,
+    this.trimSilence,
+    this.volumeBoost,
+    this.layout,
+    this.locale,
+  });
+
+  final bool? streamWarnMobileData;
+  final bool? downloadWarnMobileData;
+  final bool? autoDownloadOnlyOnWifi;
+  final bool? autoDeleteEpisodes;
+  final ThemeMode? theme;
+  final bool? markDeletedEpisodesAsPlayed;
+  final bool? storeDownloadsSDCard;
+  final double? playbackSpeed;
+  final Sleep? playbackSleep;
+  final String? searchProvider;
+  final List<SearchProvider>? searchProviders;
+  final bool? externalLinkConsent;
+  final bool? autoOpenNowPlaying;
+  final bool? showFunding;
+  final int? autoUpdateEpisodePeriod;
+  final bool? trimSilence;
+  final bool? volumeBoost;
+  final int? layout;
+  final String? locale;
 }
