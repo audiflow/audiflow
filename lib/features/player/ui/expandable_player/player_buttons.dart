@@ -1,3 +1,5 @@
+import 'package:audiflow/constants/app_sizes.dart';
+import 'package:audiflow/features/player/model/sleep.dart';
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
@@ -137,6 +139,47 @@ class PlaybackSpeedButton extends StatelessWidget {
     return TextButton(
       onPressed: onTap,
       child: Text('${speed}x'),
+    );
+  }
+}
+
+class SleepModeButton extends StatelessWidget {
+  const SleepModeButton({
+    required this.sleep,
+    required this.onSelect,
+    super.key,
+  });
+
+  final Sleep sleep;
+  final ValueChanged<Sleep> onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    return PopupMenuButton<Sleep>(
+      onSelected: onSelect,
+      position: PopupMenuPosition.under,
+      itemBuilder: (context) {
+        return predefinedSleeps.reversed
+            .map(
+              (value) => PopupMenuItem(
+                value: value,
+                child: Row(
+                  children: [
+                    value == sleep
+                        ? const Icon(
+                            Symbols.check,
+                            size: 18,
+                          )
+                        : const SizedBox(width: 18),
+                    gapW4,
+                    Text(value.getLabel(context)),
+                  ],
+                ),
+              ),
+            )
+            .toList();
+      },
+      child: const Icon(Symbols.sleep),
     );
   }
 }
