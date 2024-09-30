@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:audiflow/common/data/isar_repository.dart';
 import 'package:audiflow/features/preference/data/preference_repository.dart';
-import 'package:audiflow/features/preference/model/preference.dart';
 import 'package:isar/isar.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:rxdart/rxdart.dart';

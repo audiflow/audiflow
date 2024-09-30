@@ -3,7 +3,7 @@
 // ignore_for_file: type=lint
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
-part of 'sleep.dart';
+part of 'sleep_mode.dart';
 
 // **************************************************************************
 // FreezedGenerator
@@ -14,43 +14,44 @@ T _$identity<T>(T value) => value;
 final _privateConstructorUsedError = UnsupportedError(
     'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
 
-Sleep _$SleepFromJson(Map<String, dynamic> json) {
-  return _Sleep.fromJson(json);
+SleepMode _$SleepModeFromJson(Map<String, dynamic> json) {
+  return _SleepMode.fromJson(json);
 }
 
 /// @nodoc
-mixin _$Sleep {
+mixin _$SleepMode {
   SleepType get type => throw _privateConstructorUsedError;
   Duration get duration => throw _privateConstructorUsedError;
 
-  /// Serializes this Sleep to a JSON map.
+  /// Serializes this SleepMode to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
 
-  /// Create a copy of Sleep
+  /// Create a copy of SleepMode
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
-  $SleepCopyWith<Sleep> get copyWith => throw _privateConstructorUsedError;
+  $SleepModeCopyWith<SleepMode> get copyWith =>
+      throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class $SleepCopyWith<$Res> {
-  factory $SleepCopyWith(Sleep value, $Res Function(Sleep) then) =
-      _$SleepCopyWithImpl<$Res, Sleep>;
+abstract class $SleepModeCopyWith<$Res> {
+  factory $SleepModeCopyWith(SleepMode value, $Res Function(SleepMode) then) =
+      _$SleepModeCopyWithImpl<$Res, SleepMode>;
   @useResult
   $Res call({SleepType type, Duration duration});
 }
 
 /// @nodoc
-class _$SleepCopyWithImpl<$Res, $Val extends Sleep>
-    implements $SleepCopyWith<$Res> {
-  _$SleepCopyWithImpl(this._value, this._then);
+class _$SleepModeCopyWithImpl<$Res, $Val extends SleepMode>
+    implements $SleepModeCopyWith<$Res> {
+  _$SleepModeCopyWithImpl(this._value, this._then);
 
   // ignore: unused_field
   final $Val _value;
   // ignore: unused_field
   final $Res Function($Val) _then;
 
-  /// Create a copy of Sleep
+  /// Create a copy of SleepMode
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
@@ -72,24 +73,25 @@ class _$SleepCopyWithImpl<$Res, $Val extends Sleep>
 }
 
 /// @nodoc
-abstract class _$$SleepImplCopyWith<$Res> implements $SleepCopyWith<$Res> {
-  factory _$$SleepImplCopyWith(
-          _$SleepImpl value, $Res Function(_$SleepImpl) then) =
-      __$$SleepImplCopyWithImpl<$Res>;
+abstract class _$$SleepModeImplCopyWith<$Res>
+    implements $SleepModeCopyWith<$Res> {
+  factory _$$SleepModeImplCopyWith(
+          _$SleepModeImpl value, $Res Function(_$SleepModeImpl) then) =
+      __$$SleepModeImplCopyWithImpl<$Res>;
   @override
   @useResult
   $Res call({SleepType type, Duration duration});
 }
 
 /// @nodoc
-class __$$SleepImplCopyWithImpl<$Res>
-    extends _$SleepCopyWithImpl<$Res, _$SleepImpl>
-    implements _$$SleepImplCopyWith<$Res> {
-  __$$SleepImplCopyWithImpl(
-      _$SleepImpl _value, $Res Function(_$SleepImpl) _then)
+class __$$SleepModeImplCopyWithImpl<$Res>
+    extends _$SleepModeCopyWithImpl<$Res, _$SleepModeImpl>
+    implements _$$SleepModeImplCopyWith<$Res> {
+  __$$SleepModeImplCopyWithImpl(
+      _$SleepModeImpl _value, $Res Function(_$SleepModeImpl) _then)
       : super(_value, _then);
 
-  /// Create a copy of Sleep
+  /// Create a copy of SleepMode
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
@@ -97,7 +99,7 @@ class __$$SleepImplCopyWithImpl<$Res>
     Object? type = null,
     Object? duration = null,
   }) {
-    return _then(_$SleepImpl(
+    return _then(_$SleepModeImpl(
       type: null == type
           ? _value.type
           : type // ignore: cast_nullable_to_non_nullable
@@ -112,11 +114,11 @@ class __$$SleepImplCopyWithImpl<$Res>
 
 /// @nodoc
 @JsonSerializable()
-class _$SleepImpl implements _Sleep {
-  const _$SleepImpl({required this.type, this.duration = Duration.zero});
+class _$SleepModeImpl implements _SleepMode {
+  const _$SleepModeImpl({required this.type, this.duration = Duration.zero});
 
-  factory _$SleepImpl.fromJson(Map<String, dynamic> json) =>
-      _$$SleepImplFromJson(json);
+  factory _$SleepModeImpl.fromJson(Map<String, dynamic> json) =>
+      _$$SleepModeImplFromJson(json);
 
   @override
   final SleepType type;
@@ -126,14 +128,14 @@ class _$SleepImpl implements _Sleep {
 
   @override
   String toString() {
-    return 'Sleep(type: $type, duration: $duration)';
+    return 'SleepMode(type: $type, duration: $duration)';
   }
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$SleepImpl &&
+            other is _$SleepModeImpl &&
             (identical(other.type, type) || other.type == type) &&
             (identical(other.duration, duration) ||
                 other.duration == duration));
@@ -143,37 +145,39 @@ class _$SleepImpl implements _Sleep {
   @override
   int get hashCode => Object.hash(runtimeType, type, duration);
 
-  /// Create a copy of Sleep
+  /// Create a copy of SleepMode
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
-  _$$SleepImplCopyWith<_$SleepImpl> get copyWith =>
-      __$$SleepImplCopyWithImpl<_$SleepImpl>(this, _$identity);
+  _$$SleepModeImplCopyWith<_$SleepModeImpl> get copyWith =>
+      __$$SleepModeImplCopyWithImpl<_$SleepModeImpl>(this, _$identity);
 
   @override
   Map<String, dynamic> toJson() {
-    return _$$SleepImplToJson(
+    return _$$SleepModeImplToJson(
       this,
     );
   }
 }
 
-abstract class _Sleep implements Sleep {
-  const factory _Sleep(
-      {required final SleepType type, final Duration duration}) = _$SleepImpl;
+abstract class _SleepMode implements SleepMode {
+  const factory _SleepMode(
+      {required final SleepType type,
+      final Duration duration}) = _$SleepModeImpl;
 
-  factory _Sleep.fromJson(Map<String, dynamic> json) = _$SleepImpl.fromJson;
+  factory _SleepMode.fromJson(Map<String, dynamic> json) =
+      _$SleepModeImpl.fromJson;
 
   @override
   SleepType get type;
   @override
   Duration get duration;
 
-  /// Create a copy of Sleep
+  /// Create a copy of SleepMode
   /// with the given fields replaced by the non-null parameter values.
   @override
   @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$SleepImplCopyWith<_$SleepImpl> get copyWith =>
+  _$$SleepModeImplCopyWith<_$SleepModeImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

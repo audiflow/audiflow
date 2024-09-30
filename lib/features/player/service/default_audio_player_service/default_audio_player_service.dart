@@ -36,7 +36,7 @@ class DefaultAudioPlayerService extends _$DefaultAudioPlayerService
 
   late final AudioHandler _audioHandler;
 
-  var _sleep = const Sleep(type: SleepType.none);
+  var _sleep = const SleepMode(type: SleepType.none);
 
   /// Subscription to the position ticker.
   StreamSubscription<int>? _positionSubscription;
@@ -56,7 +56,7 @@ class DefaultAudioPlayerService extends _$DefaultAudioPlayerService
     (count) => count,
   ).asBroadcastStream();
 
-  final _sleepState = BehaviorSubject<Sleep>();
+  final _sleepState = BehaviorSubject<SleepMode>();
 
   // @override
   // Stream<Sleep> get sleepStream => _sleepState.stream;
@@ -264,7 +264,7 @@ class DefaultAudioPlayerService extends _$DefaultAudioPlayerService
   }
 
   @override
-  void sleep(Sleep sleep) {
+  void sleep(SleepMode sleep) {
     switch (sleep.type) {
       case SleepType.none:
       case SleepType.episode:
@@ -400,7 +400,7 @@ class DefaultAudioPlayerService extends _$DefaultAudioPlayerService
     _sleepSubscription ??= _sleepTicker.listen((int period) async {
       if (_sleep.type == SleepType.time) {
         await pause();
-        _sleep = const Sleep(type: SleepType.none);
+        _sleep = const SleepMode(type: SleepType.none);
         _sleepState.sink.add(_sleep);
         await _sleepSubscription?.cancel();
         _sleepSubscription = null;
@@ -413,7 +413,7 @@ class DefaultAudioPlayerService extends _$DefaultAudioPlayerService
   /// Once we have stopped sleeping we call this method to tidy up the ticker
   /// subscription.
   Future<void> _stopSleepTicker() async {
-    _sleep = const Sleep(type: SleepType.none);
+    _sleep = const SleepMode(type: SleepType.none);
     _sleepState.sink.add(_sleep);
 
     if (_sleepSubscription != null) {

@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:audiflow/common/ui/action_text.dart';
 import 'package:audiflow/features/feed/model/model.dart';
 import 'package:audiflow/features/preference/data/preference_repository.dart';
-import 'package:audiflow/features/preference/model/preference.dart';
 import 'package:audiflow/localization/generated/l10n.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';

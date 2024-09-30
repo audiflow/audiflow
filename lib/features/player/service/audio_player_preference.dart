@@ -1,13 +1,12 @@
 import 'package:audiflow/constants/audio_player.dart';
 import 'package:audiflow/features/preference/data/preference_repository.dart';
-import 'package:audiflow/features/preference/model/preference.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 export 'package:audiflow/features/feed/model/model.dart';
 export 'package:audiflow/features/player/model/audio_state.dart';
 export 'package:audiflow/features/player/model/player_phase.dart';
-export 'package:audiflow/features/player/model/sleep.dart';
+export 'package:audiflow/features/player/model/sleep_mode.dart';
 
 part 'audio_player_preference.freezed.dart';
 part 'audio_player_preference.g.dart';

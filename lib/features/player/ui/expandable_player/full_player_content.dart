@@ -186,7 +186,7 @@ class _PlayerControlPanel extends HookConsumerWidget {
             ),
             Expanded(
               child: SleepModeButton(
-                sleep: sleep,
+                sleepMode: sleep,
                 onSelect: (value) {
                   ref
                       .read(preferenceRepositoryProvider.notifier)

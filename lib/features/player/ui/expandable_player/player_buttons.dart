@@ -1,5 +1,5 @@
 import 'package:audiflow/constants/app_sizes.dart';
-import 'package:audiflow/features/player/model/sleep.dart';
+import 'package:audiflow/features/player/model/sleep_mode.dart';
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
@@ -145,13 +145,13 @@ class PlaybackSpeedButton extends StatelessWidget {
 
 class SleepModeButton extends StatelessWidget {
   const SleepModeButton({
-    required this.sleep,
+    required this.sleepMode,
     required this.onSelect,
     super.key,
   });
 
-  final Sleep sleep;
-  final ValueChanged<Sleep> onSelect;
+  final SleepMode sleepMode;
+  final ValueChanged<SleepMode> onSelect;
 
   @override
   Widget build(BuildContext context) {

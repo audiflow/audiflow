@@ -1,7 +1,7 @@
 import 'package:audiflow/constants/locale.dart';
 import 'package:audiflow/constants/search_providers.dart';
 import 'package:audiflow/core/environment.dart';
-import 'package:audiflow/features/player/model/sleep.dart';
+import 'package:audiflow/features/player/model/sleep_mode.dart';
 import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
 
@@ -173,7 +173,7 @@ class Preference {
 }
 
 extension PreferenceExt on Preference {
-  Sleep get playbackSleep => Sleep(
+  SleepMode get playbackSleep => SleepMode(
         type: playbackSleepType,
         duration: Duration(minutes: playbackSleepMinutes),
       );
@@ -210,7 +210,7 @@ class PreferenceUpdateParam {
   final bool? markDeletedEpisodesAsPlayed;
   final bool? storeDownloadsSDCard;
   final double? playbackSpeed;
-  final Sleep? playbackSleep;
+  final SleepMode? playbackSleep;
   final String? searchProvider;
   final List<SearchProvider>? searchProviders;
   final bool? externalLinkConsent;

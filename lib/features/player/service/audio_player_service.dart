@@ -1,14 +1,14 @@
 import 'package:audiflow/features/feed/model/model.dart';
 import 'package:audiflow/features/player/model/audio_state.dart';
 import 'package:audiflow/features/player/model/player_phase.dart';
-import 'package:audiflow/features/player/model/sleep.dart';
+import 'package:audiflow/features/player/model/sleep_mode.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 export 'package:audiflow/features/feed/model/model.dart';
 export 'package:audiflow/features/player/model/audio_state.dart';
 export 'package:audiflow/features/player/model/player_phase.dart';
-export 'package:audiflow/features/player/model/sleep.dart';
+export 'package:audiflow/features/player/model/sleep_mode.dart';
 
 part 'audio_player_service.freezed.dart';
 part 'audio_player_service.g.dart';
@@ -60,7 +60,7 @@ class AudioPlayerService extends _$AudioPlayerService {
   /// Call when the app is resumed to re-establish the audio service.
   Future<void> resume() => throw UnimplementedError();
 
-  void sleep(Sleep sleep) => throw UnimplementedError();
+  void sleep(SleepMode sleep) => throw UnimplementedError();
 }
 
 @freezed
