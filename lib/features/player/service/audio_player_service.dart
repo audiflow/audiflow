@@ -38,7 +38,7 @@ class AudioPlayerService extends _$AudioPlayerService {
 
   /// Stop playing of current episode. Set update to false to stop
   /// playback without saving any episode or positional updates.
-  Future<void> stop() => throw UnimplementedError();
+  FutureOr<void> stop() => throw UnimplementedError();
 
   /// Pause the current episode.
   Future<void> pause() => throw UnimplementedError();
@@ -53,15 +53,15 @@ class AudioPlayerService extends _$AudioPlayerService {
 
   /// Seek to the specified position within the current episode.
   Future<void> seek({required Duration position}) => throw UnimplementedError();
-
-  /// Call to set the playback speed.
-  Future<void> setPlaybackSpeed(double speed) => throw UnimplementedError();
-
-  /// Call to toggle trim silence.
-  Future<void> trimSilence({required bool trim}) => throw UnimplementedError();
-
-  /// Call to toggle trim silence.
-  Future<void> volumeBoost({required bool boost}) => throw UnimplementedError();
+  //
+  // /// Call to set the playback speed.
+  // Future<void> setPlaybackSpeed(double speed) => throw UnimplementedError();
+  //
+  // /// Call to toggle trim silence.
+  // Future<void> trimSilence({required bool trim}) => throw UnimplementedError();
+  //
+  // /// Call to toggle trim silence.
+  // Future<void> volumeBoost({required bool boost}) => throw UnimplementedError();
 
   /// Call when the app is about to be suspended.
   Future<void> suspend() => throw UnimplementedError();
@@ -88,13 +88,4 @@ extension AudioPlayerStateExt on AudioPlayerState {
   double get percentagePlayed => episode.duration == null
       ? 0.0
       : position.inMilliseconds / episode.duration!.inMilliseconds;
-}
-
-@freezed
-class AudioPlayerSetting with _$AudioPlayerSetting {
-  const factory AudioPlayerSetting({
-    @Default(1.0) double speed,
-    @Default(false) bool trimSilence,
-    @Default(false) bool volumeBoost,
-  }) = _AudioPlayerSetting;
 }

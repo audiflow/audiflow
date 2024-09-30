@@ -1,4 +1,5 @@
 import 'package:audiflow/constants/app_sizes.dart';
+import 'package:audiflow/features/player/service/audio_player_preference.dart';
 import 'package:audiflow/features/player/service/audio_player_service.dart';
 import 'package:audiflow/features/player/ui/expandable_player/expandable_player_controller.dart';
 import 'package:audiflow/features/player/ui/expandable_player/mini_player_height_provider.dart';
@@ -11,6 +12,7 @@ import 'package:audiflow/features/queue/model/queue.dart';
 import 'package:audiflow/features/queue/service/queue_controller.dart';
 import 'package:audiflow/features/queue/ui/queue_list_block.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 class FullPlayerContent extends ConsumerWidget {
@@ -117,7 +119,7 @@ class FullPlayerContent extends ConsumerWidget {
   }
 }
 
-class _PlayerControlPanel extends ConsumerWidget {
+class _PlayerControlPanel extends HookConsumerWidget {
   const _PlayerControlPanel({
     required this.episode,
   });
@@ -139,6 +141,18 @@ class _PlayerControlPanel extends ConsumerWidget {
         : ref.read(episodeSeekbarControllerProvider(episode).notifier)
             as SeekbarController;
 
+    final audioPlayerPreference = ref.read(audioPlayerPreferenceProvider);
+    final speedState =
+        useState<double>(audioPlayerPreference.valueOrNull?.speed ?? 1);
+    ref.listen(audioPlayerPreferenceProvider, (_, next) {
+      if (!next.hasValue) {
+        return;
+      }
+      if (speedState.value != next.requireValue.speed) {
+        speedState.value = next.requireValue.speed;
+      }
+    });
+
     return Column(
       children: [
         Seekbar(
@@ -149,6 +163,13 @@ class _PlayerControlPanel extends ConsumerWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            PlaybackSpeedButton(
+              speed: speedState.value,
+              onTap: () {
+                ref.read(audioPlayerPreferenceProvider.notifier).changeSpeed();
+              },
+            ),
+            const Spacer(),
             SkipButton(
               forward: false,
               onTap: seekbarController.rewind,
@@ -163,6 +184,7 @@ class _PlayerControlPanel extends ConsumerWidget {
               forward: true,
               onTap: seekbarController.fastForward,
             ),
+            const Spacer(),
           ],
         ),
         gapH48,

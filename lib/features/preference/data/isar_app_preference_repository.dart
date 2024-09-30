@@ -29,7 +29,7 @@ class IsarAppPreferenceRepository extends _$IsarAppPreferenceRepository
     final record =
         (await isar.appPreferences.get(1) ?? AppPreference.sensibleDefaults())
             .copyWith(streamWarnMobileData: value);
-    await isar.appPreferences.put(record);
+    await isar.writeTxn(() => isar.appPreferences.put(record));
   }
 
   // ignore: avoid_positional_boolean_parameters
@@ -38,7 +38,7 @@ class IsarAppPreferenceRepository extends _$IsarAppPreferenceRepository
     final record =
         (await isar.appPreferences.get(1) ?? AppPreference.sensibleDefaults())
             .copyWith(streamWarnMobileData: value);
-    await isar.appPreferences.put(record);
+    await isar.writeTxn(() => isar.appPreferences.put(record));
   }
 
   // ignore: avoid_positional_boolean_parameters
@@ -47,7 +47,7 @@ class IsarAppPreferenceRepository extends _$IsarAppPreferenceRepository
     final record =
         (await isar.appPreferences.get(1) ?? AppPreference.sensibleDefaults())
             .copyWith(autoDownloadOnlyOnWifi: value);
-    await isar.appPreferences.put(record);
+    await isar.writeTxn(() => isar.appPreferences.put(record));
   }
 
   // ignore: avoid_positional_boolean_parameters
@@ -56,7 +56,7 @@ class IsarAppPreferenceRepository extends _$IsarAppPreferenceRepository
     final record =
         (await isar.appPreferences.get(1) ?? AppPreference.sensibleDefaults())
             .copyWith(autoDeleteEpisodes: value);
-    await isar.appPreferences.put(record);
+    await isar.writeTxn(() => isar.appPreferences.put(record));
   }
 
   // ignore: avoid_positional_boolean_parameters
@@ -65,7 +65,7 @@ class IsarAppPreferenceRepository extends _$IsarAppPreferenceRepository
     final record =
         (await isar.appPreferences.get(1) ?? AppPreference.sensibleDefaults())
             .copyWith(markDeletedEpisodesAsPlayed: value);
-    await isar.appPreferences.put(record);
+    await isar.writeTxn(() => isar.appPreferences.put(record));
   }
 
   // ignore: avoid_positional_boolean_parameters
@@ -74,7 +74,7 @@ class IsarAppPreferenceRepository extends _$IsarAppPreferenceRepository
     final record =
         (await isar.appPreferences.get(1) ?? AppPreference.sensibleDefaults())
             .copyWith(storeDownloadsSDCard: value);
-    await isar.appPreferences.put(record);
+    await isar.writeTxn(() => isar.appPreferences.put(record));
   }
 
   @override
@@ -82,7 +82,7 @@ class IsarAppPreferenceRepository extends _$IsarAppPreferenceRepository
     final record =
         (await isar.appPreferences.get(1) ?? AppPreference.sensibleDefaults())
             .copyWith(theme: mode);
-    await isar.appPreferences.put(record);
+    await isar.writeTxn(() => isar.appPreferences.put(record));
   }
 
   @override
@@ -90,7 +90,7 @@ class IsarAppPreferenceRepository extends _$IsarAppPreferenceRepository
     final record =
         (await isar.appPreferences.get(1) ?? AppPreference.sensibleDefaults())
             .copyWith(playbackSpeed: playbackSpeed);
-    await isar.appPreferences.put(record);
+    await isar.writeTxn(() => isar.appPreferences.put(record));
   }
 
   @override
@@ -98,7 +98,7 @@ class IsarAppPreferenceRepository extends _$IsarAppPreferenceRepository
     final record =
         (await isar.appPreferences.get(1) ?? AppPreference.sensibleDefaults())
             .copyWith(searchProvider: provider);
-    await isar.appPreferences.put(record);
+    await isar.writeTxn(() => isar.appPreferences.put(record));
   }
 
   // ignore: avoid_positional_boolean_parameters
@@ -107,7 +107,7 @@ class IsarAppPreferenceRepository extends _$IsarAppPreferenceRepository
     final record =
         (await isar.appPreferences.get(1) ?? AppPreference.sensibleDefaults())
             .copyWith(externalLinkConsent: value);
-    await isar.appPreferences.put(record);
+    await isar.writeTxn(() => isar.appPreferences.put(record));
   }
 
   // ignore: avoid_positional_boolean_parameters
@@ -116,7 +116,7 @@ class IsarAppPreferenceRepository extends _$IsarAppPreferenceRepository
     final record =
         (await isar.appPreferences.get(1) ?? AppPreference.sensibleDefaults())
             .copyWith(autoOpenNowPlaying: value);
-    await isar.appPreferences.put(record);
+    await isar.writeTxn(() => isar.appPreferences.put(record));
   }
 
   // ignore: avoid_positional_boolean_parameters
@@ -125,7 +125,7 @@ class IsarAppPreferenceRepository extends _$IsarAppPreferenceRepository
     final record =
         (await isar.appPreferences.get(1) ?? AppPreference.sensibleDefaults())
             .copyWith(showFunding: value);
-    await isar.appPreferences.put(record);
+    await isar.writeTxn(() => isar.appPreferences.put(record));
   }
 
   // ignore: avoid_positional_boolean_parameters
@@ -134,7 +134,7 @@ class IsarAppPreferenceRepository extends _$IsarAppPreferenceRepository
     final record =
         (await isar.appPreferences.get(1) ?? AppPreference.sensibleDefaults())
             .copyWith(autoUpdateEpisodePeriod: period);
-    await isar.appPreferences.put(record);
+    await isar.writeTxn(() => isar.appPreferences.put(record));
   }
 
   // ignore: avoid_positional_boolean_parameters
@@ -143,7 +143,7 @@ class IsarAppPreferenceRepository extends _$IsarAppPreferenceRepository
     final record =
         (await isar.appPreferences.get(1) ?? AppPreference.sensibleDefaults())
             .copyWith(trimSilence: value);
-    await isar.appPreferences.put(record);
+    await isar.writeTxn(() => isar.appPreferences.put(record));
   }
 
   // ignore: avoid_positional_boolean_parameters
@@ -152,7 +152,7 @@ class IsarAppPreferenceRepository extends _$IsarAppPreferenceRepository
     final record =
         (await isar.appPreferences.get(1) ?? AppPreference.sensibleDefaults())
             .copyWith(volumeBoost: value);
-    await isar.appPreferences.put(record);
+    await isar.writeTxn(() => isar.appPreferences.put(record));
   }
 
   @override
@@ -160,11 +160,11 @@ class IsarAppPreferenceRepository extends _$IsarAppPreferenceRepository
     final record =
         (await isar.appPreferences.get(1) ?? AppPreference.sensibleDefaults())
             .copyWith(layout: mode);
-    await isar.appPreferences.put(record);
+    await isar.writeTxn(() => isar.appPreferences.put(record));
   }
 
   @override
   Future<void> replace(AppPreference preference) async {
-    await isar.appPreferences.put(preference);
+    await isar.writeTxn(() => isar.appPreferences.put(preference));
   }
 }

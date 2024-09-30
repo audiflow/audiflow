@@ -121,3 +121,22 @@ class SkipButton extends StatelessWidget {
     );
   }
 }
+
+class PlaybackSpeedButton extends StatelessWidget {
+  const PlaybackSpeedButton({
+    required this.speed,
+    required this.onTap,
+    super.key,
+  });
+
+  final double speed;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextButton(
+      onPressed: onTap,
+      child: Text('${speed}x'),
+    );
+  }
+}
