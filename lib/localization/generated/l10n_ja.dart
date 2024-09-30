@@ -186,6 +186,9 @@ class L10nJa extends L10n {
   String get adhocQueue => '再生キュー（自動）';
 
   @override
+  String get sleepModeTitle => 'スリープタイマー';
+
+  @override
   String get sleepOff => 'オフ';
 
   @override

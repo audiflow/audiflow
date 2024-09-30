@@ -94,6 +94,7 @@
   "tooltipPause": "エピソード再生を一時停止",
   "primaryQueue": "再生キュー（手動）",
   "adhocQueue": "再生キュー（自動）",
+  "sleepModeTitle": "スリープタイマー",
   "sleepOff": "オフ",
   "sleepOnEpisodeEnds": "エピソード終了時",
   "sleepMin": "{n}分後",

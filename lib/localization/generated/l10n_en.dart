@@ -216,6 +216,9 @@ class L10nEn extends L10n {
   String get adhocQueue => 'Queue (auto)';
 
   @override
+  String get sleepModeTitle => 'Sleep Timer';
+
+  @override
   String get sleepOff => 'Off';
 
   @override

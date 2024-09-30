@@ -94,6 +94,7 @@
   "tooltipPause": "Pause episode",
   "primaryQueue": "Queue (manual)",
   "adhocQueue": "Queue (auto)",
+  "sleepModeTitle": "Sleep Timer",
   "sleepOff": "Off",
   "sleepOnEpisodeEnds": "When episode ends",
   "sleepMin": "{n, plural, =1{1 minute} other{{n} minutes}}",

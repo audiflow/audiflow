@@ -426,6 +426,12 @@ abstract class L10n {
   /// **'Queue (auto)'**
   String get adhocQueue;
 
+  /// No description provided for @sleepModeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep Timer'**
+  String get sleepModeTitle;
+
   /// No description provided for @sleepOff.
   ///
   /// In en, this message translates to:
