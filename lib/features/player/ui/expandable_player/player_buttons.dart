@@ -1,5 +1,7 @@
 import 'package:audiflow/constants/app_sizes.dart';
 import 'package:audiflow/features/player/model/sleep_mode.dart';
+import 'package:audiflow/localization/generated/l10n.dart';
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
@@ -156,36 +158,69 @@ class SleepModeButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return PopupMenuButton<Sleep>(
-      onSelected: onSelect,
-      position: PopupMenuPosition.under,
-      itemBuilder: (context) {
-        return predefinedSleeps.reversed
-            .map(
-              (value) => PopupMenuItem(
-                value: value,
-                child: Row(
-                  children: [
-                    value == sleep
-                        ? const Icon(
-                            Symbols.check,
-                            size: 18,
-                          )
-                        : const SizedBox(width: 18),
-                    gapW4,
-                    Text(value.getLabel(context)),
-                  ],
-                ),
-              ),
-            )
-            .toList();
+    return IconButton(
+      onPressed: () async {
+        final value = await _showSleepModeSelector(context, sleepMode);
+        if (value != null) {
+          onSelect(value);
+        }
       },
-      child: Icon(
+      icon: Icon(
         Symbols.sleep,
-        color: sleep.type == SleepType.none
+        color: sleepMode.type == SleepType.none
             ? theme.dividerColor
             : theme.colorScheme.primary,
       ),
     );
   }
+}
+
+Future<SleepMode?> _showSleepModeSelector(
+  BuildContext context,
+  SleepMode current,
+) async {
+  final l10n = L10n.of(context);
+  return showModalBottomSheet(
+    context: context,
+    useRootNavigator: true,
+    isScrollControlled: true,
+    builder: (context) {
+      final theme = Theme.of(context);
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              l10n.sleepModeTitle,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            gapH12,
+            ...predefinedSleeps.reversed.mapIndexed((i, sleepMode) {
+              return DecoratedBox(
+                decoration: BoxDecoration(
+                  border: Border(
+                    top: BorderSide(
+                      color: theme.dividerColor,
+                      width: 0.2,
+                    ),
+                  ),
+                ),
+                child: ListTile(
+                  selected: sleepMode == current,
+                  title: Text(sleepMode.getLabel(context)),
+                  visualDensity: const VisualDensity(vertical: -3),
+                  // to compact
+                  leading:
+                      sleepMode == current ? const Icon(Symbols.check) : gapW20,
+                  onTap: () => Navigator.of(context).pop(sleepMode),
+                ),
+              );
+            }),
+            gapH24,
+          ],
+        ),
+      );
+    },
+  );
 }
