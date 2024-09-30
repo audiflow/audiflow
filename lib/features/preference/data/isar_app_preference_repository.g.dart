@@ -7,7 +7,7 @@ part of 'isar_app_preference_repository.dart';
 // **************************************************************************
 
 String _$isarAppPreferenceRepositoryHash() =>
-    r'a8a5ae670dfacb1f5be50947c02a33be8c7e0dcb';
+    r'9630cd65b9cb0f3d1dfbda7c6b14bb5b023e784a';
 
 /// See also [IsarAppPreferenceRepository].
 @ProviderFor(IsarAppPreferenceRepository)
