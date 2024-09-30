@@ -163,7 +163,12 @@ class _PlayerControlPanel extends HookConsumerWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            PlaybackSpeedButton(speed: speedState.value, onTap: () {}),
+            PlaybackSpeedButton(
+              speed: speedState.value,
+              onTap: () {
+                ref.read(audioPlayerPreferenceProvider.notifier).changeSpeed();
+              },
+            ),
             const Spacer(),
             SkipButton(
               forward: false,
