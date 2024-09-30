@@ -6,7 +6,7 @@ part of 'podcast_genres.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$podcastGenresHash() => r'3cf8e5fda1523109ec6046775bfda40bc2dd48a8';
+String _$podcastGenresHash() => r'2b312851a0931599fd5ede1e7fd6a1b2648bb5b0';
 
 /// See also [PodcastGenres].
 @ProviderFor(PodcastGenres)

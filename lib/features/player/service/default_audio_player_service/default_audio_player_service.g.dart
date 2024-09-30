@@ -7,7 +7,7 @@ part of 'default_audio_player_service.dart';
 // **************************************************************************
 
 String _$defaultAudioPlayerServiceHash() =>
-    r'556ed391c689d36d607a4e7317d7a64295edde57';
+    r'6a0c46bd89d45cefe4e5b7447bd2b93e36728b2f';
 
 /// This is the default implementation of [AudioPlayerService].
 ///

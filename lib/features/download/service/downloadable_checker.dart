@@ -1,7 +1,7 @@
 import 'package:audiflow/common/data/connectivity.dart';
 import 'package:audiflow/common/ui/warn_no_wifi.dart';
 import 'package:audiflow/features/feed/model/model.dart';
-import 'package:audiflow/features/preference/data/app_preference_repository.dart';
+import 'package:audiflow/features/preference/data/preference_repository.dart';
 import 'package:audiflow/localization/generated/l10n.dart';
 import 'package:audiflow/routing/app_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -24,7 +24,7 @@ class DownloadableChecker {
       return true;
     }
 
-    if (!_ref.read(appPreferenceRepositoryProvider).downloadWarnMobileData) {
+    if (!_ref.read(preferenceRepositoryProvider).downloadWarnMobileData) {
       return true;
     }
 

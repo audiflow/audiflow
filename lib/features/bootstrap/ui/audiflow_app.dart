@@ -3,7 +3,7 @@ import 'package:audiflow/common/ui/snack_bar_manager.dart';
 import 'package:audiflow/constants/color_schemes.g.dart';
 import 'package:audiflow/exceptions/app_exception.dart';
 import 'package:audiflow/features/preference/data/app_locale.dart';
-import 'package:audiflow/features/preference/data/app_preference_repository.dart';
+import 'package:audiflow/features/preference/data/preference_repository.dart';
 import 'package:audiflow/localization/generated/l10n.dart';
 import 'package:audiflow/localization/string_hardcoded.dart';
 import 'package:audiflow/routing/app_router.dart';
@@ -28,7 +28,7 @@ class AudiflowApp extends ConsumerWidget {
     );
 
     final themeMode =
-        ref.watch(appPreferenceRepositoryProvider.select((pref) => pref.theme));
+        ref.watch(preferenceRepositoryProvider.select((pref) => pref.theme));
     final router = ref.watch(appRouterProvider);
     final locale = ref.watch(appLocaleProvider);
 

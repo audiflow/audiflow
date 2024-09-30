@@ -53,15 +53,6 @@ class AudioPlayerService extends _$AudioPlayerService {
 
   /// Seek to the specified position within the current episode.
   Future<void> seek({required Duration position}) => throw UnimplementedError();
-  //
-  // /// Call to set the playback speed.
-  // Future<void> setPlaybackSpeed(double speed) => throw UnimplementedError();
-  //
-  // /// Call to toggle trim silence.
-  // Future<void> trimSilence({required bool trim}) => throw UnimplementedError();
-  //
-  // /// Call to toggle trim silence.
-  // Future<void> volumeBoost({required bool boost}) => throw UnimplementedError();
 
   /// Call when the app is about to be suspended.
   Future<void> suspend() => throw UnimplementedError();

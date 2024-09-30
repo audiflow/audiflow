@@ -2,7 +2,8 @@ import 'dart:async';
 
 import 'package:audiflow/common/ui/action_text.dart';
 import 'package:audiflow/features/feed/model/model.dart';
-import 'package:audiflow/features/preference/data/app_preference_repository.dart';
+import 'package:audiflow/features/preference/data/preference_repository.dart';
+import 'package:audiflow/features/preference/model/preference.dart';
 import 'package:audiflow/localization/generated/l10n.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -49,7 +50,7 @@ class _MaterialFundingMenu extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final settings = ref.watch(appPreferenceRepositoryProvider);
+    final settings = ref.watch(preferenceRepositoryProvider);
 
     return funding == null || funding!.isEmpty
         ? const SizedBox.shrink()
@@ -62,9 +63,9 @@ class _MaterialFundingMenu extends ConsumerWidget {
                   context,
                   consent: settings.externalLinkConsent,
                 ).then((value) {
-                  ref
-                      .read(appPreferenceRepositoryProvider.notifier)
-                      .setExternalLinkConsent(value);
+                  ref.read(preferenceRepositoryProvider.notifier).update(
+                        PreferenceUpdateParam(externalLinkConsent: value),
+                      );
                 });
               },
               icon: const Icon(
@@ -94,7 +95,7 @@ class _CupertinoFundingMenu extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final settings = ref.watch(appPreferenceRepositoryProvider);
+    final settings = ref.watch(preferenceRepositoryProvider);
 
     return funding == null || funding!.isEmpty
         ? const SizedBox.shrink()
@@ -117,8 +118,12 @@ class _CupertinoFundingMenu extends ConsumerWidget {
                             consent: settings.externalLinkConsent,
                           ).then((value) {
                             ref
-                                .read(appPreferenceRepositoryProvider.notifier)
-                                .setExternalLinkConsent(value);
+                                .read(preferenceRepositoryProvider.notifier)
+                                .update(
+                                  PreferenceUpdateParam(
+                                    externalLinkConsent: value,
+                                  ),
+                                );
                             if (context.mounted) {
                               Navigator.pop(context, 'Cancel');
                             }

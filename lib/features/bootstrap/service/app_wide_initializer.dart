@@ -13,7 +13,7 @@ import 'package:audiflow/features/download/service/download_task_controller.dart
 import 'package:audiflow/features/player/service/audio_player_service.dart';
 import 'package:audiflow/features/player/service/audio_position_recorder.dart';
 import 'package:audiflow/features/player/service/last_episode_service.dart';
-import 'package:audiflow/features/preference/data/app_preference_repository.dart';
+import 'package:audiflow/features/preference/data/preference_repository.dart';
 import 'package:audiflow/features/queue/service/audio_queue_service.dart';
 import 'package:audiflow/features/queue/service/queue_controller.dart';
 import 'package:device_info_plus/device_info_plus.dart';
@@ -28,7 +28,7 @@ part 'app_wide_initializer.g.dart';
 @Riverpod(keepAlive: true)
 bool appWide(AppWideRef ref) {
   ref
-    ..listen(appPreferenceRepositoryProvider, (_, __) {})
+    ..listen(preferenceRepositoryProvider, (_, __) {})
     ..listen(audioQueueServiceProvider, (_, __) {})
     ..listen(audioPlayerEventStreamProvider, (_, __) {})
     ..listen(audioPlayerServiceProvider, (_, __) {})

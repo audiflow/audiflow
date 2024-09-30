@@ -398,8 +398,7 @@ class DefaultAudioPlayerService extends _$DefaultAudioPlayerService
   /// a sleep.
   Future<void> _startSleepTicker() async {
     _sleepSubscription ??= _sleepTicker.listen((int period) async {
-      if (_sleep.type == SleepType.time &&
-          DateTime.now().isAfter(_sleep.endTime)) {
+      if (_sleep.type == SleepType.time) {
         await pause();
         _sleep = const Sleep(type: SleepType.none);
         _sleepState.sink.add(_sleep);

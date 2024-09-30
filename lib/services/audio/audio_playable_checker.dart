@@ -3,7 +3,7 @@ import 'package:audiflow/common/ui/warn_no_wifi.dart';
 import 'package:audiflow/features/download/data/download_repository.dart';
 import 'package:audiflow/features/download/model/downloadable.dart';
 import 'package:audiflow/features/player/service/audio_player_service.dart';
-import 'package:audiflow/features/preference/data/app_preference_repository.dart';
+import 'package:audiflow/features/preference/data/preference_repository.dart';
 import 'package:audiflow/localization/generated/l10n.dart';
 import 'package:audiflow/routing/app_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -37,7 +37,7 @@ class AudioPlayableChecker {
       return true;
     }
 
-    final prefs = _ref.read(appPreferenceRepositoryProvider);
+    final prefs = _ref.read(preferenceRepositoryProvider);
     if (!prefs.streamWarnMobileData) {
       return true;
     }
