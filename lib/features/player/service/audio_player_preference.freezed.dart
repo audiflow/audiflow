@@ -126,7 +126,9 @@ class __$$AudioPlayerPreferenceStateImplCopyWithImpl<$Res>
 
 class _$AudioPlayerPreferenceStateImpl implements _AudioPlayerPreferenceState {
   const _$AudioPlayerPreferenceStateImpl(
-      {this.speed = 1.0, this.trimSilence = false, this.volumeBoost = false});
+      {this.speed = defaultPlaybackSpeed,
+      this.trimSilence = false,
+      this.volumeBoost = false});
 
   @override
   @JsonKey()
