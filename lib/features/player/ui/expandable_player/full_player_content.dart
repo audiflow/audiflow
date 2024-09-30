@@ -1,4 +1,5 @@
 import 'package:audiflow/constants/app_sizes.dart';
+import 'package:audiflow/constants/audio_player.dart';
 import 'package:audiflow/features/player/service/audio_player_preference.dart';
 import 'package:audiflow/features/player/service/audio_player_service.dart';
 import 'package:audiflow/features/player/ui/expandable_player/expandable_player_controller.dart';
@@ -8,11 +9,11 @@ import 'package:audiflow/features/player/ui/expandable_player_frame/utils.dart';
 import 'package:audiflow/features/player/ui/player_episode_tile.dart';
 import 'package:audiflow/features/player/ui/seekbar.dart';
 import 'package:audiflow/features/player/ui/seekbar_controller.dart';
+import 'package:audiflow/features/preference/data/preference_repository.dart';
 import 'package:audiflow/features/queue/model/queue.dart';
 import 'package:audiflow/features/queue/service/queue_controller.dart';
 import 'package:audiflow/features/queue/ui/queue_list_block.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 class FullPlayerContent extends ConsumerWidget {
@@ -141,17 +142,13 @@ class _PlayerControlPanel extends HookConsumerWidget {
         : ref.read(episodeSeekbarControllerProvider(episode).notifier)
             as SeekbarController;
 
-    final audioPlayerPreference = ref.read(audioPlayerPreferenceProvider);
-    final speedState =
-        useState<double>(audioPlayerPreference.valueOrNull?.speed ?? 1);
-    ref.listen(audioPlayerPreferenceProvider, (_, next) {
-      if (!next.hasValue) {
-        return;
-      }
-      if (speedState.value != next.requireValue.speed) {
-        speedState.value = next.requireValue.speed;
-      }
-    });
+    final speed = ref.watch(
+      audioPlayerPreferenceProvider
+          .select((state) => state.valueOrNull?.speed ?? defaultPlaybackSpeed),
+    );
+    final sleep = ref.watch(
+      preferenceRepositoryProvider.select((pref) => pref.playbackSleep),
+    );
 
     return Column(
       children: [
@@ -163,13 +160,16 @@ class _PlayerControlPanel extends HookConsumerWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            PlaybackSpeedButton(
-              speed: speedState.value,
-              onTap: () {
-                ref.read(audioPlayerPreferenceProvider.notifier).changeSpeed();
-              },
+            Expanded(
+              child: PlaybackSpeedButton(
+                speed: speed,
+                onTap: () {
+                  ref
+                      .read(audioPlayerPreferenceProvider.notifier)
+                      .changeSpeed();
+                },
+              ),
             ),
-            const Spacer(),
             SkipButton(
               forward: false,
               onTap: seekbarController.rewind,
@@ -184,7 +184,16 @@ class _PlayerControlPanel extends HookConsumerWidget {
               forward: true,
               onTap: seekbarController.fastForward,
             ),
-            const Spacer(),
+            Expanded(
+              child: SleepModeButton(
+                sleep: sleep,
+                onSelect: (value) {
+                  ref
+                      .read(preferenceRepositoryProvider.notifier)
+                      .update(PreferenceUpdateParam(playbackSleep: value));
+                },
+              ),
+            ),
           ],
         ),
         gapH48,

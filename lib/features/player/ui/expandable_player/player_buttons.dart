@@ -155,6 +155,7 @@ class SleepModeButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return PopupMenuButton<Sleep>(
       onSelected: onSelect,
       position: PopupMenuPosition.under,
@@ -179,7 +180,12 @@ class SleepModeButton extends StatelessWidget {
             )
             .toList();
       },
-      child: const Icon(Symbols.sleep),
+      child: Icon(
+        Symbols.sleep,
+        color: sleep.type == SleepType.none
+            ? theme.dividerColor
+            : theme.colorScheme.primary,
+      ),
     );
   }
 }
