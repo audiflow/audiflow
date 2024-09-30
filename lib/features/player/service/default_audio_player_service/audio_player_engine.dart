@@ -86,10 +86,9 @@ class AudioPlayerEngine {
         if (next == null) {
           await _onPlayerClose();
         } else if (prev?.episode.id != next.episode.id) {
-          final state = _ref.read(audioPlayerServiceProvider)!;
-          await _onEpisodeChange(state);
+          await _onEpisodeChange();
         } else if (prev!.phase != next.phase) {
-          unawaited(_onPhaseChange(prev, next));
+          await _onPhaseChange(prev, next);
         }
       },
       maxConcurrent: 1,
@@ -100,7 +99,8 @@ class AudioPlayerEngine {
     await _audioHandler.stop();
   }
 
-  Future<void> _onEpisodeChange(AudioPlayerState state) async {
+  Future<void> _onEpisodeChange() async {
+    final state = _ref.read(audioPlayerServiceProvider)!;
     if (state.phase == PlayerPhase.play) {
       final (uri, downloaded) = await _generateEpisodeUri(state.episode);
 
@@ -156,8 +156,15 @@ class AudioPlayerEngine {
     PartialAudioPlayerState prev,
     PartialAudioPlayerState next,
   ) async {
-    if (next.phase == PlayerPhase.play && next.audioState == AudioState.ready) {
-      await _audioHandler.play();
+    if (next.phase == PlayerPhase.play) {
+      if (next.audioState == AudioState.ready) {
+        unawaited(_audioHandler.play());
+      } else {
+        // Resume after reboot.
+        // In this case, there is the mini player on the screen, but the audio
+        // service is not ready yet.
+        await _onEpisodeChange();
+      }
     } else if (next.phase == PlayerPhase.pause && !next.interrupted) {
       await _audioHandler.pause();
     } else if (next.phase == PlayerPhase.stop) {
