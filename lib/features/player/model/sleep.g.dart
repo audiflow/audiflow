@@ -21,6 +21,6 @@ Map<String, dynamic> _$$SleepImplToJson(_$SleepImpl instance) =>
 
 const _$SleepTypeEnumMap = {
   SleepType.none: 'none',
-  SleepType.time: 'time',
   SleepType.episode: 'episode',
+  SleepType.time: 'time',
 };
