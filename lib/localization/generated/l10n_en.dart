@@ -216,6 +216,34 @@ class L10nEn extends L10n {
   String get adhocQueue => 'Queue (auto)';
 
   @override
+  String get sleepOff => 'Off';
+
+  @override
+  String get sleepOnEpisodeEnds => 'When episode ends';
+
+  @override
+  String sleepMin(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n minutes',
+      one: '1 minute',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String sleepHour(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n hours',
+      one: '1 hour',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get settingsOnDemandDownloadOnPlayback => 'Download Audio on Playback';
 
   @override

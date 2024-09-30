@@ -94,6 +94,24 @@
   "tooltipPause": "エピソード再生を一時停止",
   "primaryQueue": "再生キュー（手動）",
   "adhocQueue": "再生キュー（自動）",
+  "sleepOff": "オフ",
+  "sleepOnEpisodeEnds": "エピソード終了時",
+  "sleepMin": "{n}分後",
+  "@sleepMin": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "sleepHour": "{n}時間後",
+  "@sleepHour": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "settingsOnDemandDownloadOnPlayback": "再生時の音源取得",
   "settingsOnDemandDownloadOnPlaybackDescription": "事前ダウンロードがない場合、再生開始時に音源を取得します",
   "settingsManualDownload": "手動ダウンロード",

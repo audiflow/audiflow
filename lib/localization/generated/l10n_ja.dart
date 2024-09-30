@@ -186,6 +186,22 @@ class L10nJa extends L10n {
   String get adhocQueue => '再生キュー（自動）';
 
   @override
+  String get sleepOff => 'オフ';
+
+  @override
+  String get sleepOnEpisodeEnds => 'エピソード終了時';
+
+  @override
+  String sleepMin(int n) {
+    return '$n分後';
+  }
+
+  @override
+  String sleepHour(int n) {
+    return '$n時間後';
+  }
+
+  @override
   String get settingsOnDemandDownloadOnPlayback => '再生時の音源取得';
 
   @override

@@ -94,6 +94,24 @@
   "tooltipPause": "Pause episode",
   "primaryQueue": "Queue (manual)",
   "adhocQueue": "Queue (auto)",
+  "sleepOff": "Off",
+  "sleepOnEpisodeEnds": "When episode ends",
+  "sleepMin": "{n, plural, =1{1 minute} other{{n} minutes}}",
+  "@sleepMin": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "sleepHour": "{n, plural, =1{1 hour} other{{n} hours}}",
+  "@sleepHour": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "settingsOnDemandDownloadOnPlayback": "Download Audio on Playback",
   "settingsOnDemandDownloadOnPlaybackDescription": "If not pre-downloaded, audio will be fetched at the start of playback",
   "settingsManualDownload": "Manual Download",

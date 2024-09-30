@@ -426,6 +426,30 @@ abstract class L10n {
   /// **'Queue (auto)'**
   String get adhocQueue;
 
+  /// No description provided for @sleepOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get sleepOff;
+
+  /// No description provided for @sleepOnEpisodeEnds.
+  ///
+  /// In en, this message translates to:
+  /// **'When episode ends'**
+  String get sleepOnEpisodeEnds;
+
+  /// No description provided for @sleepMin.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =1{1 minute} other{{n} minutes}}'**
+  String sleepMin(int n);
+
+  /// No description provided for @sleepHour.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =1{1 hour} other{{n} hours}}'**
+  String sleepHour(int n);
+
   /// No description provided for @settingsOnDemandDownloadOnPlayback.
   ///
   /// In en, this message translates to:
