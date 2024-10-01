@@ -2,6 +2,7 @@ import 'package:audiflow/constants/app_sizes.dart';
 import 'package:audiflow/constants/audio_player.dart';
 import 'package:audiflow/features/player/service/audio_player_preference.dart';
 import 'package:audiflow/features/player/service/audio_player_service.dart';
+import 'package:audiflow/features/player/service/playback_sleep_service.dart';
 import 'package:audiflow/features/player/ui/expandable_player/expandable_player_controller.dart';
 import 'package:audiflow/features/player/ui/expandable_player/mini_player_height_provider.dart';
 import 'package:audiflow/features/player/ui/expandable_player/player_buttons.dart';
@@ -9,7 +10,6 @@ import 'package:audiflow/features/player/ui/expandable_player_frame/utils.dart';
 import 'package:audiflow/features/player/ui/player_episode_tile.dart';
 import 'package:audiflow/features/player/ui/seekbar.dart';
 import 'package:audiflow/features/player/ui/seekbar_controller.dart';
-import 'package:audiflow/features/preference/data/preference_repository.dart';
 import 'package:audiflow/features/queue/model/queue.dart';
 import 'package:audiflow/features/queue/service/queue_controller.dart';
 import 'package:audiflow/features/queue/ui/queue_list_block.dart';
@@ -146,9 +146,7 @@ class _PlayerControlPanel extends HookConsumerWidget {
       audioPlayerPreferenceProvider
           .select((state) => state.valueOrNull?.speed ?? defaultPlaybackSpeed),
     );
-    final sleep = ref.watch(
-      preferenceRepositoryProvider.select((pref) => pref.playbackSleep),
-    );
+    final sleepMode = ref.watch(playbackSleepServiceProvider).sleepMode;
 
     return Column(
       children: [
@@ -186,11 +184,11 @@ class _PlayerControlPanel extends HookConsumerWidget {
             ),
             Expanded(
               child: SleepModeButton(
-                sleepMode: sleep,
+                sleepMode: sleepMode,
                 onSelect: (value) {
                   ref
-                      .read(preferenceRepositoryProvider.notifier)
-                      .update(PreferenceUpdateParam(playbackSleep: value));
+                      .read(playbackSleepServiceProvider.notifier)
+                      .setSleepMode(value);
                 },
               ),
             ),
