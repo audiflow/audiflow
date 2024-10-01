@@ -20,6 +20,8 @@ class SleepMode with _$SleepMode {
 
   factory SleepMode.fromJson(Map<String, dynamic> json) =>
       _$SleepModeFromJson(json);
+
+  static const none = SleepMode(type: SleepType.none);
 }
 
 extension SleepExt on SleepMode {
@@ -43,7 +45,7 @@ extension SleepExt on SleepMode {
 }
 
 const predefinedSleeps = <SleepMode>[
-  SleepMode(type: SleepType.none),
+  SleepMode.none,
   SleepMode(type: SleepType.episode),
   SleepMode(type: SleepType.time, duration: Duration(minutes: 5)),
   SleepMode(type: SleepType.time, duration: Duration(minutes: 10)),
