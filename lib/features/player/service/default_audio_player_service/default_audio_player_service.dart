@@ -14,7 +14,6 @@ import 'package:audiflow/utils/logger.dart';
 import 'package:audio_service/audio_service.dart';
 import 'package:audio_session/audio_session.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:rxdart/rxdart.dart';
 
 part 'default_audio_player_service.g.dart';
 
@@ -36,30 +35,14 @@ class DefaultAudioPlayerService extends _$DefaultAudioPlayerService
 
   late final AudioHandler _audioHandler;
 
-  var _sleep = const SleepMode(type: SleepType.none);
-
   /// Subscription to the position ticker.
   StreamSubscription<int>? _positionSubscription;
-
-  /// Subscription to the sleep ticker.
-  StreamSubscription<int>? _sleepSubscription;
 
   /// Ticks whilst playing. Updates our current position within an episode.
   final _durationTicker = Stream<int>.periodic(
     const Duration(milliseconds: 500),
     (count) => count,
   ).asBroadcastStream();
-
-  /// Ticks twice every second if a time-based sleep has been started.
-  final _sleepTicker = Stream<int>.periodic(
-    const Duration(milliseconds: 500),
-    (count) => count,
-  ).asBroadcastStream();
-
-  final _sleepState = BehaviorSubject<SleepMode>();
-
-  // @override
-  // Stream<Sleep> get sleepStream => _sleepState.stream;
 
   @override
   AudioPlayerState? build() => null;
@@ -81,11 +64,6 @@ class DefaultAudioPlayerService extends _$DefaultAudioPlayerService
     final session = await AudioSession.instance;
     await session.configure(const AudioSessionConfiguration.speech());
     _handleAudioInterruptions(session);
-  }
-
-  void dispose() {
-    _sleepState.close();
-    _sleepSubscription?.cancel();
   }
 
   @override
@@ -263,20 +241,6 @@ class DefaultAudioPlayerService extends _$DefaultAudioPlayerService
     }
   }
 
-  @override
-  void sleep(SleepMode sleep) {
-    switch (sleep.type) {
-      case SleepType.none:
-      case SleepType.episode:
-        _stopSleepTicker();
-      case SleepType.time:
-        _startSleepTicker();
-    }
-
-    _sleep = sleep;
-    _sleepState.sink.add(_sleep);
-  }
-
   Future<(String, bool)> _generateEpisodeUri(Episode episode) async {
     final download = await _downloadRepository.findDownload(episode.id);
     if (download?.state != DownloadState.downloaded) {
@@ -391,34 +355,6 @@ class DefaultAudioPlayerService extends _$DefaultAudioPlayerService
     if (_positionSubscription != null) {
       await _positionSubscription!.cancel();
       _positionSubscription = null;
-    }
-  }
-
-  /// We only want to start the sleep timer ticker when the user has requested
-  /// a sleep.
-  Future<void> _startSleepTicker() async {
-    _sleepSubscription ??= _sleepTicker.listen((int period) async {
-      if (_sleep.type == SleepType.time) {
-        await pause();
-        _sleep = const SleepMode(type: SleepType.none);
-        _sleepState.sink.add(_sleep);
-        await _sleepSubscription?.cancel();
-        _sleepSubscription = null;
-      } else {
-        _sleepState.sink.add(_sleep);
-      }
-    });
-  }
-
-  /// Once we have stopped sleeping we call this method to tidy up the ticker
-  /// subscription.
-  Future<void> _stopSleepTicker() async {
-    _sleep = const SleepMode(type: SleepType.none);
-    _sleepState.sink.add(_sleep);
-
-    if (_sleepSubscription != null) {
-      await _sleepSubscription!.cancel();
-      _sleepSubscription = null;
     }
   }
 
