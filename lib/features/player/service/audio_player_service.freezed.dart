@@ -18,6 +18,7 @@ final _privateConstructorUsedError = UnsupportedError(
 mixin _$AudioPlayerState {
   Episode get episode => throw _privateConstructorUsedError;
   Duration get position => throw _privateConstructorUsedError;
+  Duration get duration => throw _privateConstructorUsedError;
   PlayerPhase get phase => throw _privateConstructorUsedError;
   AudioState get audioState => throw _privateConstructorUsedError;
   bool get interrupted => throw _privateConstructorUsedError;
@@ -39,6 +40,7 @@ abstract class $AudioPlayerStateCopyWith<$Res> {
   $Res call(
       {Episode episode,
       Duration position,
+      Duration duration,
       PlayerPhase phase,
       AudioState audioState,
       bool interrupted,
@@ -62,6 +64,7 @@ class _$AudioPlayerStateCopyWithImpl<$Res, $Val extends AudioPlayerState>
   $Res call({
     Object? episode = null,
     Object? position = null,
+    Object? duration = null,
     Object? phase = null,
     Object? audioState = null,
     Object? interrupted = null,
@@ -75,6 +78,10 @@ class _$AudioPlayerStateCopyWithImpl<$Res, $Val extends AudioPlayerState>
       position: null == position
           ? _value.position
           : position // ignore: cast_nullable_to_non_nullable
+              as Duration,
+      duration: null == duration
+          ? _value.duration
+          : duration // ignore: cast_nullable_to_non_nullable
               as Duration,
       phase: null == phase
           ? _value.phase
@@ -107,6 +114,7 @@ abstract class _$$AudioPlayerStateImplCopyWith<$Res>
   $Res call(
       {Episode episode,
       Duration position,
+      Duration duration,
       PlayerPhase phase,
       AudioState audioState,
       bool interrupted,
@@ -128,6 +136,7 @@ class __$$AudioPlayerStateImplCopyWithImpl<$Res>
   $Res call({
     Object? episode = null,
     Object? position = null,
+    Object? duration = null,
     Object? phase = null,
     Object? audioState = null,
     Object? interrupted = null,
@@ -141,6 +150,10 @@ class __$$AudioPlayerStateImplCopyWithImpl<$Res>
       position: null == position
           ? _value.position
           : position // ignore: cast_nullable_to_non_nullable
+              as Duration,
+      duration: null == duration
+          ? _value.duration
+          : duration // ignore: cast_nullable_to_non_nullable
               as Duration,
       phase: null == phase
           ? _value.phase
@@ -168,6 +181,7 @@ class _$AudioPlayerStateImpl implements _AudioPlayerState {
   const _$AudioPlayerStateImpl(
       {required this.episode,
       required this.position,
+      required this.duration,
       required this.phase,
       required this.audioState,
       this.interrupted = false,
@@ -177,6 +191,8 @@ class _$AudioPlayerStateImpl implements _AudioPlayerState {
   final Episode episode;
   @override
   final Duration position;
+  @override
+  final Duration duration;
   @override
   final PlayerPhase phase;
   @override
@@ -190,7 +206,7 @@ class _$AudioPlayerStateImpl implements _AudioPlayerState {
 
   @override
   String toString() {
-    return 'AudioPlayerState(episode: $episode, position: $position, phase: $phase, audioState: $audioState, interrupted: $interrupted, playbackError: $playbackError)';
+    return 'AudioPlayerState(episode: $episode, position: $position, duration: $duration, phase: $phase, audioState: $audioState, interrupted: $interrupted, playbackError: $playbackError)';
   }
 
   @override
@@ -201,6 +217,8 @@ class _$AudioPlayerStateImpl implements _AudioPlayerState {
             (identical(other.episode, episode) || other.episode == episode) &&
             (identical(other.position, position) ||
                 other.position == position) &&
+            (identical(other.duration, duration) ||
+                other.duration == duration) &&
             (identical(other.phase, phase) || other.phase == phase) &&
             (identical(other.audioState, audioState) ||
                 other.audioState == audioState) &&
@@ -211,8 +229,8 @@ class _$AudioPlayerStateImpl implements _AudioPlayerState {
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, episode, position, phase,
-      audioState, interrupted, playbackError);
+  int get hashCode => Object.hash(runtimeType, episode, position, duration,
+      phase, audioState, interrupted, playbackError);
 
   /// Create a copy of AudioPlayerState
   /// with the given fields replaced by the non-null parameter values.
@@ -228,6 +246,7 @@ abstract class _AudioPlayerState implements AudioPlayerState {
   const factory _AudioPlayerState(
       {required final Episode episode,
       required final Duration position,
+      required final Duration duration,
       required final PlayerPhase phase,
       required final AudioState audioState,
       final bool interrupted,
@@ -237,6 +256,8 @@ abstract class _AudioPlayerState implements AudioPlayerState {
   Episode get episode;
   @override
   Duration get position;
+  @override
+  Duration get duration;
   @override
   PlayerPhase get phase;
   @override

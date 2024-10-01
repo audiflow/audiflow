@@ -28,6 +28,7 @@ class AudioPlayerService extends _$AudioPlayerService {
   Future<void> loadEpisode({
     required Episode episode,
     required Duration position,
+    required Duration duration,
     required bool autoPlay,
   }) =>
       throw UnimplementedError();
@@ -65,6 +66,7 @@ class AudioPlayerState with _$AudioPlayerState {
   const factory AudioPlayerState({
     required Episode episode,
     required Duration position,
+    required Duration duration,
     required PlayerPhase phase,
     required AudioState audioState,
     @Default(false) bool interrupted,
