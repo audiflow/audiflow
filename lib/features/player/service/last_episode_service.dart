@@ -45,6 +45,7 @@ class LastEpisodeService {
       await _audioPlayerService.loadEpisode(
         episode: episode,
         position: stats?.position ?? Duration.zero,
+        duration: stats?.duration ?? episode.duration ?? Duration.zero,
         autoPlay: false,
       );
     }

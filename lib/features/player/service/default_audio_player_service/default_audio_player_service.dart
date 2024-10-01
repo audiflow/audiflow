@@ -78,6 +78,7 @@ class DefaultAudioPlayerService extends _$DefaultAudioPlayerService
       return loadEpisode(
         episode: state!.episode,
         position: state!.position,
+        duration: state!.duration,
         autoPlay: true,
       );
     }
@@ -111,6 +112,7 @@ class DefaultAudioPlayerService extends _$DefaultAudioPlayerService
   Future<void> loadEpisode({
     required Episode episode,
     required Duration position,
+    required Duration duration,
     required bool autoPlay,
   }) async {
     if (episode.guid.isEmpty) {
@@ -143,6 +145,7 @@ class DefaultAudioPlayerService extends _$DefaultAudioPlayerService
     state = AudioPlayerState(
       episode: episode,
       position: playPosition,
+      duration: duration,
       phase: autoPlay ? PlayerPhase.play : PlayerPhase.pause,
       audioState: autoPlay ? AudioState.buffering : AudioState.idle,
     );
@@ -168,6 +171,7 @@ class DefaultAudioPlayerService extends _$DefaultAudioPlayerService
       state = AudioPlayerState(
         episode: episode,
         position: playPosition,
+        duration: duration,
         audioState: AudioState.error,
         phase: PlayerPhase.stop,
       );

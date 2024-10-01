@@ -112,6 +112,7 @@ class AudioQueueService {
       await _audioPlayerService.loadEpisode(
         episode: episode,
         position: stats?.position ?? Duration.zero,
+        duration: stats?.duration ?? episode.duration ?? Duration.zero,
         autoPlay: true,
       );
       return true;
@@ -139,6 +140,7 @@ class AudioQueueService {
         await _audioPlayerService.loadEpisode(
           episode: episode,
           position: stats?.position ?? Duration.zero,
+          duration: stats?.duration ?? episode.duration ?? Duration.zero,
           autoPlay: true,
         );
         return;
