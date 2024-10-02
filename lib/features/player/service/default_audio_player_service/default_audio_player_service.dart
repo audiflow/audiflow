@@ -268,6 +268,23 @@ class DefaultAudioPlayerService extends _$DefaultAudioPlayerService
         () =>
             'Audio state is $audioState - playing is ${playbackState.playing}',
       );
+
+      // Handle play/pause transitions by the Control Center.
+      // There is a tricky situation at playback start:
+      // iOS:
+      //   when audioState is ready, the playbackState.playing is true
+      // Android:
+      //   when audioState is ready, the playbackState.playing is false
+      // To cope with this, we utilize _positionSubscription state.
+      var phase = state?.phase ?? PlayerPhase.stop;
+      if (audioState == AudioState.ready) {
+        if (_positionSubscription != null && !playbackState.playing) {
+          phase = PlayerPhase.pause;
+        } else if (_positionSubscription == null && playbackState.playing) {
+          phase = PlayerPhase.play;
+        }
+      }
+
       if (audioState == AudioState.ready) {
         if (playbackState.playing) {
           _startPositionTicker();
@@ -277,6 +294,7 @@ class DefaultAudioPlayerService extends _$DefaultAudioPlayerService
       }
       state = state?.copyWith(
         position: playbackState.position,
+        phase: phase,
         audioState: audioState,
       );
       if (audioState == AudioState.completed) {
