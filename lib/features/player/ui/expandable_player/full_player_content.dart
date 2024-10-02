@@ -120,7 +120,7 @@ class FullPlayerContent extends ConsumerWidget {
   }
 }
 
-class _PlayerControlPanel extends HookConsumerWidget {
+class _PlayerControlPanel extends ConsumerWidget {
   const _PlayerControlPanel({
     required this.episode,
   });
@@ -134,9 +134,6 @@ class _PlayerControlPanel extends HookConsumerWidget {
     final hasPlayerAudio = playerPhase != null;
     final isPlaying = playerPhase == PlayerPhase.play;
 
-    final seekbarState = hasPlayerAudio
-        ? ref.watch(audioSeekbarControllerProvider)
-        : ref.watch(episodeSeekbarControllerProvider(episode));
     final seekbarController = hasPlayerAudio
         ? ref.read(audioSeekbarControllerProvider.notifier) as SeekbarController
         : ref.read(episodeSeekbarControllerProvider(episode).notifier)
@@ -146,15 +143,10 @@ class _PlayerControlPanel extends HookConsumerWidget {
       audioPlayerPreferenceProvider
           .select((state) => state.valueOrNull?.speed ?? defaultPlaybackSpeed),
     );
-    final sleepMode = ref.watch(playbackSleepServiceProvider).sleepMode;
 
     return Column(
       children: [
-        Seekbar(
-          position: seekbarState?.position,
-          duration: seekbarState?.duration,
-          onSeek: seekbarController.seekTo,
-        ),
+        _Seekbar(episode: episode),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -182,20 +174,56 @@ class _PlayerControlPanel extends HookConsumerWidget {
               forward: true,
               onTap: seekbarController.fastForward,
             ),
-            Expanded(
-              child: SleepModeButton(
-                sleepMode: sleepMode,
-                onSelect: (value) {
-                  ref
-                      .read(playbackSleepServiceProvider.notifier)
-                      .setSleepMode(value);
-                },
-              ),
+            const Expanded(
+              child: _SleepButton(),
             ),
           ],
         ),
         gapH48,
       ],
+    );
+  }
+}
+
+class _Seekbar extends ConsumerWidget {
+  const _Seekbar({
+    required this.episode,
+  });
+
+  final Episode episode;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final playerPhase =
+        ref.watch(audioPlayerServiceProvider.select((state) => state?.phase));
+    final hasPlayerAudio = playerPhase != null;
+
+    final seekbarState = hasPlayerAudio
+        ? ref.watch(audioSeekbarControllerProvider)
+        : ref.watch(episodeSeekbarControllerProvider(episode));
+    final seekbarController = hasPlayerAudio
+        ? ref.read(audioSeekbarControllerProvider.notifier) as SeekbarController
+        : ref.read(episodeSeekbarControllerProvider(episode).notifier)
+            as SeekbarController;
+    return Seekbar(
+      position: seekbarState?.position,
+      duration: seekbarState?.duration,
+      onSeek: seekbarController.seekTo,
+    );
+  }
+}
+
+class _SleepButton extends ConsumerWidget {
+  const _SleepButton();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final sleepMode = ref.watch(playbackSleepServiceProvider).sleepMode;
+    return SleepModeButton(
+      sleepMode: sleepMode,
+      onSelect: (value) {
+        ref.read(playbackSleepServiceProvider.notifier).setSleepMode(value);
+      },
     );
   }
 }
