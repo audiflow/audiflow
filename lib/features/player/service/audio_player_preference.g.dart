@@ -7,7 +7,7 @@ part of 'audio_player_preference.dart';
 // **************************************************************************
 
 String _$audioPlayerPreferenceHash() =>
-    r'c68d8082b023c42792345c97749bd7a80c3a62e0';
+    r'0371e84388a472bde7bdb3faee673ac41c4655d9';
 
 /// See also [AudioPlayerPreference].
 @ProviderFor(AudioPlayerPreference)
