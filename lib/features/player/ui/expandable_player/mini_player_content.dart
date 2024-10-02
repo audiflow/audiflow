@@ -1,4 +1,5 @@
 import 'package:audiflow/constants/app_sizes.dart';
+import 'package:audiflow/features/browser/podcast/data/podcast_provider.dart';
 import 'package:audiflow/features/player/service/audio_player_service.dart';
 import 'package:audiflow/features/player/ui/expandable_player/expandable_player_controller.dart';
 import 'package:audiflow/features/player/ui/expandable_player/mini_player_height_provider.dart';
@@ -41,6 +42,9 @@ class MiniPlayerContent extends ConsumerWidget {
         ? ref.watch(audioSeekbarControllerProvider)
         : ref.watch(episodeSeekbarControllerProvider(episode));
 
+    final podcastState = ref.watch(podcastProvider(episode.pid));
+    final imageUrl = episode.imageUrl ?? podcastState.valueOrNull?.image;
+
     final elementOpacity = 1 - 1 * percentageMiniPlayer;
     final theme = Theme.of(context);
     return DecoratedBox(
@@ -68,16 +72,18 @@ class MiniPlayerContent extends ConsumerWidget {
               child: Row(
                 children: [
                   gapW12,
-                  ConstrainedBox(
-                    constraints: BoxConstraints(maxHeight: maxImgSize),
-                    child: Image.network(
-                      episode.imageUrl!,
-                      errorBuilder: (context, error, stackTrace) {
-                        return const SizedBox.shrink();
-                      },
+                  if (imageUrl != null) ...[
+                    ConstrainedBox(
+                      constraints: BoxConstraints(maxHeight: maxImgSize),
+                      child: Image.network(
+                        imageUrl,
+                        errorBuilder: (context, error, stackTrace) {
+                          return const SizedBox.shrink();
+                        },
+                      ),
                     ),
-                  ),
-                  gapW8,
+                    gapW8,
+                  ],
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
