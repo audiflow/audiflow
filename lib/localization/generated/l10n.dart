@@ -426,6 +426,12 @@ abstract class L10n {
   /// **'Queue (auto)'**
   String get adhocQueue;
 
+  /// No description provided for @speedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Playback Speed'**
+  String get speedTitle;
+
   /// No description provided for @sleepModeTitle.
   ///
   /// In en, this message translates to:

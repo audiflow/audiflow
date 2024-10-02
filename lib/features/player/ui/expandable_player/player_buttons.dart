@@ -1,4 +1,5 @@
 import 'package:audiflow/constants/app_sizes.dart';
+import 'package:audiflow/constants/audio_player.dart';
 import 'package:audiflow/features/player/model/sleep_mode.dart';
 import 'package:audiflow/localization/generated/l10n.dart';
 import 'package:collection/collection.dart';
@@ -129,17 +130,22 @@ class SkipButton extends StatelessWidget {
 class PlaybackSpeedButton extends StatelessWidget {
   const PlaybackSpeedButton({
     required this.speed,
-    required this.onTap,
+    required this.onSelect,
     super.key,
   });
 
   final double speed;
-  final VoidCallback onTap;
+  final ValueChanged<double> onSelect;
 
   @override
   Widget build(BuildContext context) {
     return TextButton(
-      onPressed: onTap,
+      onPressed: () async {
+        final value = await _showPlaySpeedSelector(context, speed);
+        if (value != null) {
+          onSelect(value);
+        }
+      },
       child: Text('${speed}x'),
     );
   }
@@ -173,6 +179,56 @@ class SleepModeButton extends StatelessWidget {
       ),
     );
   }
+}
+
+Future<double?> _showPlaySpeedSelector(
+    BuildContext context,
+    double current,
+    ) async {
+  final l10n = L10n.of(context);
+  return showModalBottomSheet(
+    context: context,
+    useRootNavigator: true,
+    isScrollControlled: true,
+    builder: (context) {
+      final theme = Theme.of(context);
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              l10n.speedTitle,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            gapH12,
+            ...playbackSpeeds.reversed.mapIndexed((i, speed) {
+              return DecoratedBox(
+                decoration: BoxDecoration(
+                  border: Border(
+                    top: BorderSide(
+                      color: theme.dividerColor,
+                      width: 0.2,
+                    ),
+                  ),
+                ),
+                child: ListTile(
+                  selected: speed == current,
+                  title: Text('${speed}x'),
+                  visualDensity: const VisualDensity(vertical: -3),
+                  // to compact
+                  leading:
+                  speed == current ? const Icon(Symbols.check) : gapW20,
+                  onTap: () => Navigator.of(context).pop(speed),
+                ),
+              );
+            }),
+            gapH24,
+          ],
+        ),
+      );
+    },
+  );
 }
 
 Future<SleepMode?> _showSleepModeSelector(

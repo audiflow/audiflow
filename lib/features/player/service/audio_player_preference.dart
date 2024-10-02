@@ -27,6 +27,16 @@ class AudioPlayerPreference extends _$AudioPlayerPreference {
     );
   }
 
+  Future<void> setSpeed(double speed) async {
+    if (!state.hasValue) {
+      return;
+    }
+
+    await _appPreferenceRepository
+        .update(PreferenceUpdateParam(playbackSpeed: speed));
+    state = AsyncData(state.requireValue.copyWith(speed: speed));
+  }
+
   Future<void> changeSpeed() async {
     if (!state.hasValue) {
       return;

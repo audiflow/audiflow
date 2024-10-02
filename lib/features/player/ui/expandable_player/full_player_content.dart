@@ -153,10 +153,10 @@ class _PlayerControlPanel extends ConsumerWidget {
             Expanded(
               child: PlaybackSpeedButton(
                 speed: speed,
-                onTap: () {
+                onSelect: (speed) {
                   ref
                       .read(audioPlayerPreferenceProvider.notifier)
-                      .changeSpeed();
+                      .setSpeed(speed);
                 },
               ),
             ),
