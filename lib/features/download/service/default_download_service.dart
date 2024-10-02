@@ -10,8 +10,7 @@ import 'package:audiflow/features/download/service/download_task_controller.dart
 import 'package:audiflow/features/download/service/downloadable_checker.dart';
 import 'package:audiflow/features/feed/data/episode_repository.dart';
 import 'package:audiflow/features/feed/model/model.dart';
-import 'package:audiflow/features/preference/data/app_preference_repository.dart';
-import 'package:audiflow/features/preference/model/app_preference.dart';
+import 'package:audiflow/features/preference/data/preference_repository.dart';
 import 'package:audiflow/utils/http.dart';
 import 'package:audiflow/utils/logger.dart';
 import 'package:collection/collection.dart' show IterableExtension;
@@ -44,8 +43,7 @@ class DefaultDownloadService extends DownloadService {
 
   DownloadPath get _downloadPath => _ref.read(downloadPathProvider);
 
-  AppPreference get _appPreference =>
-      _ref.read(appPreferenceRepositoryProvider);
+  Preference get _appPreference => _ref.read(preferenceRepositoryProvider);
 
   @override
   Future<List<Downloadable>> loadAllDownloads() async {

@@ -1,27 +1,27 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'audio_player_preference.dart';
+part of 'playback_sleep_service.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$audioPlayerPreferenceHash() =>
-    r'c68d8082b023c42792345c97749bd7a80c3a62e0';
+String _$playbackSleepServiceHash() =>
+    r'46ce23546c6019795069a832497d5bbe7aaab46a';
 
-/// See also [AudioPlayerPreference].
-@ProviderFor(AudioPlayerPreference)
-final audioPlayerPreferenceProvider = AsyncNotifierProvider<
-    AudioPlayerPreference, AudioPlayerPreferenceState>.internal(
-  AudioPlayerPreference.new,
-  name: r'audioPlayerPreferenceProvider',
+/// See also [PlaybackSleepService].
+@ProviderFor(PlaybackSleepService)
+final playbackSleepServiceProvider =
+    NotifierProvider<PlaybackSleepService, PlaybackSleepState>.internal(
+  PlaybackSleepService.new,
+  name: r'playbackSleepServiceProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
       ? null
-      : _$audioPlayerPreferenceHash,
+      : _$playbackSleepServiceHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
 
-typedef _$AudioPlayerPreference = AsyncNotifier<AudioPlayerPreferenceState>;
+typedef _$PlaybackSleepService = Notifier<PlaybackSleepState>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

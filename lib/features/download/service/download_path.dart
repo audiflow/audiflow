@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:audiflow/features/download/model/downloadable.dart';
 import 'package:audiflow/features/feed/model/model.dart';
-import 'package:audiflow/features/preference/data/app_preference_repository.dart';
+import 'package:audiflow/features/preference/data/preference_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
@@ -75,7 +75,7 @@ class DownloadPathImpl implements DownloadPath {
   @override
   Future<bool> hasStoragePermission() async {
     if (Platform.isIOS ||
-        !ref.read(appPreferenceRepositoryProvider).storeDownloadsSDCard) {
+        !ref.read(preferenceRepositoryProvider).storeDownloadsSDCard) {
       return true;
     } else {
       final permissionStatus = await Permission.storage.request();
@@ -90,7 +90,7 @@ class DownloadPathImpl implements DownloadPath {
 
     if (Platform.isIOS) {
       directory = await getApplicationDocumentsDirectory();
-    } else if (ref.read(appPreferenceRepositoryProvider).storeDownloadsSDCard) {
+    } else if (ref.read(preferenceRepositoryProvider).storeDownloadsSDCard) {
       directory = await _getSDCard();
     } else {
       directory = await getApplicationSupportDirectory();

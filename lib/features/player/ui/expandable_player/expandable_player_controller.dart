@@ -52,6 +52,7 @@ class ExpandablePlayerController extends _$ExpandablePlayerController {
       await _audioPlayerService.loadEpisode(
         episode: episode,
         position: episodeStats?.position ?? Duration.zero,
+        duration: episodeStats?.duration ?? episode.duration ?? Duration.zero,
         autoPlay: true,
       );
     }

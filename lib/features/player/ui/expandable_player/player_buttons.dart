@@ -1,3 +1,7 @@
+import 'package:audiflow/constants/app_sizes.dart';
+import 'package:audiflow/features/player/model/sleep_mode.dart';
+import 'package:audiflow/localization/generated/l10n.dart';
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
@@ -139,4 +143,84 @@ class PlaybackSpeedButton extends StatelessWidget {
       child: Text('${speed}x'),
     );
   }
+}
+
+class SleepModeButton extends StatelessWidget {
+  const SleepModeButton({
+    required this.sleepMode,
+    required this.onSelect,
+    super.key,
+  });
+
+  final SleepMode sleepMode;
+  final ValueChanged<SleepMode> onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return IconButton(
+      onPressed: () async {
+        final value = await _showSleepModeSelector(context, sleepMode);
+        if (value != null) {
+          onSelect(value);
+        }
+      },
+      icon: Icon(
+        Symbols.sleep,
+        color: sleepMode.type == SleepType.none
+            ? theme.dividerColor
+            : theme.colorScheme.primary,
+      ),
+    );
+  }
+}
+
+Future<SleepMode?> _showSleepModeSelector(
+  BuildContext context,
+  SleepMode current,
+) async {
+  final l10n = L10n.of(context);
+  return showModalBottomSheet(
+    context: context,
+    useRootNavigator: true,
+    isScrollControlled: true,
+    builder: (context) {
+      final theme = Theme.of(context);
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              l10n.sleepModeTitle,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            gapH12,
+            ...predefinedSleeps.reversed.mapIndexed((i, sleepMode) {
+              return DecoratedBox(
+                decoration: BoxDecoration(
+                  border: Border(
+                    top: BorderSide(
+                      color: theme.dividerColor,
+                      width: 0.2,
+                    ),
+                  ),
+                ),
+                child: ListTile(
+                  selected: sleepMode == current,
+                  title: Text(sleepMode.getLabel(context)),
+                  visualDensity: const VisualDensity(vertical: -3),
+                  // to compact
+                  leading:
+                      sleepMode == current ? const Icon(Symbols.check) : gapW20,
+                  onTap: () => Navigator.of(context).pop(sleepMode),
+                ),
+              );
+            }),
+            gapH24,
+          ],
+        ),
+      );
+    },
+  );
 }

@@ -1,14 +1,13 @@
 import 'package:audiflow/features/feed/model/model.dart';
 import 'package:audiflow/features/player/model/audio_state.dart';
 import 'package:audiflow/features/player/model/player_phase.dart';
-import 'package:audiflow/features/player/model/sleep.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 export 'package:audiflow/features/feed/model/model.dart';
 export 'package:audiflow/features/player/model/audio_state.dart';
 export 'package:audiflow/features/player/model/player_phase.dart';
-export 'package:audiflow/features/player/model/sleep.dart';
+export 'package:audiflow/features/player/model/sleep_mode.dart';
 
 part 'audio_player_service.freezed.dart';
 part 'audio_player_service.g.dart';
@@ -29,6 +28,7 @@ class AudioPlayerService extends _$AudioPlayerService {
   Future<void> loadEpisode({
     required Episode episode,
     required Duration position,
+    required Duration duration,
     required bool autoPlay,
   }) =>
       throw UnimplementedError();
@@ -53,23 +53,12 @@ class AudioPlayerService extends _$AudioPlayerService {
 
   /// Seek to the specified position within the current episode.
   Future<void> seek({required Duration position}) => throw UnimplementedError();
-  //
-  // /// Call to set the playback speed.
-  // Future<void> setPlaybackSpeed(double speed) => throw UnimplementedError();
-  //
-  // /// Call to toggle trim silence.
-  // Future<void> trimSilence({required bool trim}) => throw UnimplementedError();
-  //
-  // /// Call to toggle trim silence.
-  // Future<void> volumeBoost({required bool boost}) => throw UnimplementedError();
 
   /// Call when the app is about to be suspended.
   Future<void> suspend() => throw UnimplementedError();
 
   /// Call when the app is resumed to re-establish the audio service.
   Future<void> resume() => throw UnimplementedError();
-
-  void sleep(Sleep sleep) => throw UnimplementedError();
 }
 
 @freezed
@@ -77,6 +66,7 @@ class AudioPlayerState with _$AudioPlayerState {
   const factory AudioPlayerState({
     required Episode episode,
     required Duration position,
+    required Duration duration,
     required PlayerPhase phase,
     required AudioState audioState,
     @Default(false) bool interrupted,

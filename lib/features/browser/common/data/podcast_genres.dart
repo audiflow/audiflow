@@ -1,6 +1,6 @@
 import 'package:audiflow/constants/genres.dart';
 import 'package:audiflow/features/preference/data/app_locale.dart';
-import 'package:audiflow/features/preference/data/app_preference_repository.dart';
+import 'package:audiflow/features/preference/data/preference_repository.dart';
 import 'package:collection/collection.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:intl/intl.dart';
@@ -14,7 +14,7 @@ class PodcastGenres extends _$PodcastGenres {
   @override
   PodcastGenresState build() {
     ref.listen(
-        appPreferenceRepositoryProvider
+        preferenceRepositoryProvider
             .select((settings) => settings.searchProvider), (_, __) {
       _refreshGenres();
     });
@@ -25,7 +25,7 @@ class PodcastGenres extends _$PodcastGenres {
   PodcastGenresState _refreshGenres() {
     final locale = ref.read(appLocaleProvider);
     final searchProvider =
-        ref.read(appPreferenceRepositoryProvider).searchProvider;
+        ref.read(preferenceRepositoryProvider).searchProvider;
     var categoryList = '';
     var categories = <String>[];
 
