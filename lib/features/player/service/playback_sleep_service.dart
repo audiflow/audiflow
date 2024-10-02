@@ -13,16 +13,35 @@ part 'playback_sleep_service.g.dart';
 class PlaybackSleepService extends _$PlaybackSleepService {
   Timer? _timer;
 
+  Preference get _preference => ref.read(preferenceRepositoryProvider);
+
+  PreferenceRepository get _preferenceRepositoryProvider =>
+      ref.read(preferenceRepositoryProvider.notifier);
+
+  AudioPlayerService get _audioPlayerService =>
+      ref.read(audioPlayerServiceProvider.notifier);
+
+  AudioPlayerState? get _audioPlayerState =>
+      ref.read(audioPlayerServiceProvider);
+
   @override
   PlaybackSleepState build() {
     _listen();
-    return PlaybackSleepState(
-      sleepMode: ref.read(preferenceRepositoryProvider).playbackSleep,
-    );
+    return _newState(_preference.playbackSleep);
   }
 
   void setSleepMode(SleepMode sleepMode) {
-    state = state.copyWith(
+    state = _newState(sleepMode);
+    _stopTimer();
+    _mayStartTimer();
+  }
+
+  void clear() {
+    setSleepMode(SleepMode.none);
+  }
+
+  PlaybackSleepState _newState(SleepMode sleepMode) {
+    return PlaybackSleepState(
       sleepMode: sleepMode,
       startedTime: sleepMode.type == SleepType.none ? null : DateTime.now(),
       remaining: sleepMode.type == SleepType.none
@@ -30,16 +49,7 @@ class PlaybackSleepService extends _$PlaybackSleepService {
           : sleepMode.type == SleepType.episode
               ? _getEpisodeRemaining()
               : sleepMode.duration,
-      fulfilled: false,
     );
-    _stopTimer();
-    if (sleepMode.type == SleepType.time) {
-      _startTimer();
-    }
-  }
-
-  void clear() {
-    setSleepMode(SleepMode.none);
   }
 
   void _listen() {
@@ -49,7 +59,7 @@ class PlaybackSleepService extends _$PlaybackSleepService {
             case AudioPlayerActionEvent(action: final action)) {
           switch (action) {
             case AudioPlayerAction.play:
-              break;
+              _mayStartTimer();
             case AudioPlayerAction.completed:
               if (state.sleepMode.type == SleepType.episode) {
                 _pausePlayback();
@@ -68,11 +78,16 @@ class PlaybackSleepService extends _$PlaybackSleepService {
       });
   }
 
-  void _startTimer() {
-    _timer = Timer.periodic(
-      const Duration(milliseconds: 500),
-      _onTimer,
-    );
+  void _mayStartTimer() {
+    if (_timer == null &&
+        state.sleepMode.type == SleepType.time &&
+        _audioPlayerState?.phase == PlayerPhase.play) {
+      state = _newState(state.sleepMode);
+      _timer = Timer.periodic(
+        const Duration(milliseconds: 500),
+        _onTimer,
+      );
+    }
   }
 
   void _stopTimer() {
@@ -97,11 +112,11 @@ class PlaybackSleepService extends _$PlaybackSleepService {
   }
 
   void _pausePlayback() {
-    ref.read(audioPlayerServiceProvider.notifier).pause();
+    _audioPlayerService.pause();
   }
 
   Duration? _getEpisodeRemaining() {
-    final audioPlayerState = ref.read(audioPlayerServiceProvider);
+    final audioPlayerState = _audioPlayerState;
     if (audioPlayerState == null) {
       return null;
     }

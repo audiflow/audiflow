@@ -7,7 +7,7 @@ part of 'playback_sleep_service.dart';
 // **************************************************************************
 
 String _$playbackSleepServiceHash() =>
-    r'35769f4e560de9db9c5d9383b22c10e2b18b0d09';
+    r'46ce23546c6019795069a832497d5bbe7aaab46a';
 
 /// See also [PlaybackSleepService].
 @ProviderFor(PlaybackSleepService)
