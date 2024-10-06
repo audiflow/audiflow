@@ -1151,7 +1151,7 @@ packages:
     description:
       path: "."
       ref: develop
-      resolved-ref: c21fa842e6264bba20113fc24de7032d07e47b37
+      resolved-ref: "756ead50b6166b254300a16b474198631e3cd563"
       url: "git@github.com:reedom/podcast_feed.git"
     source: git
     version: "0.0.1"
