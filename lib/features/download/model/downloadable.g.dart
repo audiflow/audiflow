@@ -138,7 +138,7 @@ const DownloadableSchema = CollectionSchema(
   getId: _downloadableGetId,
   getLinks: _downloadableGetLinks,
   attach: _downloadableAttach,
-  version: '3.1.7',
+  version: '3.1.8',
 );
 
 int _downloadableEstimateSize(

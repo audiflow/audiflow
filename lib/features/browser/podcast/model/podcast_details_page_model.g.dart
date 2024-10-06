@@ -74,7 +74,7 @@ const PodcastDetailsPageModelSchema = CollectionSchema(
   getId: _podcastDetailsPageModelGetId,
   getLinks: _podcastDetailsPageModelGetLinks,
   attach: _podcastDetailsPageModelAttach,
-  version: '3.1.7',
+  version: '3.1.8',
 );
 
 int _podcastDetailsPageModelEstimateSize(

@@ -39,7 +39,7 @@ const LockedSchema = CollectionSchema(
   getId: _lockedGetId,
   getLinks: _lockedGetLinks,
   attach: _lockedAttach,
-  version: '3.1.7',
+  version: '3.1.8',
 );
 
 int _lockedEstimateSize(

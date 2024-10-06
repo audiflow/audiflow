@@ -132,7 +132,7 @@ const SeasonSchema = CollectionSchema(
   getId: _seasonGetId,
   getLinks: _seasonGetLinks,
   attach: _seasonAttach,
-  version: '3.1.7',
+  version: '3.1.8',
 );
 
 int _seasonEstimateSize(
@@ -2157,7 +2157,7 @@ const SeasonStatsSchema = CollectionSchema(
   getId: _seasonStatsGetId,
   getLinks: _seasonStatsGetLinks,
   attach: _seasonStatsAttach,
-  version: '3.1.7',
+  version: '3.1.8',
 );
 
 int _seasonStatsEstimateSize(

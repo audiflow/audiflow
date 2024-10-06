@@ -34,7 +34,7 @@ const QueueSchema = CollectionSchema(
   getId: _queueGetId,
   getLinks: _queueGetLinks,
   attach: _queueAttach,
-  version: '3.1.7',
+  version: '3.1.8',
 );
 
 int _queueEstimateSize(

@@ -34,7 +34,7 @@ const PlayingEpisodeSchema = CollectionSchema(
   getId: _playingEpisodeGetId,
   getLinks: _playingEpisodeGetLinks,
   attach: _playingEpisodeAttach,
-  version: '3.1.7',
+  version: '3.1.8',
 );
 
 int _playingEpisodeEstimateSize(

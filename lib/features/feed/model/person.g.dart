@@ -54,7 +54,7 @@ const PersonSchema = CollectionSchema(
   getId: _personGetId,
   getLinks: _personGetLinks,
   attach: _personAttach,
-  version: '3.1.7',
+  version: '3.1.8',
 );
 
 int _personEstimateSize(

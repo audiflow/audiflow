@@ -51,7 +51,7 @@ const ValueSchema = CollectionSchema(
   getId: _valueGetId,
   getLinks: _valueGetLinks,
   attach: _valueAttach,
-  version: '3.1.7',
+  version: '3.1.8',
 );
 
 int _valueEstimateSize(
@@ -857,7 +857,7 @@ const ValueRecipientSchema = CollectionSchema(
   getId: _valueRecipientGetId,
   getLinks: _valueRecipientGetLinks,
   attach: _valueRecipientAttach,
-  version: '3.1.7',
+  version: '3.1.8',
 );
 
 int _valueRecipientEstimateSize(
