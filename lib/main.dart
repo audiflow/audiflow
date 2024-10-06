@@ -43,9 +43,9 @@ import 'package:audiflow/features/feed/data/rss_repository.dart';
 import 'package:audiflow/features/player/data/isar_player_state_repository.dart';
 import 'package:audiflow/features/player/data/player_state_repository.dart';
 import 'package:audiflow/features/player/service/audio_player_service.dart';
-import 'package:audiflow/features/player/service/default_audio_player_service.dart';
-import 'package:audiflow/features/preference/data/app_preference_repository.dart';
-import 'package:audiflow/features/preference/data/isar_app_preference_repository.dart';
+import 'package:audiflow/features/player/service/default_audio_player_service/default_audio_player_service.dart';
+import 'package:audiflow/features/preference/data/isar_preference_repository.dart';
+import 'package:audiflow/features/preference/data/preference_repository.dart';
 import 'package:audiflow/features/queue/data/isar_queue_repository.dart';
 import 'package:audiflow/features/queue/data/queue_repository.dart';
 import 'package:audiflow/features/queue/service/audio_queue_service.dart';
@@ -86,7 +86,7 @@ void main() async {
   final container = ProviderContainer(
     overrides: [
       // foundations
-      appPreferenceRepositoryProvider
+      preferenceRepositoryProvider
           .overrideWith(IsarAppPreferenceRepository.new),
       apiCacheDirProvider.overrideWithValue(tempDir.path),
       appDocDirProvider.overrideWithValue(appDocDir.path),
