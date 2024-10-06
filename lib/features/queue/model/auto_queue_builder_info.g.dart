@@ -41,7 +41,7 @@ const AutoQueueBuilderInfoSchema = CollectionSchema(
   getId: _autoQueueBuilderInfoGetId,
   getLinks: _autoQueueBuilderInfoGetLinks,
   attach: _autoQueueBuilderInfoAttach,
-  version: '3.1.7',
+  version: '3.1.8',
 );
 
 int _autoQueueBuilderInfoEstimateSize(

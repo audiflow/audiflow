@@ -168,7 +168,7 @@ const PodcastSchema = CollectionSchema(
   getId: _podcastGetId,
   getLinks: _podcastGetLinks,
   attach: _podcastAttach,
-  version: '3.1.7',
+  version: '3.1.8',
 );
 
 int _podcastEstimateSize(
@@ -3482,7 +3482,7 @@ const PodcastStatsSchema = CollectionSchema(
   getId: _podcastStatsGetId,
   getLinks: _podcastStatsGetLinks,
   attach: _podcastStatsAttach,
-  version: '3.1.7',
+  version: '3.1.8',
 );
 
 int _podcastStatsEstimateSize(
@@ -4601,7 +4601,7 @@ const FeedUrlSchema = CollectionSchema(
   getId: _feedUrlGetId,
   getLinks: _feedUrlGetLinks,
   attach: _feedUrlAttach,
-  version: '3.1.7',
+  version: '3.1.8',
 );
 
 int _feedUrlEstimateSize(

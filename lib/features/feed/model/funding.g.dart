@@ -39,7 +39,7 @@ const FundingSchema = CollectionSchema(
   getId: _fundingGetId,
   getLinks: _fundingGetLinks,
   attach: _fundingAttach,
-  version: '3.1.7',
+  version: '3.1.8',
 );
 
 int _fundingEstimateSize(
