@@ -56,6 +56,11 @@ icon: ## Generate app icons.
 icon:
 	@flutter pub run flutter_launcher_icons
 
+.PHONY: splash
+splash: ## Generate app splash screen.
+splash:
+	@flutter pub run flutter_native_splash:create
+
 .PHONY: build-aab
 build-aab: ## Build appbundle
 build-aab:
