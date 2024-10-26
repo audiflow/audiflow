@@ -1,0 +1,27 @@
+flavors:
+  dev:
+    app:
+      name: audiflow dev
+    android:
+      applicationId: com.reedom.audiflowapp.dev
+    ios:
+      bundleId: com.reedom.audiflow.dev
+    ide: idea
+
+  stg:
+    app:
+      name: audiflow stg
+    android:
+      applicationId: com.reedom.audiflowapp.stg
+    ios:
+      bundleId: com.reedom.audiflow.stg
+    ide: idea
+
+  prod:
+    app:
+      name: audiflow
+    android:
+      applicationId: com.reedom.audiflowapp
+    ios:
+      bundleId: com.reedom.audiflow
+    ide: idea
