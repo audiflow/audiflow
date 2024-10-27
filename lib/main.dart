@@ -73,7 +73,9 @@ FutureOr<void> runMainApp({required FirebaseOptions firebaseOptions}) async {
     (options) {
       options
         ..dsn = Env.sentryDsn
-        ..environment = getFlavor().name;
+        ..environment = getFlavor().name
+        ..considerInAppFramesByDefault = false
+        ..addInAppInclude('audiflow');
     },
   );
   await Firebase.initializeApp(options: firebaseOptions);
