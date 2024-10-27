@@ -8,6 +8,8 @@ import 'package:audiflow/common/data/connectivity.dart'
 import 'package:audiflow/common/data/isar_factory.dart';
 import 'package:audiflow/common/data/isar_repository.dart';
 import 'package:audiflow/common/data/shared_preferences.dart';
+import 'package:audiflow/constants/env.dart';
+import 'package:audiflow/constants/flavors.dart';
 import 'package:audiflow/exceptions/async_error_logger.dart';
 import 'package:audiflow/exceptions/error_logger.dart';
 import 'package:audiflow/features/bootstrap/ui/audiflow_app.dart';
@@ -61,11 +63,19 @@ import 'package:flutter/services.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 FutureOr<void> runMainApp({required FirebaseOptions firebaseOptions}) async {
   WidgetsFlutterBinding.ensureInitialized();
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+  await SentryFlutter.init(
+    (options) {
+      options
+        ..dsn = Env.sentryDsn
+        ..environment = getFlavor().name;
+    },
+  );
   await Firebase.initializeApp(options: firebaseOptions);
 
   final buildConfig = BuildConfig.fromPackageInfo(

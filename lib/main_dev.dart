@@ -1,5 +1,5 @@
 import 'firebase_options_dev.dart';
-import 'flavors.dart';
+import 'constants/flavors.dart';
 import 'main.dart' as runner;
 
 Future<void> main() async {

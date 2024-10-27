@@ -1,5 +1,5 @@
 import 'firebase_options_stg.dart';
-import 'flavors.dart';
+import 'constants/flavors.dart';
 
 import 'main.dart' as runner;
 
