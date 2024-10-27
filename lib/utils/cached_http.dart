@@ -3,6 +3,7 @@ import 'package:audiflow/utils/logger.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
 import 'package:dio_cache_interceptor_file_store/dio_cache_interceptor_file_store.dart';
+import 'package:sentry_dio/sentry_dio.dart';
 
 class CachedHttp {
   CachedHttp(String cacheDir) {
@@ -33,6 +34,7 @@ class CachedHttp {
     )
       ..interceptors.add(DioCacheInterceptor(options: cacheOptions))
       ..interceptors.add(LogInterceptor());
+    dio.addSentry();
   }
 
   late final Dio dio;
@@ -45,8 +47,8 @@ class CachedHttp {
   }) async {
     for (var i = 1; i <= 3; ++i) {
       try {
-        final policy = loadFromCache ? CachePolicy.request : CachePolicy
-            .refresh;
+        final policy =
+            loadFromCache ? CachePolicy.request : CachePolicy.refresh;
         final options = cacheOptions
             .copyWith(policy: policy)
             .toOptions()
