@@ -5,6 +5,8 @@ enum Flavor {
 }
 
 class F {
+  F._();
+
   static Flavor? appFlavor;
 
   static String get name => appFlavor?.name ?? '';
@@ -17,9 +19,8 @@ class F {
         return 'audiflow stg';
       case Flavor.prod:
         return 'audiflow';
-      default:
+      case null:
         return 'title';
     }
   }
-
 }
