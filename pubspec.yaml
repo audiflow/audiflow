@@ -27,6 +27,7 @@ dependencies:
   expand_widget: ^3.1.1
   extended_image: ^8.3.1
   file_picker: ^8.0.7
+  firebase_core: ^3.3.0
   flutter:
     sdk: flutter
   flutter_dialogs: ^3.0.0
