@@ -54,7 +54,8 @@ format:
 .PHONY: icon
 icon: ## Generate app icons.
 icon:
-	@flutter pub run flutter_launcher_icons
+	@dart run flutter_flavorizr -p android:icons -p ios:icons
+	# @flutter pub run flutter_launcher_icons
 
 .PHONY: splash
 splash: ## Generate app splash screen.

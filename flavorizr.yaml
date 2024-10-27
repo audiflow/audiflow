@@ -1,0 +1,42 @@
+flavors:
+  dev:
+    app:
+      name: audiflow dev
+    android:
+      applicationId: com.reedom.audiflowapp.dev
+      icon: "assets/icons/dev/app-icon-android.png"
+      adaptiveIcon:
+        foreground: "assets/icons/dev/app-icon-foreground.png"
+        background: "assets/icons/prod/app-icon-background.png"
+    ios:
+      bundleId: com.reedom.audiflow.dev
+      icon: "assets/icons/dev/app-icon.png"
+    ide: idea
+
+  stg:
+    app:
+      name: audiflow stg
+    android:
+      applicationId: com.reedom.audiflowapp.stg
+      icon: "assets/icons/stg/app-icon-android.png"
+      adaptiveIcon:
+        foreground: "assets/icons/stg/app-icon-foreground.png"
+        background: "assets/icons/prod/app-icon-background.png"
+    ios:
+      bundleId: com.reedom.audiflow.stg
+      icon: "assets/icons/stg/app-icon.png"
+    ide: idea
+
+  prod:
+    app:
+      name: audiflow
+    android:
+      applicationId: com.reedom.audiflowapp
+      icon: "assets/icons/prod/app-icon-android.png"
+      adaptiveIcon:
+        foreground: "assets/icons/prod/app-icon-foreground.png"
+        background: "assets/icons/prod/app-icon-background.png"
+    ios:
+      bundleId: com.reedom.audiflow
+      icon: "assets/icons/prod/app-icon.png"
+    ide: idea
