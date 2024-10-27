@@ -12,6 +12,7 @@ import 'package:audiflow/routing/app_bottom_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 part 'app_router.g.dart';
 
@@ -34,6 +35,9 @@ class AppRouter extends _$AppRouter {
       navigatorKey: parentNavigatorKey,
       initialLocation: '/chart',
       routes: _routes,
+      observers: [
+        SentryNavigatorObserver(),
+      ],
     );
   }
 
