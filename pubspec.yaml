@@ -82,6 +82,7 @@ dependencies:
   scrolls_to_top:
     git:
       url: git@github.com:reedom/scrolls_to_top.git
+  sentry_flutter: ^8.9.0
   share_plus: ^9.0.0
   shared_preferences: ^2.3.2
   sliver_tools: ^0.2.12
