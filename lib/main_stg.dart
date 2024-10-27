@@ -1,8 +1,9 @@
+import 'firebase_options_stg.dart';
 import 'flavors.dart';
 
 import 'main.dart' as runner;
 
 Future<void> main() async {
   F.appFlavor = Flavor.stg;
-  await runner.main();
+  await runner.runMainApp(firebaseOptions: DefaultFirebaseOptions.currentPlatform);
 }

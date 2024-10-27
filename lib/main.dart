@@ -55,6 +55,7 @@ import 'package:audiflow/features/queue/service/queue_controller.dart';
 import 'package:audiflow/localization/string_hardcoded.dart';
 import 'package:audiflow/utils/logger.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -62,9 +63,10 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-FutureOr<void> main() async {
+FutureOr<void> runMainApp({required FirebaseOptions firebaseOptions}) async {
   WidgetsFlutterBinding.ensureInitialized();
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+  await Firebase.initializeApp(options: firebaseOptions);
 
   final buildConfig = BuildConfig.fromPackageInfo(
     packageInfo: await PackageInfo.fromPlatform(),
