@@ -8,8 +8,12 @@ echo cd $CI_PRIMARY_REPOSITORY_PATH
 cd $CI_PRIMARY_REPOSITORY_PATH # change working directory to the root of your cloned repo.
 
 # Install Flutter using git.
-git clone https://github.com/flutter/flutter.git --depth 1 -b stable $HOME/flutter
+FLUTTER_VERSION=$(cat .fvmrc | grep "flutter" | cut -d '"' -f 4)
+git clone https://github.com/flutter/flutter.git --depth 1 -b $FLUTTER_VERSION $HOME/flutter
+
 export PATH="$PATH:$HOME/flutter/bin"
+
+flutter --version
 
 # Install Flutter artifacts for iOS (--ios), or macOS (--macos) platforms.
 flutter precache --ios
