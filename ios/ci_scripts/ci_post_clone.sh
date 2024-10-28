@@ -10,22 +10,18 @@ cd $CI_PRIMARY_REPOSITORY_PATH # change working directory to the root of your cl
 # Install Flutter using git.
 FLUTTER_VERSION=$(cat .fvmrc | grep "flutter" | cut -d '"' -f 4)
 git clone https://github.com/flutter/flutter.git --depth 1 -b $FLUTTER_VERSION $HOME/flutter
-
 export PATH="$PATH:$HOME/flutter/bin"
 
+echo "$FIREBASE_JSON" > firebase.json
+
 flutter --version
-
-# Install Flutter artifacts for iOS (--ios), or macOS (--macos) platforms.
 flutter precache --ios
-
-# Install Flutter dependencies.
 flutter pub get
+flutter build ios --config-only --flavor=stg --dart-define-from-file .env.stg
 
-# Install CocoaPods using Homebrew.
+# CocoaPods
 HOMEBREW_NO_AUTO_UPDATE=1 # disable homebrew's automatic updates.
 brew install cocoapods
-
-# Install CocoaPods dependencies.
-cd ios && pod install # run `pod install` in the `ios` directory.
+cd ios && pod install
 
 exit 0
