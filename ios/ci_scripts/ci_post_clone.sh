@@ -17,11 +17,13 @@ echo "$FIREBASE_JSON" > firebase.json
 flutter --version
 flutter precache --ios
 flutter pub get
-flutter build ios --config-only --flavor=$FLAVOR --dart-define=SENTRY_DSN=$SENTRY_DSN
 
 # CocoaPods
 HOMEBREW_NO_AUTO_UPDATE=1 # disable homebrew's automatic updates.
 brew install cocoapods
-cd ios && pod install
+
+flutter build ios --config-only --flavor=$FLAVOR --dart-define=SENTRY_DSN=$SENTRY_DSN
+
+# cd ios && pod install
 
 exit 0
