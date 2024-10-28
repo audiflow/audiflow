@@ -49,7 +49,6 @@ libisar.dylib
 .fvm/
 
 # Ignore Firebase configuration files
-lib/firebase_options*.dart
 ios/Runner/GoogleService-Info.plist
 ios/flavors/*/GoogleService-Info.plist
 macos/Runner/GoogleService-Info.plist
