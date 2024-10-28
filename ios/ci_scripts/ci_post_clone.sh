@@ -19,8 +19,8 @@ flutter --version
 flutter precache --ios
 flutter pub get
 
-flutter build ios --config-only --flavor=$FLAVOR --dart-define=SENTRY_DSN=$SENTRY_DSN
-
+echo flutter build appbundle --config-only --flavor $FLAVOR --dart-define-from-file .env.stg --release
+flutter build appbundle --config-only --flavor $FLAVOR --dart-define-from-file .env.stg --release
 # cd ios && pod install
 
 exit 0
