@@ -18,7 +18,8 @@ flutter --version
 flutter precache --ios
 flutter pub get
 
-# CocoaPods
+flutterfire-config.sh stg
+
 HOMEBREW_NO_AUTO_UPDATE=1 # disable homebrew's automatic updates.
 brew install cocoapods
 
