@@ -77,13 +77,13 @@ ios-dev:
 ios-stg: ## Build iOS ipa for staging
 ios-stg:
 	@flutter build ipa --flavor stg --dart-define-from-file .env.stg \
-	--source-maps
+ 	--release
 
 .PHONY: ios-prod
 ios-prod: ## Build iOS ipa for production
 ios-prod:
 	@flutter build ipa --flavor prod --dart-define-from-file .env.prod \
-	--source-maps
+ 	--release
 
 .PHONY: and-dev
 and-dev: ## Build Android App Bundle for development
@@ -95,10 +95,10 @@ and-dev:
 and-stg: ## Build Android App Bundle for staging
 and-stg:
 	@flutter build appbundle --flavor stg --dart-define-from-file .env.stg \
-	--source-maps
+	--release
 
 .PHONY: and-prod
 and-prod: ## Build Android App Bundle for production
 and-prod:
 	@flutter build appbundle --flavor prod --dart-define-from-file .env.prod \
-	--source-maps
+	--release
