@@ -19,7 +19,15 @@ flutter --version
 flutter precache --ios
 flutter pub get
 
-flutter build ios --config-only --flavor $FLAVOR --dart-define-from-file .env.stg --release
+flutter build ios --config-only --flavor $FLAVOR \
+  --dart-define=SENTRY_DSN=$SENTRY_DSN \
+  --dart-define=FIREBASE_APP_ID=$FIREBASE_APP_ID \
+  --dart-define=FIREBASE_MSG_SENDER_ID=$FIREBASE_MSG_SENDER_ID \
+  --dart-define=FIREBASE_PROJECT_ID=$FIREBASE_PROJECT_ID \
+  --dart-define=FIREBASE_STORAGE_BUCKET=$FIREBASE_STORAGE_BUCKET \
+  --dart-define=FIREBASE_BUNDLE_ID_IOS=$FIREBASE_BUNDLE_ID_IOS \
+  --dart-define=FIREBASE_API_KEY_IOS=$FIREBASE_API_KEY_IOS \
+  --dart-define=FIREBASE_API_KEY_ANDROID=$FIREBASE_API_KEY_ANDROID
 
 cd ios && pod install
 
