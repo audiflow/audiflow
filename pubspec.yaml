@@ -112,6 +112,7 @@ dev_dependencies:
   pedantic_mono: ^1.27.0
   riverpod_generator: ^2.4.2
   riverpod_lint: ^2.3.12
+  sentry_dart_plugin: ^2.1.0
 
 dependency_overrides:
   # Override layout grid to fix dependency issue with flutter_html_table
@@ -160,3 +161,14 @@ flutter:
     - family: MontserratBold
       fonts:
         - asset: assets/fonts/Montserrat-Bold.otf
+
+sentry:
+  upload_debug_symbols: true
+  upload_source_maps: true
+  upload_sources: true
+  project: audiflow
+  org: reedom
+  wait_for_processing: true
+  log_level: trace # possible values: trace, debug, info, warn, error
+  commits: auto
+  ignore_missing: true
