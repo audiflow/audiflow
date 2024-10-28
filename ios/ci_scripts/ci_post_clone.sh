@@ -19,8 +19,8 @@ flutter --version
 flutter precache --ios
 flutter pub get
 
-echo flutter build appbundle --config-only --flavor $FLAVOR --dart-define-from-file .env.stg --release
-flutter build build appbundle --config-only --flavor $FLAVOR --dart-define-from-file .env.stg --release
-# cd ios && pod install
+flutter build ios --config-only --flavor $FLAVOR --dart-define-from-file .env.stg --release
+
+cd ios && pod install
 
 exit 0
