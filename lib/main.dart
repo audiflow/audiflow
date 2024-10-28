@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:ui';
 
 import 'package:audiflow/common/data/app_path_repository.dart';
 import 'package:audiflow/common/data/connectivity.dart'
@@ -54,10 +53,12 @@ import 'package:audiflow/features/queue/data/queue_repository.dart';
 import 'package:audiflow/features/queue/service/audio_queue_service.dart';
 import 'package:audiflow/features/queue/service/default_queue_controller.dart';
 import 'package:audiflow/features/queue/service/queue_controller.dart';
+import 'package:audiflow/firebase_options.dart';
 import 'package:audiflow/localization/string_hardcoded.dart';
 import 'package:audiflow/utils/logger.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -66,7 +67,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-FutureOr<void> runMainApp({required FirebaseOptions firebaseOptions}) async {
+FutureOr<void> runMainApp() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   await SentryFlutter.init(
@@ -78,13 +79,15 @@ FutureOr<void> runMainApp({required FirebaseOptions firebaseOptions}) async {
         ..addInAppInclude('audiflow');
     },
   );
-  await Firebase.initializeApp(options: firebaseOptions);
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   final buildConfig = BuildConfig.fromPackageInfo(
     packageInfo: await PackageInfo.fromPlatform(),
     appFlavor: const String.fromEnvironment('flavor'),
   );
-  logger.t(buildConfig);
+  if (!kReleaseMode) {
+    logger.t(buildConfig);
+  }
 
   final v = await Future.wait([
     Connectivity().checkConnectivity(),
