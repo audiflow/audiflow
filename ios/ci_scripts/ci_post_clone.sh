@@ -12,17 +12,12 @@ FLUTTER_VERSION=$(cat .fvmrc | grep "flutter" | cut -d '"' -f 4)
 git clone https://github.com/flutter/flutter.git --depth 1 -b $FLUTTER_VERSION $HOME/flutter
 export PATH="$PATH:$HOME/flutter/bin:$HOME/.pub-cache/bin"
 
-echo "$FIREBASE_JSON" > firebase.json
-
 HOMEBREW_NO_AUTO_UPDATE=1 # disable homebrew's automatic updates.
 brew install cocoapods
 
 flutter --version
 flutter precache --ios
 flutter pub get
-
-dart pub global activate flutterfire_cli
-flutterfire-config.sh stg
 
 flutter build ios --config-only --flavor=$FLAVOR --dart-define=SENTRY_DSN=$SENTRY_DSN
 
