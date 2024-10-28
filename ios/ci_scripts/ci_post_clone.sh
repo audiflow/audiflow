@@ -18,6 +18,7 @@ flutter --version
 flutter precache --ios
 flutter pub get
 
+npm install -g firebase-tools
 dart pub global activate flutterfire_cli
 flutterfire-config.sh stg
 
