@@ -14,6 +14,9 @@ export PATH="$PATH:$HOME/flutter/bin"
 
 echo "$FIREBASE_JSON" > firebase.json
 
+HOMEBREW_NO_AUTO_UPDATE=1 # disable homebrew's automatic updates.
+brew install cocoapods node
+
 flutter --version
 flutter precache --ios
 flutter pub get
@@ -21,9 +24,6 @@ flutter pub get
 npm install -g firebase-tools
 dart pub global activate flutterfire_cli
 flutterfire-config.sh stg
-
-HOMEBREW_NO_AUTO_UPDATE=1 # disable homebrew's automatic updates.
-brew install cocoapods
 
 flutter build ios --config-only --flavor=$FLAVOR --dart-define=SENTRY_DSN=$SENTRY_DSN
 
