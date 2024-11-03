@@ -57,6 +57,7 @@ dependencies:
   logger: ^2.4.0
   material_symbols_icons: ^4.2785.1
   meta: ^1.16.0
+  mixpanel_flutter: 2.3.3
   mp3_info: ^0.2.1
   nanoid: ^1.0.0
   package_info_plus: ^8.0.2
