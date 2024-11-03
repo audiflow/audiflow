@@ -6,6 +6,7 @@ import 'package:audiflow/features/browser/podcast/model/podcast_details_page_mod
 import 'package:audiflow/features/browser/season/model/season.dart';
 import 'package:audiflow/features/download/data/download_repository.dart';
 import 'package:audiflow/features/download/model/downloadable.dart';
+import 'package:audiflow/features/download/service/download_service.dart';
 import 'package:audiflow/features/feed/data/episode_repository.dart';
 import 'package:audiflow/features/player/service/audio_player_service.dart';
 import 'package:audiflow/features/queue/service/audio_queue_service.dart';
@@ -32,6 +33,8 @@ class SeasonEpisodesPageController extends _$SeasonEpisodesPageController {
 
   DownloadRepository get _downloadRepository =>
       ref.read(downloadRepositoryProvider);
+
+  DownloadService get _downloadService => ref.read(downloadServiceProvider);
 
   AudioPlayerState? get _audioPlayerState =>
       ref.read(audioPlayerServiceProvider);
@@ -191,6 +194,16 @@ class SeasonEpisodesPageController extends _$SeasonEpisodesPageController {
         queueingEpisodeIds: episodes.slice(i + 1).map((e) => e.id),
       );
     }
+  }
+
+  Future<void> downloadAllEpisodes() async {
+    final episodes = state.requireValue.episodes;
+    await _downloadService.downloadEpisodes(episodes);
+  }
+
+  Future<void> downloadUnplayedEpisodes() async {
+    final episodes = state.requireValue.episodes;
+    await _downloadService.downloadEpisodes(episodes, unplayedOnly: true);
   }
 }
 

@@ -47,7 +47,6 @@ class SeasonEpisodesPage extends HookConsumerWidget {
             );
           },
           child: Scaffold(
-            // backgroundColor: Theme.of(context).scaffoldBackgroundColor,
             body: RefreshIndicator(
               displacement: 60,
               onRefresh: () async {
