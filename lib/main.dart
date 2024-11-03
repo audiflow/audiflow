@@ -42,6 +42,7 @@ import 'package:audiflow/features/feed/data/isar_rss_repository.dart';
 import 'package:audiflow/features/feed/data/podcast_repository.dart';
 import 'package:audiflow/features/feed/data/podcast_repository_change_handler.dart';
 import 'package:audiflow/features/feed/data/rss_repository.dart';
+import 'package:audiflow/features/monitoring/mixpanel_analytics_client.dart';
 import 'package:audiflow/features/player/data/isar_player_state_repository.dart';
 import 'package:audiflow/features/player/data/player_state_repository.dart';
 import 'package:audiflow/features/player/service/audio_player_service.dart';
@@ -62,6 +63,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:mixpanel_flutter/mixpanel_flutter.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
@@ -94,13 +96,19 @@ FutureOr<void> runMainApp() async {
     SharedPreferences.getInstance(),
     getTemporaryDirectory(),
     getApplicationDocumentsDirectory(),
+    Mixpanel.init(
+      Env.mixpanelProjectToken,
+      trackAutomaticEvents: true,
+    ),
   ]);
   final connectivity = v[0] as List<ConnectivityResult>;
   final preferences = v[1] as SharedPreferences;
   final tempDir = v[2] as Directory;
   final appDocDir = v[3] as Directory;
+  final mixpanel = v[4] as Mixpanel;
 
   final isar = await IsarFactory.create(appDocDir.path);
+
   final container = ProviderContainer(
     overrides: [
       // foundations
@@ -167,6 +175,9 @@ FutureOr<void> runMainApp() async {
           IsarPageModelsRepository(isar),
         ),
       ),
+      // analytics
+      mixpanelAnalyticsClientProvider
+          .overrideWithValue(MixpanelAnalyticsClient(mixpanel)),
     ],
     observers: [AsyncErrorLogger()],
   );
@@ -186,13 +197,19 @@ FutureOr<void> runMainApp() async {
 
 void registerErrorHandlers(ErrorLogger errorLogger) {
   // * Show some error UI if any uncaught exception happens
+  final originalOnError = FlutterError.onError;
   FlutterError.onError = (FlutterErrorDetails details) {
     FlutterError.presentError(details);
     errorLogger.logError(details.exception, details.stack);
+    originalOnError?.call(details);
   };
+
   // * Handle errors from the underlying platform/OS
+  final originalOnErrorFromPlatformDispatcher =
+      PlatformDispatcher.instance.onError;
   PlatformDispatcher.instance.onError = (Object error, StackTrace stack) {
     errorLogger.logError(error, stack);
+    originalOnErrorFromPlatformDispatcher?.call(error, stack);
     return true;
   };
   // * Show some error UI when any widget in the app fails to build
