@@ -24,4 +24,7 @@ class Env {
 
   static String get firebaseBundleId =>
       const String.fromEnvironment('FIREBASE_BUNDLE_ID_IOS');
+
+  static String get mixpanelProjectToken =>
+      const String.fromEnvironment('MIXPANEL_PROJECT_TOKEN');
 }
