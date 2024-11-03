@@ -110,16 +110,16 @@ class AppBottomNavigationBar extends HookConsumerWidget {
           selectedFontSize: 12,
           items: [
             BottomNavigationBarItem(
+              icon: const Icon(Symbols.video_library),
+              label: l10n.library,
+            ),
+            BottomNavigationBarItem(
               icon: const Icon(Symbols.home),
               label: l10n.home,
             ),
             BottomNavigationBarItem(
               icon: const Icon(Symbols.search),
               label: l10n.search,
-            ),
-            BottomNavigationBarItem(
-              icon: const Icon(Symbols.video_library),
-              label: l10n.library,
             ),
           ],
         ),
