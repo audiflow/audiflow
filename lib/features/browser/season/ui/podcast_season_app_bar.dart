@@ -1,5 +1,6 @@
 import 'package:audiflow/features/browser/podcast/ui/podcast_page_header_image.dart';
 import 'package:audiflow/features/browser/season/model/season.dart';
+import 'package:audiflow/features/browser/season/ui/season_episodes_page_controller.dart';
 import 'package:audiflow/localization/generated/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -20,17 +21,18 @@ class PodcastSeasonAppBar extends ConsumerWidget {
         L10n.of(context).downloadAllEpisodes,
         Icons.download,
         onSelected: () {
-          // ref.read(downloadServiceProvider)
-          // .downloadEpisodes(season.episodes);
+          ref
+              .read(seasonEpisodesPageControllerProvider(season).notifier)
+              .downloadAllEpisodes();
         },
       ),
       _MenuItem(
         L10n.of(context).downloadUnplayedEpisodes,
         Icons.download,
         onSelected: () {
-          // ref
-          //     .read(downloadServiceProvider)
-          //     .downloadEpisodes(season.episodes, unplayedOnly: true);
+          ref
+              .read(seasonEpisodesPageControllerProvider(season).notifier)
+              .downloadUnplayedEpisodes();
         },
       ),
     ];
