@@ -107,6 +107,12 @@ class AppBottomNavigationBar extends HookConsumerWidget {
               initialLocation: index == navigationShell.currentIndex,
             );
           },
+          // showSelectedLabels: false,
+          selectedItemColor: theme.colorScheme.primary,
+          selectedIconTheme: theme.iconTheme.copyWith(
+            size: 32,
+            color: theme.colorScheme.primary,
+          ),
           selectedFontSize: 12,
           items: [
             BottomNavigationBarItem(
