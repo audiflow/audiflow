@@ -47,6 +47,9 @@ class L10nEn extends L10n {
   String get latestEpisodes => 'Latest Episodes';
 
   @override
+  String get downloadedEpisodes => 'Downloaded';
+
+  @override
   String get home => 'Home';
 
   @override

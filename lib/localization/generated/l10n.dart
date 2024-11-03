@@ -168,6 +168,12 @@ abstract class L10n {
   /// **'Latest Episodes'**
   String get latestEpisodes;
 
+  /// No description provided for @downloadedEpisodes.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloaded'**
+  String get downloadedEpisodes;
+
   /// No description provided for @home.
   ///
   /// In en, this message translates to:

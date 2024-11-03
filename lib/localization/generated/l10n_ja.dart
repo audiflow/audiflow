@@ -47,6 +47,9 @@ class L10nJa extends L10n {
   String get latestEpisodes => '最新エピソード';
 
   @override
+  String get downloadedEpisodes => 'ダウンロード済み';
+
+  @override
   String get home => 'ホーム';
 
   @override
