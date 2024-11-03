@@ -120,8 +120,8 @@ class AppBottomNavigationBar extends HookConsumerWidget {
               label: l10n.library,
             ),
             BottomNavigationBarItem(
-              icon: const Icon(Symbols.home),
-              label: l10n.home,
+              icon: const Icon(Symbols.browse),
+              label: l10n.browse,
             ),
             BottomNavigationBarItem(
               icon: const Icon(Symbols.search),

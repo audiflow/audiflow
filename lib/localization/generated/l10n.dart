@@ -180,6 +180,12 @@ abstract class L10n {
   /// **'Home'**
   String get home;
 
+  /// No description provided for @browse.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse'**
+  String get browse;
+
   /// No description provided for @chart.
   ///
   /// In en, this message translates to:

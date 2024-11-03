@@ -53,6 +53,9 @@ class L10nEn extends L10n {
   String get home => 'Home';
 
   @override
+  String get browse => 'Browse';
+
+  @override
   String get chart => 'Chart';
 
   @override
