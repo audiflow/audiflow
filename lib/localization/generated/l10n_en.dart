@@ -35,7 +35,7 @@ class L10nEn extends L10n {
   String get clearSearchButton => 'Clear search text';
 
   @override
-  String get subscriptions => 'My Podcasts';
+  String get subscriptions => 'Subscribed podcasts';
 
   @override
   String get popularPodcasts => 'Popular Podcasts';

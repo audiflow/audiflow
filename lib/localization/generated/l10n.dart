@@ -147,7 +147,7 @@ abstract class L10n {
   /// No description provided for @subscriptions.
   ///
   /// In en, this message translates to:
-  /// **'My Podcasts'**
+  /// **'Subscribed podcasts'**
   String get subscriptions;
 
   /// No description provided for @popularPodcasts.
