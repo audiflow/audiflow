@@ -107,19 +107,25 @@ class AppBottomNavigationBar extends HookConsumerWidget {
               initialLocation: index == navigationShell.currentIndex,
             );
           },
+          // showSelectedLabels: false,
+          selectedItemColor: theme.colorScheme.primary,
+          selectedIconTheme: theme.iconTheme.copyWith(
+            size: 32,
+            color: theme.colorScheme.primary,
+          ),
           selectedFontSize: 12,
           items: [
             BottomNavigationBarItem(
-              icon: const Icon(Symbols.home),
-              label: l10n.home,
+              icon: const Icon(Symbols.video_library),
+              label: l10n.library,
+            ),
+            BottomNavigationBarItem(
+              icon: const Icon(Symbols.browse),
+              label: l10n.browse,
             ),
             BottomNavigationBarItem(
               icon: const Icon(Symbols.search),
               label: l10n.search,
-            ),
-            BottomNavigationBarItem(
-              icon: const Icon(Symbols.video_library),
-              label: l10n.library,
             ),
           ],
         ),

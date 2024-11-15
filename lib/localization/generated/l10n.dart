@@ -147,7 +147,7 @@ abstract class L10n {
   /// No description provided for @subscriptions.
   ///
   /// In en, this message translates to:
-  /// **'My Podcasts'**
+  /// **'Subscribed podcasts'**
   String get subscriptions;
 
   /// No description provided for @popularPodcasts.
@@ -168,11 +168,23 @@ abstract class L10n {
   /// **'Latest Episodes'**
   String get latestEpisodes;
 
+  /// No description provided for @downloadedEpisodes.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloaded'**
+  String get downloadedEpisodes;
+
   /// No description provided for @home.
   ///
   /// In en, this message translates to:
   /// **'Home'**
   String get home;
+
+  /// No description provided for @browse.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse'**
+  String get browse;
 
   /// No description provided for @chart.
   ///

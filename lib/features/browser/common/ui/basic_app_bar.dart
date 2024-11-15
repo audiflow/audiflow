@@ -20,11 +20,9 @@ class BasicAppBar extends HookConsumerWidget {
       expandedHeight: 100,
       elevation: elevation,
       flexibleSpace: FlexibleSpaceBar(
-        centerTitle: false,
-        titlePadding: const EdgeInsetsDirectional.only(start: 20, bottom: 20),
         title: Text(
           title,
-          style: Theme.of(context).textTheme.titleLarge!.copyWith(
+          style: Theme.of(context).textTheme.titleMedium!.copyWith(
                 color: Theme.of(context).colorScheme.onSurface,
               ),
         ),

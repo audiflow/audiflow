@@ -3,6 +3,8 @@ import 'package:audiflow/features/bootstrap/service/app_wide_initializer.dart';
 import 'package:audiflow/features/browser/chart/ui/podcast_chart_page.dart';
 import 'package:audiflow/features/browser/common/model/itunes_item.dart';
 import 'package:audiflow/features/browser/episode/ui/episode_page.dart';
+import 'package:audiflow/features/browser/library/ui/library_page.dart';
+import 'package:audiflow/features/browser/library/ui/subscribed_podcasts_page.dart';
 import 'package:audiflow/features/browser/podcast/ui/podcast_details_page/podcast_details_page.dart';
 import 'package:audiflow/features/browser/search/ui/search_page.dart';
 import 'package:audiflow/features/browser/season/model/season.dart';
@@ -33,7 +35,7 @@ class AppRouter extends _$AppRouter {
   GoRouter build() {
     return GoRouter(
       navigatorKey: parentNavigatorKey,
-      initialLocation: '/chart',
+      initialLocation: '/library',
       routes: _routes,
       observers: [
         SentryNavigatorObserver(),
@@ -62,6 +64,55 @@ class AppRouter extends _$AppRouter {
       StatefulShellRoute.indexedStack(
         parentNavigatorKey: parentNavigatorKey,
         branches: [
+          StatefulShellBranch(
+            navigatorKey: libraryTabNavigatorKey,
+            routes: [
+              GoRoute(
+                path: '/library',
+                name: 'library',
+                pageBuilder: (context, state) {
+                  return _getPage(
+                    child: const LibraryPage(),
+                    state: state,
+                  );
+                },
+                routes: [
+                  GoRoute(
+                    path: 'subscriptions',
+                    name: 'subscribedPodcasts',
+                    parentNavigatorKey: libraryTabNavigatorKey,
+                    pageBuilder: (context, state) {
+                      return _getPage(
+                        child: const SubscribedPodcastsPage(),
+                        state: state,
+                      );
+                    },
+                  ),
+                  //         GoRoute(
+                  //           path: 'latest',
+                  //           name: 'latestEpisodes',
+                  //           parentNavigatorKey: libraryTabNavigatorKey,
+                  //           pageBuilder: (context, state) {
+                  //             return _getPage(
+                  //               child: const LatestEpisodesPage(),
+                  //               state: state,
+                  //             );
+                  //           },
+                  //         ),
+                  //         GoRoute(
+                  //           path: 'recent',
+                  //           name: 'recentlyPlayed',
+                  //           parentNavigatorKey: libraryTabNavigatorKey,
+                  //           pageBuilder: (context, state) {
+                  //             return _getPage(
+                  //               child: const RecentlyPlayedPage(),
+                  //               state: state,
+                  //             );
+                  //           },
+                ],
+              ),
+            ],
+          ),
           StatefulShellBranch(
             navigatorKey: homeTabNavigatorKey,
             routes: [
@@ -162,44 +213,6 @@ class AppRouter extends _$AppRouter {
               ),
             ],
           ),
-          // StatefulShellBranch(
-          //   navigatorKey: libraryTabNavigatorKey,
-          //   routes: [
-          //     GoRoute(
-          //       path: libraryPath,
-          //       pageBuilder: (context, state) {
-          //         return _getPage(
-          //           child: const LibraryPage(),
-          //           state: state,
-          //         );
-          //       },
-          //       routes: [
-          //         GoRoute(
-          //           path: 'latest',
-          //           name: 'latestEpisodes',
-          //           parentNavigatorKey: libraryTabNavigatorKey,
-          //           pageBuilder: (context, state) {
-          //             return _getPage(
-          //               child: const LatestEpisodesPage(),
-          //               state: state,
-          //             );
-          //           },
-          //         ),
-          //         GoRoute(
-          //           path: 'recent',
-          //           name: 'recentlyPlayed',
-          //           parentNavigatorKey: libraryTabNavigatorKey,
-          //           pageBuilder: (context, state) {
-          //             return _getPage(
-          //               child: const RecentlyPlayedPage(),
-          //               state: state,
-          //             );
-          //           },
-          //         ),
-          //       ],
-          //     ),
-          //   ],
-          // ),
         ],
         builder: (context, state, navigationShell) {
           ref.listen(appWideProvider, (_, __) {});
@@ -285,6 +298,12 @@ class AppRouter extends _$AppRouter {
   Future<void> pushRecentlyPlayed() async {
     await state.pushNamed(
       'recentlyPlayed',
+    );
+  }
+
+  Future<void> pushSubscribedPodcasts() async {
+    await state.pushNamed(
+      'subscribedPodcasts',
     );
   }
 }

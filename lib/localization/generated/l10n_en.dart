@@ -35,7 +35,7 @@ class L10nEn extends L10n {
   String get clearSearchButton => 'Clear search text';
 
   @override
-  String get subscriptions => 'My Podcasts';
+  String get subscriptions => 'Subscribed podcasts';
 
   @override
   String get popularPodcasts => 'Popular Podcasts';
@@ -47,7 +47,13 @@ class L10nEn extends L10n {
   String get latestEpisodes => 'Latest Episodes';
 
   @override
+  String get downloadedEpisodes => 'Downloaded';
+
+  @override
   String get home => 'Home';
+
+  @override
+  String get browse => 'Browse';
 
   @override
   String get chart => 'Chart';
