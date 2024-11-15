@@ -51,12 +51,13 @@ class LoggerAnalyticsClient implements AnalyticsClient {
   }
 
   @override
-  Future<void> trackStartPlayback(
-      {required int pid,
-      required int eid,
-      required int? sid,
-      required String title,
-      required DateTime pubDate}) async {
+  Future<void> trackStartPlayback({
+    required int pid,
+    required int eid,
+    required int? sid,
+    required String title,
+    required DateTime pubDate,
+  }) async {
     if (_enabled) {
       logger.i('[analytics] trackStartPlayback('
           'pid: $pid, eid: $eid, sid: $sid, '

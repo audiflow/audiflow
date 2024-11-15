@@ -56,7 +56,7 @@ class LibraryPage extends HookConsumerWidget {
                         title: Text(l10n.recentlyPlayed),
                         trailing: const Icon(Symbols.chevron_right),
                         onTap: () {},
-                        // onTap: ref.read(appRouterProvider).pushRecentlyPlayed,
+                        // onTap: ref.read(appRouterProvider).pushRecentlyPlayed
                       ),
                       ListTile(
                         leading: const Icon(Symbols.download_for_offline),
