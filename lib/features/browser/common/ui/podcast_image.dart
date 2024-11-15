@@ -1,4 +1,4 @@
-import 'package:audiflow/core/environment.dart';
+import 'package:audiflow/common/data/user_agent.dart';
 import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
 
@@ -45,7 +45,7 @@ class _PodcastImageState extends State<PodcastImage>
 
   /// There appears to be a bug in extended image that causes images to
   /// be re-fetched if headers have been set. We'll leave headers for now.
-  final headers = <String, String>{'User-Agent': Environment.userAgent()};
+  final headers = <String, String>{'User-Agent': getUserAgent()};
 
   @override
   Widget build(BuildContext context) {
@@ -175,7 +175,7 @@ class _PodcastBannerImageState extends State<PodcastBannerImage>
 
   /// There appears to be a bug in extended image that causes images to
   /// be re-fetched if headers have been set. We'll leave headers for now.
-  final headers = <String, String>{'User-Agent': Environment.userAgent()};
+  final headers = <String, String>{'User-Agent': getUserAgent()};
 
   @override
   Widget build(BuildContext context) {

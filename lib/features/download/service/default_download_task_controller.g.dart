@@ -7,7 +7,7 @@ part of 'default_download_task_controller.dart';
 // **************************************************************************
 
 String _$defaultDownloaderTaskControllerHash() =>
-    r'affb9d2c6410bd040007953c1fc5c06eb3436534';
+    r'3c3957b95a6430d2846fef5f8005bc8cd41d0502';
 
 /// See also [DefaultDownloaderTaskController].
 @ProviderFor(DefaultDownloaderTaskController)

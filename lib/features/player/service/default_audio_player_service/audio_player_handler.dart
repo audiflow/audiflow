@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:audiflow/core/environment.dart';
+import 'package:audiflow/common/data/user_agent.dart';
 import 'package:audiflow/utils/logger.dart';
 import 'package:audio_service/audio_service.dart';
 import 'package:just_audio/just_audio.dart';
@@ -48,11 +48,11 @@ class AudioPlayerHandler extends BaseAudioHandler with SeekHandler {
           AudioPipeline(androidAudioEffects: [_androidLoudnessEnhancer]);
       _player = AudioPlayer(
         audioPipeline: _audioPipeline,
-        userAgent: Environment.userAgent(),
+        userAgent: getUserAgent(),
       );
     } else {
       _player = AudioPlayer(
-        userAgent: Environment.userAgent(),
+        userAgent: getUserAgent(),
         useProxyForRequestHeaders: false,
         audioLoadConfiguration: const AudioLoadConfiguration(
           androidLoadControl: AndroidLoadControl(
