@@ -7,6 +7,7 @@ import 'package:audiflow/common/data/connectivity.dart'
 import 'package:audiflow/common/data/isar_factory.dart';
 import 'package:audiflow/common/data/isar_repository.dart';
 import 'package:audiflow/common/data/shared_preferences.dart';
+import 'package:audiflow/common/data/user_agent.dart';
 import 'package:audiflow/constants/env.dart';
 import 'package:audiflow/constants/flavors.dart';
 import 'package:audiflow/exceptions/async_error_logger.dart';
@@ -82,6 +83,7 @@ FutureOr<void> runMainApp() async {
     },
   );
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await populateUserAgent();
 
   final buildConfig = BuildConfig.fromPackageInfo(
     packageInfo: await PackageInfo.fromPlatform(),

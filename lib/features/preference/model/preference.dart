@@ -1,6 +1,6 @@
+import 'package:audiflow/constants/env.dart';
 import 'package:audiflow/constants/locale.dart';
 import 'package:audiflow/constants/search_providers.dart';
-import 'package:audiflow/core/environment.dart';
 import 'package:audiflow/features/player/model/sleep_mode.dart';
 import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
@@ -48,7 +48,7 @@ class Preference {
       searchProvider: 'itunes',
       searchProviders: <SearchProvider>[
         SearchProvider.itunes,
-        if (podcastIndexKey.isNotEmpty) SearchProvider.podcastIndex,
+        if (Env.podcastIndexKey.isNotEmpty) SearchProvider.podcastIndex,
       ],
       externalLinkConsent: false,
       autoOpenNowPlaying: false,

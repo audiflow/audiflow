@@ -1,9 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:audiflow/common/data/user_agent.dart';
 import 'package:audiflow/constants/attribute.dart';
 import 'package:audiflow/constants/country.dart';
-import 'package:audiflow/core/environment.dart';
+import 'package:audiflow/constants/env.dart';
 import 'package:audiflow/features/browser/common/data/podcast_api_repository.dart';
 import 'package:audiflow/features/browser/common/model/itunes_chart_item.dart';
 import 'package:audiflow/features/browser/common/model/itunes_search_item.dart';
@@ -123,12 +124,12 @@ class DefaultPodcastApiRepository implements PodcastApiRepository {
     final provider = searchProvider == 'itunes'
         ? const podcast_search.ITunesProvider()
         : podcast_search.PodcastIndexProvider(
-            key: podcastIndexKey,
-            secret: podcastIndexSecret,
+            key: Env.podcastIndexKey,
+            secret: Env.podcastIndexSecret,
           );
 
     return podcast_search.Search(
-      userAgent: Environment.userAgent(),
+      userAgent: getUserAgent(),
       searchProvider: provider,
     ).genres();
   }

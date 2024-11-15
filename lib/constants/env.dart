@@ -27,4 +27,20 @@ class Env {
 
   static String get mixpanelProjectToken =>
       const String.fromEnvironment('MIXPANEL_PROJECT_TOKEN');
+
+  /// The key required when searching via PodcastIndex.org.
+  static String get podcastIndexKey =>
+      const String.fromEnvironment('PINDEX_KEY');
+
+  /// The secret required when searching via PodcastIndex.org.
+  static String get podcastIndexSecret =>
+      const String.fromEnvironment('PINDEX_SECRET');
+
+  /// Allows a user to override the default user agent string.
+  static String get userAgentAppString =>
+      const String.fromEnvironment('USER_AGENT');
+
+  /// Link to a feedback form. This will be shown in the main overflow menu if
+  /// set.
+  static String get feedbackUrl => const String.fromEnvironment('FEEDBACK_URL');
 }

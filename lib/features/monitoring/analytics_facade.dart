@@ -21,8 +21,9 @@ class AnalyticsFacade implements AnalyticsClient {
   final List<AnalyticsClient> clients;
 
   Future<void> _dispatch(
-      Future<void> Function(AnalyticsClient client) work) async {
-    for (var client in clients) {
+    Future<void> Function(AnalyticsClient client) work,
+  ) async {
+    for (final client in clients) {
       await work(client);
     }
   }

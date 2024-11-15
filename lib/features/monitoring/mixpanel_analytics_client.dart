@@ -30,10 +30,13 @@ class MixpanelAnalyticsClient implements AnalyticsClient {
 
   @override
   Future<void> trackScreenView(String routeName, String action) async {
-    await _mixpanel.track('Screen View', properties: {
-      'name': routeName,
-      'action': action,
-    });
+    await _mixpanel.track(
+      'Screen View',
+      properties: {
+        'name': routeName,
+        'action': action,
+      },
+    );
   }
 
   @override
@@ -54,13 +57,16 @@ class MixpanelAnalyticsClient implements AnalyticsClient {
     required String title,
     required DateTime pubDate,
   }) async {
-    await _mixpanel.track('playBack', properties: {
-      'pid': pid,
-      'eid': eid,
-      'sid': sid,
-      'title': title,
-      'pubDate': pubDate,
-    });
+    await _mixpanel.track(
+      'playBack',
+      properties: {
+        'pid': pid,
+        'eid': eid,
+        'sid': sid,
+        'title': title,
+        'pubDate': pubDate,
+      },
+    );
   }
 }
 

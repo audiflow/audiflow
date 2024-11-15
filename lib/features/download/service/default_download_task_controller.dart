@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:isolate';
 import 'dart:ui';
 
-import 'package:audiflow/core/environment.dart';
+import 'package:audiflow/common/data/user_agent.dart';
 import 'package:audiflow/features/download/model/downloadable.dart';
 import 'package:audiflow/features/download/service/download_task_controller.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
@@ -78,7 +78,7 @@ class DefaultDownloaderTaskController extends _$DefaultDownloaderTaskController
       fileName: fileName,
       openFileFromNotification: false,
       headers: {
-        'User-Agent': Environment.userAgent(),
+        'User-Agent': getUserAgent(),
       },
     );
   }
