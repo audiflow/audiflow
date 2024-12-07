@@ -18,6 +18,12 @@ abstract class EpisodeRepository {
 
   Future<Episode?> findLatestEpisode(Id pid);
 
+  Future<List<Episode>> findLatestEpisodes(
+    Id pid, {
+    required DateTime publishedAfter,
+    int limit = 10,
+  });
+
   Future<int> count({required Id pid});
 
   Future<void> saveEpisode(Episode episode);

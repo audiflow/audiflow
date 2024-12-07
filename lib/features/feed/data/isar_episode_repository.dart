@@ -21,6 +21,7 @@ class IsarEpisodeRepository implements EpisodeRepository {
   Future<List<Episode>> queryEpisodes({
     required Id pid,
     int? lastOrdinal,
+    DateTime? publicationDateGreaterThan,
     bool ascending = false,
     int? limit,
   }) async {
@@ -49,6 +50,23 @@ class IsarEpisodeRepository implements EpisodeRepository {
         .pidEqualToAnyOrdinal(pid)
         .sortByOrdinalDesc()
         .findFirst();
+  }
+
+  @override
+  Future<List<Episode>> findLatestEpisodes(
+    Id pid, {
+    required DateTime publishedAfter,
+    int limit = 10,
+  }) async {
+    final episodes = await isar.episodes
+        .where()
+        .pidEqualToAnyOrdinal(pid)
+        .sortByOrdinalDesc()
+        .limit(limit)
+        .findAll();
+    return episodes
+        .where((e) => e.publicationDate?.isAfter(publishedAfter) ?? true)
+        .toList();
   }
 
   @override
