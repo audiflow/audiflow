@@ -215,30 +215,21 @@ class PodcastEpisodesController extends _$PodcastEpisodesController {
   }
 
   void _listen() {
-    void addTotalEpisode(int delta) {
+    ref.listen(episodeEventStreamProvider, (_, next) {
+      next.whenData(_handleEpisodesEvent);
+    });
+  }
+
+  Future<void> _handleEpisodesEvent(EpisodeEvent event) async {
+    final countChanges = event is EpisodesAddedEvent ||
+        event is EpisodeDeletedEvent ||
+        event is EpisodesDeletedEvent;
+    if (countChanges) {
+      final totalEpisodes = await _countEpisodes();
       state = AsyncData(
-        state.requireValue
-            .copyWith(totalEpisodes: state.requireValue.totalEpisodes + delta),
+        state.requireValue.copyWith(totalEpisodes: totalEpisodes),
       );
     }
-
-    var addedEpisodes = 0;
-    ref.listen(episodeEventStreamProvider, (_, next) {
-      if (next.requireValue case EpisodesAddedEvent(episodes: final episodes)) {
-        if (state.hasValue) {
-          addTotalEpisode(episodes.length);
-        } else {
-          addedEpisodes += episodes.length;
-          ref.listenSelf((_, next) {
-            if (0 < addedEpisodes && next.hasValue) {
-              final delta = addedEpisodes;
-              addedEpisodes = 0;
-              addTotalEpisode(delta);
-            }
-          });
-        }
-      }
-    });
   }
 }
 
