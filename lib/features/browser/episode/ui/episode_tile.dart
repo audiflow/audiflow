@@ -18,14 +18,18 @@ class EpisodeTile extends HookConsumerWidget {
     super.key,
     required this.showsThumbnail,
     required this.episode,
+    this.getFallbackImageUrl,
   });
 
   final bool showsThumbnail;
   final Episode episode;
+  final String? Function()? getFallbackImageUrl;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final thumbnailUrl = showsThumbnail ? episode.imageUrl : null;
+    final thumbnailUrl = showsThumbnail
+        ? (episode.imageUrl ?? getFallbackImageUrl?.call())
+        : null;
     final theme = Theme.of(context);
     return Material(
       child: Container(
@@ -54,6 +58,7 @@ class EpisodeTile extends HookConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         if (thumbnailUrl != null) ...[
                           gapH8,

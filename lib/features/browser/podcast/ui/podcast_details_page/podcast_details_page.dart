@@ -207,7 +207,7 @@ class _PodcastDetailsPage extends HookConsumerWidget {
                           episodeCount: podcastEpisodesState!
                                   .valueOrNull?.totalEpisodes ??
                               0,
-                          parentThumbnailUrl: podcast?.image,
+                          getParentThumbnailUrl: (_) => podcast?.image,
                         ),
                       )
                     else if (viewMode == PodcastDetailsPageViewMode.seasons)

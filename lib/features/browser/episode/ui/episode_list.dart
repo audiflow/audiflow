@@ -13,7 +13,7 @@ class EpisodeList extends HookConsumerWidget {
     required this.getEpisodeAt,
     required this.scrollController,
     this.thumbnailVisibility = ThumbnailVisibility.auto,
-    this.parentThumbnailUrl,
+    this.getParentThumbnailUrl,
   });
 
   factory EpisodeList.fixed({
@@ -21,7 +21,7 @@ class EpisodeList extends HookConsumerWidget {
     required List<Episode> episodes,
     required ScrollController scrollController,
     ThumbnailVisibility thumbnailVisibility = ThumbnailVisibility.auto,
-    String? parentThumbnailUrl,
+    String? Function(int index)? getParentThumbnailUrl,
   }) {
     return EpisodeList(
       key: key,
@@ -29,7 +29,7 @@ class EpisodeList extends HookConsumerWidget {
       getEpisodeAt: (index) => episodes[index],
       scrollController: scrollController,
       thumbnailVisibility: thumbnailVisibility,
-      parentThumbnailUrl: parentThumbnailUrl,
+      getParentThumbnailUrl: getParentThumbnailUrl,
     );
   }
 
@@ -37,7 +37,7 @@ class EpisodeList extends HookConsumerWidget {
   final FutureOr<Episode?> Function(int index) getEpisodeAt;
   final ScrollController scrollController;
   final ThumbnailVisibility thumbnailVisibility;
-  final String? parentThumbnailUrl;
+  final String? Function(int index)? getParentThumbnailUrl;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -55,7 +55,8 @@ class EpisodeList extends HookConsumerWidget {
       final bool showsThumbnail;
       switch (thumbnailVisibility) {
         case ThumbnailVisibility.auto:
-          showsThumbnail = episode.imageUrl != parentThumbnailUrl;
+          showsThumbnail =
+              episode.imageUrl != getParentThumbnailUrl?.call(index);
         case ThumbnailVisibility.visible:
           showsThumbnail = true;
         case ThumbnailVisibility.hidden:
@@ -65,6 +66,7 @@ class EpisodeList extends HookConsumerWidget {
       return EpisodeTile(
         showsThumbnail: showsThumbnail,
         episode: episode,
+        getFallbackImageUrl: () => getParentThumbnailUrl?.call(index),
       );
     }
 

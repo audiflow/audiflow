@@ -1,10 +1,12 @@
 import 'package:audiflow/common/ui/error_notifier.dart';
 import 'package:audiflow/common/ui/fill_remaining_error.dart';
 import 'package:audiflow/common/ui/fill_remaining_loading.dart';
+import 'package:audiflow/constants/types.dart';
 import 'package:audiflow/features/browser/common/data/latest_episodes_provider.dart';
 import 'package:audiflow/features/browser/common/ui/basic_app_bar.dart';
 import 'package:audiflow/features/browser/episode/ui/episode_list.dart';
 import 'package:audiflow/localization/generated/l10n.dart';
+import 'package:collection/collection.dart' show IterableExtension;
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -44,9 +46,14 @@ class LatestEpisodesPage extends HookConsumerWidget {
                   FillRemainingError.podcastNoResults()
                 else
                   EpisodeList(
-                    getEpisodeAt: (index) async => episodes![index],
+                    getEpisodeAt: (index) => episodes![index],
                     scrollController: scrollController,
                     episodeCount: episodes?.length ?? 0,
+                    getParentThumbnailUrl: (index) => state
+                        .requireValue.podcasts
+                        .firstWhereOrNull((p) => p.id == episodes![index].pid)
+                        ?.image,
+                    thumbnailVisibility: ThumbnailVisibility.visible,
                   ),
               ],
             ),
