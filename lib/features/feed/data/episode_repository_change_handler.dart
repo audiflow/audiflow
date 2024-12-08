@@ -35,6 +35,18 @@ class EpisodeRepositoryHandleHandler implements EpisodeRepository {
   Future<Episode?> findLatestEpisode(Id pid) => _inner.findLatestEpisode(pid);
 
   @override
+  Future<List<Episode>> findLatestEpisodes(
+    Id pid, {
+    required DateTime publishedAfter,
+    int limit = 10,
+  }) =>
+      _inner.findLatestEpisodes(
+        pid,
+        publishedAfter: publishedAfter,
+        limit: limit,
+      );
+
+  @override
   Future<int> count({required Id pid}) => _inner.count(pid: pid);
 
   @override

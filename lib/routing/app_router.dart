@@ -3,6 +3,7 @@ import 'package:audiflow/features/bootstrap/service/app_wide_initializer.dart';
 import 'package:audiflow/features/browser/chart/ui/podcast_chart_page.dart';
 import 'package:audiflow/features/browser/common/model/itunes_item.dart';
 import 'package:audiflow/features/browser/episode/ui/episode_page.dart';
+import 'package:audiflow/features/browser/library/ui/latest_episodes_page.dart';
 import 'package:audiflow/features/browser/library/ui/library_page.dart';
 import 'package:audiflow/features/browser/library/ui/subscribed_podcasts_page.dart';
 import 'package:audiflow/features/browser/podcast/ui/podcast_details_page/podcast_details_page.dart';
@@ -78,6 +79,17 @@ class AppRouter extends _$AppRouter {
                 },
                 routes: [
                   GoRoute(
+                    path: 'latest',
+                    name: 'latestEpisodes',
+                    parentNavigatorKey: libraryTabNavigatorKey,
+                    pageBuilder: (context, state) {
+                      return _getPage(
+                        child: const LatestEpisodesPage(),
+                        state: state,
+                      );
+                    },
+                  ),
+                  GoRoute(
                     path: 'subscriptions',
                     name: 'subscribedPodcasts',
                     parentNavigatorKey: libraryTabNavigatorKey,
@@ -88,17 +100,6 @@ class AppRouter extends _$AppRouter {
                       );
                     },
                   ),
-                  //         GoRoute(
-                  //           path: 'latest',
-                  //           name: 'latestEpisodes',
-                  //           parentNavigatorKey: libraryTabNavigatorKey,
-                  //           pageBuilder: (context, state) {
-                  //             return _getPage(
-                  //               child: const LatestEpisodesPage(),
-                  //               state: state,
-                  //             );
-                  //           },
-                  //         ),
                   //         GoRoute(
                   //           path: 'recent',
                   //           name: 'recentlyPlayed',
