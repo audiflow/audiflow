@@ -18,19 +18,15 @@ class PodcastDetailsPageController extends _$PodcastDetailsPageController {
   @override
   Future<PodcastDetailsPageState> build(int pid) async {
     logger.d(() => 'build pid=$pid');
-    _listen();
     final model =
         await _pageModelsRepository.findPodcastDetailsPageModel(pid) ??
             PodcastDetailsPageModel(pid: pid);
+    _listen();
     return PodcastDetailsPageState.fromModel(model);
   }
 
   void _listen() {
     ref.listen(pageModelsEventStreamProvider, (_, next) {
-      if (!state.hasValue) {
-        return;
-      }
-
       next.whenData((event) {
         if (event
             case PodcastDetailsPageModelUpdatedEvent(model: final model)) {
