@@ -59,7 +59,7 @@ class _PodcastRefresher extends HookConsumerWidget {
           final nextCheckAt = lastCheckedAt.add(_checkInterval);
           final interval = nextCheckAt.difference(now);
           final timer = Timer(interval, () => rebuildTrigger.value++);
-          logger.d('nextCheckAt $nextCheckAt for $podcast');
+          logger.d('nextCheckAt $nextCheckAt($interval later) for $podcast');
           return timer.cancel;
         }
 

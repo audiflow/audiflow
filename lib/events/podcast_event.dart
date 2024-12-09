@@ -59,7 +59,7 @@ class PodcastEventStream extends _$PodcastEventStream {
   Stream<PodcastEvent> build() async* {}
 
   void add(PodcastEvent event) {
-    logger.t(() => 'EpisodeEventStream.add: $event');
+    logger.t(() => 'PodcastEventStream.add: $event');
     state = AsyncData(event);
   }
 }
