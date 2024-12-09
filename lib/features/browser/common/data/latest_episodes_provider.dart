@@ -5,7 +5,8 @@ import 'package:audiflow/events/podcast_event.dart';
 import 'package:audiflow/features/browser/common/data/episode_stats_repository/episode_stats_repository.dart';
 import 'package:audiflow/features/browser/common/data/podcast_subscriptions.dart';
 import 'package:audiflow/features/feed/data/episode_repository.dart';
-import 'package:audiflow/features/feed/model/model.dart';
+import 'package:audiflow/features/player/service/audio_player_service.dart';
+import 'package:audiflow/features/queue/service/audio_queue_service.dart';
 import 'package:collection/collection.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -20,6 +21,15 @@ class LatestEpisodes extends _$LatestEpisodes {
 
   EpisodeStatsRepository get _episodeStatsRepository =>
       ref.read(episodeStatsRepositoryProvider);
+
+  AudioPlayerState? get _audioPlayerState =>
+      ref.read(audioPlayerServiceProvider);
+
+  AudioPlayerService get _audioPlayerService =>
+      ref.read(audioPlayerServiceProvider.notifier);
+
+  AudioQueueService get _audioQueueService =>
+      ref.read(audioQueueServiceProvider);
 
   final borderOfPublishedDate =
       DateTime.now().subtract(const Duration(days: 7));
@@ -199,6 +209,20 @@ class LatestEpisodes extends _$LatestEpisodes {
         ),
       );
     }
+  }
+
+  Future<void> togglePlayState(Episode episode) async {
+    if (_audioPlayerState?.episode.id == episode.id) {
+      return _audioPlayerService.togglePlayPause();
+    }
+
+    final episodes = state.requireValue.episodes;
+    final index = episodes.indexWhere((e) => e.id == episode.id);
+    await _audioQueueService.buildAndPlay(
+      pid: episode.pid,
+      eid: episode.id,
+      queueingEpisodeIds: episodes.slice(index).map((e) => e.id),
+    );
   }
 }
 
