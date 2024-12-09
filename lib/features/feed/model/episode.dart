@@ -129,7 +129,7 @@ class Episode implements Comparable<Episode> {
 
   @override
   String toString() {
-    return '''Episode(guid: '$guid', title: '$title')''';
+    return '''Episode(pid: $pid, id: $id, title: '$title')''';
   }
 
   @override
@@ -219,6 +219,11 @@ class PartialEpisode {
   final int? episode;
   final int? season;
   final EpisodeType type;
+
+  @override
+  String toString() {
+    return 'PartialEpisode(pid: $pid, id: $id, title: $title)';
+  }
 }
 
 extension EpisodeExtension on Episode {
@@ -294,6 +299,11 @@ class EpisodeStats {
   /// Whether the episode has been downloaded
   @Index()
   final bool downloaded;
+
+  @override
+  String toString() {
+    return 'EpisodeStats(pid: $pid, id: $id)';
+  }
 }
 
 extension EpisodeStatsExt on EpisodeStats {
