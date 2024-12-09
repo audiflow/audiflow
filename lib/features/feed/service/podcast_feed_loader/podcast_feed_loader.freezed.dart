@@ -17,7 +17,6 @@ final _privateConstructorUsedError = UnsupportedError(
 /// @nodoc
 mixin _$PodcastFeedLoaderState {
   String get feedUrl => throw _privateConstructorUsedError;
-  int? get collectionId => throw _privateConstructorUsedError;
   LoadingState get loadingState => throw _privateConstructorUsedError;
 
   /// Create a copy of PodcastFeedLoaderState
@@ -33,7 +32,7 @@ abstract class $PodcastFeedLoaderStateCopyWith<$Res> {
           $Res Function(PodcastFeedLoaderState) then) =
       _$PodcastFeedLoaderStateCopyWithImpl<$Res, PodcastFeedLoaderState>;
   @useResult
-  $Res call({String feedUrl, int? collectionId, LoadingState loadingState});
+  $Res call({String feedUrl, LoadingState loadingState});
 }
 
 /// @nodoc
@@ -53,7 +52,6 @@ class _$PodcastFeedLoaderStateCopyWithImpl<$Res,
   @override
   $Res call({
     Object? feedUrl = null,
-    Object? collectionId = freezed,
     Object? loadingState = null,
   }) {
     return _then(_value.copyWith(
@@ -61,10 +59,6 @@ class _$PodcastFeedLoaderStateCopyWithImpl<$Res,
           ? _value.feedUrl
           : feedUrl // ignore: cast_nullable_to_non_nullable
               as String,
-      collectionId: freezed == collectionId
-          ? _value.collectionId
-          : collectionId // ignore: cast_nullable_to_non_nullable
-              as int?,
       loadingState: null == loadingState
           ? _value.loadingState
           : loadingState // ignore: cast_nullable_to_non_nullable
@@ -82,7 +76,7 @@ abstract class _$$PodcastFeedLoaderStateImplCopyWith<$Res>
       __$$PodcastFeedLoaderStateImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({String feedUrl, int? collectionId, LoadingState loadingState});
+  $Res call({String feedUrl, LoadingState loadingState});
 }
 
 /// @nodoc
@@ -101,7 +95,6 @@ class __$$PodcastFeedLoaderStateImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? feedUrl = null,
-    Object? collectionId = freezed,
     Object? loadingState = null,
   }) {
     return _then(_$PodcastFeedLoaderStateImpl(
@@ -109,10 +102,6 @@ class __$$PodcastFeedLoaderStateImplCopyWithImpl<$Res>
           ? _value.feedUrl
           : feedUrl // ignore: cast_nullable_to_non_nullable
               as String,
-      collectionId: freezed == collectionId
-          ? _value.collectionId
-          : collectionId // ignore: cast_nullable_to_non_nullable
-              as int?,
       loadingState: null == loadingState
           ? _value.loadingState
           : loadingState // ignore: cast_nullable_to_non_nullable
@@ -125,21 +114,17 @@ class __$$PodcastFeedLoaderStateImplCopyWithImpl<$Res>
 
 class _$PodcastFeedLoaderStateImpl implements _PodcastFeedLoaderState {
   const _$PodcastFeedLoaderStateImpl(
-      {required this.feedUrl,
-      this.collectionId,
-      this.loadingState = LoadingState.loadingPodcast});
+      {required this.feedUrl, this.loadingState = LoadingState.loadingPodcast});
 
   @override
   final String feedUrl;
-  @override
-  final int? collectionId;
   @override
   @JsonKey()
   final LoadingState loadingState;
 
   @override
   String toString() {
-    return 'PodcastFeedLoaderState(feedUrl: $feedUrl, collectionId: $collectionId, loadingState: $loadingState)';
+    return 'PodcastFeedLoaderState(feedUrl: $feedUrl, loadingState: $loadingState)';
   }
 
   @override
@@ -148,15 +133,12 @@ class _$PodcastFeedLoaderStateImpl implements _PodcastFeedLoaderState {
         (other.runtimeType == runtimeType &&
             other is _$PodcastFeedLoaderStateImpl &&
             (identical(other.feedUrl, feedUrl) || other.feedUrl == feedUrl) &&
-            (identical(other.collectionId, collectionId) ||
-                other.collectionId == collectionId) &&
             (identical(other.loadingState, loadingState) ||
                 other.loadingState == loadingState));
   }
 
   @override
-  int get hashCode =>
-      Object.hash(runtimeType, feedUrl, collectionId, loadingState);
+  int get hashCode => Object.hash(runtimeType, feedUrl, loadingState);
 
   /// Create a copy of PodcastFeedLoaderState
   /// with the given fields replaced by the non-null parameter values.
@@ -171,13 +153,10 @@ class _$PodcastFeedLoaderStateImpl implements _PodcastFeedLoaderState {
 abstract class _PodcastFeedLoaderState implements PodcastFeedLoaderState {
   const factory _PodcastFeedLoaderState(
       {required final String feedUrl,
-      final int? collectionId,
       final LoadingState loadingState}) = _$PodcastFeedLoaderStateImpl;
 
   @override
   String get feedUrl;
-  @override
-  int? get collectionId;
   @override
   LoadingState get loadingState;
 

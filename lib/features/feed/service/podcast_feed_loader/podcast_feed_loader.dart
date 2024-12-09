@@ -25,7 +25,6 @@ import 'package:audiflow/utils/cached_http.dart';
 import 'package:audiflow/utils/logger.dart';
 import 'package:collection/collection.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:isar/isar.dart';
 import 'package:podcast_feed/parsers/podcast_feed_parser.dart';
@@ -48,7 +47,12 @@ class PodcastFeedLoader extends _$PodcastFeedLoader {
   PodcastRepository get _podcastRepository =>
       ref.read(podcastRepositoryProvider);
 
-  bool _initialized = false;
+  PodcastStatsRepository get _podcastStatsRepository =>
+      ref.read(podcastStatsRepositoryProvider);
+
+  int? collectionId;
+
+  bool get hasCollectionId => collectionId != null;
 
   @override
   PodcastFeedLoaderState build({required String feedUrl}) {
@@ -56,19 +60,15 @@ class PodcastFeedLoader extends _$PodcastFeedLoader {
     return PodcastFeedLoaderState(feedUrl: feedUrl);
   }
 
-  void setup({int? collectionId}) {
-    if (!_initialized) {
-      _initialized = true;
-      SchedulerBinding.instance.addPostFrameCallback((_) {
-        if (collectionId != null) {
-          state = state.copyWith(collectionId: collectionId);
-        }
-        _setupWorker();
-      });
+  bool startLoading() {
+    if (_workerPort == null) {
+      _runWorker();
+      return true;
     }
+    return false;
   }
 
-  Future<void> _setupWorker() async {
+  Future<void> _runWorker() async {
     final cancellable = workerManager.executeGentleWithPort<void, _Message>(
       (sendPort, isCancelled) async {
         logger.d('start worker');
@@ -101,17 +101,21 @@ class PodcastFeedLoader extends _$PodcastFeedLoader {
             cacheDir: _cacheDir,
             storageDir: _appDocDir,
             feedUrl: state.feedUrl,
-            collectionId: state.collectionId,
+            collectionId: collectionId,
           ),
         );
-      case _LoadedPodcastMessage():
-        final podcast =
-            await _podcastRepository.findPodcastBy(feedUrl: state.feedUrl);
+      case _LoadedPodcastMessage(pid: final pid):
+        final values = await Future.wait([
+          _podcastRepository.findPodcast(pid),
+          _podcastStatsRepository.findPodcastStats(pid),
+        ]);
+        final podcast = values[0] as Podcast?;
         if (podcast == null) {
           logger.w(() => 'podcast is null');
           return;
         }
-        _notifyPodcastUpdated(podcast);
+        final stats = values[1] as PodcastStats?;
+        _notifyPodcastUpdated(podcast, stats: stats);
         state = state.copyWith(loadingState: LoadingState.loadingEpisodes);
       case _LoadedEpisodesMessage(
           inserts: final inserts,
@@ -140,11 +144,24 @@ class PodcastFeedLoader extends _$PodcastFeedLoader {
     }
   }
 
-  void _notifyPodcastUpdated(Podcast podcast) {
+  void _notifyPodcastUpdated(Podcast podcast, {PodcastStats? stats}) {
     logger.d(() => 'loaded new podcast $podcast');
     ref
         .read(podcastEventStreamProvider.notifier)
-        .add(PodcastUpdatedEvent(podcast));
+        .add(PodcastUpdatedEvent(podcast, stats: stats));
+  }
+
+  void _notifyPodcastStatsUpdated(int pid) {
+    ref
+        .read(podcastStatsRepositoryProvider)
+        .findPodcastStats(pid)
+        .then((stats) {
+      if (stats != null) {
+        ref
+            .read(podcastEventStreamProvider.notifier)
+            .add(PodcastStatsUpdatedEvent(stats));
+      }
+    });
   }
 
   void _notifyEpisodesAdded(List<PartialEpisode> episodes) {
@@ -163,19 +180,6 @@ class PodcastFeedLoader extends _$PodcastFeedLoader {
     ref
         .read(episodeEventStreamProvider.notifier)
         .add(EpisodesDeletedEvent(episodes.map((e) => e.id).toList()));
-  }
-
-  void _notifyPodcastStatsUpdated(int pid) {
-    ref
-        .read(podcastStatsRepositoryProvider)
-        .findPodcastStats(pid)
-        .then((stats) {
-      if (stats != null) {
-        ref
-            .read(podcastEventStreamProvider.notifier)
-            .add(PodcastStatsUpdatedEvent(stats));
-      }
-    });
   }
 
   void _notifySeasonsUpdated(List<Season> seasons) {
@@ -208,7 +212,6 @@ enum LoadingState {
 class PodcastFeedLoaderState with _$PodcastFeedLoaderState {
   const factory PodcastFeedLoaderState({
     required String feedUrl,
-    int? collectionId,
     @Default(LoadingState.loadingPodcast) LoadingState loadingState,
   }) = _PodcastFeedLoaderState;
 }

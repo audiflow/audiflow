@@ -166,7 +166,7 @@ class _Worker {
     try {
       final podcast = _podcast = await _feedParser!.readChannel();
       await _podcastRepository.savePodcast(podcast);
-      _sendMessage(_LoadedPodcastMessage());
+      _sendMessage(_LoadedPodcastMessage(podcast.id));
       return true;
       // ignore: avoid_catches_without_on_clauses
     } catch (err) {
