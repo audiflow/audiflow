@@ -50,6 +50,11 @@ class IsarPodcastStatsRepository implements PodcastStatsRepository {
   }
 
   @override
+  Future<List<PodcastStats?>> findPodcastStatsList(Iterable<int> pids) async {
+    return isar.podcastStats.getAll(pids.toList());
+  }
+
+  @override
   Future<PodcastStats?> findPodcastStatsBy({required String feedUrl}) async {
     return isar.podcastStats.get(Podcast.pidFrom(feedUrl));
   }

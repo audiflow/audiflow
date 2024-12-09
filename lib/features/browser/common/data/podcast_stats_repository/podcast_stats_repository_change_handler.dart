@@ -39,6 +39,10 @@ class PodcastStatsRepositoryChangeHandler implements PodcastStatsRepository {
       _inner.findPodcastStats(pid);
 
   @override
+  Future<List<PodcastStats?>> findPodcastStatsList(Iterable<int> pids) =>
+      _inner.findPodcastStatsList(pids);
+
+  @override
   Future<PodcastStats?> findPodcastStatsBy({required String feedUrl}) =>
       _inner.findPodcastStatsBy(feedUrl: feedUrl);
 
