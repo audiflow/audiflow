@@ -2,6 +2,7 @@ import 'package:audiflow/common/ui/error_notifier.dart';
 import 'package:audiflow/common/ui/fill_remaining_error.dart';
 import 'package:audiflow/common/ui/fill_remaining_loading.dart';
 import 'package:audiflow/constants/types.dart';
+import 'package:audiflow/events/play_button_notification.dart';
 import 'package:audiflow/features/browser/common/data/latest_episodes_provider.dart';
 import 'package:audiflow/features/browser/common/ui/basic_app_bar.dart';
 import 'package:audiflow/features/browser/episode/ui/episode_list.dart';
@@ -45,15 +46,22 @@ class LatestEpisodesPage extends HookConsumerWidget {
                 else if (state.hasError)
                   FillRemainingError.podcastNoResults()
                 else
-                  EpisodeList(
-                    getEpisodeAt: (index) => episodes![index],
-                    scrollController: scrollController,
-                    episodeCount: episodes?.length ?? 0,
-                    getParentThumbnailUrl: (index) => state
-                        .requireValue.podcasts
-                        .firstWhereOrNull((p) => p.id == episodes![index].pid)
-                        ?.image,
-                    thumbnailVisibility: ThumbnailVisibility.visible,
+                  NotificationListener<PlayButtonTappedNotification>(
+                    onNotification: (notification) {
+                      ref.read(latestEpisodesProvider.notifier)
+                          .togglePlayState(notification.episode);
+                      return false;
+                    },
+                    child: EpisodeList(
+                      getEpisodeAt: (index) => episodes![index],
+                      scrollController: scrollController,
+                      episodeCount: episodes?.length ?? 0,
+                      getParentThumbnailUrl: (index) => state
+                          .requireValue.podcasts
+                          .firstWhereOrNull((p) => p.id == episodes![index].pid)
+                          ?.image,
+                      thumbnailVisibility: ThumbnailVisibility.visible,
+                    ),
                   ),
               ],
             ),
