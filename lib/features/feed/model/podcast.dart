@@ -155,7 +155,7 @@ class Podcast {
 
   @override
   String toString() {
-    return '''Podcast(title: '$title', feedUrl: '$feedUrl')''';
+    return '''Podcast(id: $id, title: '$title', feedUrl: '$feedUrl')''';
   }
 }
 
@@ -218,6 +218,11 @@ class PodcastStats {
       totalEpisodes: totalEpisodes ?? this.totalEpisodes,
       totalPlayed: totalPlayed ?? this.totalPlayed,
     );
+  }
+
+  @override
+  String toString() {
+    return 'PodcastStats(id: $id)';
   }
 }
 
