@@ -1,7 +1,6 @@
 import 'package:audiflow/common/ui/error_notifier.dart';
 import 'package:audiflow/common/ui/fill_remaining_error.dart';
 import 'package:audiflow/common/ui/fill_remaining_loading.dart';
-import 'package:audiflow/features/browser/chart/ui/podcast_list_horizontal.dart';
 import 'package:audiflow/features/browser/common/data/podcast_subscriptions.dart';
 import 'package:audiflow/features/browser/common/ui/basic_app_bar.dart';
 import 'package:audiflow/features/browser/podcast/ui/podcast_list.dart';
@@ -36,12 +35,13 @@ class SubscribedPodcastsPage extends HookConsumerWidget {
               controller: controller,
               slivers: <Widget>[
                 BasicAppBar(title: L10n.of(context).subscriptions),
-                if (state.isLoading)
-                  const FillRemainingLoading()
-                else if (state.hasError)
-                  FillRemainingError.podcastNoResults()
-                else
-                  PodcastList(podcasts: state.value!),
+                state.when(
+                  data: (podcasts) => podcasts.isEmpty
+                      ? FillRemainingError.podcastNoResults()
+                      : PodcastList(podcasts: podcasts),
+                  loading: () => const FillRemainingLoading(),
+                  error: (e, _) => FillRemainingError.podcastNoResults(),
+                ),
               ],
             ),
             const ErrorNotifier(),
@@ -49,17 +49,5 @@ class SubscribedPodcastsPage extends HookConsumerWidget {
         ),
       ),
     );
-  }
-}
-
-class _SubscribedPodcasts extends ConsumerWidget {
-  const _SubscribedPodcasts();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(podcastSubscriptionsProvider);
-    return state.valueOrNull?.isNotEmpty == true
-        ? PodcastListHorizontal(podcasts: state.value!)
-        : const SliverToBoxAdapter(child: SizedBox.shrink());
   }
 }
