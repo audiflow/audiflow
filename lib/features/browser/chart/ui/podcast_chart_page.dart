@@ -39,7 +39,7 @@ class PodcastChartPage extends HookConsumerWidget {
             CustomScrollView(
               controller: controller,
               slivers: <Widget>[
-                BasicAppBar(title: L10n.of(context).home),
+                BasicAppBar(title: L10n.of(context).browse),
                 // Subscribed podcasts
                 const _SubscribedPodcasts(),
                 // Podcast in chart

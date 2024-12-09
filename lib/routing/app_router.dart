@@ -47,11 +47,11 @@ class AppRouter extends _$AppRouter {
 
   final GlobalKey<NavigatorState> parentNavigatorKey =
       GlobalKey<NavigatorState>();
-  final GlobalKey<NavigatorState> homeTabNavigatorKey =
+  final GlobalKey<NavigatorState> libraryTabNavigatorKey =
+      GlobalKey<NavigatorState>();
+  final GlobalKey<NavigatorState> browseTabNavigatorKey =
       GlobalKey<NavigatorState>();
   final GlobalKey<NavigatorState> searchTabNavigatorKey =
-      GlobalKey<NavigatorState>();
-  final GlobalKey<NavigatorState> libraryTabNavigatorKey =
       GlobalKey<NavigatorState>();
   final GlobalKey<NavigatorState> settingsTabNavigatorKey =
       GlobalKey<NavigatorState>();
@@ -116,7 +116,7 @@ class AppRouter extends _$AppRouter {
             ],
           ),
           StatefulShellBranch(
-            navigatorKey: homeTabNavigatorKey,
+            navigatorKey: browseTabNavigatorKey,
             routes: [
               GoRoute(
                 path: '/chart',
@@ -130,7 +130,7 @@ class AppRouter extends _$AppRouter {
                   GoRoute(
                     path: 'podcasts',
                     name: 'podcast',
-                    parentNavigatorKey: homeTabNavigatorKey,
+                    parentNavigatorKey: browseTabNavigatorKey,
                     pageBuilder: (context, state) {
                       final (
                         feedUrl,
@@ -160,7 +160,7 @@ class AppRouter extends _$AppRouter {
                   GoRoute(
                     path: 'season',
                     name: 'season',
-                    parentNavigatorKey: homeTabNavigatorKey,
+                    parentNavigatorKey: browseTabNavigatorKey,
                     pageBuilder: (context, state) {
                       final (podcast, season) =
                           state.extra! as (Podcast, Season);
@@ -176,7 +176,7 @@ class AppRouter extends _$AppRouter {
                   GoRoute(
                     path: 'episode',
                     name: 'episode',
-                    parentNavigatorKey: homeTabNavigatorKey,
+                    parentNavigatorKey: browseTabNavigatorKey,
                     pageBuilder: (context, state) {
                       final episode = state.extra! as Episode;
                       return _getPage(
