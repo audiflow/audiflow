@@ -3,8 +3,6 @@ import 'package:audiflow/common/ui/fill_remaining_error.dart';
 import 'package:audiflow/common/ui/fill_remaining_loading.dart';
 import 'package:audiflow/constants/country.dart';
 import 'package:audiflow/features/browser/chart/ui/podcast_chart_controller.dart';
-import 'package:audiflow/features/browser/chart/ui/podcast_list_horizontal.dart';
-import 'package:audiflow/features/browser/common/data/podcast_subscriptions.dart';
 import 'package:audiflow/features/browser/common/ui/basic_app_bar.dart';
 import 'package:audiflow/features/browser/common/ui/chart_item_list.dart';
 import 'package:audiflow/localization/generated/l10n.dart';
@@ -39,9 +37,7 @@ class PodcastChartPage extends HookConsumerWidget {
             CustomScrollView(
               controller: controller,
               slivers: <Widget>[
-                BasicAppBar(title: L10n.of(context).home),
-                // Subscribed podcasts
-                const _SubscribedPodcasts(),
+                BasicAppBar(title: L10n.of(context).browse),
                 // Podcast in chart
                 if (state.isLoading)
                   const FillRemainingLoading()
@@ -69,17 +65,5 @@ class PodcastChartPage extends HookConsumerWidget {
         ),
       ),
     );
-  }
-}
-
-class _SubscribedPodcasts extends ConsumerWidget {
-  const _SubscribedPodcasts();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(podcastSubscriptionsProvider);
-    return state.valueOrNull?.isNotEmpty == true
-        ? PodcastListHorizontal(podcasts: state.value!)
-        : const SliverToBoxAdapter(child: SizedBox.shrink());
   }
 }
