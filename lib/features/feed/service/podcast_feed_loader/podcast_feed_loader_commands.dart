@@ -46,11 +46,13 @@ class _ContinueEpisodeLoadingCommand extends _Command {
 }
 
 class _LoadedPodcastMessage extends _Message {
-  _LoadedPodcastMessage();
+  _LoadedPodcastMessage(this.pid);
+
+  final int pid;
 
   @override
   String toString() {
-    return '_LoadedPodcastMessage()';
+    return '_LoadedPodcastMessage($pid)';
   }
 }
 

@@ -2,6 +2,7 @@ import 'package:audiflow/exceptions/app_exception.dart';
 import 'package:audiflow/features/feed/data/podcast_repository.dart';
 import 'package:audiflow/features/feed/service/podcast_feed_loader.dart';
 import 'package:audiflow/features/feed/service/podcast_service.dart';
+import 'package:audiflow/utils/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'podcast_feed_loader_igniter.g.dart';
@@ -14,6 +15,7 @@ class PodcastFeedLoaderIgniter extends _$PodcastFeedLoaderIgniter {
     int? collectionId,
   }) async {
     assert(feedUrl != null || collectionId != null);
+    logger.d('build: feedUrl="$feedUrl", collectionId=$collectionId');
 
     if (feedUrl != null) {
       ref.listen(
@@ -59,21 +61,27 @@ class PodcastFeedLoaderIgniter extends _$PodcastFeedLoaderIgniter {
     String feedUrl,
     int? collectionId,
   ) async {
+    final loader =
+        ref.read(podcastFeedLoaderProvider(feedUrl: feedUrl).notifier);
     final loaderState = ref.read(podcastFeedLoaderProvider(feedUrl: feedUrl));
-    if (loaderState.collectionId != null ||
+    if (loader.hasCollectionId ||
         loaderState.loadingState != LoadingState.loadingPodcast) {
       return loaderState;
     }
 
-    final loader =
-        ref.read(podcastFeedLoaderProvider(feedUrl: feedUrl).notifier);
     if (collectionId != null) {
-      loader.setup(collectionId: collectionId);
+      await Future<void>.delayed(Duration.zero);
+      loader
+        ..collectionId = collectionId
+        ..startLoading();
     } else {
       final podcast = await ref
           .read(podcastRepositoryProvider)
           .findPodcastBy(feedUrl: feedUrl);
-      loader.setup(collectionId: podcast?.collectionId);
+      if (podcast?.collectionId != null) {
+        loader.collectionId = podcast!.collectionId;
+      }
+      loader.startLoading();
     }
 
     return ref.read(podcastFeedLoaderProvider(feedUrl: feedUrl));

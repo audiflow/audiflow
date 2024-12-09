@@ -7,7 +7,7 @@ part of 'podcast_feed_loader_igniter.dart';
 // **************************************************************************
 
 String _$podcastFeedLoaderIgniterHash() =>
-    r'89b962397e2ef496f45ce0fc2674b5353a2be14c';
+    r'52776012f281d8d65c9a07fcff614ce4674f51eb';
 
 /// Copied from Dart SDK
 class _SystemHash {

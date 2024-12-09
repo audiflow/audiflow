@@ -2,6 +2,7 @@ import 'package:audiflow/common/ui/error_notifier.dart';
 import 'package:audiflow/features/bootstrap/service/app_wide_initializer.dart';
 import 'package:audiflow/features/browser/chart/ui/podcast_chart_page.dart';
 import 'package:audiflow/features/browser/common/model/itunes_item.dart';
+import 'package:audiflow/features/browser/common/ui/subscribed_podcast_refresher.dart';
 import 'package:audiflow/features/browser/episode/ui/episode_page.dart';
 import 'package:audiflow/features/browser/library/ui/latest_episodes_page.dart';
 import 'package:audiflow/features/browser/library/ui/library_page.dart';
@@ -221,6 +222,7 @@ class AppRouter extends _$AppRouter {
             child: Stack(
               children: [
                 const ErrorNotifier(),
+                const SubscribedPodcastRefresher(),
                 AppBottomNavigationBar(
                   navigationShell: navigationShell,
                 ),

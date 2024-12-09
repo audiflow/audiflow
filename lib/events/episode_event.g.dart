@@ -7,7 +7,7 @@ part of 'episode_event.dart';
 // **************************************************************************
 
 String _$episodeEventStreamHash() =>
-    r'f9166e9d5d91ed229c974d06db4efeed92e28ccc';
+    r'1f195058b58e39f5413c77d501ad94a6b3a6e990';
 
 /// See also [EpisodeEventStream].
 @ProviderFor(EpisodeEventStream)
