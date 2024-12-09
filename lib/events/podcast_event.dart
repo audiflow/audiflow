@@ -1,4 +1,5 @@
 import 'package:audiflow/features/feed/model/model.dart';
+import 'package:audiflow/utils/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'podcast_event.g.dart';
@@ -10,6 +11,11 @@ class PodcastSubscribedEvent implements PodcastEvent {
 
   final Podcast podcast;
   final PodcastStats stats;
+
+  @override
+  String toString() {
+    return 'PodcastSubscribedEvent(podcast: $podcast, stats: $stats)';
+  }
 }
 
 class PodcastUnsubscribedEvent implements PodcastEvent {
@@ -17,6 +23,11 @@ class PodcastUnsubscribedEvent implements PodcastEvent {
 
   final Podcast podcast;
   final PodcastStats stats;
+
+  @override
+  String toString() {
+    return 'PodcastUnsubscribedEvent(podcast: $podcast, stats: $stats)';
+  }
 }
 
 class PodcastUpdatedEvent implements PodcastEvent {
@@ -24,12 +35,22 @@ class PodcastUpdatedEvent implements PodcastEvent {
 
   final Podcast podcast;
   final PodcastStats? stats;
+
+  @override
+  String toString() {
+    return 'PodcastUpdatedEvent(podcast: $podcast, stats: $stats)';
+  }
 }
 
 class PodcastStatsUpdatedEvent implements PodcastEvent {
   const PodcastStatsUpdatedEvent(this.stats);
 
   final PodcastStats stats;
+
+  @override
+  String toString() {
+    return 'PodcastStatsUpdatedEvent(stats: $stats)';
+  }
 }
 
 @Riverpod(keepAlive: true)
@@ -38,6 +59,7 @@ class PodcastEventStream extends _$PodcastEventStream {
   Stream<PodcastEvent> build() async* {}
 
   void add(PodcastEvent event) {
+    logger.t(() => 'EpisodeEventStream.add: $event');
     state = AsyncData(event);
   }
 }
