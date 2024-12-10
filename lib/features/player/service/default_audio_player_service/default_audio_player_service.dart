@@ -11,6 +11,7 @@ import 'package:audiflow/features/player/service/default_audio_player_service/au
 import 'package:audiflow/features/player/service/default_audio_player_service/audio_player_handler.dart';
 import 'package:audiflow/utils/duration.dart';
 import 'package:audiflow/utils/logger.dart';
+import 'package:audiflow/utils/widget.dart';
 import 'package:audio_service/audio_service.dart';
 import 'package:audio_session/audio_session.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -138,10 +139,6 @@ class DefaultAudioPlayerService extends _$DefaultAudioPlayerService
           '${episode.title} from position $playPosition',
     );
 
-    if (state?.phase == PlayerPhase.play && state?.episode != episode) {
-      state = state!.copyWith(phase: PlayerPhase.pause);
-    }
-
     state = AudioPlayerState(
       episode: episode,
       position: playPosition,
@@ -149,6 +146,7 @@ class DefaultAudioPlayerService extends _$DefaultAudioPlayerService
       phase: autoPlay ? PlayerPhase.play : PlayerPhase.pause,
       audioState: autoPlay ? AudioState.buffering : AudioState.idle,
     );
+    await tickNextFrame();
 
     _notifyAudioPlayerEvent(AudioPlayerAction.play);
 
