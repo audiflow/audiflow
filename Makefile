@@ -55,7 +55,7 @@ format:
 icon: ## Generate app icons.
 icon:
 	@dart run flutter_flavorizr -p android:icons -p ios:icons
-	# @flutter pub run flutter_launcher_icons
+#	@flutter pub run flutter_launcher_icons
 
 .PHONY: splash
 splash: ## Generate app splash screen.
@@ -77,13 +77,13 @@ ios-dev:
 ios-stg: ## Build iOS ipa for staging
 ios-stg:
 	@flutter build ipa --flavor stg --dart-define-from-file .env.stg \
- 	--release
+	--release
 
 .PHONY: ios-prod
 ios-prod: ## Build iOS ipa for production
 ios-prod:
 	@flutter build ipa --flavor prod --dart-define-from-file .env.prod \
- 	--release
+	--release
 
 .PHONY: and-dev
 and-dev: ## Build Android App Bundle for development
