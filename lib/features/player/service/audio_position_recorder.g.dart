@@ -7,7 +7,7 @@ part of 'audio_position_recorder.dart';
 // **************************************************************************
 
 String _$audioPositionRecorderHash() =>
-    r'42c6c8bf458f93c85f9c913af237a4c9671b39e9';
+    r'2570d67b6db1077bdc0a448fc896a21f87e7d9d6';
 
 /// See also [AudioPositionRecorder].
 @ProviderFor(AudioPositionRecorder)
