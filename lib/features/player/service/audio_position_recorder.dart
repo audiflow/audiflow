@@ -2,6 +2,7 @@ import 'package:audiflow/events/audio_player_event.dart';
 import 'package:audiflow/features/browser/common/data/episode_stats_repository/episode_stats_repository.dart';
 import 'package:audiflow/features/player/data/player_state_repository.dart';
 import 'package:audiflow/features/player/service/audio_player_service.dart';
+import 'package:audiflow/utils/duration.dart';
 import 'package:audiflow/utils/logger.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -48,8 +49,11 @@ class AudioPositionRecorder extends _$AudioPositionRecorder {
           }
           final stats =
               await _episodeStatsRepository.findEpisodeStats(episode.id);
-          final playedDuration =
-              stats!.playTotal - episode.duration! * stats.playCount;
+          final playedDuration = maxDuration(
+            Duration.zero,
+            (stats?.playTotal ?? Duration.zero) -
+                episode.duration! * (stats?.playCount ?? 0),
+          );
           if (episode.duration! * 0.95 <= playedDuration) {
             logger.d(
               () => 'save EpisodeStats.completeCountDelta +1: ${episode.title}',
