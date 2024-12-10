@@ -216,12 +216,17 @@ class LatestEpisodes extends _$LatestEpisodes {
       return _audioPlayerService.togglePlayPause();
     }
 
-    final episodes = state.requireValue.episodes;
+    final value = state.requireValue;
+    final episodes = value.episodes;
+    final playedEids = value.playedEids;
     final index = episodes.indexWhere((e) => e.id == episode.id);
     await _audioQueueService.buildAndPlay(
       pid: episode.pid,
       eid: episode.id,
-      queueingEpisodeIds: episodes.slice(index).map((e) => e.id),
+      queueingEpisodeIds: episodes
+          .slice(index + 1)
+          .where((e) => !playedEids.contains(e.id))
+          .map((e) => e.id),
     );
   }
 }
