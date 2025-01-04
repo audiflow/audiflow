@@ -7,7 +7,7 @@ part of 'default_audio_player_service.dart';
 // **************************************************************************
 
 String _$defaultAudioPlayerServiceHash() =>
-    r'7c6d08ba49198d8ad5a43a40c58bdfbb07d3f52f';
+    r'3601d81bfba1386aca171a0ca48c6040582d75eb';
 
 /// This is the default implementation of [AudioPlayerService].
 ///
@@ -31,4 +31,4 @@ final defaultAudioPlayerServiceProvider =
 
 typedef _$DefaultAudioPlayerService = Notifier<AudioPlayerState?>;
 // ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member
+// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

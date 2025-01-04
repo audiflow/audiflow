@@ -3,7 +3,7 @@ import 'package:audiflow/routing/app_router.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-class BasicAppBar extends HookConsumerWidget {
+class BasicAppBar extends ConsumerWidget {
   const BasicAppBar({
     super.key,
     required this.title,
@@ -22,9 +22,10 @@ class BasicAppBar extends HookConsumerWidget {
       flexibleSpace: FlexibleSpaceBar(
         title: Text(
           title,
-          style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                color: Theme.of(context).colorScheme.onSurface,
-              ),
+          style: Theme.of(context)
+              .textTheme
+              .titleMedium!
+              .copyWith(color: Theme.of(context).colorScheme.onSurface),
         ),
       ),
       actions: [

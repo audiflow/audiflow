@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:audiflow/utils/logger.dart';
 import 'package:connectivity_plus/connectivity_plus.dart' as conn;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'connectivity.g.dart';

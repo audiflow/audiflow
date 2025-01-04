@@ -1,3 +1,5 @@
+import 'package:collection/collection.dart';
+
 /// An enum that contains the country code for each country.
 enum Country {
   none(code: ''),
@@ -254,6 +256,12 @@ enum Country {
   const Country({
     required this.code,
   });
+
+  factory Country.fromCode(String code) {
+    final normalizedCode = code.toLowerCase();
+    return Country.values.firstWhereOrNull((e) => e.code == normalizedCode) ??
+        Country.none;
+  }
 
   final String code;
 }

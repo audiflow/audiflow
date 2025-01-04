@@ -22,6 +22,8 @@ final initialConnectivityProvider =
   allTransitiveDependencies: null,
 );
 
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
 typedef InitialConnectivityRef = ProviderRef<List<conn.ConnectivityResult>>;
 String _$connectivityHash() => r'bec0949a7e7af7b638529ff59a5cae9b935ff653';
 
@@ -39,4 +41,4 @@ final connectivityProvider =
 
 typedef _$Connectivity = Notifier<List<conn.ConnectivityResult>>;
 // ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member
+// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

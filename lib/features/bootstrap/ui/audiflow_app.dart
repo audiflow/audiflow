@@ -7,6 +7,7 @@ import 'package:audiflow/features/preference/data/preference_repository.dart';
 import 'package:audiflow/localization/generated/l10n.dart';
 import 'package:audiflow/localization/string_hardcoded.dart';
 import 'package:audiflow/routing/app_router.dart';
+import 'package:country_picker/country_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
@@ -38,6 +39,7 @@ class AudiflowApp extends ConsumerWidget {
       onGenerateTitle: (BuildContext context) => 'audiflow'.hardcoded,
       locale: locale,
       localizationsDelegates: const [
+        CountryLocalizations.delegate,
         ...L10n.localizationsDelegates,
       ],
       supportedLocales: const [
