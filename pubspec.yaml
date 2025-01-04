@@ -16,6 +16,7 @@ dependencies:
   collection: ^1.18.0
   conditional_wrap: ^3.0.0
   connectivity_plus: ^6.0.5
+  country_picker: ^2.0.27
   crypto: ^3.0.5
   cupertino_icons: ^1.0.8
   device_info_plus: ^10.1.2
