@@ -1,9 +1,8 @@
 import 'package:audiflow/common/ui/error_notifier.dart';
 import 'package:audiflow/common/ui/fill_remaining_error.dart';
 import 'package:audiflow/common/ui/fill_remaining_loading.dart';
-import 'package:audiflow/constants/country.dart';
+import 'package:audiflow/features/browser/chart/ui/podcast_chart_app_bar.dart';
 import 'package:audiflow/features/browser/chart/ui/podcast_chart_controller.dart';
-import 'package:audiflow/features/browser/common/ui/basic_app_bar.dart';
 import 'package:audiflow/features/browser/common/ui/chart_item_list.dart';
 import 'package:audiflow/localization/generated/l10n.dart';
 import 'package:flutter/material.dart';
@@ -18,9 +17,7 @@ class PodcastChartPage extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(
-      podcastChartControllerProvider(size: 50, country: Country.japan),
-    );
+    final state = ref.watch(podcastChartControllerProvider);
     final controller = useScrollController();
 
     return ScrollsToTop(
@@ -37,7 +34,7 @@ class PodcastChartPage extends HookConsumerWidget {
             CustomScrollView(
               controller: controller,
               slivers: <Widget>[
-                BasicAppBar(title: L10n.of(context).browse),
+                const PodcastChartAppBar(),
                 // Podcast in chart
                 if (state.isLoading)
                   const FillRemainingLoading()
