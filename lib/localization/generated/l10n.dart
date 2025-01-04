@@ -474,6 +474,12 @@ abstract class L10n {
   /// **'{n, plural, =1{1 hour} other{{n} hours}}'**
   String sleepHour(int n);
 
+  /// No description provided for @chartRegion.
+  ///
+  /// In en, this message translates to:
+  /// **'Region'**
+  String get chartRegion;
+
   /// No description provided for @settingsOnDemandDownloadOnPlayback.
   ///
   /// In en, this message translates to:

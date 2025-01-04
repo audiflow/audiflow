@@ -116,6 +116,7 @@
       }
     }
   },
+  "chartRegion": "地域",
   "settingsOnDemandDownloadOnPlayback": "再生時の音源取得",
   "settingsOnDemandDownloadOnPlaybackDescription": "事前ダウンロードがない場合、再生開始時に音源を取得します",
   "settingsManualDownload": "手動ダウンロード",
