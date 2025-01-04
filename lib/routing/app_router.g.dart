@@ -20,6 +20,8 @@ final routerContextProvider = AutoDisposeProvider<BuildContext>.internal(
   allTransitiveDependencies: null,
 );
 
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
 typedef RouterContextRef = AutoDisposeProviderRef<BuildContext>;
 String _$appRouterHash() => r'e8d363d819dcef5b1966e1ac5a1d3fb7976394fa';
 
@@ -36,4 +38,4 @@ final appRouterProvider = NotifierProvider<AppRouter, GoRouter>.internal(
 
 typedef _$AppRouter = Notifier<GoRouter>;
 // ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member
+// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

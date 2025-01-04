@@ -214,6 +214,9 @@ class L10nJa extends L10n {
   }
 
   @override
+  String get chartRegion => '地域';
+
+  @override
   String get settingsOnDemandDownloadOnPlayback => '再生時の音源取得';
 
   @override

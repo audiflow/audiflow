@@ -19,6 +19,8 @@ final apiCacheDirProvider = Provider<String>.internal(
   allTransitiveDependencies: null,
 );
 
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
 typedef ApiCacheDirRef = ProviderRef<String>;
 String _$appDocDirHash() => r'0ced933da070ddc32c07e8ae38d0a070f1e04065';
 
@@ -33,6 +35,8 @@ final appDocDirProvider = Provider<String>.internal(
   allTransitiveDependencies: null,
 );
 
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
 typedef AppDocDirRef = ProviderRef<String>;
 // ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member
+// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package
