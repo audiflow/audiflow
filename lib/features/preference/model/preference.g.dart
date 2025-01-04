@@ -37,86 +37,91 @@ const PreferenceSchema = CollectionSchema(
       name: r'autoUpdateEpisodePeriod',
       type: IsarType.long,
     ),
-    r'downloadWarnMobileData': PropertySchema(
+    r'chartCountries': PropertySchema(
       id: 4,
+      name: r'chartCountries',
+      type: IsarType.stringList,
+    ),
+    r'downloadWarnMobileData': PropertySchema(
+      id: 5,
       name: r'downloadWarnMobileData',
       type: IsarType.bool,
     ),
     r'externalLinkConsent': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'externalLinkConsent',
       type: IsarType.bool,
     ),
     r'layout': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'layout',
       type: IsarType.long,
     ),
     r'locale': PropertySchema(
-      id: 7,
+      id: 8,
       name: r'locale',
       type: IsarType.string,
     ),
     r'markDeletedEpisodesAsPlayed': PropertySchema(
-      id: 8,
+      id: 9,
       name: r'markDeletedEpisodesAsPlayed',
       type: IsarType.bool,
     ),
     r'playbackSleepMinutes': PropertySchema(
-      id: 9,
+      id: 10,
       name: r'playbackSleepMinutes',
       type: IsarType.long,
     ),
     r'playbackSleepType': PropertySchema(
-      id: 10,
+      id: 11,
       name: r'playbackSleepType',
       type: IsarType.byte,
       enumMap: _PreferenceplaybackSleepTypeEnumValueMap,
     ),
     r'playbackSpeed': PropertySchema(
-      id: 11,
+      id: 12,
       name: r'playbackSpeed',
       type: IsarType.double,
     ),
     r'searchProvider': PropertySchema(
-      id: 12,
+      id: 13,
       name: r'searchProvider',
       type: IsarType.string,
     ),
     r'searchProviders': PropertySchema(
-      id: 13,
+      id: 14,
       name: r'searchProviders',
       type: IsarType.byteList,
       enumMap: _PreferencesearchProvidersEnumValueMap,
     ),
     r'showFunding': PropertySchema(
-      id: 14,
+      id: 15,
       name: r'showFunding',
       type: IsarType.bool,
     ),
     r'storeDownloadsSDCard': PropertySchema(
-      id: 15,
+      id: 16,
       name: r'storeDownloadsSDCard',
       type: IsarType.bool,
     ),
     r'streamWarnMobileData': PropertySchema(
-      id: 16,
+      id: 17,
       name: r'streamWarnMobileData',
       type: IsarType.bool,
     ),
     r'theme': PropertySchema(
-      id: 17,
+      id: 18,
       name: r'theme',
       type: IsarType.byte,
       enumMap: _PreferencethemeEnumValueMap,
     ),
     r'trimSilence': PropertySchema(
-      id: 18,
+      id: 19,
       name: r'trimSilence',
       type: IsarType.bool,
     ),
     r'volumeBoost': PropertySchema(
-      id: 19,
+      id: 20,
       name: r'volumeBoost',
       type: IsarType.bool,
     )
@@ -141,6 +146,13 @@ int _preferenceEstimateSize(
   Map<Type, List<int>> allOffsets,
 ) {
   var bytesCount = offsets.last;
+  bytesCount += 3 + object.chartCountries.length * 3;
+  {
+    for (var i = 0; i < object.chartCountries.length; i++) {
+      final value = object.chartCountries[i];
+      bytesCount += value.length * 3;
+    }
+  }
   bytesCount += 3 + object.locale.length * 3;
   bytesCount += 3 + object.searchProvider.length * 3;
   bytesCount += 3 + object.searchProviders.length;
@@ -157,23 +169,24 @@ void _preferenceSerialize(
   writer.writeBool(offsets[1], object.autoDownloadOnlyOnWifi);
   writer.writeBool(offsets[2], object.autoOpenNowPlaying);
   writer.writeLong(offsets[3], object.autoUpdateEpisodePeriod);
-  writer.writeBool(offsets[4], object.downloadWarnMobileData);
-  writer.writeBool(offsets[5], object.externalLinkConsent);
-  writer.writeLong(offsets[6], object.layout);
-  writer.writeString(offsets[7], object.locale);
-  writer.writeBool(offsets[8], object.markDeletedEpisodesAsPlayed);
-  writer.writeLong(offsets[9], object.playbackSleepMinutes);
-  writer.writeByte(offsets[10], object.playbackSleepType.index);
-  writer.writeDouble(offsets[11], object.playbackSpeed);
-  writer.writeString(offsets[12], object.searchProvider);
+  writer.writeStringList(offsets[4], object.chartCountries);
+  writer.writeBool(offsets[5], object.downloadWarnMobileData);
+  writer.writeBool(offsets[6], object.externalLinkConsent);
+  writer.writeLong(offsets[7], object.layout);
+  writer.writeString(offsets[8], object.locale);
+  writer.writeBool(offsets[9], object.markDeletedEpisodesAsPlayed);
+  writer.writeLong(offsets[10], object.playbackSleepMinutes);
+  writer.writeByte(offsets[11], object.playbackSleepType.index);
+  writer.writeDouble(offsets[12], object.playbackSpeed);
+  writer.writeString(offsets[13], object.searchProvider);
   writer.writeByteList(
-      offsets[13], object.searchProviders.map((e) => e.index).toList());
-  writer.writeBool(offsets[14], object.showFunding);
-  writer.writeBool(offsets[15], object.storeDownloadsSDCard);
-  writer.writeBool(offsets[16], object.streamWarnMobileData);
-  writer.writeByte(offsets[17], object.theme.index);
-  writer.writeBool(offsets[18], object.trimSilence);
-  writer.writeBool(offsets[19], object.volumeBoost);
+      offsets[14], object.searchProviders.map((e) => e.index).toList());
+  writer.writeBool(offsets[15], object.showFunding);
+  writer.writeBool(offsets[16], object.storeDownloadsSDCard);
+  writer.writeBool(offsets[17], object.streamWarnMobileData);
+  writer.writeByte(offsets[18], object.theme.index);
+  writer.writeBool(offsets[19], object.trimSilence);
+  writer.writeBool(offsets[20], object.volumeBoost);
 }
 
 Preference _preferenceDeserialize(
@@ -187,31 +200,32 @@ Preference _preferenceDeserialize(
     autoDownloadOnlyOnWifi: reader.readBool(offsets[1]),
     autoOpenNowPlaying: reader.readBool(offsets[2]),
     autoUpdateEpisodePeriod: reader.readLong(offsets[3]),
-    downloadWarnMobileData: reader.readBool(offsets[4]),
-    externalLinkConsent: reader.readBool(offsets[5]),
-    layout: reader.readLong(offsets[6]),
-    locale: reader.readString(offsets[7]),
-    markDeletedEpisodesAsPlayed: reader.readBool(offsets[8]),
-    playbackSleepMinutes: reader.readLong(offsets[9]),
+    chartCountries: reader.readStringList(offsets[4]) ?? [],
+    downloadWarnMobileData: reader.readBool(offsets[5]),
+    externalLinkConsent: reader.readBool(offsets[6]),
+    layout: reader.readLong(offsets[7]),
+    locale: reader.readString(offsets[8]),
+    markDeletedEpisodesAsPlayed: reader.readBool(offsets[9]),
+    playbackSleepMinutes: reader.readLong(offsets[10]),
     playbackSleepType: _PreferenceplaybackSleepTypeValueEnumMap[
-            reader.readByteOrNull(offsets[10])] ??
+            reader.readByteOrNull(offsets[11])] ??
         SleepType.none,
-    playbackSpeed: reader.readDouble(offsets[11]),
-    searchProvider: reader.readString(offsets[12]),
+    playbackSpeed: reader.readDouble(offsets[12]),
+    searchProvider: reader.readString(offsets[13]),
     searchProviders: reader
-            .readByteList(offsets[13])
+            .readByteList(offsets[14])
             ?.map((e) =>
                 _PreferencesearchProvidersValueEnumMap[e] ??
                 SearchProvider.itunes)
             .toList() ??
         [],
-    showFunding: reader.readBool(offsets[14]),
-    storeDownloadsSDCard: reader.readBool(offsets[15]),
-    streamWarnMobileData: reader.readBool(offsets[16]),
-    theme: _PreferencethemeValueEnumMap[reader.readByteOrNull(offsets[17])] ??
+    showFunding: reader.readBool(offsets[15]),
+    storeDownloadsSDCard: reader.readBool(offsets[16]),
+    streamWarnMobileData: reader.readBool(offsets[17]),
+    theme: _PreferencethemeValueEnumMap[reader.readByteOrNull(offsets[18])] ??
         ThemeMode.system,
-    trimSilence: reader.readBool(offsets[18]),
-    volumeBoost: reader.readBool(offsets[19]),
+    trimSilence: reader.readBool(offsets[19]),
+    volumeBoost: reader.readBool(offsets[20]),
   );
   return object;
 }
@@ -232,26 +246,28 @@ P _preferenceDeserializeProp<P>(
     case 3:
       return (reader.readLong(offset)) as P;
     case 4:
-      return (reader.readBool(offset)) as P;
+      return (reader.readStringList(offset) ?? []) as P;
     case 5:
       return (reader.readBool(offset)) as P;
     case 6:
-      return (reader.readLong(offset)) as P;
-    case 7:
-      return (reader.readString(offset)) as P;
-    case 8:
       return (reader.readBool(offset)) as P;
-    case 9:
+    case 7:
       return (reader.readLong(offset)) as P;
+    case 8:
+      return (reader.readString(offset)) as P;
+    case 9:
+      return (reader.readBool(offset)) as P;
     case 10:
+      return (reader.readLong(offset)) as P;
+    case 11:
       return (_PreferenceplaybackSleepTypeValueEnumMap[
               reader.readByteOrNull(offset)] ??
           SleepType.none) as P;
-    case 11:
-      return (reader.readDouble(offset)) as P;
     case 12:
-      return (reader.readString(offset)) as P;
+      return (reader.readDouble(offset)) as P;
     case 13:
+      return (reader.readString(offset)) as P;
+    case 14:
       return (reader
               .readByteList(offset)
               ?.map((e) =>
@@ -259,18 +275,18 @@ P _preferenceDeserializeProp<P>(
                   SearchProvider.itunes)
               .toList() ??
           []) as P;
-    case 14:
-      return (reader.readBool(offset)) as P;
     case 15:
       return (reader.readBool(offset)) as P;
     case 16:
       return (reader.readBool(offset)) as P;
     case 17:
+      return (reader.readBool(offset)) as P;
+    case 18:
       return (_PreferencethemeValueEnumMap[reader.readByteOrNull(offset)] ??
           ThemeMode.system) as P;
-    case 18:
-      return (reader.readBool(offset)) as P;
     case 19:
+      return (reader.readBool(offset)) as P;
+    case 20:
       return (reader.readBool(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -478,6 +494,232 @@ extension PreferenceQueryFilter
         upper: upper,
         includeUpper: includeUpper,
       ));
+    });
+  }
+
+  QueryBuilder<Preference, Preference, QAfterFilterCondition>
+      chartCountriesElementEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'chartCountries',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Preference, Preference, QAfterFilterCondition>
+      chartCountriesElementGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'chartCountries',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Preference, Preference, QAfterFilterCondition>
+      chartCountriesElementLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'chartCountries',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Preference, Preference, QAfterFilterCondition>
+      chartCountriesElementBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'chartCountries',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Preference, Preference, QAfterFilterCondition>
+      chartCountriesElementStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'chartCountries',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Preference, Preference, QAfterFilterCondition>
+      chartCountriesElementEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'chartCountries',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Preference, Preference, QAfterFilterCondition>
+      chartCountriesElementContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'chartCountries',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Preference, Preference, QAfterFilterCondition>
+      chartCountriesElementMatches(String pattern,
+          {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'chartCountries',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Preference, Preference, QAfterFilterCondition>
+      chartCountriesElementIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'chartCountries',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Preference, Preference, QAfterFilterCondition>
+      chartCountriesElementIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'chartCountries',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Preference, Preference, QAfterFilterCondition>
+      chartCountriesLengthEqualTo(int length) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'chartCountries',
+        length,
+        true,
+        length,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<Preference, Preference, QAfterFilterCondition>
+      chartCountriesIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'chartCountries',
+        0,
+        true,
+        0,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<Preference, Preference, QAfterFilterCondition>
+      chartCountriesIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'chartCountries',
+        0,
+        false,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<Preference, Preference, QAfterFilterCondition>
+      chartCountriesLengthLessThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'chartCountries',
+        0,
+        true,
+        length,
+        include,
+      );
+    });
+  }
+
+  QueryBuilder<Preference, Preference, QAfterFilterCondition>
+      chartCountriesLengthGreaterThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'chartCountries',
+        length,
+        include,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<Preference, Preference, QAfterFilterCondition>
+      chartCountriesLengthBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'chartCountries',
+        lower,
+        includeLower,
+        upper,
+        includeUpper,
+      );
     });
   }
 
@@ -1865,6 +2107,12 @@ extension PreferenceQueryWhereDistinct
     });
   }
 
+  QueryBuilder<Preference, Preference, QDistinct> distinctByChartCountries() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'chartCountries');
+    });
+  }
+
   QueryBuilder<Preference, Preference, QDistinct>
       distinctByDownloadWarnMobileData() {
     return QueryBuilder.apply(this, (query) {
@@ -2005,6 +2253,13 @@ extension PreferenceQueryProperty
       autoUpdateEpisodePeriodProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'autoUpdateEpisodePeriod');
+    });
+  }
+
+  QueryBuilder<Preference, List<String>, QQueryOperations>
+      chartCountriesProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'chartCountries');
     });
   }
 

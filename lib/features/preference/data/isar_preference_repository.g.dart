@@ -7,7 +7,7 @@ part of 'isar_preference_repository.dart';
 // **************************************************************************
 
 String _$isarAppPreferenceRepositoryHash() =>
-    r'72d17882b93a7f2283e7e76dcf744f74f98564f0';
+    r'caa5dbd2cfa3f1c769411411cbb0e3afdbf58ac4';
 
 /// See also [IsarAppPreferenceRepository].
 @ProviderFor(IsarAppPreferenceRepository)
@@ -24,4 +24,4 @@ final isarAppPreferenceRepositoryProvider =
 
 typedef _$IsarAppPreferenceRepository = Notifier<Preference>;
 // ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member
+// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

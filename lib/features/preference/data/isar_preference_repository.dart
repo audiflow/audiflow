@@ -64,6 +64,9 @@ class IsarAppPreferenceRepository extends _$IsarAppPreferenceRepository
       trimSilence: param.trimSilence,
       volumeBoost: param.volumeBoost,
       layout: param.layout,
+      searchProviders: param.searchProviders,
+      locale: param.locale,
+      chartCountries: param.chartCountries,
     );
     await isar.writeTxn(() => isar.preferences.put(record));
     state = record;

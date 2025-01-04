@@ -30,6 +30,7 @@ class Preference {
     required this.volumeBoost,
     required this.layout,
     required this.locale,
+    required this.chartCountries,
   });
 
   factory Preference.sensibleDefaults() {
@@ -58,6 +59,7 @@ class Preference {
       volumeBoost: false,
       layout: 0,
       locale: undefinedLocale.toString(),
+      chartCountries: <String>[],
     );
   }
 
@@ -121,6 +123,9 @@ class Preference {
   /// App locale
   final String locale;
 
+  /// Chart country
+  final List<String> chartCountries;
+
   Preference copyWith({
     bool? streamWarnMobileData,
     bool? downloadWarnMobileData,
@@ -142,6 +147,7 @@ class Preference {
     bool? volumeBoost,
     int? layout,
     String? locale,
+    List<String>? chartCountries,
   }) {
     return Preference(
       streamWarnMobileData: streamWarnMobileData ?? this.streamWarnMobileData,
@@ -168,6 +174,7 @@ class Preference {
       volumeBoost: volumeBoost ?? this.volumeBoost,
       layout: layout ?? this.layout,
       locale: locale ?? this.locale,
+      chartCountries: chartCountries ?? this.chartCountries,
     );
   }
 }
@@ -200,6 +207,7 @@ class PreferenceUpdateParam {
     this.volumeBoost,
     this.layout,
     this.locale,
+    this.chartCountries,
   });
 
   final bool? streamWarnMobileData;
@@ -221,4 +229,5 @@ class PreferenceUpdateParam {
   final bool? volumeBoost;
   final int? layout;
   final String? locale;
+  final List<String>? chartCountries;
 }
