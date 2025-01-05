@@ -110,7 +110,6 @@ class AppBottomNavigationBar extends HookConsumerWidget {
           // showSelectedLabels: false,
           selectedItemColor: theme.colorScheme.primary,
           selectedIconTheme: theme.iconTheme.copyWith(
-            size: 32,
             color: theme.colorScheme.primary,
           ),
           selectedFontSize: 12,
