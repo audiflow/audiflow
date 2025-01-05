@@ -11,12 +11,16 @@ TODO
 
 ### Player
 - [x] Seekbar
-- [x] smart play button
+- [ ] smart play button
 
 ### Home
 - [x] cache Podcast chart
   - [x] refresh per 3 hours
 - [x] refresh Podcast
+
+### Popular Podcasts
+- [x] show chart
+- [x] change region
 
 ### Setting
 - [ ] setting page
