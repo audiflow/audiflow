@@ -156,6 +156,12 @@ abstract class L10n {
   /// **'Popular Podcasts'**
   String get popularPodcasts;
 
+  /// Popular Podcasts in a specific country or region
+  ///
+  /// In en, this message translates to:
+  /// **'Popular Podcasts in {country}'**
+  String popularPodcastsIn(String country);
+
   /// No description provided for @recentlyPlayed.
   ///
   /// In en, this message translates to:

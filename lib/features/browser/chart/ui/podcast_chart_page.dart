@@ -1,10 +1,11 @@
 import 'package:audiflow/common/ui/error_notifier.dart';
 import 'package:audiflow/common/ui/fill_remaining_error.dart';
 import 'package:audiflow/common/ui/fill_remaining_loading.dart';
-import 'package:audiflow/features/browser/chart/ui/podcast_chart_app_bar.dart';
 import 'package:audiflow/features/browser/chart/ui/podcast_chart_controller.dart';
+import 'package:audiflow/features/browser/common/ui/basic_app_bar.dart';
 import 'package:audiflow/features/browser/common/ui/chart_item_list.dart';
 import 'package:audiflow/localization/generated/l10n.dart';
+import 'package:country_picker/country_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -34,7 +35,7 @@ class PodcastChartPage extends HookConsumerWidget {
             CustomScrollView(
               controller: controller,
               slivers: <Widget>[
-                const PodcastChartAppBar(),
+                BasicAppBar(title: L10n.of(context).browse),
                 // Podcast in chart
                 if (state.isLoading)
                   const FillRemainingLoading()
@@ -42,11 +43,37 @@ class PodcastChartPage extends HookConsumerWidget {
                   FillRemainingError.podcastNoResults()
                 else ...[
                   SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 40, left: 20),
-                      child: Text(
-                        L10n.of(context).popularPodcasts,
-                        style: Theme.of(context).textTheme.titleLarge,
+                    child: InkWell(
+                      onTap: () {
+                        showCountryPicker(
+                          context: context,
+                          onSelect: (country) {
+                            ref
+                                .read(podcastChartControllerProvider.notifier)
+                                .setCountry(country.countryCode);
+                          },
+                          favorite: state.value!.chartCountries
+                              .map((country) => country.code)
+                              .toList(),
+                          useSafeArea: true,
+                          useRootNavigator: true,
+                        );
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.only(
+                          top: 12,
+                          bottom: 12,
+                          left: 14,
+                        ),
+                        child: Text(
+                          L10n.of(context).popularPodcastsIn(
+                            CountryService()
+                                    .findByCode(state.value!.chartCountry.code)
+                                    ?.flagEmoji ??
+                                '',
+                          ),
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
                       ),
                     ),
                   ),

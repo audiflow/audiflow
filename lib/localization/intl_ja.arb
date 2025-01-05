@@ -9,6 +9,15 @@
   "clearSearchButton": "クリア",
   "subscriptions": "フォロー中",
   "popularPodcasts": "人気ポッドキャスト",
+  "popularPodcastsIn": "人気ポッドキャスト: {country}",
+  "@popularPodcastsIn": {
+    "description": "Popular Podcasts in a specific country or region",
+    "placeholders": {
+      "country": {
+        "type": "String"
+      }
+    }
+  },
   "recentlyPlayed": "再生履歴",
   "latestEpisodes": "最新エピソード",
   "downloadedEpisodes": "ダウンロード済み",
