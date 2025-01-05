@@ -126,6 +126,8 @@
     }
   },
   "chartRegion": "Region",
+  "following": "Following",
+  "toFollow": "Follow",
   "settingsOnDemandDownloadOnPlayback": "Download Audio on Playback",
   "settingsOnDemandDownloadOnPlaybackDescription": "If not pre-downloaded, audio will be fetched at the start of playback",
   "settingsManualDownload": "Manual Download",

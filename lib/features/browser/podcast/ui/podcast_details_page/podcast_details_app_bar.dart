@@ -5,6 +5,7 @@ import 'package:audiflow/localization/generated/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 class PodcastDetailsAppBar extends ConsumerWidget {
   const PodcastDetailsAppBar({
@@ -35,13 +36,13 @@ class PodcastDetailsAppBar extends ConsumerWidget {
               style: textTheme.titleMedium,
             ),
           ),
-          actions: _actions(ref),
+          actions: _actions(context, ref),
         );
       },
     );
   }
 
-  List<Widget>? _actions(WidgetRef ref) {
+  List<Widget>? _actions(BuildContext context, WidgetRef ref) {
     if (podcast == null) {
       return null;
     }
@@ -49,21 +50,31 @@ class PodcastDetailsAppBar extends ConsumerWidget {
     final subscribed = stats?.subscribed;
     return [
       subscribed == true
-          ? IconButton(
-              icon: const Icon(Icons.check),
+          ? TextButton(
               onPressed: () {
                 ref
                     .read(podcastStatsRepositoryProvider)
                     .unsubscribePodcast(podcast!);
               },
+              child: Row(
+                children: [
+                  const Icon(Symbols.check, size: 18),
+                  Text(L10n.of(context).following),
+                ],
+              ),
             )
-          : IconButton(
-              icon: const Icon(Icons.bookmark_add),
+          : TextButton(
               onPressed: () {
                 ref
                     .read(podcastStatsRepositoryProvider)
                     .subscribePodcast(podcast!);
               },
+              child: Row(
+                children: [
+                  const Icon(Symbols.add, size: 18),
+                  Text(L10n.of(context).toFollow),
+                ],
+              ),
             ),
       PopupMenuButton<String>(
         onSelected: (_) {

@@ -264,6 +264,12 @@ class L10nEn extends L10n {
   String get chartRegion => 'Region';
 
   @override
+  String get following => 'Following';
+
+  @override
+  String get toFollow => 'Follow';
+
+  @override
   String get settingsOnDemandDownloadOnPlayback => 'Download Audio on Playback';
 
   @override

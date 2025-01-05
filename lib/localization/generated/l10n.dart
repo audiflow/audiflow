@@ -486,6 +486,18 @@ abstract class L10n {
   /// **'Region'**
   String get chartRegion;
 
+  /// No description provided for @following.
+  ///
+  /// In en, this message translates to:
+  /// **'Following'**
+  String get following;
+
+  /// No description provided for @toFollow.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow'**
+  String get toFollow;
+
   /// No description provided for @settingsOnDemandDownloadOnPlayback.
   ///
   /// In en, this message translates to:
