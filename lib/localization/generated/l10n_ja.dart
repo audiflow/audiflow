@@ -41,6 +41,11 @@ class L10nJa extends L10n {
   String get popularPodcasts => '人気ポッドキャスト';
 
   @override
+  String popularPodcastsIn(String country) {
+    return '人気ポッドキャスト: $country';
+  }
+
+  @override
   String get recentlyPlayed => '再生履歴';
 
   @override

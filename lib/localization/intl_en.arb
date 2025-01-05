@@ -9,6 +9,15 @@
   "clearSearchButton": "Clear search text",
   "subscriptions": "Subscribed podcasts",
   "popularPodcasts": "Popular Podcasts",
+  "popularPodcastsIn": "Popular Podcasts in {country}",
+  "@popularPodcastsIn": {
+    "description": "Popular Podcasts in a specific country or region",
+    "placeholders": {
+      "country": {
+        "type": "String"
+      }
+    }
+  },
   "recentlyPlayed": "Recently Played",
   "latestEpisodes": "Latest Episodes",
   "downloadedEpisodes": "Downloaded",

@@ -41,6 +41,11 @@ class L10nEn extends L10n {
   String get popularPodcasts => 'Popular Podcasts';
 
   @override
+  String popularPodcastsIn(String country) {
+    return 'Popular Podcasts in $country';
+  }
+
+  @override
   String get recentlyPlayed => 'Recently Played';
 
   @override
