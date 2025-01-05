@@ -222,6 +222,12 @@ class L10nJa extends L10n {
   String get chartRegion => '地域';
 
   @override
+  String get following => 'フォロー中';
+
+  @override
+  String get toFollow => 'フォローする';
+
+  @override
   String get settingsOnDemandDownloadOnPlayback => '再生時の音源取得';
 
   @override
