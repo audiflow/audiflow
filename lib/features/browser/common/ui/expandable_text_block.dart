@@ -4,7 +4,6 @@ import 'package:audiflow/utils/html.dart';
 import 'package:conditional_wrap/conditional_wrap.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:flutter_html/flutter_html.dart';
 
 /// This class wraps the description in an expandable box.
 ///
@@ -53,7 +52,7 @@ class ExpandableTextBlock extends HookWidget {
                   ).createShader,
                   child: PodcastHtml(
                     content: formatted,
-                    fontSize: FontSize.medium,
+                    fontSize: 14,
                     textSelectable: expandedState.value,
                   ),
                 ),

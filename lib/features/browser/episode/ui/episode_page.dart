@@ -8,7 +8,6 @@ import 'package:audiflow/features/player/service/audio_player_service.dart';
 import 'package:audiflow/routing/app_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:flutter_html/flutter_html.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:scrolls_to_top/scrolls_to_top.dart';
 
@@ -176,7 +175,7 @@ class _EpisodeBody extends HookConsumerWidget {
         child: SelectionArea(
           child: PodcastHtml(
             content: episode.description ?? '',
-            fontSize: FontSize.medium,
+            fontSize: 14,
           ),
         ),
       ),
