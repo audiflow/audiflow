@@ -22,17 +22,17 @@ confirm:
 .PHONY: gen
 gen: ## Run Dart's code generator.
 gen:
-	flutter pub run build_runner build --delete-conflicting-outputs
+	dart run build_runner build --delete-conflicting-outputs
 
 .PHONY: gen-watch
 gen-watch: ## Watch code to kick Dart's code generator.
 gen-watch:
-	flutter pub run build_runner watch --delete-conflicting-outputs
+	dart run build_runner watch --delete-conflicting-outputs
 
 .PHONY: gen-test
 gen-test: ## Run Dart's code generator under /test dir.
 gen-test:
-	flutter pub run build_runner build --delete-conflicting-outputs \
+	dart build_runner build --delete-conflicting-outputs \
 		--build-filter="test/*.dart" \
 		--build-filter="test/**/*.dart"
 
