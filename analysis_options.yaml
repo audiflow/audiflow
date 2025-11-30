@@ -1,10 +1,33 @@
 include: package:pedantic_mono/analysis_options.yaml
 
 analyzer:
+  errors:
+    # Treat warnings as errors (can be enabled in CI with environment variable)
+    invalid_annotation_target: ignore
   exclude:
     - build/**
-    - lib/**/*.g.dart
-    - lib/**/*.freezed.dart
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+    - "**/*.gr.dart"
     - lib/l10n/**
+    - lib/generated/**
   plugins:
     - custom_lint
+
+linter:
+  rules:
+    # Additional strict rules beyond pedantic_mono
+    - always_declare_return_types
+    - avoid_dynamic_calls
+    - avoid_print
+    - prefer_const_constructors
+    - prefer_const_literals_to_create_immutables
+    - prefer_final_fields
+    - prefer_final_locals
+    - require_trailing_commas
+    - sort_child_properties_last
+    - use_key_in_widget_constructors
+
+custom_lint:
+  rules:
+    - riverpod_final_provider
