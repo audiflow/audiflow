@@ -21,21 +21,48 @@ experience and modern Flutter patterns.
 - Isar for local storage
 - Feature-based module organization
 
-## Current Scope (v2.0)
+## Key Features
 
-**In scope:**
+### 1. Podcast Discovery & Management
+- Browse podcast charts by region/genre
+- Search podcasts via iTunes API
+- Subscribe/unsubscribe to podcasts
+- Automatic feed refresh
+- OPML import/export support (planned)
 
-- Podcast search, subscription, library management
-- RSS feed parsing and sync
-- Audio playback with queue management
-- Episode downloads and offline playback
-- Multi-language: English, Japanese
+### 2. Audio Playback
+- Background audio playback
+- System media controls integration
+- Seekable playback with position saving
+- Sleep timer
+- Playback speed control
+- Audio focus handling
+- Phone call interruption handling
 
-**Future phases (v2.1+):**
+### 3. Episode Management
+- Episode browsing by podcast/season
+- Filter by played/unplayed/downloaded status
+- Sort by episode number or date
+- Episode detail view
+- Playback statistics and progress
 
-- Smart playlists, advanced playback features
-- OPML import/export, chapter support
-- Optional cross-device sync
+### 4. Download Management
+- Offline episode downloads
+- WiFi-only download option
+- Batch downloads from season/episode pages
+- Download queue management
+
+### 5. Queue Management
+- Adhoc queue building
+- Queue reordering (swipe to remove)
+- Stop at end of episode option
+- Resume from last played position
+
+### 6. Data & Sync
+- Local Isar database for offline-first
+- Podcast metadata caching
+- Incremental RSS parsing
+- Position synchronization
 
 ## Performance Targets
 

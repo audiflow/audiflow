@@ -4,15 +4,15 @@
 
 ### Phase 1: Workspace & Package Scaffolding
 
-- [ ] 1. Configure monorepo workspace foundation
-- [ ] 1.1 Configure root workspace with Flutter pub resolution
+- [x] 1. Configure monorepo workspace foundation
+- [x] 1.1 Configure root workspace with Flutter pub resolution
   - Add `resolution: workspace` to root pubspec.yaml
   - Configure SDK constraints (Dart ≥3.9.2, Flutter 3.35+)
   - Set repository metadata and version
   - Verify workspace resolution with `flutter pub get`
   - _Requirements: 1.1, 1.2_
 
-- [ ] 1.2 Configure Melos orchestration
+- [x] 1.2 Configure Melos orchestration
   - Create melos.yaml with package globs (`packages/**`)
   - Define bootstrap hooks (post: codegen)
   - Configure concurrency scripts: codegen, test, analyze, clean
@@ -20,8 +20,8 @@
   - Verify package discovery with `melos list`
   - _Requirements: 1.8_
 
-- [ ] 2. Create workspace package structure
-- [ ] 2.1 (P) Create audiflow_app application package
+- [x] 2. Create workspace package structure
+- [x] 2.1 (P) Create audiflow_app application package
   - Generate Flutter app package with `flutter create --no-pub`
   - Configure pubspec.yaml WITHOUT dependencies (added in Task 2.5)
   - Set publish_to: 'none'
@@ -29,7 +29,7 @@
   - Create main export barrel file
   - _Requirements: 1.4_
 
-- [ ] 2.2 (P) Create audiflow_core Dart package
+- [x] 2.2 (P) Create audiflow_core Dart package
   - Generate Dart package with `flutter create --template=package --no-pub`
   - Configure pubspec.yaml (Dart-only, no Flutter dependencies)
   - Set publish_to: 'none'
@@ -37,7 +37,7 @@
   - Create main export barrel: lib/audiflow_core.dart
   - _Requirements: 1.5_
 
-- [ ] 2.3 (P) Create audiflow_domain Dart package
+- [x] 2.3 (P) Create audiflow_domain Dart package
   - Generate Dart package with `flutter create --template=package --no-pub`
   - Configure pubspec.yaml WITHOUT dependencies (added in Task 2.5)
   - Set publish_to: 'none'
@@ -45,7 +45,7 @@
   - Create main export barrel: lib/audiflow_domain.dart
   - _Requirements: 1.6_
 
-- [ ] 2.4 (P) Create audiflow_ui Flutter package
+- [x] 2.4 (P) Create audiflow_ui Flutter package
   - Generate Flutter package with `flutter create --template=package --no-pub`
   - Configure pubspec.yaml WITHOUT dependencies (added in Task 2.5)
   - Set publish_to: 'none'
@@ -53,7 +53,7 @@
   - Create main export barrel: lib/audiflow_ui.dart
   - _Requirements: 1.7_
 
-- [ ] 2.5 Add all package dependencies before bootstrap
+- [x] 2.5 Add all package dependencies before bootstrap
   - Add flutter_dotenv, path_provider to audiflow_core pubspec
   - Add isar, isar_flutter_libs, dio, riverpod_annotation, build_runner, riverpod_generator, freezed, freezed_annotation, json_annotation, json_serializable to audiflow_domain pubspec
   - Add flutter_screenutil 5.9.3, cached_network_image 3.3.1, extended_image, material_symbols_icons, dynamic_color to audiflow_ui pubspec
@@ -63,7 +63,7 @@
   - Verify all dependency declarations complete
   - _Requirements: 1.4, 1.5, 1.6, 1.7_
 
-- [ ] 2.6 Bootstrap workspace packages
+- [x] 2.6 Bootstrap workspace packages
   - Run `melos bootstrap` to link packages and install dependencies
   - Verify all package dependencies resolved
   - Test cross-package imports
@@ -71,8 +71,8 @@
 
 ### Phase 2: Development Infrastructure
 
-- [ ] 3. Configure development tooling and quality infrastructure
-- [ ] 3.1 (P) Configure code generation infrastructure
+- [x] 3. Configure development tooling and quality infrastructure
+- [x] 3.1 (P) Configure code generation infrastructure
   - Add build_runner dependencies to all packages with lib/ directories
   - Configure analysis_options.yaml at repository root with flutter_lints, riverpod_lint
   - Set analyzer to treat warnings as errors
@@ -80,31 +80,29 @@
   - Test `melos run codegen` execution
   - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.7, 3.8_
 
-- [ ] 3.2 (P) Configure development automation
+- [x] 3.2 (P) Configure development automation
   - Create Melos script for `codegen:watch` in watch mode
   - Create Melos script for parallel testing across packages
-  - Create .vscode/ directory with recommended extensions
-  - Configure VSCode settings for Flutter development
   - Create Git pre-commit hook template (analyze + test + codegen check)
   - Document hook installation in README
   - _Requirements: 3.5, 3.6, 3.9, 3.10_
 
-- [ ] 13. Implement testing infrastructure foundation
-- [ ] 13.1 Configure testing dependencies
+- [x] 13. Implement testing infrastructure foundation
+- [x] 13.1 Configure testing dependencies
   - Verify flutter_test SDK dependency in all packages
   - Verify mockito and build_runner in dev_dependencies
   - Add riverpod_test for provider testing (if available)
   - Configure test/ directories mirroring lib/ structure
   - _Requirements: 2.1, 2.2_
 
-- [ ] 13.2 Create test helper utilities
+- [x] 13.2 Create test helper utilities
   - Create packages/audiflow_app/test/helpers/pump_app.dart extension
   - Implement pumpApp() helper with ProviderScope, theme, locale, routing
   - Create test_providers.dart with createMockContainer() utility
   - Create fixtures.dart with common test data
   - _Requirements: 2.3, 2.4_
 
-- [ ] 13.3 Generate mock classes with mockito
+- [x] 13.3 Generate mock classes with mockito
   - Create test/helpers/mocks.dart with @GenerateMocks annotations
   - Annotate SharedPreferences, PackageInfo, Isar, Dio, Logger
   - Run build_runner to generate mock classes
