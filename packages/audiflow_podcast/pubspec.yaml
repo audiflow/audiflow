@@ -1,0 +1,30 @@
+name: audiflow_podcast
+description: "Podcast RSS parsing utilities with streaming support"
+version: 0.0.1
+publish_to: 'none'
+
+environment:
+  sdk: ^3.10.0
+
+resolution: workspace
+
+dependencies:
+  audiflow_core:
+    path: ../audiflow_core
+
+  # RSS parsing
+  xml: ^6.5.0
+  intl: ^0.20.2
+
+  # Logging
+  logger: ^2.6.2
+
+  # Platform & Storage
+  path_provider: ^2.1.5
+  shared_preferences: ^2.5.3
+  crypto: ^3.0.6
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
