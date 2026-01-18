@@ -5,7 +5,6 @@ part of 'app_database.dart';
 // ignore_for_file: type=lint
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
-  _$AppDatabase.connect(DatabaseConnection c) : super.connect(c);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>

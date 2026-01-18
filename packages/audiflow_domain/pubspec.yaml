@@ -9,6 +9,8 @@ environment:
 resolution: workspace
 
 dependencies:
+  audiflow_podcast:
+    path: ../audiflow_podcast
   riverpod: ^3.2.0
   drift: ^2.25.0
   sqlite3_flutter_libs: ^0.5.26
