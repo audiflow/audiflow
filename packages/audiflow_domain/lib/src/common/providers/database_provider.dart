@@ -1,7 +1,11 @@
 import 'package:riverpod/riverpod.dart';
 
-/// Provider for Isar database instance
-/// Note: Isar type will be available after running code generation
-final isarProvider = Provider<dynamic>((ref) {
-  throw UnimplementedError('isarProvider must be overridden at startup');
+import '../database/app_database.dart';
+
+/// Provider for Drift database instance
+///
+/// Must be overridden at app startup with a real AppDatabase instance.
+/// See main.dart for initialization example.
+final databaseProvider = Provider<AppDatabase>((ref) {
+  throw UnimplementedError('databaseProvider must be overridden at startup');
 });
