@@ -26,7 +26,7 @@
 - `connectivity_plus` - Network monitoring
 
 **Podcast:**
-- `podcast_feed_parser` - RSS parsing
+- `audiflow_podcast` - Internal RSS parsing package (streaming parser with caching)
 - `podcast_feed_searcher` - iTunes API
 
 **Navigation:**
@@ -94,6 +94,11 @@
 **Background tasks?**
 → Long tasks: worker_manager (isolates)
 → Audio: audio_service
+
+**RSS feed parsing?**
+→ Use `audiflow_podcast` package with `FeedParserService`
+→ For direct control: `PodcastRssParser` streaming API
+→ For custom entity construction: Implement `PodcastEntityBuilder`
 
 ## Build Flavors
 ```bash
