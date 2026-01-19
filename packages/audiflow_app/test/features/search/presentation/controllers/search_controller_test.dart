@@ -6,107 +6,7 @@ import 'package:audiflow_search/audiflow_search.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-/// Mock implementation of PodcastSearchService for testing.
-class MockPodcastSearchService implements PodcastSearchService {
-  MockPodcastSearchService({
-    this.searchDelay = Duration.zero,
-    this.searchResult,
-    this.searchException,
-  });
-
-  final Duration searchDelay;
-  final SearchResult? searchResult;
-  final SearchException? searchException;
-
-  int searchCallCount = 0;
-  String? lastSearchTerm;
-
-  @override
-  Future<SearchResult> search(SearchQuery query) async {
-    searchCallCount++;
-    lastSearchTerm = query.term;
-
-    if (searchDelay != Duration.zero) {
-      await Future<void>.delayed(searchDelay);
-    }
-
-    if (searchException != null) {
-      throw searchException!;
-    }
-
-    return searchResult ??
-        SearchResult(
-          totalCount: 0,
-          podcasts: const [],
-          provider: 'mock',
-          timestamp: DateTime.now(),
-        );
-  }
-
-  @override
-  Future<SearchEntityResult<T>> searchWithBuilder<T>(
-    SearchQuery query, {
-    required PodcastSearchEntityBuilder<T> builder,
-  }) {
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<SearchResult> getTopCharts(ChartsQuery query, {String? providerId}) {
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<SearchEntityResult<T>> getTopChartsWithBuilder<T>(
-    ChartsQuery query, {
-    required PodcastSearchEntityBuilder<T> builder,
-    String? providerId,
-  }) {
-    throw UnimplementedError();
-  }
-}
-
-/// Mock service with completer-based async control for testing loading state.
-class _DelayedMockService implements PodcastSearchService {
-  _DelayedMockService({
-    required this.onSearch,
-    required this.searchCompleter,
-    required this.searchResult,
-  });
-
-  final void Function(String term) onSearch;
-  final Completer<void> searchCompleter;
-  final SearchResult searchResult;
-
-  @override
-  Future<SearchResult> search(SearchQuery query) async {
-    onSearch(query.term);
-    await searchCompleter.future;
-    return searchResult;
-  }
-
-  @override
-  Future<SearchEntityResult<T>> searchWithBuilder<T>(
-    SearchQuery query, {
-    required PodcastSearchEntityBuilder<T> builder,
-  }) {
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<SearchResult> getTopCharts(ChartsQuery query, {String? providerId}) {
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<SearchEntityResult<T>> getTopChartsWithBuilder<T>(
-    ChartsQuery query, {
-    required PodcastSearchEntityBuilder<T> builder,
-    String? providerId,
-  }) {
-    throw UnimplementedError();
-  }
-}
+import '../../../../helpers/search_mocks.dart';
 
 void main() {
   group('SearchState', () {
@@ -319,8 +219,7 @@ void main() {
       var searchCallCount = 0;
       String? lastSearchTerm;
 
-      // Custom mock that uses completer for controlled async
-      final mockService = _DelayedMockService(
+      final mockService = DelayedMockSearchService(
         onSearch: (term) {
           searchCallCount++;
           lastSearchTerm = term;
@@ -488,7 +387,6 @@ void main() {
         timestamp: DateTime.now(),
       );
 
-      // Custom service that fails first, then succeeds
       final mockService = MockPodcastSearchService(
         searchException: SearchException.unavailable(
           providerId: 'mock',

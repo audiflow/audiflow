@@ -1,0 +1,315 @@
+import 'dart:async';
+
+import 'package:audiflow_search/audiflow_search.dart';
+
+/// Mock implementation of PodcastSearchService for testing.
+///
+/// Configurable behavior via constructor parameters.
+class MockPodcastSearchService implements PodcastSearchService {
+  MockPodcastSearchService({
+    this.searchDelay = Duration.zero,
+    this.searchResult,
+    this.searchException,
+  });
+
+  final Duration searchDelay;
+  final SearchResult? searchResult;
+  final SearchException? searchException;
+
+  int searchCallCount = 0;
+  String? lastSearchTerm;
+
+  @override
+  Future<SearchResult> search(SearchQuery query) async {
+    searchCallCount++;
+    lastSearchTerm = query.term;
+
+    if (searchDelay != Duration.zero) {
+      await Future<void>.delayed(searchDelay);
+    }
+
+    if (searchException != null) {
+      throw searchException!;
+    }
+
+    return searchResult ??
+        SearchResult(
+          totalCount: 0,
+          podcasts: const [],
+          provider: 'mock',
+          timestamp: DateTime.now(),
+        );
+  }
+
+  @override
+  Future<SearchEntityResult<T>> searchWithBuilder<T>(
+    SearchQuery query, {
+    required PodcastSearchEntityBuilder<T> builder,
+  }) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<SearchResult> getTopCharts(ChartsQuery query, {String? providerId}) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<SearchEntityResult<T>> getTopChartsWithBuilder<T>(
+    ChartsQuery query, {
+    required PodcastSearchEntityBuilder<T> builder,
+    String? providerId,
+  }) {
+    throw UnimplementedError();
+  }
+}
+
+/// Mock service with completer-based async control for testing loading state.
+class DelayedMockSearchService implements PodcastSearchService {
+  DelayedMockSearchService({
+    required this.onSearch,
+    required this.searchCompleter,
+    required this.searchResult,
+  });
+
+  final void Function(String term) onSearch;
+  final Completer<void> searchCompleter;
+  final SearchResult searchResult;
+
+  @override
+  Future<SearchResult> search(SearchQuery query) async {
+    onSearch(query.term);
+    await searchCompleter.future;
+    return searchResult;
+  }
+
+  @override
+  Future<SearchEntityResult<T>> searchWithBuilder<T>(
+    SearchQuery query, {
+    required PodcastSearchEntityBuilder<T> builder,
+  }) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<SearchResult> getTopCharts(ChartsQuery query, {String? providerId}) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<SearchEntityResult<T>> getTopChartsWithBuilder<T>(
+    ChartsQuery query, {
+    required PodcastSearchEntityBuilder<T> builder,
+    String? providerId,
+  }) {
+    throw UnimplementedError();
+  }
+}
+
+/// Mock service that never completes to test loading state.
+class SlowMockSearchService implements PodcastSearchService {
+  final _completer = Completer<SearchResult>();
+
+  @override
+  Future<SearchResult> search(SearchQuery query) {
+    return _completer.future;
+  }
+
+  @override
+  Future<SearchEntityResult<T>> searchWithBuilder<T>(
+    SearchQuery query, {
+    required PodcastSearchEntityBuilder<T> builder,
+  }) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<SearchResult> getTopCharts(ChartsQuery query, {String? providerId}) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<SearchEntityResult<T>> getTopChartsWithBuilder<T>(
+    ChartsQuery query, {
+    required PodcastSearchEntityBuilder<T> builder,
+    String? providerId,
+  }) {
+    throw UnimplementedError();
+  }
+}
+
+/// Mock service that returns a specific number of results.
+class ResultsMockSearchService implements PodcastSearchService {
+  ResultsMockSearchService({required this.count});
+  final int count;
+
+  @override
+  Future<SearchResult> search(SearchQuery query) async {
+    final podcasts = List.generate(
+      count,
+      (index) => Podcast(
+        id: 'podcast_$index',
+        name: 'Podcast $index',
+        artistName: 'Artist $index',
+        genres: const ['Technology'],
+        description: 'Description $index',
+      ),
+    );
+    return SearchResult(
+      totalCount: count,
+      podcasts: podcasts,
+      provider: 'mock',
+      timestamp: DateTime.now(),
+    );
+  }
+
+  @override
+  Future<SearchEntityResult<T>> searchWithBuilder<T>(
+    SearchQuery query, {
+    required PodcastSearchEntityBuilder<T> builder,
+  }) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<SearchResult> getTopCharts(ChartsQuery query, {String? providerId}) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<SearchEntityResult<T>> getTopChartsWithBuilder<T>(
+    ChartsQuery query, {
+    required PodcastSearchEntityBuilder<T> builder,
+    String? providerId,
+  }) {
+    throw UnimplementedError();
+  }
+}
+
+/// Mock service that returns results with custom IDs.
+class CustomIdMockSearchService implements PodcastSearchService {
+  CustomIdMockSearchService({required this.ids});
+  final List<String> ids;
+
+  @override
+  Future<SearchResult> search(SearchQuery query) async {
+    final podcasts = ids
+        .asMap()
+        .entries
+        .map(
+          (entry) => Podcast(
+            id: entry.value,
+            name: 'Podcast ${entry.key}',
+            artistName: 'Artist ${entry.key}',
+            genres: const ['Technology'],
+            description: 'Description ${entry.key}',
+          ),
+        )
+        .toList();
+    return SearchResult(
+      totalCount: podcasts.length,
+      podcasts: podcasts,
+      provider: 'mock',
+      timestamp: DateTime.now(),
+    );
+  }
+
+  @override
+  Future<SearchEntityResult<T>> searchWithBuilder<T>(
+    SearchQuery query, {
+    required PodcastSearchEntityBuilder<T> builder,
+  }) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<SearchResult> getTopCharts(ChartsQuery query, {String? providerId}) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<SearchEntityResult<T>> getTopChartsWithBuilder<T>(
+    ChartsQuery query, {
+    required PodcastSearchEntityBuilder<T> builder,
+    String? providerId,
+  }) {
+    throw UnimplementedError();
+  }
+}
+
+/// Mock service that throws an error.
+class ErrorMockSearchService implements PodcastSearchService {
+  @override
+  Future<SearchResult> search(SearchQuery query) async {
+    throw SearchException.unavailable(
+      providerId: 'mock',
+      message: 'Network error occurred',
+    );
+  }
+
+  @override
+  Future<SearchEntityResult<T>> searchWithBuilder<T>(
+    SearchQuery query, {
+    required PodcastSearchEntityBuilder<T> builder,
+  }) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<SearchResult> getTopCharts(ChartsQuery query, {String? providerId}) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<SearchEntityResult<T>> getTopChartsWithBuilder<T>(
+    ChartsQuery query, {
+    required PodcastSearchEntityBuilder<T> builder,
+    String? providerId,
+  }) {
+    throw UnimplementedError();
+  }
+}
+
+/// Mock service that fails first, then succeeds on retry.
+class RetryMockSearchService implements PodcastSearchService {
+  int callCount = 0;
+
+  @override
+  Future<SearchResult> search(SearchQuery query) async {
+    callCount++;
+    if (callCount <= 1) {
+      throw SearchException.unavailable(
+        providerId: 'mock',
+        message: 'Network error occurred',
+      );
+    }
+    return SearchResult(
+      totalCount: 0,
+      podcasts: const [],
+      provider: 'mock',
+      timestamp: DateTime.now(),
+    );
+  }
+
+  @override
+  Future<SearchEntityResult<T>> searchWithBuilder<T>(
+    SearchQuery query, {
+    required PodcastSearchEntityBuilder<T> builder,
+  }) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<SearchResult> getTopCharts(ChartsQuery query, {String? providerId}) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<SearchEntityResult<T>> getTopChartsWithBuilder<T>(
+    ChartsQuery query, {
+    required PodcastSearchEntityBuilder<T> builder,
+    String? providerId,
+  }) {
+    throw UnimplementedError();
+  }
+}
