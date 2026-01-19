@@ -1,5 +1,14 @@
 # Technical Design Rules and Principles
 
+## AI-Optimized Design Principles
+
+| Principle | Do | Don't |
+|-----------|-----|-------|
+| Conciseness | Bullet points, tables | Verbose prose |
+| Diagrams | Only for complex flows | Every component |
+| Models | Reference source files | Repeat obvious structures |
+| Architecture | Minimum viable design | Enterprise patterns |
+
 ## Core Design Principles
 
 ### 1. Type Safety is Mandatory
@@ -20,6 +29,14 @@
 - **High complexity**: Multiple diagrams (architecture, sequence, state)
 - **Always pure Mermaid**: No styling, just structure
 
+### When to Use Diagrams
+Use diagrams **only** when:
+- Multiple async flows interact
+- State machine with 4+ states
+- Cross-service communication patterns
+
+Otherwise: bullet lists or tables suffice.
+
 ### 4. Component Design Rules
 - **Single Responsibility**: One clear purpose per component
 - **Clear Boundaries**: Explicit domain ownership
@@ -33,6 +50,28 @@
 - **Consistency Boundaries**: Clear aggregate roots
 - **Normalization**: Balance between performance and integrity
 - **Evolution**: Plan for schema changes
+
+### Model Documentation Rules
+**Skip** when:
+- Model mirrors DB schema (reference migration file)
+- Model is protobuf-defined (reference .proto file)
+- Standard CRUD entity
+- SQL query is obvious (SELECT by PK, simple INSERT)
+
+**Include** when:
+- Complex invariants exist
+- Non-obvious validation rules
+- Derived/computed fields
+- Complex joins or aggregations
+
+Example reference:
+```markdown
+## Data Model
+See `lib/db/schema.dart` for table definition.
+Key invariants: status transitions only forward (PENDING -> PROCESSED -> INDEXED).
+```
+
+**Anti-pattern**: Copying table schema or obvious queries into design.md. AI reads source files directly.
 
 ### 6. Error Handling Philosophy
 - **Fail Fast**: Validate early and clearly
@@ -180,3 +219,10 @@ graph TB
 ❌ Tight coupling between components
 ❌ Missing data consistency strategy
 ❌ Incomplete dependency analysis
+
+## Quick Reference Checklist
+
+- [ ] No redundant diagrams
+- [ ] Models reference source files
+- [ ] Security/perf documented briefly
+- [ ] Under 150 lines typical

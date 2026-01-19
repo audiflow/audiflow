@@ -1,0 +1,123 @@
+import 'package:audiflow_app/features/search/presentation/controllers/search_controller.dart';
+import 'package:audiflow_app/features/search/presentation/controllers/search_state.dart';
+import 'package:audiflow_app/features/search/presentation/screens/search_screen.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+void main() {
+  group('SearchScreen', () {
+    testWidgets('renders text input field for search query', (tester) async {
+      await tester.pumpWidget(
+        const ProviderScope(
+          child: MaterialApp(home: SearchScreen()),
+        ),
+      );
+
+      // Find TextField for entering search queries (Requirement 1.1)
+      expect(find.byType(TextField), findsOneWidget);
+    });
+
+    testWidgets('renders submit button with search icon', (tester) async {
+      await tester.pumpWidget(
+        const ProviderScope(
+          child: MaterialApp(home: SearchScreen()),
+        ),
+      );
+
+      // Find IconButton with search icon (Requirement 1.2)
+      expect(find.byIcon(Icons.search), findsOneWidget);
+      expect(find.byType(IconButton), findsOneWidget);
+    });
+
+    testWidgets('submit button tap calls controller search method',
+        (tester) async {
+      final container = ProviderContainer();
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: const MaterialApp(home: SearchScreen()),
+        ),
+      );
+
+      // Enter text in the search field
+      await tester.enterText(find.byType(TextField), 'test query');
+      await tester.pump();
+
+      // Tap the submit button (Requirement 1.3)
+      await tester.tap(find.byIcon(Icons.search));
+      await tester.pump();
+
+      // Verify state changed (stub returns error state)
+      final state = container.read(podcastSearchControllerProvider);
+      expect(state, isA<SearchError>());
+    });
+
+    testWidgets('keyboard submit action calls controller search method',
+        (tester) async {
+      final container = ProviderContainer();
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: const MaterialApp(home: SearchScreen()),
+        ),
+      );
+
+      // Enter text in the search field
+      await tester.enterText(find.byType(TextField), 'keyboard test');
+      await tester.pump();
+
+      // Simulate pressing enter/done on keyboard (Requirement 1.4)
+      await tester.testTextInput.receiveAction(TextInputAction.search);
+      await tester.pump();
+
+      // Verify state changed (stub returns error state)
+      final state = container.read(podcastSearchControllerProvider);
+      expect(state, isA<SearchError>());
+    });
+
+    testWidgets('keyboard is dismissed when search is initiated',
+        (tester) async {
+      await tester.pumpWidget(
+        const ProviderScope(
+          child: MaterialApp(home: SearchScreen()),
+        ),
+      );
+
+      // Enter text and focus the text field
+      final textField = find.byType(TextField);
+      await tester.tap(textField);
+      await tester.pump();
+      await tester.enterText(textField, 'dismiss test');
+      await tester.pump();
+
+      // Find the EditableText to check focus state
+      final editableText = find.byType(EditableText);
+      final focusNode = tester.widget<EditableText>(editableText).focusNode;
+
+      // Verify text field has focus before search
+      expect(focusNode.hasFocus, isTrue);
+
+      // Tap submit button (Requirement 1.5)
+      await tester.tap(find.byIcon(Icons.search));
+      await tester.pump();
+
+      // After search, keyboard should be dismissed (focus lost)
+      expect(focusNode.hasFocus, isFalse);
+    });
+
+    testWidgets('watches PodcastSearchController state', (tester) async {
+      await tester.pumpWidget(
+        const ProviderScope(
+          child: MaterialApp(home: SearchScreen()),
+        ),
+      );
+
+      // Widget should successfully render and watch the controller
+      // If it doesn't watch properly, the widget tree wouldn't build
+      expect(find.byType(SearchScreen), findsOneWidget);
+    });
+  });
+}

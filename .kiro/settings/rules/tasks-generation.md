@@ -1,5 +1,65 @@
 # Task Generation Rules
 
+## TDD-Aligned Phase Structure
+
+```
+Phase 1: Skeleton & Wiring
+  - Interfaces/ports definition
+  - DI container setup
+  - Handler stubs (return errors)
+  - Validation tests (protovalidate, interceptor chain)
+
+Phase 2: Core Implementation
+  - Implement components (AI applies TDD automatically)
+  - Repository tests against emulator
+  - UseCase/Handler tests with mocks
+
+Phase 3: Scenario Tests
+  - Mock-based scenario tests
+  - Interceptor chain verification
+```
+
+### Why Wire-Up First
+- Early integration failures surface immediately
+- Dependency injection issues caught before deep implementation
+- Team can parallelize component work
+- Continuous "system works" validation
+
+### Why Validation Tests in Phase 1
+- Interceptor-based validation works before handler logic
+- Even stub handlers can verify validation wiring
+- Catches contract/schema issues early
+- Validates the interceptor chain is correctly configured
+
+## Testing Philosophy
+
+| Test Type | Approach |
+|-----------|----------|
+| Repository tests | Use emulator (testutil.NewTestClient) |
+| UseCase/Handler tests | Use mocks (moq-generated) |
+| Scenario tests | Mock-based, verify cross-layer flows |
+| E2E tests | Not needed - scenario tests sufficient |
+| Quality verification | Each task runs `make verify` |
+
+## Task Granularity
+- One task = one testable unit
+- No TDD micro-steps (AI follows TDD automatically)
+- No separate "testing phase" at end
+- No separate "make verify" task (redundant)
+
+## Anti-Patterns to Avoid
+
+| Anti-Pattern | Correct Approach |
+|--------------|------------------|
+| Tests as final phase | Tests with each component |
+| Wire-up after all components | Wire-up skeleton first |
+| Validation tests after implementation | Validation tests in Phase 1 |
+| E2E tests with real services | Scenario tests with mocks |
+| Separate "make verify" task | Each task runs make verify |
+| "Clean up" phase | Continuous quality |
+
+---
+
 ## Core Principles
 
 ### 1. Natural Language Descriptions
@@ -129,3 +189,15 @@ Focus on capabilities and outcomes, not code structure.
 Use `N.M`-style numeric requirement IDs where `N` is the top-level requirement number from requirements.md (for example, Requirement 1 → 1.1, 1.2; Requirement 2 → 2.1, 2.2), and `M` is a local index within that requirement group.
 
 Document any intentionally deferred requirements with rationale.
+
+---
+
+## Quick Reference Checklist
+
+- [ ] Phase 1 has skeleton + wiring
+- [ ] Validation tests in Phase 1
+- [ ] Repository tests use emulator
+- [ ] UseCase/Handler tests use mocks
+- [ ] Scenario tests (not E2E) in Phase 3
+- [ ] No separate quality verification task
+- [ ] Tests accompany each component (not at end)
