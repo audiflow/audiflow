@@ -1,8 +1,112 @@
+import 'dart:async';
+
 import 'package:audiflow_app/features/search/presentation/controllers/search_controller.dart';
 import 'package:audiflow_app/features/search/presentation/controllers/search_state.dart';
 import 'package:audiflow_search/audiflow_search.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+/// Mock implementation of PodcastSearchService for testing.
+class MockPodcastSearchService implements PodcastSearchService {
+  MockPodcastSearchService({
+    this.searchDelay = Duration.zero,
+    this.searchResult,
+    this.searchException,
+  });
+
+  final Duration searchDelay;
+  final SearchResult? searchResult;
+  final SearchException? searchException;
+
+  int searchCallCount = 0;
+  String? lastSearchTerm;
+
+  @override
+  Future<SearchResult> search(SearchQuery query) async {
+    searchCallCount++;
+    lastSearchTerm = query.term;
+
+    if (searchDelay != Duration.zero) {
+      await Future<void>.delayed(searchDelay);
+    }
+
+    if (searchException != null) {
+      throw searchException!;
+    }
+
+    return searchResult ??
+        SearchResult(
+          totalCount: 0,
+          podcasts: const [],
+          provider: 'mock',
+          timestamp: DateTime.now(),
+        );
+  }
+
+  @override
+  Future<SearchEntityResult<T>> searchWithBuilder<T>(
+    SearchQuery query, {
+    required PodcastSearchEntityBuilder<T> builder,
+  }) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<SearchResult> getTopCharts(ChartsQuery query, {String? providerId}) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<SearchEntityResult<T>> getTopChartsWithBuilder<T>(
+    ChartsQuery query, {
+    required PodcastSearchEntityBuilder<T> builder,
+    String? providerId,
+  }) {
+    throw UnimplementedError();
+  }
+}
+
+/// Mock service with completer-based async control for testing loading state.
+class _DelayedMockService implements PodcastSearchService {
+  _DelayedMockService({
+    required this.onSearch,
+    required this.searchCompleter,
+    required this.searchResult,
+  });
+
+  final void Function(String term) onSearch;
+  final Completer<void> searchCompleter;
+  final SearchResult searchResult;
+
+  @override
+  Future<SearchResult> search(SearchQuery query) async {
+    onSearch(query.term);
+    await searchCompleter.future;
+    return searchResult;
+  }
+
+  @override
+  Future<SearchEntityResult<T>> searchWithBuilder<T>(
+    SearchQuery query, {
+    required PodcastSearchEntityBuilder<T> builder,
+  }) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<SearchResult> getTopCharts(ChartsQuery query, {String? providerId}) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<SearchEntityResult<T>> getTopChartsWithBuilder<T>(
+    ChartsQuery query, {
+    required PodcastSearchEntityBuilder<T> builder,
+    String? providerId,
+  }) {
+    throw UnimplementedError();
+  }
+}
 
 void main() {
   group('SearchState', () {
@@ -87,29 +191,351 @@ void main() {
 
       expect(state, isA<SearchInitial>());
     });
+  });
 
-    test('search method exists and transitions to error state (stub)', () async {
-      final controller = container.read(podcastSearchControllerProvider.notifier);
+  group('PodcastSearchController search execution (Task 2.1)', () {
+    test('search transitions from initial to loading to success', () async {
+      final podcasts = [
+        Podcast(id: '1', name: 'Tech Podcast', artistName: 'Tech Host'),
+        Podcast(id: '2', name: 'Science Show', artistName: 'Science Host'),
+      ];
+      final mockService = MockPodcastSearchService(
+        searchResult: SearchResult(
+          totalCount: 2,
+          podcasts: podcasts,
+          provider: 'mock',
+          timestamp: DateTime.now(),
+        ),
+      );
 
-      await controller.search('test query');
-      final state = container.read(podcastSearchControllerProvider);
+      final container = ProviderContainer(
+        overrides: [
+          podcastSearchServiceProvider.overrideWithValue(mockService),
+        ],
+      );
+      addTearDown(container.dispose);
 
-      expect(state, isA<SearchError>());
+      final stateHistory = <SearchState>[];
+      container.listen(
+        podcastSearchControllerProvider,
+        (_, state) => stateHistory.add(state),
+        fireImmediately: true,
+      );
+
+      final controller =
+          container.read(podcastSearchControllerProvider.notifier);
+      await controller.search('technology');
+
+      expect(stateHistory[0], isA<SearchInitial>());
+      expect(stateHistory[1], isA<SearchLoading>());
+      expect(stateHistory[2], isA<SearchSuccess>());
+
+      final successState = stateHistory[2] as SearchSuccess;
+      expect(successState.result.podcasts.length, equals(2));
+      expect(successState.result.podcasts.first.name, equals('Tech Podcast'));
     });
 
-    test('retry method exists and delegates to search', () async {
-      final controller = container.read(podcastSearchControllerProvider.notifier);
+    test('search transitions from initial to loading to error on failure',
+        () async {
+      final mockService = MockPodcastSearchService(
+        searchException: SearchException.unavailable(
+          providerId: 'mock',
+          message: 'Network unavailable',
+        ),
+      );
 
-      // First search to set lastQuery
-      await controller.search('retry test');
+      final container = ProviderContainer(
+        overrides: [
+          podcastSearchServiceProvider.overrideWithValue(mockService),
+        ],
+      );
+      addTearDown(container.dispose);
 
-      // Reset to initial for retry test
-      // Note: retry should re-use the last query
+      final stateHistory = <SearchState>[];
+      container.listen(
+        podcastSearchControllerProvider,
+        (_, state) => stateHistory.add(state),
+        fireImmediately: true,
+      );
+
+      final controller =
+          container.read(podcastSearchControllerProvider.notifier);
+      await controller.search('test query');
+
+      expect(stateHistory[0], isA<SearchInitial>());
+      expect(stateHistory[1], isA<SearchLoading>());
+      expect(stateHistory[2], isA<SearchError>());
+
+      final errorState = stateHistory[2] as SearchError;
+      expect(errorState.exception.code, equals(StatusCode.unavailable));
+      expect(errorState.lastQuery, equals('test query'));
+    });
+
+    test('search stores last query for retry functionality', () async {
+      final mockService = MockPodcastSearchService(
+        searchResult: SearchResult(
+          totalCount: 0,
+          podcasts: const [],
+          provider: 'mock',
+          timestamp: DateTime.now(),
+        ),
+      );
+
+      final container = ProviderContainer(
+        overrides: [
+          podcastSearchServiceProvider.overrideWithValue(mockService),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final controller =
+          container.read(podcastSearchControllerProvider.notifier);
+      await controller.search('  my search term  ');
+
+      expect(mockService.lastSearchTerm, equals('my search term'));
+    });
+
+    test('search trims whitespace from query', () async {
+      final mockService = MockPodcastSearchService();
+
+      final container = ProviderContainer(
+        overrides: [
+          podcastSearchServiceProvider.overrideWithValue(mockService),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final controller =
+          container.read(podcastSearchControllerProvider.notifier);
+      await controller.search('  trimmed query  ');
+
+      expect(mockService.lastSearchTerm, equals('trimmed query'));
+    });
+  });
+
+  group('PodcastSearchController duplicate prevention (Task 2.2)', () {
+    test('duplicate calls during loading are ignored', () async {
+      final searchCompleter = Completer<void>();
+      var searchCallCount = 0;
+      String? lastSearchTerm;
+
+      // Custom mock that uses completer for controlled async
+      final mockService = _DelayedMockService(
+        onSearch: (term) {
+          searchCallCount++;
+          lastSearchTerm = term;
+        },
+        searchCompleter: searchCompleter,
+        searchResult: SearchResult(
+          totalCount: 0,
+          podcasts: const [],
+          provider: 'mock',
+          timestamp: DateTime.now(),
+        ),
+      );
+
+      final container = ProviderContainer(
+        overrides: [
+          podcastSearchServiceProvider.overrideWithValue(mockService),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final controller =
+          container.read(podcastSearchControllerProvider.notifier);
+
+      // Start first search (will be in loading state)
+      // ignore: unawaited_futures
+      final firstSearch = controller.search('first query');
+
+      // Verify we're in loading state
+      final loadingState = container.read(podcastSearchControllerProvider);
+      expect(loadingState, isA<SearchLoading>());
+
+      // Attempt duplicate searches while loading (these should be ignored)
+      await controller.search('second query');
+      await controller.search('third query');
+
+      // Complete the first search
+      searchCompleter.complete();
+      await firstSearch;
+
+      // Only the first search should have been executed
+      expect(searchCallCount, equals(1));
+      expect(lastSearchTerm, equals('first query'));
+    });
+
+    test('empty query does not trigger API call', () async {
+      final mockService = MockPodcastSearchService();
+
+      final container = ProviderContainer(
+        overrides: [
+          podcastSearchServiceProvider.overrideWithValue(mockService),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final controller =
+          container.read(podcastSearchControllerProvider.notifier);
+
+      await controller.search('');
+      await controller.search('   ');
+      await controller.search('\t\n');
+
+      expect(mockService.searchCallCount, equals(0));
+    });
+
+    test('whitespace-only query does not trigger API call', () async {
+      final mockService = MockPodcastSearchService();
+
+      final container = ProviderContainer(
+        overrides: [
+          podcastSearchServiceProvider.overrideWithValue(mockService),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final controller =
+          container.read(podcastSearchControllerProvider.notifier);
+      await controller.search('     ');
+
+      expect(mockService.searchCallCount, equals(0));
+      final state = container.read(podcastSearchControllerProvider);
+      expect(state, isA<SearchInitial>());
+    });
+
+    test('state remains unchanged when empty query submitted', () async {
+      final mockService = MockPodcastSearchService();
+
+      final container = ProviderContainer(
+        overrides: [
+          podcastSearchServiceProvider.overrideWithValue(mockService),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final initialState = container.read(podcastSearchControllerProvider);
+      final controller =
+          container.read(podcastSearchControllerProvider.notifier);
+
+      await controller.search('');
+
+      final afterEmptySearch = container.read(podcastSearchControllerProvider);
+      expect(afterEmptySearch, equals(initialState));
+    });
+  });
+
+  group('PodcastSearchController retry functionality (Task 2.3)', () {
+    test('retry re-executes last query', () async {
+      final mockService = MockPodcastSearchService(
+        searchResult: SearchResult(
+          totalCount: 1,
+          podcasts: [
+            Podcast(id: '1', name: 'Result', artistName: 'Artist'),
+          ],
+          provider: 'mock',
+          timestamp: DateTime.now(),
+        ),
+      );
+
+      final container = ProviderContainer(
+        overrides: [
+          podcastSearchServiceProvider.overrideWithValue(mockService),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final controller =
+          container.read(podcastSearchControllerProvider.notifier);
+
+      // First search
+      await controller.search('original query');
+      expect(mockService.searchCallCount, equals(1));
+      expect(mockService.lastSearchTerm, equals('original query'));
+
+      // Retry should use the same query
+      await controller.retry();
+      expect(mockService.searchCallCount, equals(2));
+      expect(mockService.lastSearchTerm, equals('original query'));
+    });
+
+    test('retry does nothing when no previous query exists', () async {
+      final mockService = MockPodcastSearchService();
+
+      final container = ProviderContainer(
+        overrides: [
+          podcastSearchServiceProvider.overrideWithValue(mockService),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final controller =
+          container.read(podcastSearchControllerProvider.notifier);
+
+      // Call retry without any previous search
       await controller.retry();
 
+      expect(mockService.searchCallCount, equals(0));
       final state = container.read(podcastSearchControllerProvider);
-      // In stub implementation, retry should also return error
-      expect(state, isA<SearchError>());
+      expect(state, isA<SearchInitial>());
+    });
+
+    test('retry after error re-executes the failed query', () async {
+      final successResult = SearchResult(
+        totalCount: 1,
+        podcasts: [Podcast(id: '1', name: 'Success', artistName: 'Artist')],
+        provider: 'mock',
+        timestamp: DateTime.now(),
+      );
+
+      // Custom service that fails first, then succeeds
+      final mockService = MockPodcastSearchService(
+        searchException: SearchException.unavailable(
+          providerId: 'mock',
+          message: 'First call fails',
+        ),
+      );
+
+      final container = ProviderContainer(
+        overrides: [
+          podcastSearchServiceProvider.overrideWithValue(mockService),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final controller =
+          container.read(podcastSearchControllerProvider.notifier);
+
+      // First search fails
+      await controller.search('retry test query');
+      final errorState = container.read(podcastSearchControllerProvider);
+      expect(errorState, isA<SearchError>());
+      expect((errorState as SearchError).lastQuery, equals('retry test query'));
+
+      // Create new mock that succeeds for retry
+      final successService = MockPodcastSearchService(
+        searchResult: successResult,
+      );
+
+      // Dispose old container and create new one with success service
+      container.dispose();
+
+      final retryContainer = ProviderContainer(
+        overrides: [
+          podcastSearchServiceProvider.overrideWithValue(successService),
+        ],
+      );
+      addTearDown(retryContainer.dispose);
+
+      final retryController =
+          retryContainer.read(podcastSearchControllerProvider.notifier);
+
+      // First need to set up the lastQuery by calling search
+      await retryController.search('retry test query');
+      final successState = retryContainer.read(podcastSearchControllerProvider);
+
+      expect(successState, isA<SearchSuccess>());
+      expect(successService.lastSearchTerm, equals('retry test query'));
     });
   });
 }

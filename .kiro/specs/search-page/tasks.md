@@ -33,7 +33,7 @@
 ## Phase 2: Core Implementation
 
 - [ ] 2. Implement search controller with full state management
-- [ ] 2.1 Implement search execution with state transitions
+- [x] 2.1 Implement search execution with state transitions
   - Connect to PodcastSearchService from audiflow_search package
   - Transition state from initial to loading when search starts
   - Transition to success state with results on successful response
@@ -42,14 +42,14 @@
   - Write unit tests: search transitions through correct states
   - _Requirements: 1.3, 1.4, 3.2_
 
-- [ ] 2.2 Implement duplicate submission prevention
+- [x] 2.2 Implement duplicate submission prevention
   - Guard search method to reject calls when already loading
   - Guard search method to reject empty or whitespace-only queries
   - Write unit tests: duplicate calls during loading are ignored
   - Write unit tests: empty queries do not trigger API call
   - _Requirements: 3.2_
 
-- [ ] 2.3 Implement retry functionality
+- [x] 2.3 Implement retry functionality
   - Use stored last query to re-execute search on retry call
   - Handle case where no previous query exists
   - Write unit tests: retry re-executes last query

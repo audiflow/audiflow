@@ -5,6 +5,19 @@ import 'search_state.dart';
 
 part 'search_controller.g.dart';
 
+/// Provider for PodcastSearchService.
+///
+/// This provider creates a [PodcastSearchService] instance configured with
+/// the iTunes provider for podcast search functionality.
+///
+/// Override this provider in tests to inject mock implementations.
+@riverpod
+PodcastSearchService podcastSearchService(Ref ref) {
+  final provider = ItunesProvider();
+  ref.onDispose(provider.close);
+  return PodcastSearchService.create(providers: [provider]);
+}
+
 /// Controller for managing podcast search state and operations.
 ///
 /// This controller coordinates search requests and manages the UI state
@@ -36,9 +49,6 @@ class PodcastSearchController extends _$PodcastSearchController {
   /// Postconditions:
   /// - state transitions to SearchLoading, then SearchSuccess or SearchError
   /// - _lastQuery is updated to the provided query
-  ///
-  /// This is a stub implementation that immediately returns an error state.
-  /// The full implementation will be added in Phase 2.
   Future<void> search(String query) async {
     // Prevent duplicate submissions (Requirement 3.2)
     if (state is SearchLoading) return;
@@ -49,15 +59,15 @@ class PodcastSearchController extends _$PodcastSearchController {
     _lastQuery = trimmed;
     state = const SearchLoading();
 
-    // Stub implementation: immediately return error state
-    // Full implementation will connect to PodcastSearchService
-    state = SearchError(
-      exception: SearchException.internal(
-        providerId: 'stub',
-        message: 'Search not yet implemented',
-      ),
-      lastQuery: trimmed,
-    );
+    try {
+      final service = ref.read(podcastSearchServiceProvider);
+      final result = await service.search(
+        SearchQuery.validated(term: trimmed),
+      );
+      state = SearchSuccess(result: result);
+    } on SearchException catch (e) {
+      state = SearchError(exception: e, lastQuery: trimmed);
+    }
   }
 
   /// Retries the last failed search.
