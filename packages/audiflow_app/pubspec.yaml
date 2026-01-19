@@ -50,6 +50,8 @@ dependencies:
   # Internal packages
   audiflow_search:
     path: ../audiflow_search
+  audiflow_ui:
+    path: ../audiflow_ui
 
 dev_dependencies:
   flutter_test:

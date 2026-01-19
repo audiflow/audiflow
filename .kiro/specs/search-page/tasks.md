@@ -56,7 +56,7 @@
   - _Requirements: 5.3_
 
 - [ ] 3. Build search result tile widget
-- [ ] 3.1 (P) Implement result tile with podcast metadata display
+- [x] 3.1 (P) Implement result tile with podcast metadata display
   - Display podcast artwork with placeholder for missing images
   - Show podcast title with appropriate text styling
   - Show author name below title
