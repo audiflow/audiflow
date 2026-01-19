@@ -67,33 +67,33 @@
   - Write widget tests: tap triggers callback
   - _Requirements: 2.1_
 
-- [ ] 4. Implement search screen UI states
-- [ ] 4.1 Implement initial empty state display
+- [x] 4. Implement search screen UI states
+- [x] 4.1 Implement initial empty state display
   - Show empty state view when controller state is initial
   - Display appropriate messaging for pre-search state
   - Write widget test: initial state renders empty view
   - _Requirements: 4.1_
 
-- [ ] 4.2 Implement loading state with indicator
+- [x] 4.2 Implement loading state with indicator
   - Show loading indicator when controller state is loading
   - Disable submit button during loading to prevent visual confusion
   - Write widget test: loading state shows indicator
   - _Requirements: 3.1, 3.2_
 
-- [ ] 4.3 Implement results list display
+- [x] 4.3 Implement results list display
   - Render scrollable list of results using lazy builder
   - Use PodcastSearchResultTile for each result item
   - Position results below search input area
   - Write widget test: results state renders correct item count
   - _Requirements: 2.1, 2.2_
 
-- [ ] 4.4 Implement no results found state
+- [x] 4.4 Implement no results found state
   - Show not-found icon when search returns empty results
   - Display explanatory text indicating no podcasts matched
   - Write widget test: empty results state shows not-found UI
   - _Requirements: 4.2_
 
-- [ ] 4.5 Implement error state with retry option
+- [x] 4.5 Implement error state with retry option
   - Display error message describing the issue
   - Show retry button below error message
   - Wire retry button to call controller retry method
