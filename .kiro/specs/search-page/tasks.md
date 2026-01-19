@@ -8,7 +8,7 @@
 
 ## Phase 1: Skeleton and Wiring
 
-- [ ] 1. Establish search feature skeleton with controller stub and routing
+- [x] 1. Establish search feature skeleton with controller stub and routing
 - [x] 1.1 Create search state models and controller stub
   - Define sealed class hierarchy for search states: initial, loading, success, error
   - Implement SearchController with Riverpod annotation returning initial state
@@ -32,7 +32,7 @@
 
 ## Phase 2: Core Implementation
 
-- [ ] 2. Implement search controller with full state management
+- [x] 2. Implement search controller with full state management
 - [x] 2.1 Implement search execution with state transitions
   - Connect to PodcastSearchService from audiflow_search package
   - Transition state from initial to loading when search starts
@@ -55,7 +55,7 @@
   - Write unit tests: retry re-executes last query
   - _Requirements: 5.3_
 
-- [ ] 3. Build search result tile widget
+- [x] 3. Build search result tile widget
 - [x] 3.1 (P) Implement result tile with podcast metadata display
   - Display podcast artwork with placeholder for missing images
   - Show podcast title with appropriate text styling
@@ -103,20 +103,20 @@
 
 ## Phase 3: Integration and Scenario Tests
 
-- [ ] 5. Complete navigation and end-to-end integration
-- [ ] 5.1 Implement navigation to podcast detail
+- [x] 5. Complete navigation and end-to-end integration
+- [x] 5.1 Implement navigation to podcast detail
   - Handle tap on search result tile
   - Extract podcast identifier from tapped result
   - Navigate to podcast detail screen via go_router
   - Write integration test: tapping result navigates to detail
   - _Requirements: 2.3_
 
-- [ ] 5.2 Verify keyboard dismissal behavior
+- [x] 5.2 Verify keyboard dismissal behavior
   - Ensure keyboard is dismissed before search request begins
   - Write integration test: keyboard hides on search submission
   - _Requirements: 1.5_
 
-- [ ] 5.3 End-to-end search flow scenario tests
+- [x] 5.3 End-to-end search flow scenario tests
   - Test complete flow: enter query, submit, receive results, tap result
   - Test error flow: enter query, submit, receive error, tap retry, receive results
   - Test empty results flow: enter query, submit, receive empty response

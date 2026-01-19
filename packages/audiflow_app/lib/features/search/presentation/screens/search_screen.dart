@@ -2,7 +2,9 @@ import 'package:audiflow_search/audiflow_search.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../routing/app_router.dart';
 import '../controllers/search_controller.dart';
 import '../controllers/search_state.dart';
 import '../widgets/podcast_search_result_tile.dart';
@@ -197,12 +199,18 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         return PodcastSearchResultTile(
           key: Key('search_result_tile_$index'),
           podcast: podcast,
-          onTap: () {
-            // TODO: Navigate to podcast detail (Requirement 2.3)
-          },
+          onTap: () => _navigateToPodcastDetail(podcast),
         );
       },
     );
+  }
+
+  /// Navigates to the podcast detail page for the given podcast.
+  ///
+  /// Extracts the podcast identifier and navigates using go_router.
+  /// Requirements: 2.3
+  void _navigateToPodcastDetail(Podcast podcast) {
+    context.push('${AppRoutes.podcastDetail}/${podcast.id}');
   }
 
   /// Builds the error state with retry button (Requirements 5.1, 5.2, 5.3).
