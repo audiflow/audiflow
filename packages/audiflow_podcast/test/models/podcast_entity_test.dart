@@ -1,5 +1,6 @@
-import 'package:flutter_test/flutter_test.dart';
 import 'package:audiflow_podcast/src/models/podcast_entity.dart';
+import 'package:flutter_test/flutter_test.dart';
+
 import '../helpers/test_constants.dart';
 
 class TestPodcastEntity extends PodcastEntity {

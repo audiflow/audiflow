@@ -131,6 +131,13 @@ abstract class PodcastEntityBuilder<TFeed, TItem> {
 
 /// Result of parsing a podcast feed using a builder.
 class ParsedPodcastResult<TFeed, TItem> {
+  const ParsedPodcastResult({
+    required this.feed,
+    required this.items,
+    this.errors = const [],
+    this.warnings = const [],
+  });
+
   /// The parsed feed metadata.
   final TFeed feed;
 
@@ -142,13 +149,6 @@ class ParsedPodcastResult<TFeed, TItem> {
 
   /// Any warnings that occurred during parsing.
   final List<PodcastParseWarning> warnings;
-
-  const ParsedPodcastResult({
-    required this.feed,
-    required this.items,
-    this.errors = const [],
-    this.warnings = const [],
-  });
 
   /// Returns true if parsing completed without errors.
   bool get hasNoErrors => errors.isEmpty;

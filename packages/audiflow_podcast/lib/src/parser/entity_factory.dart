@@ -1,10 +1,11 @@
 import 'dart:async';
-import '../models/podcast_feed.dart';
-import '../models/podcast_item.dart';
-import '../models/podcast_image.dart';
-import '../models/podcast_chapter.dart';
-import '../models/podcast_transcript.dart';
+
 import '../errors/podcast_parse_error.dart';
+import '../models/podcast_chapter.dart';
+import '../models/podcast_feed.dart';
+import '../models/podcast_image.dart';
+import '../models/podcast_item.dart';
+import '../models/podcast_transcript.dart';
 
 /// Factory class responsible for creating Feed and Item entities from parsed XML data.
 /// Handles RSS 2.0 standard elements and iTunes namespace extensions.
@@ -81,7 +82,8 @@ class EntityFactory {
           'description',
           'No description available',
         ),
-        author: _extractOptionalString(feedData, 'itunesAuthor') ??
+        author:
+            _extractOptionalString(feedData, 'itunesAuthor') ??
             _extractOptionalString(feedData, 'managingEditor'),
         images: images,
         language: _extractOptionalString(feedData, 'language'),
@@ -90,8 +92,9 @@ class EntityFactory {
         subtitle: _extractOptionalString(feedData, 'itunesSubtitle'),
         summary: _extractOptionalString(feedData, 'itunesSummary'),
         ownerName: ownerName?.trim().isEmpty == true ? null : ownerName?.trim(),
-        ownerEmail:
-            ownerEmail?.trim().isEmpty == true ? null : ownerEmail?.trim(),
+        ownerEmail: ownerEmail?.trim().isEmpty == true
+            ? null
+            : ownerEmail?.trim(),
         link: _extractOptionalString(feedData, 'link'),
         copyright: _extractOptionalString(feedData, 'copyright'),
         lastBuildDate: lastBuildDate,

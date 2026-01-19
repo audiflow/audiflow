@@ -3,17 +3,16 @@
 /// Supports multiple transcript formats (plain text, HTML, SRT, VTT)
 /// and distinguishes between captions and full transcripts.
 class PodcastTranscript {
-  final String url;
-  final String type;
-  final String? language;
-  final String? rel;
-
   const PodcastTranscript({
     required this.url,
     required this.type,
     this.language,
     this.rel,
   });
+  final String url;
+  final String type;
+  final String? language;
+  final String? rel;
 
   bool get isPlainText => type == 'text/plain';
   bool get isHtml => type == 'text/html';

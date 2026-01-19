@@ -3,72 +3,6 @@ import 'podcast_image.dart';
 
 /// Represents podcast-level metadata and information.
 class PodcastFeed extends PodcastEntity {
-  /// The title of the podcast.
-  final String title;
-
-  /// The description of the podcast.
-  final String description;
-
-  /// The author of the podcast.
-  final String? author;
-
-  /// List of podcast images with different sizes.
-  final List<PodcastImage> images;
-
-  /// The language of the podcast content.
-  final String? language;
-
-  /// Categories that the podcast belongs to.
-  final List<String> categories;
-
-  /// Whether the podcast contains explicit content.
-  final bool isExplicit;
-
-  /// Short subtitle for the podcast.
-  final String? subtitle;
-
-  /// Extended summary of the podcast.
-  final String? summary;
-
-  /// Name of the podcast owner.
-  final String? ownerName;
-
-  /// Email of the podcast owner.
-  final String? ownerEmail;
-
-  /// Website URL for the podcast.
-  final String? link;
-
-  /// Copyright notice.
-  final String? copyright;
-
-  /// Last build date of the feed.
-  final DateTime? lastBuildDate;
-
-  /// Publication date of the feed.
-  final DateTime? pubDate;
-
-  /// Software that generated the feed.
-  final String? generator;
-
-  /// Editorial contact.
-  final String? managingEditor;
-
-  /// Technical contact.
-  final String? webMaster;
-
-  /// Time to live (cache duration in minutes).
-  final int? ttl;
-
-  /// iTunes type (episodic or serial).
-  final String? type;
-
-  /// Whether the podcast is complete.
-  final bool? isComplete;
-
-  /// New feed URL for migration.
-  final String? newFeedUrl;
-
   const PodcastFeed({
     required super.parsedAt,
     required super.sourceUrl,
@@ -245,8 +179,9 @@ class PodcastFeed extends PodcastEntity {
       subtitle: subtitle?.trim().isEmpty == true ? null : subtitle?.trim(),
       summary: summary?.trim().isEmpty == true ? null : summary?.trim(),
       ownerName: ownerName?.trim().isEmpty == true ? null : ownerName?.trim(),
-      ownerEmail:
-          ownerEmail?.trim().isEmpty == true ? null : ownerEmail?.trim(),
+      ownerEmail: ownerEmail?.trim().isEmpty == true
+          ? null
+          : ownerEmail?.trim(),
       link: link?.trim().isEmpty == true ? null : link?.trim(),
       copyright: copyright?.trim().isEmpty == true ? null : copyright?.trim(),
       lastBuildDate: lastBuildDate,
@@ -259,10 +194,77 @@ class PodcastFeed extends PodcastEntity {
       ttl: ttl,
       type: normalizedType,
       isComplete: isComplete,
-      newFeedUrl:
-          newFeedUrl?.trim().isEmpty == true ? null : newFeedUrl?.trim(),
+      newFeedUrl: newFeedUrl?.trim().isEmpty == true
+          ? null
+          : newFeedUrl?.trim(),
     );
   }
+
+  /// The title of the podcast.
+  final String title;
+
+  /// The description of the podcast.
+  final String description;
+
+  /// The author of the podcast.
+  final String? author;
+
+  /// List of podcast images with different sizes.
+  final List<PodcastImage> images;
+
+  /// The language of the podcast content.
+  final String? language;
+
+  /// Categories that the podcast belongs to.
+  final List<String> categories;
+
+  /// Whether the podcast contains explicit content.
+  final bool isExplicit;
+
+  /// Short subtitle for the podcast.
+  final String? subtitle;
+
+  /// Extended summary of the podcast.
+  final String? summary;
+
+  /// Name of the podcast owner.
+  final String? ownerName;
+
+  /// Email of the podcast owner.
+  final String? ownerEmail;
+
+  /// Website URL for the podcast.
+  final String? link;
+
+  /// Copyright notice.
+  final String? copyright;
+
+  /// Last build date of the feed.
+  final DateTime? lastBuildDate;
+
+  /// Publication date of the feed.
+  final DateTime? pubDate;
+
+  /// Software that generated the feed.
+  final String? generator;
+
+  /// Editorial contact.
+  final String? managingEditor;
+
+  /// Technical contact.
+  final String? webMaster;
+
+  /// Time to live (cache duration in minutes).
+  final int? ttl;
+
+  /// iTunes type (episodic or serial).
+  final String? type;
+
+  /// Whether the podcast is complete.
+  final bool? isComplete;
+
+  /// New feed URL for migration.
+  final String? newFeedUrl;
 
   /// Returns the primary image for the podcast (largest available).
   PodcastImage? get primaryImage {
@@ -270,7 +272,7 @@ class PodcastFeed extends PodcastEntity {
 
     // Find the largest image by width
     PodcastImage? largest;
-    int maxWidth = 0;
+    var maxWidth = 0;
 
     for (final image in images) {
       if (image.width != null && maxWidth < image.width!) {
@@ -425,7 +427,7 @@ class PodcastFeed extends PodcastEntity {
 
   static bool _listEquals<T>(List<T> a, List<T> b) {
     if (a.length != b.length) return false;
-    for (int i = 0; i < a.length; i++) {
+    for (var i = 0; i < a.length; i++) {
       if (a[i] != b[i]) return false;
     }
     return true;

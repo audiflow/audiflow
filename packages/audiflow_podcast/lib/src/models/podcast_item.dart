@@ -1,82 +1,10 @@
+import 'podcast_chapter.dart';
 import 'podcast_entity.dart';
 import 'podcast_image.dart';
-import 'podcast_chapter.dart';
 import 'podcast_transcript.dart';
 
 /// Represents individual podcast episodes with full podcast RSS specification support.
 class PodcastItem extends PodcastEntity {
-  /// The title of the episode.
-  final String title;
-
-  /// The description of the episode.
-  final String description;
-
-  /// Publication date of the episode.
-  final DateTime? publishDate;
-
-  /// Duration of the episode.
-  final Duration? duration;
-
-  /// URL of the episode's media file.
-  final String? enclosureUrl;
-
-  /// MIME type of the episode's media file.
-  final String? enclosureType;
-
-  /// Size of the episode's media file in bytes.
-  final int? enclosureLength;
-
-  /// Episode number.
-  final int? episodeNumber;
-
-  /// Season number.
-  final int? seasonNumber;
-
-  /// Type of episode (full, trailer, bonus).
-  final String? episodeType;
-
-  /// Globally unique identifier for the episode.
-  final String? guid;
-
-  /// Short subtitle for the episode.
-  final String? subtitle;
-
-  /// Extended summary of the episode.
-  final String? summary;
-
-  /// Author of the episode.
-  final String? author;
-
-  /// Whether the episode contains explicit content.
-  final bool? isExplicit;
-
-  /// List of episode images with different sizes.
-  final List<PodcastImage> images;
-
-  /// Episode webpage URL.
-  final String? link;
-
-  /// Episode-specific categories.
-  final List<String> categories;
-
-  /// Comments URL.
-  final String? comments;
-
-  /// Source attribution.
-  final String? source;
-
-  /// Whether GUID is a permalink.
-  final bool? isPermaLink;
-
-  /// Rich HTML content.
-  final String? contentEncoded;
-
-  /// Chapter markers.
-  final List<PodcastChapter>? chapters;
-
-  /// Transcript links.
-  final List<PodcastTranscript>? transcripts;
-
   const PodcastItem({
     required super.parsedAt,
     required super.sourceUrl,
@@ -151,8 +79,6 @@ class PodcastItem extends PodcastEntity {
       source: data['source'] as String?,
       isPermaLink: data['isPermaLink'] as bool?,
       contentEncoded: data['contentEncoded'] as String?,
-      chapters: null, // TODO: Implement chapter parsing
-      transcripts: null, // TODO: Implement transcript parsing
     );
   }
 
@@ -249,10 +175,12 @@ class PodcastItem extends PodcastEntity {
       description: description.trim(),
       publishDate: publishDate,
       duration: duration,
-      enclosureUrl:
-          enclosureUrl?.trim().isEmpty == true ? null : enclosureUrl?.trim(),
-      enclosureType:
-          enclosureType?.trim().isEmpty == true ? null : enclosureType?.trim(),
+      enclosureUrl: enclosureUrl?.trim().isEmpty == true
+          ? null
+          : enclosureUrl?.trim(),
+      enclosureType: enclosureType?.trim().isEmpty == true
+          ? null
+          : enclosureType?.trim(),
       enclosureLength: enclosureLength,
       episodeNumber: episodeNumber,
       seasonNumber: seasonNumber,
@@ -276,13 +204,85 @@ class PodcastItem extends PodcastEntity {
     );
   }
 
+  /// The title of the episode.
+  final String title;
+
+  /// The description of the episode.
+  final String description;
+
+  /// Publication date of the episode.
+  final DateTime? publishDate;
+
+  /// Duration of the episode.
+  final Duration? duration;
+
+  /// URL of the episode's media file.
+  final String? enclosureUrl;
+
+  /// MIME type of the episode's media file.
+  final String? enclosureType;
+
+  /// Size of the episode's media file in bytes.
+  final int? enclosureLength;
+
+  /// Episode number.
+  final int? episodeNumber;
+
+  /// Season number.
+  final int? seasonNumber;
+
+  /// Type of episode (full, trailer, bonus).
+  final String? episodeType;
+
+  /// Globally unique identifier for the episode.
+  final String? guid;
+
+  /// Short subtitle for the episode.
+  final String? subtitle;
+
+  /// Extended summary of the episode.
+  final String? summary;
+
+  /// Author of the episode.
+  final String? author;
+
+  /// Whether the episode contains explicit content.
+  final bool? isExplicit;
+
+  /// List of episode images with different sizes.
+  final List<PodcastImage> images;
+
+  /// Episode webpage URL.
+  final String? link;
+
+  /// Episode-specific categories.
+  final List<String> categories;
+
+  /// Comments URL.
+  final String? comments;
+
+  /// Source attribution.
+  final String? source;
+
+  /// Whether GUID is a permalink.
+  final bool? isPermaLink;
+
+  /// Rich HTML content.
+  final String? contentEncoded;
+
+  /// Chapter markers.
+  final List<PodcastChapter>? chapters;
+
+  /// Transcript links.
+  final List<PodcastTranscript>? transcripts;
+
   /// Returns the primary image for the episode (largest available).
   PodcastImage? get primaryImage {
     if (images.isEmpty) return null;
 
     // Find the largest image by width
     PodcastImage? largest;
-    int maxWidth = 0;
+    var maxWidth = 0;
 
     for (final image in images) {
       if (image.width != null && maxWidth < image.width!) {
@@ -511,7 +511,7 @@ class PodcastItem extends PodcastEntity {
     if (a == null && b == null) return true;
     if (a == null || b == null) return false;
     if (a.length != b.length) return false;
-    for (int i = 0; i < a.length; i++) {
+    for (var i = 0; i < a.length; i++) {
       if (a[i] != b[i]) return false;
     }
     return true;

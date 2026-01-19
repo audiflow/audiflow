@@ -1,6 +1,6 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:audiflow_podcast/src/parser/entity_factory.dart';
 import 'package:audiflow_podcast/src/errors/podcast_parse_error.dart';
+import 'package:audiflow_podcast/src/parser/entity_factory.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('EntityFactory', () {
@@ -621,7 +621,7 @@ void main() {
 
       test('emits warnings for recoverable parsing issues', () async {
         final warnings = <PodcastParseWarning>[];
-        factory.warnings.listen((warning) => warnings.add(warning));
+        factory.warnings.listen(warnings.add);
 
         final feedData = {
           'title': 'Test Podcast',
@@ -652,7 +652,7 @@ void main() {
 
       test('emits warnings for item parsing issues', () async {
         final warnings = <PodcastParseWarning>[];
-        factory.warnings.listen((warning) => warnings.add(warning));
+        factory.warnings.listen(warnings.add);
 
         final itemData = {
           'title': 'Test Episode',
@@ -683,7 +683,7 @@ void main() {
 
       test('continues parsing when individual elements fail', () async {
         final warnings = <PodcastParseWarning>[];
-        factory.warnings.listen((warning) => warnings.add(warning));
+        factory.warnings.listen(warnings.add);
 
         final feedData = {
           'title': 'Test Podcast',
@@ -721,7 +721,7 @@ void main() {
 
       test('handles completely malformed data structures', () async {
         final warnings = <PodcastParseWarning>[];
-        factory.warnings.listen((warning) => warnings.add(warning));
+        factory.warnings.listen(warnings.add);
 
         // Simulate corrupted data that might cause exceptions
         final feedData = {
@@ -750,7 +750,7 @@ void main() {
         'validates enclosure data and emits warnings for invalid URLs',
         () async {
           final warnings = <PodcastParseWarning>[];
-          factory.warnings.listen((warning) => warnings.add(warning));
+          factory.warnings.listen(warnings.add);
 
           final itemData = {
             'title': 'Test Episode',

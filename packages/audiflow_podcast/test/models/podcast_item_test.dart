@@ -1,8 +1,9 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:audiflow_podcast/src/models/podcast_item.dart';
-import 'package:audiflow_podcast/src/models/podcast_image.dart';
 import 'package:audiflow_podcast/src/models/podcast_chapter.dart';
+import 'package:audiflow_podcast/src/models/podcast_image.dart';
+import 'package:audiflow_podcast/src/models/podcast_item.dart';
 import 'package:audiflow_podcast/src/models/podcast_transcript.dart';
+import 'package:flutter_test/flutter_test.dart';
+
 import '../helpers/test_constants.dart';
 
 void main() {

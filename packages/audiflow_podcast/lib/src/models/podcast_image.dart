@@ -1,11 +1,5 @@
 /// Represents podcast artwork with size information and convenience methods.
 class PodcastImage {
-  final String url;
-  final int? width;
-  final int? height;
-  final String? title;
-  final String? description;
-
   const PodcastImage({
     required this.url,
     this.width,
@@ -13,6 +7,11 @@ class PodcastImage {
     this.title,
     this.description,
   });
+  final String url;
+  final int? width;
+  final int? height;
+  final String? title;
+  final String? description;
 
   bool get isSmall => width != null && width! <= 300;
   bool get isMedium => width != null && 300 < width! && width! <= 600;

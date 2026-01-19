@@ -1,8 +1,9 @@
-import 'dart:io';
 import 'dart:async';
 import 'dart:convert';
-import 'package:flutter_test/flutter_test.dart';
+import 'dart:io';
+
 import 'package:audiflow_podcast/src/network/http_fetcher.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 const testUrl = 'https://example.com/feed.xml';
 const testRssContent = '<rss>test content</rss>';
@@ -69,11 +70,10 @@ class MockHttpClient implements HttpClient {
 }
 
 class MockHttpClientRequest implements HttpClientRequest {
+  MockHttpClientRequest(this._uri, this._response);
   final Uri _uri;
   final MockHttpClientResponse _response;
   final HttpHeaders _headers = MockHttpHeaders();
-
-  MockHttpClientRequest(this._uri, this._response);
 
   @override
   Future<HttpClientResponse> close() async {
@@ -92,16 +92,15 @@ class MockHttpClientRequest implements HttpClientRequest {
 
 class MockHttpClientResponse extends Stream<List<int>>
     implements HttpClientResponse {
-  final int _statusCode;
-  final String _reasonPhrase;
-  final Stream<List<int>> _dataStream;
-  final MockHttpHeaders _headers = MockHttpHeaders();
-
   MockHttpClientResponse(
     this._statusCode,
     this._reasonPhrase,
     this._dataStream,
   );
+  final int _statusCode;
+  final String _reasonPhrase;
+  final Stream<List<int>> _dataStream;
+  final MockHttpHeaders _headers = MockHttpHeaders();
 
   @override
   int get statusCode => _statusCode;
@@ -131,7 +130,9 @@ class MockHttpClientResponse extends Stream<List<int>>
   dynamic noSuchMethod(Invocation invocation) {
     // Handle specific Stream methods that return Futures or Streams
     if (invocation.memberName == #any) {
-      return _dataStream.any(invocation.positionalArguments[0]);
+      return _dataStream.any(
+        invocation.positionalArguments[0] as bool Function(List<int>),
+      );
     }
     return super.noSuchMethod(invocation);
   }
@@ -340,7 +341,7 @@ void main() {
 
       test('should set conditional headers', () async {
         const etag = '"abc123"';
-        final modifiedSince = DateTime(2023, 1, 1);
+        final modifiedSince = DateTime(2023);
         final dataStream = Stream.fromIterable([utf8.encode(testContent)]);
         mockClient.setMockResponse(
           MockHttpClientResponse(304, 'Not Modified', dataStream),
@@ -414,7 +415,7 @@ void main() {
       test('should extract Last-Modified from response headers', () async {
         // Arrange
         const testUrl = 'https://example.com/feed.xml';
-        final lastModified = DateTime.utc(2023, 1, 1, 12, 0, 0);
+        final lastModified = DateTime.utc(2023, 1, 1, 12);
         final lastModifiedStr = HttpDate.format(lastModified);
         final dataStream = Stream.fromIterable([utf8.encode('test')]);
 
@@ -451,7 +452,10 @@ void main() {
         // Assert
         expect(cacheInfo.etag, isNull);
         expect(cacheInfo.lastModified, isNull);
-        expect(cacheInfo.maxAge, equals(const Duration(seconds: maxAgeSeconds)));
+        expect(
+          cacheInfo.maxAge,
+          equals(const Duration(seconds: maxAgeSeconds)),
+        );
         expect(cacheInfo.noCache, isFalse);
         expect(cacheInfo.noStore, isFalse);
       });
@@ -526,7 +530,7 @@ void main() {
         // Arrange
         const testUrl = 'https://example.com/feed.xml';
         const etag = '"xyz789"';
-        final lastModified = DateTime.utc(2023, 6, 15, 10, 30, 0);
+        final lastModified = DateTime.utc(2023, 6, 15, 10, 30);
         final lastModifiedStr = HttpDate.format(lastModified);
         final dataStream = Stream.fromIterable([utf8.encode('test')]);
 

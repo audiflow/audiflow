@@ -1,11 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
-import 'package:flutter_test/flutter_test.dart';
-import 'package:audiflow_podcast/src/parser/streaming_xml_parser.dart';
+
+import 'package:audiflow_podcast/src/errors/podcast_parse_error.dart';
 import 'package:audiflow_podcast/src/models/podcast_entity.dart';
 import 'package:audiflow_podcast/src/models/podcast_feed.dart';
 import 'package:audiflow_podcast/src/models/podcast_item.dart';
-import 'package:audiflow_podcast/src/errors/podcast_parse_error.dart';
+import 'package:audiflow_podcast/src/parser/streaming_xml_parser.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 import '../helpers/test_constants.dart';
 
@@ -468,7 +469,7 @@ void main() {
         chunks.add(utf8.encode(xmlHeader));
 
         // Add items in chunks to simulate streaming
-        for (int i = 1; i <= 10; i++) {
+        for (var i = 1; i <= 10; i++) {
           final itemXml = itemTemplate.replaceAll('{index}', i.toString());
           chunks.add(utf8.encode(itemXml));
         }
@@ -497,7 +498,7 @@ void main() {
         expect(entityTypes[0], equals('PodcastFeed'));
 
         // Remaining should be items
-        for (int i = 1; i < entityTypes.length; i++) {
+        for (var i = 1; i < entityTypes.length; i++) {
           expect(entityTypes[i], equals('PodcastItem'));
         }
 
@@ -506,7 +507,7 @@ void main() {
         expect(feed.sourceUrl, equals('https://example.com/large-feed.xml'));
 
         // Check that items were processed correctly
-        for (int i = 1; i <= 10; i++) {
+        for (var i = 1; i <= 10; i++) {
           final item = entities[i] as PodcastItem;
           expect(item.title, equals('Episode $i'));
           expect(item.episodeNumber, equals(i));
@@ -618,7 +619,7 @@ void main() {
         final chunks = <List<int>>[];
         final bytes = utf8.encode(xmlContent);
 
-        for (int i = 0; i < bytes.length; i += testStreamChunkSize) {
+        for (var i = 0; i < bytes.length; i += testStreamChunkSize) {
           final end = (i + testStreamChunkSize < bytes.length)
               ? i + testStreamChunkSize
               : bytes.length;
@@ -783,7 +784,7 @@ void main() {
     group('dispose', () {
       test('should close stream controller', () async {
         final parser = StreamingXmlParser();
-        bool streamClosed = false;
+        var streamClosed = false;
 
         parser.entityStream.listen((_) {}, onDone: () => streamClosed = true);
 

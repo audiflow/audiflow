@@ -7,12 +7,6 @@ import 'podcast_parse_error.dart';
 /// Bridges [PodcastParseError] from the streaming parser to the
 /// application's [AppException] hierarchy for unified error handling.
 class PodcastException extends AppException {
-  /// The original parsing error, if this exception was created from one.
-  final PodcastParseError? parseError;
-
-  /// The source URL where the error occurred.
-  final String? sourceUrl;
-
   PodcastException({
     required String message,
     String? code,
@@ -52,7 +46,9 @@ class PodcastException extends AppException {
     String? sourceUrl,
   }) {
     return PodcastException(
-      message: elementName != null ? '$message (element: $elementName)' : message,
+      message: elementName != null
+          ? '$message (element: $elementName)'
+          : message,
       code: 'PODCAST_PARSE_ERROR',
       sourceUrl: sourceUrl,
     );
@@ -61,7 +57,6 @@ class PodcastException extends AppException {
   /// Creates a [PodcastException] for validation-related issues.
   factory PodcastException.validation(
     String message, {
-    String? entityType,
     List<String>? errors,
     String? sourceUrl,
   }) {
@@ -87,6 +82,12 @@ class PodcastException extends AppException {
       sourceUrl: sourceUrl,
     );
   }
+
+  /// The original parsing error, if this exception was created from one.
+  final PodcastParseError? parseError;
+
+  /// The source URL where the error occurred.
+  final String? sourceUrl;
 
   static String _inferCode(PodcastParseError? error) {
     if (error == null) return 'PODCAST_ERROR';

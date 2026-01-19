@@ -1,6 +1,7 @@
 import 'dart:convert';
-import 'package:flutter_test/flutter_test.dart';
+
 import 'package:audiflow_podcast/audiflow_podcast.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('PodcastRssParser', () {
@@ -68,7 +69,7 @@ void main() {
 
         final stream = parser.parseFromString(malformedXml);
 
-        expect(() => stream.toList(), throwsA(isA<PodcastParseError>()));
+        expect(stream.toList, throwsA(isA<PodcastParseError>()));
       });
     });
 
@@ -128,7 +129,6 @@ void main() {
         const testUrl = 'https://example.com/cached-feed.xml';
         const cacheOptions = CacheOptions(
           ttl: Duration(minutes: 30),
-          useCache: true,
           maxCacheSize: 1024 * 1024, // 1MB
         );
 
@@ -140,7 +140,7 @@ void main() {
         const invalidUrl = 'not-a-valid-url';
 
         final stream = parser.parseFromUrl(invalidUrl);
-        expect(() => stream.toList(), throwsA(isA<PodcastParseError>()));
+        expect(stream.toList, throwsA(isA<PodcastParseError>()));
       });
     });
 
@@ -222,11 +222,12 @@ void main() {
 
         final entityStream = parser.parseFromStream(errorStream);
 
-        expect(() => entityStream.toList(), throwsA(isA<PodcastParseError>()));
+        expect(entityStream.toList, throwsA(isA<PodcastParseError>()));
       });
 
       test('should handle stream cancellation properly', () async {
-        final longRssXml = '''<?xml version="1.0" encoding="UTF-8"?>
+        final longRssXml =
+            '''<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0">
   <channel>
     <title>Long Podcast</title>
@@ -254,7 +255,7 @@ void main() {
       test('should properly dispose all resources', () {
         // Test that disposal doesn't throw and cleans up properly
         final testParser = PodcastRssParser();
-        expect(() => testParser.dispose(), returnsNormally);
+        expect(testParser.dispose, returnsNormally);
 
         // After disposal, operations should still work (new instances created)
         const simpleXml = '''<?xml version="1.0" encoding="UTF-8"?>
@@ -269,7 +270,7 @@ void main() {
         'should handle caching during streaming without double-fetching',
         () async {
           const testUrl = 'https://example.com/cache-test.xml';
-          const cacheOptions = CacheOptions(useCache: true);
+          const cacheOptions = CacheOptions();
 
           // First call should fetch from network and cache
           final firstStream = parser.parseFromUrl(
@@ -293,7 +294,7 @@ void main() {
           // This is inefficient and should be fixed in the integration
 
           const testUrl = 'https://example.com/efficient-cache.xml';
-          const cacheOptions = CacheOptions(useCache: true);
+          const cacheOptions = CacheOptions();
 
           // The integration should cache during streaming, not after
           final stream = parser.parseFromUrl(

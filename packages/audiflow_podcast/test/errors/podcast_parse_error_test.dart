@@ -1,5 +1,5 @@
-import 'package:flutter_test/flutter_test.dart';
 import 'package:audiflow_podcast/src/errors/podcast_parse_error.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 import '../helpers/test_constants.dart';
 

@@ -1,8 +1,16 @@
-import 'dart:io';
 import 'dart:async';
+import 'dart:io';
 
 /// Contains HTTP caching information extracted from response headers.
 class CacheInfo {
+  const CacheInfo({
+    this.etag,
+    this.lastModified,
+    this.maxAge,
+    this.noCache = false,
+    this.noStore = false,
+  });
+
   /// The ETag header value for cache validation.
   final String? etag;
 
@@ -17,14 +25,6 @@ class CacheInfo {
 
   /// Whether the no-store directive is present.
   final bool noStore;
-
-  const CacheInfo({
-    this.etag,
-    this.lastModified,
-    this.maxAge,
-    this.noCache = false,
-    this.noStore = false,
-  });
 
   /// Whether this cache info indicates the content should not be cached.
   bool get shouldNotCache => noStore;
@@ -60,17 +60,16 @@ class CacheInfo {
 
 /// Manages HTTP requests with streaming support and error handling.
 class HttpFetcher {
+  /// Creates an HttpFetcher with optional configuration.
+  HttpFetcher({String? userAgent, Duration? timeout, HttpClient? client})
+    : _userAgent = userAgent ?? _defaultUserAgent,
+      _timeout = timeout ?? const Duration(seconds: 30),
+      _client = client ?? HttpClient();
   static const String _defaultUserAgent = 'PodcastRssParser/1.0.0 (Dart)';
 
   final HttpClient _client;
   final String _userAgent;
   final Duration _timeout;
-
-  /// Creates an HttpFetcher with optional configuration.
-  HttpFetcher({String? userAgent, Duration? timeout, HttpClient? client})
-      : _userAgent = userAgent ?? _defaultUserAgent,
-        _timeout = timeout ?? const Duration(seconds: 30),
-        _client = client ?? HttpClient();
 
   /// Fetches content from the given URL as a stream of bytes.
   ///
@@ -190,12 +189,13 @@ class HttpFetcher {
     }
 
     Duration? maxAge;
-    bool noCache = false;
-    bool noStore = false;
+    var noCache = false;
+    var noStore = false;
 
     if (cacheControlStr != null) {
-      final directives =
-          cacheControlStr.split(',').map((s) => s.trim().toLowerCase());
+      final directives = cacheControlStr
+          .split(',')
+          .map((s) => s.trim().toLowerCase());
 
       for (final directive in directives) {
         if (directive == 'no-cache') {

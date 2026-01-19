@@ -1,11 +1,13 @@
 import 'dart:async';
 import 'dart:convert';
-import 'package:xml/xml.dart';
+
 import 'package:intl/intl.dart';
+import 'package:xml/xml.dart';
+
+import '../errors/podcast_parse_error.dart';
 import '../models/podcast_entity.dart';
 import '../models/podcast_feed.dart';
 import '../models/podcast_item.dart';
-import '../errors/podcast_parse_error.dart';
 
 /// Streaming XML parser that processes RSS feeds in streaming mode
 /// and emits Feed and Item entities as they are parsed.
@@ -285,7 +287,8 @@ class StreamingXmlParser {
   Future<void> _parseCompleteXml(String xmlContent, String? sourceUrl) async {
     try {
       final document = XmlDocument.parse(xmlContent);
-      final rssElement = document.findElements('rss').firstOrNull ??
+      final rssElement =
+          document.findElements('rss').firstOrNull ??
           document.findElements('feed').firstOrNull;
 
       if (rssElement == null) {
@@ -337,33 +340,24 @@ class StreamingXmlParser {
     switch (elementName) {
       case 'title':
         itemData['title'] = elementData;
-        break;
       case 'description':
         itemData['description'] = elementData;
-        break;
       case 'link':
         itemData['link'] = elementData;
-        break;
       case 'guid':
         itemData['guid'] = elementData;
         itemData['isPermaLink'] =
             element.getAttribute('isPermaLink') != 'false';
-        break;
       case 'pubDate':
         itemData['pubDate'] = _parseDate(elementData);
-        break;
       case 'enclosure':
         itemData['enclosure'] = _parseEnclosureElement(element);
-        break;
       case 'category':
         _addToList(itemData, 'categories', elementData);
-        break;
       case 'comments':
         itemData['comments'] = elementData;
-        break;
       case 'source':
         itemData['source'] = elementData;
-        break;
     }
 
     // Handle iTunes namespace elements
@@ -389,34 +383,25 @@ class StreamingXmlParser {
       switch (elementName) {
         case 'author':
           itemData['itunesAuthor'] = elementData;
-          break;
         case 'subtitle':
           itemData['itunesSubtitle'] = elementData;
-          break;
         case 'summary':
           itemData['itunesSummary'] = elementData;
-          break;
         case 'explicit':
           itemData['itunesExplicit'] = _parseBoolean(elementData);
-          break;
         case 'duration':
           itemData['itunesDuration'] = _parseDuration(elementData);
-          break;
         case 'image':
           final href = element.getAttribute('href');
           if (href != null) {
             itemData['itunesImage'] = href;
           }
-          break;
         case 'episode':
           itemData['itunesEpisode'] = int.tryParse(elementData);
-          break;
         case 'season':
           itemData['itunesSeason'] = int.tryParse(elementData);
-          break;
         case 'episodeType':
           itemData['itunesEpisodeType'] = elementData;
-          break;
       }
     }
   }
@@ -529,45 +514,32 @@ class StreamingXmlParser {
         if (isDirectChannelChild) {
           _state.currentFeedData['title'] = elementData;
         }
-        break;
       case 'description':
         if (isDirectChannelChild) {
           _state.currentFeedData['description'] = elementData;
         }
-        break;
       case 'link':
         _state.currentFeedData['link'] = elementData;
-        break;
       case 'language':
         _state.currentFeedData['language'] = elementData;
-        break;
       case 'copyright':
         _state.currentFeedData['copyright'] = elementData;
-        break;
       case 'managingEditor':
         _state.currentFeedData['managingEditor'] = elementData;
-        break;
       case 'webMaster':
         _state.currentFeedData['webMaster'] = elementData;
-        break;
       case 'generator':
         _state.currentFeedData['generator'] = elementData;
-        break;
       case 'lastBuildDate':
         _state.currentFeedData['lastBuildDate'] = _parseDate(elementData);
-        break;
       case 'pubDate':
         _state.currentFeedData['pubDate'] = _parseDate(elementData);
-        break;
       case 'ttl':
         _state.currentFeedData['ttl'] = int.tryParse(elementData);
-        break;
       case 'image':
         _state.currentFeedData['image'] = _parseImageElement(element);
-        break;
       case 'category':
         _addToList(_state.currentFeedData, 'categories', elementData);
-        break;
     }
 
     // Handle iTunes namespace elements
@@ -587,43 +559,33 @@ class StreamingXmlParser {
       switch (elementName) {
         case 'author':
           _state.currentFeedData['itunesAuthor'] = elementData;
-          break;
         case 'subtitle':
           _state.currentFeedData['itunesSubtitle'] = elementData;
-          break;
         case 'summary':
           _state.currentFeedData['itunesSummary'] = elementData;
-          break;
         case 'explicit':
           _state.currentFeedData['itunesExplicit'] = _parseBoolean(elementData);
-          break;
         case 'image':
           final href = element.getAttribute('href');
           if (href != null) {
             _state.currentFeedData['itunesImage'] = href;
           }
-          break;
         case 'category':
           final category = element.getAttribute('text');
           if (category != null) {
             _addToList(_state.currentFeedData, 'itunesCategories', category);
           }
-          break;
         case 'owner':
           final ownerData = _parseOwnerElement(element);
           if (ownerData != null) {
             _state.currentFeedData['itunesOwner'] = ownerData;
           }
-          break;
         case 'type':
           _state.currentFeedData['itunesType'] = elementData;
-          break;
         case 'complete':
           _state.currentFeedData['itunesComplete'] = _parseBoolean(elementData);
-          break;
         case 'new-feed-url':
           _state.currentFeedData['itunesNewFeedUrl'] = elementData;
-          break;
       }
     }
   }
@@ -638,30 +600,22 @@ class StreamingXmlParser {
     switch (elementName) {
       case 'title':
         _state.currentItemData['title'] = elementData;
-        break;
       case 'description':
         _state.currentItemData['description'] = elementData;
-        break;
       case 'link':
         _state.currentItemData['link'] = elementData;
-        break;
       case 'guid':
         _state.currentItemData['guid'] = elementData;
         _state.currentItemData['isPermaLink'] =
             element.getAttribute('isPermaLink') != 'false';
-        break;
       case 'pubDate':
         _state.currentItemData['pubDate'] = _parseDate(elementData);
-        break;
       case 'category':
         _addToList(_state.currentItemData, 'categories', elementData);
-        break;
       case 'comments':
         _state.currentItemData['comments'] = elementData;
-        break;
       case 'source':
         _state.currentItemData['source'] = elementData;
-        break;
     }
 
     // Handle iTunes namespace elements
@@ -686,36 +640,27 @@ class StreamingXmlParser {
       switch (elementName) {
         case 'author':
           _state.currentItemData['itunesAuthor'] = elementData;
-          break;
         case 'subtitle':
           _state.currentItemData['itunesSubtitle'] = elementData;
-          break;
         case 'summary':
           _state.currentItemData['itunesSummary'] = elementData;
-          break;
         case 'explicit':
           _state.currentItemData['itunesExplicit'] = _parseBoolean(elementData);
-          break;
         case 'duration':
           _state.currentItemData['itunesDuration'] = _parseDuration(
             elementData,
           );
-          break;
         case 'image':
           final href = element.getAttribute('href');
           if (href != null) {
             _state.currentItemData['itunesImage'] = href;
           }
-          break;
         case 'episode':
           _state.currentItemData['itunesEpisode'] = int.tryParse(elementData);
-          break;
         case 'season':
           _state.currentItemData['itunesSeason'] = int.tryParse(elementData);
-          break;
         case 'episodeType':
           _state.currentItemData['itunesEpisodeType'] = elementData;
-          break;
       }
     }
   }
@@ -862,9 +807,11 @@ class StreamingXmlParser {
   /// Parse owner element
   Map<String, dynamic>? _parseOwnerElement(XmlElement element) {
     // Try both with and without iTunes namespace
-    final name = element.findElements('name').firstOrNull?.innerText ??
+    final name =
+        element.findElements('name').firstOrNull?.innerText ??
         element.findElements('itunes:name').firstOrNull?.innerText;
-    final email = element.findElements('email').firstOrNull?.innerText ??
+    final email =
+        element.findElements('email').firstOrNull?.innerText ??
         element.findElements('itunes:email').firstOrNull?.innerText;
 
     if (name == null && email == null) return null;
@@ -939,19 +886,14 @@ class ParsingState {
     switch (elementName) {
       case 'channel':
         inChannel = true;
-        break;
       case 'item':
         inItem = true;
-        break;
       case 'image':
         inImage = true;
-        break;
       case 'owner':
         inOwner = true;
-        break;
       case 'enclosure':
         inEnclosure = true;
-        break;
     }
 
     // Initialize character data buffer for this element
@@ -968,19 +910,14 @@ class ParsingState {
     switch (elementName) {
       case 'channel':
         inChannel = false;
-        break;
       case 'item':
         inItem = false;
-        break;
       case 'image':
         inImage = false;
-        break;
       case 'owner':
         inOwner = false;
-        break;
       case 'enclosure':
         inEnclosure = false;
-        break;
     }
 
     // Update current element to parent

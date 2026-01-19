@@ -81,27 +81,22 @@
 /// ```
 library;
 
-// Core parser
-export 'src/podcast_feed_parser.dart' show PodcastRssParser, CacheOptions;
-
+export 'src/cache/cache_manager.dart';
+// Cache management (for advanced usage)
+export 'src/cache/cache_metadata.dart';
+export 'src/errors/podcast_exception.dart';
+// Error types
+export 'src/errors/podcast_parse_error.dart';
+export 'src/models/podcast_chapter.dart';
 // Entity models
 export 'src/models/podcast_entity.dart';
 export 'src/models/podcast_feed.dart';
-export 'src/models/podcast_item.dart';
 export 'src/models/podcast_image.dart';
-export 'src/models/podcast_chapter.dart';
+export 'src/models/podcast_item.dart';
 export 'src/models/podcast_transcript.dart';
-
-// Error types
-export 'src/errors/podcast_parse_error.dart';
-export 'src/errors/podcast_exception.dart';
-
-// Builder interface (for domain integration)
-export 'src/parser/podcast_entity_builder.dart';
-
-// Cache management (for advanced usage)
-export 'src/cache/cache_metadata.dart';
-export 'src/cache/cache_manager.dart';
-
 // Network utilities (for advanced usage)
 export 'src/network/http_fetcher.dart' show CacheInfo;
+// Builder interface (for domain integration)
+export 'src/parser/podcast_entity_builder.dart';
+// Core parser
+export 'src/podcast_feed_parser.dart' show CacheOptions, PodcastRssParser;

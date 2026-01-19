@@ -1,11 +1,5 @@
 /// Represents chapter markers within podcast episodes.
 class PodcastChapter {
-  final String title;
-  final Duration startTime;
-  final Duration? endTime;
-  final String? url;
-  final String? imageUrl;
-
   const PodcastChapter({
     required this.title,
     required this.startTime,
@@ -13,6 +7,11 @@ class PodcastChapter {
     this.url,
     this.imageUrl,
   });
+  final String title;
+  final Duration startTime;
+  final Duration? endTime;
+  final String? url;
+  final String? imageUrl;
 
   Duration? get duration {
     if (endTime != null) {

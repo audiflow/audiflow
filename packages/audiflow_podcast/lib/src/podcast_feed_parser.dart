@@ -3,24 +3,20 @@ import 'dart:convert';
 
 import 'package:logger/logger.dart';
 
+import 'cache/cache_manager.dart';
+import 'errors/podcast_parse_error.dart';
 import 'models/podcast_entity.dart';
 import 'models/podcast_feed.dart';
 import 'models/podcast_item.dart';
-import 'parser/streaming_xml_parser.dart';
-import 'parser/podcast_entity_builder.dart';
 import 'network/http_fetcher.dart';
-import 'cache/cache_manager.dart';
-import 'errors/podcast_parse_error.dart';
+import 'parser/podcast_entity_builder.dart';
+import 'parser/streaming_xml_parser.dart';
 
 /// The main entry point for the podcast RSS parser library.
 ///
 /// Provides streaming RSS parsing capabilities for podcast feeds with
 /// intelligent caching and error handling.
 class PodcastRssParser {
-  final HttpFetcher _httpFetcher;
-  final CacheManager _cacheManager;
-  final Logger? _logger;
-
   /// Creates a new instance of [PodcastRssParser].
   ///
   /// Optionally accepts custom [HttpFetcher], [CacheManager], and [Logger]
@@ -29,9 +25,12 @@ class PodcastRssParser {
     HttpFetcher? httpFetcher,
     CacheManager? cacheManager,
     Logger? logger,
-  })  : _httpFetcher = httpFetcher ?? HttpFetcher(),
-        _cacheManager = cacheManager ?? CacheManager(),
-        _logger = logger;
+  }) : _httpFetcher = httpFetcher ?? HttpFetcher(),
+       _cacheManager = cacheManager ?? CacheManager(),
+       _logger = logger;
+  final HttpFetcher _httpFetcher;
+  final CacheManager _cacheManager;
+  final Logger? _logger;
 
   /// Parses a podcast RSS feed from the given URL.
   ///
@@ -83,7 +82,7 @@ class PodcastRssParser {
       // Fetch from network with integrated caching
       try {
         _logger?.d('Fetching RSS feed from network: $url');
-        final Stream<List<int>> networkStream = _httpFetcher.fetchStream(url);
+        final networkStream = _httpFetcher.fetchStream(url);
 
         if (options.useCache) {
           // Cache during streaming to avoid double-fetching
@@ -98,7 +97,7 @@ class PodcastRssParser {
           NetworkError(
             parsedAt: DateTime.now(),
             sourceUrl: url,
-            message: 'Failed to fetch RSS feed: ${e.toString()}',
+            message: 'Failed to fetch RSS feed: $e',
             originalException: e is Exception ? e : Exception(e.toString()),
           ),
         );
@@ -109,7 +108,7 @@ class PodcastRssParser {
         XmlParsingError(
           parsedAt: DateTime.now(),
           sourceUrl: url,
-          message: 'Unexpected error parsing from URL: ${e.toString()}',
+          message: 'Unexpected error parsing from URL: $e',
           originalException: e is Exception ? e : Exception(e.toString()),
         ),
       );
@@ -139,9 +138,10 @@ class PodcastRssParser {
               : XmlParsingError(
                   parsedAt: DateTime.now(),
                   sourceUrl: 'stream',
-                  message: 'Entity parsing error: ${error.toString()}',
-                  originalException:
-                      error is Exception ? error : Exception(error.toString()),
+                  message: 'Entity parsing error: $error',
+                  originalException: error is Exception
+                      ? error
+                      : Exception(error.toString()),
                 ),
         ),
         onDone: () => controller.close(),
@@ -157,9 +157,10 @@ class PodcastRssParser {
               : XmlParsingError(
                   parsedAt: DateTime.now(),
                   sourceUrl: 'stream',
-                  message: 'XML stream parsing error: ${e.toString()}',
-                  originalException:
-                      e is Exception ? e : Exception(e.toString()),
+                  message: 'XML stream parsing error: $e',
+                  originalException: e is Exception
+                      ? e
+                      : Exception(e.toString()),
                 ),
         );
       }
@@ -173,7 +174,7 @@ class PodcastRssParser {
             : XmlParsingError(
                 parsedAt: DateTime.now(),
                 sourceUrl: 'stream',
-                message: 'Stream setup error: ${e.toString()}',
+                message: 'Stream setup error: $e',
                 originalException: e is Exception ? e : Exception(e.toString()),
               ),
       );
@@ -219,7 +220,7 @@ class PodcastRssParser {
             : XmlParsingError(
                 parsedAt: DateTime.now(),
                 sourceUrl: 'string',
-                message: 'Error parsing from string: ${e.toString()}',
+                message: 'Error parsing from string: $e',
                 originalException: e is Exception ? e : Exception(e.toString()),
               ),
       );
@@ -251,7 +252,7 @@ class PodcastRssParser {
           // Accumulate for cache
           cacheBuffer.addAll(chunk);
         },
-        onError: (error) {
+        onError: (Object error) {
           if (!parsingController!.isClosed) {
             parsingController.addError(error);
           }
@@ -313,7 +314,10 @@ class PodcastRssParser {
     TFeed? feed;
 
     try {
-      await for (final entity in parseFromUrl(url, cacheOptions: cacheOptions)) {
+      await for (final entity in parseFromUrl(
+        url,
+        cacheOptions: cacheOptions,
+      )) {
         if (entity is PodcastFeed) {
           // Convert PodcastFeed to raw data map and call builder
           final feedData = _feedToMap(entity);
@@ -388,12 +392,14 @@ class PodcastRssParser {
           : null,
       'categories': feed.categories,
       'images': feed.images
-          .map((img) => {
-                'url': img.url,
-                'width': img.width,
-                'height': img.height,
-                'title': img.title,
-              })
+          .map(
+            (img) => {
+              'url': img.url,
+              'width': img.width,
+              'height': img.height,
+              'title': img.title,
+            },
+          )
           .toList(),
     };
   }
@@ -430,20 +436,24 @@ class PodcastRssParser {
       'itunesSeason': item.seasonNumber,
       'itunesEpisodeType': item.episodeType,
       'chapters': item.chapters
-          ?.map((ch) => {
-                'startTime': ch.startTime.inMilliseconds,
-                'title': ch.title,
-                'url': ch.url,
-                'imageUrl': ch.imageUrl,
-              })
+          ?.map(
+            (ch) => {
+              'startTime': ch.startTime.inMilliseconds,
+              'title': ch.title,
+              'url': ch.url,
+              'imageUrl': ch.imageUrl,
+            },
+          )
           .toList(),
       'transcripts': item.transcripts
-          ?.map((tr) => {
-                'url': tr.url,
-                'type': tr.type,
-                'language': tr.language,
-                'rel': tr.rel,
-              })
+          ?.map(
+            (tr) => {
+              'url': tr.url,
+              'type': tr.type,
+              'language': tr.language,
+              'rel': tr.rel,
+            },
+          )
           .toList(),
     };
   }
@@ -461,6 +471,12 @@ class PodcastRssParser {
 
 /// Options for controlling cache behavior when parsing RSS feeds.
 class CacheOptions {
+  const CacheOptions({
+    this.ttl = const Duration(hours: 1),
+    this.useCache = true,
+    this.maxCacheSize,
+  });
+
   /// Time to live for cached content.
   final Duration ttl;
 
@@ -469,10 +485,4 @@ class CacheOptions {
 
   /// Maximum size for the cache in bytes.
   final int? maxCacheSize;
-
-  const CacheOptions({
-    this.ttl = const Duration(hours: 1),
-    this.useCache = true,
-    this.maxCacheSize,
-  });
 }

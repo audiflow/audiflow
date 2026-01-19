@@ -55,14 +55,14 @@ class CacheManager {
   /// Checks if a cache file exists for the given URL.
   Future<bool> cacheExists(String url) async {
     final cacheFile = await _getCacheFile(url);
-    return await cacheFile.exists();
+    return cacheFile.exists();
   }
 
   /// Gets the size of a cache file in bytes.
   Future<int> getCacheFileSize(String url) async {
     final cacheFile = await _getCacheFile(url);
     if (await cacheFile.exists()) {
-      return await cacheFile.length();
+      return cacheFile.length();
     }
     return 0;
   }
@@ -76,7 +76,7 @@ class CacheManager {
       return 0;
     }
 
-    int totalSize = 0;
+    var totalSize = 0;
     await for (final entity in cacheFolder.list()) {
       if (entity is File) {
         totalSize += await entity.length();
@@ -130,13 +130,15 @@ class CacheManager {
   /// Updates the cache index file to track cache entries.
   Future<void> _updateCacheIndex(String hash, {required bool add}) async {
     final indexFile = await _getCacheIndexFile();
-    List<String> cacheIndex = [];
+    var cacheIndex = <String>[];
 
     if (await indexFile.exists()) {
       try {
         final indexContent = await indexFile.readAsString();
         if (indexContent.isNotEmpty) {
-          cacheIndex = List<String>.from(jsonDecode(indexContent));
+          cacheIndex = List<String>.from(
+            jsonDecode(indexContent) as Iterable<dynamic>,
+          );
         }
       } catch (e) {
         // If index is corrupted, start fresh
@@ -166,7 +168,9 @@ class CacheManager {
       if (indexContent.isEmpty) {
         return [];
       }
-      return List<String>.from(jsonDecode(indexContent));
+      return List<String>.from(
+        jsonDecode(indexContent) as Iterable<dynamic>,
+      );
     } catch (e) {
       // If index is corrupted, return empty list
       return [];
@@ -234,7 +238,9 @@ class CacheManager {
       if (await metadataFile.exists()) {
         try {
           final metadataJson = await metadataFile.readAsString();
-          final metadata = CacheMetadata.fromJson(jsonDecode(metadataJson));
+          final metadata = CacheMetadata.fromJson(
+            jsonDecode(metadataJson) as Map<String, dynamic>,
+          );
           if (metadata.isExpired) {
             expiredKeys.add(hash);
           }
@@ -320,10 +326,13 @@ class CacheManager {
       if (await metadataFile.exists()) {
         try {
           final metadataJson = await metadataFile.readAsString();
-          final metadata = CacheMetadata.fromJson(jsonDecode(metadataJson));
+          final metadata = CacheMetadata.fromJson(
+            jsonDecode(metadataJson) as Map<String, dynamic>,
+          );
           final cacheFile = await _getCacheFileByHash(hash);
-          final fileSize =
-              await cacheFile.exists() ? await cacheFile.length() : 0;
+          final fileSize = await cacheFile.exists()
+              ? await cacheFile.length()
+              : 0;
 
           entriesWithMetadata.add(
             _CacheEntryInfo(
@@ -343,11 +352,11 @@ class CacheManager {
     entriesWithMetadata.sort((a, b) => a.cachedAt.compareTo(b.cachedAt));
 
     // Remove entries until we're under the size limit
-    int currentSize = entriesWithMetadata.fold(
+    var currentSize = entriesWithMetadata.fold(
       0,
       (sum, entry) => sum + entry.size,
     );
-    int index = 0;
+    var index = 0;
 
     while (maxSize < currentSize && index < entriesWithMetadata.length) {
       final entry = entriesWithMetadata[index];
@@ -372,7 +381,9 @@ class CacheManager {
       if (await metadataFile.exists()) {
         try {
           final metadataJson = await metadataFile.readAsString();
-          final metadata = CacheMetadata.fromJson(jsonDecode(metadataJson));
+          final metadata = CacheMetadata.fromJson(
+            jsonDecode(metadataJson) as Map<String, dynamic>,
+          );
 
           entriesWithMetadata.add(
             _CacheEntryInfo(
@@ -393,7 +404,7 @@ class CacheManager {
 
     // Remove oldest entries until we're under the limit
     final entriesToRemove = entriesWithMetadata.length - maxEntries;
-    for (int i = 0; i < entriesToRemove; i++) {
+    for (var i = 0; i < entriesToRemove; i++) {
       await _deleteCacheEntry(entriesWithMetadata[i].hash);
     }
   }
@@ -401,6 +412,12 @@ class CacheManager {
 
 /// Represents a cached RSS feed with content and metadata.
 class CachedFeed {
+  const CachedFeed({
+    required this.url,
+    required this.contentFile,
+    required this.metadata,
+  });
+
   /// The original URL of the feed.
   final String url;
 
@@ -409,12 +426,6 @@ class CachedFeed {
 
   /// The cache metadata.
   final CacheMetadata metadata;
-
-  const CachedFeed({
-    required this.url,
-    required this.contentFile,
-    required this.metadata,
-  });
 
   /// Returns a stream of the cached content.
   Stream<List<int>> getContentStream() => contentFile.openRead();
@@ -425,13 +436,12 @@ class CachedFeed {
 
 /// Internal helper class for cache entry information.
 class _CacheEntryInfo {
-  final String hash;
-  final DateTime cachedAt;
-  final int size;
-
   const _CacheEntryInfo({
     required this.hash,
     required this.cachedAt,
     required this.size,
   });
+  final String hash;
+  final DateTime cachedAt;
+  final int size;
 }
