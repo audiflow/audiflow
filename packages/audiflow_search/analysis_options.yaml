@@ -1,0 +1,21 @@
+include: ../../analysis_options.yaml
+
+analyzer:
+  exclude:
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+
+linter:
+  rules:
+    # Disable rules that are too strict for a search library
+    avoid_catches_without_on_clauses: false
+    cascade_invocations: false
+    # Formatting preferences
+    lines_longer_than_80_chars: false
+    always_put_control_body_on_new_line: false
+    # Doc comment style
+    unintended_html_in_doc_comment: false
+    # Sort preferences
+    sort_constructors_first: false
+    # Error handling preferences
+    avoid_catching_errors: false

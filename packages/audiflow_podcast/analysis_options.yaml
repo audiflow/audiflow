@@ -1,0 +1,35 @@
+include: ../../analysis_options.yaml
+
+analyzer:
+  exclude:
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+  errors:
+    # Ignore some strict analyzer checks for this package
+    inference_failure_on_instance_creation: ignore
+    inference_failure_on_untyped_parameter: ignore
+    strict_raw_type: ignore
+
+linter:
+  rules:
+    # Disable rules that are too strict for an RSS parsing library
+    # These are acceptable patterns for streaming/async code
+    avoid_catches_without_on_clauses: false
+    cascade_invocations: false
+    # IO-heavy library needs async file operations
+    avoid_slow_async_io: false
+    # Formatting preferences
+    lines_longer_than_80_chars: false
+    always_put_control_body_on_new_line: false
+    # Doc comment style
+    unintended_html_in_doc_comment: false
+    # These are acceptable in test code and simple async methods
+    unnecessary_async: false
+    close_sinks: false
+    # Minor style preferences
+    prefer_foreach: false
+    use_setters_to_change_properties: false
+    join_return_with_assignment: false
+    unreachable_from_main: false
+    flutter_style_todos: false
+    sort_pub_dependencies: false

@@ -69,11 +69,11 @@ format-fix:
 
 test:
 	@echo "Running tests..."
-	melos run test
+	melos run test --no-select
 
 test-coverage:
 	@echo "Running tests with coverage..."
-	melos run test:coverage
+	melos run test:coverage --no-select
 
 check: analyze test
 	@echo "All checks passed!"
