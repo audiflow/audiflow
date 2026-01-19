@@ -5,12 +5,11 @@ void main() {
   group('Podcast', () {
     group('constructor', () {
       test('should create podcast with required fields', () {
-        final podcast = Podcast(
+        const podcast = Podcast(
           id: '123456',
           name: 'Test Podcast',
           artistName: 'Test Artist',
-          genres: const ['Technology', 'News'],
-          explicit: false,
+          genres: ['Technology', 'News'],
         );
 
         expect(podcast.id, '123456');
@@ -21,7 +20,7 @@ void main() {
       });
 
       test('should create podcast with all fields', () {
-        final releaseDate = DateTime(2025, 1, 1);
+        final releaseDate = DateTime(2025);
         final podcast = Podcast(
           id: '123456',
           name: 'Test Podcast',
@@ -116,7 +115,7 @@ void main() {
         expect(podcast.artworkUrl, json['artworkUrl600']);
         expect(
           podcast.releaseDate,
-          DateTime.parse(json['releaseDate'] as String),
+          DateTime.parse(json['releaseDate']! as String),
         );
         expect(podcast.explicit, true);
         expect(podcast.trackCount, json['trackCount']);
@@ -236,19 +235,18 @@ void main() {
 
     group('equality', () {
       test('should be equal when ids are the same', () {
-        final podcast1 = Podcast(
+        const podcast1 = Podcast(
           id: '123456',
           name: 'Test Podcast 1',
           artistName: 'Test Artist 1',
-          genres: const ['Technology'],
-          explicit: false,
+          genres: ['Technology'],
         );
 
-        final podcast2 = Podcast(
+        const podcast2 = Podcast(
           id: '123456',
           name: 'Test Podcast 2',
           artistName: 'Test Artist 2',
-          genres: const ['News'],
+          genres: ['News'],
           explicit: true,
         );
 
@@ -257,20 +255,18 @@ void main() {
       });
 
       test('should not be equal when ids are different', () {
-        final podcast1 = Podcast(
+        const podcast1 = Podcast(
           id: '123456',
           name: 'Test Podcast',
           artistName: 'Test Artist',
-          genres: const ['Technology'],
-          explicit: false,
+          genres: ['Technology'],
         );
 
-        final podcast2 = Podcast(
+        const podcast2 = Podcast(
           id: '789012',
           name: 'Test Podcast',
           artistName: 'Test Artist',
-          genres: const ['Technology'],
-          explicit: false,
+          genres: ['Technology'],
         );
 
         expect(podcast1, isNot(podcast2));
@@ -279,12 +275,11 @@ void main() {
 
     group('immutability', () {
       test('should not allow modification of genres list', () {
-        final podcast = Podcast(
+        const podcast = Podcast(
           id: '123456',
           name: 'Test Podcast',
           artistName: 'Test Artist',
           genres: ['Technology', 'News'],
-          explicit: false,
         );
 
         expect(
@@ -296,12 +291,11 @@ void main() {
 
     group('copyWith', () {
       test('should create a copy with modified fields', () {
-        final original = Podcast(
+        const original = Podcast(
           id: '123456',
           name: 'Test Podcast',
           artistName: 'Test Artist',
-          genres: const ['Technology'],
-          explicit: false,
+          genres: ['Technology'],
         );
 
         final copy = original.copyWith(
@@ -316,12 +310,11 @@ void main() {
       });
 
       test('should keep original values when no parameters provided', () {
-        final original = Podcast(
+        const original = Podcast(
           id: '123456',
           name: 'Test Podcast',
           artistName: 'Test Artist',
-          genres: const ['Technology'],
-          explicit: false,
+          genres: ['Technology'],
         );
 
         final copy = original.copyWith();
@@ -336,7 +329,7 @@ void main() {
 
     group('toBuilderData', () {
       test('should convert podcast to builder data map', () {
-        final releaseDate = DateTime(2025, 1, 1);
+        final releaseDate = DateTime(2025);
         final podcast = Podcast(
           id: '123456',
           name: 'Test Podcast',
