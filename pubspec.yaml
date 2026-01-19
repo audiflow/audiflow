@@ -29,3 +29,48 @@ dependency_overrides:
 
 flutter:
   uses-material-design: true
+
+melos:
+  scripts:
+    # Code generation across all packages
+    codegen:
+      exec: dart run build_runner build --delete-conflicting-outputs
+      concurrency: 4
+      packageFilters:
+        dirExists: lib
+
+    # Code generation in watch mode
+    codegen:watch:
+      exec: dart run build_runner watch --delete-conflicting-outputs
+      concurrency: 4
+      packageFilters:
+        dirExists: lib
+
+    # Run all tests
+    test:
+      exec: flutter test
+      concurrency: 4
+      packageFilters:
+        dirExists: test
+
+    # Generate coverage reports
+    test:coverage:
+      exec: flutter test --coverage
+      concurrency: 4
+      packageFilters:
+        dirExists: test
+
+    # Analyze all packages
+    analyze:
+      exec: flutter analyze
+      concurrency: 1
+
+    # Clean all packages
+    clean:
+      exec: flutter clean
+      concurrency: 4
+
+    # Get dependencies
+    get:
+      exec: flutter pub get
+      concurrency: 4
