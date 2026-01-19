@@ -1,6 +1,5 @@
 import 'package:audiflow_podcast/audiflow_podcast.dart';
 import 'package:logger/logger.dart';
-import 'package:riverpod/riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../builders/podcast_builder.dart';
