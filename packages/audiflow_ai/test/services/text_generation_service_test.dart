@@ -151,7 +151,13 @@ void main() {
           (call) => call.method == AudiflowAiChannel.initialize,
         );
         // Should have some default instructions
-        expect(initCall.arguments, isA<Map>());
+        expect(initCall.arguments, isA<Map<Object?, Object?>>());
+        expect(
+          (initCall.arguments as Map<Object?, Object?>).containsKey(
+            'instructions',
+          ),
+          isTrue,
+        );
       });
 
       test('sets isInitialized to true on success', () async {

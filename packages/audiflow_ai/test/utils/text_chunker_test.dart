@@ -133,10 +133,7 @@ void main() {
 
           if (1 < chunks.length) {
             // Check that there's some overlap content
-            final firstEnd = chunks.first.substring(
-              chunks.first.length - 10,
-            );
-            // The overlap should create some continuity
+            // Verify that overlapped text creates continuity
             expect(chunks.last.contains('.'), isTrue);
           }
         });
