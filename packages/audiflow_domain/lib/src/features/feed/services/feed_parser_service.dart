@@ -2,6 +2,7 @@ import 'package:audiflow_podcast/audiflow_podcast.dart';
 import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../common/providers/logger_provider.dart';
 import '../builders/podcast_builder.dart';
 
 part 'feed_parser_service.g.dart';
@@ -19,7 +20,8 @@ part 'feed_parser_service.g.dart';
 /// ```
 @riverpod
 FeedParserService feedParserService(Ref ref) {
-  return FeedParserService();
+  final logger = ref.watch(namedLoggerProvider('FeedParser'));
+  return FeedParserService(logger: logger);
 }
 
 class FeedParserService {

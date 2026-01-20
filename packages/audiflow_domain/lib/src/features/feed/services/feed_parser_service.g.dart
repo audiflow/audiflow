@@ -88,4 +88,4 @@ final class FeedParserServiceProvider
   }
 }
 
-String _$feedParserServiceHash() => r'940290e6710744e03dcdc864517fc567a37165ef';
+String _$feedParserServiceHash() => r'90623487f85c90ed981006e6aacc7fa49cd22b1f';

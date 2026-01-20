@@ -19,6 +19,7 @@ export 'src/common/models/paginated_response.dart';
 // Common providers
 export 'src/common/providers/database_provider.dart';
 export 'src/common/providers/http_client_provider.dart';
+export 'src/common/providers/logger_provider.dart';
 export 'src/common/providers/platform_providers.dart';
 
 // Common datasources
