@@ -79,7 +79,7 @@
 
 ### Text Processing Utilities
 
-- [ ] 3. Implement text processing utilities
+- [x] 3. Implement text processing utilities
 - [x] 3.1 (P) Create TextChunker utility
   - Implement chunking algorithm that respects sentence boundaries
   - Support paragraph boundary detection for cleaner splits
@@ -109,8 +109,8 @@
 
 ### Android Native Implementation
 
-- [ ] 4. Implement Android native layer with ML Kit GenAI
-- [ ] 4.1 Implement capability detection for Android
+- [x] 4. Implement Android native layer with ML Kit GenAI
+- [x] 4.1 Implement capability detection for Android
   - Query AICore availability using ML Kit FeatureStatus API
   - Map FeatureStatus values to AiCapability enum
   - Detect error code -101 and return needsSetup status
@@ -119,7 +119,7 @@
   - Write instrumentation tests for capability detection
   - _Requirements: 1.2, 1.4, 1.5, 1.6, 7.4, 7.8_
 
-- [ ] 4.2 Implement initialization and lifecycle for Android
+- [x] 4.2 Implement initialization and lifecycle for Android
   - Initialize ML Kit GenerativeModel with system instructions
   - Handle initialization failure with appropriate exceptions
   - Support reinitialization with new configuration
@@ -128,7 +128,7 @@
   - Write instrumentation tests for initialization scenarios
   - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 7.3, 7.9_
 
-- [ ] 4.3 Implement text generation for Android
+- [x] 4.3 Implement text generation for Android
   - Invoke ML Kit Prompt API with prompt and config
   - Map GenerationConfig to ML Kit generation options
   - Return generated text with token count and duration
