@@ -8,8 +8,54 @@ part of 'podcast_detail_controller.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Provides a Dio client for RSS feed fetching.
+
+@ProviderFor(feedHttpClient)
+final feedHttpClientProvider = FeedHttpClientProvider._();
+
+/// Provides a Dio client for RSS feed fetching.
+
+final class FeedHttpClientProvider extends $FunctionalProvider<Dio, Dio, Dio>
+    with $Provider<Dio> {
+  /// Provides a Dio client for RSS feed fetching.
+  FeedHttpClientProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'feedHttpClientProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$feedHttpClientHash();
+
+  @$internal
+  @override
+  $ProviderElement<Dio> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  Dio create(Ref ref) {
+    return feedHttpClient(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(Dio value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<Dio>(value),
+    );
+  }
+}
+
+String _$feedHttpClientHash() => r'1f78c2cb06966ea95e535a2df41522826f3e0f46';
+
 /// Fetches and provides parsed podcast feed data for a given feed URL.
 ///
+/// Uses Dio for network requests to avoid dart:io HttpClient issues on mobile.
 /// Returns [ParsedFeed] containing podcast metadata and episodes.
 /// Throws [PodcastException] if the feed cannot be fetched or parsed.
 
@@ -18,6 +64,7 @@ final podcastDetailProvider = PodcastDetailFamily._();
 
 /// Fetches and provides parsed podcast feed data for a given feed URL.
 ///
+/// Uses Dio for network requests to avoid dart:io HttpClient issues on mobile.
 /// Returns [ParsedFeed] containing podcast metadata and episodes.
 /// Throws [PodcastException] if the feed cannot be fetched or parsed.
 
@@ -31,6 +78,7 @@ final class PodcastDetailProvider
     with $FutureModifier<ParsedFeed>, $FutureProvider<ParsedFeed> {
   /// Fetches and provides parsed podcast feed data for a given feed URL.
   ///
+  /// Uses Dio for network requests to avoid dart:io HttpClient issues on mobile.
   /// Returns [ParsedFeed] containing podcast metadata and episodes.
   /// Throws [PodcastException] if the feed cannot be fetched or parsed.
   PodcastDetailProvider._({
@@ -76,10 +124,11 @@ final class PodcastDetailProvider
   }
 }
 
-String _$podcastDetailHash() => r'1aa0055f6979a77668b227271e8644d6f4c41989';
+String _$podcastDetailHash() => r'cfa8005e138d3fd78fd3bc78e0740fc964fa1957';
 
 /// Fetches and provides parsed podcast feed data for a given feed URL.
 ///
+/// Uses Dio for network requests to avoid dart:io HttpClient issues on mobile.
 /// Returns [ParsedFeed] containing podcast metadata and episodes.
 /// Throws [PodcastException] if the feed cannot be fetched or parsed.
 
@@ -96,6 +145,7 @@ final class PodcastDetailFamily extends $Family
 
   /// Fetches and provides parsed podcast feed data for a given feed URL.
   ///
+  /// Uses Dio for network requests to avoid dart:io HttpClient issues on mobile.
   /// Returns [ParsedFeed] containing podcast metadata and episodes.
   /// Throws [PodcastException] if the feed cannot be fetched or parsed.
 
