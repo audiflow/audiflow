@@ -49,6 +49,8 @@ dependencies:
   dio: ^5.9.0
 
   # Internal packages
+  audiflow_domain:
+    path: ../audiflow_domain
   audiflow_search:
     path: ../audiflow_search
   audiflow_ui:
