@@ -74,13 +74,29 @@ class PodcastFeed extends PodcastEntity {
       }
     }
 
+    // Build title with fallbacks: title -> itunesAuthor -> 'Untitled Podcast'
+    final rawTitle = data['title'] as String?;
+    final itunesAuthor = data['itunesAuthor'] as String?;
+    final fallbackTitle = rawTitle?.trim().isNotEmpty == true
+        ? rawTitle!
+        : (itunesAuthor?.trim().isNotEmpty == true ? itunesAuthor! : '');
+
+    // Build description with fallbacks: description -> itunesSummary -> itunesSubtitle
+    final rawDescription = data['description'] as String?;
+    final itunesSummary = data['itunesSummary'] as String?;
+    final itunesSubtitle = data['itunesSubtitle'] as String?;
+    final fallbackDescription = rawDescription?.trim().isNotEmpty == true
+        ? rawDescription!
+        : (itunesSummary?.trim().isNotEmpty == true
+              ? itunesSummary!
+              : (itunesSubtitle ?? ''));
+
     return PodcastFeed.fromData(
       parsedAt: DateTime.now(),
       sourceUrl: sourceUrl ?? '',
-      title: data['title'] as String? ?? '',
-      description: data['description'] as String? ?? '',
-      author:
-          data['itunesAuthor'] as String? ?? data['managingEditor'] as String?,
+      title: fallbackTitle,
+      description: fallbackDescription,
+      author: itunesAuthor ?? data['managingEditor'] as String?,
       images: images,
       language: data['language'] as String?,
       categories: categories,
@@ -104,6 +120,9 @@ class PodcastFeed extends PodcastEntity {
   }
 
   /// Factory constructor that creates a PodcastFeed with validation and default values.
+  ///
+  /// Title and description are technically required by RSS spec but many feeds
+  /// don't include them. If title is empty, falls back to 'Untitled Podcast'.
   factory PodcastFeed.fromData({
     required DateTime parsedAt,
     required String sourceUrl,
@@ -130,10 +149,10 @@ class PodcastFeed extends PodcastEntity {
     bool? isComplete,
     String? newFeedUrl,
   }) {
-    // Validate required fields
-    if (title.trim().isEmpty) {
-      throw ArgumentError('Feed title cannot be empty');
-    }
+    // Use fallback for empty title (many feeds don't include it)
+    final effectiveTitle = title.trim().isEmpty
+        ? 'Untitled Podcast'
+        : title.trim();
     // Description can be empty in some RSS feeds
 
     // Validate and normalize optional fields
@@ -169,7 +188,7 @@ class PodcastFeed extends PodcastEntity {
     return PodcastFeed(
       parsedAt: parsedAt,
       sourceUrl: sourceUrl,
-      title: title.trim(),
+      title: effectiveTitle,
       description: description.trim(),
       author: author?.trim().isEmpty == true ? null : author?.trim(),
       images: images ?? const [],
@@ -305,16 +324,20 @@ class PodcastFeed extends PodcastEntity {
   /// Returns the cache duration based on TTL, with a default of 60 minutes.
   Duration get cacheDuration => Duration(minutes: ttl ?? 60);
 
-  /// Validates the feed data and returns a list of validation errors.
+  /// Validates the feed data and returns a list of validation warnings.
+  ///
+  /// Note: Title and description are not strictly required as many real-world
+  /// feeds don't include them. The factory provides fallback values.
   List<String> validate() {
     final errors = <String>[];
 
-    if (title.trim().isEmpty) {
-      errors.add('Feed title is required');
+    // Title uses fallback so this is just a warning
+    if (title.trim().isEmpty || title == 'Untitled Podcast') {
+      errors.add('Feed title is missing or using fallback');
     }
 
     if (description.trim().isEmpty) {
-      errors.add('Feed description is required');
+      errors.add('Feed description is empty');
     }
 
     if (type != null && type != 'episodic' && type != 'serial') {

@@ -68,8 +68,15 @@ void main() {
 </rss>''';
 
         final stream = parser.parseFromString(malformedXml);
+        final entities = await stream.toList();
 
-        expect(stream.toList, throwsA(isA<PodcastParseError>()));
+        // Parser should still produce a feed with fallback values for malformed XML
+        expect(entities, isNotEmpty);
+        expect(entities[0], isA<PodcastFeed>());
+        final feed = entities[0] as PodcastFeed;
+        // Title element is malformed, so fallback is used
+        expect(feed.title, 'Untitled Podcast');
+        expect(feed.description, 'Missing closing tag');
       });
     });
 

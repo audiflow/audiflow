@@ -236,13 +236,14 @@ void main() {
 
         await parser.parseXmlString(xmlContent);
 
-        expect(errors.length, greaterThanOrEqualTo(0));
+        // Parser should produce entities even with missing elements (using fallbacks)
+        expect(entities, isNotEmpty);
 
-        if (entities.isNotEmpty) {
-          final feed = entities.first as PodcastFeed;
-          expect(feed.title, isNotEmpty);
-          expect(feed.description, isNotEmpty);
-        }
+        final feed = entities.first as PodcastFeed;
+        // Title uses fallback when missing
+        expect(feed.title, 'Untitled Podcast');
+        // Description can be empty
+        expect(feed.description, isEmpty);
       });
 
       test('should parse duration formats correctly', () async {

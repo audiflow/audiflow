@@ -1,8 +1,10 @@
 import 'package:audiflow_app/features/library/presentation/screens/library_screen.dart';
+import 'package:audiflow_app/features/podcast_detail/presentation/screens/podcast_detail_screen.dart';
 import 'package:audiflow_app/features/search/presentation/screens/search_screen.dart';
 import 'package:audiflow_app/features/settings/presentation/screens/settings_screen.dart';
 import 'package:audiflow_app/routing/app_router.dart';
 import 'package:audiflow_app/routing/scaffold_with_nav_bar.dart';
+import 'package:audiflow_search/audiflow_search.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -79,11 +81,17 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        // Navigate to podcast detail within Search tab
-        router.push('/search/podcast/123');
+        // Navigate to podcast detail within Search tab (with extra data)
+        final podcast = Podcast(
+          id: '123',
+          name: 'Test Podcast',
+          artistName: 'Test Artist',
+        );
+        router.push('/search/podcast/123', extra: podcast);
         await tester.pumpAndSettle();
 
-        expect(find.text('Podcast ID: 123'), findsOneWidget);
+        expect(find.byType(PodcastDetailScreen), findsOneWidget);
+        expect(find.text('Test Podcast'), findsOneWidget);
 
         // Switch to Library tab
         await tester.tap(find.text('Library'));
@@ -95,7 +103,7 @@ void main() {
         await tester.tap(find.text('Search'));
         await tester.pumpAndSettle();
 
-        expect(find.text('Podcast ID: 123'), findsOneWidget);
+        expect(find.byType(PodcastDetailScreen), findsOneWidget);
       });
 
       testWidgets('tapping current tab returns to root', (tester) async {
@@ -104,18 +112,23 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        // Navigate to podcast detail within Search tab
-        router.push('/search/podcast/123');
+        // Navigate to podcast detail within Search tab (with extra data)
+        final podcast = Podcast(
+          id: '123',
+          name: 'Test Podcast',
+          artistName: 'Test Artist',
+        );
+        router.push('/search/podcast/123', extra: podcast);
         await tester.pumpAndSettle();
 
-        expect(find.text('Podcast ID: 123'), findsOneWidget);
+        expect(find.byType(PodcastDetailScreen), findsOneWidget);
 
         // Tap Search tab again to return to root
         await tester.tap(find.text('Search'));
         await tester.pumpAndSettle();
 
         expect(find.byType(SearchScreen), findsOneWidget);
-        expect(find.text('Podcast ID: 123'), findsNothing);
+        expect(find.byType(PodcastDetailScreen), findsNothing);
       });
     });
 
@@ -153,7 +166,9 @@ void main() {
         expect(find.byType(SettingsScreen), findsOneWidget);
       });
 
-      testWidgets('podcast detail route shows podcast ID', (tester) async {
+      testWidgets('podcast detail route shows not found without extra', (
+        tester,
+      ) async {
         await tester.pumpWidget(
           ProviderScope(child: MaterialApp.router(routerConfig: router)),
         );
@@ -161,7 +176,28 @@ void main() {
         router.go('/search/podcast/456');
         await tester.pumpAndSettle();
 
-        expect(find.text('Podcast ID: 456'), findsOneWidget);
+        // Without extra data, should show not found screen
+        expect(find.text('Podcast Not Found'), findsOneWidget);
+        expect(find.text('Podcast data not available'), findsOneWidget);
+      });
+
+      testWidgets('podcast detail route shows podcast with extra data', (
+        tester,
+      ) async {
+        await tester.pumpWidget(
+          ProviderScope(child: MaterialApp.router(routerConfig: router)),
+        );
+
+        final podcast = Podcast(
+          id: '456',
+          name: 'Another Podcast',
+          artistName: 'Another Artist',
+        );
+        router.push('/search/podcast/456', extra: podcast);
+        await tester.pumpAndSettle();
+
+        expect(find.byType(PodcastDetailScreen), findsOneWidget);
+        expect(find.text('Another Podcast'), findsOneWidget);
       });
 
       test('router configuration includes all routes', () {

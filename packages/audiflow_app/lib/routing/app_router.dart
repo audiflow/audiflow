@@ -1,7 +1,9 @@
+import 'package:audiflow_search/audiflow_search.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../features/library/presentation/screens/library_screen.dart';
+import '../features/podcast_detail/presentation/screens/podcast_detail_screen.dart';
 import '../features/search/presentation/screens/search_screen.dart';
 import '../features/settings/presentation/screens/settings_screen.dart';
 import 'scaffold_with_nav_bar.dart';
@@ -53,8 +55,11 @@ GoRouter createAppRouter() {
                   GoRoute(
                     path: 'podcast/:id',
                     builder: (context, state) {
-                      final podcastId = state.pathParameters['id']!;
-                      return _PodcastDetailPlaceholder(podcastId: podcastId);
+                      final podcast = state.extra as Podcast?;
+                      if (podcast == null) {
+                        return const _PodcastNotFoundScreen();
+                      }
+                      return PodcastDetailScreen(podcast: podcast);
                     },
                   ),
                 ],
@@ -85,31 +90,29 @@ GoRouter createAppRouter() {
   );
 }
 
-/// Placeholder podcast detail page widget.
-///
-/// This temporary widget serves as the podcast detail route until the proper
-/// podcast detail screen is implemented.
-class _PodcastDetailPlaceholder extends StatelessWidget {
-  const _PodcastDetailPlaceholder({required this.podcastId});
-
-  final String podcastId;
+/// Fallback screen shown when podcast data is not available.
+class _PodcastNotFoundScreen extends StatelessWidget {
+  const _PodcastNotFoundScreen();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Podcast Detail')),
+      appBar: AppBar(title: const Text('Podcast Not Found')),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.podcasts, size: 64),
+            const Icon(Icons.error_outline, size: 64),
             const SizedBox(height: 16),
             Text(
-              'Podcast ID: $podcastId',
-              style: Theme.of(context).textTheme.headlineSmall,
+              'Podcast data not available',
+              style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 8),
-            const Text('Podcast detail page coming soon'),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Go Back'),
+            ),
           ],
         ),
       ),

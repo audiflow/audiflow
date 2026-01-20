@@ -24,6 +24,7 @@ dependencies:
   package_info_plus: ^9.0.0
   connectivity_plus: ^7.0.0
   logger: ^2.6.2
+  just_audio: ^0.10.5
 
 dev_dependencies:
   flutter_test:
