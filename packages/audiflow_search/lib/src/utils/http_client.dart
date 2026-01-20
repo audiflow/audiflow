@@ -33,7 +33,6 @@ class HttpClient {
              BaseOptions(
                connectTimeout: timeout,
                receiveTimeout: timeout,
-               responseType: ResponseType.json,
                // Accept all status codes, we'll handle them manually
                validateStatus: (_) => true,
              ),
