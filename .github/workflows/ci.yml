@@ -5,10 +5,30 @@ on:
     branches:
       - main
       - develop
+    paths-ignore:
+      - '.claude/**'
+      - '.github/**'
+      - '!.github/workflows/**'
+      - '*.md'
+      - 'docs/**'
+      - '.gitignore'
+      - '.gitattributes'
+      - 'LICENSE'
+      - 'CODEOWNERS'
   push:
     branches:
       - main
       - develop
+    paths-ignore:
+      - '.claude/**'
+      - '.github/**'
+      - '!.github/workflows/**'
+      - '*.md'
+      - 'docs/**'
+      - '.gitignore'
+      - '.gitattributes'
+      - 'LICENSE'
+      - 'CODEOWNERS'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
