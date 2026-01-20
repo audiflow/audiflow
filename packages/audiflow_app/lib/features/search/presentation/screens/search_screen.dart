@@ -203,10 +203,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   /// Navigates to the podcast detail page for the given podcast.
   ///
-  /// Extracts the podcast identifier and navigates using go_router.
+  /// Passes the full Podcast object as route extra for immediate display.
   /// Requirements: 2.3
   void _navigateToPodcastDetail(Podcast podcast) {
-    context.push('${AppRoutes.podcastDetail}/${podcast.id}');
+    context.push('${AppRoutes.podcastDetail}/${podcast.id}', extra: podcast);
   }
 
   /// Builds the error state with retry button (Requirements 5.1, 5.2, 5.3).
