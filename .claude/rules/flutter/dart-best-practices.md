@@ -1,3 +1,6 @@
+---
+paths: **/*.dart
+---
 # Dart Best Practices
 
 * **Effective Dart:** Follow the official Effective Dart guidelines

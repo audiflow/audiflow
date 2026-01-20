@@ -1,3 +1,6 @@
+---
+paths: **/*.dart
+---
 # Visual Design & Theming
 
 * **UI Design:** Build beautiful and intuitive user interfaces that follow

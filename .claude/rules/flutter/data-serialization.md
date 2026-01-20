@@ -1,3 +1,6 @@
+---
+paths: **/*.dart
+---
 # Data Handling & Serialization
 
 * **JSON Serialization:** Use `json_serializable` and `json_annotation` for

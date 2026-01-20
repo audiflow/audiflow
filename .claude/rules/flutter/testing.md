@@ -1,3 +1,6 @@
+---
+paths: **/*.dart
+---
 # Testing
 
 * **Running Tests:** To run tests, use the `run_tests` tool if it is available,

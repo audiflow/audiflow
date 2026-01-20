@@ -1,3 +1,6 @@
+---
+paths: **/*.dart
+---
 # Layout Best Practices
 
 ## Building Flexible and Overflow-Safe Layouts

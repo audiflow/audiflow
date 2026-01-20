@@ -1,3 +1,6 @@
+---
+paths: **/*.dart
+---
 # Routing
 
 * **GoRouter:** Use the `go_router` package for declarative navigation, deep
