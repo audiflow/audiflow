@@ -1,3 +1,6 @@
+---
+paths: **/*.dart
+---
 # API Design Principles
 
 When building reusable APIs, such as a library, follow these principles.

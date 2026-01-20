@@ -1,3 +1,6 @@
+---
+paths: **/*.dart
+---
 # Project Structure
 
 * **Standard Structure:** Assumes a standard Flutter project structure with

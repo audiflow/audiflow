@@ -30,10 +30,7 @@ void main() {
     }) {
       return MaterialApp(
         home: Scaffold(
-          body: PodcastSearchResultTile(
-            podcast: podcast,
-            onTap: onTap,
-          ),
+          body: PodcastSearchResultTile(podcast: podcast, onTap: onTap),
         ),
       );
     }
@@ -42,10 +39,9 @@ void main() {
       testWidgets('displays podcast title', (tester) async {
         final podcast = createTestPodcast(name: 'My Awesome Podcast');
 
-        await tester.pumpWidget(buildTestWidget(
-          podcast: podcast,
-          onTap: () {},
-        ));
+        await tester.pumpWidget(
+          buildTestWidget(podcast: podcast, onTap: () {}),
+        );
 
         expect(find.text('My Awesome Podcast'), findsOneWidget);
       });
@@ -53,10 +49,9 @@ void main() {
       testWidgets('displays author name', (tester) async {
         final podcast = createTestPodcast(artistName: 'John Doe');
 
-        await tester.pumpWidget(buildTestWidget(
-          podcast: podcast,
-          onTap: () {},
-        ));
+        await tester.pumpWidget(
+          buildTestWidget(podcast: podcast, onTap: () {}),
+        );
 
         expect(find.text('John Doe'), findsOneWidget);
       });
@@ -66,10 +61,9 @@ void main() {
           genres: ['Science', 'Education', 'News'],
         );
 
-        await tester.pumpWidget(buildTestWidget(
-          podcast: podcast,
-          onTap: () {},
-        ));
+        await tester.pumpWidget(
+          buildTestWidget(podcast: podcast, onTap: () {}),
+        );
 
         expect(find.text('Science'), findsOneWidget);
       });
@@ -79,10 +73,9 @@ void main() {
           description: 'A short podcast description.',
         );
 
-        await tester.pumpWidget(buildTestWidget(
-          podcast: podcast,
-          onTap: () {},
-        ));
+        await tester.pumpWidget(
+          buildTestWidget(podcast: podcast, onTap: () {}),
+        );
 
         expect(find.text('A short podcast description.'), findsOneWidget);
       });
@@ -95,10 +88,9 @@ void main() {
             'is more content available. This helps keep the UI clean.';
         final podcast = createTestPodcast(description: longDescription);
 
-        await tester.pumpWidget(buildTestWidget(
-          podcast: podcast,
-          onTap: () {},
-        ));
+        await tester.pumpWidget(
+          buildTestWidget(podcast: podcast, onTap: () {}),
+        );
 
         // Find a Text widget that contains the beginning of the description
         final descriptionFinder = find.byWidgetPredicate(
@@ -121,23 +113,22 @@ void main() {
           artworkUrl: 'https://example.com/podcast-image.jpg',
         );
 
-        await tester.pumpWidget(buildTestWidget(
-          podcast: podcast,
-          onTap: () {},
-        ));
+        await tester.pumpWidget(
+          buildTestWidget(podcast: podcast, onTap: () {}),
+        );
 
         // Should find an Image widget (network or cached)
         expect(find.byType(Image), findsOneWidget);
       });
 
-      testWidgets('displays placeholder when artwork URL is null',
-          (tester) async {
+      testWidgets('displays placeholder when artwork URL is null', (
+        tester,
+      ) async {
         final podcast = createTestPodcast(artworkUrl: null);
 
-        await tester.pumpWidget(buildTestWidget(
-          podcast: podcast,
-          onTap: () {},
-        ));
+        await tester.pumpWidget(
+          buildTestWidget(podcast: podcast, onTap: () {}),
+        );
 
         // Should find a placeholder icon when no artwork
         expect(find.byIcon(Icons.podcasts), findsOneWidget);
@@ -148,10 +139,9 @@ void main() {
       testWidgets('renders without description when null', (tester) async {
         final podcast = createTestPodcast(description: null);
 
-        await tester.pumpWidget(buildTestWidget(
-          podcast: podcast,
-          onTap: () {},
-        ));
+        await tester.pumpWidget(
+          buildTestWidget(podcast: podcast, onTap: () {}),
+        );
 
         // Widget should render successfully
         expect(find.byType(PodcastSearchResultTile), findsOneWidget);
@@ -159,14 +149,14 @@ void main() {
         expect(find.text('Test Podcast Title'), findsOneWidget);
       });
 
-      testWidgets('renders without genre when genres list is empty',
-          (tester) async {
+      testWidgets('renders without genre when genres list is empty', (
+        tester,
+      ) async {
         final podcast = createTestPodcast(genres: []);
 
-        await tester.pumpWidget(buildTestWidget(
-          podcast: podcast,
-          onTap: () {},
-        ));
+        await tester.pumpWidget(
+          buildTestWidget(podcast: podcast, onTap: () {}),
+        );
 
         // Widget should render successfully
         expect(find.byType(PodcastSearchResultTile), findsOneWidget);
@@ -180,10 +170,9 @@ void main() {
         var tapCount = 0;
         final podcast = createTestPodcast();
 
-        await tester.pumpWidget(buildTestWidget(
-          podcast: podcast,
-          onTap: () => tapCount++,
-        ));
+        await tester.pumpWidget(
+          buildTestWidget(podcast: podcast, onTap: () => tapCount++),
+        );
 
         await tester.tap(find.byType(PodcastSearchResultTile));
         await tester.pump();
@@ -191,15 +180,15 @@ void main() {
         expect(tapCount, equals(1));
       });
 
-      testWidgets('multiple taps trigger callback multiple times',
-          (tester) async {
+      testWidgets('multiple taps trigger callback multiple times', (
+        tester,
+      ) async {
         var tapCount = 0;
         final podcast = createTestPodcast();
 
-        await tester.pumpWidget(buildTestWidget(
-          podcast: podcast,
-          onTap: () => tapCount++,
-        ));
+        await tester.pumpWidget(
+          buildTestWidget(podcast: podcast, onTap: () => tapCount++),
+        );
 
         await tester.tap(find.byType(PodcastSearchResultTile));
         await tester.pump();

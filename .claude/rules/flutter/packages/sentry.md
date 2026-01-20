@@ -1,3 +1,6 @@
+---
+paths: **/*.dart
+---
 # Sentry
 
 ## When to Use

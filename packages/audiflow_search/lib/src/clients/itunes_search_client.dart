@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import '../builders/podcast_search_entity_builder.dart';
 import '../builders/search_entity_result.dart';
 import '../exceptions/search_exception.dart';
@@ -93,13 +95,18 @@ class ItunesSearchClient {
         ifNoneMatch: query.ifNoneMatch,
       );
 
-      final data = response.data;
+      final rawData = response.data;
+      final Map<String, dynamic> data;
 
-      if (data is! Map<String, dynamic>) {
+      if (rawData is Map<String, dynamic>) {
+        data = rawData;
+      } else if (rawData is String) {
+        data = jsonDecode(rawData) as Map<String, dynamic>;
+      } else {
         throw SearchException.invalidArgument(
           providerId: 'itunes',
           message: 'Response data is not a valid JSON object',
-          details: {'dataType': data.runtimeType.toString()},
+          details: {'dataType': rawData.runtimeType.toString()},
         );
       }
 
@@ -131,13 +138,18 @@ class ItunesSearchClient {
         ifNoneMatch: query.ifNoneMatch,
       );
 
-      final data = response.data;
+      final rawData = response.data;
+      final Map<String, dynamic> data;
 
-      if (data is! Map<String, dynamic>) {
+      if (rawData is Map<String, dynamic>) {
+        data = rawData;
+      } else if (rawData is String) {
+        data = jsonDecode(rawData) as Map<String, dynamic>;
+      } else {
         final error = SearchException.invalidArgument(
           providerId: 'itunes',
           message: 'Response data is not a valid JSON object',
-          details: {'dataType': data.runtimeType.toString()},
+          details: {'dataType': rawData.runtimeType.toString()},
         );
         builder.onError(error);
         return SearchEntityResult(

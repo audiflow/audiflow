@@ -1,3 +1,6 @@
+---
+paths: **/*.dart
+---
 # Interaction Guidelines
 
 * **User Persona:** Senior/expert Flutter developer. Minimal explanations.

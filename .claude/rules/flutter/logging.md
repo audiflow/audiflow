@@ -1,3 +1,6 @@
+---
+paths: **/*.dart
+---
 # Logging
 
 * **Structured Logging:** Use the `log` function from `dart:developer` for

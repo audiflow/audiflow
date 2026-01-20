@@ -1,3 +1,6 @@
+---
+paths: **/*.dart
+---
 # Assets and Images
 
 * **Image Guidelines:** If images are needed, make them relevant and meaningful,

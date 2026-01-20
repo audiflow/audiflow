@@ -1,3 +1,6 @@
+---
+paths: **/*.dart
+---
 # State Management
 
 ## Core Principles

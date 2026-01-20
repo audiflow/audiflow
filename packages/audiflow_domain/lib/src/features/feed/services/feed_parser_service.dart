@@ -31,9 +31,9 @@ class FeedParserService {
     PodcastRssParser? parser,
     DefaultPodcastBuilder? builder,
     Logger? logger,
-  })  : _parser = parser ?? PodcastRssParser(logger: logger),
-        _builder = builder ?? DefaultPodcastBuilder(logger: logger),
-        _logger = logger;
+  }) : _parser = parser ?? PodcastRssParser(logger: logger),
+       _builder = builder ?? DefaultPodcastBuilder(logger: logger),
+       _logger = logger;
 
   /// Parses a podcast RSS feed from the given URL.
   ///
@@ -69,10 +69,7 @@ class FeedParserService {
       );
     } on StateError catch (e) {
       _logger?.e('Failed to parse feed from $url: $e');
-      throw PodcastException.parsing(
-        e.message,
-        sourceUrl: url,
-      );
+      throw PodcastException.parsing(e.message, sourceUrl: url);
     } catch (e) {
       _logger?.e('Unexpected error parsing feed from $url: $e');
       throw PodcastException(
@@ -113,9 +110,7 @@ class FeedParserService {
         );
       }
 
-      _logger?.i(
-        'Parsed feed: ${feed.title} with ${items.length} episodes',
-      );
+      _logger?.i('Parsed feed: ${feed.title} with ${items.length} episodes');
 
       return ParsedFeed(
         podcast: feed,
@@ -126,9 +121,7 @@ class FeedParserService {
     } catch (e) {
       if (e is PodcastException) rethrow;
       _logger?.e('Unexpected error parsing feed from string: $e');
-      throw PodcastException(
-        message: 'Failed to parse podcast feed: $e',
-      );
+      throw PodcastException(message: 'Failed to parse podcast feed: $e');
     }
   }
 

@@ -45,7 +45,7 @@ final class PodcastSearchServiceProvider
         argument: null,
         retry: null,
         name: r'podcastSearchServiceProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -74,7 +74,7 @@ final class PodcastSearchServiceProvider
 }
 
 String _$podcastSearchServiceHash() =>
-    r'649a1b32171087f64d356375093aab9089ae2c5f';
+    r'9387293b0edcc4809b64ba2bf74d71856f4a8e9c';
 
 /// Controller for managing podcast search state and operations.
 ///

@@ -65,9 +65,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     final isLoading = state is SearchLoading;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Search Podcasts'),
-      ),
+      appBar: AppBar(title: const Text('Search Podcasts')),
       body: Column(
         children: [
           Padding(
@@ -95,9 +93,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               ],
             ),
           ),
-          Expanded(
-            child: _buildContent(state),
-          ),
+          Expanded(child: _buildContent(state)),
         ],
       ),
     );

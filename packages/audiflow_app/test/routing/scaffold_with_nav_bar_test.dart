@@ -54,10 +54,10 @@ void main() {
       router.dispose();
     });
 
-    testWidgets('renders NavigationBar with three destinations', (tester) async {
-      await tester.pumpWidget(
-        MaterialApp.router(routerConfig: router),
-      );
+    testWidgets('renders NavigationBar with three destinations', (
+      tester,
+    ) async {
+      await tester.pumpWidget(MaterialApp.router(routerConfig: router));
       await tester.pumpAndSettle();
 
       expect(find.byType(NavigationBar), findsOneWidget);
@@ -65,9 +65,7 @@ void main() {
     });
 
     testWidgets('displays correct destination labels', (tester) async {
-      await tester.pumpWidget(
-        MaterialApp.router(routerConfig: router),
-      );
+      await tester.pumpWidget(MaterialApp.router(routerConfig: router));
       await tester.pumpAndSettle();
 
       expect(find.text('Search'), findsOneWidget);
@@ -76,9 +74,7 @@ void main() {
     });
 
     testWidgets('displays correct destination icons', (tester) async {
-      await tester.pumpWidget(
-        MaterialApp.router(routerConfig: router),
-      );
+      await tester.pumpWidget(MaterialApp.router(routerConfig: router));
       await tester.pumpAndSettle();
 
       expect(find.byIcon(Symbols.search), findsOneWidget);
@@ -87,21 +83,18 @@ void main() {
     });
 
     testWidgets('selectedIndex reflects current tab', (tester) async {
-      await tester.pumpWidget(
-        MaterialApp.router(routerConfig: router),
-      );
+      await tester.pumpWidget(MaterialApp.router(routerConfig: router));
       await tester.pumpAndSettle();
 
       // Initial tab is 0
-      final navigationBar =
-          tester.widget<NavigationBar>(find.byType(NavigationBar));
+      final navigationBar = tester.widget<NavigationBar>(
+        find.byType(NavigationBar),
+      );
       expect(navigationBar.selectedIndex, equals(0));
     });
 
     testWidgets('tapping destination calls goBranch', (tester) async {
-      await tester.pumpWidget(
-        MaterialApp.router(routerConfig: router),
-      );
+      await tester.pumpWidget(MaterialApp.router(routerConfig: router));
       await tester.pumpAndSettle();
 
       // Initially on Tab A
@@ -114,15 +107,14 @@ void main() {
       // Should now be on Tab B
       expect(find.text('Tab B'), findsOneWidget);
 
-      final navigationBar =
-          tester.widget<NavigationBar>(find.byType(NavigationBar));
+      final navigationBar = tester.widget<NavigationBar>(
+        find.byType(NavigationBar),
+      );
       expect(navigationBar.selectedIndex, equals(1));
     });
 
     testWidgets('renders navigation shell as body', (tester) async {
-      await tester.pumpWidget(
-        MaterialApp.router(routerConfig: router),
-      );
+      await tester.pumpWidget(MaterialApp.router(routerConfig: router));
       await tester.pumpAndSettle();
 
       expect(find.byType(ScaffoldWithNavBar), findsOneWidget);

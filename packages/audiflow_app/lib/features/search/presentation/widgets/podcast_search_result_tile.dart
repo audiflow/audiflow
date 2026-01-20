@@ -43,9 +43,7 @@ class PodcastSearchResultTile extends StatelessWidget {
           children: [
             _buildArtwork(colorScheme),
             const SizedBox(width: Spacing.md),
-            Expanded(
-              child: _buildContent(textTheme, colorScheme),
-            ),
+            Expanded(child: _buildContent(textTheme, colorScheme)),
           ],
         ),
       ),
@@ -109,16 +107,13 @@ class PodcastSearchResultTile extends StatelessWidget {
           const SizedBox(height: Spacing.xxs),
           Text(
             podcast.genres.first,
-            style: textTheme.labelSmall?.copyWith(
-              color: colorScheme.primary,
-            ),
+            style: textTheme.labelSmall?.copyWith(color: colorScheme.primary),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
         ],
         // Description
-        if (podcast.description != null &&
-            podcast.description!.isNotEmpty) ...[
+        if (podcast.description != null && podcast.description!.isNotEmpty) ...[
           const SizedBox(height: Spacing.xs),
           Text(
             podcast.description!,

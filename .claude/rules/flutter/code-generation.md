@@ -1,3 +1,6 @@
+---
+paths: **/pubspec.yaml
+---
 # Code Generation
 
 * **Build Runner:** If the project uses code generation, ensure that

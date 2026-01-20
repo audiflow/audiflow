@@ -1,3 +1,6 @@
+---
+paths: **/*.dart
+---
 # Flutter Best Practices
 
 * **Immutability:** Widgets (especially `StatelessWidget`) are immutable; when

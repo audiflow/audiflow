@@ -1,3 +1,6 @@
+---
+paths: **/*.dart
+---
 # Code Quality
 
 * **Code structure:** Adhere to maintainable code structure and separation of

@@ -1,3 +1,6 @@
+---
+paths: **/*.dart
+---
 # Accessibility (A11Y)
 
 Implement accessibility features to empower all users, assuming a wide variety

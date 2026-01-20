@@ -11,7 +11,7 @@ part 'search_controller.g.dart';
 /// the iTunes provider for podcast search functionality.
 ///
 /// Override this provider in tests to inject mock implementations.
-@riverpod
+@Riverpod(keepAlive: true)
 PodcastSearchService podcastSearchService(Ref ref) {
   final provider = ItunesProvider();
   ref.onDispose(provider.close);
@@ -61,9 +61,7 @@ class PodcastSearchController extends _$PodcastSearchController {
 
     try {
       final service = ref.read(podcastSearchServiceProvider);
-      final result = await service.search(
-        SearchQuery.validated(term: trimmed),
-      );
+      final result = await service.search(SearchQuery.validated(term: trimmed));
       state = SearchSuccess(result: result);
     } on SearchException catch (e) {
       state = SearchError(exception: e, lastQuery: trimmed);
