@@ -140,8 +140,8 @@
 
 ### iOS Native Implementation
 
-- [ ] 5. Implement iOS native layer with Foundation Models
-- [ ] 5.1 Implement capability detection for iOS
+- [x] 5. Implement iOS native layer with Foundation Models
+- [x] 5.1 Implement capability detection for iOS
   - Check SystemLanguageModel.default.availability
   - Map availability status to AiCapability enum
   - Return unavailable for iOS versions below 26
@@ -149,7 +149,7 @@
   - Write unit tests for capability detection logic
   - _Requirements: 1.3, 1.5, 8.4, 8.7_
 
-- [ ] 5.2 Implement initialization and lifecycle for iOS
+- [x] 5.2 Implement initialization and lifecycle for iOS
   - Create LanguageModelSession with system instructions
   - Handle initialization failure for unsupported devices
   - Support reinitialization with new configuration
@@ -158,7 +158,7 @@
   - Write unit tests for initialization scenarios
   - _Requirements: 2.1, 2.2, 2.3, 2.5, 2.6, 8.3, 8.8, 8.9_
 
-- [ ] 5.3 Implement text generation for iOS
+- [x] 5.3 Implement text generation for iOS
   - Invoke LanguageModelSession.respond(to:) with prompt
   - Map GenerationConfig to Foundation Models GenerationOptions
   - Return generated text with available metadata

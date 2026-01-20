@@ -6,10 +6,19 @@
 import Flutter
 import UIKit
 
+#if canImport(FoundationModels)
+import FoundationModels
+#endif
+
 /// AudiflowAiPlugin handles platform channel communication for on-device AI features.
 ///
 /// This plugin provides access to Apple Foundation Models for text generation
-/// and summarization on supported iOS devices.
+/// and summarization on supported iOS devices (iOS 26+, iPhone 15 Pro+).
+///
+/// ## Task Coverage
+/// - Task 5.1: Capability detection (SystemLanguageModel.default.availability)
+/// - Task 5.2: Initialization and lifecycle (LanguageModelSession, dispose, reinitialization)
+/// - Task 5.3: Text generation (LanguageModelSession.respond(to:), GenerationConfig mapping)
 public class AudiflowAiPlugin: NSObject, FlutterPlugin {
     // MARK: - Constants
 
@@ -31,15 +40,36 @@ public class AudiflowAiPlugin: NSObject, FlutterPlugin {
     private static let keyErrorCode = "errorCode"
     private static let keyErrorMessage = "errorMessage"
 
-    // Status values
+    // Status values matching Dart AiCapability enum
     private static let statusFull = "full"
     private static let statusLimited = "limited"
     private static let statusUnavailable = "unavailable"
     private static let statusNeedsSetup = "needsSetup"
 
+    // Error codes
+    private static let errorAiNotAvailable = "AI_NOT_AVAILABLE"
+    private static let errorAiNotInitialized = "AI_NOT_INITIALIZED"
+    private static let errorGenerationFailed = "AI_GENERATION_FAILED"
+    private static let errorPromptTooLong = "PROMPT_TOO_LONG"
+    private static let errorInvalidArgument = "INVALID_ARGUMENT"
+
+    // Default generation config
+    private static let defaultTemperature: Double = 0.7
+    private static let defaultMaxOutputTokens: Int = 256
+
     // MARK: - Properties
 
-    private var isInitialized = false
+    #if canImport(FoundationModels)
+    /// The language model session for text generation.
+    @available(iOS 26.0, *)
+    private var session: LanguageModelSession?
+    #endif
+
+    /// The system instructions for the current session.
+    private var systemInstructions: String?
+
+    /// Whether the plugin is initialized and ready for generation.
+    private var isInitialized: Bool = false
 
     // MARK: - Plugin Registration
 
@@ -69,7 +99,7 @@ public class AudiflowAiPlugin: NSObject, FlutterPlugin {
             handleDispose(result: result)
 
         case AudiflowAiPlugin.methodPromptAiCoreInstall:
-            // Not applicable on iOS
+            // Not applicable on iOS - AICore is Android-specific
             result(false)
 
         default:
@@ -77,73 +107,411 @@ public class AudiflowAiPlugin: NSObject, FlutterPlugin {
         }
     }
 
-    // MARK: - Method Handlers
+    // MARK: - Task 5.1: Capability Detection
 
     /// Check AI capability on this device.
     ///
-    /// Returns status indicating whether AI is available or unavailable.
-    /// This is a stub that returns unavailable - will be implemented with Foundation Models in Phase 2.
+    /// Queries SystemLanguageModel.default.availability to determine if Foundation Models
+    /// is available on this device.
+    ///
+    /// ## Status Mapping
+    /// - .available -> full
+    /// - .unavailable(reason) -> unavailable (with reason in details)
+    ///
+    /// ## Requirements Coverage
+    /// - Req 1.3: iOS device running iOS 26+ returns full capability
+    /// - Req 1.5: Device not meeting requirements returns unavailable
+    /// - Req 8.4: Verify Foundation Models availability
     private func handleCheckCapability(result: @escaping FlutterResult) {
-        // Stub implementation - returns unavailable until Foundation Models integration in Phase 2
-        // TODO: Check SystemLanguageModel.default.availability
+        #if canImport(FoundationModels)
+        if #available(iOS 26.0, *) {
+            let availability = SystemLanguageModel.default.availability
+
+            switch availability {
+            case .available:
+                result([AudiflowAiPlugin.keyStatus: AudiflowAiPlugin.statusFull])
+
+            case .unavailable(let reason):
+                let details = mapUnavailabilityReason(reason)
+                result([
+                    AudiflowAiPlugin.keyStatus: AudiflowAiPlugin.statusUnavailable,
+                    AudiflowAiPlugin.keyErrorMessage: details
+                ])
+
+            @unknown default:
+                result([AudiflowAiPlugin.keyStatus: AudiflowAiPlugin.statusUnavailable])
+            }
+        } else {
+            // iOS version below 26
+            result([
+                AudiflowAiPlugin.keyStatus: AudiflowAiPlugin.statusUnavailable,
+                AudiflowAiPlugin.keyErrorMessage: "iOS 26 or later is required for on-device AI"
+            ])
+        }
+        #else
+        // Foundation Models framework not available (older SDK)
         result([
-            AudiflowAiPlugin.keyStatus: AudiflowAiPlugin.statusUnavailable
+            AudiflowAiPlugin.keyStatus: AudiflowAiPlugin.statusUnavailable,
+            AudiflowAiPlugin.keyErrorMessage: "Foundation Models framework not available"
         ])
+        #endif
     }
+
+    // MARK: - Task 5.2: Initialization and Lifecycle
 
     /// Initialize the AI engine with optional system instructions.
     ///
-    /// This is a stub that returns an error - will be implemented with Foundation Models in Phase 2.
+    /// Creates a new LanguageModelSession. If already initialized, disposes
+    /// the existing session first (supports reinitialization).
+    ///
+    /// ## Parameters
+    /// - instructions: Optional system instructions for the model
+    ///
+    /// ## Error Handling
+    /// - Empty system instructions: Returns INVALID_ARGUMENT error
+    /// - Device not supported: Returns AI_NOT_AVAILABLE error
+    /// - Session creation failure: Returns AI_NOT_AVAILABLE with details
+    ///
+    /// ## Requirements Coverage
+    /// - Req 2.1: Initialize with default system instructions
+    /// - Req 2.2: Initialize with custom system instructions
+    /// - Req 2.3: Throw AiNotAvailableException if platform not supported
+    /// - Req 2.5: Reinitialize with new configuration
+    /// - Req 8.3: Initialize Foundation Models framework
+    /// - Req 8.9: Proper memory management
     private func handleInitialize(call: FlutterMethodCall, result: @escaping FlutterResult) {
         let args = call.arguments as? [String: Any]
-        let _ = args?["instructions"] as? String
+        let instructions = args?["instructions"] as? String
 
-        // Stub implementation - returns error until Foundation Models integration in Phase 2
-        // TODO: Create LanguageModelSession with system instructions
+        // Validate system instructions (null is ok, empty is not)
+        if let inst = instructions, inst.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            result(FlutterError(
+                code: AudiflowAiPlugin.errorInvalidArgument,
+                message: "System instructions cannot be empty",
+                details: nil
+            ))
+            return
+        }
+
+        #if canImport(FoundationModels)
+        if #available(iOS 26.0, *) {
+            // Check availability before initialization
+            let availability = SystemLanguageModel.default.availability
+            guard case .available = availability else {
+                let reason: String
+                if case .unavailable(let unavailabilityReason) = availability {
+                    reason = mapUnavailabilityReason(unavailabilityReason)
+                } else {
+                    reason = "On-device AI is not available on this device"
+                }
+                result(FlutterError(
+                    code: AudiflowAiPlugin.errorAiNotAvailable,
+                    message: reason,
+                    details: nil
+                ))
+                return
+            }
+
+            // Support reinitialization: dispose existing session first
+            if isInitialized {
+                disposeResources()
+            }
+
+            do {
+                // Create session with system instructions if provided
+                if let instructions = instructions {
+                    session = LanguageModelSession(instructions: instructions)
+                } else {
+                    session = LanguageModelSession()
+                }
+
+                systemInstructions = instructions
+                isInitialized = true
+
+                result([AudiflowAiPlugin.keySuccess: true])
+            } catch {
+                result(FlutterError(
+                    code: AudiflowAiPlugin.errorAiNotAvailable,
+                    message: "Failed to initialize AI: \(error.localizedDescription)",
+                    details: nil
+                ))
+            }
+        } else {
+            result(FlutterError(
+                code: AudiflowAiPlugin.errorAiNotAvailable,
+                message: "iOS 26 or later is required for on-device AI",
+                details: nil
+            ))
+        }
+        #else
         result(FlutterError(
-            code: "AI_NOT_AVAILABLE",
-            message: "AI is not available on this device (stub implementation)",
+            code: AudiflowAiPlugin.errorAiNotAvailable,
+            message: "Foundation Models framework not available",
             details: nil
         ))
+        #endif
     }
+
+    // MARK: - Task 5.3: Text Generation
 
     /// Generate text from a prompt.
     ///
-    /// This is a stub that returns an error - will be implemented with Foundation Models in Phase 2.
+    /// Invokes LanguageModelSession.respond(to:) with the given prompt and configuration.
+    /// Returns generated text along with metadata (duration).
+    ///
+    /// ## Parameters
+    /// - prompt: The text prompt for generation
+    /// - config: Optional generation configuration (temperature, maxOutputTokens)
+    ///
+    /// ## Response
+    /// - text: Generated text
+    /// - durationMs: Generation duration in milliseconds
+    ///
+    /// ## Error Handling
+    /// - Not initialized: Returns AI_NOT_INITIALIZED error
+    /// - Empty prompt: Returns INVALID_ARGUMENT error
+    /// - Generation failure: Returns AI_GENERATION_FAILED error
+    ///
+    /// ## Requirements Coverage
+    /// - Req 3.1: Generate text with valid prompt returns AiResponse
+    /// - Req 3.2: Apply GenerationConfig parameters
+    /// - Req 3.5: Handle generation errors with AiGenerationException
+    /// - Req 8.5: Invoke LanguageModelSession.respond(to:)
+    /// - Req 8.6: Use summarization-optimized prompts when appropriate
     private func handleGenerateText(call: FlutterMethodCall, result: @escaping FlutterResult) {
+        // Verify initialization
         guard isInitialized else {
             result(FlutterError(
-                code: "AI_NOT_INITIALIZED",
+                code: AudiflowAiPlugin.errorAiNotInitialized,
                 message: "AI engine not initialized. Call initialize() first.",
                 details: nil
             ))
             return
         }
 
+        // Validate prompt
         guard let args = call.arguments as? [String: Any],
               let prompt = args["prompt"] as? String,
               !prompt.isEmpty else {
             result(FlutterError(
-                code: "INVALID_ARGUMENT",
+                code: AudiflowAiPlugin.errorInvalidArgument,
                 message: "Prompt cannot be empty",
                 details: nil
             ))
             return
         }
 
-        // Stub implementation - will be implemented with Foundation Models in Phase 2
-        // TODO: Invoke LanguageModelSession.respond(to:)
+        // Parse generation config
+        let configMap = args["config"] as? [String: Any]
+        let config = parseGenerationConfig(configMap)
+
+        #if canImport(FoundationModels)
+        if #available(iOS 26.0, *) {
+            guard let currentSession = session else {
+                result(FlutterError(
+                    code: AudiflowAiPlugin.errorAiNotInitialized,
+                    message: "AI session not available. Call initialize() first.",
+                    details: nil
+                ))
+                return
+            }
+
+            // Execute generation asynchronously
+            Task {
+                let startTime = CFAbsoluteTimeGetCurrent()
+
+                do {
+                    // Build generation options from config
+                    let generationOptions = buildGenerationOptions(from: config)
+
+                    // Generate response using LanguageModelSession
+                    let response: String
+                    if let options = generationOptions {
+                        response = try await currentSession.respond(to: prompt, options: options)
+                    } else {
+                        response = try await currentSession.respond(to: prompt)
+                    }
+
+                    let durationMs = Int((CFAbsoluteTimeGetCurrent() - startTime) * 1000)
+
+                    // Return result on main thread
+                    DispatchQueue.main.async {
+                        result([
+                            AudiflowAiPlugin.keyText: response,
+                            AudiflowAiPlugin.keyDurationMs: durationMs
+                        ])
+                    }
+                } catch let error as LanguageModelSession.GenerationError {
+                    DispatchQueue.main.async {
+                        self.handleGenerationError(error, result: result)
+                    }
+                } catch {
+                    DispatchQueue.main.async {
+                        result(FlutterError(
+                            code: AudiflowAiPlugin.errorGenerationFailed,
+                            message: "Text generation failed: \(error.localizedDescription)",
+                            details: nil
+                        ))
+                    }
+                }
+            }
+        } else {
+            result(FlutterError(
+                code: AudiflowAiPlugin.errorAiNotAvailable,
+                message: "iOS 26 or later is required for on-device AI",
+                details: nil
+            ))
+        }
+        #else
         result(FlutterError(
-            code: "AI_NOT_AVAILABLE",
-            message: "AI is not available on this device (stub implementation)",
+            code: AudiflowAiPlugin.errorAiNotAvailable,
+            message: "Foundation Models framework not available",
             details: nil
         ))
+        #endif
     }
 
     /// Release native resources.
+    ///
+    /// Disposes the LanguageModelSession and resets initialization state.
+    /// Safe to call multiple times.
+    ///
+    /// ## Requirements Coverage
+    /// - Req 15.1: Support disposing resources via dispose() method
+    /// - Req 15.2: Release all native platform resources
     private func handleDispose(result: @escaping FlutterResult) {
-        isInitialized = false
-        // TODO: Release Foundation Models resources in Phase 2
+        disposeResources()
         result([AudiflowAiPlugin.keySuccess: true])
     }
+
+    // MARK: - Private Helpers
+
+    /// Disposes all native resources.
+    private func disposeResources() {
+        #if canImport(FoundationModels)
+        if #available(iOS 26.0, *) {
+            session = nil
+        }
+        #endif
+        systemInstructions = nil
+        isInitialized = false
+    }
+
+    /// Parsed generation configuration.
+    private struct ParsedGenerationConfig {
+        let temperature: Double
+        let maxOutputTokens: Int?
+    }
+
+    /// Parses generation config from platform channel arguments.
+    ///
+    /// - Parameter config: Map containing temperature and maxOutputTokens
+    /// - Returns: Parsed configuration with defaults applied
+    private func parseGenerationConfig(_ config: [String: Any]?) -> ParsedGenerationConfig {
+        guard let config = config else {
+            return ParsedGenerationConfig(
+                temperature: AudiflowAiPlugin.defaultTemperature,
+                maxOutputTokens: nil
+            )
+        }
+
+        let temperature: Double
+        if let temp = config["temperature"] as? Double {
+            temperature = temp
+        } else if let temp = config["temperature"] as? NSNumber {
+            temperature = temp.doubleValue
+        } else {
+            temperature = AudiflowAiPlugin.defaultTemperature
+        }
+
+        let maxOutputTokens: Int?
+        if let max = config["maxOutputTokens"] as? Int {
+            maxOutputTokens = max
+        } else if let max = config["maxOutputTokens"] as? NSNumber {
+            maxOutputTokens = max.intValue
+        } else {
+            maxOutputTokens = nil
+        }
+
+        return ParsedGenerationConfig(
+            temperature: temperature,
+            maxOutputTokens: maxOutputTokens
+        )
+    }
+
+    /// Builds Foundation Models GenerationOptions from parsed config.
+    #if canImport(FoundationModels)
+    @available(iOS 26.0, *)
+    private func buildGenerationOptions(from config: ParsedGenerationConfig) -> GenerationOptions? {
+        var options = GenerationOptions()
+        var hasOptions = false
+
+        // Apply temperature if different from default
+        if config.temperature != AudiflowAiPlugin.defaultTemperature {
+            options.temperature = config.temperature
+            hasOptions = true
+        }
+
+        // Apply max output tokens if specified
+        if let maxTokens = config.maxOutputTokens {
+            options.maximumResponseTokens = maxTokens
+            hasOptions = true
+        }
+
+        return hasOptions ? options : nil
+    }
+    #endif
+
+    /// Maps unavailability reason to human-readable string.
+    #if canImport(FoundationModels)
+    @available(iOS 26.0, *)
+    private func mapUnavailabilityReason(_ reason: SystemLanguageModel.UnavailabilityReason) -> String {
+        switch reason {
+        case .deviceNotEligible:
+            return "This device does not support Apple Intelligence"
+        case .appleIntelligenceNotEnabled:
+            return "Apple Intelligence is not enabled. Please enable it in Settings."
+        case .modelNotReady:
+            return "The language model is not ready. Please try again later."
+        @unknown default:
+            return "On-device AI is not available on this device"
+        }
+    }
+    #endif
+
+    /// Handles generation errors and maps to appropriate error codes.
+    #if canImport(FoundationModels)
+    @available(iOS 26.0, *)
+    private func handleGenerationError(_ error: LanguageModelSession.GenerationError, result: @escaping FlutterResult) {
+        switch error {
+        case .exceededContextWindowSize:
+            result(FlutterError(
+                code: AudiflowAiPlugin.errorPromptTooLong,
+                message: "Prompt exceeds maximum context window size",
+                details: nil
+            ))
+
+        case .guardrailViolation(let details):
+            result(FlutterError(
+                code: AudiflowAiPlugin.errorGenerationFailed,
+                message: "Content policy violation: \(details ?? "Unknown violation")",
+                details: nil
+            ))
+
+        case .cancelled:
+            result(FlutterError(
+                code: AudiflowAiPlugin.errorGenerationFailed,
+                message: "Generation was cancelled",
+                details: nil
+            ))
+
+        @unknown default:
+            result(FlutterError(
+                code: AudiflowAiPlugin.errorGenerationFailed,
+                message: "Text generation failed: \(error.localizedDescription)",
+                details: nil
+            ))
+        }
+    }
+    #endif
 }
