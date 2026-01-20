@@ -20,5 +20,10 @@ export 'src/models/generation_config.dart';
 export 'src/models/summarization_config.dart';
 export 'src/models/voice_command.dart';
 
+// Utilities
+export 'src/utils/prompt_templates.dart';
+export 'src/utils/text_chunker.dart';
+export 'src/utils/text_utils.dart';
+
 // Main API
 export 'src/audiflow_ai.dart';

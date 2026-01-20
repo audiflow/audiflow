@@ -80,7 +80,7 @@
 ### Text Processing Utilities
 
 - [ ] 3. Implement text processing utilities
-- [ ] 3.1 (P) Create TextChunker utility
+- [x] 3.1 (P) Create TextChunker utility
   - Implement chunking algorithm that respects sentence boundaries
   - Support paragraph boundary detection for cleaner splits
   - Make chunk size configurable (default 2000 characters)
@@ -89,7 +89,7 @@
   - Write unit tests for boundary detection and overlap behavior
   - _Requirements: 11.1, 11.2, 11.3_
 
-- [ ] 3.2 (P) Create HTML and text processing utilities
+- [x] 3.2 (P) Create HTML and text processing utilities
   - Implement HTML tag stripping function
   - Implement HTML entity decoding
   - Create text normalization for whitespace, line breaks, special characters
@@ -97,7 +97,7 @@
   - Write unit tests for various HTML input scenarios
   - _Requirements: 11.4, 11.5_
 
-- [ ] 3.3 (P) Create prompt template system
+- [x] 3.3 (P) Create prompt template system
   - Implement PromptTemplates class with predefined templates
   - Create summarization template with style options (concise, detailed, bullet points)
   - Create voice command parsing template with podcast player terminology
