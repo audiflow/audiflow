@@ -25,5 +25,10 @@ export 'src/utils/prompt_templates.dart';
 export 'src/utils/text_chunker.dart';
 export 'src/utils/text_utils.dart';
 
+// Services
+export 'src/services/summarization_service.dart';
+export 'src/services/text_generation_service.dart';
+export 'src/services/voice_command_service.dart';
+
 // Main API
 export 'src/audiflow_ai.dart';

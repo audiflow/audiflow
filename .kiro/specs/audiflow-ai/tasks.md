@@ -169,8 +169,8 @@
 
 ### Dart Service Layer
 
-- [ ] 6. Implement Dart service layer
-- [ ] 6.1 Implement TextGenerationService
+- [x] 6. Implement Dart service layer
+- [x] 6.1 Implement TextGenerationService
   - Create service with MethodChannel dependency
   - Implement isAvailable check using platform channel
   - Implement initialize with system instructions forwarding
@@ -180,7 +180,7 @@
   - Write unit tests with mocked platform channel
   - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6_
 
-- [ ] 6.2 Implement SummarizationService
+- [x] 6.2 Implement SummarizationService
   - Create service with TextGenerationService dependency
   - Implement text summarization with style application
   - Strip HTML from input before processing
@@ -191,7 +191,7 @@
   - Write unit tests with mocked TextGenerationService
   - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7_
 
-- [ ] 6.3 Implement episode summarization
+- [x] 6.3 Implement episode summarization
   - Create summarizeEpisode method in SummarizationService
   - Accept title, description, and optional transcript
   - Validate content is sufficient (non-empty title or description)
@@ -202,7 +202,7 @@
   - Write unit tests for episode summarization scenarios
   - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6_
 
-- [ ] 6.4 Implement VoiceCommandService
+- [x] 6.4 Implement VoiceCommandService
   - Create service with TextGenerationService dependency
   - Use voice command parsing prompt template
   - Parse transcription into VoiceCommand structure
