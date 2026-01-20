@@ -14,11 +14,66 @@ import 'models/episode_summary.dart';
 import 'models/generation_config.dart';
 import 'models/summarization_config.dart';
 import 'models/voice_command.dart';
+import 'services/summarization_service.dart';
+import 'services/text_generation_service.dart';
+import 'services/voice_command_service.dart';
 
 /// Progress callback for long-running AI operations.
 ///
 /// [progress] is a value between 0.0 and 1.0.
 typedef AiProgressCallback = void Function(double progress);
+
+/// Token for cancelling long-running AI operations.
+///
+/// Create a [CancellationToken] and pass it to operations that support
+/// cancellation. Call [cancel] to request cancellation.
+class CancellationToken {
+  /// Creates a new [CancellationToken].
+  CancellationToken();
+
+  /// A token that is never cancelled.
+  ///
+  /// Use this when you need a token but don't need cancellation support.
+  static final CancellationToken none = _NoneCancellationToken();
+
+  final List<VoidCallback> _listeners = [];
+  bool _isCancelled = false;
+
+  /// Whether cancellation has been requested.
+  bool get isCancelled => _isCancelled;
+
+  /// Request cancellation of the associated operation.
+  void cancel() {
+    if (_isCancelled) {
+      return;
+    }
+    _isCancelled = true;
+    for (final listener in _listeners) {
+      listener();
+    }
+  }
+
+  /// Add a listener that is called when cancellation is requested.
+  void addListener(VoidCallback listener) {
+    _listeners.add(listener);
+  }
+
+  /// Remove a previously added listener.
+  void removeListener(VoidCallback listener) {
+    _listeners.remove(listener);
+  }
+}
+
+/// A cancellation token that is never cancelled.
+class _NoneCancellationToken extends CancellationToken {
+  @override
+  bool get isCancelled => false;
+
+  @override
+  void cancel() {
+    // No-op: none token cannot be cancelled
+  }
+}
 
 /// Main entry point for on-device AI features.
 ///
@@ -114,14 +169,45 @@ abstract class AudiflowAi {
 }
 
 /// Default implementation of [AudiflowAi].
+///
+/// Coordinates all AI services and manages the platform channel.
 class AudiflowAiImpl implements AudiflowAi {
-  /// Creates an [AudiflowAiImpl].
-  AudiflowAiImpl();
+  /// Creates an [AudiflowAiImpl] with default services.
+  AudiflowAiImpl()
+    : _textGenerationService = TextGenerationService(),
+      _summarizationService = null,
+      _voiceCommandService = null;
+
+  /// Creates an [AudiflowAiImpl] with injected services for testing.
+  @visibleForTesting
+  AudiflowAiImpl.withServices({
+    required TextGenerationService textGenerationService,
+    required SummarizationService summarizationService,
+    required VoiceCommandService voiceCommandService,
+  }) : _textGenerationService = textGenerationService,
+       _summarizationService = summarizationService,
+       _voiceCommandService = voiceCommandService;
+
+  final TextGenerationService _textGenerationService;
+  SummarizationService? _summarizationService;
+  VoiceCommandService? _voiceCommandService;
 
   bool _isInitialized = false;
 
   @override
   bool get isInitialized => _isInitialized;
+
+  /// Lazily initialize summarization service.
+  SummarizationService get _summarization =>
+      _summarizationService ??= SummarizationService(
+        textGenerationService: _textGenerationService,
+      );
+
+  /// Lazily initialize voice command service.
+  VoiceCommandService get _voiceCommand =>
+      _voiceCommandService ??= VoiceCommandService(
+        textGenerationService: _textGenerationService,
+      );
 
   @override
   Future<AiCapability> checkCapability() async {
@@ -150,17 +236,12 @@ class AudiflowAiImpl implements AudiflowAi {
       throw AiCoreRequiredException();
     }
 
-    try {
-      await AudiflowAiChannel.channel.invokeMethod<Map<dynamic, dynamic>>(
-        AudiflowAiChannel.initialize,
-        {
-          if (systemInstructions != null) 'instructions': systemInstructions,
-        },
-      );
-      _isInitialized = true;
-    } on PlatformException catch (e) {
-      throw AiGenerationException('Failed to initialize: ${e.message}', e);
-    }
+    // Delegate to text generation service which handles platform channel
+    await _textGenerationService.initialize(
+      systemInstructions: systemInstructions,
+    );
+
+    _isInitialized = true;
   }
 
   @override
@@ -173,32 +254,9 @@ class AudiflowAiImpl implements AudiflowAi {
   Future<AiResponse> generateText({
     required String prompt,
     GenerationConfig? config,
-  }) async {
+  }) {
     _ensureInitialized();
-
-    try {
-      final result = await AudiflowAiChannel.channel
-          .invokeMethod<Map<dynamic, dynamic>>(
-            AudiflowAiChannel.generateText,
-            {
-              'prompt': prompt,
-              if (config != null) 'config': config.toMap(),
-            },
-          );
-
-      return AiResponse(
-        text: result?[AudiflowAiChannel.kText] as String? ?? '',
-        tokenCount: result?[AudiflowAiChannel.kTokenCount] as int?,
-        durationMs: result?[AudiflowAiChannel.kDurationMs] as int?,
-      );
-    } on PlatformException catch (e) {
-      if (e.code == 'PROMPT_TOO_LONG') {
-        throw PromptTooLongException(
-          int.tryParse(e.details?.toString() ?? '') ?? 4000,
-        );
-      }
-      throw AiGenerationException('Text generation failed: ${e.message}', e);
-    }
+    return _textGenerationService.generateText(prompt: prompt, config: config);
   }
 
   @override
@@ -206,16 +264,13 @@ class AudiflowAiImpl implements AudiflowAi {
     required String text,
     SummarizationConfig? config,
     AiProgressCallback? onProgress,
-  }) async {
+  }) {
     _ensureInitialized();
-
-    // Stub implementation - will be implemented in Phase 2
-    onProgress?.call(1);
-    final response = await generateText(
-      prompt: 'Summarize the following text:\n\n$text',
-      config: const GenerationConfig(maxOutputTokens: 500),
+    return _summarization.summarize(
+      text: text,
+      config: config ?? const SummarizationConfig(),
+      onProgress: onProgress,
     );
-    return response.text;
   }
 
   @override
@@ -225,36 +280,23 @@ class AudiflowAiImpl implements AudiflowAi {
     String? transcript,
     SummarizationConfig? config,
     AiProgressCallback? onProgress,
-  }) async {
+  }) {
     _ensureInitialized();
-
-    if (title.isEmpty && description.isEmpty) {
-      throw InsufficientContentException(
-        'Episode title and description cannot both be empty',
-      );
-    }
-
-    // Stub implementation - will be implemented in Phase 2
-    onProgress?.call(1);
-    return EpisodeSummary(
-      summary: 'Summary of $title',
-      keyTopics: const [],
+    return _summarization.summarizeEpisode(
+      title: title,
+      description: description,
+      transcript: transcript,
+      config: config ?? const SummarizationConfig(),
+      onProgress: onProgress,
     );
   }
 
   @override
   Future<VoiceCommand> parseVoiceCommand({
     required String transcription,
-  }) async {
+  }) {
     _ensureInitialized();
-
-    // Stub implementation - will be implemented in Phase 2
-    return VoiceCommand(
-      intent: VoiceIntent.unknown,
-      parameters: const {},
-      confidence: 0,
-      rawTranscription: transcription,
-    );
+    return _voiceCommand.parseCommand(transcription);
   }
 
   @override
@@ -273,6 +315,10 @@ class AudiflowAiImpl implements AudiflowAi {
 
   @override
   Future<void> dispose() async {
+    // Dispose text generation service
+    await _textGenerationService.dispose();
+
+    // Dispose platform channel resources
     try {
       await AudiflowAiChannel.channel.invokeMethod<void>(
         AudiflowAiChannel.dispose,
@@ -280,6 +326,7 @@ class AudiflowAiImpl implements AudiflowAi {
     } on MissingPluginException {
       // Ignore - native plugin not available
     }
+
     _isInitialized = false;
   }
 

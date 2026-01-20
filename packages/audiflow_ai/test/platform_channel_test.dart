@@ -133,8 +133,13 @@ void main() {
 
       await ai.dispose();
 
-      expect(log.length, equals(1));
-      expect(log.first.method, equals(AudiflowAiChannel.dispose));
+      // Dispose is called twice: once by TextGenerationService and once by
+      // AudiflowAiImpl for platform channel cleanup
+      expect(log.length, equals(2));
+      expect(
+        log.every((call) => call.method == AudiflowAiChannel.dispose),
+        isTrue,
+      );
     });
 
     test('promptAiCoreInstall invokes correct method channel call', () async {

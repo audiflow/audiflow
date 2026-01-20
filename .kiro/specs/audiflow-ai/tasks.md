@@ -217,8 +217,8 @@
 
 ### Main API Facade
 
-- [ ] 7. Implement AudiflowAi facade and resource management
-- [ ] 7.1 Implement AudiflowAi facade
+- [x] 7. Implement AudiflowAi facade and resource management
+- [x] 7.1 Implement AudiflowAi facade
   - Implement AudiflowAiImpl with all service dependencies
   - Coordinate checkCapability through platform channel
   - Implement initialize/reinitialize with state tracking
@@ -231,7 +231,7 @@
   - Write unit tests for facade coordination
   - _Requirements: 1.1, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 3.1, 3.2, 3.3, 3.4, 4.1, 5.1, 6.1_
 
-- [ ] 7.2 Implement resource management
+- [x] 7.2 Implement resource management
   - Implement dispose method to release native resources
   - Forward dispose to all services and platform channel
   - Use background isolates for text preprocessing over 100ms
