@@ -64,16 +64,14 @@ void main() {
         );
       });
 
-      test('should throw on empty title', () {
-        expect(
-          () => PodcastFeed.fromData(
-            parsedAt: testParsedAt,
-            sourceUrl: testSourceUrl,
-            title: '   ',
-            description: 'Test',
-          ),
-          throwsArgumentError,
+      test('should use fallback on empty title', () {
+        final feed = PodcastFeed.fromData(
+          parsedAt: testParsedAt,
+          sourceUrl: testSourceUrl,
+          title: '   ',
+          description: 'Test',
         );
+        expect(feed.title, 'Untitled Podcast');
       });
 
       test('should allow empty description', () {
