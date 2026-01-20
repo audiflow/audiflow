@@ -46,8 +46,8 @@
 
 ### Data Models & Exceptions
 
-- [ ] 2. Implement data models and exception hierarchy
-- [ ] 2.1 (P) Create enum and config models
+- [x] 2. Implement data models and exception hierarchy
+- [x] 2.1 (P) Create enum and config models
   - Implement AiCapability enum with full, limited, unavailable, needsSetup values
   - Add extension methods for isUsable, requiresAction, description
   - Implement GenerationConfig with temperature, maxOutputTokens, stopSequences
@@ -56,7 +56,7 @@
   - Write unit tests for enum behavior and config defaults
   - _Requirements: 9.1, 9.3, 9.4_
 
-- [ ] 2.2 (P) Create response and command models
+- [x] 2.2 (P) Create response and command models
   - Implement AiResponse with text, tokenCount, durationMs, metadata fields
   - Implement EpisodeSummary with summary, keyTopics, estimatedListeningMinutes
   - Implement VoiceCommand with intent, parameters, confidence, rawTranscription
@@ -65,7 +65,7 @@
   - Write unit tests for model equality, hash code, and serialization
   - _Requirements: 9.2, 9.5, 9.6, 9.7_
 
-- [ ] 2.3 (P) Create exception hierarchy
+- [x] 2.3 (P) Create exception hierarchy
   - Implement AudiflowAiException extending AppException from audiflow_core
   - Create AiNotAvailableException for unsupported devices
   - Create AiNotInitializedException for pre-initialization calls
