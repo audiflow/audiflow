@@ -16,7 +16,8 @@ void main() {
     });
 
     Widget buildTestWidget({ProviderContainer? container}) {
-      final effectiveContainer = container ??
+      final effectiveContainer =
+          container ??
           ProviderContainer(
             overrides: [
               podcastSearchServiceProvider.overrideWithValue(mockService),
@@ -45,8 +46,9 @@ void main() {
       expect(icon.icon, equals(Icons.search));
     });
 
-    testWidgets('submit button tap calls controller search method',
-        (tester) async {
+    testWidgets('submit button tap calls controller search method', (
+      tester,
+    ) async {
       final container = ProviderContainer(
         overrides: [
           podcastSearchServiceProvider.overrideWithValue(mockService),
@@ -66,8 +68,9 @@ void main() {
       expect(state, isA<SearchSuccess>());
     });
 
-    testWidgets('keyboard submit action calls controller search method',
-        (tester) async {
+    testWidgets('keyboard submit action calls controller search method', (
+      tester,
+    ) async {
       final container = ProviderContainer(
         overrides: [
           podcastSearchServiceProvider.overrideWithValue(mockService),
@@ -87,8 +90,9 @@ void main() {
       expect(state, isA<SearchSuccess>());
     });
 
-    testWidgets('keyboard is dismissed when search is initiated',
-        (tester) async {
+    testWidgets('keyboard is dismissed when search is initiated', (
+      tester,
+    ) async {
       final container = ProviderContainer(
         overrides: [
           podcastSearchServiceProvider.overrideWithValue(mockService),
@@ -122,8 +126,9 @@ void main() {
     });
 
     group('UI States', () {
-      testWidgets('initial state renders empty view with message',
-          (tester) async {
+      testWidgets('initial state renders empty view with message', (
+        tester,
+      ) async {
         final container = ProviderContainer(
           overrides: [
             podcastSearchServiceProvider.overrideWithValue(mockService),

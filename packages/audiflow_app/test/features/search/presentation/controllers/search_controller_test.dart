@@ -122,8 +122,9 @@ void main() {
         fireImmediately: true,
       );
 
-      final controller =
-          container.read(podcastSearchControllerProvider.notifier);
+      final controller = container.read(
+        podcastSearchControllerProvider.notifier,
+      );
       await controller.search('technology');
 
       expect(stateHistory[0], isA<SearchInitial>());
@@ -135,41 +136,44 @@ void main() {
       expect(successState.result.podcasts.first.name, equals('Tech Podcast'));
     });
 
-    test('search transitions from initial to loading to error on failure',
-        () async {
-      final mockService = MockPodcastSearchService(
-        searchException: SearchException.unavailable(
-          providerId: 'mock',
-          message: 'Network unavailable',
-        ),
-      );
+    test(
+      'search transitions from initial to loading to error on failure',
+      () async {
+        final mockService = MockPodcastSearchService(
+          searchException: SearchException.unavailable(
+            providerId: 'mock',
+            message: 'Network unavailable',
+          ),
+        );
 
-      final container = ProviderContainer(
-        overrides: [
-          podcastSearchServiceProvider.overrideWithValue(mockService),
-        ],
-      );
-      addTearDown(container.dispose);
+        final container = ProviderContainer(
+          overrides: [
+            podcastSearchServiceProvider.overrideWithValue(mockService),
+          ],
+        );
+        addTearDown(container.dispose);
 
-      final stateHistory = <SearchState>[];
-      container.listen(
-        podcastSearchControllerProvider,
-        (_, state) => stateHistory.add(state),
-        fireImmediately: true,
-      );
+        final stateHistory = <SearchState>[];
+        container.listen(
+          podcastSearchControllerProvider,
+          (_, state) => stateHistory.add(state),
+          fireImmediately: true,
+        );
 
-      final controller =
-          container.read(podcastSearchControllerProvider.notifier);
-      await controller.search('test query');
+        final controller = container.read(
+          podcastSearchControllerProvider.notifier,
+        );
+        await controller.search('test query');
 
-      expect(stateHistory[0], isA<SearchInitial>());
-      expect(stateHistory[1], isA<SearchLoading>());
-      expect(stateHistory[2], isA<SearchError>());
+        expect(stateHistory[0], isA<SearchInitial>());
+        expect(stateHistory[1], isA<SearchLoading>());
+        expect(stateHistory[2], isA<SearchError>());
 
-      final errorState = stateHistory[2] as SearchError;
-      expect(errorState.exception.code, equals(StatusCode.unavailable));
-      expect(errorState.lastQuery, equals('test query'));
-    });
+        final errorState = stateHistory[2] as SearchError;
+        expect(errorState.exception.code, equals(StatusCode.unavailable));
+        expect(errorState.lastQuery, equals('test query'));
+      },
+    );
 
     test('search stores last query for retry functionality', () async {
       final mockService = MockPodcastSearchService(
@@ -188,8 +192,9 @@ void main() {
       );
       addTearDown(container.dispose);
 
-      final controller =
-          container.read(podcastSearchControllerProvider.notifier);
+      final controller = container.read(
+        podcastSearchControllerProvider.notifier,
+      );
       await controller.search('  my search term  ');
 
       expect(mockService.lastSearchTerm, equals('my search term'));
@@ -205,8 +210,9 @@ void main() {
       );
       addTearDown(container.dispose);
 
-      final controller =
-          container.read(podcastSearchControllerProvider.notifier);
+      final controller = container.read(
+        podcastSearchControllerProvider.notifier,
+      );
       await controller.search('  trimmed query  ');
 
       expect(mockService.lastSearchTerm, equals('trimmed query'));
@@ -240,8 +246,9 @@ void main() {
       );
       addTearDown(container.dispose);
 
-      final controller =
-          container.read(podcastSearchControllerProvider.notifier);
+      final controller = container.read(
+        podcastSearchControllerProvider.notifier,
+      );
 
       // Start first search (will be in loading state)
       // ignore: unawaited_futures
@@ -274,8 +281,9 @@ void main() {
       );
       addTearDown(container.dispose);
 
-      final controller =
-          container.read(podcastSearchControllerProvider.notifier);
+      final controller = container.read(
+        podcastSearchControllerProvider.notifier,
+      );
 
       await controller.search('');
       await controller.search('   ');
@@ -294,8 +302,9 @@ void main() {
       );
       addTearDown(container.dispose);
 
-      final controller =
-          container.read(podcastSearchControllerProvider.notifier);
+      final controller = container.read(
+        podcastSearchControllerProvider.notifier,
+      );
       await controller.search('     ');
 
       expect(mockService.searchCallCount, equals(0));
@@ -314,8 +323,9 @@ void main() {
       addTearDown(container.dispose);
 
       final initialState = container.read(podcastSearchControllerProvider);
-      final controller =
-          container.read(podcastSearchControllerProvider.notifier);
+      final controller = container.read(
+        podcastSearchControllerProvider.notifier,
+      );
 
       await controller.search('');
 
@@ -329,9 +339,7 @@ void main() {
       final mockService = MockPodcastSearchService(
         searchResult: SearchResult(
           totalCount: 1,
-          podcasts: [
-            Podcast(id: '1', name: 'Result', artistName: 'Artist'),
-          ],
+          podcasts: [Podcast(id: '1', name: 'Result', artistName: 'Artist')],
           provider: 'mock',
           timestamp: DateTime.now(),
         ),
@@ -344,8 +352,9 @@ void main() {
       );
       addTearDown(container.dispose);
 
-      final controller =
-          container.read(podcastSearchControllerProvider.notifier);
+      final controller = container.read(
+        podcastSearchControllerProvider.notifier,
+      );
 
       // First search
       await controller.search('original query');
@@ -368,8 +377,9 @@ void main() {
       );
       addTearDown(container.dispose);
 
-      final controller =
-          container.read(podcastSearchControllerProvider.notifier);
+      final controller = container.read(
+        podcastSearchControllerProvider.notifier,
+      );
 
       // Call retry without any previous search
       await controller.retry();
@@ -401,8 +411,9 @@ void main() {
       );
       addTearDown(container.dispose);
 
-      final controller =
-          container.read(podcastSearchControllerProvider.notifier);
+      final controller = container.read(
+        podcastSearchControllerProvider.notifier,
+      );
 
       // First search fails
       await controller.search('retry test query');
@@ -425,8 +436,9 @@ void main() {
       );
       addTearDown(retryContainer.dispose);
 
-      final retryController =
-          retryContainer.read(podcastSearchControllerProvider.notifier);
+      final retryController = retryContainer.read(
+        podcastSearchControllerProvider.notifier,
+      );
 
       // First need to set up the lastQuery by calling search
       await retryController.search('retry test query');

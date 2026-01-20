@@ -23,9 +23,7 @@ void main() {
     group('Tab Navigation', () {
       testWidgets('default tab is Search', (tester) async {
         await tester.pumpWidget(
-          ProviderScope(
-            child: MaterialApp.router(routerConfig: router),
-          ),
+          ProviderScope(child: MaterialApp.router(routerConfig: router)),
         );
         await tester.pumpAndSettle();
 
@@ -34,12 +32,11 @@ void main() {
         expect(find.byType(SettingsScreen), findsNothing);
       });
 
-      testWidgets('displays bottom navigation bar with three destinations',
-          (tester) async {
+      testWidgets('displays bottom navigation bar with three destinations', (
+        tester,
+      ) async {
         await tester.pumpWidget(
-          ProviderScope(
-            child: MaterialApp.router(routerConfig: router),
-          ),
+          ProviderScope(child: MaterialApp.router(routerConfig: router)),
         );
         await tester.pumpAndSettle();
 
@@ -52,9 +49,7 @@ void main() {
 
       testWidgets('navigation to Library tab works correctly', (tester) async {
         await tester.pumpWidget(
-          ProviderScope(
-            child: MaterialApp.router(routerConfig: router),
-          ),
+          ProviderScope(child: MaterialApp.router(routerConfig: router)),
         );
         await tester.pumpAndSettle();
 
@@ -66,9 +61,7 @@ void main() {
 
       testWidgets('navigation to Settings tab works correctly', (tester) async {
         await tester.pumpWidget(
-          ProviderScope(
-            child: MaterialApp.router(routerConfig: router),
-          ),
+          ProviderScope(child: MaterialApp.router(routerConfig: router)),
         );
         await tester.pumpAndSettle();
 
@@ -78,11 +71,11 @@ void main() {
         expect(find.byType(SettingsScreen), findsOneWidget);
       });
 
-      testWidgets('each tab maintains its own navigation stack', (tester) async {
+      testWidgets('each tab maintains its own navigation stack', (
+        tester,
+      ) async {
         await tester.pumpWidget(
-          ProviderScope(
-            child: MaterialApp.router(routerConfig: router),
-          ),
+          ProviderScope(child: MaterialApp.router(routerConfig: router)),
         );
         await tester.pumpAndSettle();
 
@@ -107,9 +100,7 @@ void main() {
 
       testWidgets('tapping current tab returns to root', (tester) async {
         await tester.pumpWidget(
-          ProviderScope(
-            child: MaterialApp.router(routerConfig: router),
-          ),
+          ProviderScope(child: MaterialApp.router(routerConfig: router)),
         );
         await tester.pumpAndSettle();
 
@@ -131,9 +122,7 @@ void main() {
     group('Route Matching', () {
       testWidgets('search route navigates to SearchScreen', (tester) async {
         await tester.pumpWidget(
-          ProviderScope(
-            child: MaterialApp.router(routerConfig: router),
-          ),
+          ProviderScope(child: MaterialApp.router(routerConfig: router)),
         );
 
         router.go('/search');
@@ -144,9 +133,7 @@ void main() {
 
       testWidgets('library route navigates to LibraryScreen', (tester) async {
         await tester.pumpWidget(
-          ProviderScope(
-            child: MaterialApp.router(routerConfig: router),
-          ),
+          ProviderScope(child: MaterialApp.router(routerConfig: router)),
         );
 
         router.go('/library');
@@ -157,9 +144,7 @@ void main() {
 
       testWidgets('settings route navigates to SettingsScreen', (tester) async {
         await tester.pumpWidget(
-          ProviderScope(
-            child: MaterialApp.router(routerConfig: router),
-          ),
+          ProviderScope(child: MaterialApp.router(routerConfig: router)),
         );
 
         router.go('/settings');
@@ -170,9 +155,7 @@ void main() {
 
       testWidgets('podcast detail route shows podcast ID', (tester) async {
         await tester.pumpWidget(
-          ProviderScope(
-            child: MaterialApp.router(routerConfig: router),
-          ),
+          ProviderScope(child: MaterialApp.router(routerConfig: router)),
         );
 
         router.go('/search/podcast/456');
@@ -194,9 +177,7 @@ void main() {
     group('ScaffoldWithNavBar', () {
       testWidgets('wraps content with navigation shell', (tester) async {
         await tester.pumpWidget(
-          ProviderScope(
-            child: MaterialApp.router(routerConfig: router),
-          ),
+          ProviderScope(child: MaterialApp.router(routerConfig: router)),
         );
         await tester.pumpAndSettle();
 
