@@ -40,6 +40,7 @@ dependencies:
 
   # UI
   cupertino_icons: ^1.0.8
+  material_symbols_icons: ^4.2801.0
 
   # Utilities
   logger: ^2.6.2
