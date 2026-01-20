@@ -13,8 +13,10 @@
 class TextChunker {
   /// Creates a [TextChunker] with configurable chunk size and overlap.
   ///
-  /// [chunkSize] is the maximum size of each chunk in characters (default 2000).
-  /// [overlap] is the number of characters to overlap between chunks (default 100).
+  /// [chunkSize] is the maximum size of each chunk in characters
+  /// (default 2000).
+  /// [overlap] is the number of characters to overlap between chunks
+  /// (default 100).
   const TextChunker({
     this.chunkSize = 2000,
     this.overlap = 100,

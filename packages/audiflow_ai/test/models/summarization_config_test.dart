@@ -70,16 +70,8 @@ void main() {
 
     group('equality', () {
       test('equal instances are equal', () {
-        const config1 = SummarizationConfig(
-          maxLength: 200,
-          style: SummarizationStyle.concise,
-          includeBulletPoints: false,
-        );
-        const config2 = SummarizationConfig(
-          maxLength: 200,
-          style: SummarizationStyle.concise,
-          includeBulletPoints: false,
-        );
+        const config1 = SummarizationConfig();
+        const config2 = SummarizationConfig();
 
         expect(config1, equals(config2));
       });
@@ -92,21 +84,21 @@ void main() {
       });
 
       test('different maxLength makes instances unequal', () {
-        const config1 = SummarizationConfig(maxLength: 200);
+        const config1 = SummarizationConfig();
         const config2 = SummarizationConfig(maxLength: 300);
 
         expect(config1, isNot(equals(config2)));
       });
 
       test('different style makes instances unequal', () {
-        const config1 = SummarizationConfig(style: SummarizationStyle.concise);
+        const config1 = SummarizationConfig();
         const config2 = SummarizationConfig(style: SummarizationStyle.detailed);
 
         expect(config1, isNot(equals(config2)));
       });
 
       test('different includeBulletPoints makes instances unequal', () {
-        const config1 = SummarizationConfig(includeBulletPoints: false);
+        const config1 = SummarizationConfig();
         const config2 = SummarizationConfig(includeBulletPoints: true);
 
         expect(config1, isNot(equals(config2)));
@@ -121,22 +113,14 @@ void main() {
 
     group('hashCode', () {
       test('equal instances have same hashCode', () {
-        const config1 = SummarizationConfig(
-          maxLength: 200,
-          style: SummarizationStyle.concise,
-          includeBulletPoints: false,
-        );
-        const config2 = SummarizationConfig(
-          maxLength: 200,
-          style: SummarizationStyle.concise,
-          includeBulletPoints: false,
-        );
+        const config1 = SummarizationConfig();
+        const config2 = SummarizationConfig();
 
         expect(config1.hashCode, equals(config2.hashCode));
       });
 
       test('different instances may have different hashCodes', () {
-        const config1 = SummarizationConfig(maxLength: 200);
+        const config1 = SummarizationConfig();
         const config2 = SummarizationConfig(maxLength: 500);
 
         expect(config1.hashCode, isNot(equals(config2.hashCode)));

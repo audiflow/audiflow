@@ -10,23 +10,23 @@ void main() {
   group('TextChunker', () {
     group('constructor', () {
       test('uses default values when not specified', () {
-        final chunker = TextChunker();
+        const chunker = TextChunker();
         expect(chunker.chunkSize, equals(2000));
         expect(chunker.overlap, equals(100));
       });
 
       test('accepts custom chunk size', () {
-        final chunker = TextChunker(chunkSize: 500);
+        const chunker = TextChunker(chunkSize: 500);
         expect(chunker.chunkSize, equals(500));
       });
 
       test('accepts custom overlap', () {
-        final chunker = TextChunker(overlap: 50);
+        const chunker = TextChunker(overlap: 50);
         expect(chunker.overlap, equals(50));
       });
 
       test('accepts both custom chunk size and overlap', () {
-        final chunker = TextChunker(chunkSize: 1000, overlap: 200);
+        const chunker = TextChunker(chunkSize: 1000, overlap: 200);
         expect(chunker.chunkSize, equals(1000));
         expect(chunker.overlap, equals(200));
       });
@@ -35,19 +35,19 @@ void main() {
     group('chunkText', () {
       group('edge cases', () {
         test('returns empty list for empty text', () {
-          final chunker = TextChunker();
+          const chunker = TextChunker();
           final chunks = chunker.chunkText('');
           expect(chunks, isEmpty);
         });
 
         test('returns empty list for whitespace-only text', () {
-          final chunker = TextChunker();
+          const chunker = TextChunker();
           final chunks = chunker.chunkText('   \n\t  ');
           expect(chunks, isEmpty);
         });
 
         test('returns single chunk for text shorter than chunk size', () {
-          final chunker = TextChunker(chunkSize: 100);
+          const chunker = TextChunker(chunkSize: 100);
           const text = 'Short text.';
           final chunks = chunker.chunkText(text);
           expect(chunks, hasLength(1));
@@ -55,7 +55,7 @@ void main() {
         });
 
         test('returns single chunk for text equal to chunk size', () {
-          final chunker = TextChunker(chunkSize: 11);
+          const chunker = TextChunker(chunkSize: 11);
           const text = 'Short text.';
           final chunks = chunker.chunkText(text);
           expect(chunks, hasLength(1));
@@ -65,7 +65,7 @@ void main() {
 
       group('sentence boundary detection', () {
         test('splits at sentence boundary when possible', () {
-          final chunker = TextChunker(chunkSize: 30, overlap: 5);
+          const chunker = TextChunker(chunkSize: 30, overlap: 5);
           const text = 'First sentence. Second sentence. Third sentence.';
           final chunks = chunker.chunkText(text);
 
@@ -76,7 +76,7 @@ void main() {
         });
 
         test('handles multiple sentence terminators', () {
-          final chunker = TextChunker(chunkSize: 50, overlap: 10);
+          const chunker = TextChunker(chunkSize: 50, overlap: 10);
           const text = 'Question? Exclamation! Statement. Another one.';
           final chunks = chunker.chunkText(text);
 
@@ -87,7 +87,7 @@ void main() {
         });
 
         test('handles sentences with abbreviations', () {
-          final chunker = TextChunker(chunkSize: 100, overlap: 10);
+          const chunker = TextChunker(chunkSize: 100, overlap: 10);
           const text =
               'Dr. Smith went to the store. He bought some items. '
               'Then he left.';
@@ -100,7 +100,7 @@ void main() {
 
       group('paragraph boundary detection', () {
         test('prefers paragraph boundaries over sentence boundaries', () {
-          final chunker = TextChunker(chunkSize: 50, overlap: 10);
+          const chunker = TextChunker(chunkSize: 50, overlap: 10);
           const text =
               'First paragraph with some text.\n\n'
               'Second paragraph here.\n\n'
@@ -113,7 +113,7 @@ void main() {
         });
 
         test('handles single line break vs double line break', () {
-          final chunker = TextChunker(chunkSize: 60, overlap: 10);
+          const chunker = TextChunker(chunkSize: 60, overlap: 10);
           const text =
               'Line one.\n'
               'Line two.\n\n'
@@ -126,7 +126,7 @@ void main() {
 
       group('overlap behavior', () {
         test('includes overlap between chunks', () {
-          final chunker = TextChunker(chunkSize: 50, overlap: 20);
+          const chunker = TextChunker(chunkSize: 50, overlap: 20);
           const text =
               'First sentence here. Second sentence here. Third sentence.';
           final chunks = chunker.chunkText(text);
@@ -139,7 +139,7 @@ void main() {
         });
 
         test('handles zero overlap', () {
-          final chunker = TextChunker(chunkSize: 30, overlap: 0);
+          const chunker = TextChunker(chunkSize: 30, overlap: 0);
           const text = 'First part. Second part. Third part.';
           final chunks = chunker.chunkText(text);
 
@@ -150,7 +150,7 @@ void main() {
 
       group('chunking long text', () {
         test('chunks long text into multiple pieces', () {
-          final chunker = TextChunker(chunkSize: 100, overlap: 20);
+          const chunker = TextChunker(chunkSize: 100, overlap: 20);
           final text = List.generate(
             20,
             (i) => 'This is sentence number $i.',
@@ -169,7 +169,7 @@ void main() {
         });
 
         test('preserves all content across chunks', () {
-          final chunker = TextChunker(chunkSize: 50, overlap: 10);
+          const chunker = TextChunker(chunkSize: 50, overlap: 10);
           const text =
               'Word1 Word2 Word3 Word4 Word5 Word6 Word7 Word8 Word9 Word10.';
           final chunks = chunker.chunkText(text);
@@ -183,7 +183,7 @@ void main() {
 
       group('special characters and unicode', () {
         test('handles unicode text correctly', () {
-          final chunker = TextChunker(chunkSize: 50, overlap: 10);
+          const chunker = TextChunker(chunkSize: 50, overlap: 10);
           const text = 'Japanese text. English text. More content here.';
           final chunks = chunker.chunkText(text);
 
@@ -192,7 +192,7 @@ void main() {
         });
 
         test('handles text with special characters', () {
-          final chunker = TextChunker(chunkSize: 100, overlap: 10);
+          const chunker = TextChunker(chunkSize: 100, overlap: 10);
           const text =
               'Price is \$100. Email: test@example.com. '
               "It's working! #hashtag";
@@ -204,7 +204,7 @@ void main() {
 
       group('fallback behavior', () {
         test('falls back to hard split when no boundary found', () {
-          final chunker = TextChunker(chunkSize: 20, overlap: 5);
+          const chunker = TextChunker(chunkSize: 20, overlap: 5);
           // Text without sentence boundaries
           const text = 'verylongwordwithoutanyspacesorboundarieshere';
           final chunks = chunker.chunkText(text);
@@ -214,7 +214,7 @@ void main() {
         });
 
         test('handles text with only spaces no sentences', () {
-          final chunker = TextChunker(chunkSize: 30, overlap: 5);
+          const chunker = TextChunker(chunkSize: 30, overlap: 5);
           const text = 'word word word word word word word word word word';
           final chunks = chunker.chunkText(text);
 
@@ -225,17 +225,17 @@ void main() {
 
     group('estimateChunkCount', () {
       test('returns 0 for empty text', () {
-        final chunker = TextChunker();
+        const chunker = TextChunker();
         expect(chunker.estimateChunkCount(''), equals(0));
       });
 
       test('returns 1 for short text', () {
-        final chunker = TextChunker(chunkSize: 100);
+        const chunker = TextChunker(chunkSize: 100);
         expect(chunker.estimateChunkCount('Short text'), equals(1));
       });
 
       test('estimates correctly for long text', () {
-        final chunker = TextChunker(chunkSize: 100, overlap: 20);
+        const chunker = TextChunker(chunkSize: 100, overlap: 20);
         final text = 'A' * 350; // 350 characters
         final estimate = chunker.estimateChunkCount(text);
 

@@ -103,11 +103,9 @@ void main() {
     group('equality', () {
       test('equal instances are equal', () {
         const config1 = GenerationConfig(
-          temperature: 0.7,
           maxOutputTokens: 256,
         );
         const config2 = GenerationConfig(
-          temperature: 0.7,
           maxOutputTokens: 256,
         );
 
@@ -115,7 +113,7 @@ void main() {
       });
 
       test('different temperature makes instances unequal', () {
-        const config1 = GenerationConfig(temperature: 0.7);
+        const config1 = GenerationConfig();
         const config2 = GenerationConfig(temperature: 0.8);
 
         expect(config1, isNot(equals(config2)));
@@ -138,11 +136,9 @@ void main() {
     group('hashCode', () {
       test('equal instances have same hashCode', () {
         const config1 = GenerationConfig(
-          temperature: 0.7,
           maxOutputTokens: 256,
         );
         const config2 = GenerationConfig(
-          temperature: 0.7,
           maxOutputTokens: 256,
         );
 
@@ -150,7 +146,7 @@ void main() {
       });
 
       test('different instances may have different hashCodes', () {
-        const config1 = GenerationConfig(temperature: 0.7);
+        const config1 = GenerationConfig();
         const config2 = GenerationConfig(temperature: 0.8);
 
         // Note: Hash codes are not guaranteed to be different,

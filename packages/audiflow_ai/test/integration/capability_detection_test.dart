@@ -77,9 +77,7 @@ void main() {
           );
     }
 
-    setUp(() {
-      AudiflowAi.resetInstance();
-    });
+    setUp(AudiflowAi.resetInstance);
 
     tearDown(() {
       clearPlatformChannel();
@@ -92,8 +90,6 @@ void main() {
         () async {
           setUpPlatformChannel(
             status: AudiflowAiChannel.kStatusFull,
-            isAndroid: true,
-            aiCoreInstalled: true,
           );
 
           final ai = AudiflowAi.instance;
@@ -116,7 +112,6 @@ void main() {
         () async {
           setUpPlatformChannel(
             status: AudiflowAiChannel.kStatusNeedsSetup,
-            isAndroid: true,
             aiCoreInstalled: false,
           );
 
@@ -134,7 +129,6 @@ void main() {
         () async {
           setUpPlatformChannel(
             status: AudiflowAiChannel.kStatusLimited,
-            isAndroid: true,
           );
 
           final ai = AudiflowAi.instance;
@@ -188,7 +182,6 @@ void main() {
         () async {
           setUpPlatformChannel(
             status: AudiflowAiChannel.kStatusUnavailable,
-            isAndroid: true,
           );
 
           final ai = AudiflowAi.instance;
@@ -252,7 +245,6 @@ void main() {
         () async {
           setUpPlatformChannel(
             status: AudiflowAiChannel.kStatusFull,
-            isAndroid: true,
           );
 
           final ai1 = AudiflowAi.instance;
@@ -273,7 +265,6 @@ void main() {
         () async {
           setUpPlatformChannel(
             status: AudiflowAiChannel.kStatusFull,
-            isAndroid: true,
           );
 
           final ai1 = AudiflowAi.instance;
@@ -306,7 +297,6 @@ void main() {
         () async {
           setUpPlatformChannel(
             status: AudiflowAiChannel.kStatusFull,
-            isAndroid: true,
           );
 
           final ai = AudiflowAi.instance;
@@ -329,13 +319,12 @@ void main() {
         () async {
           setUpPlatformChannel(
             status: AudiflowAiChannel.kStatusUnavailable,
-            isAndroid: true,
           );
 
           final ai = AudiflowAi.instance;
 
           expect(
-            () => ai.initialize(),
+            ai.initialize,
             throwsA(isA<AiNotAvailableException>()),
           );
         },
@@ -346,14 +335,13 @@ void main() {
         () async {
           setUpPlatformChannel(
             status: AudiflowAiChannel.kStatusNeedsSetup,
-            isAndroid: true,
             aiCoreInstalled: false,
           );
 
           final ai = AudiflowAi.instance;
 
           expect(
-            () => ai.initialize(),
+            ai.initialize,
             throwsA(isA<AiCoreRequiredException>()),
           );
         },

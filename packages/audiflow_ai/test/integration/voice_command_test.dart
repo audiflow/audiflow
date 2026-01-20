@@ -72,9 +72,7 @@ void main() {
           );
     }
 
-    setUp(() {
-      AudiflowAi.resetInstance();
-    });
+    setUp(AudiflowAi.resetInstance);
 
     tearDown(() {
       clearPlatformChannel();

@@ -4,9 +4,6 @@
 // Licensed under the MIT License
 
 import 'package:audiflow_ai/audiflow_ai.dart';
-import 'package:audiflow_ai/src/services/summarization_service.dart';
-import 'package:audiflow_ai/src/services/text_generation_service.dart';
-import 'package:audiflow_ai/src/services/voice_command_service.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
@@ -287,7 +284,8 @@ void main() {
       );
 
       test(
-        'summarizeEpisode throws AiNotInitializedException when not initialized',
+        'summarizeEpisode throws AiNotInitializedException '
+        'when not initialized',
         () {
           final ai = AudiflowAiImpl();
           expect(
@@ -298,7 +296,8 @@ void main() {
       );
 
       test(
-        'parseVoiceCommand throws AiNotInitializedException when not initialized',
+        'parseVoiceCommand throws AiNotInitializedException '
+        'when not initialized',
         () {
           final ai = AudiflowAiImpl();
           expect(
@@ -390,7 +389,7 @@ void main() {
           final ai = AudiflowAiImpl();
 
           expect(
-            () => ai.initialize(),
+            ai.initialize,
             throwsA(isA<AiNotAvailableException>()),
           );
         },
@@ -403,7 +402,7 @@ void main() {
           final ai = AudiflowAiImpl();
 
           expect(
-            () => ai.initialize(),
+            ai.initialize,
             throwsA(isA<AiCoreRequiredException>()),
           );
         },

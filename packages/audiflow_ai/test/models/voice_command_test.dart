@@ -63,7 +63,7 @@ void main() {
         const command = VoiceCommand(
           intent: VoiceIntent.pause,
           parameters: {},
-          confidence: 1.0,
+          confidence: 1,
           rawTranscription: 'pause',
         );
 
@@ -74,7 +74,7 @@ void main() {
         const command = VoiceCommand(
           intent: VoiceIntent.unknown,
           parameters: {},
-          confidence: 0.0,
+          confidence: 0,
           rawTranscription: 'gibberish',
         );
 
@@ -338,7 +338,7 @@ void main() {
         const command = VoiceCommand(
           intent: VoiceIntent.pause,
           parameters: {},
-          confidence: 1.0,
+          confidence: 1,
           rawTranscription: 'pause',
         );
 

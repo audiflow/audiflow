@@ -9,10 +9,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('PromptTemplates', () {
-    tearDown(() {
-      // Reset to default templates after each test
-      PromptTemplates.resetToDefaults();
-    });
+    tearDown(PromptTemplates.resetToDefaults);
 
     group('substituteVariables', () {
       test('returns text unchanged when no variables', () {
@@ -76,7 +73,7 @@ void main() {
     group('summarization', () {
       test('returns template for concise style', () {
         final template = PromptTemplates.summarization(
-          const SummarizationConfig(style: SummarizationStyle.concise),
+          const SummarizationConfig(),
         );
         expect(template, contains('{content}'));
         expect(template.toLowerCase(), contains('summary'));
@@ -139,7 +136,6 @@ void main() {
       test('excludes transcript placeholder when not needed', () {
         final template = PromptTemplates.episodeSummarization(
           const SummarizationConfig(),
-          includeTranscript: false,
         );
         expect(template, isNot(contains('{transcript}')));
       });

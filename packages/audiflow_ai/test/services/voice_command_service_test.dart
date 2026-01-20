@@ -4,8 +4,6 @@
 // Licensed under the MIT License
 
 import 'package:audiflow_ai/audiflow_ai.dart';
-import 'package:audiflow_ai/src/services/text_generation_service.dart';
-import 'package:audiflow_ai/src/services/voice_command_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';

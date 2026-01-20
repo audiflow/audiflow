@@ -109,7 +109,8 @@ Identify and list the key topics discussed. For each topic:
 Return a list of topics, ordered by importance/prominence in the content.''';
 
   static const _defaultSystemInstructions = '''
-You are an AI assistant for the Audiflow podcast player app. Your role is to help users with:
+You are an AI assistant for the Audiflow podcast player app.
+Your role is to help users with:
 - Summarizing podcast episodes and content
 - Parsing voice commands for playback control
 - Extracting key topics and themes from podcast content
@@ -121,7 +122,8 @@ Guidelines:
 - For voice commands, prioritize accuracy over assumptions
 - If uncertain, indicate lower confidence rather than guessing''';
 
-  /// Substitutes `{placeholder}` variables in [text] with values from [variables].
+  /// Substitutes `{placeholder}` variables in [text] with values
+  /// from [variables].
   ///
   /// Unknown placeholders are left unchanged.
   static String substituteVariables(

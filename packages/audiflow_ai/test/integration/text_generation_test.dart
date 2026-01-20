@@ -77,9 +77,7 @@ void main() {
           );
     }
 
-    setUp(() {
-      AudiflowAi.resetInstance();
-    });
+    setUp(AudiflowAi.resetInstance);
 
     tearDown(() {
       clearPlatformChannel();
@@ -94,7 +92,6 @@ void main() {
             generatedText: 'Android generated response',
             tokenCount: 25,
             durationMs: 150,
-            isAndroid: true,
           );
 
           final ai = AudiflowAi.instance;

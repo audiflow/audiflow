@@ -4,8 +4,6 @@
 // Licensed under the MIT License
 
 import 'package:audiflow_ai/audiflow_ai.dart';
-import 'package:audiflow_ai/src/services/summarization_service.dart';
-import 'package:audiflow_ai/src/services/text_generation_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
@@ -66,7 +64,7 @@ void main() {
         });
 
         test('applies concise style from config', () async {
-          const config = SummarizationConfig(style: SummarizationStyle.concise);
+          const config = SummarizationConfig();
 
           await service.summarize(text: 'Content', config: config);
 
@@ -229,9 +227,7 @@ void main() {
           await service.summarize(
             text: longText,
             config: config,
-            onProgress: (progress) {
-              progressValues.add(progress);
-            },
+            onProgress: progressValues.add,
           );
 
           expect(progressValues, isNotEmpty);
@@ -251,9 +247,7 @@ void main() {
           await service.summarize(
             text: 'Short text to summarize.',
             config: config,
-            onProgress: (progress) {
-              progressValues.add(progress);
-            },
+            onProgress: progressValues.add,
           );
 
           if (progressValues.isNotEmpty) {
@@ -268,9 +262,7 @@ void main() {
           await service.summarize(
             text: 'Short text to summarize.',
             config: config,
-            onProgress: (progress) {
-              progressValues.add(progress);
-            },
+            onProgress: progressValues.add,
           );
 
           expect(progressValues.last, equals(1.0));
@@ -532,9 +524,7 @@ Key Topics: Artificial Intelligence, Machine Learning, Data Science
             title: 'Title',
             description: 'Description',
             config: const SummarizationConfig(),
-            onProgress: (progress) {
-              progressValues.add(progress);
-            },
+            onProgress: progressValues.add,
           );
 
           expect(progressValues, isNotEmpty);

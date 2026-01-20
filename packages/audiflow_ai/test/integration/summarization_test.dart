@@ -73,9 +73,7 @@ void main() {
           );
     }
 
-    setUp(() {
-      AudiflowAi.resetInstance();
-    });
+    setUp(AudiflowAi.resetInstance);
 
     tearDown(() {
       clearPlatformChannel();
@@ -101,9 +99,7 @@ void main() {
                 'This is some long text that needs to be summarized. '
                 'It contains many details and information that should be '
                 'condensed into a shorter form.',
-            config: const SummarizationConfig(
-              style: SummarizationStyle.concise,
-            ),
+            config: const SummarizationConfig(),
           );
 
           expect(summary, isNotEmpty);
@@ -378,7 +374,7 @@ void main() {
       test(
         'respects sentence boundaries when chunking',
         () async {
-          var chunks = <String>[];
+          final chunks = <String>[];
           setUpPlatformChannel(
             responseGenerator: (prompt) {
               chunks.add(prompt);
@@ -419,9 +415,7 @@ void main() {
 
           await ai.summarize(
             text: 'Short text that fits in one chunk.',
-            onProgress: (progress) {
-              progressValues.add(progress);
-            },
+            onProgress: progressValues.add,
           );
 
           // Should report completion (1.0) at the end
@@ -443,9 +437,7 @@ void main() {
 
           await ai.summarize(
             text: longText,
-            onProgress: (progress) {
-              progressValues.add(progress);
-            },
+            onProgress: progressValues.add,
           );
 
           // Should have multiple progress updates
@@ -472,9 +464,7 @@ void main() {
 
           await ai.summarize(
             text: longText,
-            onProgress: (progress) {
-              progressValues.add(progress);
-            },
+            onProgress: progressValues.add,
           );
 
           for (final value in progressValues) {
@@ -514,9 +504,7 @@ void main() {
           await ai.summarizeEpisode(
             title: 'Episode',
             description: 'Description',
-            onProgress: (progress) {
-              progressValues.add(progress);
-            },
+            onProgress: progressValues.add,
           );
 
           expect(progressValues, contains(1.0));
