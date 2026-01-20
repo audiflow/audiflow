@@ -212,6 +212,7 @@ sequenceDiagram
 - Manages initialization state
 - Coordinates service instances
 - Handles platform-specific behavior
+- Singleton pattern with test injection support via `setInstance()`
 
 **Dependencies**
 - Outbound: TextGenerationService, SummarizationService, VoiceCommandService (P0)
@@ -222,60 +223,102 @@ sequenceDiagram
 ##### Service Interface
 
 ```dart
-abstract final class AudiflowAi {
-  /// Current initialization state
-  static bool get isInitialized;
+/// Progress callback for long-running AI operations.
+/// [progress] is a value between 0.0 and 1.0.
+typedef AiProgressCallback = void Function(double progress);
 
-  /// Check device AI capability
-  static Future<AiCapability> checkCapability();
+/// Main entry point for on-device AI features.
+///
+/// Uses singleton pattern for testability via dependency injection.
+/// Access the singleton instance via [AudiflowAi.instance] or create
+/// a custom instance for testing.
+abstract class AudiflowAi {
+  /// Singleton instance for production use.
+  static AudiflowAi get instance => _instance ??= AudiflowAiImpl();
+  static AudiflowAi? _instance;
 
-  /// Initialize AI engine with optional custom instructions
+  /// Replace singleton instance (for testing).
+  @visibleForTesting
+  static void setInstance(AudiflowAi instance) => _instance = instance;
+
+  /// Reset to default instance.
+  @visibleForTesting
+  static void resetInstance() => _instance = null;
+
+  /// Current initialization state.
+  bool get isInitialized;
+
+  /// Check device AI capability.
+  Future<AiCapability> checkCapability();
+
+  /// Initialize AI engine with optional custom instructions.
   /// Throws: AiNotAvailableException, AiCoreRequiredException
-  static Future<void> initialize({String? systemInstructions});
+  Future<void> initialize({String? systemInstructions});
 
-  /// Reinitialize with new configuration
-  static Future<void> reinitialize({String? systemInstructions});
+  /// Reinitialize with new configuration.
+  Future<void> reinitialize({String? systemInstructions});
 
-  /// Generate text from prompt
+  /// Generate text from prompt.
   /// Throws: AiNotInitializedException, PromptTooLongException, AiGenerationException
-  static Future<AiResponse> generateText({
+  Future<AiResponse> generateText({
     required String prompt,
     GenerationConfig? config,
   });
 
-  /// Summarize arbitrary text
+  /// Summarize arbitrary text.
+  ///
+  /// [onProgress] receives hybrid progress updates:
+  /// - Chunk-based progress at boundaries (e.g., 20%, 40%, 60%)
+  /// - Native-layer progress within chunks if available (smoother updates)
+  ///
   /// Throws: AiNotInitializedException, AiSummarizationException
-  static Future<String> summarize({
+  Future<String> summarize({
     required String text,
     SummarizationConfig? config,
+    AiProgressCallback? onProgress,
   });
 
-  /// Summarize podcast episode with context
+  /// Summarize podcast episode with context.
+  ///
+  /// [onProgress] receives hybrid progress updates:
+  /// - Chunk-based progress at boundaries (e.g., 20%, 40%, 60%)
+  /// - Native-layer progress within chunks if available (smoother updates)
+  ///
   /// Throws: AiNotInitializedException, InsufficientContentException
-  static Future<EpisodeSummary> summarizeEpisode({
+  Future<EpisodeSummary> summarizeEpisode({
     required String title,
     required String description,
     String? transcript,
     SummarizationConfig? config,
+    AiProgressCallback? onProgress,
   });
 
-  /// Parse voice command transcription
+  /// Parse voice command transcription.
   /// Throws: AiNotInitializedException
-  static Future<VoiceCommand> parseVoiceCommand({
+  Future<VoiceCommand> parseVoiceCommand({
     required String transcription,
   });
 
-  /// Open AICore install page (Android only)
-  static Future<bool> promptAiCoreInstall();
+  /// Open AICore install page (Android only).
+  Future<bool> promptAiCoreInstall();
 
-  /// Release native resources
-  static Future<void> dispose();
+  /// Release native resources.
+  Future<void> dispose();
 }
 ```
 
 - Preconditions: `checkCapability()` should return usable capability before `initialize()`
 - Postconditions: After `initialize()`, `isInitialized` returns `true`
 - Invariants: Methods requiring initialization throw `AiNotInitializedException` if not initialized
+
+**Riverpod Integration** (in `audiflow_domain`):
+```dart
+@riverpod
+AudiflowAi audiflowAi(Ref ref) => AudiflowAi.instance;
+
+// In tests, override via ProviderScope:
+// ProviderScope(overrides: [audiflowAiProvider.overrideWithValue(mockAi)])
+```
 
 #### TextGenerationService
 
@@ -345,16 +388,26 @@ class TextGenerationService {
 class SummarizationService {
   SummarizationService({required TextGenerationService textGenerationService});
 
+  /// Summarize text with hybrid progress reporting.
+  ///
+  /// Progress calculation:
+  /// 1. Text is split into N chunks
+  /// 2. Each chunk contributes 1/N to total progress
+  /// 3. Within each chunk, native progress (if available) provides granular updates
+  /// 4. Falls back to chunk-boundary-only updates if native progress unavailable
   Future<String> summarize({
     required String text,
     required SummarizationConfig config,
+    AiProgressCallback? onProgress,
   });
 
+  /// Summarize episode with hybrid progress reporting.
   Future<EpisodeSummary> summarizeEpisode({
     required String title,
     required String description,
     String? transcript,
     required SummarizationConfig config,
+    AiProgressCallback? onProgress,
   });
 }
 ```
@@ -687,14 +740,20 @@ class InsufficientContentException extends AudiflowAiException {
 - `TextChunker` boundary detection (sentence, paragraph)
 - `PromptTemplates` variable substitution
 - Exception hierarchy toString and code values
+- `AudiflowAi.setInstance()` / `resetInstance()` for test isolation
+- Progress callback invocation with correct values (0.0 to 1.0 range)
+- Progress callback respects chunk boundaries
 
 ### Integration Tests
 
+- `AudiflowAi.instance` returns singleton consistently
 - `AudiflowAi.checkCapability()` returns valid enum on all platforms
 - `AudiflowAi.initialize()` succeeds on supported devices
 - `AudiflowAi.generateText()` returns valid response with test prompt
 - `SummarizationService` handles long text chunking correctly
+- `SummarizationService` reports progress at chunk boundaries
 - Platform channel communication round-trip
+- Mock `AudiflowAi` injection via Riverpod provider overrides
 
 ### Platform-Specific Tests
 
@@ -727,6 +786,29 @@ class InsufficientContentException extends AudiflowAiException {
 - Warmup call after initialization to preload model
 - Chunking prevents memory pressure on long text
 - Background isolate for text preprocessing (> 100ms operations)
+
+**Hybrid Progress Callback System** (Requirement 15.5):
+
+The progress callback uses a hybrid approach combining chunk-based and native-layer progress:
+
+```
+Total Progress = (completedChunks / totalChunks) + (currentChunkProgress / totalChunks)
+```
+
+Example with 5 chunks:
+- Chunk 1 processing: 0% → 4% → 8% → 12% → 16% → 20% (complete)
+- Chunk 2 processing: 20% → 24% → 28% → 32% → 36% → 40% (complete)
+- ...continues to 100%
+
+**Native Progress Integration**:
+- Android: Check if ML Kit GenAI provides token-level progress callbacks
+- iOS: Check if Foundation Models exposes inference progress
+- Fallback: If native progress unavailable, report only at chunk boundaries (20%, 40%, 60%, 80%, 100%)
+
+**Implementation approach**:
+1. First iteration: Implement chunk-boundary progress (guaranteed to work)
+2. Enhancement: Add native progress probing during platform testing
+3. Graceful degradation: Always fall back to chunk-based if native unavailable
 
 ### Migration Strategy
 
