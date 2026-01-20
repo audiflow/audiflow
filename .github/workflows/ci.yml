@@ -42,4 +42,9 @@ jobs:
 
       - name: Run tests
         run: |
-          flutter test --coverage --test-randomize-ordering-seed=random
+          for pkg in packages/*/; do
+            if [ -d "${pkg}test" ]; then
+              echo "Running tests in ${pkg}"
+              (cd "$pkg" && flutter test --test-randomize-ordering-seed=random)
+            fi
+          done
