@@ -22,6 +22,12 @@ class _MyAppState extends State<MyApp> {
   late final _router = createAppRouter();
 
   @override
+  void dispose() {
+    _router.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
       title: 'Audiflow',
