@@ -44,31 +44,34 @@ class AudioPlayerController extends _$AudioPlayerController {
   }
 
   void _listenToPlayerState() {
-    _subscription = _player.playerStateStream.listen((playerState) {
-      final processingState = playerState.processingState;
-      final playing = playerState.playing;
+    _subscription = _player.playerStateStream.listen(
+      (playerState) {
+        final processingState = playerState.processingState;
+        final playing = playerState.playing;
 
-      if (_currentUrl == null) {
-        state = const PlaybackState.idle();
-        return;
-      }
+        if (_currentUrl == null) {
+          state = const PlaybackState.idle();
+          return;
+        }
 
-      final url = _currentUrl!;
+        final url = _currentUrl!;
 
-      if (processingState == ProcessingState.loading ||
-          processingState == ProcessingState.buffering) {
-        state = PlaybackState.loading(episodeUrl: url);
-      } else if (playing) {
-        state = PlaybackState.playing(episodeUrl: url);
-      } else if (processingState == ProcessingState.completed) {
-        state = const PlaybackState.idle();
-        _currentUrl = null;
-      } else {
-        state = PlaybackState.paused(episodeUrl: url);
-      }
-    }, onError: (error) {
-      state = PlaybackState.error(message: error.toString());
-    });
+        if (processingState == ProcessingState.loading ||
+            processingState == ProcessingState.buffering) {
+          state = PlaybackState.loading(episodeUrl: url);
+        } else if (playing) {
+          state = PlaybackState.playing(episodeUrl: url);
+        } else if (processingState == ProcessingState.completed) {
+          state = const PlaybackState.idle();
+          _currentUrl = null;
+        } else {
+          state = PlaybackState.paused(episodeUrl: url);
+        }
+      },
+      onError: (error) {
+        state = PlaybackState.error(message: error.toString());
+      },
+    );
   }
 
   void _cleanup() {

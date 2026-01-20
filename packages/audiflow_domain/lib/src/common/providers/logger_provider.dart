@@ -42,23 +42,20 @@ Logger appLogger(Ref ref) {
 /// ```
 @riverpod
 Logger namedLogger(Ref ref, String name) {
-  return Logger(
-    printer: _NamedPrinter(name),
-    level: Level.debug,
-  );
+  return Logger(printer: _NamedPrinter(name), level: Level.debug);
 }
 
 /// Custom printer that prefixes log messages with a component name.
 class _NamedPrinter extends PrettyPrinter {
   _NamedPrinter(this.name)
-      : super(
-          methodCount: 0,
-          errorMethodCount: 5,
-          lineLength: 80,
-          colors: true,
-          printEmojis: false,
-          dateTimeFormat: DateTimeFormat.onlyTimeAndSinceStart,
-        );
+    : super(
+        methodCount: 0,
+        errorMethodCount: 5,
+        lineLength: 80,
+        colors: true,
+        printEmojis: false,
+        dateTimeFormat: DateTimeFormat.onlyTimeAndSinceStart,
+      );
 
   final String name;
 
@@ -68,9 +65,6 @@ class _NamedPrinter extends PrettyPrinter {
     if (lines.isEmpty) return lines;
 
     // Prepend component name to the first line
-    return [
-      '[$name] ${lines.first}',
-      ...lines.skip(1),
-    ];
+    return ['[$name] ${lines.first}', ...lines.skip(1)];
   }
 }

@@ -88,8 +88,8 @@ class PodcastFeed extends PodcastEntity {
     final fallbackDescription = rawDescription?.trim().isNotEmpty == true
         ? rawDescription!
         : (itunesSummary?.trim().isNotEmpty == true
-            ? itunesSummary!
-            : (itunesSubtitle ?? ''));
+              ? itunesSummary!
+              : (itunesSubtitle ?? ''));
 
     return PodcastFeed.fromData(
       parsedAt: DateTime.now(),
@@ -150,8 +150,9 @@ class PodcastFeed extends PodcastEntity {
     String? newFeedUrl,
   }) {
     // Use fallback for empty title (many feeds don't include it)
-    final effectiveTitle =
-        title.trim().isEmpty ? 'Untitled Podcast' : title.trim();
+    final effectiveTitle = title.trim().isEmpty
+        ? 'Untitled Podcast'
+        : title.trim();
     // Description can be empty in some RSS feeds
 
     // Validate and normalize optional fields

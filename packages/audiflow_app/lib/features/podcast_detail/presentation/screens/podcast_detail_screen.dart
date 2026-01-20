@@ -12,10 +12,7 @@ import '../widgets/episode_list_tile.dart';
 /// Shows podcast artwork, name, and artist at the top, followed by a
 /// scrollable list of episodes with play/pause buttons.
 class PodcastDetailScreen extends ConsumerWidget {
-  const PodcastDetailScreen({
-    super.key,
-    required this.podcast,
-  });
+  const PodcastDetailScreen({super.key, required this.podcast});
 
   final Podcast podcast;
 
@@ -26,11 +23,7 @@ class PodcastDetailScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          podcast.name,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
+        title: Text(podcast.name, maxLines: 1, overflow: TextOverflow.ellipsis),
       ),
       body: _buildBody(context, ref, theme, colorScheme),
     );
@@ -204,7 +197,9 @@ class PodcastDetailScreen extends ConsumerWidget {
                   Text(
                     podcast.genres.join(', '),
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                      color: colorScheme.onSurfaceVariant.withValues(
+                        alpha: 0.7,
+                      ),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -245,9 +240,7 @@ class PodcastDetailScreen extends ConsumerWidget {
           width: 100,
           height: 100,
           color: colorScheme.surfaceContainerHighest,
-          child: const Center(
-            child: CircularProgressIndicator(strokeWidth: 2),
-          ),
+          child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
         );
       },
       errorBuilder: (context, error, stackTrace) => Container(

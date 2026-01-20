@@ -9,10 +9,7 @@ import 'package:intl/intl.dart';
 /// Shows episode title, duration, publish date, and a play/pause button.
 /// The button state reflects the current playback status of this episode.
 class EpisodeListTile extends ConsumerWidget {
-  const EpisodeListTile({
-    super.key,
-    required this.episode,
-  });
+  const EpisodeListTile({super.key, required this.episode});
 
   final PodcastItem episode;
 
