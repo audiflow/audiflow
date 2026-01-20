@@ -7,20 +7,29 @@ void main() {
   runApp(const ProviderScope(child: MyApp()));
 }
 
-class MyApp extends ConsumerWidget {
+/// Root application widget.
+///
+/// Creates the [MaterialApp.router] with the application router
+/// and theme configuration.
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final router = createAppRouter();
+  State<MyApp> createState() => _MyAppState();
+}
 
+class _MyAppState extends State<MyApp> {
+  late final _router = createAppRouter();
+
+  @override
+  Widget build(BuildContext context) {
     return MaterialApp.router(
       title: 'Audiflow',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      routerConfig: router,
+      routerConfig: _router,
     );
   }
 }
