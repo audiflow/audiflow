@@ -27,3 +27,7 @@ export 'src/common/datasources/shared_preferences_datasource.dart';
 // Feed feature
 export 'src/features/feed/builders/podcast_builder.dart';
 export 'src/features/feed/services/feed_parser_service.dart';
+
+// Player feature
+export 'src/features/player/models/playback_state.dart';
+export 'src/features/player/services/audio_player_service.dart';
