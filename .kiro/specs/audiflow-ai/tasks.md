@@ -242,8 +242,8 @@
 
 ## Phase 3: Integration & Validation
 
-- [ ] 8. Integration tests and cross-layer verification
-- [ ] 8.1 Verify capability detection end-to-end
+- [x] 8. Integration tests and cross-layer verification
+- [x] 8.1 Verify capability detection end-to-end
   - Test checkCapability returns correct status on supported Android devices
   - Test checkCapability returns correct status on supported iOS devices
   - Test needsSetup detection when AICore not installed
@@ -251,7 +251,7 @@
   - Verify singleton instance returns consistent results
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5_
 
-- [ ] 8.2 Verify text generation end-to-end
+- [x] 8.2 Verify text generation end-to-end
   - Test generation with simple prompts on both platforms
   - Test generation with custom config parameters
   - Test error handling for initialization failures
@@ -259,7 +259,7 @@
   - Verify response includes metadata (token count, duration)
   - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6_
 
-- [ ] 8.3 Verify summarization flows end-to-end
+- [x] 8.3 Verify summarization flows end-to-end
   - Test text summarization with different styles
   - Test episode summarization with title and description
   - Test episode summarization with transcript
@@ -268,7 +268,7 @@
   - Test HTML stripping works correctly
   - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 5.1, 5.2, 5.3, 5.4_
 
-- [ ] 8.4 Verify voice command parsing
+- [x] 8.4 Verify voice command parsing
   - Test parsing of playback commands (play, pause, skip)
   - Test parsing of search commands with extracted terms
   - Test parsing of navigation commands
