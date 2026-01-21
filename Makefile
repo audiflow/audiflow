@@ -1,4 +1,4 @@
-.PHONY: help bootstrap clean get codegen codegen-watch analyze test test-coverage format check build-dev build-stg build-prod run-dev run-stg run-prod icons splash
+.PHONY: help bootstrap clean get codegen codegen-watch analyze test test-coverage format check build-dev build-stg build-prod run-dev run-stg run-prod icons splash git-prune-merged
 
 # Default target
 help:
@@ -31,6 +31,9 @@ help:
 	@echo "Assets:"
 	@echo "  make icons            - Generate app icons"
 	@echo "  make splash           - Generate splash screens"
+	@echo ""
+	@echo "Git:"
+	@echo "  make git-prune-merged - Delete local branches merged into main/develop"
 
 # Setup & Dependencies
 bootstrap:
@@ -144,9 +147,15 @@ upgrade:
 	@echo "Upgrading packages..."
 	@melos exec -- "flutter pub upgrade"
 
-# Git hooks
+# Git
 install-hooks:
 	@echo "Installing git hooks..."
 	@cp .pre-commit-config.yaml .git/hooks/pre-commit || true
 	@chmod +x .git/hooks/pre-commit || true
 	@echo "Git hooks installed!"
+
+git-prune-merged:
+	@echo "Pruning merged branches..."
+	@git fetch --prune
+	@git branch --merged | grep -vE '^\*|main|master|develop' | xargs -r git branch -d 2>/dev/null || echo "No merged branches to prune"
+	@echo "Done!"
