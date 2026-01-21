@@ -1,0 +1,32 @@
+name: audiflow_ai
+description: "On-device AI capabilities for Audiflow podcast application"
+version: 0.0.1
+publish_to: 'none'
+
+environment:
+  sdk: ^3.10.0
+  flutter: ">=3.35.0"
+
+resolution: workspace
+
+dependencies:
+  audiflow_core:
+    path: ../audiflow_core
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  build_runner: ^2.10.5
+  flutter_lints: ^6.0.0
+  flutter_test:
+    sdk: flutter
+  mockito: ^5.4.7
+
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: com.audiflow.ai
+        pluginClass: AudiflowAiPlugin
+      ios:
+        pluginClass: AudiflowAiPlugin
