@@ -3,14 +3,15 @@ import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../subscription/presentation/controllers/subscription_controller.dart';
 import '../controllers/podcast_detail_controller.dart';
 import '../widgets/episode_list_tile.dart';
 
 /// Displays podcast details and episode list with playback controls.
 ///
 /// Receives a [Podcast] via route extra and fetches episodes from its feedUrl.
-/// Shows podcast artwork, name, and artist at the top, followed by a
-/// scrollable list of episodes with play/pause buttons.
+/// Shows podcast artwork, name, artist, and subscribe button at the top,
+/// followed by a scrollable list of episodes with play/pause buttons.
 class PodcastDetailScreen extends ConsumerWidget {
   const PodcastDetailScreen({super.key, required this.podcast});
 
@@ -44,7 +45,7 @@ class PodcastDetailScreen extends ConsumerWidget {
     final feedAsync = ref.watch(podcastDetailProvider(feedUrl));
 
     return feedAsync.when(
-      data: (parsedFeed) => _buildContent(context, theme, parsedFeed),
+      data: (parsedFeed) => _buildContent(context, ref, theme, parsedFeed),
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (error, stack) => _buildErrorState(
         theme,
@@ -136,6 +137,7 @@ class PodcastDetailScreen extends ConsumerWidget {
 
   Widget _buildContent(
     BuildContext context,
+    WidgetRef ref,
     ThemeData theme,
     dynamic parsedFeed,
   ) {
@@ -143,7 +145,7 @@ class PodcastDetailScreen extends ConsumerWidget {
 
     return CustomScrollView(
       slivers: [
-        SliverToBoxAdapter(child: _buildHeader(context, theme)),
+        SliverToBoxAdapter(child: _buildHeader(context, ref, theme)),
         if (episodes.isEmpty)
           SliverFillRemaining(child: _buildEmptyEpisodesState(theme))
         else
@@ -158,59 +160,121 @@ class PodcastDetailScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildHeader(BuildContext context, ThemeData theme) {
+  Widget _buildHeader(BuildContext context, WidgetRef ref, ThemeData theme) {
     final colorScheme = theme.colorScheme;
 
     return Container(
       padding: const EdgeInsets.all(Spacing.md),
-      child: Row(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: _buildArtwork(colorScheme),
-          ),
-          const SizedBox(width: Spacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  podcast.name,
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: Spacing.xs),
-                Text(
-                  podcast.artistName,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                if (podcast.genres.isNotEmpty) ...[
-                  const SizedBox(height: Spacing.xs),
-                  Text(
-                    podcast.genres.join(', '),
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurfaceVariant.withValues(
-                        alpha: 0.7,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: _buildArtwork(colorScheme),
+              ),
+              const SizedBox(width: Spacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      podcast.name,
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
                       ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ],
-            ),
+                    const SizedBox(height: Spacing.xs),
+                    Text(
+                      podcast.artistName,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (podcast.genres.isNotEmpty) ...[
+                      const SizedBox(height: Spacing.xs),
+                      Text(
+                        podcast.genres.join(', '),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: colorScheme.onSurfaceVariant.withValues(
+                            alpha: 0.7,
+                          ),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
           ),
+          const SizedBox(height: Spacing.md),
+          _buildSubscribeButton(context, ref, theme),
         ],
       ),
     );
+  }
+
+  Widget _buildSubscribeButton(
+    BuildContext context,
+    WidgetRef ref,
+    ThemeData theme,
+  ) {
+    final colorScheme = theme.colorScheme;
+    final subscriptionState = ref.watch(
+      subscriptionControllerProvider(podcast.id),
+    );
+
+    return subscriptionState.when(
+      data: (isSubscribed) {
+        if (isSubscribed) {
+          return OutlinedButton.icon(
+            onPressed: () => _toggleSubscription(ref),
+            icon: const Icon(Icons.check),
+            label: const Text('Subscribed'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: colorScheme.primary,
+              side: BorderSide(color: colorScheme.primary),
+            ),
+          );
+        }
+
+        return FilledButton.icon(
+          onPressed: podcast.feedUrl != null
+              ? () => _toggleSubscription(ref)
+              : null,
+          icon: const Icon(Icons.add),
+          label: const Text('Subscribe'),
+        );
+      },
+      loading: () => FilledButton.icon(
+        onPressed: null,
+        icon: const SizedBox(
+          width: 16,
+          height: 16,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
+        label: const Text('Loading...'),
+      ),
+      error: (error, stack) => FilledButton.icon(
+        onPressed: () => _toggleSubscription(ref),
+        icon: const Icon(Icons.refresh),
+        label: const Text('Retry'),
+      ),
+    );
+  }
+
+  void _toggleSubscription(WidgetRef ref) {
+    ref
+        .read(subscriptionControllerProvider(podcast.id).notifier)
+        .toggleSubscription(podcast);
   }
 
   Widget _buildArtwork(ColorScheme colorScheme) {

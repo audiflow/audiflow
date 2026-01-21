@@ -72,6 +72,18 @@ GoRouter createAppRouter() {
               GoRoute(
                 path: AppRoutes.library,
                 builder: (context, state) => const LibraryScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'podcast/:id',
+                    builder: (context, state) {
+                      final podcast = state.extra as Podcast?;
+                      if (podcast == null) {
+                        return const _PodcastNotFoundScreen();
+                      }
+                      return PodcastDetailScreen(podcast: podcast);
+                    },
+                  ),
+                ],
               ),
             ],
           ),
