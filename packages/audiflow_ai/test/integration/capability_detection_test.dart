@@ -281,7 +281,7 @@ void main() {
 
       test(
         'testInstance allows injecting mock instance',
-        () async {
+        () {
           final mockAi = _MockAudiflowAi();
           AudiflowAi.testInstance = mockAi;
 
@@ -316,7 +316,7 @@ void main() {
 
       test(
         'initialize respects capability check result',
-        () async {
+        () {
           setUpPlatformChannel(
             status: AudiflowAiChannel.kStatusUnavailable,
           );
@@ -332,7 +332,7 @@ void main() {
 
       test(
         'initialize throws AiCoreRequiredException on needsSetup',
-        () async {
+        () {
           setUpPlatformChannel(
             status: AudiflowAiChannel.kStatusNeedsSetup,
             aiCoreInstalled: false,

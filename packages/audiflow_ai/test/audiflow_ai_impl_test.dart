@@ -384,7 +384,7 @@ void main() {
     group('initialization with capability checks', () {
       test(
         'throws AiNotAvailableException when capability is unavailable',
-        () async {
+        () {
           setUpPlatformChannel(AiCapability.unavailable);
           final ai = AudiflowAiImpl();
 
@@ -397,7 +397,7 @@ void main() {
 
       test(
         'throws AiCoreRequiredException when capability is needsSetup',
-        () async {
+        () {
           setUpPlatformChannel(AiCapability.needsSetup);
           final ai = AudiflowAiImpl();
 
@@ -526,29 +526,27 @@ void main() {
       });
 
       test('CancellationToken can be cancelled', () {
-        final token = CancellationToken();
-        token.cancel();
+        final token = CancellationToken()..cancel();
         expect(token.isCancelled, isTrue);
       });
 
       test('CancellationToken notifies listeners on cancel', () {
-        final token = CancellationToken();
         var notified = false;
-        token.addListener(() => notified = true);
-
-        token.cancel();
+        CancellationToken()
+          ..addListener(() => notified = true)
+          ..cancel();
 
         expect(notified, isTrue);
       });
 
       test('CancellationToken does not notify after removal', () {
-        final token = CancellationToken();
         var notified = false;
         void listener() => notified = true;
 
-        token.addListener(listener);
-        token.removeListener(listener);
-        token.cancel();
+        CancellationToken()
+          ..addListener(listener)
+          ..removeListener(listener)
+          ..cancel();
 
         expect(notified, isFalse);
       });

@@ -3,6 +3,8 @@
 // Copyright (c) 2025 kekko7072
 // Licensed under the MIT License
 
+// ignore_for_file: avoid_classes_with_only_static_members
+
 /// Utilities for text processing and normalization.
 ///
 /// Provides methods for stripping HTML, decoding entities, and normalizing text

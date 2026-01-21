@@ -3,6 +3,8 @@
 // Copyright (c) 2025 kekko7072
 // Licensed under the MIT License
 
+// ignore_for_file: unnecessary_async
+
 import 'package:audiflow_ai/audiflow_ai.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';

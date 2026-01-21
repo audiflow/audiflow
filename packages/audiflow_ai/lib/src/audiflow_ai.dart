@@ -85,9 +85,13 @@ abstract class AudiflowAi {
   static AudiflowAi get instance => _instance ??= AudiflowAiImpl();
   static AudiflowAi? _instance;
 
+  /// Get the current test instance (for testing verification).
+  @visibleForTesting
+  static AudiflowAi? get testInstance => _instance;
+
   /// Replace singleton instance (for testing).
   @visibleForTesting
-  static set testInstance(AudiflowAi instance) => _instance = instance;
+  static set testInstance(AudiflowAi? instance) => _instance = instance;
 
   /// Reset to default instance.
   @visibleForTesting
@@ -165,6 +169,7 @@ abstract class AudiflowAi {
   ///
   /// Prefer using [testInstance] setter instead.
   @visibleForTesting
+  // ignore: use_setters_to_change_properties
   static void setInstance(AudiflowAi instance) => _instance = instance;
 }
 

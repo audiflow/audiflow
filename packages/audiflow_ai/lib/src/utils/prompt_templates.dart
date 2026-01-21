@@ -3,6 +3,9 @@
 // Copyright (c) 2025 kekko7072
 // Licensed under the MIT License
 
+// ignore_for_file: avoid_classes_with_only_static_members
+// ignore_for_file: use_setters_to_change_properties
+
 import '../models/summarization_config.dart';
 
 /// Provides podcast-optimized prompt templates for AI operations.
@@ -162,7 +165,8 @@ Guidelines:
   /// Returns an episode summarization prompt template for the given [config].
   ///
   /// The template includes `{title}` and `{description}` placeholders.
-  /// If [includeTranscript] is true, also includes a `{transcript}` placeholder.
+  /// If [includeTranscript] is true, also includes a `{transcript}`
+  /// placeholder.
   static String episodeSummarization(
     SummarizationConfig config, {
     bool includeTranscript = false,

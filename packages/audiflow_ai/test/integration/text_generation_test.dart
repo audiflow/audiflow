@@ -3,6 +3,9 @@
 // Copyright (c) 2025 kekko7072
 // Licensed under the MIT License
 
+// ignore_for_file: avoid_dynamic_calls
+// ignore_for_file: unnecessary_async
+
 /// Integration tests for text generation (Task 8.2).
 ///
 /// Verifies end-to-end text generation across:
