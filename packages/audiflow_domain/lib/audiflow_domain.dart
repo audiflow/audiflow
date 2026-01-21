@@ -32,3 +32,14 @@ export 'src/features/feed/services/feed_parser_service.dart';
 // Player feature
 export 'src/features/player/models/playback_state.dart';
 export 'src/features/player/services/audio_player_service.dart';
+
+// Voice feature
+export 'src/features/voice/models/voice_recognition_state.dart';
+export 'src/features/voice/repositories/speech_recognition_repository.dart';
+export 'src/features/voice/repositories/speech_recognition_repository_impl.dart';
+export 'src/features/voice/services/play_podcast_by_name_service.dart';
+export 'src/features/voice/services/voice_command_orchestrator.dart';
+
+// Re-export audiflow_ai types for voice feature
+export 'package:audiflow_ai/audiflow_ai.dart'
+    show VoiceCommand, VoiceIntent, AudiflowAi, AudiflowAiException;

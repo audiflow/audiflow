@@ -131,8 +131,8 @@ public class AudiflowAiPlugin: NSObject, FlutterPlugin {
             case .available:
                 result([AudiflowAiPlugin.keyStatus: AudiflowAiPlugin.statusFull])
 
-            case .unavailable(let reason):
-                let details = mapUnavailabilityReason(reason)
+            case .unavailable(_):
+                let details = mapUnavailabilityReason(availability)
                 result([
                     AudiflowAiPlugin.keyStatus: AudiflowAiPlugin.statusUnavailable,
                     AudiflowAiPlugin.keyErrorMessage: details
@@ -198,12 +198,7 @@ public class AudiflowAiPlugin: NSObject, FlutterPlugin {
             // Check availability before initialization
             let availability = SystemLanguageModel.default.availability
             guard case .available = availability else {
-                let reason: String
-                if case .unavailable(let unavailabilityReason) = availability {
-                    reason = mapUnavailabilityReason(unavailabilityReason)
-                } else {
-                    reason = "On-device AI is not available on this device"
-                }
+                let reason = mapUnavailabilityReason(availability)
                 result(FlutterError(
                     code: AudiflowAiPlugin.errorAiNotAvailable,
                     message: reason,
@@ -325,12 +320,15 @@ public class AudiflowAiPlugin: NSObject, FlutterPlugin {
                     let generationOptions = buildGenerationOptions(from: config)
 
                     // Generate response using LanguageModelSession
-                    let response: String
+                    let sessionResponse: LanguageModelSession.Response<String>
                     if let options = generationOptions {
-                        response = try await currentSession.respond(to: prompt, options: options)
+                        sessionResponse = try await currentSession.respond(to: prompt, options: options)
                     } else {
-                        response = try await currentSession.respond(to: prompt)
+                        sessionResponse = try await currentSession.respond(to: prompt)
                     }
+
+                    // Extract the content string from the response
+                    let response = sessionResponse.content
 
                     let durationMs = Int((CFAbsoluteTimeGetCurrent() - startTime) * 1000)
 
@@ -465,14 +463,18 @@ public class AudiflowAiPlugin: NSObject, FlutterPlugin {
     /// Maps unavailability reason to human-readable string.
     #if canImport(FoundationModels)
     @available(iOS 26.0, *)
-    private func mapUnavailabilityReason(_ reason: SystemLanguageModel.UnavailabilityReason) -> String {
-        switch reason {
-        case .deviceNotEligible:
+    private func mapUnavailabilityReason(_ availability: SystemLanguageModel.Availability) -> String {
+        switch availability {
+        case .available:
+            return "Available"
+        case .unavailable(.deviceNotEligible):
             return "This device does not support Apple Intelligence"
-        case .appleIntelligenceNotEnabled:
+        case .unavailable(.appleIntelligenceNotEnabled):
             return "Apple Intelligence is not enabled. Please enable it in Settings."
-        case .modelNotReady:
+        case .unavailable(.modelNotReady):
             return "The language model is not ready. Please try again later."
+        case .unavailable(_):
+            return "On-device AI is not available on this device"
         @unknown default:
             return "On-device AI is not available on this device"
         }
@@ -491,17 +493,10 @@ public class AudiflowAiPlugin: NSObject, FlutterPlugin {
                 details: nil
             ))
 
-        case .guardrailViolation(let details):
+        case .guardrailViolation(let context):
             result(FlutterError(
                 code: AudiflowAiPlugin.errorGenerationFailed,
-                message: "Content policy violation: \(details ?? "Unknown violation")",
-                details: nil
-            ))
-
-        case .cancelled:
-            result(FlutterError(
-                code: AudiflowAiPlugin.errorGenerationFailed,
-                message: "Generation was cancelled",
+                message: "Content policy violation: \(context)",
                 details: nil
             ))
 

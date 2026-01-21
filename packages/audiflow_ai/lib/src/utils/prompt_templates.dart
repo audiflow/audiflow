@@ -79,6 +79,7 @@ Focus on what makes this episode valuable and what listeners will learn.''';
 
   static const _defaultVoiceCommand = '''
 Parse the following voice command transcription into a structured command for a podcast player app.
+The command may be in any language (English, Japanese, etc.).
 
 Transcription: "{transcription}"
 
@@ -89,15 +90,26 @@ Identify the intent from these categories:
 - Queue: addToQueue, removeFromQueue, clearQueue
 - Unknown: if the command doesn't match any category
 
-Respond with:
-- intent: the identified command type
-- parameters: relevant extracted values (e.g., search terms, time values)
-- confidence: your confidence level (0.0 to 1.0)
+For "play" commands with a podcast name, extract podcastName parameter.
+
+Respond with exactly this format:
+intent: <intent_name>
+parameters: {key: value}
+confidence: <0.0-1.0>
 
 Example responses:
+
+English:
 - "play the podcast" -> intent: play, parameters: {}, confidence: 0.95
-- "search for technology news" -> intent: search, parameters: {query: "technology news"}, confidence: 0.9
-- "skip forward 30 seconds" -> intent: skipForward, parameters: {seconds: 30}, confidence: 0.85''';
+- "play The Daily" -> intent: play, parameters: {podcastName: The Daily}, confidence: 0.95
+- "search for technology news" -> intent: search, parameters: {query: technology news}, confidence: 0.9
+
+Japanese:
+- "再生して" -> intent: play, parameters: {}, confidence: 0.9
+- "The Dailyを再生" -> intent: play, parameters: {podcastName: The Daily}, confidence: 0.95
+- "The Dailyの最新話を再生して" -> intent: play, parameters: {podcastName: The Daily}, confidence: 0.95
+- "一時停止" -> intent: pause, parameters: {}, confidence: 0.95
+- "テクノロジーを検索" -> intent: search, parameters: {query: テクノロジー}, confidence: 0.9''';
 
   static const _defaultTopicExtraction = '''
 Extract the main topics and themes from the following podcast content.

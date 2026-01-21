@@ -9,8 +9,12 @@ environment:
 resolution: workspace
 
 dependencies:
+  audiflow_ai:
+    path: ../audiflow_ai
   audiflow_podcast:
     path: ../audiflow_podcast
+  audiflow_search:
+    path: ../audiflow_search
   riverpod: ^3.2.0
   drift: ^2.25.0
   sqlite3_flutter_libs: ^0.5.26
@@ -25,6 +29,7 @@ dependencies:
   connectivity_plus: ^7.0.0
   logger: ^2.6.2
   just_audio: ^0.10.5
+  speech_to_text: ^7.3.0
 
 dev_dependencies:
   flutter_test:

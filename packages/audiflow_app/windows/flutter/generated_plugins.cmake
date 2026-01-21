@@ -6,6 +6,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   connectivity_plus
   dynamic_color
   sentry_flutter
+  speech_to_text_windows
   sqlite3_flutter_libs
 )
 
