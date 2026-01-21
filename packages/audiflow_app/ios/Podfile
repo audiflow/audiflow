@@ -1,5 +1,5 @@
-# iOS 14.0+ required per project constraints
-platform :ios, '14.0'
+# iOS 26.0+ required for audiflow_ai (Apple Foundation Models)
+platform :ios, '26.0'
 
 # CocoaPods analytics sends network stats synchronously affecting flutter build latency.
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'

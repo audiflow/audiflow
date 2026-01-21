@@ -9,6 +9,7 @@
 #include <connectivity_plus/connectivity_plus_windows_plugin.h>
 #include <dynamic_color/dynamic_color_plugin_c_api.h>
 #include <sentry_flutter/sentry_flutter_plugin.h>
+#include <speech_to_text_windows/speech_to_text_windows.h>
 #include <sqlite3_flutter_libs/sqlite3_flutter_libs_plugin.h>
 
 void RegisterPlugins(flutter::PluginRegistry* registry) {
@@ -18,6 +19,8 @@ void RegisterPlugins(flutter::PluginRegistry* registry) {
       registry->GetRegistrarForPlugin("DynamicColorPluginCApi"));
   SentryFlutterPluginRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("SentryFlutterPlugin"));
+  SpeechToTextWindowsRegisterWithRegistrar(
+      registry->GetRegistrarForPlugin("SpeechToTextWindows"));
   Sqlite3FlutterLibsPluginRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("Sqlite3FlutterLibsPlugin"));
 }
