@@ -1,5 +1,7 @@
 import 'package:audiflow_app/routing/scaffold_with_nav_bar.dart';
+import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -54,10 +56,21 @@ void main() {
       router.dispose();
     });
 
+    Widget buildTestWidget() {
+      return ProviderScope(
+        overrides: [
+          voiceCommandOrchestratorProvider.overrideWith(
+            () => _MockVoiceCommandOrchestrator(),
+          ),
+        ],
+        child: MaterialApp.router(routerConfig: router),
+      );
+    }
+
     testWidgets('renders NavigationBar with three destinations', (
       tester,
     ) async {
-      await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+      await tester.pumpWidget(buildTestWidget());
       await tester.pumpAndSettle();
 
       expect(find.byType(NavigationBar), findsOneWidget);
@@ -65,7 +78,7 @@ void main() {
     });
 
     testWidgets('displays correct destination labels', (tester) async {
-      await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+      await tester.pumpWidget(buildTestWidget());
       await tester.pumpAndSettle();
 
       expect(find.text('Search'), findsOneWidget);
@@ -74,7 +87,7 @@ void main() {
     });
 
     testWidgets('displays correct destination icons', (tester) async {
-      await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+      await tester.pumpWidget(buildTestWidget());
       await tester.pumpAndSettle();
 
       expect(find.byIcon(Symbols.search), findsOneWidget);
@@ -83,7 +96,7 @@ void main() {
     });
 
     testWidgets('selectedIndex reflects current tab', (tester) async {
-      await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+      await tester.pumpWidget(buildTestWidget());
       await tester.pumpAndSettle();
 
       // Initial tab is 0
@@ -94,7 +107,7 @@ void main() {
     });
 
     testWidgets('tapping destination calls goBranch', (tester) async {
-      await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+      await tester.pumpWidget(buildTestWidget());
       await tester.pumpAndSettle();
 
       // Initially on Tab A
@@ -114,11 +127,17 @@ void main() {
     });
 
     testWidgets('renders navigation shell as body', (tester) async {
-      await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+      await tester.pumpWidget(buildTestWidget());
       await tester.pumpAndSettle();
 
       expect(find.byType(ScaffoldWithNavBar), findsOneWidget);
       expect(find.byType(Scaffold), findsOneWidget);
     });
   });
+}
+
+/// Mock orchestrator that returns idle state.
+class _MockVoiceCommandOrchestrator extends VoiceCommandOrchestrator {
+  @override
+  VoiceRecognitionState build() => const VoiceRecognitionState.idle();
 }
