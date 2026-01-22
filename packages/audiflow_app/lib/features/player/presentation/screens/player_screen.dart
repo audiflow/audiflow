@@ -16,15 +16,8 @@ class PlayerScreen extends ConsumerWidget {
     final playbackState = ref.watch(audioPlayerControllerProvider);
     final progress = ref.watch(playbackProgressProvider);
 
-    final isPlaying = playbackState.maybeWhen(
-      playing: (_) => true,
-      orElse: () => false,
-    );
-
-    final isLoading = playbackState.maybeWhen(
-      loading: (_) => true,
-      orElse: () => false,
-    );
+    final isPlaying = playbackState is PlaybackPlaying;
+    final isLoading = playbackState is PlaybackLoading;
 
     return Scaffold(
       appBar: AppBar(

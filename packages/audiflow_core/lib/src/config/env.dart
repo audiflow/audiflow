@@ -34,20 +34,12 @@ class Env {
 
   /// Validate required environment variables
   static void validate() {
-    final missing = <String>[];
-
-    if (_sentryDsn == null || _sentryDsn!.isEmpty) {
-      missing.add('SENTRY_DSN');
-    }
-    if (_apiBaseUrl == null || _apiBaseUrl!.isEmpty) {
-      missing.add('API_BASE_URL');
-    }
-    if (_mixpanelToken == null || _mixpanelToken!.isEmpty) {
-      missing.add('MIXPANEL_TOKEN');
-    }
-    if (_appName == null || _appName!.isEmpty) {
-      missing.add('APP_NAME');
-    }
+    final missing = <String>[
+      if (_sentryDsn?.isEmpty ?? true) 'SENTRY_DSN',
+      if (_apiBaseUrl?.isEmpty ?? true) 'API_BASE_URL',
+      if (_mixpanelToken?.isEmpty ?? true) 'MIXPANEL_TOKEN',
+      if (_appName?.isEmpty ?? true) 'APP_NAME',
+    ];
 
     if (missing.isNotEmpty) {
       throw StateError(

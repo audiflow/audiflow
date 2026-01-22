@@ -54,13 +54,8 @@ GoRouter createAppRouter() {
                 routes: [
                   GoRoute(
                     path: 'podcast/:id',
-                    builder: (context, state) {
-                      final podcast = state.extra as Podcast?;
-                      if (podcast == null) {
-                        return const _PodcastNotFoundScreen();
-                      }
-                      return PodcastDetailScreen(podcast: podcast);
-                    },
+                    builder: (context, state) =>
+                        _buildPodcastDetailScreen(state),
                   ),
                 ],
               ),
@@ -75,13 +70,8 @@ GoRouter createAppRouter() {
                 routes: [
                   GoRoute(
                     path: 'podcast/:id',
-                    builder: (context, state) {
-                      final podcast = state.extra as Podcast?;
-                      if (podcast == null) {
-                        return const _PodcastNotFoundScreen();
-                      }
-                      return PodcastDetailScreen(podcast: podcast);
-                    },
+                    builder: (context, state) =>
+                        _buildPodcastDetailScreen(state),
                   ),
                 ],
               ),
@@ -100,6 +90,17 @@ GoRouter createAppRouter() {
       ),
     ],
   );
+}
+
+/// Builds the podcast detail screen from route state.
+///
+/// Returns [_PodcastNotFoundScreen] if podcast data is not available.
+Widget _buildPodcastDetailScreen(GoRouterState state) {
+  final podcast = state.extra as Podcast?;
+  if (podcast == null) {
+    return const _PodcastNotFoundScreen();
+  }
+  return PodcastDetailScreen(podcast: podcast);
 }
 
 /// Fallback screen shown when podcast data is not available.

@@ -28,21 +28,16 @@ class SubscriptionLocalDatasource {
   }
 
   /// Returns all subscriptions ordered by subscription date (newest first).
-  Future<List<Subscription>> getAll() {
-    return (_db.select(_db.subscriptions)..orderBy([
-          (t) =>
-              OrderingTerm(expression: t.subscribedAt, mode: OrderingMode.desc),
-        ]))
-        .get();
-  }
+  Future<List<Subscription>> getAll() => _orderedQuery().get();
 
   /// Watches all subscriptions, emitting updates when data changes.
-  Stream<List<Subscription>> watchAll() {
-    return (_db.select(_db.subscriptions)..orderBy([
-          (t) =>
-              OrderingTerm(expression: t.subscribedAt, mode: OrderingMode.desc),
-        ]))
-        .watch();
+  Stream<List<Subscription>> watchAll() => _orderedQuery().watch();
+
+  /// Creates a query for subscriptions ordered by date (newest first).
+  SimpleSelectStatement<$SubscriptionsTable, Subscription> _orderedQuery() {
+    return _db.select(_db.subscriptions)..orderBy([
+      (t) => OrderingTerm(expression: t.subscribedAt, mode: OrderingMode.desc),
+    ]);
   }
 
   /// Returns a subscription by its iTunes ID, or null if not found.
