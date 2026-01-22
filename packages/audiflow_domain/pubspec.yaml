@@ -30,6 +30,7 @@ dependencies:
   logger: ^2.6.2
   just_audio: ^0.10.5
   speech_to_text: ^7.3.0
+  rxdart: ^0.28.0
 
 dev_dependencies:
   flutter_test:
