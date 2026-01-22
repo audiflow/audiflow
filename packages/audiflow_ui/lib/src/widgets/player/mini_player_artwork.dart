@@ -26,29 +26,51 @@ class MiniPlayerArtwork extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(borderRadius),
-      child: SizedBox(
-        width: size,
-        height: size,
-        child: imageUrl != null
-            ? Image.network(
-                imageUrl!,
-                fit: BoxFit.cover,
-                loadingBuilder: (context, child, loadingProgress) {
-                  if (loadingProgress == null) return child;
-                  return _buildPlaceholder(colorScheme);
-                },
-                errorBuilder: (context, error, stackTrace) {
-                  return _buildPlaceholder(colorScheme);
-                },
-              )
-            : _buildPlaceholder(colorScheme),
+    return ExcludeSemantics(
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(borderRadius),
+        child: SizedBox(
+          width: size,
+          height: size,
+          child: imageUrl != null
+              ? Image.network(
+                  imageUrl!,
+                  fit: BoxFit.cover,
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return _MiniPlayerArtworkPlaceholder(
+                      colorScheme: colorScheme,
+                      size: size,
+                    );
+                  },
+                  errorBuilder: (context, error, stackTrace) {
+                    return _MiniPlayerArtworkPlaceholder(
+                      colorScheme: colorScheme,
+                      size: size,
+                    );
+                  },
+                )
+              : _MiniPlayerArtworkPlaceholder(
+                  colorScheme: colorScheme,
+                  size: size,
+                ),
+        ),
       ),
     );
   }
+}
 
-  Widget _buildPlaceholder(ColorScheme colorScheme) {
+class _MiniPlayerArtworkPlaceholder extends StatelessWidget {
+  const _MiniPlayerArtworkPlaceholder({
+    required this.colorScheme,
+    required this.size,
+  });
+
+  final ColorScheme colorScheme;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       color: colorScheme.surfaceContainerHighest,
       child: Icon(

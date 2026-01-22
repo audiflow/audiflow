@@ -40,110 +40,144 @@ class MiniPlayer extends ConsumerWidget {
       orElse: () => false,
     );
 
-    return Material(
-      elevation: 8,
-      color: colorScheme.surfaceContainer,
-      child: InkWell(
-        onTap: onTap,
-        child: SizedBox(
-          height: height,
-          child: Column(
-            children: [
-              // Progress bar at top
-              MiniPlayerProgressBar(
-                progress: progress?.progress ?? 0.0,
-                bufferedProgress: progress?.bufferedProgress ?? 0.0,
-              ),
-              // Main content
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: Spacing.sm),
-                  child: Row(
-                    children: [
-                      // Artwork
-                      MiniPlayerArtwork(
-                        imageUrl: nowPlaying.artworkUrl,
-                        size: 48,
-                      ),
-                      const SizedBox(width: Spacing.sm),
-                      // Title and podcast name
-                      Expanded(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              nowPlaying.episodeTitle,
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.w500,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              nowPlaying.podcastTitle,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: colorScheme.onSurfaceVariant,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
+    return Semantics(
+      container: true,
+      label:
+          'Now playing: ${nowPlaying.episodeTitle} by ${nowPlaying.podcastTitle}',
+      child: Material(
+        elevation: 8,
+        color: colorScheme.surfaceContainer,
+        child: InkWell(
+          onTap: onTap,
+          child: SizedBox(
+            height: height,
+            child: Column(
+              children: [
+                MiniPlayerProgressBar(
+                  progress: progress?.progress ?? 0.0,
+                  bufferedProgress: progress?.bufferedProgress ?? 0.0,
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: Spacing.sm),
+                    child: Row(
+                      children: [
+                        MiniPlayerArtwork(
+                          imageUrl: nowPlaying.artworkUrl,
+                          size: 48,
                         ),
-                      ),
-                      // Play/Pause button
-                      _buildPlayPauseButton(
-                        context,
-                        ref,
-                        isPlaying: isPlaying,
-                        isLoading: isLoading,
-                      ),
-                    ],
+                        const SizedBox(width: Spacing.sm),
+                        _MiniPlayerInfo(
+                          episodeTitle: nowPlaying.episodeTitle,
+                          podcastTitle: nowPlaying.podcastTitle,
+                        ),
+                        _MiniPlayerPlayPauseButton(
+                          isPlaying: isPlaying,
+                          isLoading: isLoading,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
     );
   }
+}
 
-  Widget _buildPlayPauseButton(
-    BuildContext context,
-    WidgetRef ref, {
-    required bool isPlaying,
-    required bool isLoading,
-  }) {
+class _MiniPlayerInfo extends StatelessWidget {
+  const _MiniPlayerInfo({
+    required this.episodeTitle,
+    required this.podcastTitle,
+  });
+
+  final String episodeTitle;
+  final String podcastTitle;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Expanded(
+      child: ExcludeSemantics(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              episodeTitle,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w500,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 2),
+            Text(
+              podcastTitle,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MiniPlayerPlayPauseButton extends ConsumerWidget {
+  const _MiniPlayerPlayPauseButton({
+    required this.isPlaying,
+    required this.isLoading,
+  });
+
+  final bool isPlaying;
+  final bool isLoading;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
 
     if (isLoading) {
-      return const SizedBox(
-        width: 48,
-        height: 48,
-        child: Padding(
-          padding: EdgeInsets.all(12),
-          child: CircularProgressIndicator(strokeWidth: 2),
+      return Semantics(
+        label: 'Loading',
+        child: const SizedBox(
+          width: 48,
+          height: 48,
+          child: Padding(
+            padding: EdgeInsets.all(12),
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
         ),
       );
     }
 
-    return IconButton(
-      icon: Icon(
-        isPlaying ? Symbols.pause : Symbols.play_arrow,
-        fill: 1,
-        size: 32,
+    return Semantics(
+      button: true,
+      label: isPlaying ? 'Pause' : 'Play',
+      child: IconButton(
+        icon: Icon(
+          isPlaying ? Symbols.pause : Symbols.play_arrow,
+          fill: 1,
+          size: 32,
+        ),
+        color: colorScheme.primary,
+        onPressed: () {
+          final controller = ref.read(audioPlayerControllerProvider.notifier);
+          if (isPlaying) {
+            controller.pause();
+          } else {
+            controller.resume();
+          }
+        },
       ),
-      color: colorScheme.primary,
-      onPressed: () {
-        final controller = ref.read(audioPlayerControllerProvider.notifier);
-        if (isPlaying) {
-          controller.pause();
-        } else {
-          controller.resume();
-        }
-      },
     );
   }
 }
