@@ -110,7 +110,12 @@ audiflow_app/
 │   │   ├── library/
 │   │   │   └── presentation/...
 │   │   ├── player/
-│   │   │   └── presentation/...
+│   │   │   └── presentation/
+│   │   │       ├── widgets/
+│   │   │       │   ├── mini_player.dart                   # Compact player in bottom nav
+│   │   │       │   └── animated_mini_player.dart          # Slide animation wrapper
+│   │   │       └── screens/
+│   │   │           └── player_screen.dart                 # Full player screen
 │   │   ├── queue/
 │   │   │   └── presentation/...
 │   │   ├── download/
@@ -218,7 +223,9 @@ audiflow_domain/
 │   │       │   └── repositories/...
 │   │       ├── player/
 │   │       │   ├── models/
-│   │       │   │   ├── player_state.dart                  # @freezed
+│   │       │   │   ├── playback_state.dart                # @freezed (idle/loading/playing/paused/error)
+│   │       │   │   ├── now_playing_info.dart              # @freezed (episode metadata for mini player)
+│   │       │   │   ├── playback_progress.dart             # @freezed (position/duration/buffered with computed progress)
 │   │       │   │   ├── playback_position.dart             # Drift Table
 │   │       │   │   └── playback_speed.dart                # @freezed
 │   │       │   ├── repositories/
@@ -226,7 +233,8 @@ audiflow_domain/
 │   │       │   │   └── player_repository_impl.dart
 │   │       │   ├── datasources/local/player_state_datasource.dart
 │   │       │   ├── services/
-│   │       │   │   ├── audio_player_service.dart
+│   │       │   │   ├── audio_player_service.dart          # AudioPlayer wrapper with playback progress stream
+│   │       │   │   ├── now_playing_controller.dart        # @Riverpod(keepAlive: true) for now playing state
 │   │       │   │   └── audio_handler_service.dart
 │   │       │   └── events/player_events.dart
 │   │       ├── queue/
@@ -275,6 +283,9 @@ audiflow_ui/
 │   │   │   ├── cards/
 │   │   │   │   ├── podcast_card.dart
 │   │   │   │   └── episode_card.dart
+│   │   │   ├── player/
+│   │   │   │   ├── mini_player_artwork.dart               # Episode artwork with placeholder fallback
+│   │   │   │   └── mini_player_progress_bar.dart          # Thin progress indicator
 │   │   │   └── layouts/
 │   │   │       ├── empty_state.dart
 │   │   │       └── error_state.dart
@@ -374,6 +385,46 @@ class PlaybackStarted extends PlayerEvent {}
 Stream<PlayerEvent> playerEventStream(PlayerEventStreamRef ref) { ... }
 ```
 
+### 5. Mini Player Integration Pattern
+```dart
+// State management in audiflow_domain
+@freezed
+sealed class NowPlayingInfo with _$NowPlayingInfo {
+  const factory NowPlayingInfo({
+    required String episodeUrl,
+    required String episodeTitle,
+    required String podcastTitle,
+    String? artworkUrl,
+  }) = _NowPlayingInfo;
+}
+
+@Riverpod(keepAlive: true)
+class NowPlayingController extends _$NowPlayingController {
+  @override
+  NowPlayingInfo? build() => null;
+
+  void setNowPlaying(NowPlayingInfo info) => state = info;
+  void clear() => state = null;
+}
+
+// Reusable widgets in audiflow_ui
+class MiniPlayerArtwork extends StatelessWidget { ... }
+class MiniPlayerProgressBar extends StatelessWidget { ... }
+
+// Feature widgets in audiflow_app
+class MiniPlayer extends ConsumerWidget { ... }
+class AnimatedMiniPlayer extends ConsumerStatefulWidget { ... }
+
+// Integration in ScaffoldWithNavBar
+bottomNavigationBar: Column(
+  mainAxisSize: MainAxisSize.min,
+  children: [
+    AnimatedMiniPlayer(onTap: () => _openPlayerScreen(context)),
+    NavigationBar(...),
+  ],
+),
+```
+
 ## Error Handling Pattern
 ```dart
 // In audiflow_core/src/errors/exceptions.dart
@@ -413,6 +464,8 @@ class StorageException extends AppException { ... }
 | **Podcast models** | `audiflow_podcast` | `lib/src/models/` | `audiflow_podcast/lib/src/models/podcast_feed.dart` |
 | **Podcast caching** | `audiflow_podcast` | `lib/src/cache/` | `audiflow_podcast/lib/src/cache/cache_manager.dart` |
 | **Entity builder** | `audiflow_domain` | `lib/src/features/feed/builders/` | `audiflow_domain/lib/src/features/feed/builders/podcast_builder.dart` |
+| **Player widget** (reusable) | `audiflow_ui` | `lib/src/widgets/player/` | `audiflow_ui/lib/src/widgets/player/mini_player_artwork.dart` |
+| **Player presentation** | `audiflow_app` | `lib/features/player/presentation/` | `audiflow_app/lib/features/player/presentation/widgets/mini_player.dart` |
 
 ## Quick Rules for Me (Claude)
 
