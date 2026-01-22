@@ -30,15 +30,8 @@ class MiniPlayer extends ConsumerWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    final isPlaying = playbackState.maybeWhen(
-      playing: (_) => true,
-      orElse: () => false,
-    );
-
-    final isLoading = playbackState.maybeWhen(
-      loading: (_) => true,
-      orElse: () => false,
-    );
+    final isPlaying = playbackState is PlaybackPlaying;
+    final isLoading = playbackState is PlaybackLoading;
 
     return Semantics(
       container: true,

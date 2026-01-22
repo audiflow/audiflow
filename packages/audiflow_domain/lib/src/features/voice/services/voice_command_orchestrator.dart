@@ -296,9 +296,30 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
     final text = transcription.trim();
     final lower = text.toLowerCase();
 
-    // === English patterns ===
+    // Try play command
+    final playResult = _tryParsePlayCommand(text, lower, transcription);
+    if (playResult != null) return playResult;
 
-    // Play commands: "play [podcast name]" or "play the latest episode of [name]"
+    // Try pause command
+    if (_isPauseCommand(text, lower)) {
+      return VoiceCommand(
+        intent: VoiceIntent.pause,
+        parameters: const {},
+        confidence: 0.9,
+        rawTranscription: transcription,
+      );
+    }
+
+    // Try search command
+    return _tryParseSearchCommand(text, lower, transcription);
+  }
+
+  VoiceCommand? _tryParsePlayCommand(
+    String text,
+    String lower,
+    String transcription,
+  ) {
+    // English patterns
     final playPatternsEn = [
       RegExp(
         r'^play\s+(?:the\s+)?(?:latest\s+)?(?:episode\s+)?(?:of\s+)?(.+)$',
@@ -307,32 +328,57 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
       RegExp(r'^play\s+(.+)$', caseSensitive: false),
     ];
 
+    // Japanese patterns
+    final playPatternsJa = [
+      RegExp(r'^(.+?)の最新(?:話|エピソード)を再生(?:して)?$'),
+      RegExp(r'^(.+?)を再生(?:して)?$'),
+      RegExp(r'^(.+?)再生(?:して)?$'),
+    ];
+
+    // Try English patterns on lowercase text
     for (final pattern in playPatternsEn) {
-      final match = pattern.firstMatch(lower);
-      if (match != null) {
-        final podcastName = match.group(1)?.trim();
-        if (podcastName != null && podcastName.isNotEmpty) {
-          return VoiceCommand(
-            intent: VoiceIntent.play,
-            parameters: {'podcastName': podcastName},
-            confidence: 0.7,
-            rawTranscription: transcription,
-          );
-        }
+      final name = _extractGroup(pattern, lower);
+      if (name != null) {
+        return _buildPlayCommand(name, transcription);
       }
     }
 
-    // Pause command (English)
-    if (lower == 'pause' || lower == 'stop' || lower == 'pause playback') {
-      return VoiceCommand(
-        intent: VoiceIntent.pause,
-        parameters: const {},
-        confidence: 0.9,
-        rawTranscription: transcription,
-      );
+    // Try Japanese patterns on original text
+    for (final pattern in playPatternsJa) {
+      final name = _extractGroup(pattern, text);
+      if (name != null) {
+        return _buildPlayCommand(name, transcription);
+      }
     }
 
-    // Search command (English): "search for [query]"
+    return null;
+  }
+
+  VoiceCommand _buildPlayCommand(String podcastName, String transcription) {
+    return VoiceCommand(
+      intent: VoiceIntent.play,
+      parameters: {'podcastName': podcastName},
+      confidence: 0.7,
+      rawTranscription: transcription,
+    );
+  }
+
+  bool _isPauseCommand(String text, String lower) {
+    // English
+    if (lower == 'pause' || lower == 'stop' || lower == 'pause playback') {
+      return true;
+    }
+    // Japanese
+    const japanesePauseKeywords = ['一時停止', '停止', 'ストップ', 'ポーズ'];
+    return japanesePauseKeywords.any(text.contains);
+  }
+
+  VoiceCommand? _tryParseSearchCommand(
+    String text,
+    String lower,
+    String transcription,
+  ) {
+    // English pattern
     final searchMatchEn = RegExp(
       r'^search\s+(?:for\s+)?(.+)$',
       caseSensitive: false,
@@ -340,76 +386,40 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
     if (searchMatchEn != null) {
       final query = searchMatchEn.group(1)?.trim();
       if (query != null && query.isNotEmpty) {
-        return VoiceCommand(
-          intent: VoiceIntent.search,
-          parameters: {'query': query},
-          confidence: 0.8,
-          rawTranscription: transcription,
-        );
+        return _buildSearchCommand(query, transcription);
       }
     }
 
-    // === Japanese patterns ===
-
-    // Play commands: "[name]を再生", "[name]の最新話を再生して", etc.
-    final playPatternsJa = [
-      // "[name]の最新話を再生して" or "[name]の最新話を再生"
-      RegExp(r'^(.+?)の最新(?:話|エピソード)を再生(?:して)?$'),
-      // "[name]を再生して" or "[name]を再生"
-      RegExp(r'^(.+?)を再生(?:して)?$'),
-      // "[name]再生して" or "[name]再生"
-      RegExp(r'^(.+?)再生(?:して)?$'),
-    ];
-
-    for (final pattern in playPatternsJa) {
-      final match = pattern.firstMatch(text);
-      if (match != null) {
-        final podcastName = match.group(1)?.trim();
-        if (podcastName != null && podcastName.isNotEmpty) {
-          return VoiceCommand(
-            intent: VoiceIntent.play,
-            parameters: {'podcastName': podcastName},
-            confidence: 0.7,
-            rawTranscription: transcription,
-          );
-        }
-      }
-    }
-
-    // Pause command (Japanese)
-    if (text.contains('一時停止') ||
-        text.contains('停止') ||
-        text.contains('ストップ') ||
-        text.contains('ポーズ')) {
-      return VoiceCommand(
-        intent: VoiceIntent.pause,
-        parameters: const {},
-        confidence: 0.9,
-        rawTranscription: transcription,
-      );
-    }
-
-    // Search command (Japanese): "[query]を検索", "[query]検索"
+    // Japanese patterns
     final searchPatternsJa = [
       RegExp(r'^(.+?)を検索(?:して)?$'),
       RegExp(r'^(.+?)検索(?:して)?$'),
     ];
 
     for (final pattern in searchPatternsJa) {
-      final match = pattern.firstMatch(text);
-      if (match != null) {
-        final query = match.group(1)?.trim();
-        if (query != null && query.isNotEmpty) {
-          return VoiceCommand(
-            intent: VoiceIntent.search,
-            parameters: {'query': query},
-            confidence: 0.8,
-            rawTranscription: transcription,
-          );
-        }
+      final query = _extractGroup(pattern, text);
+      if (query != null) {
+        return _buildSearchCommand(query, transcription);
       }
     }
 
     return null;
+  }
+
+  VoiceCommand _buildSearchCommand(String query, String transcription) {
+    return VoiceCommand(
+      intent: VoiceIntent.search,
+      parameters: {'query': query},
+      confidence: 0.8,
+      rawTranscription: transcription,
+    );
+  }
+
+  /// Extracts the first capture group from a pattern match.
+  String? _extractGroup(RegExp pattern, String input) {
+    final match = pattern.firstMatch(input);
+    if (match == null) return null;
+    final value = match.group(1)?.trim();
+    return (value != null && value.isNotEmpty) ? value : null;
   }
 }

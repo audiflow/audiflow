@@ -190,33 +190,33 @@ class PodcastFeed extends PodcastEntity {
       sourceUrl: sourceUrl,
       title: effectiveTitle,
       description: description.trim(),
-      author: author?.trim().isEmpty == true ? null : author?.trim(),
+      author: _trimOrNull(author),
       images: images ?? const [],
-      language: language?.trim().isEmpty == true ? null : language?.trim(),
+      language: _trimOrNull(language),
       categories: categories ?? const [],
       isExplicit: isExplicit ?? false,
-      subtitle: subtitle?.trim().isEmpty == true ? null : subtitle?.trim(),
-      summary: summary?.trim().isEmpty == true ? null : summary?.trim(),
-      ownerName: ownerName?.trim().isEmpty == true ? null : ownerName?.trim(),
-      ownerEmail: ownerEmail?.trim().isEmpty == true
-          ? null
-          : ownerEmail?.trim(),
-      link: link?.trim().isEmpty == true ? null : link?.trim(),
-      copyright: copyright?.trim().isEmpty == true ? null : copyright?.trim(),
+      subtitle: _trimOrNull(subtitle),
+      summary: _trimOrNull(summary),
+      ownerName: _trimOrNull(ownerName),
+      ownerEmail: _trimOrNull(ownerEmail),
+      link: _trimOrNull(link),
+      copyright: _trimOrNull(copyright),
       lastBuildDate: lastBuildDate,
       pubDate: pubDate,
-      generator: generator?.trim().isEmpty == true ? null : generator?.trim(),
-      managingEditor: managingEditor?.trim().isEmpty == true
-          ? null
-          : managingEditor?.trim(),
-      webMaster: webMaster?.trim().isEmpty == true ? null : webMaster?.trim(),
+      generator: _trimOrNull(generator),
+      managingEditor: _trimOrNull(managingEditor),
+      webMaster: _trimOrNull(webMaster),
       ttl: ttl,
       type: normalizedType,
       isComplete: isComplete,
-      newFeedUrl: newFeedUrl?.trim().isEmpty == true
-          ? null
-          : newFeedUrl?.trim(),
+      newFeedUrl: _trimOrNull(newFeedUrl),
     );
+  }
+
+  /// Trims the string and returns null if empty.
+  static String? _trimOrNull(String? value) {
+    final trimmed = value?.trim();
+    return (trimmed?.isEmpty ?? true) ? null : trimmed;
   }
 
   /// The title of the podcast.

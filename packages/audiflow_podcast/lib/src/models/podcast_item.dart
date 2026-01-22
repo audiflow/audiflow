@@ -175,33 +175,33 @@ class PodcastItem extends PodcastEntity {
       description: description.trim(),
       publishDate: publishDate,
       duration: duration,
-      enclosureUrl: enclosureUrl?.trim().isEmpty == true
-          ? null
-          : enclosureUrl?.trim(),
-      enclosureType: enclosureType?.trim().isEmpty == true
-          ? null
-          : enclosureType?.trim(),
+      enclosureUrl: _trimOrNull(enclosureUrl),
+      enclosureType: _trimOrNull(enclosureType),
       enclosureLength: enclosureLength,
       episodeNumber: episodeNumber,
       seasonNumber: seasonNumber,
       episodeType: normalizedEpisodeType,
-      guid: guid?.trim().isEmpty == true ? null : guid?.trim(),
-      subtitle: subtitle?.trim().isEmpty == true ? null : subtitle?.trim(),
-      summary: summary?.trim().isEmpty == true ? null : summary?.trim(),
-      author: author?.trim().isEmpty == true ? null : author?.trim(),
+      guid: _trimOrNull(guid),
+      subtitle: _trimOrNull(subtitle),
+      summary: _trimOrNull(summary),
+      author: _trimOrNull(author),
       isExplicit: isExplicit,
       images: images ?? const [],
-      link: link?.trim().isEmpty == true ? null : link?.trim(),
+      link: _trimOrNull(link),
       categories: categories ?? const [],
-      comments: comments?.trim().isEmpty == true ? null : comments?.trim(),
-      source: source?.trim().isEmpty == true ? null : source?.trim(),
+      comments: _trimOrNull(comments),
+      source: _trimOrNull(source),
       isPermaLink: isPermaLink,
-      contentEncoded: contentEncoded?.trim().isEmpty == true
-          ? null
-          : contentEncoded?.trim(),
+      contentEncoded: _trimOrNull(contentEncoded),
       chapters: chapters,
       transcripts: transcripts,
     );
+  }
+
+  /// Trims the string and returns null if empty.
+  static String? _trimOrNull(String? value) {
+    final trimmed = value?.trim();
+    return (trimmed?.isEmpty ?? true) ? null : trimmed;
   }
 
   /// The title of the episode.
