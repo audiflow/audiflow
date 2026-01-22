@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
+import '../features/player/presentation/screens/player_screen.dart';
+import '../features/player/presentation/widgets/animated_mini_player.dart';
 import '../features/voice/presentation/widgets/voice_command_fab.dart';
 import '../features/voice/presentation/widgets/voice_listening_overlay.dart';
 
@@ -28,6 +30,12 @@ class ScaffoldWithNavBar extends ConsumerWidget {
     );
   }
 
+  void _onMiniPlayerTap(BuildContext context) {
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute<void>(builder: (context) => const PlayerScreen()));
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final voiceState = ref.watch(voiceCommandOrchestratorProvider);
@@ -38,24 +46,30 @@ class ScaffoldWithNavBar extends ConsumerWidget {
         Scaffold(
           body: navigationShell,
           floatingActionButton: const VoiceCommandFab(),
-          bottomNavigationBar: NavigationBar(
-            selectedIndex: navigationShell.currentIndex,
-            onDestinationSelected: _onDestinationSelected,
-            destinations: const [
-              NavigationDestination(
-                icon: Icon(Symbols.search),
-                selectedIcon: Icon(Symbols.search, fill: 1),
-                label: 'Search',
-              ),
-              NavigationDestination(
-                icon: Icon(Symbols.library_music),
-                selectedIcon: Icon(Symbols.library_music, fill: 1),
-                label: 'Library',
-              ),
-              NavigationDestination(
-                icon: Icon(Symbols.settings),
-                selectedIcon: Icon(Symbols.settings, fill: 1),
-                label: 'Settings',
+          bottomNavigationBar: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AnimatedMiniPlayer(onTap: () => _onMiniPlayerTap(context)),
+              NavigationBar(
+                selectedIndex: navigationShell.currentIndex,
+                onDestinationSelected: _onDestinationSelected,
+                destinations: const [
+                  NavigationDestination(
+                    icon: Icon(Symbols.search),
+                    selectedIcon: Icon(Symbols.search, fill: 1),
+                    label: 'Search',
+                  ),
+                  NavigationDestination(
+                    icon: Icon(Symbols.library_music),
+                    selectedIcon: Icon(Symbols.library_music, fill: 1),
+                    label: 'Library',
+                  ),
+                  NavigationDestination(
+                    icon: Icon(Symbols.settings),
+                    selectedIcon: Icon(Symbols.settings, fill: 1),
+                    label: 'Settings',
+                  ),
+                ],
               ),
             ],
           ),
