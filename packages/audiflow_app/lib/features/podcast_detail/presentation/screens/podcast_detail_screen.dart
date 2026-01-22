@@ -154,6 +154,8 @@ class PodcastDetailScreen extends ConsumerWidget {
             itemBuilder: (context, index) => EpisodeListTile(
               key: ValueKey(episodes[index].guid ?? index),
               episode: episodes[index],
+              podcastTitle: podcast.name,
+              artworkUrl: podcast.artworkUrl,
             ),
           ),
       ],

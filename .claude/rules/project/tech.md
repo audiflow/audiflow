@@ -138,3 +138,13 @@ flutter gen-l10n  # Generate from ARB files
 - `*.gr.dart` - GoRouter routes
 
 **Never edit generated files manually!**
+
+## Pre-Commit Checklist (MANDATORY)
+
+Before committing Dart files, Claude MUST verify all of the following pass:
+
+1. **Format**: Run `dart_format` tool
+2. **Analyze**: Run `analyze_files` tool - must have zero errors/warnings
+3. **Tests**: Run `run_tests` tool - all tests must pass
+
+**Do NOT commit if any of these checks fail.** Fix issues first, then commit.

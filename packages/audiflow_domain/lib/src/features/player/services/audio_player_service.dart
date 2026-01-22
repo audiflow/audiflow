@@ -2,8 +2,12 @@ import 'dart:async';
 
 import 'package:just_audio/just_audio.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:rxdart/rxdart.dart';
 
+import '../models/now_playing_info.dart';
+import '../models/playback_progress.dart';
 import '../models/playback_state.dart';
+import 'now_playing_controller.dart';
 
 part 'audio_player_service.g.dart';
 
@@ -16,6 +20,35 @@ AudioPlayer audioPlayer(Ref ref) {
   final player = AudioPlayer();
   ref.onDispose(() => player.dispose());
   return player;
+}
+
+/// Provides a stream of playback progress updates.
+///
+/// Combines position, duration, and buffered position into a single stream.
+/// Updates approximately every 200ms while playing.
+@Riverpod(keepAlive: true)
+Stream<PlaybackProgress> playbackProgressStream(Ref ref) {
+  final player = ref.watch(audioPlayerProvider);
+
+  return Rx.combineLatest3<Duration, Duration?, Duration, PlaybackProgress>(
+    player.positionStream,
+    player.durationStream,
+    player.bufferedPositionStream,
+    (position, duration, buffered) => PlaybackProgress(
+      position: position,
+      duration: duration ?? Duration.zero,
+      bufferedPosition: buffered,
+    ),
+  );
+}
+
+/// Provides the current playback progress.
+///
+/// Returns null when no audio is loaded.
+@riverpod
+PlaybackProgress? playbackProgress(Ref ref) {
+  final asyncProgress = ref.watch(playbackProgressStreamProvider);
+  return asyncProgress.value;
 }
 
 /// Controller for managing audio playback.
@@ -82,10 +115,19 @@ class AudioPlayerController extends _$AudioPlayerController {
   ///
   /// If audio is already playing from a different URL, it will stop the
   /// current playback and start the new audio.
-  Future<void> play(String url) async {
+  ///
+  /// Optional [metadata] can be provided to display episode information
+  /// in the mini player without needing to fetch it from the database.
+  Future<void> play(String url, {NowPlayingInfo? metadata}) async {
     try {
       _currentUrl = url;
       state = PlaybackState.loading(episodeUrl: url);
+
+      // Update now playing controller if metadata is provided
+      if (metadata != null) {
+        ref.read(nowPlayingControllerProvider.notifier).setNowPlaying(metadata);
+      }
+
       await _player.setUrl(url);
       await _player.play();
     } catch (e) {
@@ -123,6 +165,7 @@ class AudioPlayerController extends _$AudioPlayerController {
     await _player.stop();
     _currentUrl = null;
     state = const PlaybackState.idle();
+    ref.read(nowPlayingControllerProvider.notifier).clear();
   }
 
   /// Returns the URL of the currently loaded audio, if any.

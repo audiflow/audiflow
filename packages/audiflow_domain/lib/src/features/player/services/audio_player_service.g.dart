@@ -63,6 +63,118 @@ final class AudioPlayerProvider
 
 String _$audioPlayerHash() => r'a0bd7256f42a3a742e3295e76106e9d013150914';
 
+/// Provides a stream of playback progress updates.
+///
+/// Combines position, duration, and buffered position into a single stream.
+/// Updates approximately every 200ms while playing.
+
+@ProviderFor(playbackProgressStream)
+final playbackProgressStreamProvider = PlaybackProgressStreamProvider._();
+
+/// Provides a stream of playback progress updates.
+///
+/// Combines position, duration, and buffered position into a single stream.
+/// Updates approximately every 200ms while playing.
+
+final class PlaybackProgressStreamProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<PlaybackProgress>,
+          PlaybackProgress,
+          Stream<PlaybackProgress>
+        >
+    with $FutureModifier<PlaybackProgress>, $StreamProvider<PlaybackProgress> {
+  /// Provides a stream of playback progress updates.
+  ///
+  /// Combines position, duration, and buffered position into a single stream.
+  /// Updates approximately every 200ms while playing.
+  PlaybackProgressStreamProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'playbackProgressStreamProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$playbackProgressStreamHash();
+
+  @$internal
+  @override
+  $StreamProviderElement<PlaybackProgress> $createElement(
+    $ProviderPointer pointer,
+  ) => $StreamProviderElement(pointer);
+
+  @override
+  Stream<PlaybackProgress> create(Ref ref) {
+    return playbackProgressStream(ref);
+  }
+}
+
+String _$playbackProgressStreamHash() =>
+    r'158e0b1996954fb42b48619527dce62a18db62db';
+
+/// Provides the current playback progress.
+///
+/// Returns null when no audio is loaded.
+
+@ProviderFor(playbackProgress)
+final playbackProgressProvider = PlaybackProgressProvider._();
+
+/// Provides the current playback progress.
+///
+/// Returns null when no audio is loaded.
+
+final class PlaybackProgressProvider
+    extends
+        $FunctionalProvider<
+          PlaybackProgress?,
+          PlaybackProgress?,
+          PlaybackProgress?
+        >
+    with $Provider<PlaybackProgress?> {
+  /// Provides the current playback progress.
+  ///
+  /// Returns null when no audio is loaded.
+  PlaybackProgressProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'playbackProgressProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$playbackProgressHash();
+
+  @$internal
+  @override
+  $ProviderElement<PlaybackProgress?> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  PlaybackProgress? create(Ref ref) {
+    return playbackProgress(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(PlaybackProgress? value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<PlaybackProgress?>(value),
+    );
+  }
+}
+
+String _$playbackProgressHash() => r'dd7c9c1003e75d0513c2f075137b3948e3e139af';
+
 /// Controller for managing audio playback.
 ///
 /// Wraps [AudioPlayer] to provide a simplified interface and exposes
@@ -130,7 +242,7 @@ final class AudioPlayerControllerProvider
 }
 
 String _$audioPlayerControllerHash() =>
-    r'6131a2e263d5c206181595038a797934c753ab51';
+    r'50b395f7eb56509476b44ec7e0707781658fe057';
 
 /// Controller for managing audio playback.
 ///

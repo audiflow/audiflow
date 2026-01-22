@@ -30,8 +30,11 @@ export 'src/features/feed/builders/podcast_builder.dart';
 export 'src/features/feed/services/feed_parser_service.dart';
 
 // Player feature
+export 'src/features/player/models/now_playing_info.dart';
+export 'src/features/player/models/playback_progress.dart';
 export 'src/features/player/models/playback_state.dart';
 export 'src/features/player/services/audio_player_service.dart';
+export 'src/features/player/services/now_playing_controller.dart';
 
 // Voice feature
 export 'src/features/voice/models/voice_recognition_state.dart';

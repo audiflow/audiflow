@@ -9,9 +9,16 @@ import 'package:intl/intl.dart';
 /// Shows episode title, duration, publish date, and a play/pause button.
 /// The button state reflects the current playback status of this episode.
 class EpisodeListTile extends ConsumerWidget {
-  const EpisodeListTile({super.key, required this.episode});
+  const EpisodeListTile({
+    super.key,
+    required this.episode,
+    required this.podcastTitle,
+    this.artworkUrl,
+  });
 
   final PodcastItem episode;
+  final String podcastTitle;
+  final String? artworkUrl;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -136,7 +143,16 @@ class EpisodeListTile extends ConsumerWidget {
     } else if (controller.isLoaded(url)) {
       controller.resume();
     } else {
-      controller.play(url);
+      controller.play(
+        url,
+        metadata: NowPlayingInfo(
+          episodeUrl: url,
+          episodeTitle: episode.title,
+          podcastTitle: podcastTitle,
+          artworkUrl: artworkUrl ?? episode.primaryImage?.url,
+          totalDuration: episode.duration,
+        ),
+      );
     }
   }
 }
