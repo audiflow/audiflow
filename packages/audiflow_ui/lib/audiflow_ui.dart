@@ -10,4 +10,6 @@ export 'src/themes/text_styles.dart';
 export 'src/styles/spacing.dart';
 export 'src/styles/borders.dart';
 
-// Widgets (will be added as needed)
+// Widgets - Player
+export 'src/widgets/player/mini_player_artwork.dart';
+export 'src/widgets/player/mini_player_progress_bar.dart';
