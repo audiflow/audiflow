@@ -16,9 +16,6 @@ class PlayerScreen extends ConsumerWidget {
     final playbackState = ref.watch(audioPlayerControllerProvider);
     final progress = ref.watch(playbackProgressProvider);
 
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
     final isPlaying = playbackState.maybeWhen(
       playing: (_) => true,
       orElse: () => false,
