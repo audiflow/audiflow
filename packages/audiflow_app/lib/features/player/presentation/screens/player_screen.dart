@@ -18,6 +18,20 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
   bool _isSeeking = false;
   bool _wasPlayingBeforeSeek = false;
 
+  void _beginSeek(bool wasPlaying) {
+    setState(() {
+      _isSeeking = true;
+      _wasPlayingBeforeSeek = wasPlaying;
+    });
+  }
+
+  Future<void> _endSeek() async {
+    // Allow player state to stabilize after seek
+    await Future<void>.delayed(const Duration(milliseconds: 150));
+    if (!mounted) return;
+    setState(() => _isSeeking = false);
+  }
+
   @override
   Widget build(BuildContext context) {
     final nowPlaying = ref.watch(nowPlayingControllerProvider);
@@ -60,11 +74,8 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                     const SizedBox(height: 32),
                     _PlayerProgressBar(
                       progress: progress,
-                      onSeekStart: () => setState(() {
-                        _isSeeking = true;
-                        _wasPlayingBeforeSeek = isPlaying;
-                      }),
-                      onSeekEnd: () => setState(() => _isSeeking = false),
+                      onSeekStart: () => _beginSeek(isPlaying),
+                      onSeekEnd: _endSeek,
                     ),
                     const SizedBox(height: 24),
                     _PlayerControls(
@@ -95,14 +106,9 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
     Future<void> Function() skipAction,
     bool wasPlaying,
   ) async {
-    setState(() {
-      _isSeeking = true;
-      _wasPlayingBeforeSeek = wasPlaying;
-    });
+    _beginSeek(wasPlaying);
     await skipAction();
-    await Future<void>.delayed(const Duration(milliseconds: 150));
-    if (!mounted) return;
-    setState(() => _isSeeking = false);
+    await _endSeek();
   }
 }
 
@@ -203,7 +209,7 @@ class _PlayerProgressBar extends ConsumerStatefulWidget {
 
   final PlaybackProgress? progress;
   final VoidCallback? onSeekStart;
-  final VoidCallback? onSeekEnd;
+  final Future<void> Function()? onSeekEnd;
 
   @override
   ConsumerState<_PlayerProgressBar> createState() => _PlayerProgressBarState();
@@ -256,13 +262,10 @@ class _PlayerProgressBarState extends ConsumerState<_PlayerProgressBar> {
                 await ref
                     .read(audioPlayerControllerProvider.notifier)
                     .seek(seekPosition);
-                // Allow player state to stabilize after seek
-                await Future<void>.delayed(const Duration(milliseconds: 150));
+                // Parent handles stabilization delay via onSeekEnd
+                await widget.onSeekEnd?.call();
                 if (!mounted) return;
-                setState(() {
-                  _isDragging = false;
-                });
-                widget.onSeekEnd?.call();
+                setState(() => _isDragging = false);
               },
             ),
           ),
