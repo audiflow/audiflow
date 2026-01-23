@@ -35,7 +35,7 @@ class PlaybackHistoryLocalDatasource {
       // First time playing - create new record
       await upsert(
         PlaybackHistoriesCompanion.insert(
-          episodeId: episodeId,
+          episodeId: Value(episodeId),
           positionMs: Value(positionMs),
           durationMs: Value(durationMs),
           firstPlayedAt: Value(now),
@@ -67,7 +67,7 @@ class PlaybackHistoryLocalDatasource {
     if (existing == null) {
       await upsert(
         PlaybackHistoriesCompanion.insert(
-          episodeId: episodeId,
+          episodeId: Value(episodeId),
           completedAt: Value(now),
           lastPlayedAt: Value(now),
         ),
