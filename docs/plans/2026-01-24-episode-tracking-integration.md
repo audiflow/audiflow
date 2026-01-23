@@ -1,4 +1,4 @@
-# Episode Tracking Integration Plan
+# [COMPLETED] Episode Tracking Integration Plan
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 

@@ -1,4 +1,4 @@
-# Episode Tracking Feature Design
+# [COMPLETED] Episode Tracking Feature Design
 
 ## Overview
 
