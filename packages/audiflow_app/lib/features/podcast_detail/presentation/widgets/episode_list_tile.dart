@@ -4,10 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../controllers/podcast_detail_controller.dart';
+
 /// Displays a single episode with play/pause controls.
 ///
 /// Shows episode title, duration, publish date, and a play/pause button.
 /// The button state reflects the current playback status of this episode.
+/// Also displays progress indicators for in-progress and completed episodes.
 class EpisodeListTile extends ConsumerWidget {
   const EpisodeListTile({
     super.key,
@@ -26,6 +29,12 @@ class EpisodeListTile extends ConsumerWidget {
     final colorScheme = theme.colorScheme;
     final playbackState = ref.watch(audioPlayerControllerProvider);
     final enclosureUrl = episode.enclosureUrl;
+
+    // Watch episode progress for this episode
+    final progressAsync = enclosureUrl != null
+        ? ref.watch(episodeProgressProvider(enclosureUrl))
+        : const AsyncValue<EpisodeWithProgress?>.data(null);
+    final progress = progressAsync.value;
 
     // Check if this episode is currently playing or paused
     final isCurrentEpisode =
@@ -47,6 +56,9 @@ class EpisodeListTile extends ConsumerWidget {
       orElse: () => false,
     );
 
+    // Dim completed episodes
+    final isCompleted = progress?.isCompleted ?? false;
+
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(
         horizontal: Spacing.md,
@@ -58,10 +70,14 @@ class EpisodeListTile extends ConsumerWidget {
         overflow: TextOverflow.ellipsis,
         style: theme.textTheme.titleSmall?.copyWith(
           fontWeight: isCurrentEpisode ? FontWeight.bold : FontWeight.normal,
-          color: isCurrentEpisode ? colorScheme.primary : null,
+          color: isCurrentEpisode
+              ? colorScheme.primary
+              : isCompleted
+              ? colorScheme.onSurfaceVariant.withValues(alpha: 0.6)
+              : null,
         ),
       ),
-      subtitle: _buildSubtitle(theme),
+      subtitle: _buildSubtitle(theme, progress),
       trailing: _buildPlayButton(
         context,
         ref,
@@ -72,10 +88,18 @@ class EpisodeListTile extends ConsumerWidget {
     );
   }
 
-  Widget _buildSubtitle(ThemeData theme) {
+  Widget _buildSubtitle(ThemeData theme, EpisodeWithProgress? progress) {
     final parts = <String>[];
 
-    if (episode.formattedDuration != null) {
+    // Show remaining time if in progress, otherwise show total duration
+    if (progress != null && progress.isInProgress) {
+      final remaining = progress.remainingTimeFormatted;
+      if (remaining != null) {
+        parts.add(remaining);
+      } else if (episode.formattedDuration != null) {
+        parts.add(episode.formattedDuration!);
+      }
+    } else if (episode.formattedDuration != null) {
       parts.add(episode.formattedDuration!);
     }
 
@@ -90,13 +114,30 @@ class EpisodeListTile extends ConsumerWidget {
       parts.add('${seasonPart}E${episode.episodeNumber}');
     }
 
-    if (parts.isEmpty) return const SizedBox.shrink();
+    if (parts.isEmpty && progress == null) return const SizedBox.shrink();
 
-    return Text(
-      parts.join(' - '),
-      style: theme.textTheme.bodySmall?.copyWith(
-        color: theme.colorScheme.onSurfaceVariant,
-      ),
+    // Build subtitle with progress indicator
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (parts.isNotEmpty)
+          Text(
+            parts.join(' - '),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        if (progress != null &&
+            (progress.isCompleted || progress.isInProgress)) ...[
+          const SizedBox(height: 4),
+          EpisodeProgressIndicator(
+            isCompleted: progress.isCompleted,
+            isInProgress: progress.isInProgress,
+            remainingTimeFormatted: progress.remainingTimeFormatted,
+          ),
+        ],
+      ],
     );
   }
 

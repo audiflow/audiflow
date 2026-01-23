@@ -86,3 +86,19 @@ Future<ParsedFeed> podcastDetail(Ref ref, String feedUrl) async {
     rethrow;
   }
 }
+
+/// Fetches episode progress for a given audio URL.
+///
+/// Returns [EpisodeWithProgress] if the episode exists in the database,
+/// otherwise returns null (episode not yet persisted).
+@riverpod
+Future<EpisodeWithProgress?> episodeProgress(Ref ref, String audioUrl) async {
+  final episodeRepo = ref.watch(episodeRepositoryProvider);
+  final historyRepo = ref.watch(playbackHistoryRepositoryProvider);
+
+  final episode = await episodeRepo.getByAudioUrl(audioUrl);
+  if (episode == null) return null;
+
+  final history = await historyRepo.getByEpisodeId(episode.id);
+  return EpisodeWithProgress(episode: episode, history: history);
+}

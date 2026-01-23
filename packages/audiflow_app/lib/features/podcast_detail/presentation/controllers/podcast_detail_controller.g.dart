@@ -215,3 +215,104 @@ final class PodcastDetailFamily extends $Family
   @override
   String toString() => r'podcastDetailProvider';
 }
+
+/// Fetches episode progress for a given audio URL.
+///
+/// Returns [EpisodeWithProgress] if the episode exists in the database,
+/// otherwise returns null (episode not yet persisted).
+
+@ProviderFor(episodeProgress)
+final episodeProgressProvider = EpisodeProgressFamily._();
+
+/// Fetches episode progress for a given audio URL.
+///
+/// Returns [EpisodeWithProgress] if the episode exists in the database,
+/// otherwise returns null (episode not yet persisted).
+
+final class EpisodeProgressProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<EpisodeWithProgress?>,
+          EpisodeWithProgress?,
+          FutureOr<EpisodeWithProgress?>
+        >
+    with
+        $FutureModifier<EpisodeWithProgress?>,
+        $FutureProvider<EpisodeWithProgress?> {
+  /// Fetches episode progress for a given audio URL.
+  ///
+  /// Returns [EpisodeWithProgress] if the episode exists in the database,
+  /// otherwise returns null (episode not yet persisted).
+  EpisodeProgressProvider._({
+    required EpisodeProgressFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'episodeProgressProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$episodeProgressHash();
+
+  @override
+  String toString() {
+    return r'episodeProgressProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<EpisodeWithProgress?> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<EpisodeWithProgress?> create(Ref ref) {
+    final argument = this.argument as String;
+    return episodeProgress(ref, argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is EpisodeProgressProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$episodeProgressHash() => r'8557c4ce7cfc930b819eb33d78461a3fbffd7ef8';
+
+/// Fetches episode progress for a given audio URL.
+///
+/// Returns [EpisodeWithProgress] if the episode exists in the database,
+/// otherwise returns null (episode not yet persisted).
+
+final class EpisodeProgressFamily extends $Family
+    with $FunctionalFamilyOverride<FutureOr<EpisodeWithProgress?>, String> {
+  EpisodeProgressFamily._()
+    : super(
+        retry: null,
+        name: r'episodeProgressProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  /// Fetches episode progress for a given audio URL.
+  ///
+  /// Returns [EpisodeWithProgress] if the episode exists in the database,
+  /// otherwise returns null (episode not yet persisted).
+
+  EpisodeProgressProvider call(String audioUrl) =>
+      EpisodeProgressProvider._(argument: audioUrl, from: this);
+
+  @override
+  String toString() => r'episodeProgressProvider';
+}
