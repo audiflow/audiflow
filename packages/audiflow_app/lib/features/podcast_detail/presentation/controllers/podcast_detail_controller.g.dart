@@ -8,6 +8,66 @@ part of 'podcast_detail_controller.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Provider for subscription repository access.
+///
+/// Re-exported from audiflow_domain for convenience.
+
+@ProviderFor(subscriptionRepositoryAccess)
+final subscriptionRepositoryAccessProvider =
+    SubscriptionRepositoryAccessProvider._();
+
+/// Provider for subscription repository access.
+///
+/// Re-exported from audiflow_domain for convenience.
+
+final class SubscriptionRepositoryAccessProvider
+    extends
+        $FunctionalProvider<
+          SubscriptionRepository,
+          SubscriptionRepository,
+          SubscriptionRepository
+        >
+    with $Provider<SubscriptionRepository> {
+  /// Provider for subscription repository access.
+  ///
+  /// Re-exported from audiflow_domain for convenience.
+  SubscriptionRepositoryAccessProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'subscriptionRepositoryAccessProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$subscriptionRepositoryAccessHash();
+
+  @$internal
+  @override
+  $ProviderElement<SubscriptionRepository> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  SubscriptionRepository create(Ref ref) {
+    return subscriptionRepositoryAccess(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(SubscriptionRepository value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<SubscriptionRepository>(value),
+    );
+  }
+}
+
+String _$subscriptionRepositoryAccessHash() =>
+    r'0323f4a4c4efb56babc23b13a320fa01eda9894b';
+
 /// Provides a Dio client for RSS feed fetching.
 
 @ProviderFor(feedHttpClient)
@@ -124,7 +184,7 @@ final class PodcastDetailProvider
   }
 }
 
-String _$podcastDetailHash() => r'cfa8005e138d3fd78fd3bc78e0740fc964fa1957';
+String _$podcastDetailHash() => r'27aa2a179ea5aaa09be868c73ebcf9b61df79eda';
 
 /// Fetches and provides parsed podcast feed data for a given feed URL.
 ///

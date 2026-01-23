@@ -4,6 +4,14 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'podcast_detail_controller.g.dart';
 
+/// Provider for subscription repository access.
+///
+/// Re-exported from audiflow_domain for convenience.
+@riverpod
+SubscriptionRepository subscriptionRepositoryAccess(Ref ref) {
+  return ref.watch(subscriptionRepositoryProvider);
+}
+
 /// Provides a Dio client for RSS feed fetching.
 @Riverpod(keepAlive: true)
 Dio feedHttpClient(Ref ref) {
@@ -55,6 +63,17 @@ Future<ParsedFeed> podcastDetail(Ref ref, String feedUrl) async {
     final result = await feedParser.parseFromString(response.data!);
 
     logger.i('Successfully parsed feed: ${result.episodeCount} episodes');
+
+    // Persist episodes if user is subscribed to this podcast
+    final subscriptionRepo = ref.read(subscriptionRepositoryProvider);
+    final subscription = await subscriptionRepo.getByFeedUrl(feedUrl);
+
+    if (subscription != null) {
+      final episodeRepo = ref.read(episodeRepositoryProvider);
+      await episodeRepo.upsertFromFeedItems(subscription.id, result.episodes);
+      logger.d('Persisted ${result.episodes.length} episodes for subscription');
+    }
+
     return result;
   } on DioException catch (e) {
     logger.e('Network error fetching feed', error: e);

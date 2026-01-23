@@ -1,3 +1,5 @@
+import 'package:audiflow_podcast/audiflow_podcast.dart';
+import 'package:drift/drift.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../common/database/app_database.dart';
@@ -45,5 +47,28 @@ class EpisodeRepositoryImpl implements EpisodeRepository {
   @override
   Future<void> upsertEpisodes(List<EpisodesCompanion> episodes) {
     return _datasource.upsertAll(episodes);
+  }
+
+  @override
+  Future<void> upsertFromFeedItems(int podcastId, List<PodcastItem> items) {
+    final companions = items
+        .where((item) => item.guid != null && item.enclosureUrl != null)
+        .map(
+          (item) => EpisodesCompanion.insert(
+            podcastId: podcastId,
+            guid: item.guid!,
+            title: item.title,
+            description: Value(item.description),
+            audioUrl: item.enclosureUrl!,
+            durationMs: Value(item.duration?.inMilliseconds),
+            publishedAt: Value(item.publishDate),
+            imageUrl: Value(item.primaryImage?.url),
+            episodeNumber: Value(item.episodeNumber),
+            seasonNumber: Value(item.seasonNumber),
+          ),
+        )
+        .toList();
+
+    return _datasource.upsertAll(companions);
   }
 }
