@@ -1,5 +1,4 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
-import 'package:audiflow_search/audiflow_search.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'subscription_controller.g.dart';
