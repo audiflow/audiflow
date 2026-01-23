@@ -6,6 +6,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 import '../../features/feed/models/episode.dart';
+import '../../features/player/models/playback_history.dart';
 import '../../features/subscription/models/subscriptions.dart';
 
 part 'app_database.g.dart';
@@ -13,13 +14,13 @@ part 'app_database.g.dart';
 /// Main database class for Audiflow
 ///
 /// Uses Drift with SQLite for local data storage.
-@DriftDatabase(tables: [Subscriptions, Episodes])
+@DriftDatabase(tables: [Subscriptions, Episodes, PlaybackHistories])
 class AppDatabase extends _$AppDatabase {
   /// Creates the database instance with lazy initialization
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -32,6 +33,10 @@ class AppDatabase extends _$AppDatabase {
       // Migration from v2 to v3: add Episodes table
       if (3 <= to && from < 3) {
         await m.createTable(episodes);
+      }
+      // Migration from v3 to v4: add PlaybackHistories table
+      if (4 <= to && from < 4) {
+        await m.createTable(playbackHistories);
       }
     },
   );
