@@ -11,6 +11,7 @@ import '../controllers/podcast_detail_controller.dart';
 /// Shows episode title, duration, publish date, and a play/pause button.
 /// The button state reflects the current playback status of this episode.
 /// Also displays progress indicators for in-progress and completed episodes.
+/// Long-press to access mark played/unplayed options.
 class EpisodeListTile extends ConsumerWidget {
   const EpisodeListTile({
     super.key,
@@ -59,33 +60,114 @@ class EpisodeListTile extends ConsumerWidget {
     // Dim completed episodes
     final isCompleted = progress?.isCompleted ?? false;
 
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(
-        horizontal: Spacing.md,
-        vertical: Spacing.xs,
-      ),
-      title: Text(
-        episode.title,
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
-        style: theme.textTheme.titleSmall?.copyWith(
-          fontWeight: isCurrentEpisode ? FontWeight.bold : FontWeight.normal,
-          color: isCurrentEpisode
-              ? colorScheme.primary
-              : isCompleted
-              ? colorScheme.onSurfaceVariant.withValues(alpha: 0.6)
-              : null,
+    return GestureDetector(
+      onLongPress: enclosureUrl != null
+          ? () => _showContextMenu(context, ref, enclosureUrl, progress)
+          : null,
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: Spacing.md,
+          vertical: Spacing.xs,
+        ),
+        title: Text(
+          episode.title,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: theme.textTheme.titleSmall?.copyWith(
+            fontWeight: isCurrentEpisode ? FontWeight.bold : FontWeight.normal,
+            color: isCurrentEpisode
+                ? colorScheme.primary
+                : isCompleted
+                ? colorScheme.onSurfaceVariant.withValues(alpha: 0.6)
+                : null,
+          ),
+        ),
+        subtitle: _buildSubtitle(theme, progress),
+        trailing: _buildPlayButton(
+          context,
+          ref,
+          enclosureUrl: enclosureUrl,
+          isPlaying: isPlaying,
+          isLoading: isLoading,
         ),
       ),
-      subtitle: _buildSubtitle(theme, progress),
-      trailing: _buildPlayButton(
-        context,
-        ref,
-        enclosureUrl: enclosureUrl,
-        isPlaying: isPlaying,
-        isLoading: isLoading,
+    );
+  }
+
+  void _showContextMenu(
+    BuildContext context,
+    WidgetRef ref,
+    String audioUrl,
+    EpisodeWithProgress? progress,
+  ) {
+    final isCompleted = progress?.isCompleted ?? false;
+
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 32,
+              height: 4,
+              margin: const EdgeInsets.symmetric(vertical: Spacing.sm),
+              decoration: BoxDecoration(
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: Spacing.md,
+                vertical: Spacing.xs,
+              ),
+              child: Text(
+                episode.title,
+                style: Theme.of(context).textTheme.titleSmall,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+              ),
+            ),
+            const Divider(),
+            ListTile(
+              leading: Icon(
+                isCompleted ? Icons.replay : Icons.check_circle_outline,
+              ),
+              title: Text(isCompleted ? 'Mark as unplayed' : 'Mark as played'),
+              onTap: () {
+                Navigator.pop(context);
+                _togglePlayedStatus(ref, audioUrl, isCompleted);
+              },
+            ),
+            const SizedBox(height: Spacing.sm),
+          ],
+        ),
       ),
     );
+  }
+
+  Future<void> _togglePlayedStatus(
+    WidgetRef ref,
+    String audioUrl,
+    bool isCurrentlyCompleted,
+  ) async {
+    final episodeRepo = ref.read(episodeRepositoryProvider);
+    final episode = await episodeRepo.getByAudioUrl(audioUrl);
+    if (episode == null) return;
+
+    final historyService = ref.read(playbackHistoryServiceProvider);
+    if (isCurrentlyCompleted) {
+      await historyService.markIncomplete(episode.id);
+    } else {
+      await historyService.markCompleted(episode.id);
+    }
+
+    // Invalidate the progress provider to refresh UI
+    ref.invalidate(episodeProgressProvider(audioUrl));
   }
 
   Widget _buildSubtitle(ThemeData theme, EpisodeWithProgress? progress) {
