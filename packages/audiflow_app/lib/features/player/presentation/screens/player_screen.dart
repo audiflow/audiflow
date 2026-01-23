@@ -7,17 +7,43 @@ import 'package:material_symbols_icons/symbols.dart';
 ///
 /// This screen will be expanded with full playback controls, seek bar,
 /// episode details, and other features in a future update.
-class PlayerScreen extends ConsumerWidget {
+class PlayerScreen extends ConsumerStatefulWidget {
   const PlayerScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<PlayerScreen> createState() => _PlayerScreenState();
+}
+
+class _PlayerScreenState extends ConsumerState<PlayerScreen> {
+  bool _isSeeking = false;
+  bool _wasPlayingBeforeSeek = false;
+
+  void _beginSeek(bool wasPlaying) {
+    setState(() {
+      _isSeeking = true;
+      _wasPlayingBeforeSeek = wasPlaying;
+    });
+  }
+
+  Future<void> _endSeek() async {
+    // Allow player state to stabilize after seek
+    await Future<void>.delayed(const Duration(milliseconds: 150));
+    if (!mounted) return;
+    setState(() => _isSeeking = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final nowPlaying = ref.watch(nowPlayingControllerProvider);
     final playbackState = ref.watch(audioPlayerControllerProvider);
     final progress = ref.watch(playbackProgressProvider);
 
     final isPlaying = playbackState is PlaybackPlaying;
     final isLoading = playbackState is PlaybackLoading;
+
+    // During seeking, preserve the play/pause state from before seek started
+    final displayIsPlaying = _isSeeking ? _wasPlayingBeforeSeek : isPlaying;
+    final displayIsLoading = _isSeeking ? false : isLoading;
 
     return Scaffold(
       appBar: AppBar(
@@ -46,15 +72,43 @@ class PlayerScreen extends ConsumerWidget {
                       podcastTitle: nowPlaying.podcastTitle,
                     ),
                     const SizedBox(height: 32),
-                    _PlayerProgressBar(progress: progress),
+                    _PlayerProgressBar(
+                      progress: progress,
+                      onSeekStart: () => _beginSeek(isPlaying),
+                      onSeekEnd: _endSeek,
+                    ),
                     const SizedBox(height: 24),
-                    _PlayerControls(isPlaying: isPlaying, isLoading: isLoading),
+                    _PlayerControls(
+                      isPlaying: displayIsPlaying,
+                      isLoading: displayIsLoading,
+                      onSkipBackward: () => _handleSkip(
+                        ref
+                            .read(audioPlayerControllerProvider.notifier)
+                            .skipBackward,
+                        isPlaying,
+                      ),
+                      onSkipForward: () => _handleSkip(
+                        ref
+                            .read(audioPlayerControllerProvider.notifier)
+                            .skipForward,
+                        isPlaying,
+                      ),
+                    ),
                     const Spacer(),
                   ],
                 ),
               ),
             ),
     );
+  }
+
+  Future<void> _handleSkip(
+    Future<void> Function() skipAction,
+    bool wasPlaying,
+  ) async {
+    _beginSeek(wasPlaying);
+    await skipAction();
+    await _endSeek();
   }
 }
 
@@ -150,19 +204,35 @@ class _PlayerInfo extends StatelessWidget {
   }
 }
 
-class _PlayerProgressBar extends StatelessWidget {
-  const _PlayerProgressBar({this.progress});
+class _PlayerProgressBar extends ConsumerStatefulWidget {
+  const _PlayerProgressBar({this.progress, this.onSeekStart, this.onSeekEnd});
 
   final PlaybackProgress? progress;
+  final VoidCallback? onSeekStart;
+  final Future<void> Function()? onSeekEnd;
+
+  @override
+  ConsumerState<_PlayerProgressBar> createState() => _PlayerProgressBarState();
+}
+
+class _PlayerProgressBarState extends ConsumerState<_PlayerProgressBar> {
+  bool _isDragging = false;
+  double _dragValue = 0.0;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final progress = widget.progress;
+
+    final displayValue = _isDragging ? _dragValue : (progress?.progress ?? 0.0);
+    final displayPosition = _isDragging
+        ? _computeDragPosition(progress?.duration)
+        : progress?.position;
 
     return Semantics(
       slider: true,
       value:
-          '${_formatDuration(progress?.position)} of ${_formatDuration(progress?.duration)}',
+          '${_formatDuration(displayPosition)} of ${_formatDuration(progress?.duration)}',
       child: Column(
         children: [
           SliderTheme(
@@ -171,9 +241,31 @@ class _PlayerProgressBar extends StatelessWidget {
               thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
             ),
             child: Slider(
-              value: progress?.progress ?? 0.0,
-              onChanged: (_) {
-                // Seek functionality - placeholder
+              value: displayValue,
+              onChangeStart: (value) {
+                setState(() {
+                  _isDragging = true;
+                  _dragValue = value;
+                });
+                widget.onSeekStart?.call();
+              },
+              onChanged: (value) {
+                setState(() {
+                  _dragValue = value;
+                });
+              },
+              onChangeEnd: (value) async {
+                final duration = progress?.duration ?? Duration.zero;
+                final seekPosition = Duration(
+                  milliseconds: (duration.inMilliseconds * value).round(),
+                );
+                await ref
+                    .read(audioPlayerControllerProvider.notifier)
+                    .seek(seekPosition);
+                // Parent handles stabilization delay via onSeekEnd
+                await widget.onSeekEnd?.call();
+                if (!mounted) return;
+                setState(() => _isDragging = false);
               },
             ),
           ),
@@ -184,7 +276,7 @@ class _PlayerProgressBar extends StatelessWidget {
               children: [
                 ExcludeSemantics(
                   child: Text(
-                    _formatDuration(progress?.position),
+                    _formatDuration(displayPosition),
                     style: theme.textTheme.bodySmall,
                   ),
                 ),
@@ -202,6 +294,13 @@ class _PlayerProgressBar extends StatelessWidget {
     );
   }
 
+  Duration? _computeDragPosition(Duration? duration) {
+    if (duration == null) return null;
+    return Duration(
+      milliseconds: (duration.inMilliseconds * _dragValue).round(),
+    );
+  }
+
   String _formatDuration(Duration? duration) {
     if (duration == null) return '--:--';
     final minutes = duration.inMinutes.remainder(60).toString().padLeft(2, '0');
@@ -214,14 +313,21 @@ class _PlayerProgressBar extends StatelessWidget {
   }
 }
 
-class _PlayerControls extends ConsumerWidget {
-  const _PlayerControls({required this.isPlaying, required this.isLoading});
+class _PlayerControls extends StatelessWidget {
+  const _PlayerControls({
+    required this.isPlaying,
+    required this.isLoading,
+    required this.onSkipBackward,
+    required this.onSkipForward,
+  });
 
   final bool isPlaying;
   final bool isLoading;
+  final VoidCallback onSkipBackward;
+  final VoidCallback onSkipForward;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -231,9 +337,7 @@ class _PlayerControls extends ConsumerWidget {
           child: IconButton(
             icon: const Icon(Symbols.replay_30),
             iconSize: 36,
-            onPressed: () {
-              // Rewind 30s - placeholder
-            },
+            onPressed: onSkipBackward,
           ),
         ),
         const SizedBox(width: 24),
@@ -245,9 +349,7 @@ class _PlayerControls extends ConsumerWidget {
           child: IconButton(
             icon: const Icon(Symbols.forward_30),
             iconSize: 36,
-            onPressed: () {
-              // Forward 30s - placeholder
-            },
+            onPressed: onSkipForward,
           ),
         ),
       ],
