@@ -43,6 +43,7 @@ export 'src/features/player/services/audio_player_service.dart';
 export 'src/features/player/services/now_playing_controller.dart';
 
 // Player feature - Playback History
+export 'src/features/player/models/episode_with_progress.dart';
 export 'src/features/player/models/playback_history.dart';
 export 'src/features/player/datasources/local/playback_history_local_datasource.dart';
 export 'src/features/player/repositories/playback_history_repository.dart';
