@@ -180,6 +180,9 @@ String _$playbackProgressHash() => r'dd7c9c1003e75d0513c2f075137b3948e3e139af';
 /// Wraps [AudioPlayer] to provide a simplified interface and exposes
 /// playback state as a reactive [PlaybackState] stream.
 ///
+/// Integrates with [PlaybackHistoryService] to track playback progress
+/// and auto-mark episodes as completed.
+///
 /// Usage:
 /// ```dart
 /// final state = ref.watch(audioPlayerControllerProvider);
@@ -195,6 +198,9 @@ final audioPlayerControllerProvider = AudioPlayerControllerProvider._();
 /// Wraps [AudioPlayer] to provide a simplified interface and exposes
 /// playback state as a reactive [PlaybackState] stream.
 ///
+/// Integrates with [PlaybackHistoryService] to track playback progress
+/// and auto-mark episodes as completed.
+///
 /// Usage:
 /// ```dart
 /// final state = ref.watch(audioPlayerControllerProvider);
@@ -207,6 +213,9 @@ final class AudioPlayerControllerProvider
   ///
   /// Wraps [AudioPlayer] to provide a simplified interface and exposes
   /// playback state as a reactive [PlaybackState] stream.
+  ///
+  /// Integrates with [PlaybackHistoryService] to track playback progress
+  /// and auto-mark episodes as completed.
   ///
   /// Usage:
   /// ```dart
@@ -242,12 +251,15 @@ final class AudioPlayerControllerProvider
 }
 
 String _$audioPlayerControllerHash() =>
-    r'50b395f7eb56509476b44ec7e0707781658fe057';
+    r'bb70ff8cd97b49b488abe6d543a4ea3558a50298';
 
 /// Controller for managing audio playback.
 ///
 /// Wraps [AudioPlayer] to provide a simplified interface and exposes
 /// playback state as a reactive [PlaybackState] stream.
+///
+/// Integrates with [PlaybackHistoryService] to track playback progress
+/// and auto-mark episodes as completed.
 ///
 /// Usage:
 /// ```dart

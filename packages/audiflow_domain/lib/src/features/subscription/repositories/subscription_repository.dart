@@ -35,6 +35,9 @@ abstract class SubscriptionRepository {
 
   /// Returns a subscription by its iTunes ID, or null if not found.
   Future<Subscription?> getSubscription(String itunesId);
+
+  /// Returns a subscription by its feed URL, or null if not found.
+  Future<Subscription?> getByFeedUrl(String feedUrl);
 }
 
 /// Exception thrown when a subscription operation fails.

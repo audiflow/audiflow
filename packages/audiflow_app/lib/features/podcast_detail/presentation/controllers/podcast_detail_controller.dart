@@ -2,7 +2,17 @@ import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:dio/dio.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../widgets/episode_filter_chips.dart';
+
 part 'podcast_detail_controller.g.dart';
+
+/// Provider for subscription repository access.
+///
+/// Re-exported from audiflow_domain for convenience.
+@riverpod
+SubscriptionRepository subscriptionRepositoryAccess(Ref ref) {
+  return ref.watch(subscriptionRepositoryProvider);
+}
 
 /// Provides a Dio client for RSS feed fetching.
 @Riverpod(keepAlive: true)
@@ -55,6 +65,17 @@ Future<ParsedFeed> podcastDetail(Ref ref, String feedUrl) async {
     final result = await feedParser.parseFromString(response.data!);
 
     logger.i('Successfully parsed feed: ${result.episodeCount} episodes');
+
+    // Persist episodes if user is subscribed to this podcast
+    final subscriptionRepo = ref.read(subscriptionRepositoryProvider);
+    final subscription = await subscriptionRepo.getByFeedUrl(feedUrl);
+
+    if (subscription != null) {
+      final episodeRepo = ref.read(episodeRepositoryProvider);
+      await episodeRepo.upsertFromFeedItems(subscription.id, result.episodes);
+      logger.d('Persisted ${result.episodes.length} episodes for subscription');
+    }
+
     return result;
   } on DioException catch (e) {
     logger.e('Network error fetching feed', error: e);
@@ -66,4 +87,75 @@ Future<ParsedFeed> podcastDetail(Ref ref, String feedUrl) async {
     logger.e('Error fetching/parsing feed', error: e, stackTrace: stack);
     rethrow;
   }
+}
+
+/// Fetches episode progress for a given audio URL.
+///
+/// Returns [EpisodeWithProgress] if the episode exists in the database,
+/// otherwise returns null (episode not yet persisted).
+@riverpod
+Future<EpisodeWithProgress?> episodeProgress(Ref ref, String audioUrl) async {
+  final episodeRepo = ref.watch(episodeRepositoryProvider);
+  final historyRepo = ref.watch(playbackHistoryRepositoryProvider);
+
+  final episode = await episodeRepo.getByAudioUrl(audioUrl);
+  if (episode == null) return null;
+
+  final history = await historyRepo.getByEpisodeId(episode.id);
+  return EpisodeWithProgress(episode: episode, history: history);
+}
+
+/// Manages the current episode filter selection.
+@riverpod
+class EpisodeFilterState extends _$EpisodeFilterState {
+  @override
+  EpisodeFilter build() => EpisodeFilter.all;
+
+  void setFilter(EpisodeFilter filter) => state = filter;
+}
+
+/// Filters episodes based on the selected filter.
+///
+/// Returns filtered list of [PodcastItem] based on playback status.
+@riverpod
+Future<List<PodcastItem>> filteredEpisodes(
+  Ref ref,
+  String feedUrl,
+  EpisodeFilter filter,
+) async {
+  final feed = await ref.watch(podcastDetailProvider(feedUrl).future);
+  final episodes = feed.episodes;
+
+  // No filtering needed for 'all'
+  if (filter == EpisodeFilter.all) return episodes;
+
+  final episodeRepo = ref.watch(episodeRepositoryProvider);
+  final historyRepo = ref.watch(playbackHistoryRepositoryProvider);
+
+  final filtered = <PodcastItem>[];
+
+  for (final item in episodes) {
+    if (item.enclosureUrl == null) continue;
+
+    final episode = await episodeRepo.getByAudioUrl(item.enclosureUrl!);
+
+    // Episode not in DB = unplayed
+    if (episode == null) {
+      if (filter == EpisodeFilter.unplayed) filtered.add(item);
+      continue;
+    }
+
+    final history = await historyRepo.getByEpisodeId(episode.id);
+    final isCompleted = history?.completedAt != null;
+    final isInProgress =
+        history != null && 0 < history.positionMs && !isCompleted;
+
+    if (filter == EpisodeFilter.unplayed && !isCompleted && !isInProgress) {
+      filtered.add(item);
+    } else if (filter == EpisodeFilter.inProgress && isInProgress) {
+      filtered.add(item);
+    }
+  }
+
+  return filtered;
 }

@@ -1,3 +1,5 @@
+import 'package:audiflow_podcast/audiflow_podcast.dart';
+
 import '../../../common/database/app_database.dart';
 
 /// Repository interface for episode operations.
@@ -20,4 +22,10 @@ abstract class EpisodeRepository {
   ///
   /// Uses the composite unique key (podcastId, guid) for conflict resolution.
   Future<void> upsertEpisodes(List<EpisodesCompanion> episodes);
+
+  /// Upserts episodes from parsed RSS feed items.
+  ///
+  /// Converts [PodcastItem] list to [EpisodesCompanion] and persists them.
+  /// Items without guid or enclosureUrl are skipped.
+  Future<void> upsertFromFeedItems(int podcastId, List<PodcastItem> items);
 }
