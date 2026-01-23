@@ -57,6 +57,7 @@ dependencies:
     path: ../audiflow_search
   audiflow_ui:
     path: ../audiflow_ui
+  extended_image: ^10.0.1
 
 dev_dependencies:
   flutter_test:
