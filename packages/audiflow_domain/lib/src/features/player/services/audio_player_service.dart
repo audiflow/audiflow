@@ -4,10 +4,12 @@ import 'package:just_audio/just_audio.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:rxdart/rxdart.dart';
 
+import '../../feed/repositories/episode_repository_impl.dart';
 import '../models/now_playing_info.dart';
 import '../models/playback_progress.dart';
 import '../models/playback_state.dart';
 import 'now_playing_controller.dart';
+import 'playback_history_service.dart';
 
 part 'audio_player_service.g.dart';
 
@@ -56,6 +58,9 @@ PlaybackProgress? playbackProgress(Ref ref) {
 /// Wraps [AudioPlayer] to provide a simplified interface and exposes
 /// playback state as a reactive [PlaybackState] stream.
 ///
+/// Integrates with [PlaybackHistoryService] to track playback progress
+/// and auto-mark episodes as completed.
+///
 /// Usage:
 /// ```dart
 /// final state = ref.watch(audioPlayerControllerProvider);
@@ -65,20 +70,35 @@ PlaybackProgress? playbackProgress(Ref ref) {
 @Riverpod(keepAlive: true)
 class AudioPlayerController extends _$AudioPlayerController {
   late final AudioPlayer _player;
-  StreamSubscription<PlayerState>? _subscription;
+  StreamSubscription<PlayerState>? _stateSubscription;
   String? _currentUrl;
+  int? _currentEpisodeId;
 
   @override
   PlaybackState build() {
     _player = ref.watch(audioPlayerProvider);
     _listenToPlayerState();
+    _listenToProgress();
     ref.onDispose(_cleanup);
     return const PlaybackState.idle();
   }
 
+  void _listenToProgress() {
+    ref.listen<AsyncValue<PlaybackProgress>>(playbackProgressStreamProvider, (
+      previous,
+      next,
+    ) {
+      final progress = next.value;
+      if (progress == null || _currentEpisodeId == null) return;
+
+      final historyService = ref.read(playbackHistoryServiceProvider);
+      historyService.onProgressUpdate(_currentEpisodeId!, progress);
+    });
+  }
+
   void _listenToPlayerState() {
-    _subscription = _player.playerStateStream.listen(
-      (playerState) {
+    _stateSubscription = _player.playerStateStream.listen(
+      (playerState) async {
         final processingState = playerState.processingState;
         final playing = playerState.playing;
 
@@ -95,8 +115,11 @@ class AudioPlayerController extends _$AudioPlayerController {
         } else if (playing) {
           state = PlaybackState.playing(episodeUrl: url);
         } else if (processingState == ProcessingState.completed) {
+          // Save final progress before clearing
+          await _saveProgressOnStop();
           state = const PlaybackState.idle();
           _currentUrl = null;
+          _currentEpisodeId = null;
         } else {
           state = PlaybackState.paused(episodeUrl: url);
         }
@@ -107,8 +130,18 @@ class AudioPlayerController extends _$AudioPlayerController {
     );
   }
 
+  Future<void> _saveProgressOnStop() async {
+    if (_currentEpisodeId == null) return;
+
+    final progress = ref.read(playbackProgressProvider);
+    if (progress == null) return;
+
+    final historyService = ref.read(playbackHistoryServiceProvider);
+    await historyService.onPlaybackStopped(_currentEpisodeId!, progress);
+  }
+
   void _cleanup() {
-    _subscription?.cancel();
+    _stateSubscription?.cancel();
   }
 
   /// Plays audio from the specified URL.
@@ -118,9 +151,21 @@ class AudioPlayerController extends _$AudioPlayerController {
   ///
   /// Optional [metadata] can be provided to display episode information
   /// in the mini player without needing to fetch it from the database.
+  ///
+  /// Integrates with [PlaybackHistoryService] to track playback progress.
   Future<void> play(String url, {NowPlayingInfo? metadata}) async {
     try {
+      // Save progress of previous episode before switching
+      if (_currentEpisodeId != null && _currentUrl != url) {
+        await _saveProgressOnStop();
+      }
+
+      // Look up episode ID from URL
+      final episodeRepo = ref.read(episodeRepositoryProvider);
+      final episode = await episodeRepo.getByAudioUrl(url);
+
       _currentUrl = url;
+      _currentEpisodeId = episode?.id;
       state = PlaybackState.loading(episodeUrl: url);
 
       // Update now playing controller if metadata is provided
@@ -129,6 +174,16 @@ class AudioPlayerController extends _$AudioPlayerController {
       }
 
       await _player.setUrl(url);
+
+      // Notify history service of playback start
+      if (_currentEpisodeId != null) {
+        final historyService = ref.read(playbackHistoryServiceProvider);
+        await historyService.onPlaybackStarted(
+          _currentEpisodeId!,
+          _player.position.inMilliseconds,
+        );
+      }
+
       await _player.play();
     } catch (e) {
       state = PlaybackState.error(message: 'Failed to play audio: $e');
@@ -136,7 +191,17 @@ class AudioPlayerController extends _$AudioPlayerController {
   }
 
   /// Pauses the current playback.
+  ///
+  /// Saves playback progress to history.
   Future<void> pause() async {
+    // Save progress on pause
+    if (_currentEpisodeId != null) {
+      final progress = ref.read(playbackProgressProvider);
+      if (progress != null) {
+        final historyService = ref.read(playbackHistoryServiceProvider);
+        await historyService.onPlaybackPaused(_currentEpisodeId!, progress);
+      }
+    }
     await _player.pause();
   }
 
@@ -161,15 +226,24 @@ class AudioPlayerController extends _$AudioPlayerController {
   }
 
   /// Stops playback and clears the current audio source.
+  ///
+  /// Saves final playback progress to history.
   Future<void> stop() async {
+    // Save final progress before stopping
+    await _saveProgressOnStop();
+
     await _player.stop();
     _currentUrl = null;
+    _currentEpisodeId = null;
     state = const PlaybackState.idle();
     ref.read(nowPlayingControllerProvider.notifier).clear();
   }
 
   /// Returns the URL of the currently loaded audio, if any.
   String? get currentUrl => _currentUrl;
+
+  /// Returns the episode ID of the currently loaded audio, if any.
+  int? get currentEpisodeId => _currentEpisodeId;
 
   /// Returns true if the specified URL is currently playing.
   bool isPlaying(String url) {
