@@ -58,7 +58,8 @@ export 'src/features/voice/services/play_podcast_by_name_service.dart';
 export 'src/features/voice/services/voice_command_orchestrator.dart';
 
 // Database
-export 'src/common/database/app_database.dart' show AppDatabase, Subscription;
+export 'src/common/database/app_database.dart'
+    show AppDatabase, Subscription, Episode, PlaybackHistory;
 export 'src/features/subscription/repositories/subscription_repository.dart';
 export 'src/features/subscription/repositories/subscription_repository_impl.dart';
 
