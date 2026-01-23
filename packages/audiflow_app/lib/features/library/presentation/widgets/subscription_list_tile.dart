@@ -1,5 +1,4 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
-import 'package:audiflow_search/audiflow_search.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 
@@ -103,26 +102,6 @@ class SubscriptionListTile extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
         ),
       ],
-    );
-  }
-}
-
-/// Extension to convert a [Subscription] to a [Podcast] for navigation.
-extension SubscriptionToPodcast on Subscription {
-  /// Converts this subscription to a [Podcast] model.
-  ///
-  /// This is useful for navigating to the podcast detail screen,
-  /// which expects a [Podcast] object.
-  Podcast toPodcast() {
-    return Podcast(
-      id: itunesId,
-      name: title,
-      artistName: artistName,
-      feedUrl: feedUrl,
-      artworkUrl: artworkUrl,
-      description: description,
-      genres: genres.isNotEmpty ? genres.split(',') : const <String>[],
-      explicit: explicit,
     );
   }
 }

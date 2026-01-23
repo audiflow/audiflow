@@ -38,7 +38,7 @@ class LibraryScreen extends ConsumerWidget {
   Widget _buildContent(
     BuildContext context,
     WidgetRef ref,
-    List subscriptions,
+    List<Subscription> subscriptions,
   ) {
     if (subscriptions.isEmpty) {
       return _buildEmptyState(context);
