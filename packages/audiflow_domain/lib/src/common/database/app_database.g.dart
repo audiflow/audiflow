@@ -691,15 +691,1215 @@ class SubscriptionsCompanion extends UpdateCompanion<Subscription> {
   }
 }
 
+class $EpisodesTable extends Episodes with TableInfo<$EpisodesTable, Episode> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $EpisodesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _podcastIdMeta = const VerificationMeta(
+    'podcastId',
+  );
+  @override
+  late final GeneratedColumn<int> podcastId = GeneratedColumn<int>(
+    'podcast_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES subscriptions (id)',
+    ),
+  );
+  static const VerificationMeta _guidMeta = const VerificationMeta('guid');
+  @override
+  late final GeneratedColumn<String> guid = GeneratedColumn<String>(
+    'guid',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+    'title',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _descriptionMeta = const VerificationMeta(
+    'description',
+  );
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+    'description',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _audioUrlMeta = const VerificationMeta(
+    'audioUrl',
+  );
+  @override
+  late final GeneratedColumn<String> audioUrl = GeneratedColumn<String>(
+    'audio_url',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _durationMsMeta = const VerificationMeta(
+    'durationMs',
+  );
+  @override
+  late final GeneratedColumn<int> durationMs = GeneratedColumn<int>(
+    'duration_ms',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _publishedAtMeta = const VerificationMeta(
+    'publishedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> publishedAt = GeneratedColumn<DateTime>(
+    'published_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _imageUrlMeta = const VerificationMeta(
+    'imageUrl',
+  );
+  @override
+  late final GeneratedColumn<String> imageUrl = GeneratedColumn<String>(
+    'image_url',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _episodeNumberMeta = const VerificationMeta(
+    'episodeNumber',
+  );
+  @override
+  late final GeneratedColumn<int> episodeNumber = GeneratedColumn<int>(
+    'episode_number',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _seasonNumberMeta = const VerificationMeta(
+    'seasonNumber',
+  );
+  @override
+  late final GeneratedColumn<int> seasonNumber = GeneratedColumn<int>(
+    'season_number',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    podcastId,
+    guid,
+    title,
+    description,
+    audioUrl,
+    durationMs,
+    publishedAt,
+    imageUrl,
+    episodeNumber,
+    seasonNumber,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'episodes';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<Episode> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('podcast_id')) {
+      context.handle(
+        _podcastIdMeta,
+        podcastId.isAcceptableOrUnknown(data['podcast_id']!, _podcastIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_podcastIdMeta);
+    }
+    if (data.containsKey('guid')) {
+      context.handle(
+        _guidMeta,
+        guid.isAcceptableOrUnknown(data['guid']!, _guidMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_guidMeta);
+    }
+    if (data.containsKey('title')) {
+      context.handle(
+        _titleMeta,
+        title.isAcceptableOrUnknown(data['title']!, _titleMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_titleMeta);
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+        _descriptionMeta,
+        description.isAcceptableOrUnknown(
+          data['description']!,
+          _descriptionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('audio_url')) {
+      context.handle(
+        _audioUrlMeta,
+        audioUrl.isAcceptableOrUnknown(data['audio_url']!, _audioUrlMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_audioUrlMeta);
+    }
+    if (data.containsKey('duration_ms')) {
+      context.handle(
+        _durationMsMeta,
+        durationMs.isAcceptableOrUnknown(data['duration_ms']!, _durationMsMeta),
+      );
+    }
+    if (data.containsKey('published_at')) {
+      context.handle(
+        _publishedAtMeta,
+        publishedAt.isAcceptableOrUnknown(
+          data['published_at']!,
+          _publishedAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('image_url')) {
+      context.handle(
+        _imageUrlMeta,
+        imageUrl.isAcceptableOrUnknown(data['image_url']!, _imageUrlMeta),
+      );
+    }
+    if (data.containsKey('episode_number')) {
+      context.handle(
+        _episodeNumberMeta,
+        episodeNumber.isAcceptableOrUnknown(
+          data['episode_number']!,
+          _episodeNumberMeta,
+        ),
+      );
+    }
+    if (data.containsKey('season_number')) {
+      context.handle(
+        _seasonNumberMeta,
+        seasonNumber.isAcceptableOrUnknown(
+          data['season_number']!,
+          _seasonNumberMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {podcastId, guid},
+  ];
+  @override
+  Episode map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Episode(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      podcastId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}podcast_id'],
+      )!,
+      guid: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}guid'],
+      )!,
+      title: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}title'],
+      )!,
+      description: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}description'],
+      ),
+      audioUrl: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}audio_url'],
+      )!,
+      durationMs: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}duration_ms'],
+      ),
+      publishedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}published_at'],
+      ),
+      imageUrl: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}image_url'],
+      ),
+      episodeNumber: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}episode_number'],
+      ),
+      seasonNumber: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}season_number'],
+      ),
+    );
+  }
+
+  @override
+  $EpisodesTable createAlias(String alias) {
+    return $EpisodesTable(attachedDatabase, alias);
+  }
+}
+
+class Episode extends DataClass implements Insertable<Episode> {
+  /// Auto-incrementing primary key.
+  final int id;
+
+  /// Foreign key to Subscriptions table.
+  final int podcastId;
+
+  /// Unique identifier from RSS feed (guid element).
+  final String guid;
+
+  /// Episode title.
+  final String title;
+
+  /// Episode description/show notes (nullable).
+  final String? description;
+
+  /// URL to the audio file.
+  final String audioUrl;
+
+  /// Duration in milliseconds (nullable, may not be in feed).
+  final int? durationMs;
+
+  /// Publication date (nullable).
+  final DateTime? publishedAt;
+
+  /// Episode artwork URL (nullable, falls back to podcast artwork).
+  final String? imageUrl;
+
+  /// Episode number within season (nullable).
+  final int? episodeNumber;
+
+  /// Season number (nullable).
+  final int? seasonNumber;
+  const Episode({
+    required this.id,
+    required this.podcastId,
+    required this.guid,
+    required this.title,
+    this.description,
+    required this.audioUrl,
+    this.durationMs,
+    this.publishedAt,
+    this.imageUrl,
+    this.episodeNumber,
+    this.seasonNumber,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['podcast_id'] = Variable<int>(podcastId);
+    map['guid'] = Variable<String>(guid);
+    map['title'] = Variable<String>(title);
+    if (!nullToAbsent || description != null) {
+      map['description'] = Variable<String>(description);
+    }
+    map['audio_url'] = Variable<String>(audioUrl);
+    if (!nullToAbsent || durationMs != null) {
+      map['duration_ms'] = Variable<int>(durationMs);
+    }
+    if (!nullToAbsent || publishedAt != null) {
+      map['published_at'] = Variable<DateTime>(publishedAt);
+    }
+    if (!nullToAbsent || imageUrl != null) {
+      map['image_url'] = Variable<String>(imageUrl);
+    }
+    if (!nullToAbsent || episodeNumber != null) {
+      map['episode_number'] = Variable<int>(episodeNumber);
+    }
+    if (!nullToAbsent || seasonNumber != null) {
+      map['season_number'] = Variable<int>(seasonNumber);
+    }
+    return map;
+  }
+
+  EpisodesCompanion toCompanion(bool nullToAbsent) {
+    return EpisodesCompanion(
+      id: Value(id),
+      podcastId: Value(podcastId),
+      guid: Value(guid),
+      title: Value(title),
+      description: description == null && nullToAbsent
+          ? const Value.absent()
+          : Value(description),
+      audioUrl: Value(audioUrl),
+      durationMs: durationMs == null && nullToAbsent
+          ? const Value.absent()
+          : Value(durationMs),
+      publishedAt: publishedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(publishedAt),
+      imageUrl: imageUrl == null && nullToAbsent
+          ? const Value.absent()
+          : Value(imageUrl),
+      episodeNumber: episodeNumber == null && nullToAbsent
+          ? const Value.absent()
+          : Value(episodeNumber),
+      seasonNumber: seasonNumber == null && nullToAbsent
+          ? const Value.absent()
+          : Value(seasonNumber),
+    );
+  }
+
+  factory Episode.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Episode(
+      id: serializer.fromJson<int>(json['id']),
+      podcastId: serializer.fromJson<int>(json['podcastId']),
+      guid: serializer.fromJson<String>(json['guid']),
+      title: serializer.fromJson<String>(json['title']),
+      description: serializer.fromJson<String?>(json['description']),
+      audioUrl: serializer.fromJson<String>(json['audioUrl']),
+      durationMs: serializer.fromJson<int?>(json['durationMs']),
+      publishedAt: serializer.fromJson<DateTime?>(json['publishedAt']),
+      imageUrl: serializer.fromJson<String?>(json['imageUrl']),
+      episodeNumber: serializer.fromJson<int?>(json['episodeNumber']),
+      seasonNumber: serializer.fromJson<int?>(json['seasonNumber']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'podcastId': serializer.toJson<int>(podcastId),
+      'guid': serializer.toJson<String>(guid),
+      'title': serializer.toJson<String>(title),
+      'description': serializer.toJson<String?>(description),
+      'audioUrl': serializer.toJson<String>(audioUrl),
+      'durationMs': serializer.toJson<int?>(durationMs),
+      'publishedAt': serializer.toJson<DateTime?>(publishedAt),
+      'imageUrl': serializer.toJson<String?>(imageUrl),
+      'episodeNumber': serializer.toJson<int?>(episodeNumber),
+      'seasonNumber': serializer.toJson<int?>(seasonNumber),
+    };
+  }
+
+  Episode copyWith({
+    int? id,
+    int? podcastId,
+    String? guid,
+    String? title,
+    Value<String?> description = const Value.absent(),
+    String? audioUrl,
+    Value<int?> durationMs = const Value.absent(),
+    Value<DateTime?> publishedAt = const Value.absent(),
+    Value<String?> imageUrl = const Value.absent(),
+    Value<int?> episodeNumber = const Value.absent(),
+    Value<int?> seasonNumber = const Value.absent(),
+  }) => Episode(
+    id: id ?? this.id,
+    podcastId: podcastId ?? this.podcastId,
+    guid: guid ?? this.guid,
+    title: title ?? this.title,
+    description: description.present ? description.value : this.description,
+    audioUrl: audioUrl ?? this.audioUrl,
+    durationMs: durationMs.present ? durationMs.value : this.durationMs,
+    publishedAt: publishedAt.present ? publishedAt.value : this.publishedAt,
+    imageUrl: imageUrl.present ? imageUrl.value : this.imageUrl,
+    episodeNumber: episodeNumber.present
+        ? episodeNumber.value
+        : this.episodeNumber,
+    seasonNumber: seasonNumber.present ? seasonNumber.value : this.seasonNumber,
+  );
+  Episode copyWithCompanion(EpisodesCompanion data) {
+    return Episode(
+      id: data.id.present ? data.id.value : this.id,
+      podcastId: data.podcastId.present ? data.podcastId.value : this.podcastId,
+      guid: data.guid.present ? data.guid.value : this.guid,
+      title: data.title.present ? data.title.value : this.title,
+      description: data.description.present
+          ? data.description.value
+          : this.description,
+      audioUrl: data.audioUrl.present ? data.audioUrl.value : this.audioUrl,
+      durationMs: data.durationMs.present
+          ? data.durationMs.value
+          : this.durationMs,
+      publishedAt: data.publishedAt.present
+          ? data.publishedAt.value
+          : this.publishedAt,
+      imageUrl: data.imageUrl.present ? data.imageUrl.value : this.imageUrl,
+      episodeNumber: data.episodeNumber.present
+          ? data.episodeNumber.value
+          : this.episodeNumber,
+      seasonNumber: data.seasonNumber.present
+          ? data.seasonNumber.value
+          : this.seasonNumber,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Episode(')
+          ..write('id: $id, ')
+          ..write('podcastId: $podcastId, ')
+          ..write('guid: $guid, ')
+          ..write('title: $title, ')
+          ..write('description: $description, ')
+          ..write('audioUrl: $audioUrl, ')
+          ..write('durationMs: $durationMs, ')
+          ..write('publishedAt: $publishedAt, ')
+          ..write('imageUrl: $imageUrl, ')
+          ..write('episodeNumber: $episodeNumber, ')
+          ..write('seasonNumber: $seasonNumber')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    podcastId,
+    guid,
+    title,
+    description,
+    audioUrl,
+    durationMs,
+    publishedAt,
+    imageUrl,
+    episodeNumber,
+    seasonNumber,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Episode &&
+          other.id == this.id &&
+          other.podcastId == this.podcastId &&
+          other.guid == this.guid &&
+          other.title == this.title &&
+          other.description == this.description &&
+          other.audioUrl == this.audioUrl &&
+          other.durationMs == this.durationMs &&
+          other.publishedAt == this.publishedAt &&
+          other.imageUrl == this.imageUrl &&
+          other.episodeNumber == this.episodeNumber &&
+          other.seasonNumber == this.seasonNumber);
+}
+
+class EpisodesCompanion extends UpdateCompanion<Episode> {
+  final Value<int> id;
+  final Value<int> podcastId;
+  final Value<String> guid;
+  final Value<String> title;
+  final Value<String?> description;
+  final Value<String> audioUrl;
+  final Value<int?> durationMs;
+  final Value<DateTime?> publishedAt;
+  final Value<String?> imageUrl;
+  final Value<int?> episodeNumber;
+  final Value<int?> seasonNumber;
+  const EpisodesCompanion({
+    this.id = const Value.absent(),
+    this.podcastId = const Value.absent(),
+    this.guid = const Value.absent(),
+    this.title = const Value.absent(),
+    this.description = const Value.absent(),
+    this.audioUrl = const Value.absent(),
+    this.durationMs = const Value.absent(),
+    this.publishedAt = const Value.absent(),
+    this.imageUrl = const Value.absent(),
+    this.episodeNumber = const Value.absent(),
+    this.seasonNumber = const Value.absent(),
+  });
+  EpisodesCompanion.insert({
+    this.id = const Value.absent(),
+    required int podcastId,
+    required String guid,
+    required String title,
+    this.description = const Value.absent(),
+    required String audioUrl,
+    this.durationMs = const Value.absent(),
+    this.publishedAt = const Value.absent(),
+    this.imageUrl = const Value.absent(),
+    this.episodeNumber = const Value.absent(),
+    this.seasonNumber = const Value.absent(),
+  }) : podcastId = Value(podcastId),
+       guid = Value(guid),
+       title = Value(title),
+       audioUrl = Value(audioUrl);
+  static Insertable<Episode> custom({
+    Expression<int>? id,
+    Expression<int>? podcastId,
+    Expression<String>? guid,
+    Expression<String>? title,
+    Expression<String>? description,
+    Expression<String>? audioUrl,
+    Expression<int>? durationMs,
+    Expression<DateTime>? publishedAt,
+    Expression<String>? imageUrl,
+    Expression<int>? episodeNumber,
+    Expression<int>? seasonNumber,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (podcastId != null) 'podcast_id': podcastId,
+      if (guid != null) 'guid': guid,
+      if (title != null) 'title': title,
+      if (description != null) 'description': description,
+      if (audioUrl != null) 'audio_url': audioUrl,
+      if (durationMs != null) 'duration_ms': durationMs,
+      if (publishedAt != null) 'published_at': publishedAt,
+      if (imageUrl != null) 'image_url': imageUrl,
+      if (episodeNumber != null) 'episode_number': episodeNumber,
+      if (seasonNumber != null) 'season_number': seasonNumber,
+    });
+  }
+
+  EpisodesCompanion copyWith({
+    Value<int>? id,
+    Value<int>? podcastId,
+    Value<String>? guid,
+    Value<String>? title,
+    Value<String?>? description,
+    Value<String>? audioUrl,
+    Value<int?>? durationMs,
+    Value<DateTime?>? publishedAt,
+    Value<String?>? imageUrl,
+    Value<int?>? episodeNumber,
+    Value<int?>? seasonNumber,
+  }) {
+    return EpisodesCompanion(
+      id: id ?? this.id,
+      podcastId: podcastId ?? this.podcastId,
+      guid: guid ?? this.guid,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      audioUrl: audioUrl ?? this.audioUrl,
+      durationMs: durationMs ?? this.durationMs,
+      publishedAt: publishedAt ?? this.publishedAt,
+      imageUrl: imageUrl ?? this.imageUrl,
+      episodeNumber: episodeNumber ?? this.episodeNumber,
+      seasonNumber: seasonNumber ?? this.seasonNumber,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (podcastId.present) {
+      map['podcast_id'] = Variable<int>(podcastId.value);
+    }
+    if (guid.present) {
+      map['guid'] = Variable<String>(guid.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (audioUrl.present) {
+      map['audio_url'] = Variable<String>(audioUrl.value);
+    }
+    if (durationMs.present) {
+      map['duration_ms'] = Variable<int>(durationMs.value);
+    }
+    if (publishedAt.present) {
+      map['published_at'] = Variable<DateTime>(publishedAt.value);
+    }
+    if (imageUrl.present) {
+      map['image_url'] = Variable<String>(imageUrl.value);
+    }
+    if (episodeNumber.present) {
+      map['episode_number'] = Variable<int>(episodeNumber.value);
+    }
+    if (seasonNumber.present) {
+      map['season_number'] = Variable<int>(seasonNumber.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('EpisodesCompanion(')
+          ..write('id: $id, ')
+          ..write('podcastId: $podcastId, ')
+          ..write('guid: $guid, ')
+          ..write('title: $title, ')
+          ..write('description: $description, ')
+          ..write('audioUrl: $audioUrl, ')
+          ..write('durationMs: $durationMs, ')
+          ..write('publishedAt: $publishedAt, ')
+          ..write('imageUrl: $imageUrl, ')
+          ..write('episodeNumber: $episodeNumber, ')
+          ..write('seasonNumber: $seasonNumber')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $PlaybackHistoriesTable extends PlaybackHistories
+    with TableInfo<$PlaybackHistoriesTable, PlaybackHistory> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PlaybackHistoriesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _episodeIdMeta = const VerificationMeta(
+    'episodeId',
+  );
+  @override
+  late final GeneratedColumn<int> episodeId = GeneratedColumn<int>(
+    'episode_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES episodes (id)',
+    ),
+  );
+  static const VerificationMeta _positionMsMeta = const VerificationMeta(
+    'positionMs',
+  );
+  @override
+  late final GeneratedColumn<int> positionMs = GeneratedColumn<int>(
+    'position_ms',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _durationMsMeta = const VerificationMeta(
+    'durationMs',
+  );
+  @override
+  late final GeneratedColumn<int> durationMs = GeneratedColumn<int>(
+    'duration_ms',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _completedAtMeta = const VerificationMeta(
+    'completedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> completedAt = GeneratedColumn<DateTime>(
+    'completed_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _firstPlayedAtMeta = const VerificationMeta(
+    'firstPlayedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> firstPlayedAt =
+      GeneratedColumn<DateTime>(
+        'first_played_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _lastPlayedAtMeta = const VerificationMeta(
+    'lastPlayedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> lastPlayedAt = GeneratedColumn<DateTime>(
+    'last_played_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _playCountMeta = const VerificationMeta(
+    'playCount',
+  );
+  @override
+  late final GeneratedColumn<int> playCount = GeneratedColumn<int>(
+    'play_count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    episodeId,
+    positionMs,
+    durationMs,
+    completedAt,
+    firstPlayedAt,
+    lastPlayedAt,
+    playCount,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'playback_histories';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<PlaybackHistory> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('episode_id')) {
+      context.handle(
+        _episodeIdMeta,
+        episodeId.isAcceptableOrUnknown(data['episode_id']!, _episodeIdMeta),
+      );
+    }
+    if (data.containsKey('position_ms')) {
+      context.handle(
+        _positionMsMeta,
+        positionMs.isAcceptableOrUnknown(data['position_ms']!, _positionMsMeta),
+      );
+    }
+    if (data.containsKey('duration_ms')) {
+      context.handle(
+        _durationMsMeta,
+        durationMs.isAcceptableOrUnknown(data['duration_ms']!, _durationMsMeta),
+      );
+    }
+    if (data.containsKey('completed_at')) {
+      context.handle(
+        _completedAtMeta,
+        completedAt.isAcceptableOrUnknown(
+          data['completed_at']!,
+          _completedAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('first_played_at')) {
+      context.handle(
+        _firstPlayedAtMeta,
+        firstPlayedAt.isAcceptableOrUnknown(
+          data['first_played_at']!,
+          _firstPlayedAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('last_played_at')) {
+      context.handle(
+        _lastPlayedAtMeta,
+        lastPlayedAt.isAcceptableOrUnknown(
+          data['last_played_at']!,
+          _lastPlayedAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('play_count')) {
+      context.handle(
+        _playCountMeta,
+        playCount.isAcceptableOrUnknown(data['play_count']!, _playCountMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {episodeId};
+  @override
+  PlaybackHistory map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PlaybackHistory(
+      episodeId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}episode_id'],
+      )!,
+      positionMs: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}position_ms'],
+      )!,
+      durationMs: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}duration_ms'],
+      ),
+      completedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}completed_at'],
+      ),
+      firstPlayedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}first_played_at'],
+      ),
+      lastPlayedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_played_at'],
+      ),
+      playCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}play_count'],
+      )!,
+    );
+  }
+
+  @override
+  $PlaybackHistoriesTable createAlias(String alias) {
+    return $PlaybackHistoriesTable(attachedDatabase, alias);
+  }
+}
+
+class PlaybackHistory extends DataClass implements Insertable<PlaybackHistory> {
+  /// Foreign key to Episodes table (also serves as primary key).
+  final int episodeId;
+
+  /// Current playback position in milliseconds.
+  final int positionMs;
+
+  /// Episode duration in milliseconds (cached from playback).
+  final int? durationMs;
+
+  /// When the episode was marked as completed (null = not completed).
+  final DateTime? completedAt;
+
+  /// When the user first started playing this episode.
+  final DateTime? firstPlayedAt;
+
+  /// When the user last played this episode.
+  final DateTime? lastPlayedAt;
+
+  /// Number of times the episode was started from the beginning.
+  final int playCount;
+  const PlaybackHistory({
+    required this.episodeId,
+    required this.positionMs,
+    this.durationMs,
+    this.completedAt,
+    this.firstPlayedAt,
+    this.lastPlayedAt,
+    required this.playCount,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['episode_id'] = Variable<int>(episodeId);
+    map['position_ms'] = Variable<int>(positionMs);
+    if (!nullToAbsent || durationMs != null) {
+      map['duration_ms'] = Variable<int>(durationMs);
+    }
+    if (!nullToAbsent || completedAt != null) {
+      map['completed_at'] = Variable<DateTime>(completedAt);
+    }
+    if (!nullToAbsent || firstPlayedAt != null) {
+      map['first_played_at'] = Variable<DateTime>(firstPlayedAt);
+    }
+    if (!nullToAbsent || lastPlayedAt != null) {
+      map['last_played_at'] = Variable<DateTime>(lastPlayedAt);
+    }
+    map['play_count'] = Variable<int>(playCount);
+    return map;
+  }
+
+  PlaybackHistoriesCompanion toCompanion(bool nullToAbsent) {
+    return PlaybackHistoriesCompanion(
+      episodeId: Value(episodeId),
+      positionMs: Value(positionMs),
+      durationMs: durationMs == null && nullToAbsent
+          ? const Value.absent()
+          : Value(durationMs),
+      completedAt: completedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(completedAt),
+      firstPlayedAt: firstPlayedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(firstPlayedAt),
+      lastPlayedAt: lastPlayedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastPlayedAt),
+      playCount: Value(playCount),
+    );
+  }
+
+  factory PlaybackHistory.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PlaybackHistory(
+      episodeId: serializer.fromJson<int>(json['episodeId']),
+      positionMs: serializer.fromJson<int>(json['positionMs']),
+      durationMs: serializer.fromJson<int?>(json['durationMs']),
+      completedAt: serializer.fromJson<DateTime?>(json['completedAt']),
+      firstPlayedAt: serializer.fromJson<DateTime?>(json['firstPlayedAt']),
+      lastPlayedAt: serializer.fromJson<DateTime?>(json['lastPlayedAt']),
+      playCount: serializer.fromJson<int>(json['playCount']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'episodeId': serializer.toJson<int>(episodeId),
+      'positionMs': serializer.toJson<int>(positionMs),
+      'durationMs': serializer.toJson<int?>(durationMs),
+      'completedAt': serializer.toJson<DateTime?>(completedAt),
+      'firstPlayedAt': serializer.toJson<DateTime?>(firstPlayedAt),
+      'lastPlayedAt': serializer.toJson<DateTime?>(lastPlayedAt),
+      'playCount': serializer.toJson<int>(playCount),
+    };
+  }
+
+  PlaybackHistory copyWith({
+    int? episodeId,
+    int? positionMs,
+    Value<int?> durationMs = const Value.absent(),
+    Value<DateTime?> completedAt = const Value.absent(),
+    Value<DateTime?> firstPlayedAt = const Value.absent(),
+    Value<DateTime?> lastPlayedAt = const Value.absent(),
+    int? playCount,
+  }) => PlaybackHistory(
+    episodeId: episodeId ?? this.episodeId,
+    positionMs: positionMs ?? this.positionMs,
+    durationMs: durationMs.present ? durationMs.value : this.durationMs,
+    completedAt: completedAt.present ? completedAt.value : this.completedAt,
+    firstPlayedAt: firstPlayedAt.present
+        ? firstPlayedAt.value
+        : this.firstPlayedAt,
+    lastPlayedAt: lastPlayedAt.present ? lastPlayedAt.value : this.lastPlayedAt,
+    playCount: playCount ?? this.playCount,
+  );
+  PlaybackHistory copyWithCompanion(PlaybackHistoriesCompanion data) {
+    return PlaybackHistory(
+      episodeId: data.episodeId.present ? data.episodeId.value : this.episodeId,
+      positionMs: data.positionMs.present
+          ? data.positionMs.value
+          : this.positionMs,
+      durationMs: data.durationMs.present
+          ? data.durationMs.value
+          : this.durationMs,
+      completedAt: data.completedAt.present
+          ? data.completedAt.value
+          : this.completedAt,
+      firstPlayedAt: data.firstPlayedAt.present
+          ? data.firstPlayedAt.value
+          : this.firstPlayedAt,
+      lastPlayedAt: data.lastPlayedAt.present
+          ? data.lastPlayedAt.value
+          : this.lastPlayedAt,
+      playCount: data.playCount.present ? data.playCount.value : this.playCount,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PlaybackHistory(')
+          ..write('episodeId: $episodeId, ')
+          ..write('positionMs: $positionMs, ')
+          ..write('durationMs: $durationMs, ')
+          ..write('completedAt: $completedAt, ')
+          ..write('firstPlayedAt: $firstPlayedAt, ')
+          ..write('lastPlayedAt: $lastPlayedAt, ')
+          ..write('playCount: $playCount')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    episodeId,
+    positionMs,
+    durationMs,
+    completedAt,
+    firstPlayedAt,
+    lastPlayedAt,
+    playCount,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PlaybackHistory &&
+          other.episodeId == this.episodeId &&
+          other.positionMs == this.positionMs &&
+          other.durationMs == this.durationMs &&
+          other.completedAt == this.completedAt &&
+          other.firstPlayedAt == this.firstPlayedAt &&
+          other.lastPlayedAt == this.lastPlayedAt &&
+          other.playCount == this.playCount);
+}
+
+class PlaybackHistoriesCompanion extends UpdateCompanion<PlaybackHistory> {
+  final Value<int> episodeId;
+  final Value<int> positionMs;
+  final Value<int?> durationMs;
+  final Value<DateTime?> completedAt;
+  final Value<DateTime?> firstPlayedAt;
+  final Value<DateTime?> lastPlayedAt;
+  final Value<int> playCount;
+  const PlaybackHistoriesCompanion({
+    this.episodeId = const Value.absent(),
+    this.positionMs = const Value.absent(),
+    this.durationMs = const Value.absent(),
+    this.completedAt = const Value.absent(),
+    this.firstPlayedAt = const Value.absent(),
+    this.lastPlayedAt = const Value.absent(),
+    this.playCount = const Value.absent(),
+  });
+  PlaybackHistoriesCompanion.insert({
+    this.episodeId = const Value.absent(),
+    this.positionMs = const Value.absent(),
+    this.durationMs = const Value.absent(),
+    this.completedAt = const Value.absent(),
+    this.firstPlayedAt = const Value.absent(),
+    this.lastPlayedAt = const Value.absent(),
+    this.playCount = const Value.absent(),
+  });
+  static Insertable<PlaybackHistory> custom({
+    Expression<int>? episodeId,
+    Expression<int>? positionMs,
+    Expression<int>? durationMs,
+    Expression<DateTime>? completedAt,
+    Expression<DateTime>? firstPlayedAt,
+    Expression<DateTime>? lastPlayedAt,
+    Expression<int>? playCount,
+  }) {
+    return RawValuesInsertable({
+      if (episodeId != null) 'episode_id': episodeId,
+      if (positionMs != null) 'position_ms': positionMs,
+      if (durationMs != null) 'duration_ms': durationMs,
+      if (completedAt != null) 'completed_at': completedAt,
+      if (firstPlayedAt != null) 'first_played_at': firstPlayedAt,
+      if (lastPlayedAt != null) 'last_played_at': lastPlayedAt,
+      if (playCount != null) 'play_count': playCount,
+    });
+  }
+
+  PlaybackHistoriesCompanion copyWith({
+    Value<int>? episodeId,
+    Value<int>? positionMs,
+    Value<int?>? durationMs,
+    Value<DateTime?>? completedAt,
+    Value<DateTime?>? firstPlayedAt,
+    Value<DateTime?>? lastPlayedAt,
+    Value<int>? playCount,
+  }) {
+    return PlaybackHistoriesCompanion(
+      episodeId: episodeId ?? this.episodeId,
+      positionMs: positionMs ?? this.positionMs,
+      durationMs: durationMs ?? this.durationMs,
+      completedAt: completedAt ?? this.completedAt,
+      firstPlayedAt: firstPlayedAt ?? this.firstPlayedAt,
+      lastPlayedAt: lastPlayedAt ?? this.lastPlayedAt,
+      playCount: playCount ?? this.playCount,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (episodeId.present) {
+      map['episode_id'] = Variable<int>(episodeId.value);
+    }
+    if (positionMs.present) {
+      map['position_ms'] = Variable<int>(positionMs.value);
+    }
+    if (durationMs.present) {
+      map['duration_ms'] = Variable<int>(durationMs.value);
+    }
+    if (completedAt.present) {
+      map['completed_at'] = Variable<DateTime>(completedAt.value);
+    }
+    if (firstPlayedAt.present) {
+      map['first_played_at'] = Variable<DateTime>(firstPlayedAt.value);
+    }
+    if (lastPlayedAt.present) {
+      map['last_played_at'] = Variable<DateTime>(lastPlayedAt.value);
+    }
+    if (playCount.present) {
+      map['play_count'] = Variable<int>(playCount.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PlaybackHistoriesCompanion(')
+          ..write('episodeId: $episodeId, ')
+          ..write('positionMs: $positionMs, ')
+          ..write('durationMs: $durationMs, ')
+          ..write('completedAt: $completedAt, ')
+          ..write('firstPlayedAt: $firstPlayedAt, ')
+          ..write('lastPlayedAt: $lastPlayedAt, ')
+          ..write('playCount: $playCount')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $SubscriptionsTable subscriptions = $SubscriptionsTable(this);
+  late final $EpisodesTable episodes = $EpisodesTable(this);
+  late final $PlaybackHistoriesTable playbackHistories =
+      $PlaybackHistoriesTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
-  List<DatabaseSchemaEntity> get allSchemaEntities => [subscriptions];
+  List<DatabaseSchemaEntity> get allSchemaEntities => [
+    subscriptions,
+    episodes,
+    playbackHistories,
+  ];
 }
 
 typedef $$SubscriptionsTableCreateCompanionBuilder =
@@ -730,6 +1930,34 @@ typedef $$SubscriptionsTableUpdateCompanionBuilder =
       Value<DateTime> subscribedAt,
       Value<DateTime?> lastRefreshedAt,
     });
+
+final class $$SubscriptionsTableReferences
+    extends BaseReferences<_$AppDatabase, $SubscriptionsTable, Subscription> {
+  $$SubscriptionsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static MultiTypedResultKey<$EpisodesTable, List<Episode>> _episodesRefsTable(
+    _$AppDatabase db,
+  ) => MultiTypedResultKey.fromTable(
+    db.episodes,
+    aliasName: $_aliasNameGenerator(db.subscriptions.id, db.episodes.podcastId),
+  );
+
+  $$EpisodesTableProcessedTableManager get episodesRefs {
+    final manager = $$EpisodesTableTableManager(
+      $_db,
+      $_db.episodes,
+    ).filter((f) => f.podcastId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_episodesRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
 
 class $$SubscriptionsTableFilterComposer
     extends Composer<_$AppDatabase, $SubscriptionsTable> {
@@ -794,6 +2022,31 @@ class $$SubscriptionsTableFilterComposer
     column: $table.lastRefreshedAt,
     builder: (column) => ColumnFilters(column),
   );
+
+  Expression<bool> episodesRefs(
+    Expression<bool> Function($$EpisodesTableFilterComposer f) f,
+  ) {
+    final $$EpisodesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.episodes,
+      getReferencedColumn: (t) => t.podcastId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$EpisodesTableFilterComposer(
+            $db: $db,
+            $table: $db.episodes,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$SubscriptionsTableOrderingComposer
@@ -912,6 +2165,31 @@ class $$SubscriptionsTableAnnotationComposer
     column: $table.lastRefreshedAt,
     builder: (column) => column,
   );
+
+  Expression<T> episodesRefs<T extends Object>(
+    Expression<T> Function($$EpisodesTableAnnotationComposer a) f,
+  ) {
+    final $$EpisodesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.episodes,
+      getReferencedColumn: (t) => t.podcastId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$EpisodesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.episodes,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$SubscriptionsTableTableManager
@@ -925,12 +2203,9 @@ class $$SubscriptionsTableTableManager
           $$SubscriptionsTableAnnotationComposer,
           $$SubscriptionsTableCreateCompanionBuilder,
           $$SubscriptionsTableUpdateCompanionBuilder,
-          (
-            Subscription,
-            BaseReferences<_$AppDatabase, $SubscriptionsTable, Subscription>,
-          ),
+          (Subscription, $$SubscriptionsTableReferences),
           Subscription,
-          PrefetchHooks Function()
+          PrefetchHooks Function({bool episodesRefs})
         > {
   $$SubscriptionsTableTableManager(_$AppDatabase db, $SubscriptionsTable table)
     : super(
@@ -996,9 +2271,43 @@ class $$SubscriptionsTableTableManager
                 lastRefreshedAt: lastRefreshedAt,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$SubscriptionsTableReferences(db, table, e),
+                ),
+              )
               .toList(),
-          prefetchHooksCallback: null,
+          prefetchHooksCallback: ({episodesRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [if (episodesRefs) db.episodes],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (episodesRefs)
+                    await $_getPrefetchedData<
+                      Subscription,
+                      $SubscriptionsTable,
+                      Episode
+                    >(
+                      currentTable: table,
+                      referencedTable: $$SubscriptionsTableReferences
+                          ._episodesRefsTable(db),
+                      managerFromTypedResult: (p0) =>
+                          $$SubscriptionsTableReferences(
+                            db,
+                            table,
+                            p0,
+                          ).episodesRefs,
+                      referencedItemsForCurrentItem: (item, referencedItems) =>
+                          referencedItems.where((e) => e.podcastId == item.id),
+                      typedResults: items,
+                    ),
+                ];
+              },
+            );
+          },
         ),
       );
 }
@@ -1013,12 +2322,923 @@ typedef $$SubscriptionsTableProcessedTableManager =
       $$SubscriptionsTableAnnotationComposer,
       $$SubscriptionsTableCreateCompanionBuilder,
       $$SubscriptionsTableUpdateCompanionBuilder,
-      (
-        Subscription,
-        BaseReferences<_$AppDatabase, $SubscriptionsTable, Subscription>,
-      ),
+      (Subscription, $$SubscriptionsTableReferences),
       Subscription,
-      PrefetchHooks Function()
+      PrefetchHooks Function({bool episodesRefs})
+    >;
+typedef $$EpisodesTableCreateCompanionBuilder =
+    EpisodesCompanion Function({
+      Value<int> id,
+      required int podcastId,
+      required String guid,
+      required String title,
+      Value<String?> description,
+      required String audioUrl,
+      Value<int?> durationMs,
+      Value<DateTime?> publishedAt,
+      Value<String?> imageUrl,
+      Value<int?> episodeNumber,
+      Value<int?> seasonNumber,
+    });
+typedef $$EpisodesTableUpdateCompanionBuilder =
+    EpisodesCompanion Function({
+      Value<int> id,
+      Value<int> podcastId,
+      Value<String> guid,
+      Value<String> title,
+      Value<String?> description,
+      Value<String> audioUrl,
+      Value<int?> durationMs,
+      Value<DateTime?> publishedAt,
+      Value<String?> imageUrl,
+      Value<int?> episodeNumber,
+      Value<int?> seasonNumber,
+    });
+
+final class $$EpisodesTableReferences
+    extends BaseReferences<_$AppDatabase, $EpisodesTable, Episode> {
+  $$EpisodesTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $SubscriptionsTable _podcastIdTable(_$AppDatabase db) =>
+      db.subscriptions.createAlias(
+        $_aliasNameGenerator(db.episodes.podcastId, db.subscriptions.id),
+      );
+
+  $$SubscriptionsTableProcessedTableManager get podcastId {
+    final $_column = $_itemColumn<int>('podcast_id')!;
+
+    final manager = $$SubscriptionsTableTableManager(
+      $_db,
+      $_db.subscriptions,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_podcastIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static MultiTypedResultKey<$PlaybackHistoriesTable, List<PlaybackHistory>>
+  _playbackHistoriesRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.playbackHistories,
+        aliasName: $_aliasNameGenerator(
+          db.episodes.id,
+          db.playbackHistories.episodeId,
+        ),
+      );
+
+  $$PlaybackHistoriesTableProcessedTableManager get playbackHistoriesRefs {
+    final manager = $$PlaybackHistoriesTableTableManager(
+      $_db,
+      $_db.playbackHistories,
+    ).filter((f) => f.episodeId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _playbackHistoriesRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
+class $$EpisodesTableFilterComposer
+    extends Composer<_$AppDatabase, $EpisodesTable> {
+  $$EpisodesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get guid => $composableBuilder(
+    column: $table.guid,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get audioUrl => $composableBuilder(
+    column: $table.audioUrl,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get durationMs => $composableBuilder(
+    column: $table.durationMs,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get publishedAt => $composableBuilder(
+    column: $table.publishedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get imageUrl => $composableBuilder(
+    column: $table.imageUrl,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get episodeNumber => $composableBuilder(
+    column: $table.episodeNumber,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get seasonNumber => $composableBuilder(
+    column: $table.seasonNumber,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$SubscriptionsTableFilterComposer get podcastId {
+    final $$SubscriptionsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.podcastId,
+      referencedTable: $db.subscriptions,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SubscriptionsTableFilterComposer(
+            $db: $db,
+            $table: $db.subscriptions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  Expression<bool> playbackHistoriesRefs(
+    Expression<bool> Function($$PlaybackHistoriesTableFilterComposer f) f,
+  ) {
+    final $$PlaybackHistoriesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.playbackHistories,
+      getReferencedColumn: (t) => t.episodeId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PlaybackHistoriesTableFilterComposer(
+            $db: $db,
+            $table: $db.playbackHistories,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$EpisodesTableOrderingComposer
+    extends Composer<_$AppDatabase, $EpisodesTable> {
+  $$EpisodesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get guid => $composableBuilder(
+    column: $table.guid,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get audioUrl => $composableBuilder(
+    column: $table.audioUrl,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get durationMs => $composableBuilder(
+    column: $table.durationMs,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get publishedAt => $composableBuilder(
+    column: $table.publishedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get imageUrl => $composableBuilder(
+    column: $table.imageUrl,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get episodeNumber => $composableBuilder(
+    column: $table.episodeNumber,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get seasonNumber => $composableBuilder(
+    column: $table.seasonNumber,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$SubscriptionsTableOrderingComposer get podcastId {
+    final $$SubscriptionsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.podcastId,
+      referencedTable: $db.subscriptions,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SubscriptionsTableOrderingComposer(
+            $db: $db,
+            $table: $db.subscriptions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$EpisodesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $EpisodesTable> {
+  $$EpisodesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get guid =>
+      $composableBuilder(column: $table.guid, builder: (column) => column);
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get audioUrl =>
+      $composableBuilder(column: $table.audioUrl, builder: (column) => column);
+
+  GeneratedColumn<int> get durationMs => $composableBuilder(
+    column: $table.durationMs,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get publishedAt => $composableBuilder(
+    column: $table.publishedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get imageUrl =>
+      $composableBuilder(column: $table.imageUrl, builder: (column) => column);
+
+  GeneratedColumn<int> get episodeNumber => $composableBuilder(
+    column: $table.episodeNumber,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get seasonNumber => $composableBuilder(
+    column: $table.seasonNumber,
+    builder: (column) => column,
+  );
+
+  $$SubscriptionsTableAnnotationComposer get podcastId {
+    final $$SubscriptionsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.podcastId,
+      referencedTable: $db.subscriptions,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SubscriptionsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.subscriptions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  Expression<T> playbackHistoriesRefs<T extends Object>(
+    Expression<T> Function($$PlaybackHistoriesTableAnnotationComposer a) f,
+  ) {
+    final $$PlaybackHistoriesTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.playbackHistories,
+          getReferencedColumn: (t) => t.episodeId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$PlaybackHistoriesTableAnnotationComposer(
+                $db: $db,
+                $table: $db.playbackHistories,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+}
+
+class $$EpisodesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $EpisodesTable,
+          Episode,
+          $$EpisodesTableFilterComposer,
+          $$EpisodesTableOrderingComposer,
+          $$EpisodesTableAnnotationComposer,
+          $$EpisodesTableCreateCompanionBuilder,
+          $$EpisodesTableUpdateCompanionBuilder,
+          (Episode, $$EpisodesTableReferences),
+          Episode,
+          PrefetchHooks Function({bool podcastId, bool playbackHistoriesRefs})
+        > {
+  $$EpisodesTableTableManager(_$AppDatabase db, $EpisodesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$EpisodesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$EpisodesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$EpisodesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> podcastId = const Value.absent(),
+                Value<String> guid = const Value.absent(),
+                Value<String> title = const Value.absent(),
+                Value<String?> description = const Value.absent(),
+                Value<String> audioUrl = const Value.absent(),
+                Value<int?> durationMs = const Value.absent(),
+                Value<DateTime?> publishedAt = const Value.absent(),
+                Value<String?> imageUrl = const Value.absent(),
+                Value<int?> episodeNumber = const Value.absent(),
+                Value<int?> seasonNumber = const Value.absent(),
+              }) => EpisodesCompanion(
+                id: id,
+                podcastId: podcastId,
+                guid: guid,
+                title: title,
+                description: description,
+                audioUrl: audioUrl,
+                durationMs: durationMs,
+                publishedAt: publishedAt,
+                imageUrl: imageUrl,
+                episodeNumber: episodeNumber,
+                seasonNumber: seasonNumber,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int podcastId,
+                required String guid,
+                required String title,
+                Value<String?> description = const Value.absent(),
+                required String audioUrl,
+                Value<int?> durationMs = const Value.absent(),
+                Value<DateTime?> publishedAt = const Value.absent(),
+                Value<String?> imageUrl = const Value.absent(),
+                Value<int?> episodeNumber = const Value.absent(),
+                Value<int?> seasonNumber = const Value.absent(),
+              }) => EpisodesCompanion.insert(
+                id: id,
+                podcastId: podcastId,
+                guid: guid,
+                title: title,
+                description: description,
+                audioUrl: audioUrl,
+                durationMs: durationMs,
+                publishedAt: publishedAt,
+                imageUrl: imageUrl,
+                episodeNumber: episodeNumber,
+                seasonNumber: seasonNumber,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$EpisodesTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback:
+              ({podcastId = false, playbackHistoriesRefs = false}) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (playbackHistoriesRefs) db.playbackHistories,
+                  ],
+                  addJoins:
+                      <
+                        T extends TableManagerState<
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic
+                        >
+                      >(state) {
+                        if (podcastId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.podcastId,
+                                    referencedTable: $$EpisodesTableReferences
+                                        ._podcastIdTable(db),
+                                    referencedColumn: $$EpisodesTableReferences
+                                        ._podcastIdTable(db)
+                                        .id,
+                                  )
+                                  as T;
+                        }
+
+                        return state;
+                      },
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (playbackHistoriesRefs)
+                        await $_getPrefetchedData<
+                          Episode,
+                          $EpisodesTable,
+                          PlaybackHistory
+                        >(
+                          currentTable: table,
+                          referencedTable: $$EpisodesTableReferences
+                              ._playbackHistoriesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$EpisodesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).playbackHistoriesRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.episodeId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                    ];
+                  },
+                );
+              },
+        ),
+      );
+}
+
+typedef $$EpisodesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $EpisodesTable,
+      Episode,
+      $$EpisodesTableFilterComposer,
+      $$EpisodesTableOrderingComposer,
+      $$EpisodesTableAnnotationComposer,
+      $$EpisodesTableCreateCompanionBuilder,
+      $$EpisodesTableUpdateCompanionBuilder,
+      (Episode, $$EpisodesTableReferences),
+      Episode,
+      PrefetchHooks Function({bool podcastId, bool playbackHistoriesRefs})
+    >;
+typedef $$PlaybackHistoriesTableCreateCompanionBuilder =
+    PlaybackHistoriesCompanion Function({
+      Value<int> episodeId,
+      Value<int> positionMs,
+      Value<int?> durationMs,
+      Value<DateTime?> completedAt,
+      Value<DateTime?> firstPlayedAt,
+      Value<DateTime?> lastPlayedAt,
+      Value<int> playCount,
+    });
+typedef $$PlaybackHistoriesTableUpdateCompanionBuilder =
+    PlaybackHistoriesCompanion Function({
+      Value<int> episodeId,
+      Value<int> positionMs,
+      Value<int?> durationMs,
+      Value<DateTime?> completedAt,
+      Value<DateTime?> firstPlayedAt,
+      Value<DateTime?> lastPlayedAt,
+      Value<int> playCount,
+    });
+
+final class $$PlaybackHistoriesTableReferences
+    extends
+        BaseReferences<
+          _$AppDatabase,
+          $PlaybackHistoriesTable,
+          PlaybackHistory
+        > {
+  $$PlaybackHistoriesTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $EpisodesTable _episodeIdTable(_$AppDatabase db) =>
+      db.episodes.createAlias(
+        $_aliasNameGenerator(db.playbackHistories.episodeId, db.episodes.id),
+      );
+
+  $$EpisodesTableProcessedTableManager get episodeId {
+    final $_column = $_itemColumn<int>('episode_id')!;
+
+    final manager = $$EpisodesTableTableManager(
+      $_db,
+      $_db.episodes,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_episodeIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$PlaybackHistoriesTableFilterComposer
+    extends Composer<_$AppDatabase, $PlaybackHistoriesTable> {
+  $$PlaybackHistoriesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get positionMs => $composableBuilder(
+    column: $table.positionMs,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get durationMs => $composableBuilder(
+    column: $table.durationMs,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get completedAt => $composableBuilder(
+    column: $table.completedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get firstPlayedAt => $composableBuilder(
+    column: $table.firstPlayedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get lastPlayedAt => $composableBuilder(
+    column: $table.lastPlayedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get playCount => $composableBuilder(
+    column: $table.playCount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$EpisodesTableFilterComposer get episodeId {
+    final $$EpisodesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.episodeId,
+      referencedTable: $db.episodes,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$EpisodesTableFilterComposer(
+            $db: $db,
+            $table: $db.episodes,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$PlaybackHistoriesTableOrderingComposer
+    extends Composer<_$AppDatabase, $PlaybackHistoriesTable> {
+  $$PlaybackHistoriesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get positionMs => $composableBuilder(
+    column: $table.positionMs,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get durationMs => $composableBuilder(
+    column: $table.durationMs,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get completedAt => $composableBuilder(
+    column: $table.completedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get firstPlayedAt => $composableBuilder(
+    column: $table.firstPlayedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get lastPlayedAt => $composableBuilder(
+    column: $table.lastPlayedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get playCount => $composableBuilder(
+    column: $table.playCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$EpisodesTableOrderingComposer get episodeId {
+    final $$EpisodesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.episodeId,
+      referencedTable: $db.episodes,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$EpisodesTableOrderingComposer(
+            $db: $db,
+            $table: $db.episodes,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$PlaybackHistoriesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PlaybackHistoriesTable> {
+  $$PlaybackHistoriesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get positionMs => $composableBuilder(
+    column: $table.positionMs,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get durationMs => $composableBuilder(
+    column: $table.durationMs,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get completedAt => $composableBuilder(
+    column: $table.completedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get firstPlayedAt => $composableBuilder(
+    column: $table.firstPlayedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get lastPlayedAt => $composableBuilder(
+    column: $table.lastPlayedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get playCount =>
+      $composableBuilder(column: $table.playCount, builder: (column) => column);
+
+  $$EpisodesTableAnnotationComposer get episodeId {
+    final $$EpisodesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.episodeId,
+      referencedTable: $db.episodes,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$EpisodesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.episodes,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$PlaybackHistoriesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $PlaybackHistoriesTable,
+          PlaybackHistory,
+          $$PlaybackHistoriesTableFilterComposer,
+          $$PlaybackHistoriesTableOrderingComposer,
+          $$PlaybackHistoriesTableAnnotationComposer,
+          $$PlaybackHistoriesTableCreateCompanionBuilder,
+          $$PlaybackHistoriesTableUpdateCompanionBuilder,
+          (PlaybackHistory, $$PlaybackHistoriesTableReferences),
+          PlaybackHistory,
+          PrefetchHooks Function({bool episodeId})
+        > {
+  $$PlaybackHistoriesTableTableManager(
+    _$AppDatabase db,
+    $PlaybackHistoriesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PlaybackHistoriesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PlaybackHistoriesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PlaybackHistoriesTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> episodeId = const Value.absent(),
+                Value<int> positionMs = const Value.absent(),
+                Value<int?> durationMs = const Value.absent(),
+                Value<DateTime?> completedAt = const Value.absent(),
+                Value<DateTime?> firstPlayedAt = const Value.absent(),
+                Value<DateTime?> lastPlayedAt = const Value.absent(),
+                Value<int> playCount = const Value.absent(),
+              }) => PlaybackHistoriesCompanion(
+                episodeId: episodeId,
+                positionMs: positionMs,
+                durationMs: durationMs,
+                completedAt: completedAt,
+                firstPlayedAt: firstPlayedAt,
+                lastPlayedAt: lastPlayedAt,
+                playCount: playCount,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> episodeId = const Value.absent(),
+                Value<int> positionMs = const Value.absent(),
+                Value<int?> durationMs = const Value.absent(),
+                Value<DateTime?> completedAt = const Value.absent(),
+                Value<DateTime?> firstPlayedAt = const Value.absent(),
+                Value<DateTime?> lastPlayedAt = const Value.absent(),
+                Value<int> playCount = const Value.absent(),
+              }) => PlaybackHistoriesCompanion.insert(
+                episodeId: episodeId,
+                positionMs: positionMs,
+                durationMs: durationMs,
+                completedAt: completedAt,
+                firstPlayedAt: firstPlayedAt,
+                lastPlayedAt: lastPlayedAt,
+                playCount: playCount,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$PlaybackHistoriesTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({episodeId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (episodeId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.episodeId,
+                                referencedTable:
+                                    $$PlaybackHistoriesTableReferences
+                                        ._episodeIdTable(db),
+                                referencedColumn:
+                                    $$PlaybackHistoriesTableReferences
+                                        ._episodeIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$PlaybackHistoriesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $PlaybackHistoriesTable,
+      PlaybackHistory,
+      $$PlaybackHistoriesTableFilterComposer,
+      $$PlaybackHistoriesTableOrderingComposer,
+      $$PlaybackHistoriesTableAnnotationComposer,
+      $$PlaybackHistoriesTableCreateCompanionBuilder,
+      $$PlaybackHistoriesTableUpdateCompanionBuilder,
+      (PlaybackHistory, $$PlaybackHistoriesTableReferences),
+      PlaybackHistory,
+      PrefetchHooks Function({bool episodeId})
     >;
 
 class $AppDatabaseManager {
@@ -1026,4 +3246,8 @@ class $AppDatabaseManager {
   $AppDatabaseManager(this._db);
   $$SubscriptionsTableTableManager get subscriptions =>
       $$SubscriptionsTableTableManager(_db, _db.subscriptions);
+  $$EpisodesTableTableManager get episodes =>
+      $$EpisodesTableTableManager(_db, _db.episodes);
+  $$PlaybackHistoriesTableTableManager get playbackHistories =>
+      $$PlaybackHistoriesTableTableManager(_db, _db.playbackHistories);
 }

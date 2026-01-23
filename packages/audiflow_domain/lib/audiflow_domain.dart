@@ -29,12 +29,26 @@ export 'src/common/datasources/shared_preferences_datasource.dart';
 export 'src/features/feed/builders/podcast_builder.dart';
 export 'src/features/feed/services/feed_parser_service.dart';
 
+// Feed feature - Episodes
+export 'src/features/feed/models/episode.dart';
+export 'src/features/feed/datasources/local/episode_local_datasource.dart';
+export 'src/features/feed/repositories/episode_repository.dart';
+export 'src/features/feed/repositories/episode_repository_impl.dart';
+
 // Player feature
 export 'src/features/player/models/now_playing_info.dart';
 export 'src/features/player/models/playback_progress.dart';
 export 'src/features/player/models/playback_state.dart';
 export 'src/features/player/services/audio_player_service.dart';
 export 'src/features/player/services/now_playing_controller.dart';
+
+// Player feature - Playback History
+export 'src/features/player/models/episode_with_progress.dart';
+export 'src/features/player/models/playback_history.dart';
+export 'src/features/player/datasources/local/playback_history_local_datasource.dart';
+export 'src/features/player/repositories/playback_history_repository.dart';
+export 'src/features/player/repositories/playback_history_repository_impl.dart';
+export 'src/features/player/services/playback_history_service.dart';
 
 // Voice feature
 export 'src/features/voice/models/voice_recognition_state.dart';
@@ -44,7 +58,8 @@ export 'src/features/voice/services/play_podcast_by_name_service.dart';
 export 'src/features/voice/services/voice_command_orchestrator.dart';
 
 // Database
-export 'src/common/database/app_database.dart' show AppDatabase, Subscription;
+export 'src/common/database/app_database.dart'
+    show AppDatabase, Subscription, Episode, PlaybackHistory;
 export 'src/features/subscription/repositories/subscription_repository.dart';
 export 'src/features/subscription/repositories/subscription_repository_impl.dart';
 
