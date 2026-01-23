@@ -7,17 +7,29 @@ import 'package:material_symbols_icons/symbols.dart';
 ///
 /// This screen will be expanded with full playback controls, seek bar,
 /// episode details, and other features in a future update.
-class PlayerScreen extends ConsumerWidget {
+class PlayerScreen extends ConsumerStatefulWidget {
   const PlayerScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<PlayerScreen> createState() => _PlayerScreenState();
+}
+
+class _PlayerScreenState extends ConsumerState<PlayerScreen> {
+  bool _isSeeking = false;
+  bool _wasPlayingBeforeSeek = false;
+
+  @override
+  Widget build(BuildContext context) {
     final nowPlaying = ref.watch(nowPlayingControllerProvider);
     final playbackState = ref.watch(audioPlayerControllerProvider);
     final progress = ref.watch(playbackProgressProvider);
 
     final isPlaying = playbackState is PlaybackPlaying;
     final isLoading = playbackState is PlaybackLoading;
+
+    // During seeking, preserve the play/pause state from before seek started
+    final displayIsPlaying = _isSeeking ? _wasPlayingBeforeSeek : isPlaying;
+    final displayIsLoading = _isSeeking ? false : isLoading;
 
     return Scaffold(
       appBar: AppBar(
@@ -46,9 +58,19 @@ class PlayerScreen extends ConsumerWidget {
                       podcastTitle: nowPlaying.podcastTitle,
                     ),
                     const SizedBox(height: 32),
-                    _PlayerProgressBar(progress: progress),
+                    _PlayerProgressBar(
+                      progress: progress,
+                      onSeekStart: () => setState(() {
+                        _isSeeking = true;
+                        _wasPlayingBeforeSeek = isPlaying;
+                      }),
+                      onSeekEnd: () => setState(() => _isSeeking = false),
+                    ),
                     const SizedBox(height: 24),
-                    _PlayerControls(isPlaying: isPlaying, isLoading: isLoading),
+                    _PlayerControls(
+                      isPlaying: displayIsPlaying,
+                      isLoading: displayIsLoading,
+                    ),
                     const Spacer(),
                   ],
                 ),
@@ -151,9 +173,11 @@ class _PlayerInfo extends StatelessWidget {
 }
 
 class _PlayerProgressBar extends ConsumerStatefulWidget {
-  const _PlayerProgressBar({this.progress});
+  const _PlayerProgressBar({this.progress, this.onSeekStart, this.onSeekEnd});
 
   final PlaybackProgress? progress;
+  final VoidCallback? onSeekStart;
+  final VoidCallback? onSeekEnd;
 
   @override
   ConsumerState<_PlayerProgressBar> createState() => _PlayerProgressBarState();
@@ -191,23 +215,28 @@ class _PlayerProgressBarState extends ConsumerState<_PlayerProgressBar> {
                   _isDragging = true;
                   _dragValue = value;
                 });
+                widget.onSeekStart?.call();
               },
               onChanged: (value) {
                 setState(() {
                   _dragValue = value;
                 });
               },
-              onChangeEnd: (value) {
+              onChangeEnd: (value) async {
                 final duration = progress?.duration ?? Duration.zero;
                 final seekPosition = Duration(
                   milliseconds: (duration.inMilliseconds * value).round(),
                 );
-                ref
+                await ref
                     .read(audioPlayerControllerProvider.notifier)
                     .seek(seekPosition);
+                // Allow player state to stabilize after seek
+                await Future<void>.delayed(const Duration(milliseconds: 150));
+                if (!mounted) return;
                 setState(() {
                   _isDragging = false;
                 });
+                widget.onSeekEnd?.call();
               },
             ),
           ),
