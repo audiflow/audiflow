@@ -1,3 +1,4 @@
+import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,6 +7,7 @@ import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../../routing/app_router.dart';
 import '../controllers/library_controller.dart';
+import '../widgets/continue_listening_section.dart';
 import '../widgets/subscription_list_tile.dart';
 
 /// Displays the user's podcast subscriptions.
@@ -22,7 +24,7 @@ class LibraryScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Library')),
       body: subscriptionsAsync.when(
-        data: (subscriptions) => _buildContent(context, subscriptions),
+        data: (subscriptions) => _buildContent(context, ref, subscriptions),
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stack) => _buildErrorState(
           context,
@@ -33,28 +35,87 @@ class LibraryScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildContent(BuildContext context, List subscriptions) {
+  Widget _buildContent(
+    BuildContext context,
+    WidgetRef ref,
+    List subscriptions,
+  ) {
     if (subscriptions.isEmpty) {
       return _buildEmptyState(context);
     }
 
-    return ListView.builder(
-      itemCount: subscriptions.length,
-      itemBuilder: (context, index) {
-        final subscription = subscriptions[index];
-        return SubscriptionListTile(
-          key: ValueKey(subscription.itunesId),
-          subscription: subscription,
-          onTap: () {
-            final podcast = subscription.toPodcast();
-            context.push(
-              '${AppRoutes.library}/podcast/${podcast.id}',
-              extra: podcast,
+    final theme = Theme.of(context);
+
+    return CustomScrollView(
+      slivers: [
+        SliverToBoxAdapter(
+          child: ContinueListeningSection(
+            onEpisodeTap: (episode) =>
+                _onContinueListeningTap(context, ref, episode),
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              Spacing.md,
+              Spacing.md,
+              Spacing.md,
+              Spacing.sm,
+            ),
+            child: Text(
+              'Your Podcasts',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ),
+        SliverList(
+          delegate: SliverChildBuilderDelegate((context, index) {
+            final subscription = subscriptions[index];
+            return SubscriptionListTile(
+              key: ValueKey(subscription.itunesId),
+              subscription: subscription,
+              onTap: () {
+                final podcast = subscription.toPodcast();
+                context.push(
+                  '${AppRoutes.library}/podcast/${podcast.id}',
+                  extra: podcast,
+                );
+              },
             );
-          },
-        );
-      },
+          }, childCount: subscriptions.length),
+        ),
+      ],
     );
+  }
+
+  void _onContinueListeningTap(
+    BuildContext context,
+    WidgetRef ref,
+    EpisodeWithProgress episode,
+  ) {
+    final controller = ref.read(audioPlayerControllerProvider.notifier);
+    final audioUrl = episode.episode.audioUrl;
+    final position = Duration(milliseconds: episode.history?.positionMs ?? 0);
+
+    controller.play(
+      audioUrl,
+      metadata: NowPlayingInfo(
+        episodeUrl: audioUrl,
+        episodeTitle: episode.episode.title,
+        podcastTitle: '',
+        artworkUrl: episode.episode.imageUrl,
+        totalDuration: episode.episode.durationMs != null
+            ? Duration(milliseconds: episode.episode.durationMs!)
+            : null,
+      ),
+    );
+
+    // Seek to saved position after playback starts
+    Future.delayed(const Duration(milliseconds: 500), () {
+      controller.seek(position);
+    });
   }
 
   Widget _buildEmptyState(BuildContext context) {
