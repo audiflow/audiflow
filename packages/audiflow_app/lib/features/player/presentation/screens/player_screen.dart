@@ -150,19 +150,33 @@ class _PlayerInfo extends StatelessWidget {
   }
 }
 
-class _PlayerProgressBar extends StatelessWidget {
+class _PlayerProgressBar extends ConsumerStatefulWidget {
   const _PlayerProgressBar({this.progress});
 
   final PlaybackProgress? progress;
 
   @override
+  ConsumerState<_PlayerProgressBar> createState() => _PlayerProgressBarState();
+}
+
+class _PlayerProgressBarState extends ConsumerState<_PlayerProgressBar> {
+  bool _isDragging = false;
+  double _dragValue = 0.0;
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final progress = widget.progress;
+
+    final displayValue = _isDragging ? _dragValue : (progress?.progress ?? 0.0);
+    final displayPosition = _isDragging
+        ? _computeDragPosition(progress?.duration)
+        : progress?.position;
 
     return Semantics(
       slider: true,
       value:
-          '${_formatDuration(progress?.position)} of ${_formatDuration(progress?.duration)}',
+          '${_formatDuration(displayPosition)} of ${_formatDuration(progress?.duration)}',
       child: Column(
         children: [
           SliderTheme(
@@ -171,9 +185,29 @@ class _PlayerProgressBar extends StatelessWidget {
               thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
             ),
             child: Slider(
-              value: progress?.progress ?? 0.0,
-              onChanged: (_) {
-                // Seek functionality - placeholder
+              value: displayValue,
+              onChangeStart: (value) {
+                setState(() {
+                  _isDragging = true;
+                  _dragValue = value;
+                });
+              },
+              onChanged: (value) {
+                setState(() {
+                  _dragValue = value;
+                });
+              },
+              onChangeEnd: (value) {
+                final duration = progress?.duration ?? Duration.zero;
+                final seekPosition = Duration(
+                  milliseconds: (duration.inMilliseconds * value).round(),
+                );
+                ref
+                    .read(audioPlayerControllerProvider.notifier)
+                    .seek(seekPosition);
+                setState(() {
+                  _isDragging = false;
+                });
               },
             ),
           ),
@@ -184,7 +218,7 @@ class _PlayerProgressBar extends StatelessWidget {
               children: [
                 ExcludeSemantics(
                   child: Text(
-                    _formatDuration(progress?.position),
+                    _formatDuration(displayPosition),
                     style: theme.textTheme.bodySmall,
                   ),
                 ),
@@ -199,6 +233,13 @@ class _PlayerProgressBar extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Duration? _computeDragPosition(Duration? duration) {
+    if (duration == null) return null;
+    return Duration(
+      milliseconds: (duration.inMilliseconds * _dragValue).round(),
     );
   }
 
@@ -232,7 +273,7 @@ class _PlayerControls extends ConsumerWidget {
             icon: const Icon(Symbols.replay_30),
             iconSize: 36,
             onPressed: () {
-              // Rewind 30s - placeholder
+              ref.read(audioPlayerControllerProvider.notifier).skipBackward();
             },
           ),
         ),
@@ -246,7 +287,7 @@ class _PlayerControls extends ConsumerWidget {
             icon: const Icon(Symbols.forward_30),
             iconSize: 36,
             onPressed: () {
-              // Forward 30s - placeholder
+              ref.read(audioPlayerControllerProvider.notifier).skipForward();
             },
           ),
         ),

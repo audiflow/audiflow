@@ -183,4 +183,37 @@ class AudioPlayerController extends _$AudioPlayerController {
   bool isLoaded(String url) {
     return _currentUrl == url;
   }
+
+  /// Seeks to the specified position.
+  ///
+  /// Clamps position between zero and duration to prevent invalid seeks.
+  /// No-op if no audio is loaded or duration is unknown.
+  Future<void> seek(Duration position) async {
+    if (_currentUrl == null) return;
+    final duration = _player.duration;
+    if (duration == null) return;
+
+    final clampedMs = position.inMilliseconds.clamp(0, duration.inMilliseconds);
+    await _player.seek(Duration(milliseconds: clampedMs));
+  }
+
+  /// Skips forward by the specified duration (default 30s).
+  ///
+  /// Clamped to duration if near the end.
+  Future<void> skipForward([
+    Duration amount = const Duration(seconds: 30),
+  ]) async {
+    if (_currentUrl == null) return;
+    await seek(_player.position + amount);
+  }
+
+  /// Skips backward by the specified duration (default 30s).
+  ///
+  /// Clamped to zero if near the start.
+  Future<void> skipBackward([
+    Duration amount = const Duration(seconds: 30),
+  ]) async {
+    if (_currentUrl == null) return;
+    await seek(_player.position - amount);
+  }
 }
