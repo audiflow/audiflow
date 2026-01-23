@@ -316,3 +316,162 @@ final class EpisodeProgressFamily extends $Family
   @override
   String toString() => r'episodeProgressProvider';
 }
+
+/// Manages the current episode filter selection.
+
+@ProviderFor(EpisodeFilterState)
+final episodeFilterStateProvider = EpisodeFilterStateProvider._();
+
+/// Manages the current episode filter selection.
+final class EpisodeFilterStateProvider
+    extends $NotifierProvider<EpisodeFilterState, EpisodeFilter> {
+  /// Manages the current episode filter selection.
+  EpisodeFilterStateProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'episodeFilterStateProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$episodeFilterStateHash();
+
+  @$internal
+  @override
+  EpisodeFilterState create() => EpisodeFilterState();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(EpisodeFilter value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<EpisodeFilter>(value),
+    );
+  }
+}
+
+String _$episodeFilterStateHash() =>
+    r'ab76b1b8835f0fd3f0798663f5520f0dfc3b9c98';
+
+/// Manages the current episode filter selection.
+
+abstract class _$EpisodeFilterState extends $Notifier<EpisodeFilter> {
+  EpisodeFilter build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref = this.ref as $Ref<EpisodeFilter, EpisodeFilter>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<EpisodeFilter, EpisodeFilter>,
+              EpisodeFilter,
+              Object?,
+              Object?
+            >;
+    element.handleCreate(ref, build);
+  }
+}
+
+/// Filters episodes based on the selected filter.
+///
+/// Returns filtered list of [PodcastItem] based on playback status.
+
+@ProviderFor(filteredEpisodes)
+final filteredEpisodesProvider = FilteredEpisodesFamily._();
+
+/// Filters episodes based on the selected filter.
+///
+/// Returns filtered list of [PodcastItem] based on playback status.
+
+final class FilteredEpisodesProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<PodcastItem>>,
+          List<PodcastItem>,
+          FutureOr<List<PodcastItem>>
+        >
+    with
+        $FutureModifier<List<PodcastItem>>,
+        $FutureProvider<List<PodcastItem>> {
+  /// Filters episodes based on the selected filter.
+  ///
+  /// Returns filtered list of [PodcastItem] based on playback status.
+  FilteredEpisodesProvider._({
+    required FilteredEpisodesFamily super.from,
+    required (String, EpisodeFilter) super.argument,
+  }) : super(
+         retry: null,
+         name: r'filteredEpisodesProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$filteredEpisodesHash();
+
+  @override
+  String toString() {
+    return r'filteredEpisodesProvider'
+        ''
+        '$argument';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<List<PodcastItem>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<PodcastItem>> create(Ref ref) {
+    final argument = this.argument as (String, EpisodeFilter);
+    return filteredEpisodes(ref, argument.$1, argument.$2);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is FilteredEpisodesProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$filteredEpisodesHash() => r'b994b18281ac38af788477bcedc96f1e2a951d3b';
+
+/// Filters episodes based on the selected filter.
+///
+/// Returns filtered list of [PodcastItem] based on playback status.
+
+final class FilteredEpisodesFamily extends $Family
+    with
+        $FunctionalFamilyOverride<
+          FutureOr<List<PodcastItem>>,
+          (String, EpisodeFilter)
+        > {
+  FilteredEpisodesFamily._()
+    : super(
+        retry: null,
+        name: r'filteredEpisodesProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  /// Filters episodes based on the selected filter.
+  ///
+  /// Returns filtered list of [PodcastItem] based on playback status.
+
+  FilteredEpisodesProvider call(String feedUrl, EpisodeFilter filter) =>
+      FilteredEpisodesProvider._(argument: (feedUrl, filter), from: this);
+
+  @override
+  String toString() => r'filteredEpisodesProvider';
+}

@@ -2,6 +2,8 @@ import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:dio/dio.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../widgets/episode_filter_chips.dart';
+
 part 'podcast_detail_controller.g.dart';
 
 /// Provider for subscription repository access.
@@ -101,4 +103,59 @@ Future<EpisodeWithProgress?> episodeProgress(Ref ref, String audioUrl) async {
 
   final history = await historyRepo.getByEpisodeId(episode.id);
   return EpisodeWithProgress(episode: episode, history: history);
+}
+
+/// Manages the current episode filter selection.
+@riverpod
+class EpisodeFilterState extends _$EpisodeFilterState {
+  @override
+  EpisodeFilter build() => EpisodeFilter.all;
+
+  void setFilter(EpisodeFilter filter) => state = filter;
+}
+
+/// Filters episodes based on the selected filter.
+///
+/// Returns filtered list of [PodcastItem] based on playback status.
+@riverpod
+Future<List<PodcastItem>> filteredEpisodes(
+  Ref ref,
+  String feedUrl,
+  EpisodeFilter filter,
+) async {
+  final feed = await ref.watch(podcastDetailProvider(feedUrl).future);
+  final episodes = feed.episodes;
+
+  // No filtering needed for 'all'
+  if (filter == EpisodeFilter.all) return episodes;
+
+  final episodeRepo = ref.watch(episodeRepositoryProvider);
+  final historyRepo = ref.watch(playbackHistoryRepositoryProvider);
+
+  final filtered = <PodcastItem>[];
+
+  for (final item in episodes) {
+    if (item.enclosureUrl == null) continue;
+
+    final episode = await episodeRepo.getByAudioUrl(item.enclosureUrl!);
+
+    // Episode not in DB = unplayed
+    if (episode == null) {
+      if (filter == EpisodeFilter.unplayed) filtered.add(item);
+      continue;
+    }
+
+    final history = await historyRepo.getByEpisodeId(episode.id);
+    final isCompleted = history?.completedAt != null;
+    final isInProgress =
+        history != null && 0 < history.positionMs && !isCompleted;
+
+    if (filter == EpisodeFilter.unplayed && !isCompleted && !isInProgress) {
+      filtered.add(item);
+    } else if (filter == EpisodeFilter.inProgress && isInProgress) {
+      filtered.add(item);
+    }
+  }
+
+  return filtered;
 }

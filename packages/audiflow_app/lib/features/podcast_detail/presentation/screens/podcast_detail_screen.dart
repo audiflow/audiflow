@@ -5,13 +5,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../subscription/presentation/controllers/subscription_controller.dart';
 import '../controllers/podcast_detail_controller.dart';
+import '../widgets/episode_filter_chips.dart';
 import '../widgets/episode_list_tile.dart';
 
 /// Displays podcast details and episode list with playback controls.
 ///
 /// Receives a [Podcast] via route extra and fetches episodes from its feedUrl.
 /// Shows podcast artwork, name, artist, and subscribe button at the top,
-/// followed by a scrollable list of episodes with play/pause buttons.
+/// followed by filter chips and a scrollable list of episodes with play/pause
+/// buttons.
 class PodcastDetailScreen extends ConsumerWidget {
   const PodcastDetailScreen({super.key, required this.podcast});
 
@@ -45,7 +47,7 @@ class PodcastDetailScreen extends ConsumerWidget {
     final feedAsync = ref.watch(podcastDetailProvider(feedUrl));
 
     return feedAsync.when(
-      data: (parsedFeed) => _buildContent(context, ref, theme, parsedFeed),
+      data: (_) => _buildContent(context, ref, theme, feedUrl),
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (error, stack) => _buildErrorState(
         theme,
@@ -139,26 +141,60 @@ class PodcastDetailScreen extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
     ThemeData theme,
-    dynamic parsedFeed,
+    String feedUrl,
   ) {
-    final episodes = parsedFeed.episodes;
+    final filter = ref.watch(episodeFilterStateProvider);
+    final filteredAsync = ref.watch(filteredEpisodesProvider(feedUrl, filter));
 
     return CustomScrollView(
       slivers: [
         SliverToBoxAdapter(child: _buildHeader(context, ref, theme)),
-        if (episodes.isEmpty)
-          SliverFillRemaining(child: _buildEmptyEpisodesState(theme))
-        else
-          SliverList.builder(
-            itemCount: episodes.length,
-            itemBuilder: (context, index) => EpisodeListTile(
-              key: ValueKey(episodes[index].guid ?? index),
-              episode: episodes[index],
-              podcastTitle: podcast.name,
-              artworkUrl: podcast.artworkUrl,
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: Spacing.sm),
+            child: EpisodeFilterChips(
+              selected: filter,
+              onSelected: (f) =>
+                  ref.read(episodeFilterStateProvider.notifier).setFilter(f),
             ),
           ),
+        ),
+        _buildEpisodeList(filteredAsync, theme),
       ],
+    );
+  }
+
+  Widget _buildEpisodeList(
+    AsyncValue<List<dynamic>> episodesAsync,
+    ThemeData theme,
+  ) {
+    return episodesAsync.when(
+      data: (episodes) {
+        if (episodes.isEmpty) {
+          return SliverFillRemaining(child: _buildEmptyFilterState(theme));
+        }
+        return SliverList.builder(
+          itemCount: episodes.length,
+          itemBuilder: (context, index) => EpisodeListTile(
+            key: ValueKey(episodes[index].guid ?? index),
+            episode: episodes[index],
+            podcastTitle: podcast.name,
+            artworkUrl: podcast.artworkUrl,
+          ),
+        );
+      },
+      loading: () => const SliverToBoxAdapter(
+        child: Padding(
+          padding: EdgeInsets.all(Spacing.lg),
+          child: Center(child: CircularProgressIndicator()),
+        ),
+      ),
+      error: (error, _) => SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsets.all(Spacing.lg),
+          child: Text('Error loading episodes: $error'),
+        ),
+      ),
     );
   }
 
@@ -322,7 +358,7 @@ class PodcastDetailScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildEmptyEpisodesState(ThemeData theme) {
+  Widget _buildEmptyFilterState(ThemeData theme) {
     final colorScheme = theme.colorScheme;
 
     return Center(
@@ -330,15 +366,22 @@ class PodcastDetailScreen extends ConsumerWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            Icons.playlist_remove,
+            Icons.filter_list_off,
             size: 64,
             color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
           ),
           const SizedBox(height: Spacing.md),
           Text(
-            'No episodes found',
+            'No matching episodes',
             style: theme.textTheme.titleMedium?.copyWith(
               color: colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: Spacing.xs),
+          Text(
+            'Try a different filter',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
             ),
           ),
         ],
