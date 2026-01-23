@@ -70,6 +70,18 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                     _PlayerControls(
                       isPlaying: displayIsPlaying,
                       isLoading: displayIsLoading,
+                      onSkipBackward: () => _handleSkip(
+                        ref
+                            .read(audioPlayerControllerProvider.notifier)
+                            .skipBackward,
+                        isPlaying,
+                      ),
+                      onSkipForward: () => _handleSkip(
+                        ref
+                            .read(audioPlayerControllerProvider.notifier)
+                            .skipForward,
+                        isPlaying,
+                      ),
                     ),
                     const Spacer(),
                   ],
@@ -77,6 +89,20 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
               ),
             ),
     );
+  }
+
+  Future<void> _handleSkip(
+    Future<void> Function() skipAction,
+    bool wasPlaying,
+  ) async {
+    setState(() {
+      _isSeeking = true;
+      _wasPlayingBeforeSeek = wasPlaying;
+    });
+    await skipAction();
+    await Future<void>.delayed(const Duration(milliseconds: 150));
+    if (!mounted) return;
+    setState(() => _isSeeking = false);
   }
 }
 
@@ -284,14 +310,21 @@ class _PlayerProgressBarState extends ConsumerState<_PlayerProgressBar> {
   }
 }
 
-class _PlayerControls extends ConsumerWidget {
-  const _PlayerControls({required this.isPlaying, required this.isLoading});
+class _PlayerControls extends StatelessWidget {
+  const _PlayerControls({
+    required this.isPlaying,
+    required this.isLoading,
+    required this.onSkipBackward,
+    required this.onSkipForward,
+  });
 
   final bool isPlaying;
   final bool isLoading;
+  final VoidCallback onSkipBackward;
+  final VoidCallback onSkipForward;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -301,9 +334,7 @@ class _PlayerControls extends ConsumerWidget {
           child: IconButton(
             icon: const Icon(Symbols.replay_30),
             iconSize: 36,
-            onPressed: () {
-              ref.read(audioPlayerControllerProvider.notifier).skipBackward();
-            },
+            onPressed: onSkipBackward,
           ),
         ),
         const SizedBox(width: 24),
@@ -315,9 +346,7 @@ class _PlayerControls extends ConsumerWidget {
           child: IconButton(
             icon: const Icon(Symbols.forward_30),
             iconSize: 36,
-            onPressed: () {
-              ref.read(audioPlayerControllerProvider.notifier).skipForward();
-            },
+            onPressed: onSkipForward,
           ),
         ),
       ],
