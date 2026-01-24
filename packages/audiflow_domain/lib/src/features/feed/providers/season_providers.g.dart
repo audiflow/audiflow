@@ -336,3 +336,109 @@ final class HasSeasonViewByFeedUrlFamily extends $Family
   @override
   String toString() => r'hasSeasonViewByFeedUrlProvider';
 }
+
+/// Provides the season grouping for a podcast by feed URL.
+///
+/// Looks up the subscription by feedUrl and returns the [SeasonGrouping] if
+/// episodes can be grouped into seasons. Returns null if the podcast is not
+/// subscribed or if no resolver can group the episodes.
+
+@ProviderFor(podcastSeasonsByFeedUrl)
+final podcastSeasonsByFeedUrlProvider = PodcastSeasonsByFeedUrlFamily._();
+
+/// Provides the season grouping for a podcast by feed URL.
+///
+/// Looks up the subscription by feedUrl and returns the [SeasonGrouping] if
+/// episodes can be grouped into seasons. Returns null if the podcast is not
+/// subscribed or if no resolver can group the episodes.
+
+final class PodcastSeasonsByFeedUrlProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<SeasonGrouping?>,
+          SeasonGrouping?,
+          FutureOr<SeasonGrouping?>
+        >
+    with $FutureModifier<SeasonGrouping?>, $FutureProvider<SeasonGrouping?> {
+  /// Provides the season grouping for a podcast by feed URL.
+  ///
+  /// Looks up the subscription by feedUrl and returns the [SeasonGrouping] if
+  /// episodes can be grouped into seasons. Returns null if the podcast is not
+  /// subscribed or if no resolver can group the episodes.
+  PodcastSeasonsByFeedUrlProvider._({
+    required PodcastSeasonsByFeedUrlFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'podcastSeasonsByFeedUrlProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$podcastSeasonsByFeedUrlHash();
+
+  @override
+  String toString() {
+    return r'podcastSeasonsByFeedUrlProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<SeasonGrouping?> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<SeasonGrouping?> create(Ref ref) {
+    final argument = this.argument as String;
+    return podcastSeasonsByFeedUrl(ref, argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is PodcastSeasonsByFeedUrlProvider &&
+        other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$podcastSeasonsByFeedUrlHash() =>
+    r'923c1024ac254173f8a38c3be3f0d8c0a011b545';
+
+/// Provides the season grouping for a podcast by feed URL.
+///
+/// Looks up the subscription by feedUrl and returns the [SeasonGrouping] if
+/// episodes can be grouped into seasons. Returns null if the podcast is not
+/// subscribed or if no resolver can group the episodes.
+
+final class PodcastSeasonsByFeedUrlFamily extends $Family
+    with $FunctionalFamilyOverride<FutureOr<SeasonGrouping?>, String> {
+  PodcastSeasonsByFeedUrlFamily._()
+    : super(
+        retry: null,
+        name: r'podcastSeasonsByFeedUrlProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  /// Provides the season grouping for a podcast by feed URL.
+  ///
+  /// Looks up the subscription by feedUrl and returns the [SeasonGrouping] if
+  /// episodes can be grouped into seasons. Returns null if the podcast is not
+  /// subscribed or if no resolver can group the episodes.
+
+  PodcastSeasonsByFeedUrlProvider call(String feedUrl) =>
+      PodcastSeasonsByFeedUrlProvider._(argument: feedUrl, from: this);
+
+  @override
+  String toString() => r'podcastSeasonsByFeedUrlProvider';
+}

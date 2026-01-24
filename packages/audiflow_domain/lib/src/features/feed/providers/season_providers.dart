@@ -60,3 +60,17 @@ Future<bool> hasSeasonViewByFeedUrl(Ref ref, String feedUrl) async {
 
   return ref.watch(hasSeasonViewProvider(subscription.id).future);
 }
+
+/// Provides the season grouping for a podcast by feed URL.
+///
+/// Looks up the subscription by feedUrl and returns the [SeasonGrouping] if
+/// episodes can be grouped into seasons. Returns null if the podcast is not
+/// subscribed or if no resolver can group the episodes.
+@riverpod
+Future<SeasonGrouping?> podcastSeasonsByFeedUrl(Ref ref, String feedUrl) async {
+  final subscriptionRepo = ref.watch(subscriptionRepositoryProvider);
+  final subscription = await subscriptionRepo.getByFeedUrl(feedUrl);
+  if (subscription == null) return null;
+
+  return ref.watch(podcastSeasonsProvider(subscription.id).future);
+}

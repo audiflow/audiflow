@@ -1,15 +1,21 @@
 import 'package:audiflow_domain/audiflow_domain.dart'
-    show hasSeasonViewByFeedUrlProvider;
+    show
+        Season,
+        hasSeasonViewByFeedUrlProvider,
+        podcastSeasonsByFeedUrlProvider;
 import 'package:audiflow_search/audiflow_search.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../routing/app_router.dart';
 import '../../../subscription/presentation/controllers/subscription_controller.dart';
 import '../controllers/podcast_detail_controller.dart';
 import '../controllers/podcast_view_mode_controller.dart';
 import '../widgets/episode_filter_chips.dart';
 import '../widgets/episode_list_tile.dart';
+import '../widgets/season_grid.dart';
 import '../widgets/season_view_toggle.dart';
 
 /// Displays podcast details and episode list with playback controls.
@@ -204,42 +210,68 @@ class PodcastDetailScreen extends ConsumerWidget {
           if (viewMode == PodcastViewMode.episodes)
             _buildEpisodeList(filteredAsync, progressMapAsync, theme)
           else
-            _buildSeasonsPlaceholder(theme),
+            _buildSeasonView(context, ref, feedUrl),
         ],
       ),
     );
   }
 
-  Widget _buildSeasonsPlaceholder(ThemeData theme) {
-    final colorScheme = theme.colorScheme;
+  Widget _buildSeasonView(BuildContext context, WidgetRef ref, String feedUrl) {
+    final seasonsAsync = ref.watch(podcastSeasonsByFeedUrlProvider(feedUrl));
 
-    return SliverFillRemaining(
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.folder_outlined,
-              size: 64,
-              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+    return seasonsAsync.when(
+      data: (grouping) {
+        if (grouping == null) {
+          return const SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.all(Spacing.lg),
+              child: Center(child: Text('No seasons available')),
             ),
-            const SizedBox(height: Spacing.md),
-            Text(
-              'Seasons view coming soon',
-              style: theme.textTheme.titleMedium?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
+          );
+        }
+
+        return SeasonGrid(
+          seasons: grouping.seasons,
+          ungroupedEpisodeIds: grouping.ungroupedEpisodeIds,
+          onSeasonTap: (season) => _navigateToSeasonEpisodes(context, season),
+          onUngroupedTap: () => _navigateToSeasonEpisodes(
+            context,
+            Season(
+              id: 'ungrouped',
+              displayName: 'Ungrouped',
+              sortKey: 999999,
+              episodeIds: grouping.ungroupedEpisodeIds,
             ),
-            const SizedBox(height: Spacing.xs),
-            Text(
-              'Episodes will be grouped by season',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-              ),
-            ),
-          ],
+          ),
+        );
+      },
+      loading: () => const SliverToBoxAdapter(
+        child: Padding(
+          padding: EdgeInsets.all(Spacing.lg),
+          child: Center(child: CircularProgressIndicator()),
         ),
       ),
+      error: (error, _) => SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsets.all(Spacing.lg),
+          child: Center(child: Text('Error loading seasons: $error')),
+        ),
+      ),
+    );
+  }
+
+  void _navigateToSeasonEpisodes(BuildContext context, Season season) {
+    final currentPath = GoRouterState.of(context).uri.path;
+    context.push(
+      '$currentPath/${AppRoutes.seasonEpisodes}'.replaceAll(
+        ':seasonId',
+        season.id,
+      ),
+      extra: {
+        'season': season,
+        'podcastTitle': podcast.name,
+        'podcastArtworkUrl': podcast.artworkUrl,
+      },
     );
   }
 
