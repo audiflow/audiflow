@@ -1,6 +1,5 @@
 import 'package:audiflow_app/features/podcast_detail/presentation/models/podcast_detail_state.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
-import 'package:audiflow_podcast/audiflow_podcast.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

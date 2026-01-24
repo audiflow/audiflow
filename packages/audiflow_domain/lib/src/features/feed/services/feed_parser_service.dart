@@ -180,8 +180,6 @@ class FeedParserService {
           :final title,
           :final description,
           :final enclosureUrl,
-          :final enclosureType,
-          :final enclosureLength,
           :final publishDate,
           :final duration,
           :final episodeNumber,

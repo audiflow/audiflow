@@ -2,7 +2,6 @@ import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:dio/dio.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../models/podcast_detail_state.dart';
 import '../widgets/episode_filter_chips.dart';
 
 part 'podcast_detail_controller.g.dart';

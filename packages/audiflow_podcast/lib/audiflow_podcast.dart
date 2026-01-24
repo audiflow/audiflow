@@ -96,11 +96,9 @@ export 'src/models/podcast_item.dart';
 export 'src/models/podcast_transcript.dart';
 // Network utilities (for advanced usage)
 export 'src/network/http_fetcher.dart' show CacheInfo;
-// Builder interface (for domain integration)
-export 'src/parser/podcast_entity_builder.dart';
-// Isolate parser progress events
-export 'src/parser/parse_progress.dart';
-// Isolate-based RSS parser
+// Parser exports
 export 'src/parser/isolate_rss_parser.dart';
+export 'src/parser/parse_progress.dart';
+export 'src/parser/podcast_entity_builder.dart';
 // Core parser
 export 'src/podcast_feed_parser.dart' show CacheOptions, PodcastRssParser;
