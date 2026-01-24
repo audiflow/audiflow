@@ -146,21 +146,27 @@ class PodcastDetailScreen extends ConsumerWidget {
     final filter = ref.watch(episodeFilterStateProvider);
     final filteredAsync = ref.watch(filteredEpisodesProvider(feedUrl, filter));
 
-    return CustomScrollView(
-      slivers: [
-        SliverToBoxAdapter(child: _buildHeader(context, ref, theme)),
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.only(bottom: Spacing.sm),
-            child: EpisodeFilterChips(
-              selected: filter,
-              onSelected: (f) =>
-                  ref.read(episodeFilterStateProvider.notifier).setFilter(f),
+    return RefreshIndicator(
+      onRefresh: () async {
+        ref.invalidate(podcastDetailProvider(feedUrl));
+        await ref.read(podcastDetailProvider(feedUrl).future);
+      },
+      child: CustomScrollView(
+        slivers: [
+          SliverToBoxAdapter(child: _buildHeader(context, ref, theme)),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: Spacing.sm),
+              child: EpisodeFilterChips(
+                selected: filter,
+                onSelected: (f) =>
+                    ref.read(episodeFilterStateProvider.notifier).setFilter(f),
+              ),
             ),
           ),
-        ),
-        _buildEpisodeList(filteredAsync, theme),
-      ],
+          _buildEpisodeList(filteredAsync, theme),
+        ],
+      ),
     );
   }
 
