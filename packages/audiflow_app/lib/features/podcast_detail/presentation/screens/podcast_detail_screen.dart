@@ -1,3 +1,5 @@
+import 'package:audiflow_domain/audiflow_domain.dart'
+    show hasSeasonViewByFeedUrlProvider;
 import 'package:audiflow_search/audiflow_search.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
@@ -154,8 +156,9 @@ class PodcastDetailScreen extends ConsumerWidget {
     // View mode state
     final viewMode = ref.watch(podcastViewModeControllerProvider(podcast.id));
 
-    // Placeholder: actual season detection will be integrated later
-    const hasSeasons = false;
+    // Check if season view is available for this podcast
+    final hasSeasonsAsync = ref.watch(hasSeasonViewByFeedUrlProvider(feedUrl));
+    final hasSeasons = hasSeasonsAsync.value ?? false;
 
     return RefreshIndicator(
       onRefresh: () async {

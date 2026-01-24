@@ -241,3 +241,98 @@ final class HasSeasonViewFamily extends $Family
   @override
   String toString() => r'hasSeasonViewProvider';
 }
+
+/// Whether the season view toggle should be visible for a podcast by feed URL.
+///
+/// Looks up the subscription by feedUrl and delegates to [hasSeasonView].
+/// Returns false if the podcast is not subscribed.
+
+@ProviderFor(hasSeasonViewByFeedUrl)
+final hasSeasonViewByFeedUrlProvider = HasSeasonViewByFeedUrlFamily._();
+
+/// Whether the season view toggle should be visible for a podcast by feed URL.
+///
+/// Looks up the subscription by feedUrl and delegates to [hasSeasonView].
+/// Returns false if the podcast is not subscribed.
+
+final class HasSeasonViewByFeedUrlProvider
+    extends $FunctionalProvider<AsyncValue<bool>, bool, FutureOr<bool>>
+    with $FutureModifier<bool>, $FutureProvider<bool> {
+  /// Whether the season view toggle should be visible for a podcast by feed URL.
+  ///
+  /// Looks up the subscription by feedUrl and delegates to [hasSeasonView].
+  /// Returns false if the podcast is not subscribed.
+  HasSeasonViewByFeedUrlProvider._({
+    required HasSeasonViewByFeedUrlFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'hasSeasonViewByFeedUrlProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$hasSeasonViewByFeedUrlHash();
+
+  @override
+  String toString() {
+    return r'hasSeasonViewByFeedUrlProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<bool> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<bool> create(Ref ref) {
+    final argument = this.argument as String;
+    return hasSeasonViewByFeedUrl(ref, argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is HasSeasonViewByFeedUrlProvider &&
+        other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$hasSeasonViewByFeedUrlHash() =>
+    r'1482ce849bfd0abce89dff0ad2931c0106c1b563';
+
+/// Whether the season view toggle should be visible for a podcast by feed URL.
+///
+/// Looks up the subscription by feedUrl and delegates to [hasSeasonView].
+/// Returns false if the podcast is not subscribed.
+
+final class HasSeasonViewByFeedUrlFamily extends $Family
+    with $FunctionalFamilyOverride<FutureOr<bool>, String> {
+  HasSeasonViewByFeedUrlFamily._()
+    : super(
+        retry: null,
+        name: r'hasSeasonViewByFeedUrlProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  /// Whether the season view toggle should be visible for a podcast by feed URL.
+  ///
+  /// Looks up the subscription by feedUrl and delegates to [hasSeasonView].
+  /// Returns false if the podcast is not subscribed.
+
+  HasSeasonViewByFeedUrlProvider call(String feedUrl) =>
+      HasSeasonViewByFeedUrlProvider._(argument: feedUrl, from: this);
+
+  @override
+  String toString() => r'hasSeasonViewByFeedUrlProvider';
+}

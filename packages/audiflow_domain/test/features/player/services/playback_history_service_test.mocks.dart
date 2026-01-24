@@ -109,4 +109,14 @@ class MockPlaybackHistoryRepository extends _i1.Mock
             returnValue: _i3.Stream<List<_i4.PlaybackHistory>>.empty(),
           )
           as _i3.Stream<List<_i4.PlaybackHistory>>);
+
+  @override
+  _i3.Future<Map<int, _i4.PlaybackHistory>> getByPodcastId(int? podcastId) =>
+      (super.noSuchMethod(
+            Invocation.method(#getByPodcastId, [podcastId]),
+            returnValue: _i3.Future<Map<int, _i4.PlaybackHistory>>.value(
+              <int, _i4.PlaybackHistory>{},
+            ),
+          )
+          as _i3.Future<Map<int, _i4.PlaybackHistory>>);
 }
