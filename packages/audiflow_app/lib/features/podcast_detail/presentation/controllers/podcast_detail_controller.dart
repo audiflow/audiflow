@@ -2,9 +2,30 @@ import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:dio/dio.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../models/podcast_detail_state.dart';
 import '../widgets/episode_filter_chips.dart';
 
 part 'podcast_detail_controller.g.dart';
+
+/// Refresh window in minutes - skip fetch if last fetched within this time.
+const _refreshWindowMinutes = 10;
+
+/// Checks if remote fetch should be performed.
+///
+/// Returns false if:
+/// - Offline
+/// - Within refresh window (10 minutes)
+bool shouldFetchRemote({
+  required DateTime? lastFetchedAt,
+  required bool isOnline,
+}) {
+  if (!isOnline) return false;
+  if (lastFetchedAt == null) return true;
+
+  const refreshWindow = Duration(minutes: _refreshWindowMinutes);
+  final elapsed = DateTime.now().difference(lastFetchedAt);
+  return refreshWindow <= elapsed;
+}
 
 /// Provider for subscription repository access.
 ///
