@@ -36,6 +36,7 @@ export 'src/features/feed/resolvers/season_resolver.dart';
 export 'src/features/feed/resolvers/title_appearance_order_resolver.dart';
 export 'src/features/feed/resolvers/year_resolver.dart';
 export 'src/features/feed/services/feed_parser_service.dart';
+export 'src/features/feed/services/season_resolver_service.dart';
 
 // Feed feature - Episodes
 export 'src/features/feed/models/episode.dart';
