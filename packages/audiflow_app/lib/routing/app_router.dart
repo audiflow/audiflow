@@ -1,9 +1,11 @@
+import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_search/audiflow_search.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../features/library/presentation/screens/library_screen.dart';
 import '../features/podcast_detail/presentation/screens/podcast_detail_screen.dart';
+import '../features/podcast_detail/presentation/screens/season_episodes_screen.dart';
 import '../features/search/presentation/screens/search_screen.dart';
 import '../features/settings/presentation/screens/settings_screen.dart';
 import 'scaffold_with_nav_bar.dart';
@@ -16,6 +18,7 @@ class AppRoutes {
   static const String library = '/library';
   static const String settings = '/settings';
   static const String podcastDetail = '/search/podcast';
+  static const String seasonEpisodes = 'season/:seasonId';
 }
 
 /// Navigator keys for each tab branch.
@@ -56,6 +59,13 @@ GoRouter createAppRouter() {
                     path: 'podcast/:id',
                     builder: (context, state) =>
                         _buildPodcastDetailScreen(state),
+                    routes: [
+                      GoRoute(
+                        path: AppRoutes.seasonEpisodes,
+                        builder: (context, state) =>
+                            _buildSeasonEpisodesScreen(state),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -72,6 +82,13 @@ GoRouter createAppRouter() {
                     path: 'podcast/:id',
                     builder: (context, state) =>
                         _buildPodcastDetailScreen(state),
+                    routes: [
+                      GoRoute(
+                        path: AppRoutes.seasonEpisodes,
+                        builder: (context, state) =>
+                            _buildSeasonEpisodesScreen(state),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -103,6 +120,30 @@ Widget _buildPodcastDetailScreen(GoRouterState state) {
   return PodcastDetailScreen(podcast: podcast);
 }
 
+/// Builds the season episodes screen from route state.
+///
+/// Returns [_SeasonNotFoundScreen] if season data is not available.
+Widget _buildSeasonEpisodesScreen(GoRouterState state) {
+  final extra = state.extra as Map<String, dynamic>?;
+  if (extra == null) {
+    return const _SeasonNotFoundScreen();
+  }
+
+  final season = extra['season'] as Season?;
+  if (season == null) {
+    return const _SeasonNotFoundScreen();
+  }
+
+  final podcastTitle = extra['podcastTitle'] as String? ?? '';
+  final podcastArtworkUrl = extra['podcastArtworkUrl'] as String?;
+
+  return SeasonEpisodesScreen(
+    season: season,
+    podcastTitle: podcastTitle,
+    podcastArtworkUrl: podcastArtworkUrl,
+  );
+}
+
 /// Fallback screen shown when podcast data is not available.
 class _PodcastNotFoundScreen extends StatelessWidget {
   const _PodcastNotFoundScreen();
@@ -119,6 +160,36 @@ class _PodcastNotFoundScreen extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               'Podcast data not available',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Go Back'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Fallback screen shown when season data is not available.
+class _SeasonNotFoundScreen extends StatelessWidget {
+  const _SeasonNotFoundScreen();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Season Not Found')),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.folder_off_outlined, size: 64),
+            const SizedBox(height: 16),
+            Text(
+              'Season data not available',
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 8),
