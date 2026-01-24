@@ -31,6 +31,7 @@ export 'src/features/feed/models/feed_parse_progress.dart';
 export 'src/features/feed/models/season.dart';
 export 'src/features/feed/models/season_pattern.dart';
 export 'src/features/feed/models/season_sort.dart';
+export 'src/features/feed/resolvers/rss_metadata_resolver.dart';
 export 'src/features/feed/resolvers/season_resolver.dart';
 export 'src/features/feed/services/feed_parser_service.dart';
 
