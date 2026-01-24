@@ -146,9 +146,13 @@ class PodcastDetailScreen extends ConsumerWidget {
     final filter = ref.watch(episodeFilterStateProvider);
     final filteredAsync = ref.watch(filteredEpisodesProvider(feedUrl, filter));
 
+    // Batch-fetch all episode progress in a single query
+    final progressMapAsync = ref.watch(podcastEpisodeProgressProvider(feedUrl));
+
     return RefreshIndicator(
       onRefresh: () async {
         ref.invalidate(podcastDetailProvider(feedUrl));
+        ref.invalidate(podcastEpisodeProgressProvider(feedUrl));
         await ref.read(podcastDetailProvider(feedUrl).future);
       },
       child: CustomScrollView(
@@ -164,7 +168,7 @@ class PodcastDetailScreen extends ConsumerWidget {
               ),
             ),
           ),
-          _buildEpisodeList(filteredAsync, theme),
+          _buildEpisodeList(filteredAsync, progressMapAsync, theme),
         ],
       ),
     );
@@ -172,6 +176,7 @@ class PodcastDetailScreen extends ConsumerWidget {
 
   Widget _buildEpisodeList(
     AsyncValue<List<dynamic>> episodesAsync,
+    AsyncValue<EpisodeProgressMap> progressMapAsync,
     ThemeData theme,
   ) {
     return episodesAsync.when(
@@ -179,14 +184,27 @@ class PodcastDetailScreen extends ConsumerWidget {
         if (episodes.isEmpty) {
           return SliverFillRemaining(child: _buildEmptyFilterState(theme));
         }
+
+        // Use progress map if available, otherwise empty map
+        final progressMap = progressMapAsync.value ?? {};
+
         return SliverList.builder(
           itemCount: episodes.length,
-          itemBuilder: (context, index) => EpisodeListTile(
-            key: ValueKey(episodes[index].guid ?? index),
-            episode: episodes[index],
-            podcastTitle: podcast.name,
-            artworkUrl: podcast.artworkUrl,
-          ),
+          itemBuilder: (context, index) {
+            final episode = episodes[index];
+            // Look up pre-fetched progress by audioUrl
+            final progress = episode.enclosureUrl != null
+                ? progressMap[episode.enclosureUrl]
+                : null;
+
+            return EpisodeListTile(
+              key: ValueKey(episode.guid ?? index),
+              episode: episode,
+              podcastTitle: podcast.name,
+              artworkUrl: podcast.artworkUrl,
+              progress: progress,
+            );
+          },
         );
       },
       loading: () => const SliverToBoxAdapter(
