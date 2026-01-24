@@ -5,8 +5,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../subscription/presentation/controllers/subscription_controller.dart';
 import '../controllers/podcast_detail_controller.dart';
+import '../controllers/podcast_view_mode_controller.dart';
 import '../widgets/episode_filter_chips.dart';
 import '../widgets/episode_list_tile.dart';
+import '../widgets/season_view_toggle.dart';
 
 /// Displays podcast details and episode list with playback controls.
 ///
@@ -149,6 +151,12 @@ class PodcastDetailScreen extends ConsumerWidget {
     // Batch-fetch all episode progress in a single query
     final progressMapAsync = ref.watch(podcastEpisodeProgressProvider(feedUrl));
 
+    // View mode state
+    final viewMode = ref.watch(podcastViewModeControllerProvider(podcast.id));
+
+    // Placeholder: actual season detection will be integrated later
+    const hasSeasons = false;
+
     return RefreshIndicator(
       onRefresh: () async {
         ref.invalidate(podcastDetailProvider(feedUrl));
@@ -158,18 +166,76 @@ class PodcastDetailScreen extends ConsumerWidget {
       child: CustomScrollView(
         slivers: [
           SliverToBoxAdapter(child: _buildHeader(context, ref, theme)),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: Spacing.sm),
-              child: EpisodeFilterChips(
-                selected: filter,
-                onSelected: (f) =>
-                    ref.read(episodeFilterStateProvider.notifier).setFilter(f),
+          // Show view mode toggle only when seasons are available
+          if (hasSeasons)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: Spacing.md,
+                  vertical: Spacing.sm,
+                ),
+                child: SeasonViewToggle(
+                  selected: viewMode,
+                  onChanged: (mode) => ref
+                      .read(
+                        podcastViewModeControllerProvider(podcast.id).notifier,
+                      )
+                      .toggle(),
+                ),
               ),
             ),
-          ),
-          _buildEpisodeList(filteredAsync, progressMapAsync, theme),
+          // Show filter chips only in episodes view
+          if (viewMode == PodcastViewMode.episodes)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: Spacing.sm),
+                child: EpisodeFilterChips(
+                  selected: filter,
+                  onSelected: (f) => ref
+                      .read(episodeFilterStateProvider.notifier)
+                      .setFilter(f),
+                ),
+              ),
+            ),
+          // Content based on view mode
+          if (viewMode == PodcastViewMode.episodes)
+            _buildEpisodeList(filteredAsync, progressMapAsync, theme)
+          else
+            _buildSeasonsPlaceholder(theme),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSeasonsPlaceholder(ThemeData theme) {
+    final colorScheme = theme.colorScheme;
+
+    return SliverFillRemaining(
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.folder_outlined,
+              size: 64,
+              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+            ),
+            const SizedBox(height: Spacing.md),
+            Text(
+              'Seasons view coming soon',
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: Spacing.xs),
+            Text(
+              'Episodes will be grouped by season',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
