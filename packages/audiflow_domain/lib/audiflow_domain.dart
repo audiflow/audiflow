@@ -59,7 +59,14 @@ export 'src/features/voice/services/voice_command_orchestrator.dart';
 
 // Database
 export 'src/common/database/app_database.dart'
-    show AppDatabase, Subscription, Episode, PlaybackHistory;
+    show
+        AppDatabase,
+        Subscription,
+        SubscriptionsCompanion,
+        Episode,
+        EpisodesCompanion,
+        PlaybackHistory,
+        PlaybackHistoriesCompanion;
 
 // Subscription feature
 export 'src/features/subscription/extensions/subscription_extensions.dart';

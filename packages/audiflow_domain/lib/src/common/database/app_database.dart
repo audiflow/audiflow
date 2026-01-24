@@ -19,6 +19,9 @@ class AppDatabase extends _$AppDatabase {
   /// Creates the database instance with lazy initialization
   AppDatabase() : super(_openConnection());
 
+  /// Creates a test database with in-memory storage.
+  AppDatabase.forTesting(super.executor);
+
   @override
   int get schemaVersion => 4;
 
