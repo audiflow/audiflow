@@ -73,4 +73,9 @@ class PlaybackHistoryRepositoryImpl implements PlaybackHistoryRepository {
   Stream<List<PlaybackHistory>> watchInProgress({int limit = 10}) {
     return _datasource.watchInProgress(limit: limit);
   }
+
+  @override
+  Future<Map<int, PlaybackHistory>> getByPodcastId(int podcastId) {
+    return _datasource.getByPodcastId(podcastId);
+  }
 }

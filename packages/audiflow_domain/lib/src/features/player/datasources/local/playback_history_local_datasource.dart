@@ -142,4 +142,24 @@ class PlaybackHistoryLocalDatasource {
     final history = await getByEpisodeId(episodeId);
     return history?.completedAt != null;
   }
+
+  /// Returns all playback histories for episodes in a podcast.
+  ///
+  /// Performs a single query with JOIN instead of N individual queries.
+  Future<Map<int, PlaybackHistory>> getByPodcastId(int podcastId) async {
+    final query = _db.select(_db.playbackHistories).join([
+      innerJoin(
+        _db.episodes,
+        _db.episodes.id.equalsExp(_db.playbackHistories.episodeId),
+      ),
+    ])..where(_db.episodes.podcastId.equals(podcastId));
+
+    final results = await query.get();
+    return {
+      for (final row in results)
+        row.readTable(_db.playbackHistories).episodeId: row.readTable(
+          _db.playbackHistories,
+        ),
+    };
+  }
 }

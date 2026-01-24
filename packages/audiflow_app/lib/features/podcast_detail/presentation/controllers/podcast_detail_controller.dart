@@ -6,6 +6,26 @@ import '../widgets/episode_filter_chips.dart';
 
 part 'podcast_detail_controller.g.dart';
 
+/// Refresh window in minutes - skip fetch if last fetched within this time.
+const _refreshWindowMinutes = 10;
+
+/// Checks if remote fetch should be performed.
+///
+/// Returns false if:
+/// - Offline
+/// - Within refresh window (10 minutes)
+bool shouldFetchRemote({
+  required DateTime? lastFetchedAt,
+  required bool isOnline,
+}) {
+  if (!isOnline) return false;
+  if (lastFetchedAt == null) return true;
+
+  const refreshWindow = Duration(minutes: _refreshWindowMinutes);
+  final elapsed = DateTime.now().difference(lastFetchedAt);
+  return refreshWindow <= elapsed;
+}
+
 /// Provider for subscription repository access.
 ///
 /// Re-exported from audiflow_domain for convenience.
@@ -103,6 +123,79 @@ Future<EpisodeWithProgress?> episodeProgress(Ref ref, String audioUrl) async {
 
   final history = await historyRepo.getByEpisodeId(episode.id);
   return EpisodeWithProgress(episode: episode, history: history);
+}
+
+/// Map of audioUrl -> EpisodeWithProgress for a podcast.
+typedef EpisodeProgressMap = Map<String, EpisodeWithProgress>;
+
+/// Batch-fetches all episode progress for a podcast in a single query.
+///
+/// This is much more efficient than N individual episodeProgress queries
+/// when displaying a list of episodes.
+@riverpod
+Future<EpisodeProgressMap> podcastEpisodeProgress(
+  Ref ref,
+  String feedUrl,
+) async {
+  final subscriptionRepo = ref.watch(subscriptionRepositoryProvider);
+  final subscription = await subscriptionRepo.getByFeedUrl(feedUrl);
+  if (subscription == null) return {};
+
+  final episodeRepo = ref.watch(episodeRepositoryProvider);
+  final historyRepo = ref.watch(playbackHistoryRepositoryProvider);
+
+  // Single batch query for all episodes
+  final episodes = await episodeRepo.getByPodcastId(subscription.id);
+  if (episodes.isEmpty) return {};
+
+  // Single batch query for all histories
+  final histories = await historyRepo.getByPodcastId(subscription.id);
+
+  // Build map keyed by audioUrl for O(1) lookup in list tiles
+  final result = <String, EpisodeWithProgress>{};
+  for (final episode in episodes) {
+    final history = histories[episode.id];
+    result[episode.audioUrl] = EpisodeWithProgress(
+      episode: episode,
+      history: history,
+    );
+  }
+  return result;
+}
+
+/// Extracts only the current episode URL from playback state.
+///
+/// This allows tiles to watch ONLY the URL, preventing rebuilds when
+/// other playback properties change (e.g., position updates).
+@riverpod
+String? currentPlayingEpisodeUrl(Ref ref) {
+  final playbackState = ref.watch(audioPlayerControllerProvider);
+  return playbackState.maybeWhen(
+    playing: (url) => url,
+    paused: (url) => url,
+    loading: (url) => url,
+    orElse: () => null,
+  );
+}
+
+/// Returns true if the given URL is currently playing (not paused).
+@riverpod
+bool isEpisodePlaying(Ref ref, String audioUrl) {
+  final playbackState = ref.watch(audioPlayerControllerProvider);
+  return playbackState.maybeWhen(
+    playing: (url) => url == audioUrl,
+    orElse: () => false,
+  );
+}
+
+/// Returns true if the given URL is currently loading.
+@riverpod
+bool isEpisodeLoading(Ref ref, String audioUrl) {
+  final playbackState = ref.watch(audioPlayerControllerProvider);
+  return playbackState.maybeWhen(
+    loading: (url) => url == audioUrl,
+    orElse: () => false,
+  );
 }
 
 /// Manages the current episode filter selection.

@@ -317,6 +317,337 @@ final class EpisodeProgressFamily extends $Family
   String toString() => r'episodeProgressProvider';
 }
 
+/// Batch-fetches all episode progress for a podcast in a single query.
+///
+/// This is much more efficient than N individual episodeProgress queries
+/// when displaying a list of episodes.
+
+@ProviderFor(podcastEpisodeProgress)
+final podcastEpisodeProgressProvider = PodcastEpisodeProgressFamily._();
+
+/// Batch-fetches all episode progress for a podcast in a single query.
+///
+/// This is much more efficient than N individual episodeProgress queries
+/// when displaying a list of episodes.
+
+final class PodcastEpisodeProgressProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<EpisodeProgressMap>,
+          EpisodeProgressMap,
+          FutureOr<EpisodeProgressMap>
+        >
+    with
+        $FutureModifier<EpisodeProgressMap>,
+        $FutureProvider<EpisodeProgressMap> {
+  /// Batch-fetches all episode progress for a podcast in a single query.
+  ///
+  /// This is much more efficient than N individual episodeProgress queries
+  /// when displaying a list of episodes.
+  PodcastEpisodeProgressProvider._({
+    required PodcastEpisodeProgressFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'podcastEpisodeProgressProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$podcastEpisodeProgressHash();
+
+  @override
+  String toString() {
+    return r'podcastEpisodeProgressProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<EpisodeProgressMap> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<EpisodeProgressMap> create(Ref ref) {
+    final argument = this.argument as String;
+    return podcastEpisodeProgress(ref, argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is PodcastEpisodeProgressProvider &&
+        other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$podcastEpisodeProgressHash() =>
+    r'8bbe628514cfdfc2ce4694ccb564084079f5913b';
+
+/// Batch-fetches all episode progress for a podcast in a single query.
+///
+/// This is much more efficient than N individual episodeProgress queries
+/// when displaying a list of episodes.
+
+final class PodcastEpisodeProgressFamily extends $Family
+    with $FunctionalFamilyOverride<FutureOr<EpisodeProgressMap>, String> {
+  PodcastEpisodeProgressFamily._()
+    : super(
+        retry: null,
+        name: r'podcastEpisodeProgressProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  /// Batch-fetches all episode progress for a podcast in a single query.
+  ///
+  /// This is much more efficient than N individual episodeProgress queries
+  /// when displaying a list of episodes.
+
+  PodcastEpisodeProgressProvider call(String feedUrl) =>
+      PodcastEpisodeProgressProvider._(argument: feedUrl, from: this);
+
+  @override
+  String toString() => r'podcastEpisodeProgressProvider';
+}
+
+/// Extracts only the current episode URL from playback state.
+///
+/// This allows tiles to watch ONLY the URL, preventing rebuilds when
+/// other playback properties change (e.g., position updates).
+
+@ProviderFor(currentPlayingEpisodeUrl)
+final currentPlayingEpisodeUrlProvider = CurrentPlayingEpisodeUrlProvider._();
+
+/// Extracts only the current episode URL from playback state.
+///
+/// This allows tiles to watch ONLY the URL, preventing rebuilds when
+/// other playback properties change (e.g., position updates).
+
+final class CurrentPlayingEpisodeUrlProvider
+    extends $FunctionalProvider<String?, String?, String?>
+    with $Provider<String?> {
+  /// Extracts only the current episode URL from playback state.
+  ///
+  /// This allows tiles to watch ONLY the URL, preventing rebuilds when
+  /// other playback properties change (e.g., position updates).
+  CurrentPlayingEpisodeUrlProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'currentPlayingEpisodeUrlProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$currentPlayingEpisodeUrlHash();
+
+  @$internal
+  @override
+  $ProviderElement<String?> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  String? create(Ref ref) {
+    return currentPlayingEpisodeUrl(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(String? value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<String?>(value),
+    );
+  }
+}
+
+String _$currentPlayingEpisodeUrlHash() =>
+    r'1effa061b31513f97f0176272f294d4df7e7b596';
+
+/// Returns true if the given URL is currently playing (not paused).
+
+@ProviderFor(isEpisodePlaying)
+final isEpisodePlayingProvider = IsEpisodePlayingFamily._();
+
+/// Returns true if the given URL is currently playing (not paused).
+
+final class IsEpisodePlayingProvider
+    extends $FunctionalProvider<bool, bool, bool>
+    with $Provider<bool> {
+  /// Returns true if the given URL is currently playing (not paused).
+  IsEpisodePlayingProvider._({
+    required IsEpisodePlayingFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'isEpisodePlayingProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$isEpisodePlayingHash();
+
+  @override
+  String toString() {
+    return r'isEpisodePlayingProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $ProviderElement<bool> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  bool create(Ref ref) {
+    final argument = this.argument as String;
+    return isEpisodePlaying(ref, argument);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(bool value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<bool>(value),
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is IsEpisodePlayingProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$isEpisodePlayingHash() => r'8368dd9571e306824e409441c7c489c2bc6c0351';
+
+/// Returns true if the given URL is currently playing (not paused).
+
+final class IsEpisodePlayingFamily extends $Family
+    with $FunctionalFamilyOverride<bool, String> {
+  IsEpisodePlayingFamily._()
+    : super(
+        retry: null,
+        name: r'isEpisodePlayingProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  /// Returns true if the given URL is currently playing (not paused).
+
+  IsEpisodePlayingProvider call(String audioUrl) =>
+      IsEpisodePlayingProvider._(argument: audioUrl, from: this);
+
+  @override
+  String toString() => r'isEpisodePlayingProvider';
+}
+
+/// Returns true if the given URL is currently loading.
+
+@ProviderFor(isEpisodeLoading)
+final isEpisodeLoadingProvider = IsEpisodeLoadingFamily._();
+
+/// Returns true if the given URL is currently loading.
+
+final class IsEpisodeLoadingProvider
+    extends $FunctionalProvider<bool, bool, bool>
+    with $Provider<bool> {
+  /// Returns true if the given URL is currently loading.
+  IsEpisodeLoadingProvider._({
+    required IsEpisodeLoadingFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'isEpisodeLoadingProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$isEpisodeLoadingHash();
+
+  @override
+  String toString() {
+    return r'isEpisodeLoadingProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $ProviderElement<bool> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  bool create(Ref ref) {
+    final argument = this.argument as String;
+    return isEpisodeLoading(ref, argument);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(bool value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<bool>(value),
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is IsEpisodeLoadingProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$isEpisodeLoadingHash() => r'8c2a8fe9aebb8f66a3b7b55b88b1633b36f174a7';
+
+/// Returns true if the given URL is currently loading.
+
+final class IsEpisodeLoadingFamily extends $Family
+    with $FunctionalFamilyOverride<bool, String> {
+  IsEpisodeLoadingFamily._()
+    : super(
+        retry: null,
+        name: r'isEpisodeLoadingProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  /// Returns true if the given URL is currently loading.
+
+  IsEpisodeLoadingProvider call(String audioUrl) =>
+      IsEpisodeLoadingProvider._(argument: audioUrl, from: this);
+
+  @override
+  String toString() => r'isEpisodeLoadingProvider';
+}
+
 /// Manages the current episode filter selection.
 
 @ProviderFor(EpisodeFilterState)

@@ -1,9 +1,12 @@
 import 'package:audiflow_podcast/audiflow_podcast.dart';
+import 'package:drift/drift.dart';
 import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../common/database/app_database.dart';
 import '../../../common/providers/logger_provider.dart';
 import '../builders/podcast_builder.dart';
+import '../models/feed_parse_progress.dart';
 
 part 'feed_parser_service.g.dart';
 
@@ -81,49 +84,166 @@ class FeedParserService {
     }
   }
 
-  /// Parses a podcast RSS feed from raw XML content.
+  /// Parses a podcast RSS feed from raw XML content using isolate.
   ///
-  /// This is useful for testing or when the XML content is already available.
+  /// This runs parsing in a background isolate to prevent UI freezes.
   Future<ParsedFeed> parseFromString(String xmlContent) async {
-    _logger?.d('Parsing podcast feed from string content');
-
-    final errors = <PodcastParseError>[];
-    final warnings = <PodcastParseWarning>[];
-    PodcastFeed? feed;
-    final items = <PodcastItem>[];
+    _logger?.d('Parsing podcast feed from string content (isolate)');
 
     try {
-      await for (final entity in _parser.parseFromString(xmlContent)) {
-        if (entity is PodcastFeed) {
-          feed = entity;
-        } else if (entity is PodcastItem) {
-          items.add(entity);
-        } else if (entity is PodcastParseError) {
-          errors.add(entity);
-        } else if (entity is PodcastParseWarning) {
-          warnings.add(entity);
-        }
-      }
+      // Use isolate-based parsing to prevent UI freeze
+      final result = await IsolateRssParser.parseFeed(feedXml: xmlContent);
 
-      if (feed == null) {
-        throw PodcastException.parsing(
-          'No feed metadata found in XML content',
-          sourceUrl: 'string',
-        );
-      }
+      _logger?.i(
+        'Parsed feed: ${result.meta.title} with ${result.episodes.length} episodes',
+      );
 
-      _logger?.i('Parsed feed: ${feed.title} with ${items.length} episodes');
+      // Convert ParsedPodcastMeta to PodcastFeed
+      final feed = PodcastFeed.fromData(
+        parsedAt: DateTime.now(),
+        sourceUrl: '',
+        title: result.meta.title,
+        description: result.meta.description,
+        author: result.meta.author,
+        language: result.meta.language,
+        images: result.meta.imageUrl != null
+            ? [PodcastImage(url: result.meta.imageUrl!)]
+            : [],
+      );
+
+      // Convert ParsedEpisode to PodcastItem
+      final items = result.episodes
+          .map(
+            (e) => PodcastItem.fromData(
+              parsedAt: DateTime.now(),
+              sourceUrl: '',
+              title: e.title,
+              description: e.description ?? '',
+              guid: e.guid,
+              enclosureUrl: e.enclosureUrl,
+              enclosureType: e.enclosureType,
+              enclosureLength: e.enclosureLength,
+              publishDate: e.publishDate,
+              duration: e.duration,
+              episodeNumber: e.episodeNumber,
+              seasonNumber: e.seasonNumber,
+              images: e.imageUrl != null
+                  ? [PodcastImage(url: e.imageUrl!)]
+                  : [],
+            ),
+          )
+          .toList();
 
       return ParsedFeed(
         podcast: feed,
         episodes: items,
-        errors: errors,
-        warnings: warnings,
+        errors: const [],
+        warnings: const [],
       );
     } catch (e) {
       if (e is PodcastException) rethrow;
       _logger?.e('Unexpected error parsing feed from string: $e');
       throw PodcastException(message: 'Failed to parse podcast feed: $e');
+    }
+  }
+
+  static const _defaultBatchSize = 20;
+
+  /// Parses XML content in isolate with progress streaming and batched storage.
+  ///
+  /// Emits [FeedParseProgress] events for UI updates.
+  /// Calls [onBatchReady] when a batch of episodes is ready to store.
+  ///
+  /// - [xmlContent]: Raw XML content of the RSS feed
+  /// - [podcastId]: Database ID for the podcast (used in companion objects)
+  /// - [knownGuids]: Set of episode GUIDs already in the database
+  /// - [onBatchReady]: Callback to persist a batch of episodes
+  /// - [batchSize]: Number of episodes per batch (default: 20)
+  Stream<FeedParseProgress> parseWithProgress({
+    required String xmlContent,
+    required int podcastId,
+    required Set<String> knownGuids,
+    required Future<void> Function(List<EpisodesCompanion> companions)
+    onBatchReady,
+    int batchSize = _defaultBatchSize,
+  }) async* {
+    _logger?.i('Starting isolate parse for podcast $podcastId');
+    _logger?.d('Known GUIDs: ${knownGuids.length}');
+
+    final buffer = <EpisodesCompanion>[];
+    var totalParsed = 0;
+
+    await for (final progress in IsolateRssParser.parse(
+      feedXml: xmlContent,
+      knownGuids: knownGuids,
+    )) {
+      switch (progress) {
+        case ParsedPodcastMeta(
+          :final title,
+          :final description,
+          :final imageUrl,
+          :final author,
+        ):
+          _logger?.d('Parsed metadata: $title');
+          yield FeedMetaReady(
+            title: title,
+            description: description,
+            imageUrl: imageUrl,
+            author: author,
+          );
+
+        case ParsedEpisode(
+          :final guid,
+          :final title,
+          :final description,
+          :final enclosureUrl,
+          :final publishDate,
+          :final duration,
+          :final episodeNumber,
+          :final seasonNumber,
+          :final imageUrl,
+        ):
+          buffer.add(
+            EpisodesCompanion.insert(
+              podcastId: podcastId,
+              guid:
+                  guid ??
+                  enclosureUrl ??
+                  'unknown-${DateTime.now().millisecondsSinceEpoch}',
+              title: title,
+              description: Value(description),
+              audioUrl: enclosureUrl ?? '',
+              durationMs: Value(duration?.inMilliseconds),
+              publishedAt: Value(publishDate),
+              imageUrl: Value(imageUrl),
+              episodeNumber: Value(episodeNumber),
+              seasonNumber: Value(seasonNumber),
+            ),
+          );
+          totalParsed++;
+
+          if (batchSize <= buffer.length) {
+            await onBatchReady(buffer.toList());
+            buffer.clear();
+            _logger?.d('Stored batch, total: $totalParsed');
+            yield EpisodesBatchStored(totalSoFar: totalParsed);
+          }
+
+        case ParseComplete(:final stoppedEarly):
+          // Flush remaining buffer
+          if (buffer.isNotEmpty) {
+            await onBatchReady(buffer.toList());
+            buffer.clear();
+          }
+
+          _logger?.i(
+            'Parse complete: $totalParsed episodes, stoppedEarly: $stoppedEarly',
+          );
+          yield FeedParseComplete(
+            total: totalParsed,
+            stoppedEarly: stoppedEarly,
+          );
+      }
     }
   }
 

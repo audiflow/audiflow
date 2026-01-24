@@ -27,6 +27,7 @@ export 'src/common/datasources/shared_preferences_datasource.dart';
 
 // Feed feature
 export 'src/features/feed/builders/podcast_builder.dart';
+export 'src/features/feed/models/feed_parse_progress.dart';
 export 'src/features/feed/services/feed_parser_service.dart';
 
 // Feed feature - Episodes
@@ -59,7 +60,14 @@ export 'src/features/voice/services/voice_command_orchestrator.dart';
 
 // Database
 export 'src/common/database/app_database.dart'
-    show AppDatabase, Subscription, Episode, PlaybackHistory;
+    show
+        AppDatabase,
+        Subscription,
+        SubscriptionsCompanion,
+        Episode,
+        EpisodesCompanion,
+        PlaybackHistory,
+        PlaybackHistoriesCompanion;
 
 // Subscription feature
 export 'src/features/subscription/extensions/subscription_extensions.dart';

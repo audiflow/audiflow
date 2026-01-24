@@ -80,6 +80,16 @@ class EpisodeLocalDatasource {
     )..where((e) => e.audioUrl.equals(audioUrl))).getSingleOrNull();
   }
 
+  /// Returns all episode GUIDs for a podcast.
+  ///
+  /// Used for early-stop optimization during RSS parsing.
+  Future<Set<String>> getGuidsByPodcastId(int podcastId) async {
+    final results = await (_db.select(
+      _db.episodes,
+    )..where((e) => e.podcastId.equals(podcastId))).map((e) => e.guid).get();
+    return results.toSet();
+  }
+
   /// Deletes all episodes for a podcast.
   Future<int> deleteByPodcastId(int podcastId) {
     return (_db.delete(

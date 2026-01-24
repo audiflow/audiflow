@@ -47,4 +47,10 @@ abstract class PlaybackHistoryRepository {
   /// Returns episodes that have been started but not completed,
   /// ordered by most recently played.
   Stream<List<PlaybackHistory>> watchInProgress({int limit = 10});
+
+  /// Returns all playback histories for episodes in a podcast.
+  ///
+  /// Performs a single batch query instead of N individual queries.
+  /// Map key is episodeId.
+  Future<Map<int, PlaybackHistory>> getByPodcastId(int podcastId);
 }
