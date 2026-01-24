@@ -82,4 +82,54 @@ void main() {
       expect(guids, isNot(contains('guid-3')));
     });
   });
+
+  group('upsertAll', () {
+    test('inserts multiple episodes in batch', () async {
+      final companions = [
+        EpisodesCompanion.insert(
+          podcastId: 1,
+          guid: 'batch-1',
+          title: 'Batch Episode 1',
+          audioUrl: 'https://example.com/batch1.mp3',
+        ),
+        EpisodesCompanion.insert(
+          podcastId: 1,
+          guid: 'batch-2',
+          title: 'Batch Episode 2',
+          audioUrl: 'https://example.com/batch2.mp3',
+        ),
+      ];
+
+      await datasource.upsertAll(companions);
+
+      final episodes = await datasource.getByPodcastId(1);
+      expect(episodes, hasLength(2));
+    });
+
+    test('updates existing episodes on conflict', () async {
+      // Insert initial episode
+      await datasource.upsert(
+        EpisodesCompanion.insert(
+          podcastId: 1,
+          guid: 'update-test',
+          title: 'Original Title',
+          audioUrl: 'https://example.com/update.mp3',
+        ),
+      );
+
+      // Upsert with same guid but different title
+      await datasource.upsertAll([
+        EpisodesCompanion.insert(
+          podcastId: 1,
+          guid: 'update-test',
+          title: 'Updated Title',
+          audioUrl: 'https://example.com/update.mp3',
+        ),
+      ]);
+
+      final episodes = await datasource.getByPodcastId(1);
+      expect(episodes, hasLength(1));
+      expect(episodes.first.title, 'Updated Title');
+    });
+  });
 }
