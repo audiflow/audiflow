@@ -29,6 +29,7 @@ export 'src/common/datasources/shared_preferences_datasource.dart';
 export 'src/features/feed/builders/podcast_builder.dart';
 export 'src/features/feed/models/feed_parse_progress.dart';
 export 'src/features/feed/models/season.dart';
+export 'src/features/feed/models/season_pattern.dart';
 export 'src/features/feed/models/season_sort.dart';
 export 'src/features/feed/services/feed_parser_service.dart';
 
