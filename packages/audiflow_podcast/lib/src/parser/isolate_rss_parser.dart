@@ -9,8 +9,59 @@ import 'parse_progress.dart';
 ///
 /// Supports early-stop optimization: stops parsing when a known episode GUID
 /// is encountered, reducing parse time for subscribed podcasts from O(n) to O(new).
+/// Result of parsing a complete feed in an isolate.
+class IsolateParsedFeed {
+  const IsolateParsedFeed({
+    required this.meta,
+    required this.episodes,
+    required this.stoppedEarly,
+  });
+
+  final ParsedPodcastMeta meta;
+  final List<ParsedEpisode> episodes;
+  final bool stoppedEarly;
+}
+
 class IsolateRssParser {
   IsolateRssParser._();
+
+  /// Parses the complete feed in an isolate and returns all data at once.
+  ///
+  /// Use this for initial load when you need all episodes.
+  /// For incremental updates, use [parse] which streams events.
+  static Future<IsolateParsedFeed> parseFeed({
+    required String feedXml,
+    int maxEpisodes = 500,
+  }) async {
+    ParsedPodcastMeta? meta;
+    final episodes = <ParsedEpisode>[];
+    var didStopEarly = false;
+
+    await for (final progress in parse(
+      feedXml: feedXml,
+      knownGuids: const {},
+      maxNewEpisodes: maxEpisodes,
+    )) {
+      switch (progress) {
+        case ParsedPodcastMeta():
+          meta = progress;
+        case ParsedEpisode():
+          episodes.add(progress);
+        case ParseComplete(:final stoppedEarly):
+          didStopEarly = stoppedEarly;
+      }
+    }
+
+    if (meta == null) {
+      throw Exception('No podcast metadata found in feed');
+    }
+
+    return IsolateParsedFeed(
+      meta: meta,
+      episodes: episodes,
+      stoppedEarly: didStopEarly,
+    );
+  }
 
   /// Parses the given XML in a background isolate.
   ///

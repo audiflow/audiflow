@@ -84,44 +84,61 @@ class FeedParserService {
     }
   }
 
-  /// Parses a podcast RSS feed from raw XML content.
+  /// Parses a podcast RSS feed from raw XML content using isolate.
   ///
-  /// This is useful for testing or when the XML content is already available.
+  /// This runs parsing in a background isolate to prevent UI freezes.
   Future<ParsedFeed> parseFromString(String xmlContent) async {
-    _logger?.d('Parsing podcast feed from string content');
-
-    final errors = <PodcastParseError>[];
-    final warnings = <PodcastParseWarning>[];
-    PodcastFeed? feed;
-    final items = <PodcastItem>[];
+    _logger?.d('Parsing podcast feed from string content (isolate)');
 
     try {
-      await for (final entity in _parser.parseFromString(xmlContent)) {
-        if (entity is PodcastFeed) {
-          feed = entity;
-        } else if (entity is PodcastItem) {
-          items.add(entity);
-        } else if (entity is PodcastParseError) {
-          errors.add(entity);
-        } else if (entity is PodcastParseWarning) {
-          warnings.add(entity);
-        }
-      }
+      // Use isolate-based parsing to prevent UI freeze
+      final result = await IsolateRssParser.parseFeed(feedXml: xmlContent);
 
-      if (feed == null) {
-        throw PodcastException.parsing(
-          'No feed metadata found in XML content',
-          sourceUrl: 'string',
-        );
-      }
+      _logger?.i(
+        'Parsed feed: ${result.meta.title} with ${result.episodes.length} episodes',
+      );
 
-      _logger?.i('Parsed feed: ${feed.title} with ${items.length} episodes');
+      // Convert ParsedPodcastMeta to PodcastFeed
+      final feed = PodcastFeed.fromData(
+        parsedAt: DateTime.now(),
+        sourceUrl: '',
+        title: result.meta.title,
+        description: result.meta.description,
+        author: result.meta.author,
+        language: result.meta.language,
+        images: result.meta.imageUrl != null
+            ? [PodcastImage(url: result.meta.imageUrl!)]
+            : [],
+      );
+
+      // Convert ParsedEpisode to PodcastItem
+      final items = result.episodes
+          .map(
+            (e) => PodcastItem.fromData(
+              parsedAt: DateTime.now(),
+              sourceUrl: '',
+              title: e.title,
+              description: e.description ?? '',
+              guid: e.guid,
+              enclosureUrl: e.enclosureUrl,
+              enclosureType: e.enclosureType,
+              enclosureLength: e.enclosureLength,
+              publishDate: e.publishDate,
+              duration: e.duration,
+              episodeNumber: e.episodeNumber,
+              seasonNumber: e.seasonNumber,
+              images: e.imageUrl != null
+                  ? [PodcastImage(url: e.imageUrl!)]
+                  : [],
+            ),
+          )
+          .toList();
 
       return ParsedFeed(
         podcast: feed,
         episodes: items,
-        errors: errors,
-        warnings: warnings,
+        errors: const [],
+        warnings: const [],
       );
     } catch (e) {
       if (e is PodcastException) rethrow;
