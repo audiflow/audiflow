@@ -1,9 +1,12 @@
 import 'package:audiflow_podcast/audiflow_podcast.dart';
+import 'package:drift/drift.dart';
 import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../common/database/app_database.dart';
 import '../../../common/providers/logger_provider.dart';
 import '../builders/podcast_builder.dart';
+import '../models/feed_parse_progress.dart';
 
 part 'feed_parser_service.g.dart';
 
@@ -124,6 +127,108 @@ class FeedParserService {
       if (e is PodcastException) rethrow;
       _logger?.e('Unexpected error parsing feed from string: $e');
       throw PodcastException(message: 'Failed to parse podcast feed: $e');
+    }
+  }
+
+  static const _defaultBatchSize = 20;
+
+  /// Parses XML content in isolate with progress streaming and batched storage.
+  ///
+  /// Emits [FeedParseProgress] events for UI updates.
+  /// Calls [onBatchReady] when a batch of episodes is ready to store.
+  ///
+  /// - [xmlContent]: Raw XML content of the RSS feed
+  /// - [podcastId]: Database ID for the podcast (used in companion objects)
+  /// - [knownGuids]: Set of episode GUIDs already in the database
+  /// - [onBatchReady]: Callback to persist a batch of episodes
+  /// - [batchSize]: Number of episodes per batch (default: 20)
+  Stream<FeedParseProgress> parseWithProgress({
+    required String xmlContent,
+    required int podcastId,
+    required Set<String> knownGuids,
+    required Future<void> Function(List<EpisodesCompanion> companions)
+    onBatchReady,
+    int batchSize = _defaultBatchSize,
+  }) async* {
+    _logger?.i('Starting isolate parse for podcast $podcastId');
+    _logger?.d('Known GUIDs: ${knownGuids.length}');
+
+    final buffer = <EpisodesCompanion>[];
+    var totalParsed = 0;
+
+    await for (final progress in IsolateRssParser.parse(
+      feedXml: xmlContent,
+      knownGuids: knownGuids,
+    )) {
+      switch (progress) {
+        case ParsedPodcastMeta(
+          :final title,
+          :final description,
+          :final imageUrl,
+          :final author,
+        ):
+          _logger?.d('Parsed metadata: $title');
+          yield FeedMetaReady(
+            title: title,
+            description: description,
+            imageUrl: imageUrl,
+            author: author,
+          );
+
+        case ParsedEpisode(
+          :final guid,
+          :final title,
+          :final description,
+          :final enclosureUrl,
+          :final enclosureType,
+          :final enclosureLength,
+          :final publishDate,
+          :final duration,
+          :final episodeNumber,
+          :final seasonNumber,
+          :final imageUrl,
+        ):
+          buffer.add(
+            EpisodesCompanion.insert(
+              podcastId: podcastId,
+              guid:
+                  guid ??
+                  enclosureUrl ??
+                  'unknown-${DateTime.now().millisecondsSinceEpoch}',
+              title: title,
+              description: Value(description),
+              audioUrl: enclosureUrl ?? '',
+              durationMs: Value(duration?.inMilliseconds),
+              publishedAt: Value(publishDate),
+              imageUrl: Value(imageUrl),
+              episodeNumber: Value(episodeNumber),
+              seasonNumber: Value(seasonNumber),
+            ),
+          );
+          totalParsed++;
+
+          if (batchSize <= buffer.length) {
+            await onBatchReady(buffer.toList());
+            buffer.clear();
+            _logger?.d('Stored batch, total: $totalParsed');
+            yield EpisodesBatchStored(totalSoFar: totalParsed);
+          }
+
+        case ParseComplete(:final stoppedEarly):
+          // Flush remaining buffer
+          if (buffer.isNotEmpty) {
+            await onBatchReady(buffer.toList());
+            buffer.clear();
+          }
+
+          _logger?.i(
+            'Parse complete: $totalParsed episodes, stoppedEarly: $stoppedEarly',
+          );
+          yield FeedParseComplete(
+            total: totalParsed,
+            stoppedEarly: stoppedEarly,
+          );
+      }
     }
   }
 
