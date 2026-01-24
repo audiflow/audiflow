@@ -60,7 +60,7 @@ class IsolateRssParser {
           document.findElements('feed').firstOrNull;
 
       if (rssElement == null) {
-        params.sendPort.send(_IsolateError('No RSS or Atom feed found'));
+        params.sendPort.send(const _IsolateError('No RSS or Atom feed found'));
         params.sendPort.send(
           const ParseComplete(totalParsed: 0, stoppedEarly: false),
         );
@@ -69,7 +69,7 @@ class IsolateRssParser {
 
       final channelElement = rssElement.findElements('channel').firstOrNull;
       if (channelElement == null) {
-        params.sendPort.send(_IsolateError('No channel element found'));
+        params.sendPort.send(const _IsolateError('No channel element found'));
         params.sendPort.send(
           const ParseComplete(totalParsed: 0, stoppedEarly: false),
         );

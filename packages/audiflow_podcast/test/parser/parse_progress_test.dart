@@ -1,10 +1,10 @@
 import 'package:audiflow_podcast/audiflow_podcast.dart';
-import 'package:test/test.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('ParseProgress', () {
     test('ParsedPodcastMeta holds metadata', () {
-      final meta = ParsedPodcastMeta(
+      const meta = ParsedPodcastMeta(
         title: 'Test Podcast',
         description: 'A test podcast',
         author: 'Test Author',
@@ -18,7 +18,7 @@ void main() {
     });
 
     test('ParsedEpisode holds episode data', () {
-      final episode = ParsedEpisode(
+      const episode = ParsedEpisode(
         guid: 'episode-123',
         title: 'Episode 1',
         enclosureUrl: 'https://example.com/ep1.mp3',
@@ -30,7 +30,7 @@ void main() {
     });
 
     test('ParseComplete reports stats', () {
-      final complete = ParseComplete(totalParsed: 50, stoppedEarly: true);
+      const complete = ParseComplete(totalParsed: 50, stoppedEarly: true);
 
       expect(complete.totalParsed, 50);
       expect(complete.stoppedEarly, isTrue);
@@ -38,7 +38,7 @@ void main() {
 
     test('ParseProgress is sealed', () {
       // Verify exhaustive switch works
-      ParseProgress progress = ParseComplete(
+      const ParseProgress progress = ParseComplete(
         totalParsed: 1,
         stoppedEarly: false,
       );
