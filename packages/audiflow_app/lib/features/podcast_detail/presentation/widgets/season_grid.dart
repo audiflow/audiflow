@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'season_card.dart';
 
-/// Grid of season cards for the seasons view.
+/// List of season cards for the seasons view.
 class SeasonGrid extends StatelessWidget {
   const SeasonGrid({
     super.key,
@@ -29,19 +29,20 @@ class SeasonGrid extends StatelessWidget {
 
     return SliverPadding(
       padding: const EdgeInsets.symmetric(horizontal: Spacing.md),
-      sliver: SliverGrid(
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          mainAxisSpacing: Spacing.md,
-          crossAxisSpacing: Spacing.md,
-          childAspectRatio: 0.75,
-        ),
-        delegate: SliverChildBuilderDelegate((context, index) {
+      sliver: SliverList.builder(
+        itemCount: itemCount,
+        itemBuilder: (context, index) {
           if (index < seasons.length) {
-            return _buildSeasonCard(seasons[index]);
+            return Padding(
+              padding: const EdgeInsets.only(bottom: Spacing.sm),
+              child: _buildSeasonCard(seasons[index]),
+            );
           }
-          return _buildUngroupedCard();
-        }, childCount: itemCount),
+          return Padding(
+            padding: const EdgeInsets.only(bottom: Spacing.sm),
+            child: _buildUngroupedCard(),
+          );
+        },
       ),
     );
   }

@@ -3,6 +3,9 @@ import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 
 /// Card displaying season information with tap to navigate.
+///
+/// Uses a horizontal layout with thumbnail on left and info on right,
+/// optimized for single-column list display.
 class SeasonCard extends StatelessWidget {
   const SeasonCard({
     super.key,
@@ -21,6 +24,8 @@ class SeasonCard extends StatelessWidget {
   final String? thumbnailUrl;
   final VoidCallback? onTap;
 
+  static const _thumbnailSize = 72.0;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -32,37 +37,47 @@ class SeasonCard extends StatelessWidget {
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.all(Spacing.md),
-          child: Column(
+          child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildThumbnail(colorScheme),
-              const SizedBox(height: Spacing.sm),
-              Text(
-                season.displayName,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
+              const SizedBox(width: Spacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      season.displayName,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: Spacing.xs),
+                    Text(
+                      '$episodeCount episodes',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    if (dateRange != null) ...[
+                      const SizedBox(height: Spacing.xs),
+                      Text(
+                        dateRange!,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: colorScheme.onSurfaceVariant.withValues(
+                            alpha: 0.7,
+                          ),
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: Spacing.sm),
+                    _buildProgressBar(colorScheme),
+                  ],
                 ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
               ),
-              const SizedBox(height: Spacing.xs),
-              Text(
-                '$episodeCount episodes',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                ),
-              ),
-              if (dateRange != null) ...[
-                const SizedBox(height: Spacing.xs),
-                Text(
-                  dateRange!,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-                  ),
-                ),
-              ],
-              const SizedBox(height: Spacing.sm),
-              _buildProgressBar(colorScheme),
+              Icon(Icons.chevron_right, color: colorScheme.onSurfaceVariant),
             ],
           ),
         ),
@@ -72,30 +87,31 @@ class SeasonCard extends StatelessWidget {
 
   Widget _buildThumbnail(ColorScheme colorScheme) {
     if (thumbnailUrl != null) {
-      return AspectRatio(
-        aspectRatio: 1,
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: Image.network(
-            thumbnailUrl!,
-            fit: BoxFit.cover,
-            errorBuilder: (_, _, _) => _buildPlaceholder(colorScheme),
-          ),
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Image.network(
+          thumbnailUrl!,
+          width: _thumbnailSize,
+          height: _thumbnailSize,
+          fit: BoxFit.cover,
+          errorBuilder: (_, _, _) => _buildPlaceholder(colorScheme),
         ),
       );
     }
-    return AspectRatio(aspectRatio: 1, child: _buildPlaceholder(colorScheme));
+    return _buildPlaceholder(colorScheme);
   }
 
   Widget _buildPlaceholder(ColorScheme colorScheme) {
     return Container(
+      width: _thumbnailSize,
+      height: _thumbnailSize,
       decoration: BoxDecoration(
         color: colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Icon(
         Icons.folder_outlined,
-        size: 48,
+        size: 32,
         color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
       ),
     );
