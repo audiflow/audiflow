@@ -3,6 +3,8 @@ import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../widgets/season_episode_list_tile.dart';
+
 /// Screen showing episodes within a single season.
 class SeasonEpisodesScreen extends ConsumerWidget {
   const SeasonEpisodesScreen({
@@ -38,41 +40,120 @@ class SeasonEpisodesScreen extends ConsumerWidget {
                 horizontal: Spacing.md,
                 vertical: Spacing.sm,
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    '${season.episodeCount} episodes',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.sort),
-                    onPressed: () {
-                      // TODO: Show episode sort options
-                    },
-                    tooltip: 'Sort',
-                  ),
-                ],
+              child: Text(
+                '${season.episodeCount} episodes',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
               ),
             ),
           ),
-          _buildEpisodeList(ref),
+          _buildEpisodeList(context, ref, theme),
         ],
       ),
     );
   }
 
-  Widget _buildEpisodeList(WidgetRef ref) {
-    // TODO: Fetch actual episodes by IDs from season.episodeIds
-    // For now, show placeholder
-    return SliverToBoxAdapter(
-      child: Padding(
-        padding: const EdgeInsets.all(Spacing.lg),
-        child: Center(
-          child: Text('${season.episodeCount} episodes in this season'),
+  Widget _buildEpisodeList(
+    BuildContext context,
+    WidgetRef ref,
+    ThemeData theme,
+  ) {
+    final episodesAsync = ref.watch(seasonEpisodesProvider(season.episodeIds));
+
+    return episodesAsync.when(
+      data: (episodes) {
+        if (episodes.isEmpty) {
+          return SliverFillRemaining(child: _buildEmptyState(theme));
+        }
+
+        return SliverList.builder(
+          itemCount: episodes.length,
+          itemBuilder: (context, index) {
+            final data = episodes[index];
+            return SeasonEpisodeListTile(
+              key: ValueKey(data.episode.id),
+              episode: data.episode,
+              podcastTitle: podcastTitle,
+              artworkUrl: podcastArtworkUrl,
+              progress: data.progress,
+            );
+          },
+        );
+      },
+      loading: () => const SliverToBoxAdapter(
+        child: Padding(
+          padding: EdgeInsets.all(Spacing.lg),
+          child: Center(child: CircularProgressIndicator()),
         ),
+      ),
+      error: (error, _) => SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsets.all(Spacing.lg),
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.error_outline,
+                  size: 48,
+                  color: theme.colorScheme.error.withValues(alpha: 0.7),
+                ),
+                const SizedBox(height: Spacing.md),
+                Text(
+                  'Failed to load episodes',
+                  style: theme.textTheme.titleMedium,
+                ),
+                const SizedBox(height: Spacing.sm),
+                Text(
+                  error.toString(),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: Spacing.md),
+                FilledButton.icon(
+                  onPressed: () =>
+                      ref.invalidate(seasonEpisodesProvider(season.episodeIds)),
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('Retry'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(ThemeData theme) {
+    final colorScheme = theme.colorScheme;
+
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.folder_open_outlined,
+            size: 64,
+            color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+          ),
+          const SizedBox(height: Spacing.md),
+          Text(
+            'No episodes found',
+            style: theme.textTheme.titleMedium?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: Spacing.xs),
+          Text(
+            'This season has no episodes',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+            ),
+          ),
+        ],
       ),
     );
   }

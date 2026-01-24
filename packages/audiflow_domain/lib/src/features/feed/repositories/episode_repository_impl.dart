@@ -71,4 +71,9 @@ class EpisodeRepositoryImpl implements EpisodeRepository {
 
     return _datasource.upsertAll(companions);
   }
+
+  @override
+  Future<List<Episode>> getByIds(List<int> ids) {
+    return _datasource.getByIds(ids);
+  }
 }

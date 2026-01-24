@@ -28,4 +28,9 @@ abstract class EpisodeRepository {
   /// Converts [PodcastItem] list to [EpisodesCompanion] and persists them.
   /// Items without guid or enclosureUrl are skipped.
   Future<void> upsertFromFeedItems(int podcastId, List<PodcastItem> items);
+
+  /// Returns episodes by their IDs.
+  ///
+  /// Order is not guaranteed; caller should sort as needed.
+  Future<List<Episode>> getByIds(List<int> ids);
 }

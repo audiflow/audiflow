@@ -442,3 +442,108 @@ final class PodcastSeasonsByFeedUrlFamily extends $Family
   @override
   String toString() => r'podcastSeasonsByFeedUrlProvider';
 }
+
+/// Fetches episodes for a season by their IDs with progress data.
+///
+/// Episodes are sorted by episode number (ascending) with fallback to
+/// publish date (newest first).
+
+@ProviderFor(seasonEpisodes)
+final seasonEpisodesProvider = SeasonEpisodesFamily._();
+
+/// Fetches episodes for a season by their IDs with progress data.
+///
+/// Episodes are sorted by episode number (ascending) with fallback to
+/// publish date (newest first).
+
+final class SeasonEpisodesProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<SeasonEpisodeData>>,
+          List<SeasonEpisodeData>,
+          FutureOr<List<SeasonEpisodeData>>
+        >
+    with
+        $FutureModifier<List<SeasonEpisodeData>>,
+        $FutureProvider<List<SeasonEpisodeData>> {
+  /// Fetches episodes for a season by their IDs with progress data.
+  ///
+  /// Episodes are sorted by episode number (ascending) with fallback to
+  /// publish date (newest first).
+  SeasonEpisodesProvider._({
+    required SeasonEpisodesFamily super.from,
+    required List<int> super.argument,
+  }) : super(
+         retry: null,
+         name: r'seasonEpisodesProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$seasonEpisodesHash();
+
+  @override
+  String toString() {
+    return r'seasonEpisodesProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<List<SeasonEpisodeData>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<SeasonEpisodeData>> create(Ref ref) {
+    final argument = this.argument as List<int>;
+    return seasonEpisodes(ref, argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is SeasonEpisodesProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$seasonEpisodesHash() => r'547248cf4fbdfe516ec5937947c7a9e77c88648e';
+
+/// Fetches episodes for a season by their IDs with progress data.
+///
+/// Episodes are sorted by episode number (ascending) with fallback to
+/// publish date (newest first).
+
+final class SeasonEpisodesFamily extends $Family
+    with
+        $FunctionalFamilyOverride<
+          FutureOr<List<SeasonEpisodeData>>,
+          List<int>
+        > {
+  SeasonEpisodesFamily._()
+    : super(
+        retry: null,
+        name: r'seasonEpisodesProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  /// Fetches episodes for a season by their IDs with progress data.
+  ///
+  /// Episodes are sorted by episode number (ascending) with fallback to
+  /// publish date (newest first).
+
+  SeasonEpisodesProvider call(List<int> episodeIds) =>
+      SeasonEpisodesProvider._(argument: episodeIds, from: this);
+
+  @override
+  String toString() => r'seasonEpisodesProvider';
+}
