@@ -19,7 +19,7 @@ final class PodcastViewModeControllerProvider
   /// Controller for the podcast detail screen view mode toggle.
   PodcastViewModeControllerProvider._({
     required PodcastViewModeControllerFamily super.from,
-    required int super.argument,
+    required String super.argument,
   }) : super(
          retry: null,
          name: r'podcastViewModeControllerProvider',
@@ -63,7 +63,7 @@ final class PodcastViewModeControllerProvider
 }
 
 String _$podcastViewModeControllerHash() =>
-    r'8f4f115f54c6af5d8187fd7982e30eb771beac7f';
+    r'60b68ee7b24510867790bbfe77480763ee16f434';
 
 /// Controller for the podcast detail screen view mode toggle.
 
@@ -74,7 +74,7 @@ final class PodcastViewModeControllerFamily extends $Family
           PodcastViewMode,
           PodcastViewMode,
           PodcastViewMode,
-          int
+          String
         > {
   PodcastViewModeControllerFamily._()
     : super(
@@ -87,7 +87,7 @@ final class PodcastViewModeControllerFamily extends $Family
 
   /// Controller for the podcast detail screen view mode toggle.
 
-  PodcastViewModeControllerProvider call(int podcastId) =>
+  PodcastViewModeControllerProvider call(String podcastId) =>
       PodcastViewModeControllerProvider._(argument: podcastId, from: this);
 
   @override
@@ -97,10 +97,10 @@ final class PodcastViewModeControllerFamily extends $Family
 /// Controller for the podcast detail screen view mode toggle.
 
 abstract class _$PodcastViewModeController extends $Notifier<PodcastViewMode> {
-  late final _$args = ref.$arg as int;
-  int get podcastId => _$args;
+  late final _$args = ref.$arg as String;
+  String get podcastId => _$args;
 
-  PodcastViewMode build(int podcastId);
+  PodcastViewMode build(String podcastId);
   @$mustCallSuper
   @override
   void runBuild() {

@@ -135,7 +135,7 @@ class _SeasonHeader extends StatelessWidget {
         width: 80,
         height: 80,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => _buildPlaceholder(colorScheme),
+        errorBuilder: (_, _, _) => _buildPlaceholder(colorScheme),
       );
     }
     return _buildPlaceholder(colorScheme);

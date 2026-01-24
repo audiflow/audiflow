@@ -77,13 +77,9 @@ class SeasonSortSheet extends StatelessWidget {
 
     return ListTile(
       title: Text(label),
-      leading: Radio<bool>(
-        value: true,
-        groupValue: isSelected,
-        onChanged: (_) {
-          onSortSelected(field, order);
-          Navigator.pop(context);
-        },
+      leading: Icon(
+        isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+        color: isSelected ? colorScheme.primary : colorScheme.onSurfaceVariant,
       ),
       trailing: isSelected
           ? Icon(Icons.check, color: colorScheme.primary)

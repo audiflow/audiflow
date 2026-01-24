@@ -15,7 +15,7 @@ enum PodcastViewMode {
 @riverpod
 class PodcastViewModeController extends _$PodcastViewModeController {
   @override
-  PodcastViewMode build(int podcastId) => PodcastViewMode.episodes;
+  PodcastViewMode build(String podcastId) => PodcastViewMode.episodes;
 
   /// Sets the view mode to episodes (flat list).
   void setEpisodes() => state = PodcastViewMode.episodes;

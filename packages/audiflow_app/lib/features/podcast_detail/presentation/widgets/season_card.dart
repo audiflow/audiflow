@@ -79,7 +79,7 @@ class SeasonCard extends StatelessWidget {
           child: Image.network(
             thumbnailUrl!,
             fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) => _buildPlaceholder(colorScheme),
+            errorBuilder: (_, _, _) => _buildPlaceholder(colorScheme),
           ),
         ),
       );

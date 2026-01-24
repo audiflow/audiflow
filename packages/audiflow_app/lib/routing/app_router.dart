@@ -1,5 +1,4 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
-import 'package:audiflow_search/audiflow_search.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
