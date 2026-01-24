@@ -1,4 +1,5 @@
 import 'season_sort.dart';
+import 'season_title_extractor.dart';
 
 /// Configuration for how to group episodes into seasons for a specific podcast.
 final class SeasonPattern {
@@ -10,6 +11,7 @@ final class SeasonPattern {
     required this.config,
     this.priority = 0,
     this.customSort,
+    this.titleExtractor,
   });
 
   /// Unique identifier for this pattern.
@@ -32,6 +34,11 @@ final class SeasonPattern {
 
   /// Custom default sort for seasons from this pattern.
   final SeasonSortSpec? customSort;
+
+  /// Custom title extractor for generating season display names.
+  ///
+  /// When provided, overrides the default title generation logic.
+  final SeasonTitleExtractor? titleExtractor;
 
   /// Returns true if this pattern matches the given podcast.
   bool matchesPodcast(String? guid, String feedUrl) {

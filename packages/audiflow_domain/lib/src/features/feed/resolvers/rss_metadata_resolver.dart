@@ -2,6 +2,7 @@ import '../../../common/database/app_database.dart';
 import '../models/season.dart';
 import '../models/season_pattern.dart';
 import '../models/season_sort.dart';
+import '../models/season_title_extractor.dart';
 import 'season_resolver.dart';
 
 /// Resolver that groups episodes using RSS metadata (seasonNumber field).
@@ -15,13 +16,13 @@ class RssMetadataResolver implements SeasonResolver {
 
   @override
   SeasonGrouping? resolve(List<Episode> episodes, SeasonPattern? pattern) {
-    final grouped = <int, List<int>>{};
+    final grouped = <int, List<Episode>>{};
     final ungrouped = <int>[];
 
     for (final episode in episodes) {
       final seasonNum = episode.seasonNumber;
       if (seasonNum != null) {
-        grouped.putIfAbsent(seasonNum, () => []).add(episode.id);
+        grouped.putIfAbsent(seasonNum, () => []).add(episode);
       } else {
         ungrouped.add(episode.id);
       }
@@ -32,12 +33,21 @@ class RssMetadataResolver implements SeasonResolver {
       return null;
     }
 
+    final titleExtractor = pattern?.titleExtractor;
+
     final seasons = grouped.entries.map((entry) {
+      final seasonEpisodes = entry.value;
+      final displayName = _extractDisplayName(
+        seasonNumber: entry.key,
+        episodes: seasonEpisodes,
+        titleExtractor: titleExtractor,
+      );
+
       return Season(
         id: 'season_${entry.key}',
-        displayName: 'Season ${entry.key}',
+        displayName: displayName,
         sortKey: entry.key,
-        episodeIds: entry.value,
+        episodeIds: seasonEpisodes.map((e) => e.id).toList(),
       );
     }).toList()..sort((a, b) => a.sortKey.compareTo(b.sortKey));
 
@@ -46,5 +56,19 @@ class RssMetadataResolver implements SeasonResolver {
       ungroupedEpisodeIds: ungrouped,
       resolverType: type,
     );
+  }
+
+  String _extractDisplayName({
+    required int seasonNumber,
+    required List<Episode> episodes,
+    required SeasonTitleExtractor? titleExtractor,
+  }) {
+    if (titleExtractor == null || episodes.isEmpty) {
+      return 'Season $seasonNumber';
+    }
+
+    // Try to extract title from first episode
+    final extracted = titleExtractor.extract(episodes.first);
+    return extracted ?? 'Season $seasonNumber';
   }
 }

@@ -2,6 +2,7 @@ import '../../../common/database/app_database.dart';
 import '../models/season.dart';
 import '../models/season_pattern.dart';
 import '../models/season_sort.dart';
+import '../models/season_title_extractor.dart';
 import 'season_resolver.dart';
 
 /// Resolver that groups episodes by publication year.
@@ -17,13 +18,13 @@ class YearResolver implements SeasonResolver {
 
   @override
   SeasonGrouping? resolve(List<Episode> episodes, SeasonPattern? pattern) {
-    final grouped = <int, List<int>>{};
+    final grouped = <int, List<Episode>>{};
     final ungrouped = <int>[];
 
     for (final episode in episodes) {
       final pubDate = episode.publishedAt;
       if (pubDate != null) {
-        grouped.putIfAbsent(pubDate.year, () => []).add(episode.id);
+        grouped.putIfAbsent(pubDate.year, () => []).add(episode);
       } else {
         ungrouped.add(episode.id);
       }
@@ -34,12 +35,21 @@ class YearResolver implements SeasonResolver {
       return null;
     }
 
+    final titleExtractor = pattern?.titleExtractor;
+
     final seasons = grouped.entries.map((entry) {
+      final seasonEpisodes = entry.value;
+      final displayName = _extractDisplayName(
+        year: entry.key,
+        episodes: seasonEpisodes,
+        titleExtractor: titleExtractor,
+      );
+
       return Season(
         id: 'year_${entry.key}',
-        displayName: '${entry.key}',
+        displayName: displayName,
         sortKey: entry.key,
-        episodeIds: entry.value,
+        episodeIds: seasonEpisodes.map((e) => e.id).toList(),
       );
     }).toList()..sort((a, b) => b.sortKey.compareTo(a.sortKey)); // Descending
 
@@ -48,5 +58,19 @@ class YearResolver implements SeasonResolver {
       ungroupedEpisodeIds: ungrouped,
       resolverType: type,
     );
+  }
+
+  String _extractDisplayName({
+    required int year,
+    required List<Episode> episodes,
+    required SeasonTitleExtractor? titleExtractor,
+  }) {
+    if (titleExtractor == null || episodes.isEmpty) {
+      return '$year';
+    }
+
+    // Try to extract title from first episode
+    final extracted = titleExtractor.extract(episodes.first);
+    return extracted ?? '$year';
   }
 }
