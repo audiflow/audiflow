@@ -60,6 +60,13 @@ class SubscriptionLocalDatasource {
     )..where((t) => t.feedUrl.equals(feedUrl))).getSingleOrNull();
   }
 
+  /// Returns a subscription by its database ID, or null if not found.
+  Future<Subscription?> getById(int id) {
+    return (_db.select(
+      _db.subscriptions,
+    )..where((t) => t.id.equals(id))).getSingleOrNull();
+  }
+
   /// Updates a subscription's lastRefreshedAt timestamp.
   Future<int> updateLastRefreshed(String itunesId, DateTime timestamp) {
     return (_db.update(_db.subscriptions)

@@ -38,6 +38,9 @@ abstract class SubscriptionRepository {
 
   /// Returns a subscription by its feed URL, or null if not found.
   Future<Subscription?> getByFeedUrl(String feedUrl);
+
+  /// Returns a subscription by its database ID, or null if not found.
+  Future<Subscription?> getById(int id);
 }
 
 /// Exception thrown when a subscription operation fails.
