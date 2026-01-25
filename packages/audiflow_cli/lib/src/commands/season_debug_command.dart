@@ -1,0 +1,166 @@
+import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:audiflow_podcast/audiflow_podcast.dart';
+import 'package:http/http.dart' as http;
+
+import '../adapters/episode_adapter.dart';
+import '../diagnostics/episode_extractor_diagnostics.dart';
+import '../diagnostics/title_extractor_diagnostics.dart';
+import '../models/extraction_result.dart';
+import '../patterns/pattern_registry.dart';
+import '../reporters/json_reporter.dart';
+import '../reporters/table_reporter.dart';
+
+/// Command to debug season extraction against a live RSS feed.
+class SeasonDebugCommand {
+  SeasonDebugCommand([StringSink? sink])
+    : _sink = sink ?? StringBuffer(),
+      _registry = PatternRegistry();
+
+  final StringSink _sink;
+  final PatternRegistry _registry;
+
+  /// Runs the command by fetching and parsing the feed.
+  Future<int> run({
+    required String feedUrl,
+    String? patternId,
+    bool json = false,
+  }) async {
+    // Fetch feed
+    final response = await http.get(Uri.parse(feedUrl));
+    if (response.statusCode != 200) {
+      _sink.writeln('Error: HTTP ${response.statusCode}');
+      return 2;
+    }
+
+    // Parse feed
+    final parser = PodcastRssParser();
+    final items = <PodcastItem>[];
+
+    try {
+      await for (final entity in parser.parseFromString(response.body)) {
+        if (entity is PodcastItem) {
+          items.add(entity);
+        }
+      }
+    } catch (e) {
+      _sink.writeln('Error parsing feed: $e');
+      return 2;
+    }
+
+    return runWithItems(
+      feedUrl: feedUrl,
+      items: items,
+      patternId: patternId,
+      json: json,
+    );
+  }
+
+  /// Runs with pre-fetched items (for testing).
+  Future<int> runWithItems({
+    required String feedUrl,
+    required List<PodcastItem> items,
+    String? patternId,
+    bool json = false,
+  }) async {
+    // Find pattern
+    final pattern = patternId != null
+        ? _registry.findById(patternId)
+        : _registry.detectFromUrl(feedUrl);
+
+    if (pattern == null) {
+      _sink.writeln('Error: No pattern found for feed');
+      return 2;
+    }
+
+    // Process items
+    final results = <ExtractionResult>[];
+    var passed = 0;
+    var failed = 0;
+
+    for (final item in items) {
+      final episode = toEpisode(item);
+      final result = _extractWithDiagnostics(episode, pattern);
+      results.add(result);
+
+      if (result.success) {
+        passed++;
+      } else {
+        failed++;
+      }
+    }
+
+    // Report
+    if (json) {
+      final reporter = JsonReporter(_sink);
+      reporter.start(feedUrl: feedUrl, patternId: pattern.id);
+      for (final result in results) {
+        reporter.addResult(result);
+      }
+      reporter.finish(total: items.length, passed: passed, failed: failed);
+    } else {
+      final reporter = TableReporter(_sink);
+      reporter.writeHeader(
+        feedUrl: feedUrl,
+        patternId: pattern.id,
+        episodeCount: items.length,
+      );
+      for (final result in results) {
+        reporter.writeResult(result);
+      }
+      reporter.writeSummary(
+        total: items.length,
+        passed: passed,
+        failed: failed,
+      );
+    }
+
+    return 0 < failed ? 1 : 0;
+  }
+
+  ExtractionResult _extractWithDiagnostics(
+    Episode episode,
+    SeasonPattern pattern,
+  ) {
+    String? extractedTitle;
+    int? extractedEpisodeNumber;
+    String? titleError;
+    String? episodeError;
+
+    // Extract title
+    if (pattern.titleExtractor != null) {
+      final diagnostics = TitleExtractorDiagnostics(pattern.titleExtractor!);
+      final result = diagnostics.run(episode);
+      extractedTitle = result.extractedValue;
+      titleError = result.error;
+    }
+
+    // Extract episode number
+    if (pattern.episodeNumberExtractor != null) {
+      final diagnostics = EpisodeExtractorDiagnostics(
+        pattern.episodeNumberExtractor!,
+      );
+      final result = diagnostics.run(episode);
+      extractedEpisodeNumber = result.extractedValue;
+      episodeError = result.error;
+    }
+
+    // Build result
+    final hasError = extractedTitle == null;
+    final error = titleError ?? episodeError;
+
+    return ExtractionResult(
+      title: episode.title,
+      rssSeasonNumber: episode.seasonNumber,
+      rssEpisodeNumber: episode.episodeNumber,
+      extractedTitle: extractedTitle,
+      extractedEpisodeNumber: extractedEpisodeNumber,
+      diagnostics: hasError
+          ? ExtractionDiagnostics(
+              titlePattern: pattern.titleExtractor?.pattern,
+              fallbackValue: pattern.titleExtractor?.fallbackValue,
+              error: error ?? 'extraction failed',
+            )
+          : null,
+    );
+  }
+}
