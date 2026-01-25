@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import '../../../common/database/app_database.dart';
+import '../extensions/episode_extensions.dart';
 import '../models/season.dart';
 import '../models/season_pattern.dart';
 import '../models/season_sort.dart';
@@ -81,7 +82,7 @@ class RssMetadataResolver implements SeasonResolver {
       return 'Season $seasonNumber';
     }
 
-    final extracted = titleExtractor.extract(episodes.first);
+    final extracted = titleExtractor.extract(episodes.first.toEpisodeData());
     return extracted ?? 'Season $seasonNumber';
   }
 

@@ -21,3 +21,6 @@ export 'src/extensions/duration_extensions.dart';
 // Utilities
 export 'src/utils/validators.dart';
 export 'src/utils/formatters.dart';
+
+// Models
+export 'src/models/episode_data.dart';

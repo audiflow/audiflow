@@ -1,4 +1,4 @@
-import '../../../common/database/app_database.dart';
+import 'package:audiflow_core/audiflow_core.dart';
 
 /// Configuration for extracting season display names from episode data.
 ///
@@ -96,7 +96,7 @@ final class SeasonTitleExtractor {
   /// Extracts the season title from an episode.
   ///
   /// Returns null if extraction fails and no fallback is available.
-  String? extract(Episode episode) {
+  String? extract(EpisodeData episode) {
     // For null/zero seasonNumber, use fallbackValue if available
     final seasonNum = episode.seasonNumber;
     if (fallbackValue != null && (seasonNum == null || 1 > seasonNum)) {
@@ -128,7 +128,7 @@ final class SeasonTitleExtractor {
     return result;
   }
 
-  String? _getSourceValue(Episode episode) {
+  String? _getSourceValue(EpisodeData episode) {
     return switch (source) {
       'title' => episode.title,
       'description' => episode.description,

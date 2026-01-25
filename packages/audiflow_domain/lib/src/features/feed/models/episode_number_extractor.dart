@@ -1,4 +1,4 @@
-import '../../../common/database/app_database.dart';
+import 'package:audiflow_core/audiflow_core.dart';
 
 /// Extracts episode-in-season number from episode data on-demand.
 ///
@@ -32,7 +32,7 @@ final class EpisodeNumberExtractor {
     };
   }
 
-  int? extract(Episode episode) {
+  int? extract(EpisodeData episode) {
     // For null/zero seasonNumber (e.g., 番外編), use RSS episodeNumber directly
     final seasonNum = episode.seasonNumber;
     if (seasonNum == null || 1 > seasonNum) {
