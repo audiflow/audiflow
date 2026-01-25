@@ -1,3 +1,4 @@
+import 'episode_number_extractor.dart';
 import 'season_sort.dart';
 import 'season_title_extractor.dart';
 
@@ -6,12 +7,14 @@ final class SeasonPattern {
   const SeasonPattern({
     required this.id,
     this.podcastGuid,
-    this.feedUrlPattern,
+    @Deprecated('Use feedUrlPatterns instead') this.feedUrlPattern,
+    this.feedUrlPatterns,
     required this.resolverType,
     required this.config,
     this.priority = 0,
     this.customSort,
     this.titleExtractor,
+    this.episodeNumberExtractor,
   });
 
   /// Unique identifier for this pattern.
@@ -21,7 +24,11 @@ final class SeasonPattern {
   final String? podcastGuid;
 
   /// Match by feed URL regex pattern (fallback).
+  @Deprecated('Use feedUrlPatterns instead')
   final String? feedUrlPattern;
+
+  /// Match by feed URL regex patterns (anchored matching with ^$).
+  final List<String>? feedUrlPatterns;
 
   /// Which resolver type to use (e.g., "rss", "title_appearance").
   final String resolverType;
@@ -40,6 +47,11 @@ final class SeasonPattern {
   /// When provided, overrides the default title generation logic.
   final SeasonTitleExtractor? titleExtractor;
 
+  /// Custom episode number extractor for on-demand extraction.
+  ///
+  /// When provided, extracts episode-in-season numbers from episode titles.
+  final EpisodeNumberExtractor? episodeNumberExtractor;
+
   /// Returns true if this pattern matches the given podcast.
   bool matchesPodcast(String? guid, String feedUrl) {
     // Match by GUID first
@@ -47,8 +59,20 @@ final class SeasonPattern {
       return true;
     }
 
-    // Fall back to feed URL pattern
+    // Try feedUrlPatterns (anchored matching)
+    if (feedUrlPatterns != null) {
+      for (final pattern in feedUrlPatterns!) {
+        final regex = RegExp('^$pattern\$');
+        if (regex.hasMatch(feedUrl)) {
+          return true;
+        }
+      }
+    }
+
+    // Fall back to legacy feedUrlPattern (unanchored for backwards compat)
+    // ignore: deprecated_member_use_from_same_package
     if (feedUrlPattern != null) {
+      // ignore: deprecated_member_use_from_same_package
       final regex = RegExp(feedUrlPattern!);
       if (regex.hasMatch(feedUrl)) {
         return true;
