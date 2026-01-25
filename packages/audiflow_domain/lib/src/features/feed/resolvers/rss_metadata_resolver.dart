@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import '../../../common/database/app_database.dart';
 import '../models/season.dart';
 import '../models/season_pattern.dart';
@@ -19,11 +21,20 @@ class RssMetadataResolver implements SeasonResolver {
     final grouped = <int, List<Episode>>{};
     final ungrouped = <int>[];
 
+    // Check for groupNullSeasonAs config
+    final groupNullAs = pattern?.config['groupNullSeasonAs'] as int?;
+
     for (final episode in episodes) {
       final seasonNum = episode.seasonNumber;
-      if (seasonNum != null) {
+
+      if (seasonNum != null && 1 <= seasonNum) {
+        // Positive season number - group normally
         grouped.putIfAbsent(seasonNum, () => []).add(episode);
+      } else if (groupNullAs != null) {
+        // Null/zero season number with groupNullSeasonAs config
+        grouped.putIfAbsent(groupNullAs, () => []).add(episode);
       } else {
+        // No config for grouping - mark as ungrouped
         ungrouped.add(episode.id);
       }
     }
@@ -43,10 +54,13 @@ class RssMetadataResolver implements SeasonResolver {
         titleExtractor: titleExtractor,
       );
 
+      // Calculate sortKey from max episodeNumber
+      final sortKey = _calculateSortKey(seasonEpisodes);
+
       return Season(
         id: 'season_${entry.key}',
         displayName: displayName,
-        sortKey: entry.key,
+        sortKey: sortKey,
         episodeIds: seasonEpisodes.map((e) => e.id).toList(),
       );
     }).toList()..sort((a, b) => a.sortKey.compareTo(b.sortKey));
@@ -67,8 +81,13 @@ class RssMetadataResolver implements SeasonResolver {
       return 'Season $seasonNumber';
     }
 
-    // Try to extract title from first episode
     final extracted = titleExtractor.extract(episodes.first);
     return extracted ?? 'Season $seasonNumber';
+  }
+
+  int _calculateSortKey(List<Episode> episodes) {
+    if (episodes.isEmpty) return 0;
+
+    return episodes.map((e) => e.episodeNumber ?? 0).reduce(max);
   }
 }
