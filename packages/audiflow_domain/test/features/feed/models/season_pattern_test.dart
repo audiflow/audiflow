@@ -9,7 +9,7 @@ void main() {
         id: 'italy_podcast',
         podcastGuid: 'guid-123',
         // ignore: deprecated_member_use_from_same_package
-        feedUrlPattern: r'.*italy-travel\.com/feed.*',
+        feedUrlPatterns: [r'.*italy-travel\.com/feed.*'],
         resolverType: 'title_appearance',
         config: {'pattern': r'\[(\w+)\s+\d+\]'},
         priority: 10,
@@ -18,7 +18,7 @@ void main() {
       expect(pattern.id, 'italy_podcast');
       expect(pattern.podcastGuid, 'guid-123');
       // ignore: deprecated_member_use_from_same_package
-      expect(pattern.feedUrlPattern, r'.*italy-travel\.com/feed.*');
+      expect(pattern.feedUrlPatterns, [r'.*italy-travel\.com/feed.*']);
       expect(pattern.resolverType, 'title_appearance');
       expect(pattern.config['pattern'], r'\[(\w+)\s+\d+\]');
       expect(pattern.priority, 10);
@@ -44,7 +44,7 @@ void main() {
         id: 'test',
         podcastGuid: 'guid-abc',
         // ignore: deprecated_member_use_from_same_package
-        feedUrlPattern: r'.*example\.com.*',
+        feedUrlPatterns: [r'.*example\.com.*'],
         resolverType: 'rss',
         config: {},
       );

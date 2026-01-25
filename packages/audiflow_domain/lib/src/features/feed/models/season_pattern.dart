@@ -7,7 +7,6 @@ final class SeasonPattern {
   const SeasonPattern({
     required this.id,
     this.podcastGuid,
-    @Deprecated('Use feedUrlPatterns instead') this.feedUrlPattern,
     this.feedUrlPatterns,
     required this.resolverType,
     required this.config,
@@ -22,10 +21,6 @@ final class SeasonPattern {
 
   /// Match by podcast GUID (checked first).
   final String? podcastGuid;
-
-  /// Match by feed URL regex pattern (fallback).
-  @Deprecated('Use feedUrlPatterns instead')
-  final String? feedUrlPattern;
 
   /// Match by feed URL regex patterns (anchored matching with ^$).
   final List<String>? feedUrlPatterns;
@@ -66,16 +61,6 @@ final class SeasonPattern {
         if (regex.hasMatch(feedUrl)) {
           return true;
         }
-      }
-    }
-
-    // Fall back to legacy feedUrlPattern (unanchored for backwards compat)
-    // ignore: deprecated_member_use_from_same_package
-    if (feedUrlPattern != null) {
-      // ignore: deprecated_member_use_from_same_package
-      final regex = RegExp(feedUrlPattern!);
-      if (regex.hasMatch(feedUrl)) {
-        return true;
       }
     }
 
