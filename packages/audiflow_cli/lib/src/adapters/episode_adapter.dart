@@ -1,5 +1,4 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
-import 'package:audiflow_podcast/audiflow_podcast.dart';
 
 /// Converts a [PodcastItem] from RSS parsing to an [Episode] for extractors.
 ///
