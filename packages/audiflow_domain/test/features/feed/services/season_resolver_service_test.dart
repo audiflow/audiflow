@@ -86,7 +86,7 @@ void main() {
         patterns: [
           SeasonPattern(
             id: 'test_pattern',
-            feedUrlPattern: r'.*example\.com.*',
+            feedUrlPatterns: [r'https://example\.com/feed\.rss'],
             resolverType: 'title_appearance',
             config: {'pattern': r'Ep(\d+)'},
           ),
@@ -114,7 +114,7 @@ void main() {
 
       final result = serviceWithPattern.resolveSeasons(
         podcastGuid: null,
-        feedUrl: 'https://example.com/feed',
+        feedUrl: 'https://example.com/feed.rss',
         episodes: episodes,
       );
 
