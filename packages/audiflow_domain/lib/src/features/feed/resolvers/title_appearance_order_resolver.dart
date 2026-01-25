@@ -1,4 +1,5 @@
 import '../../../common/database/app_database.dart';
+import '../extensions/episode_extensions.dart';
 import '../models/season.dart';
 import '../models/season_pattern.dart';
 import '../models/season_sort.dart';
@@ -99,7 +100,7 @@ class TitleAppearanceOrderResolver implements SeasonResolver {
   }) {
     // Try titleExtractor first if available
     if (titleExtractor != null) {
-      return titleExtractor.extract(episode);
+      return titleExtractor.extract(episode.toEpisodeData());
     }
 
     // Fall back to pattern config

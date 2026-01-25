@@ -10,7 +10,7 @@ void main() {
       final output = StringBuffer();
       final command = SeasonDebugCommand(output);
 
-      final exitCode = await command.run(
+      await command.run(
         feedUrl: 'https://anchor.fm/s/8c2088c/podcast/rss',
         json: false,
       );

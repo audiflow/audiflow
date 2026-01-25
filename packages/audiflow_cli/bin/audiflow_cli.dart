@@ -39,7 +39,7 @@ void main(List<String> args) async {
     }
 
     if (results['version'] as bool) {
-      print('audiflow_cli 0.0.1');
+      stdout.writeln('audiflow_cli 0.0.1');
       exit(0);
     }
 
@@ -57,31 +57,31 @@ void main(List<String> args) async {
       case 'pattern-list':
         _runPatternList();
       default:
-        print('Unknown command: ${command.name}');
+        stdout.writeln('Unknown command: ${command.name}');
         exit(1);
     }
   } on FormatException catch (e) {
-    print('Error: ${e.message}');
+    stdout.writeln('Error: ${e.message}');
     _printUsage(parser);
     exit(1);
   }
 }
 
 void _printUsage(ArgParser parser) {
-  print('Usage: dart run audiflow_cli <command> [options]');
-  print('');
-  print('Commands:');
-  print('  season-debug <url>   Test extractors against RSS feed');
-  print('  pattern-test         Test patterns against a single title');
-  print('  pattern-list         List available patterns');
-  print('');
-  print('Options:');
-  print(parser.usage);
+  stdout.writeln('Usage: dart run audiflow_cli <command> [options]');
+  stdout.writeln('');
+  stdout.writeln('Commands:');
+  stdout.writeln('  season-debug <url>   Test extractors against RSS feed');
+  stdout.writeln('  pattern-test         Test patterns against a single title');
+  stdout.writeln('  pattern-list         List available patterns');
+  stdout.writeln('');
+  stdout.writeln('Options:');
+  stdout.writeln(parser.usage);
 }
 
 Future<void> _runSeasonDebug(ArgResults command) async {
   if (command.rest.isEmpty) {
-    print('Error: Feed URL required');
+    stdout.writeln('Error: Feed URL required');
     exit(1);
   }
 
@@ -101,7 +101,7 @@ Future<void> _runSeasonDebug(ArgResults command) async {
 void _runPatternTest(ArgResults command) {
   final title = command['title'] as String?;
   if (title == null) {
-    print('Error: --title is required');
+    stdout.writeln('Error: --title is required');
     exit(1);
   }
 

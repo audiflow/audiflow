@@ -1,4 +1,5 @@
 import '../../../common/database/app_database.dart';
+import '../extensions/episode_extensions.dart';
 import '../models/season.dart';
 import '../models/season_pattern.dart';
 import '../models/season_sort.dart';
@@ -70,7 +71,7 @@ class YearResolver implements SeasonResolver {
     }
 
     // Try to extract title from first episode
-    final extracted = titleExtractor.extract(episodes.first);
+    final extracted = titleExtractor.extract(episodes.first.toEpisodeData());
     return extracted ?? '$year';
   }
 }

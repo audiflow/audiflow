@@ -1,22 +1,18 @@
+import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('EpisodeNumberExtractor', () {
-    Episode makeEpisode({
+    EpisodeData makeEpisode({
       String title = 'Test',
       int? episodeNumber,
       int? seasonNumber,
     }) {
-      return Episode(
-        id: 1,
-        podcastId: 1,
-        guid: 'guid-1',
+      return SimpleEpisodeData(
         title: title,
-        audioUrl: 'https://example.com/1.mp3',
         episodeNumber: episodeNumber,
         seasonNumber: seasonNumber,
-        publishedAt: DateTime(2024, 1, 1),
       );
     }
 

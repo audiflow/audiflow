@@ -8,7 +8,7 @@ import 'streaming_xml_parser.dart';
 /// Pure-Dart RSS parser without Flutter dependencies.
 ///
 /// This parser supports parsing from strings and byte streams only.
-/// For URL fetching with caching, use [PodcastRssParser] from the main library.
+/// For URL fetching with caching, use `PodcastRssParser` from the main library.
 class PureRssParser {
   /// Parses a podcast RSS feed from the given XML string.
   ///

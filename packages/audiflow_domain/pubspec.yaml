@@ -11,6 +11,8 @@ resolution: workspace
 dependencies:
   audiflow_ai:
     path: ../audiflow_ai
+  audiflow_core:
+    path: ../audiflow_core
   audiflow_podcast:
     path: ../audiflow_podcast
   audiflow_search:
