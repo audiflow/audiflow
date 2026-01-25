@@ -37,6 +37,7 @@ final class SeasonTitleExtractor {
     this.group = 0,
     this.template,
     this.fallback,
+    this.fallbackValue,
   });
 
   /// Creates an extractor from JSON configuration.
@@ -51,6 +52,7 @@ final class SeasonTitleExtractor {
               json['fallback'] as Map<String, dynamic>,
             )
           : null,
+      fallbackValue: json['fallbackValue'] as String?,
     );
   }
 
@@ -76,6 +78,9 @@ final class SeasonTitleExtractor {
   /// Fallback extractor to use when this one fails.
   final SeasonTitleExtractor? fallback;
 
+  /// Fallback string value for null/zero seasonNumber episodes.
+  final String? fallbackValue;
+
   /// Converts to JSON representation.
   Map<String, dynamic> toJson() {
     return {
@@ -84,6 +89,7 @@ final class SeasonTitleExtractor {
       if (group != 0) 'group': group,
       if (template != null) 'template': template,
       if (fallback != null) 'fallback': fallback!.toJson(),
+      if (fallbackValue != null) 'fallbackValue': fallbackValue,
     };
   }
 
@@ -91,6 +97,12 @@ final class SeasonTitleExtractor {
   ///
   /// Returns null if extraction fails and no fallback is available.
   String? extract(Episode episode) {
+    // For null/zero seasonNumber, use fallbackValue if available
+    final seasonNum = episode.seasonNumber;
+    if (fallbackValue != null && (seasonNum == null || 1 > seasonNum)) {
+      return fallbackValue;
+    }
+
     final sourceValue = _getSourceValue(episode);
 
     if (sourceValue == null) {

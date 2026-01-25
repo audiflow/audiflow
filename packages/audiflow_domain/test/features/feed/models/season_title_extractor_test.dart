@@ -67,6 +67,31 @@ void main() {
 
       expect(extractor.group, 0);
     });
+
+    test('creates from JSON config with fallbackValue', () {
+      final json = {
+        'source': 'title',
+        'pattern': r'【COTEN RADIO (ショート)?\s*(.+?)\s+\d+】',
+        'group': 2,
+        'fallbackValue': '番外編',
+      };
+
+      final extractor = SeasonTitleExtractor.fromJson(json);
+
+      expect(extractor.fallbackValue, '番外編');
+    });
+
+    test('converts to JSON with fallbackValue', () {
+      final extractor = SeasonTitleExtractor(
+        source: 'title',
+        pattern: r'【COTEN RADIO】',
+        fallbackValue: '番外編',
+      );
+
+      final json = extractor.toJson();
+
+      expect(json['fallbackValue'], '番外編');
+    });
   });
 
   group('SeasonTitleExtractor.extract', () {
@@ -180,6 +205,68 @@ void main() {
       final result = extractor.extract(episode);
 
       expect(result, isNull);
+    });
+
+    test('uses fallback string for null seasonNumber', () {
+      final extractor = SeasonTitleExtractor(
+        source: 'title',
+        pattern: r'【COTEN RADIO (ショート)?\s*(.+?)\s+\d+】',
+        group: 2,
+        fallbackValue: '番外編',
+      );
+
+      final episode = makeEpisode(title: '【番外編＃135】仏教のこと', seasonNumber: null);
+      final result = extractor.extract(episode);
+
+      expect(result, '番外編');
+    });
+
+    test('uses fallback string for seasonNumber zero', () {
+      final extractor = SeasonTitleExtractor(
+        source: 'title',
+        pattern: r'【COTEN RADIO (ショート)?\s*(.+?)\s+\d+】',
+        group: 2,
+        fallbackValue: '番外編',
+      );
+
+      final episode = makeEpisode(title: '【番外編＃135】仏教のこと', seasonNumber: 0);
+      final result = extractor.extract(episode);
+
+      expect(result, '番外編');
+    });
+
+    test('extracts COTEN RADIO season title from regular episode', () {
+      final extractor = SeasonTitleExtractor(
+        source: 'title',
+        pattern: r'【COTEN RADIO (ショート\s)?(.+?)\d+】',
+        group: 2,
+        fallbackValue: '番外編',
+      );
+
+      final episode = makeEpisode(
+        title: '【62-15】何が変わった？【COTEN RADIO リンカン編15】',
+        seasonNumber: 62,
+      );
+      final result = extractor.extract(episode);
+
+      expect(result, 'リンカン編');
+    });
+
+    test('extracts COTEN RADIO short season title', () {
+      final extractor = SeasonTitleExtractor(
+        source: 'title',
+        pattern: r'【COTEN RADIO (ショート\s)?(.+?)\d+】',
+        group: 2,
+        fallbackValue: '番外編',
+      );
+
+      final episode = makeEpisode(
+        title: '【1-1】概要【COTEN RADIO ショート 織田信長編1】',
+        seasonNumber: 1,
+      );
+      final result = extractor.extract(episode);
+
+      expect(result, '織田信長編');
     });
   });
 }
