@@ -9,6 +9,7 @@ environment:
 workspace:
   - packages/audiflow_ai
   - packages/audiflow_app
+  - packages/audiflow_cli
   - packages/audiflow_core
   - packages/audiflow_domain
   - packages/audiflow_podcast
