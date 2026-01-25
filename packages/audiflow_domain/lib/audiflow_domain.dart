@@ -28,7 +28,18 @@ export 'src/common/datasources/shared_preferences_datasource.dart';
 // Feed feature
 export 'src/features/feed/builders/podcast_builder.dart';
 export 'src/features/feed/models/feed_parse_progress.dart';
+export 'src/features/feed/models/season.dart';
+export 'src/features/feed/models/season_pattern.dart';
+export 'src/features/feed/models/season_sort.dart';
+export 'src/features/feed/resolvers/rss_metadata_resolver.dart';
+export 'src/features/feed/resolvers/season_resolver.dart';
+export 'src/features/feed/resolvers/title_appearance_order_resolver.dart';
+export 'src/features/feed/resolvers/year_resolver.dart';
 export 'src/features/feed/services/feed_parser_service.dart';
+export 'src/features/feed/services/season_resolver_service.dart';
+
+// Feed feature - Season Providers
+export 'src/features/feed/providers/season_providers.dart';
 
 // Feed feature - Episodes
 export 'src/features/feed/models/episode.dart';

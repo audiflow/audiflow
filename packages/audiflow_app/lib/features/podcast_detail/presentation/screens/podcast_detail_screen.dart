@@ -1,12 +1,22 @@
+import 'package:audiflow_domain/audiflow_domain.dart'
+    show
+        Season,
+        hasSeasonViewByFeedUrlProvider,
+        podcastSeasonsByFeedUrlProvider;
 import 'package:audiflow_search/audiflow_search.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../routing/app_router.dart';
 import '../../../subscription/presentation/controllers/subscription_controller.dart';
 import '../controllers/podcast_detail_controller.dart';
+import '../controllers/podcast_view_mode_controller.dart';
 import '../widgets/episode_filter_chips.dart';
 import '../widgets/episode_list_tile.dart';
+import '../widgets/season_grid.dart';
+import '../widgets/season_view_toggle.dart';
 
 /// Displays podcast details and episode list with playback controls.
 ///
@@ -149,6 +159,13 @@ class PodcastDetailScreen extends ConsumerWidget {
     // Batch-fetch all episode progress in a single query
     final progressMapAsync = ref.watch(podcastEpisodeProgressProvider(feedUrl));
 
+    // View mode state
+    final viewMode = ref.watch(podcastViewModeControllerProvider(podcast.id));
+
+    // Check if season view is available for this podcast
+    final hasSeasonsAsync = ref.watch(hasSeasonViewByFeedUrlProvider(feedUrl));
+    final hasSeasons = hasSeasonsAsync.value ?? false;
+
     return RefreshIndicator(
       onRefresh: () async {
         ref.invalidate(podcastDetailProvider(feedUrl));
@@ -158,19 +175,103 @@ class PodcastDetailScreen extends ConsumerWidget {
       child: CustomScrollView(
         slivers: [
           SliverToBoxAdapter(child: _buildHeader(context, ref, theme)),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: Spacing.sm),
-              child: EpisodeFilterChips(
-                selected: filter,
-                onSelected: (f) =>
-                    ref.read(episodeFilterStateProvider.notifier).setFilter(f),
+          // Show view mode toggle only when seasons are available
+          if (hasSeasons)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: Spacing.md,
+                  vertical: Spacing.sm,
+                ),
+                child: SeasonViewToggle(
+                  selected: viewMode,
+                  onChanged: (mode) => ref
+                      .read(
+                        podcastViewModeControllerProvider(podcast.id).notifier,
+                      )
+                      .toggle(),
+                ),
               ),
             ),
-          ),
-          _buildEpisodeList(filteredAsync, progressMapAsync, theme),
+          // Show filter chips only in episodes view
+          if (viewMode == PodcastViewMode.episodes)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: Spacing.sm),
+                child: EpisodeFilterChips(
+                  selected: filter,
+                  onSelected: (f) => ref
+                      .read(episodeFilterStateProvider.notifier)
+                      .setFilter(f),
+                ),
+              ),
+            ),
+          // Content based on view mode
+          if (viewMode == PodcastViewMode.episodes)
+            _buildEpisodeList(filteredAsync, progressMapAsync, theme)
+          else
+            _buildSeasonView(context, ref, feedUrl),
         ],
       ),
+    );
+  }
+
+  Widget _buildSeasonView(BuildContext context, WidgetRef ref, String feedUrl) {
+    final seasonsAsync = ref.watch(podcastSeasonsByFeedUrlProvider(feedUrl));
+
+    return seasonsAsync.when(
+      data: (grouping) {
+        if (grouping == null) {
+          return const SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.all(Spacing.lg),
+              child: Center(child: Text('No seasons available')),
+            ),
+          );
+        }
+
+        return SeasonGrid(
+          seasons: grouping.seasons,
+          ungroupedEpisodeIds: grouping.ungroupedEpisodeIds,
+          onSeasonTap: (season) => _navigateToSeasonEpisodes(context, season),
+          onUngroupedTap: () => _navigateToSeasonEpisodes(
+            context,
+            Season(
+              id: 'ungrouped',
+              displayName: 'Ungrouped',
+              sortKey: 999999,
+              episodeIds: grouping.ungroupedEpisodeIds,
+            ),
+          ),
+        );
+      },
+      loading: () => const SliverToBoxAdapter(
+        child: Padding(
+          padding: EdgeInsets.all(Spacing.lg),
+          child: Center(child: CircularProgressIndicator()),
+        ),
+      ),
+      error: (error, _) => SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsets.all(Spacing.lg),
+          child: Center(child: Text('Error loading seasons: $error')),
+        ),
+      ),
+    );
+  }
+
+  void _navigateToSeasonEpisodes(BuildContext context, Season season) {
+    final currentPath = GoRouterState.of(context).uri.path;
+    context.push(
+      '$currentPath/${AppRoutes.seasonEpisodes}'.replaceAll(
+        ':seasonId',
+        season.id,
+      ),
+      extra: {
+        'season': season,
+        'podcastTitle': podcast.name,
+        'podcastArtworkUrl': podcast.artworkUrl,
+      },
     );
   }
 

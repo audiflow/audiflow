@@ -96,4 +96,12 @@ class EpisodeLocalDatasource {
       _db.episodes,
     )..where((e) => e.podcastId.equals(podcastId))).go();
   }
+
+  /// Returns episodes by their IDs.
+  ///
+  /// Order is not guaranteed; caller should sort as needed.
+  Future<List<Episode>> getByIds(List<int> ids) {
+    if (ids.isEmpty) return Future.value([]);
+    return (_db.select(_db.episodes)..where((e) => e.id.isIn(ids))).get();
+  }
 }
