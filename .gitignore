@@ -54,12 +54,12 @@ app.*.map.json
 # FVM Version Cache
 .fvm/
 
-.claude
+.claude/*
 !.claude/settings.json
-!.claude/agents
-!.claude/commands
-!.claude/hooks
-!.claude/rules
-!.claude/skills
+!.claude/agents/
+!.claude/commands/
+!.claude/hooks/
+!.claude/rules/
+!.claude/skills/
 
 .kiro/**/.results/
