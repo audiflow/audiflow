@@ -81,4 +81,9 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
   Future<Subscription?> getByFeedUrl(String feedUrl) {
     return _datasource.getByFeedUrl(feedUrl);
   }
+
+  @override
+  Future<Subscription?> getById(int id) {
+    return _datasource.getById(id);
+  }
 }

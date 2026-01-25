@@ -5,6 +5,7 @@ import '../../../features/subscription/repositories/subscription_repository_impl
 import '../../player/models/episode_with_progress.dart';
 import '../../player/repositories/playback_history_repository_impl.dart';
 import '../models/season.dart';
+import '../patterns/coten_radio_pattern.dart';
 import '../repositories/episode_repository_impl.dart';
 import '../resolvers/rss_metadata_resolver.dart';
 import '../resolvers/year_resolver.dart';
@@ -20,7 +21,7 @@ part 'season_providers.g.dart';
 SeasonResolverService seasonResolverService(Ref ref) {
   return SeasonResolverService(
     resolvers: [RssMetadataResolver(), YearResolver()],
-    patterns: [], // V1: No custom patterns yet
+    patterns: [cotenRadioPattern],
   );
 }
 
@@ -29,17 +30,19 @@ SeasonResolverService seasonResolverService(Ref ref) {
 /// Returns null if no resolver can group the episodes.
 @riverpod
 Future<SeasonGrouping?> podcastSeasons(Ref ref, int podcastId) async {
+  final subscriptionRepo = ref.watch(subscriptionRepositoryProvider);
   final episodeRepo = ref.watch(episodeRepositoryProvider);
   final resolverService = ref.watch(seasonResolverServiceProvider);
+
+  final subscription = await subscriptionRepo.getById(podcastId);
+  if (subscription == null) return null;
 
   final episodes = await episodeRepo.getByPodcastId(podcastId);
   if (episodes.isEmpty) return null;
 
-  // For now, we'll pass null for guid and empty for feedUrl
-  // TODO: Add subscription repository to get podcast details
   return resolverService.resolveSeasons(
-    podcastGuid: null,
-    feedUrl: '',
+    podcastGuid: null, // TODO: Add podcastGuid to Subscriptions table
+    feedUrl: subscription.feedUrl,
     episodes: episodes,
   );
 }

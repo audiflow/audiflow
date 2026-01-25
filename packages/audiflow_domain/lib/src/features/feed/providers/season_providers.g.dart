@@ -68,7 +68,7 @@ final class SeasonResolverServiceProvider
 }
 
 String _$seasonResolverServiceHash() =>
-    r'c8fa752c6a18ada4f6a8226802206437459c9c0e';
+    r'10c1a611251c37b47e781b8fc724eab0f47ce812';
 
 /// Resolves seasons for a podcast by its ID.
 ///
@@ -136,7 +136,7 @@ final class PodcastSeasonsProvider
   }
 }
 
-String _$podcastSeasonsHash() => r'141d277c313263851dd0f66686805466b02a133c';
+String _$podcastSeasonsHash() => r'd743e3b03bd39161e7798c5d9b2370fc26cd9feb';
 
 /// Resolves seasons for a podcast by its ID.
 ///
