@@ -6,6 +6,9 @@ import '../../subscription/models/subscriptions.dart';
 ///
 /// Uses composite primary key (podcastId, seasonNumber) for natural joins
 /// with Episodes table without requiring FK modifications.
+///
+/// Generates `SeasonEntity` data class to avoid conflict with `Season` model.
+@DataClassName('SeasonEntity')
 class Seasons extends Table {
   /// Foreign key to Subscriptions table (part of composite PK).
   IntColumn get podcastId => integer().references(Subscriptions, #id)();

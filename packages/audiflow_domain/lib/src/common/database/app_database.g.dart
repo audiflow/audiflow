@@ -1884,6 +1884,402 @@ class PlaybackHistoriesCompanion extends UpdateCompanion<PlaybackHistory> {
   }
 }
 
+class $SeasonsTable extends Seasons
+    with TableInfo<$SeasonsTable, SeasonEntity> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SeasonsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _podcastIdMeta = const VerificationMeta(
+    'podcastId',
+  );
+  @override
+  late final GeneratedColumn<int> podcastId = GeneratedColumn<int>(
+    'podcast_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES subscriptions (id)',
+    ),
+  );
+  static const VerificationMeta _seasonNumberMeta = const VerificationMeta(
+    'seasonNumber',
+  );
+  @override
+  late final GeneratedColumn<int> seasonNumber = GeneratedColumn<int>(
+    'season_number',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _displayNameMeta = const VerificationMeta(
+    'displayName',
+  );
+  @override
+  late final GeneratedColumn<String> displayName = GeneratedColumn<String>(
+    'display_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _sortKeyMeta = const VerificationMeta(
+    'sortKey',
+  );
+  @override
+  late final GeneratedColumn<int> sortKey = GeneratedColumn<int>(
+    'sort_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _resolverTypeMeta = const VerificationMeta(
+    'resolverType',
+  );
+  @override
+  late final GeneratedColumn<String> resolverType = GeneratedColumn<String>(
+    'resolver_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    podcastId,
+    seasonNumber,
+    displayName,
+    sortKey,
+    resolverType,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'seasons';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SeasonEntity> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('podcast_id')) {
+      context.handle(
+        _podcastIdMeta,
+        podcastId.isAcceptableOrUnknown(data['podcast_id']!, _podcastIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_podcastIdMeta);
+    }
+    if (data.containsKey('season_number')) {
+      context.handle(
+        _seasonNumberMeta,
+        seasonNumber.isAcceptableOrUnknown(
+          data['season_number']!,
+          _seasonNumberMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_seasonNumberMeta);
+    }
+    if (data.containsKey('display_name')) {
+      context.handle(
+        _displayNameMeta,
+        displayName.isAcceptableOrUnknown(
+          data['display_name']!,
+          _displayNameMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_displayNameMeta);
+    }
+    if (data.containsKey('sort_key')) {
+      context.handle(
+        _sortKeyMeta,
+        sortKey.isAcceptableOrUnknown(data['sort_key']!, _sortKeyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_sortKeyMeta);
+    }
+    if (data.containsKey('resolver_type')) {
+      context.handle(
+        _resolverTypeMeta,
+        resolverType.isAcceptableOrUnknown(
+          data['resolver_type']!,
+          _resolverTypeMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_resolverTypeMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {podcastId, seasonNumber};
+  @override
+  SeasonEntity map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SeasonEntity(
+      podcastId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}podcast_id'],
+      )!,
+      seasonNumber: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}season_number'],
+      )!,
+      displayName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}display_name'],
+      )!,
+      sortKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sort_key'],
+      )!,
+      resolverType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}resolver_type'],
+      )!,
+    );
+  }
+
+  @override
+  $SeasonsTable createAlias(String alias) {
+    return $SeasonsTable(attachedDatabase, alias);
+  }
+}
+
+class SeasonEntity extends DataClass implements Insertable<SeasonEntity> {
+  /// Foreign key to Subscriptions table (part of composite PK).
+  final int podcastId;
+
+  /// Season number matching episode.seasonNumber (part of composite PK).
+  /// Use 0 for ungrouped/extras seasons like "番外編".
+  final int seasonNumber;
+
+  /// Display name (e.g., "リンカン編", "番外編").
+  final String displayName;
+
+  /// Sort key for ordering seasons (typically max episodeNumber in season).
+  final int sortKey;
+
+  /// Resolver type that generated this season (e.g., "rss").
+  final String resolverType;
+  const SeasonEntity({
+    required this.podcastId,
+    required this.seasonNumber,
+    required this.displayName,
+    required this.sortKey,
+    required this.resolverType,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['podcast_id'] = Variable<int>(podcastId);
+    map['season_number'] = Variable<int>(seasonNumber);
+    map['display_name'] = Variable<String>(displayName);
+    map['sort_key'] = Variable<int>(sortKey);
+    map['resolver_type'] = Variable<String>(resolverType);
+    return map;
+  }
+
+  SeasonsCompanion toCompanion(bool nullToAbsent) {
+    return SeasonsCompanion(
+      podcastId: Value(podcastId),
+      seasonNumber: Value(seasonNumber),
+      displayName: Value(displayName),
+      sortKey: Value(sortKey),
+      resolverType: Value(resolverType),
+    );
+  }
+
+  factory SeasonEntity.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SeasonEntity(
+      podcastId: serializer.fromJson<int>(json['podcastId']),
+      seasonNumber: serializer.fromJson<int>(json['seasonNumber']),
+      displayName: serializer.fromJson<String>(json['displayName']),
+      sortKey: serializer.fromJson<int>(json['sortKey']),
+      resolverType: serializer.fromJson<String>(json['resolverType']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'podcastId': serializer.toJson<int>(podcastId),
+      'seasonNumber': serializer.toJson<int>(seasonNumber),
+      'displayName': serializer.toJson<String>(displayName),
+      'sortKey': serializer.toJson<int>(sortKey),
+      'resolverType': serializer.toJson<String>(resolverType),
+    };
+  }
+
+  SeasonEntity copyWith({
+    int? podcastId,
+    int? seasonNumber,
+    String? displayName,
+    int? sortKey,
+    String? resolverType,
+  }) => SeasonEntity(
+    podcastId: podcastId ?? this.podcastId,
+    seasonNumber: seasonNumber ?? this.seasonNumber,
+    displayName: displayName ?? this.displayName,
+    sortKey: sortKey ?? this.sortKey,
+    resolverType: resolverType ?? this.resolverType,
+  );
+  SeasonEntity copyWithCompanion(SeasonsCompanion data) {
+    return SeasonEntity(
+      podcastId: data.podcastId.present ? data.podcastId.value : this.podcastId,
+      seasonNumber: data.seasonNumber.present
+          ? data.seasonNumber.value
+          : this.seasonNumber,
+      displayName: data.displayName.present
+          ? data.displayName.value
+          : this.displayName,
+      sortKey: data.sortKey.present ? data.sortKey.value : this.sortKey,
+      resolverType: data.resolverType.present
+          ? data.resolverType.value
+          : this.resolverType,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SeasonEntity(')
+          ..write('podcastId: $podcastId, ')
+          ..write('seasonNumber: $seasonNumber, ')
+          ..write('displayName: $displayName, ')
+          ..write('sortKey: $sortKey, ')
+          ..write('resolverType: $resolverType')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(podcastId, seasonNumber, displayName, sortKey, resolverType);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SeasonEntity &&
+          other.podcastId == this.podcastId &&
+          other.seasonNumber == this.seasonNumber &&
+          other.displayName == this.displayName &&
+          other.sortKey == this.sortKey &&
+          other.resolverType == this.resolverType);
+}
+
+class SeasonsCompanion extends UpdateCompanion<SeasonEntity> {
+  final Value<int> podcastId;
+  final Value<int> seasonNumber;
+  final Value<String> displayName;
+  final Value<int> sortKey;
+  final Value<String> resolverType;
+  final Value<int> rowid;
+  const SeasonsCompanion({
+    this.podcastId = const Value.absent(),
+    this.seasonNumber = const Value.absent(),
+    this.displayName = const Value.absent(),
+    this.sortKey = const Value.absent(),
+    this.resolverType = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  SeasonsCompanion.insert({
+    required int podcastId,
+    required int seasonNumber,
+    required String displayName,
+    required int sortKey,
+    required String resolverType,
+    this.rowid = const Value.absent(),
+  }) : podcastId = Value(podcastId),
+       seasonNumber = Value(seasonNumber),
+       displayName = Value(displayName),
+       sortKey = Value(sortKey),
+       resolverType = Value(resolverType);
+  static Insertable<SeasonEntity> custom({
+    Expression<int>? podcastId,
+    Expression<int>? seasonNumber,
+    Expression<String>? displayName,
+    Expression<int>? sortKey,
+    Expression<String>? resolverType,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (podcastId != null) 'podcast_id': podcastId,
+      if (seasonNumber != null) 'season_number': seasonNumber,
+      if (displayName != null) 'display_name': displayName,
+      if (sortKey != null) 'sort_key': sortKey,
+      if (resolverType != null) 'resolver_type': resolverType,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  SeasonsCompanion copyWith({
+    Value<int>? podcastId,
+    Value<int>? seasonNumber,
+    Value<String>? displayName,
+    Value<int>? sortKey,
+    Value<String>? resolverType,
+    Value<int>? rowid,
+  }) {
+    return SeasonsCompanion(
+      podcastId: podcastId ?? this.podcastId,
+      seasonNumber: seasonNumber ?? this.seasonNumber,
+      displayName: displayName ?? this.displayName,
+      sortKey: sortKey ?? this.sortKey,
+      resolverType: resolverType ?? this.resolverType,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (podcastId.present) {
+      map['podcast_id'] = Variable<int>(podcastId.value);
+    }
+    if (seasonNumber.present) {
+      map['season_number'] = Variable<int>(seasonNumber.value);
+    }
+    if (displayName.present) {
+      map['display_name'] = Variable<String>(displayName.value);
+    }
+    if (sortKey.present) {
+      map['sort_key'] = Variable<int>(sortKey.value);
+    }
+    if (resolverType.present) {
+      map['resolver_type'] = Variable<String>(resolverType.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SeasonsCompanion(')
+          ..write('podcastId: $podcastId, ')
+          ..write('seasonNumber: $seasonNumber, ')
+          ..write('displayName: $displayName, ')
+          ..write('sortKey: $sortKey, ')
+          ..write('resolverType: $resolverType, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -1891,6 +2287,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $EpisodesTable episodes = $EpisodesTable(this);
   late final $PlaybackHistoriesTable playbackHistories =
       $PlaybackHistoriesTable(this);
+  late final $SeasonsTable seasons = $SeasonsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -1899,6 +2296,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     subscriptions,
     episodes,
     playbackHistories,
+    seasons,
   ];
 }
 
@@ -1953,6 +2351,24 @@ final class $$SubscriptionsTableReferences
     ).filter((f) => f.podcastId.id.sqlEquals($_itemColumn<int>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_episodesRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$SeasonsTable, List<SeasonEntity>>
+  _seasonsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.seasons,
+    aliasName: $_aliasNameGenerator(db.subscriptions.id, db.seasons.podcastId),
+  );
+
+  $$SeasonsTableProcessedTableManager get seasonsRefs {
+    final manager = $$SeasonsTableTableManager(
+      $_db,
+      $_db.seasons,
+    ).filter((f) => f.podcastId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_seasonsRefsTable($_db));
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
@@ -2039,6 +2455,31 @@ class $$SubscriptionsTableFilterComposer
           }) => $$EpisodesTableFilterComposer(
             $db: $db,
             $table: $db.episodes,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> seasonsRefs(
+    Expression<bool> Function($$SeasonsTableFilterComposer f) f,
+  ) {
+    final $$SeasonsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.seasons,
+      getReferencedColumn: (t) => t.podcastId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SeasonsTableFilterComposer(
+            $db: $db,
+            $table: $db.seasons,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -2190,6 +2631,31 @@ class $$SubscriptionsTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> seasonsRefs<T extends Object>(
+    Expression<T> Function($$SeasonsTableAnnotationComposer a) f,
+  ) {
+    final $$SeasonsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.seasons,
+      getReferencedColumn: (t) => t.podcastId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SeasonsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.seasons,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$SubscriptionsTableTableManager
@@ -2205,7 +2671,7 @@ class $$SubscriptionsTableTableManager
           $$SubscriptionsTableUpdateCompanionBuilder,
           (Subscription, $$SubscriptionsTableReferences),
           Subscription,
-          PrefetchHooks Function({bool episodesRefs})
+          PrefetchHooks Function({bool episodesRefs, bool seasonsRefs})
         > {
   $$SubscriptionsTableTableManager(_$AppDatabase db, $SubscriptionsTable table)
     : super(
@@ -2278,10 +2744,13 @@ class $$SubscriptionsTableTableManager
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({episodesRefs = false}) {
+          prefetchHooksCallback: ({episodesRefs = false, seasonsRefs = false}) {
             return PrefetchHooks(
               db: db,
-              explicitlyWatchedTables: [if (episodesRefs) db.episodes],
+              explicitlyWatchedTables: [
+                if (episodesRefs) db.episodes,
+                if (seasonsRefs) db.seasons,
+              ],
               addJoins: null,
               getPrefetchedDataCallback: (items) async {
                 return [
@@ -2300,6 +2769,25 @@ class $$SubscriptionsTableTableManager
                             table,
                             p0,
                           ).episodesRefs,
+                      referencedItemsForCurrentItem: (item, referencedItems) =>
+                          referencedItems.where((e) => e.podcastId == item.id),
+                      typedResults: items,
+                    ),
+                  if (seasonsRefs)
+                    await $_getPrefetchedData<
+                      Subscription,
+                      $SubscriptionsTable,
+                      SeasonEntity
+                    >(
+                      currentTable: table,
+                      referencedTable: $$SubscriptionsTableReferences
+                          ._seasonsRefsTable(db),
+                      managerFromTypedResult: (p0) =>
+                          $$SubscriptionsTableReferences(
+                            db,
+                            table,
+                            p0,
+                          ).seasonsRefs,
                       referencedItemsForCurrentItem: (item, referencedItems) =>
                           referencedItems.where((e) => e.podcastId == item.id),
                       typedResults: items,
@@ -2324,7 +2812,7 @@ typedef $$SubscriptionsTableProcessedTableManager =
       $$SubscriptionsTableUpdateCompanionBuilder,
       (Subscription, $$SubscriptionsTableReferences),
       Subscription,
-      PrefetchHooks Function({bool episodesRefs})
+      PrefetchHooks Function({bool episodesRefs, bool seasonsRefs})
     >;
 typedef $$EpisodesTableCreateCompanionBuilder =
     EpisodesCompanion Function({
@@ -3240,6 +3728,331 @@ typedef $$PlaybackHistoriesTableProcessedTableManager =
       PlaybackHistory,
       PrefetchHooks Function({bool episodeId})
     >;
+typedef $$SeasonsTableCreateCompanionBuilder =
+    SeasonsCompanion Function({
+      required int podcastId,
+      required int seasonNumber,
+      required String displayName,
+      required int sortKey,
+      required String resolverType,
+      Value<int> rowid,
+    });
+typedef $$SeasonsTableUpdateCompanionBuilder =
+    SeasonsCompanion Function({
+      Value<int> podcastId,
+      Value<int> seasonNumber,
+      Value<String> displayName,
+      Value<int> sortKey,
+      Value<String> resolverType,
+      Value<int> rowid,
+    });
+
+final class $$SeasonsTableReferences
+    extends BaseReferences<_$AppDatabase, $SeasonsTable, SeasonEntity> {
+  $$SeasonsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $SubscriptionsTable _podcastIdTable(_$AppDatabase db) =>
+      db.subscriptions.createAlias(
+        $_aliasNameGenerator(db.seasons.podcastId, db.subscriptions.id),
+      );
+
+  $$SubscriptionsTableProcessedTableManager get podcastId {
+    final $_column = $_itemColumn<int>('podcast_id')!;
+
+    final manager = $$SubscriptionsTableTableManager(
+      $_db,
+      $_db.subscriptions,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_podcastIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$SeasonsTableFilterComposer
+    extends Composer<_$AppDatabase, $SeasonsTable> {
+  $$SeasonsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get seasonNumber => $composableBuilder(
+    column: $table.seasonNumber,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get displayName => $composableBuilder(
+    column: $table.displayName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sortKey => $composableBuilder(
+    column: $table.sortKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get resolverType => $composableBuilder(
+    column: $table.resolverType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$SubscriptionsTableFilterComposer get podcastId {
+    final $$SubscriptionsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.podcastId,
+      referencedTable: $db.subscriptions,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SubscriptionsTableFilterComposer(
+            $db: $db,
+            $table: $db.subscriptions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$SeasonsTableOrderingComposer
+    extends Composer<_$AppDatabase, $SeasonsTable> {
+  $$SeasonsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get seasonNumber => $composableBuilder(
+    column: $table.seasonNumber,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get displayName => $composableBuilder(
+    column: $table.displayName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get sortKey => $composableBuilder(
+    column: $table.sortKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get resolverType => $composableBuilder(
+    column: $table.resolverType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$SubscriptionsTableOrderingComposer get podcastId {
+    final $$SubscriptionsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.podcastId,
+      referencedTable: $db.subscriptions,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SubscriptionsTableOrderingComposer(
+            $db: $db,
+            $table: $db.subscriptions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$SeasonsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SeasonsTable> {
+  $$SeasonsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get seasonNumber => $composableBuilder(
+    column: $table.seasonNumber,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get displayName => $composableBuilder(
+    column: $table.displayName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get sortKey =>
+      $composableBuilder(column: $table.sortKey, builder: (column) => column);
+
+  GeneratedColumn<String> get resolverType => $composableBuilder(
+    column: $table.resolverType,
+    builder: (column) => column,
+  );
+
+  $$SubscriptionsTableAnnotationComposer get podcastId {
+    final $$SubscriptionsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.podcastId,
+      referencedTable: $db.subscriptions,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SubscriptionsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.subscriptions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$SeasonsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $SeasonsTable,
+          SeasonEntity,
+          $$SeasonsTableFilterComposer,
+          $$SeasonsTableOrderingComposer,
+          $$SeasonsTableAnnotationComposer,
+          $$SeasonsTableCreateCompanionBuilder,
+          $$SeasonsTableUpdateCompanionBuilder,
+          (SeasonEntity, $$SeasonsTableReferences),
+          SeasonEntity,
+          PrefetchHooks Function({bool podcastId})
+        > {
+  $$SeasonsTableTableManager(_$AppDatabase db, $SeasonsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SeasonsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SeasonsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SeasonsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> podcastId = const Value.absent(),
+                Value<int> seasonNumber = const Value.absent(),
+                Value<String> displayName = const Value.absent(),
+                Value<int> sortKey = const Value.absent(),
+                Value<String> resolverType = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SeasonsCompanion(
+                podcastId: podcastId,
+                seasonNumber: seasonNumber,
+                displayName: displayName,
+                sortKey: sortKey,
+                resolverType: resolverType,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required int podcastId,
+                required int seasonNumber,
+                required String displayName,
+                required int sortKey,
+                required String resolverType,
+                Value<int> rowid = const Value.absent(),
+              }) => SeasonsCompanion.insert(
+                podcastId: podcastId,
+                seasonNumber: seasonNumber,
+                displayName: displayName,
+                sortKey: sortKey,
+                resolverType: resolverType,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$SeasonsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({podcastId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (podcastId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.podcastId,
+                                referencedTable: $$SeasonsTableReferences
+                                    ._podcastIdTable(db),
+                                referencedColumn: $$SeasonsTableReferences
+                                    ._podcastIdTable(db)
+                                    .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$SeasonsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $SeasonsTable,
+      SeasonEntity,
+      $$SeasonsTableFilterComposer,
+      $$SeasonsTableOrderingComposer,
+      $$SeasonsTableAnnotationComposer,
+      $$SeasonsTableCreateCompanionBuilder,
+      $$SeasonsTableUpdateCompanionBuilder,
+      (SeasonEntity, $$SeasonsTableReferences),
+      SeasonEntity,
+      PrefetchHooks Function({bool podcastId})
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -3250,4 +4063,6 @@ class $AppDatabaseManager {
       $$EpisodesTableTableManager(_db, _db.episodes);
   $$PlaybackHistoriesTableTableManager get playbackHistories =>
       $$PlaybackHistoriesTableTableManager(_db, _db.playbackHistories);
+  $$SeasonsTableTableManager get seasons =>
+      $$SeasonsTableTableManager(_db, _db.seasons);
 }
