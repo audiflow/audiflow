@@ -1,18 +1,12 @@
-import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:audiflow_domain/patterns.dart';
+import 'package:audiflow_podcast/parser.dart';
 
-/// Converts a [PodcastItem] from RSS parsing to an [Episode] for extractors.
-///
-/// Stub values are used for database-only fields (id, podcastId).
-Episode toEpisode(PodcastItem item) {
-  return Episode(
-    id: 0,
-    podcastId: 0,
-    guid: item.guid ?? '',
+/// Converts a [PodcastItem] from RSS parsing to [EpisodeData] for extractors.
+SimpleEpisodeData toEpisode(PodcastItem item) {
+  return SimpleEpisodeData(
     title: item.title,
-    audioUrl: item.enclosureUrl ?? '',
     description: item.description.isEmpty ? null : item.description,
     seasonNumber: item.seasonNumber,
     episodeNumber: item.episodeNumber,
-    publishedAt: item.publishDate,
   );
 }

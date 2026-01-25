@@ -1,4 +1,4 @@
-import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:audiflow_domain/patterns.dart';
 // ignore: implementation_imports
 import 'package:audiflow_domain/src/features/feed/patterns/coten_radio_pattern.dart';
 

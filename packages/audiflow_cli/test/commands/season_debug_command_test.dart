@@ -1,5 +1,5 @@
 import 'package:audiflow_cli/src/commands/season_debug_command.dart';
-import 'package:audiflow_podcast/audiflow_podcast.dart';
+import 'package:audiflow_podcast/parser.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

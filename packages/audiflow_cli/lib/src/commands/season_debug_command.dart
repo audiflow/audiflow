@@ -1,5 +1,5 @@
-import 'package:audiflow_domain/audiflow_domain.dart';
-import 'package:audiflow_podcast/audiflow_podcast.dart';
+import 'package:audiflow_domain/patterns.dart';
+import 'package:audiflow_podcast/parser.dart';
 import 'package:http/http.dart' as http;
 
 import '../adapters/episode_adapter.dart';
@@ -33,7 +33,7 @@ class SeasonDebugCommand {
     }
 
     // Parse feed
-    final parser = PodcastRssParser();
+    final parser = PureRssParser();
     final items = <PodcastItem>[];
 
     try {
@@ -118,7 +118,7 @@ class SeasonDebugCommand {
   }
 
   ExtractionResult _extractWithDiagnostics(
-    Episode episode,
+    EpisodeData episode,
     SeasonPattern pattern,
   ) {
     String? extractedTitle;

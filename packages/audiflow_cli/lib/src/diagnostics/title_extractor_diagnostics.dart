@@ -1,4 +1,4 @@
-import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:audiflow_domain/patterns.dart';
 
 /// Diagnostic result from running title extraction.
 class TitleDiagnosticResult {
@@ -26,7 +26,7 @@ class TitleExtractorDiagnostics {
   final SeasonTitleExtractor extractor;
 
   /// Runs extraction and captures diagnostic details.
-  TitleDiagnosticResult run(Episode episode) {
+  TitleDiagnosticResult run(EpisodeData episode) {
     final seasonNum = episode.seasonNumber;
 
     // Step 1: Check fallbackValue condition
@@ -94,7 +94,7 @@ class TitleExtractorDiagnostics {
     return TitleDiagnosticResult(extractedValue: result);
   }
 
-  String? _getSourceValue(Episode episode) {
+  String? _getSourceValue(EpisodeData episode) {
     return switch (extractor.source) {
       'title' => episode.title,
       'description' => episode.description,

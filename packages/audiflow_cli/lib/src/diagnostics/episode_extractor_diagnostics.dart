@@ -1,4 +1,4 @@
-import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:audiflow_domain/patterns.dart';
 
 /// Diagnostic result from running episode number extraction.
 class EpisodeDiagnosticResult {
@@ -24,7 +24,7 @@ class EpisodeExtractorDiagnostics {
   final EpisodeNumberExtractor extractor;
 
   /// Runs extraction and captures diagnostic details.
-  EpisodeDiagnosticResult run(Episode episode) {
+  EpisodeDiagnosticResult run(EpisodeData episode) {
     final seasonNum = episode.seasonNumber;
 
     // Step 1: For null/zero seasonNumber, use RSS episodeNumber directly

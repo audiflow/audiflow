@@ -1,4 +1,4 @@
-import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:audiflow_domain/patterns.dart';
 
 import '../diagnostics/episode_extractor_diagnostics.dart';
 import '../diagnostics/title_extractor_diagnostics.dart';
@@ -20,13 +20,9 @@ class PatternTestCommand {
     int? seasonNumber,
     int? episodeNumber,
   }) {
-    // Create a fake Episode for testing
-    final episode = Episode(
-      id: 0,
-      podcastId: 0,
-      guid: 'test',
+    // Create a simple episode data for testing
+    final episode = SimpleEpisodeData(
       title: title,
-      audioUrl: '',
       seasonNumber: seasonNumber,
       episodeNumber: episodeNumber,
     );
