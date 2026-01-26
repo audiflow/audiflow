@@ -29,7 +29,8 @@ class SeasonCard extends StatelessWidget {
 
   /// Formats title as "#N title" for numbered seasons, or just title for others.
   String _formatTitle() {
-    if (0 < season.sortKey) {
+    // Skip "#N" prefix for special seasons (sortKey=0) and ungrouped (id='ungrouped')
+    if (0 < season.sortKey && season.id != 'ungrouped') {
       return '#${season.sortKey} ${season.displayName}';
     }
     return season.displayName;
