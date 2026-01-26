@@ -1,10 +1,12 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../common/database/app_database.dart';
+import '../../../common/providers/logger_provider.dart';
 import '../../../features/subscription/repositories/subscription_repository_impl.dart';
 import '../../player/models/episode_with_progress.dart';
 import '../../player/repositories/playback_history_repository_impl.dart';
 import '../models/season.dart';
+import '../models/season_pattern.dart';
 import '../patterns/coten_radio_pattern.dart';
 import '../repositories/episode_repository_impl.dart';
 import '../resolvers/rss_metadata_resolver.dart';
@@ -12,6 +14,11 @@ import '../resolvers/year_resolver.dart';
 import '../services/season_resolver_service.dart';
 
 part 'season_providers.g.dart';
+
+/// List of registered season patterns.
+///
+/// Add new podcast-specific patterns here.
+const _registeredPatterns = [cotenRadioPattern];
 
 /// Provides the season resolver service with built-in resolvers.
 ///
@@ -21,8 +28,21 @@ part 'season_providers.g.dart';
 SeasonResolverService seasonResolverService(Ref ref) {
   return SeasonResolverService(
     resolvers: [RssMetadataResolver(), YearResolver()],
-    patterns: [cotenRadioPattern],
+    patterns: _registeredPatterns,
   );
+}
+
+/// Finds the season pattern that matches a given feed URL.
+///
+/// Returns null if no pattern matches.
+@riverpod
+SeasonPattern? seasonPatternByFeedUrl(Ref ref, String feedUrl) {
+  for (final pattern in _registeredPatterns) {
+    if (pattern.matchesPodcast(null, feedUrl)) {
+      return pattern;
+    }
+  }
+  return null;
 }
 
 /// Resolves seasons for a podcast by its ID.
@@ -30,21 +50,42 @@ SeasonResolverService seasonResolverService(Ref ref) {
 /// Returns null if no resolver can group the episodes.
 @riverpod
 Future<SeasonGrouping?> podcastSeasons(Ref ref, int podcastId) async {
+  final logger = ref.watch(namedLoggerProvider('PodcastSeasons'));
   final subscriptionRepo = ref.watch(subscriptionRepositoryProvider);
   final episodeRepo = ref.watch(episodeRepositoryProvider);
   final resolverService = ref.watch(seasonResolverServiceProvider);
 
   final subscription = await subscriptionRepo.getById(podcastId);
-  if (subscription == null) return null;
+  if (subscription == null) {
+    logger.d('No subscription found for podcastId=$podcastId');
+    return null;
+  }
 
   final episodes = await episodeRepo.getByPodcastId(podcastId);
-  if (episodes.isEmpty) return null;
+  if (episodes.isEmpty) {
+    logger.d('No episodes found for podcastId=$podcastId');
+    return null;
+  }
 
-  return resolverService.resolveSeasons(
+  // Debug: count episodes with season numbers
+  final withSeason = episodes.where((e) => e.seasonNumber != null).length;
+  logger.d(
+    'Resolving seasons: podcastId=$podcastId, feedUrl=${subscription.feedUrl}, '
+    'episodes=${episodes.length}, withSeasonNumber=$withSeason',
+  );
+
+  final result = resolverService.resolveSeasons(
     podcastGuid: null, // TODO: Add podcastGuid to Subscriptions table
     feedUrl: subscription.feedUrl,
     episodes: episodes,
   );
+
+  logger.d(
+    'Season resolution result: ${result?.seasons.length ?? 0} seasons, '
+    '${result?.ungroupedEpisodeIds.length ?? 0} ungrouped',
+  );
+
+  return result;
 }
 
 /// Whether the season view toggle should be visible for a podcast.

@@ -1,6 +1,8 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../podcast_detail/presentation/controllers/podcast_detail_controller.dart';
+
 part 'subscription_controller.g.dart';
 
 /// Controller for managing subscription state for a specific podcast.
@@ -46,6 +48,11 @@ class SubscriptionController extends _$SubscriptionController {
           genres: podcast.genres,
           explicit: podcast.explicit,
         );
+
+        // Invalidate feed provider to trigger episode persistence
+        // (episodes are only persisted when subscribed)
+        ref.invalidate(podcastDetailProvider(feedUrl));
+
         return true;
       }
     });

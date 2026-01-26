@@ -68,7 +68,105 @@ final class SeasonResolverServiceProvider
 }
 
 String _$seasonResolverServiceHash() =>
-    r'10c1a611251c37b47e781b8fc724eab0f47ce812';
+    r'afadca160de8e003a3c0cc4cd0e6db54f22e22e3';
+
+/// Finds the season pattern that matches a given feed URL.
+///
+/// Returns null if no pattern matches.
+
+@ProviderFor(seasonPatternByFeedUrl)
+final seasonPatternByFeedUrlProvider = SeasonPatternByFeedUrlFamily._();
+
+/// Finds the season pattern that matches a given feed URL.
+///
+/// Returns null if no pattern matches.
+
+final class SeasonPatternByFeedUrlProvider
+    extends $FunctionalProvider<SeasonPattern?, SeasonPattern?, SeasonPattern?>
+    with $Provider<SeasonPattern?> {
+  /// Finds the season pattern that matches a given feed URL.
+  ///
+  /// Returns null if no pattern matches.
+  SeasonPatternByFeedUrlProvider._({
+    required SeasonPatternByFeedUrlFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'seasonPatternByFeedUrlProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$seasonPatternByFeedUrlHash();
+
+  @override
+  String toString() {
+    return r'seasonPatternByFeedUrlProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $ProviderElement<SeasonPattern?> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  SeasonPattern? create(Ref ref) {
+    final argument = this.argument as String;
+    return seasonPatternByFeedUrl(ref, argument);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(SeasonPattern? value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<SeasonPattern?>(value),
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is SeasonPatternByFeedUrlProvider &&
+        other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$seasonPatternByFeedUrlHash() =>
+    r'c2d221157f40563e39f2bf2e58e24d17e48d8e96';
+
+/// Finds the season pattern that matches a given feed URL.
+///
+/// Returns null if no pattern matches.
+
+final class SeasonPatternByFeedUrlFamily extends $Family
+    with $FunctionalFamilyOverride<SeasonPattern?, String> {
+  SeasonPatternByFeedUrlFamily._()
+    : super(
+        retry: null,
+        name: r'seasonPatternByFeedUrlProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  /// Finds the season pattern that matches a given feed URL.
+  ///
+  /// Returns null if no pattern matches.
+
+  SeasonPatternByFeedUrlProvider call(String feedUrl) =>
+      SeasonPatternByFeedUrlProvider._(argument: feedUrl, from: this);
+
+  @override
+  String toString() => r'seasonPatternByFeedUrlProvider';
+}
 
 /// Resolves seasons for a podcast by its ID.
 ///
@@ -136,7 +234,7 @@ final class PodcastSeasonsProvider
   }
 }
 
-String _$podcastSeasonsHash() => r'd743e3b03bd39161e7798c5d9b2370fc26cd9feb';
+String _$podcastSeasonsHash() => r'0d5a4d0083d2a49dd362df0f5dd18edf44801eff';
 
 /// Resolves seasons for a podcast by its ID.
 ///

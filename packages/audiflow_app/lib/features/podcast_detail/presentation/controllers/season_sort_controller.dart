@@ -22,7 +22,7 @@ class SeasonSortConfig {
 @riverpod
 class SeasonSortController extends _$SeasonSortController {
   @override
-  SeasonSortConfig build(int podcastId) {
+  SeasonSortConfig build(String podcastId) {
     return const SeasonSortConfig(
       field: SeasonSortField.seasonNumber,
       order: SortOrder.ascending,

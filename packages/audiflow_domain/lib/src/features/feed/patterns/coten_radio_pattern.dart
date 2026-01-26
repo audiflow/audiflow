@@ -1,6 +1,7 @@
 import '../models/episode_number_extractor.dart';
 import '../models/season_episode_extractor.dart';
 import '../models/season_pattern.dart';
+import '../models/season_sort.dart';
 import '../models/season_title_extractor.dart';
 
 /// Pre-configured SeasonPattern for COTEN RADIO podcast.
@@ -8,11 +9,33 @@ import '../models/season_title_extractor.dart';
 /// Handles:
 /// - Regular seasons: `【COTEN RADIO リンカン編15】` -> season title "リンカン編"
 /// - 番外編 (extras): `【番外編＃135】` -> season title "番外編"
+/// Custom sort for COTEN RADIO:
+/// - Both seasons > 0: compare by season number
+/// - Either is 0 (番外編): compare by newest episode date (earlier first in asc)
+const _cotenRadioSort = CompositeSeasonSort([
+  // Rule 1: If both seasons > 0, sort by season number
+  SeasonSortRule(
+    field: SeasonSortField.seasonNumber,
+    order: SortOrder.ascending,
+    condition: SortKeyGreaterThan(0),
+  ),
+  // Rule 2: Fallback to newest episode date for season 0
+  SeasonSortRule(
+    field: SeasonSortField.newestEpisodeDate,
+    order: SortOrder.ascending,
+  ),
+]);
+
 const SeasonPattern cotenRadioPattern = SeasonPattern(
   id: 'coten_radio',
-  feedUrlPatterns: [r'https://anchor\.fm/s/8c2088c/podcast/rss'],
+  // More flexible URL matching - anchor.fm may redirect or have variations
+  feedUrlPatterns: [
+    r'https://anchor\.fm/s/8c2088c/podcast/rss',
+    r'https://.*anchor\.fm.*8c2088c.*',
+  ],
   resolverType: 'rss',
   config: {'groupNullSeasonAs': 0},
+  customSort: _cotenRadioSort,
   titleExtractor: SeasonTitleExtractor(
     source: 'title',
     // Pattern handles:

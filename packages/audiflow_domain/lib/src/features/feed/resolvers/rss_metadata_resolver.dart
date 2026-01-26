@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import '../../../common/database/app_database.dart';
 import '../extensions/episode_extensions.dart';
 import '../models/season.dart';
@@ -48,20 +46,18 @@ class RssMetadataResolver implements SeasonResolver {
     final titleExtractor = pattern?.titleExtractor;
 
     final seasons = grouped.entries.map((entry) {
+      final seasonNumber = entry.key;
       final seasonEpisodes = entry.value;
       final displayName = _extractDisplayName(
-        seasonNumber: entry.key,
+        seasonNumber: seasonNumber,
         episodes: seasonEpisodes,
         titleExtractor: titleExtractor,
       );
 
-      // Calculate sortKey from max episodeNumber
-      final sortKey = _calculateSortKey(seasonEpisodes);
-
       return Season(
-        id: 'season_${entry.key}',
+        id: 'season_$seasonNumber',
         displayName: displayName,
-        sortKey: sortKey,
+        sortKey: seasonNumber, // Use season number as sort key
         episodeIds: seasonEpisodes.map((e) => e.id).toList(),
       );
     }).toList()..sort((a, b) => a.sortKey.compareTo(b.sortKey));
@@ -84,11 +80,5 @@ class RssMetadataResolver implements SeasonResolver {
 
     final extracted = titleExtractor.extract(episodes.first.toEpisodeData());
     return extracted ?? 'Season $seasonNumber';
-  }
-
-  int _calculateSortKey(List<Episode> episodes) {
-    if (episodes.isEmpty) return 0;
-
-    return episodes.map((e) => e.episodeNumber ?? 0).reduce(max);
   }
 }

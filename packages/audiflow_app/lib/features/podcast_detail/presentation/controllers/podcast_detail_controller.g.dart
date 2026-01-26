@@ -184,7 +184,7 @@ final class PodcastDetailProvider
   }
 }
 
-String _$podcastDetailHash() => r'27aa2a179ea5aaa09be868c73ebcf9b61df79eda';
+String _$podcastDetailHash() => r'692b4ad7e660d0ecd9d7878f16d6aa3c85388fb7';
 
 /// Fetches and provides parsed podcast feed data for a given feed URL.
 ///
@@ -805,4 +805,203 @@ final class FilteredEpisodesFamily extends $Family
 
   @override
   String toString() => r'filteredEpisodesProvider';
+}
+
+/// Whether season view is available for a podcast.
+///
+/// Checks the parsed feed data directly for season numbers, so it works
+/// for both subscribed and non-subscribed podcasts.
+
+@ProviderFor(hasSeasonViewAfterLoad)
+final hasSeasonViewAfterLoadProvider = HasSeasonViewAfterLoadFamily._();
+
+/// Whether season view is available for a podcast.
+///
+/// Checks the parsed feed data directly for season numbers, so it works
+/// for both subscribed and non-subscribed podcasts.
+
+final class HasSeasonViewAfterLoadProvider
+    extends $FunctionalProvider<AsyncValue<bool>, bool, FutureOr<bool>>
+    with $FutureModifier<bool>, $FutureProvider<bool> {
+  /// Whether season view is available for a podcast.
+  ///
+  /// Checks the parsed feed data directly for season numbers, so it works
+  /// for both subscribed and non-subscribed podcasts.
+  HasSeasonViewAfterLoadProvider._({
+    required HasSeasonViewAfterLoadFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'hasSeasonViewAfterLoadProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$hasSeasonViewAfterLoadHash();
+
+  @override
+  String toString() {
+    return r'hasSeasonViewAfterLoadProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<bool> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<bool> create(Ref ref) {
+    final argument = this.argument as String;
+    return hasSeasonViewAfterLoad(ref, argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is HasSeasonViewAfterLoadProvider &&
+        other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$hasSeasonViewAfterLoadHash() =>
+    r'49afed087d27f0e95f35ec6944584601170d24f4';
+
+/// Whether season view is available for a podcast.
+///
+/// Checks the parsed feed data directly for season numbers, so it works
+/// for both subscribed and non-subscribed podcasts.
+
+final class HasSeasonViewAfterLoadFamily extends $Family
+    with $FunctionalFamilyOverride<FutureOr<bool>, String> {
+  HasSeasonViewAfterLoadFamily._()
+    : super(
+        retry: null,
+        name: r'hasSeasonViewAfterLoadProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  /// Whether season view is available for a podcast.
+  ///
+  /// Checks the parsed feed data directly for season numbers, so it works
+  /// for both subscribed and non-subscribed podcasts.
+
+  HasSeasonViewAfterLoadProvider call(String feedUrl) =>
+      HasSeasonViewAfterLoadProvider._(argument: feedUrl, from: this);
+
+  @override
+  String toString() => r'hasSeasonViewAfterLoadProvider';
+}
+
+/// Provides sorted seasons for a podcast.
+///
+/// For subscribed podcasts, uses database-backed season resolution.
+/// For non-subscribed podcasts, derives seasons from feed data directly.
+
+@ProviderFor(sortedPodcastSeasons)
+final sortedPodcastSeasonsProvider = SortedPodcastSeasonsFamily._();
+
+/// Provides sorted seasons for a podcast.
+///
+/// For subscribed podcasts, uses database-backed season resolution.
+/// For non-subscribed podcasts, derives seasons from feed data directly.
+
+final class SortedPodcastSeasonsProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<SeasonGrouping?>,
+          SeasonGrouping?,
+          FutureOr<SeasonGrouping?>
+        >
+    with $FutureModifier<SeasonGrouping?>, $FutureProvider<SeasonGrouping?> {
+  /// Provides sorted seasons for a podcast.
+  ///
+  /// For subscribed podcasts, uses database-backed season resolution.
+  /// For non-subscribed podcasts, derives seasons from feed data directly.
+  SortedPodcastSeasonsProvider._({
+    required SortedPodcastSeasonsFamily super.from,
+    required (String, String) super.argument,
+  }) : super(
+         retry: null,
+         name: r'sortedPodcastSeasonsProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$sortedPodcastSeasonsHash();
+
+  @override
+  String toString() {
+    return r'sortedPodcastSeasonsProvider'
+        ''
+        '$argument';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<SeasonGrouping?> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<SeasonGrouping?> create(Ref ref) {
+    final argument = this.argument as (String, String);
+    return sortedPodcastSeasons(ref, argument.$1, argument.$2);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is SortedPodcastSeasonsProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$sortedPodcastSeasonsHash() =>
+    r'b5abd401313f74d6007001b9e777125f1a62437a';
+
+/// Provides sorted seasons for a podcast.
+///
+/// For subscribed podcasts, uses database-backed season resolution.
+/// For non-subscribed podcasts, derives seasons from feed data directly.
+
+final class SortedPodcastSeasonsFamily extends $Family
+    with
+        $FunctionalFamilyOverride<FutureOr<SeasonGrouping?>, (String, String)> {
+  SortedPodcastSeasonsFamily._()
+    : super(
+        retry: null,
+        name: r'sortedPodcastSeasonsProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  /// Provides sorted seasons for a podcast.
+  ///
+  /// For subscribed podcasts, uses database-backed season resolution.
+  /// For non-subscribed podcasts, derives seasons from feed data directly.
+
+  SortedPodcastSeasonsProvider call(String feedUrl, String podcastId) =>
+      SortedPodcastSeasonsProvider._(
+        argument: (feedUrl, podcastId),
+        from: this,
+      );
+
+  @override
+  String toString() => r'sortedPodcastSeasonsProvider';
 }

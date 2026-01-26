@@ -1,6 +1,9 @@
 /// Business logic and data layer for Audiflow
 library;
 
+// Re-export audiflow_core types
+export 'package:audiflow_core/audiflow_core.dart' show SimpleEpisodeData;
+
 // Re-export audiflow_podcast for convenience
 export 'package:audiflow_podcast/audiflow_podcast.dart'
     show
