@@ -2341,6 +2341,332 @@ class SeasonsCompanion extends UpdateCompanion<SeasonEntity> {
   }
 }
 
+class $PodcastViewPreferencesTable extends PodcastViewPreferences
+    with TableInfo<$PodcastViewPreferencesTable, PodcastViewPreference> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PodcastViewPreferencesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _podcastIdMeta = const VerificationMeta(
+    'podcastId',
+  );
+  @override
+  late final GeneratedColumn<int> podcastId = GeneratedColumn<int>(
+    'podcast_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES subscriptions (id)',
+    ),
+  );
+  static const VerificationMeta _viewModeMeta = const VerificationMeta(
+    'viewMode',
+  );
+  @override
+  late final GeneratedColumn<String> viewMode = GeneratedColumn<String>(
+    'view_mode',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('episodes'),
+  );
+  static const VerificationMeta _episodeFilterMeta = const VerificationMeta(
+    'episodeFilter',
+  );
+  @override
+  late final GeneratedColumn<String> episodeFilter = GeneratedColumn<String>(
+    'episode_filter',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('all'),
+  );
+  static const VerificationMeta _episodeSortOrderMeta = const VerificationMeta(
+    'episodeSortOrder',
+  );
+  @override
+  late final GeneratedColumn<String> episodeSortOrder = GeneratedColumn<String>(
+    'episode_sort_order',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('desc'),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    podcastId,
+    viewMode,
+    episodeFilter,
+    episodeSortOrder,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'podcast_view_preferences';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<PodcastViewPreference> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('podcast_id')) {
+      context.handle(
+        _podcastIdMeta,
+        podcastId.isAcceptableOrUnknown(data['podcast_id']!, _podcastIdMeta),
+      );
+    }
+    if (data.containsKey('view_mode')) {
+      context.handle(
+        _viewModeMeta,
+        viewMode.isAcceptableOrUnknown(data['view_mode']!, _viewModeMeta),
+      );
+    }
+    if (data.containsKey('episode_filter')) {
+      context.handle(
+        _episodeFilterMeta,
+        episodeFilter.isAcceptableOrUnknown(
+          data['episode_filter']!,
+          _episodeFilterMeta,
+        ),
+      );
+    }
+    if (data.containsKey('episode_sort_order')) {
+      context.handle(
+        _episodeSortOrderMeta,
+        episodeSortOrder.isAcceptableOrUnknown(
+          data['episode_sort_order']!,
+          _episodeSortOrderMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {podcastId};
+  @override
+  PodcastViewPreference map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PodcastViewPreference(
+      podcastId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}podcast_id'],
+      )!,
+      viewMode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}view_mode'],
+      )!,
+      episodeFilter: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}episode_filter'],
+      )!,
+      episodeSortOrder: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}episode_sort_order'],
+      )!,
+    );
+  }
+
+  @override
+  $PodcastViewPreferencesTable createAlias(String alias) {
+    return $PodcastViewPreferencesTable(attachedDatabase, alias);
+  }
+}
+
+class PodcastViewPreference extends DataClass
+    implements Insertable<PodcastViewPreference> {
+  /// Foreign key to Subscriptions table.
+  final int podcastId;
+
+  /// View mode: 'episodes' or 'seasons'.
+  final String viewMode;
+
+  /// Episode filter: 'all', 'unplayed', or 'inProgress'.
+  final String episodeFilter;
+
+  /// Episode sort order: 'asc' or 'desc'.
+  final String episodeSortOrder;
+  const PodcastViewPreference({
+    required this.podcastId,
+    required this.viewMode,
+    required this.episodeFilter,
+    required this.episodeSortOrder,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['podcast_id'] = Variable<int>(podcastId);
+    map['view_mode'] = Variable<String>(viewMode);
+    map['episode_filter'] = Variable<String>(episodeFilter);
+    map['episode_sort_order'] = Variable<String>(episodeSortOrder);
+    return map;
+  }
+
+  PodcastViewPreferencesCompanion toCompanion(bool nullToAbsent) {
+    return PodcastViewPreferencesCompanion(
+      podcastId: Value(podcastId),
+      viewMode: Value(viewMode),
+      episodeFilter: Value(episodeFilter),
+      episodeSortOrder: Value(episodeSortOrder),
+    );
+  }
+
+  factory PodcastViewPreference.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PodcastViewPreference(
+      podcastId: serializer.fromJson<int>(json['podcastId']),
+      viewMode: serializer.fromJson<String>(json['viewMode']),
+      episodeFilter: serializer.fromJson<String>(json['episodeFilter']),
+      episodeSortOrder: serializer.fromJson<String>(json['episodeSortOrder']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'podcastId': serializer.toJson<int>(podcastId),
+      'viewMode': serializer.toJson<String>(viewMode),
+      'episodeFilter': serializer.toJson<String>(episodeFilter),
+      'episodeSortOrder': serializer.toJson<String>(episodeSortOrder),
+    };
+  }
+
+  PodcastViewPreference copyWith({
+    int? podcastId,
+    String? viewMode,
+    String? episodeFilter,
+    String? episodeSortOrder,
+  }) => PodcastViewPreference(
+    podcastId: podcastId ?? this.podcastId,
+    viewMode: viewMode ?? this.viewMode,
+    episodeFilter: episodeFilter ?? this.episodeFilter,
+    episodeSortOrder: episodeSortOrder ?? this.episodeSortOrder,
+  );
+  PodcastViewPreference copyWithCompanion(
+    PodcastViewPreferencesCompanion data,
+  ) {
+    return PodcastViewPreference(
+      podcastId: data.podcastId.present ? data.podcastId.value : this.podcastId,
+      viewMode: data.viewMode.present ? data.viewMode.value : this.viewMode,
+      episodeFilter: data.episodeFilter.present
+          ? data.episodeFilter.value
+          : this.episodeFilter,
+      episodeSortOrder: data.episodeSortOrder.present
+          ? data.episodeSortOrder.value
+          : this.episodeSortOrder,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PodcastViewPreference(')
+          ..write('podcastId: $podcastId, ')
+          ..write('viewMode: $viewMode, ')
+          ..write('episodeFilter: $episodeFilter, ')
+          ..write('episodeSortOrder: $episodeSortOrder')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(podcastId, viewMode, episodeFilter, episodeSortOrder);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PodcastViewPreference &&
+          other.podcastId == this.podcastId &&
+          other.viewMode == this.viewMode &&
+          other.episodeFilter == this.episodeFilter &&
+          other.episodeSortOrder == this.episodeSortOrder);
+}
+
+class PodcastViewPreferencesCompanion
+    extends UpdateCompanion<PodcastViewPreference> {
+  final Value<int> podcastId;
+  final Value<String> viewMode;
+  final Value<String> episodeFilter;
+  final Value<String> episodeSortOrder;
+  const PodcastViewPreferencesCompanion({
+    this.podcastId = const Value.absent(),
+    this.viewMode = const Value.absent(),
+    this.episodeFilter = const Value.absent(),
+    this.episodeSortOrder = const Value.absent(),
+  });
+  PodcastViewPreferencesCompanion.insert({
+    this.podcastId = const Value.absent(),
+    this.viewMode = const Value.absent(),
+    this.episodeFilter = const Value.absent(),
+    this.episodeSortOrder = const Value.absent(),
+  });
+  static Insertable<PodcastViewPreference> custom({
+    Expression<int>? podcastId,
+    Expression<String>? viewMode,
+    Expression<String>? episodeFilter,
+    Expression<String>? episodeSortOrder,
+  }) {
+    return RawValuesInsertable({
+      if (podcastId != null) 'podcast_id': podcastId,
+      if (viewMode != null) 'view_mode': viewMode,
+      if (episodeFilter != null) 'episode_filter': episodeFilter,
+      if (episodeSortOrder != null) 'episode_sort_order': episodeSortOrder,
+    });
+  }
+
+  PodcastViewPreferencesCompanion copyWith({
+    Value<int>? podcastId,
+    Value<String>? viewMode,
+    Value<String>? episodeFilter,
+    Value<String>? episodeSortOrder,
+  }) {
+    return PodcastViewPreferencesCompanion(
+      podcastId: podcastId ?? this.podcastId,
+      viewMode: viewMode ?? this.viewMode,
+      episodeFilter: episodeFilter ?? this.episodeFilter,
+      episodeSortOrder: episodeSortOrder ?? this.episodeSortOrder,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (podcastId.present) {
+      map['podcast_id'] = Variable<int>(podcastId.value);
+    }
+    if (viewMode.present) {
+      map['view_mode'] = Variable<String>(viewMode.value);
+    }
+    if (episodeFilter.present) {
+      map['episode_filter'] = Variable<String>(episodeFilter.value);
+    }
+    if (episodeSortOrder.present) {
+      map['episode_sort_order'] = Variable<String>(episodeSortOrder.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PodcastViewPreferencesCompanion(')
+          ..write('podcastId: $podcastId, ')
+          ..write('viewMode: $viewMode, ')
+          ..write('episodeFilter: $episodeFilter, ')
+          ..write('episodeSortOrder: $episodeSortOrder')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -2349,6 +2675,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $PlaybackHistoriesTable playbackHistories =
       $PlaybackHistoriesTable(this);
   late final $SeasonsTable seasons = $SeasonsTable(this);
+  late final $PodcastViewPreferencesTable podcastViewPreferences =
+      $PodcastViewPreferencesTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -2358,6 +2686,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     episodes,
     playbackHistories,
     seasons,
+    podcastViewPreferences,
   ];
 }
 
@@ -2430,6 +2759,34 @@ final class $$SubscriptionsTableReferences
     ).filter((f) => f.podcastId.id.sqlEquals($_itemColumn<int>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_seasonsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<
+    $PodcastViewPreferencesTable,
+    List<PodcastViewPreference>
+  >
+  _podcastViewPreferencesRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.podcastViewPreferences,
+        aliasName: $_aliasNameGenerator(
+          db.subscriptions.id,
+          db.podcastViewPreferences.podcastId,
+        ),
+      );
+
+  $$PodcastViewPreferencesTableProcessedTableManager
+  get podcastViewPreferencesRefs {
+    final manager = $$PodcastViewPreferencesTableTableManager(
+      $_db,
+      $_db.podcastViewPreferences,
+    ).filter((f) => f.podcastId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _podcastViewPreferencesRefsTable($_db),
+    );
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
@@ -2547,6 +2904,32 @@ class $$SubscriptionsTableFilterComposer
                 $removeJoinBuilderFromRootComposer,
           ),
     );
+    return f(composer);
+  }
+
+  Expression<bool> podcastViewPreferencesRefs(
+    Expression<bool> Function($$PodcastViewPreferencesTableFilterComposer f) f,
+  ) {
+    final $$PodcastViewPreferencesTableFilterComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.podcastViewPreferences,
+          getReferencedColumn: (t) => t.podcastId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$PodcastViewPreferencesTableFilterComposer(
+                $db: $db,
+                $table: $db.podcastViewPreferences,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
     return f(composer);
   }
 }
@@ -2717,6 +3100,32 @@ class $$SubscriptionsTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> podcastViewPreferencesRefs<T extends Object>(
+    Expression<T> Function($$PodcastViewPreferencesTableAnnotationComposer a) f,
+  ) {
+    final $$PodcastViewPreferencesTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.podcastViewPreferences,
+          getReferencedColumn: (t) => t.podcastId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$PodcastViewPreferencesTableAnnotationComposer(
+                $db: $db,
+                $table: $db.podcastViewPreferences,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
 }
 
 class $$SubscriptionsTableTableManager
@@ -2732,7 +3141,11 @@ class $$SubscriptionsTableTableManager
           $$SubscriptionsTableUpdateCompanionBuilder,
           (Subscription, $$SubscriptionsTableReferences),
           Subscription,
-          PrefetchHooks Function({bool episodesRefs, bool seasonsRefs})
+          PrefetchHooks Function({
+            bool episodesRefs,
+            bool seasonsRefs,
+            bool podcastViewPreferencesRefs,
+          })
         > {
   $$SubscriptionsTableTableManager(_$AppDatabase db, $SubscriptionsTable table)
     : super(
@@ -2805,58 +3218,89 @@ class $$SubscriptionsTableTableManager
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({episodesRefs = false, seasonsRefs = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [
-                if (episodesRefs) db.episodes,
-                if (seasonsRefs) db.seasons,
-              ],
-              addJoins: null,
-              getPrefetchedDataCallback: (items) async {
-                return [
-                  if (episodesRefs)
-                    await $_getPrefetchedData<
-                      Subscription,
-                      $SubscriptionsTable,
-                      Episode
-                    >(
-                      currentTable: table,
-                      referencedTable: $$SubscriptionsTableReferences
-                          ._episodesRefsTable(db),
-                      managerFromTypedResult: (p0) =>
-                          $$SubscriptionsTableReferences(
-                            db,
-                            table,
-                            p0,
-                          ).episodesRefs,
-                      referencedItemsForCurrentItem: (item, referencedItems) =>
-                          referencedItems.where((e) => e.podcastId == item.id),
-                      typedResults: items,
-                    ),
-                  if (seasonsRefs)
-                    await $_getPrefetchedData<
-                      Subscription,
-                      $SubscriptionsTable,
-                      SeasonEntity
-                    >(
-                      currentTable: table,
-                      referencedTable: $$SubscriptionsTableReferences
-                          ._seasonsRefsTable(db),
-                      managerFromTypedResult: (p0) =>
-                          $$SubscriptionsTableReferences(
-                            db,
-                            table,
-                            p0,
-                          ).seasonsRefs,
-                      referencedItemsForCurrentItem: (item, referencedItems) =>
-                          referencedItems.where((e) => e.podcastId == item.id),
-                      typedResults: items,
-                    ),
-                ];
+          prefetchHooksCallback:
+              ({
+                episodesRefs = false,
+                seasonsRefs = false,
+                podcastViewPreferencesRefs = false,
+              }) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (episodesRefs) db.episodes,
+                    if (seasonsRefs) db.seasons,
+                    if (podcastViewPreferencesRefs) db.podcastViewPreferences,
+                  ],
+                  addJoins: null,
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (episodesRefs)
+                        await $_getPrefetchedData<
+                          Subscription,
+                          $SubscriptionsTable,
+                          Episode
+                        >(
+                          currentTable: table,
+                          referencedTable: $$SubscriptionsTableReferences
+                              ._episodesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$SubscriptionsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).episodesRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.podcastId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (seasonsRefs)
+                        await $_getPrefetchedData<
+                          Subscription,
+                          $SubscriptionsTable,
+                          SeasonEntity
+                        >(
+                          currentTable: table,
+                          referencedTable: $$SubscriptionsTableReferences
+                              ._seasonsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$SubscriptionsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).seasonsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.podcastId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (podcastViewPreferencesRefs)
+                        await $_getPrefetchedData<
+                          Subscription,
+                          $SubscriptionsTable,
+                          PodcastViewPreference
+                        >(
+                          currentTable: table,
+                          referencedTable: $$SubscriptionsTableReferences
+                              ._podcastViewPreferencesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$SubscriptionsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).podcastViewPreferencesRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.podcastId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                    ];
+                  },
+                );
               },
-            );
-          },
         ),
       );
 }
@@ -2873,7 +3317,11 @@ typedef $$SubscriptionsTableProcessedTableManager =
       $$SubscriptionsTableUpdateCompanionBuilder,
       (Subscription, $$SubscriptionsTableReferences),
       Subscription,
-      PrefetchHooks Function({bool episodesRefs, bool seasonsRefs})
+      PrefetchHooks Function({
+        bool episodesRefs,
+        bool seasonsRefs,
+        bool podcastViewPreferencesRefs,
+      })
     >;
 typedef $$EpisodesTableCreateCompanionBuilder =
     EpisodesCompanion Function({
@@ -4135,6 +4583,329 @@ typedef $$SeasonsTableProcessedTableManager =
       SeasonEntity,
       PrefetchHooks Function({bool podcastId})
     >;
+typedef $$PodcastViewPreferencesTableCreateCompanionBuilder =
+    PodcastViewPreferencesCompanion Function({
+      Value<int> podcastId,
+      Value<String> viewMode,
+      Value<String> episodeFilter,
+      Value<String> episodeSortOrder,
+    });
+typedef $$PodcastViewPreferencesTableUpdateCompanionBuilder =
+    PodcastViewPreferencesCompanion Function({
+      Value<int> podcastId,
+      Value<String> viewMode,
+      Value<String> episodeFilter,
+      Value<String> episodeSortOrder,
+    });
+
+final class $$PodcastViewPreferencesTableReferences
+    extends
+        BaseReferences<
+          _$AppDatabase,
+          $PodcastViewPreferencesTable,
+          PodcastViewPreference
+        > {
+  $$PodcastViewPreferencesTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $SubscriptionsTable _podcastIdTable(_$AppDatabase db) =>
+      db.subscriptions.createAlias(
+        $_aliasNameGenerator(
+          db.podcastViewPreferences.podcastId,
+          db.subscriptions.id,
+        ),
+      );
+
+  $$SubscriptionsTableProcessedTableManager get podcastId {
+    final $_column = $_itemColumn<int>('podcast_id')!;
+
+    final manager = $$SubscriptionsTableTableManager(
+      $_db,
+      $_db.subscriptions,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_podcastIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$PodcastViewPreferencesTableFilterComposer
+    extends Composer<_$AppDatabase, $PodcastViewPreferencesTable> {
+  $$PodcastViewPreferencesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get viewMode => $composableBuilder(
+    column: $table.viewMode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get episodeFilter => $composableBuilder(
+    column: $table.episodeFilter,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get episodeSortOrder => $composableBuilder(
+    column: $table.episodeSortOrder,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$SubscriptionsTableFilterComposer get podcastId {
+    final $$SubscriptionsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.podcastId,
+      referencedTable: $db.subscriptions,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SubscriptionsTableFilterComposer(
+            $db: $db,
+            $table: $db.subscriptions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$PodcastViewPreferencesTableOrderingComposer
+    extends Composer<_$AppDatabase, $PodcastViewPreferencesTable> {
+  $$PodcastViewPreferencesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get viewMode => $composableBuilder(
+    column: $table.viewMode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get episodeFilter => $composableBuilder(
+    column: $table.episodeFilter,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get episodeSortOrder => $composableBuilder(
+    column: $table.episodeSortOrder,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$SubscriptionsTableOrderingComposer get podcastId {
+    final $$SubscriptionsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.podcastId,
+      referencedTable: $db.subscriptions,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SubscriptionsTableOrderingComposer(
+            $db: $db,
+            $table: $db.subscriptions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$PodcastViewPreferencesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PodcastViewPreferencesTable> {
+  $$PodcastViewPreferencesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get viewMode =>
+      $composableBuilder(column: $table.viewMode, builder: (column) => column);
+
+  GeneratedColumn<String> get episodeFilter => $composableBuilder(
+    column: $table.episodeFilter,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get episodeSortOrder => $composableBuilder(
+    column: $table.episodeSortOrder,
+    builder: (column) => column,
+  );
+
+  $$SubscriptionsTableAnnotationComposer get podcastId {
+    final $$SubscriptionsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.podcastId,
+      referencedTable: $db.subscriptions,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SubscriptionsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.subscriptions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$PodcastViewPreferencesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $PodcastViewPreferencesTable,
+          PodcastViewPreference,
+          $$PodcastViewPreferencesTableFilterComposer,
+          $$PodcastViewPreferencesTableOrderingComposer,
+          $$PodcastViewPreferencesTableAnnotationComposer,
+          $$PodcastViewPreferencesTableCreateCompanionBuilder,
+          $$PodcastViewPreferencesTableUpdateCompanionBuilder,
+          (PodcastViewPreference, $$PodcastViewPreferencesTableReferences),
+          PodcastViewPreference,
+          PrefetchHooks Function({bool podcastId})
+        > {
+  $$PodcastViewPreferencesTableTableManager(
+    _$AppDatabase db,
+    $PodcastViewPreferencesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PodcastViewPreferencesTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$PodcastViewPreferencesTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$PodcastViewPreferencesTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> podcastId = const Value.absent(),
+                Value<String> viewMode = const Value.absent(),
+                Value<String> episodeFilter = const Value.absent(),
+                Value<String> episodeSortOrder = const Value.absent(),
+              }) => PodcastViewPreferencesCompanion(
+                podcastId: podcastId,
+                viewMode: viewMode,
+                episodeFilter: episodeFilter,
+                episodeSortOrder: episodeSortOrder,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> podcastId = const Value.absent(),
+                Value<String> viewMode = const Value.absent(),
+                Value<String> episodeFilter = const Value.absent(),
+                Value<String> episodeSortOrder = const Value.absent(),
+              }) => PodcastViewPreferencesCompanion.insert(
+                podcastId: podcastId,
+                viewMode: viewMode,
+                episodeFilter: episodeFilter,
+                episodeSortOrder: episodeSortOrder,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$PodcastViewPreferencesTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({podcastId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (podcastId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.podcastId,
+                                referencedTable:
+                                    $$PodcastViewPreferencesTableReferences
+                                        ._podcastIdTable(db),
+                                referencedColumn:
+                                    $$PodcastViewPreferencesTableReferences
+                                        ._podcastIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$PodcastViewPreferencesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $PodcastViewPreferencesTable,
+      PodcastViewPreference,
+      $$PodcastViewPreferencesTableFilterComposer,
+      $$PodcastViewPreferencesTableOrderingComposer,
+      $$PodcastViewPreferencesTableAnnotationComposer,
+      $$PodcastViewPreferencesTableCreateCompanionBuilder,
+      $$PodcastViewPreferencesTableUpdateCompanionBuilder,
+      (PodcastViewPreference, $$PodcastViewPreferencesTableReferences),
+      PodcastViewPreference,
+      PrefetchHooks Function({bool podcastId})
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -4147,4 +4918,9 @@ class $AppDatabaseManager {
       $$PlaybackHistoriesTableTableManager(_db, _db.playbackHistories);
   $$SeasonsTableTableManager get seasons =>
       $$SeasonsTableTableManager(_db, _db.seasons);
+  $$PodcastViewPreferencesTableTableManager get podcastViewPreferences =>
+      $$PodcastViewPreferencesTableTableManager(
+        _db,
+        _db.podcastViewPreferences,
+      );
 }
