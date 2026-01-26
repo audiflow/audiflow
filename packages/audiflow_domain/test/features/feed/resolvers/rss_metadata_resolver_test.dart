@@ -116,7 +116,7 @@ void main() {
       },
     );
 
-    test('calculates sortKey from max episodeNumber in season', () {
+    test('uses season number as sortKey', () {
       final episodes = [
         _makeEpisode(id: 1, title: 'Ep1', seasonNumber: 1, episodeNumber: 5),
         _makeEpisode(id: 2, title: 'Ep2', seasonNumber: 1, episodeNumber: 10),
@@ -129,8 +129,8 @@ void main() {
       final season1 = result!.seasons.firstWhere((s) => s.id == 'season_1');
       final season2 = result.seasons.firstWhere((s) => s.id == 'season_2');
 
-      expect(season1.sortKey, 10); // max of 5, 10
-      expect(season2.sortKey, 3);
+      expect(season1.sortKey, 1); // season number
+      expect(season2.sortKey, 2); // season number
     });
 
     test('default sort is season number ascending', () {
@@ -140,7 +140,7 @@ void main() {
       expect(sort.order, SortOrder.ascending);
     });
 
-    test('sortKey is 0 when episodes have no episodeNumber', () {
+    test('sortKey is season number regardless of episodeNumber', () {
       final episodes = [
         _makeEpisode(id: 1, title: 'Ep1', seasonNumber: 1),
         _makeEpisode(id: 2, title: 'Ep2', seasonNumber: 1),
@@ -149,10 +149,10 @@ void main() {
       final result = resolver.resolve(episodes, null);
 
       expect(result, isNotNull);
-      expect(result!.seasons[0].sortKey, 0);
+      expect(result!.seasons[0].sortKey, 1); // season number
     });
 
-    test('uses max episodeNumber even with mixed null values', () {
+    test('sortKey is season number even with mixed episodeNumber values', () {
       final episodes = [
         _makeEpisode(id: 1, title: 'Ep1', seasonNumber: 1, episodeNumber: null),
         _makeEpisode(id: 2, title: 'Ep2', seasonNumber: 1, episodeNumber: 7),
@@ -162,7 +162,23 @@ void main() {
       final result = resolver.resolve(episodes, null);
 
       expect(result, isNotNull);
-      expect(result!.seasons[0].sortKey, 7); // max of null(0), 7, 3
+      expect(result!.seasons[0].sortKey, 1); // season number
+    });
+
+    test('seasons are sorted by season number', () {
+      final episodes = [
+        _makeEpisode(id: 1, title: 'Ep1', seasonNumber: 3, episodeNumber: 1),
+        _makeEpisode(id: 2, title: 'Ep2', seasonNumber: 1, episodeNumber: 1),
+        _makeEpisode(id: 3, title: 'Ep3', seasonNumber: 2, episodeNumber: 1),
+      ];
+
+      final result = resolver.resolve(episodes, null);
+
+      expect(result, isNotNull);
+      expect(result!.seasons.length, 3);
+      expect(result.seasons[0].sortKey, 1);
+      expect(result.seasons[1].sortKey, 2);
+      expect(result.seasons[2].sortKey, 3);
     });
   });
 }

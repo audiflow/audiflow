@@ -1,8 +1,4 @@
-import 'package:audiflow_domain/audiflow_domain.dart'
-    show
-        Season,
-        hasSeasonViewByFeedUrlProvider,
-        podcastSeasonsByFeedUrlProvider;
+import 'package:audiflow_domain/audiflow_domain.dart' show Season;
 import 'package:audiflow_search/audiflow_search.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
@@ -13,9 +9,11 @@ import '../../../../routing/app_router.dart';
 import '../../../subscription/presentation/controllers/subscription_controller.dart';
 import '../controllers/podcast_detail_controller.dart';
 import '../controllers/podcast_view_mode_controller.dart';
+import '../controllers/season_sort_controller.dart';
 import '../widgets/episode_filter_chips.dart';
 import '../widgets/episode_list_tile.dart';
 import '../widgets/season_grid.dart';
+import '../widgets/season_sort_sheet.dart';
 import '../widgets/season_view_toggle.dart';
 
 /// Displays podcast details and episode list with playback controls.
@@ -34,11 +32,36 @@ class PodcastDetailScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
+    // Get view mode to determine if sort button should be shown
+    final viewMode = ref.watch(podcastViewModeControllerProvider(podcast.id));
+    final showSortButton = viewMode == PodcastViewMode.seasons;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(podcast.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+        actions: [
+          if (showSortButton)
+            IconButton(
+              icon: const Icon(Icons.sort),
+              tooltip: 'Sort seasons',
+              onPressed: () => _showSortSheet(context, ref),
+            ),
+        ],
       ),
       body: _buildBody(context, ref, theme, colorScheme),
+    );
+  }
+
+  void _showSortSheet(BuildContext context, WidgetRef ref) {
+    final sortConfig = ref.read(seasonSortControllerProvider(podcast.id));
+    showSeasonSortSheet(
+      context: context,
+      currentConfig: sortConfig,
+      onSortSelected: (field, order) {
+        ref
+            .read(seasonSortControllerProvider(podcast.id).notifier)
+            .setSort(field, order);
+      },
     );
   }
 
@@ -163,7 +186,8 @@ class PodcastDetailScreen extends ConsumerWidget {
     final viewMode = ref.watch(podcastViewModeControllerProvider(podcast.id));
 
     // Check if season view is available for this podcast
-    final hasSeasonsAsync = ref.watch(hasSeasonViewByFeedUrlProvider(feedUrl));
+    // Uses hasSeasonViewAfterLoadProvider to ensure episodes are persisted first
+    final hasSeasonsAsync = ref.watch(hasSeasonViewAfterLoadProvider(feedUrl));
     final hasSeasons = hasSeasonsAsync.value ?? false;
 
     return RefreshIndicator(
@@ -217,7 +241,9 @@ class PodcastDetailScreen extends ConsumerWidget {
   }
 
   Widget _buildSeasonView(BuildContext context, WidgetRef ref, String feedUrl) {
-    final seasonsAsync = ref.watch(podcastSeasonsByFeedUrlProvider(feedUrl));
+    final seasonsAsync = ref.watch(
+      sortedPodcastSeasonsProvider(feedUrl, podcast.id),
+    );
 
     return seasonsAsync.when(
       data: (grouping) {

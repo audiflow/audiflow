@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../widgets/episode_filter_chips.dart';
+import 'season_sort_controller.dart';
 
 part 'podcast_detail_controller.g.dart';
 
@@ -92,8 +93,28 @@ Future<ParsedFeed> podcastDetail(Ref ref, String feedUrl) async {
 
     if (subscription != null) {
       final episodeRepo = ref.read(episodeRepositoryProvider);
-      await episodeRepo.upsertFromFeedItems(subscription.id, result.episodes);
+
+      // Look up season pattern for this feed to extract season/episode numbers
+      final pattern = ref.read(seasonPatternByFeedUrlProvider(feedUrl));
+      final extractor = pattern?.seasonEpisodeExtractor;
+      logger.d(
+        'Season pattern lookup: feedUrl=$feedUrl, '
+        'pattern=${pattern?.id}, hasExtractor=${extractor != null}',
+      );
+
+      await episodeRepo.upsertFromFeedItems(
+        subscription.id,
+        result.episodes,
+        extractor: extractor,
+      );
       logger.d('Persisted ${result.episodes.length} episodes for subscription');
+
+      // Invalidate all season providers after episodes are persisted
+      // Both ID-based and feedUrl-based providers must be invalidated
+      ref.invalidate(podcastSeasonsProvider(subscription.id));
+      ref.invalidate(hasSeasonViewProvider(subscription.id));
+      ref.invalidate(podcastSeasonsByFeedUrlProvider(feedUrl));
+      ref.invalidate(hasSeasonViewByFeedUrlProvider(feedUrl));
     }
 
     return result;
@@ -251,4 +272,252 @@ Future<List<PodcastItem>> filteredEpisodes(
   }
 
   return filtered;
+}
+
+/// Whether season view is available for a podcast.
+///
+/// Checks the parsed feed data directly for season numbers, so it works
+/// for both subscribed and non-subscribed podcasts.
+@riverpod
+Future<bool> hasSeasonViewAfterLoad(Ref ref, String feedUrl) async {
+  final feed = await ref.watch(podcastDetailProvider(feedUrl).future);
+
+  // Check if any episode in the feed has a season number
+  return feed.episodes.any((e) => e.seasonNumber != null);
+}
+
+/// Provides sorted seasons for a podcast.
+///
+/// For subscribed podcasts, uses database-backed season resolution.
+/// For non-subscribed podcasts, derives seasons from feed data directly.
+@riverpod
+Future<SeasonGrouping?> sortedPodcastSeasons(
+  Ref ref,
+  String feedUrl,
+  String podcastId,
+) async {
+  final feed = await ref.watch(podcastDetailProvider(feedUrl).future);
+
+  // Try database-backed resolution first (for subscribed podcasts)
+  var grouping = await ref.watch(
+    podcastSeasonsByFeedUrlProvider(feedUrl).future,
+  );
+
+  // Fall back to feed-based resolution for non-subscribed podcasts
+  if (grouping == null) {
+    final pattern = ref.watch(seasonPatternByFeedUrlProvider(feedUrl));
+    grouping = _resolveFromFeed(feed.episodes, pattern);
+  }
+
+  if (grouping == null) return null;
+
+  final sortConfig = ref.watch(seasonSortControllerProvider(podcastId));
+  final pattern = ref.watch(seasonPatternByFeedUrlProvider(feedUrl));
+  final episodeRepo = ref.watch(episodeRepositoryProvider);
+
+  // Sort seasons based on config
+  final sortedSeasons = List<Season>.from(grouping.seasons);
+
+  // Cache for newest episode dates (computed lazily)
+  final newestDates = <String, DateTime?>{};
+
+  Future<DateTime?> getNewestDate(Season season) async {
+    if (!newestDates.containsKey(season.id)) {
+      final episodes = await episodeRepo.getByIds(season.episodeIds);
+      DateTime? newest;
+      for (final ep in episodes) {
+        if (ep.publishedAt != null) {
+          if (newest == null || newest.isBefore(ep.publishedAt!)) {
+            newest = ep.publishedAt;
+          }
+        }
+      }
+      newestDates[season.id] = newest;
+    }
+    return newestDates[season.id];
+  }
+
+  // Check if pattern has custom composite sort
+  final customSort = pattern?.customSort;
+  if (customSort is CompositeSeasonSort) {
+    // Apply composite sorting rules (pattern's rules take precedence)
+    // User's ascending/descending choice inverts the final result
+    // Pre-fetch dates for all seasons that might need them
+    for (final season in sortedSeasons) {
+      await getNewestDate(season);
+    }
+
+    // Partition: numbered seasons vs special seasons (sortKey=0, e.g., 番外編)
+    // Special seasons always appear at the end regardless of sort order
+    final numberedSeasons = sortedSeasons.where((s) => 0 < s.sortKey).toList();
+    final specialSeasons = sortedSeasons.where((s) => s.sortKey == 0).toList();
+
+    numberedSeasons.sort((a, b) {
+      final comparison = _compareWithCompositeSort(
+        a,
+        b,
+        customSort.rules,
+        newestDates,
+      );
+      // User's order choice inverts ascending ↔ descending
+      return sortConfig.order == SortOrder.ascending ? comparison : -comparison;
+    });
+
+    // Special seasons sorted by newest episode date (always at end)
+    specialSeasons.sort(
+      (a, b) => _compareDates(newestDates[a.id], newestDates[b.id]),
+    );
+
+    sortedSeasons
+      ..clear()
+      ..addAll(numberedSeasons)
+      ..addAll(specialSeasons);
+  } else {
+    // Apply simple user-selected sort
+    if (sortConfig.field == SeasonSortField.newestEpisodeDate) {
+      for (final season in sortedSeasons) {
+        await getNewestDate(season);
+      }
+    }
+
+    sortedSeasons.sort((a, b) {
+      final comparison = _compareByField(a, b, sortConfig.field, newestDates);
+      return sortConfig.order == SortOrder.ascending ? comparison : -comparison;
+    });
+  }
+
+  return SeasonGrouping(
+    seasons: sortedSeasons,
+    ungroupedEpisodeIds: grouping.ungroupedEpisodeIds,
+    resolverType: grouping.resolverType,
+  );
+}
+
+/// Compares two seasons using composite sort rules.
+///
+/// For COTEN RADIO: compares by sortKey (season number).
+/// Note: Special seasons (sortKey=0) are partitioned out before this is called.
+int _compareWithCompositeSort(
+  Season a,
+  Season b,
+  List<SeasonSortRule> rules,
+  Map<String, DateTime?> newestDates,
+) {
+  for (final rule in rules) {
+    // Check if condition applies to both seasons
+    if (rule.condition != null) {
+      final bothMatch =
+          _checkCondition(a, rule.condition!) &&
+          _checkCondition(b, rule.condition!);
+      if (!bothMatch) continue; // Try next rule
+    }
+
+    // Apply this rule
+    final comparison = _compareByField(a, b, rule.field, newestDates);
+    if (comparison != 0) {
+      // Apply rule's order (ascending = as-is, descending = negated)
+      return rule.order == SortOrder.ascending ? comparison : -comparison;
+    }
+  }
+  return 0;
+}
+
+bool _checkCondition(Season season, SeasonSortCondition condition) {
+  return switch (condition) {
+    SortKeyGreaterThan(:final value) => value < season.sortKey,
+  };
+}
+
+int _compareByField(
+  Season a,
+  Season b,
+  SeasonSortField field,
+  Map<String, DateTime?> newestDates,
+) {
+  return switch (field) {
+    SeasonSortField.seasonNumber => a.sortKey.compareTo(b.sortKey),
+    SeasonSortField.alphabetical => a.displayName.compareTo(b.displayName),
+    SeasonSortField.newestEpisodeDate => _compareDates(
+      newestDates[a.id],
+      newestDates[b.id],
+    ),
+    SeasonSortField.progress => a.sortKey.compareTo(b.sortKey), // TODO
+  };
+}
+
+int _compareDates(DateTime? a, DateTime? b) {
+  if (a == null && b == null) return 0;
+  if (a == null) return 1; // null dates go last
+  if (b == null) return -1;
+  return a.compareTo(b);
+}
+
+/// Resolves seasons from feed data for non-subscribed podcasts.
+///
+/// Groups episodes by seasonNumber from feed metadata.
+/// Uses negative indices as placeholder episode IDs since feed items
+/// don't have database IDs.
+SeasonGrouping? _resolveFromFeed(
+  List<PodcastItem> episodes,
+  SeasonPattern? pattern,
+) {
+  final grouped = <int, List<PodcastItem>>{};
+  final ungroupedIndices = <int>[];
+
+  for (var i = 0; i < episodes.length; i++) {
+    final episode = episodes[i];
+    final seasonNum = episode.seasonNumber;
+
+    if (seasonNum != null && 1 <= seasonNum) {
+      grouped.putIfAbsent(seasonNum, () => []).add(episode);
+    } else {
+      // Use negative index as placeholder ID (no DB ID available)
+      ungroupedIndices.add(-(i + 1));
+    }
+  }
+
+  if (grouped.isEmpty) return null;
+
+  final titleExtractor = pattern?.titleExtractor;
+
+  final seasons = grouped.entries.map((entry) {
+    final seasonNumber = entry.key;
+    final seasonEpisodes = entry.value;
+
+    // Try to extract custom title from first episode
+    String displayName = 'Season $seasonNumber';
+    if (titleExtractor != null && seasonEpisodes.isNotEmpty) {
+      final firstEpisode = seasonEpisodes.first;
+      final episodeData = SimpleEpisodeData(
+        title: firstEpisode.title,
+        description: firstEpisode.description,
+        seasonNumber: firstEpisode.seasonNumber,
+        episodeNumber: firstEpisode.episodeNumber,
+      );
+      final extracted = titleExtractor.extract(episodeData);
+      if (extracted != null) {
+        displayName = extracted;
+      }
+    }
+
+    // Create placeholder IDs for episode indices
+    final episodeIds = <int>[];
+    for (final ep in seasonEpisodes) {
+      final idx = episodes.indexOf(ep);
+      episodeIds.add(-(idx + 1));
+    }
+
+    return Season(
+      id: 'season_$seasonNumber',
+      displayName: displayName,
+      sortKey: seasonNumber,
+      episodeIds: episodeIds,
+    );
+  }).toList()..sort((a, b) => a.sortKey.compareTo(b.sortKey));
+
+  return SeasonGrouping(
+    seasons: seasons,
+    ungroupedEpisodeIds: ungroupedIndices,
+    resolverType: 'feed',
+  );
 }

@@ -26,6 +26,14 @@ class SeasonCard extends StatelessWidget {
 
   static const _thumbnailSize = 72.0;
 
+  /// Formats title as "#N title" for numbered seasons, or just title for others.
+  String _formatTitle() {
+    if (0 < season.sortKey) {
+      return '#${season.sortKey} ${season.displayName}';
+    }
+    return season.displayName;
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -47,7 +55,7 @@ class SeasonCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      season.displayName,
+                      _formatTitle(),
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),

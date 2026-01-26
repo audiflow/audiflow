@@ -31,7 +31,6 @@ class IsolateRssParser {
   /// For incremental updates, use [parse] which streams events.
   static Future<IsolateParsedFeed> parseFeed({
     required String feedXml,
-    int maxEpisodes = 500,
   }) async {
     ParsedPodcastMeta? meta;
     final episodes = <ParsedEpisode>[];
@@ -40,7 +39,6 @@ class IsolateRssParser {
     await for (final progress in parse(
       feedXml: feedXml,
       knownGuids: const {},
-      maxNewEpisodes: maxEpisodes,
     )) {
       switch (progress) {
         case ParsedPodcastMeta():
@@ -67,13 +65,13 @@ class IsolateRssParser {
   ///
   /// - [feedXml]: Raw XML content of the RSS feed
   /// - [knownGuids]: Set of episode GUIDs already in the database
-  /// - [maxNewEpisodes]: Safety limit to prevent runaway parsing (default: 500)
+  /// - [maxNewEpisodes]: Optional limit on episodes to parse (null = unlimited)
   ///
   /// Returns a stream of [ParseProgress] events.
   static Stream<ParseProgress> parse({
     required String feedXml,
     required Set<String> knownGuids,
-    int maxNewEpisodes = 500,
+    int? maxNewEpisodes,
   }) async* {
     final receivePort = ReceivePort();
 
@@ -148,8 +146,9 @@ class IsolateRssParser {
         params.sendPort.send(episode);
         parsedCount++;
 
-        // Safety limit
-        if (params.maxNewEpisodes <= parsedCount) {
+        // Optional limit
+        final limit = params.maxNewEpisodes;
+        if (limit != null && limit <= parsedCount) {
           break;
         }
       }
@@ -274,7 +273,7 @@ class _IsolateParams {
 
   final String feedXml;
   final Set<String> knownGuids;
-  final int maxNewEpisodes;
+  final int? maxNewEpisodes;
   final SendPort sendPort;
 }
 

@@ -1,6 +1,7 @@
 import 'package:audiflow_podcast/audiflow_podcast.dart';
 
 import '../../../common/database/app_database.dart';
+import '../models/season_episode_extractor.dart';
 
 /// Repository interface for episode operations.
 ///
@@ -27,7 +28,15 @@ abstract class EpisodeRepository {
   ///
   /// Converts [PodcastItem] list to [EpisodesCompanion] and persists them.
   /// Items without guid or enclosureUrl are skipped.
-  Future<void> upsertFromFeedItems(int podcastId, List<PodcastItem> items);
+  ///
+  /// When [extractor] is provided, season and episode numbers are extracted
+  /// from episode titles using the pattern, overriding RSS metadata values.
+  /// This is useful for podcasts with unreliable RSS metadata like COTEN RADIO.
+  Future<void> upsertFromFeedItems(
+    int podcastId,
+    List<PodcastItem> items, {
+    SeasonEpisodeExtractor? extractor,
+  });
 
   /// Returns episodes by their IDs.
   ///

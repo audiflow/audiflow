@@ -1,6 +1,9 @@
 /// Business logic and data layer for Audiflow
 library;
 
+// Re-export audiflow_core types
+export 'package:audiflow_core/audiflow_core.dart' show SimpleEpisodeData;
+
 // Re-export audiflow_podcast for convenience
 export 'package:audiflow_podcast/audiflow_podcast.dart'
     show
@@ -45,6 +48,9 @@ export 'src/features/feed/services/season_resolver_service.dart';
 // Feed feature - Season Providers
 export 'src/features/feed/providers/season_providers.dart';
 
+// Feed feature - Seasons
+export 'src/features/feed/datasources/local/season_local_datasource.dart';
+
 // Feed feature - Episodes
 export 'src/features/feed/models/episode.dart';
 export 'src/features/feed/datasources/local/episode_local_datasource.dart';
@@ -82,7 +88,9 @@ export 'src/common/database/app_database.dart'
         Episode,
         EpisodesCompanion,
         PlaybackHistory,
-        PlaybackHistoriesCompanion;
+        PlaybackHistoriesCompanion,
+        SeasonEntity,
+        SeasonsCompanion;
 
 // Subscription feature
 export 'src/features/subscription/extensions/subscription_extensions.dart';

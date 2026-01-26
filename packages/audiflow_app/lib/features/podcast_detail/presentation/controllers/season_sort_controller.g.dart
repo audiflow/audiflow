@@ -19,7 +19,7 @@ final class SeasonSortControllerProvider
   /// Controller for season sort preferences.
   SeasonSortControllerProvider._({
     required SeasonSortControllerFamily super.from,
-    required int super.argument,
+    required String super.argument,
   }) : super(
          retry: null,
          name: r'seasonSortControllerProvider',
@@ -62,7 +62,7 @@ final class SeasonSortControllerProvider
 }
 
 String _$seasonSortControllerHash() =>
-    r'aa0a8634a837a09f8b91322bf7f0fbd38e9f121c';
+    r'6d04603b48b3abca91f24cee348ef85defc75c70';
 
 /// Controller for season sort preferences.
 
@@ -73,7 +73,7 @@ final class SeasonSortControllerFamily extends $Family
           SeasonSortConfig,
           SeasonSortConfig,
           SeasonSortConfig,
-          int
+          String
         > {
   SeasonSortControllerFamily._()
     : super(
@@ -86,7 +86,7 @@ final class SeasonSortControllerFamily extends $Family
 
   /// Controller for season sort preferences.
 
-  SeasonSortControllerProvider call(int podcastId) =>
+  SeasonSortControllerProvider call(String podcastId) =>
       SeasonSortControllerProvider._(argument: podcastId, from: this);
 
   @override
@@ -96,10 +96,10 @@ final class SeasonSortControllerFamily extends $Family
 /// Controller for season sort preferences.
 
 abstract class _$SeasonSortController extends $Notifier<SeasonSortConfig> {
-  late final _$args = ref.$arg as int;
-  int get podcastId => _$args;
+  late final _$args = ref.$arg as String;
+  String get podcastId => _$args;
 
-  SeasonSortConfig build(int podcastId);
+  SeasonSortConfig build(String podcastId);
   @$mustCallSuper
   @override
   void runBuild() {

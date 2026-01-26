@@ -1,3 +1,4 @@
+import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_podcast/audiflow_podcast.dart';
 import 'package:drift/drift.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -5,6 +6,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../common/database/app_database.dart';
 import '../../../common/providers/database_provider.dart';
 import '../datasources/local/episode_local_datasource.dart';
+import '../models/season_episode_extractor.dart';
 import 'episode_repository.dart';
 
 part 'episode_repository_impl.g.dart';
@@ -50,11 +52,28 @@ class EpisodeRepositoryImpl implements EpisodeRepository {
   }
 
   @override
-  Future<void> upsertFromFeedItems(int podcastId, List<PodcastItem> items) {
+  Future<void> upsertFromFeedItems(
+    int podcastId,
+    List<PodcastItem> items, {
+    SeasonEpisodeExtractor? extractor,
+  }) {
     final companions = items
         .where((item) => item.guid != null && item.enclosureUrl != null)
-        .map(
-          (item) => EpisodesCompanion.insert(
+        .map((item) {
+          // Apply extraction if extractor is provided
+          int? seasonNumber = item.seasonNumber;
+          int? episodeNumber = item.episodeNumber;
+
+          if (extractor != null) {
+            final episodeData = _PodcastItemEpisodeData(item);
+            final extracted = extractor.extract(episodeData);
+            if (extracted.hasValues) {
+              seasonNumber = extracted.seasonNumber ?? seasonNumber;
+              episodeNumber = extracted.episodeNumber ?? episodeNumber;
+            }
+          }
+
+          return EpisodesCompanion.insert(
             podcastId: podcastId,
             guid: item.guid!,
             title: item.title,
@@ -63,10 +82,10 @@ class EpisodeRepositoryImpl implements EpisodeRepository {
             durationMs: Value(item.duration?.inMilliseconds),
             publishedAt: Value(item.publishDate),
             imageUrl: Value(item.primaryImage?.url),
-            episodeNumber: Value(item.episodeNumber),
-            seasonNumber: Value(item.seasonNumber),
-          ),
-        )
+            episodeNumber: Value(episodeNumber),
+            seasonNumber: Value(seasonNumber),
+          );
+        })
         .toList();
 
     return _datasource.upsertAll(companions);
@@ -76,4 +95,23 @@ class EpisodeRepositoryImpl implements EpisodeRepository {
   Future<List<Episode>> getByIds(List<int> ids) {
     return _datasource.getByIds(ids);
   }
+}
+
+/// Adapter to make [PodcastItem] work with [EpisodeData] interface.
+class _PodcastItemEpisodeData implements EpisodeData {
+  const _PodcastItemEpisodeData(this._item);
+
+  final PodcastItem _item;
+
+  @override
+  String get title => _item.title;
+
+  @override
+  String? get description => _item.description;
+
+  @override
+  int? get seasonNumber => _item.seasonNumber;
+
+  @override
+  int? get episodeNumber => _item.episodeNumber;
 }
