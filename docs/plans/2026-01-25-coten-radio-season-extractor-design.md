@@ -143,13 +143,86 @@ final EpisodeNumberExtractor? episodeNumberExtractor;
 }
 ```
 
+## SeasonEpisodeExtractor (Title Prefix Override)
+
+### Problem
+
+COTEN RADIO RSS feed has unreliable `seasonNumber` and `episodeNumber` due to manual maintenance. Episode titles encode this data reliably in the prefix:
+- `【62-15】何が変わった?...` encodes Season 62, Episode 15
+- `【番外編＃135】...` encodes a special episode
+
+### Solution
+
+Add a `SeasonEpisodeExtractor` that extracts both values from a single regex match. Returns optional values that the caller can apply to override RSS data.
+
+### SeasonEpisodeExtractor Model
+
+```dart
+final class SeasonEpisodeResult {
+  const SeasonEpisodeResult({this.seasonNumber, this.episodeNumber});
+  final int? seasonNumber;
+  final int? episodeNumber;
+  bool get hasValues => seasonNumber != null || episodeNumber != null;
+}
+
+final class SeasonEpisodeExtractor {
+  const SeasonEpisodeExtractor({
+    required this.source,           // "title" or "description"
+    required this.pattern,          // Regex: 【(\d+)-(\d+)】
+    this.seasonGroup = 1,           // Capture group for season
+    this.episodeGroup = 2,          // Capture group for episode
+    this.fallbackSeasonNumber,      // e.g., 0 for 番外編
+    this.fallbackEpisodePattern,    // e.g., 【番外編[＃#](\d+)】
+    this.fallbackEpisodeCaptureGroup = 1,
+  });
+
+  SeasonEpisodeResult extract(EpisodeData episode);
+  factory SeasonEpisodeExtractor.fromJson(Map<String, dynamic> json);
+  Map<String, dynamic> toJson();
+}
+```
+
+### COTEN RADIO Configuration
+
+```dart
+seasonEpisodeExtractor: SeasonEpisodeExtractor(
+  source: 'title',
+  pattern: r'【(\d+)-(\d+)】',
+  seasonGroup: 1,
+  episodeGroup: 2,
+  fallbackSeasonNumber: 0,
+  fallbackEpisodePattern: r'【番外編[＃#](\d+)】',
+  fallbackEpisodeCaptureGroup: 1,
+),
+```
+
+### Test Cases
+
+| Input | Expected |
+|-------|----------|
+| `【62-15】何が変わった?...` | season=62, episode=15 |
+| `【番外編＃135】仏教のこと` | season=0, episode=135 |
+| `【番外編#100】Something` | season=0, episode=100 |
+| Random title without pattern | season=null, episode=null |
+
+### CLI Integration
+
+Add `extractedSeasonNumber` field to `ExtractionResult` and create `SeasonEpisodeExtractorDiagnostics` wrapper for debugging output.
+
 ## Implementation Files
 
 | Action | File |
 |--------|------|
 | Create | `packages/audiflow_domain/lib/src/features/feed/models/seasons.dart` |
 | Create | `packages/audiflow_domain/lib/src/features/feed/models/episode_number_extractor.dart` |
+| Create | `packages/audiflow_domain/lib/src/features/feed/models/season_episode_extractor.dart` |
 | Modify | `packages/audiflow_domain/lib/src/features/feed/models/season_pattern.dart` |
 | Modify | `packages/audiflow_domain/lib/src/features/feed/resolvers/rss_metadata_resolver.dart` |
+| Modify | `packages/audiflow_domain/lib/src/features/feed/patterns/coten_radio_pattern.dart` |
+| Modify | `packages/audiflow_domain/lib/patterns.dart` |
+| Create | `packages/audiflow_cli/lib/src/diagnostics/season_episode_extractor_diagnostics.dart` |
+| Modify | `packages/audiflow_cli/lib/src/models/extraction_result.dart` |
+| Modify | `packages/audiflow_cli/lib/src/commands/season_debug_command.dart` |
+| Modify | `packages/audiflow_cli/lib/src/reporters/table_reporter.dart` |
 | Create | `assets/season_patterns/coten_radio.json` |
 | Create | Database migration for `Seasons` table |
