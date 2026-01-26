@@ -56,6 +56,7 @@ class SeasonGrid extends StatelessWidget {
       season: season,
       episodeCount: season.episodeCount,
       playedCount: playedCount,
+      thumbnailUrl: season.thumbnailUrl,
       onTap: () => onSeasonTap(season),
     );
   }

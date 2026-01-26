@@ -1,3 +1,4 @@
+import 'package:drift/drift.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../common/database/app_database.dart';
@@ -95,20 +96,61 @@ Future<SeasonGrouping?> podcastSeasons(Ref ref, int podcastId) async {
     '${result?.ungroupedEpisodeIds.length ?? 0} ungrouped',
   );
 
-  // Persist seasons to database
+  // Persist seasons to database and enrich with thumbnails
   if (result != null) {
-    final companions = result.seasons.map((season) {
-      return SeasonsCompanion.insert(
-        podcastId: podcastId,
-        seasonNumber: season.sortKey,
-        displayName: season.displayName,
-        sortKey: season.sortKey,
-        resolverType: result.resolverType,
+    // Build map of episode ID to thumbnail URL for quick lookup
+    final episodeThumbnails = <int, String?>{};
+    for (final episode in episodes) {
+      episodeThumbnails[episode.id] = episode.imageUrl;
+    }
+
+    // Find the latest episode thumbnail for each season
+    final enrichedSeasons = <Season>[];
+    final companions = <SeasonsCompanion>[];
+
+    for (final season in result.seasons) {
+      // Get episodes for this season, sorted by publishedAt (newest first)
+      final seasonEpisodes =
+          episodes.where((e) => season.episodeIds.contains(e.id)).toList()
+            ..sort((a, b) {
+              final aPub = a.publishedAt;
+              final bPub = b.publishedAt;
+              if (aPub == null && bPub == null) return 0;
+              if (aPub == null) return 1;
+              if (bPub == null) return -1;
+              return bPub.compareTo(aPub); // Newest first
+            });
+
+      // Get thumbnail from latest episode (first in sorted list)
+      String? thumbnailUrl;
+      for (final ep in seasonEpisodes) {
+        if (ep.imageUrl != null) {
+          thumbnailUrl = ep.imageUrl;
+          break;
+        }
+      }
+
+      enrichedSeasons.add(season.copyWith(thumbnailUrl: thumbnailUrl));
+      companions.add(
+        SeasonsCompanion.insert(
+          podcastId: podcastId,
+          seasonNumber: season.sortKey,
+          displayName: season.displayName,
+          sortKey: season.sortKey,
+          resolverType: result.resolverType,
+          thumbnailUrl: Value(thumbnailUrl),
+        ),
       );
-    }).toList();
+    }
 
     await seasonDatasource.upsertAllForPodcast(podcastId, companions);
     logger.d('Persisted ${companions.length} seasons to database');
+
+    return SeasonGrouping(
+      seasons: enrichedSeasons,
+      ungroupedEpisodeIds: result.ungroupedEpisodeIds,
+      resolverType: result.resolverType,
+    );
   }
 
   return result;
