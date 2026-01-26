@@ -221,16 +221,18 @@ final class SeasonPatternByFeedUrlFamily extends $Family
   String toString() => r'seasonPatternByFeedUrlProvider';
 }
 
-/// Resolves seasons for a podcast by its ID and persists to database.
+/// Resolves seasons for a podcast by its ID.
 ///
-/// Returns null if no resolver can group the episodes.
+/// First checks the database for cached seasons. Only resolves from episodes
+/// if no cached seasons exist. Returns null if no resolver can group episodes.
 
 @ProviderFor(podcastSeasons)
 final podcastSeasonsProvider = PodcastSeasonsFamily._();
 
-/// Resolves seasons for a podcast by its ID and persists to database.
+/// Resolves seasons for a podcast by its ID.
 ///
-/// Returns null if no resolver can group the episodes.
+/// First checks the database for cached seasons. Only resolves from episodes
+/// if no cached seasons exist. Returns null if no resolver can group episodes.
 
 final class PodcastSeasonsProvider
     extends
@@ -240,9 +242,10 @@ final class PodcastSeasonsProvider
           FutureOr<SeasonGrouping?>
         >
     with $FutureModifier<SeasonGrouping?>, $FutureProvider<SeasonGrouping?> {
-  /// Resolves seasons for a podcast by its ID and persists to database.
+  /// Resolves seasons for a podcast by its ID.
   ///
-  /// Returns null if no resolver can group the episodes.
+  /// First checks the database for cached seasons. Only resolves from episodes
+  /// if no cached seasons exist. Returns null if no resolver can group episodes.
   PodcastSeasonsProvider._({
     required PodcastSeasonsFamily super.from,
     required int super.argument,
@@ -287,11 +290,12 @@ final class PodcastSeasonsProvider
   }
 }
 
-String _$podcastSeasonsHash() => r'0fa97192864b3f5c7e011ebcc2915dc636121161';
+String _$podcastSeasonsHash() => r'3d55f5b52d39d09add2b2acdfa32f8b32efed018';
 
-/// Resolves seasons for a podcast by its ID and persists to database.
+/// Resolves seasons for a podcast by its ID.
 ///
-/// Returns null if no resolver can group the episodes.
+/// First checks the database for cached seasons. Only resolves from episodes
+/// if no cached seasons exist. Returns null if no resolver can group episodes.
 
 final class PodcastSeasonsFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<SeasonGrouping?>, int> {
@@ -304,9 +308,10 @@ final class PodcastSeasonsFamily extends $Family
         isAutoDispose: true,
       );
 
-  /// Resolves seasons for a podcast by its ID and persists to database.
+  /// Resolves seasons for a podcast by its ID.
   ///
-  /// Returns null if no resolver can group the episodes.
+  /// First checks the database for cached seasons. Only resolves from episodes
+  /// if no cached seasons exist. Returns null if no resolver can group episodes.
 
   PodcastSeasonsProvider call(int podcastId) =>
       PodcastSeasonsProvider._(argument: podcastId, from: this);

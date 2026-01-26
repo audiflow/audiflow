@@ -26,6 +26,9 @@ class Seasons extends Table {
   /// Resolver type that generated this season (e.g., "rss").
   TextColumn get resolverType => text()();
 
+  /// Thumbnail URL from the latest episode in this season.
+  TextColumn get thumbnailUrl => text().nullable()();
+
   @override
   Set<Column> get primaryKey => {podcastId, seasonNumber};
 }

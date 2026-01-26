@@ -24,7 +24,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -45,6 +45,10 @@ class AppDatabase extends _$AppDatabase {
       // Migration from v4 to v5: add Seasons table
       if (5 <= to && from < 5) {
         await m.createTable(seasons);
+      }
+      // Migration from v5 to v6: add thumbnail_url column to Seasons table
+      if (6 <= to && from < 6) {
+        await m.addColumn(seasons, seasons.thumbnailUrl);
       }
     },
   );

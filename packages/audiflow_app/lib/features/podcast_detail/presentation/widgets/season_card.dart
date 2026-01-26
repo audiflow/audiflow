@@ -1,5 +1,6 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
+import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
 
 /// Card displaying season information with tap to navigate.
@@ -28,7 +29,8 @@ class SeasonCard extends StatelessWidget {
 
   /// Formats title as "#N title" for numbered seasons, or just title for others.
   String _formatTitle() {
-    if (0 < season.sortKey) {
+    // Skip "#N" prefix for special seasons (sortKey=0) and ungrouped (id='ungrouped')
+    if (0 < season.sortKey && season.id != 'ungrouped') {
       return '#${season.sortKey} ${season.displayName}';
     }
     return season.displayName;
@@ -97,12 +99,18 @@ class SeasonCard extends StatelessWidget {
     if (thumbnailUrl != null) {
       return ClipRRect(
         borderRadius: BorderRadius.circular(8),
-        child: Image.network(
+        child: ExtendedImage.network(
           thumbnailUrl!,
           width: _thumbnailSize,
           height: _thumbnailSize,
           fit: BoxFit.cover,
-          errorBuilder: (_, _, _) => _buildPlaceholder(colorScheme),
+          cache: true,
+          loadStateChanged: (state) {
+            if (state.extendedImageLoadState == LoadState.failed) {
+              return _buildPlaceholder(colorScheme);
+            }
+            return null;
+          },
         ),
       );
     }

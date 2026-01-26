@@ -507,11 +507,30 @@ SeasonGrouping? _resolveFromFeed(
       episodeIds.add(-(idx + 1));
     }
 
+    // Get thumbnail from latest episode (sorted by publishDate, newest first)
+    final sortedByDate = List<PodcastItem>.from(seasonEpisodes)
+      ..sort((a, b) {
+        final aPub = a.publishDate;
+        final bPub = b.publishDate;
+        if (aPub == null && bPub == null) return 0;
+        if (aPub == null) return 1;
+        if (bPub == null) return -1;
+        return bPub.compareTo(aPub);
+      });
+    String? thumbnailUrl;
+    for (final ep in sortedByDate) {
+      if (ep.images.isNotEmpty) {
+        thumbnailUrl = ep.images.first.url;
+        break;
+      }
+    }
+
     return Season(
       id: 'season_$seasonNumber',
       displayName: displayName,
       sortKey: seasonNumber,
       episodeIds: episodeIds,
+      thumbnailUrl: thumbnailUrl,
     );
   }).toList()..sort((a, b) => a.sortKey.compareTo(b.sortKey));
 

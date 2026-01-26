@@ -5,6 +5,7 @@ final class Season {
     required this.displayName,
     required this.sortKey,
     required this.episodeIds,
+    this.thumbnailUrl,
   });
 
   /// Unique identifier within podcast (e.g., "season_2", "arc_mystery").
@@ -19,8 +20,28 @@ final class Season {
   /// Episode IDs belonging to this season.
   final List<int> episodeIds;
 
+  /// Thumbnail URL from the latest episode in this season.
+  final String? thumbnailUrl;
+
   /// Number of episodes in this season.
   int get episodeCount => episodeIds.length;
+
+  /// Creates a copy with optional field overrides.
+  Season copyWith({
+    String? id,
+    String? displayName,
+    int? sortKey,
+    List<int>? episodeIds,
+    String? thumbnailUrl,
+  }) {
+    return Season(
+      id: id ?? this.id,
+      displayName: displayName ?? this.displayName,
+      sortKey: sortKey ?? this.sortKey,
+      episodeIds: episodeIds ?? this.episodeIds,
+      thumbnailUrl: thumbnailUrl ?? this.thumbnailUrl,
+    );
+  }
 }
 
 /// Result from a season resolver containing grouped seasons.

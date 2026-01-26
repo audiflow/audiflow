@@ -1948,6 +1948,17 @@ class $SeasonsTable extends Seasons
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _thumbnailUrlMeta = const VerificationMeta(
+    'thumbnailUrl',
+  );
+  @override
+  late final GeneratedColumn<String> thumbnailUrl = GeneratedColumn<String>(
+    'thumbnail_url',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     podcastId,
@@ -1955,6 +1966,7 @@ class $SeasonsTable extends Seasons
     displayName,
     sortKey,
     resolverType,
+    thumbnailUrl,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2017,6 +2029,15 @@ class $SeasonsTable extends Seasons
     } else if (isInserting) {
       context.missing(_resolverTypeMeta);
     }
+    if (data.containsKey('thumbnail_url')) {
+      context.handle(
+        _thumbnailUrlMeta,
+        thumbnailUrl.isAcceptableOrUnknown(
+          data['thumbnail_url']!,
+          _thumbnailUrlMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -2046,6 +2067,10 @@ class $SeasonsTable extends Seasons
         DriftSqlType.string,
         data['${effectivePrefix}resolver_type'],
       )!,
+      thumbnailUrl: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}thumbnail_url'],
+      ),
     );
   }
 
@@ -2071,12 +2096,16 @@ class SeasonEntity extends DataClass implements Insertable<SeasonEntity> {
 
   /// Resolver type that generated this season (e.g., "rss").
   final String resolverType;
+
+  /// Thumbnail URL from the latest episode in this season.
+  final String? thumbnailUrl;
   const SeasonEntity({
     required this.podcastId,
     required this.seasonNumber,
     required this.displayName,
     required this.sortKey,
     required this.resolverType,
+    this.thumbnailUrl,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2086,6 +2115,9 @@ class SeasonEntity extends DataClass implements Insertable<SeasonEntity> {
     map['display_name'] = Variable<String>(displayName);
     map['sort_key'] = Variable<int>(sortKey);
     map['resolver_type'] = Variable<String>(resolverType);
+    if (!nullToAbsent || thumbnailUrl != null) {
+      map['thumbnail_url'] = Variable<String>(thumbnailUrl);
+    }
     return map;
   }
 
@@ -2096,6 +2128,9 @@ class SeasonEntity extends DataClass implements Insertable<SeasonEntity> {
       displayName: Value(displayName),
       sortKey: Value(sortKey),
       resolverType: Value(resolverType),
+      thumbnailUrl: thumbnailUrl == null && nullToAbsent
+          ? const Value.absent()
+          : Value(thumbnailUrl),
     );
   }
 
@@ -2110,6 +2145,7 @@ class SeasonEntity extends DataClass implements Insertable<SeasonEntity> {
       displayName: serializer.fromJson<String>(json['displayName']),
       sortKey: serializer.fromJson<int>(json['sortKey']),
       resolverType: serializer.fromJson<String>(json['resolverType']),
+      thumbnailUrl: serializer.fromJson<String?>(json['thumbnailUrl']),
     );
   }
   @override
@@ -2121,6 +2157,7 @@ class SeasonEntity extends DataClass implements Insertable<SeasonEntity> {
       'displayName': serializer.toJson<String>(displayName),
       'sortKey': serializer.toJson<int>(sortKey),
       'resolverType': serializer.toJson<String>(resolverType),
+      'thumbnailUrl': serializer.toJson<String?>(thumbnailUrl),
     };
   }
 
@@ -2130,12 +2167,14 @@ class SeasonEntity extends DataClass implements Insertable<SeasonEntity> {
     String? displayName,
     int? sortKey,
     String? resolverType,
+    Value<String?> thumbnailUrl = const Value.absent(),
   }) => SeasonEntity(
     podcastId: podcastId ?? this.podcastId,
     seasonNumber: seasonNumber ?? this.seasonNumber,
     displayName: displayName ?? this.displayName,
     sortKey: sortKey ?? this.sortKey,
     resolverType: resolverType ?? this.resolverType,
+    thumbnailUrl: thumbnailUrl.present ? thumbnailUrl.value : this.thumbnailUrl,
   );
   SeasonEntity copyWithCompanion(SeasonsCompanion data) {
     return SeasonEntity(
@@ -2150,6 +2189,9 @@ class SeasonEntity extends DataClass implements Insertable<SeasonEntity> {
       resolverType: data.resolverType.present
           ? data.resolverType.value
           : this.resolverType,
+      thumbnailUrl: data.thumbnailUrl.present
+          ? data.thumbnailUrl.value
+          : this.thumbnailUrl,
     );
   }
 
@@ -2160,14 +2202,21 @@ class SeasonEntity extends DataClass implements Insertable<SeasonEntity> {
           ..write('seasonNumber: $seasonNumber, ')
           ..write('displayName: $displayName, ')
           ..write('sortKey: $sortKey, ')
-          ..write('resolverType: $resolverType')
+          ..write('resolverType: $resolverType, ')
+          ..write('thumbnailUrl: $thumbnailUrl')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(podcastId, seasonNumber, displayName, sortKey, resolverType);
+  int get hashCode => Object.hash(
+    podcastId,
+    seasonNumber,
+    displayName,
+    sortKey,
+    resolverType,
+    thumbnailUrl,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2176,7 +2225,8 @@ class SeasonEntity extends DataClass implements Insertable<SeasonEntity> {
           other.seasonNumber == this.seasonNumber &&
           other.displayName == this.displayName &&
           other.sortKey == this.sortKey &&
-          other.resolverType == this.resolverType);
+          other.resolverType == this.resolverType &&
+          other.thumbnailUrl == this.thumbnailUrl);
 }
 
 class SeasonsCompanion extends UpdateCompanion<SeasonEntity> {
@@ -2185,6 +2235,7 @@ class SeasonsCompanion extends UpdateCompanion<SeasonEntity> {
   final Value<String> displayName;
   final Value<int> sortKey;
   final Value<String> resolverType;
+  final Value<String?> thumbnailUrl;
   final Value<int> rowid;
   const SeasonsCompanion({
     this.podcastId = const Value.absent(),
@@ -2192,6 +2243,7 @@ class SeasonsCompanion extends UpdateCompanion<SeasonEntity> {
     this.displayName = const Value.absent(),
     this.sortKey = const Value.absent(),
     this.resolverType = const Value.absent(),
+    this.thumbnailUrl = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   SeasonsCompanion.insert({
@@ -2200,6 +2252,7 @@ class SeasonsCompanion extends UpdateCompanion<SeasonEntity> {
     required String displayName,
     required int sortKey,
     required String resolverType,
+    this.thumbnailUrl = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : podcastId = Value(podcastId),
        seasonNumber = Value(seasonNumber),
@@ -2212,6 +2265,7 @@ class SeasonsCompanion extends UpdateCompanion<SeasonEntity> {
     Expression<String>? displayName,
     Expression<int>? sortKey,
     Expression<String>? resolverType,
+    Expression<String>? thumbnailUrl,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -2220,6 +2274,7 @@ class SeasonsCompanion extends UpdateCompanion<SeasonEntity> {
       if (displayName != null) 'display_name': displayName,
       if (sortKey != null) 'sort_key': sortKey,
       if (resolverType != null) 'resolver_type': resolverType,
+      if (thumbnailUrl != null) 'thumbnail_url': thumbnailUrl,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -2230,6 +2285,7 @@ class SeasonsCompanion extends UpdateCompanion<SeasonEntity> {
     Value<String>? displayName,
     Value<int>? sortKey,
     Value<String>? resolverType,
+    Value<String?>? thumbnailUrl,
     Value<int>? rowid,
   }) {
     return SeasonsCompanion(
@@ -2238,6 +2294,7 @@ class SeasonsCompanion extends UpdateCompanion<SeasonEntity> {
       displayName: displayName ?? this.displayName,
       sortKey: sortKey ?? this.sortKey,
       resolverType: resolverType ?? this.resolverType,
+      thumbnailUrl: thumbnailUrl ?? this.thumbnailUrl,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -2260,6 +2317,9 @@ class SeasonsCompanion extends UpdateCompanion<SeasonEntity> {
     if (resolverType.present) {
       map['resolver_type'] = Variable<String>(resolverType.value);
     }
+    if (thumbnailUrl.present) {
+      map['thumbnail_url'] = Variable<String>(thumbnailUrl.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -2274,6 +2334,7 @@ class SeasonsCompanion extends UpdateCompanion<SeasonEntity> {
           ..write('displayName: $displayName, ')
           ..write('sortKey: $sortKey, ')
           ..write('resolverType: $resolverType, ')
+          ..write('thumbnailUrl: $thumbnailUrl, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -3735,6 +3796,7 @@ typedef $$SeasonsTableCreateCompanionBuilder =
       required String displayName,
       required int sortKey,
       required String resolverType,
+      Value<String?> thumbnailUrl,
       Value<int> rowid,
     });
 typedef $$SeasonsTableUpdateCompanionBuilder =
@@ -3744,6 +3806,7 @@ typedef $$SeasonsTableUpdateCompanionBuilder =
       Value<String> displayName,
       Value<int> sortKey,
       Value<String> resolverType,
+      Value<String?> thumbnailUrl,
       Value<int> rowid,
     });
 
@@ -3800,6 +3863,11 @@ class $$SeasonsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get thumbnailUrl => $composableBuilder(
+    column: $table.thumbnailUrl,
+    builder: (column) => ColumnFilters(column),
+  );
+
   $$SubscriptionsTableFilterComposer get podcastId {
     final $$SubscriptionsTableFilterComposer composer = $composerBuilder(
       composer: this,
@@ -3853,6 +3921,11 @@ class $$SeasonsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get thumbnailUrl => $composableBuilder(
+    column: $table.thumbnailUrl,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$SubscriptionsTableOrderingComposer get podcastId {
     final $$SubscriptionsTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -3901,6 +3974,11 @@ class $$SeasonsTableAnnotationComposer
 
   GeneratedColumn<String> get resolverType => $composableBuilder(
     column: $table.resolverType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get thumbnailUrl => $composableBuilder(
+    column: $table.thumbnailUrl,
     builder: (column) => column,
   );
 
@@ -3961,6 +4039,7 @@ class $$SeasonsTableTableManager
                 Value<String> displayName = const Value.absent(),
                 Value<int> sortKey = const Value.absent(),
                 Value<String> resolverType = const Value.absent(),
+                Value<String?> thumbnailUrl = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SeasonsCompanion(
                 podcastId: podcastId,
@@ -3968,6 +4047,7 @@ class $$SeasonsTableTableManager
                 displayName: displayName,
                 sortKey: sortKey,
                 resolverType: resolverType,
+                thumbnailUrl: thumbnailUrl,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -3977,6 +4057,7 @@ class $$SeasonsTableTableManager
                 required String displayName,
                 required int sortKey,
                 required String resolverType,
+                Value<String?> thumbnailUrl = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SeasonsCompanion.insert(
                 podcastId: podcastId,
@@ -3984,6 +4065,7 @@ class $$SeasonsTableTableManager
                 displayName: displayName,
                 sortKey: sortKey,
                 resolverType: resolverType,
+                thumbnailUrl: thumbnailUrl,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
