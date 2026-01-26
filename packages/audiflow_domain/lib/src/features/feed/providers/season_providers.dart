@@ -11,6 +11,7 @@ import '../datasources/local/season_local_datasource.dart';
 import '../models/season.dart';
 import '../models/season_pattern.dart';
 import '../patterns/coten_radio_pattern.dart';
+import '../repositories/episode_repository.dart';
 import '../repositories/episode_repository_impl.dart';
 import '../resolvers/rss_metadata_resolver.dart';
 import '../resolvers/year_resolver.dart';
@@ -55,22 +56,93 @@ SeasonPattern? seasonPatternByFeedUrl(Ref ref, String feedUrl) {
   return null;
 }
 
-/// Resolves seasons for a podcast by its ID and persists to database.
+/// Resolves seasons for a podcast by its ID.
 ///
-/// Returns null if no resolver can group the episodes.
+/// First checks the database for cached seasons. Only resolves from episodes
+/// if no cached seasons exist. Returns null if no resolver can group episodes.
 @riverpod
 Future<SeasonGrouping?> podcastSeasons(Ref ref, int podcastId) async {
   final logger = ref.watch(namedLoggerProvider('PodcastSeasons'));
   final subscriptionRepo = ref.watch(subscriptionRepositoryProvider);
   final episodeRepo = ref.watch(episodeRepositoryProvider);
   final seasonDatasource = ref.watch(seasonLocalDatasourceProvider);
-  final resolverService = ref.watch(seasonResolverServiceProvider);
 
   final subscription = await subscriptionRepo.getById(podcastId);
   if (subscription == null) {
     logger.d('No subscription found for podcastId=$podcastId');
     return null;
   }
+
+  // Check for cached seasons first
+  final cachedSeasons = await seasonDatasource.getByPodcastId(podcastId);
+  if (cachedSeasons.isNotEmpty) {
+    logger.d(
+      'Using ${cachedSeasons.length} cached seasons for podcastId=$podcastId',
+    );
+    return _buildGroupingFromCache(ref, podcastId, cachedSeasons, episodeRepo);
+  }
+
+  // No cached seasons - resolve from episodes
+  return _resolveAndPersistSeasons(
+    ref,
+    podcastId,
+    subscription.feedUrl,
+    logger,
+  );
+}
+
+/// Builds SeasonGrouping from cached SeasonEntity records.
+Future<SeasonGrouping?> _buildGroupingFromCache(
+  Ref ref,
+  int podcastId,
+  List<SeasonEntity> cachedSeasons,
+  EpisodeRepository episodeRepo,
+) async {
+  final episodes = await episodeRepo.getByPodcastId(podcastId);
+  if (episodes.isEmpty) return null;
+
+  // Group episodes by season number
+  final episodesBySeasonNum = <int, List<int>>{};
+  final ungroupedIds = <int>[];
+
+  for (final episode in episodes) {
+    final seasonNum = episode.seasonNumber;
+    if (seasonNum != null) {
+      episodesBySeasonNum.putIfAbsent(seasonNum, () => []).add(episode.id);
+    } else {
+      ungroupedIds.add(episode.id);
+    }
+  }
+
+  // Build Season objects from cached entities
+  final seasons = cachedSeasons.map((entity) {
+    final episodeIds = episodesBySeasonNum[entity.seasonNumber] ?? [];
+    return Season(
+      id: 'season_${entity.seasonNumber}',
+      displayName: entity.displayName,
+      sortKey: entity.sortKey,
+      episodeIds: episodeIds,
+      thumbnailUrl: entity.thumbnailUrl,
+    );
+  }).toList();
+
+  return SeasonGrouping(
+    seasons: seasons,
+    ungroupedEpisodeIds: ungroupedIds,
+    resolverType: cachedSeasons.first.resolverType,
+  );
+}
+
+/// Resolves seasons from episodes and persists to database.
+Future<SeasonGrouping?> _resolveAndPersistSeasons(
+  Ref ref,
+  int podcastId,
+  String feedUrl,
+  dynamic logger,
+) async {
+  final episodeRepo = ref.watch(episodeRepositoryProvider);
+  final seasonDatasource = ref.watch(seasonLocalDatasourceProvider);
+  final resolverService = ref.watch(seasonResolverServiceProvider);
 
   final episodes = await episodeRepo.getByPodcastId(podcastId);
   if (episodes.isEmpty) {
@@ -81,13 +153,13 @@ Future<SeasonGrouping?> podcastSeasons(Ref ref, int podcastId) async {
   // Debug: count episodes with season numbers
   final withSeason = episodes.where((e) => e.seasonNumber != null).length;
   logger.d(
-    'Resolving seasons: podcastId=$podcastId, feedUrl=${subscription.feedUrl}, '
+    'Resolving seasons: podcastId=$podcastId, feedUrl=$feedUrl, '
     'episodes=${episodes.length}, withSeasonNumber=$withSeason',
   );
 
   final result = resolverService.resolveSeasons(
-    podcastGuid: null, // TODO: Add podcastGuid to Subscriptions table
-    feedUrl: subscription.feedUrl,
+    podcastGuid: null,
+    feedUrl: feedUrl,
     episodes: episodes,
   );
 
@@ -96,64 +168,55 @@ Future<SeasonGrouping?> podcastSeasons(Ref ref, int podcastId) async {
     '${result?.ungroupedEpisodeIds.length ?? 0} ungrouped',
   );
 
-  // Persist seasons to database and enrich with thumbnails
-  if (result != null) {
-    // Build map of episode ID to thumbnail URL for quick lookup
-    final episodeThumbnails = <int, String?>{};
-    for (final episode in episodes) {
-      episodeThumbnails[episode.id] = episode.imageUrl;
-    }
+  if (result == null) return null;
 
-    // Find the latest episode thumbnail for each season
-    final enrichedSeasons = <Season>[];
-    final companions = <SeasonsCompanion>[];
+  // Find the latest episode thumbnail for each season
+  final enrichedSeasons = <Season>[];
+  final companions = <SeasonsCompanion>[];
 
-    for (final season in result.seasons) {
-      // Get episodes for this season, sorted by publishedAt (newest first)
-      final seasonEpisodes =
-          episodes.where((e) => season.episodeIds.contains(e.id)).toList()
-            ..sort((a, b) {
-              final aPub = a.publishedAt;
-              final bPub = b.publishedAt;
-              if (aPub == null && bPub == null) return 0;
-              if (aPub == null) return 1;
-              if (bPub == null) return -1;
-              return bPub.compareTo(aPub); // Newest first
-            });
+  for (final season in result.seasons) {
+    // Get episodes for this season, sorted by publishedAt (newest first)
+    final seasonEpisodes =
+        episodes.where((e) => season.episodeIds.contains(e.id)).toList()
+          ..sort((a, b) {
+            final aPub = a.publishedAt;
+            final bPub = b.publishedAt;
+            if (aPub == null && bPub == null) return 0;
+            if (aPub == null) return 1;
+            if (bPub == null) return -1;
+            return bPub.compareTo(aPub); // Newest first
+          });
 
-      // Get thumbnail from latest episode (first in sorted list)
-      String? thumbnailUrl;
-      for (final ep in seasonEpisodes) {
-        if (ep.imageUrl != null) {
-          thumbnailUrl = ep.imageUrl;
-          break;
-        }
+    // Get thumbnail from latest episode (first in sorted list)
+    String? thumbnailUrl;
+    for (final ep in seasonEpisodes) {
+      if (ep.imageUrl != null) {
+        thumbnailUrl = ep.imageUrl;
+        break;
       }
-
-      enrichedSeasons.add(season.copyWith(thumbnailUrl: thumbnailUrl));
-      companions.add(
-        SeasonsCompanion.insert(
-          podcastId: podcastId,
-          seasonNumber: season.sortKey,
-          displayName: season.displayName,
-          sortKey: season.sortKey,
-          resolverType: result.resolverType,
-          thumbnailUrl: Value(thumbnailUrl),
-        ),
-      );
     }
 
-    await seasonDatasource.upsertAllForPodcast(podcastId, companions);
-    logger.d('Persisted ${companions.length} seasons to database');
-
-    return SeasonGrouping(
-      seasons: enrichedSeasons,
-      ungroupedEpisodeIds: result.ungroupedEpisodeIds,
-      resolverType: result.resolverType,
+    enrichedSeasons.add(season.copyWith(thumbnailUrl: thumbnailUrl));
+    companions.add(
+      SeasonsCompanion.insert(
+        podcastId: podcastId,
+        seasonNumber: season.sortKey,
+        displayName: season.displayName,
+        sortKey: season.sortKey,
+        resolverType: result.resolverType,
+        thumbnailUrl: Value(thumbnailUrl),
+      ),
     );
   }
 
-  return result;
+  await seasonDatasource.upsertAllForPodcast(podcastId, companions);
+  logger.d('Persisted ${companions.length} seasons to database');
+
+  return SeasonGrouping(
+    seasons: enrichedSeasons,
+    ungroupedEpisodeIds: result.ungroupedEpisodeIds,
+    resolverType: result.resolverType,
+  );
 }
 
 /// Whether the season view toggle should be visible for a podcast.
