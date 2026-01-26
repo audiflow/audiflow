@@ -1,6 +1,5 @@
+import 'package:audiflow_domain/audiflow_domain.dart' show PodcastViewMode;
 import 'package:flutter/material.dart';
-
-import '../controllers/podcast_view_mode_controller.dart';
 
 /// Segmented control for switching between Episodes and Seasons views.
 class SeasonViewToggle extends StatelessWidget {

@@ -1,5 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../models/episode_filter.dart';
+import '../models/podcast_view_mode.dart';
 import '../models/season_sort.dart';
 import '../repositories/podcast_view_preference_repository.dart';
 

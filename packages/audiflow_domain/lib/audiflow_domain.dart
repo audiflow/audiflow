@@ -30,7 +30,9 @@ export 'src/common/datasources/shared_preferences_datasource.dart';
 
 // Feed feature
 export 'src/features/feed/builders/podcast_builder.dart';
+export 'src/features/feed/models/episode_filter.dart';
 export 'src/features/feed/models/feed_parse_progress.dart';
+export 'src/features/feed/models/podcast_view_mode.dart';
 export 'src/features/feed/models/season.dart';
 export 'src/features/feed/models/season_pattern.dart';
 export 'src/features/feed/models/season_sort.dart';

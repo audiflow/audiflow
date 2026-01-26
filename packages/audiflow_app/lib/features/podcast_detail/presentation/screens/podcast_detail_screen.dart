@@ -1,4 +1,5 @@
-import 'package:audiflow_domain/audiflow_domain.dart' show Season;
+import 'package:audiflow_domain/audiflow_domain.dart'
+    show PodcastViewMode, Season;
 import 'package:audiflow_search/audiflow_search.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';

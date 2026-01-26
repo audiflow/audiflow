@@ -290,7 +290,7 @@ final class PodcastSeasonsProvider
   }
 }
 
-String _$podcastSeasonsHash() => r'3d55f5b52d39d09add2b2acdfa32f8b32efed018';
+String _$podcastSeasonsHash() => r'ed86e6f1820aa2bc97f738fd126c914487236e54';
 
 /// Resolves seasons for a podcast by its ID.
 ///

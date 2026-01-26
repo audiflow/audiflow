@@ -4,28 +4,11 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../common/database/app_database.dart';
 import '../../../common/providers/database_provider.dart';
 import '../datasources/local/podcast_view_preference_local_datasource.dart';
+import '../models/episode_filter.dart';
+import '../models/podcast_view_mode.dart';
 import '../models/season_sort.dart';
 
 part 'podcast_view_preference_repository.g.dart';
-
-/// View modes for the podcast detail screen.
-enum PodcastViewMode {
-  /// Flat list of all episodes.
-  episodes,
-
-  /// Grouped by season.
-  seasons,
-}
-
-/// Filter options for episode list.
-enum EpisodeFilter {
-  all('All'),
-  unplayed('Unplayed'),
-  inProgress('In Progress');
-
-  const EpisodeFilter(this.label);
-  final String label;
-}
 
 /// Repository for managing podcast view preferences.
 abstract class PodcastViewPreferenceRepository {
