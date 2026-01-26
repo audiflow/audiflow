@@ -6,6 +6,7 @@ class ExtractionResult {
     required this.rssEpisodeNumber,
     required this.extractedTitle,
     required this.extractedEpisodeNumber,
+    this.extractedSeasonNumber,
     this.diagnostics,
   });
 
@@ -14,6 +15,7 @@ class ExtractionResult {
   final int? rssEpisodeNumber;
   final String? extractedTitle;
   final int? extractedEpisodeNumber;
+  final int? extractedSeasonNumber;
   final ExtractionDiagnostics? diagnostics;
 
   /// Returns true if both title and episode number were extracted.
@@ -28,6 +30,8 @@ class ExtractionResult {
       'rss_episode': rssEpisodeNumber,
       'extracted_title': extractedTitle,
       'extracted_episode': extractedEpisodeNumber,
+      if (extractedSeasonNumber != null)
+        'extracted_season': extractedSeasonNumber,
       if (diagnostics != null) 'diagnostics': diagnostics!.toJson(),
     };
   }

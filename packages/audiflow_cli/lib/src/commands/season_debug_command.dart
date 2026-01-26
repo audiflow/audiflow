@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 
 import '../adapters/episode_adapter.dart';
 import '../diagnostics/episode_extractor_diagnostics.dart';
+import '../diagnostics/season_episode_extractor_diagnostics.dart';
 import '../diagnostics/title_extractor_diagnostics.dart';
 import '../models/extraction_result.dart';
 import '../patterns/pattern_registry.dart';
@@ -123,8 +124,10 @@ class SeasonDebugCommand {
   ) {
     String? extractedTitle;
     int? extractedEpisodeNumber;
+    int? extractedSeasonNumber;
     String? titleError;
     String? episodeError;
+    String? seasonEpisodeError;
 
     // Extract title
     if (pattern.titleExtractor != null) {
@@ -134,7 +137,7 @@ class SeasonDebugCommand {
       titleError = result.error;
     }
 
-    // Extract episode number
+    // Extract episode number (legacy extractor)
     if (pattern.episodeNumberExtractor != null) {
       final diagnostics = EpisodeExtractorDiagnostics(
         pattern.episodeNumberExtractor!,
@@ -144,9 +147,25 @@ class SeasonDebugCommand {
       episodeError = result.error;
     }
 
+    // Extract season+episode from title prefix (new extractor)
+    if (pattern.seasonEpisodeExtractor != null) {
+      final diagnostics = SeasonEpisodeExtractorDiagnostics(
+        pattern.seasonEpisodeExtractor!,
+      );
+      final result = diagnostics.run(episode);
+      if (result.hasValues) {
+        extractedSeasonNumber = result.extractedSeasonNumber;
+        // Override episode number if the new extractor found one
+        if (result.extractedEpisodeNumber != null) {
+          extractedEpisodeNumber = result.extractedEpisodeNumber;
+        }
+      }
+      seasonEpisodeError = result.error;
+    }
+
     // Build result
     final hasError = extractedTitle == null;
-    final error = titleError ?? episodeError;
+    final error = titleError ?? episodeError ?? seasonEpisodeError;
 
     return ExtractionResult(
       title: episode.title,
@@ -154,6 +173,7 @@ class SeasonDebugCommand {
       rssEpisodeNumber: episode.episodeNumber,
       extractedTitle: extractedTitle,
       extractedEpisodeNumber: extractedEpisodeNumber,
+      extractedSeasonNumber: extractedSeasonNumber,
       diagnostics: hasError
           ? ExtractionDiagnostics(
               titlePattern: pattern.titleExtractor?.pattern,
