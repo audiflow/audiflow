@@ -39,7 +39,7 @@ void main() {
       );
 
       final result = cotenRadioPattern.titleExtractor!.extract(episode);
-      expect(result, 'リンカン編');
+      expect(result, 'リンカン');
     });
 
     test('titleExtractor returns 番外編 for null seasonNumber', () {
@@ -82,7 +82,7 @@ void main() {
       );
 
       final result = cotenRadioPattern.titleExtractor!.extract(episode);
-      expect(result, 'ニコラ・テスラ編');
+      expect(result, 'ニコラ・テスラ');
     });
 
     test('titleExtractor handles 前編/後編 format', () {
@@ -102,7 +102,7 @@ void main() {
       );
 
       final result = cotenRadioPattern.titleExtractor!.extract(episode);
-      expect(result, '宗教改革編');
+      expect(result, '宗教改革');
     });
 
     test(

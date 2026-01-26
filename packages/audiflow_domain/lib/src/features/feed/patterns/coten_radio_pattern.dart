@@ -38,12 +38,12 @@ const SeasonPattern cotenRadioPattern = SeasonPattern(
   customSort: _cotenRadioSort,
   titleExtractor: SeasonTitleExtractor(
     source: 'title',
-    // Pattern handles:
-    // - Regular: 【COTEN RADIO リンカン編15】
-    // - Short: 【COTEN RADIOショート ニコラ・テスラ編8】
-    // - Part format: 【COTEN RADIOショート 紫式部 前編】
-    // - Missing opening bracket: 〜COTEN RADIO 宗教改革編2】
-    pattern: r'【?COTEN RADIO(ショート)?\s+(.+?)\s*(\d+|前編|中編|後編)】',
+    // Pattern handles (drops trailing 編 for regular seasons):
+    // - Regular: 【COTEN RADIO リンカン編15】 -> リンカン
+    // - Short: 【COTEN RADIOショート ニコラ・テスラ編8】 -> ニコラ・テスラ
+    // - Part format: 【COTEN RADIOショート 紫式部 前編】 -> 紫式部
+    // - Missing opening bracket: 〜COTEN RADIO 宗教改革編2】 -> 宗教改革
+    pattern: r'【?COTEN RADIO(ショート)?\s+(.+?)編?\s*(\d+|前編|中編|後編)】',
     group: 2,
     fallbackValue: '番外編',
     // Fallback handles 番外編 episodes with incorrectly set RSS seasonNumber
