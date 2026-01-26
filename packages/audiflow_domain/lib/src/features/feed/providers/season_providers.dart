@@ -79,7 +79,13 @@ Future<SeasonGrouping?> podcastSeasons(Ref ref, int podcastId) async {
     logger.d(
       'Using ${cachedSeasons.length} cached seasons for podcastId=$podcastId',
     );
-    return _buildGroupingFromCache(ref, podcastId, cachedSeasons, episodeRepo);
+    return _buildGroupingFromCache(
+      ref,
+      podcastId,
+      cachedSeasons,
+      episodeRepo,
+      subscription.feedUrl,
+    );
   }
 
   // No cached seasons - resolve from episodes
@@ -97,9 +103,14 @@ Future<SeasonGrouping?> _buildGroupingFromCache(
   int podcastId,
   List<SeasonEntity> cachedSeasons,
   EpisodeRepository episodeRepo,
+  String feedUrl,
 ) async {
   final episodes = await episodeRepo.getByPodcastId(podcastId);
   if (episodes.isEmpty) return null;
+
+  // Check for groupNullSeasonAs config from pattern
+  final pattern = ref.read(seasonPatternByFeedUrlProvider(feedUrl));
+  final groupNullAs = pattern?.config['groupNullSeasonAs'] as int?;
 
   // Group episodes by season number
   final episodesBySeasonNum = <int, List<int>>{};
@@ -107,8 +118,11 @@ Future<SeasonGrouping?> _buildGroupingFromCache(
 
   for (final episode in episodes) {
     final seasonNum = episode.seasonNumber;
-    if (seasonNum != null) {
+    if (seasonNum != null && 1 <= seasonNum) {
       episodesBySeasonNum.putIfAbsent(seasonNum, () => []).add(episode.id);
+    } else if (groupNullAs != null) {
+      // Null/zero season number with groupNullSeasonAs config
+      episodesBySeasonNum.putIfAbsent(groupNullAs, () => []).add(episode.id);
     } else {
       ungroupedIds.add(episode.id);
     }
