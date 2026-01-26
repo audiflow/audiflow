@@ -73,5 +73,50 @@ void main() {
       final result = cotenRadioPattern.episodeNumberExtractor!.extract(episode);
       expect(result, 135);
     });
+
+    test('titleExtractor extracts from ショート format (no space)', () {
+      // ショート series have "RADIOショート" without space before ショート
+      final episode = SimpleEpisodeData(
+        title: '【61-1】電撃人生！ニコラ・テスラ【COTEN RADIOショート ニコラ・テスラ編1】',
+        seasonNumber: 61,
+      );
+
+      final result = cotenRadioPattern.titleExtractor!.extract(episode);
+      expect(result, 'ニコラ・テスラ編');
+    });
+
+    test('titleExtractor handles 前編/後編 format', () {
+      final episode = SimpleEpisodeData(
+        title: '【49-1】いとをかし！源氏物語【COTEN RADIOショート 紫式部 前編】',
+        seasonNumber: 49,
+      );
+
+      final result = cotenRadioPattern.titleExtractor!.extract(episode);
+      expect(result, '紫式部');
+    });
+
+    test('titleExtractor handles missing opening bracket', () {
+      final episode = SimpleEpisodeData(
+        title: '【21-2】ローマ教皇至上権〜COTEN RADIO 宗教改革編2】',
+        seasonNumber: 21,
+      );
+
+      final result = cotenRadioPattern.titleExtractor!.extract(episode);
+      expect(result, '宗教改革編');
+    });
+
+    test(
+      'titleExtractor uses fallback for 番外編 with incorrect seasonNumber',
+      () {
+        // RSS feed incorrectly sets seasonNumber for some 番外編 episodes
+        final episode = SimpleEpisodeData(
+          title: '【番外編＃117】大切なものを大切に',
+          seasonNumber: 117, // Incorrectly set in RSS
+        );
+
+        final result = cotenRadioPattern.titleExtractor!.extract(episode);
+        expect(result, '番外編');
+      },
+    );
   });
 }

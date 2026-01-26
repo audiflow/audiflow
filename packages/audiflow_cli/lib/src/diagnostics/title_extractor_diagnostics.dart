@@ -53,8 +53,19 @@ class TitleExtractorDiagnostics {
       final match = regex.firstMatch(sourceValue);
 
       if (match == null) {
+        // Try fallback extractor if available
+        if (extractor.fallback != null) {
+          final fallbackDiagnostics = TitleExtractorDiagnostics(
+            extractor.fallback!,
+          );
+          final fallbackResult = fallbackDiagnostics.run(episode);
+          if (fallbackResult.extractedValue != null) {
+            return fallbackResult;
+          }
+        }
         return TitleDiagnosticResult(
           patternUsed: extractor.pattern,
+          fallbackValue: extractor.fallbackValue,
           error: 'pattern did not match title: "$sourceValue"',
         );
       }
