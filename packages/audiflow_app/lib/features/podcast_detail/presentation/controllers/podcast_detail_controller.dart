@@ -2,7 +2,6 @@ import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:dio/dio.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../widgets/episode_filter_chips.dart';
 import 'season_sort_controller.dart';
 
 part 'podcast_detail_controller.g.dart';
@@ -219,59 +218,60 @@ bool isEpisodeLoading(Ref ref, String audioUrl) {
   );
 }
 
-/// Manages the current episode filter selection.
-@riverpod
-class EpisodeFilterState extends _$EpisodeFilterState {
-  @override
-  EpisodeFilter build() => EpisodeFilter.all;
-
-  void setFilter(EpisodeFilter filter) => state = filter;
-}
-
-/// Filters episodes based on the selected filter.
+/// Filters and sorts episodes based on preferences.
 ///
-/// Returns filtered list of [PodcastItem] based on playback status.
+/// Returns filtered and sorted list of [PodcastItem].
 @riverpod
-Future<List<PodcastItem>> filteredEpisodes(
+Future<List<PodcastItem>> filteredSortedEpisodes(
   Ref ref,
   String feedUrl,
   EpisodeFilter filter,
+  SortOrder sortOrder,
 ) async {
   final feed = await ref.watch(podcastDetailProvider(feedUrl).future);
-  final episodes = feed.episodes;
+  var episodes = feed.episodes;
 
-  // No filtering needed for 'all'
-  if (filter == EpisodeFilter.all) return episodes;
+  // Apply filter
+  if (filter != EpisodeFilter.all) {
+    final episodeRepo = ref.watch(episodeRepositoryProvider);
+    final historyRepo = ref.watch(playbackHistoryRepositoryProvider);
 
-  final episodeRepo = ref.watch(episodeRepositoryProvider);
-  final historyRepo = ref.watch(playbackHistoryRepositoryProvider);
+    final filtered = <PodcastItem>[];
+    for (final item in episodes) {
+      if (item.enclosureUrl == null) continue;
 
-  final filtered = <PodcastItem>[];
+      final episode = await episodeRepo.getByAudioUrl(item.enclosureUrl!);
 
-  for (final item in episodes) {
-    if (item.enclosureUrl == null) continue;
+      if (episode == null) {
+        if (filter == EpisodeFilter.unplayed) filtered.add(item);
+        continue;
+      }
 
-    final episode = await episodeRepo.getByAudioUrl(item.enclosureUrl!);
+      final history = await historyRepo.getByEpisodeId(episode.id);
+      final isCompleted = history?.completedAt != null;
+      final isInProgress =
+          history != null && 0 < history.positionMs && !isCompleted;
 
-    // Episode not in DB = unplayed
-    if (episode == null) {
-      if (filter == EpisodeFilter.unplayed) filtered.add(item);
-      continue;
+      if (filter == EpisodeFilter.unplayed && !isCompleted && !isInProgress) {
+        filtered.add(item);
+      } else if (filter == EpisodeFilter.inProgress && isInProgress) {
+        filtered.add(item);
+      }
     }
-
-    final history = await historyRepo.getByEpisodeId(episode.id);
-    final isCompleted = history?.completedAt != null;
-    final isInProgress =
-        history != null && 0 < history.positionMs && !isCompleted;
-
-    if (filter == EpisodeFilter.unplayed && !isCompleted && !isInProgress) {
-      filtered.add(item);
-    } else if (filter == EpisodeFilter.inProgress && isInProgress) {
-      filtered.add(item);
-    }
+    episodes = filtered;
   }
 
-  return filtered;
+  // Sort by episode number
+  final sorted = List<PodcastItem>.from(episodes);
+  sorted.sort((a, b) {
+    final aNum = a.episodeNumber ?? 0;
+    final bNum = b.episodeNumber ?? 0;
+    return sortOrder == SortOrder.ascending
+        ? aNum.compareTo(bNum)
+        : bNum.compareTo(aNum);
+  });
+
+  return sorted;
 }
 
 /// Whether season view is available for a podcast.

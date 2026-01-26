@@ -101,6 +101,7 @@ export 'src/common/database/app_database.dart'
 
 // Subscription feature
 export 'src/features/subscription/extensions/subscription_extensions.dart';
+export 'src/features/subscription/providers/subscription_providers.dart';
 export 'src/features/subscription/repositories/subscription_repository.dart';
 export 'src/features/subscription/repositories/subscription_repository_impl.dart';
 

@@ -1,5 +1,12 @@
 import 'package:audiflow_domain/audiflow_domain.dart'
-    show PodcastViewMode, Season;
+    show
+        EpisodeFilter,
+        PodcastViewMode,
+        Season,
+        SortOrder,
+        podcastViewPreferenceControllerProvider,
+        subscriptionByFeedUrlProvider,
+        subscriptionByItunesIdProvider;
 import 'package:audiflow_search/audiflow_search.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
@@ -9,10 +16,10 @@ import 'package:go_router/go_router.dart';
 import '../../../../routing/app_router.dart';
 import '../../../subscription/presentation/controllers/subscription_controller.dart';
 import '../controllers/podcast_detail_controller.dart';
-import '../controllers/podcast_view_mode_controller.dart';
 import '../controllers/season_sort_controller.dart';
 import '../widgets/episode_filter_chips.dart';
 import '../widgets/episode_list_tile.dart';
+import '../widgets/episode_sort_sheet.dart';
 import '../widgets/season_grid.dart';
 import '../widgets/season_sort_sheet.dart';
 import '../widgets/season_view_toggle.dart';
@@ -33,19 +40,31 @@ class PodcastDetailScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    // Get view mode to determine if sort button should be shown
-    final viewMode = ref.watch(podcastViewModeControllerProvider(podcast.id));
-    final showSortButton = viewMode == PodcastViewMode.seasons;
+    // Get subscription ID for preference lookup
+    final subscriptionAsync = ref.watch(
+      subscriptionByItunesIdProvider(podcast.id),
+    );
+    final subscriptionId = subscriptionAsync.value?.id;
+
+    // Get preferences if subscribed
+    final prefsAsync = subscriptionId != null
+        ? ref.watch(podcastViewPreferenceControllerProvider(subscriptionId))
+        : null;
+    final viewMode = prefsAsync?.value?.viewMode ?? PodcastViewMode.episodes;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(podcast.name, maxLines: 1, overflow: TextOverflow.ellipsis),
         actions: [
-          if (showSortButton)
+          if (subscriptionId != null)
             IconButton(
               icon: const Icon(Icons.sort),
-              tooltip: 'Sort seasons',
-              onPressed: () => _showSortSheet(context, ref),
+              tooltip: viewMode == PodcastViewMode.seasons
+                  ? 'Sort seasons'
+                  : 'Sort episodes',
+              onPressed: () => viewMode == PodcastViewMode.seasons
+                  ? _showSeasonSortSheet(context, ref)
+                  : _showEpisodeSortSheet(context, ref, subscriptionId),
             ),
         ],
       ),
@@ -53,7 +72,7 @@ class PodcastDetailScreen extends ConsumerWidget {
     );
   }
 
-  void _showSortSheet(BuildContext context, WidgetRef ref) {
+  void _showSeasonSortSheet(BuildContext context, WidgetRef ref) {
     final sortConfig = ref.read(seasonSortControllerProvider(podcast.id));
     showSeasonSortSheet(
       context: context,
@@ -62,6 +81,29 @@ class PodcastDetailScreen extends ConsumerWidget {
         ref
             .read(seasonSortControllerProvider(podcast.id).notifier)
             .setSort(field, order);
+      },
+    );
+  }
+
+  void _showEpisodeSortSheet(
+    BuildContext context,
+    WidgetRef ref,
+    int subscriptionId,
+  ) {
+    final prefs = ref.read(
+      podcastViewPreferenceControllerProvider(subscriptionId),
+    );
+    final currentOrder = prefs.value?.episodeSortOrder ?? SortOrder.descending;
+
+    showEpisodeSortSheet(
+      context: context,
+      currentOrder: currentOrder,
+      onSortSelected: (order) {
+        ref
+            .read(
+              podcastViewPreferenceControllerProvider(subscriptionId).notifier,
+            )
+            .setEpisodeSortOrder(order);
       },
     );
   }
@@ -177,14 +219,29 @@ class PodcastDetailScreen extends ConsumerWidget {
     ThemeData theme,
     String feedUrl,
   ) {
-    final filter = ref.watch(episodeFilterStateProvider);
-    final filteredAsync = ref.watch(filteredEpisodesProvider(feedUrl, filter));
+    // Get subscription for preference lookup
+    final subscriptionAsync = ref.watch(subscriptionByFeedUrlProvider(feedUrl));
+    final subscription = subscriptionAsync.value;
+
+    // Use persisted preferences if subscribed, otherwise defaults
+    final prefsAsync = subscription != null
+        ? ref.watch(podcastViewPreferenceControllerProvider(subscription.id))
+        : null;
+    final prefs = prefsAsync?.value;
+
+    final viewMode = prefs?.viewMode ?? PodcastViewMode.episodes;
+    final filter = prefs?.episodeFilter ?? EpisodeFilter.all;
+
+    final filteredAsync = ref.watch(
+      filteredSortedEpisodesProvider(
+        feedUrl,
+        filter,
+        prefs?.episodeSortOrder ?? SortOrder.descending,
+      ),
+    );
 
     // Batch-fetch all episode progress in a single query
     final progressMapAsync = ref.watch(podcastEpisodeProgressProvider(feedUrl));
-
-    // View mode state
-    final viewMode = ref.watch(podcastViewModeControllerProvider(podcast.id));
 
     // Check if season view is available for this podcast
     // Uses hasSeasonViewAfterLoadProvider to ensure episodes are persisted first
@@ -210,11 +267,17 @@ class PodcastDetailScreen extends ConsumerWidget {
                 ),
                 child: SeasonViewToggle(
                   selected: viewMode,
-                  onChanged: (mode) => ref
-                      .read(
-                        podcastViewModeControllerProvider(podcast.id).notifier,
-                      )
-                      .toggle(),
+                  onChanged: (mode) {
+                    if (subscription != null) {
+                      ref
+                          .read(
+                            podcastViewPreferenceControllerProvider(
+                              subscription.id,
+                            ).notifier,
+                          )
+                          .toggleViewMode();
+                    }
+                  },
                 ),
               ),
             ),
@@ -225,9 +288,17 @@ class PodcastDetailScreen extends ConsumerWidget {
                 padding: const EdgeInsets.only(bottom: Spacing.sm),
                 child: EpisodeFilterChips(
                   selected: filter,
-                  onSelected: (f) => ref
-                      .read(episodeFilterStateProvider.notifier)
-                      .setFilter(f),
+                  onSelected: (f) {
+                    if (subscription != null) {
+                      ref
+                          .read(
+                            podcastViewPreferenceControllerProvider(
+                              subscription.id,
+                            ).notifier,
+                          )
+                          .setEpisodeFilter(f);
+                    }
+                  },
                 ),
               ),
             ),
