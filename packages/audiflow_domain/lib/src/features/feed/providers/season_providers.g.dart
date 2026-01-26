@@ -8,6 +8,59 @@ part of 'season_providers.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Provides the season local datasource for database operations.
+
+@ProviderFor(seasonLocalDatasource)
+final seasonLocalDatasourceProvider = SeasonLocalDatasourceProvider._();
+
+/// Provides the season local datasource for database operations.
+
+final class SeasonLocalDatasourceProvider
+    extends
+        $FunctionalProvider<
+          SeasonLocalDatasource,
+          SeasonLocalDatasource,
+          SeasonLocalDatasource
+        >
+    with $Provider<SeasonLocalDatasource> {
+  /// Provides the season local datasource for database operations.
+  SeasonLocalDatasourceProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'seasonLocalDatasourceProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$seasonLocalDatasourceHash();
+
+  @$internal
+  @override
+  $ProviderElement<SeasonLocalDatasource> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  SeasonLocalDatasource create(Ref ref) {
+    return seasonLocalDatasource(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(SeasonLocalDatasource value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<SeasonLocalDatasource>(value),
+    );
+  }
+}
+
+String _$seasonLocalDatasourceHash() =>
+    r'855b9a9957e122d6fa86eb424bda22ed95d3f813';
+
 /// Provides the season resolver service with built-in resolvers.
 ///
 /// The resolver chain tries RSS metadata first, then falls back to year-based
@@ -168,14 +221,14 @@ final class SeasonPatternByFeedUrlFamily extends $Family
   String toString() => r'seasonPatternByFeedUrlProvider';
 }
 
-/// Resolves seasons for a podcast by its ID.
+/// Resolves seasons for a podcast by its ID and persists to database.
 ///
 /// Returns null if no resolver can group the episodes.
 
 @ProviderFor(podcastSeasons)
 final podcastSeasonsProvider = PodcastSeasonsFamily._();
 
-/// Resolves seasons for a podcast by its ID.
+/// Resolves seasons for a podcast by its ID and persists to database.
 ///
 /// Returns null if no resolver can group the episodes.
 
@@ -187,7 +240,7 @@ final class PodcastSeasonsProvider
           FutureOr<SeasonGrouping?>
         >
     with $FutureModifier<SeasonGrouping?>, $FutureProvider<SeasonGrouping?> {
-  /// Resolves seasons for a podcast by its ID.
+  /// Resolves seasons for a podcast by its ID and persists to database.
   ///
   /// Returns null if no resolver can group the episodes.
   PodcastSeasonsProvider._({
@@ -234,9 +287,9 @@ final class PodcastSeasonsProvider
   }
 }
 
-String _$podcastSeasonsHash() => r'0d5a4d0083d2a49dd362df0f5dd18edf44801eff';
+String _$podcastSeasonsHash() => r'0fa97192864b3f5c7e011ebcc2915dc636121161';
 
-/// Resolves seasons for a podcast by its ID.
+/// Resolves seasons for a podcast by its ID and persists to database.
 ///
 /// Returns null if no resolver can group the episodes.
 
@@ -251,7 +304,7 @@ final class PodcastSeasonsFamily extends $Family
         isAutoDispose: true,
       );
 
-  /// Resolves seasons for a podcast by its ID.
+  /// Resolves seasons for a podcast by its ID and persists to database.
   ///
   /// Returns null if no resolver can group the episodes.
 

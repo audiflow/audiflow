@@ -48,6 +48,9 @@ export 'src/features/feed/services/season_resolver_service.dart';
 // Feed feature - Season Providers
 export 'src/features/feed/providers/season_providers.dart';
 
+// Feed feature - Seasons
+export 'src/features/feed/datasources/local/season_local_datasource.dart';
+
 // Feed feature - Episodes
 export 'src/features/feed/models/episode.dart';
 export 'src/features/feed/datasources/local/episode_local_datasource.dart';
@@ -85,7 +88,9 @@ export 'src/common/database/app_database.dart'
         Episode,
         EpisodesCompanion,
         PlaybackHistory,
-        PlaybackHistoriesCompanion;
+        PlaybackHistoriesCompanion,
+        SeasonEntity,
+        SeasonsCompanion;
 
 // Subscription feature
 export 'src/features/subscription/extensions/subscription_extensions.dart';

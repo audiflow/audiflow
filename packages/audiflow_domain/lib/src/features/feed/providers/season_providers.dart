@@ -1,10 +1,12 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../common/database/app_database.dart';
+import '../../../common/providers/database_provider.dart';
 import '../../../common/providers/logger_provider.dart';
 import '../../../features/subscription/repositories/subscription_repository_impl.dart';
 import '../../player/models/episode_with_progress.dart';
 import '../../player/repositories/playback_history_repository_impl.dart';
+import '../datasources/local/season_local_datasource.dart';
 import '../models/season.dart';
 import '../models/season_pattern.dart';
 import '../patterns/coten_radio_pattern.dart';
@@ -19,6 +21,13 @@ part 'season_providers.g.dart';
 ///
 /// Add new podcast-specific patterns here.
 const _registeredPatterns = [cotenRadioPattern];
+
+/// Provides the season local datasource for database operations.
+@Riverpod(keepAlive: true)
+SeasonLocalDatasource seasonLocalDatasource(Ref ref) {
+  final db = ref.watch(databaseProvider);
+  return SeasonLocalDatasource(db);
+}
 
 /// Provides the season resolver service with built-in resolvers.
 ///
@@ -45,7 +54,7 @@ SeasonPattern? seasonPatternByFeedUrl(Ref ref, String feedUrl) {
   return null;
 }
 
-/// Resolves seasons for a podcast by its ID.
+/// Resolves seasons for a podcast by its ID and persists to database.
 ///
 /// Returns null if no resolver can group the episodes.
 @riverpod
@@ -53,6 +62,7 @@ Future<SeasonGrouping?> podcastSeasons(Ref ref, int podcastId) async {
   final logger = ref.watch(namedLoggerProvider('PodcastSeasons'));
   final subscriptionRepo = ref.watch(subscriptionRepositoryProvider);
   final episodeRepo = ref.watch(episodeRepositoryProvider);
+  final seasonDatasource = ref.watch(seasonLocalDatasourceProvider);
   final resolverService = ref.watch(seasonResolverServiceProvider);
 
   final subscription = await subscriptionRepo.getById(podcastId);
@@ -84,6 +94,22 @@ Future<SeasonGrouping?> podcastSeasons(Ref ref, int podcastId) async {
     'Season resolution result: ${result?.seasons.length ?? 0} seasons, '
     '${result?.ungroupedEpisodeIds.length ?? 0} ungrouped',
   );
+
+  // Persist seasons to database
+  if (result != null) {
+    final companions = result.seasons.map((season) {
+      return SeasonsCompanion.insert(
+        podcastId: podcastId,
+        seasonNumber: season.sortKey,
+        displayName: season.displayName,
+        sortKey: season.sortKey,
+        resolverType: result.resolverType,
+      );
+    }).toList();
+
+    await seasonDatasource.upsertAllForPodcast(podcastId, companions);
+    logger.d('Persisted ${companions.length} seasons to database');
+  }
 
   return result;
 }

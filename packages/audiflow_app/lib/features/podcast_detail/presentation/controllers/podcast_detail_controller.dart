@@ -347,7 +347,12 @@ Future<SeasonGrouping?> sortedPodcastSeasons(
       await getNewestDate(season);
     }
 
-    sortedSeasons.sort((a, b) {
+    // Partition: numbered seasons vs special seasons (sortKey=0, e.g., 番外編)
+    // Special seasons always appear at the end regardless of sort order
+    final numberedSeasons = sortedSeasons.where((s) => 0 < s.sortKey).toList();
+    final specialSeasons = sortedSeasons.where((s) => s.sortKey == 0).toList();
+
+    numberedSeasons.sort((a, b) {
       final comparison = _compareWithCompositeSort(
         a,
         b,
@@ -357,6 +362,16 @@ Future<SeasonGrouping?> sortedPodcastSeasons(
       // User's order choice inverts ascending ↔ descending
       return sortConfig.order == SortOrder.ascending ? comparison : -comparison;
     });
+
+    // Special seasons sorted by newest episode date (always at end)
+    specialSeasons.sort(
+      (a, b) => _compareDates(newestDates[a.id], newestDates[b.id]),
+    );
+
+    sortedSeasons
+      ..clear()
+      ..addAll(numberedSeasons)
+      ..addAll(specialSeasons);
   } else {
     // Apply simple user-selected sort
     if (sortConfig.field == SeasonSortField.newestEpisodeDate) {
@@ -380,8 +395,8 @@ Future<SeasonGrouping?> sortedPodcastSeasons(
 
 /// Compares two seasons using composite sort rules.
 ///
-/// For COTEN RADIO: if both seasons have sortKey > 0, compare by sortKey.
-/// Otherwise, compare by newest episode date.
+/// For COTEN RADIO: compares by sortKey (season number).
+/// Note: Special seasons (sortKey=0) are partitioned out before this is called.
 int _compareWithCompositeSort(
   Season a,
   Season b,
@@ -389,12 +404,12 @@ int _compareWithCompositeSort(
   Map<String, DateTime?> newestDates,
 ) {
   for (final rule in rules) {
-    // Check if condition applies to BOTH seasons
+    // Check if condition applies to both seasons
     if (rule.condition != null) {
-      final conditionMet =
+      final bothMatch =
           _checkCondition(a, rule.condition!) &&
           _checkCondition(b, rule.condition!);
-      if (!conditionMet) continue; // Try next rule
+      if (!bothMatch) continue; // Try next rule
     }
 
     // Apply this rule
