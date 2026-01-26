@@ -1,4 +1,5 @@
 import '../models/episode_number_extractor.dart';
+import '../models/season_episode_extractor.dart';
 import '../models/season_pattern.dart';
 import '../models/season_title_extractor.dart';
 
@@ -34,5 +35,16 @@ const SeasonPattern cotenRadioPattern = SeasonPattern(
     pattern: r'(\d+)】',
     captureGroup: 1,
     fallbackToRss: true,
+  ),
+  seasonEpisodeExtractor: SeasonEpisodeExtractor(
+    source: 'title',
+    // Primary: 【62-15】 -> season=62, episode=15
+    pattern: r'【(\d+)-(\d+)】',
+    seasonGroup: 1,
+    episodeGroup: 2,
+    // Fallback: 【番外編＃135】 or 【番外編#100】 -> season=0, episode=135/100
+    fallbackSeasonNumber: 0,
+    fallbackEpisodePattern: r'【番外編[＃#](\d+)】',
+    fallbackEpisodeCaptureGroup: 1,
   ),
 );
