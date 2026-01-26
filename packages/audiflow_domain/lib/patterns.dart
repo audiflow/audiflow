@@ -13,3 +13,4 @@ export 'src/features/feed/models/season_pattern.dart';
 export 'src/features/feed/models/season_sort.dart';
 export 'src/features/feed/models/season_title_extractor.dart';
 export 'src/features/feed/models/episode_number_extractor.dart';
+export 'src/features/feed/models/season_episode_extractor.dart';

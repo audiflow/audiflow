@@ -1,4 +1,5 @@
 import 'episode_number_extractor.dart';
+import 'season_episode_extractor.dart';
 import 'season_sort.dart';
 import 'season_title_extractor.dart';
 
@@ -14,6 +15,7 @@ final class SeasonPattern {
     this.customSort,
     this.titleExtractor,
     this.episodeNumberExtractor,
+    this.seasonEpisodeExtractor,
   });
 
   /// Unique identifier for this pattern.
@@ -46,6 +48,13 @@ final class SeasonPattern {
   ///
   /// When provided, extracts episode-in-season numbers from episode titles.
   final EpisodeNumberExtractor? episodeNumberExtractor;
+
+  /// Extracts both season and episode numbers from episode title prefix.
+  ///
+  /// When provided, extracts values can override RSS metadata.
+  /// Useful for podcasts with unreliable RSS metadata but reliable title
+  /// encoding.
+  final SeasonEpisodeExtractor? seasonEpisodeExtractor;
 
   /// Returns true if this pattern matches the given podcast.
   bool matchesPodcast(String? guid, String feedUrl) {

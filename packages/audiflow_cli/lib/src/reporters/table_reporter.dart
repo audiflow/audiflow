@@ -33,9 +33,15 @@ class TableReporter {
     final truncatedTitle = _truncate(result.title, 40);
 
     if (result.success) {
+      final extractedInfo = StringBuffer()
+        ..write('title="${result.extractedTitle}"');
+      if (result.extractedSeasonNumber != null) {
+        extractedInfo.write(' season=${result.extractedSeasonNumber}');
+      }
+      extractedInfo.write(' ep=${result.extractedEpisodeNumber}');
+
       _sink.writeln(
-        'PASS | $season | $episode | $truncatedTitle | '
-        'title="${result.extractedTitle}" ep=${result.extractedEpisodeNumber}',
+        'PASS | $season | $episode | $truncatedTitle | $extractedInfo',
       );
     } else {
       _sink.writeln('FAIL | $season | $episode | $truncatedTitle');
