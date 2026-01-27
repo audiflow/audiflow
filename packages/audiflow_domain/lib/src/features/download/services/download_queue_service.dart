@@ -154,6 +154,12 @@ class DownloadQueueService {
         throw DownloadException(DownloadErrorType.unknown, 'Episode not found');
       }
 
+      // Throttle progress updates to avoid overwhelming the database
+      var lastUpdateTime = DateTime.now();
+      var lastReportedBytes = 0;
+      const minUpdateInterval = Duration(milliseconds: 250);
+      const minBytesDelta = 100 * 1024; // 100 KB
+
       final localPath = await _fileService.downloadFile(
         taskId: task.id,
         url: task.audioUrl,
@@ -161,11 +167,20 @@ class DownloadQueueService {
         episodeTitle: episode.title,
         resumeFromBytes: task.downloadedBytes,
         onProgress: (downloaded, total) {
-          _repository.updateProgress(
-            id: task.id,
-            downloadedBytes: downloaded,
-            totalBytes: total,
-          );
+          final now = DateTime.now();
+          final bytesDelta = downloaded - lastReportedBytes;
+          final timeDelta = now.difference(lastUpdateTime);
+
+          // Update if enough time passed OR enough bytes downloaded
+          if (minUpdateInterval <= timeDelta || minBytesDelta <= bytesDelta) {
+            lastUpdateTime = now;
+            lastReportedBytes = downloaded;
+            _repository.updateProgress(
+              id: task.id,
+              downloadedBytes: downloaded,
+              totalBytes: total,
+            );
+          }
         },
       );
 
