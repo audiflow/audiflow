@@ -5,6 +5,8 @@ import 'package:drift/native.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
+import '../../features/download/models/download_status.dart';
+import '../../features/download/models/download_task.dart';
 import '../../features/feed/models/episode.dart';
 import '../../features/feed/models/podcast_view_preference.dart';
 import '../../features/feed/models/seasons.dart';
@@ -23,6 +25,7 @@ part 'app_database.g.dart';
     PlaybackHistories,
     Seasons,
     PodcastViewPreferences,
+    DownloadTasks,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -33,7 +36,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 8;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -74,6 +77,10 @@ class AppDatabase extends _$AppDatabase {
           podcastViewPreferences.seasonSortOrder,
         );
       }
+      // Migration from v8 to v9: add DownloadTasks table
+      if (9 <= to && from < 9) {
+        await m.createTable(downloadTasks);
+      }
     },
   );
 
@@ -86,5 +93,17 @@ class AppDatabase extends _$AppDatabase {
       final file = File(p.join(dbFolder.path, 'audiflow.db'));
       return NativeDatabase.createInBackground(file);
     });
+  }
+}
+
+/// Extension to convert between Drift model and domain status.
+extension DownloadTaskStatusX on DownloadTask {
+  /// Get the status as a typed enum.
+  DownloadStatus get downloadStatus => DownloadStatus.fromDbValue(status);
+
+  /// Calculate download progress (0.0 to 1.0).
+  double get progress {
+    if (totalBytes == null || totalBytes == 0) return 0.0;
+    return downloadedBytes / totalBytes!;
   }
 }
