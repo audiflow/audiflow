@@ -239,12 +239,7 @@ class SeasonEpisodeListTile extends ConsumerWidget {
     final messenger = ScaffoldMessenger.of(context);
 
     if (task == null) {
-      final result = await downloadService.downloadEpisode(episode.id);
-      if (result != null) {
-        messenger.showSnackBar(
-          const SnackBar(content: Text('Download started')),
-        );
-      }
+      await downloadService.downloadEpisode(episode.id);
       return;
     }
 
