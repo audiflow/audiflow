@@ -2,7 +2,6 @@ import 'package:drift/drift.dart';
 
 import '../../../../common/database/app_database.dart';
 import '../../models/download_status.dart';
-import '../../models/download_task.dart';
 
 /// Local datasource for download task operations using Drift.
 ///
