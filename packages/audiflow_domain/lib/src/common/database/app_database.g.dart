@@ -2419,7 +2419,7 @@ class $PodcastViewPreferencesTable extends PodcastViewPreferences
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
-    defaultValue: const Constant('asc'),
+    defaultValue: const Constant('desc'),
   );
   @override
   List<GeneratedColumn> get $columns => [

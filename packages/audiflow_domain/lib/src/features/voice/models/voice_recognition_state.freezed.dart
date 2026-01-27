@@ -200,7 +200,7 @@ return error(_that.message);case _:
 
 class VoiceIdle implements VoiceRecognitionState {
   const VoiceIdle();
-
+  
 
 
 
@@ -232,7 +232,7 @@ String toString() {
 
 class VoiceListening implements VoiceRecognitionState {
   const VoiceListening({this.partialTranscript});
-
+  
 
 /// Partial transcription as user speaks.
  final  String? partialTranscript;
@@ -299,7 +299,7 @@ as String?,
 
 class VoiceProcessing implements VoiceRecognitionState {
   const VoiceProcessing({required this.transcription});
-
+  
 
 /// The finalized transcription text.
  final  String transcription;
@@ -366,7 +366,7 @@ as String,
 
 class VoiceExecuting implements VoiceRecognitionState {
   const VoiceExecuting({required this.command});
-
+  
 
 /// The parsed command being executed.
  final  VoiceCommand command;
@@ -433,7 +433,7 @@ as VoiceCommand,
 
 class VoiceSuccess implements VoiceRecognitionState {
   const VoiceSuccess({required this.message});
-
+  
 
 /// Human-readable success message.
  final  String message;
@@ -500,7 +500,7 @@ as String,
 
 class VoiceError implements VoiceRecognitionState {
   const VoiceError({required this.message});
-
+  
 
 /// Human-readable error message.
  final  String message;
