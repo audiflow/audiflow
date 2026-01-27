@@ -39,7 +39,7 @@ class SeasonEpisodeListTile extends ConsumerWidget {
     final isCompleted = progress?.isCompleted ?? false;
 
     final downloadAsync = ref.watch(episodeDownloadProvider(episode.id));
-    final downloadTask = downloadAsync.valueOrNull;
+    final downloadTask = downloadAsync.value;
 
     return GestureDetector(
       onLongPress: () => _showContextMenu(context, ref, audioUrl, progress),
