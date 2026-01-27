@@ -53,6 +53,12 @@ class EpisodeListTile extends ConsumerWidget {
     // Use passed-in progress data instead of querying per tile
     final isCompleted = progress?.isCompleted ?? false;
 
+    // Watch download status if episode exists in database
+    final episodeId = progress?.episode.id;
+    final downloadTask = episodeId != null
+        ? ref.watch(episodeDownloadProvider(episodeId)).value
+        : null;
+
     return GestureDetector(
       onLongPress: enclosureUrl != null
           ? () => _showContextMenu(context, ref, enclosureUrl, progress)
@@ -76,12 +82,19 @@ class EpisodeListTile extends ConsumerWidget {
           ),
         ),
         subtitle: _buildSubtitle(theme, progress),
-        trailing: _buildPlayButton(
-          context,
-          ref,
-          enclosureUrl: enclosureUrl,
-          isPlaying: isPlaying,
-          isLoading: isLoading,
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (episodeId != null)
+              _buildDownloadButton(context, ref, episodeId, downloadTask),
+            _buildPlayButton(
+              context,
+              ref,
+              enclosureUrl: enclosureUrl,
+              isPlaying: isPlaying,
+              isLoading: isLoading,
+            ),
+          ],
         ),
       ),
     );
@@ -163,6 +176,98 @@ class EpisodeListTile extends ConsumerWidget {
     // This is more efficient than N individual invalidations
     // The feedUrl would need to be passed in, but for now we'll use individual
     ref.invalidate(episodeProgressProvider(audioUrl));
+  }
+
+  Widget _buildDownloadButton(
+    BuildContext context,
+    WidgetRef ref,
+    int episodeId,
+    DownloadTask? task,
+  ) {
+    return DownloadStatusIcon(
+      task: task,
+      size: 24,
+      onTap: () => _onDownloadTap(context, ref, episodeId, task),
+    );
+  }
+
+  Future<void> _onDownloadTap(
+    BuildContext context,
+    WidgetRef ref,
+    int episodeId,
+    DownloadTask? task,
+  ) async {
+    final downloadService = ref.read(downloadServiceProvider);
+    final messenger = ScaffoldMessenger.of(context);
+
+    if (task == null) {
+      await downloadService.downloadEpisode(episodeId);
+      return;
+    }
+
+    task.downloadStatus.when(
+      pending: () async {
+        await downloadService.cancel(task.id);
+        messenger.showSnackBar(
+          const SnackBar(content: Text('Download cancelled')),
+        );
+      },
+      downloading: () async {
+        await downloadService.pause(task.id);
+      },
+      paused: () async {
+        await downloadService.resume(task.id);
+      },
+      completed: () {
+        _showDeleteConfirmation(context, ref, task);
+      },
+      failed: () async {
+        await downloadService.retry(task.id);
+        messenger.showSnackBar(
+          const SnackBar(content: Text('Retrying download')),
+        );
+      },
+      cancelled: () async {
+        final result = await downloadService.downloadEpisode(episodeId);
+        if (result != null) {
+          messenger.showSnackBar(
+            const SnackBar(content: Text('Download started')),
+          );
+        }
+      },
+    );
+  }
+
+  void _showDeleteConfirmation(
+    BuildContext context,
+    WidgetRef ref,
+    DownloadTask task,
+  ) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete download?'),
+        content: const Text('The downloaded file will be removed.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await ref.read(downloadServiceProvider).delete(task.id);
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Download deleted')),
+                );
+              }
+            },
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildSubtitle(ThemeData theme, EpisodeWithProgress? progress) {

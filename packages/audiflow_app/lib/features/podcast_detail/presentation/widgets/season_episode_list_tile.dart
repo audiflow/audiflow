@@ -38,6 +38,9 @@ class SeasonEpisodeListTile extends ConsumerWidget {
 
     final isCompleted = progress?.isCompleted ?? false;
 
+    final downloadAsync = ref.watch(episodeDownloadProvider(episode.id));
+    final downloadTask = downloadAsync.value;
+
     return GestureDetector(
       onLongPress: () => _showContextMenu(context, ref, audioUrl, progress),
       child: ListTile(
@@ -59,12 +62,18 @@ class SeasonEpisodeListTile extends ConsumerWidget {
           ),
         ),
         subtitle: _buildSubtitle(theme, progress),
-        trailing: _buildPlayButton(
-          context,
-          ref,
-          audioUrl: audioUrl,
-          isPlaying: isPlaying,
-          isLoading: isLoading,
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildDownloadButton(context, ref, downloadTask),
+            _buildPlayButton(
+              context,
+              ref,
+              audioUrl: audioUrl,
+              isPlaying: isPlaying,
+              isLoading: isLoading,
+            ),
+          ],
         ),
       ),
     );
@@ -207,6 +216,96 @@ class SeasonEpisodeListTile extends ConsumerWidget {
       return '$hours:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
     }
     return '$minutes:${seconds.toString().padLeft(2, '0')}';
+  }
+
+  Widget _buildDownloadButton(
+    BuildContext context,
+    WidgetRef ref,
+    DownloadTask? task,
+  ) {
+    return DownloadStatusIcon(
+      task: task,
+      size: 24,
+      onTap: () => _onDownloadTap(context, ref, task),
+    );
+  }
+
+  Future<void> _onDownloadTap(
+    BuildContext context,
+    WidgetRef ref,
+    DownloadTask? task,
+  ) async {
+    final downloadService = ref.read(downloadServiceProvider);
+    final messenger = ScaffoldMessenger.of(context);
+
+    if (task == null) {
+      await downloadService.downloadEpisode(episode.id);
+      return;
+    }
+
+    task.downloadStatus.when(
+      pending: () async {
+        await downloadService.cancel(task.id);
+        messenger.showSnackBar(
+          const SnackBar(content: Text('Download cancelled')),
+        );
+      },
+      downloading: () async {
+        await downloadService.pause(task.id);
+      },
+      paused: () async {
+        await downloadService.resume(task.id);
+      },
+      completed: () {
+        _showDeleteConfirmation(context, ref, task);
+      },
+      failed: () async {
+        await downloadService.retry(task.id);
+        messenger.showSnackBar(
+          const SnackBar(content: Text('Retrying download')),
+        );
+      },
+      cancelled: () async {
+        final result = await downloadService.downloadEpisode(episode.id);
+        if (result != null) {
+          messenger.showSnackBar(
+            const SnackBar(content: Text('Download started')),
+          );
+        }
+      },
+    );
+  }
+
+  void _showDeleteConfirmation(
+    BuildContext context,
+    WidgetRef ref,
+    DownloadTask task,
+  ) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete download?'),
+        content: const Text('The downloaded file will be removed.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await ref.read(downloadServiceProvider).delete(task.id);
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Download deleted')),
+                );
+              }
+            },
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildPlayButton(

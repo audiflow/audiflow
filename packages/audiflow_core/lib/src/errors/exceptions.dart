@@ -32,3 +32,21 @@ class ValidationException extends AppException {
   ValidationException([String message = 'Validation error occurred'])
     : super(message, 'VALIDATION_ERROR');
 }
+
+/// Error types for download operations
+enum DownloadErrorType {
+  networkUnavailable,
+  serverError,
+  insufficientStorage,
+  fileWriteError,
+  cancelled,
+  unknown,
+}
+
+/// Exception for download-related errors
+class DownloadException extends AppException {
+  DownloadException(this.type, [String message = 'Download error occurred'])
+    : super(message, 'DOWNLOAD_ERROR_${type.name.toUpperCase()}');
+
+  final DownloadErrorType type;
+}

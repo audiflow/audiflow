@@ -4,6 +4,7 @@ import 'package:just_audio/just_audio.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:rxdart/rxdart.dart';
 
+import '../../download/services/download_service.dart';
 import '../../feed/repositories/episode_repository_impl.dart';
 import '../models/now_playing_info.dart';
 import '../models/playback_progress.dart';
@@ -146,6 +147,9 @@ class AudioPlayerController extends _$AudioPlayerController {
 
   /// Plays audio from the specified URL.
   ///
+  /// If a completed download exists for this episode, plays from local file.
+  /// Otherwise streams from the remote URL.
+  ///
   /// If audio is already playing from a different URL, it will stop the
   /// current playback and start the new audio.
   ///
@@ -173,7 +177,17 @@ class AudioPlayerController extends _$AudioPlayerController {
         ref.read(nowPlayingControllerProvider.notifier).setNowPlaying(metadata);
       }
 
-      await _player.setUrl(url);
+      // Check for local download
+      String playUrl = url;
+      if (episode != null) {
+        final downloadService = ref.read(downloadServiceProvider);
+        final localPath = await downloadService.getLocalPath(episode.id);
+        if (localPath != null) {
+          playUrl = 'file://$localPath';
+        }
+      }
+
+      await _player.setUrl(playUrl);
 
       // Notify history service of playback start
       if (_currentEpisodeId != null) {
