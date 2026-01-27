@@ -324,7 +324,7 @@ Future<SeasonGrouping?> sortedPodcastSeasons(
     sortOrder = prefs.seasonSortOrder;
   } else {
     sortField = SeasonSortField.seasonNumber;
-    sortOrder = SortOrder.ascending;
+    sortOrder = SortOrder.descending;
   }
   final pattern = ref.watch(seasonPatternByFeedUrlProvider(feedUrl));
   final episodeRepo = ref.watch(episodeRepositoryProvider);

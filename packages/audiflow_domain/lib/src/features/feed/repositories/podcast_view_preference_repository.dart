@@ -61,7 +61,7 @@ class PodcastViewPreferenceData {
       episodeFilter: EpisodeFilter.all,
       episodeSortOrder: SortOrder.descending,
       seasonSortField: SeasonSortField.seasonNumber,
-      seasonSortOrder: SortOrder.ascending,
+      seasonSortOrder: SortOrder.descending,
     );
   }
 }
@@ -166,6 +166,7 @@ class PodcastViewPreferenceRepositoryImpl
   SortOrder _parseOrder(String value) {
     return switch (value) {
       'asc' => SortOrder.ascending,
+      'desc' => SortOrder.descending,
       _ => SortOrder.descending,
     };
   }
