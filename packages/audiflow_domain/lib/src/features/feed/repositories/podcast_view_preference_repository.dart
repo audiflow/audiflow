@@ -26,6 +26,13 @@ abstract class PodcastViewPreferenceRepository {
 
   /// Updates episode sort order for a podcast.
   Future<void> updateEpisodeSortOrder(int podcastId, SortOrder order);
+
+  /// Updates season sort field and order for a podcast.
+  Future<void> updateSeasonSort(
+    int podcastId,
+    SeasonSortField field,
+    SortOrder order,
+  );
 }
 
 /// Data class for podcast view preferences with typed values.
@@ -35,12 +42,16 @@ class PodcastViewPreferenceData {
     required this.viewMode,
     required this.episodeFilter,
     required this.episodeSortOrder,
+    required this.seasonSortField,
+    required this.seasonSortOrder,
   });
 
   final int podcastId;
   final PodcastViewMode viewMode;
   final EpisodeFilter episodeFilter;
   final SortOrder episodeSortOrder;
+  final SeasonSortField seasonSortField;
+  final SortOrder seasonSortOrder;
 
   /// Default preferences for a podcast.
   factory PodcastViewPreferenceData.defaults(int podcastId) {
@@ -49,6 +60,8 @@ class PodcastViewPreferenceData {
       viewMode: PodcastViewMode.episodes,
       episodeFilter: EpisodeFilter.all,
       episodeSortOrder: SortOrder.descending,
+      seasonSortField: SeasonSortField.seasonNumber,
+      seasonSortOrder: SortOrder.ascending,
     );
   }
 }
@@ -103,6 +116,21 @@ class PodcastViewPreferenceRepositoryImpl
     );
   }
 
+  @override
+  Future<void> updateSeasonSort(
+    int podcastId,
+    SeasonSortField field,
+    SortOrder order,
+  ) {
+    return _datasource.upsertPreference(
+      PodcastViewPreferencesCompanion(
+        podcastId: Value(podcastId),
+        seasonSortField: Value(_seasonFieldToString(field)),
+        seasonSortOrder: Value(_orderToString(order)),
+      ),
+    );
+  }
+
   PodcastViewPreferenceData _toData(
     int podcastId,
     PodcastViewPreference? pref,
@@ -115,6 +143,8 @@ class PodcastViewPreferenceRepositoryImpl
       viewMode: _parseViewMode(pref.viewMode),
       episodeFilter: _parseFilter(pref.episodeFilter),
       episodeSortOrder: _parseOrder(pref.episodeSortOrder),
+      seasonSortField: _parseSeasonField(pref.seasonSortField),
+      seasonSortOrder: _parseOrder(pref.seasonSortOrder),
     );
   }
 
@@ -159,6 +189,24 @@ class PodcastViewPreferenceRepositoryImpl
     return switch (order) {
       SortOrder.ascending => 'asc',
       SortOrder.descending => 'desc',
+    };
+  }
+
+  SeasonSortField _parseSeasonField(String value) {
+    return switch (value) {
+      'newestEpisodeDate' => SeasonSortField.newestEpisodeDate,
+      'progress' => SeasonSortField.progress,
+      'alphabetical' => SeasonSortField.alphabetical,
+      _ => SeasonSortField.seasonNumber,
+    };
+  }
+
+  String _seasonFieldToString(SeasonSortField field) {
+    return switch (field) {
+      SeasonSortField.seasonNumber => 'seasonNumber',
+      SeasonSortField.newestEpisodeDate => 'newestEpisodeDate',
+      SeasonSortField.progress => 'progress',
+      SeasonSortField.alphabetical => 'alphabetical',
     };
   }
 }

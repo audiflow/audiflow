@@ -2397,12 +2397,38 @@ class $PodcastViewPreferencesTable extends PodcastViewPreferences
     requiredDuringInsert: false,
     defaultValue: const Constant('desc'),
   );
+  static const VerificationMeta _seasonSortFieldMeta = const VerificationMeta(
+    'seasonSortField',
+  );
+  @override
+  late final GeneratedColumn<String> seasonSortField = GeneratedColumn<String>(
+    'season_sort_field',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('seasonNumber'),
+  );
+  static const VerificationMeta _seasonSortOrderMeta = const VerificationMeta(
+    'seasonSortOrder',
+  );
+  @override
+  late final GeneratedColumn<String> seasonSortOrder = GeneratedColumn<String>(
+    'season_sort_order',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('asc'),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     podcastId,
     viewMode,
     episodeFilter,
     episodeSortOrder,
+    seasonSortField,
+    seasonSortOrder,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2446,6 +2472,24 @@ class $PodcastViewPreferencesTable extends PodcastViewPreferences
         ),
       );
     }
+    if (data.containsKey('season_sort_field')) {
+      context.handle(
+        _seasonSortFieldMeta,
+        seasonSortField.isAcceptableOrUnknown(
+          data['season_sort_field']!,
+          _seasonSortFieldMeta,
+        ),
+      );
+    }
+    if (data.containsKey('season_sort_order')) {
+      context.handle(
+        _seasonSortOrderMeta,
+        seasonSortOrder.isAcceptableOrUnknown(
+          data['season_sort_order']!,
+          _seasonSortOrderMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -2471,6 +2515,14 @@ class $PodcastViewPreferencesTable extends PodcastViewPreferences
         DriftSqlType.string,
         data['${effectivePrefix}episode_sort_order'],
       )!,
+      seasonSortField: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}season_sort_field'],
+      )!,
+      seasonSortOrder: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}season_sort_order'],
+      )!,
     );
   }
 
@@ -2493,11 +2545,19 @@ class PodcastViewPreference extends DataClass
 
   /// Episode sort order: 'asc' or 'desc'.
   final String episodeSortOrder;
+
+  /// Season sort field: 'seasonNumber', 'newestEpisodeDate', 'progress', 'alphabetical'.
+  final String seasonSortField;
+
+  /// Season sort order: 'asc' or 'desc'.
+  final String seasonSortOrder;
   const PodcastViewPreference({
     required this.podcastId,
     required this.viewMode,
     required this.episodeFilter,
     required this.episodeSortOrder,
+    required this.seasonSortField,
+    required this.seasonSortOrder,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2506,6 +2566,8 @@ class PodcastViewPreference extends DataClass
     map['view_mode'] = Variable<String>(viewMode);
     map['episode_filter'] = Variable<String>(episodeFilter);
     map['episode_sort_order'] = Variable<String>(episodeSortOrder);
+    map['season_sort_field'] = Variable<String>(seasonSortField);
+    map['season_sort_order'] = Variable<String>(seasonSortOrder);
     return map;
   }
 
@@ -2515,6 +2577,8 @@ class PodcastViewPreference extends DataClass
       viewMode: Value(viewMode),
       episodeFilter: Value(episodeFilter),
       episodeSortOrder: Value(episodeSortOrder),
+      seasonSortField: Value(seasonSortField),
+      seasonSortOrder: Value(seasonSortOrder),
     );
   }
 
@@ -2528,6 +2592,8 @@ class PodcastViewPreference extends DataClass
       viewMode: serializer.fromJson<String>(json['viewMode']),
       episodeFilter: serializer.fromJson<String>(json['episodeFilter']),
       episodeSortOrder: serializer.fromJson<String>(json['episodeSortOrder']),
+      seasonSortField: serializer.fromJson<String>(json['seasonSortField']),
+      seasonSortOrder: serializer.fromJson<String>(json['seasonSortOrder']),
     );
   }
   @override
@@ -2538,6 +2604,8 @@ class PodcastViewPreference extends DataClass
       'viewMode': serializer.toJson<String>(viewMode),
       'episodeFilter': serializer.toJson<String>(episodeFilter),
       'episodeSortOrder': serializer.toJson<String>(episodeSortOrder),
+      'seasonSortField': serializer.toJson<String>(seasonSortField),
+      'seasonSortOrder': serializer.toJson<String>(seasonSortOrder),
     };
   }
 
@@ -2546,11 +2614,15 @@ class PodcastViewPreference extends DataClass
     String? viewMode,
     String? episodeFilter,
     String? episodeSortOrder,
+    String? seasonSortField,
+    String? seasonSortOrder,
   }) => PodcastViewPreference(
     podcastId: podcastId ?? this.podcastId,
     viewMode: viewMode ?? this.viewMode,
     episodeFilter: episodeFilter ?? this.episodeFilter,
     episodeSortOrder: episodeSortOrder ?? this.episodeSortOrder,
+    seasonSortField: seasonSortField ?? this.seasonSortField,
+    seasonSortOrder: seasonSortOrder ?? this.seasonSortOrder,
   );
   PodcastViewPreference copyWithCompanion(
     PodcastViewPreferencesCompanion data,
@@ -2564,6 +2636,12 @@ class PodcastViewPreference extends DataClass
       episodeSortOrder: data.episodeSortOrder.present
           ? data.episodeSortOrder.value
           : this.episodeSortOrder,
+      seasonSortField: data.seasonSortField.present
+          ? data.seasonSortField.value
+          : this.seasonSortField,
+      seasonSortOrder: data.seasonSortOrder.present
+          ? data.seasonSortOrder.value
+          : this.seasonSortOrder,
     );
   }
 
@@ -2573,14 +2651,22 @@ class PodcastViewPreference extends DataClass
           ..write('podcastId: $podcastId, ')
           ..write('viewMode: $viewMode, ')
           ..write('episodeFilter: $episodeFilter, ')
-          ..write('episodeSortOrder: $episodeSortOrder')
+          ..write('episodeSortOrder: $episodeSortOrder, ')
+          ..write('seasonSortField: $seasonSortField, ')
+          ..write('seasonSortOrder: $seasonSortOrder')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(podcastId, viewMode, episodeFilter, episodeSortOrder);
+  int get hashCode => Object.hash(
+    podcastId,
+    viewMode,
+    episodeFilter,
+    episodeSortOrder,
+    seasonSortField,
+    seasonSortOrder,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2588,7 +2674,9 @@ class PodcastViewPreference extends DataClass
           other.podcastId == this.podcastId &&
           other.viewMode == this.viewMode &&
           other.episodeFilter == this.episodeFilter &&
-          other.episodeSortOrder == this.episodeSortOrder);
+          other.episodeSortOrder == this.episodeSortOrder &&
+          other.seasonSortField == this.seasonSortField &&
+          other.seasonSortOrder == this.seasonSortOrder);
 }
 
 class PodcastViewPreferencesCompanion
@@ -2597,29 +2685,39 @@ class PodcastViewPreferencesCompanion
   final Value<String> viewMode;
   final Value<String> episodeFilter;
   final Value<String> episodeSortOrder;
+  final Value<String> seasonSortField;
+  final Value<String> seasonSortOrder;
   const PodcastViewPreferencesCompanion({
     this.podcastId = const Value.absent(),
     this.viewMode = const Value.absent(),
     this.episodeFilter = const Value.absent(),
     this.episodeSortOrder = const Value.absent(),
+    this.seasonSortField = const Value.absent(),
+    this.seasonSortOrder = const Value.absent(),
   });
   PodcastViewPreferencesCompanion.insert({
     this.podcastId = const Value.absent(),
     this.viewMode = const Value.absent(),
     this.episodeFilter = const Value.absent(),
     this.episodeSortOrder = const Value.absent(),
+    this.seasonSortField = const Value.absent(),
+    this.seasonSortOrder = const Value.absent(),
   });
   static Insertable<PodcastViewPreference> custom({
     Expression<int>? podcastId,
     Expression<String>? viewMode,
     Expression<String>? episodeFilter,
     Expression<String>? episodeSortOrder,
+    Expression<String>? seasonSortField,
+    Expression<String>? seasonSortOrder,
   }) {
     return RawValuesInsertable({
       if (podcastId != null) 'podcast_id': podcastId,
       if (viewMode != null) 'view_mode': viewMode,
       if (episodeFilter != null) 'episode_filter': episodeFilter,
       if (episodeSortOrder != null) 'episode_sort_order': episodeSortOrder,
+      if (seasonSortField != null) 'season_sort_field': seasonSortField,
+      if (seasonSortOrder != null) 'season_sort_order': seasonSortOrder,
     });
   }
 
@@ -2628,12 +2726,16 @@ class PodcastViewPreferencesCompanion
     Value<String>? viewMode,
     Value<String>? episodeFilter,
     Value<String>? episodeSortOrder,
+    Value<String>? seasonSortField,
+    Value<String>? seasonSortOrder,
   }) {
     return PodcastViewPreferencesCompanion(
       podcastId: podcastId ?? this.podcastId,
       viewMode: viewMode ?? this.viewMode,
       episodeFilter: episodeFilter ?? this.episodeFilter,
       episodeSortOrder: episodeSortOrder ?? this.episodeSortOrder,
+      seasonSortField: seasonSortField ?? this.seasonSortField,
+      seasonSortOrder: seasonSortOrder ?? this.seasonSortOrder,
     );
   }
 
@@ -2652,6 +2754,12 @@ class PodcastViewPreferencesCompanion
     if (episodeSortOrder.present) {
       map['episode_sort_order'] = Variable<String>(episodeSortOrder.value);
     }
+    if (seasonSortField.present) {
+      map['season_sort_field'] = Variable<String>(seasonSortField.value);
+    }
+    if (seasonSortOrder.present) {
+      map['season_sort_order'] = Variable<String>(seasonSortOrder.value);
+    }
     return map;
   }
 
@@ -2661,7 +2769,9 @@ class PodcastViewPreferencesCompanion
           ..write('podcastId: $podcastId, ')
           ..write('viewMode: $viewMode, ')
           ..write('episodeFilter: $episodeFilter, ')
-          ..write('episodeSortOrder: $episodeSortOrder')
+          ..write('episodeSortOrder: $episodeSortOrder, ')
+          ..write('seasonSortField: $seasonSortField, ')
+          ..write('seasonSortOrder: $seasonSortOrder')
           ..write(')'))
         .toString();
   }
@@ -4589,6 +4699,8 @@ typedef $$PodcastViewPreferencesTableCreateCompanionBuilder =
       Value<String> viewMode,
       Value<String> episodeFilter,
       Value<String> episodeSortOrder,
+      Value<String> seasonSortField,
+      Value<String> seasonSortOrder,
     });
 typedef $$PodcastViewPreferencesTableUpdateCompanionBuilder =
     PodcastViewPreferencesCompanion Function({
@@ -4596,6 +4708,8 @@ typedef $$PodcastViewPreferencesTableUpdateCompanionBuilder =
       Value<String> viewMode,
       Value<String> episodeFilter,
       Value<String> episodeSortOrder,
+      Value<String> seasonSortField,
+      Value<String> seasonSortOrder,
     });
 
 final class $$PodcastViewPreferencesTableReferences
@@ -4658,6 +4772,16 @@ class $$PodcastViewPreferencesTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get seasonSortField => $composableBuilder(
+    column: $table.seasonSortField,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get seasonSortOrder => $composableBuilder(
+    column: $table.seasonSortOrder,
+    builder: (column) => ColumnFilters(column),
+  );
+
   $$SubscriptionsTableFilterComposer get podcastId {
     final $$SubscriptionsTableFilterComposer composer = $composerBuilder(
       composer: this,
@@ -4706,6 +4830,16 @@ class $$PodcastViewPreferencesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get seasonSortField => $composableBuilder(
+    column: $table.seasonSortField,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get seasonSortOrder => $composableBuilder(
+    column: $table.seasonSortOrder,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$SubscriptionsTableOrderingComposer get podcastId {
     final $$SubscriptionsTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -4749,6 +4883,16 @@ class $$PodcastViewPreferencesTableAnnotationComposer
 
   GeneratedColumn<String> get episodeSortOrder => $composableBuilder(
     column: $table.episodeSortOrder,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get seasonSortField => $composableBuilder(
+    column: $table.seasonSortField,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get seasonSortOrder => $composableBuilder(
+    column: $table.seasonSortOrder,
     builder: (column) => column,
   );
 
@@ -4819,11 +4963,15 @@ class $$PodcastViewPreferencesTableTableManager
                 Value<String> viewMode = const Value.absent(),
                 Value<String> episodeFilter = const Value.absent(),
                 Value<String> episodeSortOrder = const Value.absent(),
+                Value<String> seasonSortField = const Value.absent(),
+                Value<String> seasonSortOrder = const Value.absent(),
               }) => PodcastViewPreferencesCompanion(
                 podcastId: podcastId,
                 viewMode: viewMode,
                 episodeFilter: episodeFilter,
                 episodeSortOrder: episodeSortOrder,
+                seasonSortField: seasonSortField,
+                seasonSortOrder: seasonSortOrder,
               ),
           createCompanionCallback:
               ({
@@ -4831,11 +4979,15 @@ class $$PodcastViewPreferencesTableTableManager
                 Value<String> viewMode = const Value.absent(),
                 Value<String> episodeFilter = const Value.absent(),
                 Value<String> episodeSortOrder = const Value.absent(),
+                Value<String> seasonSortField = const Value.absent(),
+                Value<String> seasonSortOrder = const Value.absent(),
               }) => PodcastViewPreferencesCompanion.insert(
                 podcastId: podcastId,
                 viewMode: viewMode,
                 episodeFilter: episodeFilter,
                 episodeSortOrder: episodeSortOrder,
+                seasonSortField: seasonSortField,
+                seasonSortOrder: seasonSortOrder,
               ),
           withReferenceMapper: (p0) => p0
               .map(

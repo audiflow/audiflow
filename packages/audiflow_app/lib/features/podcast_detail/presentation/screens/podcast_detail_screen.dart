@@ -3,6 +3,7 @@ import 'package:audiflow_domain/audiflow_domain.dart'
         EpisodeFilter,
         PodcastViewMode,
         Season,
+        SeasonSortField,
         SortOrder,
         podcastViewPreferenceControllerProvider,
         subscriptionByFeedUrlProvider,
@@ -16,7 +17,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../routing/app_router.dart';
 import '../../../subscription/presentation/controllers/subscription_controller.dart';
 import '../controllers/podcast_detail_controller.dart';
-import '../controllers/season_sort_controller.dart';
+import '../controllers/season_sort_controller.dart' show SeasonSortConfig;
 import '../widgets/episode_filter_chips.dart';
 import '../widgets/episode_list_tile.dart';
 import '../widgets/episode_sort_sheet.dart';
@@ -63,7 +64,7 @@ class PodcastDetailScreen extends ConsumerWidget {
                   ? 'Sort seasons'
                   : 'Sort episodes',
               onPressed: () => viewMode == PodcastViewMode.seasons
-                  ? _showSeasonSortSheet(context, ref)
+                  ? _showSeasonSortSheet(context, ref, subscriptionId)
                   : _showEpisodeSortSheet(context, ref, subscriptionId),
             ),
         ],
@@ -72,15 +73,28 @@ class PodcastDetailScreen extends ConsumerWidget {
     );
   }
 
-  void _showSeasonSortSheet(BuildContext context, WidgetRef ref) {
-    final sortConfig = ref.read(seasonSortControllerProvider(podcast.id));
+  void _showSeasonSortSheet(
+    BuildContext context,
+    WidgetRef ref,
+    int subscriptionId,
+  ) {
+    final prefs = ref.read(
+      podcastViewPreferenceControllerProvider(subscriptionId),
+    );
+    final currentConfig = SeasonSortConfig(
+      field: prefs.value?.seasonSortField ?? SeasonSortField.seasonNumber,
+      order: prefs.value?.seasonSortOrder ?? SortOrder.ascending,
+    );
+
     showSeasonSortSheet(
       context: context,
-      currentConfig: sortConfig,
+      currentConfig: currentConfig,
       onSortSelected: (field, order) {
         ref
-            .read(seasonSortControllerProvider(podcast.id).notifier)
-            .setSort(field, order);
+            .read(
+              podcastViewPreferenceControllerProvider(subscriptionId).notifier,
+            )
+            .setSeasonSort(field, order);
       },
     );
   }

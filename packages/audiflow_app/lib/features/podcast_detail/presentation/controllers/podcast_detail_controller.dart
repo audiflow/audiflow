@@ -2,8 +2,6 @@ import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:dio/dio.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import 'season_sort_controller.dart';
-
 part 'podcast_detail_controller.g.dart';
 
 /// Refresh window in minutes - skip fetch if last fetched within this time.
@@ -311,7 +309,23 @@ Future<SeasonGrouping?> sortedPodcastSeasons(
 
   if (grouping == null) return null;
 
-  final sortConfig = ref.watch(seasonSortControllerProvider(podcastId));
+  // Get persisted preferences if subscribed, otherwise use defaults
+  final subscription = await ref.watch(
+    subscriptionByFeedUrlProvider(feedUrl).future,
+  );
+  SeasonSortField sortField;
+  SortOrder sortOrder;
+
+  if (subscription != null) {
+    final prefs = await ref.watch(
+      podcastViewPreferenceControllerProvider(subscription.id).future,
+    );
+    sortField = prefs.seasonSortField;
+    sortOrder = prefs.seasonSortOrder;
+  } else {
+    sortField = SeasonSortField.seasonNumber;
+    sortOrder = SortOrder.ascending;
+  }
   final pattern = ref.watch(seasonPatternByFeedUrlProvider(feedUrl));
   final episodeRepo = ref.watch(episodeRepositoryProvider);
 
@@ -360,7 +374,7 @@ Future<SeasonGrouping?> sortedPodcastSeasons(
         newestDates,
       );
       // User's order choice inverts ascending ↔ descending
-      return sortConfig.order == SortOrder.ascending ? comparison : -comparison;
+      return sortOrder == SortOrder.ascending ? comparison : -comparison;
     });
 
     // Special seasons sorted by newest episode date (always at end)
@@ -374,15 +388,15 @@ Future<SeasonGrouping?> sortedPodcastSeasons(
       ..addAll(specialSeasons);
   } else {
     // Apply simple user-selected sort
-    if (sortConfig.field == SeasonSortField.newestEpisodeDate) {
+    if (sortField == SeasonSortField.newestEpisodeDate) {
       for (final season in sortedSeasons) {
         await getNewestDate(season);
       }
     }
 
     sortedSeasons.sort((a, b) {
-      final comparison = _compareByField(a, b, sortConfig.field, newestDates);
-      return sortConfig.order == SortOrder.ascending ? comparison : -comparison;
+      final comparison = _compareByField(a, b, sortField, newestDates);
+      return sortOrder == SortOrder.ascending ? comparison : -comparison;
     });
   }
 

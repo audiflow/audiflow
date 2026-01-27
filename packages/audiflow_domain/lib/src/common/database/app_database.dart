@@ -33,7 +33,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -62,6 +62,17 @@ class AppDatabase extends _$AppDatabase {
       // Migration from v6 to v7: add PodcastViewPreferences table
       if (7 <= to && from < 7) {
         await m.createTable(podcastViewPreferences);
+      }
+      // Migration from v7 to v8: add season sort columns to PodcastViewPreferences
+      if (8 <= to && from < 8) {
+        await m.addColumn(
+          podcastViewPreferences,
+          podcastViewPreferences.seasonSortField,
+        );
+        await m.addColumn(
+          podcastViewPreferences,
+          podcastViewPreferences.seasonSortOrder,
+        );
       }
     },
   );

@@ -73,4 +73,11 @@ class PodcastViewPreferenceController
         : SortOrder.ascending;
     await setEpisodeSortOrder(newOrder);
   }
+
+  /// Sets the season sort field and order, persists to database.
+  Future<void> setSeasonSort(SeasonSortField field, SortOrder order) async {
+    final repo = ref.read(podcastViewPreferenceRepositoryProvider);
+    await repo.updateSeasonSort(podcastId, field, order);
+    ref.invalidateSelf();
+  }
 }

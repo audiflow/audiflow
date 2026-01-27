@@ -20,6 +20,13 @@ class PodcastViewPreferences extends Table {
   TextColumn get episodeSortOrder =>
       text().withDefault(const Constant('desc'))();
 
+  /// Season sort field: 'seasonNumber', 'newestEpisodeDate', 'progress', 'alphabetical'.
+  TextColumn get seasonSortField =>
+      text().withDefault(const Constant('seasonNumber'))();
+
+  /// Season sort order: 'asc' or 'desc'.
+  TextColumn get seasonSortOrder => text().withDefault(const Constant('asc'))();
+
   @override
   Set<Column> get primaryKey => {podcastId};
 }
