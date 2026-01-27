@@ -79,3 +79,7 @@ experience and modern Flutter patterns.
 - Web/desktop platforms
 - Premium/subscription features
 - Ad insertion/monetization
+
+## Repository Management
+
+use jj(jujutsu) for repository management.
