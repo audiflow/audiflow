@@ -89,6 +89,7 @@ export 'src/features/voice/services/voice_command_orchestrator.dart';
 // Download feature
 export 'src/features/download/models/download_status.dart';
 export 'src/features/download/datasources/local/download_local_datasource.dart';
+export 'src/features/download/providers/download_providers.dart';
 export 'src/features/download/repositories/download_repository.dart';
 export 'src/features/download/repositories/download_repository_impl.dart';
 export 'src/features/download/services/download_file_service.dart';
