@@ -101,9 +101,9 @@ extension DownloadTaskStatusX on DownloadTask {
   /// Get the status as a typed enum.
   DownloadStatus get downloadStatus => DownloadStatus.fromDbValue(status);
 
-  /// Calculate download progress (0.0 to 1.0).
-  double get progress {
-    if (totalBytes == null || totalBytes == 0) return 0.0;
+  /// Calculate download progress (0.0 to 1.0), or null if unknown.
+  double? get progress {
+    if (totalBytes == null || totalBytes == 0) return null;
     return downloadedBytes / totalBytes!;
   }
 }
