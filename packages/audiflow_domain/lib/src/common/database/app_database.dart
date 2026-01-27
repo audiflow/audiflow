@@ -6,6 +6,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 import '../../features/feed/models/episode.dart';
+import '../../features/feed/models/podcast_view_preference.dart';
 import '../../features/feed/models/seasons.dart';
 import '../../features/player/models/playback_history.dart';
 import '../../features/subscription/models/subscriptions.dart';
@@ -15,7 +16,15 @@ part 'app_database.g.dart';
 /// Main database class for Audiflow
 ///
 /// Uses Drift with SQLite for local data storage.
-@DriftDatabase(tables: [Subscriptions, Episodes, PlaybackHistories, Seasons])
+@DriftDatabase(
+  tables: [
+    Subscriptions,
+    Episodes,
+    PlaybackHistories,
+    Seasons,
+    PodcastViewPreferences,
+  ],
+)
 class AppDatabase extends _$AppDatabase {
   /// Creates the database instance with lazy initialization
   AppDatabase() : super(_openConnection());
@@ -24,7 +33,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -49,6 +58,21 @@ class AppDatabase extends _$AppDatabase {
       // Migration from v5 to v6: add thumbnail_url column to Seasons table
       if (6 <= to && from < 6) {
         await m.addColumn(seasons, seasons.thumbnailUrl);
+      }
+      // Migration from v6 to v7: add PodcastViewPreferences table
+      if (7 <= to && from < 7) {
+        await m.createTable(podcastViewPreferences);
+      }
+      // Migration from v7 to v8: add season sort columns to PodcastViewPreferences
+      if (8 <= to && from < 8) {
+        await m.addColumn(
+          podcastViewPreferences,
+          podcastViewPreferences.seasonSortField,
+        );
+        await m.addColumn(
+          podcastViewPreferences,
+          podcastViewPreferences.seasonSortOrder,
+        );
       }
     },
   );

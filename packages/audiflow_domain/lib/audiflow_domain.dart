@@ -30,7 +30,9 @@ export 'src/common/datasources/shared_preferences_datasource.dart';
 
 // Feed feature
 export 'src/features/feed/builders/podcast_builder.dart';
+export 'src/features/feed/models/episode_filter.dart';
 export 'src/features/feed/models/feed_parse_progress.dart';
+export 'src/features/feed/models/podcast_view_mode.dart';
 export 'src/features/feed/models/season.dart';
 export 'src/features/feed/models/season_pattern.dart';
 export 'src/features/feed/models/season_sort.dart';
@@ -44,6 +46,11 @@ export 'src/features/feed/resolvers/title_appearance_order_resolver.dart';
 export 'src/features/feed/resolvers/year_resolver.dart';
 export 'src/features/feed/services/feed_parser_service.dart';
 export 'src/features/feed/services/season_resolver_service.dart';
+
+// Feed feature - Podcast View Preference
+export 'src/features/feed/models/podcast_view_preference.dart';
+export 'src/features/feed/providers/podcast_view_preference_providers.dart';
+export 'src/features/feed/repositories/podcast_view_preference_repository.dart';
 
 // Feed feature - Season Providers
 export 'src/features/feed/providers/season_providers.dart';
@@ -94,6 +101,7 @@ export 'src/common/database/app_database.dart'
 
 // Subscription feature
 export 'src/features/subscription/extensions/subscription_extensions.dart';
+export 'src/features/subscription/providers/subscription_providers.dart';
 export 'src/features/subscription/repositories/subscription_repository.dart';
 export 'src/features/subscription/repositories/subscription_repository_impl.dart';
 

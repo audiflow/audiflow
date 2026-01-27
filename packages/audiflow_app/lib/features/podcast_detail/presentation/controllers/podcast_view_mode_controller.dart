@@ -1,15 +1,7 @@
+import 'package:audiflow_domain/audiflow_domain.dart' show PodcastViewMode;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'podcast_view_mode_controller.g.dart';
-
-/// View modes for the podcast detail screen.
-enum PodcastViewMode {
-  /// Flat list of all episodes.
-  episodes,
-
-  /// Grouped by season.
-  seasons,
-}
 
 /// Controller for the podcast detail screen view mode toggle.
 @riverpod

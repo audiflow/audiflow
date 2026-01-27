@@ -1,15 +1,6 @@
+import 'package:audiflow_domain/audiflow_domain.dart' show EpisodeFilter;
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
-
-/// Filter options for episode list.
-enum EpisodeFilter {
-  all('All'),
-  unplayed('Unplayed'),
-  inProgress('In Progress');
-
-  const EpisodeFilter(this.label);
-  final String label;
-}
 
 /// Chip row for filtering episodes by playback status.
 class EpisodeFilterChips extends StatelessWidget {
