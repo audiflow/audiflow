@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../features/library/presentation/screens/library_screen.dart';
 import '../features/podcast_detail/presentation/screens/podcast_detail_screen.dart';
 import '../features/podcast_detail/presentation/screens/season_episodes_screen.dart';
+import '../features/queue/presentation/screens/queue_screen.dart';
 import '../features/search/presentation/screens/search_screen.dart';
 import '../features/settings/presentation/screens/settings_screen.dart';
 import 'scaffold_with_nav_bar.dart';
@@ -15,6 +16,7 @@ import 'scaffold_with_nav_bar.dart';
 class AppRoutes {
   static const String search = '/search';
   static const String library = '/library';
+  static const String queue = '/queue';
   static const String settings = '/settings';
   static const String podcastDetail = '/search/podcast';
   static const String seasonEpisodes = 'season/:seasonId';
@@ -25,6 +27,7 @@ class AppRoutes {
 /// Each tab has its own navigator to maintain independent navigation stacks.
 final _searchNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'search');
 final _libraryNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'library');
+final _queueNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'queue');
 final _settingsNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'settings');
 
 /// Creates the application router configuration.
@@ -90,6 +93,15 @@ GoRouter createAppRouter() {
                     ],
                   ),
                 ],
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            navigatorKey: _queueNavigatorKey,
+            routes: [
+              GoRoute(
+                path: AppRoutes.queue,
+                builder: (context, state) => const QueueScreen(),
               ),
             ],
           ),

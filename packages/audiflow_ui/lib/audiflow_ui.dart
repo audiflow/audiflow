@@ -19,3 +19,6 @@ export 'src/widgets/player/mini_player_progress_bar.dart';
 
 // Widgets - Downloads
 export 'src/widgets/downloads/download_status_icon.dart';
+
+// Widgets - Queue
+export 'src/widgets/queue/add_to_queue_button.dart';

@@ -921,7 +921,7 @@ final class SortedPodcastSeasonsProvider
 }
 
 String _$sortedPodcastSeasonsHash() =>
-    r'c90c739cfef550ec4efadb5b980f22dc4e394e18';
+    r'04bb768c2827478b5d1bff9356a8e62a3c940577';
 
 /// Provides sorted seasons for a podcast.
 ///

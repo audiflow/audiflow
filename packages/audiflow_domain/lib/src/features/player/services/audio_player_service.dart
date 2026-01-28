@@ -6,6 +6,8 @@ import 'package:rxdart/rxdart.dart';
 
 import '../../download/services/download_service.dart';
 import '../../feed/repositories/episode_repository_impl.dart';
+import '../../queue/services/queue_service.dart';
+import '../../subscription/repositories/subscription_repository_impl.dart';
 import '../models/now_playing_info.dart';
 import '../models/playback_progress.dart';
 import '../models/playback_state.dart';
@@ -118,9 +120,9 @@ class AudioPlayerController extends _$AudioPlayerController {
         } else if (processingState == ProcessingState.completed) {
           // Save final progress before clearing
           await _saveProgressOnStop();
-          state = const PlaybackState.idle();
-          _currentUrl = null;
-          _currentEpisodeId = null;
+
+          // Try to auto-play next from queue
+          await _handlePlaybackComplete();
         } else {
           state = PlaybackState.paused(episodeUrl: url);
         }
@@ -139,6 +141,44 @@ class AudioPlayerController extends _$AudioPlayerController {
 
     final historyService = ref.read(playbackHistoryServiceProvider);
     await historyService.onPlaybackStopped(_currentEpisodeId!, progress);
+  }
+
+  /// Handles playback completion by attempting to play the next episode.
+  ///
+  /// If there's a next episode in the queue, starts playing it automatically.
+  /// Otherwise, clears the playback state.
+  Future<void> _handlePlaybackComplete() async {
+    final queueService = ref.read(queueServiceProvider);
+    final nextEpisode = await queueService.getNextAndRemoveCurrent();
+
+    if (nextEpisode != null) {
+      // Fetch podcast title for the next episode
+      final subscriptionRepo = ref.read(subscriptionRepositoryProvider);
+      final subscription = await subscriptionRepo.getById(
+        nextEpisode.podcastId,
+      );
+      final podcastTitle = subscription?.title ?? '';
+
+      // Auto-play next episode
+      await play(
+        nextEpisode.audioUrl,
+        metadata: NowPlayingInfo(
+          episodeUrl: nextEpisode.audioUrl,
+          episodeTitle: nextEpisode.title,
+          podcastTitle: podcastTitle,
+          artworkUrl: nextEpisode.imageUrl,
+          totalDuration: nextEpisode.durationMs != null
+              ? Duration(milliseconds: nextEpisode.durationMs!)
+              : null,
+        ),
+      );
+    } else {
+      // No more episodes in queue, go idle
+      state = const PlaybackState.idle();
+      _currentUrl = null;
+      _currentEpisodeId = null;
+      ref.read(nowPlayingControllerProvider.notifier).clear();
+    }
   }
 
   void _cleanup() {

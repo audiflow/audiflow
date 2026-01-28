@@ -95,6 +95,19 @@ class EpisodeRepositoryImpl implements EpisodeRepository {
   Future<List<Episode>> getByIds(List<int> ids) {
     return _datasource.getByIds(ids);
   }
+
+  @override
+  Future<List<Episode>> getSubsequentEpisodes({
+    required int podcastId,
+    required int? afterEpisodeNumber,
+    required int limit,
+  }) {
+    return _datasource.getSubsequentEpisodes(
+      podcastId: podcastId,
+      afterEpisodeNumber: afterEpisodeNumber,
+      limit: limit,
+    );
+  }
 }
 
 /// Adapter to make [PodcastItem] work with [EpisodeData] interface.

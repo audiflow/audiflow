@@ -43,9 +43,10 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.byType(NavigationBar), findsOneWidget);
-        expect(find.byType(NavigationDestination), findsNWidgets(3));
+        expect(find.byType(NavigationDestination), findsNWidgets(4));
         expect(find.text('Search'), findsOneWidget);
         expect(find.text('Library'), findsOneWidget);
+        expect(find.text('Queue'), findsOneWidget);
         expect(find.text('Settings'), findsOneWidget);
       });
 

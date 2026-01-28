@@ -65,6 +65,11 @@ class ScaffoldWithNavBar extends ConsumerWidget {
                     label: 'Library',
                   ),
                   NavigationDestination(
+                    icon: Icon(Symbols.queue_music),
+                    selectedIcon: Icon(Symbols.queue_music, fill: 1),
+                    label: 'Queue',
+                  ),
+                  NavigationDestination(
                     icon: Icon(Symbols.settings),
                     selectedIcon: Icon(Symbols.settings, fill: 1),
                     label: 'Settings',
