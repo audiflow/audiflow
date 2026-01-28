@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../queue/presentation/controllers/queue_controller.dart';
 import '../controllers/podcast_detail_controller.dart';
 
 /// Displays a single episode with play/pause controls.
@@ -85,6 +86,31 @@ class EpisodeListTile extends ConsumerWidget {
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (episodeId != null)
+              AddToQueueButton(
+                onPlayLater: () {
+                  ref
+                      .read(queueControllerProvider.notifier)
+                      .playLater(episodeId);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Added to queue'),
+                      duration: Duration(seconds: 1),
+                    ),
+                  );
+                },
+                onPlayNext: () {
+                  ref
+                      .read(queueControllerProvider.notifier)
+                      .playNext(episodeId);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Playing next'),
+                      duration: Duration(seconds: 1),
+                    ),
+                  );
+                },
+              ),
             if (episodeId != null)
               _buildDownloadButton(context, ref, episodeId, downloadTask),
             _buildPlayButton(
@@ -355,27 +381,83 @@ class EpisodeListTile extends ConsumerWidget {
         size: 40,
       ),
       color: Theme.of(context).colorScheme.primary,
-      onPressed: () => _onPlayPausePressed(ref, enclosureUrl, isPlaying),
+      onPressed: () =>
+          _onPlayPausePressed(context, ref, enclosureUrl, isPlaying),
     );
   }
 
-  void _onPlayPausePressed(WidgetRef ref, String url, bool isPlaying) {
+  Future<bool> _showReplaceQueueDialog(BuildContext context) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Replace queue?'),
+        content: const Text(
+          'Starting playback will replace your current queue with episodes from this list.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Replace'),
+          ),
+        ],
+      ),
+    );
+    return result ?? false;
+  }
+
+  Future<void> _onPlayPausePressed(
+    BuildContext context,
+    WidgetRef ref,
+    String url,
+    bool isPlaying,
+  ) async {
     final controller = ref.read(audioPlayerControllerProvider.notifier);
+
     if (isPlaying) {
       controller.pause();
-    } else if (controller.isLoaded(url)) {
+      return;
+    }
+
+    if (controller.isLoaded(url)) {
       controller.resume();
-    } else {
-      controller.play(
-        url,
-        metadata: NowPlayingInfo(
-          episodeUrl: url,
-          episodeTitle: episode.title,
-          podcastTitle: podcastTitle,
-          artworkUrl: artworkUrl ?? episode.primaryImage?.url,
-          totalDuration: episode.duration,
-        ),
+      return;
+    }
+
+    // Starting new playback - handle adhoc queue
+    final episodeId = progress?.episode.id;
+    if (episodeId != null) {
+      final queueService = ref.read(queueServiceProvider);
+
+      // Check if confirmation needed
+      final shouldConfirm = await queueService.shouldConfirmAdhocReplace();
+
+      if (shouldConfirm) {
+        if (!context.mounted) return;
+        final confirmed = await _showReplaceQueueDialog(context);
+        if (!confirmed) return;
+      }
+
+      // Create adhoc queue
+      await queueService.createAdhocQueue(
+        startingEpisodeId: episodeId,
+        sourceContext: podcastTitle,
       );
     }
+
+    // Start playback
+    controller.play(
+      url,
+      metadata: NowPlayingInfo(
+        episodeUrl: url,
+        episodeTitle: episode.title,
+        podcastTitle: podcastTitle,
+        artworkUrl: artworkUrl ?? episode.primaryImage?.url,
+        totalDuration: episode.duration,
+      ),
+    );
   }
 }

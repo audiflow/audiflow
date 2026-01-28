@@ -109,6 +109,8 @@ export 'src/common/database/app_database.dart'
         EpisodesCompanion,
         PlaybackHistory,
         PlaybackHistoriesCompanion,
+        QueueItem,
+        QueueItemsCompanion,
         SeasonEntity,
         SeasonsCompanion;
 
@@ -124,3 +126,10 @@ export 'package:audiflow_ai/audiflow_ai.dart'
 
 // Re-export audiflow_search types for subscription extension
 export 'package:audiflow_search/audiflow_search.dart' show Podcast;
+
+// Queue feature
+export 'src/features/queue/models/playback_queue.dart';
+export 'src/features/queue/providers/queue_providers.dart';
+export 'src/features/queue/repositories/queue_repository.dart';
+export 'src/features/queue/repositories/queue_repository_impl.dart';
+export 'src/features/queue/services/queue_service.dart';

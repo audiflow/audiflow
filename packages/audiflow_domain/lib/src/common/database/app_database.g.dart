@@ -3512,6 +3512,429 @@ class DownloadTasksCompanion extends UpdateCompanion<DownloadTask> {
   }
 }
 
+class $QueueItemsTable extends QueueItems
+    with TableInfo<$QueueItemsTable, QueueItem> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $QueueItemsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _episodeIdMeta = const VerificationMeta(
+    'episodeId',
+  );
+  @override
+  late final GeneratedColumn<int> episodeId = GeneratedColumn<int>(
+    'episode_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES episodes (id)',
+    ),
+  );
+  static const VerificationMeta _positionMeta = const VerificationMeta(
+    'position',
+  );
+  @override
+  late final GeneratedColumn<int> position = GeneratedColumn<int>(
+    'position',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _isAdhocMeta = const VerificationMeta(
+    'isAdhoc',
+  );
+  @override
+  late final GeneratedColumn<bool> isAdhoc = GeneratedColumn<bool>(
+    'is_adhoc',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_adhoc" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _sourceContextMeta = const VerificationMeta(
+    'sourceContext',
+  );
+  @override
+  late final GeneratedColumn<String> sourceContext = GeneratedColumn<String>(
+    'source_context',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _addedAtMeta = const VerificationMeta(
+    'addedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> addedAt = GeneratedColumn<DateTime>(
+    'added_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    episodeId,
+    position,
+    isAdhoc,
+    sourceContext,
+    addedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'queue_items';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<QueueItem> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('episode_id')) {
+      context.handle(
+        _episodeIdMeta,
+        episodeId.isAcceptableOrUnknown(data['episode_id']!, _episodeIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_episodeIdMeta);
+    }
+    if (data.containsKey('position')) {
+      context.handle(
+        _positionMeta,
+        position.isAcceptableOrUnknown(data['position']!, _positionMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_positionMeta);
+    }
+    if (data.containsKey('is_adhoc')) {
+      context.handle(
+        _isAdhocMeta,
+        isAdhoc.isAcceptableOrUnknown(data['is_adhoc']!, _isAdhocMeta),
+      );
+    }
+    if (data.containsKey('source_context')) {
+      context.handle(
+        _sourceContextMeta,
+        sourceContext.isAcceptableOrUnknown(
+          data['source_context']!,
+          _sourceContextMeta,
+        ),
+      );
+    }
+    if (data.containsKey('added_at')) {
+      context.handle(
+        _addedAtMeta,
+        addedAt.isAcceptableOrUnknown(data['added_at']!, _addedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_addedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  QueueItem map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return QueueItem(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      episodeId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}episode_id'],
+      )!,
+      position: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}position'],
+      )!,
+      isAdhoc: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_adhoc'],
+      )!,
+      sourceContext: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source_context'],
+      ),
+      addedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}added_at'],
+      )!,
+    );
+  }
+
+  @override
+  $QueueItemsTable createAlias(String alias) {
+    return $QueueItemsTable(attachedDatabase, alias);
+  }
+}
+
+class QueueItem extends DataClass implements Insertable<QueueItem> {
+  /// Auto-incrementing primary key.
+  final int id;
+
+  /// Reference to the episode in the queue.
+  final int episodeId;
+
+  /// Position in the queue (sparse values: 0, 10, 20... for easy insertion).
+  final int position;
+
+  /// Whether this is an adhoc queue item (true) or manual (false).
+  final bool isAdhoc;
+
+  /// Source context for adhoc items (e.g., "Season 2").
+  final String? sourceContext;
+
+  /// When this item was added to the queue.
+  final DateTime addedAt;
+  const QueueItem({
+    required this.id,
+    required this.episodeId,
+    required this.position,
+    required this.isAdhoc,
+    this.sourceContext,
+    required this.addedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['episode_id'] = Variable<int>(episodeId);
+    map['position'] = Variable<int>(position);
+    map['is_adhoc'] = Variable<bool>(isAdhoc);
+    if (!nullToAbsent || sourceContext != null) {
+      map['source_context'] = Variable<String>(sourceContext);
+    }
+    map['added_at'] = Variable<DateTime>(addedAt);
+    return map;
+  }
+
+  QueueItemsCompanion toCompanion(bool nullToAbsent) {
+    return QueueItemsCompanion(
+      id: Value(id),
+      episodeId: Value(episodeId),
+      position: Value(position),
+      isAdhoc: Value(isAdhoc),
+      sourceContext: sourceContext == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sourceContext),
+      addedAt: Value(addedAt),
+    );
+  }
+
+  factory QueueItem.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return QueueItem(
+      id: serializer.fromJson<int>(json['id']),
+      episodeId: serializer.fromJson<int>(json['episodeId']),
+      position: serializer.fromJson<int>(json['position']),
+      isAdhoc: serializer.fromJson<bool>(json['isAdhoc']),
+      sourceContext: serializer.fromJson<String?>(json['sourceContext']),
+      addedAt: serializer.fromJson<DateTime>(json['addedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'episodeId': serializer.toJson<int>(episodeId),
+      'position': serializer.toJson<int>(position),
+      'isAdhoc': serializer.toJson<bool>(isAdhoc),
+      'sourceContext': serializer.toJson<String?>(sourceContext),
+      'addedAt': serializer.toJson<DateTime>(addedAt),
+    };
+  }
+
+  QueueItem copyWith({
+    int? id,
+    int? episodeId,
+    int? position,
+    bool? isAdhoc,
+    Value<String?> sourceContext = const Value.absent(),
+    DateTime? addedAt,
+  }) => QueueItem(
+    id: id ?? this.id,
+    episodeId: episodeId ?? this.episodeId,
+    position: position ?? this.position,
+    isAdhoc: isAdhoc ?? this.isAdhoc,
+    sourceContext: sourceContext.present
+        ? sourceContext.value
+        : this.sourceContext,
+    addedAt: addedAt ?? this.addedAt,
+  );
+  QueueItem copyWithCompanion(QueueItemsCompanion data) {
+    return QueueItem(
+      id: data.id.present ? data.id.value : this.id,
+      episodeId: data.episodeId.present ? data.episodeId.value : this.episodeId,
+      position: data.position.present ? data.position.value : this.position,
+      isAdhoc: data.isAdhoc.present ? data.isAdhoc.value : this.isAdhoc,
+      sourceContext: data.sourceContext.present
+          ? data.sourceContext.value
+          : this.sourceContext,
+      addedAt: data.addedAt.present ? data.addedAt.value : this.addedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('QueueItem(')
+          ..write('id: $id, ')
+          ..write('episodeId: $episodeId, ')
+          ..write('position: $position, ')
+          ..write('isAdhoc: $isAdhoc, ')
+          ..write('sourceContext: $sourceContext, ')
+          ..write('addedAt: $addedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, episodeId, position, isAdhoc, sourceContext, addedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is QueueItem &&
+          other.id == this.id &&
+          other.episodeId == this.episodeId &&
+          other.position == this.position &&
+          other.isAdhoc == this.isAdhoc &&
+          other.sourceContext == this.sourceContext &&
+          other.addedAt == this.addedAt);
+}
+
+class QueueItemsCompanion extends UpdateCompanion<QueueItem> {
+  final Value<int> id;
+  final Value<int> episodeId;
+  final Value<int> position;
+  final Value<bool> isAdhoc;
+  final Value<String?> sourceContext;
+  final Value<DateTime> addedAt;
+  const QueueItemsCompanion({
+    this.id = const Value.absent(),
+    this.episodeId = const Value.absent(),
+    this.position = const Value.absent(),
+    this.isAdhoc = const Value.absent(),
+    this.sourceContext = const Value.absent(),
+    this.addedAt = const Value.absent(),
+  });
+  QueueItemsCompanion.insert({
+    this.id = const Value.absent(),
+    required int episodeId,
+    required int position,
+    this.isAdhoc = const Value.absent(),
+    this.sourceContext = const Value.absent(),
+    required DateTime addedAt,
+  }) : episodeId = Value(episodeId),
+       position = Value(position),
+       addedAt = Value(addedAt);
+  static Insertable<QueueItem> custom({
+    Expression<int>? id,
+    Expression<int>? episodeId,
+    Expression<int>? position,
+    Expression<bool>? isAdhoc,
+    Expression<String>? sourceContext,
+    Expression<DateTime>? addedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (episodeId != null) 'episode_id': episodeId,
+      if (position != null) 'position': position,
+      if (isAdhoc != null) 'is_adhoc': isAdhoc,
+      if (sourceContext != null) 'source_context': sourceContext,
+      if (addedAt != null) 'added_at': addedAt,
+    });
+  }
+
+  QueueItemsCompanion copyWith({
+    Value<int>? id,
+    Value<int>? episodeId,
+    Value<int>? position,
+    Value<bool>? isAdhoc,
+    Value<String?>? sourceContext,
+    Value<DateTime>? addedAt,
+  }) {
+    return QueueItemsCompanion(
+      id: id ?? this.id,
+      episodeId: episodeId ?? this.episodeId,
+      position: position ?? this.position,
+      isAdhoc: isAdhoc ?? this.isAdhoc,
+      sourceContext: sourceContext ?? this.sourceContext,
+      addedAt: addedAt ?? this.addedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (episodeId.present) {
+      map['episode_id'] = Variable<int>(episodeId.value);
+    }
+    if (position.present) {
+      map['position'] = Variable<int>(position.value);
+    }
+    if (isAdhoc.present) {
+      map['is_adhoc'] = Variable<bool>(isAdhoc.value);
+    }
+    if (sourceContext.present) {
+      map['source_context'] = Variable<String>(sourceContext.value);
+    }
+    if (addedAt.present) {
+      map['added_at'] = Variable<DateTime>(addedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('QueueItemsCompanion(')
+          ..write('id: $id, ')
+          ..write('episodeId: $episodeId, ')
+          ..write('position: $position, ')
+          ..write('isAdhoc: $isAdhoc, ')
+          ..write('sourceContext: $sourceContext, ')
+          ..write('addedAt: $addedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -3523,6 +3946,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $PodcastViewPreferencesTable podcastViewPreferences =
       $PodcastViewPreferencesTable(this);
   late final $DownloadTasksTable downloadTasks = $DownloadTasksTable(this);
+  late final $QueueItemsTable queueItems = $QueueItemsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -3534,6 +3958,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     seasons,
     podcastViewPreferences,
     downloadTasks,
+    queueItems,
   ];
 }
 
@@ -4263,6 +4688,24 @@ final class $$EpisodesTableReferences
       manager.$state.copyWith(prefetchedData: cache),
     );
   }
+
+  static MultiTypedResultKey<$QueueItemsTable, List<QueueItem>>
+  _queueItemsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.queueItems,
+    aliasName: $_aliasNameGenerator(db.episodes.id, db.queueItems.episodeId),
+  );
+
+  $$QueueItemsTableProcessedTableManager get queueItemsRefs {
+    final manager = $$QueueItemsTableTableManager(
+      $_db,
+      $_db.queueItems,
+    ).filter((f) => f.episodeId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_queueItemsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
 }
 
 class $$EpisodesTableFilterComposer
@@ -4388,6 +4831,31 @@ class $$EpisodesTableFilterComposer
           }) => $$DownloadTasksTableFilterComposer(
             $db: $db,
             $table: $db.downloadTasks,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> queueItemsRefs(
+    Expression<bool> Function($$QueueItemsTableFilterComposer f) f,
+  ) {
+    final $$QueueItemsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.queueItems,
+      getReferencedColumn: (t) => t.episodeId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$QueueItemsTableFilterComposer(
+            $db: $db,
+            $table: $db.queueItems,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -4603,6 +5071,31 @@ class $$EpisodesTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> queueItemsRefs<T extends Object>(
+    Expression<T> Function($$QueueItemsTableAnnotationComposer a) f,
+  ) {
+    final $$QueueItemsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.queueItems,
+      getReferencedColumn: (t) => t.episodeId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$QueueItemsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.queueItems,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$EpisodesTableTableManager
@@ -4622,6 +5115,7 @@ class $$EpisodesTableTableManager
             bool podcastId,
             bool playbackHistoriesRefs,
             bool downloadTasksRefs,
+            bool queueItemsRefs,
           })
         > {
   $$EpisodesTableTableManager(_$AppDatabase db, $EpisodesTable table)
@@ -4700,12 +5194,14 @@ class $$EpisodesTableTableManager
                 podcastId = false,
                 playbackHistoriesRefs = false,
                 downloadTasksRefs = false,
+                queueItemsRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
                   explicitlyWatchedTables: [
                     if (playbackHistoriesRefs) db.playbackHistories,
                     if (downloadTasksRefs) db.downloadTasks,
+                    if (queueItemsRefs) db.queueItems,
                   ],
                   addJoins:
                       <
@@ -4783,6 +5279,27 @@ class $$EpisodesTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (queueItemsRefs)
+                        await $_getPrefetchedData<
+                          Episode,
+                          $EpisodesTable,
+                          QueueItem
+                        >(
+                          currentTable: table,
+                          referencedTable: $$EpisodesTableReferences
+                              ._queueItemsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$EpisodesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).queueItemsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.episodeId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -4807,6 +5324,7 @@ typedef $$EpisodesTableProcessedTableManager =
         bool podcastId,
         bool playbackHistoriesRefs,
         bool downloadTasksRefs,
+        bool queueItemsRefs,
       })
     >;
 typedef $$PlaybackHistoriesTableCreateCompanionBuilder =
@@ -6355,6 +6873,340 @@ typedef $$DownloadTasksTableProcessedTableManager =
       DownloadTask,
       PrefetchHooks Function({bool episodeId})
     >;
+typedef $$QueueItemsTableCreateCompanionBuilder =
+    QueueItemsCompanion Function({
+      Value<int> id,
+      required int episodeId,
+      required int position,
+      Value<bool> isAdhoc,
+      Value<String?> sourceContext,
+      required DateTime addedAt,
+    });
+typedef $$QueueItemsTableUpdateCompanionBuilder =
+    QueueItemsCompanion Function({
+      Value<int> id,
+      Value<int> episodeId,
+      Value<int> position,
+      Value<bool> isAdhoc,
+      Value<String?> sourceContext,
+      Value<DateTime> addedAt,
+    });
+
+final class $$QueueItemsTableReferences
+    extends BaseReferences<_$AppDatabase, $QueueItemsTable, QueueItem> {
+  $$QueueItemsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $EpisodesTable _episodeIdTable(_$AppDatabase db) =>
+      db.episodes.createAlias(
+        $_aliasNameGenerator(db.queueItems.episodeId, db.episodes.id),
+      );
+
+  $$EpisodesTableProcessedTableManager get episodeId {
+    final $_column = $_itemColumn<int>('episode_id')!;
+
+    final manager = $$EpisodesTableTableManager(
+      $_db,
+      $_db.episodes,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_episodeIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$QueueItemsTableFilterComposer
+    extends Composer<_$AppDatabase, $QueueItemsTable> {
+  $$QueueItemsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get position => $composableBuilder(
+    column: $table.position,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isAdhoc => $composableBuilder(
+    column: $table.isAdhoc,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sourceContext => $composableBuilder(
+    column: $table.sourceContext,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get addedAt => $composableBuilder(
+    column: $table.addedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$EpisodesTableFilterComposer get episodeId {
+    final $$EpisodesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.episodeId,
+      referencedTable: $db.episodes,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$EpisodesTableFilterComposer(
+            $db: $db,
+            $table: $db.episodes,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$QueueItemsTableOrderingComposer
+    extends Composer<_$AppDatabase, $QueueItemsTable> {
+  $$QueueItemsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get position => $composableBuilder(
+    column: $table.position,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isAdhoc => $composableBuilder(
+    column: $table.isAdhoc,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sourceContext => $composableBuilder(
+    column: $table.sourceContext,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get addedAt => $composableBuilder(
+    column: $table.addedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$EpisodesTableOrderingComposer get episodeId {
+    final $$EpisodesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.episodeId,
+      referencedTable: $db.episodes,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$EpisodesTableOrderingComposer(
+            $db: $db,
+            $table: $db.episodes,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$QueueItemsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $QueueItemsTable> {
+  $$QueueItemsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get position =>
+      $composableBuilder(column: $table.position, builder: (column) => column);
+
+  GeneratedColumn<bool> get isAdhoc =>
+      $composableBuilder(column: $table.isAdhoc, builder: (column) => column);
+
+  GeneratedColumn<String> get sourceContext => $composableBuilder(
+    column: $table.sourceContext,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get addedAt =>
+      $composableBuilder(column: $table.addedAt, builder: (column) => column);
+
+  $$EpisodesTableAnnotationComposer get episodeId {
+    final $$EpisodesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.episodeId,
+      referencedTable: $db.episodes,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$EpisodesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.episodes,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$QueueItemsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $QueueItemsTable,
+          QueueItem,
+          $$QueueItemsTableFilterComposer,
+          $$QueueItemsTableOrderingComposer,
+          $$QueueItemsTableAnnotationComposer,
+          $$QueueItemsTableCreateCompanionBuilder,
+          $$QueueItemsTableUpdateCompanionBuilder,
+          (QueueItem, $$QueueItemsTableReferences),
+          QueueItem,
+          PrefetchHooks Function({bool episodeId})
+        > {
+  $$QueueItemsTableTableManager(_$AppDatabase db, $QueueItemsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$QueueItemsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$QueueItemsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$QueueItemsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> episodeId = const Value.absent(),
+                Value<int> position = const Value.absent(),
+                Value<bool> isAdhoc = const Value.absent(),
+                Value<String?> sourceContext = const Value.absent(),
+                Value<DateTime> addedAt = const Value.absent(),
+              }) => QueueItemsCompanion(
+                id: id,
+                episodeId: episodeId,
+                position: position,
+                isAdhoc: isAdhoc,
+                sourceContext: sourceContext,
+                addedAt: addedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int episodeId,
+                required int position,
+                Value<bool> isAdhoc = const Value.absent(),
+                Value<String?> sourceContext = const Value.absent(),
+                required DateTime addedAt,
+              }) => QueueItemsCompanion.insert(
+                id: id,
+                episodeId: episodeId,
+                position: position,
+                isAdhoc: isAdhoc,
+                sourceContext: sourceContext,
+                addedAt: addedAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$QueueItemsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({episodeId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (episodeId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.episodeId,
+                                referencedTable: $$QueueItemsTableReferences
+                                    ._episodeIdTable(db),
+                                referencedColumn: $$QueueItemsTableReferences
+                                    ._episodeIdTable(db)
+                                    .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$QueueItemsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $QueueItemsTable,
+      QueueItem,
+      $$QueueItemsTableFilterComposer,
+      $$QueueItemsTableOrderingComposer,
+      $$QueueItemsTableAnnotationComposer,
+      $$QueueItemsTableCreateCompanionBuilder,
+      $$QueueItemsTableUpdateCompanionBuilder,
+      (QueueItem, $$QueueItemsTableReferences),
+      QueueItem,
+      PrefetchHooks Function({bool episodeId})
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -6374,4 +7226,6 @@ class $AppDatabaseManager {
       );
   $$DownloadTasksTableTableManager get downloadTasks =>
       $$DownloadTasksTableTableManager(_db, _db.downloadTasks);
+  $$QueueItemsTableTableManager get queueItems =>
+      $$QueueItemsTableTableManager(_db, _db.queueItems);
 }

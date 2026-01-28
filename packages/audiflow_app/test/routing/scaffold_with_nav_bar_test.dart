@@ -67,14 +67,12 @@ void main() {
       );
     }
 
-    testWidgets('renders NavigationBar with three destinations', (
-      tester,
-    ) async {
+    testWidgets('renders NavigationBar with four destinations', (tester) async {
       await tester.pumpWidget(buildTestWidget());
       await tester.pumpAndSettle();
 
       expect(find.byType(NavigationBar), findsOneWidget);
-      expect(find.byType(NavigationDestination), findsNWidgets(3));
+      expect(find.byType(NavigationDestination), findsNWidgets(4));
     });
 
     testWidgets('displays correct destination labels', (tester) async {
@@ -83,6 +81,7 @@ void main() {
 
       expect(find.text('Search'), findsOneWidget);
       expect(find.text('Library'), findsOneWidget);
+      expect(find.text('Queue'), findsOneWidget);
       expect(find.text('Settings'), findsOneWidget);
     });
 
@@ -92,6 +91,7 @@ void main() {
 
       expect(find.byIcon(Symbols.search), findsOneWidget);
       expect(find.byIcon(Symbols.library_music), findsOneWidget);
+      expect(find.byIcon(Symbols.queue_music), findsOneWidget);
       expect(find.byIcon(Symbols.settings), findsOneWidget);
     });
 

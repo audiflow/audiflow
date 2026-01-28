@@ -42,4 +42,15 @@ abstract class EpisodeRepository {
   ///
   /// Order is not guaranteed; caller should sort as needed.
   Future<List<Episode>> getByIds(List<int> ids);
+
+  /// Gets episodes after a given episode number, ordered ascending.
+  ///
+  /// Returns episodes from [podcastId] with episode numbers greater than
+  /// [afterEpisodeNumber], ordered by episode number ascending.
+  /// If [afterEpisodeNumber] is null, returns from the beginning.
+  Future<List<Episode>> getSubsequentEpisodes({
+    required int podcastId,
+    required int? afterEpisodeNumber,
+    required int limit,
+  });
 }

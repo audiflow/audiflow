@@ -11,6 +11,7 @@ import '../../features/feed/models/episode.dart';
 import '../../features/feed/models/podcast_view_preference.dart';
 import '../../features/feed/models/seasons.dart';
 import '../../features/player/models/playback_history.dart';
+import '../../features/queue/models/queue_item.dart';
 import '../../features/subscription/models/subscriptions.dart';
 
 part 'app_database.g.dart';
@@ -26,6 +27,7 @@ part 'app_database.g.dart';
     Seasons,
     PodcastViewPreferences,
     DownloadTasks,
+    QueueItems,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -36,7 +38,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 9;
+  int get schemaVersion => 10;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -80,6 +82,10 @@ class AppDatabase extends _$AppDatabase {
       // Migration from v8 to v9: add DownloadTasks table
       if (9 <= to && from < 9) {
         await m.createTable(downloadTasks);
+      }
+      // Migration from v9 to v10: add QueueItems table
+      if (10 <= to && from < 10) {
+        await m.createTable(queueItems);
       }
     },
   );

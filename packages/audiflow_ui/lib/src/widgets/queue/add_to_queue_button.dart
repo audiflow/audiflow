@@ -1,0 +1,35 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:material_symbols_icons/symbols.dart';
+
+/// Button to add episode to queue.
+///
+/// - Tap: Play Later (add to end)
+/// - Long press: Play Next (add to front)
+class AddToQueueButton extends StatelessWidget {
+  const AddToQueueButton({
+    required this.onPlayLater,
+    required this.onPlayNext,
+    this.iconSize = 24,
+    super.key,
+  });
+
+  final VoidCallback onPlayLater;
+  final VoidCallback onPlayNext;
+  final double iconSize;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onLongPress: () {
+        HapticFeedback.mediumImpact();
+        onPlayNext();
+      },
+      child: IconButton(
+        icon: Icon(Symbols.playlist_add, size: iconSize),
+        tooltip: 'Add to queue (long press for Play Next)',
+        onPressed: onPlayLater,
+      ),
+    );
+  }
+}

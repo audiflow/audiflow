@@ -1,5 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import '../../../common/database/app_database.dart';
+
 part 'now_playing_info.freezed.dart';
 
 /// Metadata about the currently playing episode.
@@ -14,5 +16,6 @@ sealed class NowPlayingInfo with _$NowPlayingInfo {
     required String podcastTitle,
     String? artworkUrl,
     Duration? totalDuration,
+    Episode? episode,
   }) = _NowPlayingInfo;
 }

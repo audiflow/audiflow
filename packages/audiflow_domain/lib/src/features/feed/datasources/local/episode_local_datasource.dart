@@ -104,4 +104,27 @@ class EpisodeLocalDatasource {
     if (ids.isEmpty) return Future.value([]);
     return (_db.select(_db.episodes)..where((e) => e.id.isIn(ids))).get();
   }
+
+  /// Gets episodes after a given episode number, ordered by episode number ascending.
+  ///
+  /// Returns episodes from [podcastId] with episode numbers greater than
+  /// [afterEpisodeNumber]. If [afterEpisodeNumber] is null, returns from the beginning.
+  Future<List<Episode>> getSubsequentEpisodes({
+    required int podcastId,
+    required int? afterEpisodeNumber,
+    required int limit,
+  }) {
+    final query = _db.select(_db.episodes)
+      ..where((t) => t.podcastId.equals(podcastId));
+
+    if (afterEpisodeNumber != null) {
+      query.where((t) => t.episodeNumber.isBiggerThanValue(afterEpisodeNumber));
+    }
+
+    query
+      ..orderBy([(t) => OrderingTerm.asc(t.episodeNumber)])
+      ..limit(limit);
+
+    return query.get();
+  }
 }
