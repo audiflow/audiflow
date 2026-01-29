@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../features/library/presentation/screens/library_screen.dart';
 import '../features/podcast_detail/presentation/screens/podcast_detail_screen.dart';
-import '../features/podcast_detail/presentation/screens/season_episodes_screen.dart';
+import '../features/podcast_detail/presentation/screens/smart_playlist_episodes_screen.dart';
 import '../features/queue/presentation/screens/queue_screen.dart';
 import '../features/search/presentation/screens/search_screen.dart';
 import '../features/settings/presentation/screens/settings_screen.dart';
@@ -19,12 +19,13 @@ class AppRoutes {
   static const String queue = '/queue';
   static const String settings = '/settings';
   static const String podcastDetail = '/search/podcast';
-  static const String seasonEpisodes = 'season/:seasonId';
+  static const String smartPlaylistEpisodes = 'smart-playlist/:playlistId';
 }
 
 /// Navigator keys for each tab branch.
 ///
-/// Each tab has its own navigator to maintain independent navigation stacks.
+/// Each tab has its own navigator to maintain
+/// independent navigation stacks.
 final _searchNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'search');
 final _libraryNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'library');
 final _queueNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'queue');
@@ -32,9 +33,10 @@ final _settingsNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'settings');
 
 /// Creates the application router configuration.
 ///
-/// This function returns a configured [GoRouter] instance with all
-/// application routes defined. The router uses [StatefulShellRoute.indexedStack]
-/// to provide tab-based navigation with preserved state per tab.
+/// This function returns a configured [GoRouter] instance
+/// with all application routes defined. The router uses
+/// [StatefulShellRoute.indexedStack] to provide tab-based
+/// navigation with preserved state per tab.
 ///
 /// Route structure:
 /// - `/search` (default tab)
@@ -63,9 +65,9 @@ GoRouter createAppRouter() {
                         _buildPodcastDetailScreen(state),
                     routes: [
                       GoRoute(
-                        path: AppRoutes.seasonEpisodes,
+                        path: AppRoutes.smartPlaylistEpisodes,
                         builder: (context, state) =>
-                            _buildSeasonEpisodesScreen(state),
+                            _buildSmartPlaylistEpisodesScreen(state),
                       ),
                     ],
                   ),
@@ -86,9 +88,9 @@ GoRouter createAppRouter() {
                         _buildPodcastDetailScreen(state),
                     routes: [
                       GoRoute(
-                        path: AppRoutes.seasonEpisodes,
+                        path: AppRoutes.smartPlaylistEpisodes,
                         builder: (context, state) =>
-                            _buildSeasonEpisodesScreen(state),
+                            _buildSmartPlaylistEpisodesScreen(state),
                       ),
                     ],
                   ),
@@ -122,7 +124,8 @@ GoRouter createAppRouter() {
 
 /// Builds the podcast detail screen from route state.
 ///
-/// Returns [_PodcastNotFoundScreen] if podcast data is not available.
+/// Returns [_PodcastNotFoundScreen] if podcast data
+/// is not available.
 Widget _buildPodcastDetailScreen(GoRouterState state) {
   final podcast = state.extra as Podcast?;
   if (podcast == null) {
@@ -131,25 +134,27 @@ Widget _buildPodcastDetailScreen(GoRouterState state) {
   return PodcastDetailScreen(podcast: podcast);
 }
 
-/// Builds the season episodes screen from route state.
+/// Builds the smart playlist episodes screen from
+/// route state.
 ///
-/// Returns [_SeasonNotFoundScreen] if season data is not available.
-Widget _buildSeasonEpisodesScreen(GoRouterState state) {
+/// Returns [_SmartPlaylistNotFoundScreen] if playlist
+/// data is not available.
+Widget _buildSmartPlaylistEpisodesScreen(GoRouterState state) {
   final extra = state.extra as Map<String, dynamic>?;
   if (extra == null) {
-    return const _SeasonNotFoundScreen();
+    return const _SmartPlaylistNotFoundScreen();
   }
 
-  final season = extra['season'] as Season?;
-  if (season == null) {
-    return const _SeasonNotFoundScreen();
+  final playlist = extra['smartPlaylist'] as SmartPlaylist?;
+  if (playlist == null) {
+    return const _SmartPlaylistNotFoundScreen();
   }
 
   final podcastTitle = extra['podcastTitle'] as String? ?? '';
   final podcastArtworkUrl = extra['podcastArtworkUrl'] as String?;
 
-  return SeasonEpisodesScreen(
-    season: season,
+  return SmartPlaylistEpisodesScreen(
+    smartPlaylist: playlist,
     podcastTitle: podcastTitle,
     podcastArtworkUrl: podcastArtworkUrl,
   );
@@ -185,14 +190,15 @@ class _PodcastNotFoundScreen extends StatelessWidget {
   }
 }
 
-/// Fallback screen shown when season data is not available.
-class _SeasonNotFoundScreen extends StatelessWidget {
-  const _SeasonNotFoundScreen();
+/// Fallback screen shown when smart playlist data
+/// is not available.
+class _SmartPlaylistNotFoundScreen extends StatelessWidget {
+  const _SmartPlaylistNotFoundScreen();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Season Not Found')),
+      appBar: AppBar(title: const Text('Playlist Not Found')),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -200,7 +206,7 @@ class _SeasonNotFoundScreen extends StatelessWidget {
             const Icon(Icons.folder_off_outlined, size: 64),
             const SizedBox(height: 16),
             Text(
-              'Season data not available',
+              'Playlist data not available',
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 8),

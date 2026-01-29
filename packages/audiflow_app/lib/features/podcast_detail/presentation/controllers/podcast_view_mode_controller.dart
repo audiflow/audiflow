@@ -12,14 +12,14 @@ class PodcastViewModeController extends _$PodcastViewModeController {
   /// Sets the view mode to episodes (flat list).
   void setEpisodes() => state = PodcastViewMode.episodes;
 
-  /// Sets the view mode to seasons (grouped view).
-  void setSeasons() => state = PodcastViewMode.seasons;
+  /// Sets the view mode to smart playlists (grouped view).
+  void setSmartPlaylists() => state = PodcastViewMode.smartPlaylists;
 
-  /// Toggles between episodes and seasons view modes.
+  /// Toggles between episodes and smart playlists view modes.
   void toggle() {
     state = switch (state) {
-      PodcastViewMode.episodes => PodcastViewMode.seasons,
-      PodcastViewMode.seasons => PodcastViewMode.episodes,
+      PodcastViewMode.episodes => PodcastViewMode.smartPlaylists,
+      PodcastViewMode.smartPlaylists => PodcastViewMode.episodes,
     };
   }
 }

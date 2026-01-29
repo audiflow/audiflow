@@ -3,6 +3,6 @@ enum PodcastViewMode {
   /// Flat list of all episodes.
   episodes,
 
-  /// Grouped by season.
-  seasons,
+  /// Grouped by smart playlist.
+  smartPlaylists,
 }

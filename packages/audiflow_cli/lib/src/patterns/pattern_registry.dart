@@ -2,13 +2,13 @@ import 'package:audiflow_domain/patterns.dart';
 // ignore: implementation_imports
 import 'package:audiflow_domain/src/features/feed/patterns/coten_radio_pattern.dart';
 
-/// Registry of all available season patterns.
+/// Registry of all available smart playlist patterns.
 class PatternRegistry {
   /// All registered patterns.
-  List<SeasonPattern> get patterns => [cotenRadioPattern];
+  List<SmartPlaylistPattern> get patterns => [cotenRadioPattern];
 
   /// Finds a pattern by its ID.
-  SeasonPattern? findById(String id) {
+  SmartPlaylistPattern? findById(String id) {
     for (final pattern in patterns) {
       if (pattern.id == id) {
         return pattern;
@@ -18,7 +18,7 @@ class PatternRegistry {
   }
 
   /// Detects a pattern from a feed URL.
-  SeasonPattern? detectFromUrl(String feedUrl) {
+  SmartPlaylistPattern? detectFromUrl(String feedUrl) {
     for (final pattern in patterns) {
       if (pattern.matchesPodcast(null, feedUrl)) {
         return pattern;
@@ -28,5 +28,5 @@ class PatternRegistry {
   }
 
   /// Lists all patterns with their metadata.
-  List<SeasonPattern> listPatterns() => patterns;
+  List<SmartPlaylistPattern> listPatterns() => patterns;
 }

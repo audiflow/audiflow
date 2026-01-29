@@ -228,14 +228,59 @@ class IsolateRssParser {
     try {
       return DateTime.parse(dateString);
     } catch (_) {
-      // Try common RSS date formats
-      try {
-        // RFC 2822 simplified parsing
-        return DateTime.tryParse(dateString);
-      } catch (_) {
-        return null;
+      // Try RFC 2822 format: "Wed, 28 Jan 2026 20:00:00 GMT"
+      return _parseRfc2822(dateString);
+    }
+  }
+
+  static final _rfc2822Re = RegExp(
+    r'(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{4})\s+(\d{2}):(\d{2}):(\d{2})\s*(\S+)?',
+  );
+
+  static const _months = {
+    'Jan': 1,
+    'Feb': 2,
+    'Mar': 3,
+    'Apr': 4,
+    'May': 5,
+    'Jun': 6,
+    'Jul': 7,
+    'Aug': 8,
+    'Sep': 9,
+    'Oct': 10,
+    'Nov': 11,
+    'Dec': 12,
+  };
+
+  static DateTime? _parseRfc2822(String dateString) {
+    final match = _rfc2822Re.firstMatch(dateString);
+    if (match == null) return null;
+
+    final day = int.parse(match.group(1)!);
+    final month = _months[match.group(2)!];
+    if (month == null) return null;
+    final year = int.parse(match.group(3)!);
+    final hour = int.parse(match.group(4)!);
+    final minute = int.parse(match.group(5)!);
+    final second = int.parse(match.group(6)!);
+    final tz = match.group(7);
+
+    final dt = DateTime.utc(year, month, day, hour, minute, second);
+
+    // Apply timezone offset
+    if (tz != null && tz != 'GMT' && tz != 'UTC' && tz != 'UT') {
+      final tzMatch = RegExp(r'^([+-])(\d{2})(\d{2})$').firstMatch(tz);
+      if (tzMatch != null) {
+        final sign = tzMatch.group(1) == '+' ? 1 : -1;
+        final tzHours = int.parse(tzMatch.group(2)!);
+        final tzMinutes = int.parse(tzMatch.group(3)!);
+        return dt.subtract(
+          Duration(hours: sign * tzHours, minutes: sign * tzMinutes),
+        );
       }
     }
+
+    return dt;
   }
 
   static Duration? _parseDuration(String? durationString) {

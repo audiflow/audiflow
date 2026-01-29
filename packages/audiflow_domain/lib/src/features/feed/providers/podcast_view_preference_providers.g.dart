@@ -163,7 +163,7 @@ final class PodcastViewPreferenceControllerProvider
 }
 
 String _$podcastViewPreferenceControllerHash() =>
-    r'42fc984ea137503d5f9d744d7445d50da7123c3e';
+    r'd0e7747a5c3b16aace1daec33a652d923b8c0c19';
 
 /// Controller for updating podcast view preferences.
 ///

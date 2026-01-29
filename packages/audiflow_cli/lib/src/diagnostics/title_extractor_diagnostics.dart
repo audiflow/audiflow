@@ -19,11 +19,11 @@ class TitleDiagnosticResult {
   final String? error;
 }
 
-/// Wraps [SeasonTitleExtractor] to capture diagnostic information.
+/// Wraps [SmartPlaylistTitleExtractor] to capture diagnostic information.
 class TitleExtractorDiagnostics {
   const TitleExtractorDiagnostics(this.extractor);
 
-  final SeasonTitleExtractor extractor;
+  final SmartPlaylistTitleExtractor extractor;
 
   /// Runs extraction and captures diagnostic details.
   TitleDiagnosticResult run(EpisodeData episode) {

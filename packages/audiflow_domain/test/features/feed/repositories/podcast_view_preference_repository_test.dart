@@ -43,14 +43,14 @@ void main() {
 
     test('returns stored preference when exists', () async {
       // First, store some preferences
-      await repository.updateViewMode(1, PodcastViewMode.seasons);
+      await repository.updateViewMode(1, PodcastViewMode.smartPlaylists);
       await repository.updateEpisodeFilter(1, EpisodeFilter.unplayed);
       await repository.updateEpisodeSortOrder(1, SortOrder.ascending);
 
       final pref = await repository.getPreference(1);
 
       expect(pref.podcastId, 1);
-      expect(pref.viewMode, PodcastViewMode.seasons);
+      expect(pref.viewMode, PodcastViewMode.smartPlaylists);
       expect(pref.episodeFilter, EpisodeFilter.unplayed);
       expect(pref.episodeSortOrder, SortOrder.ascending);
     });
@@ -65,18 +65,18 @@ void main() {
     });
 
     test('persists seasons mode', () async {
-      await repository.updateViewMode(1, PodcastViewMode.seasons);
+      await repository.updateViewMode(1, PodcastViewMode.smartPlaylists);
       final pref = await repository.getPreference(1);
 
-      expect(pref.viewMode, PodcastViewMode.seasons);
+      expect(pref.viewMode, PodcastViewMode.smartPlaylists);
     });
 
     test('does not affect other preferences', () async {
       await repository.updateEpisodeFilter(1, EpisodeFilter.inProgress);
-      await repository.updateViewMode(1, PodcastViewMode.seasons);
+      await repository.updateViewMode(1, PodcastViewMode.smartPlaylists);
       final pref = await repository.getPreference(1);
 
-      expect(pref.viewMode, PodcastViewMode.seasons);
+      expect(pref.viewMode, PodcastViewMode.smartPlaylists);
       expect(pref.episodeFilter, EpisodeFilter.inProgress);
     });
   });
@@ -104,11 +104,11 @@ void main() {
     });
 
     test('does not affect other preferences', () async {
-      await repository.updateViewMode(1, PodcastViewMode.seasons);
+      await repository.updateViewMode(1, PodcastViewMode.smartPlaylists);
       await repository.updateEpisodeFilter(1, EpisodeFilter.unplayed);
       final pref = await repository.getPreference(1);
 
-      expect(pref.viewMode, PodcastViewMode.seasons);
+      expect(pref.viewMode, PodcastViewMode.smartPlaylists);
       expect(pref.episodeFilter, EpisodeFilter.unplayed);
     });
   });
@@ -129,12 +129,12 @@ void main() {
     });
 
     test('does not affect other preferences', () async {
-      await repository.updateViewMode(1, PodcastViewMode.seasons);
+      await repository.updateViewMode(1, PodcastViewMode.smartPlaylists);
       await repository.updateEpisodeFilter(1, EpisodeFilter.inProgress);
       await repository.updateEpisodeSortOrder(1, SortOrder.ascending);
       final pref = await repository.getPreference(1);
 
-      expect(pref.viewMode, PodcastViewMode.seasons);
+      expect(pref.viewMode, PodcastViewMode.smartPlaylists);
       expect(pref.episodeFilter, EpisodeFilter.inProgress);
       expect(pref.episodeSortOrder, SortOrder.ascending);
     });
@@ -160,7 +160,7 @@ void main() {
       await Future<void>.delayed(const Duration(milliseconds: 50));
 
       // Update view mode
-      await repository.updateViewMode(1, PodcastViewMode.seasons);
+      await repository.updateViewMode(1, PodcastViewMode.smartPlaylists);
 
       // Wait for update emission
       await Future<void>.delayed(const Duration(milliseconds: 50));
@@ -169,7 +169,7 @@ void main() {
 
       expect(emissions.length, 2);
       expect(emissions[0].viewMode, PodcastViewMode.episodes);
-      expect(emissions[1].viewMode, PodcastViewMode.seasons);
+      expect(emissions[1].viewMode, PodcastViewMode.smartPlaylists);
     });
 
     test('emits updates when episode filter changes', () async {
@@ -230,7 +230,7 @@ void main() {
           );
 
       // Set different preferences for each podcast
-      await repository.updateViewMode(1, PodcastViewMode.seasons);
+      await repository.updateViewMode(1, PodcastViewMode.smartPlaylists);
       await repository.updateViewMode(2, PodcastViewMode.episodes);
       await repository.updateEpisodeFilter(1, EpisodeFilter.unplayed);
       await repository.updateEpisodeFilter(2, EpisodeFilter.inProgress);
@@ -238,7 +238,7 @@ void main() {
       final pref1 = await repository.getPreference(1);
       final pref2 = await repository.getPreference(2);
 
-      expect(pref1.viewMode, PodcastViewMode.seasons);
+      expect(pref1.viewMode, PodcastViewMode.smartPlaylists);
       expect(pref2.viewMode, PodcastViewMode.episodes);
       expect(pref1.episodeFilter, EpisodeFilter.unplayed);
       expect(pref2.episodeFilter, EpisodeFilter.inProgress);

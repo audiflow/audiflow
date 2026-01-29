@@ -33,30 +33,32 @@ export 'src/features/feed/builders/podcast_builder.dart';
 export 'src/features/feed/models/episode_filter.dart';
 export 'src/features/feed/models/feed_parse_progress.dart';
 export 'src/features/feed/models/podcast_view_mode.dart';
-export 'src/features/feed/models/season.dart';
-export 'src/features/feed/models/season_pattern.dart';
-export 'src/features/feed/models/season_sort.dart';
-export 'src/features/feed/models/season_title_extractor.dart';
-export 'src/features/feed/models/seasons.dart';
+export 'src/features/feed/models/smart_playlist.dart';
+export 'src/features/feed/models/smart_playlist_pattern.dart';
+export 'src/features/feed/models/smart_playlist_sort.dart';
+export 'src/features/feed/models/smart_playlist_title_extractor.dart';
+export 'src/features/feed/models/smart_playlists.dart';
 export 'src/features/feed/models/episode_number_extractor.dart';
-export 'src/features/feed/models/season_episode_extractor.dart';
+export 'src/features/feed/models/smart_playlist_episode_extractor.dart';
+export 'src/features/feed/patterns/news_connect_pattern.dart';
+export 'src/features/feed/resolvers/category_resolver.dart';
 export 'src/features/feed/resolvers/rss_metadata_resolver.dart';
-export 'src/features/feed/resolvers/season_resolver.dart';
+export 'src/features/feed/resolvers/smart_playlist_resolver.dart';
 export 'src/features/feed/resolvers/title_appearance_order_resolver.dart';
 export 'src/features/feed/resolvers/year_resolver.dart';
 export 'src/features/feed/services/feed_parser_service.dart';
-export 'src/features/feed/services/season_resolver_service.dart';
+export 'src/features/feed/services/smart_playlist_resolver_service.dart';
 
 // Feed feature - Podcast View Preference
 export 'src/features/feed/models/podcast_view_preference.dart';
 export 'src/features/feed/providers/podcast_view_preference_providers.dart';
 export 'src/features/feed/repositories/podcast_view_preference_repository.dart';
 
-// Feed feature - Season Providers
-export 'src/features/feed/providers/season_providers.dart';
+// Feed feature - Smart Playlist Providers
+export 'src/features/feed/providers/smart_playlist_providers.dart';
 
-// Feed feature - Seasons
-export 'src/features/feed/datasources/local/season_local_datasource.dart';
+// Feed feature - Smart Playlists
+export 'src/features/feed/datasources/local/smart_playlist_local_datasource.dart';
 
 // Feed feature - Episodes
 export 'src/features/feed/models/episode.dart';
@@ -111,8 +113,8 @@ export 'src/common/database/app_database.dart'
         PlaybackHistoriesCompanion,
         QueueItem,
         QueueItemsCompanion,
-        SeasonEntity,
-        SeasonsCompanion;
+        SmartPlaylistEntity,
+        SmartPlaylistsCompanion;
 
 // Subscription feature
 export 'src/features/subscription/extensions/subscription_extensions.dart';

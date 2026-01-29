@@ -1,36 +1,29 @@
 import 'package:audiflow_domain/audiflow_domain.dart'
     show
         EpisodeFilter,
+        PodcastItem,
         PodcastViewMode,
-        Season,
-        SeasonSortField,
+        SmartPlaylist,
+        SmartPlaylistEpisodeData,
         SortOrder,
         podcastViewPreferenceControllerProvider,
-        subscriptionByFeedUrlProvider,
-        subscriptionByItunesIdProvider;
+        smartPlaylistEpisodesProvider,
+        smartPlaylistPatternByFeedUrlProvider,
+        subscriptionByFeedUrlProvider;
 import 'package:audiflow_search/audiflow_search.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
-import '../../../../routing/app_router.dart';
 import '../../../subscription/presentation/controllers/subscription_controller.dart';
 import '../controllers/podcast_detail_controller.dart';
-import '../controllers/season_sort_controller.dart' show SeasonSortConfig;
 import '../widgets/episode_filter_chips.dart';
 import '../widgets/episode_list_tile.dart';
-import '../widgets/episode_sort_sheet.dart';
-import '../widgets/season_grid.dart';
-import '../widgets/season_sort_sheet.dart';
-import '../widgets/season_view_toggle.dart';
+import '../widgets/smart_playlist_episode_list_tile.dart';
+import '../widgets/smart_playlist_view_toggle.dart';
 
-/// Displays podcast details and episode list with playback controls.
-///
-/// Receives a [Podcast] via route extra and fetches episodes from its feedUrl.
-/// Shows podcast artwork, name, artist, and subscribe button at the top,
-/// followed by filter chips and a scrollable list of episodes with play/pause
-/// buttons.
+/// Displays podcast details and episode list with
+/// playback controls.
 class PodcastDetailScreen extends ConsumerWidget {
   const PodcastDetailScreen({super.key, required this.podcast});
 
@@ -41,13 +34,14 @@ class PodcastDetailScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    // Get subscription ID for preference lookup
-    final subscriptionAsync = ref.watch(
-      subscriptionByItunesIdProvider(podcast.id),
-    );
-    final subscriptionId = subscriptionAsync.value?.id;
+    final feedUrl = podcast.feedUrl;
 
-    // Get preferences if subscribed
+    // Resolve subscription from feed URL (same as _buildContent)
+    final subscriptionAsync = feedUrl != null
+        ? ref.watch(subscriptionByFeedUrlProvider(feedUrl))
+        : null;
+    final subscriptionId = subscriptionAsync?.value?.id;
+
     final prefsAsync = subscriptionId != null
         ? ref.watch(podcastViewPreferenceControllerProvider(subscriptionId))
         : null;
@@ -57,68 +51,35 @@ class PodcastDetailScreen extends ConsumerWidget {
       appBar: AppBar(
         title: Text(podcast.name, maxLines: 1, overflow: TextOverflow.ellipsis),
         actions: [
-          if (subscriptionId != null)
+          if (subscriptionId != null && viewMode == PodcastViewMode.episodes)
             IconButton(
-              icon: const Icon(Icons.sort),
-              tooltip: viewMode == PodcastViewMode.seasons
-                  ? 'Sort seasons'
-                  : 'Sort episodes',
-              onPressed: () => viewMode == PodcastViewMode.seasons
-                  ? _showSeasonSortSheet(context, ref, subscriptionId)
-                  : _showEpisodeSortSheet(context, ref, subscriptionId),
+              icon: Icon(
+                prefsAsync?.value?.episodeSortOrder == SortOrder.ascending
+                    ? Icons.arrow_upward
+                    : Icons.arrow_downward,
+              ),
+              tooltip:
+                  prefsAsync?.value?.episodeSortOrder == SortOrder.ascending
+                  ? 'Oldest first'
+                  : 'Newest first',
+              onPressed: () {
+                final current =
+                    prefsAsync?.value?.episodeSortOrder ?? SortOrder.descending;
+                final next = current == SortOrder.descending
+                    ? SortOrder.ascending
+                    : SortOrder.descending;
+                ref
+                    .read(
+                      podcastViewPreferenceControllerProvider(
+                        subscriptionId,
+                      ).notifier,
+                    )
+                    .setEpisodeSortOrder(next);
+              },
             ),
         ],
       ),
       body: _buildBody(context, ref, theme, colorScheme),
-    );
-  }
-
-  void _showSeasonSortSheet(
-    BuildContext context,
-    WidgetRef ref,
-    int subscriptionId,
-  ) {
-    final prefs = ref.read(
-      podcastViewPreferenceControllerProvider(subscriptionId),
-    );
-    final currentConfig = SeasonSortConfig(
-      field: prefs.value?.seasonSortField ?? SeasonSortField.seasonNumber,
-      order: prefs.value?.seasonSortOrder ?? SortOrder.ascending,
-    );
-
-    showSeasonSortSheet(
-      context: context,
-      currentConfig: currentConfig,
-      onSortSelected: (field, order) {
-        ref
-            .read(
-              podcastViewPreferenceControllerProvider(subscriptionId).notifier,
-            )
-            .setSeasonSort(field, order);
-      },
-    );
-  }
-
-  void _showEpisodeSortSheet(
-    BuildContext context,
-    WidgetRef ref,
-    int subscriptionId,
-  ) {
-    final prefs = ref.read(
-      podcastViewPreferenceControllerProvider(subscriptionId),
-    );
-    final currentOrder = prefs.value?.episodeSortOrder ?? SortOrder.descending;
-
-    showEpisodeSortSheet(
-      context: context,
-      currentOrder: currentOrder,
-      onSortSelected: (order) {
-        ref
-            .read(
-              podcastViewPreferenceControllerProvider(subscriptionId).notifier,
-            )
-            .setEpisodeSortOrder(order);
-      },
     );
   }
 
@@ -233,11 +194,9 @@ class PodcastDetailScreen extends ConsumerWidget {
     ThemeData theme,
     String feedUrl,
   ) {
-    // Get subscription for preference lookup
     final subscriptionAsync = ref.watch(subscriptionByFeedUrlProvider(feedUrl));
     final subscription = subscriptionAsync.value;
 
-    // Use persisted preferences if subscribed, otherwise defaults
     final prefsAsync = subscription != null
         ? ref.watch(podcastViewPreferenceControllerProvider(subscription.id))
         : null;
@@ -245,22 +204,45 @@ class PodcastDetailScreen extends ConsumerWidget {
 
     final viewMode = prefs?.viewMode ?? PodcastViewMode.episodes;
     final filter = prefs?.episodeFilter ?? EpisodeFilter.all;
+    final selectedPlaylistId = prefs?.selectedPlaylistId;
+
+    final sortOrder = prefs?.episodeSortOrder ?? SortOrder.descending;
 
     final filteredAsync = ref.watch(
-      filteredSortedEpisodesProvider(
-        feedUrl,
-        filter,
-        prefs?.episodeSortOrder ?? SortOrder.descending,
-      ),
+      filteredSortedEpisodesProvider(feedUrl, filter, sortOrder),
     );
 
-    // Batch-fetch all episode progress in a single query
     final progressMapAsync = ref.watch(podcastEpisodeProgressProvider(feedUrl));
 
-    // Check if season view is available for this podcast
-    // Uses hasSeasonViewAfterLoadProvider to ensure episodes are persisted first
-    final hasSeasonsAsync = ref.watch(hasSeasonViewAfterLoadProvider(feedUrl));
-    final hasSeasons = hasSeasonsAsync.value ?? false;
+    // Fetch playlists for toggle
+    final playlistsAsync = ref.watch(
+      sortedPodcastSmartPlaylistsProvider(feedUrl, podcast.id),
+    );
+    final grouping = playlistsAsync.value;
+    final allPlaylists = grouping?.playlists ?? [];
+
+    // Build ungrouped playlist if needed
+    final displayPlaylists = <SmartPlaylist>[
+      ...allPlaylists,
+      if (grouping != null && grouping.hasUngrouped)
+        SmartPlaylist(
+          id: 'ungrouped',
+          displayName: 'Ungrouped',
+          sortKey: 999999,
+          episodeIds: grouping.ungroupedEpisodeIds,
+        ),
+    ];
+
+    // Resolve selected playlist for inline display
+    SmartPlaylist? activePlaylist;
+    if (viewMode == PodcastViewMode.smartPlaylists &&
+        displayPlaylists.isNotEmpty) {
+      activePlaylist =
+          displayPlaylists
+              .where((p) => p.id == selectedPlaylistId)
+              .firstOrNull ??
+          displayPlaylists.first;
+    }
 
     return RefreshIndicator(
       onRefresh: () async {
@@ -271,17 +253,19 @@ class PodcastDetailScreen extends ConsumerWidget {
       child: CustomScrollView(
         slivers: [
           SliverToBoxAdapter(child: _buildHeader(context, ref, theme)),
-          // Show view mode toggle only when seasons are available
-          if (hasSeasons)
+          // View mode toggle
+          if (displayPlaylists.isNotEmpty)
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: Spacing.md,
                   vertical: Spacing.sm,
                 ),
-                child: SeasonViewToggle(
-                  selected: viewMode,
-                  onChanged: (mode) {
+                child: SmartPlaylistViewToggle(
+                  playlists: displayPlaylists,
+                  selectedMode: viewMode,
+                  selectedPlaylistId: activePlaylist?.id ?? selectedPlaylistId,
+                  onEpisodesSelected: () {
                     if (subscription != null) {
                       ref
                           .read(
@@ -289,13 +273,24 @@ class PodcastDetailScreen extends ConsumerWidget {
                               subscription.id,
                             ).notifier,
                           )
-                          .toggleViewMode();
+                          .setViewMode(PodcastViewMode.episodes);
+                    }
+                  },
+                  onPlaylistSelected: (playlist) {
+                    if (subscription != null) {
+                      ref
+                          .read(
+                            podcastViewPreferenceControllerProvider(
+                              subscription.id,
+                            ).notifier,
+                          )
+                          .selectPlaylist(playlist.id);
                     }
                   },
                 ),
               ),
             ),
-          // Show filter chips only in episodes view
+          // Filter chips only in episodes view
           if (viewMode == PodcastViewMode.episodes)
             SliverToBoxAdapter(
               child: Padding(
@@ -316,45 +311,59 @@ class PodcastDetailScreen extends ConsumerWidget {
                 ),
               ),
             ),
-          // Content based on view mode
+          // Content
           if (viewMode == PodcastViewMode.episodes)
-            _buildEpisodeList(filteredAsync, progressMapAsync, theme)
-          else
-            _buildSeasonView(context, ref, feedUrl),
+            _buildEpisodeList(
+              ref,
+              feedUrl,
+              filteredAsync,
+              progressMapAsync,
+              theme,
+              sortOrder,
+            )
+          else if (activePlaylist != null)
+            _buildInlinePlaylistEpisodes(ref, activePlaylist, theme),
         ],
       ),
     );
   }
 
-  Widget _buildSeasonView(BuildContext context, WidgetRef ref, String feedUrl) {
-    final seasonsAsync = ref.watch(
-      sortedPodcastSeasonsProvider(feedUrl, podcast.id),
+  Widget _buildInlinePlaylistEpisodes(
+    WidgetRef ref,
+    SmartPlaylist playlist,
+    ThemeData theme,
+  ) {
+    final episodesAsync = ref.watch(
+      smartPlaylistEpisodesProvider(playlist.episodeIds),
     );
 
-    return seasonsAsync.when(
-      data: (grouping) {
-        if (grouping == null) {
-          return const SliverToBoxAdapter(
-            child: Padding(
-              padding: EdgeInsets.all(Spacing.lg),
-              child: Center(child: Text('No seasons available')),
-            ),
-          );
+    return episodesAsync.when(
+      data: (episodes) {
+        if (episodes.isEmpty) {
+          return SliverFillRemaining(child: _buildEmptyPlaylistState(theme));
         }
 
-        return SeasonGrid(
-          seasons: grouping.seasons,
-          ungroupedEpisodeIds: grouping.ungroupedEpisodeIds,
-          onSeasonTap: (season) => _navigateToSeasonEpisodes(context, season),
-          onUngroupedTap: () => _navigateToSeasonEpisodes(
-            context,
-            Season(
-              id: 'ungrouped',
-              displayName: 'Ungrouped',
-              sortKey: 999999,
-              episodeIds: grouping.ungroupedEpisodeIds,
-            ),
-          ),
+        if (playlist.yearGrouped) {
+          return _buildYearGroupedList(episodes, theme);
+        }
+
+        if (playlist.subCategories != null &&
+            playlist.subCategories!.isNotEmpty) {
+          return _buildSubCategoryList(episodes, playlist, theme);
+        }
+
+        return SliverList.builder(
+          itemCount: episodes.length,
+          itemBuilder: (context, index) {
+            final data = episodes[index];
+            return SmartPlaylistEpisodeListTile(
+              key: ValueKey(data.episode.id),
+              episode: data.episode,
+              podcastTitle: podcast.name,
+              artworkUrl: podcast.artworkUrl,
+              progress: data.progress,
+            );
+          },
         );
       },
       loading: () => const SliverToBoxAdapter(
@@ -366,46 +375,128 @@ class PodcastDetailScreen extends ConsumerWidget {
       error: (error, _) => SliverToBoxAdapter(
         child: Padding(
           padding: const EdgeInsets.all(Spacing.lg),
-          child: Center(child: Text('Error loading seasons: $error')),
+          child: Center(child: Text('Error loading episodes: $error')),
         ),
       ),
     );
   }
 
-  void _navigateToSeasonEpisodes(BuildContext context, Season season) {
-    final currentPath = GoRouterState.of(context).uri.path;
-    context.push(
-      '$currentPath/${AppRoutes.seasonEpisodes}'.replaceAll(
-        ':seasonId',
-        season.id,
-      ),
-      extra: {
-        'season': season,
-        'podcastTitle': podcast.name,
-        'podcastArtworkUrl': podcast.artworkUrl,
-      },
+  Widget _buildYearGroupedList(
+    List<SmartPlaylistEpisodeData> episodes,
+    ThemeData theme,
+  ) {
+    final byYear = <int, List<SmartPlaylistEpisodeData>>{};
+    for (final data in episodes) {
+      final year = data.episode.publishedAt?.year ?? 0;
+      byYear.putIfAbsent(year, () => []).add(data);
+    }
+    final sortedYears = byYear.keys.toList()..sort((a, b) => b.compareTo(a));
+    final currentYear = DateTime.now().year;
+
+    return SliverList(
+      delegate: SliverChildListDelegate([
+        for (final year in sortedYears)
+          ExpansionTile(
+            key: PageStorageKey('year_$year'),
+            title: Text(
+              year == 0 ? 'Unknown' : '$year',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            initiallyExpanded: year == currentYear,
+            children: [
+              for (final data in byYear[year]!)
+                SmartPlaylistEpisodeListTile(
+                  key: ValueKey(data.episode.id),
+                  episode: data.episode,
+                  podcastTitle: podcast.name,
+                  artworkUrl: podcast.artworkUrl,
+                  progress: data.progress,
+                ),
+            ],
+          ),
+      ]),
+    );
+  }
+
+  Widget _buildSubCategoryList(
+    List<SmartPlaylistEpisodeData> episodes,
+    SmartPlaylist playlist,
+    ThemeData theme,
+  ) {
+    final subCategories = playlist.subCategories!;
+    final episodeById = <int, SmartPlaylistEpisodeData>{};
+    for (final data in episodes) {
+      episodeById[data.episode.id] = data;
+    }
+
+    return SliverList(
+      delegate: SliverChildListDelegate([
+        for (final subCategory in subCategories)
+          ExpansionTile(
+            key: PageStorageKey('sub_${subCategory.id}'),
+            title: Text(
+              subCategory.displayName,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            subtitle: Text(
+              '${subCategory.episodeIds.length} episodes',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            initiallyExpanded: true,
+            children: [
+              for (final id in subCategory.episodeIds)
+                if (episodeById.containsKey(id))
+                  SmartPlaylistEpisodeListTile(
+                    key: ValueKey(id),
+                    episode: episodeById[id]!.episode,
+                    podcastTitle: podcast.name,
+                    artworkUrl: podcast.artworkUrl,
+                    progress: episodeById[id]!.progress,
+                  ),
+            ],
+          ),
+      ]),
     );
   }
 
   Widget _buildEpisodeList(
-    AsyncValue<List<dynamic>> episodesAsync,
+    WidgetRef ref,
+    String feedUrl,
+    AsyncValue<List<PodcastItem>> episodesAsync,
     AsyncValue<EpisodeProgressMap> progressMapAsync,
     ThemeData theme,
+    SortOrder sortOrder,
   ) {
+    final pattern = ref.watch(smartPlaylistPatternByFeedUrlProvider(feedUrl));
+    final yearGrouped = pattern?.yearGroupedEpisodes ?? false;
+
     return episodesAsync.when(
       data: (episodes) {
         if (episodes.isEmpty) {
           return SliverFillRemaining(child: _buildEmptyFilterState(theme));
         }
 
-        // Use progress map if available, otherwise empty map
         final progressMap = progressMapAsync.value ?? {};
+
+        if (yearGrouped) {
+          return _buildYearGroupedEpisodeList(
+            episodes,
+            progressMap,
+            theme,
+            sortOrder,
+          );
+        }
 
         return SliverList.builder(
           itemCount: episodes.length,
           itemBuilder: (context, index) {
             final episode = episodes[index];
-            // Look up pre-fetched progress by audioUrl
             final progress = episode.enclosureUrl != null
                 ? progressMap[episode.enclosureUrl]
                 : null;
@@ -432,6 +523,64 @@ class PodcastDetailScreen extends ConsumerWidget {
           child: Text('Error loading episodes: $error'),
         ),
       ),
+    );
+  }
+
+  Widget _buildYearGroupedEpisodeList(
+    List<PodcastItem> episodes,
+    EpisodeProgressMap progressMap,
+    ThemeData theme,
+    SortOrder sortOrder,
+  ) {
+    final byYear = <int, List<PodcastItem>>{};
+    for (final episode in episodes) {
+      // Prefer DB publishedAt (reliably parsed), fall back to RSS publishDate
+      final dbEpisode = episode.enclosureUrl != null
+          ? progressMap[episode.enclosureUrl]?.episode
+          : null;
+      final year =
+          dbEpisode?.publishedAt?.year ?? episode.publishDate?.year ?? 0;
+      byYear.putIfAbsent(year, () => []).add(episode);
+    }
+    final sortedYears = byYear.keys.toList()
+      ..sort(
+        sortOrder == SortOrder.descending
+            ? (a, b) => b.compareTo(a)
+            : (a, b) => a.compareTo(b),
+      );
+
+    return SliverList(
+      delegate: SliverChildListDelegate([
+        for (final year in sortedYears)
+          ExpansionTile(
+            key: PageStorageKey('episodes_year_$year'),
+            title: Text(
+              year == 0 ? 'Unknown' : '$year',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            subtitle: Text(
+              '${byYear[year]!.length} episodes',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            initiallyExpanded: year == sortedYears.first,
+            children: [
+              for (final episode in byYear[year]!)
+                EpisodeListTile(
+                  key: ValueKey(episode.guid ?? episode.title),
+                  episode: episode,
+                  podcastTitle: podcast.name,
+                  artworkUrl: podcast.artworkUrl,
+                  progress: episode.enclosureUrl != null
+                      ? progressMap[episode.enclosureUrl]
+                      : null,
+                ),
+            ],
+          ),
+      ]),
     );
   }
 
@@ -617,6 +766,37 @@ class PodcastDetailScreen extends ConsumerWidget {
           const SizedBox(height: Spacing.xs),
           Text(
             'Try a different filter',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyPlaylistState(ThemeData theme) {
+    final colorScheme = theme.colorScheme;
+
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.folder_open_outlined,
+            size: 64,
+            color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+          ),
+          const SizedBox(height: Spacing.md),
+          Text(
+            'No episodes found',
+            style: theme.textTheme.titleMedium?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: Spacing.xs),
+          Text(
+            'This playlist has no episodes',
             style: theme.textTheme.bodyMedium?.copyWith(
               color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
             ),

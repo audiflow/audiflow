@@ -55,12 +55,12 @@ void main() {
       final result = resolver.resolve(episodes, null);
 
       expect(result, isNotNull);
-      expect(result!.seasons, hasLength(2));
+      expect(result!.playlists, hasLength(2));
 
-      final season1 = result.seasons.firstWhere((s) => s.id == 'season_1');
-      final season2 = result.seasons.firstWhere((s) => s.id == 'season_2');
-      expect(season1.episodeIds, [1, 2]);
-      expect(season2.episodeIds, [3]);
+      final playlist1 = result.playlists.firstWhere((s) => s.id == 'season_1');
+      final playlist2 = result.playlists.firstWhere((s) => s.id == 'season_2');
+      expect(playlist1.episodeIds, [1, 2]);
+      expect(playlist2.episodeIds, [3]);
     });
 
     test('treats null seasonNumber as ungrouped by default', () {
@@ -77,14 +77,14 @@ void main() {
       final result = resolver.resolve(episodes, null);
 
       expect(result, isNotNull);
-      expect(result!.seasons, hasLength(1));
+      expect(result!.playlists, hasLength(1));
       expect(result.ungroupedEpisodeIds, [2]);
     });
 
     test(
       'groups null/zero seasonNumber when groupNullSeasonAs is configured',
       () {
-        final pattern = SeasonPattern(
+        final pattern = SmartPlaylistPattern(
           id: 'test',
           resolverType: 'rss',
           config: {'groupNullSeasonAs': 0},
@@ -108,11 +108,13 @@ void main() {
         final result = resolver.resolve(episodes, pattern);
 
         expect(result, isNotNull);
-        expect(result!.seasons, hasLength(2));
+        expect(result!.playlists, hasLength(2));
         expect(result.ungroupedEpisodeIds, isEmpty);
 
-        final season0 = result.seasons.firstWhere((s) => s.id == 'season_0');
-        expect(season0.episodeIds, containsAll([2, 3]));
+        final playlist0 = result.playlists.firstWhere(
+          (s) => s.id == 'season_0',
+        );
+        expect(playlist0.episodeIds, containsAll([2, 3]));
       },
     );
 
@@ -126,17 +128,17 @@ void main() {
       final result = resolver.resolve(episodes, null);
 
       expect(result, isNotNull);
-      final season1 = result!.seasons.firstWhere((s) => s.id == 'season_1');
-      final season2 = result.seasons.firstWhere((s) => s.id == 'season_2');
+      final playlist1 = result!.playlists.firstWhere((s) => s.id == 'season_1');
+      final playlist2 = result.playlists.firstWhere((s) => s.id == 'season_2');
 
-      expect(season1.sortKey, 1); // season number
-      expect(season2.sortKey, 2); // season number
+      expect(playlist1.sortKey, 1);
+      expect(playlist2.sortKey, 2);
     });
 
     test('default sort is season number ascending', () {
-      expect(resolver.defaultSort, isA<SimpleSeasonSort>());
-      final sort = resolver.defaultSort as SimpleSeasonSort;
-      expect(sort.field, SeasonSortField.seasonNumber);
+      expect(resolver.defaultSort, isA<SimpleSmartPlaylistSort>());
+      final sort = resolver.defaultSort as SimpleSmartPlaylistSort;
+      expect(sort.field, SmartPlaylistSortField.playlistNumber);
       expect(sort.order, SortOrder.ascending);
     });
 
@@ -149,7 +151,7 @@ void main() {
       final result = resolver.resolve(episodes, null);
 
       expect(result, isNotNull);
-      expect(result!.seasons[0].sortKey, 1); // season number
+      expect(result!.playlists[0].sortKey, 1); // season number
     });
 
     test('sortKey is season number even with mixed episodeNumber values', () {
@@ -162,7 +164,53 @@ void main() {
       final result = resolver.resolve(episodes, null);
 
       expect(result, isNotNull);
-      expect(result!.seasons[0].sortKey, 1); // season number
+      expect(result!.playlists[0].sortKey, 1); // season number
+    });
+
+    test('yearGroupedPlaylists config sets yearGrouped=true', () {
+      final pattern = SmartPlaylistPattern(
+        id: 'test',
+        resolverType: 'rss',
+        config: {
+          'groupNullSeasonAs': 0,
+          'yearGroupedPlaylists': {'0': true},
+        },
+      );
+      final episodes = [
+        _makeEpisode(id: 1, title: 'S1E1', seasonNumber: 1, episodeNumber: 1),
+        _makeEpisode(
+          id: 2,
+          title: 'Extra1',
+          seasonNumber: null,
+          episodeNumber: 100,
+        ),
+      ];
+
+      final result = resolver.resolve(episodes, pattern);
+
+      expect(result, isNotNull);
+      final playlist0 = result!.playlists.firstWhere((s) => s.id == 'season_0');
+      expect(playlist0.yearGrouped, isTrue);
+    });
+
+    test('playlists not in yearGroupedPlaylists get '
+        'yearGrouped=false', () {
+      final pattern = SmartPlaylistPattern(
+        id: 'test',
+        resolverType: 'rss',
+        config: {
+          'yearGroupedPlaylists': {'0': true},
+        },
+      );
+      final episodes = [
+        _makeEpisode(id: 1, title: 'S1E1', seasonNumber: 1, episodeNumber: 1),
+      ];
+
+      final result = resolver.resolve(episodes, pattern);
+
+      expect(result, isNotNull);
+      final playlist1 = result!.playlists.firstWhere((s) => s.id == 'season_1');
+      expect(playlist1.yearGrouped, isFalse);
     });
 
     test('seasons are sorted by season number', () {
@@ -175,10 +223,10 @@ void main() {
       final result = resolver.resolve(episodes, null);
 
       expect(result, isNotNull);
-      expect(result!.seasons.length, 3);
-      expect(result.seasons[0].sortKey, 1);
-      expect(result.seasons[1].sortKey, 2);
-      expect(result.seasons[2].sortKey, 3);
+      expect(result!.playlists.length, 3);
+      expect(result.playlists[0].sortKey, 1);
+      expect(result.playlists[1].sortKey, 2);
+      expect(result.playlists[2].sortKey, 3);
     });
   });
 }

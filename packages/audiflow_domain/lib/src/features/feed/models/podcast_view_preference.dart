@@ -28,6 +28,9 @@ class PodcastViewPreferences extends Table {
   TextColumn get seasonSortOrder =>
       text().withDefault(const Constant('desc'))();
 
+  /// Selected smart playlist ID for inline display.
+  TextColumn get selectedPlaylistId => text().nullable()();
+
   @override
   Set<Column> get primaryKey => {podcastId};
 }

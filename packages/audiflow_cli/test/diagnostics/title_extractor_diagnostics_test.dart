@@ -17,7 +17,7 @@ SimpleEpisodeData _makeEpisode({
 void main() {
   group('TitleExtractorDiagnostics', () {
     test('returns fallbackValue result when seasonNumber is null', () {
-      final extractor = SeasonTitleExtractor(
+      final extractor = SmartPlaylistTitleExtractor(
         source: 'title',
         pattern: r'COTEN RADIO (.+?)\d+',
         group: 1,
@@ -36,7 +36,7 @@ void main() {
     });
 
     test('returns pattern match result for positive seasonNumber', () {
-      final extractor = SeasonTitleExtractor(
+      final extractor = SmartPlaylistTitleExtractor(
         source: 'title',
         pattern: r'COTEN RADIO (Short)?\s*(.+?)\s*\d+',
         group: 2,
@@ -58,7 +58,7 @@ void main() {
     });
 
     test('returns error when pattern does not match', () {
-      final extractor = SeasonTitleExtractor(
+      final extractor = SmartPlaylistTitleExtractor(
         source: 'title',
         pattern: r'COTEN RADIO (.+?)\d+',
         group: 1,
