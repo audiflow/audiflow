@@ -24,19 +24,34 @@ import '../widgets/smart_playlist_view_toggle.dart';
 
 /// Displays podcast details and episode list with
 /// playback controls.
-class PodcastDetailScreen extends ConsumerWidget {
+class PodcastDetailScreen extends ConsumerStatefulWidget {
   const PodcastDetailScreen({super.key, required this.podcast});
 
   final Podcast podcast;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<PodcastDetailScreen> createState() =>
+      _PodcastDetailScreenState();
+}
+
+class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
+  final _scrollController = ScrollController();
+
+  Podcast get podcast => widget.podcast;
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
     final feedUrl = podcast.feedUrl;
 
-    // Resolve subscription from feed URL (same as _buildContent)
     final subscriptionAsync = feedUrl != null
         ? ref.watch(subscriptionByFeedUrlProvider(feedUrl))
         : null;
@@ -251,6 +266,7 @@ class PodcastDetailScreen extends ConsumerWidget {
         await ref.read(podcastDetailProvider(feedUrl).future);
       },
       child: CustomScrollView(
+        controller: _scrollController,
         slivers: [
           SliverToBoxAdapter(child: _buildHeader(context, ref, theme)),
           // View mode toggle
@@ -313,7 +329,7 @@ class PodcastDetailScreen extends ConsumerWidget {
             ),
           // Content
           if (viewMode == PodcastViewMode.episodes)
-            _buildEpisodeList(
+            ..._buildEpisodeList(
               ref,
               feedUrl,
               filteredAsync,
@@ -322,13 +338,13 @@ class PodcastDetailScreen extends ConsumerWidget {
               sortOrder,
             )
           else if (activePlaylist != null)
-            _buildInlinePlaylistEpisodes(ref, activePlaylist, theme),
+            ..._buildInlinePlaylistEpisodes(ref, activePlaylist, theme),
         ],
       ),
     );
   }
 
-  Widget _buildInlinePlaylistEpisodes(
+  List<Widget> _buildInlinePlaylistEpisodes(
     WidgetRef ref,
     SmartPlaylist playlist,
     ThemeData theme,
@@ -340,48 +356,54 @@ class PodcastDetailScreen extends ConsumerWidget {
     return episodesAsync.when(
       data: (episodes) {
         if (episodes.isEmpty) {
-          return SliverFillRemaining(child: _buildEmptyPlaylistState(theme));
+          return [SliverFillRemaining(child: _buildEmptyPlaylistState(theme))];
         }
 
         if (playlist.yearGrouped) {
-          return _buildYearGroupedList(episodes, theme);
+          return _buildYearGroupedPlaylistSlivers(episodes, theme);
         }
 
         if (playlist.subCategories != null &&
             playlist.subCategories!.isNotEmpty) {
-          return _buildSubCategoryList(episodes, playlist, theme);
+          return [_buildSubCategoryList(episodes, playlist, theme)];
         }
 
-        return SliverList.builder(
-          itemCount: episodes.length,
-          itemBuilder: (context, index) {
-            final data = episodes[index];
-            return SmartPlaylistEpisodeListTile(
-              key: ValueKey(data.episode.id),
-              episode: data.episode,
-              podcastTitle: podcast.name,
-              artworkUrl: podcast.artworkUrl,
-              progress: data.progress,
-            );
-          },
-        );
+        return [
+          SliverList.builder(
+            itemCount: episodes.length,
+            itemBuilder: (context, index) {
+              final data = episodes[index];
+              return SmartPlaylistEpisodeListTile(
+                key: ValueKey(data.episode.id),
+                episode: data.episode,
+                podcastTitle: podcast.name,
+                artworkUrl: podcast.artworkUrl,
+                progress: data.progress,
+              );
+            },
+          ),
+        ];
       },
-      loading: () => const SliverToBoxAdapter(
-        child: Padding(
-          padding: EdgeInsets.all(Spacing.lg),
-          child: Center(child: CircularProgressIndicator()),
+      loading: () => [
+        const SliverToBoxAdapter(
+          child: Padding(
+            padding: EdgeInsets.all(Spacing.lg),
+            child: Center(child: CircularProgressIndicator()),
+          ),
         ),
-      ),
-      error: (error, _) => SliverToBoxAdapter(
-        child: Padding(
-          padding: const EdgeInsets.all(Spacing.lg),
-          child: Center(child: Text('Error loading episodes: $error')),
+      ],
+      error: (error, _) => [
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.all(Spacing.lg),
+            child: Center(child: Text('Error loading episodes: $error')),
+          ),
         ),
-      ),
+      ],
     );
   }
 
-  Widget _buildYearGroupedList(
+  List<Widget> _buildYearGroupedPlaylistSlivers(
     List<SmartPlaylistEpisodeData> episodes,
     ThemeData theme,
   ) {
@@ -391,32 +413,20 @@ class PodcastDetailScreen extends ConsumerWidget {
       byYear.putIfAbsent(year, () => []).add(data);
     }
     final sortedYears = byYear.keys.toList()..sort((a, b) => b.compareTo(a));
-    final currentYear = DateTime.now().year;
 
-    return SliverList(
-      delegate: SliverChildListDelegate([
-        for (final year in sortedYears)
-          ExpansionTile(
-            key: PageStorageKey('year_$year'),
-            title: Text(
-              year == 0 ? 'Unknown' : '$year',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            initiallyExpanded: year == currentYear,
-            children: [
-              for (final data in byYear[year]!)
-                SmartPlaylistEpisodeListTile(
-                  key: ValueKey(data.episode.id),
-                  episode: data.episode,
-                  podcastTitle: podcast.name,
-                  artworkUrl: podcast.artworkUrl,
-                  progress: data.progress,
-                ),
-            ],
-          ),
-      ]),
+    return buildYearGroupedSlivers<SmartPlaylistEpisodeData>(
+      itemsByYear: byYear,
+      sortedYears: sortedYears,
+      itemBuilder: (context, data) => SmartPlaylistEpisodeListTile(
+        key: ValueKey(data.episode.id),
+        episode: data.episode,
+        podcastTitle: podcast.name,
+        artworkUrl: podcast.artworkUrl,
+        progress: data.progress,
+      ),
+      scrollController: _scrollController,
+      yearGroupingEnabled: true,
+      itemExtent: 72.0,
     );
   }
 
@@ -465,7 +475,7 @@ class PodcastDetailScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildEpisodeList(
+  List<Widget> _buildEpisodeList(
     WidgetRef ref,
     String feedUrl,
     AsyncValue<List<PodcastItem>> episodesAsync,
@@ -479,13 +489,13 @@ class PodcastDetailScreen extends ConsumerWidget {
     return episodesAsync.when(
       data: (episodes) {
         if (episodes.isEmpty) {
-          return SliverFillRemaining(child: _buildEmptyFilterState(theme));
+          return [SliverFillRemaining(child: _buildEmptyFilterState(theme))];
         }
 
         final progressMap = progressMapAsync.value ?? {};
 
         if (yearGrouped) {
-          return _buildYearGroupedEpisodeList(
+          return _buildYearGroupedEpisodeSlivers(
             episodes,
             progressMap,
             theme,
@@ -493,40 +503,46 @@ class PodcastDetailScreen extends ConsumerWidget {
           );
         }
 
-        return SliverList.builder(
-          itemCount: episodes.length,
-          itemBuilder: (context, index) {
-            final episode = episodes[index];
-            final progress = episode.enclosureUrl != null
-                ? progressMap[episode.enclosureUrl]
-                : null;
+        return [
+          SliverList.builder(
+            itemCount: episodes.length,
+            itemBuilder: (context, index) {
+              final episode = episodes[index];
+              final progress = episode.enclosureUrl != null
+                  ? progressMap[episode.enclosureUrl]
+                  : null;
 
-            return EpisodeListTile(
-              key: ValueKey(episode.guid ?? index),
-              episode: episode,
-              podcastTitle: podcast.name,
-              artworkUrl: podcast.artworkUrl,
-              progress: progress,
-            );
-          },
-        );
+              return EpisodeListTile(
+                key: ValueKey(episode.guid ?? index),
+                episode: episode,
+                podcastTitle: podcast.name,
+                artworkUrl: podcast.artworkUrl,
+                progress: progress,
+              );
+            },
+          ),
+        ];
       },
-      loading: () => const SliverToBoxAdapter(
-        child: Padding(
-          padding: EdgeInsets.all(Spacing.lg),
-          child: Center(child: CircularProgressIndicator()),
+      loading: () => [
+        const SliverToBoxAdapter(
+          child: Padding(
+            padding: EdgeInsets.all(Spacing.lg),
+            child: Center(child: CircularProgressIndicator()),
+          ),
         ),
-      ),
-      error: (error, _) => SliverToBoxAdapter(
-        child: Padding(
-          padding: const EdgeInsets.all(Spacing.lg),
-          child: Text('Error loading episodes: $error'),
+      ],
+      error: (error, _) => [
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.all(Spacing.lg),
+            child: Text('Error loading episodes: $error'),
+          ),
         ),
-      ),
+      ],
     );
   }
 
-  Widget _buildYearGroupedEpisodeList(
+  List<Widget> _buildYearGroupedEpisodeSlivers(
     List<PodcastItem> episodes,
     EpisodeProgressMap progressMap,
     ThemeData theme,
@@ -534,7 +550,6 @@ class PodcastDetailScreen extends ConsumerWidget {
   ) {
     final byYear = <int, List<PodcastItem>>{};
     for (final episode in episodes) {
-      // Prefer DB publishedAt (reliably parsed), fall back to RSS publishDate
       final dbEpisode = episode.enclosureUrl != null
           ? progressMap[episode.enclosureUrl]?.episode
           : null;
@@ -549,38 +564,24 @@ class PodcastDetailScreen extends ConsumerWidget {
             : (a, b) => a.compareTo(b),
       );
 
-    return SliverList(
-      delegate: SliverChildListDelegate([
-        for (final year in sortedYears)
-          ExpansionTile(
-            key: PageStorageKey('episodes_year_$year'),
-            title: Text(
-              year == 0 ? 'Unknown' : '$year',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            subtitle: Text(
-              '${byYear[year]!.length} episodes',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            initiallyExpanded: year == sortedYears.first,
-            children: [
-              for (final episode in byYear[year]!)
-                EpisodeListTile(
-                  key: ValueKey(episode.guid ?? episode.title),
-                  episode: episode,
-                  podcastTitle: podcast.name,
-                  artworkUrl: podcast.artworkUrl,
-                  progress: episode.enclosureUrl != null
-                      ? progressMap[episode.enclosureUrl]
-                      : null,
-                ),
-            ],
-          ),
-      ]),
+    return buildYearGroupedSlivers<PodcastItem>(
+      itemsByYear: byYear,
+      sortedYears: sortedYears,
+      itemBuilder: (context, episode) {
+        final progress = episode.enclosureUrl != null
+            ? progressMap[episode.enclosureUrl]
+            : null;
+        return EpisodeListTile(
+          key: ValueKey(episode.guid ?? episode.title),
+          episode: episode,
+          podcastTitle: podcast.name,
+          artworkUrl: podcast.artworkUrl,
+          progress: progress,
+        );
+      },
+      scrollController: _scrollController,
+      yearGroupingEnabled: true,
+      itemExtent: 72.0,
     );
   }
 
