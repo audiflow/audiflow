@@ -63,7 +63,7 @@ final class PodcastViewModeControllerProvider
 }
 
 String _$podcastViewModeControllerHash() =>
-    r'60b68ee7b24510867790bbfe77480763ee16f434';
+    r'b699d4cd42c1c65d8e1b758bedc8128d30c65ae7';
 
 /// Controller for the podcast detail screen view mode toggle.
 

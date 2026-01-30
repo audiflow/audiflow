@@ -82,7 +82,10 @@ Future<ParsedFeed> podcastDetail(Ref ref, String feedUrl) async {
     // Parse the XML content
     final result = await feedParser.parseFromString(response.data!);
 
-    logger.i('Successfully parsed feed: ${result.episodeCount} episodes');
+    logger.i(
+      'Successfully parsed feed: '
+      '${result.episodeCount} episodes',
+    );
 
     // Persist episodes if user is subscribed to this podcast
     final subscriptionRepo = ref.read(subscriptionRepositoryProvider);
@@ -91,12 +94,14 @@ Future<ParsedFeed> podcastDetail(Ref ref, String feedUrl) async {
     if (subscription != null) {
       final episodeRepo = ref.read(episodeRepositoryProvider);
 
-      // Look up season pattern for this feed to extract season/episode numbers
-      final pattern = ref.read(seasonPatternByFeedUrlProvider(feedUrl));
-      final extractor = pattern?.seasonEpisodeExtractor;
+      // Look up smart playlist pattern for this feed
+      final pattern = ref.read(smartPlaylistPatternByFeedUrlProvider(feedUrl));
+      final extractor = pattern?.smartPlaylistEpisodeExtractor;
       logger.d(
-        'Season pattern lookup: feedUrl=$feedUrl, '
-        'pattern=${pattern?.id}, hasExtractor=${extractor != null}',
+        'Smart playlist pattern lookup: '
+        'feedUrl=$feedUrl, '
+        'pattern=${pattern?.id}, '
+        'hasExtractor=${extractor != null}',
       );
 
       await episodeRepo.upsertFromFeedItems(
@@ -104,14 +109,18 @@ Future<ParsedFeed> podcastDetail(Ref ref, String feedUrl) async {
         result.episodes,
         extractor: extractor,
       );
-      logger.d('Persisted ${result.episodes.length} episodes for subscription');
+      logger.d(
+        'Persisted ${result.episodes.length} episodes '
+        'for subscription',
+      );
 
-      // Invalidate all season providers after episodes are persisted
-      // Both ID-based and feedUrl-based providers must be invalidated
-      ref.invalidate(podcastSeasonsProvider(subscription.id));
-      ref.invalidate(hasSeasonViewProvider(subscription.id));
-      ref.invalidate(podcastSeasonsByFeedUrlProvider(feedUrl));
-      ref.invalidate(hasSeasonViewByFeedUrlProvider(feedUrl));
+      // Invalidate all smart playlist providers after
+      // episodes are persisted. Both ID-based and
+      // feedUrl-based providers must be invalidated.
+      ref.invalidate(podcastSmartPlaylistsProvider(subscription.id));
+      ref.invalidate(hasSmartPlaylistViewProvider(subscription.id));
+      ref.invalidate(podcastSmartPlaylistsByFeedUrlProvider(feedUrl));
+      ref.invalidate(hasSmartPlaylistViewByFeedUrlProvider(feedUrl));
     }
 
     return result;
@@ -241,7 +250,9 @@ Future<List<PodcastItem>> filteredSortedEpisodes(
       final episode = await episodeRepo.getByAudioUrl(item.enclosureUrl!);
 
       if (episode == null) {
-        if (filter == EpisodeFilter.unplayed) filtered.add(item);
+        if (filter == EpisodeFilter.unplayed) {
+          filtered.add(item);
+        }
         continue;
       }
 
@@ -272,72 +283,78 @@ Future<List<PodcastItem>> filteredSortedEpisodes(
   return sorted;
 }
 
-/// Whether season view is available for a podcast.
+/// Whether smart playlist view is available for a podcast.
 ///
-/// Checks the parsed feed data directly for season numbers, so it works
-/// for both subscribed and non-subscribed podcasts.
+/// Checks for season numbers in feed data or a registered
+/// pattern matching the feed URL.
 @riverpod
-Future<bool> hasSeasonViewAfterLoad(Ref ref, String feedUrl) async {
-  final feed = await ref.watch(podcastDetailProvider(feedUrl).future);
+Future<bool> hasSmartPlaylistViewAfterLoad(Ref ref, String feedUrl) async {
+  // Check for a registered pattern first (e.g., category-based)
+  final pattern = ref.watch(smartPlaylistPatternByFeedUrlProvider(feedUrl));
+  if (pattern != null) return true;
 
-  // Check if any episode in the feed has a season number
+  final feed = await ref.watch(podcastDetailProvider(feedUrl).future);
   return feed.episodes.any((e) => e.seasonNumber != null);
 }
 
-/// Provides sorted seasons for a podcast.
+/// Provides sorted smart playlists for a podcast.
 ///
-/// For subscribed podcasts, uses database-backed season resolution.
-/// For non-subscribed podcasts, derives seasons from feed data directly.
+/// For subscribed podcasts, uses database-backed resolution.
+/// For non-subscribed podcasts, derives playlists from feed
+/// data directly.
 @riverpod
-Future<SeasonGrouping?> sortedPodcastSeasons(
+Future<SmartPlaylistGrouping?> sortedPodcastSmartPlaylists(
   Ref ref,
   String feedUrl,
   String podcastId,
 ) async {
   final feed = await ref.watch(podcastDetailProvider(feedUrl).future);
 
-  // Try database-backed resolution first (for subscribed podcasts)
+  // Try database-backed resolution first
+  // (for subscribed podcasts)
   var grouping = await ref.watch(
-    podcastSeasonsByFeedUrlProvider(feedUrl).future,
+    podcastSmartPlaylistsByFeedUrlProvider(feedUrl).future,
   );
 
-  // Fall back to feed-based resolution for non-subscribed podcasts
+  // Fall back to feed-based resolution for
+  // non-subscribed podcasts
   if (grouping == null) {
-    final pattern = ref.watch(seasonPatternByFeedUrlProvider(feedUrl));
+    final pattern = ref.watch(smartPlaylistPatternByFeedUrlProvider(feedUrl));
     grouping = _resolveFromFeed(feed.episodes, pattern);
   }
 
   if (grouping == null) return null;
 
-  // Get persisted preferences if subscribed, otherwise use defaults
+  // Get persisted preferences if subscribed,
+  // otherwise use defaults
   final subscription = await ref.watch(
     subscriptionByFeedUrlProvider(feedUrl).future,
   );
-  SeasonSortField sortField;
+  SmartPlaylistSortField sortField;
   SortOrder sortOrder;
 
   if (subscription != null) {
     final prefs = await ref.watch(
       podcastViewPreferenceControllerProvider(subscription.id).future,
     );
-    sortField = prefs.seasonSortField;
-    sortOrder = prefs.seasonSortOrder;
+    sortField = prefs.smartPlaylistSortField;
+    sortOrder = prefs.smartPlaylistSortOrder;
   } else {
-    sortField = SeasonSortField.seasonNumber;
+    sortField = SmartPlaylistSortField.playlistNumber;
     sortOrder = SortOrder.descending;
   }
-  final pattern = ref.watch(seasonPatternByFeedUrlProvider(feedUrl));
+  final pattern = ref.watch(smartPlaylistPatternByFeedUrlProvider(feedUrl));
   final episodeRepo = ref.watch(episodeRepositoryProvider);
 
-  // Sort seasons based on config
-  final sortedSeasons = List<Season>.from(grouping.seasons);
+  // Sort smart playlists based on config
+  final sortedPlaylists = List<SmartPlaylist>.from(grouping.playlists);
 
   // Cache for newest episode dates (computed lazily)
   final newestDates = <String, DateTime?>{};
 
-  Future<DateTime?> getNewestDate(Season season) async {
-    if (!newestDates.containsKey(season.id)) {
-      final episodes = await episodeRepo.getByIds(season.episodeIds);
+  Future<DateTime?> getNewestDate(SmartPlaylist playlist) async {
+    if (!newestDates.containsKey(playlist.id)) {
+      final episodes = await episodeRepo.getByIds(playlist.episodeIds);
       DateTime? newest;
       for (final ep in episodes) {
         if (ep.publishedAt != null) {
@@ -346,79 +363,84 @@ Future<SeasonGrouping?> sortedPodcastSeasons(
           }
         }
       }
-      newestDates[season.id] = newest;
+      newestDates[playlist.id] = newest;
     }
-    return newestDates[season.id];
+    return newestDates[playlist.id];
   }
 
   // Check if pattern has custom composite sort
   final customSort = pattern?.customSort;
-  if (customSort is CompositeSeasonSort) {
-    // Apply composite sorting rules (pattern's rules take precedence)
-    // User's ascending/descending choice inverts the final result
-    // Pre-fetch dates for all seasons that might need them
-    for (final season in sortedSeasons) {
-      await getNewestDate(season);
+  if (customSort is CompositeSmartPlaylistSort) {
+    // Apply composite sorting rules
+    // Pre-fetch dates for all playlists that might need them
+    for (final playlist in sortedPlaylists) {
+      await getNewestDate(playlist);
     }
 
-    // Partition: numbered seasons vs special seasons (sortKey=0, e.g., 番外編)
-    // Special seasons always appear at the end regardless of sort order
-    final numberedSeasons = sortedSeasons.where((s) => 0 < s.sortKey).toList();
-    final specialSeasons = sortedSeasons.where((s) => s.sortKey == 0).toList();
+    // Partition: numbered playlists vs special playlists
+    // (sortKey=0, e.g., 番外編)
+    // Special playlists always appear at the end
+    final numberedPlaylists = sortedPlaylists
+        .where((s) => 0 < s.sortKey)
+        .toList();
+    final specialPlaylists = sortedPlaylists
+        .where((s) => s.sortKey == 0)
+        .toList();
 
-    numberedSeasons.sort((a, b) {
+    numberedPlaylists.sort((a, b) {
       final comparison = _compareWithCompositeSort(
         a,
         b,
         customSort.rules,
         newestDates,
       );
-      // User's order choice inverts ascending ↔ descending
+      // User's order choice inverts ascending/descending
       return sortOrder == SortOrder.ascending ? comparison : -comparison;
     });
 
-    // Special seasons sorted by newest episode date (always at end)
-    specialSeasons.sort(
+    // Special playlists sorted by newest episode date
+    specialPlaylists.sort(
       (a, b) => _compareDates(newestDates[a.id], newestDates[b.id]),
     );
 
-    sortedSeasons
+    sortedPlaylists
       ..clear()
-      ..addAll(numberedSeasons)
-      ..addAll(specialSeasons);
+      ..addAll(numberedPlaylists)
+      ..addAll(specialPlaylists);
   } else {
     // Apply simple user-selected sort
-    if (sortField == SeasonSortField.newestEpisodeDate) {
-      for (final season in sortedSeasons) {
-        await getNewestDate(season);
+    if (sortField == SmartPlaylistSortField.newestEpisodeDate) {
+      for (final playlist in sortedPlaylists) {
+        await getNewestDate(playlist);
       }
     }
 
-    sortedSeasons.sort((a, b) {
+    sortedPlaylists.sort((a, b) {
       final comparison = _compareByField(a, b, sortField, newestDates);
       return sortOrder == SortOrder.ascending ? comparison : -comparison;
     });
   }
 
-  return SeasonGrouping(
-    seasons: sortedSeasons,
+  return SmartPlaylistGrouping(
+    playlists: sortedPlaylists,
     ungroupedEpisodeIds: grouping.ungroupedEpisodeIds,
     resolverType: grouping.resolverType,
   );
 }
 
-/// Compares two seasons using composite sort rules.
+/// Compares two smart playlists using composite sort rules.
 ///
-/// For COTEN RADIO: compares by sortKey (season number).
-/// Note: Special seasons (sortKey=0) are partitioned out before this is called.
+/// For COTEN RADIO: compares by sortKey (playlist number).
+/// Note: Special playlists (sortKey=0) are partitioned out
+/// before this is called.
 int _compareWithCompositeSort(
-  Season a,
-  Season b,
-  List<SeasonSortRule> rules,
+  SmartPlaylist a,
+  SmartPlaylist b,
+  List<SmartPlaylistSortRule> rules,
   Map<String, DateTime?> newestDates,
 ) {
   for (final rule in rules) {
-    // Check if condition applies to both seasons
+    // Check if condition applies to both playlists
     if (rule.condition != null) {
       final bothMatch =
           _checkCondition(a, rule.condition!) &&
@@ -429,33 +451,38 @@ int _compareWithCompositeSort(
     // Apply this rule
     final comparison = _compareByField(a, b, rule.field, newestDates);
     if (comparison != 0) {
-      // Apply rule's order (ascending = as-is, descending = negated)
+      // Apply rule's order
       return rule.order == SortOrder.ascending ? comparison : -comparison;
     }
   }
   return 0;
 }
 
-bool _checkCondition(Season season, SeasonSortCondition condition) {
+bool _checkCondition(
+  SmartPlaylist playlist,
+  SmartPlaylistSortCondition condition,
+) {
   return switch (condition) {
-    SortKeyGreaterThan(:final value) => value < season.sortKey,
+    SortKeyGreaterThan(:final value) => value < playlist.sortKey,
   };
 }
 
 int _compareByField(
-  Season a,
-  Season b,
-  SeasonSortField field,
+  SmartPlaylist a,
+  SmartPlaylist b,
+  SmartPlaylistSortField field,
   Map<String, DateTime?> newestDates,
 ) {
   return switch (field) {
-    SeasonSortField.seasonNumber => a.sortKey.compareTo(b.sortKey),
-    SeasonSortField.alphabetical => a.displayName.compareTo(b.displayName),
-    SeasonSortField.newestEpisodeDate => _compareDates(
+    SmartPlaylistSortField.playlistNumber => a.sortKey.compareTo(b.sortKey),
+    SmartPlaylistSortField.alphabetical => a.displayName.compareTo(
+      b.displayName,
+    ),
+    SmartPlaylistSortField.newestEpisodeDate => _compareDates(
       newestDates[a.id],
       newestDates[b.id],
     ),
-    SeasonSortField.progress => a.sortKey.compareTo(b.sortKey), // TODO
+    SmartPlaylistSortField.progress => a.sortKey.compareTo(b.sortKey), // TODO
   };
 }
 
@@ -466,14 +493,111 @@ int _compareDates(DateTime? a, DateTime? b) {
   return a.compareTo(b);
 }
 
-/// Resolves seasons from feed data for non-subscribed podcasts.
+/// Resolves smart playlists from feed data for
+/// non-subscribed podcasts.
 ///
-/// Groups episodes by seasonNumber from feed metadata.
-/// Uses negative indices as placeholder episode IDs since feed items
-/// don't have database IDs.
-SeasonGrouping? _resolveFromFeed(
+/// For category patterns, groups by title regex. Otherwise
+/// groups by seasonNumber. Uses negative indices as
+/// placeholder episode IDs since feed items don't have
+/// database IDs.
+SmartPlaylistGrouping? _resolveFromFeed(
   List<PodcastItem> episodes,
-  SeasonPattern? pattern,
+  SmartPlaylistPattern? pattern,
+) {
+  if (pattern?.resolverType == 'category') {
+    return _resolveFromFeedByCategory(episodes, pattern!);
+  }
+  return _resolveFromFeedBySeason(episodes, pattern);
+}
+
+/// Groups feed episodes by title-pattern categories.
+SmartPlaylistGrouping? _resolveFromFeedByCategory(
+  List<PodcastItem> episodes,
+  SmartPlaylistPattern pattern,
+) {
+  final categoriesRaw = pattern.config['categories'] as List<dynamic>?;
+  if (categoriesRaw == null || categoriesRaw.isEmpty) return null;
+
+  final categories = categoriesRaw.cast<Map<String, dynamic>>();
+  final matchers = categories.map((c) {
+    return (
+      regex: RegExp(c['pattern'] as String),
+      id: c['id'] as String,
+      displayName: c['displayName'] as String,
+      yearGrouped: c['yearGrouped'] as bool? ?? false,
+      sortKey: c['sortKey'] as int,
+    );
+  }).toList();
+
+  final grouped = <String, List<PodcastItem>>{};
+  final ungroupedIndices = <int>[];
+
+  for (var i = 0; i < episodes.length; i++) {
+    final episode = episodes[i];
+    var matched = false;
+    for (final matcher in matchers) {
+      if (matcher.regex.hasMatch(episode.title)) {
+        grouped.putIfAbsent(matcher.id, () => []).add(episode);
+        matched = true;
+        break;
+      }
+    }
+    if (!matched) {
+      ungroupedIndices.add(-(i + 1));
+    }
+  }
+
+  if (grouped.isEmpty) return null;
+
+  final playlists = matchers.where((m) => grouped.containsKey(m.id)).map((m) {
+    final playlistEpisodes = grouped[m.id]!;
+    final episodeIds = playlistEpisodes
+        .map((ep) => -(episodes.indexOf(ep) + 1))
+        .toList();
+
+    String? thumbnailUrl;
+    for (final ep in playlistEpisodes) {
+      if (ep.images.isNotEmpty) {
+        thumbnailUrl = ep.images.first.url;
+        break;
+      }
+    }
+
+    // Resolve sub-categories if configured
+    final categoryConfig = categories.firstWhere((c) => c['id'] == m.id);
+    final subCategoriesConfig =
+        categoryConfig['subCategories'] as List<dynamic>?;
+    List<SmartPlaylistSubCategory>? subCategories;
+    if (subCategoriesConfig != null) {
+      subCategories = _resolveSubCategoriesFromFeed(
+        subCategoriesConfig,
+        playlistEpisodes,
+        episodes,
+      );
+    }
+
+    return SmartPlaylist(
+      id: 'playlist_${m.id}',
+      displayName: m.displayName,
+      sortKey: m.sortKey,
+      episodeIds: episodeIds,
+      thumbnailUrl: thumbnailUrl,
+      yearGrouped: m.yearGrouped,
+      subCategories: subCategories,
+    );
+  }).toList();
+
+  return SmartPlaylistGrouping(
+    playlists: playlists,
+    ungroupedEpisodeIds: ungroupedIndices,
+    resolverType: 'category',
+  );
+}
+
+/// Groups feed episodes by seasonNumber from RSS metadata.
+SmartPlaylistGrouping? _resolveFromFeedBySeason(
+  List<PodcastItem> episodes,
+  SmartPlaylistPattern? pattern,
 ) {
   final grouped = <int, List<PodcastItem>>{};
   final ungroupedIndices = <int>[];
@@ -485,7 +609,6 @@ SeasonGrouping? _resolveFromFeed(
     if (seasonNum != null && 1 <= seasonNum) {
       grouped.putIfAbsent(seasonNum, () => []).add(episode);
     } else {
-      // Use negative index as placeholder ID (no DB ID available)
       ungroupedIndices.add(-(i + 1));
     }
   }
@@ -494,14 +617,13 @@ SeasonGrouping? _resolveFromFeed(
 
   final titleExtractor = pattern?.titleExtractor;
 
-  final seasons = grouped.entries.map((entry) {
-    final seasonNumber = entry.key;
-    final seasonEpisodes = entry.value;
+  final playlists = grouped.entries.map((entry) {
+    final playlistNumber = entry.key;
+    final playlistEpisodes = entry.value;
 
-    // Try to extract custom title from first episode
-    String displayName = 'Season $seasonNumber';
-    if (titleExtractor != null && seasonEpisodes.isNotEmpty) {
-      final firstEpisode = seasonEpisodes.first;
+    String displayName = 'Season $playlistNumber';
+    if (titleExtractor != null && playlistEpisodes.isNotEmpty) {
+      final firstEpisode = playlistEpisodes.first;
       final episodeData = SimpleEpisodeData(
         title: firstEpisode.title,
         description: firstEpisode.description,
@@ -514,15 +636,13 @@ SeasonGrouping? _resolveFromFeed(
       }
     }
 
-    // Create placeholder IDs for episode indices
     final episodeIds = <int>[];
-    for (final ep in seasonEpisodes) {
+    for (final ep in playlistEpisodes) {
       final idx = episodes.indexOf(ep);
       episodeIds.add(-(idx + 1));
     }
 
-    // Get thumbnail from latest episode (sorted by publishDate, newest first)
-    final sortedByDate = List<PodcastItem>.from(seasonEpisodes)
+    final sortedByDate = List<PodcastItem>.from(playlistEpisodes)
       ..sort((a, b) {
         final aPub = a.publishDate;
         final bPub = b.publishDate;
@@ -539,18 +659,78 @@ SeasonGrouping? _resolveFromFeed(
       }
     }
 
-    return Season(
-      id: 'season_$seasonNumber',
+    return SmartPlaylist(
+      id: 'smart_playlist_$playlistNumber',
       displayName: displayName,
-      sortKey: seasonNumber,
+      sortKey: playlistNumber,
       episodeIds: episodeIds,
       thumbnailUrl: thumbnailUrl,
     );
   }).toList()..sort((a, b) => a.sortKey.compareTo(b.sortKey));
 
-  return SeasonGrouping(
-    seasons: seasons,
+  return SmartPlaylistGrouping(
+    playlists: playlists,
     ungroupedEpisodeIds: ungroupedIndices,
     resolverType: 'feed',
   );
+}
+
+/// Resolves sub-categories from feed data using pattern config.
+List<SmartPlaylistSubCategory>? _resolveSubCategoriesFromFeed(
+  List<dynamic> subCategoriesConfig,
+  List<PodcastItem> categoryEpisodes,
+  List<PodcastItem> allEpisodes,
+) {
+  final configs = subCategoriesConfig.cast<Map<String, dynamic>>();
+  final matchers = configs.map((c) {
+    return (
+      regex: RegExp(c['pattern'] as String),
+      id: c['id'] as String,
+      displayName: c['displayName'] as String,
+    );
+  }).toList();
+
+  final grouped = <String, List<int>>{};
+  final otherIds = <int>[];
+
+  for (final episode in categoryEpisodes) {
+    final placeholderId = -(allEpisodes.indexOf(episode) + 1);
+    var matched = false;
+    for (final matcher in matchers) {
+      if (matcher.regex.hasMatch(episode.title)) {
+        grouped.putIfAbsent(matcher.id, () => []).add(placeholderId);
+        matched = true;
+        break;
+      }
+    }
+    if (!matched) {
+      otherIds.add(placeholderId);
+    }
+  }
+
+  final result = <SmartPlaylistSubCategory>[];
+  for (final matcher in matchers) {
+    final ids = grouped[matcher.id];
+    if (ids != null && ids.isNotEmpty) {
+      result.add(
+        SmartPlaylistSubCategory(
+          id: matcher.id,
+          displayName: matcher.displayName,
+          episodeIds: ids,
+        ),
+      );
+    }
+  }
+
+  if (otherIds.isNotEmpty) {
+    result.add(
+      SmartPlaylistSubCategory(
+        id: 'other',
+        displayName: 'Other',
+        episodeIds: otherIds,
+      ),
+    );
+  }
+
+  return result.isEmpty ? null : result;
 }

@@ -6,7 +6,7 @@ import '../../../common/providers/database_provider.dart';
 import '../datasources/local/podcast_view_preference_local_datasource.dart';
 import '../models/episode_filter.dart';
 import '../models/podcast_view_mode.dart';
-import '../models/season_sort.dart';
+import '../models/smart_playlist_sort.dart';
 
 part 'podcast_view_preference_repository.g.dart';
 
@@ -27,12 +27,15 @@ abstract class PodcastViewPreferenceRepository {
   /// Updates episode sort order for a podcast.
   Future<void> updateEpisodeSortOrder(int podcastId, SortOrder order);
 
-  /// Updates season sort field and order for a podcast.
-  Future<void> updateSeasonSort(
+  /// Updates smart playlist sort field and order for a podcast.
+  Future<void> updateSmartPlaylistSort(
     int podcastId,
-    SeasonSortField field,
+    SmartPlaylistSortField field,
     SortOrder order,
   );
+
+  /// Updates the selected smart playlist ID for inline display.
+  Future<void> updateSelectedPlaylistId(int podcastId, String? playlistId);
 }
 
 /// Data class for podcast view preferences with typed values.
@@ -42,16 +45,20 @@ class PodcastViewPreferenceData {
     required this.viewMode,
     required this.episodeFilter,
     required this.episodeSortOrder,
-    required this.seasonSortField,
-    required this.seasonSortOrder,
+    required this.smartPlaylistSortField,
+    required this.smartPlaylistSortOrder,
+    this.selectedPlaylistId,
   });
 
   final int podcastId;
   final PodcastViewMode viewMode;
   final EpisodeFilter episodeFilter;
   final SortOrder episodeSortOrder;
-  final SeasonSortField seasonSortField;
-  final SortOrder seasonSortOrder;
+  final SmartPlaylistSortField smartPlaylistSortField;
+  final SortOrder smartPlaylistSortOrder;
+
+  /// Selected smart playlist ID for inline display.
+  final String? selectedPlaylistId;
 
   /// Default preferences for a podcast.
   factory PodcastViewPreferenceData.defaults(int podcastId) {
@@ -60,8 +67,8 @@ class PodcastViewPreferenceData {
       viewMode: PodcastViewMode.episodes,
       episodeFilter: EpisodeFilter.all,
       episodeSortOrder: SortOrder.descending,
-      seasonSortField: SeasonSortField.seasonNumber,
-      seasonSortOrder: SortOrder.descending,
+      smartPlaylistSortField: SmartPlaylistSortField.playlistNumber,
+      smartPlaylistSortOrder: SortOrder.descending,
     );
   }
 }
@@ -117,16 +124,27 @@ class PodcastViewPreferenceRepositoryImpl
   }
 
   @override
-  Future<void> updateSeasonSort(
+  Future<void> updateSmartPlaylistSort(
     int podcastId,
-    SeasonSortField field,
+    SmartPlaylistSortField field,
     SortOrder order,
   ) {
     return _datasource.upsertPreference(
       PodcastViewPreferencesCompanion(
         podcastId: Value(podcastId),
-        seasonSortField: Value(_seasonFieldToString(field)),
+        seasonSortField: Value(_smartPlaylistFieldToString(field)),
         seasonSortOrder: Value(_orderToString(order)),
+      ),
+    );
+  }
+
+  @override
+  Future<void> updateSelectedPlaylistId(int podcastId, String? playlistId) {
+    return _datasource.upsertPreference(
+      PodcastViewPreferencesCompanion(
+        podcastId: Value(podcastId),
+        viewMode: const Value('seasons'),
+        selectedPlaylistId: Value(playlistId),
       ),
     );
   }
@@ -143,14 +161,15 @@ class PodcastViewPreferenceRepositoryImpl
       viewMode: _parseViewMode(pref.viewMode),
       episodeFilter: _parseFilter(pref.episodeFilter),
       episodeSortOrder: _parseOrder(pref.episodeSortOrder),
-      seasonSortField: _parseSeasonField(pref.seasonSortField),
-      seasonSortOrder: _parseOrder(pref.seasonSortOrder),
+      smartPlaylistSortField: _parseSmartPlaylistField(pref.seasonSortField),
+      smartPlaylistSortOrder: _parseOrder(pref.seasonSortOrder),
+      selectedPlaylistId: pref.selectedPlaylistId,
     );
   }
 
   PodcastViewMode _parseViewMode(String value) {
     return switch (value) {
-      'seasons' => PodcastViewMode.seasons,
+      'seasons' => PodcastViewMode.smartPlaylists,
       _ => PodcastViewMode.episodes,
     };
   }
@@ -174,7 +193,7 @@ class PodcastViewPreferenceRepositoryImpl
   String _viewModeToString(PodcastViewMode mode) {
     return switch (mode) {
       PodcastViewMode.episodes => 'episodes',
-      PodcastViewMode.seasons => 'seasons',
+      PodcastViewMode.smartPlaylists => 'seasons',
     };
   }
 
@@ -193,21 +212,21 @@ class PodcastViewPreferenceRepositoryImpl
     };
   }
 
-  SeasonSortField _parseSeasonField(String value) {
+  SmartPlaylistSortField _parseSmartPlaylistField(String value) {
     return switch (value) {
-      'newestEpisodeDate' => SeasonSortField.newestEpisodeDate,
-      'progress' => SeasonSortField.progress,
-      'alphabetical' => SeasonSortField.alphabetical,
-      _ => SeasonSortField.seasonNumber,
+      'newestEpisodeDate' => SmartPlaylistSortField.newestEpisodeDate,
+      'progress' => SmartPlaylistSortField.progress,
+      'alphabetical' => SmartPlaylistSortField.alphabetical,
+      _ => SmartPlaylistSortField.playlistNumber,
     };
   }
 
-  String _seasonFieldToString(SeasonSortField field) {
+  String _smartPlaylistFieldToString(SmartPlaylistSortField field) {
     return switch (field) {
-      SeasonSortField.seasonNumber => 'seasonNumber',
-      SeasonSortField.newestEpisodeDate => 'newestEpisodeDate',
-      SeasonSortField.progress => 'progress',
-      SeasonSortField.alphabetical => 'alphabetical',
+      SmartPlaylistSortField.playlistNumber => 'seasonNumber',
+      SmartPlaylistSortField.newestEpisodeDate => 'newestEpisodeDate',
+      SmartPlaylistSortField.progress => 'progress',
+      SmartPlaylistSortField.alphabetical => 'alphabetical',
     };
   }
 }

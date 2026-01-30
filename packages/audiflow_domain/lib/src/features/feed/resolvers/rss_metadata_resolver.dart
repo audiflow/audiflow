@@ -1,22 +1,27 @@
 import '../../../common/database/app_database.dart';
 import '../extensions/episode_extensions.dart';
-import '../models/season.dart';
-import '../models/season_pattern.dart';
-import '../models/season_sort.dart';
-import '../models/season_title_extractor.dart';
-import 'season_resolver.dart';
+import '../models/smart_playlist.dart';
+import '../models/smart_playlist_pattern.dart';
+import '../models/smart_playlist_sort.dart';
+import '../models/smart_playlist_title_extractor.dart';
+import 'smart_playlist_resolver.dart';
 
 /// Resolver that groups episodes using RSS metadata (seasonNumber field).
-class RssMetadataResolver implements SeasonResolver {
+class RssMetadataResolver implements SmartPlaylistResolver {
   @override
   String get type => 'rss';
 
   @override
-  SeasonSortSpec get defaultSort =>
-      const SimpleSeasonSort(SeasonSortField.seasonNumber, SortOrder.ascending);
+  SmartPlaylistSortSpec get defaultSort => const SimpleSmartPlaylistSort(
+    SmartPlaylistSortField.playlistNumber,
+    SortOrder.ascending,
+  );
 
   @override
-  SeasonGrouping? resolve(List<Episode> episodes, SeasonPattern? pattern) {
+  SmartPlaylistGrouping? resolve(
+    List<Episode> episodes,
+    SmartPlaylistPattern? pattern,
+  ) {
     final grouped = <int, List<Episode>>{};
     final ungrouped = <int>[];
 
@@ -45,25 +50,29 @@ class RssMetadataResolver implements SeasonResolver {
 
     final titleExtractor = pattern?.titleExtractor;
 
-    final seasons = grouped.entries.map((entry) {
+    final yearGroupedMap =
+        pattern?.config['yearGroupedPlaylists'] as Map<String, dynamic>?;
+
+    final playlists = grouped.entries.map((entry) {
       final seasonNumber = entry.key;
-      final seasonEpisodes = entry.value;
+      final playlistEpisodes = entry.value;
       final displayName = _extractDisplayName(
         seasonNumber: seasonNumber,
-        episodes: seasonEpisodes,
+        episodes: playlistEpisodes,
         titleExtractor: titleExtractor,
       );
 
-      return Season(
+      return SmartPlaylist(
         id: 'season_$seasonNumber',
         displayName: displayName,
-        sortKey: seasonNumber, // Use season number as sort key
-        episodeIds: seasonEpisodes.map((e) => e.id).toList(),
+        sortKey: seasonNumber,
+        episodeIds: playlistEpisodes.map((e) => e.id).toList(),
+        yearGrouped: yearGroupedMap?['$seasonNumber'] == true,
       );
     }).toList()..sort((a, b) => a.sortKey.compareTo(b.sortKey));
 
-    return SeasonGrouping(
-      seasons: seasons,
+    return SmartPlaylistGrouping(
+      playlists: playlists,
       ungroupedEpisodeIds: ungrouped,
       resolverType: type,
     );
@@ -72,7 +81,7 @@ class RssMetadataResolver implements SeasonResolver {
   String _extractDisplayName({
     required int seasonNumber,
     required List<Episode> episodes,
-    required SeasonTitleExtractor? titleExtractor,
+    required SmartPlaylistTitleExtractor? titleExtractor,
   }) {
     if (titleExtractor == null || episodes.isEmpty) {
       return 'Season $seasonNumber';

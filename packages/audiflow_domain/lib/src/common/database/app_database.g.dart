@@ -1884,12 +1884,12 @@ class PlaybackHistoriesCompanion extends UpdateCompanion<PlaybackHistory> {
   }
 }
 
-class $SeasonsTable extends Seasons
-    with TableInfo<$SeasonsTable, SeasonEntity> {
+class $SmartPlaylistsTable extends SmartPlaylists
+    with TableInfo<$SmartPlaylistsTable, SmartPlaylistEntity> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
-  $SeasonsTable(this.attachedDatabase, [this._alias]);
+  $SmartPlaylistsTable(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _podcastIdMeta = const VerificationMeta(
     'podcastId',
   );
@@ -1904,11 +1904,11 @@ class $SeasonsTable extends Seasons
       'REFERENCES subscriptions (id)',
     ),
   );
-  static const VerificationMeta _seasonNumberMeta = const VerificationMeta(
-    'seasonNumber',
+  static const VerificationMeta _playlistNumberMeta = const VerificationMeta(
+    'playlistNumber',
   );
   @override
-  late final GeneratedColumn<int> seasonNumber = GeneratedColumn<int>(
+  late final GeneratedColumn<int> playlistNumber = GeneratedColumn<int>(
     'season_number',
     aliasedName,
     false,
@@ -1959,14 +1959,30 @@ class $SeasonsTable extends Seasons
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _yearGroupedMeta = const VerificationMeta(
+    'yearGrouped',
+  );
+  @override
+  late final GeneratedColumn<bool> yearGrouped = GeneratedColumn<bool>(
+    'year_grouped',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("year_grouped" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     podcastId,
-    seasonNumber,
+    playlistNumber,
     displayName,
     sortKey,
     resolverType,
     thumbnailUrl,
+    yearGrouped,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1975,7 +1991,7 @@ class $SeasonsTable extends Seasons
   static const String $name = 'seasons';
   @override
   VerificationContext validateIntegrity(
-    Insertable<SeasonEntity> instance, {
+    Insertable<SmartPlaylistEntity> instance, {
     bool isInserting = false,
   }) {
     final context = VerificationContext();
@@ -1990,14 +2006,14 @@ class $SeasonsTable extends Seasons
     }
     if (data.containsKey('season_number')) {
       context.handle(
-        _seasonNumberMeta,
-        seasonNumber.isAcceptableOrUnknown(
+        _playlistNumberMeta,
+        playlistNumber.isAcceptableOrUnknown(
           data['season_number']!,
-          _seasonNumberMeta,
+          _playlistNumberMeta,
         ),
       );
     } else if (isInserting) {
-      context.missing(_seasonNumberMeta);
+      context.missing(_playlistNumberMeta);
     }
     if (data.containsKey('display_name')) {
       context.handle(
@@ -2038,20 +2054,29 @@ class $SeasonsTable extends Seasons
         ),
       );
     }
+    if (data.containsKey('year_grouped')) {
+      context.handle(
+        _yearGroupedMeta,
+        yearGrouped.isAcceptableOrUnknown(
+          data['year_grouped']!,
+          _yearGroupedMeta,
+        ),
+      );
+    }
     return context;
   }
 
   @override
-  Set<GeneratedColumn> get $primaryKey => {podcastId, seasonNumber};
+  Set<GeneratedColumn> get $primaryKey => {podcastId, playlistNumber};
   @override
-  SeasonEntity map(Map<String, dynamic> data, {String? tablePrefix}) {
+  SmartPlaylistEntity map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return SeasonEntity(
+    return SmartPlaylistEntity(
       podcastId: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}podcast_id'],
       )!,
-      seasonNumber: attachedDatabase.typeMapping.read(
+      playlistNumber: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}season_number'],
       )!,
@@ -2071,81 +2096,95 @@ class $SeasonsTable extends Seasons
         DriftSqlType.string,
         data['${effectivePrefix}thumbnail_url'],
       ),
+      yearGrouped: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}year_grouped'],
+      )!,
     );
   }
 
   @override
-  $SeasonsTable createAlias(String alias) {
-    return $SeasonsTable(attachedDatabase, alias);
+  $SmartPlaylistsTable createAlias(String alias) {
+    return $SmartPlaylistsTable(attachedDatabase, alias);
   }
 }
 
-class SeasonEntity extends DataClass implements Insertable<SeasonEntity> {
+class SmartPlaylistEntity extends DataClass
+    implements Insertable<SmartPlaylistEntity> {
   /// Foreign key to Subscriptions table (part of composite PK).
   final int podcastId;
 
-  /// Season number matching episode.seasonNumber (part of composite PK).
-  /// Use 0 for ungrouped/extras seasons like "番外編".
-  final int seasonNumber;
+  /// Playlist number matching episode.seasonNumber (part of
+  /// composite PK).
+  /// Use 0 for ungrouped/extras playlists like "bangai-hen".
+  final int playlistNumber;
 
-  /// Display name (e.g., "リンカン編", "番外編").
+  /// Display name (e.g., "Lincoln arc", "bangai-hen").
   final String displayName;
 
-  /// Sort key for ordering seasons (typically max episodeNumber in season).
+  /// Sort key for ordering smart playlists (typically max
+  /// episodeNumber in playlist).
   final int sortKey;
 
-  /// Resolver type that generated this season (e.g., "rss").
+  /// Resolver type that generated this smart playlist (e.g., "rss").
   final String resolverType;
 
-  /// Thumbnail URL from the latest episode in this season.
+  /// Thumbnail URL from the latest episode in this smart playlist.
   final String? thumbnailUrl;
-  const SeasonEntity({
+
+  /// Whether this smart playlist groups episodes by year.
+  final bool yearGrouped;
+  const SmartPlaylistEntity({
     required this.podcastId,
-    required this.seasonNumber,
+    required this.playlistNumber,
     required this.displayName,
     required this.sortKey,
     required this.resolverType,
     this.thumbnailUrl,
+    required this.yearGrouped,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['podcast_id'] = Variable<int>(podcastId);
-    map['season_number'] = Variable<int>(seasonNumber);
+    map['season_number'] = Variable<int>(playlistNumber);
     map['display_name'] = Variable<String>(displayName);
     map['sort_key'] = Variable<int>(sortKey);
     map['resolver_type'] = Variable<String>(resolverType);
     if (!nullToAbsent || thumbnailUrl != null) {
       map['thumbnail_url'] = Variable<String>(thumbnailUrl);
     }
+    map['year_grouped'] = Variable<bool>(yearGrouped);
     return map;
   }
 
-  SeasonsCompanion toCompanion(bool nullToAbsent) {
-    return SeasonsCompanion(
+  SmartPlaylistsCompanion toCompanion(bool nullToAbsent) {
+    return SmartPlaylistsCompanion(
       podcastId: Value(podcastId),
-      seasonNumber: Value(seasonNumber),
+      playlistNumber: Value(playlistNumber),
       displayName: Value(displayName),
       sortKey: Value(sortKey),
       resolverType: Value(resolverType),
       thumbnailUrl: thumbnailUrl == null && nullToAbsent
           ? const Value.absent()
           : Value(thumbnailUrl),
+      yearGrouped: Value(yearGrouped),
     );
   }
 
-  factory SeasonEntity.fromJson(
+  factory SmartPlaylistEntity.fromJson(
     Map<String, dynamic> json, {
     ValueSerializer? serializer,
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return SeasonEntity(
+    return SmartPlaylistEntity(
       podcastId: serializer.fromJson<int>(json['podcastId']),
-      seasonNumber: serializer.fromJson<int>(json['seasonNumber']),
+      playlistNumber: serializer.fromJson<int>(json['playlistNumber']),
       displayName: serializer.fromJson<String>(json['displayName']),
       sortKey: serializer.fromJson<int>(json['sortKey']),
       resolverType: serializer.fromJson<String>(json['resolverType']),
       thumbnailUrl: serializer.fromJson<String?>(json['thumbnailUrl']),
+      yearGrouped: serializer.fromJson<bool>(json['yearGrouped']),
     );
   }
   @override
@@ -2153,35 +2192,38 @@ class SeasonEntity extends DataClass implements Insertable<SeasonEntity> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'podcastId': serializer.toJson<int>(podcastId),
-      'seasonNumber': serializer.toJson<int>(seasonNumber),
+      'playlistNumber': serializer.toJson<int>(playlistNumber),
       'displayName': serializer.toJson<String>(displayName),
       'sortKey': serializer.toJson<int>(sortKey),
       'resolverType': serializer.toJson<String>(resolverType),
       'thumbnailUrl': serializer.toJson<String?>(thumbnailUrl),
+      'yearGrouped': serializer.toJson<bool>(yearGrouped),
     };
   }
 
-  SeasonEntity copyWith({
+  SmartPlaylistEntity copyWith({
     int? podcastId,
-    int? seasonNumber,
+    int? playlistNumber,
     String? displayName,
     int? sortKey,
     String? resolverType,
     Value<String?> thumbnailUrl = const Value.absent(),
-  }) => SeasonEntity(
+    bool? yearGrouped,
+  }) => SmartPlaylistEntity(
     podcastId: podcastId ?? this.podcastId,
-    seasonNumber: seasonNumber ?? this.seasonNumber,
+    playlistNumber: playlistNumber ?? this.playlistNumber,
     displayName: displayName ?? this.displayName,
     sortKey: sortKey ?? this.sortKey,
     resolverType: resolverType ?? this.resolverType,
     thumbnailUrl: thumbnailUrl.present ? thumbnailUrl.value : this.thumbnailUrl,
+    yearGrouped: yearGrouped ?? this.yearGrouped,
   );
-  SeasonEntity copyWithCompanion(SeasonsCompanion data) {
-    return SeasonEntity(
+  SmartPlaylistEntity copyWithCompanion(SmartPlaylistsCompanion data) {
+    return SmartPlaylistEntity(
       podcastId: data.podcastId.present ? data.podcastId.value : this.podcastId,
-      seasonNumber: data.seasonNumber.present
-          ? data.seasonNumber.value
-          : this.seasonNumber,
+      playlistNumber: data.playlistNumber.present
+          ? data.playlistNumber.value
+          : this.playlistNumber,
       displayName: data.displayName.present
           ? data.displayName.value
           : this.displayName,
@@ -2192,18 +2234,22 @@ class SeasonEntity extends DataClass implements Insertable<SeasonEntity> {
       thumbnailUrl: data.thumbnailUrl.present
           ? data.thumbnailUrl.value
           : this.thumbnailUrl,
+      yearGrouped: data.yearGrouped.present
+          ? data.yearGrouped.value
+          : this.yearGrouped,
     );
   }
 
   @override
   String toString() {
-    return (StringBuffer('SeasonEntity(')
+    return (StringBuffer('SmartPlaylistEntity(')
           ..write('podcastId: $podcastId, ')
-          ..write('seasonNumber: $seasonNumber, ')
+          ..write('playlistNumber: $playlistNumber, ')
           ..write('displayName: $displayName, ')
           ..write('sortKey: $sortKey, ')
           ..write('resolverType: $resolverType, ')
-          ..write('thumbnailUrl: $thumbnailUrl')
+          ..write('thumbnailUrl: $thumbnailUrl, ')
+          ..write('yearGrouped: $yearGrouped')
           ..write(')'))
         .toString();
   }
@@ -2211,90 +2257,99 @@ class SeasonEntity extends DataClass implements Insertable<SeasonEntity> {
   @override
   int get hashCode => Object.hash(
     podcastId,
-    seasonNumber,
+    playlistNumber,
     displayName,
     sortKey,
     resolverType,
     thumbnailUrl,
+    yearGrouped,
   );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is SeasonEntity &&
+      (other is SmartPlaylistEntity &&
           other.podcastId == this.podcastId &&
-          other.seasonNumber == this.seasonNumber &&
+          other.playlistNumber == this.playlistNumber &&
           other.displayName == this.displayName &&
           other.sortKey == this.sortKey &&
           other.resolverType == this.resolverType &&
-          other.thumbnailUrl == this.thumbnailUrl);
+          other.thumbnailUrl == this.thumbnailUrl &&
+          other.yearGrouped == this.yearGrouped);
 }
 
-class SeasonsCompanion extends UpdateCompanion<SeasonEntity> {
+class SmartPlaylistsCompanion extends UpdateCompanion<SmartPlaylistEntity> {
   final Value<int> podcastId;
-  final Value<int> seasonNumber;
+  final Value<int> playlistNumber;
   final Value<String> displayName;
   final Value<int> sortKey;
   final Value<String> resolverType;
   final Value<String?> thumbnailUrl;
+  final Value<bool> yearGrouped;
   final Value<int> rowid;
-  const SeasonsCompanion({
+  const SmartPlaylistsCompanion({
     this.podcastId = const Value.absent(),
-    this.seasonNumber = const Value.absent(),
+    this.playlistNumber = const Value.absent(),
     this.displayName = const Value.absent(),
     this.sortKey = const Value.absent(),
     this.resolverType = const Value.absent(),
     this.thumbnailUrl = const Value.absent(),
+    this.yearGrouped = const Value.absent(),
     this.rowid = const Value.absent(),
   });
-  SeasonsCompanion.insert({
+  SmartPlaylistsCompanion.insert({
     required int podcastId,
-    required int seasonNumber,
+    required int playlistNumber,
     required String displayName,
     required int sortKey,
     required String resolverType,
     this.thumbnailUrl = const Value.absent(),
+    this.yearGrouped = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : podcastId = Value(podcastId),
-       seasonNumber = Value(seasonNumber),
+       playlistNumber = Value(playlistNumber),
        displayName = Value(displayName),
        sortKey = Value(sortKey),
        resolverType = Value(resolverType);
-  static Insertable<SeasonEntity> custom({
+  static Insertable<SmartPlaylistEntity> custom({
     Expression<int>? podcastId,
-    Expression<int>? seasonNumber,
+    Expression<int>? playlistNumber,
     Expression<String>? displayName,
     Expression<int>? sortKey,
     Expression<String>? resolverType,
     Expression<String>? thumbnailUrl,
+    Expression<bool>? yearGrouped,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (podcastId != null) 'podcast_id': podcastId,
-      if (seasonNumber != null) 'season_number': seasonNumber,
+      if (playlistNumber != null) 'season_number': playlistNumber,
       if (displayName != null) 'display_name': displayName,
       if (sortKey != null) 'sort_key': sortKey,
       if (resolverType != null) 'resolver_type': resolverType,
       if (thumbnailUrl != null) 'thumbnail_url': thumbnailUrl,
+      if (yearGrouped != null) 'year_grouped': yearGrouped,
       if (rowid != null) 'rowid': rowid,
     });
   }
 
-  SeasonsCompanion copyWith({
+  SmartPlaylistsCompanion copyWith({
     Value<int>? podcastId,
-    Value<int>? seasonNumber,
+    Value<int>? playlistNumber,
     Value<String>? displayName,
     Value<int>? sortKey,
     Value<String>? resolverType,
     Value<String?>? thumbnailUrl,
+    Value<bool>? yearGrouped,
     Value<int>? rowid,
   }) {
-    return SeasonsCompanion(
+    return SmartPlaylistsCompanion(
       podcastId: podcastId ?? this.podcastId,
-      seasonNumber: seasonNumber ?? this.seasonNumber,
+      playlistNumber: playlistNumber ?? this.playlistNumber,
       displayName: displayName ?? this.displayName,
       sortKey: sortKey ?? this.sortKey,
       resolverType: resolverType ?? this.resolverType,
       thumbnailUrl: thumbnailUrl ?? this.thumbnailUrl,
+      yearGrouped: yearGrouped ?? this.yearGrouped,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -2305,8 +2360,8 @@ class SeasonsCompanion extends UpdateCompanion<SeasonEntity> {
     if (podcastId.present) {
       map['podcast_id'] = Variable<int>(podcastId.value);
     }
-    if (seasonNumber.present) {
-      map['season_number'] = Variable<int>(seasonNumber.value);
+    if (playlistNumber.present) {
+      map['season_number'] = Variable<int>(playlistNumber.value);
     }
     if (displayName.present) {
       map['display_name'] = Variable<String>(displayName.value);
@@ -2320,6 +2375,9 @@ class SeasonsCompanion extends UpdateCompanion<SeasonEntity> {
     if (thumbnailUrl.present) {
       map['thumbnail_url'] = Variable<String>(thumbnailUrl.value);
     }
+    if (yearGrouped.present) {
+      map['year_grouped'] = Variable<bool>(yearGrouped.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -2328,13 +2386,14 @@ class SeasonsCompanion extends UpdateCompanion<SeasonEntity> {
 
   @override
   String toString() {
-    return (StringBuffer('SeasonsCompanion(')
+    return (StringBuffer('SmartPlaylistsCompanion(')
           ..write('podcastId: $podcastId, ')
-          ..write('seasonNumber: $seasonNumber, ')
+          ..write('playlistNumber: $playlistNumber, ')
           ..write('displayName: $displayName, ')
           ..write('sortKey: $sortKey, ')
           ..write('resolverType: $resolverType, ')
           ..write('thumbnailUrl: $thumbnailUrl, ')
+          ..write('yearGrouped: $yearGrouped, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -2421,6 +2480,17 @@ class $PodcastViewPreferencesTable extends PodcastViewPreferences
     requiredDuringInsert: false,
     defaultValue: const Constant('desc'),
   );
+  static const VerificationMeta _selectedPlaylistIdMeta =
+      const VerificationMeta('selectedPlaylistId');
+  @override
+  late final GeneratedColumn<String> selectedPlaylistId =
+      GeneratedColumn<String>(
+        'selected_playlist_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
   @override
   List<GeneratedColumn> get $columns => [
     podcastId,
@@ -2429,6 +2499,7 @@ class $PodcastViewPreferencesTable extends PodcastViewPreferences
     episodeSortOrder,
     seasonSortField,
     seasonSortOrder,
+    selectedPlaylistId,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2490,6 +2561,15 @@ class $PodcastViewPreferencesTable extends PodcastViewPreferences
         ),
       );
     }
+    if (data.containsKey('selected_playlist_id')) {
+      context.handle(
+        _selectedPlaylistIdMeta,
+        selectedPlaylistId.isAcceptableOrUnknown(
+          data['selected_playlist_id']!,
+          _selectedPlaylistIdMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -2523,6 +2603,10 @@ class $PodcastViewPreferencesTable extends PodcastViewPreferences
         DriftSqlType.string,
         data['${effectivePrefix}season_sort_order'],
       )!,
+      selectedPlaylistId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}selected_playlist_id'],
+      ),
     );
   }
 
@@ -2551,6 +2635,9 @@ class PodcastViewPreference extends DataClass
 
   /// Season sort order: 'asc' or 'desc'.
   final String seasonSortOrder;
+
+  /// Selected smart playlist ID for inline display.
+  final String? selectedPlaylistId;
   const PodcastViewPreference({
     required this.podcastId,
     required this.viewMode,
@@ -2558,6 +2645,7 @@ class PodcastViewPreference extends DataClass
     required this.episodeSortOrder,
     required this.seasonSortField,
     required this.seasonSortOrder,
+    this.selectedPlaylistId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2568,6 +2656,9 @@ class PodcastViewPreference extends DataClass
     map['episode_sort_order'] = Variable<String>(episodeSortOrder);
     map['season_sort_field'] = Variable<String>(seasonSortField);
     map['season_sort_order'] = Variable<String>(seasonSortOrder);
+    if (!nullToAbsent || selectedPlaylistId != null) {
+      map['selected_playlist_id'] = Variable<String>(selectedPlaylistId);
+    }
     return map;
   }
 
@@ -2579,6 +2670,9 @@ class PodcastViewPreference extends DataClass
       episodeSortOrder: Value(episodeSortOrder),
       seasonSortField: Value(seasonSortField),
       seasonSortOrder: Value(seasonSortOrder),
+      selectedPlaylistId: selectedPlaylistId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(selectedPlaylistId),
     );
   }
 
@@ -2594,6 +2688,9 @@ class PodcastViewPreference extends DataClass
       episodeSortOrder: serializer.fromJson<String>(json['episodeSortOrder']),
       seasonSortField: serializer.fromJson<String>(json['seasonSortField']),
       seasonSortOrder: serializer.fromJson<String>(json['seasonSortOrder']),
+      selectedPlaylistId: serializer.fromJson<String?>(
+        json['selectedPlaylistId'],
+      ),
     );
   }
   @override
@@ -2606,6 +2703,7 @@ class PodcastViewPreference extends DataClass
       'episodeSortOrder': serializer.toJson<String>(episodeSortOrder),
       'seasonSortField': serializer.toJson<String>(seasonSortField),
       'seasonSortOrder': serializer.toJson<String>(seasonSortOrder),
+      'selectedPlaylistId': serializer.toJson<String?>(selectedPlaylistId),
     };
   }
 
@@ -2616,6 +2714,7 @@ class PodcastViewPreference extends DataClass
     String? episodeSortOrder,
     String? seasonSortField,
     String? seasonSortOrder,
+    Value<String?> selectedPlaylistId = const Value.absent(),
   }) => PodcastViewPreference(
     podcastId: podcastId ?? this.podcastId,
     viewMode: viewMode ?? this.viewMode,
@@ -2623,6 +2722,9 @@ class PodcastViewPreference extends DataClass
     episodeSortOrder: episodeSortOrder ?? this.episodeSortOrder,
     seasonSortField: seasonSortField ?? this.seasonSortField,
     seasonSortOrder: seasonSortOrder ?? this.seasonSortOrder,
+    selectedPlaylistId: selectedPlaylistId.present
+        ? selectedPlaylistId.value
+        : this.selectedPlaylistId,
   );
   PodcastViewPreference copyWithCompanion(
     PodcastViewPreferencesCompanion data,
@@ -2642,6 +2744,9 @@ class PodcastViewPreference extends DataClass
       seasonSortOrder: data.seasonSortOrder.present
           ? data.seasonSortOrder.value
           : this.seasonSortOrder,
+      selectedPlaylistId: data.selectedPlaylistId.present
+          ? data.selectedPlaylistId.value
+          : this.selectedPlaylistId,
     );
   }
 
@@ -2653,7 +2758,8 @@ class PodcastViewPreference extends DataClass
           ..write('episodeFilter: $episodeFilter, ')
           ..write('episodeSortOrder: $episodeSortOrder, ')
           ..write('seasonSortField: $seasonSortField, ')
-          ..write('seasonSortOrder: $seasonSortOrder')
+          ..write('seasonSortOrder: $seasonSortOrder, ')
+          ..write('selectedPlaylistId: $selectedPlaylistId')
           ..write(')'))
         .toString();
   }
@@ -2666,6 +2772,7 @@ class PodcastViewPreference extends DataClass
     episodeSortOrder,
     seasonSortField,
     seasonSortOrder,
+    selectedPlaylistId,
   );
   @override
   bool operator ==(Object other) =>
@@ -2676,7 +2783,8 @@ class PodcastViewPreference extends DataClass
           other.episodeFilter == this.episodeFilter &&
           other.episodeSortOrder == this.episodeSortOrder &&
           other.seasonSortField == this.seasonSortField &&
-          other.seasonSortOrder == this.seasonSortOrder);
+          other.seasonSortOrder == this.seasonSortOrder &&
+          other.selectedPlaylistId == this.selectedPlaylistId);
 }
 
 class PodcastViewPreferencesCompanion
@@ -2687,6 +2795,7 @@ class PodcastViewPreferencesCompanion
   final Value<String> episodeSortOrder;
   final Value<String> seasonSortField;
   final Value<String> seasonSortOrder;
+  final Value<String?> selectedPlaylistId;
   const PodcastViewPreferencesCompanion({
     this.podcastId = const Value.absent(),
     this.viewMode = const Value.absent(),
@@ -2694,6 +2803,7 @@ class PodcastViewPreferencesCompanion
     this.episodeSortOrder = const Value.absent(),
     this.seasonSortField = const Value.absent(),
     this.seasonSortOrder = const Value.absent(),
+    this.selectedPlaylistId = const Value.absent(),
   });
   PodcastViewPreferencesCompanion.insert({
     this.podcastId = const Value.absent(),
@@ -2702,6 +2812,7 @@ class PodcastViewPreferencesCompanion
     this.episodeSortOrder = const Value.absent(),
     this.seasonSortField = const Value.absent(),
     this.seasonSortOrder = const Value.absent(),
+    this.selectedPlaylistId = const Value.absent(),
   });
   static Insertable<PodcastViewPreference> custom({
     Expression<int>? podcastId,
@@ -2710,6 +2821,7 @@ class PodcastViewPreferencesCompanion
     Expression<String>? episodeSortOrder,
     Expression<String>? seasonSortField,
     Expression<String>? seasonSortOrder,
+    Expression<String>? selectedPlaylistId,
   }) {
     return RawValuesInsertable({
       if (podcastId != null) 'podcast_id': podcastId,
@@ -2718,6 +2830,8 @@ class PodcastViewPreferencesCompanion
       if (episodeSortOrder != null) 'episode_sort_order': episodeSortOrder,
       if (seasonSortField != null) 'season_sort_field': seasonSortField,
       if (seasonSortOrder != null) 'season_sort_order': seasonSortOrder,
+      if (selectedPlaylistId != null)
+        'selected_playlist_id': selectedPlaylistId,
     });
   }
 
@@ -2728,6 +2842,7 @@ class PodcastViewPreferencesCompanion
     Value<String>? episodeSortOrder,
     Value<String>? seasonSortField,
     Value<String>? seasonSortOrder,
+    Value<String?>? selectedPlaylistId,
   }) {
     return PodcastViewPreferencesCompanion(
       podcastId: podcastId ?? this.podcastId,
@@ -2736,6 +2851,7 @@ class PodcastViewPreferencesCompanion
       episodeSortOrder: episodeSortOrder ?? this.episodeSortOrder,
       seasonSortField: seasonSortField ?? this.seasonSortField,
       seasonSortOrder: seasonSortOrder ?? this.seasonSortOrder,
+      selectedPlaylistId: selectedPlaylistId ?? this.selectedPlaylistId,
     );
   }
 
@@ -2760,6 +2876,9 @@ class PodcastViewPreferencesCompanion
     if (seasonSortOrder.present) {
       map['season_sort_order'] = Variable<String>(seasonSortOrder.value);
     }
+    if (selectedPlaylistId.present) {
+      map['selected_playlist_id'] = Variable<String>(selectedPlaylistId.value);
+    }
     return map;
   }
 
@@ -2771,7 +2890,8 @@ class PodcastViewPreferencesCompanion
           ..write('episodeFilter: $episodeFilter, ')
           ..write('episodeSortOrder: $episodeSortOrder, ')
           ..write('seasonSortField: $seasonSortField, ')
-          ..write('seasonSortOrder: $seasonSortOrder')
+          ..write('seasonSortOrder: $seasonSortOrder, ')
+          ..write('selectedPlaylistId: $selectedPlaylistId')
           ..write(')'))
         .toString();
   }
@@ -3942,7 +4062,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $EpisodesTable episodes = $EpisodesTable(this);
   late final $PlaybackHistoriesTable playbackHistories =
       $PlaybackHistoriesTable(this);
-  late final $SeasonsTable seasons = $SeasonsTable(this);
+  late final $SmartPlaylistsTable smartPlaylists = $SmartPlaylistsTable(this);
   late final $PodcastViewPreferencesTable podcastViewPreferences =
       $PodcastViewPreferencesTable(this);
   late final $DownloadTasksTable downloadTasks = $DownloadTasksTable(this);
@@ -3955,7 +4075,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     subscriptions,
     episodes,
     playbackHistories,
-    seasons,
+    smartPlaylists,
     podcastViewPreferences,
     downloadTasks,
     queueItems,
@@ -4018,19 +4138,22 @@ final class $$SubscriptionsTableReferences
     );
   }
 
-  static MultiTypedResultKey<$SeasonsTable, List<SeasonEntity>>
-  _seasonsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
-    db.seasons,
-    aliasName: $_aliasNameGenerator(db.subscriptions.id, db.seasons.podcastId),
+  static MultiTypedResultKey<$SmartPlaylistsTable, List<SmartPlaylistEntity>>
+  _smartPlaylistsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.smartPlaylists,
+    aliasName: $_aliasNameGenerator(
+      db.subscriptions.id,
+      db.smartPlaylists.podcastId,
+    ),
   );
 
-  $$SeasonsTableProcessedTableManager get seasonsRefs {
-    final manager = $$SeasonsTableTableManager(
+  $$SmartPlaylistsTableProcessedTableManager get smartPlaylistsRefs {
+    final manager = $$SmartPlaylistsTableTableManager(
       $_db,
-      $_db.seasons,
+      $_db.smartPlaylists,
     ).filter((f) => f.podcastId.id.sqlEquals($_itemColumn<int>('id')!));
 
-    final cache = $_typedResult.readTableOrNull(_seasonsRefsTable($_db));
+    final cache = $_typedResult.readTableOrNull(_smartPlaylistsRefsTable($_db));
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
@@ -4154,22 +4277,22 @@ class $$SubscriptionsTableFilterComposer
     return f(composer);
   }
 
-  Expression<bool> seasonsRefs(
-    Expression<bool> Function($$SeasonsTableFilterComposer f) f,
+  Expression<bool> smartPlaylistsRefs(
+    Expression<bool> Function($$SmartPlaylistsTableFilterComposer f) f,
   ) {
-    final $$SeasonsTableFilterComposer composer = $composerBuilder(
+    final $$SmartPlaylistsTableFilterComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.id,
-      referencedTable: $db.seasons,
+      referencedTable: $db.smartPlaylists,
       getReferencedColumn: (t) => t.podcastId,
       builder:
           (
             joinBuilder, {
             $addJoinBuilderToRootComposer,
             $removeJoinBuilderFromRootComposer,
-          }) => $$SeasonsTableFilterComposer(
+          }) => $$SmartPlaylistsTableFilterComposer(
             $db: $db,
-            $table: $db.seasons,
+            $table: $db.smartPlaylists,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -4348,22 +4471,22 @@ class $$SubscriptionsTableAnnotationComposer
     return f(composer);
   }
 
-  Expression<T> seasonsRefs<T extends Object>(
-    Expression<T> Function($$SeasonsTableAnnotationComposer a) f,
+  Expression<T> smartPlaylistsRefs<T extends Object>(
+    Expression<T> Function($$SmartPlaylistsTableAnnotationComposer a) f,
   ) {
-    final $$SeasonsTableAnnotationComposer composer = $composerBuilder(
+    final $$SmartPlaylistsTableAnnotationComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.id,
-      referencedTable: $db.seasons,
+      referencedTable: $db.smartPlaylists,
       getReferencedColumn: (t) => t.podcastId,
       builder:
           (
             joinBuilder, {
             $addJoinBuilderToRootComposer,
             $removeJoinBuilderFromRootComposer,
-          }) => $$SeasonsTableAnnotationComposer(
+          }) => $$SmartPlaylistsTableAnnotationComposer(
             $db: $db,
-            $table: $db.seasons,
+            $table: $db.smartPlaylists,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -4415,7 +4538,7 @@ class $$SubscriptionsTableTableManager
           Subscription,
           PrefetchHooks Function({
             bool episodesRefs,
-            bool seasonsRefs,
+            bool smartPlaylistsRefs,
             bool podcastViewPreferencesRefs,
           })
         > {
@@ -4493,14 +4616,14 @@ class $$SubscriptionsTableTableManager
           prefetchHooksCallback:
               ({
                 episodesRefs = false,
-                seasonsRefs = false,
+                smartPlaylistsRefs = false,
                 podcastViewPreferencesRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
                   explicitlyWatchedTables: [
                     if (episodesRefs) db.episodes,
-                    if (seasonsRefs) db.seasons,
+                    if (smartPlaylistsRefs) db.smartPlaylists,
                     if (podcastViewPreferencesRefs) db.podcastViewPreferences,
                   ],
                   addJoins: null,
@@ -4527,21 +4650,21 @@ class $$SubscriptionsTableTableManager
                               ),
                           typedResults: items,
                         ),
-                      if (seasonsRefs)
+                      if (smartPlaylistsRefs)
                         await $_getPrefetchedData<
                           Subscription,
                           $SubscriptionsTable,
-                          SeasonEntity
+                          SmartPlaylistEntity
                         >(
                           currentTable: table,
                           referencedTable: $$SubscriptionsTableReferences
-                              ._seasonsRefsTable(db),
+                              ._smartPlaylistsRefsTable(db),
                           managerFromTypedResult: (p0) =>
                               $$SubscriptionsTableReferences(
                                 db,
                                 table,
                                 p0,
-                              ).seasonsRefs,
+                              ).smartPlaylistsRefs,
                           referencedItemsForCurrentItem:
                               (item, referencedItems) => referencedItems.where(
                                 (e) => e.podcastId == item.id,
@@ -4591,7 +4714,7 @@ typedef $$SubscriptionsTableProcessedTableManager =
       Subscription,
       PrefetchHooks Function({
         bool episodesRefs,
-        bool seasonsRefs,
+        bool smartPlaylistsRefs,
         bool podcastViewPreferencesRefs,
       })
     >;
@@ -5704,34 +5827,45 @@ typedef $$PlaybackHistoriesTableProcessedTableManager =
       PlaybackHistory,
       PrefetchHooks Function({bool episodeId})
     >;
-typedef $$SeasonsTableCreateCompanionBuilder =
-    SeasonsCompanion Function({
+typedef $$SmartPlaylistsTableCreateCompanionBuilder =
+    SmartPlaylistsCompanion Function({
       required int podcastId,
-      required int seasonNumber,
+      required int playlistNumber,
       required String displayName,
       required int sortKey,
       required String resolverType,
       Value<String?> thumbnailUrl,
+      Value<bool> yearGrouped,
       Value<int> rowid,
     });
-typedef $$SeasonsTableUpdateCompanionBuilder =
-    SeasonsCompanion Function({
+typedef $$SmartPlaylistsTableUpdateCompanionBuilder =
+    SmartPlaylistsCompanion Function({
       Value<int> podcastId,
-      Value<int> seasonNumber,
+      Value<int> playlistNumber,
       Value<String> displayName,
       Value<int> sortKey,
       Value<String> resolverType,
       Value<String?> thumbnailUrl,
+      Value<bool> yearGrouped,
       Value<int> rowid,
     });
 
-final class $$SeasonsTableReferences
-    extends BaseReferences<_$AppDatabase, $SeasonsTable, SeasonEntity> {
-  $$SeasonsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+final class $$SmartPlaylistsTableReferences
+    extends
+        BaseReferences<
+          _$AppDatabase,
+          $SmartPlaylistsTable,
+          SmartPlaylistEntity
+        > {
+  $$SmartPlaylistsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
 
   static $SubscriptionsTable _podcastIdTable(_$AppDatabase db) =>
       db.subscriptions.createAlias(
-        $_aliasNameGenerator(db.seasons.podcastId, db.subscriptions.id),
+        $_aliasNameGenerator(db.smartPlaylists.podcastId, db.subscriptions.id),
       );
 
   $$SubscriptionsTableProcessedTableManager get podcastId {
@@ -5749,17 +5883,17 @@ final class $$SeasonsTableReferences
   }
 }
 
-class $$SeasonsTableFilterComposer
-    extends Composer<_$AppDatabase, $SeasonsTable> {
-  $$SeasonsTableFilterComposer({
+class $$SmartPlaylistsTableFilterComposer
+    extends Composer<_$AppDatabase, $SmartPlaylistsTable> {
+  $$SmartPlaylistsTableFilterComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get seasonNumber => $composableBuilder(
-    column: $table.seasonNumber,
+  ColumnFilters<int> get playlistNumber => $composableBuilder(
+    column: $table.playlistNumber,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5780,6 +5914,11 @@ class $$SeasonsTableFilterComposer
 
   ColumnFilters<String> get thumbnailUrl => $composableBuilder(
     column: $table.thumbnailUrl,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get yearGrouped => $composableBuilder(
+    column: $table.yearGrouped,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5807,17 +5946,17 @@ class $$SeasonsTableFilterComposer
   }
 }
 
-class $$SeasonsTableOrderingComposer
-    extends Composer<_$AppDatabase, $SeasonsTable> {
-  $$SeasonsTableOrderingComposer({
+class $$SmartPlaylistsTableOrderingComposer
+    extends Composer<_$AppDatabase, $SmartPlaylistsTable> {
+  $$SmartPlaylistsTableOrderingComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get seasonNumber => $composableBuilder(
-    column: $table.seasonNumber,
+  ColumnOrderings<int> get playlistNumber => $composableBuilder(
+    column: $table.playlistNumber,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -5838,6 +5977,11 @@ class $$SeasonsTableOrderingComposer
 
   ColumnOrderings<String> get thumbnailUrl => $composableBuilder(
     column: $table.thumbnailUrl,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get yearGrouped => $composableBuilder(
+    column: $table.yearGrouped,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -5865,17 +6009,17 @@ class $$SeasonsTableOrderingComposer
   }
 }
 
-class $$SeasonsTableAnnotationComposer
-    extends Composer<_$AppDatabase, $SeasonsTable> {
-  $$SeasonsTableAnnotationComposer({
+class $$SmartPlaylistsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SmartPlaylistsTable> {
+  $$SmartPlaylistsTableAnnotationComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get seasonNumber => $composableBuilder(
-    column: $table.seasonNumber,
+  GeneratedColumn<int> get playlistNumber => $composableBuilder(
+    column: $table.playlistNumber,
     builder: (column) => column,
   );
 
@@ -5894,6 +6038,11 @@ class $$SeasonsTableAnnotationComposer
 
   GeneratedColumn<String> get thumbnailUrl => $composableBuilder(
     column: $table.thumbnailUrl,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get yearGrouped => $composableBuilder(
+    column: $table.yearGrouped,
     builder: (column) => column,
   );
 
@@ -5921,73 +6070,79 @@ class $$SeasonsTableAnnotationComposer
   }
 }
 
-class $$SeasonsTableTableManager
+class $$SmartPlaylistsTableTableManager
     extends
         RootTableManager<
           _$AppDatabase,
-          $SeasonsTable,
-          SeasonEntity,
-          $$SeasonsTableFilterComposer,
-          $$SeasonsTableOrderingComposer,
-          $$SeasonsTableAnnotationComposer,
-          $$SeasonsTableCreateCompanionBuilder,
-          $$SeasonsTableUpdateCompanionBuilder,
-          (SeasonEntity, $$SeasonsTableReferences),
-          SeasonEntity,
+          $SmartPlaylistsTable,
+          SmartPlaylistEntity,
+          $$SmartPlaylistsTableFilterComposer,
+          $$SmartPlaylistsTableOrderingComposer,
+          $$SmartPlaylistsTableAnnotationComposer,
+          $$SmartPlaylistsTableCreateCompanionBuilder,
+          $$SmartPlaylistsTableUpdateCompanionBuilder,
+          (SmartPlaylistEntity, $$SmartPlaylistsTableReferences),
+          SmartPlaylistEntity,
           PrefetchHooks Function({bool podcastId})
         > {
-  $$SeasonsTableTableManager(_$AppDatabase db, $SeasonsTable table)
-    : super(
+  $$SmartPlaylistsTableTableManager(
+    _$AppDatabase db,
+    $SmartPlaylistsTable table,
+  ) : super(
         TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
-              $$SeasonsTableFilterComposer($db: db, $table: table),
+              $$SmartPlaylistsTableFilterComposer($db: db, $table: table),
           createOrderingComposer: () =>
-              $$SeasonsTableOrderingComposer($db: db, $table: table),
+              $$SmartPlaylistsTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
-              $$SeasonsTableAnnotationComposer($db: db, $table: table),
+              $$SmartPlaylistsTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<int> podcastId = const Value.absent(),
-                Value<int> seasonNumber = const Value.absent(),
+                Value<int> playlistNumber = const Value.absent(),
                 Value<String> displayName = const Value.absent(),
                 Value<int> sortKey = const Value.absent(),
                 Value<String> resolverType = const Value.absent(),
                 Value<String?> thumbnailUrl = const Value.absent(),
+                Value<bool> yearGrouped = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
-              }) => SeasonsCompanion(
+              }) => SmartPlaylistsCompanion(
                 podcastId: podcastId,
-                seasonNumber: seasonNumber,
+                playlistNumber: playlistNumber,
                 displayName: displayName,
                 sortKey: sortKey,
                 resolverType: resolverType,
                 thumbnailUrl: thumbnailUrl,
+                yearGrouped: yearGrouped,
                 rowid: rowid,
               ),
           createCompanionCallback:
               ({
                 required int podcastId,
-                required int seasonNumber,
+                required int playlistNumber,
                 required String displayName,
                 required int sortKey,
                 required String resolverType,
                 Value<String?> thumbnailUrl = const Value.absent(),
+                Value<bool> yearGrouped = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
-              }) => SeasonsCompanion.insert(
+              }) => SmartPlaylistsCompanion.insert(
                 podcastId: podcastId,
-                seasonNumber: seasonNumber,
+                playlistNumber: playlistNumber,
                 displayName: displayName,
                 sortKey: sortKey,
                 resolverType: resolverType,
                 thumbnailUrl: thumbnailUrl,
+                yearGrouped: yearGrouped,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
                   e.readTable(table),
-                  $$SeasonsTableReferences(db, table, e),
+                  $$SmartPlaylistsTableReferences(db, table, e),
                 ),
               )
               .toList(),
@@ -6016,11 +6171,12 @@ class $$SeasonsTableTableManager
                           state.withJoin(
                                 currentTable: table,
                                 currentColumn: table.podcastId,
-                                referencedTable: $$SeasonsTableReferences
+                                referencedTable: $$SmartPlaylistsTableReferences
                                     ._podcastIdTable(db),
-                                referencedColumn: $$SeasonsTableReferences
-                                    ._podcastIdTable(db)
-                                    .id,
+                                referencedColumn:
+                                    $$SmartPlaylistsTableReferences
+                                        ._podcastIdTable(db)
+                                        .id,
                               )
                               as T;
                     }
@@ -6036,18 +6192,18 @@ class $$SeasonsTableTableManager
       );
 }
 
-typedef $$SeasonsTableProcessedTableManager =
+typedef $$SmartPlaylistsTableProcessedTableManager =
     ProcessedTableManager<
       _$AppDatabase,
-      $SeasonsTable,
-      SeasonEntity,
-      $$SeasonsTableFilterComposer,
-      $$SeasonsTableOrderingComposer,
-      $$SeasonsTableAnnotationComposer,
-      $$SeasonsTableCreateCompanionBuilder,
-      $$SeasonsTableUpdateCompanionBuilder,
-      (SeasonEntity, $$SeasonsTableReferences),
-      SeasonEntity,
+      $SmartPlaylistsTable,
+      SmartPlaylistEntity,
+      $$SmartPlaylistsTableFilterComposer,
+      $$SmartPlaylistsTableOrderingComposer,
+      $$SmartPlaylistsTableAnnotationComposer,
+      $$SmartPlaylistsTableCreateCompanionBuilder,
+      $$SmartPlaylistsTableUpdateCompanionBuilder,
+      (SmartPlaylistEntity, $$SmartPlaylistsTableReferences),
+      SmartPlaylistEntity,
       PrefetchHooks Function({bool podcastId})
     >;
 typedef $$PodcastViewPreferencesTableCreateCompanionBuilder =
@@ -6058,6 +6214,7 @@ typedef $$PodcastViewPreferencesTableCreateCompanionBuilder =
       Value<String> episodeSortOrder,
       Value<String> seasonSortField,
       Value<String> seasonSortOrder,
+      Value<String?> selectedPlaylistId,
     });
 typedef $$PodcastViewPreferencesTableUpdateCompanionBuilder =
     PodcastViewPreferencesCompanion Function({
@@ -6067,6 +6224,7 @@ typedef $$PodcastViewPreferencesTableUpdateCompanionBuilder =
       Value<String> episodeSortOrder,
       Value<String> seasonSortField,
       Value<String> seasonSortOrder,
+      Value<String?> selectedPlaylistId,
     });
 
 final class $$PodcastViewPreferencesTableReferences
@@ -6139,6 +6297,11 @@ class $$PodcastViewPreferencesTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get selectedPlaylistId => $composableBuilder(
+    column: $table.selectedPlaylistId,
+    builder: (column) => ColumnFilters(column),
+  );
+
   $$SubscriptionsTableFilterComposer get podcastId {
     final $$SubscriptionsTableFilterComposer composer = $composerBuilder(
       composer: this,
@@ -6197,6 +6360,11 @@ class $$PodcastViewPreferencesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get selectedPlaylistId => $composableBuilder(
+    column: $table.selectedPlaylistId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$SubscriptionsTableOrderingComposer get podcastId {
     final $$SubscriptionsTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -6250,6 +6418,11 @@ class $$PodcastViewPreferencesTableAnnotationComposer
 
   GeneratedColumn<String> get seasonSortOrder => $composableBuilder(
     column: $table.seasonSortOrder,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get selectedPlaylistId => $composableBuilder(
+    column: $table.selectedPlaylistId,
     builder: (column) => column,
   );
 
@@ -6322,6 +6495,7 @@ class $$PodcastViewPreferencesTableTableManager
                 Value<String> episodeSortOrder = const Value.absent(),
                 Value<String> seasonSortField = const Value.absent(),
                 Value<String> seasonSortOrder = const Value.absent(),
+                Value<String?> selectedPlaylistId = const Value.absent(),
               }) => PodcastViewPreferencesCompanion(
                 podcastId: podcastId,
                 viewMode: viewMode,
@@ -6329,6 +6503,7 @@ class $$PodcastViewPreferencesTableTableManager
                 episodeSortOrder: episodeSortOrder,
                 seasonSortField: seasonSortField,
                 seasonSortOrder: seasonSortOrder,
+                selectedPlaylistId: selectedPlaylistId,
               ),
           createCompanionCallback:
               ({
@@ -6338,6 +6513,7 @@ class $$PodcastViewPreferencesTableTableManager
                 Value<String> episodeSortOrder = const Value.absent(),
                 Value<String> seasonSortField = const Value.absent(),
                 Value<String> seasonSortOrder = const Value.absent(),
+                Value<String?> selectedPlaylistId = const Value.absent(),
               }) => PodcastViewPreferencesCompanion.insert(
                 podcastId: podcastId,
                 viewMode: viewMode,
@@ -6345,6 +6521,7 @@ class $$PodcastViewPreferencesTableTableManager
                 episodeSortOrder: episodeSortOrder,
                 seasonSortField: seasonSortField,
                 seasonSortOrder: seasonSortOrder,
+                selectedPlaylistId: selectedPlaylistId,
               ),
           withReferenceMapper: (p0) => p0
               .map(
@@ -7217,8 +7394,8 @@ class $AppDatabaseManager {
       $$EpisodesTableTableManager(_db, _db.episodes);
   $$PlaybackHistoriesTableTableManager get playbackHistories =>
       $$PlaybackHistoriesTableTableManager(_db, _db.playbackHistories);
-  $$SeasonsTableTableManager get seasons =>
-      $$SeasonsTableTableManager(_db, _db.seasons);
+  $$SmartPlaylistsTableTableManager get smartPlaylists =>
+      $$SmartPlaylistsTableTableManager(_db, _db.smartPlaylists);
   $$PodcastViewPreferencesTableTableManager get podcastViewPreferences =>
       $$PodcastViewPreferencesTableTableManager(
         _db,

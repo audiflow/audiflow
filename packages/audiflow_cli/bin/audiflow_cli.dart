@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:args/args.dart';
 import 'package:audiflow_cli/src/commands/pattern_list_command.dart';
 import 'package:audiflow_cli/src/commands/pattern_test_command.dart';
-import 'package:audiflow_cli/src/commands/season_debug_command.dart';
+import 'package:audiflow_cli/src/commands/smart_playlist_debug_command.dart';
 
 void main(List<String> args) async {
   final parser = ArgParser()
@@ -11,7 +11,7 @@ void main(List<String> args) async {
     ..addFlag('version', negatable: false, help: 'Show version');
 
   // Add subcommands
-  parser.addCommand('season-debug')
+  parser.addCommand('playlist-debug')
     ..addFlag('json', help: 'Output as JSON')
     ..addOption('pattern', abbr: 'p', help: 'Pattern ID to use');
 
@@ -50,8 +50,8 @@ void main(List<String> args) async {
     }
 
     switch (command.name) {
-      case 'season-debug':
-        await _runSeasonDebug(command);
+      case 'playlist-debug':
+        await _runPlaylistDebug(command);
       case 'pattern-test':
         _runPatternTest(command);
       case 'pattern-list':
@@ -71,7 +71,7 @@ void _printUsage(ArgParser parser) {
   stdout.writeln('Usage: dart run audiflow_cli <command> [options]');
   stdout.writeln('');
   stdout.writeln('Commands:');
-  stdout.writeln('  season-debug <url>   Test extractors against RSS feed');
+  stdout.writeln('  playlist-debug <url>   Test extractors against RSS feed');
   stdout.writeln('  pattern-test         Test patterns against a single title');
   stdout.writeln('  pattern-list         List available patterns');
   stdout.writeln('');
@@ -79,7 +79,7 @@ void _printUsage(ArgParser parser) {
   stdout.writeln(parser.usage);
 }
 
-Future<void> _runSeasonDebug(ArgResults command) async {
+Future<void> _runPlaylistDebug(ArgResults command) async {
   if (command.rest.isEmpty) {
     stdout.writeln('Error: Feed URL required');
     exit(1);
@@ -89,7 +89,7 @@ Future<void> _runSeasonDebug(ArgResults command) async {
   final json = command['json'] as bool;
   final patternId = command['pattern'] as String?;
 
-  final cmd = SeasonDebugCommand(stdout);
+  final cmd = SmartPlaylistDebugCommand(stdout);
   final exitCode = await cmd.run(
     feedUrl: feedUrl,
     patternId: patternId,

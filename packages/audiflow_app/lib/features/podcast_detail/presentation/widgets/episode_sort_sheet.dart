@@ -26,16 +26,8 @@ class EpisodeSortSheet extends StatelessWidget {
           children: [
             Text('Sort by', style: theme.textTheme.titleLarge),
             const SizedBox(height: Spacing.md),
-            _buildSortOption(
-              context,
-              'Episode number (oldest first)',
-              SortOrder.ascending,
-            ),
-            _buildSortOption(
-              context,
-              'Episode number (newest first)',
-              SortOrder.descending,
-            ),
+            _buildSortOption(context, 'Oldest first', SortOrder.ascending),
+            _buildSortOption(context, 'Newest first', SortOrder.descending),
             const SizedBox(height: Spacing.md),
           ],
         ),

@@ -6,7 +6,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../common/database/app_database.dart';
 import '../../../common/providers/database_provider.dart';
 import '../datasources/local/episode_local_datasource.dart';
-import '../models/season_episode_extractor.dart';
+import '../models/smart_playlist_episode_extractor.dart';
 import 'episode_repository.dart';
 
 part 'episode_repository_impl.g.dart';
@@ -55,7 +55,7 @@ class EpisodeRepositoryImpl implements EpisodeRepository {
   Future<void> upsertFromFeedItems(
     int podcastId,
     List<PodcastItem> items, {
-    SeasonEpisodeExtractor? extractor,
+    SmartPlaylistEpisodeExtractor? extractor,
   }) {
     final companions = items
         .where((item) => item.guid != null && item.enclosureUrl != null)

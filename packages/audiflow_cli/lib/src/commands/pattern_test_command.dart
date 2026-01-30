@@ -37,7 +37,7 @@ class PatternTestCommand {
 
     // Test title extraction
     if (titlePattern != null || titleFallback != null) {
-      final extractor = SeasonTitleExtractor(
+      final extractor = SmartPlaylistTitleExtractor(
         source: 'title',
         pattern: titlePattern,
         group: titleGroup,

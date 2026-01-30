@@ -47,11 +47,11 @@ void main() {
       final result = resolver.resolve(episodes, null);
 
       expect(result, isNotNull);
-      expect(result!.seasons.length, 2);
-      expect(result.seasons[0].displayName, '2024');
-      expect(result.seasons[0].episodeIds, [3, 4]);
-      expect(result.seasons[1].displayName, '2023');
-      expect(result.seasons[1].episodeIds, [1, 2]);
+      expect(result!.playlists.length, 2);
+      expect(result.playlists[0].displayName, '2024');
+      expect(result.playlists[0].episodeIds, [3, 4]);
+      expect(result.playlists[1].displayName, '2023');
+      expect(result.playlists[1].episodeIds, [1, 2]);
     });
 
     test('episodes without publishedAt go to ungrouped', () {
@@ -67,9 +67,9 @@ void main() {
     });
 
     test('default sort is year descending (newest first)', () {
-      expect(resolver.defaultSort, isA<SimpleSeasonSort>());
-      final sort = resolver.defaultSort as SimpleSeasonSort;
-      expect(sort.field, SeasonSortField.seasonNumber);
+      expect(resolver.defaultSort, isA<SimpleSmartPlaylistSort>());
+      final sort = resolver.defaultSort as SimpleSmartPlaylistSort;
+      expect(sort.field, SmartPlaylistSortField.playlistNumber);
       expect(sort.order, SortOrder.descending);
     });
   });

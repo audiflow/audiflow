@@ -1,0 +1,17 @@
+{
+  "@@locale": "en",
+  "smartPlaylistDailyNews": "Daily News",
+  "@smartPlaylistDailyNews": { "description": "NewsConnect weekday episodes playlist name" },
+  "smartPlaylistPrograms": "Programs",
+  "@smartPlaylistPrograms": { "description": "NewsConnect non-weekday episodes playlist name" },
+  "smartPlaylistExtras": "Extras",
+  "@smartPlaylistExtras": { "description": "COTEN Radio extras playlist name" },
+  "smartPlaylistOthers": "Others",
+  "@smartPlaylistOthers": { "description": "Catch-all playlist name for uncategorized episodes" },
+  "smartPlaylistSectionTitle": "Smart Playlists",
+  "@smartPlaylistSectionTitle": { "description": "Section header for smart playlists in podcast detail" },
+  "episodesLabel": "Episodes",
+  "@episodesLabel": { "description": "Label for episodes view tab" },
+  "smartPlaylistsLabel": "Smart Playlists",
+  "@smartPlaylistsLabel": { "description": "Label for smart playlists view tab" }
+}

@@ -2,7 +2,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../models/episode_filter.dart';
 import '../models/podcast_view_mode.dart';
-import '../models/season_sort.dart';
+import '../models/smart_playlist_sort.dart';
 import '../repositories/podcast_view_preference_repository.dart';
 
 part 'podcast_view_preference_providers.g.dart';
@@ -38,13 +38,13 @@ class PodcastViewPreferenceController
     ref.invalidateSelf();
   }
 
-  /// Toggles between episodes and seasons view modes.
+  /// Toggles between episodes and smart playlists view modes.
   Future<void> toggleViewMode() async {
     final current = state.value;
     if (current == null) return;
 
     final newMode = current.viewMode == PodcastViewMode.episodes
-        ? PodcastViewMode.seasons
+        ? PodcastViewMode.smartPlaylists
         : PodcastViewMode.episodes;
     await setViewMode(newMode);
   }
@@ -74,10 +74,24 @@ class PodcastViewPreferenceController
     await setEpisodeSortOrder(newOrder);
   }
 
-  /// Sets the season sort field and order, persists to database.
-  Future<void> setSeasonSort(SeasonSortField field, SortOrder order) async {
+  /// Selects a smart playlist for inline display.
+  ///
+  /// Sets view mode to smartPlaylists and persists the
+  /// selected playlist ID.
+  Future<void> selectPlaylist(String playlistId) async {
     final repo = ref.read(podcastViewPreferenceRepositoryProvider);
-    await repo.updateSeasonSort(podcastId, field, order);
+    await repo.updateSelectedPlaylistId(podcastId, playlistId);
+    ref.invalidateSelf();
+  }
+
+  /// Sets the smart playlist sort field and order, persists to
+  /// database.
+  Future<void> setSmartPlaylistSort(
+    SmartPlaylistSortField field,
+    SortOrder order,
+  ) async {
+    final repo = ref.read(podcastViewPreferenceRepositoryProvider);
+    await repo.updateSmartPlaylistSort(podcastId, field, order);
     ref.invalidateSelf();
   }
 }

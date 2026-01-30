@@ -1,24 +1,27 @@
 import '../../../common/database/app_database.dart';
 import '../extensions/episode_extensions.dart';
-import '../models/season.dart';
-import '../models/season_pattern.dart';
-import '../models/season_sort.dart';
-import '../models/season_title_extractor.dart';
-import 'season_resolver.dart';
+import '../models/smart_playlist.dart';
+import '../models/smart_playlist_pattern.dart';
+import '../models/smart_playlist_sort.dart';
+import '../models/smart_playlist_title_extractor.dart';
+import 'smart_playlist_resolver.dart';
 
 /// Resolver that groups episodes by publication year.
-class YearResolver implements SeasonResolver {
+class YearResolver implements SmartPlaylistResolver {
   @override
   String get type => 'year';
 
   @override
-  SeasonSortSpec get defaultSort => const SimpleSeasonSort(
-    SeasonSortField.seasonNumber,
+  SmartPlaylistSortSpec get defaultSort => const SimpleSmartPlaylistSort(
+    SmartPlaylistSortField.playlistNumber,
     SortOrder.descending, // Newest years first
   );
 
   @override
-  SeasonGrouping? resolve(List<Episode> episodes, SeasonPattern? pattern) {
+  SmartPlaylistGrouping? resolve(
+    List<Episode> episodes,
+    SmartPlaylistPattern? pattern,
+  ) {
     final grouped = <int, List<Episode>>{};
     final ungrouped = <int>[];
 
@@ -38,24 +41,24 @@ class YearResolver implements SeasonResolver {
 
     final titleExtractor = pattern?.titleExtractor;
 
-    final seasons = grouped.entries.map((entry) {
-      final seasonEpisodes = entry.value;
+    final playlists = grouped.entries.map((entry) {
+      final playlistEpisodes = entry.value;
       final displayName = _extractDisplayName(
         year: entry.key,
-        episodes: seasonEpisodes,
+        episodes: playlistEpisodes,
         titleExtractor: titleExtractor,
       );
 
-      return Season(
+      return SmartPlaylist(
         id: 'year_${entry.key}',
         displayName: displayName,
         sortKey: entry.key,
-        episodeIds: seasonEpisodes.map((e) => e.id).toList(),
+        episodeIds: playlistEpisodes.map((e) => e.id).toList(),
       );
     }).toList()..sort((a, b) => b.sortKey.compareTo(a.sortKey)); // Descending
 
-    return SeasonGrouping(
-      seasons: seasons,
+    return SmartPlaylistGrouping(
+      playlists: playlists,
       ungroupedEpisodeIds: ungrouped,
       resolverType: type,
     );
@@ -64,7 +67,7 @@ class YearResolver implements SeasonResolver {
   String _extractDisplayName({
     required int year,
     required List<Episode> episodes,
-    required SeasonTitleExtractor? titleExtractor,
+    required SmartPlaylistTitleExtractor? titleExtractor,
   }) {
     if (titleExtractor == null || episodes.isEmpty) {
       return '$year';

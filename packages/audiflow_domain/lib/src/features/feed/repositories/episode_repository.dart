@@ -1,7 +1,7 @@
 import 'package:audiflow_podcast/audiflow_podcast.dart';
 
 import '../../../common/database/app_database.dart';
-import '../models/season_episode_extractor.dart';
+import '../models/smart_playlist_episode_extractor.dart';
 
 /// Repository interface for episode operations.
 ///
@@ -35,7 +35,7 @@ abstract class EpisodeRepository {
   Future<void> upsertFromFeedItems(
     int podcastId,
     List<PodcastItem> items, {
-    SeasonEpisodeExtractor? extractor,
+    SmartPlaylistEpisodeExtractor? extractor,
   });
 
   /// Returns episodes by their IDs.

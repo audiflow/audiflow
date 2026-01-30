@@ -34,7 +34,7 @@ void main() {
     });
 
     test('groups by first appearance order', () {
-      final pattern = SeasonPattern(
+      final pattern = SmartPlaylistPattern(
         id: 'test',
         resolverType: 'title_appearance',
         config: {'pattern': r'\[(\w+)\s+\d+\]'},
@@ -53,24 +53,24 @@ void main() {
       final result = resolver.resolve(episodes, pattern);
 
       expect(result, isNotNull);
-      expect(result!.seasons.length, 3);
+      expect(result!.playlists.length, 3);
 
       // Rome appeared first chronologically, so it's season 1
-      expect(result.seasons[0].displayName, 'Rome');
-      expect(result.seasons[0].sortKey, 1);
-      expect(result.seasons[0].episodeIds, containsAll([1, 2, 3]));
+      expect(result.playlists[0].displayName, 'Rome');
+      expect(result.playlists[0].sortKey, 1);
+      expect(result.playlists[0].episodeIds, containsAll([1, 2, 3]));
 
       // Venezia appeared second
-      expect(result.seasons[1].displayName, 'Venezia');
-      expect(result.seasons[1].sortKey, 2);
+      expect(result.playlists[1].displayName, 'Venezia');
+      expect(result.playlists[1].sortKey, 2);
 
       // Firenze appeared third
-      expect(result.seasons[2].displayName, 'Firenze');
-      expect(result.seasons[2].sortKey, 3);
+      expect(result.playlists[2].displayName, 'Firenze');
+      expect(result.playlists[2].sortKey, 3);
     });
 
     test('non-matching episodes go to ungrouped', () {
-      final pattern = SeasonPattern(
+      final pattern = SmartPlaylistPattern(
         id: 'test',
         resolverType: 'title_appearance',
         config: {'pattern': r'\[(\w+)\s+\d+\]'},
@@ -88,7 +88,7 @@ void main() {
     });
 
     test('returns null when no matches found', () {
-      final pattern = SeasonPattern(
+      final pattern = SmartPlaylistPattern(
         id: 'test',
         resolverType: 'title_appearance',
         config: {'pattern': r'\[(\w+)\s+\d+\]'},
