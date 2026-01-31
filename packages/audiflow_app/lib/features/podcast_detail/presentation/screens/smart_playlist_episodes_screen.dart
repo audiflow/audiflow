@@ -26,11 +26,21 @@ class SmartPlaylistEpisodesScreen extends ConsumerStatefulWidget {
 class _SmartPlaylistEpisodesScreenState
     extends ConsumerState<SmartPlaylistEpisodesScreen> {
   final _scrollController = ScrollController();
+  final _subCategoryExpanded = <String, bool>{};
+  SortOrder _sortOrder = SortOrder.descending;
 
   @override
   void dispose() {
     _scrollController.dispose();
     super.dispose();
+  }
+
+  void _toggleSortOrder() {
+    setState(() {
+      _sortOrder = _sortOrder == SortOrder.descending
+          ? SortOrder.ascending
+          : SortOrder.descending;
+    });
   }
 
   @override
@@ -39,7 +49,22 @@ class _SmartPlaylistEpisodesScreenState
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      appBar: AppBar(title: Text(widget.smartPlaylist.displayName)),
+      appBar: AppBar(
+        title: Text(widget.smartPlaylist.displayName),
+        actions: [
+          IconButton(
+            icon: Icon(
+              _sortOrder == SortOrder.ascending
+                  ? Icons.arrow_upward
+                  : Icons.arrow_downward,
+            ),
+            tooltip: _sortOrder == SortOrder.ascending
+                ? 'Oldest first'
+                : 'Newest first',
+            onPressed: _toggleSortOrder,
+          ),
+        ],
+      ),
       body: CustomScrollView(
         controller: _scrollController,
         slivers: [
@@ -87,14 +112,18 @@ class _SmartPlaylistEpisodesScreenState
 
         if (widget.smartPlaylist.subCategories != null &&
             widget.smartPlaylist.subCategories!.isNotEmpty) {
-          return [_buildSubCategoryList(ref, episodes, theme)];
+          return _buildSubCategorySlivers(episodes);
         }
+
+        final sorted = _sortOrder == SortOrder.ascending
+            ? episodes.reversed.toList()
+            : episodes;
 
         return [
           SliverList.builder(
-            itemCount: episodes.length,
+            itemCount: sorted.length,
             itemBuilder: (context, index) {
-              final data = episodes[index];
+              final data = sorted[index];
               return SmartPlaylistEpisodeListTile(
                 key: ValueKey(data.episode.id),
                 episode: data.episode,
@@ -168,7 +197,17 @@ class _SmartPlaylistEpisodesScreenState
       final year = data.episode.publishedAt?.year ?? 0;
       byYear.putIfAbsent(year, () => []).add(data);
     }
-    final sortedYears = byYear.keys.toList()..sort((a, b) => b.compareTo(a));
+    if (_sortOrder == SortOrder.ascending) {
+      for (final key in byYear.keys) {
+        byYear[key] = byYear[key]!.reversed.toList();
+      }
+    }
+    final sortedYears = byYear.keys.toList()
+      ..sort(
+        _sortOrder == SortOrder.descending
+            ? (a, b) => b.compareTo(a)
+            : (a, b) => a.compareTo(b),
+      );
 
     return buildYearGroupedSlivers<SmartPlaylistEpisodeData>(
       itemsByYear: byYear,
@@ -186,48 +225,66 @@ class _SmartPlaylistEpisodesScreenState
     );
   }
 
-  Widget _buildSubCategoryList(
-    WidgetRef ref,
+  List<Widget> _buildSubCategorySlivers(
     List<SmartPlaylistEpisodeData> episodes,
-    ThemeData theme,
   ) {
-    final subCategories = widget.smartPlaylist.subCategories!;
     final episodeById = <int, SmartPlaylistEpisodeData>{};
     for (final data in episodes) {
       episodeById[data.episode.id] = data;
     }
 
-    return SliverList(
-      delegate: SliverChildListDelegate([
-        for (final subCategory in subCategories)
-          ExpansionTile(
-            key: PageStorageKey('sub_${subCategory.id}'),
-            title: Text(
-              subCategory.displayName,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            subtitle: Text(
-              '${subCategory.episodeIds.length} episodes',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            initiallyExpanded: true,
-            children: [
-              for (final id in subCategory.episodeIds)
-                if (episodeById.containsKey(id))
-                  SmartPlaylistEpisodeListTile(
-                    key: ValueKey(id),
-                    episode: episodeById[id]!.episode,
-                    podcastTitle: widget.podcastTitle,
-                    artworkUrl: widget.podcastArtworkUrl,
-                    progress: episodeById[id]!.progress,
-                  ),
-            ],
-          ),
-      ]),
+    final subCategoryData = <SubCategoryData<SmartPlaylistEpisodeData>>[];
+    for (final sub in widget.smartPlaylist.subCategories!) {
+      var items = [
+        for (final id in sub.episodeIds)
+          if (episodeById.containsKey(id)) episodeById[id]!,
+      ];
+      if (_sortOrder == SortOrder.ascending) {
+        items = items.reversed.toList();
+      }
+
+      Map<int, List<SmartPlaylistEpisodeData>>? byYear;
+      List<int>? sortedYears;
+      if (sub.yearGrouped) {
+        byYear = <int, List<SmartPlaylistEpisodeData>>{};
+        for (final data in items) {
+          final year = data.episode.publishedAt?.year ?? 0;
+          byYear.putIfAbsent(year, () => []).add(data);
+        }
+        sortedYears = byYear.keys.toList()
+          ..sort(
+            _sortOrder == SortOrder.descending
+                ? (a, b) => b.compareTo(a)
+                : (a, b) => a.compareTo(b),
+          );
+      }
+
+      subCategoryData.add(
+        SubCategoryData(
+          id: sub.id,
+          displayName: sub.displayName,
+          items: items,
+          yearGrouped: sub.yearGrouped,
+          itemsByYear: byYear,
+          sortedYears: sortedYears,
+        ),
+      );
+    }
+
+    return buildSubCategorySlivers<SmartPlaylistEpisodeData>(
+      subCategories: subCategoryData,
+      itemBuilder: (context, data) => SmartPlaylistEpisodeListTile(
+        key: ValueKey(data.episode.id),
+        episode: data.episode,
+        podcastTitle: widget.podcastTitle,
+        artworkUrl: widget.podcastArtworkUrl,
+        progress: data.progress,
+      ),
+      itemExtent: 72.0,
+      expandedState: _subCategoryExpanded,
+      onToggle: (id) => setState(() {
+        _subCategoryExpanded[id] = !(_subCategoryExpanded[id] ?? false);
+      }),
     );
   }
 

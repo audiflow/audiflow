@@ -108,6 +108,7 @@ class CategoryResolver implements SmartPlaylistResolver {
         regex: RegExp(c['pattern'] as String),
         id: c['id'] as String,
         displayName: c['displayName'] as String,
+        yearGrouped: c['yearGrouped'] as bool? ?? false,
       );
     }).toList();
 
@@ -137,6 +138,7 @@ class CategoryResolver implements SmartPlaylistResolver {
             id: matcher.id,
             displayName: matcher.displayName,
             episodeIds: ids,
+            yearGrouped: matcher.yearGrouped,
           ),
         );
       }

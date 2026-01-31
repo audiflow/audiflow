@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sliver_tools/sliver_tools.dart';
 
+import 'year_divider.dart';
 import 'year_picker_bottom_sheet.dart';
 
 /// Height of the sticky year header and inline year dividers.
@@ -173,25 +174,7 @@ class _InlineYearDivider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return GestureDetector(
-      onTap: () => onTap(context, year),
-      child: Container(
-        height: yearHeaderHeight,
-        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-        alignment: Alignment.centerLeft,
-        child: Text(
-          year == 0 ? 'Unknown' : '$year',
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: colorScheme.onSurfaceVariant,
-          ),
-        ),
-      ),
-    );
+    return YearDivider(year: year, onTap: () => onTap(context, year));
   }
 }
 
