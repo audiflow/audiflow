@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../queue/presentation/controllers/queue_controller.dart';
 import '../controllers/podcast_detail_controller.dart';
 import '../screens/episode_detail_screen.dart';
 
@@ -67,6 +68,28 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
+            AddToQueueButton(
+              onPlayLater: () {
+                ref
+                    .read(queueControllerProvider.notifier)
+                    .playLater(episode.id);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Added to queue'),
+                    duration: Duration(seconds: 1),
+                  ),
+                );
+              },
+              onPlayNext: () {
+                ref.read(queueControllerProvider.notifier).playNext(episode.id);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Playing next'),
+                    duration: Duration(seconds: 1),
+                  ),
+                );
+              },
+            ),
             _buildDownloadButton(context, ref, downloadTask),
             _buildPlayButton(
               context,
