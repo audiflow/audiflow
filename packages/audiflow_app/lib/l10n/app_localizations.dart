@@ -139,6 +139,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Smart Playlists'**
   String get smartPlaylistsLabel;
+
+  /// Title for episode detail screen
+  ///
+  /// In en, this message translates to:
+  /// **'Episode details'**
+  String get episodeDetails;
+
+  /// Tooltip for share episode button
+  ///
+  /// In en, this message translates to:
+  /// **'Share episode'**
+  String get shareEpisode;
+
+  /// Action to mark episode as played
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as played'**
+  String get markAsPlayed;
+
+  /// Action to mark episode as unplayed
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as unplayed'**
+  String get markAsUnplayed;
+
+  /// Action to add episode to playback queue
+  ///
+  /// In en, this message translates to:
+  /// **'Add to queue'**
+  String get addToQueue;
 }
 
 class _AppLocalizationsDelegate

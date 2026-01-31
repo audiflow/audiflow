@@ -28,4 +28,19 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get smartPlaylistsLabel => 'スマートプレイリスト';
+
+  @override
+  String get episodeDetails => 'エピソード詳細';
+
+  @override
+  String get shareEpisode => 'エピソードを共有';
+
+  @override
+  String get markAsPlayed => '再生済みにする';
+
+  @override
+  String get markAsUnplayed => '未再生にする';
+
+  @override
+  String get addToQueue => 'キューに追加';
 }

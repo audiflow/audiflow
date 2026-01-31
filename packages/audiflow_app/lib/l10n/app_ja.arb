@@ -6,5 +6,10 @@
   "smartPlaylistOthers": "その他",
   "smartPlaylistSectionTitle": "スマートプレイリスト",
   "episodesLabel": "エピソード",
-  "smartPlaylistsLabel": "スマートプレイリスト"
+  "smartPlaylistsLabel": "スマートプレイリスト",
+  "episodeDetails": "エピソード詳細",
+  "shareEpisode": "エピソードを共有",
+  "markAsPlayed": "再生済みにする",
+  "markAsUnplayed": "未再生にする",
+  "addToQueue": "キューに追加"
 }
