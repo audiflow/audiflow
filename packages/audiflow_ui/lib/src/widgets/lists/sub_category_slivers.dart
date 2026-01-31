@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:sliver_tools/sliver_tools.dart';
 
 import 'year_divider.dart';
-import 'year_grouped_slivers.dart';
 
 /// Builds slivers for subcategory-grouped episodes with two-level sticky
 /// headers: subcategory name (level 1) and year (level 2).

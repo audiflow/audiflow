@@ -5,7 +5,6 @@ import 'package:audiflow_domain/audiflow_domain.dart'
         PodcastViewMode,
         SmartPlaylist,
         SmartPlaylistEpisodeData,
-        SmartPlaylistSubCategory,
         SortOrder,
         podcastViewPreferenceControllerProvider,
         smartPlaylistEpisodesProvider,
@@ -62,8 +61,6 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
     final prefsAsync = subscriptionId != null
         ? ref.watch(podcastViewPreferenceControllerProvider(subscriptionId))
         : null;
-    final viewMode = prefsAsync?.value?.viewMode ?? PodcastViewMode.episodes;
-
     return Scaffold(
       appBar: AppBar(
         title: Text(podcast.name, maxLines: 1, overflow: TextOverflow.ellipsis),
