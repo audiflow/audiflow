@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'app/app_lifecycle_observer.dart';
 import 'l10n/app_localizations.dart';
 import 'routing/app_router.dart';
 
@@ -21,7 +22,7 @@ void main() {
         databaseProvider.overrideWithValue(database),
         dioProvider.overrideWithValue(dio),
       ],
-      child: const MyApp(),
+      child: const AppLifecycleObserver(child: MyApp()),
     ),
   );
 }

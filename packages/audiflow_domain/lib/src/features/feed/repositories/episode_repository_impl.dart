@@ -92,6 +92,11 @@ class EpisodeRepositoryImpl implements EpisodeRepository {
   }
 
   @override
+  Future<Set<String>> getGuidsByPodcastId(int podcastId) {
+    return _datasource.getGuidsByPodcastId(podcastId);
+  }
+
+  @override
   Future<List<Episode>> getByIds(List<int> ids) {
     return _datasource.getByIds(ids);
   }
