@@ -9,11 +9,11 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
-import com.google.mlkit.genai.prompt.FeatureStatus
+import com.google.mlkit.genai.common.FeatureStatus
+import com.google.mlkit.genai.common.GenAiException
 import com.google.mlkit.genai.prompt.GenerateContentRequest
 import com.google.mlkit.genai.prompt.GenerativeModel
 import com.google.mlkit.genai.prompt.Generation
-import com.google.mlkit.genai.prompt.GenAiException
 import com.google.mlkit.genai.prompt.TextPart
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.MethodCall
@@ -456,8 +456,8 @@ class AudiflowAiPlugin : FlutterPlugin, MethodCallHandler {
         config: ParsedGenerationConfig
     ): GenerateContentRequest {
         return GenerateContentRequest.Builder(TextPart(prompt)).apply {
-            setTemperature(config.temperature)
-            config.maxOutputTokens?.let { setMaxOutputTokens(it) }
+            temperature = config.temperature
+            config.maxOutputTokens?.let { maxOutputTokens = it }
         }.build()
     }
 

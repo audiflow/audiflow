@@ -6,6 +6,11 @@ set -euo pipefail
 
 input=$(cat)
 
+# Exit immediately if STDIN was empty
+if [ -z "$input" ]; then
+  exit 0
+fi
+
 # Extract the file path from tool input
 file_path=$(echo "$input" | jq -r '.tool_input.file_path // .tool_input.filePath // empty')
 
