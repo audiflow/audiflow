@@ -11,7 +11,6 @@ import '../../../features/subscription/repositories/subscription_repository_impl
 import '../models/feed_parse_progress.dart';
 import '../models/feed_sync_result.dart';
 import '../providers/smart_playlist_providers.dart';
-import '../repositories/episode_repository.dart';
 import '../repositories/episode_repository_impl.dart';
 import 'feed_parser_service.dart';
 
@@ -152,7 +151,7 @@ class FeedSyncService {
                 seasonNumber: c.seasonNumber.value,
                 episodeNumber: c.episodeNumber.value,
               );
-              final extracted = extractor!.extract(episodeData);
+              final extracted = extractor.extract(episodeData);
               if (extracted.hasValues) {
                 return c.copyWith(
                   seasonNumber: Value(
@@ -216,7 +215,6 @@ class FeedSyncService {
 class _CompanionEpisodeData implements EpisodeData {
   const _CompanionEpisodeData({
     required this.title,
-    this.description,
     this.seasonNumber,
     this.episodeNumber,
   });
@@ -225,7 +223,7 @@ class _CompanionEpisodeData implements EpisodeData {
   final String title;
 
   @override
-  final String? description;
+  String? get description => null;
 
   @override
   final int? seasonNumber;
