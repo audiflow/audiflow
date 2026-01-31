@@ -32,6 +32,9 @@ const SmartPlaylistPattern newsConnectPattern = SmartPlaylistPattern(
         'subCategories': [
           {'id': 'saturday', 'displayName': '土曜版', 'pattern': r'【土曜版'},
           {'id': 'news_talk', 'displayName': 'ニュース小話', 'pattern': r'【ニュース小話'},
+          {'id': 'special', 'displayName': '特別編', 'pattern': r'【.*?特別編.*?】'},
+          {'id': 'expat', 'displayName': '越境日本人編', 'pattern': r'【越境日本人編'},
+          {'id': 'holiday', 'displayName': '祝日版', 'pattern': r'【祝日版'},
         ],
       },
     ],
