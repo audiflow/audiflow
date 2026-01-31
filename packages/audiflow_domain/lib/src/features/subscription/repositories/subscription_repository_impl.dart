@@ -86,4 +86,9 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
   Future<Subscription?> getById(int id) {
     return _datasource.getById(id);
   }
+
+  @override
+  Future<void> updateLastRefreshed(String itunesId, DateTime timestamp) async {
+    await _datasource.updateLastRefreshed(itunesId, timestamp);
+  }
 }

@@ -14,17 +14,45 @@ import '../widgets/subscription_list_tile.dart';
 ///
 /// Shows a list of subscribed podcasts with artwork and metadata.
 /// Tapping a subscription navigates to the podcast detail screen.
-class LibraryScreen extends ConsumerWidget {
+class LibraryScreen extends ConsumerStatefulWidget {
   const LibraryScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<LibraryScreen> createState() => _LibraryScreenState();
+}
+
+class _LibraryScreenState extends ConsumerState<LibraryScreen> {
+  Future<void> _onRefresh() async {
+    final syncService = ref.read(feedSyncServiceProvider);
+    final result = await syncService.syncAllSubscriptions(forceRefresh: true);
+    if (!mounted) return;
+
+    ref.invalidate(librarySubscriptionsProvider);
+
+    if (0 < result.errorCount) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Synced ${result.successCount} feeds, '
+            '${result.errorCount} failed',
+          ),
+        ),
+      );
+    } else if (0 < result.successCount) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Synced ${result.successCount} feeds')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final subscriptionsAsync = ref.watch(librarySubscriptionsProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Library')),
       body: subscriptionsAsync.when(
-        data: (subscriptions) => _buildContent(context, ref, subscriptions),
+        data: (subscriptions) => _buildContent(context, subscriptions),
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stack) => _buildErrorState(
           context,
@@ -35,64 +63,62 @@ class LibraryScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildContent(
-    BuildContext context,
-    WidgetRef ref,
-    List<Subscription> subscriptions,
-  ) {
+  Widget _buildContent(BuildContext context, List<Subscription> subscriptions) {
     if (subscriptions.isEmpty) {
       return _buildEmptyState(context);
     }
 
     final theme = Theme.of(context);
 
-    return CustomScrollView(
-      slivers: [
-        SliverToBoxAdapter(
-          child: ContinueListeningSection(
-            onEpisodeTap: (episode) =>
-                _onContinueListeningTap(context, ref, episode),
-          ),
-        ),
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              Spacing.md,
-              Spacing.md,
-              Spacing.md,
-              Spacing.sm,
+    return RefreshIndicator(
+      onRefresh: _onRefresh,
+      child: CustomScrollView(
+        slivers: [
+          SliverToBoxAdapter(
+            child: ContinueListeningSection(
+              onEpisodeTap: (episode) =>
+                  _onContinueListeningTap(context, episode),
             ),
-            child: Text(
-              'Your Podcasts',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                Spacing.md,
+                Spacing.md,
+                Spacing.md,
+                Spacing.sm,
+              ),
+              child: Text(
+                'Your Podcasts',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ),
-        ),
-        SliverList(
-          delegate: SliverChildBuilderDelegate((context, index) {
-            final subscription = subscriptions[index];
-            return SubscriptionListTile(
-              key: ValueKey(subscription.itunesId),
-              subscription: subscription,
-              onTap: () {
-                final podcast = subscription.toPodcast();
-                context.push(
-                  '${AppRoutes.library}/podcast/${podcast.id}',
-                  extra: podcast,
-                );
-              },
-            );
-          }, childCount: subscriptions.length),
-        ),
-      ],
+          SliverList(
+            delegate: SliverChildBuilderDelegate((context, index) {
+              final subscription = subscriptions[index];
+              return SubscriptionListTile(
+                key: ValueKey(subscription.itunesId),
+                subscription: subscription,
+                onTap: () {
+                  final podcast = subscription.toPodcast();
+                  context.push(
+                    '${AppRoutes.library}/podcast/${podcast.id}',
+                    extra: podcast,
+                  );
+                },
+              );
+            }, childCount: subscriptions.length),
+          ),
+        ],
+      ),
     );
   }
 
   void _onContinueListeningTap(
     BuildContext context,
-    WidgetRef ref,
     EpisodeWithProgress episode,
   ) {
     final controller = ref.read(audioPlayerControllerProvider.notifier);

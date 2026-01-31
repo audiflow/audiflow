@@ -47,6 +47,8 @@ export 'src/features/feed/resolvers/smart_playlist_resolver.dart';
 export 'src/features/feed/resolvers/title_appearance_order_resolver.dart';
 export 'src/features/feed/resolvers/year_resolver.dart';
 export 'src/features/feed/services/feed_parser_service.dart';
+export 'src/features/feed/services/feed_sync_service.dart';
+export 'src/features/feed/models/feed_sync_result.dart';
 export 'src/features/feed/services/smart_playlist_resolver_service.dart';
 
 // Feed feature - Podcast View Preference

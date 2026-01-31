@@ -43,6 +43,11 @@ abstract class EpisodeRepository {
   /// Order is not guaranteed; caller should sort as needed.
   Future<List<Episode>> getByIds(List<int> ids);
 
+  /// Returns all episode GUIDs for a podcast.
+  ///
+  /// Used for early-stop optimization during RSS parsing.
+  Future<Set<String>> getGuidsByPodcastId(int podcastId);
+
   /// Gets episodes after a given episode number, ordered ascending.
   ///
   /// Returns episodes from [podcastId] with episode numbers greater than

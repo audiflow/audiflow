@@ -41,6 +41,9 @@ abstract class SubscriptionRepository {
 
   /// Returns a subscription by its database ID, or null if not found.
   Future<Subscription?> getById(int id);
+
+  /// Updates a subscription's lastRefreshedAt timestamp.
+  Future<void> updateLastRefreshed(String itunesId, DateTime timestamp);
 }
 
 /// Exception thrown when a subscription operation fails.
