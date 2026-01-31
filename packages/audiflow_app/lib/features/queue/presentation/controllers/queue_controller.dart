@@ -39,7 +39,27 @@ class QueueController extends _$QueueController {
 
   Future<void> skipToItem(int queueItemId) async {
     final service = ref.read(queueServiceProvider);
-    await service.skipToItem(queueItemId);
-    // TODO: Integrate with player to start playback
+    final episode = await service.skipToItem(queueItemId);
+    if (episode == null) return;
+
+    final subscription = await ref
+        .read(subscriptionRepositoryProvider)
+        .getById(episode.podcastId);
+    final podcastTitle = subscription?.title ?? '';
+
+    final controller = ref.read(audioPlayerControllerProvider.notifier);
+    controller.play(
+      episode.audioUrl,
+      metadata: NowPlayingInfo(
+        episodeUrl: episode.audioUrl,
+        episodeTitle: episode.title,
+        podcastTitle: podcastTitle,
+        artworkUrl: episode.imageUrl,
+        totalDuration: episode.durationMs != null
+            ? Duration(milliseconds: episode.durationMs!)
+            : null,
+        episode: episode,
+      ),
+    );
   }
 }
