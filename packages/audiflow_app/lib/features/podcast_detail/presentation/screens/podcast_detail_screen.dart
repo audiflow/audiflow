@@ -36,6 +36,7 @@ class PodcastDetailScreen extends ConsumerStatefulWidget {
 
 class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
   final _scrollController = ScrollController();
+  final _subCategoryExpanded = <String, bool>{};
 
   Podcast get podcast => widget.podcast;
 
@@ -60,13 +61,11 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
     final prefsAsync = subscriptionId != null
         ? ref.watch(podcastViewPreferenceControllerProvider(subscriptionId))
         : null;
-    final viewMode = prefsAsync?.value?.viewMode ?? PodcastViewMode.episodes;
-
     return Scaffold(
       appBar: AppBar(
         title: Text(podcast.name, maxLines: 1, overflow: TextOverflow.ellipsis),
         actions: [
-          if (subscriptionId != null && viewMode == PodcastViewMode.episodes)
+          if (subscriptionId != null)
             IconButton(
               icon: Icon(
                 prefsAsync?.value?.episodeSortOrder == SortOrder.ascending
@@ -338,7 +337,12 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
               sortOrder,
             )
           else if (activePlaylist != null)
-            ..._buildInlinePlaylistEpisodes(ref, activePlaylist, theme),
+            ..._buildInlinePlaylistEpisodes(
+              ref,
+              activePlaylist,
+              theme,
+              sortOrder,
+            ),
         ],
       ),
     );
@@ -348,6 +352,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
     WidgetRef ref,
     SmartPlaylist playlist,
     ThemeData theme,
+    SortOrder sortOrder,
   ) {
     final episodesAsync = ref.watch(
       smartPlaylistEpisodesProvider(playlist.episodeIds),
@@ -360,19 +365,23 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
         }
 
         if (playlist.yearGrouped) {
-          return _buildYearGroupedPlaylistSlivers(episodes, theme);
+          return _buildYearGroupedPlaylistSlivers(episodes, theme, sortOrder);
         }
 
         if (playlist.subCategories != null &&
             playlist.subCategories!.isNotEmpty) {
-          return [_buildSubCategoryList(episodes, playlist, theme)];
+          return _buildSubCategorySlivers(episodes, playlist, sortOrder);
         }
+
+        final sorted = sortOrder == SortOrder.ascending
+            ? episodes.reversed.toList()
+            : episodes;
 
         return [
           SliverList.builder(
-            itemCount: episodes.length,
+            itemCount: sorted.length,
             itemBuilder: (context, index) {
-              final data = episodes[index];
+              final data = sorted[index];
               return SmartPlaylistEpisodeListTile(
                 key: ValueKey(data.episode.id),
                 episode: data.episode,
@@ -406,13 +415,24 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
   List<Widget> _buildYearGroupedPlaylistSlivers(
     List<SmartPlaylistEpisodeData> episodes,
     ThemeData theme,
+    SortOrder sortOrder,
   ) {
     final byYear = <int, List<SmartPlaylistEpisodeData>>{};
     for (final data in episodes) {
       final year = data.episode.publishedAt?.year ?? 0;
       byYear.putIfAbsent(year, () => []).add(data);
     }
-    final sortedYears = byYear.keys.toList()..sort((a, b) => b.compareTo(a));
+    if (sortOrder == SortOrder.ascending) {
+      for (final key in byYear.keys) {
+        byYear[key] = byYear[key]!.reversed.toList();
+      }
+    }
+    final sortedYears = byYear.keys.toList()
+      ..sort(
+        sortOrder == SortOrder.descending
+            ? (a, b) => b.compareTo(a)
+            : (a, b) => a.compareTo(b),
+      );
 
     return buildYearGroupedSlivers<SmartPlaylistEpisodeData>(
       itemsByYear: byYear,
@@ -430,48 +450,68 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
     );
   }
 
-  Widget _buildSubCategoryList(
+  List<Widget> _buildSubCategorySlivers(
     List<SmartPlaylistEpisodeData> episodes,
     SmartPlaylist playlist,
-    ThemeData theme,
+    SortOrder sortOrder,
   ) {
-    final subCategories = playlist.subCategories!;
     final episodeById = <int, SmartPlaylistEpisodeData>{};
     for (final data in episodes) {
       episodeById[data.episode.id] = data;
     }
 
-    return SliverList(
-      delegate: SliverChildListDelegate([
-        for (final subCategory in subCategories)
-          ExpansionTile(
-            key: PageStorageKey('sub_${subCategory.id}'),
-            title: Text(
-              subCategory.displayName,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            subtitle: Text(
-              '${subCategory.episodeIds.length} episodes',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            initiallyExpanded: true,
-            children: [
-              for (final id in subCategory.episodeIds)
-                if (episodeById.containsKey(id))
-                  SmartPlaylistEpisodeListTile(
-                    key: ValueKey(id),
-                    episode: episodeById[id]!.episode,
-                    podcastTitle: podcast.name,
-                    artworkUrl: podcast.artworkUrl,
-                    progress: episodeById[id]!.progress,
-                  ),
-            ],
-          ),
-      ]),
+    final subCategoryData = <SubCategoryData<SmartPlaylistEpisodeData>>[];
+    for (final sub in playlist.subCategories!) {
+      var items = [
+        for (final id in sub.episodeIds)
+          if (episodeById.containsKey(id)) episodeById[id]!,
+      ];
+      if (sortOrder == SortOrder.ascending) {
+        items = items.reversed.toList();
+      }
+
+      Map<int, List<SmartPlaylistEpisodeData>>? byYear;
+      List<int>? sortedYears;
+      if (sub.yearGrouped) {
+        byYear = <int, List<SmartPlaylistEpisodeData>>{};
+        for (final data in items) {
+          final year = data.episode.publishedAt?.year ?? 0;
+          byYear.putIfAbsent(year, () => []).add(data);
+        }
+        sortedYears = byYear.keys.toList()
+          ..sort(
+            sortOrder == SortOrder.descending
+                ? (a, b) => b.compareTo(a)
+                : (a, b) => a.compareTo(b),
+          );
+      }
+
+      subCategoryData.add(
+        SubCategoryData(
+          id: sub.id,
+          displayName: sub.displayName,
+          items: items,
+          yearGrouped: sub.yearGrouped,
+          itemsByYear: byYear,
+          sortedYears: sortedYears,
+        ),
+      );
+    }
+
+    return buildSubCategorySlivers<SmartPlaylistEpisodeData>(
+      subCategories: subCategoryData,
+      itemBuilder: (context, data) => SmartPlaylistEpisodeListTile(
+        key: ValueKey(data.episode.id),
+        episode: data.episode,
+        podcastTitle: podcast.name,
+        artworkUrl: podcast.artworkUrl,
+        progress: data.progress,
+      ),
+      itemExtent: 72.0,
+      expandedState: _subCategoryExpanded,
+      onToggle: (id) => setState(() {
+        _subCategoryExpanded[id] = !(_subCategoryExpanded[id] ?? false);
+      }),
     );
   }
 

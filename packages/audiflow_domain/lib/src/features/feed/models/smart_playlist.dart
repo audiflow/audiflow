@@ -4,6 +4,7 @@ final class SmartPlaylistSubCategory {
     required this.id,
     required this.displayName,
     required this.episodeIds,
+    this.yearGrouped = false,
   });
 
   /// Unique identifier within the parent playlist.
@@ -14,6 +15,9 @@ final class SmartPlaylistSubCategory {
 
   /// Episode IDs belonging to this sub-category.
   final List<int> episodeIds;
+
+  /// Whether episodes in this sub-category are grouped by year.
+  final bool yearGrouped;
 }
 
 /// Represents a smart playlist grouping of episodes within a podcast.
