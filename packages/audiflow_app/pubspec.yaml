@@ -58,6 +58,8 @@ dependencies:
   audiflow_ui:
     path: ../audiflow_ui
   extended_image: ^10.0.1
+  flutter_html: ^3.0.0
+  share_plus: ^12.0.1
 
 dev_dependencies:
   flutter_test:

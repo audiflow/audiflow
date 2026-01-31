@@ -2,8 +2,10 @@ import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../routing/app_router.dart';
 import '../../../queue/presentation/controllers/queue_controller.dart';
 import '../controllers/podcast_detail_controller.dart';
 
@@ -65,6 +67,7 @@ class EpisodeListTile extends ConsumerWidget {
           ? () => _showContextMenu(context, ref, enclosureUrl, progress)
           : null,
       child: ListTile(
+        onTap: () => _navigateToDetail(context),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: Spacing.md,
           vertical: Spacing.xs,
@@ -123,6 +126,23 @@ class EpisodeListTile extends ConsumerWidget {
           ],
         ),
       ),
+    );
+  }
+
+  void _navigateToDetail(BuildContext context) {
+    final guid = episode.guid ?? episode.enclosureUrl ?? '';
+    final location = GoRouterState.of(context).uri.toString();
+    context.push(
+      '$location/${AppRoutes.episodeDetail}'.replaceAll(
+        ':episodeGuid',
+        Uri.encodeComponent(guid),
+      ),
+      extra: <String, dynamic>{
+        'episode': episode,
+        'podcastTitle': podcastTitle,
+        'artworkUrl': artworkUrl,
+        'progress': progress,
+      },
     );
   }
 

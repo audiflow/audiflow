@@ -28,4 +28,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get smartPlaylistsLabel => 'Smart Playlists';
+
+  @override
+  String get episodeDetails => 'Episode details';
+
+  @override
+  String get shareEpisode => 'Share episode';
+
+  @override
+  String get markAsPlayed => 'Mark as played';
+
+  @override
+  String get markAsUnplayed => 'Mark as unplayed';
+
+  @override
+  String get addToQueue => 'Add to queue';
 }

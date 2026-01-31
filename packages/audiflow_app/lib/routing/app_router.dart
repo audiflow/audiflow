@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../features/library/presentation/screens/library_screen.dart';
+import '../features/podcast_detail/presentation/screens/episode_detail_screen.dart';
 import '../features/podcast_detail/presentation/screens/podcast_detail_screen.dart';
 import '../features/podcast_detail/presentation/screens/smart_playlist_episodes_screen.dart';
 import '../features/queue/presentation/screens/queue_screen.dart';
@@ -20,6 +21,7 @@ class AppRoutes {
   static const String settings = '/settings';
   static const String podcastDetail = '/search/podcast';
   static const String smartPlaylistEpisodes = 'smart-playlist/:playlistId';
+  static const String episodeDetail = 'episode/:episodeGuid';
 }
 
 /// Navigator keys for each tab branch.
@@ -69,6 +71,11 @@ GoRouter createAppRouter() {
                         builder: (context, state) =>
                             _buildSmartPlaylistEpisodesScreen(state),
                       ),
+                      GoRoute(
+                        path: AppRoutes.episodeDetail,
+                        builder: (context, state) =>
+                            _buildEpisodeDetailScreen(state),
+                      ),
                     ],
                   ),
                 ],
@@ -91,6 +98,11 @@ GoRouter createAppRouter() {
                         path: AppRoutes.smartPlaylistEpisodes,
                         builder: (context, state) =>
                             _buildSmartPlaylistEpisodesScreen(state),
+                      ),
+                      GoRoute(
+                        path: AppRoutes.episodeDetail,
+                        builder: (context, state) =>
+                            _buildEpisodeDetailScreen(state),
                       ),
                     ],
                   ),
@@ -160,6 +172,33 @@ Widget _buildSmartPlaylistEpisodesScreen(GoRouterState state) {
   );
 }
 
+/// Builds the episode detail screen from route state.
+///
+/// Returns [_EpisodeNotFoundScreen] if episode data
+/// is not available.
+Widget _buildEpisodeDetailScreen(GoRouterState state) {
+  final extra = state.extra as Map<String, dynamic>?;
+  if (extra == null) {
+    return const _EpisodeNotFoundScreen();
+  }
+
+  final episode = extra['episode'] as PodcastItem?;
+  if (episode == null) {
+    return const _EpisodeNotFoundScreen();
+  }
+
+  final podcastTitle = extra['podcastTitle'] as String? ?? '';
+  final artworkUrl = extra['artworkUrl'] as String?;
+  final progress = extra['progress'] as EpisodeWithProgress?;
+
+  return EpisodeDetailScreen(
+    episode: episode,
+    podcastTitle: podcastTitle,
+    artworkUrl: artworkUrl,
+    progress: progress,
+  );
+}
+
 /// Fallback screen shown when podcast data is not available.
 class _PodcastNotFoundScreen extends StatelessWidget {
   const _PodcastNotFoundScreen();
@@ -207,6 +246,37 @@ class _SmartPlaylistNotFoundScreen extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               'Playlist data not available',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Go Back'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Fallback screen shown when episode data is not
+/// available.
+class _EpisodeNotFoundScreen extends StatelessWidget {
+  const _EpisodeNotFoundScreen();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Episode Not Found')),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, size: 64),
+            const SizedBox(height: 16),
+            Text(
+              'Episode data not available',
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 8),

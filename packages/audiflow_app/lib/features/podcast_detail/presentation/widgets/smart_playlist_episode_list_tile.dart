@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../controllers/podcast_detail_controller.dart';
+import '../screens/episode_detail_screen.dart';
 
 /// Displays a single episode from the database (Episode model) with playback.
 ///
@@ -44,6 +45,7 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
     return GestureDetector(
       onLongPress: () => _showContextMenu(context, ref, audioUrl, progress),
       child: ListTile(
+        onTap: () => _navigateToDetail(context),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: Spacing.md,
           vertical: Spacing.xs,
@@ -74,6 +76,37 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
               isLoading: isLoading,
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  void _navigateToDetail(BuildContext context) {
+    final podcastItem = PodcastItem(
+      parsedAt: DateTime.now(),
+      sourceUrl: episode.audioUrl,
+      title: episode.title,
+      description: episode.description ?? '',
+      publishDate: episode.publishedAt,
+      duration: episode.durationMs != null
+          ? Duration(milliseconds: episode.durationMs!)
+          : null,
+      enclosureUrl: episode.audioUrl,
+      guid: episode.guid,
+      episodeNumber: episode.episodeNumber,
+      seasonNumber: episode.seasonNumber,
+      images: episode.imageUrl != null
+          ? [PodcastImage(url: episode.imageUrl!)]
+          : const [],
+    );
+
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => EpisodeDetailScreen(
+          episode: podcastItem,
+          podcastTitle: podcastTitle,
+          artworkUrl: artworkUrl,
+          progress: progress,
         ),
       ),
     );
