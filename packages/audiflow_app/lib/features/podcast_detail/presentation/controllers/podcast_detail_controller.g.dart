@@ -967,3 +967,130 @@ final class SortedPodcastSmartPlaylistsFamily extends $Family
   @override
   String toString() => r'sortedPodcastSmartPlaylistsProvider';
 }
+
+/// Resolves smart playlist episodes from feed data using
+/// negative placeholder IDs.
+///
+/// For non-subscribed podcasts, episode IDs are negative
+/// indices into the feed episode list: `-(index + 1)`.
+/// This provider resolves them back to [SmartPlaylistEpisodeData]
+/// by converting [PodcastItem] to synthetic [Episode] objects.
+
+@ProviderFor(feedSmartPlaylistEpisodes)
+final feedSmartPlaylistEpisodesProvider = FeedSmartPlaylistEpisodesFamily._();
+
+/// Resolves smart playlist episodes from feed data using
+/// negative placeholder IDs.
+///
+/// For non-subscribed podcasts, episode IDs are negative
+/// indices into the feed episode list: `-(index + 1)`.
+/// This provider resolves them back to [SmartPlaylistEpisodeData]
+/// by converting [PodcastItem] to synthetic [Episode] objects.
+
+final class FeedSmartPlaylistEpisodesProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<SmartPlaylistEpisodeData>>,
+          List<SmartPlaylistEpisodeData>,
+          FutureOr<List<SmartPlaylistEpisodeData>>
+        >
+    with
+        $FutureModifier<List<SmartPlaylistEpisodeData>>,
+        $FutureProvider<List<SmartPlaylistEpisodeData>> {
+  /// Resolves smart playlist episodes from feed data using
+  /// negative placeholder IDs.
+  ///
+  /// For non-subscribed podcasts, episode IDs are negative
+  /// indices into the feed episode list: `-(index + 1)`.
+  /// This provider resolves them back to [SmartPlaylistEpisodeData]
+  /// by converting [PodcastItem] to synthetic [Episode] objects.
+  FeedSmartPlaylistEpisodesProvider._({
+    required FeedSmartPlaylistEpisodesFamily super.from,
+    required (String, List<int>) super.argument,
+  }) : super(
+         retry: null,
+         name: r'feedSmartPlaylistEpisodesProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$feedSmartPlaylistEpisodesHash();
+
+  @override
+  String toString() {
+    return r'feedSmartPlaylistEpisodesProvider'
+        ''
+        '$argument';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<List<SmartPlaylistEpisodeData>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<SmartPlaylistEpisodeData>> create(Ref ref) {
+    final argument = this.argument as (String, List<int>);
+    return feedSmartPlaylistEpisodes(ref, argument.$1, argument.$2);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is FeedSmartPlaylistEpisodesProvider &&
+        other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$feedSmartPlaylistEpisodesHash() =>
+    r'c2a18869bcb9c7ec96e414bfc4e751c243440edb';
+
+/// Resolves smart playlist episodes from feed data using
+/// negative placeholder IDs.
+///
+/// For non-subscribed podcasts, episode IDs are negative
+/// indices into the feed episode list: `-(index + 1)`.
+/// This provider resolves them back to [SmartPlaylistEpisodeData]
+/// by converting [PodcastItem] to synthetic [Episode] objects.
+
+final class FeedSmartPlaylistEpisodesFamily extends $Family
+    with
+        $FunctionalFamilyOverride<
+          FutureOr<List<SmartPlaylistEpisodeData>>,
+          (String, List<int>)
+        > {
+  FeedSmartPlaylistEpisodesFamily._()
+    : super(
+        retry: null,
+        name: r'feedSmartPlaylistEpisodesProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  /// Resolves smart playlist episodes from feed data using
+  /// negative placeholder IDs.
+  ///
+  /// For non-subscribed podcasts, episode IDs are negative
+  /// indices into the feed episode list: `-(index + 1)`.
+  /// This provider resolves them back to [SmartPlaylistEpisodeData]
+  /// by converting [PodcastItem] to synthetic [Episode] objects.
+
+  FeedSmartPlaylistEpisodesProvider call(
+    String feedUrl,
+    List<int> episodeIds,
+  ) => FeedSmartPlaylistEpisodesProvider._(
+    argument: (feedUrl, episodeIds),
+    from: this,
+  );
+
+  @override
+  String toString() => r'feedSmartPlaylistEpisodesProvider';
+}

@@ -38,6 +38,12 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
   final _scrollController = ScrollController();
   final _subCategoryExpanded = <String, bool>{};
 
+  /// Local view mode for non-subscribed podcasts.
+  PodcastViewMode _localViewMode = PodcastViewMode.episodes;
+
+  /// Local selected playlist ID for non-subscribed podcasts.
+  String? _localSelectedPlaylistId;
+
   Podcast get podcast => widget.podcast;
 
   @override
@@ -216,9 +222,10 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
         : null;
     final prefs = prefsAsync?.value;
 
-    final viewMode = prefs?.viewMode ?? PodcastViewMode.episodes;
+    final viewMode = prefs?.viewMode ?? _localViewMode;
     final filter = prefs?.episodeFilter ?? EpisodeFilter.all;
-    final selectedPlaylistId = prefs?.selectedPlaylistId;
+    final selectedPlaylistId =
+        prefs?.selectedPlaylistId ?? _localSelectedPlaylistId;
 
     final sortOrder = prefs?.episodeSortOrder ?? SortOrder.descending;
 
@@ -289,6 +296,10 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
                             ).notifier,
                           )
                           .setViewMode(PodcastViewMode.episodes);
+                    } else {
+                      setState(() {
+                        _localViewMode = PodcastViewMode.episodes;
+                      });
                     }
                   },
                   onPlaylistSelected: (playlist) {
@@ -300,6 +311,11 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
                             ).notifier,
                           )
                           .selectPlaylist(playlist.id);
+                    } else {
+                      setState(() {
+                        _localViewMode = PodcastViewMode.smartPlaylists;
+                        _localSelectedPlaylistId = playlist.id;
+                      });
                     }
                   },
                 ),
@@ -354,9 +370,15 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
     ThemeData theme,
     SortOrder sortOrder,
   ) {
-    final episodesAsync = ref.watch(
-      smartPlaylistEpisodesProvider(playlist.episodeIds),
-    );
+    final hasFeedIds =
+        playlist.episodeIds.isNotEmpty && playlist.episodeIds.first < 0;
+    final feedUrl = podcast.feedUrl;
+
+    final episodesAsync = hasFeedIds && feedUrl != null
+        ? ref.watch(
+            feedSmartPlaylistEpisodesProvider(feedUrl, playlist.episodeIds),
+          )
+        : ref.watch(smartPlaylistEpisodesProvider(playlist.episodeIds));
 
     return episodesAsync.when(
       data: (episodes) {
