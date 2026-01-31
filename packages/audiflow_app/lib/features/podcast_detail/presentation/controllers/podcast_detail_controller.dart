@@ -493,6 +493,53 @@ int _compareDates(DateTime? a, DateTime? b) {
   return a.compareTo(b);
 }
 
+/// Resolves smart playlist episodes from feed data using
+/// negative placeholder IDs.
+///
+/// For non-subscribed podcasts, episode IDs are negative
+/// indices into the feed episode list: `-(index + 1)`.
+/// This provider resolves them back to [SmartPlaylistEpisodeData]
+/// by converting [PodcastItem] to synthetic [Episode] objects.
+@riverpod
+Future<List<SmartPlaylistEpisodeData>> feedSmartPlaylistEpisodes(
+  Ref ref,
+  String feedUrl,
+  List<int> episodeIds,
+) async {
+  if (episodeIds.isEmpty) return [];
+
+  final feed = await ref.watch(podcastDetailProvider(feedUrl).future);
+  final episodes = feed.episodes;
+
+  final result = <SmartPlaylistEpisodeData>[];
+  for (final id in episodeIds) {
+    // Negative IDs encode feed index as -(index + 1)
+    final index = -(id) - 1;
+    if (index < 0 || episodes.length <= index) continue;
+
+    final item = episodes[index];
+    if (item.enclosureUrl == null) continue;
+
+    final episode = Episode(
+      id: id,
+      podcastId: 0,
+      guid: item.guid ?? 'feed_$index',
+      title: item.title,
+      description: item.description,
+      audioUrl: item.enclosureUrl!,
+      durationMs: item.duration?.inMilliseconds,
+      publishedAt: item.publishDate,
+      imageUrl: item.images.isNotEmpty ? item.images.first.url : null,
+      episodeNumber: item.episodeNumber,
+      seasonNumber: item.seasonNumber,
+    );
+
+    result.add(SmartPlaylistEpisodeData(episode: episode));
+  }
+
+  return result;
+}
+
 /// Resolves smart playlists from feed data for
 /// non-subscribed podcasts.
 ///
