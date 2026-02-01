@@ -1,23 +1,61 @@
+/// Whether a smart playlist directly contains episodes or groups.
+enum SmartPlaylistContentType {
+  /// Playlist directly contains an episode list.
+  episodes,
+
+  /// Playlist contains groups; tapping a group opens its episode list.
+  groups,
+}
+
+/// How year headers are applied to groups or episodes.
+enum YearHeaderMode {
+  /// No year headers.
+  none,
+
+  /// Group's year = first episode's publishedAt year. Group appears once.
+  firstEpisode,
+
+  /// Group appears under each year it has episodes in.
+  /// Tapping shows only that year's episodes.
+  perEpisode,
+}
+
 /// Sub-category within a smart playlist for further episode grouping.
-final class SmartPlaylistSubCategory {
-  const SmartPlaylistSubCategory({
+@Deprecated('Use SmartPlaylistGroup instead')
+typedef SmartPlaylistSubCategory = SmartPlaylistGroup;
+
+/// A group within a smart playlist containing episodes.
+final class SmartPlaylistGroup {
+  const SmartPlaylistGroup({
     required this.id,
     required this.displayName,
     required this.episodeIds,
-    this.yearGrouped = false,
+    this.sortKey = 0,
+    this.thumbnailUrl,
+    this.yearOverride,
+    @Deprecated('Use yearOverride instead') bool yearGrouped = false,
   });
 
   /// Unique identifier within the parent playlist.
   final String id;
 
-  /// Display name for the sub-category section header.
+  /// Display name for the group.
   final String displayName;
 
-  /// Episode IDs belonging to this sub-category.
+  /// Sort key for ordering groups.
+  final int sortKey;
+
+  /// Episode IDs belonging to this group.
   final List<int> episodeIds;
 
-  /// Whether episodes in this sub-category are grouped by year.
-  final bool yearGrouped;
+  /// Thumbnail URL from the latest episode in this group.
+  final String? thumbnailUrl;
+
+  /// Per-group override of the parent playlist's yearHeaderMode.
+  final YearHeaderMode? yearOverride;
+
+  /// Number of episodes in this group.
+  int get episodeCount => episodeIds.length;
 }
 
 /// Represents a smart playlist grouping of episodes within a podcast.
@@ -28,14 +66,18 @@ final class SmartPlaylist {
     required this.sortKey,
     required this.episodeIds,
     this.thumbnailUrl,
-    this.yearGrouped = false,
-    this.subCategories,
+    this.contentType = SmartPlaylistContentType.episodes,
+    this.yearHeaderMode = YearHeaderMode.none,
+    this.episodeYearHeaders = false,
+    this.groups,
+    @Deprecated('Use yearHeaderMode instead') bool yearGrouped = false,
+    @Deprecated('Use groups instead') List<SmartPlaylistGroup>? subCategories,
   });
 
-  /// Unique identifier within podcast (e.g., "season_2", "arc_mystery").
+  /// Unique identifier within podcast.
   final String id;
 
-  /// Display name (e.g., "Season 2", "The Vanishing").
+  /// Display name.
   final String displayName;
 
   /// Sort key for ordering smart playlists.
@@ -47,11 +89,25 @@ final class SmartPlaylist {
   /// Thumbnail URL from the latest episode in this smart playlist.
   final String? thumbnailUrl;
 
+  /// Whether this playlist contains episodes directly or groups.
+  final SmartPlaylistContentType contentType;
+
+  /// How year headers are applied in the group list view.
+  final YearHeaderMode yearHeaderMode;
+
+  /// Whether episodes within groups show year headers.
+  final bool episodeYearHeaders;
+
+  /// Groups within this playlist (when contentType == groups).
+  final List<SmartPlaylistGroup>? groups;
+
   /// Whether episodes in this playlist are grouped by year.
-  final bool yearGrouped;
+  @Deprecated('Use yearHeaderMode instead')
+  bool get yearGrouped => yearHeaderMode != YearHeaderMode.none;
 
   /// Optional sub-categories for further grouping within this playlist.
-  final List<SmartPlaylistSubCategory>? subCategories;
+  @Deprecated('Use groups instead')
+  List<SmartPlaylistGroup>? get subCategories => groups;
 
   /// Number of episodes in this smart playlist.
   int get episodeCount => episodeIds.length;
@@ -63,8 +119,12 @@ final class SmartPlaylist {
     int? sortKey,
     List<int>? episodeIds,
     String? thumbnailUrl,
-    bool? yearGrouped,
-    List<SmartPlaylistSubCategory>? subCategories,
+    SmartPlaylistContentType? contentType,
+    YearHeaderMode? yearHeaderMode,
+    bool? episodeYearHeaders,
+    List<SmartPlaylistGroup>? groups,
+    @Deprecated('Use yearHeaderMode instead') bool? yearGrouped,
+    @Deprecated('Use groups instead') List<SmartPlaylistGroup>? subCategories,
   }) {
     return SmartPlaylist(
       id: id ?? this.id,
@@ -72,8 +132,10 @@ final class SmartPlaylist {
       sortKey: sortKey ?? this.sortKey,
       episodeIds: episodeIds ?? this.episodeIds,
       thumbnailUrl: thumbnailUrl ?? this.thumbnailUrl,
-      yearGrouped: yearGrouped ?? this.yearGrouped,
-      subCategories: subCategories ?? this.subCategories,
+      contentType: contentType ?? this.contentType,
+      yearHeaderMode: yearHeaderMode ?? this.yearHeaderMode,
+      episodeYearHeaders: episodeYearHeaders ?? this.episodeYearHeaders,
+      groups: groups ?? subCategories ?? this.groups,
     );
   }
 }
@@ -92,7 +154,7 @@ final class SmartPlaylistGrouping {
   /// Episode IDs that could not be grouped.
   final List<int> ungroupedEpisodeIds;
 
-  /// Resolver type that produced this grouping (e.g., "rss", "title_pattern").
+  /// Resolver type that produced this grouping.
   final String resolverType;
 
   /// True if there are ungrouped episodes.
