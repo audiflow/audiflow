@@ -45,6 +45,10 @@
     <true/>
     <key>UIApplicationSupportsIndirectInputEvents</key>
     <true/>
+    <key>UIBackgroundModes</key>
+    <array>
+      <string>audio</string>
+    </array>
     <key>NSSpeechRecognitionUsageDescription</key>
     <string>Voice commands for hands-free podcast control</string>
     <key>NSMicrophoneUsageDescription</key>

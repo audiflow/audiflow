@@ -4,10 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app/app_lifecycle_observer.dart';
+import 'features/player/services/audio_handler_provider.dart';
 import 'l10n/app_localizations.dart';
 import 'routing/app_router.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
   final database = AppDatabase();
   final dio = Dio(
     BaseOptions(
@@ -16,12 +19,19 @@ void main() {
     ),
   );
 
+  final container = ProviderContainer(
+    overrides: [
+      databaseProvider.overrideWithValue(database),
+      dioProvider.overrideWithValue(dio),
+    ],
+  );
+
+  // Initialize audio service for platform media controls
+  await container.read(audioHandlerProvider.future);
+
   runApp(
-    ProviderScope(
-      overrides: [
-        databaseProvider.overrideWithValue(database),
-        dioProvider.overrideWithValue(dio),
-      ],
+    UncontrolledProviderScope(
+      container: container,
       child: const AppLifecycleObserver(child: MyApp()),
     ),
   );

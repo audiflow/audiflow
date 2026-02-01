@@ -22,7 +22,9 @@ part 'audio_player_service.g.dart';
 /// across navigation and screen changes.
 @Riverpod(keepAlive: true)
 AudioPlayer audioPlayer(Ref ref) {
-  final player = AudioPlayer();
+  // handleInterruptions must be false when using audio_service,
+  // which manages the remote command center and audio session.
+  final player = AudioPlayer(handleInterruptions: false);
   ref.onDispose(() => player.dispose());
   return player;
 }
