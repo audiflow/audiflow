@@ -35,6 +35,17 @@ class SmartPlaylists extends Table {
   /// Whether this smart playlist groups episodes by year.
   BoolColumn get yearGrouped => boolean().withDefault(const Constant(false))();
 
+  /// Content type for this playlist (e.g., 'episodes').
+  TextColumn get contentType =>
+      text().withDefault(const Constant('episodes'))();
+
+  /// Year header display mode ('none', 'firstEpisode', etc.).
+  TextColumn get yearHeaderMode => text().withDefault(const Constant('none'))();
+
+  /// Whether to show year headers for episodes.
+  BoolColumn get episodeYearHeaders =>
+      boolean().withDefault(const Constant(false))();
+
   @override
   Set<Column> get primaryKey => {podcastId, playlistNumber};
 

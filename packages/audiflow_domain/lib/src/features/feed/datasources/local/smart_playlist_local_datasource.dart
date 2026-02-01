@@ -80,6 +80,43 @@ class SmartPlaylistLocalDatasource {
     )..where((s) => s.podcastId.equals(podcastId))).go();
   }
 
+  /// Returns groups for a playlist.
+  Future<List<SmartPlaylistGroupEntity>> getGroupsByPlaylist(
+    int podcastId,
+    String playlistId,
+  ) {
+    return (_db.select(_db.smartPlaylistGroups)
+          ..where(
+            (g) =>
+                g.podcastId.equals(podcastId) & g.playlistId.equals(playlistId),
+          )
+          ..orderBy([(g) => OrderingTerm.asc(g.sortKey)]))
+        .get();
+  }
+
+  /// Replaces all groups for a playlist atomically.
+  Future<void> upsertGroupsForPlaylist(
+    int podcastId,
+    String playlistId,
+    List<SmartPlaylistGroupsCompanion> companions,
+  ) async {
+    await _db.transaction(() async {
+      await (_db.delete(_db.smartPlaylistGroups)..where(
+            (g) =>
+                g.podcastId.equals(podcastId) & g.playlistId.equals(playlistId),
+          ))
+          .go();
+
+      if (companions.isNotEmpty) {
+        await _db.batch((batch) {
+          for (final c in companions) {
+            batch.insert(_db.smartPlaylistGroups, c);
+          }
+        });
+      }
+    });
+  }
+
   /// Returns count of smart playlists for a podcast.
   Future<int> countByPodcastId(int podcastId) async {
     final count = _db.smartPlaylists.podcastId.count();

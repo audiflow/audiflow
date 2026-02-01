@@ -9,6 +9,7 @@ import '../../features/download/models/download_status.dart';
 import '../../features/download/models/download_task.dart';
 import '../../features/feed/models/episode.dart';
 import '../../features/feed/models/podcast_view_preference.dart';
+import '../../features/feed/models/smart_playlist_groups.dart';
 import '../../features/feed/models/smart_playlists.dart';
 import '../../features/player/models/playback_history.dart';
 import '../../features/queue/models/queue_item.dart';
@@ -25,6 +26,7 @@ part 'app_database.g.dart';
     Episodes,
     PlaybackHistories,
     SmartPlaylists,
+    SmartPlaylistGroups,
     PodcastViewPreferences,
     DownloadTasks,
     QueueItems,
@@ -38,7 +40,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 12;
+  int get schemaVersion => 14;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -97,6 +99,22 @@ class AppDatabase extends _$AppDatabase {
           podcastViewPreferences,
           podcastViewPreferences.selectedPlaylistId,
         );
+      }
+      // Migration from v12 to v13: add new columns to SmartPlaylists
+      if (13 <= to && from < 13) {
+        await m.addColumn(smartPlaylists, smartPlaylists.contentType);
+        await m.addColumn(smartPlaylists, smartPlaylists.yearHeaderMode);
+        await m.addColumn(smartPlaylists, smartPlaylists.episodeYearHeaders);
+        // Migrate yearGrouped data
+        await customStatement(
+          "UPDATE seasons"
+          " SET year_header_mode = 'firstEpisode'"
+          " WHERE year_grouped = 1",
+        );
+      }
+      // Migration from v13 to v14: create SmartPlaylistGroups table
+      if (14 <= to && from < 14) {
+        await m.createTable(smartPlaylistGroups);
       }
     },
   );
