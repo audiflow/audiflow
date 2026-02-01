@@ -10,104 +10,129 @@ import '../screens/episode_detail_screen.dart';
 
 /// Displays a single episode from the database (Episode model) with playback.
 ///
-/// Similar to [EpisodeListTile] but works with [Episode] (Drift model)
-/// instead of [PodcastItem] (RSS parsed model).
+/// Works with [Episode] (Drift model) instead of [PodcastItem] (RSS model).
 class SmartPlaylistEpisodeListTile extends ConsumerWidget {
   const SmartPlaylistEpisodeListTile({
     super.key,
     required this.episode,
     required this.podcastTitle,
     this.artworkUrl,
+    this.feedImageUrl,
     this.progress,
     this.siblingEpisodeIds,
+    this.lastRefreshedAt,
   });
 
   final Episode episode;
   final String podcastTitle;
   final String? artworkUrl;
+
+  /// RSS feed-level image URL for thumbnail deduplication.
+  final String? feedImageUrl;
   final EpisodeWithProgress? progress;
 
-  /// Episode IDs in the same group (playlist/sub-category), ordered by
-  /// episode number ascending. When provided, adhoc queue is built from
-  /// these IDs only instead of all podcast episodes.
+  /// Subscription's last refresh timestamp for "new" badge logic.
+  final DateTime? lastRefreshedAt;
+
+  /// Episode IDs in the same group, for adhoc queue building.
   final List<int>? siblingEpisodeIds;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
     final audioUrl = episode.audioUrl;
 
     final currentPlayingUrl = ref.watch(currentPlayingEpisodeUrlProvider);
     final isCurrentEpisode = currentPlayingUrl == audioUrl;
-
     final isPlaying = ref.watch(isEpisodePlayingProvider(audioUrl));
     final isLoading = ref.watch(isEpisodeLoadingProvider(audioUrl));
-
     final isCompleted = progress?.isCompleted ?? false;
+    final isNew =
+        !isCompleted &&
+        !(progress?.isInProgress ?? false) &&
+        _isRecentlyPublished(episode.publishedAt);
 
     final downloadAsync = ref.watch(episodeDownloadProvider(episode.id));
     final downloadTask = downloadAsync.value;
 
-    return GestureDetector(
+    return EpisodeCard(
+      title: episode.title,
+      subtitle: _buildSubtitleText(),
+      description: episode.description,
+      thumbnailUrl: episode.imageUrl,
+      podcastArtworkUrl: artworkUrl,
+      feedImageUrl: feedImageUrl,
+      isPlaying: isPlaying,
+      isLoading: isLoading,
+      isNew: isNew,
+      isCompleted: isCompleted,
+      isCurrentEpisode: isCurrentEpisode,
+      onTap: () => _navigateToDetail(context),
+      onPlayPause: () => _onPlayPausePressed(context, ref, audioUrl, isPlaying),
       onLongPress: () => _showContextMenu(context, ref, audioUrl, progress),
-      child: ListTile(
-        onTap: () => _navigateToDetail(context),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: Spacing.md,
-          vertical: Spacing.xs,
+      actionButtons: [
+        AddToQueueButton(
+          onPlayLater: () {
+            ref.read(queueControllerProvider.notifier).playLater(episode.id);
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Added to queue'),
+                duration: Duration(seconds: 1),
+              ),
+            );
+          },
+          onPlayNext: () {
+            ref.read(queueControllerProvider.notifier).playNext(episode.id);
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Playing next'),
+                duration: Duration(seconds: 1),
+              ),
+            );
+          },
         ),
-        title: Text(
-          episode.title,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: theme.textTheme.titleSmall?.copyWith(
-            fontWeight: isCurrentEpisode ? FontWeight.bold : FontWeight.normal,
-            color: isCurrentEpisode
-                ? colorScheme.primary
-                : isCompleted
-                ? colorScheme.onSurfaceVariant.withValues(alpha: 0.6)
-                : null,
-          ),
-        ),
-        subtitle: _buildSubtitle(theme, progress),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            AddToQueueButton(
-              onPlayLater: () {
-                ref
-                    .read(queueControllerProvider.notifier)
-                    .playLater(episode.id);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Added to queue'),
-                    duration: Duration(seconds: 1),
-                  ),
-                );
-              },
-              onPlayNext: () {
-                ref.read(queueControllerProvider.notifier).playNext(episode.id);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Playing next'),
-                    duration: Duration(seconds: 1),
-                  ),
-                );
-              },
-            ),
-            _buildDownloadButton(context, ref, downloadTask),
-            _buildPlayButton(
-              context,
-              ref,
-              audioUrl: audioUrl,
-              isPlaying: isPlaying,
-              isLoading: isLoading,
-            ),
-          ],
-        ),
-      ),
+        _buildDownloadButton(context, ref, downloadTask),
+        _buildShareButton(context),
+      ],
     );
+  }
+
+  /// Episode is "new" if published after the last feed refresh, or within
+  /// the last 2 days when no refresh timestamp is available.
+  bool _isRecentlyPublished(DateTime? publishDate) {
+    if (publishDate == null) return false;
+    final threshold =
+        lastRefreshedAt ?? DateTime.now().subtract(const Duration(days: 2));
+    return threshold.isBefore(publishDate);
+  }
+
+  String _buildSubtitleText() {
+    final parts = <String>[];
+
+    if (progress != null && progress!.isInProgress) {
+      final remaining = progress!.remainingTimeFormatted;
+      if (remaining != null) {
+        parts.add(remaining);
+      } else if (episode.durationMs != null) {
+        parts.add(_formatDuration(episode.durationMs!));
+      }
+    } else if (episode.durationMs != null) {
+      parts.add(_formatDuration(episode.durationMs!));
+    }
+
+    if (episode.publishedAt != null) {
+      parts.add(DateFormat.E().format(episode.publishedAt!));
+    }
+
+    return parts.join('  ');
+  }
+
+  String _formatDuration(int durationMs) {
+    final duration = Duration(milliseconds: durationMs);
+    final hours = duration.inHours;
+    final minutes = duration.inMinutes.remainder(60);
+
+    if (0 < hours) return '${hours}h ${minutes}min';
+    return '$minutes min';
   }
 
   void _navigateToDetail(BuildContext context) {
@@ -216,75 +241,6 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
     ref.invalidate(episodeProgressProvider(audioUrl));
   }
 
-  Widget _buildSubtitle(ThemeData theme, EpisodeWithProgress? progress) {
-    final parts = <String>[];
-
-    // Show remaining time if in progress
-    if (progress != null && progress.isInProgress) {
-      final remaining = progress.remainingTimeFormatted;
-      if (remaining != null) {
-        parts.add(remaining);
-      } else if (episode.durationMs != null) {
-        parts.add(_formatDuration(episode.durationMs!));
-      }
-    } else if (episode.durationMs != null) {
-      parts.add(_formatDuration(episode.durationMs!));
-    }
-
-    if (episode.publishedAt != null) {
-      parts.add(DateFormat.yMMMd().format(episode.publishedAt!));
-    }
-
-    if (episode.episodeNumber != null) {
-      final seasonPart = episode.seasonNumber != null
-          ? 'S${episode.seasonNumber}:'
-          : '';
-      parts.add('${seasonPart}E${episode.episodeNumber}');
-    }
-
-    if (parts.isEmpty && progress == null) {
-      return const SizedBox.shrink();
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (parts.isNotEmpty)
-          Text(
-            parts.join(' - '),
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-        if (progress != null &&
-            (progress.isCompleted || progress.isInProgress)) ...[
-          const SizedBox(height: 4),
-          EpisodeProgressIndicator(
-            isCompleted: progress.isCompleted,
-            isInProgress: progress.isInProgress,
-            remainingTimeFormatted: progress.remainingTimeFormatted,
-          ),
-        ],
-      ],
-    );
-  }
-
-  String _formatDuration(int durationMs) {
-    final duration = Duration(milliseconds: durationMs);
-    final hours = duration.inHours;
-    final minutes = duration.inMinutes.remainder(60);
-    final seconds = duration.inSeconds.remainder(60);
-
-    if (0 < hours) {
-      return '$hours:'
-          '${minutes.toString().padLeft(2, '0')}:'
-          '${seconds.toString().padLeft(2, '0')}';
-    }
-    return '$minutes:'
-        '${seconds.toString().padLeft(2, '0')}';
-  }
-
   Widget _buildDownloadButton(
     BuildContext context,
     WidgetRef ref,
@@ -375,31 +331,13 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
     );
   }
 
-  Widget _buildPlayButton(
-    BuildContext context,
-    WidgetRef ref, {
-    required String audioUrl,
-    required bool isPlaying,
-    required bool isLoading,
-  }) {
-    if (isLoading) {
-      return const SizedBox(
-        width: 48,
-        height: 48,
-        child: Padding(
-          padding: EdgeInsets.all(12),
-          child: CircularProgressIndicator(strokeWidth: 2),
-        ),
-      );
-    }
-
+  Widget _buildShareButton(BuildContext context) {
     return IconButton(
-      icon: Icon(
-        isPlaying ? Icons.pause_circle_filled : Icons.play_circle_filled,
-        size: 40,
-      ),
-      color: Theme.of(context).colorScheme.primary,
-      onPressed: () => _onPlayPausePressed(context, ref, audioUrl, isPlaying),
+      icon: const Icon(Icons.share, size: 20),
+      iconSize: 20,
+      constraints: const BoxConstraints(minWidth: 40, minHeight: 36),
+      padding: EdgeInsets.zero,
+      onPressed: null,
     );
   }
 
@@ -421,7 +359,6 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
       return;
     }
 
-    // Starting new playback - handle adhoc queue
     final queueService = ref.read(queueServiceProvider);
 
     final shouldConfirm = await queueService.shouldConfirmAdhocReplace();

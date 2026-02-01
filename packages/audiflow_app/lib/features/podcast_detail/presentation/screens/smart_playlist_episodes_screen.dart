@@ -12,11 +12,15 @@ class SmartPlaylistEpisodesScreen extends ConsumerStatefulWidget {
     required this.smartPlaylist,
     required this.podcastTitle,
     required this.podcastArtworkUrl,
+    this.feedImageUrl,
+    this.lastRefreshedAt,
   });
 
   final SmartPlaylist smartPlaylist;
   final String podcastTitle;
   final String? podcastArtworkUrl;
+  final String? feedImageUrl;
+  final DateTime? lastRefreshedAt;
 
   @override
   ConsumerState<SmartPlaylistEpisodesScreen> createState() =>
@@ -129,6 +133,8 @@ class _SmartPlaylistEpisodesScreenState
                 episode: data.episode,
                 podcastTitle: widget.podcastTitle,
                 artworkUrl: widget.podcastArtworkUrl,
+                feedImageUrl: widget.feedImageUrl,
+                lastRefreshedAt: widget.lastRefreshedAt,
                 progress: data.progress,
                 siblingEpisodeIds: widget.smartPlaylist.episodeIds,
               );
@@ -218,12 +224,13 @@ class _SmartPlaylistEpisodesScreenState
         episode: data.episode,
         podcastTitle: widget.podcastTitle,
         artworkUrl: widget.podcastArtworkUrl,
+        feedImageUrl: widget.feedImageUrl,
         progress: data.progress,
         siblingEpisodeIds: widget.smartPlaylist.episodeIds,
       ),
       scrollController: _scrollController,
       yearGroupingEnabled: true,
-      itemExtent: 72.0,
+      itemExtent: episodeCardExtent,
     );
   }
 
@@ -281,14 +288,15 @@ class _SmartPlaylistEpisodesScreenState
         episode: data.episode,
         podcastTitle: widget.podcastTitle,
         artworkUrl: widget.podcastArtworkUrl,
+        feedImageUrl: widget.feedImageUrl,
         progress: data.progress,
         siblingEpisodeIds: data.siblingEpisodeIds,
       ),
-      itemExtent: 72.0,
       expandedState: _subCategoryExpanded,
       onToggle: (id) => setState(() {
         _subCategoryExpanded[id] = !(_subCategoryExpanded[id] ?? false);
       }),
+      itemExtent: episodeCardExtent,
     );
   }
 

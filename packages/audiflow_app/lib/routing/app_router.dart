@@ -164,11 +164,15 @@ Widget _buildSmartPlaylistEpisodesScreen(GoRouterState state) {
 
   final podcastTitle = extra['podcastTitle'] as String? ?? '';
   final podcastArtworkUrl = extra['podcastArtworkUrl'] as String?;
+  final feedImageUrl = extra['feedImageUrl'] as String?;
+  final lastRefreshedAt = extra['lastRefreshedAt'] as DateTime?;
 
   return SmartPlaylistEpisodesScreen(
     smartPlaylist: playlist,
     podcastTitle: podcastTitle,
     podcastArtworkUrl: podcastArtworkUrl,
+    feedImageUrl: feedImageUrl,
+    lastRefreshedAt: lastRefreshedAt,
   );
 }
 
