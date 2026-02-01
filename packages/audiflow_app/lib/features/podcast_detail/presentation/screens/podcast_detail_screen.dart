@@ -539,7 +539,6 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
         progress: data.progress,
         siblingEpisodeIds: data.siblingEpisodeIds,
       ),
-      itemExtent: 72.0,
       expandedState: _subCategoryExpanded,
       onToggle: (id) => setState(() {
         _subCategoryExpanded[id] = !(_subCategoryExpanded[id] ?? false);

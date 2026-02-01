@@ -14,7 +14,6 @@ import 'year_divider.dart';
 List<Widget> buildSubCategorySlivers<T>({
   required List<SubCategoryData<T>> subCategories,
   required Widget Function(BuildContext, T) itemBuilder,
-  required double itemExtent,
   required Map<String, bool> expandedState,
   required ValueChanged<String> onToggle,
 }) {
@@ -24,7 +23,6 @@ List<Widget> buildSubCategorySlivers<T>({
         key: ValueKey('sub_${sub.id}'),
         sub: sub,
         itemBuilder: itemBuilder,
-        itemExtent: itemExtent,
         expanded: expandedState[sub.id] ?? false,
         onToggle: () => onToggle(sub.id),
       ),
@@ -36,14 +34,12 @@ class _SubCategorySliver<T> extends StatelessWidget {
     super.key,
     required this.sub,
     required this.itemBuilder,
-    required this.itemExtent,
     required this.expanded,
     required this.onToggle,
   });
 
   final SubCategoryData<T> sub;
   final Widget Function(BuildContext, T) itemBuilder;
-  final double itemExtent;
   final bool expanded;
   final VoidCallback onToggle;
 
@@ -71,12 +67,10 @@ class _SubCategorySliver<T> extends StatelessWidget {
         itemsByYear: sub.itemsByYear!,
         sortedYears: sub.sortedYears!,
         itemBuilder: itemBuilder,
-        itemExtent: itemExtent,
       );
     }
     return [
-      SliverFixedExtentList(
-        itemExtent: itemExtent,
+      SliverList(
         delegate: SliverChildBuilderDelegate(
           (context, index) => itemBuilder(context, sub.items[index]),
           childCount: sub.items.length,
@@ -90,7 +84,6 @@ List<Widget> _buildYearSlivers<T>({
   required Map<int, List<T>> itemsByYear,
   required List<int> sortedYears,
   required Widget Function(BuildContext, T) itemBuilder,
-  required double itemExtent,
 }) {
   return [
     for (final year in sortedYears)
@@ -98,8 +91,7 @@ List<Widget> _buildYearSlivers<T>({
         pushPinnedChildren: true,
         children: [
           SliverPinnedHeader(child: YearDivider(year: year)),
-          SliverFixedExtentList(
-            itemExtent: itemExtent,
+          SliverList(
             delegate: SliverChildBuilderDelegate(
               (context, index) =>
                   itemBuilder(context, itemsByYear[year]![index]),
