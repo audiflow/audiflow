@@ -4,7 +4,9 @@ import 'package:audiflow_domain/audiflow_domain.dart'
         PodcastItem,
         PodcastViewMode,
         SmartPlaylist,
+        SmartPlaylistContentType,
         SmartPlaylistEpisodeData,
+        SmartPlaylistGroup,
         SortOrder,
         YearHeaderMode,
         podcastViewPreferenceControllerProvider,
@@ -12,10 +14,13 @@ import 'package:audiflow_domain/audiflow_domain.dart'
         smartPlaylistPatternByFeedUrlProvider,
         subscriptionByFeedUrlProvider;
 import 'package:audiflow_search/audiflow_search.dart';
+import 'package:extended_image/extended_image.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../routing/app_router.dart';
 import '../../../subscription/presentation/controllers/subscription_controller.dart';
 import '../controllers/podcast_detail_controller.dart';
 import '../widgets/episode_filter_chips.dart';
@@ -37,7 +42,6 @@ class PodcastDetailScreen extends ConsumerStatefulWidget {
 
 class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
   final _scrollController = ScrollController();
-  final _subCategoryExpanded = <String, bool>{};
 
   /// Local view mode for non-subscribed podcasts.
   PodcastViewMode _localViewMode = PodcastViewMode.episodes;
@@ -64,47 +68,10 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    final feedUrl = podcast.feedUrl;
-
-    final subscriptionAsync = feedUrl != null
-        ? ref.watch(subscriptionByFeedUrlProvider(feedUrl))
-        : null;
-    final subscriptionId = subscriptionAsync?.value?.id;
-
-    final prefsAsync = subscriptionId != null
-        ? ref.watch(podcastViewPreferenceControllerProvider(subscriptionId))
-        : null;
     return Scaffold(
       appBar: AppBar(
         title: Text(podcast.name, maxLines: 1, overflow: TextOverflow.ellipsis),
-        actions: [
-          if (subscriptionId != null)
-            IconButton(
-              icon: Icon(
-                prefsAsync?.value?.episodeSortOrder == SortOrder.ascending
-                    ? Icons.arrow_upward
-                    : Icons.arrow_downward,
-              ),
-              tooltip:
-                  prefsAsync?.value?.episodeSortOrder == SortOrder.ascending
-                  ? 'Oldest first'
-                  : 'Newest first',
-              onPressed: () {
-                final current =
-                    prefsAsync?.value?.episodeSortOrder ?? SortOrder.descending;
-                final next = current == SortOrder.descending
-                    ? SortOrder.ascending
-                    : SortOrder.descending;
-                ref
-                    .read(
-                      podcastViewPreferenceControllerProvider(
-                        subscriptionId,
-                      ).notifier,
-                    )
-                    .setEpisodeSortOrder(next);
-              },
-            ),
-        ],
+        actions: const [],
       ),
       body: _buildBody(context, ref, theme, colorScheme),
     );
@@ -401,6 +368,13 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
           return [SliverFillRemaining(child: _buildEmptyPlaylistState(theme))];
         }
 
+        // Groups-based playlists show group cards, not episodes.
+        if (playlist.contentType == SmartPlaylistContentType.groups &&
+            playlist.groups != null &&
+            playlist.groups!.isNotEmpty) {
+          return _buildInlineGroupList(episodes, playlist, theme, sortOrder);
+        }
+
         if (playlist.yearHeaderMode != YearHeaderMode.none) {
           return _buildYearGroupedPlaylistSlivers(
             episodes,
@@ -408,10 +382,6 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
             theme,
             sortOrder,
           );
-        }
-
-        if (playlist.groups != null && playlist.groups!.isNotEmpty) {
-          return _buildSubCategorySlivers(episodes, playlist, sortOrder);
         }
 
         final sorted = sortOrder == SortOrder.ascending
@@ -497,72 +467,173 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
     );
   }
 
-  List<Widget> _buildSubCategorySlivers(
+  Widget _buildSortHeader(ThemeData theme, String label, SortOrder sortOrder) {
+    final colorScheme = theme.colorScheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: Spacing.md,
+        vertical: Spacing.xs,
+      ),
+      child: Row(
+        children: [
+          Text(
+            label,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const Spacer(),
+          InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: _toggleSortOrder,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: Spacing.sm,
+                vertical: Spacing.xxs,
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    sortOrder == SortOrder.ascending
+                        ? Icons.arrow_upward
+                        : Icons.arrow_downward,
+                    size: 16,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    sortOrder == SortOrder.ascending
+                        ? 'Oldest first'
+                        : 'Newest first',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _toggleSortOrder() {
+    final feedUrl = podcast.feedUrl;
+    if (feedUrl == null) return;
+    final subscriptionAsync = ref.read(subscriptionByFeedUrlProvider(feedUrl));
+    final subscription = subscriptionAsync.value;
+    if (subscription == null) return;
+    final prefsAsync = ref.read(
+      podcastViewPreferenceControllerProvider(subscription.id),
+    );
+    final current = prefsAsync.value?.episodeSortOrder ?? SortOrder.descending;
+    final next = current == SortOrder.descending
+        ? SortOrder.ascending
+        : SortOrder.descending;
+    ref
+        .read(podcastViewPreferenceControllerProvider(subscription.id).notifier)
+        .setEpisodeSortOrder(next);
+  }
+
+  List<Widget> _buildInlineGroupList(
     List<SmartPlaylistEpisodeData> episodes,
     SmartPlaylist playlist,
+    ThemeData theme,
     SortOrder sortOrder,
   ) {
-    final episodeById = <int, SmartPlaylistEpisodeData>{};
-    for (final data in episodes) {
-      episodeById[data.episode.id] = data;
+    final groups = playlist.groups!;
+    final episodeMap = <int, SmartPlaylistEpisodeData>{};
+    for (final ep in episodes) {
+      episodeMap[ep.episode.id] = ep;
     }
 
-    final subCategoryData = <SubCategoryData<SmartPlaylistEpisodeData>>[];
-    for (final sub in playlist.groups!) {
-      var items = [
-        for (final id in sub.episodeIds)
-          if (episodeById.containsKey(id))
-            episodeById[id]!.withSiblingEpisodeIds(sub.episodeIds),
-      ];
-      if (sortOrder == SortOrder.ascending) {
-        items = items.reversed.toList();
-      }
-
-      Map<int, List<SmartPlaylistEpisodeData>>? byYear;
-      List<int>? sortedYears;
-      final isYearGrouped = sub.yearOverride != null;
-      if (isYearGrouped) {
-        byYear = <int, List<SmartPlaylistEpisodeData>>{};
-        for (final data in items) {
-          final year = data.episode.publishedAt?.year ?? 0;
-          byYear.putIfAbsent(year, () => []).add(data);
-        }
-        sortedYears = byYear.keys.toList()
-          ..sort(
-            sortOrder == SortOrder.descending
-                ? (a, b) => b.compareTo(a)
-                : (a, b) => a.compareTo(b),
-          );
-      }
-
-      subCategoryData.add(
-        SubCategoryData(
-          id: sub.id,
-          displayName: sub.displayName,
-          items: items,
-          yearGrouped: isYearGrouped,
-          itemsByYear: byYear,
-          sortedYears: sortedYears,
+    if (playlist.yearHeaderMode == YearHeaderMode.none) {
+      return [
+        SliverList.builder(
+          itemCount: groups.length,
+          itemBuilder: (context, index) {
+            final group = groups[index];
+            return _InlineGroupCard(
+              group: group,
+              podcastArtworkUrl: podcast.artworkUrl,
+              onTap: () => _navigateToGroupEpisodes(playlist, group),
+            );
+          },
         ),
-      );
+      ];
     }
 
-    return buildSubCategorySlivers<SmartPlaylistEpisodeData>(
-      subCategories: subCategoryData,
-      itemBuilder: (context, data) => SmartPlaylistEpisodeListTile(
-        key: ValueKey(data.episode.id),
-        episode: data.episode,
-        podcastTitle: podcast.name,
-        artworkUrl: podcast.artworkUrl,
-        feedImageUrl: _feedImageUrl,
-        progress: data.progress,
-        siblingEpisodeIds: data.siblingEpisodeIds,
+    // Year-grouped display: determine year per group from
+    // first episode's publishedAt.
+    final byYear = <int, List<SmartPlaylistGroup>>{};
+    for (final group in groups) {
+      var year = 0;
+      if (group.episodeIds.isNotEmpty) {
+        final firstId = group.episodeIds.first;
+        final ep = episodeMap[firstId];
+        year = ep?.episode.publishedAt?.year ?? 0;
+      }
+      byYear.putIfAbsent(year, () => []).add(group);
+    }
+
+    if (sortOrder == SortOrder.descending) {
+      for (final key in byYear.keys) {
+        byYear[key] = byYear[key]!.reversed.toList();
+      }
+    }
+
+    final sortedYears = byYear.keys.toList()
+      ..sort(
+        sortOrder == SortOrder.descending
+            ? (a, b) => b.compareTo(a)
+            : (a, b) => a.compareTo(b),
+      );
+
+    return [
+      SliverToBoxAdapter(
+        child: _buildSortHeader(theme, '${groups.length} groups', sortOrder),
       ),
-      expandedState: _subCategoryExpanded,
-      onToggle: (id) => setState(() {
-        _subCategoryExpanded[id] = !(_subCategoryExpanded[id] ?? false);
-      }),
-      itemExtent: episodeCardExtent,
+      ...buildYearGroupedSlivers<SmartPlaylistGroup>(
+        itemsByYear: {for (final y in sortedYears) y: byYear[y]!},
+        sortedYears: sortedYears,
+        itemBuilder: (context, group) => _InlineGroupCard(
+          group: group,
+          podcastArtworkUrl: podcast.artworkUrl,
+          onTap: () => _navigateToGroupEpisodes(playlist, group),
+        ),
+        scrollController: _scrollController,
+        yearGroupingEnabled: true,
+        itemExtent: 84,
+      ),
+    ];
+  }
+
+  void _navigateToGroupEpisodes(
+    SmartPlaylist playlist,
+    SmartPlaylistGroup group,
+  ) {
+    final uri = GoRouterState.of(context).uri;
+    final playlistPath = AppRoutes.smartPlaylistEpisodes.replaceFirst(
+      ':playlistId',
+      playlist.id,
+    );
+    final groupPath = AppRoutes.smartPlaylistGroupEpisodesPath.replaceFirst(
+      ':groupId',
+      group.id,
+    );
+    context.go(
+      '$uri/$playlistPath/$groupPath',
+      extra: <String, dynamic>{
+        'podcast': podcast,
+        'group': group,
+        'smartPlaylist': playlist,
+        'podcastTitle': podcast.name,
+        'podcastArtworkUrl': podcast.artworkUrl,
+        'feedImageUrl': _feedImageUrl,
+        'lastRefreshedAt': _lastRefreshedAt,
+      },
     );
   }
 
@@ -584,17 +655,28 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
         }
 
         final progressMap = progressMapAsync.value ?? {};
+        final sortHeader = SliverToBoxAdapter(
+          child: _buildSortHeader(
+            theme,
+            '${episodes.length} episodes',
+            sortOrder,
+          ),
+        );
 
         if (yearGrouped) {
-          return _buildYearGroupedEpisodeSlivers(
-            episodes,
-            progressMap,
-            theme,
-            sortOrder,
-          );
+          return [
+            sortHeader,
+            ..._buildYearGroupedEpisodeSlivers(
+              episodes,
+              progressMap,
+              theme,
+              sortOrder,
+            ),
+          ];
         }
 
         return [
+          sortHeader,
           SliverList.builder(
             itemCount: episodes.length,
             itemBuilder: (context, index) {
@@ -900,6 +982,149 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Formats a date range as "YYYY.M.D 〜 YYYY.M.D".
+String? _formatDateRange(DateTime? earliest, DateTime? latest) {
+  if (earliest == null || latest == null) return null;
+  String fmt(DateTime d) => '${d.year}.${d.month}.${d.day}';
+  if (earliest == latest) return fmt(earliest);
+  return '${fmt(earliest)} 〜 ${fmt(latest)}';
+}
+
+/// Formats duration in ms to "Xh Ym" or "Xm".
+String? _formatDuration(int? totalMs) {
+  if (totalMs == null || totalMs == 0) return null;
+  final minutes = totalMs ~/ 60000;
+  final hours = minutes ~/ 60;
+  final remainingMinutes = minutes % 60;
+  if (0 < hours) return '${hours}h${remainingMinutes}m';
+  return '${minutes}m';
+}
+
+/// Card widget for displaying a smart playlist group inline.
+class _InlineGroupCard extends StatelessWidget {
+  const _InlineGroupCard({
+    required this.group,
+    required this.onTap,
+    this.podcastArtworkUrl,
+  });
+
+  final SmartPlaylistGroup group;
+  final VoidCallback onTap;
+  final String? podcastArtworkUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final dateRange = _formatDateRange(group.earliestDate, group.latestDate);
+    final duration = _formatDuration(group.totalDurationMs);
+
+    final metaLine = StringBuffer('${group.episodeIds.length} episodes');
+    if (duration != null) {
+      metaLine.write('  $duration');
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: Spacing.md,
+        vertical: Spacing.xxs,
+      ),
+      child: Card(
+        elevation: 0,
+        color: colorScheme.surfaceContainerLow,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: Spacing.md,
+              vertical: Spacing.sm,
+            ),
+            child: Row(
+              children: [
+                _buildThumbnail(colorScheme),
+                const SizedBox(width: Spacing.sm),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        group.displayName,
+                        style: theme.textTheme.titleSmall,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (dateRange != null) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          dateRange,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 2),
+                      Text(
+                        metaLine.toString(),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(Icons.chevron_right, color: colorScheme.onSurfaceVariant),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  static const _thumbnailSize = 56.0;
+
+  Widget _buildThumbnail(ColorScheme colorScheme) {
+    final url = group.thumbnailUrl ?? podcastArtworkUrl;
+    if (url != null) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: ExtendedImage.network(
+          url,
+          width: _thumbnailSize,
+          height: _thumbnailSize,
+          fit: BoxFit.cover,
+          cache: true,
+          loadStateChanged: (state) {
+            if (state.extendedImageLoadState == LoadState.failed) {
+              return _buildPlaceholder(colorScheme);
+            }
+            return null;
+          },
+        ),
+      );
+    }
+    return _buildPlaceholder(colorScheme);
+  }
+
+  Widget _buildPlaceholder(ColorScheme colorScheme) {
+    return Container(
+      width: _thumbnailSize,
+      height: _thumbnailSize,
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Icon(
+        Icons.folder_outlined,
+        size: 24,
+        color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
       ),
     );
   }

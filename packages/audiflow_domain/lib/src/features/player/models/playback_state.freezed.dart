@@ -194,7 +194,7 @@ return error(_that.message);case _:
 
 class PlaybackIdle implements PlaybackState {
   const PlaybackIdle();
-
+  
 
 
 
@@ -226,7 +226,7 @@ String toString() {
 
 class PlaybackLoading implements PlaybackState {
   const PlaybackLoading({required this.episodeUrl});
-
+  
 
  final  String episodeUrl;
 
@@ -292,7 +292,7 @@ as String,
 
 class PlaybackPlaying implements PlaybackState {
   const PlaybackPlaying({required this.episodeUrl});
-
+  
 
  final  String episodeUrl;
 
@@ -358,7 +358,7 @@ as String,
 
 class PlaybackPaused implements PlaybackState {
   const PlaybackPaused({required this.episodeUrl});
-
+  
 
  final  String episodeUrl;
 
@@ -424,7 +424,7 @@ as String,
 
 class PlaybackError implements PlaybackState {
   const PlaybackError({required this.message});
-
+  
 
  final  String message;
 

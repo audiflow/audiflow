@@ -348,6 +348,33 @@ Future<SmartPlaylistGrouping?> _resolveAndPersistSmartPlaylists(
   }
 
   await playlistDatasource.upsertAllForPodcast(podcastId, companions);
+
+  // Persist groups with cached metadata
+  for (final playlist in enrichedPlaylists) {
+    if (playlist.groups != null && playlist.groups!.isNotEmpty) {
+      final groupCompanions = playlist.groups!.map((g) {
+        return SmartPlaylistGroupsCompanion.insert(
+          podcastId: podcastId,
+          playlistId: playlist.id,
+          groupId: g.id,
+          displayName: g.displayName,
+          sortKey: g.sortKey,
+          thumbnailUrl: Value(g.thumbnailUrl),
+          episodeIds: g.episodeIds.join(','),
+          yearOverride: Value(g.yearOverride?.name),
+          earliestDate: Value(g.earliestDate),
+          latestDate: Value(g.latestDate),
+          totalDurationMs: Value(g.totalDurationMs),
+        );
+      }).toList();
+      await playlistDatasource.upsertGroupsForPlaylist(
+        podcastId,
+        playlist.id,
+        groupCompanions,
+      );
+    }
+  }
+
   logger.d('Persisted ${companions.length} smart playlists to database');
 
   return SmartPlaylistGrouping(
@@ -605,16 +632,29 @@ List<SmartPlaylistGroup>? _resolveGroupsFromConfig(
     }
   }
 
+  // Build episode lookup for stats computation
+  final episodeById = <int, Episode>{};
+  for (final ep in episodes) {
+    episodeById[ep.id] = ep;
+  }
+
   final result = <SmartPlaylistGroup>[];
   for (final matcher in patternMatchers) {
     final ids = grouped[matcher.id];
     if (ids != null && ids.isNotEmpty) {
+      final groupEps = ids.map((id) => episodeById[id]).nonNulls.toList();
+      final stats = _computeGroupStatsFromEpisodes(groupEps);
+      final thumb = _latestThumbnailFromEpisodes(groupEps);
       result.add(
         SmartPlaylistGroup(
           id: matcher.id,
           displayName: matcher.displayName,
           episodeIds: ids,
           yearOverride: matcher.yearOverride,
+          thumbnailUrl: thumb,
+          earliestDate: stats.earliest,
+          latestDate: stats.latest,
+          totalDurationMs: stats.totalDurationMs,
         ),
       );
     }
@@ -623,8 +663,22 @@ List<SmartPlaylistGroup>? _resolveGroupsFromConfig(
   if (fallbackIds.isNotEmpty) {
     final id = fallbackId ?? 'other';
     final name = fallbackDisplayName ?? 'Other';
+    final fallbackEps = fallbackIds
+        .map((id) => episodeById[id])
+        .nonNulls
+        .toList();
+    final stats = _computeGroupStatsFromEpisodes(fallbackEps);
+    final thumb = _latestThumbnailFromEpisodes(fallbackEps);
     result.add(
-      SmartPlaylistGroup(id: id, displayName: name, episodeIds: fallbackIds),
+      SmartPlaylistGroup(
+        id: id,
+        displayName: name,
+        episodeIds: fallbackIds,
+        thumbnailUrl: thumb,
+        earliestDate: stats.earliest,
+        latestDate: stats.latest,
+        totalDurationMs: stats.totalDurationMs,
+      ),
     );
   }
 
@@ -638,4 +692,55 @@ YearHeaderMode _parseYearOverride(String value) {
     'perEpisode' => YearHeaderMode.perEpisode,
     _ => YearHeaderMode.none,
   };
+}
+
+/// Returns the imageUrl of the newest episode that has one.
+String? _latestThumbnailFromEpisodes(List<Episode> episodes) {
+  final sorted = [...episodes]
+    ..sort((a, b) {
+      final aPub = a.publishedAt;
+      final bPub = b.publishedAt;
+      if (aPub == null && bPub == null) return 0;
+      if (aPub == null) return 1;
+      if (bPub == null) return -1;
+      return bPub.compareTo(aPub);
+    });
+  for (final ep in sorted) {
+    if (ep.imageUrl != null) return ep.imageUrl;
+  }
+  return null;
+}
+
+/// Computed stats for a group of episodes.
+typedef _GroupStats = ({
+  DateTime? earliest,
+  DateTime? latest,
+  int? totalDurationMs,
+});
+
+/// Computes min/max publishedAt and total duration from episodes.
+_GroupStats _computeGroupStatsFromEpisodes(List<Episode> episodes) {
+  DateTime? earliest;
+  DateTime? latest;
+  var totalMs = 0;
+  var hasDuration = false;
+
+  for (final ep in episodes) {
+    final pub = ep.publishedAt;
+    if (pub != null) {
+      if (earliest == null || pub.isBefore(earliest)) earliest = pub;
+      if (latest == null || pub.isAfter(latest)) latest = pub;
+    }
+    final dur = ep.durationMs;
+    if (dur != null && 0 < dur) {
+      totalMs += dur;
+      hasDuration = true;
+    }
+  }
+
+  return (
+    earliest: earliest,
+    latest: latest,
+    totalDurationMs: hasDuration ? totalMs : null,
+  );
 }

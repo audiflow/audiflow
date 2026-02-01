@@ -2659,6 +2659,39 @@ class $SmartPlaylistGroupsTable extends SmartPlaylistGroups
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _earliestDateMeta = const VerificationMeta(
+    'earliestDate',
+  );
+  @override
+  late final GeneratedColumn<DateTime> earliestDate = GeneratedColumn<DateTime>(
+    'earliest_date',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _latestDateMeta = const VerificationMeta(
+    'latestDate',
+  );
+  @override
+  late final GeneratedColumn<DateTime> latestDate = GeneratedColumn<DateTime>(
+    'latest_date',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _totalDurationMsMeta = const VerificationMeta(
+    'totalDurationMs',
+  );
+  @override
+  late final GeneratedColumn<int> totalDurationMs = GeneratedColumn<int>(
+    'total_duration_ms',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     podcastId,
@@ -2669,6 +2702,9 @@ class $SmartPlaylistGroupsTable extends SmartPlaylistGroups
     thumbnailUrl,
     episodeIds,
     yearOverride,
+    earliestDate,
+    latestDate,
+    totalDurationMs,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2751,6 +2787,30 @@ class $SmartPlaylistGroupsTable extends SmartPlaylistGroups
         ),
       );
     }
+    if (data.containsKey('earliest_date')) {
+      context.handle(
+        _earliestDateMeta,
+        earliestDate.isAcceptableOrUnknown(
+          data['earliest_date']!,
+          _earliestDateMeta,
+        ),
+      );
+    }
+    if (data.containsKey('latest_date')) {
+      context.handle(
+        _latestDateMeta,
+        latestDate.isAcceptableOrUnknown(data['latest_date']!, _latestDateMeta),
+      );
+    }
+    if (data.containsKey('total_duration_ms')) {
+      context.handle(
+        _totalDurationMsMeta,
+        totalDurationMs.isAcceptableOrUnknown(
+          data['total_duration_ms']!,
+          _totalDurationMsMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -2795,6 +2855,18 @@ class $SmartPlaylistGroupsTable extends SmartPlaylistGroups
         DriftSqlType.string,
         data['${effectivePrefix}year_override'],
       ),
+      earliestDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}earliest_date'],
+      ),
+      latestDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}latest_date'],
+      ),
+      totalDurationMs: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}total_duration_ms'],
+      ),
     );
   }
 
@@ -2816,6 +2888,9 @@ class SmartPlaylistGroupEntity extends DataClass
   /// JSON-encoded list of episode IDs.
   final String episodeIds;
   final String? yearOverride;
+  final DateTime? earliestDate;
+  final DateTime? latestDate;
+  final int? totalDurationMs;
   const SmartPlaylistGroupEntity({
     required this.podcastId,
     required this.playlistId,
@@ -2825,6 +2900,9 @@ class SmartPlaylistGroupEntity extends DataClass
     this.thumbnailUrl,
     required this.episodeIds,
     this.yearOverride,
+    this.earliestDate,
+    this.latestDate,
+    this.totalDurationMs,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2840,6 +2918,15 @@ class SmartPlaylistGroupEntity extends DataClass
     map['episode_ids'] = Variable<String>(episodeIds);
     if (!nullToAbsent || yearOverride != null) {
       map['year_override'] = Variable<String>(yearOverride);
+    }
+    if (!nullToAbsent || earliestDate != null) {
+      map['earliest_date'] = Variable<DateTime>(earliestDate);
+    }
+    if (!nullToAbsent || latestDate != null) {
+      map['latest_date'] = Variable<DateTime>(latestDate);
+    }
+    if (!nullToAbsent || totalDurationMs != null) {
+      map['total_duration_ms'] = Variable<int>(totalDurationMs);
     }
     return map;
   }
@@ -2858,6 +2945,15 @@ class SmartPlaylistGroupEntity extends DataClass
       yearOverride: yearOverride == null && nullToAbsent
           ? const Value.absent()
           : Value(yearOverride),
+      earliestDate: earliestDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(earliestDate),
+      latestDate: latestDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(latestDate),
+      totalDurationMs: totalDurationMs == null && nullToAbsent
+          ? const Value.absent()
+          : Value(totalDurationMs),
     );
   }
 
@@ -2875,6 +2971,9 @@ class SmartPlaylistGroupEntity extends DataClass
       thumbnailUrl: serializer.fromJson<String?>(json['thumbnailUrl']),
       episodeIds: serializer.fromJson<String>(json['episodeIds']),
       yearOverride: serializer.fromJson<String?>(json['yearOverride']),
+      earliestDate: serializer.fromJson<DateTime?>(json['earliestDate']),
+      latestDate: serializer.fromJson<DateTime?>(json['latestDate']),
+      totalDurationMs: serializer.fromJson<int?>(json['totalDurationMs']),
     );
   }
   @override
@@ -2889,6 +2988,9 @@ class SmartPlaylistGroupEntity extends DataClass
       'thumbnailUrl': serializer.toJson<String?>(thumbnailUrl),
       'episodeIds': serializer.toJson<String>(episodeIds),
       'yearOverride': serializer.toJson<String?>(yearOverride),
+      'earliestDate': serializer.toJson<DateTime?>(earliestDate),
+      'latestDate': serializer.toJson<DateTime?>(latestDate),
+      'totalDurationMs': serializer.toJson<int?>(totalDurationMs),
     };
   }
 
@@ -2901,6 +3003,9 @@ class SmartPlaylistGroupEntity extends DataClass
     Value<String?> thumbnailUrl = const Value.absent(),
     String? episodeIds,
     Value<String?> yearOverride = const Value.absent(),
+    Value<DateTime?> earliestDate = const Value.absent(),
+    Value<DateTime?> latestDate = const Value.absent(),
+    Value<int?> totalDurationMs = const Value.absent(),
   }) => SmartPlaylistGroupEntity(
     podcastId: podcastId ?? this.podcastId,
     playlistId: playlistId ?? this.playlistId,
@@ -2910,6 +3015,11 @@ class SmartPlaylistGroupEntity extends DataClass
     thumbnailUrl: thumbnailUrl.present ? thumbnailUrl.value : this.thumbnailUrl,
     episodeIds: episodeIds ?? this.episodeIds,
     yearOverride: yearOverride.present ? yearOverride.value : this.yearOverride,
+    earliestDate: earliestDate.present ? earliestDate.value : this.earliestDate,
+    latestDate: latestDate.present ? latestDate.value : this.latestDate,
+    totalDurationMs: totalDurationMs.present
+        ? totalDurationMs.value
+        : this.totalDurationMs,
   );
   SmartPlaylistGroupEntity copyWithCompanion(
     SmartPlaylistGroupsCompanion data,
@@ -2933,6 +3043,15 @@ class SmartPlaylistGroupEntity extends DataClass
       yearOverride: data.yearOverride.present
           ? data.yearOverride.value
           : this.yearOverride,
+      earliestDate: data.earliestDate.present
+          ? data.earliestDate.value
+          : this.earliestDate,
+      latestDate: data.latestDate.present
+          ? data.latestDate.value
+          : this.latestDate,
+      totalDurationMs: data.totalDurationMs.present
+          ? data.totalDurationMs.value
+          : this.totalDurationMs,
     );
   }
 
@@ -2946,7 +3065,10 @@ class SmartPlaylistGroupEntity extends DataClass
           ..write('sortKey: $sortKey, ')
           ..write('thumbnailUrl: $thumbnailUrl, ')
           ..write('episodeIds: $episodeIds, ')
-          ..write('yearOverride: $yearOverride')
+          ..write('yearOverride: $yearOverride, ')
+          ..write('earliestDate: $earliestDate, ')
+          ..write('latestDate: $latestDate, ')
+          ..write('totalDurationMs: $totalDurationMs')
           ..write(')'))
         .toString();
   }
@@ -2961,6 +3083,9 @@ class SmartPlaylistGroupEntity extends DataClass
     thumbnailUrl,
     episodeIds,
     yearOverride,
+    earliestDate,
+    latestDate,
+    totalDurationMs,
   );
   @override
   bool operator ==(Object other) =>
@@ -2973,7 +3098,10 @@ class SmartPlaylistGroupEntity extends DataClass
           other.sortKey == this.sortKey &&
           other.thumbnailUrl == this.thumbnailUrl &&
           other.episodeIds == this.episodeIds &&
-          other.yearOverride == this.yearOverride);
+          other.yearOverride == this.yearOverride &&
+          other.earliestDate == this.earliestDate &&
+          other.latestDate == this.latestDate &&
+          other.totalDurationMs == this.totalDurationMs);
 }
 
 class SmartPlaylistGroupsCompanion
@@ -2986,6 +3114,9 @@ class SmartPlaylistGroupsCompanion
   final Value<String?> thumbnailUrl;
   final Value<String> episodeIds;
   final Value<String?> yearOverride;
+  final Value<DateTime?> earliestDate;
+  final Value<DateTime?> latestDate;
+  final Value<int?> totalDurationMs;
   final Value<int> rowid;
   const SmartPlaylistGroupsCompanion({
     this.podcastId = const Value.absent(),
@@ -2996,6 +3127,9 @@ class SmartPlaylistGroupsCompanion
     this.thumbnailUrl = const Value.absent(),
     this.episodeIds = const Value.absent(),
     this.yearOverride = const Value.absent(),
+    this.earliestDate = const Value.absent(),
+    this.latestDate = const Value.absent(),
+    this.totalDurationMs = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   SmartPlaylistGroupsCompanion.insert({
@@ -3007,6 +3141,9 @@ class SmartPlaylistGroupsCompanion
     this.thumbnailUrl = const Value.absent(),
     required String episodeIds,
     this.yearOverride = const Value.absent(),
+    this.earliestDate = const Value.absent(),
+    this.latestDate = const Value.absent(),
+    this.totalDurationMs = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : podcastId = Value(podcastId),
        playlistId = Value(playlistId),
@@ -3023,6 +3160,9 @@ class SmartPlaylistGroupsCompanion
     Expression<String>? thumbnailUrl,
     Expression<String>? episodeIds,
     Expression<String>? yearOverride,
+    Expression<DateTime>? earliestDate,
+    Expression<DateTime>? latestDate,
+    Expression<int>? totalDurationMs,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -3034,6 +3174,9 @@ class SmartPlaylistGroupsCompanion
       if (thumbnailUrl != null) 'thumbnail_url': thumbnailUrl,
       if (episodeIds != null) 'episode_ids': episodeIds,
       if (yearOverride != null) 'year_override': yearOverride,
+      if (earliestDate != null) 'earliest_date': earliestDate,
+      if (latestDate != null) 'latest_date': latestDate,
+      if (totalDurationMs != null) 'total_duration_ms': totalDurationMs,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -3047,6 +3190,9 @@ class SmartPlaylistGroupsCompanion
     Value<String?>? thumbnailUrl,
     Value<String>? episodeIds,
     Value<String?>? yearOverride,
+    Value<DateTime?>? earliestDate,
+    Value<DateTime?>? latestDate,
+    Value<int?>? totalDurationMs,
     Value<int>? rowid,
   }) {
     return SmartPlaylistGroupsCompanion(
@@ -3058,6 +3204,9 @@ class SmartPlaylistGroupsCompanion
       thumbnailUrl: thumbnailUrl ?? this.thumbnailUrl,
       episodeIds: episodeIds ?? this.episodeIds,
       yearOverride: yearOverride ?? this.yearOverride,
+      earliestDate: earliestDate ?? this.earliestDate,
+      latestDate: latestDate ?? this.latestDate,
+      totalDurationMs: totalDurationMs ?? this.totalDurationMs,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -3089,6 +3238,15 @@ class SmartPlaylistGroupsCompanion
     if (yearOverride.present) {
       map['year_override'] = Variable<String>(yearOverride.value);
     }
+    if (earliestDate.present) {
+      map['earliest_date'] = Variable<DateTime>(earliestDate.value);
+    }
+    if (latestDate.present) {
+      map['latest_date'] = Variable<DateTime>(latestDate.value);
+    }
+    if (totalDurationMs.present) {
+      map['total_duration_ms'] = Variable<int>(totalDurationMs.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -3106,6 +3264,9 @@ class SmartPlaylistGroupsCompanion
           ..write('thumbnailUrl: $thumbnailUrl, ')
           ..write('episodeIds: $episodeIds, ')
           ..write('yearOverride: $yearOverride, ')
+          ..write('earliestDate: $earliestDate, ')
+          ..write('latestDate: $latestDate, ')
+          ..write('totalDurationMs: $totalDurationMs, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -7097,6 +7258,9 @@ typedef $$SmartPlaylistGroupsTableCreateCompanionBuilder =
       Value<String?> thumbnailUrl,
       required String episodeIds,
       Value<String?> yearOverride,
+      Value<DateTime?> earliestDate,
+      Value<DateTime?> latestDate,
+      Value<int?> totalDurationMs,
       Value<int> rowid,
     });
 typedef $$SmartPlaylistGroupsTableUpdateCompanionBuilder =
@@ -7109,6 +7273,9 @@ typedef $$SmartPlaylistGroupsTableUpdateCompanionBuilder =
       Value<String?> thumbnailUrl,
       Value<String> episodeIds,
       Value<String?> yearOverride,
+      Value<DateTime?> earliestDate,
+      Value<DateTime?> latestDate,
+      Value<int?> totalDurationMs,
       Value<int> rowid,
     });
 
@@ -7192,6 +7359,21 @@ class $$SmartPlaylistGroupsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<DateTime> get earliestDate => $composableBuilder(
+    column: $table.earliestDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get latestDate => $composableBuilder(
+    column: $table.latestDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get totalDurationMs => $composableBuilder(
+    column: $table.totalDurationMs,
+    builder: (column) => ColumnFilters(column),
+  );
+
   $$SubscriptionsTableFilterComposer get podcastId {
     final $$SubscriptionsTableFilterComposer composer = $composerBuilder(
       composer: this,
@@ -7260,6 +7442,21 @@ class $$SmartPlaylistGroupsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<DateTime> get earliestDate => $composableBuilder(
+    column: $table.earliestDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get latestDate => $composableBuilder(
+    column: $table.latestDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get totalDurationMs => $composableBuilder(
+    column: $table.totalDurationMs,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$SubscriptionsTableOrderingComposer get podcastId {
     final $$SubscriptionsTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -7321,6 +7518,21 @@ class $$SmartPlaylistGroupsTableAnnotationComposer
 
   GeneratedColumn<String> get yearOverride => $composableBuilder(
     column: $table.yearOverride,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get earliestDate => $composableBuilder(
+    column: $table.earliestDate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get latestDate => $composableBuilder(
+    column: $table.latestDate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get totalDurationMs => $composableBuilder(
+    column: $table.totalDurationMs,
     builder: (column) => column,
   );
 
@@ -7392,6 +7604,9 @@ class $$SmartPlaylistGroupsTableTableManager
                 Value<String?> thumbnailUrl = const Value.absent(),
                 Value<String> episodeIds = const Value.absent(),
                 Value<String?> yearOverride = const Value.absent(),
+                Value<DateTime?> earliestDate = const Value.absent(),
+                Value<DateTime?> latestDate = const Value.absent(),
+                Value<int?> totalDurationMs = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SmartPlaylistGroupsCompanion(
                 podcastId: podcastId,
@@ -7402,6 +7617,9 @@ class $$SmartPlaylistGroupsTableTableManager
                 thumbnailUrl: thumbnailUrl,
                 episodeIds: episodeIds,
                 yearOverride: yearOverride,
+                earliestDate: earliestDate,
+                latestDate: latestDate,
+                totalDurationMs: totalDurationMs,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -7414,6 +7632,9 @@ class $$SmartPlaylistGroupsTableTableManager
                 Value<String?> thumbnailUrl = const Value.absent(),
                 required String episodeIds,
                 Value<String?> yearOverride = const Value.absent(),
+                Value<DateTime?> earliestDate = const Value.absent(),
+                Value<DateTime?> latestDate = const Value.absent(),
+                Value<int?> totalDurationMs = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SmartPlaylistGroupsCompanion.insert(
                 podcastId: podcastId,
@@ -7424,6 +7645,9 @@ class $$SmartPlaylistGroupsTableTableManager
                 thumbnailUrl: thumbnailUrl,
                 episodeIds: episodeIds,
                 yearOverride: yearOverride,
+                earliestDate: earliestDate,
+                latestDate: latestDate,
+                totalDurationMs: totalDurationMs,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

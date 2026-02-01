@@ -8,8 +8,11 @@ part of 'audio_handler_provider.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// Initializes [AudioService] with [AudiflowAudioHandler] and sets up
-/// state sync listeners.
+/// Initializes AudioService with [AudiflowAudioHandler] and sets up
+/// media item sync listeners.
+///
+/// Playback state is synced via direct stream piping inside the handler.
+/// This provider only handles media item (now playing info) sync.
 ///
 /// Must be awaited before the app starts to ensure platform media
 /// controls are connected.
@@ -17,8 +20,11 @@ part of 'audio_handler_provider.dart';
 @ProviderFor(audioHandler)
 final audioHandlerProvider = AudioHandlerProvider._();
 
-/// Initializes [AudioService] with [AudiflowAudioHandler] and sets up
-/// state sync listeners.
+/// Initializes AudioService with [AudiflowAudioHandler] and sets up
+/// media item sync listeners.
+///
+/// Playback state is synced via direct stream piping inside the handler.
+/// This provider only handles media item (now playing info) sync.
 ///
 /// Must be awaited before the app starts to ensure platform media
 /// controls are connected.
@@ -33,8 +39,11 @@ final class AudioHandlerProvider
     with
         $FutureModifier<AudiflowAudioHandler>,
         $FutureProvider<AudiflowAudioHandler> {
-  /// Initializes [AudioService] with [AudiflowAudioHandler] and sets up
-  /// state sync listeners.
+  /// Initializes AudioService with [AudiflowAudioHandler] and sets up
+  /// media item sync listeners.
+  ///
+  /// Playback state is synced via direct stream piping inside the handler.
+  /// This provider only handles media item (now playing info) sync.
   ///
   /// Must be awaited before the app starts to ensure platform media
   /// controls are connected.
@@ -64,4 +73,4 @@ final class AudioHandlerProvider
   }
 }
 
-String _$audioHandlerHash() => r'e837afd74d8e032c598df05fee4c1d4c7e8f1f1d';
+String _$audioHandlerHash() => r'78c96d93c875c06213df9b05f72259964ad64586';

@@ -194,11 +194,17 @@ class RssMetadataResolver implements SmartPlaylistResolver {
         episodes: groupEpisodes,
         titleExtractor: titleExtractor,
       );
+      final stats = _computeGroupStats(groupEpisodes);
+      final thumbnailUrl = _latestThumbnail(groupEpisodes);
       return SmartPlaylistGroup(
         id: 'season_$seasonNumber',
         displayName: displayName,
         sortKey: seasonNumber,
         episodeIds: groupEpisodes.map((e) => e.id).toList(),
+        thumbnailUrl: thumbnailUrl,
+        earliestDate: stats.earliest,
+        latestDate: stats.latest,
+        totalDurationMs: stats.totalDurationMs,
       );
     }).toList()..sort((a, b) => a.sortKey.compareTo(b.sortKey));
   }
@@ -230,6 +236,57 @@ class RssMetadataResolver implements SmartPlaylistResolver {
     final extracted = titleExtractor.extract(episodes.first.toEpisodeData());
     return extracted ?? 'Season $seasonNumber';
   }
+}
+
+/// Computed stats for a group of episodes.
+typedef _GroupStats = ({
+  DateTime? earliest,
+  DateTime? latest,
+  int? totalDurationMs,
+});
+
+/// Computes min/max publishedAt and total duration from episodes.
+_GroupStats _computeGroupStats(List<Episode> episodes) {
+  DateTime? earliest;
+  DateTime? latest;
+  var totalMs = 0;
+  var hasDuration = false;
+
+  for (final ep in episodes) {
+    final pub = ep.publishedAt;
+    if (pub != null) {
+      if (earliest == null || pub.isBefore(earliest)) earliest = pub;
+      if (latest == null || pub.isAfter(latest)) latest = pub;
+    }
+    final dur = ep.durationMs;
+    if (dur != null && 0 < dur) {
+      totalMs += dur;
+      hasDuration = true;
+    }
+  }
+
+  return (
+    earliest: earliest,
+    latest: latest,
+    totalDurationMs: hasDuration ? totalMs : null,
+  );
+}
+
+/// Returns the imageUrl of the newest episode that has one.
+String? _latestThumbnail(List<Episode> episodes) {
+  final sorted = [...episodes]
+    ..sort((a, b) {
+      final aPub = a.publishedAt;
+      final bPub = b.publishedAt;
+      if (aPub == null && bPub == null) return 0;
+      if (aPub == null) return 1;
+      if (bPub == null) return -1;
+      return bPub.compareTo(aPub);
+    });
+  for (final ep in sorted) {
+    if (ep.imageUrl != null) return ep.imageUrl;
+  }
+  return null;
 }
 
 /// Compiled filter for a single playlist config entry.

@@ -368,9 +368,15 @@ Future<SmartPlaylistGrouping?> sortedPodcastSmartPlaylists(
     return newestDates[playlist.id];
   }
 
-  // Check if pattern has custom composite sort
+  // Parent playlists (from `playlists` config) are already in
+  // config order — skip custom sorting.
+  final hasParentPlaylists = pattern?.config['playlists'] != null;
+
+  // Parent playlists keep config order — no sorting needed.
   final customSort = pattern?.customSort;
-  if (customSort is CompositeSmartPlaylistSort) {
+  if (hasParentPlaylists) {
+    // Preserve config order as-is.
+  } else if (customSort is CompositeSmartPlaylistSort) {
     // Apply composite sorting rules
     // Pre-fetch dates for all playlists that might need them
     for (final playlist in sortedPlaylists) {
@@ -554,6 +560,11 @@ SmartPlaylistGrouping? _resolveFromFeed(
   if (pattern?.resolverType == 'category') {
     return _resolveFromFeedByCategory(episodes, pattern!);
   }
+  // Patterns with `playlists` config produce parent playlists
+  // with groups inside (not season-level playlists).
+  if (pattern?.config['playlists'] != null) {
+    return _resolveFromFeedWithParentPlaylists(episodes, pattern!);
+  }
   return _resolveFromFeedBySeason(episodes, pattern);
 }
 
@@ -641,6 +652,221 @@ SmartPlaylistGrouping? _resolveFromFeedByCategory(
     ungroupedEpisodeIds: ungroupedIndices,
     resolverType: 'category',
   );
+}
+
+/// Groups feed episodes into parent playlists with groups using
+/// the `playlists` config from the pattern.
+SmartPlaylistGrouping? _resolveFromFeedWithParentPlaylists(
+  List<PodcastItem> episodes,
+  SmartPlaylistPattern pattern,
+) {
+  final playlistConfigs = (pattern.config['playlists'] as List<dynamic>)
+      .cast<Map<String, dynamic>>();
+  final titleExtractor = pattern.titleExtractor;
+  final groupNullAs = pattern.config['groupNullSeasonAs'] as int?;
+
+  // Build compiled filters for each playlist config.
+  final filters = playlistConfigs.map(_FeedPlaylistFilter.from).toList();
+
+  // Assign episodes to playlists.
+  final buckets = List.generate(playlistConfigs.length, (_) => <PodcastItem>[]);
+  final ungroupedIndices = <int>[];
+
+  for (var i = 0; episodes.length - i != 0; i++) {
+    final episode = episodes[i];
+    final seasonNum = episode.seasonNumber;
+    final hasSeason =
+        (seasonNum != null && 1 <= seasonNum) || groupNullAs != null;
+
+    if (!hasSeason) {
+      ungroupedIndices.add(-(i + 1));
+      continue;
+    }
+
+    var matched = false;
+    for (var f = 0; filters.length - f != 0; f++) {
+      if (filters[f].matches(episode.title)) {
+        buckets[f].add(episode);
+        matched = true;
+        break;
+      }
+    }
+
+    if (!matched) {
+      // Find last playlist without titleFilter (fallback).
+      final fallbackIdx = _findFeedFallbackIndex(filters);
+      if (0 <= fallbackIdx) {
+        buckets[fallbackIdx].add(episode);
+      } else {
+        ungroupedIndices.add(-(i + 1));
+      }
+    }
+  }
+
+  // Build SmartPlaylists with groups from season buckets.
+  final playlists = <SmartPlaylist>[];
+  for (var i = 0; playlistConfigs.length - i != 0; i++) {
+    final cfg = playlistConfigs[i];
+    final bucketEpisodes = buckets[i];
+    if (bucketEpisodes.isEmpty) continue;
+
+    final groups = _buildFeedGroups(
+      bucketEpisodes,
+      episodes,
+      groupNullAs,
+      titleExtractor,
+    );
+    final allEpisodeIds = bucketEpisodes
+        .map((ep) => -(episodes.indexOf(ep) + 1))
+        .toList();
+
+    // Get thumbnail from latest episode
+    final sortedByDate = List<PodcastItem>.from(bucketEpisodes)
+      ..sort((a, b) {
+        final aPub = a.publishDate;
+        final bPub = b.publishDate;
+        if (aPub == null && bPub == null) return 0;
+        if (aPub == null) return 1;
+        if (bPub == null) return -1;
+        return bPub.compareTo(aPub);
+      });
+    String? thumbnailUrl;
+    for (final ep in sortedByDate) {
+      if (ep.images.isNotEmpty) {
+        thumbnailUrl = ep.images.first.url;
+        break;
+      }
+    }
+
+    playlists.add(
+      SmartPlaylist(
+        id: cfg['id'] as String,
+        displayName: cfg['displayName'] as String,
+        sortKey: playlists.length,
+        episodeIds: allEpisodeIds,
+        thumbnailUrl: thumbnailUrl,
+        contentType: _parseFeedContentType(cfg['contentType'] as String?),
+        yearHeaderMode: _parseFeedYearHeaderMode(
+          cfg['yearHeaderMode'] as String?,
+        ),
+        episodeYearHeaders: cfg['episodeYearHeaders'] as bool? ?? false,
+        groups: groups,
+      ),
+    );
+  }
+
+  if (playlists.isEmpty) return null;
+
+  return SmartPlaylistGrouping(
+    playlists: playlists,
+    ungroupedEpisodeIds: ungroupedIndices,
+    resolverType: 'rss',
+  );
+}
+
+int _findFeedFallbackIndex(List<_FeedPlaylistFilter> filters) {
+  for (var i = filters.length - 1; 0 <= i; i--) {
+    if (filters[i].isFallback) return i;
+  }
+  return -1;
+}
+
+List<SmartPlaylistGroup> _buildFeedGroups(
+  List<PodcastItem> bucketEpisodes,
+  List<PodcastItem> allEpisodes,
+  int? groupNullAs,
+  SmartPlaylistTitleExtractor? titleExtractor,
+) {
+  final grouped = <int, List<PodcastItem>>{};
+  for (final episode in bucketEpisodes) {
+    final seasonNum = episode.seasonNumber;
+    if (seasonNum != null && 1 <= seasonNum) {
+      grouped.putIfAbsent(seasonNum, () => []).add(episode);
+    } else if (groupNullAs != null) {
+      grouped.putIfAbsent(groupNullAs, () => []).add(episode);
+    }
+  }
+  return grouped.entries.map((entry) {
+    final seasonNumber = entry.key;
+    final groupEpisodes = entry.value;
+
+    String displayName = 'Season $seasonNumber';
+    if (titleExtractor != null && groupEpisodes.isNotEmpty) {
+      final first = groupEpisodes.first;
+      final episodeData = SimpleEpisodeData(
+        title: first.title,
+        description: first.description,
+        seasonNumber: first.seasonNumber,
+        episodeNumber: first.episodeNumber,
+      );
+      final extracted = titleExtractor.extract(episodeData);
+      if (extracted != null) {
+        displayName = extracted;
+      }
+    }
+
+    return SmartPlaylistGroup(
+      id: 'season_$seasonNumber',
+      displayName: displayName,
+      sortKey: seasonNumber,
+      episodeIds: groupEpisodes
+          .map((ep) => -(allEpisodes.indexOf(ep) + 1))
+          .toList(),
+    );
+  }).toList()..sort((a, b) => a.sortKey.compareTo(b.sortKey));
+}
+
+SmartPlaylistContentType _parseFeedContentType(String? value) {
+  return switch (value) {
+    'groups' => SmartPlaylistContentType.groups,
+    _ => SmartPlaylistContentType.episodes,
+  };
+}
+
+YearHeaderMode _parseFeedYearHeaderMode(String? value) {
+  return switch (value) {
+    'firstEpisode' => YearHeaderMode.firstEpisode,
+    'perEpisode' => YearHeaderMode.perEpisode,
+    _ => YearHeaderMode.none,
+  };
+}
+
+/// Compiled filter for a single playlist config entry (feed data).
+class _FeedPlaylistFilter {
+  _FeedPlaylistFilter._({
+    this.titleFilter,
+    this.excludeFilter,
+    this.requireFilter,
+  });
+
+  factory _FeedPlaylistFilter.from(Map<String, dynamic> cfg) {
+    final title = cfg['titleFilter'] as String?;
+    final exclude = cfg['excludeFilter'] as String?;
+    final require = cfg['requireFilter'] as String?;
+    return _FeedPlaylistFilter._(
+      titleFilter: title != null ? RegExp(title) : null,
+      excludeFilter: exclude != null ? RegExp(exclude) : null,
+      requireFilter: require != null ? RegExp(require) : null,
+    );
+  }
+
+  final RegExp? titleFilter;
+  final RegExp? excludeFilter;
+  final RegExp? requireFilter;
+
+  bool get isFallback => titleFilter == null;
+
+  bool matches(String title) {
+    if (titleFilter == null) return false;
+    if (!titleFilter!.hasMatch(title)) return false;
+    if (excludeFilter != null && excludeFilter!.hasMatch(title)) {
+      return false;
+    }
+    if (requireFilter != null && !requireFilter!.hasMatch(title)) {
+      return false;
+    }
+    return true;
+  }
 }
 
 /// Groups feed episodes by seasonNumber from RSS metadata.

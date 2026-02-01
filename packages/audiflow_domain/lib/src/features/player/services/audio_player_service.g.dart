@@ -61,7 +61,7 @@ final class AudioPlayerProvider
   }
 }
 
-String _$audioPlayerHash() => r'a0bd7256f42a3a742e3295e76106e9d013150914';
+String _$audioPlayerHash() => r'39aa2c7d111a8c4afdcf352654abd1ca07ad0c40';
 
 /// Provides a stream of playback progress updates.
 ///
