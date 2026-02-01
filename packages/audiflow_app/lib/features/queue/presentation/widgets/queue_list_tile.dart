@@ -10,11 +10,13 @@ class QueueListTile extends StatelessWidget {
   const QueueListTile({
     super.key,
     required this.item,
+    required this.index,
     required this.onRemove,
     required this.onTap,
   });
 
   final QueueItemWithEpisode item;
+  final int index;
   final VoidCallback onRemove;
   final VoidCallback onTap;
 
@@ -35,7 +37,10 @@ class QueueListTile extends StatelessWidget {
       ),
       child: ListTile(
         onTap: onTap,
-        leading: Icon(Symbols.drag_handle, color: colorScheme.onSurfaceVariant),
+        leading: ReorderableDragStartListener(
+          index: index,
+          child: Icon(Symbols.drag_handle, color: colorScheme.onSurfaceVariant),
+        ),
         title: Text(
           item.episode.title,
           maxLines: 2,

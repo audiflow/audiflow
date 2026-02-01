@@ -19,12 +19,18 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
     required this.podcastTitle,
     this.artworkUrl,
     this.progress,
+    this.siblingEpisodeIds,
   });
 
   final Episode episode;
   final String podcastTitle;
   final String? artworkUrl;
   final EpisodeWithProgress? progress;
+
+  /// Episode IDs in the same group (playlist/sub-category), ordered by
+  /// episode number ascending. When provided, adhoc queue is built from
+  /// these IDs only instead of all podcast episodes.
+  final List<int>? siblingEpisodeIds;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -393,29 +399,79 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
         size: 40,
       ),
       color: Theme.of(context).colorScheme.primary,
-      onPressed: () => _onPlayPausePressed(ref, audioUrl, isPlaying),
+      onPressed: () => _onPlayPausePressed(context, ref, audioUrl, isPlaying),
     );
   }
 
-  void _onPlayPausePressed(WidgetRef ref, String url, bool isPlaying) {
+  Future<void> _onPlayPausePressed(
+    BuildContext context,
+    WidgetRef ref,
+    String url,
+    bool isPlaying,
+  ) async {
     final controller = ref.read(audioPlayerControllerProvider.notifier);
+
     if (isPlaying) {
       controller.pause();
-    } else if (controller.isLoaded(url)) {
-      controller.resume();
-    } else {
-      controller.play(
-        url,
-        metadata: NowPlayingInfo(
-          episodeUrl: url,
-          episodeTitle: episode.title,
-          podcastTitle: podcastTitle,
-          artworkUrl: artworkUrl ?? episode.imageUrl,
-          totalDuration: episode.durationMs != null
-              ? Duration(milliseconds: episode.durationMs!)
-              : null,
-        ),
-      );
+      return;
     }
+
+    if (controller.isLoaded(url)) {
+      controller.resume();
+      return;
+    }
+
+    // Starting new playback - handle adhoc queue
+    final queueService = ref.read(queueServiceProvider);
+
+    final shouldConfirm = await queueService.shouldConfirmAdhocReplace();
+    if (shouldConfirm) {
+      if (!context.mounted) return;
+      final confirmed = await _showReplaceQueueDialog(context);
+      if (!confirmed) return;
+    }
+
+    await queueService.createAdhocQueue(
+      startingEpisodeId: episode.id,
+      sourceContext: podcastTitle,
+      siblingEpisodeIds: siblingEpisodeIds,
+    );
+
+    controller.play(
+      url,
+      metadata: NowPlayingInfo(
+        episodeUrl: url,
+        episodeTitle: episode.title,
+        podcastTitle: podcastTitle,
+        artworkUrl: artworkUrl ?? episode.imageUrl,
+        totalDuration: episode.durationMs != null
+            ? Duration(milliseconds: episode.durationMs!)
+            : null,
+      ),
+    );
+  }
+
+  Future<bool> _showReplaceQueueDialog(BuildContext context) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Replace queue?'),
+        content: const Text(
+          'Starting playback will replace your current queue '
+          'with episodes from this list.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Replace'),
+          ),
+        ],
+      ),
+    );
+    return result ?? false;
   }
 }

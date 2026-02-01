@@ -130,6 +130,7 @@ class _SmartPlaylistEpisodesScreenState
                 podcastTitle: widget.podcastTitle,
                 artworkUrl: widget.podcastArtworkUrl,
                 progress: data.progress,
+                siblingEpisodeIds: widget.smartPlaylist.episodeIds,
               );
             },
           ),
@@ -218,6 +219,7 @@ class _SmartPlaylistEpisodesScreenState
         podcastTitle: widget.podcastTitle,
         artworkUrl: widget.podcastArtworkUrl,
         progress: data.progress,
+        siblingEpisodeIds: widget.smartPlaylist.episodeIds,
       ),
       scrollController: _scrollController,
       yearGroupingEnabled: true,
@@ -237,7 +239,8 @@ class _SmartPlaylistEpisodesScreenState
     for (final sub in widget.smartPlaylist.subCategories!) {
       var items = [
         for (final id in sub.episodeIds)
-          if (episodeById.containsKey(id)) episodeById[id]!,
+          if (episodeById.containsKey(id))
+            episodeById[id]!.withSiblingEpisodeIds(sub.episodeIds),
       ];
       if (_sortOrder == SortOrder.ascending) {
         items = items.reversed.toList();
@@ -279,6 +282,7 @@ class _SmartPlaylistEpisodesScreenState
         podcastTitle: widget.podcastTitle,
         artworkUrl: widget.podcastArtworkUrl,
         progress: data.progress,
+        siblingEpisodeIds: data.siblingEpisodeIds,
       ),
       itemExtent: 72.0,
       expandedState: _subCategoryExpanded,

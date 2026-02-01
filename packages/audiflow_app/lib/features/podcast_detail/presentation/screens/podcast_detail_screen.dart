@@ -387,7 +387,12 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
         }
 
         if (playlist.yearGrouped) {
-          return _buildYearGroupedPlaylistSlivers(episodes, theme, sortOrder);
+          return _buildYearGroupedPlaylistSlivers(
+            episodes,
+            playlist,
+            theme,
+            sortOrder,
+          );
         }
 
         if (playlist.subCategories != null &&
@@ -410,6 +415,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
                 podcastTitle: podcast.name,
                 artworkUrl: podcast.artworkUrl,
                 progress: data.progress,
+                siblingEpisodeIds: playlist.episodeIds,
               );
             },
           ),
@@ -436,6 +442,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
 
   List<Widget> _buildYearGroupedPlaylistSlivers(
     List<SmartPlaylistEpisodeData> episodes,
+    SmartPlaylist playlist,
     ThemeData theme,
     SortOrder sortOrder,
   ) {
@@ -465,6 +472,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
         podcastTitle: podcast.name,
         artworkUrl: podcast.artworkUrl,
         progress: data.progress,
+        siblingEpisodeIds: playlist.episodeIds,
       ),
       scrollController: _scrollController,
       yearGroupingEnabled: true,
@@ -486,7 +494,8 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
     for (final sub in playlist.subCategories!) {
       var items = [
         for (final id in sub.episodeIds)
-          if (episodeById.containsKey(id)) episodeById[id]!,
+          if (episodeById.containsKey(id))
+            episodeById[id]!.withSiblingEpisodeIds(sub.episodeIds),
       ];
       if (sortOrder == SortOrder.ascending) {
         items = items.reversed.toList();
@@ -528,6 +537,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
         podcastTitle: podcast.name,
         artworkUrl: podcast.artworkUrl,
         progress: data.progress,
+        siblingEpisodeIds: data.siblingEpisodeIds,
       ),
       itemExtent: 72.0,
       expandedState: _subCategoryExpanded,

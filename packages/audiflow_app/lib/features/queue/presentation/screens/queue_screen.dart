@@ -105,18 +105,16 @@ class QueueScreen extends ConsumerWidget {
             },
             itemBuilder: (context, index) {
               final item = allItems[index];
-              return ReorderableDragStartListener(
+              return QueueListTile(
                 key: ValueKey(item.queueItem.id),
+                item: item,
                 index: index,
-                child: QueueListTile(
-                  item: item,
-                  onRemove: () => ref
-                      .read(queueControllerProvider.notifier)
-                      .removeItem(item.queueItem.id),
-                  onTap: () => ref
-                      .read(queueControllerProvider.notifier)
-                      .skipToItem(item.queueItem.id),
-                ),
+                onRemove: () => ref
+                    .read(queueControllerProvider.notifier)
+                    .removeItem(item.queueItem.id),
+                onTap: () => ref
+                    .read(queueControllerProvider.notifier)
+                    .skipToItem(item.queueItem.id),
               );
             },
           ),

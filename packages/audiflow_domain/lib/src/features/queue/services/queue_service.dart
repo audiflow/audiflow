@@ -88,16 +88,23 @@ class QueueService {
     return _repository.hasManualItems();
   }
 
-  /// Creates an adhoc queue starting from the given episode.
+  /// Creates an adhoc queue of episodes following the given episode.
   ///
-  /// This replaces the entire queue with episodes from the same context
-  /// (e.g., season, podcast). The [startingEpisodeId] is included as the
-  /// first item, followed by subsequent episodes.
+  /// The starting episode is NOT included in the queue (it becomes "now
+  /// playing"). Only subsequent episodes are queued.
+  ///
+  /// When [siblingEpisodeIds] is provided, the queue is built from those
+  /// IDs only (filtered to episodes after the starting one). This is used
+  /// for smart playlists where episodes are grouped by title pattern.
+  ///
+  /// When [siblingEpisodeIds] is null, subsequent episodes are fetched from
+  /// the database by podcast and episode number.
   ///
   /// [sourceContext] describes where the episodes came from (e.g., "Season 2").
   Future<void> createAdhocQueue({
     required int startingEpisodeId,
     required String sourceContext,
+    List<int>? siblingEpisodeIds,
   }) async {
     final startingEpisode = await _episodeRepository.getById(startingEpisodeId);
     if (startingEpisode == null) {
@@ -107,18 +114,25 @@ class QueueService {
       return;
     }
 
-    // Get subsequent episodes with limit of 99 (total adhoc limit is 100 including start)
+    // Get subsequent episodes (episode number ascending, after starting)
     final subsequentEpisodes = await _episodeRepository.getSubsequentEpisodes(
       podcastId: startingEpisode.podcastId,
       afterEpisodeNumber: startingEpisode.episodeNumber,
-      limit: 99,
+      limit: 100,
     );
 
-    // Combine starting episode + subsequent episodes
-    final episodeIds = [
-      startingEpisodeId,
-      ...subsequentEpisodes.map((e) => e.id),
-    ];
+    List<int> episodeIds;
+
+    if (siblingEpisodeIds != null) {
+      // Filter to only episodes in the same group (playlist/sub-category)
+      final allowedIds = siblingEpisodeIds.toSet();
+      episodeIds = subsequentEpisodes
+          .where((e) => allowedIds.contains(e.id))
+          .map((e) => e.id)
+          .toList();
+    } else {
+      episodeIds = subsequentEpisodes.map((e) => e.id).toList();
+    }
 
     await _repository.replaceWithAdhoc(
       episodeIds: episodeIds,
@@ -127,7 +141,7 @@ class QueueService {
 
     _logger.i(
       'Created adhoc queue from "$sourceContext" with ${episodeIds.length} '
-      'episode(s), starting with: ${startingEpisode.title}',
+      'episode(s), after: ${startingEpisode.title}',
     );
   }
 
