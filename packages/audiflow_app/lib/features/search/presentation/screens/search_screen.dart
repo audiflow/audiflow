@@ -116,29 +116,31 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
     return Center(
       key: const Key('search_initial_state'),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.search,
-            size: 64,
-            color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
-          ),
-          const SizedBox(height: Spacing.md),
-          Text(
-            'Search for podcasts',
-            style: theme.textTheme.titleMedium?.copyWith(
-              color: colorScheme.onSurfaceVariant,
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.search,
+              size: 64,
+              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
             ),
-          ),
-          const SizedBox(height: Spacing.sm),
-          Text(
-            'Enter a keyword to discover podcasts',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+            const SizedBox(height: Spacing.md),
+            Text(
+              'Search for podcasts',
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
             ),
-          ),
-        ],
+            const SizedBox(height: Spacing.sm),
+            Text(
+              'Enter a keyword to discover podcasts',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 import '../../styles/spacing.dart';
 
 /// Fixed height for the episode card, used as itemExtent in sliver lists.
-const double episodeCardExtent = 116.0;
+const double episodeCardExtent = 132.0;
 
 const double _thumbnailSize = 64.0;
-const double _mainRowHeight = 64.0;
+const double _mainRowHeight = 80.0;
 const double _actionRowHeight = 36.0;
 const double _playButtonSize = 48.0;
 
@@ -143,61 +143,65 @@ class EpisodeCard extends StatelessWidget {
   Widget _buildCenter(ThemeData theme, ColorScheme colorScheme) {
     final descColor = colorScheme.onSurfaceVariant.withValues(alpha: 0.7);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Title pinned to top.
-        Text(
-          title,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: theme.textTheme.titleSmall?.copyWith(
-            fontWeight: isCurrentEpisode ? FontWeight.bold : FontWeight.normal,
-            color: isCurrentEpisode
-                ? colorScheme.primary
-                : isCompleted
-                ? colorScheme.onSurfaceVariant.withValues(alpha: 0.6)
-                : null,
+    return ClipRect(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Title pinned to top.
+          Text(
+            title,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: isCurrentEpisode
+                  ? FontWeight.bold
+                  : FontWeight.normal,
+              color: isCurrentEpisode
+                  ? colorScheme.primary
+                  : isCompleted
+                  ? colorScheme.onSurfaceVariant.withValues(alpha: 0.6)
+                  : null,
+            ),
           ),
-        ),
-        // Description fills remaining space; naturally hidden when the title
-        // consumes all vertical room (same behaviour as Apple Podcasts).
-        Expanded(
-          child: description != null && description!.isNotEmpty
-              ? Padding(
-                  padding: const EdgeInsets.only(top: 2),
-                  child: Text(
-                    _stripHtml(description!),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: descColor,
+          // Description fills remaining space; naturally hidden when the title
+          // consumes all vertical room (same behaviour as Apple Podcasts).
+          Expanded(
+            child: description != null && description!.isNotEmpty
+                ? Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(
+                      _stripHtml(description!),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: descColor,
+                      ),
                     ),
+                  )
+                : const SizedBox.shrink(),
+          ),
+          // Metadata row pinned to bottom.
+          const SizedBox(height: 3),
+          Row(
+            children: [
+              Flexible(
+                child: Text(
+                  subtitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
                   ),
-                )
-              : const SizedBox.shrink(),
-        ),
-        // Metadata row pinned to bottom.
-        const SizedBox(height: 3),
-        Row(
-          children: [
-            Flexible(
-              child: Text(
-                subtitle,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
                 ),
               ),
-            ),
-            if (isNew) ...[
-              const SizedBox(width: Spacing.sm),
-              _NewBadge(color: colorScheme.primary),
+              if (isNew) ...[
+                const SizedBox(width: Spacing.sm),
+                _NewBadge(color: colorScheme.primary),
+              ],
             ],
-          ],
-        ),
-      ],
+          ),
+        ],
+      ),
     );
   }
 
