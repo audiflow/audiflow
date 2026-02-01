@@ -393,10 +393,26 @@ Future<SmartPlaylistGrouping?> podcastSmartPlaylistsByFeedUrl(
 
 /// Data class containing an episode with its progress information.
 class SmartPlaylistEpisodeData {
-  const SmartPlaylistEpisodeData({required this.episode, this.progress});
+  const SmartPlaylistEpisodeData({
+    required this.episode,
+    this.progress,
+    this.siblingEpisodeIds,
+  });
 
   final Episode episode;
   final EpisodeWithProgress? progress;
+
+  /// Episode IDs in the same group for adhoc queue building.
+  /// Set by the screen when episodes are displayed in a sub-category.
+  final List<int>? siblingEpisodeIds;
+
+  /// Creates a copy with the given [siblingEpisodeIds].
+  SmartPlaylistEpisodeData withSiblingEpisodeIds(List<int> ids) =>
+      SmartPlaylistEpisodeData(
+        episode: episode,
+        progress: progress,
+        siblingEpisodeIds: ids,
+      );
 }
 
 /// Fetches episodes for a smart playlist by their IDs with
