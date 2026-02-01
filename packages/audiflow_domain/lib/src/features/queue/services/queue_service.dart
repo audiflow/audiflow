@@ -203,8 +203,8 @@ class QueueService {
       return null;
     }
 
-    // Remove all items before the target
-    for (var i = 0; i < targetIndex; i++) {
+    // Remove all items up to and including the target
+    for (var i = 0; i <= targetIndex; i++) {
       await _repository.remove(allItems[i].queueItem.id);
     }
 
