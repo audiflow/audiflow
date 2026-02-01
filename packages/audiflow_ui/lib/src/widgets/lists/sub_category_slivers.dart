@@ -14,9 +14,9 @@ import 'year_divider.dart';
 List<Widget> buildSubCategorySlivers<T>({
   required List<SubCategoryData<T>> subCategories,
   required Widget Function(BuildContext, T) itemBuilder,
-  required double itemExtent,
   required Map<String, bool> expandedState,
   required ValueChanged<String> onToggle,
+  required double itemExtent,
 }) {
   return [
     for (final sub in subCategories)
@@ -24,9 +24,9 @@ List<Widget> buildSubCategorySlivers<T>({
         key: ValueKey('sub_${sub.id}'),
         sub: sub,
         itemBuilder: itemBuilder,
-        itemExtent: itemExtent,
         expanded: expandedState[sub.id] ?? false,
         onToggle: () => onToggle(sub.id),
+        itemExtent: itemExtent,
       ),
   ];
 }
@@ -36,16 +36,16 @@ class _SubCategorySliver<T> extends StatelessWidget {
     super.key,
     required this.sub,
     required this.itemBuilder,
-    required this.itemExtent,
     required this.expanded,
     required this.onToggle,
+    required this.itemExtent,
   });
 
   final SubCategoryData<T> sub;
   final Widget Function(BuildContext, T) itemBuilder;
-  final double itemExtent;
   final bool expanded;
   final VoidCallback onToggle;
+  final double itemExtent;
 
   @override
   Widget build(BuildContext context) {

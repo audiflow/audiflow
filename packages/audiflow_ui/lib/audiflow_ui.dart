@@ -10,6 +10,9 @@ export 'src/themes/text_styles.dart';
 export 'src/styles/spacing.dart';
 export 'src/styles/borders.dart';
 
+// Widgets - Cards
+export 'src/widgets/cards/episode_card.dart';
+
 // Widgets - Indicators
 export 'src/widgets/indicators/episode_progress_indicator.dart';
 

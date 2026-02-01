@@ -46,6 +46,12 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
 
   Podcast get podcast => widget.podcast;
 
+  /// RSS feed-level image URL for thumbnail deduplication.
+  String? _feedImageUrl;
+
+  /// Subscription's last refresh timestamp for "new" badge logic.
+  DateTime? _lastRefreshedAt;
+
   @override
   void dispose() {
     _scrollController.dispose();
@@ -214,8 +220,16 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
     ThemeData theme,
     String feedUrl,
   ) {
+    _feedImageUrl = ref
+        .watch(podcastDetailProvider(feedUrl))
+        .value
+        ?.podcast
+        .primaryImage
+        ?.url;
+
     final subscriptionAsync = ref.watch(subscriptionByFeedUrlProvider(feedUrl));
     final subscription = subscriptionAsync.value;
+    _lastRefreshedAt = subscription?.lastRefreshedAt;
 
     final prefsAsync = subscription != null
         ? ref.watch(podcastViewPreferenceControllerProvider(subscription.id))
@@ -410,10 +424,12 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
             itemBuilder: (context, index) {
               final data = sorted[index];
               return SmartPlaylistEpisodeListTile(
+                lastRefreshedAt: _lastRefreshedAt,
                 key: ValueKey(data.episode.id),
                 episode: data.episode,
                 podcastTitle: podcast.name,
                 artworkUrl: podcast.artworkUrl,
+                feedImageUrl: _feedImageUrl,
                 progress: data.progress,
                 siblingEpisodeIds: playlist.episodeIds,
               );
@@ -471,12 +487,13 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
         episode: data.episode,
         podcastTitle: podcast.name,
         artworkUrl: podcast.artworkUrl,
+        feedImageUrl: _feedImageUrl,
         progress: data.progress,
         siblingEpisodeIds: playlist.episodeIds,
       ),
       scrollController: _scrollController,
       yearGroupingEnabled: true,
-      itemExtent: 72.0,
+      itemExtent: episodeCardExtent,
     );
   }
 
@@ -536,14 +553,15 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
         episode: data.episode,
         podcastTitle: podcast.name,
         artworkUrl: podcast.artworkUrl,
+        feedImageUrl: _feedImageUrl,
         progress: data.progress,
         siblingEpisodeIds: data.siblingEpisodeIds,
       ),
-      itemExtent: 72.0,
       expandedState: _subCategoryExpanded,
       onToggle: (id) => setState(() {
         _subCategoryExpanded[id] = !(_subCategoryExpanded[id] ?? false);
       }),
+      itemExtent: episodeCardExtent,
     );
   }
 
@@ -585,10 +603,12 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
                   : null;
 
               return EpisodeListTile(
+                lastRefreshedAt: _lastRefreshedAt,
                 key: ValueKey(episode.guid ?? index),
                 episode: episode,
                 podcastTitle: podcast.name,
                 artworkUrl: podcast.artworkUrl,
+                feedImageUrl: _feedImageUrl,
                 progress: progress,
               );
             },
@@ -644,16 +664,18 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
             ? progressMap[episode.enclosureUrl]
             : null;
         return EpisodeListTile(
+          lastRefreshedAt: _lastRefreshedAt,
           key: ValueKey(episode.guid ?? episode.title),
           episode: episode,
           podcastTitle: podcast.name,
           artworkUrl: podcast.artworkUrl,
+          feedImageUrl: _feedImageUrl,
           progress: progress,
         );
       },
       scrollController: _scrollController,
       yearGroupingEnabled: true,
-      itemExtent: 72.0,
+      itemExtent: episodeCardExtent,
     );
   }
 
