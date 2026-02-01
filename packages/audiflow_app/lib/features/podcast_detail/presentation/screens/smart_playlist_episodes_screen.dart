@@ -204,7 +204,10 @@ class _SmartPlaylistEpisodesScreenState
       final year = data.episode.publishedAt?.year ?? 0;
       byYear.putIfAbsent(year, () => []).add(data);
     }
-    if (_sortOrder == SortOrder.ascending) {
+    // Provider returns episodes sorted by episode number (asc) or publish
+    // date (newest first). When displaying years descending, episodes within
+    // each year should also be newest-first (reversed from number-asc order).
+    if (_sortOrder == SortOrder.descending) {
       for (final key in byYear.keys) {
         byYear[key] = byYear[key]!.reversed.toList();
       }

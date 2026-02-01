@@ -467,7 +467,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
       final year = data.episode.publishedAt?.year ?? 0;
       byYear.putIfAbsent(year, () => []).add(data);
     }
-    if (sortOrder == SortOrder.ascending) {
+    if (sortOrder == SortOrder.descending) {
       for (final key in byYear.keys) {
         byYear[key] = byYear[key]!.reversed.toList();
       }
@@ -649,6 +649,8 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
           dbEpisode?.publishedAt?.year ?? episode.publishDate?.year ?? 0;
       byYear.putIfAbsent(year, () => []).add(episode);
     }
+    // The provider already returns episodes in the requested sort order,
+    // so no per-year reversal is needed.
     final sortedYears = byYear.keys.toList()
       ..sort(
         sortOrder == SortOrder.descending
