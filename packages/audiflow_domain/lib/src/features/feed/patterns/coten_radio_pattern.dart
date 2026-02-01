@@ -37,7 +37,33 @@ const SmartPlaylistPattern cotenRadioPattern = SmartPlaylistPattern(
   resolverType: 'rss',
   config: {
     'groupNullSeasonAs': 0,
-    'yearGroupedPlaylists': {'0': true},
+    'playlists': [
+      {
+        'id': 'regular',
+        'displayName': 'レギュラーシリーズ',
+        'contentType': 'groups',
+        'yearHeaderMode': 'firstEpisode',
+        'episodeYearHeaders': false,
+        'titleFilter': r'【\d+-\d+】',
+        'excludeFilter': r'【COTEN RADIO\s*ショート',
+      },
+      {
+        'id': 'short',
+        'displayName': 'ショートシリーズ',
+        'contentType': 'groups',
+        'yearHeaderMode': 'firstEpisode',
+        'episodeYearHeaders': false,
+        'titleFilter': r'【\d+-\d+】',
+        'requireFilter': r'【COTEN RADIO\s*ショート',
+      },
+      {
+        'id': 'extras',
+        'displayName': 'その他(番外編など)',
+        'contentType': 'groups',
+        'yearHeaderMode': 'perEpisode',
+        'episodeYearHeaders': false,
+      },
+    ],
   },
   customSort: _cotenRadioSort,
   titleExtractor: SmartPlaylistTitleExtractor(

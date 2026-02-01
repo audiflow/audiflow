@@ -32,6 +32,38 @@ void main() {
       expect(cotenRadioPattern.config['groupNullSeasonAs'], 0);
     });
 
+    test('has 3 playlists in config', () {
+      final playlists = cotenRadioPattern.config['playlists'] as List<dynamic>;
+      expect(playlists, hasLength(3));
+    });
+
+    test('regular playlist has titleFilter and excludeFilter', () {
+      final playlists = cotenRadioPattern.config['playlists'] as List<dynamic>;
+      final regular = playlists[0] as Map<String, dynamic>;
+      expect(regular['id'], 'regular');
+      expect(regular['titleFilter'], isNotNull);
+      expect(regular['excludeFilter'], isNotNull);
+      expect(regular.containsKey('requireFilter'), isFalse);
+    });
+
+    test('short playlist has titleFilter and requireFilter', () {
+      final playlists = cotenRadioPattern.config['playlists'] as List<dynamic>;
+      final short = playlists[1] as Map<String, dynamic>;
+      expect(short['id'], 'short');
+      expect(short['titleFilter'], isNotNull);
+      expect(short['requireFilter'], isNotNull);
+      expect(short.containsKey('excludeFilter'), isFalse);
+    });
+
+    test('extras playlist has no filters', () {
+      final playlists = cotenRadioPattern.config['playlists'] as List<dynamic>;
+      final extras = playlists[2] as Map<String, dynamic>;
+      expect(extras['id'], 'extras');
+      expect(extras.containsKey('titleFilter'), isFalse);
+      expect(extras.containsKey('excludeFilter'), isFalse);
+      expect(extras.containsKey('requireFilter'), isFalse);
+    });
+
     test('titleExtractor extracts season name from regular episode', () {
       final episode = SimpleEpisodeData(
         title: '【62-15】何が変わった?【COTEN RADIO リンカン編15】',

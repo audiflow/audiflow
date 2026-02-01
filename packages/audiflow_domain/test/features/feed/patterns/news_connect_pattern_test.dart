@@ -27,16 +27,32 @@ void main() {
       expect(newsConnectPattern.resolverType, 'category');
     });
 
-    test('defines 2 categories', () {
-      final categories =
-          newsConnectPattern.config['categories'] as List<dynamic>;
-      expect(categories, hasLength(2));
+    test('defines 2 playlists', () {
+      final playlists = newsConnectPattern.config['playlists'] as List<dynamic>;
+      expect(playlists, hasLength(2));
     });
 
-    test('daily_news category pattern matches date titles', () {
-      final categories =
-          newsConnectPattern.config['categories'] as List<dynamic>;
-      final dailyNews = categories.first as Map<String, dynamic>;
+    test('by_category playlist has 7 groups', () {
+      final playlists = newsConnectPattern.config['playlists'] as List<dynamic>;
+      final byCategory = playlists[0] as Map<String, dynamic>;
+      expect(byCategory['id'], 'by_category');
+      final groups = byCategory['groups'] as List<dynamic>;
+      expect(groups, hasLength(7));
+    });
+
+    test('by_year playlist has 7 groups', () {
+      final playlists = newsConnectPattern.config['playlists'] as List<dynamic>;
+      final byYear = playlists[1] as Map<String, dynamic>;
+      expect(byYear['id'], 'by_year');
+      final groups = byYear['groups'] as List<dynamic>;
+      expect(groups, hasLength(7));
+    });
+
+    test('daily_news group pattern matches date titles', () {
+      final playlists = newsConnectPattern.config['playlists'] as List<dynamic>;
+      final byCategory = playlists[0] as Map<String, dynamic>;
+      final groups = byCategory['groups'] as List<dynamic>;
+      final dailyNews = groups[0] as Map<String, dynamic>;
       final pattern = RegExp(dailyNews['pattern'] as String);
 
       expect(pattern.hasMatch('【1月29日】EU news'), isTrue);
@@ -44,16 +60,24 @@ void main() {
       expect(pattern.hasMatch('【土曜版 #62】direct prize'), isFalse);
     });
 
-    test('programs category pattern matches non-date titles', () {
-      final categories =
-          newsConnectPattern.config['categories'] as List<dynamic>;
-      final programs = categories[1] as Map<String, dynamic>;
-      final pattern = RegExp(programs['pattern'] as String);
+    test('saturday group pattern matches saturday titles', () {
+      final playlists = newsConnectPattern.config['playlists'] as List<dynamic>;
+      final byCategory = playlists[0] as Map<String, dynamic>;
+      final groups = byCategory['groups'] as List<dynamic>;
+      final saturday = groups[1] as Map<String, dynamic>;
+      final pattern = RegExp(saturday['pattern'] as String);
 
       expect(pattern.hasMatch('【土曜版 #62】direct prize'), isTrue);
-      expect(pattern.hasMatch('【ニュース小話 #200】bonds'), isTrue);
-      // Should not match date pattern
       expect(pattern.hasMatch('【1月29日】EU news'), isFalse);
+    });
+
+    test('other group has no pattern', () {
+      final playlists = newsConnectPattern.config['playlists'] as List<dynamic>;
+      final byCategory = playlists[0] as Map<String, dynamic>;
+      final groups = byCategory['groups'] as List<dynamic>;
+      final other = groups[6] as Map<String, dynamic>;
+      expect(other['id'], 'other');
+      expect(other.containsKey('pattern'), isFalse);
     });
   });
 }
