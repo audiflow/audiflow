@@ -2,38 +2,38 @@ import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  group('SmartPlaylist.yearGrouped', () {
-    test('defaults to false', () {
+  group('SmartPlaylist.yearHeaderMode', () {
+    test('defaults to none', () {
       const playlist = SmartPlaylist(
         id: 'test',
         displayName: 'Test',
         sortKey: 1,
         episodeIds: [],
       );
-      expect(playlist.yearGrouped, isFalse);
+      expect(playlist.yearHeaderMode, YearHeaderMode.none);
     });
 
-    test('can be set to true', () {
+    test('can be set to firstEpisode', () {
       const playlist = SmartPlaylist(
         id: 'test',
         displayName: 'Test',
         sortKey: 1,
         episodeIds: [],
-        yearGrouped: true,
+        yearHeaderMode: YearHeaderMode.firstEpisode,
       );
-      expect(playlist.yearGrouped, isTrue);
+      expect(playlist.yearHeaderMode, YearHeaderMode.firstEpisode);
     });
 
-    test('copyWith preserves yearGrouped', () {
+    test('copyWith preserves yearHeaderMode', () {
       const playlist = SmartPlaylist(
         id: 'test',
         displayName: 'Test',
         sortKey: 1,
         episodeIds: [],
-        yearGrouped: true,
+        yearHeaderMode: YearHeaderMode.perEpisode,
       );
       final copy = playlist.copyWith(displayName: 'Updated');
-      expect(copy.yearGrouped, isTrue);
+      expect(copy.yearHeaderMode, YearHeaderMode.perEpisode);
     });
   });
 }

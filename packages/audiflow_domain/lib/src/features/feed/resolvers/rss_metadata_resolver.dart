@@ -67,7 +67,9 @@ class RssMetadataResolver implements SmartPlaylistResolver {
         displayName: displayName,
         sortKey: seasonNumber,
         episodeIds: playlistEpisodes.map((e) => e.id).toList(),
-        yearGrouped: yearGroupedMap?['$seasonNumber'] == true,
+        yearHeaderMode: yearGroupedMap?['$seasonNumber'] == true
+            ? YearHeaderMode.firstEpisode
+            : YearHeaderMode.none,
       );
     }).toList()..sort((a, b) => a.sortKey.compareTo(b.sortKey));
 

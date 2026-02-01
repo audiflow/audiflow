@@ -155,7 +155,9 @@ Future<SmartPlaylistGrouping?> _buildGroupingFromCache(
       sortKey: entity.sortKey,
       episodeIds: episodeIds,
       thumbnailUrl: entity.thumbnailUrl,
-      yearGrouped: entity.yearGrouped,
+      yearHeaderMode: entity.yearGrouped
+          ? YearHeaderMode.firstEpisode
+          : YearHeaderMode.none,
     );
   }).toList();
 
@@ -225,16 +227,13 @@ SmartPlaylistGrouping? _buildCategoryGroupingFromCache(
     final categoryConfig = categories.firstWhere((c) => c['id'] == matcher.id);
     final subCategoriesConfig =
         categoryConfig['subCategories'] as List<dynamic>?;
-    List<SmartPlaylistSubCategory>? subCategories;
+    List<SmartPlaylistGroup>? groups;
     if (subCategoriesConfig != null) {
       final categoryEpisodes = ids
           .map((id) => episodeById[id])
           .nonNulls
           .toList();
-      subCategories = _resolveSubCategoriesFromConfig(
-        subCategoriesConfig,
-        categoryEpisodes,
-      );
+      groups = _resolveGroupsFromConfig(subCategoriesConfig, categoryEpisodes);
     }
 
     playlists.add(
@@ -244,8 +243,10 @@ SmartPlaylistGrouping? _buildCategoryGroupingFromCache(
         sortKey: entity.sortKey,
         episodeIds: ids,
         thumbnailUrl: entity.thumbnailUrl,
-        yearGrouped: entity.yearGrouped,
-        subCategories: subCategories,
+        yearHeaderMode: entity.yearGrouped
+            ? YearHeaderMode.firstEpisode
+            : YearHeaderMode.none,
+        groups: groups,
       ),
     );
   }
@@ -333,7 +334,7 @@ Future<SmartPlaylistGrouping?> _resolveAndPersistSmartPlaylists(
         sortKey: playlist.sortKey,
         resolverType: result.resolverType,
         thumbnailUrl: Value(thumbnailUrl),
-        yearGrouped: Value(playlist.yearGrouped),
+        yearGrouped: Value(playlist.yearHeaderMode != YearHeaderMode.none),
       ),
     );
   }
@@ -484,8 +485,8 @@ Future<List<SmartPlaylistEpisodeData>> smartPlaylistEpisodes(
   return result;
 }
 
-/// Resolves sub-categories from pattern config for cached rebuilds.
-List<SmartPlaylistSubCategory>? _resolveSubCategoriesFromConfig(
+/// Resolves groups from pattern config for cached rebuilds.
+List<SmartPlaylistGroup>? _resolveGroupsFromConfig(
   List<dynamic> subCategoriesConfig,
   List<Episode> episodes,
 ) {
@@ -516,16 +517,16 @@ List<SmartPlaylistSubCategory>? _resolveSubCategoriesFromConfig(
     }
   }
 
-  final result = <SmartPlaylistSubCategory>[];
+  final result = <SmartPlaylistGroup>[];
   for (final matcher in matchers) {
     final ids = grouped[matcher.id];
     if (ids != null && ids.isNotEmpty) {
       result.add(
-        SmartPlaylistSubCategory(
+        SmartPlaylistGroup(
           id: matcher.id,
           displayName: matcher.displayName,
           episodeIds: ids,
-          yearGrouped: matcher.yearGrouped,
+          yearOverride: matcher.yearGrouped ? YearHeaderMode.perEpisode : null,
         ),
       );
     }
@@ -533,7 +534,7 @@ List<SmartPlaylistSubCategory>? _resolveSubCategoriesFromConfig(
 
   if (otherIds.isNotEmpty) {
     result.add(
-      SmartPlaylistSubCategory(
+      SmartPlaylistGroup(
         id: 'other',
         displayName: 'Other',
         episodeIds: otherIds,

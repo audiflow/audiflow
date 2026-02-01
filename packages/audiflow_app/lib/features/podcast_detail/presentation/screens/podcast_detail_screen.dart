@@ -6,6 +6,7 @@ import 'package:audiflow_domain/audiflow_domain.dart'
         SmartPlaylist,
         SmartPlaylistEpisodeData,
         SortOrder,
+        YearHeaderMode,
         podcastViewPreferenceControllerProvider,
         smartPlaylistEpisodesProvider,
         smartPlaylistPatternByFeedUrlProvider,
@@ -400,7 +401,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
           return [SliverFillRemaining(child: _buildEmptyPlaylistState(theme))];
         }
 
-        if (playlist.yearGrouped) {
+        if (playlist.yearHeaderMode != YearHeaderMode.none) {
           return _buildYearGroupedPlaylistSlivers(
             episodes,
             playlist,
@@ -409,8 +410,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
           );
         }
 
-        if (playlist.subCategories != null &&
-            playlist.subCategories!.isNotEmpty) {
+        if (playlist.groups != null && playlist.groups!.isNotEmpty) {
           return _buildSubCategorySlivers(episodes, playlist, sortOrder);
         }
 
@@ -508,7 +508,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
     }
 
     final subCategoryData = <SubCategoryData<SmartPlaylistEpisodeData>>[];
-    for (final sub in playlist.subCategories!) {
+    for (final sub in playlist.groups!) {
       var items = [
         for (final id in sub.episodeIds)
           if (episodeById.containsKey(id))
@@ -520,7 +520,8 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
 
       Map<int, List<SmartPlaylistEpisodeData>>? byYear;
       List<int>? sortedYears;
-      if (sub.yearGrouped) {
+      final isYearGrouped = sub.yearOverride != null;
+      if (isYearGrouped) {
         byYear = <int, List<SmartPlaylistEpisodeData>>{};
         for (final data in items) {
           final year = data.episode.publishedAt?.year ?? 0;
@@ -539,7 +540,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
           id: sub.id,
           displayName: sub.displayName,
           items: items,
-          yearGrouped: sub.yearGrouped,
+          yearGrouped: isYearGrouped,
           itemsByYear: byYear,
           sortedYears: sortedYears,
         ),

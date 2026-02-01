@@ -614,9 +614,9 @@ SmartPlaylistGrouping? _resolveFromFeedByCategory(
     final categoryConfig = categories.firstWhere((c) => c['id'] == m.id);
     final subCategoriesConfig =
         categoryConfig['subCategories'] as List<dynamic>?;
-    List<SmartPlaylistSubCategory>? subCategories;
+    List<SmartPlaylistGroup>? groups;
     if (subCategoriesConfig != null) {
-      subCategories = _resolveSubCategoriesFromFeed(
+      groups = _resolveGroupsFromFeed(
         subCategoriesConfig,
         playlistEpisodes,
         episodes,
@@ -629,8 +629,10 @@ SmartPlaylistGrouping? _resolveFromFeedByCategory(
       sortKey: m.sortKey,
       episodeIds: episodeIds,
       thumbnailUrl: thumbnailUrl,
-      yearGrouped: m.yearGrouped,
-      subCategories: subCategories,
+      yearHeaderMode: m.yearGrouped
+          ? YearHeaderMode.firstEpisode
+          : YearHeaderMode.none,
+      groups: groups,
     );
   }).toList();
 
@@ -722,8 +724,8 @@ SmartPlaylistGrouping? _resolveFromFeedBySeason(
   );
 }
 
-/// Resolves sub-categories from feed data using pattern config.
-List<SmartPlaylistSubCategory>? _resolveSubCategoriesFromFeed(
+/// Resolves groups from feed data using pattern config.
+List<SmartPlaylistGroup>? _resolveGroupsFromFeed(
   List<dynamic> subCategoriesConfig,
   List<PodcastItem> categoryEpisodes,
   List<PodcastItem> allEpisodes,
@@ -755,12 +757,12 @@ List<SmartPlaylistSubCategory>? _resolveSubCategoriesFromFeed(
     }
   }
 
-  final result = <SmartPlaylistSubCategory>[];
+  final result = <SmartPlaylistGroup>[];
   for (final matcher in matchers) {
     final ids = grouped[matcher.id];
     if (ids != null && ids.isNotEmpty) {
       result.add(
-        SmartPlaylistSubCategory(
+        SmartPlaylistGroup(
           id: matcher.id,
           displayName: matcher.displayName,
           episodeIds: ids,
@@ -771,7 +773,7 @@ List<SmartPlaylistSubCategory>? _resolveSubCategoriesFromFeed(
 
   if (otherIds.isNotEmpty) {
     result.add(
-      SmartPlaylistSubCategory(
+      SmartPlaylistGroup(
         id: 'other',
         displayName: 'Other',
         episodeIds: otherIds,

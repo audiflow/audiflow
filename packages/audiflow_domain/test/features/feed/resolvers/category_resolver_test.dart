@@ -111,7 +111,7 @@ void main() {
       expect(result!.ungroupedEpisodeIds, [2]);
     });
 
-    test('yearGrouped flags are set per category', () {
+    test('yearHeaderMode flags are set per category', () {
       final pattern = _categoryPattern();
       final episodes = [
         _makeEpisode(1, '【1月29日】EU news'),
@@ -127,8 +127,8 @@ void main() {
       final programs = result.playlists.firstWhere(
         (p) => p.id == 'playlist_programs',
       );
-      expect(daily.yearGrouped, isTrue);
-      expect(programs.yearGrouped, isFalse);
+      expect(daily.yearHeaderMode, YearHeaderMode.firstEpisode);
+      expect(programs.yearHeaderMode, YearHeaderMode.none);
     });
 
     test('resolves sub-categories when configured', () {
@@ -164,18 +164,18 @@ void main() {
 
       expect(result, isNotNull);
       final playlist = result!.playlists.first;
-      expect(playlist.subCategories, isNotNull);
-      expect(playlist.subCategories, hasLength(3));
+      expect(playlist.groups, isNotNull);
+      expect(playlist.groups, hasLength(3));
 
-      expect(playlist.subCategories![0].id, 'saturday');
-      expect(playlist.subCategories![0].episodeIds, [1]);
+      expect(playlist.groups![0].id, 'saturday');
+      expect(playlist.groups![0].episodeIds, [1]);
 
-      expect(playlist.subCategories![1].id, 'talk');
-      expect(playlist.subCategories![1].episodeIds, [2]);
+      expect(playlist.groups![1].id, 'talk');
+      expect(playlist.groups![1].episodeIds, [2]);
 
-      // Unmatched sub-category goes to "Other"
-      expect(playlist.subCategories![2].id, 'other');
-      expect(playlist.subCategories![2].episodeIds, [3]);
+      // Unmatched group goes to "Other"
+      expect(playlist.groups![2].id, 'other');
+      expect(playlist.groups![2].episodeIds, [3]);
     });
 
     test('sub-categories are null when not configured', () {
@@ -188,7 +188,7 @@ void main() {
       final daily = result!.playlists.firstWhere(
         (p) => p.id == 'playlist_daily_news',
       );
-      expect(daily.subCategories, isNull);
+      expect(daily.groups, isNull);
     });
 
     test('first match wins when multiple patterns could match', () {

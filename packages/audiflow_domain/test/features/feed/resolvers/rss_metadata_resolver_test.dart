@@ -167,7 +167,7 @@ void main() {
       expect(result!.playlists[0].sortKey, 1); // season number
     });
 
-    test('yearGroupedPlaylists config sets yearGrouped=true', () {
+    test('yearGroupedPlaylists config sets yearHeaderMode', () {
       final pattern = SmartPlaylistPattern(
         id: 'test',
         resolverType: 'rss',
@@ -190,11 +190,11 @@ void main() {
 
       expect(result, isNotNull);
       final playlist0 = result!.playlists.firstWhere((s) => s.id == 'season_0');
-      expect(playlist0.yearGrouped, isTrue);
+      expect(playlist0.yearHeaderMode, YearHeaderMode.firstEpisode);
     });
 
     test('playlists not in yearGroupedPlaylists get '
-        'yearGrouped=false', () {
+        'yearHeaderMode=none', () {
       final pattern = SmartPlaylistPattern(
         id: 'test',
         resolverType: 'rss',
@@ -210,7 +210,7 @@ void main() {
 
       expect(result, isNotNull);
       final playlist1 = result!.playlists.firstWhere((s) => s.id == 'season_1');
-      expect(playlist1.yearGrouped, isFalse);
+      expect(playlist1.yearHeaderMode, YearHeaderMode.none);
     });
 
     test('seasons are sorted by season number', () {

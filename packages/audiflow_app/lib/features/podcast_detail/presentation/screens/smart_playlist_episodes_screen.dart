@@ -110,12 +110,12 @@ class _SmartPlaylistEpisodesScreenState
           return [SliverFillRemaining(child: _buildEmptyState(theme))];
         }
 
-        if (widget.smartPlaylist.yearGrouped) {
+        if (widget.smartPlaylist.yearHeaderMode != YearHeaderMode.none) {
           return _buildYearGroupedSlivers(episodes, theme);
         }
 
-        if (widget.smartPlaylist.subCategories != null &&
-            widget.smartPlaylist.subCategories!.isNotEmpty) {
+        if (widget.smartPlaylist.groups != null &&
+            widget.smartPlaylist.groups!.isNotEmpty) {
           return _buildSubCategorySlivers(episodes);
         }
 
@@ -246,7 +246,7 @@ class _SmartPlaylistEpisodesScreenState
     }
 
     final subCategoryData = <SubCategoryData<SmartPlaylistEpisodeData>>[];
-    for (final sub in widget.smartPlaylist.subCategories!) {
+    for (final sub in widget.smartPlaylist.groups!) {
       var items = [
         for (final id in sub.episodeIds)
           if (episodeById.containsKey(id))
@@ -258,7 +258,8 @@ class _SmartPlaylistEpisodesScreenState
 
       Map<int, List<SmartPlaylistEpisodeData>>? byYear;
       List<int>? sortedYears;
-      if (sub.yearGrouped) {
+      final isYearGrouped = sub.yearOverride != null;
+      if (isYearGrouped) {
         byYear = <int, List<SmartPlaylistEpisodeData>>{};
         for (final data in items) {
           final year = data.episode.publishedAt?.year ?? 0;
@@ -277,7 +278,7 @@ class _SmartPlaylistEpisodesScreenState
           id: sub.id,
           displayName: sub.displayName,
           items: items,
-          yearGrouped: sub.yearGrouped,
+          yearGrouped: isYearGrouped,
           itemsByYear: byYear,
           sortedYears: sortedYears,
         ),

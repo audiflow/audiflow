@@ -82,8 +82,10 @@ class CategoryResolver implements SmartPlaylistResolver {
         displayName: m.displayName,
         sortKey: m.sortKey,
         episodeIds: episodeIds,
-        yearGrouped: m.yearGrouped,
-        subCategories: subCategories,
+        yearHeaderMode: m.yearGrouped
+            ? YearHeaderMode.firstEpisode
+            : YearHeaderMode.none,
+        groups: subCategories,
       );
     }).toList();
 
@@ -98,7 +100,7 @@ class CategoryResolver implements SmartPlaylistResolver {
   ///
   /// Episodes not matching any sub-category pattern are placed into
   /// an implicit "Other" sub-category at the end.
-  List<SmartPlaylistSubCategory>? _resolveSubCategories(
+  List<SmartPlaylistGroup>? _resolveSubCategories(
     List<dynamic> subCategoriesConfig,
     List<Episode> episodes,
   ) {
@@ -129,16 +131,18 @@ class CategoryResolver implements SmartPlaylistResolver {
       }
     }
 
-    final result = <SmartPlaylistSubCategory>[];
+    final result = <SmartPlaylistGroup>[];
     for (final matcher in matchers) {
       final ids = grouped[matcher.id];
       if (ids != null && ids.isNotEmpty) {
         result.add(
-          SmartPlaylistSubCategory(
+          SmartPlaylistGroup(
             id: matcher.id,
             displayName: matcher.displayName,
             episodeIds: ids,
-            yearGrouped: matcher.yearGrouped,
+            yearOverride: matcher.yearGrouped
+                ? YearHeaderMode.perEpisode
+                : null,
           ),
         );
       }
@@ -146,7 +150,7 @@ class CategoryResolver implements SmartPlaylistResolver {
 
     if (otherIds.isNotEmpty) {
       result.add(
-        SmartPlaylistSubCategory(
+        SmartPlaylistGroup(
           id: 'other',
           displayName: 'Other',
           episodeIds: otherIds,
