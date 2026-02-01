@@ -28,6 +28,11 @@ class CategoryResolver implements SmartPlaylistResolver {
   ) {
     if (pattern == null) return null;
 
+    final playlistsRaw = pattern.config['playlists'] as List<dynamic>?;
+    if (playlistsRaw != null && playlistsRaw.isNotEmpty) {
+      return _resolvePlaylists(playlistsRaw, episodes);
+    }
+
     final categoriesRaw = pattern.config['categories'] as List<dynamic>?;
     if (categoriesRaw == null || categoriesRaw.isEmpty) {
       return null;
@@ -159,5 +164,148 @@ class CategoryResolver implements SmartPlaylistResolver {
     }
 
     return result.isEmpty ? null : result;
+  }
+
+  /// Resolves the `playlists` config path.
+  ///
+  /// Every playlist receives ALL episodes; groups within
+  /// each playlist determine how episodes are categorized.
+  SmartPlaylistGrouping? _resolvePlaylists(
+    List<dynamic> playlistsRaw,
+    List<Episode> episodes,
+  ) {
+    final configs = playlistsRaw.cast<Map<String, dynamic>>();
+    final playlists = <SmartPlaylist>[];
+    final ungrouped = <int>{};
+
+    for (var i = 0; i < configs.length; i++) {
+      final config = configs[i];
+      final groups = _resolvePlaylistGroups(config, episodes, ungrouped);
+      final allIds = episodes.map((e) => e.id).toList();
+
+      playlists.add(
+        SmartPlaylist(
+          id: config['id'] as String,
+          displayName: config['displayName'] as String,
+          sortKey: i,
+          episodeIds: allIds,
+          contentType: _parseContentType(config['contentType'] as String?),
+          yearHeaderMode: _parseYearHeaderMode(
+            config['yearHeaderMode'] as String?,
+          ),
+          episodeYearHeaders: config['episodeYearHeaders'] as bool? ?? false,
+          groups: groups,
+        ),
+      );
+    }
+
+    return SmartPlaylistGrouping(
+      playlists: playlists,
+      ungroupedEpisodeIds: ungrouped.toList(),
+      resolverType: type,
+    );
+  }
+
+  /// Groups episodes for a single playlist config.
+  ///
+  /// Episodes not matching any pattern go to the
+  /// fallback group (one without `pattern` key).
+  /// If no fallback exists, unmatched IDs are added
+  /// to [ungroupedOut].
+  List<SmartPlaylistGroup>? _resolvePlaylistGroups(
+    Map<String, dynamic> playlistConfig,
+    List<Episode> episodes,
+    Set<int> ungroupedOut,
+  ) {
+    final groupsRaw = playlistConfig['groups'] as List<dynamic>?;
+    if (groupsRaw == null || groupsRaw.isEmpty) {
+      for (final e in episodes) {
+        ungroupedOut.add(e.id);
+      }
+      return null;
+    }
+
+    final groupConfigs = groupsRaw.cast<Map<String, dynamic>>();
+
+    // Separate pattern groups from fallback
+    final patternGroups = <({RegExp regex, String id, String displayName})>[];
+    String? fallbackId;
+    String? fallbackDisplayName;
+
+    for (final g in groupConfigs) {
+      final patternStr = g['pattern'] as String?;
+      if (patternStr != null) {
+        patternGroups.add((
+          regex: RegExp(patternStr),
+          id: g['id'] as String,
+          displayName: g['displayName'] as String,
+        ));
+      } else {
+        fallbackId = g['id'] as String;
+        fallbackDisplayName = g['displayName'] as String;
+      }
+    }
+
+    final grouped = <String, List<int>>{};
+    final fallbackIds = <int>[];
+
+    for (final episode in episodes) {
+      var matched = false;
+      for (final pg in patternGroups) {
+        if (pg.regex.hasMatch(episode.title)) {
+          grouped.putIfAbsent(pg.id, () => []).add(episode.id);
+          matched = true;
+          break;
+        }
+      }
+      if (!matched) {
+        if (fallbackId != null) {
+          fallbackIds.add(episode.id);
+        } else {
+          ungroupedOut.add(episode.id);
+        }
+      }
+    }
+
+    final result = <SmartPlaylistGroup>[];
+    for (final pg in patternGroups) {
+      final ids = grouped[pg.id];
+      if (ids != null && ids.isNotEmpty) {
+        result.add(
+          SmartPlaylistGroup(
+            id: pg.id,
+            displayName: pg.displayName,
+            episodeIds: ids,
+          ),
+        );
+      }
+    }
+
+    if (fallbackIds.isNotEmpty) {
+      result.add(
+        SmartPlaylistGroup(
+          id: fallbackId!,
+          displayName: fallbackDisplayName!,
+          episodeIds: fallbackIds,
+        ),
+      );
+    }
+
+    return result.isEmpty ? null : result;
+  }
+
+  static SmartPlaylistContentType _parseContentType(String? value) {
+    return switch (value) {
+      'groups' => SmartPlaylistContentType.groups,
+      _ => SmartPlaylistContentType.episodes,
+    };
+  }
+
+  static YearHeaderMode _parseYearHeaderMode(String? value) {
+    return switch (value) {
+      'firstEpisode' => YearHeaderMode.firstEpisode,
+      'perEpisode' => YearHeaderMode.perEpisode,
+      _ => YearHeaderMode.none,
+    };
   }
 }

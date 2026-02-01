@@ -191,6 +191,242 @@ void main() {
       expect(daily.groups, isNull);
     });
 
+    group('playlists config', () {
+      test('all episodes appear in every playlist', () {
+        const pattern = SmartPlaylistPattern(
+          id: 'test_playlists',
+          resolverType: 'category',
+          config: {
+            'playlists': [
+              {
+                'id': 'by_category',
+                'displayName': 'By Category',
+                'contentType': 'groups',
+                'yearHeaderMode': 'none',
+                'episodeYearHeaders': true,
+                'groups': [
+                  {
+                    'id': 'saturday',
+                    'displayName': 'Saturday',
+                    'pattern': r'【土曜版',
+                  },
+                  {
+                    'id': 'news_talk',
+                    'displayName': 'News Talk',
+                    'pattern': r'【ニュース小話',
+                  },
+                  {'id': 'other', 'displayName': 'Other'},
+                ],
+              },
+              {
+                'id': 'by_year',
+                'displayName': 'By Year',
+                'contentType': 'groups',
+                'yearHeaderMode': 'perEpisode',
+                'episodeYearHeaders': false,
+                'groups': [
+                  {
+                    'id': 'saturday',
+                    'displayName': 'Saturday',
+                    'pattern': r'【土曜版',
+                  },
+                  {
+                    'id': 'news_talk',
+                    'displayName': 'News Talk',
+                    'pattern': r'【ニュース小話',
+                  },
+                  {'id': 'other', 'displayName': 'Other'},
+                ],
+              },
+            ],
+          },
+        );
+
+        final episodes = [
+          _makeEpisode(1, '【土曜版 #62】topic'),
+          _makeEpisode(2, '【ニュース小話 #200】bonds'),
+          _makeEpisode(3, '【1月29日】EU news'),
+        ];
+
+        final result = resolver.resolve(episodes, pattern);
+
+        expect(result, isNotNull);
+        expect(result!.playlists, hasLength(2));
+        // All episodes in every playlist
+        expect(result.playlists[0].episodeIds, [1, 2, 3]);
+        expect(result.playlists[1].episodeIds, [1, 2, 3]);
+        // No ungrouped
+        expect(result.ungroupedEpisodeIds, isEmpty);
+      });
+
+      test('groups episodes within each playlist', () {
+        const pattern = SmartPlaylistPattern(
+          id: 'test_playlists',
+          resolverType: 'category',
+          config: {
+            'playlists': [
+              {
+                'id': 'by_category',
+                'displayName': 'By Category',
+                'contentType': 'groups',
+                'yearHeaderMode': 'none',
+                'groups': [
+                  {
+                    'id': 'saturday',
+                    'displayName': 'Saturday',
+                    'pattern': r'【土曜版',
+                  },
+                  {'id': 'other', 'displayName': 'Other'},
+                ],
+              },
+            ],
+          },
+        );
+
+        final episodes = [
+          _makeEpisode(1, '【土曜版 #62】topic'),
+          _makeEpisode(2, '【1月29日】EU news'),
+        ];
+
+        final result = resolver.resolve(episodes, pattern);
+
+        expect(result, isNotNull);
+        final playlist = result!.playlists.first;
+        expect(playlist.groups, hasLength(2));
+        expect(playlist.groups![0].id, 'saturday');
+        expect(playlist.groups![0].episodeIds, [1]);
+        expect(playlist.groups![1].id, 'other');
+        expect(playlist.groups![1].episodeIds, [2]);
+      });
+
+      test('sets contentType and yearHeaderMode', () {
+        const pattern = SmartPlaylistPattern(
+          id: 'test_playlists',
+          resolverType: 'category',
+          config: {
+            'playlists': [
+              {
+                'id': 'p1',
+                'displayName': 'P1',
+                'contentType': 'groups',
+                'yearHeaderMode': 'perEpisode',
+                'episodeYearHeaders': true,
+                'groups': [
+                  {'id': 'all', 'displayName': 'All'},
+                ],
+              },
+            ],
+          },
+        );
+
+        final episodes = [_makeEpisode(1, 'Episode 1')];
+
+        final result = resolver.resolve(episodes, pattern);
+
+        expect(result, isNotNull);
+        final playlist = result!.playlists.first;
+        expect(playlist.contentType, SmartPlaylistContentType.groups);
+        expect(playlist.yearHeaderMode, YearHeaderMode.perEpisode);
+        expect(playlist.episodeYearHeaders, isTrue);
+      });
+
+      test('ungrouped when no fallback group', () {
+        const pattern = SmartPlaylistPattern(
+          id: 'test_playlists',
+          resolverType: 'category',
+          config: {
+            'playlists': [
+              {
+                'id': 'p1',
+                'displayName': 'P1',
+                'contentType': 'groups',
+                'yearHeaderMode': 'none',
+                'groups': [
+                  {
+                    'id': 'saturday',
+                    'displayName': 'Saturday',
+                    'pattern': r'【土曜版',
+                  },
+                ],
+              },
+            ],
+          },
+        );
+
+        final episodes = [
+          _makeEpisode(1, '【土曜版 #62】topic'),
+          _makeEpisode(2, 'No match'),
+        ];
+
+        final result = resolver.resolve(episodes, pattern);
+
+        expect(result, isNotNull);
+        expect(result!.ungroupedEpisodeIds, [2]);
+      });
+
+      test('playlists config takes precedence over categories', () {
+        const pattern = SmartPlaylistPattern(
+          id: 'test_both',
+          resolverType: 'category',
+          config: {
+            'playlists': [
+              {
+                'id': 'p1',
+                'displayName': 'Playlist',
+                'contentType': 'episodes',
+                'yearHeaderMode': 'none',
+                'groups': [
+                  {'id': 'all', 'displayName': 'All'},
+                ],
+              },
+            ],
+            'categories': [
+              {
+                'id': 'cat1',
+                'displayName': 'Cat',
+                'pattern': r'.*',
+                'sortKey': 1,
+              },
+            ],
+          },
+        );
+
+        final episodes = [_makeEpisode(1, 'Episode 1')];
+
+        final result = resolver.resolve(episodes, pattern);
+
+        expect(result, isNotNull);
+        expect(result!.playlists.first.id, 'p1');
+      });
+
+      test('empty groups list returns null', () {
+        const pattern = SmartPlaylistPattern(
+          id: 'test_empty',
+          resolverType: 'category',
+          config: {
+            'playlists': [
+              {
+                'id': 'p1',
+                'displayName': 'P1',
+                'contentType': 'groups',
+                'yearHeaderMode': 'none',
+                'groups': <Map<String, dynamic>>[],
+              },
+            ],
+          },
+        );
+
+        final episodes = [_makeEpisode(1, 'Episode 1')];
+
+        final result = resolver.resolve(episodes, pattern);
+
+        // Playlist still created but with no groups
+        // and episode goes to ungrouped
+        expect(result, isNotNull);
+        expect(result!.ungroupedEpisodeIds, [1]);
+      });
+    });
+
     test('first match wins when multiple patterns could match', () {
       const pattern = SmartPlaylistPattern(
         id: 'overlap',
