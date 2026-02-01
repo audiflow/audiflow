@@ -1,8 +1,11 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
+import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../routing/app_router.dart';
 import '../widgets/smart_playlist_episode_list_tile.dart';
 
 /// Screen showing episodes within a single smart playlist.
@@ -86,7 +89,12 @@ class _SmartPlaylistEpisodesScreenState
                 vertical: Spacing.sm,
               ),
               child: Text(
-                '${widget.smartPlaylist.episodeCount} episodes',
+                widget.smartPlaylist.contentType ==
+                        SmartPlaylistContentType.groups
+                    ? '${widget.smartPlaylist.groups?.length ?? 0}'
+                          ' groups'
+                    : '${widget.smartPlaylist.episodeCount}'
+                          ' episodes',
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: colorScheme.onSurfaceVariant,
                 ),
@@ -100,6 +108,11 @@ class _SmartPlaylistEpisodesScreenState
   }
 
   List<Widget> _buildEpisodeList(BuildContext context, ThemeData theme) {
+    if (widget.smartPlaylist.contentType == SmartPlaylistContentType.groups &&
+        widget.smartPlaylist.groups != null) {
+      return _buildGroupList(context, theme);
+    }
+
     final episodesAsync = ref.watch(
       smartPlaylistEpisodesProvider(widget.smartPlaylist.episodeIds),
     );
@@ -304,6 +317,205 @@ class _SmartPlaylistEpisodesScreenState
     );
   }
 
+  List<Widget> _buildGroupList(BuildContext context, ThemeData theme) {
+    final groups = widget.smartPlaylist.groups!;
+
+    if (widget.smartPlaylist.yearHeaderMode == YearHeaderMode.none) {
+      return [_buildFlatGroupSliver(groups, theme)];
+    }
+
+    // Need episodes to determine years for groups.
+    final episodesAsync = ref.watch(
+      smartPlaylistEpisodesProvider(widget.smartPlaylist.episodeIds),
+    );
+
+    return episodesAsync.when(
+      data: (episodes) {
+        final episodeMap = <int, SmartPlaylistEpisodeData>{};
+        for (final ep in episodes) {
+          episodeMap[ep.episode.id] = ep;
+        }
+        return _buildYearGroupedGroupList(groups, episodeMap, theme);
+      },
+      loading: () => [
+        const SliverToBoxAdapter(
+          child: Padding(
+            padding: EdgeInsets.all(Spacing.lg),
+            child: Center(child: CircularProgressIndicator()),
+          ),
+        ),
+      ],
+      error: (e, _) => [
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.all(Spacing.lg),
+            child: Center(child: Text('Failed to load: $e')),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFlatGroupSliver(
+    List<SmartPlaylistGroup> groups,
+    ThemeData theme,
+  ) {
+    final sorted = _sortOrder == SortOrder.ascending
+        ? groups.reversed.toList()
+        : groups;
+
+    return SliverList.builder(
+      itemCount: sorted.length,
+      itemBuilder: (context, index) {
+        final group = sorted[index];
+        return _SmartPlaylistGroupCard(
+          group: group,
+          thumbnailUrl: group.thumbnailUrl,
+          onTap: () => _navigateToGroup(group),
+        );
+      },
+    );
+  }
+
+  List<Widget> _buildYearGroupedGroupList(
+    List<SmartPlaylistGroup> groups,
+    Map<int, SmartPlaylistEpisodeData> episodeMap,
+    ThemeData theme,
+  ) {
+    final mode = widget.smartPlaylist.yearHeaderMode;
+
+    if (mode == YearHeaderMode.firstEpisode) {
+      return _buildFirstEpisodeYearGroups(groups, episodeMap, theme);
+    }
+
+    // perEpisode mode
+    return _buildPerEpisodeYearGroups(groups, episodeMap, theme);
+  }
+
+  List<Widget> _buildFirstEpisodeYearGroups(
+    List<SmartPlaylistGroup> groups,
+    Map<int, SmartPlaylistEpisodeData> episodeMap,
+    ThemeData theme,
+  ) {
+    final byYear = <int, List<SmartPlaylistGroup>>{};
+    for (final group in groups) {
+      var year = 0;
+      if (group.episodeIds.isNotEmpty) {
+        final firstId = group.episodeIds.first;
+        final ep = episodeMap[firstId];
+        year = ep?.episode.publishedAt?.year ?? 0;
+      }
+      byYear.putIfAbsent(year, () => []).add(group);
+    }
+
+    if (_sortOrder == SortOrder.descending) {
+      for (final key in byYear.keys) {
+        byYear[key] = byYear[key]!.reversed.toList();
+      }
+    }
+
+    final sortedYears = byYear.keys.toList()
+      ..sort(
+        _sortOrder == SortOrder.descending
+            ? (a, b) => b.compareTo(a)
+            : (a, b) => a.compareTo(b),
+      );
+
+    final itemsByYear = <int, List<SmartPlaylistGroup>>{};
+    for (final year in sortedYears) {
+      itemsByYear[year] = byYear[year]!;
+    }
+
+    return buildYearGroupedSlivers<SmartPlaylistGroup>(
+      itemsByYear: itemsByYear,
+      sortedYears: sortedYears,
+      itemBuilder: (context, group) => _SmartPlaylistGroupCard(
+        group: group,
+        thumbnailUrl: group.thumbnailUrl,
+        onTap: () => _navigateToGroup(group),
+      ),
+      scrollController: _scrollController,
+      yearGroupingEnabled: true,
+      itemExtent: _groupCardExtent,
+    );
+  }
+
+  List<Widget> _buildPerEpisodeYearGroups(
+    List<SmartPlaylistGroup> groups,
+    Map<int, SmartPlaylistEpisodeData> episodeMap,
+    ThemeData theme,
+  ) {
+    final byYear = <int, List<(SmartPlaylistGroup, List<int>)>>{};
+    for (final group in groups) {
+      final yearIds = <int, List<int>>{};
+      for (final id in group.episodeIds) {
+        final ep = episodeMap[id];
+        final year = ep?.episode.publishedAt?.year ?? 0;
+        yearIds.putIfAbsent(year, () => []).add(id);
+      }
+      for (final entry in yearIds.entries) {
+        byYear.putIfAbsent(entry.key, () => []).add((group, entry.value));
+      }
+    }
+
+    final sortedYears = byYear.keys.toList()
+      ..sort(
+        _sortOrder == SortOrder.descending
+            ? (a, b) => b.compareTo(a)
+            : (a, b) => a.compareTo(b),
+      );
+
+    // Flatten into year-keyed group cards.
+    final itemsByYear = <int, List<_YearFilteredGroup>>{};
+    for (final year in sortedYears) {
+      itemsByYear[year] = byYear[year]!
+          .map(
+            (pair) =>
+                _YearFilteredGroup(group: pair.$1, filteredEpisodeIds: pair.$2),
+          )
+          .toList();
+    }
+
+    return buildYearGroupedSlivers<_YearFilteredGroup>(
+      itemsByYear: itemsByYear,
+      sortedYears: sortedYears,
+      itemBuilder: (context, item) => _SmartPlaylistGroupCard(
+        group: item.group,
+        thumbnailUrl: item.group.thumbnailUrl,
+        episodeCount: item.filteredEpisodeIds.length,
+        onTap: () => _navigateToGroup(
+          item.group,
+          filteredEpisodeIds: item.filteredEpisodeIds,
+        ),
+      ),
+      scrollController: _scrollController,
+      yearGroupingEnabled: true,
+      itemExtent: _groupCardExtent,
+    );
+  }
+
+  void _navigateToGroup(
+    SmartPlaylistGroup group, {
+    List<int>? filteredEpisodeIds,
+  }) {
+    final uri = GoRouterState.of(context).uri;
+    context.go(
+      '$uri/${AppRoutes.smartPlaylistGroupEpisodesPath}'.replaceFirst(
+        ':groupId',
+        group.id,
+      ),
+      extra: <String, dynamic>{
+        'group': group,
+        'smartPlaylist': widget.smartPlaylist,
+        'podcastTitle': widget.podcastTitle,
+        'podcastArtworkUrl': widget.podcastArtworkUrl,
+        'feedImageUrl': widget.feedImageUrl,
+        'lastRefreshedAt': widget.lastRefreshedAt,
+        'filteredEpisodeIds': filteredEpisodeIds,
+      },
+    );
+  }
+
   Widget _buildEmptyState(ThemeData theme) {
     final colorScheme = theme.colorScheme;
 
@@ -408,6 +620,124 @@ class _SmartPlaylistHeader extends StatelessWidget {
         Icons.folder_outlined,
         size: 40,
         color: colorScheme.onSurfaceVariant,
+      ),
+    );
+  }
+}
+
+/// Height of a group card for fixed-extent lists.
+const double _groupCardExtent = 96.0;
+
+/// Helper for perEpisode year mode to carry filtered IDs.
+class _YearFilteredGroup {
+  const _YearFilteredGroup({
+    required this.group,
+    required this.filteredEpisodeIds,
+  });
+
+  final SmartPlaylistGroup group;
+  final List<int> filteredEpisodeIds;
+}
+
+/// Card displaying a smart playlist group.
+class _SmartPlaylistGroupCard extends StatelessWidget {
+  const _SmartPlaylistGroupCard({
+    required this.group,
+    this.thumbnailUrl,
+    this.episodeCount,
+    this.onTap,
+  });
+
+  final SmartPlaylistGroup group;
+  final String? thumbnailUrl;
+
+  /// Override episode count (for perEpisode year mode).
+  final int? episodeCount;
+  final VoidCallback? onTap;
+
+  static const _thumbnailSize = 72.0;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final count = episodeCount ?? group.episodeCount;
+
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: Spacing.md,
+          vertical: Spacing.sm,
+        ),
+        child: Row(
+          children: [
+            _buildThumbnail(colorScheme),
+            const SizedBox(width: Spacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    group.displayName,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: Spacing.xs),
+                  Text(
+                    '$count episodes',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, color: colorScheme.onSurfaceVariant),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildThumbnail(ColorScheme colorScheme) {
+    if (thumbnailUrl != null) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: ExtendedImage.network(
+          thumbnailUrl!,
+          width: _thumbnailSize,
+          height: _thumbnailSize,
+          fit: BoxFit.cover,
+          cache: true,
+          loadStateChanged: (state) {
+            if (state.extendedImageLoadState == LoadState.failed) {
+              return _buildPlaceholder(colorScheme);
+            }
+            return null;
+          },
+        ),
+      );
+    }
+    return _buildPlaceholder(colorScheme);
+  }
+
+  Widget _buildPlaceholder(ColorScheme colorScheme) {
+    return Container(
+      width: _thumbnailSize,
+      height: _thumbnailSize,
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Icon(
+        Icons.folder_outlined,
+        size: 32,
+        color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
       ),
     );
   }

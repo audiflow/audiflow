@@ -6,6 +6,7 @@ import '../features/library/presentation/screens/library_screen.dart';
 import '../features/podcast_detail/presentation/screens/episode_detail_screen.dart';
 import '../features/podcast_detail/presentation/screens/podcast_detail_screen.dart';
 import '../features/podcast_detail/presentation/screens/smart_playlist_episodes_screen.dart';
+import '../features/podcast_detail/presentation/screens/smart_playlist_group_episodes_screen.dart';
 import '../features/queue/presentation/screens/queue_screen.dart';
 import '../features/search/presentation/screens/search_screen.dart';
 import '../features/settings/presentation/screens/settings_screen.dart';
@@ -22,6 +23,7 @@ class AppRoutes {
   static const String podcastDetail = '/search/podcast';
   static const String smartPlaylistEpisodes = 'smart-playlist/:playlistId';
   static const String episodeDetail = 'episode/:episodeGuid';
+  static const String smartPlaylistGroupEpisodesPath = 'group/:groupId';
 }
 
 /// Navigator keys for each tab branch.
@@ -70,6 +72,13 @@ GoRouter createAppRouter() {
                         path: AppRoutes.smartPlaylistEpisodes,
                         builder: (context, state) =>
                             _buildSmartPlaylistEpisodesScreen(state),
+                        routes: [
+                          GoRoute(
+                            path: AppRoutes.smartPlaylistGroupEpisodesPath,
+                            builder: (context, state) =>
+                                _buildGroupEpisodesScreen(state),
+                          ),
+                        ],
                       ),
                       GoRoute(
                         path: AppRoutes.episodeDetail,
@@ -98,6 +107,13 @@ GoRouter createAppRouter() {
                         path: AppRoutes.smartPlaylistEpisodes,
                         builder: (context, state) =>
                             _buildSmartPlaylistEpisodesScreen(state),
+                        routes: [
+                          GoRoute(
+                            path: AppRoutes.smartPlaylistGroupEpisodesPath,
+                            builder: (context, state) =>
+                                _buildGroupEpisodesScreen(state),
+                          ),
+                        ],
                       ),
                       GoRoute(
                         path: AppRoutes.episodeDetail,
@@ -200,6 +216,30 @@ Widget _buildEpisodeDetailScreen(GoRouterState state) {
     podcastTitle: podcastTitle,
     artworkUrl: artworkUrl,
     progress: progress,
+  );
+}
+
+/// Builds the group episodes screen from route state.
+Widget _buildGroupEpisodesScreen(GoRouterState state) {
+  final extra = state.extra as Map<String, dynamic>?;
+  if (extra == null) {
+    return const _SmartPlaylistNotFoundScreen();
+  }
+
+  final group = extra['group'] as SmartPlaylistGroup?;
+  final parentPlaylist = extra['smartPlaylist'] as SmartPlaylist?;
+  if (group == null || parentPlaylist == null) {
+    return const _SmartPlaylistNotFoundScreen();
+  }
+
+  return SmartPlaylistGroupEpisodesScreen(
+    group: group,
+    parentPlaylist: parentPlaylist,
+    podcastTitle: extra['podcastTitle'] as String? ?? '',
+    podcastArtworkUrl: extra['podcastArtworkUrl'] as String?,
+    feedImageUrl: extra['feedImageUrl'] as String?,
+    lastRefreshedAt: extra['lastRefreshedAt'] as DateTime?,
+    filteredEpisodeIds: extra['filteredEpisodeIds'] as List<int>?,
   );
 }
 
