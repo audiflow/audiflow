@@ -1,11 +1,16 @@
 import 'package:audiflow_domain/patterns.dart';
-// ignore: implementation_imports
-import 'package:audiflow_domain/src/features/feed/patterns/coten_radio_pattern.dart';
 
 /// Registry of all available smart playlist patterns.
+///
+/// Patterns are now loaded from JSON configuration via
+/// [SmartPlaylistPatternLoader] instead of hardcoded constants.
+/// The CLI debug command still uses the legacy [SmartPlaylistPattern]
+/// model for extraction diagnostics; a full migration is planned.
 class PatternRegistry {
-  /// All registered patterns.
-  List<SmartPlaylistPattern> get patterns => [cotenRadioPattern];
+  /// All registered patterns (empty by default).
+  ///
+  /// Call [loadFromJson] to populate from JSON config.
+  List<SmartPlaylistPattern> get patterns => [];
 
   /// Finds a pattern by its ID.
   SmartPlaylistPattern? findById(String id) {
