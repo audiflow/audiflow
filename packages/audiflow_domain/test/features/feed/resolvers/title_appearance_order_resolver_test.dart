@@ -24,7 +24,7 @@ void main() {
       expect(resolver.type, 'title_appearance');
     });
 
-    test('returns null when no pattern provided', () {
+    test('returns null when no definition provided', () {
       final episodes = [
         _makeEpisode(1, '[Rome 1] First', DateTime(2024, 1, 1)),
       ];
@@ -33,11 +33,18 @@ void main() {
       expect(result, isNull);
     });
 
-    test('groups by first appearance order', () {
-      final pattern = SmartPlaylistPattern(
+    test('groups by first appearance order using group pattern', () {
+      const definition = SmartPlaylistDefinition(
         id: 'test',
+        displayName: 'Test',
         resolverType: 'title_appearance',
-        config: {'pattern': r'\[(\w+)\s+\d+\]'},
+        groups: [
+          SmartPlaylistGroupDef(
+            id: 'extract',
+            displayName: 'Extract',
+            pattern: r'\[(\w+)\s+\d+\]',
+          ),
+        ],
       );
 
       // Episodes in feed order (newest first typically)
@@ -50,7 +57,7 @@ void main() {
         _makeEpisode(1, '[Rome 1] First Steps', DateTime(2024, 1, 1)),
       ];
 
-      final result = resolver.resolve(episodes, pattern);
+      final result = resolver.resolve(episodes, definition);
 
       expect(result, isNotNull);
       expect(result!.playlists.length, 3);
@@ -70,10 +77,17 @@ void main() {
     });
 
     test('non-matching episodes go to ungrouped', () {
-      final pattern = SmartPlaylistPattern(
+      const definition = SmartPlaylistDefinition(
         id: 'test',
+        displayName: 'Test',
         resolverType: 'title_appearance',
-        config: {'pattern': r'\[(\w+)\s+\d+\]'},
+        groups: [
+          SmartPlaylistGroupDef(
+            id: 'extract',
+            displayName: 'Extract',
+            pattern: r'\[(\w+)\s+\d+\]',
+          ),
+        ],
       );
 
       final episodes = [
@@ -81,17 +95,24 @@ void main() {
         _makeEpisode(2, 'Bonus Episode', DateTime(2024, 1, 5)), // No match
       ];
 
-      final result = resolver.resolve(episodes, pattern);
+      final result = resolver.resolve(episodes, definition);
 
       expect(result, isNotNull);
       expect(result!.ungroupedEpisodeIds, [2]);
     });
 
     test('returns null when no matches found', () {
-      final pattern = SmartPlaylistPattern(
+      const definition = SmartPlaylistDefinition(
         id: 'test',
+        displayName: 'Test',
         resolverType: 'title_appearance',
-        config: {'pattern': r'\[(\w+)\s+\d+\]'},
+        groups: [
+          SmartPlaylistGroupDef(
+            id: 'extract',
+            displayName: 'Extract',
+            pattern: r'\[(\w+)\s+\d+\]',
+          ),
+        ],
       );
 
       final episodes = [
@@ -99,7 +120,7 @@ void main() {
         _makeEpisode(2, 'Another One', DateTime(2024, 1, 2)),
       ];
 
-      final result = resolver.resolve(episodes, pattern);
+      final result = resolver.resolve(episodes, definition);
       expect(result, isNull);
     });
   });

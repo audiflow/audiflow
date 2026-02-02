@@ -2,9 +2,9 @@ import '../patterns/pattern_registry.dart';
 
 /// Command to list all available patterns.
 class PatternListCommand {
-  PatternListCommand([StringSink? sink])
+  PatternListCommand({StringSink? sink, PatternRegistry? registry})
     : _sink = sink ?? StringBuffer(),
-      _registry = PatternRegistry();
+      _registry = registry ?? PatternRegistry();
 
   final StringSink _sink;
   final PatternRegistry _registry;

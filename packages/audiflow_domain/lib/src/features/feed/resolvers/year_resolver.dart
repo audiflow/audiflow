@@ -1,7 +1,7 @@
 import '../../../common/database/app_database.dart';
 import '../extensions/episode_extensions.dart';
 import '../models/smart_playlist.dart';
-import '../models/smart_playlist_pattern.dart';
+import '../models/smart_playlist_definition.dart';
 import '../models/smart_playlist_sort.dart';
 import '../models/smart_playlist_title_extractor.dart';
 import 'smart_playlist_resolver.dart';
@@ -20,7 +20,7 @@ class YearResolver implements SmartPlaylistResolver {
   @override
   SmartPlaylistGrouping? resolve(
     List<Episode> episodes,
-    SmartPlaylistPattern? pattern,
+    SmartPlaylistDefinition? definition,
   ) {
     final grouped = <int, List<Episode>>{};
     final ungrouped = <int>[];
@@ -39,7 +39,7 @@ class YearResolver implements SmartPlaylistResolver {
       return null;
     }
 
-    final titleExtractor = pattern?.titleExtractor;
+    final titleExtractor = definition?.titleExtractor;
 
     final playlists = grouped.entries.map((entry) {
       final playlistEpisodes = entry.value;

@@ -15,7 +15,7 @@ class TestSmartPlaylistResolver implements SmartPlaylistResolver {
   @override
   SmartPlaylistGrouping? resolve(
     List<Episode> episodes,
-    SmartPlaylistPattern? pattern,
+    SmartPlaylistDefinition? definition,
   ) {
     if (episodes.isEmpty) return null;
     return SmartPlaylistGrouping(

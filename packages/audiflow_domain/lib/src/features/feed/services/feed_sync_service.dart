@@ -129,11 +129,14 @@ class FeedSyncService {
       // Get known GUIDs for early termination
       final knownGuids = await episodeRepo.getGuidsByPodcastId(sub.id);
 
-      // Look up smart playlist extractor
-      final pattern = _ref.read(
+      // Look up smart playlist extractor from pattern config
+      final patternConfig = _ref.read(
         smartPlaylistPatternByFeedUrlProvider(sub.feedUrl),
       );
-      final extractor = pattern?.smartPlaylistEpisodeExtractor;
+      final extractor = patternConfig?.playlists
+          .map((d) => d.smartPlaylistEpisodeExtractor)
+          .nonNulls
+          .firstOrNull;
 
       // Parse with progress and batch storage
       var newEpisodeCount = 0;

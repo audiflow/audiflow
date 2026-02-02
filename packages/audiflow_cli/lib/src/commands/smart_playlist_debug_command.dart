@@ -14,9 +14,9 @@ import '../reporters/table_reporter.dart';
 /// Command to debug smart playlist extraction against
 /// a live RSS feed.
 class SmartPlaylistDebugCommand {
-  SmartPlaylistDebugCommand([StringSink? sink])
+  SmartPlaylistDebugCommand({StringSink? sink, PatternRegistry? registry})
     : _sink = sink ?? StringBuffer(),
-      _registry = PatternRegistry();
+      _registry = registry ?? PatternRegistry();
 
   final StringSink _sink;
   final PatternRegistry _registry;
@@ -64,13 +64,20 @@ class SmartPlaylistDebugCommand {
     String? patternId,
     bool json = false,
   }) async {
-    // Find pattern
-    final pattern = patternId != null
+    // Find pattern config
+    final config = patternId != null
         ? _registry.findById(patternId)
         : _registry.detectFromUrl(feedUrl);
 
-    if (pattern == null) {
+    if (config == null) {
       _sink.writeln('Error: No pattern found for feed');
+      return 2;
+    }
+
+    // Use the first playlist definition for extraction.
+    final definition = config.playlists.firstOrNull;
+    if (definition == null) {
+      _sink.writeln('Error: Pattern has no playlist definitions');
       return 2;
     }
 
@@ -81,7 +88,7 @@ class SmartPlaylistDebugCommand {
 
     for (final item in items) {
       final episode = toEpisode(item);
-      final result = _extractWithDiagnostics(episode, pattern);
+      final result = _extractWithDiagnostics(episode, definition);
       results.add(result);
 
       if (result.success) {
@@ -94,7 +101,7 @@ class SmartPlaylistDebugCommand {
     // Report
     if (json) {
       final reporter = JsonReporter(_sink);
-      reporter.start(feedUrl: feedUrl, patternId: pattern.id);
+      reporter.start(feedUrl: feedUrl, patternId: config.id);
       for (final result in results) {
         reporter.addResult(result);
       }
@@ -103,7 +110,7 @@ class SmartPlaylistDebugCommand {
       final reporter = TableReporter(_sink);
       reporter.writeHeader(
         feedUrl: feedUrl,
-        patternId: pattern.id,
+        patternId: config.id,
         episodeCount: items.length,
       );
       for (final result in results) {
@@ -121,7 +128,7 @@ class SmartPlaylistDebugCommand {
 
   ExtractionResult _extractWithDiagnostics(
     EpisodeData episode,
-    SmartPlaylistPattern pattern,
+    SmartPlaylistDefinition definition,
   ) {
     String? extractedTitle;
     int? extractedEpisodeNumber;
@@ -131,17 +138,17 @@ class SmartPlaylistDebugCommand {
     String? playlistEpisodeError;
 
     // Extract title
-    if (pattern.titleExtractor != null) {
-      final diagnostics = TitleExtractorDiagnostics(pattern.titleExtractor!);
+    if (definition.titleExtractor != null) {
+      final diagnostics = TitleExtractorDiagnostics(definition.titleExtractor!);
       final result = diagnostics.run(episode);
       extractedTitle = result.extractedValue;
       titleError = result.error;
     }
 
     // Extract episode number (legacy extractor)
-    if (pattern.episodeNumberExtractor != null) {
+    if (definition.episodeNumberExtractor != null) {
       final diagnostics = EpisodeExtractorDiagnostics(
-        pattern.episodeNumberExtractor!,
+        definition.episodeNumberExtractor!,
       );
       final result = diagnostics.run(episode);
       extractedEpisodeNumber = result.extractedValue;
@@ -149,9 +156,9 @@ class SmartPlaylistDebugCommand {
     }
 
     // Extract season+episode from title prefix
-    if (pattern.smartPlaylistEpisodeExtractor != null) {
+    if (definition.smartPlaylistEpisodeExtractor != null) {
       final diagnostics = SmartPlaylistEpisodeExtractorDiagnostics(
-        pattern.smartPlaylistEpisodeExtractor!,
+        definition.smartPlaylistEpisodeExtractor!,
       );
       final result = diagnostics.run(episode);
       if (result.hasValues) {
@@ -176,8 +183,8 @@ class SmartPlaylistDebugCommand {
       extractedSeasonNumber: extractedSeasonNumber,
       diagnostics: hasError
           ? ExtractionDiagnostics(
-              titlePattern: pattern.titleExtractor?.pattern,
-              fallbackValue: pattern.titleExtractor?.fallbackValue,
+              titlePattern: definition.titleExtractor?.pattern,
+              fallbackValue: definition.titleExtractor?.fallbackValue,
               error: error ?? 'extraction failed',
             )
           : null,

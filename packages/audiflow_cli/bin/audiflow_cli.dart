@@ -89,7 +89,7 @@ Future<void> _runPlaylistDebug(ArgResults command) async {
   final json = command['json'] as bool;
   final patternId = command['pattern'] as String?;
 
-  final cmd = SmartPlaylistDebugCommand(stdout);
+  final cmd = SmartPlaylistDebugCommand(sink: stdout);
   final exitCode = await cmd.run(
     feedUrl: feedUrl,
     patternId: patternId,
@@ -134,7 +134,7 @@ void _runPatternTest(ArgResults command) {
 }
 
 void _runPatternList() {
-  final cmd = PatternListCommand(stdout);
+  final cmd = PatternListCommand(sink: stdout);
   final exitCode = cmd.run();
   exit(exitCode);
 }

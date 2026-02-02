@@ -1,14 +1,27 @@
 import 'package:audiflow_domain/patterns.dart';
-// ignore: implementation_imports
-import 'package:audiflow_domain/src/features/feed/patterns/coten_radio_pattern.dart';
 
 /// Registry of all available smart playlist patterns.
+///
+/// Patterns are loaded from JSON configuration via
+/// [SmartPlaylistPatternLoader].
 class PatternRegistry {
-  /// All registered patterns.
-  List<SmartPlaylistPattern> get patterns => [cotenRadioPattern];
+  /// Creates a registry with optional pre-loaded patterns.
+  PatternRegistry([List<SmartPlaylistPatternConfig>? patterns])
+    : _patterns = patterns ?? [];
 
-  /// Finds a pattern by its ID.
-  SmartPlaylistPattern? findById(String id) {
+  /// Creates a registry from a JSON string.
+  factory PatternRegistry.fromJson(String jsonString) {
+    final patterns = SmartPlaylistPatternLoader.parse(jsonString);
+    return PatternRegistry(patterns);
+  }
+
+  final List<SmartPlaylistPatternConfig> _patterns;
+
+  /// All registered pattern configs.
+  List<SmartPlaylistPatternConfig> get patterns => _patterns;
+
+  /// Finds a pattern config by its ID.
+  SmartPlaylistPatternConfig? findById(String id) {
     for (final pattern in patterns) {
       if (pattern.id == id) {
         return pattern;
@@ -17,8 +30,8 @@ class PatternRegistry {
     return null;
   }
 
-  /// Detects a pattern from a feed URL.
-  SmartPlaylistPattern? detectFromUrl(String feedUrl) {
+  /// Detects a pattern config from a feed URL.
+  SmartPlaylistPatternConfig? detectFromUrl(String feedUrl) {
     for (final pattern in patterns) {
       if (pattern.matchesPodcast(null, feedUrl)) {
         return pattern;
@@ -27,6 +40,6 @@ class PatternRegistry {
     return null;
   }
 
-  /// Lists all patterns with their metadata.
-  List<SmartPlaylistPattern> listPatterns() => patterns;
+  /// Lists all pattern configs with their metadata.
+  List<SmartPlaylistPatternConfig> listPatterns() => patterns;
 }
