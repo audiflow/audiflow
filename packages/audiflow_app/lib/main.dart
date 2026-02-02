@@ -34,6 +34,13 @@ Future<void> main() async {
   // Initialize audio service for platform media controls
   await container.read(audioHandlerProvider.future);
 
+  // Load smart playlist patterns from bundled JSON
+  final patternsJson = await rootBundle.loadString(
+    'assets/smart_playlist_patterns.json',
+  );
+  final patterns = SmartPlaylistPatternLoader.parse(patternsJson);
+  container.read(smartPlaylistPatternsProvider.notifier).setPatterns(patterns);
+
   runApp(
     UncontrolledProviderScope(
       container: container,
