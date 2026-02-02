@@ -155,7 +155,12 @@ GoRouter createAppRouter() {
 /// Returns [_PodcastNotFoundScreen] if podcast data
 /// is not available.
 Widget _buildPodcastDetailScreen(GoRouterState state) {
-  final podcast = state.extra as Podcast?;
+  final extra = state.extra;
+  final podcast = extra is Podcast
+      ? extra
+      : extra is Map<String, dynamic>
+      ? extra['podcast'] as Podcast?
+      : null;
   if (podcast == null) {
     return const _PodcastNotFoundScreen();
   }
@@ -183,7 +188,13 @@ Widget _buildSmartPlaylistEpisodesScreen(GoRouterState state) {
   final feedImageUrl = extra['feedImageUrl'] as String?;
   final lastRefreshedAt = extra['lastRefreshedAt'] as DateTime?;
 
+  final podcast = extra['podcast'] as Podcast?;
+  if (podcast == null) {
+    return const _SmartPlaylistNotFoundScreen();
+  }
+
   return SmartPlaylistEpisodesScreen(
+    podcast: podcast,
     smartPlaylist: playlist,
     podcastTitle: podcastTitle,
     podcastArtworkUrl: podcastArtworkUrl,

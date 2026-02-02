@@ -15,6 +15,9 @@ class SmartPlaylistGroups extends Table {
   /// JSON-encoded list of episode IDs.
   TextColumn get episodeIds => text()();
   TextColumn get yearOverride => text().nullable()();
+  DateTimeColumn get earliestDate => dateTime().nullable()();
+  DateTimeColumn get latestDate => dateTime().nullable()();
+  IntColumn get totalDurationMs => integer().nullable()();
 
   @override
   Set<Column> get primaryKey => {podcastId, playlistId, groupId};

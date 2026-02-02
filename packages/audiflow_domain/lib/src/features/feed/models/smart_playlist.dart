@@ -33,6 +33,9 @@ final class SmartPlaylistGroup {
     this.sortKey = 0,
     this.thumbnailUrl,
     this.yearOverride,
+    this.earliestDate,
+    this.latestDate,
+    this.totalDurationMs,
     @Deprecated('Use yearOverride instead') bool yearGrouped = false,
   });
 
@@ -53,6 +56,15 @@ final class SmartPlaylistGroup {
 
   /// Per-group override of the parent playlist's yearHeaderMode.
   final YearHeaderMode? yearOverride;
+
+  /// Earliest episode publish date in this group.
+  final DateTime? earliestDate;
+
+  /// Latest episode publish date in this group.
+  final DateTime? latestDate;
+
+  /// Total duration of all episodes in milliseconds.
+  final int? totalDurationMs;
 
   /// Number of episodes in this group.
   int get episodeCount => episodeIds.length;

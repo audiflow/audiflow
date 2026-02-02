@@ -203,7 +203,7 @@ return $default(_that.position,_that.duration,_that.bufferedPosition);case _:
 
 class _PlaybackProgress extends PlaybackProgress {
   const _PlaybackProgress({required this.position, required this.duration, required this.bufferedPosition}): super._();
-
+  
 
 @override final  Duration position;
 @override final  Duration duration;

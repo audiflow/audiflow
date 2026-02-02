@@ -12,6 +12,7 @@ import '../widgets/smart_playlist_episode_list_tile.dart';
 class SmartPlaylistEpisodesScreen extends ConsumerStatefulWidget {
   const SmartPlaylistEpisodesScreen({
     super.key,
+    required this.podcast,
     required this.smartPlaylist,
     required this.podcastTitle,
     required this.podcastArtworkUrl,
@@ -19,6 +20,7 @@ class SmartPlaylistEpisodesScreen extends ConsumerStatefulWidget {
     this.lastRefreshedAt,
   });
 
+  final Podcast podcast;
   final SmartPlaylist smartPlaylist;
   final String podcastTitle;
   final String? podcastArtworkUrl;
@@ -298,6 +300,8 @@ class _SmartPlaylistEpisodesScreenState
         return _SmartPlaylistGroupCard(
           group: group,
           thumbnailUrl: group.thumbnailUrl,
+          dateRange: _formatDateRange(group.earliestDate, group.latestDate),
+          totalDuration: _formatDuration(group.totalDurationMs),
           onTap: () => _navigateToGroup(group),
         );
       },
@@ -359,6 +363,8 @@ class _SmartPlaylistEpisodesScreenState
       itemBuilder: (context, group) => _SmartPlaylistGroupCard(
         group: group,
         thumbnailUrl: group.thumbnailUrl,
+        dateRange: _formatDateRange(group.earliestDate, group.latestDate),
+        totalDuration: _formatDuration(group.totalDurationMs),
         onTap: () => _navigateToGroup(group),
       ),
       scrollController: _scrollController,
@@ -410,6 +416,11 @@ class _SmartPlaylistEpisodesScreenState
         group: item.group,
         thumbnailUrl: item.group.thumbnailUrl,
         episodeCount: item.filteredEpisodeIds.length,
+        dateRange: _formatDateRange(
+          item.group.earliestDate,
+          item.group.latestDate,
+        ),
+        totalDuration: _formatDuration(item.group.totalDurationMs),
         onTap: () => _navigateToGroup(
           item.group,
           filteredEpisodeIds: item.filteredEpisodeIds,
@@ -432,6 +443,7 @@ class _SmartPlaylistEpisodesScreenState
         group.id,
       ),
       extra: <String, dynamic>{
+        'podcast': widget.podcast,
         'group': group,
         'smartPlaylist': widget.smartPlaylist,
         'podcastTitle': widget.podcastTitle,
@@ -552,6 +564,24 @@ class _SmartPlaylistHeader extends StatelessWidget {
   }
 }
 
+/// Formats a date range as "YYYY.M.D 〜 YYYY.M.D".
+String? _formatDateRange(DateTime? earliest, DateTime? latest) {
+  if (earliest == null || latest == null) return null;
+  String fmt(DateTime d) => '${d.year}.${d.month}.${d.day}';
+  if (earliest == latest) return fmt(earliest);
+  return '${fmt(earliest)} 〜 ${fmt(latest)}';
+}
+
+/// Formats duration in ms to "Xh Ym" or "Xm".
+String? _formatDuration(int? totalMs) {
+  if (totalMs == null || totalMs == 0) return null;
+  final minutes = totalMs ~/ 60000;
+  final hours = minutes ~/ 60;
+  final remainingMinutes = minutes % 60;
+  if (0 < hours) return '${hours}h${remainingMinutes}m';
+  return '${minutes}m';
+}
+
 /// Height of a group card for fixed-extent lists.
 const double _groupCardExtent = 96.0;
 
@@ -572,6 +602,8 @@ class _SmartPlaylistGroupCard extends StatelessWidget {
     required this.group,
     this.thumbnailUrl,
     this.episodeCount,
+    this.dateRange,
+    this.totalDuration,
     this.onTap,
   });
 
@@ -580,6 +612,12 @@ class _SmartPlaylistGroupCard extends StatelessWidget {
 
   /// Override episode count (for perEpisode year mode).
   final int? episodeCount;
+
+  /// Date range string (e.g. "2026.1.26 〜 2026.1.29").
+  final String? dateRange;
+
+  /// Total duration string (e.g. "1h18m").
+  final String? totalDuration;
   final VoidCallback? onTap;
 
   static const _thumbnailSize = 72.0;
@@ -589,6 +627,11 @@ class _SmartPlaylistGroupCard extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final count = episodeCount ?? group.episodeCount;
+
+    final metaLine = StringBuffer('$count episodes');
+    if (totalDuration != null) {
+      metaLine.write('  $totalDuration');
+    }
 
     return InkWell(
       onTap: onTap,
@@ -614,9 +657,18 @@ class _SmartPlaylistGroupCard extends StatelessWidget {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: Spacing.xs),
+                  if (dateRange != null) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      dateRange!,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 2),
                   Text(
-                    '$count episodes',
+                    metaLine.toString(),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: colorScheme.onSurfaceVariant,
                     ),

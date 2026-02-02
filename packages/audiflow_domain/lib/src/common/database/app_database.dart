@@ -40,7 +40,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 14;
+  int get schemaVersion => 15;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -115,6 +115,18 @@ class AppDatabase extends _$AppDatabase {
       // Migration from v13 to v14: create SmartPlaylistGroups table
       if (14 <= to && from < 14) {
         await m.createTable(smartPlaylistGroups);
+      }
+      // Migration from v14 to v15: add cached metadata columns
+      if (15 <= to && from < 15) {
+        await m.addColumn(
+          smartPlaylistGroups,
+          smartPlaylistGroups.earliestDate,
+        );
+        await m.addColumn(smartPlaylistGroups, smartPlaylistGroups.latestDate);
+        await m.addColumn(
+          smartPlaylistGroups,
+          smartPlaylistGroups.totalDurationMs,
+        );
       }
     },
   );
