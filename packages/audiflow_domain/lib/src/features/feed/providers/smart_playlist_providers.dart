@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:meta/meta.dart' show visibleForTesting;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../common/database/app_database.dart';
@@ -421,8 +422,8 @@ class SmartPlaylistEpisodeData {
 /// Fetches episodes for a smart playlist by their IDs with
 /// progress data.
 ///
-/// Episodes are sorted by episode number (ascending) with fallback
-/// to publish date (newest first).
+/// Episodes are sorted by publish date (oldest first).
+/// Callers reverse the list for "newest first" display.
 @riverpod
 Future<List<SmartPlaylistEpisodeData>> smartPlaylistEpisodes(
   Ref ref,
@@ -455,34 +456,7 @@ Future<List<SmartPlaylistEpisodeData>> smartPlaylistEpisodes(
     );
   }).toList();
 
-  // Sort: episode number ascending (if available), fallback to
-  // publish date
-  result.sort((a, b) {
-    final aNum = a.episode.episodeNumber;
-    final bNum = b.episode.episodeNumber;
-
-    // Both have episode numbers: sort ascending
-    if (aNum != null && bNum != null) {
-      return aNum.compareTo(bNum);
-    }
-
-    // One has episode number, prioritize it
-    if (aNum != null) return -1;
-    if (bNum != null) return 1;
-
-    // Neither has episode number: sort by publish date
-    // (newest first)
-    final aPub = a.episode.publishedAt;
-    final bPub = b.episode.publishedAt;
-    if (aPub != null && bPub != null) {
-      return bPub.compareTo(aPub);
-    }
-
-    // Fallback: one or both missing dates
-    if (aPub != null) return -1;
-    if (bPub != null) return 1;
-    return 0;
-  });
+  sortEpisodeDataByPublishDate(result);
 
   return result;
 }
@@ -570,4 +544,21 @@ Future<SmartPlaylistGrouping?> _reResolveFromEpisodes(
     ungroupedEpisodeIds: result.ungroupedEpisodeIds,
     resolverType: result.resolverType,
   );
+}
+
+/// Sorts [SmartPlaylistEpisodeData] by publish date ascending
+/// (oldest first). Episodes with null dates sort after those
+/// with dates.
+@visibleForTesting
+void sortEpisodeDataByPublishDate(List<SmartPlaylistEpisodeData> data) {
+  data.sort((a, b) {
+    final aPub = a.episode.publishedAt;
+    final bPub = b.episode.publishedAt;
+    if (aPub != null && bPub != null) {
+      return aPub.compareTo(bPub);
+    }
+    if (aPub != null) return -1;
+    if (bPub != null) return 1;
+    return 0;
+  });
 }

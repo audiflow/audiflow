@@ -67,15 +67,7 @@ class _SmartPlaylistEpisodesScreenState
               podcastArtworkUrl: widget.podcastArtworkUrl,
             ),
           ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: Spacing.md,
-                vertical: Spacing.sm,
-              ),
-              child: _buildSortHeader(theme),
-            ),
-          ),
+          SliverToBoxAdapter(child: _buildSortHeader(theme)),
           ..._buildEpisodeList(context, theme),
         ],
       ),
@@ -89,47 +81,53 @@ class _SmartPlaylistEpisodesScreenState
         ? '${widget.smartPlaylist.groups?.length ?? 0} groups'
         : '${widget.smartPlaylist.episodeCount} episodes';
 
-    return Row(
-      children: [
-        Text(
-          label,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: colorScheme.onSurfaceVariant,
-          ),
-        ),
-        const Spacer(),
-        InkWell(
-          borderRadius: BorderRadius.circular(16),
-          onTap: _toggleSortOrder,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: Spacing.sm,
-              vertical: Spacing.xxs,
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: Spacing.md,
+        vertical: Spacing.xs,
+      ),
+      child: Row(
+        children: [
+          Text(
+            label,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: colorScheme.onSurfaceVariant,
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  _sortOrder == SortOrder.ascending
-                      ? Icons.arrow_upward
-                      : Icons.arrow_downward,
-                  size: 16,
-                  color: colorScheme.onSurfaceVariant,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  _sortOrder == SortOrder.ascending
-                      ? 'Oldest first'
-                      : 'Newest first',
-                  style: theme.textTheme.bodySmall?.copyWith(
+          ),
+          const Spacer(),
+          InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: _toggleSortOrder,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: Spacing.sm,
+                vertical: Spacing.xxs,
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    _sortOrder == SortOrder.ascending
+                        ? Icons.arrow_upward
+                        : Icons.arrow_downward,
+                    size: 16,
                     color: colorScheme.onSurfaceVariant,
                   ),
-                ),
-              ],
+                  const SizedBox(width: 4),
+                  Text(
+                    _sortOrder == SortOrder.ascending
+                        ? 'Oldest first'
+                        : 'Newest first',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 

@@ -273,14 +273,14 @@ Future<List<PodcastItem>> filteredSortedEpisodes(
     episodes = filtered;
   }
 
-  // Sort by episode number
+  // Sort by publish date
   final sorted = List<PodcastItem>.from(episodes);
   sorted.sort((a, b) {
-    final aNum = a.episodeNumber ?? 0;
-    final bNum = b.episodeNumber ?? 0;
+    final aDate = a.publishDate ?? DateTime(1970);
+    final bDate = b.publishDate ?? DateTime(1970);
     return sortOrder == SortOrder.ascending
-        ? aNum.compareTo(bNum)
-        : bNum.compareTo(aNum);
+        ? aDate.compareTo(bDate)
+        : bDate.compareTo(aDate);
   });
 
   return sorted;

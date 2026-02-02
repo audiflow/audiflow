@@ -615,16 +615,11 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
     SmartPlaylistGroup group,
   ) {
     final uri = GoRouterState.of(context).uri;
-    final playlistPath = AppRoutes.smartPlaylistEpisodes.replaceFirst(
-      ':playlistId',
-      playlist.id,
-    );
-    final groupPath = AppRoutes.smartPlaylistGroupEpisodesPath.replaceFirst(
-      ':groupId',
-      group.id,
-    );
+    final directGroupPath = AppRoutes.smartPlaylistDirectGroup
+        .replaceFirst(':playlistId', playlist.id)
+        .replaceFirst(':groupId', group.id);
     context.push(
-      '$uri/$playlistPath/$groupPath',
+      '$uri/$directGroupPath',
       extra: <String, dynamic>{
         'podcast': podcast,
         'group': group,
