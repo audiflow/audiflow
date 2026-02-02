@@ -109,7 +109,7 @@ class CategoryResolver implements SmartPlaylistResolver {
 
     final playlists = [
       SmartPlaylist(
-        id: 'playlist_${type}',
+        id: 'playlist_$type',
         displayName: 'All',
         sortKey: 0,
         episodeIds: allEpisodeIds,

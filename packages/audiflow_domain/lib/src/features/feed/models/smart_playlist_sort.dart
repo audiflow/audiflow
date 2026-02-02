@@ -122,6 +122,7 @@ sealed class SmartPlaylistSortCondition {
   factory SmartPlaylistSortCondition.fromJson(Map<String, dynamic> json) {
     final type = json['type'] as String?;
     return switch (type) {
+      'sortKeyGreaterThan' ||
       'greaterThan' => SortKeyGreaterThan.fromJson(json),
       _ => throw FormatException(
         'Unknown SmartPlaylistSortCondition type: $type',
@@ -145,5 +146,8 @@ final class SortKeyGreaterThan extends SmartPlaylistSortCondition {
   final int value;
 
   @override
-  Map<String, dynamic> toJson() => {'type': 'greaterThan', 'value': value};
+  Map<String, dynamic> toJson() => {
+    'type': 'sortKeyGreaterThan',
+    'value': value,
+  };
 }

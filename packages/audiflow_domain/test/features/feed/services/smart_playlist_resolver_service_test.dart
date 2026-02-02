@@ -1,5 +1,4 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
-import 'package:audiflow_domain/src/features/feed/models/smart_playlist_pattern_config.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 Episode _makeEpisode(
