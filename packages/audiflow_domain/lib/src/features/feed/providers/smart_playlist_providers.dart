@@ -293,6 +293,7 @@ Future<SmartPlaylistGrouping?> _resolveAndPersistSmartPlaylists(
         sortKey: group.sortKey,
         episodeIds: group.episodeIds,
         thumbnailUrl: groupThumb,
+        episodeYearHeaders: group.episodeYearHeaders,
         earliestDate: earliest,
         latestDate: latest,
         totalDurationMs: hasDuration ? totalMs : null,
@@ -333,6 +334,7 @@ Future<SmartPlaylistGrouping?> _resolveAndPersistSmartPlaylists(
           earliestDate: Value(g.earliestDate),
           latestDate: Value(g.latestDate),
           totalDurationMs: Value(g.totalDurationMs),
+          episodeYearHeaders: Value(g.episodeYearHeaders),
         );
       }).toList();
       await playlistDatasource.upsertGroupsForPlaylist(
@@ -530,6 +532,7 @@ Future<SmartPlaylistGrouping?> _reResolveFromEpisodes(
         sortKey: group.sortKey,
         episodeIds: group.episodeIds,
         thumbnailUrl: groupThumb,
+        episodeYearHeaders: group.episodeYearHeaders,
       );
     }).toList();
 

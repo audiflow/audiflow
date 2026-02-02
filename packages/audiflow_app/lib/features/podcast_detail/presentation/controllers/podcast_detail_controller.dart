@@ -647,6 +647,7 @@ SmartPlaylistGrouping? _resolveFromFeedByCategory(
           episodeIds: gEpisodes
               .map((ep) => -(episodes.indexOf(ep) + 1))
               .toList(),
+          episodeYearHeaders: gDef.episodeYearHeaders,
         ),
       );
     }

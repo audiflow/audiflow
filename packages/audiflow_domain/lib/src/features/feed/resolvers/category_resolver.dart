@@ -40,9 +40,18 @@ class CategoryResolver implements SmartPlaylistResolver {
     List<SmartPlaylistGroupDef> groupDefs,
   ) {
     // Separate pattern groups from fallback
-    final patternGroups = <({RegExp regex, String id, String displayName})>[];
+    final patternGroups =
+        <
+          ({
+            RegExp regex,
+            String id,
+            String displayName,
+            bool? episodeYearHeaders,
+          })
+        >[];
     String? fallbackId;
     String? fallbackDisplayName;
+    bool? fallbackEpisodeYearHeaders;
 
     for (final g in groupDefs) {
       if (g.pattern != null) {
@@ -50,10 +59,12 @@ class CategoryResolver implements SmartPlaylistResolver {
           regex: RegExp(g.pattern!),
           id: g.id,
           displayName: g.displayName,
+          episodeYearHeaders: g.episodeYearHeaders,
         ));
       } else {
         fallbackId = g.id;
         fallbackDisplayName = g.displayName;
+        fallbackEpisodeYearHeaders = g.episodeYearHeaders;
       }
     }
 
@@ -88,6 +99,7 @@ class CategoryResolver implements SmartPlaylistResolver {
             id: pg.id,
             displayName: pg.displayName,
             episodeIds: ids,
+            episodeYearHeaders: pg.episodeYearHeaders,
           ),
         );
       }
@@ -99,6 +111,7 @@ class CategoryResolver implements SmartPlaylistResolver {
           id: fallbackId!,
           displayName: fallbackDisplayName!,
           episodeIds: fallbackIds,
+          episodeYearHeaders: fallbackEpisodeYearHeaders,
         ),
       );
     }

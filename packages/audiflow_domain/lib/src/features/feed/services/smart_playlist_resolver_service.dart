@@ -1,6 +1,7 @@
 import '../../../common/database/app_database.dart';
 import '../models/smart_playlist.dart';
 import '../models/smart_playlist_definition.dart';
+import '../models/smart_playlist_group_def.dart';
 import '../models/smart_playlist_pattern_config.dart';
 import '../resolvers/rss_metadata_resolver.dart';
 import '../resolvers/smart_playlist_resolver.dart';
@@ -82,17 +83,20 @@ class SmartPlaylistResolverService {
       // become groups inside a single parent playlist named after
       // the definition.
       if (contentType == SmartPlaylistContentType.groups) {
-        final groups = result.playlists
-            .map(
-              (p) => SmartPlaylistGroup(
-                id: p.id,
-                displayName: p.displayName,
-                sortKey: p.sortKey,
-                episodeIds: p.episodeIds,
-                thumbnailUrl: p.thumbnailUrl,
-              ),
-            )
-            .toList();
+        final groupDefMap = {
+          for (final g in definition.groups ?? <SmartPlaylistGroupDef>[])
+            g.id: g,
+        };
+        final groups = result.playlists.map((p) {
+          return SmartPlaylistGroup(
+            id: p.id,
+            displayName: p.displayName,
+            sortKey: p.sortKey,
+            episodeIds: p.episodeIds,
+            thumbnailUrl: p.thumbnailUrl,
+            episodeYearHeaders: groupDefMap[p.id]?.episodeYearHeaders,
+          );
+        }).toList();
         final allEpisodeIds = groups.expand((g) => g.episodeIds).toList();
 
         allPlaylists.add(

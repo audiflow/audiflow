@@ -41,6 +41,10 @@ class _SmartPlaylistGroupEpisodesScreenState
   List<int> get _episodeIds =>
       widget.filteredEpisodeIds ?? widget.group.episodeIds;
 
+  bool get _showYearHeaders =>
+      widget.group.episodeYearHeaders ??
+      widget.parentPlaylist.episodeYearHeaders;
+
   @override
   void dispose() {
     _scrollController.dispose();
@@ -81,7 +85,7 @@ class _SmartPlaylistGroupEpisodesScreenState
                     ),
                   ),
                   const SizedBox(height: Spacing.xs),
-                  _buildSortHeader(theme),
+                  _buildSortHeader(theme, showSortSwitch: _showYearHeaders),
                 ],
               ),
             ),
@@ -92,7 +96,7 @@ class _SmartPlaylistGroupEpisodesScreenState
     );
   }
 
-  Widget _buildSortHeader(ThemeData theme) {
+  Widget _buildSortHeader(ThemeData theme, {required bool showSortSwitch}) {
     final colorScheme = theme.colorScheme;
     return Row(
       children: [
@@ -102,38 +106,40 @@ class _SmartPlaylistGroupEpisodesScreenState
             color: colorScheme.onSurfaceVariant,
           ),
         ),
-        const Spacer(),
-        InkWell(
-          borderRadius: BorderRadius.circular(16),
-          onTap: _toggleSortOrder,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: Spacing.sm,
-              vertical: Spacing.xxs,
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  _sortOrder == SortOrder.ascending
-                      ? Icons.arrow_upward
-                      : Icons.arrow_downward,
-                  size: 16,
-                  color: colorScheme.onSurfaceVariant,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  _sortOrder == SortOrder.ascending
-                      ? 'Oldest first'
-                      : 'Newest first',
-                  style: theme.textTheme.bodySmall?.copyWith(
+        if (showSortSwitch) ...[
+          const Spacer(),
+          InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: _toggleSortOrder,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: Spacing.sm,
+                vertical: Spacing.xxs,
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    _sortOrder == SortOrder.ascending
+                        ? Icons.arrow_upward
+                        : Icons.arrow_downward,
+                    size: 16,
                     color: colorScheme.onSurfaceVariant,
                   ),
-                ),
-              ],
+                  const SizedBox(width: 4),
+                  Text(
+                    _sortOrder == SortOrder.ascending
+                        ? 'Oldest first'
+                        : 'Newest first',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
+        ],
       ],
     );
   }
@@ -147,13 +153,12 @@ class _SmartPlaylistGroupEpisodesScreenState
           return [SliverFillRemaining(child: _buildEmptyState(theme))];
         }
 
-        if (widget.parentPlaylist.episodeYearHeaders) {
+        if (_showYearHeaders) {
           return _buildYearGroupedSlivers(episodes, theme);
         }
 
-        final sorted = _sortOrder == SortOrder.descending
-            ? episodes.reversed.toList()
-            : episodes;
+        // No year headers: always ascending (oldest first)
+        final sorted = episodes;
 
         return [
           SliverList.builder(

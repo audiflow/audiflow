@@ -7,6 +7,7 @@ final class SmartPlaylistGroupDef {
     required this.id,
     required this.displayName,
     this.pattern,
+    this.episodeYearHeaders,
   });
 
   /// Creates a group definition from JSON configuration.
@@ -15,6 +16,7 @@ final class SmartPlaylistGroupDef {
       id: json['id'] as String,
       displayName: json['displayName'] as String,
       pattern: json['pattern'] as String?,
+      episodeYearHeaders: json['episodeYearHeaders'] as bool?,
     );
   }
 
@@ -29,12 +31,18 @@ final class SmartPlaylistGroupDef {
   /// When null, this group acts as a catch-all fallback.
   final String? pattern;
 
+  /// Per-group override for episode year headers.
+  ///
+  /// When null, inherits the playlist-level setting.
+  final bool? episodeYearHeaders;
+
   /// Converts to JSON representation.
   Map<String, dynamic> toJson() {
     return {
       'id': id,
       'displayName': displayName,
       if (pattern != null) 'pattern': pattern,
+      if (episodeYearHeaders != null) 'episodeYearHeaders': episodeYearHeaders,
     };
   }
 }
