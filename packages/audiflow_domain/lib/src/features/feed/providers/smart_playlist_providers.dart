@@ -10,6 +10,7 @@ import '../../player/repositories/playback_history_repository_impl.dart';
 import '../datasources/local/smart_playlist_local_datasource.dart';
 import '../models/smart_playlist.dart';
 import '../models/smart_playlist_pattern.dart';
+import '../models/smart_playlist_pattern_config.dart';
 import '../patterns/coten_radio_pattern.dart';
 import '../patterns/news_connect_pattern.dart';
 import '../repositories/episode_repository.dart';
@@ -44,7 +45,8 @@ SmartPlaylistLocalDatasource smartPlaylistLocalDatasource(Ref ref) {
 SmartPlaylistResolverService smartPlaylistResolverService(Ref ref) {
   return SmartPlaylistResolverService(
     resolvers: [RssMetadataResolver(), CategoryResolver(), YearResolver()],
-    patterns: _registeredPatterns,
+    // TODO(task-8): migrate _registeredPatterns to SmartPlaylistPatternConfig
+    patterns: <SmartPlaylistPatternConfig>[],
   );
 }
 
