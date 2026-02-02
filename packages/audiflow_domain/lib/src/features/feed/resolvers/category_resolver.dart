@@ -105,17 +105,19 @@ class CategoryResolver implements SmartPlaylistResolver {
 
     if (groups.isEmpty && ungrouped.isEmpty) return null;
 
-    final allEpisodeIds = episodes.map((e) => e.id).toList();
-
-    final playlists = [
-      SmartPlaylist(
-        id: 'playlist_$type',
-        displayName: 'All',
-        sortKey: 0,
-        episodeIds: allEpisodeIds,
-        groups: groups.isEmpty ? null : groups,
-      ),
-    ];
+    // Return each category group as a separate SmartPlaylist.
+    // The service wraps these into a parent playlist when
+    // contentType == "groups".
+    final playlists = groups
+        .map(
+          (g) => SmartPlaylist(
+            id: g.id,
+            displayName: g.displayName,
+            sortKey: g.sortKey,
+            episodeIds: g.episodeIds,
+          ),
+        )
+        .toList();
 
     return SmartPlaylistGrouping(
       playlists: playlists,

@@ -75,16 +75,14 @@ void main() {
       final result = resolver.resolve(episodes, definition);
 
       expect(result, isNotNull);
-      expect(result!.playlists, hasLength(1));
-
-      final playlist = result.playlists.first;
-      expect(playlist.groups, hasLength(3));
-      expect(playlist.groups![0].id, 'saturday');
-      expect(playlist.groups![0].episodeIds, [1]);
-      expect(playlist.groups![1].id, 'news_talk');
-      expect(playlist.groups![1].episodeIds, [2]);
-      expect(playlist.groups![2].id, 'other');
-      expect(playlist.groups![2].episodeIds, [3]);
+      // Each category becomes a separate playlist
+      expect(result!.playlists, hasLength(3));
+      expect(result.playlists[0].id, 'saturday');
+      expect(result.playlists[0].episodeIds, [1]);
+      expect(result.playlists[1].id, 'news_talk');
+      expect(result.playlists[1].episodeIds, [2]);
+      expect(result.playlists[2].id, 'other');
+      expect(result.playlists[2].episodeIds, [3]);
     });
 
     test('ungrouped when no fallback group', () {
@@ -135,9 +133,8 @@ void main() {
       final result = resolver.resolve(episodes, definition);
 
       expect(result, isNotNull);
-      final groups = result!.playlists.first.groups!;
-      expect(groups, hasLength(1));
-      expect(groups.first.id, 'first');
+      expect(result!.playlists, hasLength(1));
+      expect(result.playlists.first.id, 'first');
     });
 
     test('returns null when groups list is empty', () {
@@ -177,12 +174,11 @@ void main() {
       final result = resolver.resolve(episodes, definition);
 
       expect(result, isNotNull);
-      final groups = result!.playlists.first.groups!;
-      expect(groups, hasLength(2));
-      expect(groups[0].id, 'matched');
-      expect(groups[0].episodeIds, [1]);
-      expect(groups[1].id, 'fallback');
-      expect(groups[1].episodeIds, [2]);
+      expect(result!.playlists, hasLength(2));
+      expect(result.playlists[0].id, 'matched');
+      expect(result.playlists[0].episodeIds, [1]);
+      expect(result.playlists[1].id, 'fallback');
+      expect(result.playlists[1].episodeIds, [2]);
     });
   });
 }

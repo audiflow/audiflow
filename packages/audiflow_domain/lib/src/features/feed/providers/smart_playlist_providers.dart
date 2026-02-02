@@ -248,7 +248,59 @@ Future<SmartPlaylistGrouping?> _resolveAndPersistSmartPlaylists(
       }
     }
 
-    enrichedPlaylists.add(playlist.copyWith(thumbnailUrl: thumbnailUrl));
+    // Enrich groups with thumbnails
+    final enrichedGroups = playlist.groups?.map((group) {
+      final groupEpisodes =
+          episodes.where((e) => group.episodeIds.contains(e.id)).toList()
+            ..sort((a, b) {
+              final aPub = a.publishedAt;
+              final bPub = b.publishedAt;
+              if (aPub == null && bPub == null) return 0;
+              if (aPub == null) return 1;
+              if (bPub == null) return -1;
+              return bPub.compareTo(aPub);
+            });
+
+      String? groupThumb;
+      for (final ep in groupEpisodes) {
+        if (ep.imageUrl != null) {
+          groupThumb = ep.imageUrl;
+          break;
+        }
+      }
+
+      DateTime? earliest;
+      DateTime? latest;
+      var totalMs = 0;
+      var hasDuration = false;
+      for (final ep in groupEpisodes) {
+        final pub = ep.publishedAt;
+        if (pub != null) {
+          if (earliest == null || pub.isBefore(earliest)) earliest = pub;
+          if (latest == null || pub.isAfter(latest)) latest = pub;
+        }
+        final dur = ep.durationMs;
+        if (dur != null && 0 < dur) {
+          totalMs += dur;
+          hasDuration = true;
+        }
+      }
+
+      return SmartPlaylistGroup(
+        id: group.id,
+        displayName: group.displayName,
+        sortKey: group.sortKey,
+        episodeIds: group.episodeIds,
+        thumbnailUrl: groupThumb,
+        earliestDate: earliest,
+        latestDate: latest,
+        totalDurationMs: hasDuration ? totalMs : null,
+      );
+    }).toList();
+
+    enrichedPlaylists.add(
+      playlist.copyWith(thumbnailUrl: thumbnailUrl, groups: enrichedGroups),
+    );
     companions.add(
       SmartPlaylistsCompanion.insert(
         podcastId: podcastId,

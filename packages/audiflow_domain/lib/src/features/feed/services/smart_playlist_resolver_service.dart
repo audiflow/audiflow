@@ -122,9 +122,18 @@ class SmartPlaylistResolverService {
 
       allUngroupedIds.addAll(result.ungroupedEpisodeIds);
 
-      // Track claimed episode IDs
-      for (final p in result.playlists) {
-        claimedIds.addAll(p.episodeIds);
+      // Only claim episode IDs when the definition has explicit
+      // filters. Fallback definitions (no filters) receive all
+      // unclaimed episodes without preventing other fallbacks
+      // from also receiving them.
+      final hasFilters =
+          definition.titleFilter != null ||
+          definition.excludeFilter != null ||
+          definition.requireFilter != null;
+      if (hasFilters) {
+        for (final p in result.playlists) {
+          claimedIds.addAll(p.episodeIds);
+        }
       }
     }
 
