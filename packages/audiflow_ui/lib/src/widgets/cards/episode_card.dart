@@ -1,3 +1,4 @@
+import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
 
 import '../../styles/spacing.dart';
@@ -270,21 +271,27 @@ class _Thumbnail extends StatelessWidget {
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(6),
-      child: Image.network(
+      child: ExtendedImage.network(
         url,
         width: _thumbnailSize,
         height: _thumbnailSize,
         fit: BoxFit.cover,
-        errorBuilder: (_, _, _) => Container(
-          width: _thumbnailSize,
-          height: _thumbnailSize,
-          color: colorScheme.surfaceContainerHighest,
-          child: Icon(
-            Icons.podcasts,
-            size: 32,
-            color: colorScheme.onSurfaceVariant,
-          ),
-        ),
+        cache: true,
+        loadStateChanged: (state) {
+          if (state.extendedImageLoadState == LoadState.failed) {
+            return Container(
+              width: _thumbnailSize,
+              height: _thumbnailSize,
+              color: colorScheme.surfaceContainerHighest,
+              child: Icon(
+                Icons.podcasts,
+                size: 32,
+                color: colorScheme.onSurfaceVariant,
+              ),
+            );
+          }
+          return null;
+        },
       ),
     );
   }
