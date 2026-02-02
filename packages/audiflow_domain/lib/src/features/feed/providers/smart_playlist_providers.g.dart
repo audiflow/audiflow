@@ -8,6 +8,92 @@ part of 'smart_playlist_providers.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Provides the registered smart playlist pattern configs.
+///
+/// Initially empty; the app layer overrides this to set patterns
+/// loaded from JSON config files.
+
+@ProviderFor(SmartPlaylistPatterns)
+final smartPlaylistPatternsProvider = SmartPlaylistPatternsProvider._();
+
+/// Provides the registered smart playlist pattern configs.
+///
+/// Initially empty; the app layer overrides this to set patterns
+/// loaded from JSON config files.
+final class SmartPlaylistPatternsProvider
+    extends
+        $NotifierProvider<
+          SmartPlaylistPatterns,
+          List<SmartPlaylistPatternConfig>
+        > {
+  /// Provides the registered smart playlist pattern configs.
+  ///
+  /// Initially empty; the app layer overrides this to set patterns
+  /// loaded from JSON config files.
+  SmartPlaylistPatternsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'smartPlaylistPatternsProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$smartPlaylistPatternsHash();
+
+  @$internal
+  @override
+  SmartPlaylistPatterns create() => SmartPlaylistPatterns();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(List<SmartPlaylistPatternConfig> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<List<SmartPlaylistPatternConfig>>(
+        value,
+      ),
+    );
+  }
+}
+
+String _$smartPlaylistPatternsHash() =>
+    r'404282a0f53185eda4965dd86de3da5e1c3b8f2e';
+
+/// Provides the registered smart playlist pattern configs.
+///
+/// Initially empty; the app layer overrides this to set patterns
+/// loaded from JSON config files.
+
+abstract class _$SmartPlaylistPatterns
+    extends $Notifier<List<SmartPlaylistPatternConfig>> {
+  List<SmartPlaylistPatternConfig> build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref =
+        this.ref
+            as $Ref<
+              List<SmartPlaylistPatternConfig>,
+              List<SmartPlaylistPatternConfig>
+            >;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<
+                List<SmartPlaylistPatternConfig>,
+                List<SmartPlaylistPatternConfig>
+              >,
+              List<SmartPlaylistPatternConfig>,
+              Object?,
+              Object?
+            >;
+    element.handleCreate(ref, build);
+  }
+}
+
 /// Provides the smart playlist local datasource for database
 /// operations.
 
@@ -132,9 +218,10 @@ final class SmartPlaylistResolverServiceProvider
 }
 
 String _$smartPlaylistResolverServiceHash() =>
-    r'1e7e2ec04bb55fc218386d22f2ef64bdd4df507a';
+    r'6d23df42e1a0fc261e3c49a6e8494d44698969ce';
 
-/// Finds the smart playlist pattern that matches a given feed URL.
+/// Finds the smart playlist pattern config that matches a given
+/// feed URL.
 ///
 /// Returns null if no pattern matches.
 
@@ -142,19 +229,21 @@ String _$smartPlaylistResolverServiceHash() =>
 final smartPlaylistPatternByFeedUrlProvider =
     SmartPlaylistPatternByFeedUrlFamily._();
 
-/// Finds the smart playlist pattern that matches a given feed URL.
+/// Finds the smart playlist pattern config that matches a given
+/// feed URL.
 ///
 /// Returns null if no pattern matches.
 
 final class SmartPlaylistPatternByFeedUrlProvider
     extends
         $FunctionalProvider<
-          SmartPlaylistPattern?,
-          SmartPlaylistPattern?,
-          SmartPlaylistPattern?
+          SmartPlaylistPatternConfig?,
+          SmartPlaylistPatternConfig?,
+          SmartPlaylistPatternConfig?
         >
-    with $Provider<SmartPlaylistPattern?> {
-  /// Finds the smart playlist pattern that matches a given feed URL.
+    with $Provider<SmartPlaylistPatternConfig?> {
+  /// Finds the smart playlist pattern config that matches a given
+  /// feed URL.
   ///
   /// Returns null if no pattern matches.
   SmartPlaylistPatternByFeedUrlProvider._({
@@ -180,21 +269,21 @@ final class SmartPlaylistPatternByFeedUrlProvider
 
   @$internal
   @override
-  $ProviderElement<SmartPlaylistPattern?> $createElement(
+  $ProviderElement<SmartPlaylistPatternConfig?> $createElement(
     $ProviderPointer pointer,
   ) => $ProviderElement(pointer);
 
   @override
-  SmartPlaylistPattern? create(Ref ref) {
+  SmartPlaylistPatternConfig? create(Ref ref) {
     final argument = this.argument as String;
     return smartPlaylistPatternByFeedUrl(ref, argument);
   }
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(SmartPlaylistPattern? value) {
+  Override overrideWithValue(SmartPlaylistPatternConfig? value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<SmartPlaylistPattern?>(value),
+      providerOverride: $SyncValueProvider<SmartPlaylistPatternConfig?>(value),
     );
   }
 
@@ -211,14 +300,15 @@ final class SmartPlaylistPatternByFeedUrlProvider
 }
 
 String _$smartPlaylistPatternByFeedUrlHash() =>
-    r'a6c9b0e744abed871277026ebb1b1a5f6101c926';
+    r'497296d0ad8ac1c3702c663e8afc086b9e0aca06';
 
-/// Finds the smart playlist pattern that matches a given feed URL.
+/// Finds the smart playlist pattern config that matches a given
+/// feed URL.
 ///
 /// Returns null if no pattern matches.
 
 final class SmartPlaylistPatternByFeedUrlFamily extends $Family
-    with $FunctionalFamilyOverride<SmartPlaylistPattern?, String> {
+    with $FunctionalFamilyOverride<SmartPlaylistPatternConfig?, String> {
   SmartPlaylistPatternByFeedUrlFamily._()
     : super(
         retry: null,
@@ -228,7 +318,8 @@ final class SmartPlaylistPatternByFeedUrlFamily extends $Family
         isAutoDispose: true,
       );
 
-  /// Finds the smart playlist pattern that matches a given feed URL.
+  /// Finds the smart playlist pattern config that matches a given
+  /// feed URL.
   ///
   /// Returns null if no pattern matches.
 

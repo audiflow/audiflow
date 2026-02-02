@@ -9,10 +9,7 @@ import '../../player/models/episode_with_progress.dart';
 import '../../player/repositories/playback_history_repository_impl.dart';
 import '../datasources/local/smart_playlist_local_datasource.dart';
 import '../models/smart_playlist.dart';
-import '../models/smart_playlist_pattern.dart';
 import '../models/smart_playlist_pattern_config.dart';
-import '../patterns/coten_radio_pattern.dart';
-import '../patterns/news_connect_pattern.dart';
 import '../repositories/episode_repository.dart';
 import '../repositories/episode_repository_impl.dart';
 import '../resolvers/category_resolver.dart';
@@ -22,10 +19,20 @@ import '../services/smart_playlist_resolver_service.dart';
 
 part 'smart_playlist_providers.g.dart';
 
-/// List of registered smart playlist patterns.
+/// Provides the registered smart playlist pattern configs.
 ///
-/// Add new podcast-specific patterns here.
-const _registeredPatterns = [cotenRadioPattern, newsConnectPattern];
+/// Initially empty; the app layer overrides this to set patterns
+/// loaded from JSON config files.
+@Riverpod(keepAlive: true)
+class SmartPlaylistPatterns extends _$SmartPlaylistPatterns {
+  @override
+  List<SmartPlaylistPatternConfig> build() => [];
+
+  /// Replaces the current patterns with the given list.
+  void setPatterns(List<SmartPlaylistPatternConfig> patterns) {
+    state = patterns;
+  }
+}
 
 /// Provides the smart playlist local datasource for database
 /// operations.
@@ -43,21 +50,26 @@ SmartPlaylistLocalDatasource smartPlaylistLocalDatasource(Ref ref) {
 /// podcasts.
 @Riverpod(keepAlive: true)
 SmartPlaylistResolverService smartPlaylistResolverService(Ref ref) {
+  final patterns = ref.watch(smartPlaylistPatternsProvider);
   return SmartPlaylistResolverService(
     resolvers: [RssMetadataResolver(), CategoryResolver(), YearResolver()],
-    // TODO(task-8): migrate _registeredPatterns to SmartPlaylistPatternConfig
-    patterns: <SmartPlaylistPatternConfig>[],
+    patterns: patterns,
   );
 }
 
-/// Finds the smart playlist pattern that matches a given feed URL.
+/// Finds the smart playlist pattern config that matches a given
+/// feed URL.
 ///
 /// Returns null if no pattern matches.
 @riverpod
-SmartPlaylistPattern? smartPlaylistPatternByFeedUrl(Ref ref, String feedUrl) {
-  for (final pattern in _registeredPatterns) {
-    if (pattern.matchesPodcast(null, feedUrl)) {
-      return pattern;
+SmartPlaylistPatternConfig? smartPlaylistPatternByFeedUrl(
+  Ref ref,
+  String feedUrl,
+) {
+  final patterns = ref.watch(smartPlaylistPatternsProvider);
+  for (final config in patterns) {
+    if (config.matchesPodcast(null, feedUrl)) {
+      return config;
     }
   }
   return null;
@@ -112,10 +124,9 @@ Future<SmartPlaylistGrouping?> podcastSmartPlaylists(
 /// Builds SmartPlaylistGrouping from cached SmartPlaylistEntity
 /// records.
 ///
-/// For patterns with `playlists` config, re-resolves directly from
-/// episodes using the resolver (groups are not cached). For
-/// category-based resolvers, re-resolves by title pattern. For
-/// season-based resolvers, groups by episode.seasonNumber.
+/// When a pattern config matches, re-resolves from episodes using
+/// the resolver service (groups are not cached). For season-based
+/// resolvers without a config match, groups by episode.seasonNumber.
 Future<SmartPlaylistGrouping?> _buildGroupingFromCache(
   Ref ref,
   int podcastId,
@@ -123,11 +134,11 @@ Future<SmartPlaylistGrouping?> _buildGroupingFromCache(
   EpisodeRepository episodeRepo,
   String feedUrl,
 ) async {
-  final pattern = ref.read(smartPlaylistPatternByFeedUrlProvider(feedUrl));
+  final config = ref.read(smartPlaylistPatternByFeedUrlProvider(feedUrl));
 
-  // Patterns with `playlists` config: re-resolve from episodes
-  // since groups are not persisted in cache.
-  if (pattern?.config['playlists'] != null) {
+  // Pattern configs always have playlists with resolvers;
+  // re-resolve from episodes since groups are not persisted.
+  if (config != null) {
     return _reResolveFromEpisodes(ref, podcastId, feedUrl);
   }
 
@@ -136,13 +147,7 @@ Future<SmartPlaylistGrouping?> _buildGroupingFromCache(
 
   final resolverType = cachedPlaylists.first.resolverType;
 
-  // Category-based resolvers need to re-resolve by title pattern
-  if (resolverType == 'category' && pattern != null) {
-    return _buildCategoryGroupingFromCache(episodes, cachedPlaylists, pattern);
-  }
-
-  // Season-number-based grouping
-  final groupNullAs = pattern?.config['groupNullSeasonAs'] as int?;
+  // Season-number-based grouping (generic podcasts)
   final episodesByPlaylistNum = <int, List<int>>{};
   final ungroupedIds = <int>[];
 
@@ -150,8 +155,6 @@ Future<SmartPlaylistGrouping?> _buildGroupingFromCache(
     final seasonNum = episode.seasonNumber;
     if (seasonNum != null && 1 <= seasonNum) {
       episodesByPlaylistNum.putIfAbsent(seasonNum, () => []).add(episode.id);
-    } else if (groupNullAs != null) {
-      episodesByPlaylistNum.putIfAbsent(groupNullAs, () => []).add(episode.id);
     } else {
       ungroupedIds.add(episode.id);
     }
@@ -175,96 +178,6 @@ Future<SmartPlaylistGrouping?> _buildGroupingFromCache(
     playlists: playlists,
     ungroupedEpisodeIds: ungroupedIds,
     resolverType: resolverType,
-  );
-}
-
-/// Builds grouping for category-based resolvers by re-running
-/// title pattern matching against episodes.
-SmartPlaylistGrouping? _buildCategoryGroupingFromCache(
-  List<Episode> episodes,
-  List<SmartPlaylistEntity> cachedPlaylists,
-  SmartPlaylistPattern pattern,
-) {
-  final categoriesRaw = pattern.config['categories'] as List<dynamic>?;
-  if (categoriesRaw == null || categoriesRaw.isEmpty) return null;
-
-  final categories = categoriesRaw.cast<Map<String, dynamic>>();
-  final matchers = categories.map((c) {
-    return (
-      regex: RegExp(c['pattern'] as String),
-      id: c['id'] as String,
-      sortKey: c['sortKey'] as int,
-    );
-  }).toList();
-
-  // Match episodes to categories by title
-  final episodeIdsByCategory = <String, List<int>>{};
-  final ungroupedIds = <int>[];
-
-  for (final episode in episodes) {
-    var matched = false;
-    for (final matcher in matchers) {
-      if (matcher.regex.hasMatch(episode.title)) {
-        episodeIdsByCategory.putIfAbsent(matcher.id, () => []).add(episode.id);
-        matched = true;
-        break;
-      }
-    }
-    if (!matched) {
-      ungroupedIds.add(episode.id);
-    }
-  }
-
-  // Map cached entities to category IDs via sortKey
-  final entityBySortKey = <int, SmartPlaylistEntity>{};
-  for (final entity in cachedPlaylists) {
-    entityBySortKey[entity.sortKey] = entity;
-  }
-
-  // Build episode lookup by ID for sub-category resolution
-  final episodeById = <int, Episode>{};
-  for (final episode in episodes) {
-    episodeById[episode.id] = episode;
-  }
-
-  final playlists = <SmartPlaylist>[];
-  for (final matcher in matchers) {
-    final entity = entityBySortKey[matcher.sortKey];
-    if (entity == null) continue;
-    final ids = episodeIdsByCategory[matcher.id] ?? [];
-
-    // Resolve sub-categories from pattern config
-    final categoryConfig = categories.firstWhere((c) => c['id'] == matcher.id);
-    final subCategoriesConfig =
-        categoryConfig['subCategories'] as List<dynamic>?;
-    List<SmartPlaylistGroup>? groups;
-    if (subCategoriesConfig != null) {
-      final categoryEpisodes = ids
-          .map((id) => episodeById[id])
-          .nonNulls
-          .toList();
-      groups = _resolveGroupsFromConfig(subCategoriesConfig, categoryEpisodes);
-    }
-
-    playlists.add(
-      SmartPlaylist(
-        id: 'playlist_${matcher.id}',
-        displayName: entity.displayName,
-        sortKey: entity.sortKey,
-        episodeIds: ids,
-        thumbnailUrl: entity.thumbnailUrl,
-        yearHeaderMode: entity.yearGrouped
-            ? YearHeaderMode.firstEpisode
-            : YearHeaderMode.none,
-        groups: groups,
-      ),
-    );
-  }
-
-  return SmartPlaylistGrouping(
-    playlists: playlists,
-    ungroupedEpisodeIds: ungroupedIds,
-    resolverType: cachedPlaylists.first.resolverType,
   );
 }
 
@@ -571,178 +484,5 @@ Future<SmartPlaylistGrouping?> _reResolveFromEpisodes(
     playlists: enriched,
     ungroupedEpisodeIds: result.ungroupedEpisodeIds,
     resolverType: result.resolverType,
-  );
-}
-
-/// Resolves groups from pattern config for cached rebuilds.
-///
-/// Supports both old `subCategories` format (all entries have
-/// `pattern`) and new `groups` format (entries without `pattern`
-/// act as fallback groups).
-List<SmartPlaylistGroup>? _resolveGroupsFromConfig(
-  List<dynamic> groupsConfig,
-  List<Episode> episodes,
-) {
-  final configs = groupsConfig.cast<Map<String, dynamic>>();
-
-  // Separate pattern-based and fallback groups
-  final patternMatchers =
-      <
-        ({
-          RegExp regex,
-          String id,
-          String displayName,
-          YearHeaderMode? yearOverride,
-        })
-      >[];
-  String? fallbackId;
-  String? fallbackDisplayName;
-
-  for (final c in configs) {
-    final patternStr = c['pattern'] as String?;
-    if (patternStr != null) {
-      final yearGrouped = c['yearGrouped'] as bool? ?? false;
-      final yearOverrideStr = c['yearOverride'] as String?;
-      patternMatchers.add((
-        regex: RegExp(patternStr),
-        id: c['id'] as String,
-        displayName: c['displayName'] as String,
-        yearOverride: yearOverrideStr != null
-            ? _parseYearOverride(yearOverrideStr)
-            : (yearGrouped ? YearHeaderMode.perEpisode : null),
-      ));
-    } else {
-      fallbackId = c['id'] as String;
-      fallbackDisplayName = c['displayName'] as String;
-    }
-  }
-
-  final grouped = <String, List<int>>{};
-  final fallbackIds = <int>[];
-
-  for (final episode in episodes) {
-    var matched = false;
-    for (final matcher in patternMatchers) {
-      if (matcher.regex.hasMatch(episode.title)) {
-        grouped.putIfAbsent(matcher.id, () => []).add(episode.id);
-        matched = true;
-        break;
-      }
-    }
-    if (!matched) {
-      fallbackIds.add(episode.id);
-    }
-  }
-
-  // Build episode lookup for stats computation
-  final episodeById = <int, Episode>{};
-  for (final ep in episodes) {
-    episodeById[ep.id] = ep;
-  }
-
-  final result = <SmartPlaylistGroup>[];
-  for (final matcher in patternMatchers) {
-    final ids = grouped[matcher.id];
-    if (ids != null && ids.isNotEmpty) {
-      final groupEps = ids.map((id) => episodeById[id]).nonNulls.toList();
-      final stats = _computeGroupStatsFromEpisodes(groupEps);
-      final thumb = _latestThumbnailFromEpisodes(groupEps);
-      result.add(
-        SmartPlaylistGroup(
-          id: matcher.id,
-          displayName: matcher.displayName,
-          episodeIds: ids,
-          yearOverride: matcher.yearOverride,
-          thumbnailUrl: thumb,
-          earliestDate: stats.earliest,
-          latestDate: stats.latest,
-          totalDurationMs: stats.totalDurationMs,
-        ),
-      );
-    }
-  }
-
-  if (fallbackIds.isNotEmpty) {
-    final id = fallbackId ?? 'other';
-    final name = fallbackDisplayName ?? 'Other';
-    final fallbackEps = fallbackIds
-        .map((id) => episodeById[id])
-        .nonNulls
-        .toList();
-    final stats = _computeGroupStatsFromEpisodes(fallbackEps);
-    final thumb = _latestThumbnailFromEpisodes(fallbackEps);
-    result.add(
-      SmartPlaylistGroup(
-        id: id,
-        displayName: name,
-        episodeIds: fallbackIds,
-        thumbnailUrl: thumb,
-        earliestDate: stats.earliest,
-        latestDate: stats.latest,
-        totalDurationMs: stats.totalDurationMs,
-      ),
-    );
-  }
-
-  return result.isEmpty ? null : result;
-}
-
-/// Parses a yearOverride string into [YearHeaderMode].
-YearHeaderMode _parseYearOverride(String value) {
-  return switch (value) {
-    'firstEpisode' => YearHeaderMode.firstEpisode,
-    'perEpisode' => YearHeaderMode.perEpisode,
-    _ => YearHeaderMode.none,
-  };
-}
-
-/// Returns the imageUrl of the newest episode that has one.
-String? _latestThumbnailFromEpisodes(List<Episode> episodes) {
-  final sorted = [...episodes]
-    ..sort((a, b) {
-      final aPub = a.publishedAt;
-      final bPub = b.publishedAt;
-      if (aPub == null && bPub == null) return 0;
-      if (aPub == null) return 1;
-      if (bPub == null) return -1;
-      return bPub.compareTo(aPub);
-    });
-  for (final ep in sorted) {
-    if (ep.imageUrl != null) return ep.imageUrl;
-  }
-  return null;
-}
-
-/// Computed stats for a group of episodes.
-typedef _GroupStats = ({
-  DateTime? earliest,
-  DateTime? latest,
-  int? totalDurationMs,
-});
-
-/// Computes min/max publishedAt and total duration from episodes.
-_GroupStats _computeGroupStatsFromEpisodes(List<Episode> episodes) {
-  DateTime? earliest;
-  DateTime? latest;
-  var totalMs = 0;
-  var hasDuration = false;
-
-  for (final ep in episodes) {
-    final pub = ep.publishedAt;
-    if (pub != null) {
-      if (earliest == null || pub.isBefore(earliest)) earliest = pub;
-      if (latest == null || pub.isAfter(latest)) latest = pub;
-    }
-    final dur = ep.durationMs;
-    if (dur != null && 0 < dur) {
-      totalMs += dur;
-      hasDuration = true;
-    }
-  }
-
-  return (
-    earliest: earliest,
-    latest: latest,
-    totalDurationMs: hasDuration ? totalMs : null,
   );
 }
