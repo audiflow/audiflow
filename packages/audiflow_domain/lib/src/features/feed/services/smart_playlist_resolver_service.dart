@@ -71,20 +71,55 @@ class SmartPlaylistResolverService {
 
       resolverType ??= result.resolverType;
 
-      // Apply display config from definition
-      final decorated = result.playlists.map((playlist) {
-        return playlist.copyWith(
-          contentType: RssMetadataResolver.parseContentType(
-            definition.contentType,
-          ),
-          yearHeaderMode: RssMetadataResolver.parseYearHeaderMode(
-            definition.yearHeaderMode,
-          ),
-          episodeYearHeaders: definition.episodeYearHeaders,
-        );
-      }).toList();
+      final contentType = RssMetadataResolver.parseContentType(
+        definition.contentType,
+      );
+      final yearHeaderMode = RssMetadataResolver.parseYearHeaderMode(
+        definition.yearHeaderMode,
+      );
 
-      allPlaylists.addAll(decorated);
+      // When contentType is "groups", the resolver's playlists
+      // become groups inside a single parent playlist named after
+      // the definition.
+      if (contentType == SmartPlaylistContentType.groups) {
+        final groups = result.playlists
+            .map(
+              (p) => SmartPlaylistGroup(
+                id: p.id,
+                displayName: p.displayName,
+                sortKey: p.sortKey,
+                episodeIds: p.episodeIds,
+                thumbnailUrl: p.thumbnailUrl,
+              ),
+            )
+            .toList();
+        final allEpisodeIds = groups.expand((g) => g.episodeIds).toList();
+
+        allPlaylists.add(
+          SmartPlaylist(
+            id: definition.id,
+            displayName: definition.displayName,
+            sortKey: allPlaylists.length,
+            episodeIds: allEpisodeIds,
+            contentType: contentType,
+            yearHeaderMode: yearHeaderMode,
+            episodeYearHeaders: definition.episodeYearHeaders,
+            groups: groups,
+          ),
+        );
+      } else {
+        // Episodes mode: each resolver playlist is a top-level
+        // smart playlist.
+        final decorated = result.playlists.map((playlist) {
+          return playlist.copyWith(
+            contentType: contentType,
+            yearHeaderMode: yearHeaderMode,
+            episodeYearHeaders: definition.episodeYearHeaders,
+          );
+        }).toList();
+        allPlaylists.addAll(decorated);
+      }
+
       allUngroupedIds.addAll(result.ungroupedEpisodeIds);
 
       // Track claimed episode IDs
