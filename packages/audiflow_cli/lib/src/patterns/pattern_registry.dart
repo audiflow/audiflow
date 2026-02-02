@@ -5,10 +5,20 @@ import 'package:audiflow_domain/patterns.dart';
 /// Patterns are loaded from JSON configuration via
 /// [SmartPlaylistPatternLoader].
 class PatternRegistry {
-  /// All registered pattern configs (empty by default).
-  ///
-  /// Call [loadFromJson] to populate from JSON config.
-  List<SmartPlaylistPatternConfig> get patterns => [];
+  /// Creates a registry with optional pre-loaded patterns.
+  PatternRegistry([List<SmartPlaylistPatternConfig>? patterns])
+    : _patterns = patterns ?? [];
+
+  /// Creates a registry from a JSON string.
+  factory PatternRegistry.fromJson(String jsonString) {
+    final patterns = SmartPlaylistPatternLoader.parse(jsonString);
+    return PatternRegistry(patterns);
+  }
+
+  final List<SmartPlaylistPatternConfig> _patterns;
+
+  /// All registered pattern configs.
+  List<SmartPlaylistPatternConfig> get patterns => _patterns;
 
   /// Finds a pattern config by its ID.
   SmartPlaylistPatternConfig? findById(String id) {

@@ -61,22 +61,7 @@ class _SmartPlaylistGroupEpisodesScreenState
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.group.displayName),
-        actions: [
-          IconButton(
-            icon: Icon(
-              _sortOrder == SortOrder.ascending
-                  ? Icons.arrow_upward
-                  : Icons.arrow_downward,
-            ),
-            tooltip: _sortOrder == SortOrder.ascending
-                ? 'Oldest first'
-                : 'Newest first',
-            onPressed: _toggleSortOrder,
-          ),
-        ],
-      ),
+      appBar: AppBar(title: Text(widget.group.displayName)),
       body: CustomScrollView(
         controller: _scrollController,
         slivers: [
@@ -96,12 +81,7 @@ class _SmartPlaylistGroupEpisodesScreenState
                     ),
                   ),
                   const SizedBox(height: Spacing.xs),
-                  Text(
-                    '${_episodeIds.length} episodes',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                  ),
+                  _buildSortHeader(theme),
                 ],
               ),
             ),
@@ -109,6 +89,52 @@ class _SmartPlaylistGroupEpisodesScreenState
           ..._buildEpisodeList(theme),
         ],
       ),
+    );
+  }
+
+  Widget _buildSortHeader(ThemeData theme) {
+    final colorScheme = theme.colorScheme;
+    return Row(
+      children: [
+        Text(
+          '${_episodeIds.length} episodes',
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const Spacer(),
+        InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: _toggleSortOrder,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: Spacing.sm,
+              vertical: Spacing.xxs,
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  _sortOrder == SortOrder.ascending
+                      ? Icons.arrow_upward
+                      : Icons.arrow_downward,
+                  size: 16,
+                  color: colorScheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  _sortOrder == SortOrder.ascending
+                      ? 'Oldest first'
+                      : 'Newest first',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 

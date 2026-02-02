@@ -1,14 +1,27 @@
 @Tags(['integration'])
 library;
 
+import 'dart:io';
+
 import 'package:audiflow_cli/src/commands/smart_playlist_debug_command.dart';
+import 'package:audiflow_cli/src/patterns/pattern_registry.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  late PatternRegistry registry;
+
+  setUp(() {
+    final jsonFile = File('test/fixtures/smart_playlist_patterns.json');
+    registry = PatternRegistry.fromJson(jsonFile.readAsStringSync());
+  });
+
   group('SmartPlaylistDebugCommand integration', () {
     test('processes COTEN RADIO feed', () async {
       final output = StringBuffer();
-      final command = SmartPlaylistDebugCommand(output);
+      final command = SmartPlaylistDebugCommand(
+        sink: output,
+        registry: registry,
+      );
 
       await command.run(
         feedUrl: 'https://anchor.fm/s/8c2088c/podcast/rss',

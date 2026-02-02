@@ -623,7 +623,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
       ':groupId',
       group.id,
     );
-    context.go(
+    context.push(
       '$uri/$playlistPath/$groupPath',
       extra: <String, dynamic>{
         'podcast': podcast,

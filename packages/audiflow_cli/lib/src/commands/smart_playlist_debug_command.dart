@@ -14,9 +14,9 @@ import '../reporters/table_reporter.dart';
 /// Command to debug smart playlist extraction against
 /// a live RSS feed.
 class SmartPlaylistDebugCommand {
-  SmartPlaylistDebugCommand([StringSink? sink])
+  SmartPlaylistDebugCommand({StringSink? sink, PatternRegistry? registry})
     : _sink = sink ?? StringBuffer(),
-      _registry = PatternRegistry();
+      _registry = registry ?? PatternRegistry();
 
   final StringSink _sink;
   final PatternRegistry _registry;
