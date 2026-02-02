@@ -508,7 +508,7 @@ Future<SmartPlaylistGrouping?> _reResolveFromEpisodes(
   );
   if (result == null) return null;
 
-  // Enrich playlists with thumbnail from latest episode
+  // Enrich playlists and their groups with thumbnails
   final enriched = result.playlists.map((playlist) {
     final playlistEpisodes =
         episodes.where((e) => playlist.episodeIds.contains(e.id)).toList()
@@ -529,7 +529,40 @@ Future<SmartPlaylistGrouping?> _reResolveFromEpisodes(
       }
     }
 
-    return playlist.copyWith(thumbnailUrl: thumbnailUrl);
+    // Enrich groups with thumbnails
+    final enrichedGroups = playlist.groups?.map((group) {
+      final groupEpisodes =
+          episodes.where((e) => group.episodeIds.contains(e.id)).toList()
+            ..sort((a, b) {
+              final aPub = a.publishedAt;
+              final bPub = b.publishedAt;
+              if (aPub == null && bPub == null) return 0;
+              if (aPub == null) return 1;
+              if (bPub == null) return -1;
+              return bPub.compareTo(aPub);
+            });
+
+      String? groupThumb;
+      for (final ep in groupEpisodes) {
+        if (ep.imageUrl != null) {
+          groupThumb = ep.imageUrl;
+          break;
+        }
+      }
+
+      return SmartPlaylistGroup(
+        id: group.id,
+        displayName: group.displayName,
+        sortKey: group.sortKey,
+        episodeIds: group.episodeIds,
+        thumbnailUrl: groupThumb,
+      );
+    }).toList();
+
+    return playlist.copyWith(
+      thumbnailUrl: thumbnailUrl,
+      groups: enrichedGroups,
+    );
   }).toList();
 
   return SmartPlaylistGrouping(
