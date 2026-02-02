@@ -744,8 +744,8 @@ final class PodcastSmartPlaylistsByFeedUrlFamily extends $Family
 /// Fetches episodes for a smart playlist by their IDs with
 /// progress data.
 ///
-/// Episodes are sorted by episode number (ascending) with fallback
-/// to publish date (newest first).
+/// Episodes are sorted by publish date (oldest first).
+/// Callers reverse the list for "newest first" display.
 
 @ProviderFor(smartPlaylistEpisodes)
 final smartPlaylistEpisodesProvider = SmartPlaylistEpisodesFamily._();
@@ -753,8 +753,8 @@ final smartPlaylistEpisodesProvider = SmartPlaylistEpisodesFamily._();
 /// Fetches episodes for a smart playlist by their IDs with
 /// progress data.
 ///
-/// Episodes are sorted by episode number (ascending) with fallback
-/// to publish date (newest first).
+/// Episodes are sorted by publish date (oldest first).
+/// Callers reverse the list for "newest first" display.
 
 final class SmartPlaylistEpisodesProvider
     extends
@@ -769,8 +769,8 @@ final class SmartPlaylistEpisodesProvider
   /// Fetches episodes for a smart playlist by their IDs with
   /// progress data.
   ///
-  /// Episodes are sorted by episode number (ascending) with fallback
-  /// to publish date (newest first).
+  /// Episodes are sorted by publish date (oldest first).
+  /// Callers reverse the list for "newest first" display.
   SmartPlaylistEpisodesProvider._({
     required SmartPlaylistEpisodesFamily super.from,
     required List<int> super.argument,
@@ -816,13 +816,13 @@ final class SmartPlaylistEpisodesProvider
 }
 
 String _$smartPlaylistEpisodesHash() =>
-    r'f661b45c1bf737dca9cde6a40c2bf2121f561f1d';
+    r'307b7b5cd474af559b96a7fd443ea755576313f6';
 
 /// Fetches episodes for a smart playlist by their IDs with
 /// progress data.
 ///
-/// Episodes are sorted by episode number (ascending) with fallback
-/// to publish date (newest first).
+/// Episodes are sorted by publish date (oldest first).
+/// Callers reverse the list for "newest first" display.
 
 final class SmartPlaylistEpisodesFamily extends $Family
     with
@@ -842,8 +842,8 @@ final class SmartPlaylistEpisodesFamily extends $Family
   /// Fetches episodes for a smart playlist by their IDs with
   /// progress data.
   ///
-  /// Episodes are sorted by episode number (ascending) with fallback
-  /// to publish date (newest first).
+  /// Episodes are sorted by publish date (oldest first).
+  /// Callers reverse the list for "newest first" display.
 
   SmartPlaylistEpisodesProvider call(List<int> episodeIds) =>
       SmartPlaylistEpisodesProvider._(argument: episodeIds, from: this);

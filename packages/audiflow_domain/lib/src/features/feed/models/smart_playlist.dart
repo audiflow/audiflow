@@ -33,6 +33,7 @@ final class SmartPlaylistGroup {
     this.sortKey = 0,
     this.thumbnailUrl,
     this.yearOverride,
+    this.episodeYearHeaders,
     this.earliestDate,
     this.latestDate,
     this.totalDurationMs,
@@ -56,6 +57,11 @@ final class SmartPlaylistGroup {
 
   /// Per-group override of the parent playlist's yearHeaderMode.
   final YearHeaderMode? yearOverride;
+
+  /// Per-group override of the parent playlist's episodeYearHeaders.
+  ///
+  /// When null, inherits the playlist-level setting.
+  final bool? episodeYearHeaders;
 
   /// Earliest episode publish date in this group.
   final DateTime? earliestDate;

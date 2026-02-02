@@ -40,7 +40,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 15;
+  int get schemaVersion => 16;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -126,6 +126,13 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(
           smartPlaylistGroups,
           smartPlaylistGroups.totalDurationMs,
+        );
+      }
+      // Migration from v15 to v16: add episodeYearHeaders to groups
+      if (16 <= to && from < 16) {
+        await m.addColumn(
+          smartPlaylistGroups,
+          smartPlaylistGroups.episodeYearHeaders,
         );
       }
     },
