@@ -34,6 +34,8 @@ export 'src/features/feed/models/episode_filter.dart';
 export 'src/features/feed/models/feed_parse_progress.dart';
 export 'src/features/feed/models/podcast_view_mode.dart';
 export 'src/features/feed/models/smart_playlist.dart';
+export 'src/features/feed/models/smart_playlist_definition.dart';
+export 'src/features/feed/models/smart_playlist_group_def.dart';
 export 'src/features/feed/models/smart_playlist_pattern.dart';
 export 'src/features/feed/models/smart_playlist_sort.dart';
 export 'src/features/feed/models/smart_playlist_title_extractor.dart';

@@ -32,7 +32,8 @@ class SmartPlaylistResolverService {
     if (pattern != null) {
       final resolver = _findResolverByType(pattern.resolverType);
       if (resolver != null) {
-        final result = resolver.resolve(episodes, pattern);
+        // TODO(task-7): pass definition instead of null
+        final result = resolver.resolve(episodes, null);
         if (result != null) return result;
       }
     }

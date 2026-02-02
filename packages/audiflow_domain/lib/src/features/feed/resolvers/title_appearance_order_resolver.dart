@@ -1,7 +1,7 @@
 import '../../../common/database/app_database.dart';
 import '../extensions/episode_extensions.dart';
 import '../models/smart_playlist.dart';
-import '../models/smart_playlist_pattern.dart';
+import '../models/smart_playlist_definition.dart';
 import '../models/smart_playlist_sort.dart';
 import '../models/smart_playlist_title_extractor.dart';
 import 'smart_playlist_resolver.dart';
@@ -17,9 +17,9 @@ import 'smart_playlist_resolver.dart';
 /// Where "Rome" becomes playlist 1 (appeared first), "Venezia"
 /// becomes playlist 2.
 ///
-/// When a titleExtractor is provided in the pattern, it uses that
-/// to extract playlist names. Otherwise, falls back to the
-/// 'pattern' config with capture group 1.
+/// When a titleExtractor is provided in the definition, it uses that
+/// to extract playlist names. Otherwise, falls back to the first
+/// group's pattern with capture group 1.
 class TitleAppearanceOrderResolver implements SmartPlaylistResolver {
   @override
   String get type => 'title_appearance';
@@ -33,14 +33,14 @@ class TitleAppearanceOrderResolver implements SmartPlaylistResolver {
   @override
   SmartPlaylistGrouping? resolve(
     List<Episode> episodes,
-    SmartPlaylistPattern? pattern,
+    SmartPlaylistDefinition? definition,
   ) {
-    if (pattern == null) return null;
+    if (definition == null) return null;
 
-    final titleExtractor = pattern.titleExtractor;
-    final patternStr = pattern.config['pattern'] as String?;
+    final titleExtractor = definition.titleExtractor;
+    final patternStr = definition.groups?.firstOrNull?.pattern;
 
-    // Need either a titleExtractor or a pattern config
+    // Need either a titleExtractor or a group pattern
     if (titleExtractor == null && patternStr == null) {
       return null;
     }
@@ -83,7 +83,7 @@ class TitleAppearanceOrderResolver implements SmartPlaylistResolver {
     }
 
     final playlists = <SmartPlaylist>[];
-    for (var i = 0; i < playlistOrder.length; i++) {
+    for (var i = 0; playlistOrder.length - i != 0; i++) {
       final name = playlistOrder[i];
       final playlistEpisodes = grouped[name]!;
       playlists.add(
@@ -113,7 +113,7 @@ class TitleAppearanceOrderResolver implements SmartPlaylistResolver {
       return titleExtractor.extract(episode.toEpisodeData());
     }
 
-    // Fall back to pattern config
+    // Fall back to group pattern
     if (patternStr != null) {
       final regex = RegExp(patternStr);
       final match = regex.firstMatch(episode.title);
