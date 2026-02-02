@@ -98,7 +98,7 @@ class _SmartPlaylistGroupEpisodesScreenState
       children: [
         Text(
           '${_episodeIds.length} episodes',
-          style: theme.textTheme.bodySmall?.copyWith(
+          style: theme.textTheme.bodyMedium?.copyWith(
             color: colorScheme.onSurfaceVariant,
           ),
         ),
@@ -151,7 +151,7 @@ class _SmartPlaylistGroupEpisodesScreenState
           return _buildYearGroupedSlivers(episodes, theme);
         }
 
-        final sorted = _sortOrder == SortOrder.ascending
+        final sorted = _sortOrder == SortOrder.descending
             ? episodes.reversed.toList()
             : episodes;
 

@@ -24,6 +24,8 @@ class AppRoutes {
   static const String smartPlaylistEpisodes = 'smart-playlist/:playlistId';
   static const String episodeDetail = 'episode/:episodeGuid';
   static const String smartPlaylistGroupEpisodesPath = 'group/:groupId';
+  static const String smartPlaylistDirectGroup =
+      'smart-playlist/:playlistId/group/:groupId';
 }
 
 /// Navigator keys for each tab branch.
@@ -81,6 +83,11 @@ GoRouter createAppRouter() {
                         ],
                       ),
                       GoRoute(
+                        path: AppRoutes.smartPlaylistDirectGroup,
+                        builder: (context, state) =>
+                            _buildGroupEpisodesScreen(state),
+                      ),
+                      GoRoute(
                         path: AppRoutes.episodeDetail,
                         builder: (context, state) =>
                             _buildEpisodeDetailScreen(state),
@@ -114,6 +121,11 @@ GoRouter createAppRouter() {
                                 _buildGroupEpisodesScreen(state),
                           ),
                         ],
+                      ),
+                      GoRoute(
+                        path: AppRoutes.smartPlaylistDirectGroup,
+                        builder: (context, state) =>
+                            _buildGroupEpisodesScreen(state),
                       ),
                       GoRoute(
                         path: AppRoutes.episodeDetail,
