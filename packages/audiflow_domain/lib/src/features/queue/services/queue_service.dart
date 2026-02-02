@@ -114,23 +114,38 @@ class QueueService {
       return;
     }
 
-    // Get subsequent episodes (episode number ascending, after starting)
-    final subsequentEpisodes = await _episodeRepository.getSubsequentEpisodes(
-      podcastId: startingEpisode.podcastId,
-      afterEpisodeNumber: startingEpisode.episodeNumber,
-      limit: 100,
-    );
-
     List<int> episodeIds;
 
     if (siblingEpisodeIds != null) {
-      // Filter to only episodes in the same group (playlist/sub-category)
-      final allowedIds = siblingEpisodeIds.toSet();
-      episodeIds = subsequentEpisodes
-          .where((e) => allowedIds.contains(e.id))
-          .map((e) => e.id)
-          .toList();
+      // Fetch sibling episodes and sort by episode number ascending
+      // to build a queue from the current episode toward newer ones.
+      final siblings = await _episodeRepository.getByIds(siblingEpisodeIds);
+      siblings.sort((a, b) {
+        final aNum = a.episodeNumber;
+        final bNum = b.episodeNumber;
+        if (aNum != null && bNum != null) return aNum.compareTo(bNum);
+        if (aNum != null) return -1;
+        if (bNum != null) return 1;
+        final aPub = a.publishedAt;
+        final bPub = b.publishedAt;
+        if (aPub != null && bPub != null) return aPub.compareTo(bPub);
+        return 0;
+      });
+
+      // Take episodes after the starting episode
+      final startIndex = siblings.indexWhere((e) => e.id == startingEpisodeId);
+      if (0 <= startIndex && startIndex < siblings.length - 1) {
+        episodeIds = siblings.sublist(startIndex + 1).map((e) => e.id).toList();
+      } else {
+        episodeIds = [];
+      }
     } else {
+      // Get subsequent episodes (episode number ascending, after starting)
+      final subsequentEpisodes = await _episodeRepository.getSubsequentEpisodes(
+        podcastId: startingEpisode.podcastId,
+        afterEpisodeNumber: startingEpisode.episodeNumber,
+        limit: 100,
+      );
       episodeIds = subsequentEpisodes.map((e) => e.id).toList();
     }
 

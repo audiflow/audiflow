@@ -539,12 +539,18 @@ class _SmartPlaylistHeader extends StatelessWidget {
 
   Widget _buildArtwork(ColorScheme colorScheme) {
     if (podcastArtworkUrl != null) {
-      return Image.network(
+      return ExtendedImage.network(
         podcastArtworkUrl!,
         width: 80,
         height: 80,
         fit: BoxFit.cover,
-        errorBuilder: (_, _, _) => _buildPlaceholder(colorScheme),
+        cache: true,
+        loadStateChanged: (state) {
+          if (state.extendedImageLoadState == LoadState.failed) {
+            return _buildPlaceholder(colorScheme);
+          }
+          return null;
+        },
       );
     }
     return _buildPlaceholder(colorScheme);
