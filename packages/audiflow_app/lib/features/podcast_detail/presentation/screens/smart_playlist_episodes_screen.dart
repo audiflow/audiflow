@@ -36,6 +36,7 @@ class _SmartPlaylistEpisodesScreenState
     extends ConsumerState<SmartPlaylistEpisodesScreen> {
   final _scrollController = ScrollController();
   SortOrder _sortOrder = SortOrder.descending;
+  String _searchQuery = '';
 
   @override
   void dispose() {
@@ -56,7 +57,10 @@ class _SmartPlaylistEpisodesScreenState
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: Text(widget.smartPlaylist.displayName)),
+      appBar: SearchableAppBar(
+        title: Text(widget.smartPlaylist.displayName),
+        onSearchChanged: (query) => setState(() => _searchQuery = query),
+      ),
       body: CustomScrollView(
         controller: _scrollController,
         slivers: [
@@ -67,19 +71,22 @@ class _SmartPlaylistEpisodesScreenState
               podcastArtworkUrl: widget.podcastArtworkUrl,
             ),
           ),
-          SliverToBoxAdapter(child: _buildSortHeader(theme)),
           ..._buildEpisodeList(context, theme),
         ],
       ),
     );
   }
 
-  Widget _buildSortHeader(ThemeData theme) {
+  Widget _buildSortHeader(ThemeData theme, {int? countOverride}) {
     final colorScheme = theme.colorScheme;
-    final label =
-        widget.smartPlaylist.contentType == SmartPlaylistContentType.groups
-        ? '${widget.smartPlaylist.groups?.length ?? 0} groups'
-        : '${widget.smartPlaylist.episodeCount} episodes';
+    final isGroups =
+        widget.smartPlaylist.contentType == SmartPlaylistContentType.groups;
+    final count =
+        countOverride ??
+        (isGroups
+            ? widget.smartPlaylist.groups?.length ?? 0
+            : widget.smartPlaylist.episodeCount);
+    final label = isGroups ? '$count groups' : '$count episodes';
 
     return Padding(
       padding: const EdgeInsets.symmetric(
@@ -143,19 +150,42 @@ class _SmartPlaylistEpisodesScreenState
 
     return episodesAsync.when(
       data: (episodes) {
-        if (episodes.isEmpty) {
+        final displayEpisodes = filterBySearchQuery(
+          items: episodes,
+          query: _searchQuery,
+          getTitle: (e) => e.episode.title,
+          getDescription: (e) => e.episode.description,
+        );
+
+        final sortHeader = SliverToBoxAdapter(
+          child: _buildSortHeader(theme, countOverride: displayEpisodes.length),
+        );
+
+        if (displayEpisodes.isEmpty) {
+          if (2 <= _searchQuery.length) {
+            return [
+              sortHeader,
+              const SliverFillRemaining(
+                child: Center(child: Text('No results found')),
+              ),
+            ];
+          }
           return [SliverFillRemaining(child: _buildEmptyState(theme))];
         }
 
         if (widget.smartPlaylist.yearHeaderMode != YearHeaderMode.none) {
-          return _buildYearGroupedSlivers(episodes, theme);
+          return [
+            sortHeader,
+            ..._buildYearGroupedSlivers(displayEpisodes, theme),
+          ];
         }
 
         final sorted = _sortOrder == SortOrder.ascending
-            ? episodes.reversed.toList()
-            : episodes;
+            ? displayEpisodes.reversed.toList()
+            : displayEpisodes;
 
         return [
+          sortHeader,
           SliverList.builder(
             itemCount: sorted.length,
             itemBuilder: (context, index) {
@@ -270,10 +300,28 @@ class _SmartPlaylistEpisodesScreenState
   }
 
   List<Widget> _buildGroupList(BuildContext context, ThemeData theme) {
-    final groups = widget.smartPlaylist.groups!;
+    final allGroups = widget.smartPlaylist.groups!;
+    final groups = filterBySearchQuery(
+      items: allGroups,
+      query: _searchQuery,
+      getTitle: (g) => g.displayName,
+    );
+
+    final sortHeader = SliverToBoxAdapter(
+      child: _buildSortHeader(theme, countOverride: groups.length),
+    );
+
+    if (groups.isEmpty && 2 <= _searchQuery.length) {
+      return [
+        sortHeader,
+        const SliverFillRemaining(
+          child: Center(child: Text('No results found')),
+        ),
+      ];
+    }
 
     if (widget.smartPlaylist.yearHeaderMode == YearHeaderMode.none) {
-      return [_buildFlatGroupSliver(groups, theme)];
+      return [sortHeader, _buildFlatGroupSliver(groups, theme)];
     }
 
     // Need episodes to determine years for groups.
@@ -287,7 +335,10 @@ class _SmartPlaylistEpisodesScreenState
         for (final ep in episodes) {
           episodeMap[ep.episode.id] = ep;
         }
-        return _buildYearGroupedGroupList(groups, episodeMap, theme);
+        return [
+          sortHeader,
+          ..._buildYearGroupedGroupList(groups, episodeMap, theme),
+        ];
       },
       loading: () => [
         const SliverToBoxAdapter(
