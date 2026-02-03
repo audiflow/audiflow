@@ -32,5 +32,8 @@ export 'src/widgets/lists/year_divider.dart';
 export 'src/widgets/lists/year_grouped_slivers.dart';
 export 'src/widgets/lists/year_picker_bottom_sheet.dart';
 
+// Widgets - Search
+export 'src/widgets/search/searchable_app_bar.dart';
+
 // Utils
 export 'src/utils/search_filter.dart';
