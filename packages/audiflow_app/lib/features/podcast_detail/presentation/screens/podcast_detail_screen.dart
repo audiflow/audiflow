@@ -43,6 +43,8 @@ class PodcastDetailScreen extends ConsumerStatefulWidget {
 class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
   final _scrollController = ScrollController();
 
+  String _searchQuery = '';
+
   /// Local view mode for non-subscribed podcasts.
   PodcastViewMode _localViewMode = PodcastViewMode.episodes;
 
@@ -69,9 +71,9 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      appBar: AppBar(
+      appBar: SearchableAppBar(
         title: Text(podcast.name, maxLines: 1, overflow: TextOverflow.ellipsis),
-        actions: const [],
+        onSearchChanged: (query) => setState(() => _searchQuery = query),
       ),
       body: _buildBody(context, ref, theme, colorScheme),
     );
@@ -375,9 +377,20 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
           return _buildInlineGroupList(episodes, playlist, theme, sortOrder);
         }
 
+        final displayEpisodes = filterBySearchQuery(
+          items: episodes,
+          query: _searchQuery,
+          getTitle: (e) => e.episode.title,
+          getDescription: (e) => e.episode.description,
+        );
+
+        if (displayEpisodes.isEmpty && 2 <= _searchQuery.length) {
+          return [_buildSearchEmptyState(theme)];
+        }
+
         if (playlist.yearHeaderMode != YearHeaderMode.none) {
           return _buildYearGroupedPlaylistSlivers(
-            episodes,
+            displayEpisodes,
             playlist,
             theme,
             sortOrder,
@@ -385,8 +398,8 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
         }
 
         final sorted = sortOrder == SortOrder.ascending
-            ? episodes.reversed.toList()
-            : episodes;
+            ? displayEpisodes.reversed.toList()
+            : displayEpisodes;
 
         return [
           SliverList.builder(
@@ -544,6 +557,16 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
     SortOrder sortOrder,
   ) {
     final groups = playlist.groups!;
+    final displayGroups = filterBySearchQuery(
+      items: groups,
+      query: _searchQuery,
+      getTitle: (g) => g.displayName,
+    );
+
+    if (displayGroups.isEmpty && 2 <= _searchQuery.length) {
+      return [_buildSearchEmptyState(theme)];
+    }
+
     final episodeMap = <int, SmartPlaylistEpisodeData>{};
     for (final ep in episodes) {
       episodeMap[ep.episode.id] = ep;
@@ -552,9 +575,9 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
     if (playlist.yearHeaderMode == YearHeaderMode.none) {
       return [
         SliverList.builder(
-          itemCount: groups.length,
+          itemCount: displayGroups.length,
           itemBuilder: (context, index) {
-            final group = groups[index];
+            final group = displayGroups[index];
             return _InlineGroupCard(
               group: group,
               podcastArtworkUrl: podcast.artworkUrl,
@@ -568,7 +591,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
     // Year-grouped display: determine year per group from
     // first episode's publishedAt.
     final byYear = <int, List<SmartPlaylistGroup>>{};
-    for (final group in groups) {
+    for (final group in displayGroups) {
       var year = 0;
       if (group.episodeIds.isNotEmpty) {
         final firstId = group.episodeIds.first;
@@ -593,7 +616,11 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
 
     return [
       SliverToBoxAdapter(
-        child: _buildSortHeader(theme, '${groups.length} groups', sortOrder),
+        child: _buildSortHeader(
+          theme,
+          '${displayGroups.length} groups',
+          sortOrder,
+        ),
       ),
       ...buildYearGroupedSlivers<SmartPlaylistGroup>(
         itemsByYear: {for (final y in sortedYears) y: byYear[y]!},
@@ -645,7 +672,17 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
 
     return episodesAsync.when(
       data: (episodes) {
-        if (episodes.isEmpty) {
+        final displayEpisodes = filterBySearchQuery(
+          items: episodes,
+          query: _searchQuery,
+          getTitle: (e) => e.title,
+          getDescription: (e) => e.description,
+        );
+
+        if (displayEpisodes.isEmpty) {
+          if (2 <= _searchQuery.length) {
+            return [_buildSearchEmptyState(theme)];
+          }
           return [SliverFillRemaining(child: _buildEmptyFilterState(theme))];
         }
 
@@ -653,7 +690,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
         final sortHeader = SliverToBoxAdapter(
           child: _buildSortHeader(
             theme,
-            '${episodes.length} episodes',
+            '${displayEpisodes.length} episodes',
             sortOrder,
           ),
         );
@@ -662,7 +699,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
           return [
             sortHeader,
             ..._buildYearGroupedEpisodeSlivers(
-              episodes,
+              displayEpisodes,
               progressMap,
               theme,
               sortOrder,
@@ -673,9 +710,9 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
         return [
           sortHeader,
           SliverList.builder(
-            itemCount: episodes.length,
+            itemCount: displayEpisodes.length,
             itemBuilder: (context, index) {
-              final episode = episodes[index];
+              final episode = displayEpisodes[index];
               final progress = episode.enclosureUrl != null
                   ? progressMap[episode.enclosureUrl]
                   : null;
@@ -914,6 +951,20 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
           Icons.broken_image,
           size: 48,
           color: colorScheme.onSurfaceVariant,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSearchEmptyState(ThemeData theme) {
+    final colorScheme = theme.colorScheme;
+    return SliverFillRemaining(
+      child: Center(
+        child: Text(
+          'No results found',
+          style: theme.textTheme.titleMedium?.copyWith(
+            color: colorScheme.onSurfaceVariant,
+          ),
         ),
       ),
     );
