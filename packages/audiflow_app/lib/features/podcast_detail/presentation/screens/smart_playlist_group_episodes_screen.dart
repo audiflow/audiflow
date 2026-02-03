@@ -37,6 +37,7 @@ class _SmartPlaylistGroupEpisodesScreenState
     extends ConsumerState<SmartPlaylistGroupEpisodesScreen> {
   final _scrollController = ScrollController();
   SortOrder _sortOrder = SortOrder.descending;
+  String _searchQuery = '';
 
   List<int> get _episodeIds =>
       widget.filteredEpisodeIds ?? widget.group.episodeIds;
@@ -65,7 +66,10 @@ class _SmartPlaylistGroupEpisodesScreenState
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      appBar: AppBar(title: Text(widget.group.displayName)),
+      appBar: SearchableAppBar(
+        title: Text(widget.group.displayName),
+        onSearchChanged: (query) => setState(() => _searchQuery = query),
+      ),
       body: CustomScrollView(
         controller: _scrollController,
         slivers: [
@@ -75,18 +79,11 @@ class _SmartPlaylistGroupEpisodesScreenState
                 horizontal: Spacing.md,
                 vertical: Spacing.sm,
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    widget.podcastTitle,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(height: Spacing.xs),
-                  _buildSortHeader(theme, showSortSwitch: _showYearHeaders),
-                ],
+              child: Text(
+                widget.podcastTitle,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
               ),
             ),
           ),
@@ -96,12 +93,16 @@ class _SmartPlaylistGroupEpisodesScreenState
     );
   }
 
-  Widget _buildSortHeader(ThemeData theme, {required bool showSortSwitch}) {
+  Widget _buildSortHeader(
+    ThemeData theme, {
+    required bool showSortSwitch,
+    int? episodeCount,
+  }) {
     final colorScheme = theme.colorScheme;
     return Row(
       children: [
         Text(
-          '${_episodeIds.length} episodes',
+          '${episodeCount ?? _episodeIds.length} episodes',
           style: theme.textTheme.bodyMedium?.copyWith(
             color: colorScheme.onSurfaceVariant,
           ),
@@ -149,18 +150,48 @@ class _SmartPlaylistGroupEpisodesScreenState
 
     return episodesAsync.when(
       data: (episodes) {
-        if (episodes.isEmpty) {
+        final displayEpisodes = filterBySearchQuery(
+          items: episodes,
+          query: _searchQuery,
+          getTitle: (e) => e.episode.title,
+          getDescription: (e) => e.episode.description,
+        );
+
+        final sortHeaderSliver = SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: Spacing.md),
+            child: _buildSortHeader(
+              theme,
+              showSortSwitch: _showYearHeaders,
+              episodeCount: displayEpisodes.length,
+            ),
+          ),
+        );
+
+        if (displayEpisodes.isEmpty) {
+          if (2 <= _searchQuery.length) {
+            return [
+              sortHeaderSliver,
+              const SliverFillRemaining(
+                child: Center(child: Text('No results found')),
+              ),
+            ];
+          }
           return [SliverFillRemaining(child: _buildEmptyState(theme))];
         }
 
         if (_showYearHeaders) {
-          return _buildYearGroupedSlivers(episodes, theme);
+          return [
+            sortHeaderSliver,
+            ..._buildYearGroupedSlivers(displayEpisodes, theme),
+          ];
         }
 
         // No year headers: always ascending (oldest first)
-        final sorted = episodes;
+        final sorted = displayEpisodes;
 
         return [
+          sortHeaderSliver,
           SliverList.builder(
             itemCount: sorted.length,
             itemBuilder: (context, index) {
