@@ -139,12 +139,14 @@ flutter gen-l10n  # Generate from ARB files
 
 **Never edit generated files manually!**
 
-## Pre-Commit Checklist (MANDATORY)
+## Post-Implementation Checklist (MANDATORY)
 
-Before committing Dart files, Claude MUST verify all of the following pass:
+After completing implementation, Claude MUST perform all of the following:
 
 1. **Format**: Run `dart_format` tool
 2. **Analyze**: Run `analyze_files` tool - must have zero errors/warnings
 3. **Tests**: Run `run_tests` tool - all tests must pass
+4. **Bookmark**: Run `jj bookmark create <type>/<description>`
+   - Naming: `feat/`, `fix/`, `refactor/`, `chore/`
 
-**Do NOT commit if any of these checks fail.** Fix issues first, then commit.
+**Do NOT report completion if any of these steps fail.** Fix issues first.

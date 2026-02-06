@@ -51,6 +51,8 @@ dependencies:
   # Internal packages
   audiflow_ai:
     path: ../audiflow_ai
+  audiflow_core:
+    path: ../audiflow_core
   audiflow_domain:
     path: ../audiflow_domain
   audiflow_search:

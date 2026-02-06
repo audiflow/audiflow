@@ -1,10 +1,11 @@
+import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 
 import '../../../queue/presentation/controllers/queue_controller.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../controllers/podcast_detail_controller.dart';
 import '../screens/episode_detail_screen.dart';
 
@@ -54,9 +55,11 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
     final downloadAsync = ref.watch(episodeDownloadProvider(episode.id));
     final downloadTask = downloadAsync.value;
 
+    final l10n = AppLocalizations.of(context);
+
     return EpisodeCard(
       title: episode.title,
-      subtitle: _buildSubtitleText(),
+      subtitle: _buildSubtitleText(l10n),
       description: episode.description,
       thumbnailUrl: episode.imageUrl,
       podcastArtworkUrl: artworkUrl,
@@ -105,7 +108,7 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
     return threshold.isBefore(publishDate);
   }
 
-  String _buildSubtitleText() {
+  String _buildSubtitleText(AppLocalizations l10n) {
     final parts = <String>[];
 
     if (progress != null && progress!.isInProgress) {
@@ -120,7 +123,12 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
     }
 
     if (episode.publishedAt != null) {
-      parts.add(DateFormat.E().format(episode.publishedAt!));
+      parts.add(
+        episode.publishedAt!.formatEpisodeDate(
+          todayLabel: l10n.dateToday,
+          yesterdayLabel: l10n.dateYesterday,
+        ),
+      );
     }
 
     return parts.join('  ');
