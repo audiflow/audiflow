@@ -43,4 +43,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get addToQueue => 'Add to queue';
+
+  @override
+  String get dateToday => 'Today';
+
+  @override
+  String get dateYesterday => 'Yesterday';
 }

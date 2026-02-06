@@ -43,4 +43,10 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get addToQueue => 'キューに追加';
+
+  @override
+  String get dateToday => '今日';
+
+  @override
+  String get dateYesterday => '昨日';
 }
