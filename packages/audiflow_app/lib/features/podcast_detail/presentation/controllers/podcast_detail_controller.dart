@@ -648,6 +648,7 @@ SmartPlaylistGrouping? _resolveFromFeedByCategory(
               .map((ep) => -(episodes.indexOf(ep) + 1))
               .toList(),
           episodeYearHeaders: gDef.episodeYearHeaders,
+          showDateRange: gDef.showDateRange ?? definition.showDateRange,
         ),
       );
     }
@@ -675,6 +676,7 @@ SmartPlaylistGrouping? _resolveFromFeedByCategory(
         contentType: _parseFeedContentType(definition.contentType),
         yearHeaderMode: _parseFeedYearHeaderMode(definition.yearHeaderMode),
         episodeYearHeaders: definition.episodeYearHeaders,
+        showDateRange: definition.showDateRange,
         groups: smartGroups.isEmpty ? null : smartGroups,
       ),
     );
@@ -758,6 +760,7 @@ SmartPlaylistGrouping? _resolveFromFeedWithParentPlaylists(
       episodes,
       def.nullSeasonGroupKey,
       def.titleExtractor,
+      showDateRange: def.showDateRange,
     );
     final allEpisodeIds = bucketEpisodes
         .map((ep) => -(episodes.indexOf(ep) + 1))
@@ -791,6 +794,7 @@ SmartPlaylistGrouping? _resolveFromFeedWithParentPlaylists(
         contentType: _parseFeedContentType(def.contentType),
         yearHeaderMode: _parseFeedYearHeaderMode(def.yearHeaderMode),
         episodeYearHeaders: def.episodeYearHeaders,
+        showDateRange: def.showDateRange,
         groups: groups,
       ),
     );
@@ -816,8 +820,9 @@ List<SmartPlaylistGroup> _buildFeedGroups(
   List<PodcastItem> bucketEpisodes,
   List<PodcastItem> allEpisodes,
   int? groupNullAs,
-  SmartPlaylistTitleExtractor? titleExtractor,
-) {
+  SmartPlaylistTitleExtractor? titleExtractor, {
+  bool showDateRange = false,
+}) {
   final grouped = <int, List<PodcastItem>>{};
   for (final episode in bucketEpisodes) {
     final seasonNum = episode.seasonNumber;
@@ -853,6 +858,7 @@ List<SmartPlaylistGroup> _buildFeedGroups(
       episodeIds: groupEpisodes
           .map((ep) => -(allEpisodes.indexOf(ep) + 1))
           .toList(),
+      showDateRange: showDateRange,
     );
   }).toList()..sort((a, b) => a.sortKey.compareTo(b.sortKey));
 }

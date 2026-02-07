@@ -19,7 +19,9 @@ import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
+import '../../../../l10n/app_localizations.dart';
 import '../../../../routing/app_router.dart';
 import '../../../subscription/presentation/controllers/subscription_controller.dart';
 import '../controllers/podcast_detail_controller.dart';
@@ -1033,22 +1035,26 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
   }
 }
 
-/// Formats a date range as "YYYY.M.D 〜 YYYY.M.D".
+/// Formats a date range in Apple Podcasts style.
 String? _formatDateRange(DateTime? earliest, DateTime? latest) {
   if (earliest == null || latest == null) return null;
-  String fmt(DateTime d) => '${d.year}.${d.month}.${d.day}';
-  if (earliest == latest) return fmt(earliest);
-  return '${fmt(earliest)} 〜 ${fmt(latest)}';
+  final now = DateTime.now();
+  final bothCurrentYear = earliest.year == now.year && latest.year == now.year;
+  final fmt = bothCurrentYear ? DateFormat('M/d') : DateFormat.yMMMd();
+  if (earliest == latest) return fmt.format(earliest);
+  return '${fmt.format(earliest)}\u301c${fmt.format(latest)}';
 }
 
-/// Formats duration in ms to "Xh Ym" or "Xm".
-String? _formatDuration(int? totalMs) {
+/// Formats duration in ms using localized strings.
+String? _formatDuration(int? totalMs, AppLocalizations l10n) {
   if (totalMs == null || totalMs == 0) return null;
   final minutes = totalMs ~/ 60000;
   final hours = minutes ~/ 60;
   final remainingMinutes = minutes % 60;
-  if (0 < hours) return '${hours}h${remainingMinutes}m';
-  return '${minutes}m';
+  if (0 < hours) {
+    return l10n.groupDurationHoursMinutes(hours, remainingMinutes);
+  }
+  return l10n.groupDurationMinutes(minutes);
 }
 
 /// Card widget for displaying a smart playlist group inline.
@@ -1067,10 +1073,17 @@ class _InlineGroupCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final dateRange = _formatDateRange(group.earliestDate, group.latestDate);
-    final duration = _formatDuration(group.totalDurationMs);
+    final l10n = AppLocalizations.of(context);
+    final dateRange = group.showDateRange
+        ? _formatDateRange(group.earliestDate, group.latestDate)
+        : null;
+    final duration = group.showDateRange
+        ? _formatDuration(group.totalDurationMs, l10n)
+        : null;
 
-    final metaLine = StringBuffer('${group.episodeIds.length} episodes');
+    final metaLine = StringBuffer(
+      l10n.groupEpisodeCount(group.episodeIds.length),
+    );
     if (duration != null) {
       metaLine.write('  $duration');
     }
@@ -1106,6 +1119,13 @@ class _InlineGroupCard extends StatelessWidget {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
+                      const SizedBox(height: 2),
+                      Text(
+                        metaLine.toString(),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
                       if (dateRange != null) ...[
                         const SizedBox(height: 2),
                         Text(
@@ -1115,13 +1135,6 @@ class _InlineGroupCard extends StatelessWidget {
                           ),
                         ),
                       ],
-                      const SizedBox(height: 2),
-                      Text(
-                        metaLine.toString(),
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                        ),
-                      ),
                     ],
                   ),
                 ),

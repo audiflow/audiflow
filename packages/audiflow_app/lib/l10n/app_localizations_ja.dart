@@ -49,4 +49,19 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get dateYesterday => '昨日';
+
+  @override
+  String groupEpisodeCount(int count) {
+    return '$countエピソード';
+  }
+
+  @override
+  String groupDurationHoursMinutes(int hours, int minutes) {
+    return '$hours時間$minutes分';
+  }
+
+  @override
+  String groupDurationMinutes(int minutes) {
+    return '$minutes分';
+  }
 }
