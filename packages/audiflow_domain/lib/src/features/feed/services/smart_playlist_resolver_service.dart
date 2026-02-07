@@ -88,13 +88,15 @@ class SmartPlaylistResolverService {
             g.id: g,
         };
         final groups = result.playlists.map((p) {
+          final gDef = groupDefMap[p.id];
           return SmartPlaylistGroup(
             id: p.id,
             displayName: p.displayName,
             sortKey: p.sortKey,
             episodeIds: p.episodeIds,
             thumbnailUrl: p.thumbnailUrl,
-            episodeYearHeaders: groupDefMap[p.id]?.episodeYearHeaders,
+            episodeYearHeaders: gDef?.episodeYearHeaders,
+            showDateRange: gDef?.showDateRange ?? definition.showDateRange,
           );
         }).toList();
         final allEpisodeIds = groups.expand((g) => g.episodeIds).toList();
@@ -108,6 +110,7 @@ class SmartPlaylistResolverService {
             contentType: contentType,
             yearHeaderMode: yearHeaderMode,
             episodeYearHeaders: definition.episodeYearHeaders,
+            showDateRange: definition.showDateRange,
             groups: groups,
           ),
         );
@@ -119,6 +122,7 @@ class SmartPlaylistResolverService {
             contentType: contentType,
             yearHeaderMode: yearHeaderMode,
             episodeYearHeaders: definition.episodeYearHeaders,
+            showDateRange: definition.showDateRange,
           );
         }).toList();
         allPlaylists.addAll(decorated);

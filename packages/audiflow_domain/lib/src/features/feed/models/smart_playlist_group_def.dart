@@ -8,6 +8,7 @@ final class SmartPlaylistGroupDef {
     required this.displayName,
     this.pattern,
     this.episodeYearHeaders,
+    this.showDateRange,
   });
 
   /// Creates a group definition from JSON configuration.
@@ -17,6 +18,7 @@ final class SmartPlaylistGroupDef {
       displayName: json['displayName'] as String,
       pattern: json['pattern'] as String?,
       episodeYearHeaders: json['episodeYearHeaders'] as bool?,
+      showDateRange: json['showDateRange'] as bool?,
     );
   }
 
@@ -36,6 +38,11 @@ final class SmartPlaylistGroupDef {
   /// When null, inherits the playlist-level setting.
   final bool? episodeYearHeaders;
 
+  /// Per-group override for showing date range and duration.
+  ///
+  /// When null, inherits the playlist-level setting.
+  final bool? showDateRange;
+
   /// Converts to JSON representation.
   Map<String, dynamic> toJson() {
     return {
@@ -43,6 +50,7 @@ final class SmartPlaylistGroupDef {
       'displayName': displayName,
       if (pattern != null) 'pattern': pattern,
       if (episodeYearHeaders != null) 'episodeYearHeaders': episodeYearHeaders,
+      if (showDateRange != null) 'showDateRange': showDateRange,
     };
   }
 }

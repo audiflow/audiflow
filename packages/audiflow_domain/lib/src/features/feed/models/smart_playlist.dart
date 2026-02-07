@@ -34,6 +34,7 @@ final class SmartPlaylistGroup {
     this.thumbnailUrl,
     this.yearOverride,
     this.episodeYearHeaders,
+    this.showDateRange = false,
     this.earliestDate,
     this.latestDate,
     this.totalDurationMs,
@@ -63,6 +64,9 @@ final class SmartPlaylistGroup {
   /// When null, inherits the playlist-level setting.
   final bool? episodeYearHeaders;
 
+  /// Whether this group shows date range and duration metadata.
+  final bool showDateRange;
+
   /// Earliest episode publish date in this group.
   final DateTime? earliestDate;
 
@@ -87,6 +91,7 @@ final class SmartPlaylist {
     this.contentType = SmartPlaylistContentType.episodes,
     this.yearHeaderMode = YearHeaderMode.none,
     this.episodeYearHeaders = false,
+    this.showDateRange = false,
     this.groups,
     @Deprecated('Use yearHeaderMode instead') bool yearGrouped = false,
     @Deprecated('Use groups instead') List<SmartPlaylistGroup>? subCategories,
@@ -116,6 +121,9 @@ final class SmartPlaylist {
   /// Whether episodes within groups show year headers.
   final bool episodeYearHeaders;
 
+  /// Whether group cards should display a date range.
+  final bool showDateRange;
+
   /// Groups within this playlist (when contentType == groups).
   final List<SmartPlaylistGroup>? groups;
 
@@ -140,6 +148,7 @@ final class SmartPlaylist {
     SmartPlaylistContentType? contentType,
     YearHeaderMode? yearHeaderMode,
     bool? episodeYearHeaders,
+    bool? showDateRange,
     List<SmartPlaylistGroup>? groups,
     @Deprecated('Use yearHeaderMode instead') bool? yearGrouped,
     @Deprecated('Use groups instead') List<SmartPlaylistGroup>? subCategories,
@@ -153,6 +162,7 @@ final class SmartPlaylist {
       contentType: contentType ?? this.contentType,
       yearHeaderMode: yearHeaderMode ?? this.yearHeaderMode,
       episodeYearHeaders: episodeYearHeaders ?? this.episodeYearHeaders,
+      showDateRange: showDateRange ?? this.showDateRange,
       groups: groups ?? subCategories ?? this.groups,
     );
   }

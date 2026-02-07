@@ -27,5 +27,11 @@
   "dateToday": "Today",
   "@dateToday": { "description": "Relative date label for today" },
   "dateYesterday": "Yesterday",
-  "@dateYesterday": { "description": "Relative date label for yesterday" }
+  "@dateYesterday": { "description": "Relative date label for yesterday" },
+  "groupEpisodeCount": "{count} episodes",
+  "@groupEpisodeCount": { "description": "Episode count for smart playlist group card", "placeholders": { "count": { "type": "int" } } },
+  "groupDurationHoursMinutes": "{hours}h{minutes}m",
+  "@groupDurationHoursMinutes": { "description": "Duration with hours and minutes for group card", "placeholders": { "hours": { "type": "int" }, "minutes": { "type": "int" } } },
+  "groupDurationMinutes": "{minutes}m",
+  "@groupDurationMinutes": { "description": "Duration in minutes for group card", "placeholders": { "minutes": { "type": "int" } } }
 }

@@ -13,5 +13,8 @@
   "markAsUnplayed": "未再生にする",
   "addToQueue": "キューに追加",
   "dateToday": "今日",
-  "dateYesterday": "昨日"
+  "dateYesterday": "昨日",
+  "groupEpisodeCount": "{count}エピソード",
+  "groupDurationHoursMinutes": "{hours}時間{minutes}分",
+  "groupDurationMinutes": "{minutes}分"
 }

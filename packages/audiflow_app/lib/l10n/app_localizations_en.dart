@@ -49,4 +49,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dateYesterday => 'Yesterday';
+
+  @override
+  String groupEpisodeCount(int count) {
+    return '$count episodes';
+  }
+
+  @override
+  String groupDurationHoursMinutes(int hours, int minutes) {
+    return '${hours}h${minutes}m';
+  }
+
+  @override
+  String groupDurationMinutes(int minutes) {
+    return '${minutes}m';
+  }
 }

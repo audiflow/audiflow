@@ -4,7 +4,9 @@ import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
+import '../../../../l10n/app_localizations.dart';
 import '../../../../routing/app_router.dart';
 import '../widgets/smart_playlist_episode_list_tile.dart';
 
@@ -367,6 +369,8 @@ class _SmartPlaylistEpisodesScreenState
         ? groups.reversed.toList()
         : groups;
 
+    final l10n = AppLocalizations.of(context);
+
     return SliverList.builder(
       itemCount: sorted.length,
       itemBuilder: (context, index) {
@@ -374,8 +378,13 @@ class _SmartPlaylistEpisodesScreenState
         return _SmartPlaylistGroupCard(
           group: group,
           thumbnailUrl: group.thumbnailUrl,
-          dateRange: _formatDateRange(group.earliestDate, group.latestDate),
-          totalDuration: _formatDuration(group.totalDurationMs),
+          dateRange: group.showDateRange
+              ? _formatDateRange(group.earliestDate, group.latestDate)
+              : null,
+          totalDuration: group.showDateRange
+              ? _formatDuration(group.totalDurationMs, l10n)
+              : null,
+          l10n: l10n,
           onTap: () => _navigateToGroup(group),
         );
       },
@@ -431,14 +440,21 @@ class _SmartPlaylistEpisodesScreenState
       itemsByYear[year] = byYear[year]!;
     }
 
+    final l10n = AppLocalizations.of(context);
+
     return buildYearGroupedSlivers<SmartPlaylistGroup>(
       itemsByYear: itemsByYear,
       sortedYears: sortedYears,
       itemBuilder: (context, group) => _SmartPlaylistGroupCard(
         group: group,
         thumbnailUrl: group.thumbnailUrl,
-        dateRange: _formatDateRange(group.earliestDate, group.latestDate),
-        totalDuration: _formatDuration(group.totalDurationMs),
+        dateRange: group.showDateRange
+            ? _formatDateRange(group.earliestDate, group.latestDate)
+            : null,
+        totalDuration: group.showDateRange
+            ? _formatDuration(group.totalDurationMs, l10n)
+            : null,
+        l10n: l10n,
         onTap: () => _navigateToGroup(group),
       ),
       scrollController: _scrollController,
@@ -483,6 +499,8 @@ class _SmartPlaylistEpisodesScreenState
           .toList();
     }
 
+    final l10n = AppLocalizations.of(context);
+
     return buildYearGroupedSlivers<_YearFilteredGroup>(
       itemsByYear: itemsByYear,
       sortedYears: sortedYears,
@@ -490,11 +508,13 @@ class _SmartPlaylistEpisodesScreenState
         group: item.group,
         thumbnailUrl: item.group.thumbnailUrl,
         episodeCount: item.filteredEpisodeIds.length,
-        dateRange: _formatDateRange(
-          item.group.earliestDate,
-          item.group.latestDate,
-        ),
-        totalDuration: _formatDuration(item.group.totalDurationMs),
+        dateRange: item.group.showDateRange
+            ? _formatDateRange(item.group.earliestDate, item.group.latestDate)
+            : null,
+        totalDuration: item.group.showDateRange
+            ? _formatDuration(item.group.totalDurationMs, l10n)
+            : null,
+        l10n: l10n,
         onTap: () => _navigateToGroup(
           item.group,
           filteredEpisodeIds: item.filteredEpisodeIds,
@@ -644,22 +664,29 @@ class _SmartPlaylistHeader extends StatelessWidget {
   }
 }
 
-/// Formats a date range as "YYYY.M.D 〜 YYYY.M.D".
+/// Formats a date range in Apple Podcasts style.
+///
+/// Same year as now: compact "M/d" format (locale-aware).
+/// Different year: full "yMMMd" format (locale-aware).
 String? _formatDateRange(DateTime? earliest, DateTime? latest) {
   if (earliest == null || latest == null) return null;
-  String fmt(DateTime d) => '${d.year}.${d.month}.${d.day}';
-  if (earliest == latest) return fmt(earliest);
-  return '${fmt(earliest)} 〜 ${fmt(latest)}';
+  final now = DateTime.now();
+  final bothCurrentYear = earliest.year == now.year && latest.year == now.year;
+  final fmt = bothCurrentYear ? DateFormat('M/d') : DateFormat.yMMMd();
+  if (earliest == latest) return fmt.format(earliest);
+  return '${fmt.format(earliest)}\u301c${fmt.format(latest)}';
 }
 
-/// Formats duration in ms to "Xh Ym" or "Xm".
-String? _formatDuration(int? totalMs) {
+/// Formats duration in ms using localized strings.
+String? _formatDuration(int? totalMs, AppLocalizations l10n) {
   if (totalMs == null || totalMs == 0) return null;
   final minutes = totalMs ~/ 60000;
   final hours = minutes ~/ 60;
   final remainingMinutes = minutes % 60;
-  if (0 < hours) return '${hours}h${remainingMinutes}m';
-  return '${minutes}m';
+  if (0 < hours) {
+    return l10n.groupDurationHoursMinutes(hours, remainingMinutes);
+  }
+  return l10n.groupDurationMinutes(minutes);
 }
 
 /// Height of a group card for fixed-extent lists.
@@ -684,6 +711,7 @@ class _SmartPlaylistGroupCard extends StatelessWidget {
     this.episodeCount,
     this.dateRange,
     this.totalDuration,
+    this.l10n,
     this.onTap,
   });
 
@@ -693,11 +721,14 @@ class _SmartPlaylistGroupCard extends StatelessWidget {
   /// Override episode count (for perEpisode year mode).
   final int? episodeCount;
 
-  /// Date range string (e.g. "2026.1.26 〜 2026.1.29").
+  /// Date range string (e.g. "10/30~12/18").
   final String? dateRange;
 
   /// Total duration string (e.g. "1h18m").
   final String? totalDuration;
+
+  /// Localizations for episode count/duration formatting.
+  final AppLocalizations? l10n;
   final VoidCallback? onTap;
 
   static const _thumbnailSize = 72.0;
@@ -707,8 +738,9 @@ class _SmartPlaylistGroupCard extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final count = episodeCount ?? group.episodeCount;
+    final resolvedL10n = l10n ?? AppLocalizations.of(context);
 
-    final metaLine = StringBuffer('$count episodes');
+    final metaLine = StringBuffer(resolvedL10n.groupEpisodeCount(count));
     if (totalDuration != null) {
       metaLine.write('  $totalDuration');
     }
@@ -737,6 +769,13 @@ class _SmartPlaylistGroupCard extends StatelessWidget {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
+                  const SizedBox(height: 2),
+                  Text(
+                    metaLine.toString(),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
                   if (dateRange != null) ...[
                     const SizedBox(height: 2),
                     Text(
@@ -746,13 +785,6 @@ class _SmartPlaylistGroupCard extends StatelessWidget {
                       ),
                     ),
                   ],
-                  const SizedBox(height: 2),
-                  Text(
-                    metaLine.toString(),
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                  ),
                 ],
               ),
             ),

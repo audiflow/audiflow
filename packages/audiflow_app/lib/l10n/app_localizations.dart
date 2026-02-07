@@ -181,6 +181,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Yesterday'**
   String get dateYesterday;
+
+  /// Episode count for smart playlist group card
+  ///
+  /// In en, this message translates to:
+  /// **'{count} episodes'**
+  String groupEpisodeCount(int count);
+
+  /// Duration with hours and minutes for group card
+  ///
+  /// In en, this message translates to:
+  /// **'{hours}h{minutes}m'**
+  String groupDurationHoursMinutes(int hours, int minutes);
+
+  /// Duration in minutes for group card
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes}m'**
+  String groupDurationMinutes(int minutes);
 }
 
 class _AppLocalizationsDelegate

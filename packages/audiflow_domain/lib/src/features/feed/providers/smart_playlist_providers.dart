@@ -294,6 +294,7 @@ Future<SmartPlaylistGrouping?> _resolveAndPersistSmartPlaylists(
         episodeIds: group.episodeIds,
         thumbnailUrl: groupThumb,
         episodeYearHeaders: group.episodeYearHeaders,
+        showDateRange: group.showDateRange,
         earliestDate: earliest,
         latestDate: latest,
         totalDurationMs: hasDuration ? totalMs : null,
@@ -526,6 +527,23 @@ Future<SmartPlaylistGrouping?> _reResolveFromEpisodes(
         }
       }
 
+      DateTime? earliest;
+      DateTime? latest;
+      var totalMs = 0;
+      var hasDuration = false;
+      for (final ep in groupEpisodes) {
+        final pub = ep.publishedAt;
+        if (pub != null) {
+          if (earliest == null || pub.isBefore(earliest)) earliest = pub;
+          if (latest == null || pub.isAfter(latest)) latest = pub;
+        }
+        final dur = ep.durationMs;
+        if (dur != null && 0 < dur) {
+          totalMs += dur;
+          hasDuration = true;
+        }
+      }
+
       return SmartPlaylistGroup(
         id: group.id,
         displayName: group.displayName,
@@ -533,6 +551,10 @@ Future<SmartPlaylistGrouping?> _reResolveFromEpisodes(
         episodeIds: group.episodeIds,
         thumbnailUrl: groupThumb,
         episodeYearHeaders: group.episodeYearHeaders,
+        showDateRange: group.showDateRange,
+        earliestDate: earliest,
+        latestDate: latest,
+        totalDurationMs: hasDuration ? totalMs : null,
       );
     }).toList();
 
