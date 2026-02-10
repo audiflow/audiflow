@@ -130,8 +130,8 @@ class FeedSyncService {
       final knownGuids = await episodeRepo.getGuidsByPodcastId(sub.id);
 
       // Look up smart playlist extractor from pattern config
-      final patternConfig = _ref.read(
-        smartPlaylistPatternByFeedUrlProvider(sub.feedUrl),
+      final patternConfig = await _ref.read(
+        smartPlaylistPatternByFeedUrlProvider(sub.feedUrl).future,
       );
       final extractor = patternConfig?.playlists
           .map((d) => d.smartPlaylistEpisodeExtractor)

@@ -4,15 +4,22 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../common/database/app_database.dart';
 import '../../../common/providers/database_provider.dart';
+import '../../../common/providers/http_client_provider.dart';
 import '../../../common/providers/logger_provider.dart';
+import '../../../common/providers/platform_providers.dart';
 import '../../../features/subscription/repositories/subscription_repository_impl.dart';
 import '../../player/models/episode_with_progress.dart';
 import '../../player/repositories/playback_history_repository_impl.dart';
+import '../datasources/local/smart_playlist_cache_datasource.dart';
 import '../datasources/local/smart_playlist_local_datasource.dart';
+import '../datasources/remote/smart_playlist_remote_datasource.dart';
+import '../models/pattern_summary.dart';
 import '../models/smart_playlist.dart';
 import '../models/smart_playlist_pattern_config.dart';
 import '../repositories/episode_repository.dart';
 import '../repositories/episode_repository_impl.dart';
+import '../repositories/smart_playlist_config_repository.dart';
+import '../repositories/smart_playlist_config_repository_impl.dart';
 import '../resolvers/category_resolver.dart';
 import '../resolvers/rss_metadata_resolver.dart';
 import '../resolvers/year_resolver.dart';
@@ -20,19 +27,47 @@ import '../services/smart_playlist_resolver_service.dart';
 
 part 'smart_playlist_providers.g.dart';
 
-/// Provides the registered smart playlist pattern configs.
+/// Provides the pattern summaries loaded from remote
+/// root meta.json.
 ///
-/// Initially empty; the app layer overrides this to set patterns
-/// loaded from JSON config files.
+/// Initially empty; populated on startup after fetching
+/// root meta.
 @Riverpod(keepAlive: true)
-class SmartPlaylistPatterns extends _$SmartPlaylistPatterns {
+class PatternSummaries extends _$PatternSummaries {
   @override
-  List<SmartPlaylistPatternConfig> build() => [];
+  List<PatternSummary> build() => [];
 
-  /// Replaces the current patterns with the given list.
-  void setPatterns(List<SmartPlaylistPatternConfig> patterns) {
-    state = patterns;
+  /// Replaces the current summaries.
+  void setSummaries(List<PatternSummary> summaries) {
+    state = summaries;
   }
+}
+
+/// Provides the smart playlist config repository.
+///
+/// Uses Dio for HTTP and path_provider for cache directory.
+@Riverpod(keepAlive: true)
+SmartPlaylistConfigRepository smartPlaylistConfigRepository(Ref ref) {
+  final dio = ref.watch(dioProvider);
+  final baseUrl = ref.watch(smartPlaylistConfigBaseUrlProvider);
+  final cacheDir = ref.watch(cacheDirProvider);
+
+  final remote = SmartPlaylistRemoteDatasource(
+    baseUrl: baseUrl,
+    httpGet: (Uri url) async {
+      final response = await dio.getUri<String>(url);
+      return response.data!;
+    },
+  );
+  final cache = SmartPlaylistCacheDatasource(cacheDir: cacheDir);
+
+  final repo = SmartPlaylistConfigRepositoryImpl(remote: remote, cache: cache);
+
+  // Seed with current summaries so findMatchingPattern works.
+  final summaries = ref.watch(patternSummariesProvider);
+  repo.setPatternSummaries(summaries);
+
+  return repo;
 }
 
 /// Provides the smart playlist local datasource for database
@@ -46,34 +81,29 @@ SmartPlaylistLocalDatasource smartPlaylistLocalDatasource(Ref ref) {
 /// Provides the smart playlist resolver service with built-in
 /// resolvers.
 ///
-/// The resolver chain tries RSS metadata first, then falls back to
-/// year-based grouping. Custom patterns can be added for specific
-/// podcasts.
+/// Patterns are loaded lazily via repository. The resolver
+/// operates in auto-detect mode (empty patterns list).
 @Riverpod(keepAlive: true)
 SmartPlaylistResolverService smartPlaylistResolverService(Ref ref) {
-  final patterns = ref.watch(smartPlaylistPatternsProvider);
   return SmartPlaylistResolverService(
     resolvers: [RssMetadataResolver(), CategoryResolver(), YearResolver()],
-    patterns: patterns,
+    patterns: [],
   );
 }
 
-/// Finds the smart playlist pattern config that matches a given
-/// feed URL.
+/// Finds and loads the smart playlist config for a feed URL.
 ///
-/// Returns null if no pattern matches.
+/// Returns null if no pattern matches. Lazily fetches the
+/// full config from remote/cache when a match is found.
 @riverpod
-SmartPlaylistPatternConfig? smartPlaylistPatternByFeedUrl(
+Future<SmartPlaylistPatternConfig?> smartPlaylistPatternByFeedUrl(
   Ref ref,
   String feedUrl,
-) {
-  final patterns = ref.watch(smartPlaylistPatternsProvider);
-  for (final config in patterns) {
-    if (config.matchesPodcast(null, feedUrl)) {
-      return config;
-    }
-  }
-  return null;
+) async {
+  final repo = ref.watch(smartPlaylistConfigRepositoryProvider);
+  final summary = repo.findMatchingPattern(null, feedUrl);
+  if (summary == null) return null;
+  return repo.getConfig(summary);
 }
 
 /// Resolves smart playlists for a podcast by its ID.
@@ -101,8 +131,8 @@ Future<SmartPlaylistGrouping?> podcastSmartPlaylists(
   final cachedPlaylists = await playlistDatasource.getByPodcastId(podcastId);
   if (cachedPlaylists.isNotEmpty) {
     logger.d(
-      'Using ${cachedPlaylists.length} cached smart playlists '
-      'for podcastId=$podcastId',
+      'Using ${cachedPlaylists.length} cached smart '
+      'playlists for podcastId=$podcastId',
     );
     return _buildGroupingFromCache(
       ref,
@@ -125,9 +155,10 @@ Future<SmartPlaylistGrouping?> podcastSmartPlaylists(
 /// Builds SmartPlaylistGrouping from cached SmartPlaylistEntity
 /// records.
 ///
-/// When a pattern config matches, re-resolves from episodes using
-/// the resolver service (groups are not cached). For season-based
-/// resolvers without a config match, groups by episode.seasonNumber.
+/// When a pattern config matches, re-resolves from episodes
+/// using the resolver service (groups are not cached). For
+/// season-based resolvers without a config match, groups by
+/// episode.seasonNumber.
 Future<SmartPlaylistGrouping?> _buildGroupingFromCache(
   Ref ref,
   int podcastId,
@@ -135,7 +166,9 @@ Future<SmartPlaylistGrouping?> _buildGroupingFromCache(
   EpisodeRepository episodeRepo,
   String feedUrl,
 ) async {
-  final config = ref.read(smartPlaylistPatternByFeedUrlProvider(feedUrl));
+  final config = await ref.read(
+    smartPlaylistPatternByFeedUrlProvider(feedUrl).future,
+  );
 
   // Pattern configs always have playlists with resolvers;
   // re-resolve from episodes since groups are not persisted.
@@ -182,7 +215,8 @@ Future<SmartPlaylistGrouping?> _buildGroupingFromCache(
   );
 }
 
-/// Resolves smart playlists from episodes and persists to database.
+/// Resolves smart playlists from episodes and persists to
+/// database.
 Future<SmartPlaylistGrouping?> _resolveAndPersistSmartPlaylists(
   Ref ref,
   int podcastId,
@@ -191,7 +225,23 @@ Future<SmartPlaylistGrouping?> _resolveAndPersistSmartPlaylists(
 ) async {
   final episodeRepo = ref.watch(episodeRepositoryProvider);
   final playlistDatasource = ref.watch(smartPlaylistLocalDatasourceProvider);
-  final resolverService = ref.watch(smartPlaylistResolverServiceProvider);
+
+  // Load matching config from repository
+  final repo = ref.watch(smartPlaylistConfigRepositoryProvider);
+  final summary = repo.findMatchingPattern(null, feedUrl);
+  SmartPlaylistPatternConfig? config;
+  if (summary != null) {
+    try {
+      config = await repo.getConfig(summary);
+    } on Object {
+      // If remote fetch fails, continue without config
+    }
+  }
+
+  final resolverService = SmartPlaylistResolverService(
+    resolvers: [RssMetadataResolver(), CategoryResolver(), YearResolver()],
+    patterns: config != null ? [config] : [],
+  );
 
   final episodes = await episodeRepo.getByPodcastId(podcastId);
   if (episodes.isEmpty) {
@@ -227,93 +277,13 @@ Future<SmartPlaylistGrouping?> _resolveAndPersistSmartPlaylists(
   final companions = <SmartPlaylistsCompanion>[];
 
   for (final playlist in result.playlists) {
-    // Get episodes for this playlist, sorted by publishedAt
-    // (newest first)
-    final playlistEpisodes =
-        episodes.where((e) => playlist.episodeIds.contains(e.id)).toList()
-          ..sort((a, b) {
-            final aPub = a.publishedAt;
-            final bPub = b.publishedAt;
-            if (aPub == null && bPub == null) return 0;
-            if (aPub == null) return 1;
-            if (bPub == null) return -1;
-            return bPub.compareTo(aPub); // Newest first
-          });
-
-    // Get thumbnail from latest episode (first in sorted list)
-    String? thumbnailUrl;
-    for (final ep in playlistEpisodes) {
-      if (ep.imageUrl != null) {
-        thumbnailUrl = ep.imageUrl;
-        break;
-      }
-    }
-
-    // Enrich groups with thumbnails
-    final enrichedGroups = playlist.groups?.map((group) {
-      final groupEpisodes =
-          episodes.where((e) => group.episodeIds.contains(e.id)).toList()
-            ..sort((a, b) {
-              final aPub = a.publishedAt;
-              final bPub = b.publishedAt;
-              if (aPub == null && bPub == null) return 0;
-              if (aPub == null) return 1;
-              if (bPub == null) return -1;
-              return bPub.compareTo(aPub);
-            });
-
-      String? groupThumb;
-      for (final ep in groupEpisodes) {
-        if (ep.imageUrl != null) {
-          groupThumb = ep.imageUrl;
-          break;
-        }
-      }
-
-      DateTime? earliest;
-      DateTime? latest;
-      var totalMs = 0;
-      var hasDuration = false;
-      for (final ep in groupEpisodes) {
-        final pub = ep.publishedAt;
-        if (pub != null) {
-          if (earliest == null || pub.isBefore(earliest)) earliest = pub;
-          if (latest == null || pub.isAfter(latest)) latest = pub;
-        }
-        final dur = ep.durationMs;
-        if (dur != null && 0 < dur) {
-          totalMs += dur;
-          hasDuration = true;
-        }
-      }
-
-      return SmartPlaylistGroup(
-        id: group.id,
-        displayName: group.displayName,
-        sortKey: group.sortKey,
-        episodeIds: group.episodeIds,
-        thumbnailUrl: groupThumb,
-        episodeYearHeaders: group.episodeYearHeaders,
-        showDateRange: group.showDateRange,
-        earliestDate: earliest,
-        latestDate: latest,
-        totalDurationMs: hasDuration ? totalMs : null,
-      );
-    }).toList();
-
-    enrichedPlaylists.add(
-      playlist.copyWith(thumbnailUrl: thumbnailUrl, groups: enrichedGroups),
-    );
-    companions.add(
-      SmartPlaylistsCompanion.insert(
-        podcastId: podcastId,
-        playlistNumber: playlist.sortKey,
-        displayName: playlist.displayName,
-        sortKey: playlist.sortKey,
-        resolverType: result.resolverType,
-        thumbnailUrl: Value(thumbnailUrl),
-        yearGrouped: Value(playlist.yearHeaderMode != YearHeaderMode.none),
-      ),
+    _enrichPlaylist(
+      playlist,
+      episodes,
+      result,
+      podcastId,
+      enrichedPlaylists,
+      companions,
     );
   }
 
@@ -346,7 +316,10 @@ Future<SmartPlaylistGrouping?> _resolveAndPersistSmartPlaylists(
     }
   }
 
-  logger.d('Persisted ${companions.length} smart playlists to database');
+  logger.d(
+    'Persisted ${companions.length} smart playlists '
+    'to database',
+  );
 
   return SmartPlaylistGrouping(
     playlists: enrichedPlaylists,
@@ -355,8 +328,120 @@ Future<SmartPlaylistGrouping?> _resolveAndPersistSmartPlaylists(
   );
 }
 
-/// Whether the smart playlist view toggle should be visible for a
-/// podcast.
+/// Enriches a playlist with thumbnails and builds the
+/// companion for database persistence.
+void _enrichPlaylist(
+  SmartPlaylist playlist,
+  List<Episode> episodes,
+  SmartPlaylistGrouping result,
+  int podcastId,
+  List<SmartPlaylist> enrichedPlaylists,
+  List<SmartPlaylistsCompanion> companions,
+) {
+  // Get episodes for this playlist, sorted by publishedAt
+  // (newest first)
+  final playlistEpisodes =
+      episodes.where((e) => playlist.episodeIds.contains(e.id)).toList()
+        ..sort((a, b) {
+          final aPub = a.publishedAt;
+          final bPub = b.publishedAt;
+          if (aPub == null && bPub == null) return 0;
+          if (aPub == null) return 1;
+          if (bPub == null) return -1;
+          return bPub.compareTo(aPub); // Newest first
+        });
+
+  // Get thumbnail from latest episode (first in sorted list)
+  String? thumbnailUrl;
+  for (final ep in playlistEpisodes) {
+    if (ep.imageUrl != null) {
+      thumbnailUrl = ep.imageUrl;
+      break;
+    }
+  }
+
+  // Enrich groups with thumbnails
+  final enrichedGroups = playlist.groups?.map((group) {
+    return _enrichGroup(group, episodes);
+  }).toList();
+
+  enrichedPlaylists.add(
+    playlist.copyWith(thumbnailUrl: thumbnailUrl, groups: enrichedGroups),
+  );
+  companions.add(
+    SmartPlaylistsCompanion.insert(
+      podcastId: podcastId,
+      playlistNumber: playlist.sortKey,
+      displayName: playlist.displayName,
+      sortKey: playlist.sortKey,
+      resolverType: result.resolverType,
+      thumbnailUrl: Value(thumbnailUrl),
+      yearGrouped: Value(playlist.yearHeaderMode != YearHeaderMode.none),
+    ),
+  );
+}
+
+/// Enriches a group with thumbnail and date/duration metadata.
+SmartPlaylistGroup _enrichGroup(
+  SmartPlaylistGroup group,
+  List<Episode> episodes,
+) {
+  final groupEpisodes =
+      episodes.where((e) => group.episodeIds.contains(e.id)).toList()
+        ..sort((a, b) {
+          final aPub = a.publishedAt;
+          final bPub = b.publishedAt;
+          if (aPub == null && bPub == null) return 0;
+          if (aPub == null) return 1;
+          if (bPub == null) return -1;
+          return bPub.compareTo(aPub);
+        });
+
+  String? groupThumb;
+  for (final ep in groupEpisodes) {
+    if (ep.imageUrl != null) {
+      groupThumb = ep.imageUrl;
+      break;
+    }
+  }
+
+  DateTime? earliest;
+  DateTime? latest;
+  var totalMs = 0;
+  var hasDuration = false;
+  for (final ep in groupEpisodes) {
+    final pub = ep.publishedAt;
+    if (pub != null) {
+      if (earliest == null || pub.isBefore(earliest)) {
+        earliest = pub;
+      }
+      if (latest == null || pub.isAfter(latest)) {
+        latest = pub;
+      }
+    }
+    final dur = ep.durationMs;
+    if (dur != null && 0 < dur) {
+      totalMs += dur;
+      hasDuration = true;
+    }
+  }
+
+  return SmartPlaylistGroup(
+    id: group.id,
+    displayName: group.displayName,
+    sortKey: group.sortKey,
+    episodeIds: group.episodeIds,
+    thumbnailUrl: groupThumb,
+    episodeYearHeaders: group.episodeYearHeaders,
+    showDateRange: group.showDateRange,
+    earliestDate: earliest,
+    latestDate: latest,
+    totalDurationMs: hasDuration ? totalMs : null,
+  );
+}
+
+/// Whether the smart playlist view toggle should be visible
+/// for a podcast.
 @riverpod
 Future<bool> hasSmartPlaylistView(Ref ref, int podcastId) async {
   final grouping = await ref.watch(
@@ -365,12 +450,12 @@ Future<bool> hasSmartPlaylistView(Ref ref, int podcastId) async {
   return grouping != null;
 }
 
-/// Whether the smart playlist view toggle should be visible for a
-/// podcast by feed URL.
+/// Whether the smart playlist view toggle should be visible
+/// for a podcast by feed URL.
 ///
 /// Looks up the subscription by feedUrl and delegates to
-/// [hasSmartPlaylistView]. Returns false if the podcast is not
-/// subscribed.
+/// [hasSmartPlaylistView]. Returns false if the podcast is
+/// not subscribed.
 @riverpod
 Future<bool> hasSmartPlaylistViewByFeedUrl(Ref ref, String feedUrl) async {
   final subscriptionRepo = ref.watch(subscriptionRepositoryProvider);
@@ -380,12 +465,13 @@ Future<bool> hasSmartPlaylistViewByFeedUrl(Ref ref, String feedUrl) async {
   return ref.watch(hasSmartPlaylistViewProvider(subscription.id).future);
 }
 
-/// Provides the smart playlist grouping for a podcast by feed URL.
+/// Provides the smart playlist grouping for a podcast by
+/// feed URL.
 ///
 /// Looks up the subscription by feedUrl and returns the
-/// [SmartPlaylistGrouping] if episodes can be grouped into smart
-/// playlists. Returns null if the podcast is not subscribed or if
-/// no resolver can group the episodes.
+/// [SmartPlaylistGrouping] if episodes can be grouped into
+/// smart playlists. Returns null if the podcast is not
+/// subscribed or if no resolver can group the episodes.
 @riverpod
 Future<SmartPlaylistGrouping?> podcastSmartPlaylistsByFeedUrl(
   Ref ref,
@@ -398,7 +484,8 @@ Future<SmartPlaylistGrouping?> podcastSmartPlaylistsByFeedUrl(
   return ref.watch(podcastSmartPlaylistsProvider(subscription.id).future);
 }
 
-/// Data class containing an episode with its progress information.
+/// Data class containing an episode with its progress
+/// information.
 class SmartPlaylistEpisodeData {
   const SmartPlaylistEpisodeData({
     required this.episode,
@@ -410,7 +497,8 @@ class SmartPlaylistEpisodeData {
   final EpisodeWithProgress? progress;
 
   /// Episode IDs in the same group for adhoc queue building.
-  /// Set by the screen when episodes are displayed in a sub-category.
+  /// Set by the screen when episodes are displayed in a
+  /// sub-category.
   final List<int>? siblingEpisodeIds;
 
   /// Creates a copy with the given [siblingEpisodeIds].
@@ -464,16 +552,32 @@ Future<List<SmartPlaylistEpisodeData>> smartPlaylistEpisodes(
   return result;
 }
 
-/// Re-resolves smart playlists from episodes using the resolver
-/// service, enriches with thumbnails, but does not persist (data
-/// is already cached).
+/// Re-resolves smart playlists from episodes using the
+/// resolver service, enriches with thumbnails, but does not
+/// persist (data is already cached).
 Future<SmartPlaylistGrouping?> _reResolveFromEpisodes(
   Ref ref,
   int podcastId,
   String feedUrl,
 ) async {
   final episodeRepo = ref.watch(episodeRepositoryProvider);
-  final resolverService = ref.watch(smartPlaylistResolverServiceProvider);
+
+  // Load matching config from repository
+  final repo = ref.watch(smartPlaylistConfigRepositoryProvider);
+  final summary = repo.findMatchingPattern(null, feedUrl);
+  SmartPlaylistPatternConfig? config;
+  if (summary != null) {
+    try {
+      config = await repo.getConfig(summary);
+    } on Object {
+      // If remote fetch fails, continue without config
+    }
+  }
+
+  final resolverService = SmartPlaylistResolverService(
+    resolvers: [RssMetadataResolver(), CategoryResolver(), YearResolver()],
+    patterns: config != null ? [config] : [],
+  );
 
   final episodes = await episodeRepo.getByPodcastId(podcastId);
   if (episodes.isEmpty) return null;
@@ -508,54 +612,7 @@ Future<SmartPlaylistGrouping?> _reResolveFromEpisodes(
 
     // Enrich groups with thumbnails
     final enrichedGroups = playlist.groups?.map((group) {
-      final groupEpisodes =
-          episodes.where((e) => group.episodeIds.contains(e.id)).toList()
-            ..sort((a, b) {
-              final aPub = a.publishedAt;
-              final bPub = b.publishedAt;
-              if (aPub == null && bPub == null) return 0;
-              if (aPub == null) return 1;
-              if (bPub == null) return -1;
-              return bPub.compareTo(aPub);
-            });
-
-      String? groupThumb;
-      for (final ep in groupEpisodes) {
-        if (ep.imageUrl != null) {
-          groupThumb = ep.imageUrl;
-          break;
-        }
-      }
-
-      DateTime? earliest;
-      DateTime? latest;
-      var totalMs = 0;
-      var hasDuration = false;
-      for (final ep in groupEpisodes) {
-        final pub = ep.publishedAt;
-        if (pub != null) {
-          if (earliest == null || pub.isBefore(earliest)) earliest = pub;
-          if (latest == null || pub.isAfter(latest)) latest = pub;
-        }
-        final dur = ep.durationMs;
-        if (dur != null && 0 < dur) {
-          totalMs += dur;
-          hasDuration = true;
-        }
-      }
-
-      return SmartPlaylistGroup(
-        id: group.id,
-        displayName: group.displayName,
-        sortKey: group.sortKey,
-        episodeIds: group.episodeIds,
-        thumbnailUrl: groupThumb,
-        episodeYearHeaders: group.episodeYearHeaders,
-        showDateRange: group.showDateRange,
-        earliestDate: earliest,
-        latestDate: latest,
-        totalDurationMs: hasDuration ? totalMs : null,
-      );
+      return _enrichGroup(group, episodes);
     }).toList();
 
     return playlist.copyWith(

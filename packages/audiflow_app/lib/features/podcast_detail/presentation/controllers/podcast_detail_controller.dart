@@ -95,7 +95,9 @@ Future<ParsedFeed> podcastDetail(Ref ref, String feedUrl) async {
       final episodeRepo = ref.read(episodeRepositoryProvider);
 
       // Look up smart playlist pattern for this feed
-      final pattern = ref.read(smartPlaylistPatternByFeedUrlProvider(feedUrl));
+      final pattern = await ref.read(
+        smartPlaylistPatternByFeedUrlProvider(feedUrl).future,
+      );
       final extractor = pattern?.playlists
           .map((d) => d.smartPlaylistEpisodeExtractor)
           .nonNulls
@@ -293,7 +295,9 @@ Future<List<PodcastItem>> filteredSortedEpisodes(
 @riverpod
 Future<bool> hasSmartPlaylistViewAfterLoad(Ref ref, String feedUrl) async {
   // Check for a registered pattern first (e.g., category-based)
-  final pattern = ref.watch(smartPlaylistPatternByFeedUrlProvider(feedUrl));
+  final pattern = await ref.watch(
+    smartPlaylistPatternByFeedUrlProvider(feedUrl).future,
+  );
   if (pattern != null) return true;
 
   final feed = await ref.watch(podcastDetailProvider(feedUrl).future);
@@ -322,7 +326,9 @@ Future<SmartPlaylistGrouping?> sortedPodcastSmartPlaylists(
   // Fall back to feed-based resolution for
   // non-subscribed podcasts
   if (grouping == null) {
-    final pattern = ref.watch(smartPlaylistPatternByFeedUrlProvider(feedUrl));
+    final pattern = await ref.watch(
+      smartPlaylistPatternByFeedUrlProvider(feedUrl).future,
+    );
     grouping = _resolveFromFeed(feed.episodes, pattern);
   }
 
@@ -346,7 +352,9 @@ Future<SmartPlaylistGrouping?> sortedPodcastSmartPlaylists(
     sortField = SmartPlaylistSortField.playlistNumber;
     sortOrder = SortOrder.descending;
   }
-  final pattern = ref.watch(smartPlaylistPatternByFeedUrlProvider(feedUrl));
+  final pattern = await ref.watch(
+    smartPlaylistPatternByFeedUrlProvider(feedUrl).future,
+  );
   final episodeRepo = ref.watch(episodeRepositoryProvider);
 
   // Sort smart playlists based on config

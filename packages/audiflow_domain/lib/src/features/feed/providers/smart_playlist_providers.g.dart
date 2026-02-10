@@ -8,91 +8,141 @@ part of 'smart_playlist_providers.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// Provides the registered smart playlist pattern configs.
+/// Provides the pattern summaries loaded from remote
+/// root meta.json.
 ///
-/// Initially empty; the app layer overrides this to set patterns
-/// loaded from JSON config files.
+/// Initially empty; populated on startup after fetching
+/// root meta.
 
-@ProviderFor(SmartPlaylistPatterns)
-final smartPlaylistPatternsProvider = SmartPlaylistPatternsProvider._();
+@ProviderFor(PatternSummaries)
+final patternSummariesProvider = PatternSummariesProvider._();
 
-/// Provides the registered smart playlist pattern configs.
+/// Provides the pattern summaries loaded from remote
+/// root meta.json.
 ///
-/// Initially empty; the app layer overrides this to set patterns
-/// loaded from JSON config files.
-final class SmartPlaylistPatternsProvider
-    extends
-        $NotifierProvider<
-          SmartPlaylistPatterns,
-          List<SmartPlaylistPatternConfig>
-        > {
-  /// Provides the registered smart playlist pattern configs.
+/// Initially empty; populated on startup after fetching
+/// root meta.
+final class PatternSummariesProvider
+    extends $NotifierProvider<PatternSummaries, List<PatternSummary>> {
+  /// Provides the pattern summaries loaded from remote
+  /// root meta.json.
   ///
-  /// Initially empty; the app layer overrides this to set patterns
-  /// loaded from JSON config files.
-  SmartPlaylistPatternsProvider._()
+  /// Initially empty; populated on startup after fetching
+  /// root meta.
+  PatternSummariesProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
-        name: r'smartPlaylistPatternsProvider',
+        name: r'patternSummariesProvider',
         isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
 
   @override
-  String debugGetCreateSourceHash() => _$smartPlaylistPatternsHash();
+  String debugGetCreateSourceHash() => _$patternSummariesHash();
 
   @$internal
   @override
-  SmartPlaylistPatterns create() => SmartPlaylistPatterns();
+  PatternSummaries create() => PatternSummaries();
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(List<SmartPlaylistPatternConfig> value) {
+  Override overrideWithValue(List<PatternSummary> value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<List<SmartPlaylistPatternConfig>>(
-        value,
-      ),
+      providerOverride: $SyncValueProvider<List<PatternSummary>>(value),
     );
   }
 }
 
-String _$smartPlaylistPatternsHash() =>
-    r'404282a0f53185eda4965dd86de3da5e1c3b8f2e';
+String _$patternSummariesHash() => r'ba07a69cefa7eefbb2ba617eb8ba402b8a45f4d0';
 
-/// Provides the registered smart playlist pattern configs.
+/// Provides the pattern summaries loaded from remote
+/// root meta.json.
 ///
-/// Initially empty; the app layer overrides this to set patterns
-/// loaded from JSON config files.
+/// Initially empty; populated on startup after fetching
+/// root meta.
 
-abstract class _$SmartPlaylistPatterns
-    extends $Notifier<List<SmartPlaylistPatternConfig>> {
-  List<SmartPlaylistPatternConfig> build();
+abstract class _$PatternSummaries extends $Notifier<List<PatternSummary>> {
+  List<PatternSummary> build();
   @$mustCallSuper
   @override
   void runBuild() {
-    final ref =
-        this.ref
-            as $Ref<
-              List<SmartPlaylistPatternConfig>,
-              List<SmartPlaylistPatternConfig>
-            >;
+    final ref = this.ref as $Ref<List<PatternSummary>, List<PatternSummary>>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<
-                List<SmartPlaylistPatternConfig>,
-                List<SmartPlaylistPatternConfig>
-              >,
-              List<SmartPlaylistPatternConfig>,
+              AnyNotifier<List<PatternSummary>, List<PatternSummary>>,
+              List<PatternSummary>,
               Object?,
               Object?
             >;
     element.handleCreate(ref, build);
   }
 }
+
+/// Provides the smart playlist config repository.
+///
+/// Uses Dio for HTTP and path_provider for cache directory.
+
+@ProviderFor(smartPlaylistConfigRepository)
+final smartPlaylistConfigRepositoryProvider =
+    SmartPlaylistConfigRepositoryProvider._();
+
+/// Provides the smart playlist config repository.
+///
+/// Uses Dio for HTTP and path_provider for cache directory.
+
+final class SmartPlaylistConfigRepositoryProvider
+    extends
+        $FunctionalProvider<
+          SmartPlaylistConfigRepository,
+          SmartPlaylistConfigRepository,
+          SmartPlaylistConfigRepository
+        >
+    with $Provider<SmartPlaylistConfigRepository> {
+  /// Provides the smart playlist config repository.
+  ///
+  /// Uses Dio for HTTP and path_provider for cache directory.
+  SmartPlaylistConfigRepositoryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'smartPlaylistConfigRepositoryProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$smartPlaylistConfigRepositoryHash();
+
+  @$internal
+  @override
+  $ProviderElement<SmartPlaylistConfigRepository> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  SmartPlaylistConfigRepository create(Ref ref) {
+    return smartPlaylistConfigRepository(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(SmartPlaylistConfigRepository value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<SmartPlaylistConfigRepository>(
+        value,
+      ),
+    );
+  }
+}
+
+String _$smartPlaylistConfigRepositoryHash() =>
+    r'41d5591c1fe62e328ad5f4b20d1dc4099d7859e4';
 
 /// Provides the smart playlist local datasource for database
 /// operations.
@@ -154,9 +204,8 @@ String _$smartPlaylistLocalDatasourceHash() =>
 /// Provides the smart playlist resolver service with built-in
 /// resolvers.
 ///
-/// The resolver chain tries RSS metadata first, then falls back to
-/// year-based grouping. Custom patterns can be added for specific
-/// podcasts.
+/// Patterns are loaded lazily via repository. The resolver
+/// operates in auto-detect mode (empty patterns list).
 
 @ProviderFor(smartPlaylistResolverService)
 final smartPlaylistResolverServiceProvider =
@@ -165,9 +214,8 @@ final smartPlaylistResolverServiceProvider =
 /// Provides the smart playlist resolver service with built-in
 /// resolvers.
 ///
-/// The resolver chain tries RSS metadata first, then falls back to
-/// year-based grouping. Custom patterns can be added for specific
-/// podcasts.
+/// Patterns are loaded lazily via repository. The resolver
+/// operates in auto-detect mode (empty patterns list).
 
 final class SmartPlaylistResolverServiceProvider
     extends
@@ -180,9 +228,8 @@ final class SmartPlaylistResolverServiceProvider
   /// Provides the smart playlist resolver service with built-in
   /// resolvers.
   ///
-  /// The resolver chain tries RSS metadata first, then falls back to
-  /// year-based grouping. Custom patterns can be added for specific
-  /// podcasts.
+  /// Patterns are loaded lazily via repository. The resolver
+  /// operates in auto-detect mode (empty patterns list).
   SmartPlaylistResolverServiceProvider._()
     : super(
         from: null,
@@ -218,34 +265,36 @@ final class SmartPlaylistResolverServiceProvider
 }
 
 String _$smartPlaylistResolverServiceHash() =>
-    r'6d23df42e1a0fc261e3c49a6e8494d44698969ce';
+    r'52af60dfc77f01ffc43f42a1f6daa8cfe5713420';
 
-/// Finds the smart playlist pattern config that matches a given
-/// feed URL.
+/// Finds and loads the smart playlist config for a feed URL.
 ///
-/// Returns null if no pattern matches.
+/// Returns null if no pattern matches. Lazily fetches the
+/// full config from remote/cache when a match is found.
 
 @ProviderFor(smartPlaylistPatternByFeedUrl)
 final smartPlaylistPatternByFeedUrlProvider =
     SmartPlaylistPatternByFeedUrlFamily._();
 
-/// Finds the smart playlist pattern config that matches a given
-/// feed URL.
+/// Finds and loads the smart playlist config for a feed URL.
 ///
-/// Returns null if no pattern matches.
+/// Returns null if no pattern matches. Lazily fetches the
+/// full config from remote/cache when a match is found.
 
 final class SmartPlaylistPatternByFeedUrlProvider
     extends
         $FunctionalProvider<
+          AsyncValue<SmartPlaylistPatternConfig?>,
           SmartPlaylistPatternConfig?,
-          SmartPlaylistPatternConfig?,
-          SmartPlaylistPatternConfig?
+          FutureOr<SmartPlaylistPatternConfig?>
         >
-    with $Provider<SmartPlaylistPatternConfig?> {
-  /// Finds the smart playlist pattern config that matches a given
-  /// feed URL.
+    with
+        $FutureModifier<SmartPlaylistPatternConfig?>,
+        $FutureProvider<SmartPlaylistPatternConfig?> {
+  /// Finds and loads the smart playlist config for a feed URL.
   ///
-  /// Returns null if no pattern matches.
+  /// Returns null if no pattern matches. Lazily fetches the
+  /// full config from remote/cache when a match is found.
   SmartPlaylistPatternByFeedUrlProvider._({
     required SmartPlaylistPatternByFeedUrlFamily super.from,
     required String super.argument,
@@ -269,22 +318,14 @@ final class SmartPlaylistPatternByFeedUrlProvider
 
   @$internal
   @override
-  $ProviderElement<SmartPlaylistPatternConfig?> $createElement(
+  $FutureProviderElement<SmartPlaylistPatternConfig?> $createElement(
     $ProviderPointer pointer,
-  ) => $ProviderElement(pointer);
+  ) => $FutureProviderElement(pointer);
 
   @override
-  SmartPlaylistPatternConfig? create(Ref ref) {
+  FutureOr<SmartPlaylistPatternConfig?> create(Ref ref) {
     final argument = this.argument as String;
     return smartPlaylistPatternByFeedUrl(ref, argument);
-  }
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(SmartPlaylistPatternConfig? value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<SmartPlaylistPatternConfig?>(value),
-    );
   }
 
   @override
@@ -300,15 +341,19 @@ final class SmartPlaylistPatternByFeedUrlProvider
 }
 
 String _$smartPlaylistPatternByFeedUrlHash() =>
-    r'497296d0ad8ac1c3702c663e8afc086b9e0aca06';
+    r'dc6c5c4e5a0f69e875de3d3c83e5c4956e6141d7';
 
-/// Finds the smart playlist pattern config that matches a given
-/// feed URL.
+/// Finds and loads the smart playlist config for a feed URL.
 ///
-/// Returns null if no pattern matches.
+/// Returns null if no pattern matches. Lazily fetches the
+/// full config from remote/cache when a match is found.
 
 final class SmartPlaylistPatternByFeedUrlFamily extends $Family
-    with $FunctionalFamilyOverride<SmartPlaylistPatternConfig?, String> {
+    with
+        $FunctionalFamilyOverride<
+          FutureOr<SmartPlaylistPatternConfig?>,
+          String
+        > {
   SmartPlaylistPatternByFeedUrlFamily._()
     : super(
         retry: null,
@@ -318,10 +363,10 @@ final class SmartPlaylistPatternByFeedUrlFamily extends $Family
         isAutoDispose: true,
       );
 
-  /// Finds the smart playlist pattern config that matches a given
-  /// feed URL.
+  /// Finds and loads the smart playlist config for a feed URL.
   ///
-  /// Returns null if no pattern matches.
+  /// Returns null if no pattern matches. Lazily fetches the
+  /// full config from remote/cache when a match is found.
 
   SmartPlaylistPatternByFeedUrlProvider call(String feedUrl) =>
       SmartPlaylistPatternByFeedUrlProvider._(argument: feedUrl, from: this);
@@ -405,7 +450,7 @@ final class PodcastSmartPlaylistsProvider
 }
 
 String _$podcastSmartPlaylistsHash() =>
-    r'b7d528058b3f394ed6145d508a53945cdf4b75e4';
+    r'dd0e8c1089d806858e2920e07e6b26ce1c953c71';
 
 /// Resolves smart playlists for a podcast by its ID.
 ///
@@ -437,20 +482,20 @@ final class PodcastSmartPlaylistsFamily extends $Family
   String toString() => r'podcastSmartPlaylistsProvider';
 }
 
-/// Whether the smart playlist view toggle should be visible for a
-/// podcast.
+/// Whether the smart playlist view toggle should be visible
+/// for a podcast.
 
 @ProviderFor(hasSmartPlaylistView)
 final hasSmartPlaylistViewProvider = HasSmartPlaylistViewFamily._();
 
-/// Whether the smart playlist view toggle should be visible for a
-/// podcast.
+/// Whether the smart playlist view toggle should be visible
+/// for a podcast.
 
 final class HasSmartPlaylistViewProvider
     extends $FunctionalProvider<AsyncValue<bool>, bool, FutureOr<bool>>
     with $FutureModifier<bool>, $FutureProvider<bool> {
-  /// Whether the smart playlist view toggle should be visible for a
-  /// podcast.
+  /// Whether the smart playlist view toggle should be visible
+  /// for a podcast.
   HasSmartPlaylistViewProvider._({
     required HasSmartPlaylistViewFamily super.from,
     required int super.argument,
@@ -497,8 +542,8 @@ final class HasSmartPlaylistViewProvider
 String _$hasSmartPlaylistViewHash() =>
     r'3620e859b235439c652fc679cc4d0cd66bf524c7';
 
-/// Whether the smart playlist view toggle should be visible for a
-/// podcast.
+/// Whether the smart playlist view toggle should be visible
+/// for a podcast.
 
 final class HasSmartPlaylistViewFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<bool>, int> {
@@ -511,8 +556,8 @@ final class HasSmartPlaylistViewFamily extends $Family
         isAutoDispose: true,
       );
 
-  /// Whether the smart playlist view toggle should be visible for a
-  /// podcast.
+  /// Whether the smart playlist view toggle should be visible
+  /// for a podcast.
 
   HasSmartPlaylistViewProvider call(int podcastId) =>
       HasSmartPlaylistViewProvider._(argument: podcastId, from: this);
@@ -521,33 +566,33 @@ final class HasSmartPlaylistViewFamily extends $Family
   String toString() => r'hasSmartPlaylistViewProvider';
 }
 
-/// Whether the smart playlist view toggle should be visible for a
-/// podcast by feed URL.
+/// Whether the smart playlist view toggle should be visible
+/// for a podcast by feed URL.
 ///
 /// Looks up the subscription by feedUrl and delegates to
-/// [hasSmartPlaylistView]. Returns false if the podcast is not
-/// subscribed.
+/// [hasSmartPlaylistView]. Returns false if the podcast is
+/// not subscribed.
 
 @ProviderFor(hasSmartPlaylistViewByFeedUrl)
 final hasSmartPlaylistViewByFeedUrlProvider =
     HasSmartPlaylistViewByFeedUrlFamily._();
 
-/// Whether the smart playlist view toggle should be visible for a
-/// podcast by feed URL.
+/// Whether the smart playlist view toggle should be visible
+/// for a podcast by feed URL.
 ///
 /// Looks up the subscription by feedUrl and delegates to
-/// [hasSmartPlaylistView]. Returns false if the podcast is not
-/// subscribed.
+/// [hasSmartPlaylistView]. Returns false if the podcast is
+/// not subscribed.
 
 final class HasSmartPlaylistViewByFeedUrlProvider
     extends $FunctionalProvider<AsyncValue<bool>, bool, FutureOr<bool>>
     with $FutureModifier<bool>, $FutureProvider<bool> {
-  /// Whether the smart playlist view toggle should be visible for a
-  /// podcast by feed URL.
+  /// Whether the smart playlist view toggle should be visible
+  /// for a podcast by feed URL.
   ///
   /// Looks up the subscription by feedUrl and delegates to
-  /// [hasSmartPlaylistView]. Returns false if the podcast is not
-  /// subscribed.
+  /// [hasSmartPlaylistView]. Returns false if the podcast is
+  /// not subscribed.
   HasSmartPlaylistViewByFeedUrlProvider._({
     required HasSmartPlaylistViewByFeedUrlFamily super.from,
     required String super.argument,
@@ -595,12 +640,12 @@ final class HasSmartPlaylistViewByFeedUrlProvider
 String _$hasSmartPlaylistViewByFeedUrlHash() =>
     r'a84d0ff08d905993a40556a5bb9cdb1bc876fabd';
 
-/// Whether the smart playlist view toggle should be visible for a
-/// podcast by feed URL.
+/// Whether the smart playlist view toggle should be visible
+/// for a podcast by feed URL.
 ///
 /// Looks up the subscription by feedUrl and delegates to
-/// [hasSmartPlaylistView]. Returns false if the podcast is not
-/// subscribed.
+/// [hasSmartPlaylistView]. Returns false if the podcast is
+/// not subscribed.
 
 final class HasSmartPlaylistViewByFeedUrlFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<bool>, String> {
@@ -613,12 +658,12 @@ final class HasSmartPlaylistViewByFeedUrlFamily extends $Family
         isAutoDispose: true,
       );
 
-  /// Whether the smart playlist view toggle should be visible for a
-  /// podcast by feed URL.
+  /// Whether the smart playlist view toggle should be visible
+  /// for a podcast by feed URL.
   ///
   /// Looks up the subscription by feedUrl and delegates to
-  /// [hasSmartPlaylistView]. Returns false if the podcast is not
-  /// subscribed.
+  /// [hasSmartPlaylistView]. Returns false if the podcast is
+  /// not subscribed.
 
   HasSmartPlaylistViewByFeedUrlProvider call(String feedUrl) =>
       HasSmartPlaylistViewByFeedUrlProvider._(argument: feedUrl, from: this);
@@ -627,23 +672,25 @@ final class HasSmartPlaylistViewByFeedUrlFamily extends $Family
   String toString() => r'hasSmartPlaylistViewByFeedUrlProvider';
 }
 
-/// Provides the smart playlist grouping for a podcast by feed URL.
+/// Provides the smart playlist grouping for a podcast by
+/// feed URL.
 ///
 /// Looks up the subscription by feedUrl and returns the
-/// [SmartPlaylistGrouping] if episodes can be grouped into smart
-/// playlists. Returns null if the podcast is not subscribed or if
-/// no resolver can group the episodes.
+/// [SmartPlaylistGrouping] if episodes can be grouped into
+/// smart playlists. Returns null if the podcast is not
+/// subscribed or if no resolver can group the episodes.
 
 @ProviderFor(podcastSmartPlaylistsByFeedUrl)
 final podcastSmartPlaylistsByFeedUrlProvider =
     PodcastSmartPlaylistsByFeedUrlFamily._();
 
-/// Provides the smart playlist grouping for a podcast by feed URL.
+/// Provides the smart playlist grouping for a podcast by
+/// feed URL.
 ///
 /// Looks up the subscription by feedUrl and returns the
-/// [SmartPlaylistGrouping] if episodes can be grouped into smart
-/// playlists. Returns null if the podcast is not subscribed or if
-/// no resolver can group the episodes.
+/// [SmartPlaylistGrouping] if episodes can be grouped into
+/// smart playlists. Returns null if the podcast is not
+/// subscribed or if no resolver can group the episodes.
 
 final class PodcastSmartPlaylistsByFeedUrlProvider
     extends
@@ -655,12 +702,13 @@ final class PodcastSmartPlaylistsByFeedUrlProvider
     with
         $FutureModifier<SmartPlaylistGrouping?>,
         $FutureProvider<SmartPlaylistGrouping?> {
-  /// Provides the smart playlist grouping for a podcast by feed URL.
+  /// Provides the smart playlist grouping for a podcast by
+  /// feed URL.
   ///
   /// Looks up the subscription by feedUrl and returns the
-  /// [SmartPlaylistGrouping] if episodes can be grouped into smart
-  /// playlists. Returns null if the podcast is not subscribed or if
-  /// no resolver can group the episodes.
+  /// [SmartPlaylistGrouping] if episodes can be grouped into
+  /// smart playlists. Returns null if the podcast is not
+  /// subscribed or if no resolver can group the episodes.
   PodcastSmartPlaylistsByFeedUrlProvider._({
     required PodcastSmartPlaylistsByFeedUrlFamily super.from,
     required String super.argument,
@@ -709,12 +757,13 @@ final class PodcastSmartPlaylistsByFeedUrlProvider
 String _$podcastSmartPlaylistsByFeedUrlHash() =>
     r'c9f45da49411fda0af2d3fa4115fa5c8fa0b8d4d';
 
-/// Provides the smart playlist grouping for a podcast by feed URL.
+/// Provides the smart playlist grouping for a podcast by
+/// feed URL.
 ///
 /// Looks up the subscription by feedUrl and returns the
-/// [SmartPlaylistGrouping] if episodes can be grouped into smart
-/// playlists. Returns null if the podcast is not subscribed or if
-/// no resolver can group the episodes.
+/// [SmartPlaylistGrouping] if episodes can be grouped into
+/// smart playlists. Returns null if the podcast is not
+/// subscribed or if no resolver can group the episodes.
 
 final class PodcastSmartPlaylistsByFeedUrlFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<SmartPlaylistGrouping?>, String> {
@@ -727,12 +776,13 @@ final class PodcastSmartPlaylistsByFeedUrlFamily extends $Family
         isAutoDispose: true,
       );
 
-  /// Provides the smart playlist grouping for a podcast by feed URL.
+  /// Provides the smart playlist grouping for a podcast by
+  /// feed URL.
   ///
   /// Looks up the subscription by feedUrl and returns the
-  /// [SmartPlaylistGrouping] if episodes can be grouped into smart
-  /// playlists. Returns null if the podcast is not subscribed or if
-  /// no resolver can group the episodes.
+  /// [SmartPlaylistGrouping] if episodes can be grouped into
+  /// smart playlists. Returns null if the podcast is not
+  /// subscribed or if no resolver can group the episodes.
 
   PodcastSmartPlaylistsByFeedUrlProvider call(String feedUrl) =>
       PodcastSmartPlaylistsByFeedUrlProvider._(argument: feedUrl, from: this);
