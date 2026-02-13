@@ -7,6 +7,7 @@ class FlavorConfig {
     required this.flavor,
     required this.name,
     required this.apiBaseUrl,
+    required this.smartPlaylistConfigBaseUrl,
     required this.enableAnalytics,
     required this.enableCrashReporting,
   });
@@ -14,6 +15,7 @@ class FlavorConfig {
   final Flavor flavor;
   final String name;
   final String apiBaseUrl;
+  final String smartPlaylistConfigBaseUrl;
   final bool enableAnalytics;
   final bool enableCrashReporting;
 
@@ -34,6 +36,8 @@ class FlavorConfig {
     flavor: Flavor.dev,
     name: 'Development',
     apiBaseUrl: 'https://api-dev.audiflow.example.com',
+    smartPlaylistConfigBaseUrl:
+        'https://storage.googleapis.com/audiflow-dev-config',
     enableAnalytics: false,
     enableCrashReporting: false,
   );
@@ -43,6 +47,8 @@ class FlavorConfig {
     flavor: Flavor.stg,
     name: 'Staging',
     apiBaseUrl: 'https://api-stg.audiflow.example.com',
+    smartPlaylistConfigBaseUrl:
+        'https://storage.googleapis.com/audiflow-dev-config',
     enableAnalytics: true,
     enableCrashReporting: true,
   );
@@ -52,6 +58,8 @@ class FlavorConfig {
     flavor: Flavor.prod,
     name: 'Production',
     apiBaseUrl: 'https://api.audiflow.example.com',
+    smartPlaylistConfigBaseUrl:
+        'https://reedom.github.io/audiflow-smart-playlists',
     enableAnalytics: true,
     enableCrashReporting: true,
   );

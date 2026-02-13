@@ -669,8 +669,10 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
     ThemeData theme,
     SortOrder sortOrder,
   ) {
-    final pattern = ref.watch(smartPlaylistPatternByFeedUrlProvider(feedUrl));
-    final yearGrouped = pattern?.yearGroupedEpisodes ?? false;
+    final patternAsync = ref.watch(
+      smartPlaylistPatternByFeedUrlProvider(feedUrl),
+    );
+    final yearGrouped = patternAsync.value?.yearGroupedEpisodes ?? false;
 
     return episodesAsync.when(
       data: (episodes) {

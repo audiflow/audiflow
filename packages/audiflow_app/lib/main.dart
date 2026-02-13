@@ -4,13 +4,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart' as intl;
+import 'package:path_provider/path_provider.dart';
 
 import 'app/app_lifecycle_observer.dart';
 import 'features/player/services/audio_handler_provider.dart';
 import 'l10n/app_localizations.dart';
 import 'routing/app_router.dart';
 
-Future<void> main() async {
+Future<void> main({
+  String smartPlaylistConfigBaseUrl =
+      'https://storage.googleapis.com/audiflow-dev-config',
+}) async {
   WidgetsFlutterBinding.ensureInitialized();
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
@@ -24,23 +28,30 @@ Future<void> main() async {
       receiveTimeout: const Duration(minutes: 5),
     ),
   );
+  final cacheDir = await getApplicationCacheDirectory();
 
   final container = ProviderContainer(
     overrides: [
       databaseProvider.overrideWithValue(database),
       dioProvider.overrideWithValue(dio),
+      cacheDirProvider.overrideWithValue(cacheDir.path),
+      smartPlaylistConfigBaseUrlProvider.overrideWithValue(
+        smartPlaylistConfigBaseUrl,
+      ),
     ],
   );
 
   // Initialize audio service for platform media controls
   await container.read(audioHandlerProvider.future);
 
-  // Load smart playlist patterns from bundled JSON
-  final patternsJson = await rootBundle.loadString(
-    'assets/smart_playlist_patterns.json',
-  );
-  final patterns = SmartPlaylistPatternLoader.parse(patternsJson);
-  container.read(smartPlaylistPatternsProvider.notifier).setPatterns(patterns);
+  // Fetch smart playlist pattern summaries from remote
+  final configRepo = container.read(smartPlaylistConfigRepositoryProvider);
+  final rootMeta = await configRepo.fetchRootMeta();
+  await configRepo.reconcileCache(rootMeta.patterns);
+  configRepo.setPatternSummaries(rootMeta.patterns);
+  container
+      .read(patternSummariesProvider.notifier)
+      .setSummaries(rootMeta.patterns);
 
   runApp(
     UncontrolledProviderScope(
