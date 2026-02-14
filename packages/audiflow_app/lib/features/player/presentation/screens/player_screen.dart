@@ -61,23 +61,27 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
           ? const Center(child: Text('No audio playing'))
           : SafeArea(
               child: Padding(
-                padding: const EdgeInsets.all(24),
+                padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Column(
                   children: [
-                    const Spacer(),
-                    _PlayerArtwork(artworkUrl: nowPlaying.artworkUrl),
-                    const SizedBox(height: 32),
+                    Expanded(
+                      child: Center(
+                        child: _PlayerArtwork(
+                          artworkUrl: nowPlaying.artworkUrl,
+                        ),
+                      ),
+                    ),
                     _PlayerInfo(
                       episodeTitle: nowPlaying.episodeTitle,
                       podcastTitle: nowPlaying.podcastTitle,
                     ),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 24),
                     _PlayerProgressBar(
                       progress: progress,
                       onSeekStart: () => _beginSeek(isPlaying),
                       onSeekEnd: _endSeek,
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 16),
                     _PlayerControls(
                       isPlaying: displayIsPlaying,
                       isLoading: displayIsLoading,
@@ -94,7 +98,8 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                         isPlaying,
                       ),
                     ),
-                    const Spacer(),
+                    const _PlaybackSpeedButton(),
+                    const SizedBox(height: 16),
                   ],
                 ),
               ),
@@ -405,5 +410,36 @@ class _PlayerPlayPauseButton extends ConsumerWidget {
         },
       ),
     );
+  }
+}
+
+class _PlaybackSpeedButton extends ConsumerWidget {
+  const _PlaybackSpeedButton();
+
+  static const _speeds = [0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0];
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final asyncSpeed = ref.watch(playbackSpeedProvider);
+    final speed = asyncSpeed.value ?? 1.0;
+
+    return Semantics(
+      button: true,
+      label: 'Playback speed ${speed}x',
+      child: TextButton(
+        onPressed: () {
+          final nextSpeed = _nextSpeed(speed);
+          ref.read(audioPlayerControllerProvider.notifier).setSpeed(nextSpeed);
+        },
+        child: Text('${speed}x', style: Theme.of(context).textTheme.labelLarge),
+      ),
+    );
+  }
+
+  double _nextSpeed(double current) {
+    for (final s in _speeds) {
+      if (current < s) return s;
+    }
+    return _speeds.first;
   }
 }

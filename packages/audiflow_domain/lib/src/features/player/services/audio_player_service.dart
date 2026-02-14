@@ -30,6 +30,15 @@ AudioPlayer audioPlayer(Ref ref) {
   return player;
 }
 
+/// Provides a stream of the current playback speed.
+///
+/// Reactively updates when speed changes via [AudioPlayerController.setSpeed].
+@Riverpod(keepAlive: true)
+Stream<double> playbackSpeed(Ref ref) {
+  final player = ref.watch(audioPlayerProvider);
+  return player.speedStream;
+}
+
 /// Provides a stream of playback progress updates.
 ///
 /// Combines position, duration, and buffered position into a single stream.
@@ -232,6 +241,11 @@ class AudioPlayerController extends _$AudioPlayerController {
 
       await _player.setUrl(playUrl);
 
+      // Apply persisted playback speed
+      final settingsRepo = ref.read(appSettingsRepositoryProvider);
+      final speed = settingsRepo.getPlaybackSpeed();
+      await _player.setSpeed(speed);
+
       // Notify history service of playback start
       if (_currentEpisodeId != null) {
         final historyService = ref.read(playbackHistoryServiceProvider);
@@ -346,5 +360,12 @@ class AudioPlayerController extends _$AudioPlayerController {
     final settingsRepo = ref.read(appSettingsRepositoryProvider);
     final seconds = settingsRepo.getSkipBackwardSeconds();
     await seek(_player.position - Duration(seconds: seconds));
+  }
+
+  /// Sets the playback speed and persists it to settings.
+  Future<void> setSpeed(double speed) async {
+    await _player.setSpeed(speed);
+    final settingsRepo = ref.read(appSettingsRepositoryProvider);
+    await settingsRepo.setPlaybackSpeed(speed);
   }
 }

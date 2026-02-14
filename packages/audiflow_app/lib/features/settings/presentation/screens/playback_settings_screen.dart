@@ -22,7 +22,7 @@ class PlaybackSettingsScreen extends ConsumerWidget {
         children: [
           _PlaybackSpeedTile(
             speed: speed,
-            onChanged: (v) => _update(ref, () => repo.setPlaybackSpeed(v)),
+            onChanged: (v) => _updateSpeed(ref, repo, v),
           ),
           _SkipForwardTile(
             seconds: skipForward,
@@ -47,6 +47,12 @@ class PlaybackSettingsScreen extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  void _updateSpeed(WidgetRef ref, AppSettingsRepository repo, double speed) {
+    // Use controller's setSpeed to apply to player and persist in one call
+    ref.read(audioPlayerControllerProvider.notifier).setSpeed(speed);
+    ref.invalidate(appSettingsRepositoryProvider);
   }
 
   void _update(WidgetRef ref, Future<void> Function() setter) {
