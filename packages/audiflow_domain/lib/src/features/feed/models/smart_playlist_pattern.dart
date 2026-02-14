@@ -9,7 +9,7 @@ final class SmartPlaylistPattern {
   const SmartPlaylistPattern({
     required this.id,
     this.podcastGuid,
-    this.feedUrlPatterns,
+    this.feedUrls,
     required this.resolverType,
     required this.config,
     this.priority = 0,
@@ -26,8 +26,8 @@ final class SmartPlaylistPattern {
   /// Match by podcast GUID (checked first).
   final String? podcastGuid;
 
-  /// Match by feed URL regex patterns (anchored matching with ^$).
-  final List<String>? feedUrlPatterns;
+  /// Exact feed URLs for matching.
+  final List<String>? feedUrls;
 
   /// Which resolver type to use (e.g., "rss", "title_appearance").
   final String resolverType;
@@ -71,14 +71,9 @@ final class SmartPlaylistPattern {
       return true;
     }
 
-    // Try feedUrlPatterns (anchored matching)
-    if (feedUrlPatterns != null) {
-      for (final pattern in feedUrlPatterns!) {
-        final regex = RegExp('^$pattern\$');
-        if (regex.hasMatch(feedUrl)) {
-          return true;
-        }
-      }
+    // Try exact feed URL matching
+    if (feedUrls != null && feedUrls!.contains(feedUrl)) {
+      return true;
     }
 
     return false;

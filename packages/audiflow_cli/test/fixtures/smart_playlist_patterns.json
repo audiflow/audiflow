@@ -3,9 +3,8 @@
   "patterns": [
     {
       "id": "coten_radio",
-      "feedUrlPatterns": [
-        "https://anchor\\.fm/s/8c2088c/podcast/rss",
-        "https://.*anchor\\.fm.*\\b8c2088c\\b.*"
+      "feedUrls": [
+        "https://anchor.fm/s/8c2088c/podcast/rss"
       ],
       "yearGroupedEpisodes": false,
       "playlists": [
@@ -124,9 +123,8 @@
     },
     {
       "id": "news_connect",
-      "feedUrlPatterns": [
-        "https://anchor\\.fm/s/81fb5eec/podcast/rss",
-        "https://.*anchor\\.fm.*81fb5eec.*"
+      "feedUrls": [
+        "https://anchor.fm/s/81fb5eec/podcast/rss"
       ],
       "yearGroupedEpisodes": true,
       "playlists": [

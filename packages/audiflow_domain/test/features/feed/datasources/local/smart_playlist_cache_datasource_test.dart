@@ -69,7 +69,7 @@ void main() {
         final meta = PatternMeta(
           version: 1,
           id: 'coten_radio',
-          feedUrlPatterns: [r'anchor\.fm'],
+          feedUrls: ['anchor.fm'],
           playlists: ['regular'],
         );
         await datasource.writePatternMeta('coten_radio', meta);
@@ -107,7 +107,7 @@ void main() {
         final meta = PatternMeta(
           version: 1,
           id: 'old',
-          feedUrlPatterns: [],
+          feedUrls: [],
           playlists: ['main'],
         );
         await datasource.writePatternMeta('old', meta);

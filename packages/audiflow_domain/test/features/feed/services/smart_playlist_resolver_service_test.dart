@@ -90,7 +90,7 @@ void main() {
         patterns: [
           SmartPlaylistPatternConfig(
             id: 'test_pattern',
-            feedUrlPatterns: [r'https://example\.com/feed\.rss'],
+            feedUrls: ['https://example.com/feed.rss'],
             playlists: [
               SmartPlaylistDefinition(
                 id: 'main',
@@ -139,7 +139,7 @@ void main() {
         patterns: [
           SmartPlaylistPatternConfig(
             id: 'test',
-            feedUrlPatterns: [r'https://example\.com/feed'],
+            feedUrls: ['https://example.com/feed'],
             playlists: [
               SmartPlaylistDefinition(
                 id: 'regular',
@@ -191,7 +191,7 @@ void main() {
         patterns: [
           SmartPlaylistPatternConfig(
             id: 'test',
-            feedUrlPatterns: [r'https://example\.com/feed'],
+            feedUrls: ['https://example.com/feed'],
             playlists: [
               SmartPlaylistDefinition(
                 id: 'main',
@@ -238,7 +238,7 @@ void main() {
         patterns: [
           SmartPlaylistPatternConfig(
             id: 'test',
-            feedUrlPatterns: [r'https://example\.com/feed'],
+            feedUrls: ['https://example.com/feed'],
             playlists: [
               SmartPlaylistDefinition(
                 id: 'all',
@@ -274,7 +274,7 @@ void main() {
         patterns: [
           SmartPlaylistPatternConfig(
             id: 'filter_test',
-            feedUrlPatterns: [r'https://example\.com/feed'],
+            feedUrls: ['https://example.com/feed'],
             playlists: [
               SmartPlaylistDefinition(
                 id: 'bonus',
