@@ -535,3 +535,68 @@ Keep internal implementation in `lib/src/` and only export what's needed.
 **Trade-offs accepted:**
 - Less flexibility to swap Drift (but we're committed to it)
 - Repository implementations in same package as interfaces (acceptable for this use case)
+
+## Smart Playlist Config Ecosystem
+
+Smart playlist configurations (curated episode groupings per podcast) are managed across three external components:
+
+### Data Flow
+
+```
+[audiflow-smartplaylist-web]   [audiflow-smartplaylist]       [GCS]             [audiflow app]
+ (web editor)           PR     (config data repo)     CI sync  (static hosting)   fetch
+ sp_web  ──────────────────>  JSON files on GitHub  ────────>  GCS bucket  <──────  audiflow_domain
+ sp_server                    (source of truth)                                     (cached locally)
+```
+
+### 1. Config Data Repository (`reedom/audiflow-smartplaylist`)
+
+Static JSON files representing smart playlist definitions. Split multi-file structure:
+
+```
+audiflow-smartplaylist/
+├── meta.json                     # Root: version + pattern summaries
+├── coten_radio/
+│   ├── meta.json                 # Pattern: feedUrls, playlistIds, flags
+│   └── playlists/
+│       ├── regular.json          # SmartPlaylistDefinition
+│       ├── short.json
+│       └── extras.json
+└── news_connect/
+    ├── meta.json
+    └── playlists/...
+```
+
+- **Source of truth** for all smart playlist configs
+- CI bumps pattern versions in `meta.json` on merge
+- Synced to GCS for the mobile app to consume
+
+### 2. Web Editor (`reedom/audiflow-smartplaylist-web`)
+
+Dart monorepo for creating/editing smart playlist configs:
+
+| Package | Role |
+|---------|------|
+| `sp_shared` | Shared models (`PatternMeta`, `SmartPlaylistDefinition`, etc.) |
+| `sp_server` | Backend API (shelf): fetches configs, runs preview, submits PRs |
+| `sp_web` | Flutter web frontend: editor UI, preview, feed loading |
+
+- Submits changes as PRs to the data repo via GitHub Git Trees API
+- **Reference implementation** for model serialization format (JSON keys, field names)
+
+### 3. GCS Static Hosting
+
+- Dev/Stg: `https://storage.googleapis.com/audiflow-dev-config/`
+- Mirrors the data repo structure; files served as static JSON
+- The mobile app fetches from here at startup and caches locally
+
+### How audiflow Consumes Configs
+
+In `audiflow_domain`, the `feed` feature handles smart playlist configs:
+
+- `SmartPlaylistRemoteDatasource` fetches JSON from GCS base URL
+- `SmartPlaylistCacheDatasource` caches files on disk (mirrors remote structure)
+- `SmartPlaylistConfigRepositoryImpl` coordinates cache vs remote with version-based invalidation
+- Models (`PatternMeta`, `SmartPlaylistDefinition`, etc.) must stay aligned with `sp_shared` models in the web editor repo
+
+**When updating model serialization (JSON keys, field structure), changes must be coordinated across the data repo, web editor, and mobile app.**
