@@ -67,20 +67,27 @@ class SmartPlaylistConfigRepositoryImpl
   Future<SmartPlaylistPatternConfig?> _tryLoadFromCache(
     String patternId,
   ) async {
-    final meta = await _cache.readPatternMeta(patternId);
-    if (meta == null) return null;
+    try {
+      final meta = await _cache.readPatternMeta(patternId);
+      if (meta == null) return null;
 
-    final playlists = <SmartPlaylistDefinition>[];
-    for (final playlistId in meta.playlists) {
-      final playlist = await _cache.readPlaylist(patternId, playlistId);
-      if (playlist == null) return null;
-      playlists.add(playlist);
-    }
+      final playlists = <SmartPlaylistDefinition>[];
+      for (final playlistId in meta.playlists) {
+        final playlist = await _cache.readPlaylist(patternId, playlistId);
+        if (playlist == null) return null;
+        playlists.add(playlist);
+      }
 
-    if (playlists.length != meta.playlists.length) {
+      if (playlists.length != meta.playlists.length) {
+        return null;
+      }
+      return ConfigAssembler.assemble(meta, playlists);
+    } on Object {
+      // Stale or corrupted cache; evict and fall through to
+      // re-fetch from remote.
+      await _cache.evictPattern(patternId);
       return null;
     }
-    return ConfigAssembler.assemble(meta, playlists);
   }
 
   Future<SmartPlaylistPatternConfig> _fetchAndCache(
