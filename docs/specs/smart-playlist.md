@@ -16,7 +16,7 @@ A prioritized chain of resolvers attempts to group episodes. The chain stops at 
 
 ```
 SmartPlaylistResolverService
-  1. Match podcast against pattern configs (by GUID or feed URL regex)
+  1. Match podcast against pattern configs (by GUID or exact feed URL)
   2. For each playlist definition in the matched config:
      - Route to the appropriate resolver by resolverType
      - Filter episodes by titleFilter/excludeFilter/requireFilter
@@ -72,7 +72,7 @@ Patterns define how episodes are grouped for specific podcasts. Two-level hierar
 final class SmartPlaylistPatternConfig {
   final String id;
   final String? podcastGuid;
-  final List<String>? feedUrlPatterns;  // Regex, anchored with ^ and $
+  final List<String>? feedUrls;  // Exact feed URLs for matching
   final bool yearGroupedEpisodes;
   final List<SmartPlaylistDefinition> playlists;
 }
@@ -106,7 +106,7 @@ final class SmartPlaylistDefinition {
   "patterns": [
     {
       "id": "coten_radio",
-      "feedUrlPatterns": ["https://anchor\\.fm/s/8c2088c/podcast/rss"],
+      "feedUrls": ["https://anchor.fm/s/8c2088c/podcast/rss"],
       "yearGroupedEpisodes": false,
       "playlists": [
         {

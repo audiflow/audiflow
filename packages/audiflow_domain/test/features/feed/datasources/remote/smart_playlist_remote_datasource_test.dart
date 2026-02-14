@@ -47,7 +47,7 @@ void main() {
       fakeResponses['$baseUrl/coten_radio/meta.json'] = jsonEncode({
         'version': 1,
         'id': 'coten_radio',
-        'feedUrlPatterns': [r'anchor\.fm'],
+        'feedUrls': ['anchor.fm'],
         'playlists': ['regular'],
       });
 

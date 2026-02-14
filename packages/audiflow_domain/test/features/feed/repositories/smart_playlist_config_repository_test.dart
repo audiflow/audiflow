@@ -92,7 +92,7 @@ void main() {
         PatternMeta(
           version: 1,
           id: 'old_pattern',
-          feedUrlPatterns: [],
+          feedUrls: [],
           playlists: ['main'],
         ),
       );
@@ -115,12 +115,7 @@ void main() {
       await cache.writeVersions({'test': 1});
       await cache.writePatternMeta(
         'test',
-        PatternMeta(
-          version: 1,
-          id: 'test',
-          feedUrlPatterns: [],
-          playlists: ['main'],
-        ),
+        PatternMeta(version: 1, id: 'test', feedUrls: [], playlists: ['main']),
       );
 
       await repo.reconcileCache([
@@ -141,7 +136,7 @@ void main() {
       fakeResponses['$baseUrl/test/meta.json'] = jsonEncode({
         'version': 1,
         'id': 'test',
-        'feedUrlPatterns': [r'test\.com'],
+        'feedUrls': ['test.com'],
         'playlists': ['main'],
       });
       fakeResponses['$baseUrl/test/playlists/main.json'] = jsonEncode({
@@ -176,7 +171,7 @@ void main() {
         PatternMeta(
           version: 1,
           id: 'test',
-          feedUrlPatterns: [r'test\.com'],
+          feedUrls: ['test.com'],
           playlists: ['main'],
         ),
       );
@@ -207,7 +202,7 @@ void main() {
       fakeResponses['$baseUrl/test/meta.json'] = jsonEncode({
         'version': 1,
         'id': 'test',
-        'feedUrlPatterns': [r'test\.com'],
+        'feedUrls': ['test.com'],
         'playlists': ['main'],
       });
       fakeResponses['$baseUrl/test/playlists/main.json'] = jsonEncode({

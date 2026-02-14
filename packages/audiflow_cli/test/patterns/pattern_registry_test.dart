@@ -37,7 +37,7 @@ void main() {
 
       expect(list, isNotEmpty);
       expect(list.first.id, isNotEmpty);
-      expect(list.first.feedUrlPatterns, isNotEmpty);
+      expect(list.first.feedUrls, isNotEmpty);
     });
   });
 }

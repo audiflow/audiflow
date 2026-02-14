@@ -22,7 +22,7 @@ class PatternListCommand {
     _sink.writeln();
 
     for (final pattern in patterns) {
-      final urls = pattern.feedUrlPatterns?.join(', ') ?? '(no URL patterns)';
+      final urls = pattern.feedUrls?.join(', ') ?? '(no URLs)';
       _sink.writeln('  ${pattern.id.padRight(20)} $urls');
     }
 
