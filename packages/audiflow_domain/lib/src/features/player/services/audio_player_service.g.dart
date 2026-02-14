@@ -63,6 +63,50 @@ final class AudioPlayerProvider
 
 String _$audioPlayerHash() => r'39aa2c7d111a8c4afdcf352654abd1ca07ad0c40';
 
+/// Provides a stream of the current playback speed.
+///
+/// Reactively updates when speed changes via [AudioPlayerController.setSpeed].
+
+@ProviderFor(playbackSpeed)
+final playbackSpeedProvider = PlaybackSpeedProvider._();
+
+/// Provides a stream of the current playback speed.
+///
+/// Reactively updates when speed changes via [AudioPlayerController.setSpeed].
+
+final class PlaybackSpeedProvider
+    extends $FunctionalProvider<AsyncValue<double>, double, Stream<double>>
+    with $FutureModifier<double>, $StreamProvider<double> {
+  /// Provides a stream of the current playback speed.
+  ///
+  /// Reactively updates when speed changes via [AudioPlayerController.setSpeed].
+  PlaybackSpeedProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'playbackSpeedProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$playbackSpeedHash();
+
+  @$internal
+  @override
+  $StreamProviderElement<double> $createElement($ProviderPointer pointer) =>
+      $StreamProviderElement(pointer);
+
+  @override
+  Stream<double> create(Ref ref) {
+    return playbackSpeed(ref);
+  }
+}
+
+String _$playbackSpeedHash() => r'd28ead49a076eb3b42ac76a446e4be96d63cc798';
+
 /// Provides a stream of playback progress updates.
 ///
 /// Combines position, duration, and buffered position into a single stream.
@@ -251,7 +295,7 @@ final class AudioPlayerControllerProvider
 }
 
 String _$audioPlayerControllerHash() =>
-    r'b0c534a2df2b2f43bcacc1f5e57d3138fcd92b17';
+    r'a81b02c82078899f7611b9c0283bdc49f05df4ed';
 
 /// Controller for managing audio playback.
 ///
