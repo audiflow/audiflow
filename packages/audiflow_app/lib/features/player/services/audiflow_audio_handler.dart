@@ -152,10 +152,8 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
   Future<void> skipToPrevious() async => _controller.skipBackward();
 
   @override
-  Future<void> fastForward() async =>
-      _controller.skipForward(const Duration(seconds: 30));
+  Future<void> fastForward() async => _controller.skipForward();
 
   @override
-  Future<void> rewind() async =>
-      _controller.skipBackward(const Duration(seconds: 30));
+  Future<void> rewind() async => _controller.skipBackward();
 }

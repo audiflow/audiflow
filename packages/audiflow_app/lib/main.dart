@@ -4,10 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart' as intl;
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app/app_lifecycle_observer.dart';
 import 'features/player/services/audio_handler_provider.dart';
+import 'features/settings/presentation/controllers/theme_controller.dart';
 import 'l10n/app_localizations.dart';
 import 'routing/app_router.dart';
 
@@ -29,12 +32,16 @@ Future<void> main({
     ),
   );
   final cacheDir = await getApplicationCacheDirectory();
+  final prefs = await SharedPreferences.getInstance();
+  final packageInfo = await PackageInfo.fromPlatform();
 
   final container = ProviderContainer(
     overrides: [
       databaseProvider.overrideWithValue(database),
       dioProvider.overrideWithValue(dio),
       cacheDirProvider.overrideWithValue(cacheDir.path),
+      sharedPreferencesProvider.overrideWithValue(prefs),
+      packageInfoProvider.overrideWithValue(packageInfo),
       smartPlaylistConfigBaseUrlProvider.overrideWithValue(
         smartPlaylistConfigBaseUrl,
       ),
@@ -64,15 +71,16 @@ Future<void> main({
 /// Root application widget.
 ///
 /// Creates the [MaterialApp.router] with the application router
-/// and theme configuration.
-class MyApp extends StatefulWidget {
+/// and theme configuration. Watches [ThemeModeController] and
+/// [TextScaleController] to apply live settings changes.
+class MyApp extends ConsumerStatefulWidget {
   const MyApp({super.key});
 
   @override
-  State<MyApp> createState() => _MyAppState();
+  ConsumerState<MyApp> createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> {
+class _MyAppState extends ConsumerState<MyApp> {
   late final _router = createAppRouter();
 
   @override
@@ -83,25 +91,41 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      title: 'Audiflow',
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      localeResolutionCallback: (locale, supportedLocales) {
-        for (final supported in supportedLocales) {
-          if (supported.languageCode == locale?.languageCode) {
-            intl.Intl.defaultLocale = supported.toLanguageTag();
-            return supported;
+    final themeMode = ref.watch(themeModeControllerProvider);
+    final textScale = ref.watch(textScaleControllerProvider);
+
+    return MediaQuery(
+      data: MediaQuery.of(
+        context,
+      ).copyWith(textScaler: TextScaler.linear(textScale)),
+      child: MaterialApp.router(
+        title: 'Audiflow',
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        localeResolutionCallback: (locale, supportedLocales) {
+          for (final supported in supportedLocales) {
+            if (supported.languageCode == locale?.languageCode) {
+              intl.Intl.defaultLocale = supported.toLanguageTag();
+              return supported;
+            }
           }
-        }
-        intl.Intl.defaultLocale = supportedLocales.first.toLanguageTag();
-        return supportedLocales.first;
-      },
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
+          intl.Intl.defaultLocale = supportedLocales.first.toLanguageTag();
+          return supportedLocales.first;
+        },
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+          useMaterial3: true,
+        ),
+        darkTheme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: Colors.deepPurple,
+            brightness: Brightness.dark,
+          ),
+          useMaterial3: true,
+        ),
+        themeMode: themeMode,
+        routerConfig: _router,
       ),
-      routerConfig: _router,
     );
   }
 }

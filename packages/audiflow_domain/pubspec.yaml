@@ -9,6 +9,8 @@ environment:
 resolution: workspace
 
 dependencies:
+  flutter:
+    sdk: flutter
   audiflow_ai:
     path: ../audiflow_ai
   audiflow_core:

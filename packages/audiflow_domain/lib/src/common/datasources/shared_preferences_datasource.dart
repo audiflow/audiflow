@@ -23,6 +23,13 @@ class SharedPreferencesDataSource {
   /// Set int value
   Future<bool> setInt(String key, int value) => _prefs.setInt(key, value);
 
+  /// Get double value
+  double? getDouble(String key) => _prefs.getDouble(key);
+
+  /// Set double value
+  Future<bool> setDouble(String key, double value) =>
+      _prefs.setDouble(key, value);
+
   /// Get bool value
   bool? getBool(String key) => _prefs.getBool(key);
 

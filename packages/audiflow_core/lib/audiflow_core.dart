@@ -4,6 +4,7 @@ library;
 // Constants
 export 'src/constants/app_constants.dart';
 export 'src/constants/asset_paths.dart';
+export 'src/constants/settings_keys.dart';
 
 // Configuration
 export 'src/config/flavor_config.dart';

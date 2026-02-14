@@ -146,3 +146,8 @@ export 'src/features/queue/providers/queue_providers.dart';
 export 'src/features/queue/repositories/queue_repository.dart';
 export 'src/features/queue/repositories/queue_repository_impl.dart';
 export 'src/features/queue/services/queue_service.dart';
+
+// Settings feature
+export 'src/features/settings/repositories/app_settings_repository.dart';
+export 'src/features/settings/repositories/app_settings_repository_impl.dart';
+export 'src/features/settings/providers/settings_providers.dart';

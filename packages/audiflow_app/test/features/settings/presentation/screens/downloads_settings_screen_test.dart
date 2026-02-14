@@ -1,0 +1,88 @@
+import 'package:audiflow_app/features/settings/presentation/screens/downloads_settings_screen.dart';
+import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+void main() {
+  late SharedPreferences prefs;
+
+  setUp(() async {
+    SharedPreferences.setMockInitialValues({});
+    prefs = await SharedPreferences.getInstance();
+  });
+
+  Widget buildTestWidget() {
+    return ProviderScope(
+      overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+      child: const MaterialApp(home: DownloadsSettingsScreen()),
+    );
+  }
+
+  group('DownloadsSettingsScreen', () {
+    testWidgets('renders without errors', (tester) async {
+      await tester.pumpWidget(buildTestWidget());
+
+      expect(find.byType(DownloadsSettingsScreen), findsOneWidget);
+    });
+
+    testWidgets('displays AppBar with Downloads title', (tester) async {
+      await tester.pumpWidget(buildTestWidget());
+
+      final appBar = tester.widget<AppBar>(find.byType(AppBar));
+      final title = appBar.title! as Text;
+      expect(title.data, equals('Downloads'));
+    });
+
+    testWidgets('shows WiFi-only enabled by default', (tester) async {
+      await tester.pumpWidget(buildTestWidget());
+
+      expect(find.text('WiFi-Only Downloads'), findsOneWidget);
+
+      final tiles = tester
+          .widgetList<SwitchListTile>(find.byType(SwitchListTile))
+          .toList();
+      // First SwitchListTile is WiFi-only
+      expect(tiles[0].value, isTrue);
+    });
+
+    testWidgets('shows auto-delete disabled by default', (tester) async {
+      await tester.pumpWidget(buildTestWidget());
+
+      expect(find.text('Auto-Delete After Played'), findsOneWidget);
+
+      final tiles = tester
+          .widgetList<SwitchListTile>(find.byType(SwitchListTile))
+          .toList();
+      // Second SwitchListTile is auto-delete
+      expect(tiles[1].value, isFalse);
+    });
+
+    testWidgets('shows max concurrent downloads with default 1', (
+      tester,
+    ) async {
+      await tester.pumpWidget(buildTestWidget());
+
+      expect(find.text('Max Concurrent Downloads'), findsOneWidget);
+
+      final segmented = tester.widget<SegmentedButton<int>>(
+        find.byType(SegmentedButton<int>),
+      );
+      expect(segmented.selected, equals({1}));
+    });
+
+    testWidgets('toggling WiFi-only updates state', (tester) async {
+      await tester.pumpWidget(buildTestWidget());
+
+      // Tap the first Switch (WiFi-only)
+      await tester.tap(find.byType(Switch).first);
+      await tester.pumpAndSettle();
+
+      final tiles = tester
+          .widgetList<SwitchListTile>(find.byType(SwitchListTile))
+          .toList();
+      expect(tiles[0].value, isFalse);
+    });
+  });
+}

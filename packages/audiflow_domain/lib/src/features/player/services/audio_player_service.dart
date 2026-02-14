@@ -7,6 +7,7 @@ import 'package:rxdart/rxdart.dart';
 import '../../download/services/download_service.dart';
 import '../../feed/repositories/episode_repository_impl.dart';
 import '../../queue/services/queue_service.dart';
+import '../../settings/providers/settings_providers.dart';
 import '../../subscription/repositories/subscription_repository_impl.dart';
 import '../models/now_playing_info.dart';
 import '../models/playback_progress.dart';
@@ -327,23 +328,23 @@ class AudioPlayerController extends _$AudioPlayerController {
     await _player.seek(Duration(milliseconds: clampedMs));
   }
 
-  /// Skips forward by the specified duration (default 30s).
+  /// Skips forward by the user-configured duration.
   ///
   /// Clamped to duration if near the end.
-  Future<void> skipForward([
-    Duration amount = const Duration(seconds: 30),
-  ]) async {
+  Future<void> skipForward() async {
     if (_currentUrl == null) return;
-    await seek(_player.position + amount);
+    final settingsRepo = ref.read(appSettingsRepositoryProvider);
+    final seconds = settingsRepo.getSkipForwardSeconds();
+    await seek(_player.position + Duration(seconds: seconds));
   }
 
-  /// Skips backward by the specified duration (default 30s).
+  /// Skips backward by the user-configured duration.
   ///
   /// Clamped to zero if near the start.
-  Future<void> skipBackward([
-    Duration amount = const Duration(seconds: 30),
-  ]) async {
+  Future<void> skipBackward() async {
     if (_currentUrl == null) return;
-    await seek(_player.position - amount);
+    final settingsRepo = ref.read(appSettingsRepositoryProvider);
+    final seconds = settingsRepo.getSkipBackwardSeconds();
+    await seek(_player.position - Duration(seconds: seconds));
   }
 }

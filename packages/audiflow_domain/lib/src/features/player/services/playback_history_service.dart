@@ -1,5 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../settings/providers/settings_providers.dart';
 import '../models/playback_progress.dart';
 import '../repositories/playback_history_repository.dart';
 import '../repositories/playback_history_repository_impl.dart';
@@ -10,19 +11,24 @@ part 'playback_history_service.g.dart';
 @Riverpod(keepAlive: true)
 PlaybackHistoryService playbackHistoryService(Ref ref) {
   final repository = ref.watch(playbackHistoryRepositoryProvider);
-  return PlaybackHistoryService(repository);
+  final settingsRepo = ref.watch(appSettingsRepositoryProvider);
+  return PlaybackHistoryService(
+    repository,
+    getCompletionThreshold: settingsRepo.getAutoCompleteThreshold,
+  );
 }
 
 /// Service for managing playback history with auto-completion logic.
 ///
 /// Handles progress saving throttling and automatic completion detection.
 class PlaybackHistoryService {
-  PlaybackHistoryService(this._repository);
+  PlaybackHistoryService(
+    this._repository, {
+    required double Function() getCompletionThreshold,
+  }) : _getCompletionThreshold = getCompletionThreshold;
 
   final PlaybackHistoryRepository _repository;
-
-  /// Threshold at which an episode is considered "completed" (95%).
-  static const double completionThreshold = 0.95;
+  final double Function() _getCompletionThreshold;
 
   /// Minimum interval between progress saves (15 seconds).
   static const int saveIntervalMs = 15000;
@@ -70,7 +76,7 @@ class PlaybackHistoryService {
     // Auto-complete check
     if (0 < durationMs) {
       final progressPercent = positionMs / durationMs;
-      if (completionThreshold <= progressPercent) {
+      if (_getCompletionThreshold() <= progressPercent) {
         final isAlreadyCompleted = await _repository.isCompleted(episodeId);
         if (!isAlreadyCompleted) {
           await _repository.markCompleted(episodeId);

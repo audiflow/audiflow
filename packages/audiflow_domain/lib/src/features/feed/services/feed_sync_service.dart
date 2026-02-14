@@ -10,6 +10,7 @@ import '../../../common/providers/logger_provider.dart';
 import '../../../features/subscription/repositories/subscription_repository_impl.dart';
 import '../models/feed_parse_progress.dart';
 import '../models/feed_sync_result.dart';
+import '../../settings/providers/settings_providers.dart';
 import '../providers/smart_playlist_providers.dart';
 import '../repositories/episode_repository_impl.dart';
 import 'feed_parser_service.dart';
@@ -35,15 +36,33 @@ class FeedSyncService {
   final Ref _ref;
   final Logger _logger;
 
-  static const _syncInterval = Duration(hours: 1);
+  /// Sync interval derived from user settings.
+  Duration get _syncInterval {
+    final repo = _ref.read(appSettingsRepositoryProvider);
+    return Duration(minutes: repo.getSyncIntervalMinutes());
+  }
 
   /// Syncs all subscribed podcast feeds in parallel.
   ///
   /// When [forceRefresh] is true, skips the timing window check
   /// and syncs all feeds regardless of when they were last refreshed.
+  /// Also skips sync when auto-sync is disabled (unless forced).
   Future<FeedSyncResult> syncAllSubscriptions({
     bool forceRefresh = false,
   }) async {
+    if (!forceRefresh) {
+      final settingsRepo = _ref.read(appSettingsRepositoryProvider);
+      if (!settingsRepo.getAutoSync()) {
+        _logger.i('Auto-sync disabled, skipping');
+        return const FeedSyncResult(
+          totalCount: 0,
+          successCount: 0,
+          skipCount: 0,
+          errorCount: 0,
+        );
+      }
+    }
+
     final subscriptionRepo = _ref.read(subscriptionRepositoryProvider);
     final subscriptions = await subscriptionRepo.getSubscriptions();
 
