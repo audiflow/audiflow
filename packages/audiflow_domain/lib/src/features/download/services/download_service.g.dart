@@ -10,21 +10,21 @@ part of 'download_service.dart';
 // ignore_for_file: type=lint, type=warning
 /// Provider for WiFi-only download setting.
 ///
-/// Override this with SharedPreferences in the app.
+/// Reads from user settings via [AppSettingsRepository].
 
 @ProviderFor(downloadWifiOnly)
 final downloadWifiOnlyProvider = DownloadWifiOnlyProvider._();
 
 /// Provider for WiFi-only download setting.
 ///
-/// Override this with SharedPreferences in the app.
+/// Reads from user settings via [AppSettingsRepository].
 
 final class DownloadWifiOnlyProvider
     extends $FunctionalProvider<bool, bool, bool>
     with $Provider<bool> {
   /// Provider for WiFi-only download setting.
   ///
-  /// Override this with SharedPreferences in the app.
+  /// Reads from user settings via [AppSettingsRepository].
   DownloadWifiOnlyProvider._()
     : super(
         from: null,
@@ -58,25 +58,25 @@ final class DownloadWifiOnlyProvider
   }
 }
 
-String _$downloadWifiOnlyHash() => r'5fd962076fe783619397f406589ea7c62eb77f45';
+String _$downloadWifiOnlyHash() => r'32bc279478c4907cffa33c78e54ed66848760526';
 
 /// Provider for auto-delete played setting.
 ///
-/// Override this with SharedPreferences in the app.
+/// Reads from user settings via [AppSettingsRepository].
 
 @ProviderFor(downloadAutoDeletePlayed)
 final downloadAutoDeletePlayedProvider = DownloadAutoDeletePlayedProvider._();
 
 /// Provider for auto-delete played setting.
 ///
-/// Override this with SharedPreferences in the app.
+/// Reads from user settings via [AppSettingsRepository].
 
 final class DownloadAutoDeletePlayedProvider
     extends $FunctionalProvider<bool, bool, bool>
     with $Provider<bool> {
   /// Provider for auto-delete played setting.
   ///
-  /// Override this with SharedPreferences in the app.
+  /// Reads from user settings via [AppSettingsRepository].
   DownloadAutoDeletePlayedProvider._()
     : super(
         from: null,
@@ -111,7 +111,7 @@ final class DownloadAutoDeletePlayedProvider
 }
 
 String _$downloadAutoDeletePlayedHash() =>
-    r'48664debd81589d7dbbf1d65a003fbe28da46c9b';
+    r'cbccc113b6e9ea5b66235d7a78f9b715167d3446';
 
 /// Main service for managing episode downloads.
 ///

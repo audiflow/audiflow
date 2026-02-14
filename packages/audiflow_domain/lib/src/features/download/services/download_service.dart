@@ -8,6 +8,7 @@ import '../../../common/providers/logger_provider.dart';
 import '../../feed/repositories/episode_repository.dart';
 import '../../feed/repositories/episode_repository_impl.dart';
 import '../models/download_status.dart';
+import '../../settings/providers/settings_providers.dart';
 import '../repositories/download_repository.dart';
 import '../repositories/download_repository_impl.dart';
 import 'download_file_service.dart';
@@ -17,15 +18,21 @@ part 'download_service.g.dart';
 
 /// Provider for WiFi-only download setting.
 ///
-/// Override this with SharedPreferences in the app.
+/// Reads from user settings via [AppSettingsRepository].
 @riverpod
-bool downloadWifiOnly(Ref ref) => true;
+bool downloadWifiOnly(Ref ref) {
+  final repo = ref.watch(appSettingsRepositoryProvider);
+  return repo.getWifiOnlyDownload();
+}
 
 /// Provider for auto-delete played setting.
 ///
-/// Override this with SharedPreferences in the app.
+/// Reads from user settings via [AppSettingsRepository].
 @riverpod
-bool downloadAutoDeletePlayed(Ref ref) => false;
+bool downloadAutoDeletePlayed(Ref ref) {
+  final repo = ref.watch(appSettingsRepositoryProvider);
+  return repo.getAutoDeletePlayed();
+}
 
 /// Main service for managing episode downloads.
 ///

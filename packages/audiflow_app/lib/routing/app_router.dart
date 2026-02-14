@@ -9,7 +9,13 @@ import '../features/podcast_detail/presentation/screens/smart_playlist_episodes_
 import '../features/podcast_detail/presentation/screens/smart_playlist_group_episodes_screen.dart';
 import '../features/queue/presentation/screens/queue_screen.dart';
 import '../features/search/presentation/screens/search_screen.dart';
+import '../features/settings/presentation/screens/about_screen.dart';
+import '../features/settings/presentation/screens/appearance_settings_screen.dart';
+import '../features/settings/presentation/screens/downloads_settings_screen.dart';
+import '../features/settings/presentation/screens/feed_sync_settings_screen.dart';
+import '../features/settings/presentation/screens/playback_settings_screen.dart';
 import '../features/settings/presentation/screens/settings_screen.dart';
+import '../features/settings/presentation/screens/storage_settings_screen.dart';
 import 'scaffold_with_nav_bar.dart';
 
 /// Application route paths.
@@ -26,6 +32,12 @@ class AppRoutes {
   static const String smartPlaylistGroupEpisodesPath = 'group/:groupId';
   static const String smartPlaylistDirectGroup =
       'smart-playlist/:playlistId/group/:groupId';
+  static const String settingsAppearance = '/settings/appearance';
+  static const String settingsPlayback = '/settings/playback';
+  static const String settingsDownloads = '/settings/downloads';
+  static const String settingsFeedSync = '/settings/feed-sync';
+  static const String settingsStorage = '/settings/storage';
+  static const String settingsAbout = '/settings/about';
 }
 
 /// Navigator keys for each tab branch.
@@ -153,6 +165,34 @@ GoRouter createAppRouter() {
               GoRoute(
                 path: AppRoutes.settings,
                 builder: (context, state) => const SettingsScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'appearance',
+                    builder: (context, state) =>
+                        const AppearanceSettingsScreen(),
+                  ),
+                  GoRoute(
+                    path: 'playback',
+                    builder: (context, state) => const PlaybackSettingsScreen(),
+                  ),
+                  GoRoute(
+                    path: 'downloads',
+                    builder: (context, state) =>
+                        const DownloadsSettingsScreen(),
+                  ),
+                  GoRoute(
+                    path: 'feed-sync',
+                    builder: (context, state) => const FeedSyncSettingsScreen(),
+                  ),
+                  GoRoute(
+                    path: 'storage',
+                    builder: (context, state) => const StorageSettingsScreen(),
+                  ),
+                  GoRoute(
+                    path: 'about',
+                    builder: (context, state) => const AboutScreen(),
+                  ),
+                ],
               ),
             ],
           ),

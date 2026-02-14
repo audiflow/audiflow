@@ -1,0 +1,97 @@
+/// Keys for SharedPreferences storage of user settings.
+class SettingsKeys {
+  SettingsKeys._();
+
+  // -- Appearance --
+
+  /// Theme mode preference (system, light, dark).
+  static const String themeMode = 'settings_theme_mode';
+
+  /// Locale/language preference.
+  static const String locale = 'settings_locale';
+
+  /// UI text scale factor.
+  static const String textScale = 'settings_text_scale';
+
+  // -- Playback --
+
+  /// Audio playback speed multiplier.
+  static const String playbackSpeed = 'settings_playback_speed';
+
+  /// Seconds to skip forward on tap.
+  static const String skipForwardSeconds = 'settings_skip_forward_seconds';
+
+  /// Seconds to skip backward on tap.
+  static const String skipBackwardSeconds = 'settings_skip_backward_seconds';
+
+  /// Fraction of episode duration at which it is marked complete.
+  static const String autoCompleteThreshold =
+      'settings_auto_complete_threshold';
+
+  /// Whether to auto-play the next episode in the queue.
+  static const String continuousPlayback = 'settings_continuous_playback';
+
+  // -- Downloads --
+
+  /// Restrict downloads to Wi-Fi connections.
+  static const String wifiOnlyDownload = 'settings_wifi_only_download';
+
+  /// Automatically delete episodes after playback completes.
+  static const String autoDeletePlayed = 'settings_auto_delete_played';
+
+  /// Maximum number of simultaneous download tasks.
+  static const String maxConcurrentDownloads =
+      'settings_max_concurrent_downloads';
+
+  // -- Feed Sync --
+
+  /// Enable automatic background feed sync.
+  static const String autoSync = 'settings_auto_sync';
+
+  /// Minutes between automatic feed syncs.
+  static const String syncIntervalMinutes = 'settings_sync_interval_minutes';
+
+  /// Restrict feed sync to Wi-Fi connections.
+  static const String wifiOnlySync = 'settings_wifi_only_sync';
+}
+
+/// Default values for app settings when no preference has been saved.
+class SettingsDefaults {
+  SettingsDefaults._();
+
+  /// Default UI text scale factor.
+  static const double textScale = 1.0;
+
+  /// Default audio playback speed.
+  static const double playbackSpeed = 1.0;
+
+  /// Default seconds to skip forward.
+  static const int skipForwardSeconds = 30;
+
+  /// Default seconds to skip backward.
+  static const int skipBackwardSeconds = 10;
+
+  /// Default auto-complete threshold (95% of episode).
+  static const double autoCompleteThreshold = 0.95;
+
+  /// Default continuous playback setting.
+  static const bool continuousPlayback = true;
+
+  /// Default Wi-Fi only download setting.
+  static const bool wifiOnlyDownload = true;
+
+  /// Default auto-delete after playback setting.
+  static const bool autoDeletePlayed = false;
+
+  /// Default maximum concurrent downloads.
+  static const int maxConcurrentDownloads = 1;
+
+  /// Default auto-sync setting.
+  static const bool autoSync = true;
+
+  /// Default minutes between syncs.
+  static const int syncIntervalMinutes = 60;
+
+  /// Default Wi-Fi only sync setting.
+  static const bool wifiOnlySync = false;
+}

@@ -12,7 +12,10 @@ void main() {
 
   setUp(() {
     mockRepository = MockPlaybackHistoryRepository();
-    service = PlaybackHistoryService(mockRepository);
+    service = PlaybackHistoryService(
+      mockRepository,
+      getCompletionThreshold: () => 0.95,
+    );
   });
 
   group('onProgressUpdate', () {
