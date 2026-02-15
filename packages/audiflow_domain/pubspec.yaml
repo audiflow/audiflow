@@ -36,6 +36,7 @@ dependencies:
   speech_to_text: ^7.3.0
   rxdart: ^0.28.0
   meta: ^1.17.0
+  xml: ^6.6.1
 
 dev_dependencies:
   flutter_test:

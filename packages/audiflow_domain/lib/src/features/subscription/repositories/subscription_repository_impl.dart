@@ -63,6 +63,11 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
   }
 
   @override
+  Future<bool> isSubscribedByFeedUrl(String feedUrl) {
+    return _datasource.existsByFeedUrl(feedUrl);
+  }
+
+  @override
   Future<List<Subscription>> getSubscriptions() {
     return _datasource.getAll();
   }

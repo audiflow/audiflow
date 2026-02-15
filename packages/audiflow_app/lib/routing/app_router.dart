@@ -40,6 +40,12 @@ class AppRoutes {
   static const String settingsAbout = '/settings/about';
 }
 
+/// Root navigator key for the application.
+///
+/// Used by components outside the router tree (e.g.
+/// [OpmlFileReceiver]) that need to push full-screen routes.
+final rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
+
 /// Navigator keys for each tab branch.
 ///
 /// Each tab has its own navigator to maintain
@@ -63,7 +69,12 @@ final _settingsNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'settings');
 /// - `/settings`
 GoRouter createAppRouter() {
   return GoRouter(
+    navigatorKey: rootNavigatorKey,
     initialLocation: AppRoutes.search,
+    // File URIs from the share sheet (e.g. file:///...opml)
+    // are handled by OpmlFileReceiverController via app_links,
+    // not by the router. Redirect to home on unknown routes.
+    onException: (_, _, router) => router.go(AppRoutes.search),
     routes: [
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {

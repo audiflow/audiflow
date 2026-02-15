@@ -53,6 +53,12 @@ class SubscriptionLocalDatasource {
     return result != null;
   }
 
+  /// Returns true if a subscription exists for the given feed URL.
+  Future<bool> existsByFeedUrl(String feedUrl) async {
+    final result = await getByFeedUrl(feedUrl);
+    return result != null;
+  }
+
   /// Returns a subscription by its feed URL, or null if not found.
   Future<Subscription?> getByFeedUrl(String feedUrl) {
     return (_db.select(

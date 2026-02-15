@@ -2,6 +2,10 @@ import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../controllers/opml_export_controller.dart';
+import '../controllers/opml_import_controller.dart';
+import 'opml_import_preview_screen.dart';
+
 /// Screen for managing storage and data: cache, search history,
 /// OPML import/export, and full data reset.
 class StorageSettingsScreen extends ConsumerWidget {
@@ -16,7 +20,7 @@ class StorageSettingsScreen extends ConsumerWidget {
           _CacheTile(ref: ref),
           _SearchHistoryTile(context: context),
           const Divider(),
-          _OpmlSection(context: context),
+          const _OpmlSection(),
           const Divider(),
           _DangerZoneSection(context: context, ref: ref),
         ],
@@ -115,39 +119,133 @@ class _SearchHistoryTile extends StatelessWidget {
   }
 }
 
-class _OpmlSection extends StatelessWidget {
-  const _OpmlSection({required this.context});
-
-  final BuildContext context;
+class _OpmlSection extends ConsumerWidget {
+  const _OpmlSection();
 
   @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        ListTile(
-          title: const Text('Export Subscriptions'),
-          subtitle: const Text('Save subscriptions as OPML file'),
-          trailing: OutlinedButton(
-            onPressed: () => _showComingSoon(context),
-            child: const Text('Export'),
-          ),
-        ),
-        ListTile(
-          title: const Text('Import Subscriptions'),
-          subtitle: const Text('Import from OPML file'),
-          trailing: OutlinedButton(
-            onPressed: () => _showComingSoon(context),
-            child: const Text('Import'),
-          ),
-        ),
-      ],
+  Widget build(BuildContext context, WidgetRef ref) {
+    return const Column(children: [_ExportTile(), _ImportTile()]);
+  }
+}
+
+class _ExportTile extends ConsumerWidget {
+  const _ExportTile();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    ref.listen(opmlExportControllerProvider, (_, next) {
+      final message = switch (next) {
+        OpmlExportEmpty() => 'No subscriptions to export',
+        OpmlExportSuccess() => 'Subscriptions exported',
+        OpmlExportError(:final message) => 'Export failed: $message',
+        _ => null,
+      };
+      if (message != null) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(message)));
+      }
+    });
+
+    return ListTile(
+      title: const Text('Export Subscriptions'),
+      subtitle: const Text('Save subscriptions as OPML file'),
+      trailing: OutlinedButton(
+        onPressed: () =>
+            ref.read(opmlExportControllerProvider.notifier).export(),
+        child: const Text('Export'),
+      ),
+    );
+  }
+}
+
+class _ImportTile extends ConsumerWidget {
+  const _ImportTile();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    ref.listen(opmlImportControllerProvider, (_, next) {
+      switch (next) {
+        case OpmlPickSuccess(:final entries, :final subscribedFeedUrls):
+          _navigateToPreview(
+            context,
+            entries: entries,
+            subscribedFeedUrls: subscribedFeedUrls,
+          );
+        case OpmlPickError(:final message):
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(message)));
+        case OpmlPickCancelled():
+        case OpmlPickIdle():
+        case OpmlPickLoading():
+          break;
+      }
+    });
+
+    return ListTile(
+      title: const Text('Import Subscriptions'),
+      subtitle: const Text('Import from OPML file'),
+      trailing: OutlinedButton(
+        onPressed: () =>
+            ref.read(opmlImportControllerProvider.notifier).pickAndParse(),
+        child: const Text('Import'),
+      ),
     );
   }
 
-  void _showComingSoon(BuildContext context) {
-    ScaffoldMessenger.of(
+  Future<void> _navigateToPreview(
+    BuildContext context, {
+    required List<OpmlEntry> entries,
+    required Set<String> subscribedFeedUrls,
+  }) async {
+    final result = await Navigator.push<OpmlImportResult>(
       context,
-    ).showSnackBar(const SnackBar(content: Text('Coming soon')));
+      MaterialPageRoute<OpmlImportResult>(
+        builder: (_) => OpmlImportPreviewScreen(
+          entries: entries,
+          subscribedFeedUrls: subscribedFeedUrls,
+        ),
+      ),
+    );
+
+    if (result == null || !context.mounted) return;
+
+    await showDialog<void>(
+      context: context,
+      builder: (_) => _ImportSummaryDialog(result: result),
+    );
+  }
+}
+
+class _ImportSummaryDialog extends StatelessWidget {
+  const _ImportSummaryDialog({required this.result});
+
+  final OpmlImportResult result;
+
+  @override
+  Widget build(BuildContext context) {
+    final lines = <String>['Imported ${result.succeeded.length} podcasts'];
+    if (result.alreadySubscribed.isNotEmpty) {
+      lines.add(
+        '${result.alreadySubscribed.length}'
+        ' already subscribed',
+      );
+    }
+    if (result.failed.isNotEmpty) {
+      lines.add('${result.failed.length} failed');
+    }
+
+    return AlertDialog(
+      title: const Text('Import Complete'),
+      content: Text(lines.join('\n')),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('OK'),
+        ),
+      ],
+    );
   }
 }
 

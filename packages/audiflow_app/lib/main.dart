@@ -11,6 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'app/app_lifecycle_observer.dart';
 import 'features/player/services/audio_handler_provider.dart';
 import 'features/settings/presentation/controllers/theme_controller.dart';
+import 'features/settings/presentation/widgets/opml_file_receiver.dart';
 import 'l10n/app_localizations.dart';
 import 'routing/app_router.dart';
 
@@ -124,6 +125,7 @@ class _MyAppState extends ConsumerState<MyApp> {
           useMaterial3: true,
         ),
         themeMode: themeMode,
+        builder: (context, child) => OpmlFileReceiver(child: child!),
         routerConfig: _router,
       ),
     );
