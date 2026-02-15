@@ -27,6 +27,9 @@ abstract class SubscriptionRepository {
   /// Returns whether the user is subscribed to a podcast.
   Future<bool> isSubscribed(String itunesId);
 
+  /// Returns whether the user is subscribed to a podcast by feed URL.
+  Future<bool> isSubscribedByFeedUrl(String feedUrl);
+
   /// Returns all subscriptions ordered by subscription date (newest first).
   Future<List<Subscription>> getSubscriptions();
 
