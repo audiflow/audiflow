@@ -124,22 +124,15 @@ class _OpmlSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Column(
-      children: [
-        _ExportTile(ref: ref),
-        _ImportTile(),
-      ],
-    );
+    return const Column(children: [_ExportTile(), _ImportTile()]);
   }
 }
 
-class _ExportTile extends StatelessWidget {
-  const _ExportTile({required this.ref});
-
-  final WidgetRef ref;
+class _ExportTile extends ConsumerWidget {
+  const _ExportTile();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     ref.listen(opmlExportControllerProvider, (_, next) {
       final message = switch (next) {
         OpmlExportEmpty() => 'No subscriptions to export',
