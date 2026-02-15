@@ -51,8 +51,7 @@ class OpmlImportController extends _$OpmlImportController {
 
     try {
       final result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['opml', 'xml'],
+        type: FileType.any,
       );
 
       if (result == null || result.files.isEmpty) {
