@@ -48,7 +48,7 @@ final class OpmlImportControllerProvider
 }
 
 String _$opmlImportControllerHash() =>
-    r'93e2e1ba738a1351dd5bfe6ab3cc3e4d2c4eae4b';
+    r'2b889bc7c5c338e1cee5e1cfe55fd7b6067f98d4';
 
 /// Controls OPML import: pick file, parse, and check
 /// existing subscriptions.

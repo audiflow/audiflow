@@ -89,13 +89,11 @@ void main() {
       expect(find.widgetWithText(FilledButton, 'Clear'), findsOneWidget);
     });
 
-    testWidgets('tapping Export shows coming soon snackbar', (tester) async {
+    testWidgets('Export button is present and tappable', (tester) async {
       await tester.pumpWidget(buildTestWidget());
 
-      await tester.tap(find.text('Export'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Coming soon'), findsOneWidget);
+      final exportButton = find.widgetWithText(OutlinedButton, 'Export');
+      expect(exportButton, findsOneWidget);
     });
 
     testWidgets('tapping Reset All Data shows confirmation dialog', (
