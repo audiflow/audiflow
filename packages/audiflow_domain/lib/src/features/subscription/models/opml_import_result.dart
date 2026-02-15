@@ -6,7 +6,7 @@ part 'opml_import_result.freezed.dart';
 
 /// Tracks outcomes of an OPML import operation.
 @freezed
-class OpmlImportResult with _$OpmlImportResult {
+sealed class OpmlImportResult with _$OpmlImportResult {
   const factory OpmlImportResult({
     required List<OpmlEntry> succeeded,
     required List<OpmlEntry> alreadySubscribed,

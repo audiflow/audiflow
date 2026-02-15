@@ -136,6 +136,8 @@ export 'src/features/subscription/repositories/subscription_repository_impl.dart
 // Subscription feature - OPML
 export 'src/features/subscription/models/opml_entry.dart';
 export 'src/features/subscription/models/opml_import_result.dart';
+export 'src/features/subscription/services/opml_import_service.dart';
+export 'src/features/subscription/services/opml_parser_service.dart';
 
 // Re-export audiflow_ai types for voice feature
 export 'package:audiflow_ai/audiflow_ai.dart'
