@@ -233,13 +233,13 @@ class _ImportSummaryDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final lines = <String>['Imported ${result.succeeded.length} podcasts'];
-    if (0 < result.alreadySubscribed.length) {
+    if (result.alreadySubscribed.isNotEmpty) {
       lines.add(
         '${result.alreadySubscribed.length}'
         ' already subscribed',
       );
     }
-    if (0 < result.failed.length) {
+    if (result.failed.isNotEmpty) {
       lines.add('${result.failed.length} failed');
     }
 
