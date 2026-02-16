@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:audiflow_app/features/library/presentation/controllers/library_controller.dart';
 import 'package:audiflow_app/features/library/presentation/screens/library_screen.dart';
+import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,7 +14,11 @@ void main() {
     Widget buildTestWidget(ProviderContainer container) {
       return UncontrolledProviderScope(
         container: container,
-        child: const MaterialApp(home: LibraryScreen()),
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const LibraryScreen(),
+        ),
       );
     }
 

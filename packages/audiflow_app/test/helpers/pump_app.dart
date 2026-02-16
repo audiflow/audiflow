@@ -1,3 +1,4 @@
+import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,7 +12,13 @@ extension PumpApp on WidgetTester {
   }) async {
     await pumpWidget(
       ProviderScope(
-        child: MaterialApp(themeMode: themeMode, locale: locale, home: widget),
+        child: MaterialApp(
+          themeMode: themeMode,
+          locale: locale,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: widget,
+        ),
       ),
     );
   }

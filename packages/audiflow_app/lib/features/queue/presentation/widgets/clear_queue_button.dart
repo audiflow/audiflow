@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
+import '../../../../l10n/app_localizations.dart';
+
 /// Button widget with double-tap confirmation to clear the queue.
 ///
 /// First tap changes text to "Confirm?" with error color.
@@ -53,6 +55,7 @@ class _ClearQueueButtonState extends State<ClearQueueButton> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -60,7 +63,7 @@ class _ClearQueueButtonState extends State<ClearQueueButton> {
       return TextButton(
         onPressed: widget.enabled ? _handleTap : null,
         child: Text(
-          'Confirm?',
+          l10n.queueClearConfirm,
           style: TextStyle(
             color: widget.enabled
                 ? colorScheme.error
@@ -74,7 +77,7 @@ class _ClearQueueButtonState extends State<ClearQueueButton> {
     return IconButton(
       onPressed: widget.enabled ? _handleTap : null,
       icon: const Icon(Symbols.delete_sweep),
-      tooltip: 'Clear queue',
+      tooltip: l10n.queueClearTooltip,
     );
   }
 }

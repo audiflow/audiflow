@@ -2,6 +2,8 @@ import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../l10n/app_localizations.dart';
+
 /// Screen for configuring playback settings: speed, skip
 /// durations, auto-complete threshold, and continuous playback.
 class PlaybackSettingsScreen extends ConsumerWidget {
@@ -9,6 +11,7 @@ class PlaybackSettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final repo = ref.watch(appSettingsRepositoryProvider);
     final speed = repo.getPlaybackSpeed();
     final skipForward = repo.getSkipForwardSeconds();
@@ -17,7 +20,7 @@ class PlaybackSettingsScreen extends ConsumerWidget {
     final continuous = repo.getContinuousPlayback();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Playback')),
+      appBar: AppBar(title: Text(l10n.settingsPlaybackTitle)),
       body: ListView(
         children: [
           _PlaybackSpeedTile(
@@ -39,8 +42,8 @@ class PlaybackSettingsScreen extends ConsumerWidget {
                 _update(ref, () => repo.setAutoCompleteThreshold(v)),
           ),
           SwitchListTile(
-            title: const Text('Continuous Playback'),
-            subtitle: const Text('Auto-play the next episode in the queue'),
+            title: Text(l10n.playbackContinuousTitle),
+            subtitle: Text(l10n.playbackContinuousSubtitle),
             value: continuous,
             onChanged: (v) => _update(ref, () => repo.setContinuousPlayback(v)),
           ),
@@ -71,9 +74,10 @@ class _PlaybackSpeedTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final effectiveSpeed = _speeds.contains(speed) ? speed : 1.0;
     return ListTile(
-      title: const Text('Default Playback Speed'),
+      title: Text(l10n.playbackDefaultSpeed),
       trailing: DropdownButton<double>(
         value: effectiveSpeed,
         onChanged: (v) {
@@ -96,13 +100,15 @@ class _SkipForwardTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Skip Forward (seconds)',
+            l10n.playbackSkipForward,
             style: Theme.of(context).textTheme.bodyLarge,
           ),
           const SizedBox(height: 8),
@@ -134,13 +140,15 @@ class _SkipBackwardTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Skip Backward (seconds)',
+            l10n.playbackSkipBackward,
             style: Theme.of(context).textTheme.bodyLarge,
           ),
           const SizedBox(height: 8),
@@ -173,6 +181,7 @@ class _AutoCompleteThresholdTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final percent = (threshold * 100).round();
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -183,7 +192,7 @@ class _AutoCompleteThresholdTile extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Auto-Complete Threshold',
+                l10n.playbackAutoCompleteThreshold,
                 style: Theme.of(context).textTheme.bodyLarge,
               ),
               Text('$percent%'),

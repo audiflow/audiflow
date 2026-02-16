@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
+import '../../../../l10n/app_localizations.dart';
+
 /// Full player screen placeholder.
 ///
 /// This screen will be expanded with full playback controls, seek bar,
@@ -34,6 +36,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final nowPlaying = ref.watch(nowPlayingControllerProvider);
     final playbackState = ref.watch(audioPlayerControllerProvider);
     final progress = ref.watch(playbackProgressProvider);
@@ -49,16 +52,16 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
       appBar: AppBar(
         leading: Semantics(
           button: true,
-          label: 'Close player',
+          label: l10n.playerCloseLabel,
           child: IconButton(
             icon: const Icon(Symbols.keyboard_arrow_down),
             onPressed: () => Navigator.of(context).pop(),
           ),
         ),
-        title: const Text('Now Playing'),
+        title: Text(l10n.playerNowPlaying),
       ),
       body: nowPlaying == null
-          ? const Center(child: Text('No audio playing'))
+          ? Center(child: Text(l10n.playerNoAudio))
           : SafeArea(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -124,11 +127,12 @@ class _PlayerArtwork extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final colorScheme = Theme.of(context).colorScheme;
 
     return Semantics(
       image: true,
-      label: 'Episode artwork',
+      label: l10n.playerArtworkLabel,
       child: AspectRatio(
         aspectRatio: 1,
         child: ClipRRect(
@@ -333,12 +337,14 @@ class _PlayerControls extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Semantics(
           button: true,
-          label: 'Rewind 30 seconds',
+          label: l10n.playerRewindLabel,
           child: IconButton(
             icon: const Icon(Symbols.replay_30),
             iconSize: 36,
@@ -350,7 +356,7 @@ class _PlayerControls extends StatelessWidget {
         const SizedBox(width: 24),
         Semantics(
           button: true,
-          label: 'Forward 30 seconds',
+          label: l10n.playerForwardLabel,
           child: IconButton(
             icon: const Icon(Symbols.forward_30),
             iconSize: 36,
@@ -373,11 +379,12 @@ class _PlayerPlayPauseButton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final colorScheme = Theme.of(context).colorScheme;
 
     if (isLoading) {
       return Semantics(
-        label: 'Loading',
+        label: l10n.playerLoadingLabel,
         child: const SizedBox(
           width: 64,
           height: 64,
@@ -391,7 +398,7 @@ class _PlayerPlayPauseButton extends ConsumerWidget {
 
     return Semantics(
       button: true,
-      label: isPlaying ? 'Pause' : 'Play',
+      label: isPlaying ? l10n.playerPauseLabel : l10n.playerPlayLabel,
       child: IconButton.filled(
         icon: Icon(isPlaying ? Symbols.pause : Symbols.play_arrow, fill: 1),
         iconSize: 40,
@@ -420,12 +427,13 @@ class _PlaybackSpeedButton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final asyncSpeed = ref.watch(playbackSpeedProvider);
     final speed = asyncSpeed.value ?? 1.0;
 
     return Semantics(
       button: true,
-      label: 'Playback speed ${speed}x',
+      label: l10n.playerSpeedLabel('$speed'),
       child: TextButton(
         onPressed: () {
           final nextSpeed = _nextSpeed(speed);

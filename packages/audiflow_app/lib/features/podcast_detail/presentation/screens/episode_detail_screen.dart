@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../../../l10n/app_localizations.dart';
 import '../../../queue/presentation/controllers/queue_controller.dart';
 import '../controllers/podcast_detail_controller.dart';
 
@@ -30,6 +31,7 @@ class EpisodeDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context);
     final enclosureUrl = episode.enclosureUrl;
 
     final isPlaying = enclosureUrl != null
@@ -144,9 +146,9 @@ class EpisodeDetailScreen extends ConsumerWidget {
                                 .read(queueControllerProvider.notifier)
                                 .playLater(episodeId);
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Added to queue'),
-                                duration: Duration(seconds: 1),
+                              SnackBar(
+                                content: Text(l10n.queueAddedToQueue),
+                                duration: const Duration(seconds: 1),
                               ),
                             );
                           }
@@ -221,22 +223,20 @@ class EpisodeDetailScreen extends ConsumerWidget {
   }
 
   Future<bool> _showReplaceQueueDialog(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Replace queue?'),
-        content: const Text(
-          'Starting playback will replace your current '
-          'queue with episodes from this list.',
-        ),
+        title: Text(l10n.episodeReplaceQueueTitle),
+        content: Text(l10n.episodeReplaceQueueContent),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(l10n.commonCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Replace'),
+            child: Text(l10n.episodeReplace),
           ),
         ],
       ),
@@ -252,6 +252,7 @@ class EpisodeDetailScreen extends ConsumerWidget {
   ) async {
     final downloadService = ref.read(downloadServiceProvider);
     final messenger = ScaffoldMessenger.of(context);
+    final l10n = AppLocalizations.of(context);
 
     if (task == null) {
       await downloadService.downloadEpisode(episodeId);
@@ -261,9 +262,7 @@ class EpisodeDetailScreen extends ConsumerWidget {
     task.downloadStatus.when(
       pending: () async {
         await downloadService.cancel(task.id);
-        messenger.showSnackBar(
-          const SnackBar(content: Text('Download cancelled')),
-        );
+        messenger.showSnackBar(SnackBar(content: Text(l10n.downloadCancelled)));
       },
       downloading: () async {
         await downloadService.pause(task.id);
@@ -276,16 +275,12 @@ class EpisodeDetailScreen extends ConsumerWidget {
       },
       failed: () async {
         await downloadService.retry(task.id);
-        messenger.showSnackBar(
-          const SnackBar(content: Text('Retrying download')),
-        );
+        messenger.showSnackBar(SnackBar(content: Text(l10n.downloadRetrying)));
       },
       cancelled: () async {
         final result = await downloadService.downloadEpisode(episodeId);
         if (result != null) {
-          messenger.showSnackBar(
-            const SnackBar(content: Text('Download started')),
-          );
+          messenger.showSnackBar(SnackBar(content: Text(l10n.downloadStarted)));
         }
       },
     );
@@ -296,27 +291,28 @@ class EpisodeDetailScreen extends ConsumerWidget {
     WidgetRef ref,
     DownloadTask task,
   ) {
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete download?'),
-        content: const Text('The downloaded file will be removed.'),
+        title: Text(l10n.downloadDeleteTitle),
+        content: Text(l10n.downloadDeleteContent),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(l10n.commonCancel),
           ),
           TextButton(
             onPressed: () async {
               Navigator.pop(context);
               await ref.read(downloadServiceProvider).delete(task.id);
               if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Download deleted')),
-                );
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text(l10n.downloadDeleted)));
               }
             },
-            child: const Text('Delete'),
+            child: Text(l10n.commonDelete),
           ),
         ],
       ),
@@ -431,6 +427,7 @@ class _ActionBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
 
     return Row(
       children: [
@@ -476,7 +473,7 @@ class _ActionBar extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.playlist_add),
             onPressed: onQueuePlayLater,
-            tooltip: 'Add to queue',
+            tooltip: l10n.addToQueue,
           ),
 
         // Mark played/unplayed
@@ -484,7 +481,7 @@ class _ActionBar extends StatelessWidget {
           IconButton(
             icon: Icon(isCompleted ? Icons.replay : Icons.check_circle_outline),
             onPressed: onTogglePlayed,
-            tooltip: isCompleted ? 'Mark as unplayed' : 'Mark as played',
+            tooltip: isCompleted ? l10n.markAsUnplayed : l10n.markAsPlayed,
           ),
       ],
     );

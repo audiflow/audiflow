@@ -4,25 +4,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
+import '../../../../l10n/app_localizations.dart';
 import '../controllers/queue_controller.dart';
 import '../widgets/clear_queue_button.dart';
 import '../widgets/now_playing_card.dart';
 import '../widgets/queue_list_tile.dart';
 
-/// Screen displaying the playback queue.
-///
-/// Shows the currently playing episode at the top, followed by a reorderable
-/// list of upcoming queue items. Supports swipe-to-remove and drag-to-reorder.
 class QueueScreen extends ConsumerWidget {
   const QueueScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final queueAsync = ref.watch(queueControllerProvider);
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Queue'),
+        title: Text(l10n.queueTitle),
         actions: [
           queueAsync.when(
             data: (queue) => ClearQueueButton(
@@ -62,6 +60,7 @@ class QueueScreen extends ConsumerWidget {
     }
 
     final allItems = queue.allItems;
+    final l10n = AppLocalizations.of(context);
 
     return CustomScrollView(
       slivers: [
@@ -79,7 +78,7 @@ class QueueScreen extends ConsumerWidget {
                 Spacing.sm,
               ),
               child: Text(
-                'UP NEXT',
+                l10n.queueUpNext,
                 style: Theme.of(context).textTheme.labelMedium?.copyWith(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                   fontWeight: FontWeight.bold,
@@ -125,6 +124,7 @@ class QueueScreen extends ConsumerWidget {
   Widget _buildEmptyState(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context);
 
     return Center(
       child: Padding(
@@ -138,10 +138,10 @@ class QueueScreen extends ConsumerWidget {
               color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
             ),
             const SizedBox(height: Spacing.md),
-            Text('Queue is empty', style: theme.textTheme.headlineSmall),
+            Text(l10n.queueEmpty, style: theme.textTheme.headlineSmall),
             const SizedBox(height: Spacing.sm),
             Text(
-              'Add episodes to your queue from the library or podcast pages',
+              l10n.queueEmptySubtitle,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: colorScheme.onSurfaceVariant,
               ),
@@ -160,6 +160,7 @@ class QueueScreen extends ConsumerWidget {
   ) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context);
 
     return Center(
       child: Padding(
@@ -174,7 +175,7 @@ class QueueScreen extends ConsumerWidget {
             ),
             const SizedBox(height: Spacing.md),
             Text(
-              'Failed to load queue',
+              l10n.queueLoadError,
               style: theme.textTheme.titleMedium?.copyWith(
                 color: colorScheme.onSurface,
               ),
@@ -193,7 +194,7 @@ class QueueScreen extends ConsumerWidget {
             FilledButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
+              label: Text(l10n.commonRetry),
             ),
           ],
         ),

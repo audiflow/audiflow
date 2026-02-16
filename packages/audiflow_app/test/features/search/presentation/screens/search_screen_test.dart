@@ -1,6 +1,7 @@
 import 'package:audiflow_app/features/search/presentation/controllers/search_controller.dart';
 import 'package:audiflow_app/features/search/presentation/controllers/search_state.dart';
 import 'package:audiflow_app/features/search/presentation/screens/search_screen.dart';
+import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -26,7 +27,11 @@ void main() {
 
       return UncontrolledProviderScope(
         container: effectiveContainer,
-        child: const MaterialApp(home: SearchScreen()),
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const SearchScreen(),
+        ),
       );
     }
 

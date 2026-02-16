@@ -2,6 +2,8 @@ import 'package:audiflow_domain/audiflow_domain.dart'
     show PodcastViewMode, SmartPlaylist;
 import 'package:flutter/material.dart';
 
+import '../../../../l10n/app_localizations.dart';
+
 /// Context-aware toggle for switching between Episodes and
 /// Smart Playlist views.
 ///
@@ -67,9 +69,10 @@ class _SinglePlaylistToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return SegmentedButton<bool>(
       segments: [
-        const ButtonSegment(value: false, label: Text('Episodes')),
+        ButtonSegment(value: false, label: Text(l10n.episodesLabel)),
         ButtonSegment(
           value: true,
           label: Text(playlist.displayName, overflow: TextOverflow.ellipsis),
@@ -116,7 +119,7 @@ class _MultiPlaylistToggle extends StatelessWidget {
       children: [
         Expanded(
           child: _ToggleSegment(
-            label: 'Episodes',
+            label: AppLocalizations.of(context).episodesLabel,
             isSelected: episodesSelected,
             isLeft: true,
             colorScheme: colorScheme,

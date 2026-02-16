@@ -11,12 +11,14 @@ class AddToQueueButton extends StatelessWidget {
     required this.onPlayLater,
     required this.onPlayNext,
     this.iconSize = 24,
+    this.tooltip = 'Add to queue (long press for Play Next)',
     super.key,
   });
 
   final VoidCallback onPlayLater;
   final VoidCallback onPlayNext;
   final double iconSize;
+  final String tooltip;
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +29,7 @@ class AddToQueueButton extends StatelessWidget {
       },
       child: IconButton(
         icon: Icon(Symbols.playlist_add, size: iconSize),
-        tooltip: 'Add to queue (long press for Play Next)',
+        tooltip: tooltip,
         onPressed: onPlayLater,
       ),
     );

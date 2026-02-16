@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
+import '../../../../l10n/app_localizations.dart';
+
 /// A compact player widget displayed at the bottom of the screen.
 ///
 /// Shows episode artwork, title, podcast name, play/pause button, and
@@ -19,6 +21,7 @@ class MiniPlayer extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final nowPlaying = ref.watch(nowPlayingControllerProvider);
     final playbackState = ref.watch(audioPlayerControllerProvider);
     final progress = ref.watch(playbackProgressProvider);
@@ -35,8 +38,10 @@ class MiniPlayer extends ConsumerWidget {
 
     return Semantics(
       container: true,
-      label:
-          'Now playing: ${nowPlaying.episodeTitle} by ${nowPlaying.podcastTitle}',
+      label: l10n.playerNowPlayingLabel(
+        nowPlaying.episodeTitle,
+        nowPlaying.podcastTitle,
+      ),
       child: Material(
         elevation: 8,
         color: colorScheme.surfaceContainer,
@@ -136,11 +141,12 @@ class _MiniPlayerPlayPauseButton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final colorScheme = Theme.of(context).colorScheme;
 
     if (isLoading) {
       return Semantics(
-        label: 'Loading',
+        label: l10n.playerLoadingLabel,
         child: const SizedBox(
           width: 48,
           height: 48,
@@ -154,7 +160,7 @@ class _MiniPlayerPlayPauseButton extends ConsumerWidget {
 
     return Semantics(
       button: true,
-      label: isPlaying ? 'Pause' : 'Play',
+      label: isPlaying ? l10n.playerPauseLabel : l10n.playerPlayLabel,
       child: IconButton(
         icon: Icon(
           isPlaying ? Symbols.pause : Symbols.play_arrow,

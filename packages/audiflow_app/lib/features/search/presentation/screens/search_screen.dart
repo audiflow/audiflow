@@ -4,28 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../l10n/app_localizations.dart';
 import '../../../../routing/app_router.dart';
 import '../controllers/search_controller.dart';
 import '../controllers/search_state.dart';
 import '../widgets/podcast_search_result_tile.dart';
 
-/// Search screen for discovering podcasts by keyword.
-///
-/// This screen provides a search input field with a submit button,
-/// allowing users to search for podcasts. The screen displays appropriate
-/// UI states: initial, loading, results, empty, and error.
-///
-/// Requirements covered:
-/// - 1.1: Search text input field
-/// - 1.2: Submit button with search icon
-/// - 1.3: Submit button initiates search
-/// - 1.4: Enter key initiates search
-/// - 1.5: Dismiss keyboard on search
-/// - 2.1, 2.2: Display search results
-/// - 3.1, 3.2: Loading state with indicator
-/// - 4.1: Initial empty state
-/// - 4.2: No results found state
-/// - 5.1, 5.2, 5.3: Error state with retry
 class SearchScreen extends ConsumerStatefulWidget {
   const SearchScreen({super.key});
 
@@ -63,9 +47,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   Widget build(BuildContext context) {
     final state = ref.watch(podcastSearchControllerProvider);
     final isLoading = state is SearchLoading;
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Search Podcasts')),
+      appBar: AppBar(title: Text(l10n.searchTitle)),
       body: Column(
         children: [
           Padding(
@@ -76,9 +61,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                   child: TextField(
                     controller: _textController,
                     focusNode: _focusNode,
-                    decoration: const InputDecoration(
-                      hintText: 'Search podcasts...',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      hintText: l10n.searchHint,
+                      border: const OutlineInputBorder(),
                     ),
                     textInputAction: TextInputAction.search,
                     onSubmitted: (_) => _onSearch(),
@@ -109,10 +94,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     };
   }
 
-  /// Builds the initial state view shown before any search (Requirement 4.1).
   Widget _buildInitialState() {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context);
 
     return Center(
       key: const Key('search_initial_state'),
@@ -127,14 +112,14 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             ),
             const SizedBox(height: Spacing.md),
             Text(
-              'Search for podcasts',
+              l10n.searchInitialTitle,
               style: theme.textTheme.titleMedium?.copyWith(
                 color: colorScheme.onSurfaceVariant,
               ),
             ),
             const SizedBox(height: Spacing.sm),
             Text(
-              'Enter a keyword to discover podcasts',
+              l10n.searchInitialSubtitle,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
               ),
@@ -145,7 +130,6 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     );
   }
 
-  /// Builds the loading state view with indicator (Requirement 3.1).
   Widget _buildLoadingState() {
     return const Center(
       key: Key('search_loading_state'),
@@ -153,10 +137,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     );
   }
 
-  /// Builds the empty results state (Requirement 4.2).
   Widget _buildEmptyState() {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context);
 
     return Center(
       key: const Key('search_empty_state'),
@@ -170,14 +154,14 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           ),
           const SizedBox(height: Spacing.md),
           Text(
-            'No podcasts found',
+            l10n.searchEmpty,
             style: theme.textTheme.titleMedium?.copyWith(
               color: colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: Spacing.sm),
           Text(
-            'Try a different search term',
+            l10n.searchEmptySubtitle,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
             ),
@@ -187,7 +171,6 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     );
   }
 
-  /// Builds the results list (Requirements 2.1, 2.2).
   Widget _buildResultsList(SearchResult result) {
     return ListView.builder(
       key: const Key('search_results_list'),
@@ -203,18 +186,14 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     );
   }
 
-  /// Navigates to the podcast detail page for the given podcast.
-  ///
-  /// Passes the full Podcast object as route extra for immediate display.
-  /// Requirements: 2.3
   void _navigateToPodcastDetail(Podcast podcast) {
     context.push('${AppRoutes.podcastDetail}/${podcast.id}', extra: podcast);
   }
 
-  /// Builds the error state with retry button (Requirements 5.1, 5.2, 5.3).
   Widget _buildErrorState(SearchException exception) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context);
 
     return Center(
       key: const Key('search_error_state'),
@@ -230,7 +209,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             ),
             const SizedBox(height: Spacing.md),
             Text(
-              _getErrorMessage(exception),
+              _getErrorMessage(exception, l10n),
               style: theme.textTheme.titleMedium?.copyWith(
                 color: colorScheme.onSurface,
               ),
@@ -240,7 +219,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             FilledButton.icon(
               onPressed: _onRetry,
               icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
+              label: Text(l10n.commonRetry),
             ),
           ],
         ),
@@ -248,16 +227,13 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     );
   }
 
-  /// Maps exception status codes to user-friendly error messages.
-  String _getErrorMessage(SearchException exception) {
+  String _getErrorMessage(SearchException exception, AppLocalizations l10n) {
     return switch (exception.code) {
-      StatusCode.unavailable =>
-        'Unable to connect. Check your internet connection.',
-      StatusCode.deadlineExceeded => 'Search timed out. Please try again.',
-      StatusCode.resourceExhausted =>
-        'Too many requests. Please wait a moment.',
-      StatusCode.invalidArgument => 'Please enter a valid search term.',
-      _ => 'Something went wrong. Please try again.',
+      StatusCode.unavailable => l10n.searchErrorUnavailable,
+      StatusCode.deadlineExceeded => l10n.searchErrorTimeout,
+      StatusCode.resourceExhausted => l10n.searchErrorRateLimit,
+      StatusCode.invalidArgument => l10n.searchErrorInvalid,
+      _ => l10n.searchErrorGeneric,
     };
   }
 }

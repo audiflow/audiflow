@@ -3,6 +3,7 @@ import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../l10n/app_localizations.dart';
 import '../widgets/smart_playlist_episode_list_tile.dart';
 
 /// Screen showing episodes within a smart playlist group.
@@ -99,10 +100,11 @@ class _SmartPlaylistGroupEpisodesScreenState
     int? episodeCount,
   }) {
     final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context);
     return Row(
       children: [
         Text(
-          '${episodeCount ?? _episodeIds.length} episodes',
+          l10n.podcastDetailEpisodeCount(episodeCount ?? _episodeIds.length),
           style: theme.textTheme.bodyMedium?.copyWith(
             color: colorScheme.onSurfaceVariant,
           ),
@@ -130,8 +132,8 @@ class _SmartPlaylistGroupEpisodesScreenState
                   const SizedBox(width: 4),
                   Text(
                     _sortOrder == SortOrder.ascending
-                        ? 'Oldest first'
-                        : 'Newest first',
+                        ? l10n.podcastDetailOldestFirst
+                        : l10n.podcastDetailNewestFirst,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: colorScheme.onSurfaceVariant,
                     ),
@@ -172,8 +174,12 @@ class _SmartPlaylistGroupEpisodesScreenState
           if (2 <= _searchQuery.length) {
             return [
               sortHeaderSliver,
-              const SliverFillRemaining(
-                child: Center(child: Text('No results found')),
+              SliverFillRemaining(
+                child: Center(
+                  child: Text(
+                    AppLocalizations.of(context).podcastDetailNoResults,
+                  ),
+                ),
               ),
             ];
           }
@@ -224,7 +230,7 @@ class _SmartPlaylistGroupEpisodesScreenState
             padding: const EdgeInsets.all(Spacing.lg),
             child: Center(
               child: Text(
-                'Failed to load episodes',
+                AppLocalizations.of(context).podcastDetailLoadError,
                 style: theme.textTheme.titleMedium,
               ),
             ),
@@ -289,7 +295,7 @@ class _SmartPlaylistGroupEpisodesScreenState
           ),
           const SizedBox(height: Spacing.md),
           Text(
-            'No episodes found',
+            AppLocalizations.of(context).podcastDetailNoEpisodes,
             style: theme.textTheme.titleMedium?.copyWith(
               color: colorScheme.onSurfaceVariant,
             ),

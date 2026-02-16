@@ -2,6 +2,8 @@ import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../l10n/app_localizations.dart';
+
 /// Screen for configuring download settings: WiFi-only,
 /// auto-delete, and max concurrent downloads.
 class DownloadsSettingsScreen extends ConsumerWidget {
@@ -9,24 +11,25 @@ class DownloadsSettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final repo = ref.watch(appSettingsRepositoryProvider);
     final wifiOnly = repo.getWifiOnlyDownload();
     final autoDelete = repo.getAutoDeletePlayed();
     final maxConcurrent = repo.getMaxConcurrentDownloads();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Downloads')),
+      appBar: AppBar(title: Text(l10n.settingsDownloadsTitle)),
       body: ListView(
         children: [
           SwitchListTile(
-            title: const Text('WiFi-Only Downloads'),
-            subtitle: const Text('Only download episodes over WiFi'),
+            title: Text(l10n.downloadsWifiOnlyTitle),
+            subtitle: Text(l10n.downloadsWifiOnlySubtitle),
             value: wifiOnly,
             onChanged: (v) => _update(ref, () => repo.setWifiOnlyDownload(v)),
           ),
           SwitchListTile(
-            title: const Text('Auto-Delete After Played'),
-            subtitle: const Text('Remove downloaded episodes after playback'),
+            title: Text(l10n.downloadsAutoDeleteTitle),
+            subtitle: Text(l10n.downloadsAutoDeleteSubtitle),
             value: autoDelete,
             onChanged: (v) => _update(ref, () => repo.setAutoDeletePlayed(v)),
           ),
@@ -36,7 +39,7 @@ class DownloadsSettingsScreen extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Max Concurrent Downloads',
+                  l10n.downloadsMaxConcurrent,
                   style: Theme.of(context).textTheme.bodyLarge,
                 ),
                 const SizedBox(height: 8),

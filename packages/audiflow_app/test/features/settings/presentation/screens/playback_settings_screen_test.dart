@@ -1,4 +1,5 @@
 import 'package:audiflow_app/features/settings/presentation/screens/playback_settings_screen.dart';
+import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -16,7 +17,11 @@ void main() {
   Widget buildTestWidget() {
     return ProviderScope(
       overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
-      child: const MaterialApp(home: PlaybackSettingsScreen()),
+      child: MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: const PlaybackSettingsScreen(),
+      ),
     );
   }
 
