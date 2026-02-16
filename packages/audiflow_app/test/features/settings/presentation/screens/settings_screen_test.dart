@@ -1,12 +1,17 @@
 import 'package:audiflow_app/features/settings/presentation/screens/settings_screen.dart';
 import 'package:audiflow_app/features/settings/presentation/widgets/settings_category_card.dart';
+import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('SettingsScreen', () {
     Widget buildTestWidget() {
-      return const MaterialApp(home: SettingsScreen());
+      return MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: const SettingsScreen(),
+      );
     }
 
     /// Sets a surface size tall enough to render all 6

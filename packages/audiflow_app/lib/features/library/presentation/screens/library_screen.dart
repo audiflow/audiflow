@@ -5,15 +5,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
+import '../../../../l10n/app_localizations.dart';
 import '../../../../routing/app_router.dart';
 import '../controllers/library_controller.dart';
 import '../widgets/continue_listening_section.dart';
 import '../widgets/subscription_list_tile.dart';
 
-/// Displays the user's podcast subscriptions.
-///
-/// Shows a list of subscribed podcasts with artwork and metadata.
-/// Tapping a subscription navigates to the podcast detail screen.
 class LibraryScreen extends ConsumerStatefulWidget {
   const LibraryScreen({super.key});
 
@@ -29,18 +26,19 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
 
     ref.invalidate(librarySubscriptionsProvider);
 
+    final l10n = AppLocalizations.of(context);
+
     if (0 < result.errorCount) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Synced ${result.successCount} feeds, '
-            '${result.errorCount} failed',
+            l10n.librarySyncResult(result.successCount, result.errorCount),
           ),
         ),
       );
     } else if (0 < result.successCount) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Synced ${result.successCount} feeds')),
+        SnackBar(content: Text(l10n.librarySyncSuccess(result.successCount))),
       );
     }
   }
@@ -48,9 +46,10 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
   @override
   Widget build(BuildContext context) {
     final subscriptionsAsync = ref.watch(librarySubscriptionsProvider);
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Library')),
+      appBar: AppBar(title: Text(l10n.libraryTitle)),
       body: subscriptionsAsync.when(
         data: (subscriptions) => _buildContent(context, subscriptions),
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -69,6 +68,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     }
 
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
 
     return RefreshIndicator(
       onRefresh: _onRefresh,
@@ -89,7 +89,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                 Spacing.sm,
               ),
               child: Text(
-                'Your Podcasts',
+                l10n.libraryYourPodcasts,
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -147,6 +147,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
   Widget _buildEmptyState(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context);
 
     return Center(
       child: Padding(
@@ -160,10 +161,10 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
               color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
             ),
             const SizedBox(height: Spacing.md),
-            Text('No subscriptions yet', style: theme.textTheme.headlineSmall),
+            Text(l10n.libraryEmpty, style: theme.textTheme.headlineSmall),
             const SizedBox(height: Spacing.sm),
             Text(
-              'Search for podcasts and subscribe to see them here',
+              l10n.libraryEmptySubtitle,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: colorScheme.onSurfaceVariant,
               ),
@@ -182,6 +183,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
   ) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context);
 
     return Center(
       child: Padding(
@@ -196,7 +198,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
             ),
             const SizedBox(height: Spacing.md),
             Text(
-              'Failed to load subscriptions',
+              l10n.libraryLoadError,
               style: theme.textTheme.titleMedium?.copyWith(
                 color: colorScheme.onSurface,
               ),
@@ -215,7 +217,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
             FilledButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
+              label: Text(l10n.commonRetry),
             ),
           ],
         ),

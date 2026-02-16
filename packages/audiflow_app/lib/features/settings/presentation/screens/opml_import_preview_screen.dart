@@ -2,6 +2,8 @@ import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../l10n/app_localizations.dart';
+
 /// Preview screen for OPML import showing a selectable list
 /// of podcast entries parsed from the OPML file.
 class OpmlImportPreviewScreen extends ConsumerStatefulWidget {
@@ -38,10 +40,11 @@ class _OpmlImportPreviewScreenState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Import Podcasts')),
+      appBar: AppBar(title: Text(l10n.opmlImportTitle)),
       body: ListView.builder(
         itemCount: widget.entries.length,
         itemBuilder: (context, index) {
@@ -83,7 +86,7 @@ class _OpmlImportPreviewScreenState
                 ),
                 if (isSubscribed)
                   Text(
-                    'Already subscribed',
+                    l10n.opmlAlreadySubscribed,
                     style: theme.textTheme.labelSmall?.copyWith(
                       color: theme.colorScheme.primary,
                     ),
@@ -106,7 +109,7 @@ class _OpmlImportPreviewScreenState
                     width: 20,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : Text('Import Selected ($_selectedCount)'),
+                : Text(l10n.opmlImportSelected(_selectedCount)),
           ),
         ),
       ),

@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
-/// Screen showing app info, version, licenses, and support links.
+import '../../../../l10n/app_localizations.dart';
+
 class AboutScreen extends ConsumerWidget {
   const AboutScreen({super.key});
 
@@ -11,9 +12,10 @@ class AboutScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final packageInfo = ref.watch(packageInfoProvider);
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('About')),
+      appBar: AppBar(title: Text(l10n.settingsAboutTitle)),
       body: ListView(
         children: [
           _AppHeader(theme: theme),
@@ -38,6 +40,8 @@ class _AppHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 32),
       child: Column(
@@ -47,7 +51,7 @@ class _AppHeader extends StatelessWidget {
           Text('Audiflow', style: theme.textTheme.headlineSmall),
           const SizedBox(height: 4),
           Text(
-            'Your podcast companion',
+            l10n.aboutTagline,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -66,8 +70,10 @@ class _VersionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return ListTile(
-      title: const Text('Version'),
+      title: Text(l10n.aboutVersion),
       subtitle: Text('$version ($buildNumber)'),
     );
   }
@@ -80,8 +86,10 @@ class _LicensesTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return ListTile(
-      title: const Text('Open Source Licenses'),
+      title: Text(l10n.aboutLicenses),
       trailing: const Icon(Icons.chevron_right),
       onTap: () =>
           showLicensePage(context: context, applicationName: 'Audiflow'),
@@ -96,13 +104,15 @@ class _FeedbackTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return ListTile(
-      title: const Text('Send Feedback'),
+      title: Text(l10n.aboutSendFeedback),
       trailing: const Icon(Icons.chevron_right),
       onTap: () {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('Coming soon')));
+        ).showSnackBar(SnackBar(content: Text(l10n.commonComingSoon)));
       },
     );
   }
@@ -115,13 +125,15 @@ class _RateAppTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return ListTile(
-      title: const Text('Rate the App'),
+      title: Text(l10n.aboutRateApp),
       trailing: const Icon(Icons.chevron_right),
       onTap: () {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('Coming soon')));
+        ).showSnackBar(SnackBar(content: Text(l10n.commonComingSoon)));
       },
     );
   }

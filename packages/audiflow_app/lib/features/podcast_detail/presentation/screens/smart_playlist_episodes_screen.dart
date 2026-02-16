@@ -88,7 +88,10 @@ class _SmartPlaylistEpisodesScreenState
         (isGroups
             ? widget.smartPlaylist.groups?.length ?? 0
             : widget.smartPlaylist.episodeCount);
-    final label = isGroups ? '$count groups' : '$count episodes';
+    final l10n = AppLocalizations.of(context);
+    final label = isGroups
+        ? l10n.podcastDetailGroupCount(count)
+        : l10n.podcastDetailEpisodeCount(count);
 
     return Padding(
       padding: const EdgeInsets.symmetric(
@@ -125,8 +128,8 @@ class _SmartPlaylistEpisodesScreenState
                   const SizedBox(width: 4),
                   Text(
                     _sortOrder == SortOrder.ascending
-                        ? 'Oldest first'
-                        : 'Newest first',
+                        ? l10n.podcastDetailOldestFirst
+                        : l10n.podcastDetailNewestFirst,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: colorScheme.onSurfaceVariant,
                     ),
@@ -167,8 +170,12 @@ class _SmartPlaylistEpisodesScreenState
           if (2 <= _searchQuery.length) {
             return [
               sortHeader,
-              const SliverFillRemaining(
-                child: Center(child: Text('No results found')),
+              SliverFillRemaining(
+                child: Center(
+                  child: Text(
+                    AppLocalizations.of(context).podcastDetailNoResults,
+                  ),
+                ),
               ),
             ];
           }
@@ -229,7 +236,7 @@ class _SmartPlaylistEpisodesScreenState
                   ),
                   const SizedBox(height: Spacing.md),
                   Text(
-                    'Failed to load episodes',
+                    AppLocalizations.of(context).podcastDetailLoadError,
                     style: theme.textTheme.titleMedium,
                   ),
                   const SizedBox(height: Spacing.sm),
@@ -248,7 +255,7 @@ class _SmartPlaylistEpisodesScreenState
                       ),
                     ),
                     icon: const Icon(Icons.refresh),
-                    label: const Text('Retry'),
+                    label: Text(AppLocalizations.of(context).commonRetry),
                   ),
                 ],
               ),
@@ -316,8 +323,10 @@ class _SmartPlaylistEpisodesScreenState
     if (groups.isEmpty && 2 <= _searchQuery.length) {
       return [
         sortHeader,
-        const SliverFillRemaining(
-          child: Center(child: Text('No results found')),
+        SliverFillRemaining(
+          child: Center(
+            child: Text(AppLocalizations.of(context).podcastDetailNoResults),
+          ),
         ),
       ];
     }
@@ -354,7 +363,13 @@ class _SmartPlaylistEpisodesScreenState
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.all(Spacing.lg),
-            child: Center(child: Text('Failed to load: $e')),
+            child: Center(
+              child: Text(
+                AppLocalizations.of(
+                  context,
+                ).podcastDetailFailedToLoad(e.toString()),
+              ),
+            ),
           ),
         ),
       ],
@@ -551,6 +566,7 @@ class _SmartPlaylistEpisodesScreenState
 
   Widget _buildEmptyState(ThemeData theme) {
     final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context);
 
     return Center(
       child: Column(
@@ -563,14 +579,14 @@ class _SmartPlaylistEpisodesScreenState
           ),
           const SizedBox(height: Spacing.md),
           Text(
-            'No episodes found',
+            l10n.podcastDetailNoEpisodes,
             style: theme.textTheme.titleMedium?.copyWith(
               color: colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: Spacing.xs),
           Text(
-            'This playlist has no episodes',
+            l10n.podcastDetailPlaylistEmpty,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
             ),

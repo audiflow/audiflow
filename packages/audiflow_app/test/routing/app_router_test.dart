@@ -1,3 +1,4 @@
+import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_app/features/library/presentation/screens/library_screen.dart';
 import 'package:audiflow_app/features/podcast_detail/presentation/screens/podcast_detail_screen.dart';
 import 'package:audiflow_app/features/search/presentation/screens/search_screen.dart';
@@ -25,7 +26,13 @@ void main() {
     group('Tab Navigation', () {
       testWidgets('default tab is Search', (tester) async {
         await tester.pumpWidget(
-          ProviderScope(child: MaterialApp.router(routerConfig: router)),
+          ProviderScope(
+            child: MaterialApp.router(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              routerConfig: router,
+            ),
+          ),
         );
         await tester.pumpAndSettle();
 
@@ -38,7 +45,13 @@ void main() {
         tester,
       ) async {
         await tester.pumpWidget(
-          ProviderScope(child: MaterialApp.router(routerConfig: router)),
+          ProviderScope(
+            child: MaterialApp.router(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              routerConfig: router,
+            ),
+          ),
         );
         await tester.pumpAndSettle();
 
@@ -52,7 +65,13 @@ void main() {
 
       testWidgets('navigation to Library tab works correctly', (tester) async {
         await tester.pumpWidget(
-          ProviderScope(child: MaterialApp.router(routerConfig: router)),
+          ProviderScope(
+            child: MaterialApp.router(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              routerConfig: router,
+            ),
+          ),
         );
         await tester.pumpAndSettle();
 
@@ -64,7 +83,13 @@ void main() {
 
       testWidgets('navigation to Settings tab works correctly', (tester) async {
         await tester.pumpWidget(
-          ProviderScope(child: MaterialApp.router(routerConfig: router)),
+          ProviderScope(
+            child: MaterialApp.router(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              routerConfig: router,
+            ),
+          ),
         );
         await tester.pumpAndSettle();
 
@@ -78,7 +103,13 @@ void main() {
         tester,
       ) async {
         await tester.pumpWidget(
-          ProviderScope(child: MaterialApp.router(routerConfig: router)),
+          ProviderScope(
+            child: MaterialApp.router(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              routerConfig: router,
+            ),
+          ),
         );
         await tester.pumpAndSettle();
 
@@ -109,7 +140,13 @@ void main() {
 
       testWidgets('tapping current tab returns to root', (tester) async {
         await tester.pumpWidget(
-          ProviderScope(child: MaterialApp.router(routerConfig: router)),
+          ProviderScope(
+            child: MaterialApp.router(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              routerConfig: router,
+            ),
+          ),
         );
         await tester.pumpAndSettle();
 
@@ -136,7 +173,13 @@ void main() {
     group('Route Matching', () {
       testWidgets('search route navigates to SearchScreen', (tester) async {
         await tester.pumpWidget(
-          ProviderScope(child: MaterialApp.router(routerConfig: router)),
+          ProviderScope(
+            child: MaterialApp.router(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              routerConfig: router,
+            ),
+          ),
         );
 
         router.go('/search');
@@ -147,7 +190,13 @@ void main() {
 
       testWidgets('library route navigates to LibraryScreen', (tester) async {
         await tester.pumpWidget(
-          ProviderScope(child: MaterialApp.router(routerConfig: router)),
+          ProviderScope(
+            child: MaterialApp.router(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              routerConfig: router,
+            ),
+          ),
         );
 
         router.go('/library');
@@ -158,7 +207,13 @@ void main() {
 
       testWidgets('settings route navigates to SettingsScreen', (tester) async {
         await tester.pumpWidget(
-          ProviderScope(child: MaterialApp.router(routerConfig: router)),
+          ProviderScope(
+            child: MaterialApp.router(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              routerConfig: router,
+            ),
+          ),
         );
 
         router.go('/settings');
@@ -171,7 +226,13 @@ void main() {
         tester,
       ) async {
         await tester.pumpWidget(
-          ProviderScope(child: MaterialApp.router(routerConfig: router)),
+          ProviderScope(
+            child: MaterialApp.router(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              routerConfig: router,
+            ),
+          ),
         );
 
         router.go('/search/podcast/456');
@@ -186,7 +247,13 @@ void main() {
         tester,
       ) async {
         await tester.pumpWidget(
-          ProviderScope(child: MaterialApp.router(routerConfig: router)),
+          ProviderScope(
+            child: MaterialApp.router(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              routerConfig: router,
+            ),
+          ),
         );
 
         final podcast = Podcast(
@@ -214,7 +281,13 @@ void main() {
     group('ScaffoldWithNavBar', () {
       testWidgets('wraps content with navigation shell', (tester) async {
         await tester.pumpWidget(
-          ProviderScope(child: MaterialApp.router(routerConfig: router)),
+          ProviderScope(
+            child: MaterialApp.router(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              routerConfig: router,
+            ),
+          ),
         );
         await tester.pumpAndSettle();
 

@@ -2,6 +2,7 @@ import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../l10n/app_localizations.dart';
 import '../controllers/opml_export_controller.dart';
 import '../controllers/opml_import_controller.dart';
 import 'opml_import_preview_screen.dart';
@@ -13,8 +14,10 @@ class StorageSettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Storage & Data')),
+      appBar: AppBar(title: Text(l10n.settingsStorageTitle)),
       body: ListView(
         children: [
           _CacheTile(ref: ref),
@@ -36,39 +39,39 @@ class _CacheTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return ListTile(
-      title: const Text('Image Cache'),
-      subtitle: const Text('Clear temporary files and cached images'),
+      title: Text(l10n.storageImageCache),
+      subtitle: Text(l10n.storageImageCacheSubtitle),
       trailing: OutlinedButton(
         onPressed: () => _confirmClearCache(context),
-        child: const Text('Clear Cache'),
+        child: Text(l10n.storageClearCache),
       ),
     );
   }
 
   void _confirmClearCache(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Clear Cache?'),
-        content: const Text(
-          'This will delete all temporary files and '
-          'cached images. They will be re-downloaded '
-          'as needed.',
-        ),
+        title: Text(l10n.storageClearCacheTitle),
+        content: Text(l10n.storageClearCacheContent),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(l10n.commonCancel),
           ),
           FilledButton(
             onPressed: () {
               Navigator.pop(context);
               ScaffoldMessenger.of(
                 context,
-              ).showSnackBar(const SnackBar(content: Text('Cache cleared')));
+              ).showSnackBar(SnackBar(content: Text(l10n.storageCacheCleared)));
             },
-            child: const Text('Clear'),
+            child: Text(l10n.commonClear),
           ),
         ],
       ),
@@ -83,35 +86,39 @@ class _SearchHistoryTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return ListTile(
-      title: const Text('Search History'),
-      subtitle: const Text('Clear search suggestions'),
+      title: Text(l10n.storageSearchHistory),
+      subtitle: Text(l10n.storageSearchHistorySubtitle),
       trailing: OutlinedButton(
         onPressed: () => _confirmClearHistory(context),
-        child: const Text('Clear'),
+        child: Text(l10n.commonClear),
       ),
     );
   }
 
   void _confirmClearHistory(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Clear Search History?'),
-        content: const Text('This will remove all saved search suggestions.'),
+        title: Text(l10n.storageClearSearchHistoryTitle),
+        content: Text(l10n.storageClearSearchHistoryContent),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(l10n.commonCancel),
           ),
           FilledButton(
             onPressed: () {
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Search history cleared')),
+                SnackBar(content: Text(l10n.storageSearchHistoryCleared)),
               );
             },
-            child: const Text('Clear'),
+            child: Text(l10n.commonClear),
           ),
         ],
       ),
@@ -133,11 +140,13 @@ class _ExportTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+
     ref.listen(opmlExportControllerProvider, (_, next) {
       final message = switch (next) {
-        OpmlExportEmpty() => 'No subscriptions to export',
-        OpmlExportSuccess() => 'Subscriptions exported',
-        OpmlExportError(:final message) => 'Export failed: $message',
+        OpmlExportEmpty() => l10n.storageExportEmpty,
+        OpmlExportSuccess() => l10n.storageExportSuccess,
+        OpmlExportError(:final message) => l10n.storageExportError(message),
         _ => null,
       };
       if (message != null) {
@@ -148,12 +157,12 @@ class _ExportTile extends ConsumerWidget {
     });
 
     return ListTile(
-      title: const Text('Export Subscriptions'),
-      subtitle: const Text('Save subscriptions as OPML file'),
+      title: Text(l10n.storageExportTitle),
+      subtitle: Text(l10n.storageExportSubtitle),
       trailing: OutlinedButton(
         onPressed: () =>
             ref.read(opmlExportControllerProvider.notifier).export(),
-        child: const Text('Export'),
+        child: Text(l10n.storageExport),
       ),
     );
   }
@@ -164,6 +173,8 @@ class _ImportTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+
     ref.listen(opmlImportControllerProvider, (_, next) {
       switch (next) {
         case OpmlPickSuccess(:final entries, :final subscribedFeedUrls):
@@ -184,12 +195,12 @@ class _ImportTile extends ConsumerWidget {
     });
 
     return ListTile(
-      title: const Text('Import Subscriptions'),
-      subtitle: const Text('Import from OPML file'),
+      title: Text(l10n.storageImportTitle),
+      subtitle: Text(l10n.storageImportSubtitle),
       trailing: OutlinedButton(
         onPressed: () =>
             ref.read(opmlImportControllerProvider.notifier).pickAndParse(),
-        child: const Text('Import'),
+        child: Text(l10n.storageImport),
       ),
     );
   }
@@ -225,24 +236,24 @@ class _ImportSummaryDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final lines = <String>['Imported ${result.succeeded.length} podcasts'];
+    final l10n = AppLocalizations.of(context);
+    final lines = <String>[l10n.storageImportedCount(result.succeeded.length)];
     if (result.alreadySubscribed.isNotEmpty) {
       lines.add(
-        '${result.alreadySubscribed.length}'
-        ' already subscribed',
+        l10n.storageAlreadySubscribedCount(result.alreadySubscribed.length),
       );
     }
     if (result.failed.isNotEmpty) {
-      lines.add('${result.failed.length} failed');
+      lines.add(l10n.storageFailedCount(result.failed.length));
     }
 
     return AlertDialog(
-      title: const Text('Import Complete'),
+      title: Text(l10n.storageImportComplete),
       content: Text(lines.join('\n')),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('OK'),
+          child: Text(l10n.commonOk),
         ),
       ],
     );
@@ -257,6 +268,7 @@ class _DangerZoneSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final colorScheme = Theme.of(context).colorScheme;
 
     return Column(
@@ -265,7 +277,7 @@ class _DangerZoneSection extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Text(
-            'Danger Zone',
+            l10n.storageDangerZone,
             style: Theme.of(
               context,
             ).textTheme.titleSmall?.copyWith(color: colorScheme.error),
@@ -273,12 +285,10 @@ class _DangerZoneSection extends StatelessWidget {
         ),
         ListTile(
           title: Text(
-            'Reset All Data',
+            l10n.storageResetTitle,
             style: TextStyle(color: colorScheme.error),
           ),
-          subtitle: const Text(
-            'Delete all data and reset app to initial state',
-          ),
+          subtitle: Text(l10n.storageResetSubtitle),
           onTap: () => _showResetDialog(context),
         ),
       ],
@@ -286,6 +296,8 @@ class _DangerZoneSection extends StatelessWidget {
   }
 
   void _showResetDialog(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     showDialog<void>(
       context: context,
       builder: (dialogContext) => _ResetConfirmationDialog(
@@ -295,14 +307,14 @@ class _DangerZoneSection extends StatelessWidget {
             await repo.clearAll();
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Data reset complete')),
+                SnackBar(content: Text(l10n.storageResetComplete)),
               );
             }
           } on Exception catch (e) {
             if (context.mounted) {
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(SnackBar(content: Text('Reset failed: $e')));
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(l10n.storageResetFailed(e.toString()))),
+              );
             }
           }
         },
@@ -346,21 +358,18 @@ class _ResetConfirmationDialogState extends State<_ResetConfirmationDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final colorScheme = Theme.of(context).colorScheme;
 
     return AlertDialog(
-      title: const Text('Reset All Data?'),
+      title: Text(l10n.storageResetDialogTitle),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'This will permanently delete all your data '
-            'including subscriptions, downloads, playback '
-            'history, and settings.',
-          ),
+          Text(l10n.storageResetDialogContent),
           const SizedBox(height: 16),
-          const Text('Type RESET to confirm:'),
+          Text(l10n.storageResetTypeConfirm),
           const SizedBox(height: 8),
           TextField(
             controller: _controller,
@@ -375,7 +384,7 @@ class _ResetConfirmationDialogState extends State<_ResetConfirmationDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text(l10n.commonCancel),
         ),
         FilledButton(
           onPressed: _isValid
@@ -388,7 +397,7 @@ class _ResetConfirmationDialogState extends State<_ResetConfirmationDialog> {
             backgroundColor: colorScheme.error,
             foregroundColor: colorScheme.onError,
           ),
-          child: const Text('Reset'),
+          child: Text(l10n.storageResetButton),
         ),
       ],
     );

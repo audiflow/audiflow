@@ -108,6 +108,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
   }
 
   Widget _buildNoFeedUrlState(ThemeData theme, ColorScheme colorScheme) {
+    final l10n = AppLocalizations.of(context);
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(Spacing.lg),
@@ -121,14 +122,14 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
             ),
             const SizedBox(height: Spacing.md),
             Text(
-              'Feed URL not available',
+              l10n.podcastDetailFeedUrlMissing,
               style: theme.textTheme.titleMedium?.copyWith(
                 color: colorScheme.onSurfaceVariant,
               ),
             ),
             const SizedBox(height: Spacing.sm),
             Text(
-              'This podcast does not have a feed URL',
+              l10n.podcastDetailFeedUrlMissingSubtitle,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
               ),
@@ -159,7 +160,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
             ),
             const SizedBox(height: Spacing.md),
             Text(
-              'Failed to load episodes',
+              AppLocalizations.of(context).podcastDetailLoadError,
               style: theme.textTheme.titleMedium?.copyWith(
                 color: colorScheme.onSurface,
               ),
@@ -178,7 +179,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
             FilledButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
+              label: Text(AppLocalizations.of(context).commonRetry),
             ),
           ],
         ),
@@ -234,7 +235,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
       if (grouping != null && grouping.hasUngrouped)
         SmartPlaylist(
           id: 'ungrouped',
-          displayName: 'Ungrouped',
+          displayName: AppLocalizations.of(context).podcastDetailUngrouped,
           sortKey: 999999,
           episodeIds: grouping.ungroupedEpisodeIds,
         ),
@@ -434,7 +435,13 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.all(Spacing.lg),
-            child: Center(child: Text('Error loading episodes: $error')),
+            child: Center(
+              child: Text(
+                AppLocalizations.of(
+                  context,
+                ).podcastDetailEpisodeLoadError(error.toString()),
+              ),
+            ),
           ),
         ),
       ],
@@ -484,6 +491,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
 
   Widget _buildSortHeader(ThemeData theme, String label, SortOrder sortOrder) {
     final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(
         horizontal: Spacing.md,
@@ -519,8 +527,8 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
                   const SizedBox(width: 4),
                   Text(
                     sortOrder == SortOrder.ascending
-                        ? 'Oldest first'
-                        : 'Newest first',
+                        ? l10n.podcastDetailOldestFirst
+                        : l10n.podcastDetailNewestFirst,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: colorScheme.onSurfaceVariant,
                     ),
@@ -620,7 +628,9 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
       SliverToBoxAdapter(
         child: _buildSortHeader(
           theme,
-          '${displayGroups.length} groups',
+          AppLocalizations.of(
+            context,
+          ).podcastDetailGroupCount(displayGroups.length),
           sortOrder,
         ),
       ),
@@ -694,7 +704,9 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
         final sortHeader = SliverToBoxAdapter(
           child: _buildSortHeader(
             theme,
-            '${displayEpisodes.length} episodes',
+            AppLocalizations.of(
+              context,
+            ).podcastDetailEpisodeCount(displayEpisodes.length),
             sortOrder,
           ),
         );
@@ -746,7 +758,11 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.all(Spacing.lg),
-            child: Text('Error loading episodes: $error'),
+            child: Text(
+              AppLocalizations.of(
+                context,
+              ).podcastDetailEpisodeLoadError(error.toString()),
+            ),
           ),
         ),
       ],
@@ -874,11 +890,12 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
 
     return subscriptionState.when(
       data: (isSubscribed) {
+        final l10n = AppLocalizations.of(context);
         if (isSubscribed) {
           return OutlinedButton.icon(
             onPressed: () => _toggleSubscription(ref),
             icon: const Icon(Icons.check),
-            label: const Text('Subscribed'),
+            label: Text(l10n.podcastDetailSubscribed),
             style: OutlinedButton.styleFrom(
               foregroundColor: colorScheme.primary,
               side: BorderSide(color: colorScheme.primary),
@@ -891,7 +908,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
               ? () => _toggleSubscription(ref)
               : null,
           icon: const Icon(Icons.add),
-          label: const Text('Subscribe'),
+          label: Text(l10n.podcastDetailSubscribe),
         );
       },
       loading: () => FilledButton.icon(
@@ -901,12 +918,12 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
           height: 16,
           child: CircularProgressIndicator(strokeWidth: 2),
         ),
-        label: const Text('Loading...'),
+        label: Text(AppLocalizations.of(context).commonLoading),
       ),
       error: (error, stack) => FilledButton.icon(
         onPressed: () => _toggleSubscription(ref),
         icon: const Icon(Icons.refresh),
-        label: const Text('Retry'),
+        label: Text(AppLocalizations.of(context).commonRetry),
       ),
     );
   }
@@ -965,7 +982,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
     return SliverFillRemaining(
       child: Center(
         child: Text(
-          'No results found',
+          AppLocalizations.of(context).podcastDetailNoResults,
           style: theme.textTheme.titleMedium?.copyWith(
             color: colorScheme.onSurfaceVariant,
           ),
@@ -976,6 +993,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
 
   Widget _buildEmptyFilterState(ThemeData theme) {
     final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context);
 
     return Center(
       child: Column(
@@ -988,14 +1006,14 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
           ),
           const SizedBox(height: Spacing.md),
           Text(
-            'No matching episodes',
+            l10n.podcastDetailNoMatchingEpisodes,
             style: theme.textTheme.titleMedium?.copyWith(
               color: colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: Spacing.xs),
           Text(
-            'Try a different filter',
+            l10n.podcastDetailTryDifferentFilter,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
             ),
@@ -1007,6 +1025,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
 
   Widget _buildEmptyPlaylistState(ThemeData theme) {
     final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context);
 
     return Center(
       child: Column(
@@ -1019,14 +1038,14 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
           ),
           const SizedBox(height: Spacing.md),
           Text(
-            'No episodes found',
+            l10n.podcastDetailNoEpisodes,
             style: theme.textTheme.titleMedium?.copyWith(
               color: colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: Spacing.xs),
           Text(
-            'This playlist has no episodes',
+            l10n.podcastDetailPlaylistEmpty,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
             ),

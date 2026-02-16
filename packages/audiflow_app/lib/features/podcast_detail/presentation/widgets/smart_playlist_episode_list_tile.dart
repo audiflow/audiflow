@@ -77,18 +77,18 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
           onPlayLater: () {
             ref.read(queueControllerProvider.notifier).playLater(episode.id);
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Added to queue'),
-                duration: Duration(seconds: 1),
+              SnackBar(
+                content: Text(l10n.queueAddedToQueue),
+                duration: const Duration(seconds: 1),
               ),
             );
           },
           onPlayNext: () {
             ref.read(queueControllerProvider.notifier).playNext(episode.id);
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Playing next'),
-                duration: Duration(seconds: 1),
+              SnackBar(
+                content: Text(l10n.queuePlayingNext),
+                duration: const Duration(seconds: 1),
               ),
             );
           },
@@ -217,7 +217,11 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
               leading: Icon(
                 isCompleted ? Icons.replay : Icons.check_circle_outline,
               ),
-              title: Text(isCompleted ? 'Mark as unplayed' : 'Mark as played'),
+              title: Text(
+                isCompleted
+                    ? AppLocalizations.of(context).markAsUnplayed
+                    : AppLocalizations.of(context).markAsPlayed,
+              ),
               onTap: () {
                 Navigator.pop(context);
                 _togglePlayedStatus(ref, audioUrl, isCompleted);
@@ -268,6 +272,7 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
   ) async {
     final downloadService = ref.read(downloadServiceProvider);
     final messenger = ScaffoldMessenger.of(context);
+    final l10n = AppLocalizations.of(context);
 
     if (task == null) {
       await downloadService.downloadEpisode(episode.id);
@@ -277,9 +282,7 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
     task.downloadStatus.when(
       pending: () async {
         await downloadService.cancel(task.id);
-        messenger.showSnackBar(
-          const SnackBar(content: Text('Download cancelled')),
-        );
+        messenger.showSnackBar(SnackBar(content: Text(l10n.downloadCancelled)));
       },
       downloading: () async {
         await downloadService.pause(task.id);
@@ -292,16 +295,12 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
       },
       failed: () async {
         await downloadService.retry(task.id);
-        messenger.showSnackBar(
-          const SnackBar(content: Text('Retrying download')),
-        );
+        messenger.showSnackBar(SnackBar(content: Text(l10n.downloadRetrying)));
       },
       cancelled: () async {
         final result = await downloadService.downloadEpisode(episode.id);
         if (result != null) {
-          messenger.showSnackBar(
-            const SnackBar(content: Text('Download started')),
-          );
+          messenger.showSnackBar(SnackBar(content: Text(l10n.downloadStarted)));
         }
       },
     );
@@ -312,27 +311,28 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
     WidgetRef ref,
     DownloadTask task,
   ) {
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete download?'),
-        content: const Text('The downloaded file will be removed.'),
+        title: Text(l10n.downloadDeleteTitle),
+        content: Text(l10n.downloadDeleteContent),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(l10n.commonCancel),
           ),
           TextButton(
             onPressed: () async {
               Navigator.pop(context);
               await ref.read(downloadServiceProvider).delete(task.id);
               if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Download deleted')),
-                );
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text(l10n.downloadDeleted)));
               }
             },
-            child: const Text('Delete'),
+            child: Text(l10n.commonDelete),
           ),
         ],
       ),
@@ -397,22 +397,20 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
   }
 
   Future<bool> _showReplaceQueueDialog(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Replace queue?'),
-        content: const Text(
-          'Starting playback will replace your current queue '
-          'with episodes from this list.',
-        ),
+        title: Text(l10n.episodeReplaceQueueTitle),
+        content: Text(l10n.episodeReplaceQueueContent),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(l10n.commonCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Replace'),
+            child: Text(l10n.episodeReplace),
           ),
         ],
       ),

@@ -1,4 +1,5 @@
 import 'package:audiflow_app/features/settings/presentation/screens/about_screen.dart';
+import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -20,7 +21,11 @@ void main() {
   Widget buildTestWidget() {
     return ProviderScope(
       overrides: [packageInfoProvider.overrideWithValue(packageInfo)],
-      child: const MaterialApp(home: AboutScreen()),
+      child: MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: const AboutScreen(),
+      ),
     );
   }
 

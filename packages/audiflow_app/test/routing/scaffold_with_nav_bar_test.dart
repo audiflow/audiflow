@@ -1,3 +1,4 @@
+import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_app/routing/scaffold_with_nav_bar.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
@@ -63,7 +64,11 @@ void main() {
             () => _MockVoiceCommandOrchestrator(),
           ),
         ],
-        child: MaterialApp.router(routerConfig: router),
+        child: MaterialApp.router(
+          routerConfig: router,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+        ),
       );
     }
 
