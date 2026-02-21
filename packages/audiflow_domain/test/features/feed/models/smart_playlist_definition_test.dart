@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:audiflow_domain/src/features/feed/models/episode_number_extractor.dart';
 import 'package:audiflow_domain/src/features/feed/models/smart_playlist_definition.dart';
 import 'package:audiflow_domain/src/features/feed/models/smart_playlist_episode_extractor.dart';
 import 'package:audiflow_domain/src/features/feed/models/smart_playlist_group_def.dart';
@@ -27,10 +26,6 @@ void main() {
           source: 'seasonNumber',
           template: 'Season {value}',
         ),
-        episodeNumberExtractor: const EpisodeNumberExtractor(
-          pattern: r'\[(\d+)-(\d+)\]',
-          captureGroup: 2,
-        ),
         smartPlaylistEpisodeExtractor: const SmartPlaylistEpisodeExtractor(
           source: 'title',
           pattern: r'\[(\d+)-(\d+)\]',
@@ -52,7 +47,6 @@ void main() {
       expect(decoded.nullSeasonGroupKey, 0);
       expect(decoded.customSort, isA<SimpleSmartPlaylistSort>());
       expect(decoded.titleExtractor, isNotNull);
-      expect(decoded.episodeNumberExtractor, isNotNull);
       expect(decoded.smartPlaylistEpisodeExtractor, isNotNull);
     });
 
@@ -107,7 +101,6 @@ void main() {
       expect(decoded.groups, isNull);
       expect(decoded.customSort, isNull);
       expect(decoded.titleExtractor, isNull);
-      expect(decoded.episodeNumberExtractor, isNull);
       expect(decoded.smartPlaylistEpisodeExtractor, isNull);
     });
   });

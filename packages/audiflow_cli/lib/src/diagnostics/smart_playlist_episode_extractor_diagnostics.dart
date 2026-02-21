@@ -52,8 +52,9 @@ class SmartPlaylistEpisodeExtractorDiagnostics {
       int? season;
       int? episodeNum;
 
-      if (extractor.seasonGroup <= primaryMatch.groupCount) {
-        final captured = primaryMatch.group(extractor.seasonGroup);
+      if (extractor.seasonGroup != null &&
+          extractor.seasonGroup! <= primaryMatch.groupCount) {
+        final captured = primaryMatch.group(extractor.seasonGroup!);
         if (captured != null) {
           season = int.tryParse(captured);
         }
@@ -103,7 +104,17 @@ class SmartPlaylistEpisodeExtractorDiagnostics {
       }
     }
 
-    // Step 3: No match
+    // Step 3: RSS fallback if enabled
+    if (extractor.fallbackToRss && episode.episodeNumber != null) {
+      return SmartPlaylistEpisodeDiagnosticResult(
+        extractedEpisodeNumber: episode.episodeNumber,
+        primaryPatternUsed: extractor.pattern,
+        fallbackPatternUsed: extractor.fallbackEpisodePattern,
+        usedFallback: true,
+      );
+    }
+
+    // Step 4: No match
     return SmartPlaylistEpisodeDiagnosticResult(
       primaryPatternUsed: extractor.pattern,
       fallbackPatternUsed: extractor.fallbackEpisodePattern,
