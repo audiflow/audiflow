@@ -56,9 +56,7 @@ class SmartPlaylistResolverService {
     final claimedIds = <int>{};
     String? resolverType;
 
-    // Sort definitions by priority (higher first)
-    final sorted = List.of(config.playlists)
-      ..sort((a, b) => b.priority.compareTo(a.priority));
+    final sorted = _sortByProcessingOrder(config.playlists);
 
     for (final definition in sorted) {
       final filtered = _filterEpisodes(episodes, definition, claimedIds);
@@ -130,15 +128,7 @@ class SmartPlaylistResolverService {
 
       allUngroupedIds.addAll(result.ungroupedEpisodeIds);
 
-      // Only claim episode IDs when the definition has explicit
-      // filters. Fallback definitions (no filters) receive all
-      // unclaimed episodes without preventing other fallbacks
-      // from also receiving them.
-      final hasFilters =
-          definition.titleFilter != null ||
-          definition.excludeFilter != null ||
-          definition.requireFilter != null;
-      if (hasFilters) {
+      if (_hasFilters(definition)) {
         for (final p in result.playlists) {
           claimedIds.addAll(p.episodeIds);
         }
@@ -159,7 +149,7 @@ class SmartPlaylistResolverService {
 
   /// Filters episodes based on definition routing rules.
   ///
-  /// Episodes already claimed by a higher-priority definition
+  /// Episodes already claimed by a lower-priority-number definition
   /// are excluded. A definition with no filters acts as a
   /// fallback, receiving all unclaimed episodes.
   List<Episode> _filterEpisodes(
@@ -222,5 +212,33 @@ class SmartPlaylistResolverService {
       }
     }
     return null;
+  }
+
+  /// Sorts definitions so filtered definitions process before fallbacks.
+  /// Within each group, sorts by priority ascending (lower number first).
+  static List<SmartPlaylistDefinition> _sortByProcessingOrder(
+    List<SmartPlaylistDefinition> definitions,
+  ) {
+    final filtered = <SmartPlaylistDefinition>[];
+    final fallbacks = <SmartPlaylistDefinition>[];
+
+    for (final def in definitions) {
+      if (_hasFilters(def)) {
+        filtered.add(def);
+      } else {
+        fallbacks.add(def);
+      }
+    }
+
+    filtered.sort((a, b) => a.priority.compareTo(b.priority));
+    fallbacks.sort((a, b) => a.priority.compareTo(b.priority));
+
+    return [...filtered, ...fallbacks];
+  }
+
+  static bool _hasFilters(SmartPlaylistDefinition definition) {
+    return definition.titleFilter != null ||
+        definition.excludeFilter != null ||
+        definition.requireFilter != null;
   }
 }
