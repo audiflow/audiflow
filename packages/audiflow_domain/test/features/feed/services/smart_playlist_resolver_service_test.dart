@@ -326,18 +326,18 @@ void main() {
       expect(result, isNotNull);
 
       // All episodes in 2024, so each definition produces one
-      // year-based playlist. Bonus (higher priority) is resolved
-      // first, then main gets remaining episodes.
+      // year-based playlist. Both have filters, so sorted by
+      // priority ascending: main (0) first, then bonus (10).
       expect(result!.playlists.length, 2);
 
       // Collect all episode IDs per playlist
       final firstIds = result.playlists[0].episodeIds;
       final secondIds = result.playlists[1].episodeIds;
 
+      // Main playlist (lower priority) gets episodes not matching excludeFilter
+      expect(firstIds, unorderedEquals([1, 3]));
       // Bonus playlist gets episodes matching requireFilter
-      expect(firstIds, unorderedEquals([2, 4]));
-      // Main playlist gets episodes not matching excludeFilter
-      expect(secondIds, unorderedEquals([1, 3]));
+      expect(secondIds, unorderedEquals([2, 4]));
     });
   });
 }

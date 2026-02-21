@@ -72,7 +72,7 @@ final class SmartPlaylistDefinition {
   /// Type of resolver to use for episode grouping.
   final String resolverType;
 
-  /// Sort priority among sibling playlists (default: 0).
+  /// Episode claiming order among siblings (lower = first, default: 0).
   final int priority;
 
   /// Content type hint (e.g., "bonus", "main").
