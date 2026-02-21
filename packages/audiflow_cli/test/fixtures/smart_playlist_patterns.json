@@ -44,11 +44,6 @@
               "template": "\u756a\u5916\u7de8"
             }
           },
-          "episodeNumberExtractor": {
-            "pattern": "(\\d+)\u3011",
-            "captureGroup": 1,
-            "fallbackToRss": true
-          },
           "smartPlaylistEpisodeExtractor": {
             "source": "title",
             "pattern": "\u3010(\\d+)-(\\d+)\u3011",
@@ -56,7 +51,8 @@
             "episodeGroup": 2,
             "fallbackSeasonNumber": 0,
             "fallbackEpisodePattern": "\u3010\u756a\u5916\u7de8[\uff03#](\\d+)\u3011",
-            "fallbackEpisodeCaptureGroup": 1
+            "fallbackEpisodeCaptureGroup": 1,
+            "fallbackToRss": true
           }
         },
         {
@@ -95,11 +91,6 @@
               "template": "\u756a\u5916\u7de8"
             }
           },
-          "episodeNumberExtractor": {
-            "pattern": "(\\d+)\u3011",
-            "captureGroup": 1,
-            "fallbackToRss": true
-          },
           "smartPlaylistEpisodeExtractor": {
             "source": "title",
             "pattern": "\u3010(\\d+)-(\\d+)\u3011",
@@ -107,7 +98,8 @@
             "episodeGroup": 2,
             "fallbackSeasonNumber": 0,
             "fallbackEpisodePattern": "\u3010\u756a\u5916\u7de8[\uff03#](\\d+)\u3011",
-            "fallbackEpisodeCaptureGroup": 1
+            "fallbackEpisodeCaptureGroup": 1,
+            "fallbackToRss": true
           }
         },
         {

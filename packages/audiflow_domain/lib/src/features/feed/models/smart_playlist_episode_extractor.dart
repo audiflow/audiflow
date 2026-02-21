@@ -34,18 +34,22 @@ final class SmartPlaylistEpisodeExtractor {
     this.fallbackSeasonNumber,
     this.fallbackEpisodePattern,
     this.fallbackEpisodeCaptureGroup = 1,
+    this.fallbackToRss = false,
   });
 
   factory SmartPlaylistEpisodeExtractor.fromJson(Map<String, dynamic> json) {
     return SmartPlaylistEpisodeExtractor(
       source: json['source'] as String,
       pattern: json['pattern'] as String,
-      seasonGroup: (json['seasonGroup'] as int?) ?? 1,
+      seasonGroup: json.containsKey('seasonGroup')
+          ? json['seasonGroup'] as int?
+          : 1,
       episodeGroup: (json['episodeGroup'] as int?) ?? 2,
       fallbackSeasonNumber: json['fallbackSeasonNumber'] as int?,
       fallbackEpisodePattern: json['fallbackEpisodePattern'] as String?,
       fallbackEpisodeCaptureGroup:
           (json['fallbackEpisodeCaptureGroup'] as int?) ?? 1,
+      fallbackToRss: (json['fallbackToRss'] as bool?) ?? false,
     );
   }
 
@@ -57,8 +61,11 @@ final class SmartPlaylistEpisodeExtractor {
   /// Example: `[(\d+)-(\d+)]` for `[62-15]`
   final String pattern;
 
-  /// Capture group index for season number (default: 1).
-  final int seasonGroup;
+  /// Capture group index for season number.
+  ///
+  /// Defaults to `1`. When `null`, season extraction is skipped
+  /// (episode-only mode).
+  final int? seasonGroup;
 
   /// Capture group index for episode number (default: 2).
   final int episodeGroup;
@@ -78,11 +85,15 @@ final class SmartPlaylistEpisodeExtractor {
   /// (default: 1).
   final int fallbackEpisodeCaptureGroup;
 
+  /// When true and no pattern matches, returns the episode's RSS
+  /// episodeNumber as a fallback.
+  final bool fallbackToRss;
+
   Map<String, dynamic> toJson() {
     return {
       'source': source,
       'pattern': pattern,
-      'seasonGroup': seasonGroup,
+      if (seasonGroup != null) 'seasonGroup': seasonGroup,
       'episodeGroup': episodeGroup,
       if (fallbackSeasonNumber != null)
         'fallbackSeasonNumber': fallbackSeasonNumber,
@@ -90,6 +101,7 @@ final class SmartPlaylistEpisodeExtractor {
         'fallbackEpisodePattern': fallbackEpisodePattern,
       if (fallbackEpisodeCaptureGroup != 1)
         'fallbackEpisodeCaptureGroup': fallbackEpisodeCaptureGroup,
+      if (fallbackToRss) 'fallbackToRss': fallbackToRss,
     };
   }
 
@@ -111,7 +123,18 @@ final class SmartPlaylistEpisodeExtractor {
 
     // Try fallback pattern if configured
     if (fallbackEpisodePattern != null) {
-      return _extractFromFallback(sourceValue);
+      final fallbackResult = _extractFromFallback(sourceValue);
+      if (fallbackResult.hasValues) {
+        return fallbackResult;
+      }
+    }
+
+    // Fall back to RSS episodeNumber if enabled
+    if (fallbackToRss) {
+      final rssEpisodeNumber = episode.episodeNumber;
+      if (rssEpisodeNumber != null) {
+        return SmartPlaylistEpisodeResult(episodeNumber: rssEpisodeNumber);
+      }
     }
 
     return const SmartPlaylistEpisodeResult();
@@ -136,8 +159,9 @@ final class SmartPlaylistEpisodeExtractor {
     int? season;
     int? episode;
 
-    if (seasonGroup <= match.groupCount) {
-      final captured = match.group(seasonGroup);
+    // Extract season only when seasonGroup is non-null
+    if (seasonGroup != null && seasonGroup! <= match.groupCount) {
+      final captured = match.group(seasonGroup!);
       if (captured != null) {
         season = int.tryParse(captured);
       }

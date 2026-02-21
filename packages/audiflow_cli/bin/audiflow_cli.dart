@@ -20,7 +20,6 @@ void main(List<String> args) async {
     ..addOption('title-pattern', help: 'Regex pattern for title extraction')
     ..addOption('title-group', help: 'Capture group for title', defaultsTo: '1')
     ..addOption('title-fallback', help: 'Fallback value for title')
-    ..addOption('episode-pattern', help: 'Regex pattern for episode number')
     ..addOption('season-number', abbr: 's', help: 'Season number (int or null)')
     ..addOption(
       'episode-number',
@@ -108,7 +107,6 @@ void _runPatternTest(ArgResults command) {
   final titlePattern = command['title-pattern'] as String?;
   final titleGroup = int.tryParse(command['title-group'] as String) ?? 1;
   final titleFallback = command['title-fallback'] as String?;
-  final episodePattern = command['episode-pattern'] as String?;
 
   final seasonNumberStr = command['season-number'] as String?;
   final seasonNumber = seasonNumberStr == null
@@ -126,7 +124,6 @@ void _runPatternTest(ArgResults command) {
     titlePattern: titlePattern,
     titleGroup: titleGroup,
     titleFallback: titleFallback,
-    episodePattern: episodePattern,
     seasonNumber: seasonNumber,
     episodeNumber: episodeNumber,
   );

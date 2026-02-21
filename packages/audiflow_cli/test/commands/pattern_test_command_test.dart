@@ -11,7 +11,6 @@ void main() {
         title: '【62-15】Test【COTEN RADIO リンカン編15】',
         titlePattern: r'【COTEN RADIO (ショート)?\s*(.+?)\s*\d+】',
         titleGroup: 2,
-        episodePattern: r'(\d+)】',
         seasonNumber: 62,
       );
 
@@ -28,7 +27,6 @@ void main() {
         title: '【特別編】Test',
         titlePattern: r'【COTEN RADIO (.+?)\d+】',
         titleGroup: 1,
-        episodePattern: null,
         seasonNumber: 99,
       );
 
@@ -45,7 +43,6 @@ void main() {
         titlePattern: r'【COTEN RADIO (.+?)\d+】',
         titleGroup: 1,
         titleFallback: '番外編',
-        episodePattern: null,
         seasonNumber: null,
         episodeNumber: 135,
       );

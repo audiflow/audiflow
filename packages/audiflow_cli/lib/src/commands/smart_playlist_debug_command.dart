@@ -3,7 +3,6 @@ import 'package:audiflow_podcast/parser.dart';
 import 'package:http/http.dart' as http;
 
 import '../adapters/episode_adapter.dart';
-import '../diagnostics/episode_extractor_diagnostics.dart';
 import '../diagnostics/smart_playlist_episode_extractor_diagnostics.dart';
 import '../diagnostics/title_extractor_diagnostics.dart';
 import '../models/extraction_result.dart';
@@ -134,7 +133,6 @@ class SmartPlaylistDebugCommand {
     int? extractedEpisodeNumber;
     int? extractedSeasonNumber;
     String? titleError;
-    String? episodeError;
     String? playlistEpisodeError;
 
     // Extract title
@@ -143,16 +141,6 @@ class SmartPlaylistDebugCommand {
       final result = diagnostics.run(episode);
       extractedTitle = result.extractedValue;
       titleError = result.error;
-    }
-
-    // Extract episode number (legacy extractor)
-    if (definition.episodeNumberExtractor != null) {
-      final diagnostics = EpisodeExtractorDiagnostics(
-        definition.episodeNumberExtractor!,
-      );
-      final result = diagnostics.run(episode);
-      extractedEpisodeNumber = result.extractedValue;
-      episodeError = result.error;
     }
 
     // Extract season+episode from title prefix
@@ -172,7 +160,7 @@ class SmartPlaylistDebugCommand {
 
     // Build result
     final hasError = extractedTitle == null;
-    final error = titleError ?? episodeError ?? playlistEpisodeError;
+    final error = titleError ?? playlistEpisodeError;
 
     return ExtractionResult(
       title: episode.title,
