@@ -59,7 +59,7 @@ class FlavorConfig {
     name: 'Production',
     apiBaseUrl: 'https://api.audiflow.example.com',
     smartPlaylistConfigBaseUrl:
-        'https://reedom.github.io/audiflow-smart-playlists',
+        'https://audiflow.github.io/audiflow-smartplaylist',
     enableAnalytics: true,
     enableCrashReporting: true,
   );

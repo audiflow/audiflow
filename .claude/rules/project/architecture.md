@@ -538,7 +538,17 @@ Keep internal implementation in `lib/src/` and only export what's needed.
 
 ## Smart Playlist Config Ecosystem
 
-Smart playlist configurations (curated episode groupings per podcast) are managed across three external repositories plus static hosting:
+Smart playlist configurations (curated episode groupings per podcast) are managed across external repositories plus static hosting.
+
+### Schema (Single Source of Truth)
+
+**[`audiflow/audiflow-smartplaylist-schema`](https://github.com/audiflow/audiflow-smartplaylist-schema)** is the canonical source for:
+- JSON Schema definitions (`schema.json`, `playlist-definition.schema.json`)
+- File structure documentation (`docs/file-structure.md`)
+- Validation scripts (`scripts/validate.sh`)
+- Example configurations (`examples/`)
+
+All config data repos, the web editor, and the mobile app must conform to this schema.
 
 ### Data Flow
 
@@ -564,8 +574,8 @@ Smart playlist configurations (curated episode groupings per podcast) are manage
                  │                                    │
                  v                                    v
      main_stg.dart fetches from          main_prod.dart fetches from
-     storage.googleapis.com/             reedom.github.io/
-     audiflow-dev-config/                audiflow-smart-playlists/
+     storage.googleapis.com/             audiflow.github.io/
+     audiflow-dev-config/                audiflow-smartplaylist/
 ```
 
 ### 1. Config Data Repositories (Static JSON)
@@ -574,10 +584,10 @@ Two repos with identical structure, separated by environment:
 
 | Repo | Environment | CI Deployment | Base URL |
 |------|-------------|---------------|----------|
-| `reedom/audiflow-smartplaylist` | Production | GitHub Pages (`deploy-pages.yml`) | `https://reedom.github.io/audiflow-smart-playlists/` |
+| `audiflow/audiflow-smartplaylist` | Production | GitHub Pages (`deploy-pages.yml`) | `https://audiflow.github.io/audiflow-smartplaylist/` |
 | `reedom/audiflow-smartplaylist-dev` | Dev/Staging | GCS bucket (`deploy-config.yml`) | `https://storage.googleapis.com/audiflow-dev-config/` |
 
-Both repos share the same directory structure:
+Both repos share the same directory structure (defined in `audiflow-smartplaylist-schema`):
 
 ```
 {repo}/
@@ -621,4 +631,4 @@ In `audiflow_domain`, the `feed` feature handles smart playlist configs:
 - `SmartPlaylistConfigRepositoryImpl` coordinates cache vs remote with version-based invalidation
 - The base URL is injected via `smartPlaylistConfigBaseUrlProvider` (overridden in `main_stg.dart` / `main_prod.dart`)
 
-**When updating model serialization (JSON keys, field structure), changes must be coordinated across the data repos, web editor (`sp_shared`), and mobile app (`audiflow_domain`).**
+**When updating model serialization (JSON keys, field structure), changes must be coordinated across the schema repo (`audiflow-smartplaylist-schema`), data repos, web editor (`sp_shared`), and mobile app (`audiflow_domain`).**
