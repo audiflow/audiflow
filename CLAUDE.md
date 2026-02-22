@@ -43,3 +43,33 @@ Kiro-style Spec Driven Development implementation on AI-DLC (AI Development Life
 - Load entire `.kiro/steering/` as project memory
 - Default files: `product.md`, `tech.md`, `structure.md`
 - Custom files are supported (managed via `/kiro:steering-custom`)
+
+## Smart Playlist Schema Conformance
+
+`audiflow_domain` has hand-written smart playlist models (`fromJson()`/`toJson()`) that must stay aligned with the JSON Schema defined in the `audiflow-smartplaylist-web` repo (`sp_shared/assets/schema.json`).
+
+### Vendored schema
+
+A copy of the reference schema lives at `packages/audiflow_domain/test/fixtures/schema.json`. This is the single source of truth for conformance testing.
+
+### Conformance tests
+
+`packages/audiflow_domain/test/features/feed/models/schema_conformance_test.dart` validates:
+- **Round-trip tests**: model `toJson()` output wrapped in a config envelope validates against the vendored schema
+- **Enum conformance**: Dart enum `.name` values and string constants match the schema's `oneOf`/`enum` definitions
+
+### Keeping the schema in sync
+
+When `sp_shared/assets/schema.json` changes upstream:
+1. Copy the updated file to `packages/audiflow_domain/test/fixtures/schema.json`
+2. Run `flutter test packages/audiflow_domain/test/features/feed/models/schema_conformance_test.dart`
+3. Fix any failures (update models, enums, or test data to match the new schema)
+4. Run `flutter test packages/audiflow_domain` to ensure no regressions
+
+### Test data rules
+
+Always use schema-valid values in test data:
+- Resolver types: `'rss'`, `'category'`, `'year'`, `'titleAppearanceOrder'` (not `'rssSeason'`, `'categoryGroup'`, `'flat'`)
+- Content types: `'episodes'`, `'groups'`
+- Sort fields: use `SmartPlaylistSortField` enum names (match schema)
+- Sort orders: `'ascending'`, `'descending'`
