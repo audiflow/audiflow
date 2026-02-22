@@ -632,3 +632,21 @@ In `audiflow_domain`, the `feed` feature handles smart playlist configs:
 - The base URL is injected via `smartPlaylistConfigBaseUrlProvider` (overridden in `main_stg.dart` / `main_prod.dart`)
 
 **When updating model serialization (JSON keys, field structure), changes must be coordinated across the schema repo (`audiflow-smartplaylist-schema`), data repos, web editor (`sp_shared`), and mobile app (`audiflow_domain`).**
+
+### Schema Conformance Testing
+
+A vendored copy of the reference JSON Schema lives at `packages/audiflow_domain/test/fixtures/schema.json` (copied from `audiflow-smartplaylist-web/packages/sp_shared/assets/schema.json`).
+
+Conformance tests at `packages/audiflow_domain/test/features/feed/models/schema_conformance_test.dart` validate that:
+- Model `toJson()` output validates against the schema (round-trip tests)
+- Dart enum names and string constants match schema `oneOf`/`enum` definitions
+
+**Valid resolver types** (from schema): `rss`, `category`, `year`, `titleAppearanceOrder`
+
+Always use these exact values in test data. Never use legacy names like `rssSeason`, `categoryGroup`, or `flat`.
+
+**To update the vendored schema:**
+1. Copy `sp_shared/assets/schema.json` to `packages/audiflow_domain/test/fixtures/schema.json`
+2. Run conformance tests: `flutter test packages/audiflow_domain/test/features/feed/models/schema_conformance_test.dart`
+3. Fix any drift (update models/enums/test data to match)
+4. Run full suite: `flutter test packages/audiflow_domain`

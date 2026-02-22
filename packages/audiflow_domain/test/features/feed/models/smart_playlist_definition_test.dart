@@ -13,7 +13,7 @@ void main() {
       final def = SmartPlaylistDefinition(
         id: 'main',
         displayName: 'Main Episodes',
-        resolverType: 'rssSeason',
+        resolverType: 'rss',
         priority: 1,
         titleFilter: r'^\[\d+',
         excludeFilter: r'bonus',
@@ -40,7 +40,7 @@ void main() {
 
       expect(decoded.id, 'main');
       expect(decoded.displayName, 'Main Episodes');
-      expect(decoded.resolverType, 'rssSeason');
+      expect(decoded.resolverType, 'rss');
       expect(decoded.priority, 1);
       expect(decoded.titleFilter, r'^\[\d+');
       expect(decoded.excludeFilter, r'bonus');
@@ -54,7 +54,7 @@ void main() {
       const def = SmartPlaylistDefinition(
         id: 'categories',
         displayName: 'Categories',
-        resolverType: 'categoryGroup',
+        resolverType: 'category',
         groups: [
           SmartPlaylistGroupDef(
             id: 'tech',
@@ -82,7 +82,7 @@ void main() {
       const def = SmartPlaylistDefinition(
         id: 'simple',
         displayName: 'Simple',
-        resolverType: 'flat',
+        resolverType: 'rss',
       );
 
       final json = def.toJson();

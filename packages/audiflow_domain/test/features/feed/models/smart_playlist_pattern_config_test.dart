@@ -14,7 +14,7 @@ void main() {
           SmartPlaylistDefinition(
             id: 'main',
             displayName: 'Main',
-            resolverType: 'rssSeason',
+            resolverType: 'rss',
           ),
         ],
       );
@@ -39,7 +39,7 @@ void main() {
           SmartPlaylistDefinition(
             id: 'p1',
             displayName: 'P1',
-            resolverType: 'flat',
+            resolverType: 'rss',
           ),
         ],
       );
@@ -58,7 +58,7 @@ void main() {
           SmartPlaylistDefinition(
             id: 'p1',
             displayName: 'P1',
-            resolverType: 'flat',
+            resolverType: 'rss',
           ),
         ],
       );
@@ -74,7 +74,7 @@ void main() {
           SmartPlaylistDefinition(
             id: 'p1',
             displayName: 'P1',
-            resolverType: 'flat',
+            resolverType: 'rss',
           ),
         ],
       );
@@ -90,7 +90,7 @@ void main() {
           SmartPlaylistDefinition(
             id: 'p1',
             displayName: 'P1',
-            resolverType: 'flat',
+            resolverType: 'rss',
           ),
         ],
       );
