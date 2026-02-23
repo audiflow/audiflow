@@ -685,6 +685,8 @@ SmartPlaylistGrouping? _resolveFromFeedByCategory(
         yearHeaderMode: _parseFeedYearHeaderMode(definition.yearHeaderMode),
         episodeYearHeaders: definition.episodeYearHeaders,
         showDateRange: definition.showDateRange,
+        showSortOrderToggle: definition.showSortOrderToggle,
+        customSort: definition.customSort,
         groups: smartGroups.isEmpty ? null : smartGroups,
       ),
     );
@@ -803,6 +805,8 @@ SmartPlaylistGrouping? _resolveFromFeedWithParentPlaylists(
         yearHeaderMode: _parseFeedYearHeaderMode(def.yearHeaderMode),
         episodeYearHeaders: def.episodeYearHeaders,
         showDateRange: def.showDateRange,
+        showSortOrderToggle: def.showSortOrderToggle,
+        customSort: def.customSort,
         groups: groups,
       ),
     );

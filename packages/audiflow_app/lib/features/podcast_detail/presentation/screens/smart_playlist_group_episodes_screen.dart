@@ -37,8 +37,19 @@ class SmartPlaylistGroupEpisodesScreen extends ConsumerStatefulWidget {
 class _SmartPlaylistGroupEpisodesScreenState
     extends ConsumerState<SmartPlaylistGroupEpisodesScreen> {
   final _scrollController = ScrollController();
-  SortOrder _sortOrder = SortOrder.descending;
+  late SortOrder _sortOrder;
   String _searchQuery = '';
+
+  @override
+  void initState() {
+    super.initState();
+    final parent = widget.parentPlaylist;
+    if (parent.showSortOrderToggle && parent.customSort != null) {
+      _sortOrder = parent.customSort!.rules.first.order;
+    } else {
+      _sortOrder = SortOrder.descending;
+    }
+  }
 
   List<int> get _episodeIds =>
       widget.filteredEpisodeIds ?? widget.group.episodeIds;
@@ -164,7 +175,8 @@ class _SmartPlaylistGroupEpisodesScreenState
             padding: const EdgeInsets.symmetric(horizontal: Spacing.md),
             child: _buildSortHeader(
               theme,
-              showSortSwitch: _showYearHeaders,
+              showSortSwitch:
+                  _showYearHeaders || widget.parentPlaylist.showSortOrderToggle,
               episodeCount: displayEpisodes.length,
             ),
           ),

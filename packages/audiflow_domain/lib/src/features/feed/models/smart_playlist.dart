@@ -1,3 +1,5 @@
+import 'smart_playlist_sort.dart';
+
 /// Whether a smart playlist directly contains episodes or groups.
 enum SmartPlaylistContentType {
   /// Playlist directly contains an episode list.
@@ -92,6 +94,8 @@ final class SmartPlaylist {
     this.yearHeaderMode = YearHeaderMode.none,
     this.episodeYearHeaders = false,
     this.showDateRange = false,
+    this.showSortOrderToggle = false,
+    this.customSort,
     this.groups,
     @Deprecated('Use yearHeaderMode instead') bool yearGrouped = false,
     @Deprecated('Use groups instead') List<SmartPlaylistGroup>? subCategories,
@@ -124,6 +128,12 @@ final class SmartPlaylist {
   /// Whether group cards should display a date range.
   final bool showDateRange;
 
+  /// Whether to explicitly show the sort order toggle.
+  final bool showSortOrderToggle;
+
+  /// Custom sort specification from the playlist definition.
+  final SmartPlaylistSortSpec? customSort;
+
   /// Groups within this playlist (when contentType == groups).
   final List<SmartPlaylistGroup>? groups;
 
@@ -149,6 +159,8 @@ final class SmartPlaylist {
     YearHeaderMode? yearHeaderMode,
     bool? episodeYearHeaders,
     bool? showDateRange,
+    bool? showSortOrderToggle,
+    SmartPlaylistSortSpec? customSort,
     List<SmartPlaylistGroup>? groups,
     @Deprecated('Use yearHeaderMode instead') bool? yearGrouped,
     @Deprecated('Use groups instead') List<SmartPlaylistGroup>? subCategories,
@@ -163,6 +175,8 @@ final class SmartPlaylist {
       yearHeaderMode: yearHeaderMode ?? this.yearHeaderMode,
       episodeYearHeaders: episodeYearHeaders ?? this.episodeYearHeaders,
       showDateRange: showDateRange ?? this.showDateRange,
+      showSortOrderToggle: showSortOrderToggle ?? this.showSortOrderToggle,
+      customSort: customSort ?? this.customSort,
       groups: groups ?? subCategories ?? this.groups,
     );
   }
