@@ -39,7 +39,7 @@ void main() {
   group('SmartPlaylistConfigRepository', () {
     test('fetchRootMeta returns root meta and caches it', () async {
       fakeResponses['$baseUrl/meta.json'] = jsonEncode({
-        'version': 1,
+        'version': 2,
         'patterns': [
           {
             'id': 'test',
@@ -61,7 +61,7 @@ void main() {
     test('fetchRootMeta falls back to cache on network error', () async {
       await cache.writeRootMeta(
         RootMeta(
-          version: 1,
+          version: 2,
           patterns: [
             PatternSummary(
               id: 'cached',
@@ -81,7 +81,7 @@ void main() {
     test('fetchRootMeta returns empty when no cache and '
         'network fails', () async {
       final meta = await repo.fetchRootMeta();
-      expect(meta.version, 1);
+      expect(meta.version, 2);
       expect(meta.patterns, isEmpty);
     });
 

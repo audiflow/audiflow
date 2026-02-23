@@ -5,9 +5,9 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('SmartPlaylistPatternLoader', () {
-    test('parses valid JSON with version 1', () {
+    test('parses valid JSON with version 2', () {
       final json = jsonEncode({
-        'version': 1,
+        'version': 2,
         'patterns': [
           {
             'id': 'test',
@@ -41,7 +41,7 @@ void main() {
     });
 
     test('returns empty list for empty patterns', () {
-      final json = jsonEncode({'version': 1, 'patterns': []});
+      final json = jsonEncode({'version': 2, 'patterns': []});
       final result = SmartPlaylistPatternLoader.parse(json);
       expect(result, isEmpty);
     });

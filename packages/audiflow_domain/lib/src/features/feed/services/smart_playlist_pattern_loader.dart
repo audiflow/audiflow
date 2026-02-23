@@ -9,7 +9,7 @@ import '../models/smart_playlist_pattern_config.dart';
 final class SmartPlaylistPatternLoader {
   SmartPlaylistPatternLoader._();
 
-  static const _supportedVersion = 1;
+  static const _supportedVersion = 2;
 
   /// Parses a JSON string into a list of pattern configs.
   ///

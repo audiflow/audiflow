@@ -127,6 +127,20 @@ Future<SmartPlaylistGrouping?> podcastSmartPlaylists(
     return null;
   }
 
+  // Log matched pattern for this podcast
+  final configRepo = ref.watch(smartPlaylistConfigRepositoryProvider);
+  final matchedSummary = configRepo.findMatchingPattern(
+    null,
+    subscription.feedUrl,
+  );
+  if (matchedSummary != null) {
+    logger.d(
+      'Matched smart playlist pattern: '
+      '"${matchedSummary.displayName}" '
+      'version=${matchedSummary.version}',
+    );
+  }
+
   // Check for cached smart playlists first
   final cachedPlaylists = await playlistDatasource.getByPodcastId(podcastId);
   if (cachedPlaylists.isNotEmpty) {
@@ -231,6 +245,10 @@ Future<SmartPlaylistGrouping?> _resolveAndPersistSmartPlaylists(
   final summary = repo.findMatchingPattern(null, feedUrl);
   SmartPlaylistPatternConfig? config;
   if (summary != null) {
+    logger.d(
+      'Matched smart playlist pattern: '
+      '"${summary.displayName}" version=${summary.version}',
+    );
     try {
       config = await repo.getConfig(summary);
     } on Object {

@@ -40,7 +40,7 @@ void main() {
 
       test('writes and reads root meta', () async {
         final meta = RootMeta(
-          version: 1,
+          version: 2,
           patterns: [
             PatternSummary(
               id: 'test',

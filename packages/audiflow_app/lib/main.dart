@@ -84,8 +84,17 @@ Future<void> _startApp(String smartPlaylistConfigBaseUrl) async {
   await container.read(audioHandlerProvider.future);
 
   // Fetch smart playlist pattern summaries from remote
+  final spLogger = container.read(namedLoggerProvider('SmartPlaylist'));
+  spLogger.d(
+    'Fetching smart playlist config from: '
+    '$smartPlaylistConfigBaseUrl',
+  );
   final configRepo = container.read(smartPlaylistConfigRepositoryProvider);
   final rootMeta = await configRepo.fetchRootMeta();
+  spLogger.d(
+    'Smart playlist config version=${rootMeta.version}, '
+    'patterns=${rootMeta.patterns.length}',
+  );
   await configRepo.reconcileCache(rootMeta.patterns);
   configRepo.setPatternSummaries(rootMeta.patterns);
   container
