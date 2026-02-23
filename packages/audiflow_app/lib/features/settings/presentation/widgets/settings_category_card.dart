@@ -44,10 +44,14 @@ class SettingsCategoryCard extends StatelessWidget {
               const SizedBox(height: 12),
               Text(title, style: theme.textTheme.titleMedium),
               const SizedBox(height: 4),
-              Text(
-                subtitle,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
+              Expanded(
+                child: Text(
+                  subtitle,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ),
             ],
