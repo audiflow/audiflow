@@ -24,7 +24,7 @@ class SettingsScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         mainAxisSpacing: 12,
         crossAxisSpacing: 12,
-        childAspectRatio: 1.1,
+        childAspectRatio: 0.95,
         children: [
           SettingsCategoryCard(
             icon: Symbols.palette,
