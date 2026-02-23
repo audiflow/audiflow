@@ -84,27 +84,27 @@ check: analyze test
 # Build & Run
 run-dev:
 	@echo "Running dev flavor..."
-	cd packages/audiflow_app && flutter run --flavor dev -t lib/main_dev.dart
+	cd packages/audiflow_app && flutter run --flavor dev -t lib/main_dev.dart --dart-define-from-file=../../.env.dev
 
 run-stg:
 	@echo "Running staging flavor..."
-	cd packages/audiflow_app && flutter run --flavor stg -t lib/main_stg.dart
+	cd packages/audiflow_app && flutter run --flavor stg -t lib/main_stg.dart --dart-define-from-file=../../.env.stg
 
 run-prod:
 	@echo "Running production flavor..."
-	cd packages/audiflow_app && flutter run --flavor prod -t lib/main_prod.dart
+	cd packages/audiflow_app && flutter run --flavor prod -t lib/main_prod.dart --dart-define-from-file=../../.env.prod
 
 build-dev:
 	@echo "Building dev APK..."
-	cd packages/audiflow_app && flutter build apk --flavor dev -t lib/main_dev.dart
+	cd packages/audiflow_app && flutter build apk --flavor dev -t lib/main_dev.dart --dart-define-from-file=../../.env.dev
 
 build-stg:
 	@echo "Building staging APK..."
-	cd packages/audiflow_app && flutter build apk --flavor stg -t lib/main_stg.dart
+	cd packages/audiflow_app && flutter build apk --flavor stg -t lib/main_stg.dart --dart-define-from-file=../../.env.stg
 
 build-prod:
 	@echo "Building production release APK..."
-	cd packages/audiflow_app && flutter build apk --flavor prod -t lib/main_prod.dart --release
+	cd packages/audiflow_app && flutter build apk --flavor prod -t lib/main_prod.dart --release --dart-define-from-file=../../.env.prod
 
 # Assets
 icons:
@@ -118,11 +118,11 @@ splash:
 # iOS specific
 build-ios-dev:
 	@echo "Building iOS dev..."
-	cd packages/audiflow_app && flutter build ios --flavor dev -t lib/main_dev.dart --no-codesign
+	cd packages/audiflow_app && flutter build ios --flavor dev -t lib/main_dev.dart --no-codesign --dart-define-from-file=../../.env.dev
 
 build-ios-prod:
 	@echo "Building iOS production..."
-	cd packages/audiflow_app && flutter build ios --flavor prod -t lib/main_prod.dart --release
+	cd packages/audiflow_app && flutter build ios --flavor prod -t lib/main_prod.dart --release --dart-define-from-file=../../.env.prod
 
 # Utilities
 version:

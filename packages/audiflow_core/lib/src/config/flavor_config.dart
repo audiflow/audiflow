@@ -10,6 +10,7 @@ class FlavorConfig {
     required this.smartPlaylistConfigBaseUrl,
     required this.enableAnalytics,
     required this.enableCrashReporting,
+    required this.enableHttpTracing,
   });
 
   final Flavor flavor;
@@ -18,6 +19,7 @@ class FlavorConfig {
   final String smartPlaylistConfigBaseUrl;
   final bool enableAnalytics;
   final bool enableCrashReporting;
+  final bool enableHttpTracing;
 
   static FlavorConfig? _current;
 
@@ -39,7 +41,8 @@ class FlavorConfig {
     smartPlaylistConfigBaseUrl:
         'https://storage.googleapis.com/audiflow-dev-config',
     enableAnalytics: false,
-    enableCrashReporting: false,
+    enableCrashReporting: true,
+    enableHttpTracing: true,
   );
 
   /// Staging flavor
@@ -51,6 +54,7 @@ class FlavorConfig {
         'https://storage.googleapis.com/audiflow-dev-config',
     enableAnalytics: true,
     enableCrashReporting: true,
+    enableHttpTracing: true,
   );
 
   /// Production flavor
@@ -62,6 +66,7 @@ class FlavorConfig {
         'https://audiflow.github.io/audiflow-smartplaylist',
     enableAnalytics: true,
     enableCrashReporting: true,
+    enableHttpTracing: false,
   );
 
   /// Initialize with a flavor
