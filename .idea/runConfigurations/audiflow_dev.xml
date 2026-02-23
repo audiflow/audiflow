@@ -1,7 +1,8 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="audiflow (dev)" type="FlutterRunConfigurationType" factoryName="Flutter">
-    <option name="filePath" value="$PROJECT_DIR$/packages/audiflow_app/lib/main_dev.dart" />
+    <option name="additionalArgs" value="--dart-define-from-file=../../.env.dev" />
     <option name="buildFlavor" value="dev" />
+    <option name="filePath" value="$PROJECT_DIR$/packages/audiflow_app/lib/main_dev.dart" />
     <method v="2" />
   </configuration>
 </component>

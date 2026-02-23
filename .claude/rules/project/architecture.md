@@ -554,9 +554,9 @@ All config data repos, the web editor, and the mobile app must conform to this s
 
 ```
                               ┌─────────────────────────────┐
-                              │  audiflow-smartplaylist-web  │
-                              │  (sp_react + sp_server +     │
-                              │   sp_shared + mcp_server)    │
+                              │ audiflow-smartplaylist-editor │
+                              │  (sp_react + sp_server +      │
+                              │   sp_shared + mcp_server)     │
                               └──────────┬──────────────────┘
                                     PRs  │
                      ┌───────────────────┼───────────────────┐
@@ -607,7 +607,7 @@ Both repos share the same directory structure (defined in `audiflow-smartplaylis
 - CI auto-deploys on merge to main
 - GCS deployment sets cache headers (5min for root meta.json, 30min for pattern files)
 
-### 2. Web Editor (`reedom/audiflow-smartplaylist-web`)
+### 2. Web Editor (`audiflow/audiflow-smartplaylist-editor`)
 
 Monorepo for creating/editing smart playlist configs:
 
@@ -635,7 +635,7 @@ In `audiflow_domain`, the `feed` feature handles smart playlist configs:
 
 ### Schema Conformance Testing
 
-A vendored copy of the reference JSON Schema lives at `packages/audiflow_domain/test/fixtures/schema.json` (copied from `audiflow-smartplaylist-web/packages/sp_shared/assets/schema.json`).
+A vendored copy of the reference JSON Schema lives at `packages/audiflow_domain/test/fixtures/schema.json` (copied from `audiflow-smartplaylist-editor/packages/sp_shared/assets/schema.json`).
 
 Conformance tests at `packages/audiflow_domain/test/features/feed/models/schema_conformance_test.dart` validate that:
 - Model `toJson()` output validates against the schema (round-trip tests)
