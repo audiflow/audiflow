@@ -37,8 +37,19 @@ class SmartPlaylistEpisodesScreen extends ConsumerStatefulWidget {
 class _SmartPlaylistEpisodesScreenState
     extends ConsumerState<SmartPlaylistEpisodesScreen> {
   final _scrollController = ScrollController();
-  SortOrder _sortOrder = SortOrder.descending;
+  late SortOrder _sortOrder;
   String _searchQuery = '';
+
+  @override
+  void initState() {
+    super.initState();
+    final sp = widget.smartPlaylist;
+    if (sp.showSortOrderToggle && sp.customSort != null) {
+      _sortOrder = sp.customSort!.rules.first.order;
+    } else {
+      _sortOrder = SortOrder.descending;
+    }
+  }
 
   @override
   void dispose() {
@@ -79,6 +90,10 @@ class _SmartPlaylistEpisodesScreenState
     );
   }
 
+  bool get _showSortToggle =>
+      widget.smartPlaylist.showSortOrderToggle ||
+      widget.smartPlaylist.yearHeaderMode != YearHeaderMode.none;
+
   Widget _buildSortHeader(ThemeData theme, {int? countOverride}) {
     final colorScheme = theme.colorScheme;
     final isGroups =
@@ -106,38 +121,40 @@ class _SmartPlaylistEpisodesScreenState
               color: colorScheme.onSurfaceVariant,
             ),
           ),
-          const Spacer(),
-          InkWell(
-            borderRadius: BorderRadius.circular(16),
-            onTap: _toggleSortOrder,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: Spacing.sm,
-                vertical: Spacing.xxs,
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    _sortOrder == SortOrder.ascending
-                        ? Icons.arrow_upward
-                        : Icons.arrow_downward,
-                    size: 16,
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    _sortOrder == SortOrder.ascending
-                        ? l10n.podcastDetailOldestFirst
-                        : l10n.podcastDetailNewestFirst,
-                    style: theme.textTheme.bodySmall?.copyWith(
+          if (_showSortToggle) ...[
+            const Spacer(),
+            InkWell(
+              borderRadius: BorderRadius.circular(16),
+              onTap: _toggleSortOrder,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: Spacing.sm,
+                  vertical: Spacing.xxs,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      _sortOrder == SortOrder.ascending
+                          ? Icons.arrow_upward
+                          : Icons.arrow_downward,
+                      size: 16,
                       color: colorScheme.onSurfaceVariant,
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 4),
+                    Text(
+                      _sortOrder == SortOrder.ascending
+                          ? l10n.podcastDetailOldestFirst
+                          : l10n.podcastDetailNewestFirst,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
+          ],
         ],
       ),
     );

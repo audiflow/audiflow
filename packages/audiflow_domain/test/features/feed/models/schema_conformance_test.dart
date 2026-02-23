@@ -110,6 +110,7 @@ void main() {
         yearHeaderMode: 'firstEpisode',
         episodeYearHeaders: true,
         showDateRange: true,
+        showSortOrderToggle: true,
         titleFilter: r'S\d+',
         excludeFilter: r'Trailer',
         requireFilter: r'\[.+\]',

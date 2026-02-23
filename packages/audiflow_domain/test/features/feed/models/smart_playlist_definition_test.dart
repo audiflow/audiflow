@@ -95,16 +95,45 @@ void main() {
       expect(json.containsKey('priority'), isFalse);
       expect(json.containsKey('groups'), isFalse);
       expect(json.containsKey('customSort'), isFalse);
+      expect(json.containsKey('showSortOrderToggle'), isFalse);
 
       final decoded = SmartPlaylistDefinition.fromJson(json);
 
       expect(decoded.id, 'simple');
       expect(decoded.priority, 0);
       expect(decoded.episodeYearHeaders, isFalse);
+      expect(decoded.showSortOrderToggle, isFalse);
       expect(decoded.groups, isNull);
       expect(decoded.customSort, isNull);
       expect(decoded.titleExtractor, isNull);
       expect(decoded.smartPlaylistEpisodeExtractor, isNull);
+    });
+
+    test('round-trip with showSortOrderToggle true', () {
+      const def = SmartPlaylistDefinition(
+        id: 'toggle-test',
+        displayName: 'Toggle Test',
+        resolverType: 'rss',
+        showSortOrderToggle: true,
+        customSort: SmartPlaylistSortSpec([
+          SmartPlaylistSortRule(
+            field: SmartPlaylistSortField.playlistNumber,
+            order: SortOrder.ascending,
+          ),
+        ]),
+      );
+
+      final json = def.toJson();
+      expect(json['showSortOrderToggle'], isTrue);
+
+      final jsonString = jsonEncode(json);
+      final decoded = SmartPlaylistDefinition.fromJson(
+        jsonDecode(jsonString) as Map<String, dynamic>,
+      );
+
+      expect(decoded.showSortOrderToggle, isTrue);
+      expect(decoded.customSort, isNotNull);
+      expect(decoded.customSort!.rules.first.order, SortOrder.ascending);
     });
   });
 }

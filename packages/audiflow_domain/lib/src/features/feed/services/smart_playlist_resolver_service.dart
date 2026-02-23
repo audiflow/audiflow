@@ -109,6 +109,8 @@ class SmartPlaylistResolverService {
             yearHeaderMode: yearHeaderMode,
             episodeYearHeaders: definition.episodeYearHeaders,
             showDateRange: definition.showDateRange,
+            showSortOrderToggle: definition.showSortOrderToggle,
+            customSort: definition.customSort,
             groups: groups,
           ),
         );
@@ -121,6 +123,8 @@ class SmartPlaylistResolverService {
             yearHeaderMode: yearHeaderMode,
             episodeYearHeaders: definition.episodeYearHeaders,
             showDateRange: definition.showDateRange,
+            showSortOrderToggle: definition.showSortOrderToggle,
+            customSort: definition.customSort,
           );
         }).toList();
         allPlaylists.addAll(decorated);
