@@ -122,7 +122,7 @@ void main() {
           ),
           SmartPlaylistGroupDef(id: 'other', displayName: 'Other'),
         ],
-        customSort: CompositeSmartPlaylistSort([
+        customSort: SmartPlaylistSortSpec([
           SmartPlaylistSortRule(
             field: SmartPlaylistSortField.playlistNumber,
             order: SortOrder.descending,
@@ -221,17 +221,9 @@ void main() {
     });
 
     test('sortFields match schema oneOf', () {
-      final sortSpec = defs['SmartPlaylistSortSpec'] as Map<String, dynamic>;
-      final simpleVariant =
-          (sortSpec['oneOf'] as List<dynamic>).firstWhere((v) {
-                final m = v as Map<String, dynamic>;
-                return m['properties'] != null &&
-                    (m['properties'] as Map<String, dynamic>)['field'] != null;
-              })
-              as Map<String, dynamic>;
-      final field =
-          (simpleVariant['properties'] as Map<String, dynamic>)['field']
-              as Map<String, dynamic>;
+      final sortRule = defs['SmartPlaylistSortRule'] as Map<String, dynamic>;
+      final props = sortRule['properties'] as Map<String, dynamic>;
+      final field = props['field'] as Map<String, dynamic>;
       final schemaValues = _extractEnum(field);
 
       // Verify SmartPlaylistSortField enum names match schema values
@@ -242,17 +234,9 @@ void main() {
     });
 
     test('sortOrders match schema enum', () {
-      final sortSpec = defs['SmartPlaylistSortSpec'] as Map<String, dynamic>;
-      final simpleVariant =
-          (sortSpec['oneOf'] as List<dynamic>).firstWhere((v) {
-                final m = v as Map<String, dynamic>;
-                return m['properties'] != null &&
-                    (m['properties'] as Map<String, dynamic>)['order'] != null;
-              })
-              as Map<String, dynamic>;
-      final order =
-          (simpleVariant['properties'] as Map<String, dynamic>)['order']
-              as Map<String, dynamic>;
+      final sortRule = defs['SmartPlaylistSortRule'] as Map<String, dynamic>;
+      final props = sortRule['properties'] as Map<String, dynamic>;
+      final order = props['order'] as Map<String, dynamic>;
       final schemaValues = _extractEnum(order);
 
       final dartEnumValues = SortOrder.values.map((e) => e.name).toList();

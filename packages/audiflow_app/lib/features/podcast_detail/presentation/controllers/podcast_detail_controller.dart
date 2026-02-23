@@ -390,7 +390,7 @@ Future<SmartPlaylistGrouping?> sortedPodcastSmartPlaylists(
       : null;
   if (hasParentPlaylists) {
     // Preserve config order as-is.
-  } else if (customSort is CompositeSmartPlaylistSort) {
+  } else if (customSort != null) {
     // Apply composite sorting rules
     // Pre-fetch dates for all playlists that might need them
     for (final playlist in sortedPlaylists) {
