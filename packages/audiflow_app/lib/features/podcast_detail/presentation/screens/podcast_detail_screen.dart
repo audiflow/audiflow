@@ -405,6 +405,16 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
             : displayEpisodes;
 
         return [
+          if (playlist.showSortOrderToggle)
+            SliverToBoxAdapter(
+              child: _buildSortHeader(
+                theme,
+                AppLocalizations.of(
+                  context,
+                ).podcastDetailEpisodeCount(sorted.length),
+                sortOrder,
+              ),
+            ),
           SliverList.builder(
             itemCount: sorted.length,
             itemBuilder: (context, index) {
@@ -583,11 +593,25 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
     }
 
     if (playlist.yearHeaderMode == YearHeaderMode.none) {
+      final sorted = sortOrder == SortOrder.ascending
+          ? displayGroups.reversed.toList()
+          : displayGroups;
+
       return [
+        if (playlist.showSortOrderToggle)
+          SliverToBoxAdapter(
+            child: _buildSortHeader(
+              theme,
+              AppLocalizations.of(
+                context,
+              ).podcastDetailGroupCount(sorted.length),
+              sortOrder,
+            ),
+          ),
         SliverList.builder(
-          itemCount: displayGroups.length,
+          itemCount: sorted.length,
           itemBuilder: (context, index) {
-            final group = displayGroups[index];
+            final group = sorted[index];
             return _InlineGroupCard(
               group: group,
               podcastArtworkUrl: podcast.artworkUrl,
