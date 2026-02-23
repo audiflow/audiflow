@@ -46,7 +46,7 @@ Kiro-style Spec Driven Development implementation on AI-DLC (AI Development Life
 
 ## Smart Playlist Schema Conformance
 
-`audiflow_domain` has hand-written smart playlist models (`fromJson()`/`toJson()`) that must stay aligned with the JSON Schema defined in the `audiflow-smartplaylist-web` repo (`sp_shared/assets/schema.json`).
+`audiflow_domain` has hand-written smart playlist models (`fromJson()`/`toJson()`) that must stay aligned with the JSON Schema defined in the `audiflow-smartplaylist-editor` repo (`sp_shared/assets/schema.json`).
 
 ### Vendored schema
 

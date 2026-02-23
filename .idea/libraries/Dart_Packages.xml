@@ -429,13 +429,6 @@
             </list>
           </value>
         </entry>
-        <entry key="flutter_dotenv">
-          <value>
-            <list>
-              <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/flutter_dotenv-6.0.0/lib" />
-            </list>
-          </value>
-        </entry>
         <entry key="flutter_flavorizr">
           <value>
             <list>
@@ -1570,7 +1563,6 @@
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/file_picker-10.3.10/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/fixnum-1.1.1/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/flutter_cache_manager-3.4.1/lib" />
-      <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/flutter_dotenv-6.0.0/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/flutter_flavorizr-2.4.1/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/flutter_html-3.0.0/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/flutter_launcher_icons-0.14.4/lib" />
