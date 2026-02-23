@@ -1,3 +1,4 @@
+import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -6,6 +7,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart' as intl;
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:sentry_dio/sentry_dio.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app/app_lifecycle_observer.dart';
@@ -15,11 +18,34 @@ import 'features/settings/presentation/widgets/opml_file_receiver.dart';
 import 'l10n/app_localizations.dart';
 import 'routing/app_router.dart';
 
-Future<void> main({
+Future<void> appMain({
+  required Flavor flavor,
   String smartPlaylistConfigBaseUrl =
       'https://storage.googleapis.com/audiflow-dev-config',
 }) async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  final flavorConfig = switch (flavor) {
+    Flavor.dev => FlavorConfig.dev,
+    Flavor.stg => FlavorConfig.stg,
+    Flavor.prod => FlavorConfig.prod,
+  };
+  FlavorConfig.initialize(flavorConfig);
+
+  const sentryDsn = String.fromEnvironment('SENTRY_DSN');
+
+  if (flavorConfig.enableCrashReporting && sentryDsn.isNotEmpty) {
+    await SentryFlutter.init((options) {
+      options.dsn = sentryDsn;
+      options.environment = flavor.name;
+      options.tracesSampleRate = 0;
+    }, appRunner: () => _startApp(smartPlaylistConfigBaseUrl));
+  } else {
+    await _startApp(smartPlaylistConfigBaseUrl);
+  }
+}
+
+Future<void> _startApp(String smartPlaylistConfigBaseUrl) async {
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
@@ -32,6 +58,11 @@ Future<void> main({
       receiveTimeout: const Duration(minutes: 5),
     ),
   );
+
+  if (FlavorConfig.current.enableHttpTracing) {
+    dio.addSentry();
+  }
+
   final cacheDir = await getApplicationCacheDirectory();
   final prefs = await SharedPreferences.getInstance();
   final packageInfo = await PackageInfo.fromPlatform();
