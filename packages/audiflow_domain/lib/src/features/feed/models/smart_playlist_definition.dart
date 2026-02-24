@@ -37,9 +37,9 @@ final class SmartPlaylistDefinition {
       episodeYearHeaders: (json['episodeYearHeaders'] as bool?) ?? false,
       showDateRange: (json['showDateRange'] as bool?) ?? false,
       showSortOrderToggle: (json['showSortOrderToggle'] as bool?) ?? false,
-      titleFilter: json['titleFilter'] as String?,
-      excludeFilter: json['excludeFilter'] as String?,
-      requireFilter: json['requireFilter'] as String?,
+      titleFilter: _nonEmpty(json['titleFilter'] as String?),
+      excludeFilter: _nonEmpty(json['excludeFilter'] as String?),
+      requireFilter: _nonEmpty(json['requireFilter'] as String?),
       nullSeasonGroupKey: json['nullSeasonGroupKey'] as int?,
       groups: (json['groups'] as List<dynamic>?)
           ?.map(
@@ -116,6 +116,10 @@ final class SmartPlaylistDefinition {
 
   /// Configuration for extracting both season and episode numbers.
   final SmartPlaylistEpisodeExtractor? smartPlaylistEpisodeExtractor;
+
+  /// Returns null for null or empty strings.
+  static String? _nonEmpty(String? value) =>
+      (value == null || value.isEmpty) ? null : value;
 
   /// Converts to JSON representation.
   Map<String, dynamic> toJson() {

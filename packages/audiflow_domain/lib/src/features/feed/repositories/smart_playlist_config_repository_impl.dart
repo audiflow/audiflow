@@ -32,7 +32,7 @@ class SmartPlaylistConfigRepositoryImpl
     } on Object {
       final cached = await _cache.readRootMeta();
       if (cached != null) return cached;
-      return const RootMeta(version: 1, patterns: []);
+      return const RootMeta(version: 2, patterns: []);
     }
   }
 

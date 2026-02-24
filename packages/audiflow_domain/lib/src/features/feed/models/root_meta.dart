@@ -8,7 +8,7 @@ import 'pattern_summary.dart';
 final class RootMeta {
   const RootMeta({required this.version, required this.patterns});
 
-  static const _supportedVersion = 1;
+  static const _supportedVersion = 2;
 
   factory RootMeta.fromJson(Map<String, dynamic> json) {
     return RootMeta(

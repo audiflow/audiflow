@@ -26,7 +26,7 @@ void main() {
 
     test('fetchRootMeta returns parsed root meta', () async {
       fakeResponses['$baseUrl/meta.json'] = jsonEncode({
-        'version': 1,
+        'version': 2,
         'patterns': [
           {
             'id': 'test',

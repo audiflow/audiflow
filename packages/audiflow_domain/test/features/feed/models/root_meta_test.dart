@@ -44,7 +44,7 @@ void main() {
 
     test('parses from JSON string', () {
       final jsonString = jsonEncode({
-        'version': 1,
+        'version': 2,
         'patterns': [
           {
             'id': 'p1',

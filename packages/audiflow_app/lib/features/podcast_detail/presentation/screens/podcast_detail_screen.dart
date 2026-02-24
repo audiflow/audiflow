@@ -7,6 +7,10 @@ import 'package:audiflow_domain/audiflow_domain.dart'
         SmartPlaylistContentType,
         SmartPlaylistEpisodeData,
         SmartPlaylistGroup,
+        SmartPlaylistSortCondition,
+        SmartPlaylistSortField,
+        SmartPlaylistSortSpec,
+        SortKeyGreaterThan,
         SortOrder,
         YearHeaderMode,
         podcastViewPreferenceControllerProvider,
@@ -593,9 +597,11 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
     }
 
     if (playlist.yearHeaderMode == YearHeaderMode.none) {
-      final sorted = sortOrder == SortOrder.ascending
-          ? displayGroups.reversed.toList()
-          : displayGroups;
+      final sorted = _sortGroupsByCustomSort(
+        displayGroups,
+        playlist.customSort,
+        sortOrder,
+      );
 
       return [
         if (playlist.showSortOrderToggle)
@@ -1100,6 +1106,81 @@ String? _formatDuration(int? totalMs, AppLocalizations l10n) {
     return l10n.groupDurationHoursMinutes(hours, remainingMinutes);
   }
   return l10n.groupDurationMinutes(minutes);
+}
+
+/// Sorts groups using the playlist's [customSort] rules and
+/// the user's [sortOrder] toggle.
+List<SmartPlaylistGroup> _sortGroupsByCustomSort(
+  List<SmartPlaylistGroup> groups,
+  SmartPlaylistSortSpec? customSort,
+  SortOrder sortOrder,
+) {
+  final sorted = List<SmartPlaylistGroup>.from(groups);
+
+  if (customSort == null || customSort.rules.isEmpty) {
+    sorted.sort((a, b) {
+      final cmp = a.sortKey.compareTo(b.sortKey);
+      return sortOrder == SortOrder.ascending ? cmp : -cmp;
+    });
+    return sorted;
+  }
+
+  // When sortOrder matches the first rule's order, use rules as written.
+  // Otherwise invert.
+  final invert = sortOrder != customSort.rules.first.order;
+
+  sorted.sort((a, b) {
+    for (final rule in customSort.rules) {
+      if (rule.condition != null) {
+        final bothMatch =
+            _matchesGroupCondition(a, rule.condition!) &&
+            _matchesGroupCondition(b, rule.condition!);
+        if (!bothMatch) continue;
+      }
+
+      final cmp = _compareGroupsByField(a, b, rule.field);
+      if (cmp != 0) {
+        final directed = rule.order == SortOrder.ascending ? cmp : -cmp;
+        return invert ? -directed : directed;
+      }
+    }
+    return 0;
+  });
+  return sorted;
+}
+
+int _compareGroupsByField(
+  SmartPlaylistGroup a,
+  SmartPlaylistGroup b,
+  SmartPlaylistSortField field,
+) {
+  return switch (field) {
+    SmartPlaylistSortField.playlistNumber => a.sortKey.compareTo(b.sortKey),
+    SmartPlaylistSortField.newestEpisodeDate => _compareNullableDates(
+      a.latestDate,
+      b.latestDate,
+    ),
+    SmartPlaylistSortField.alphabetical => a.displayName.compareTo(
+      b.displayName,
+    ),
+    SmartPlaylistSortField.progress => a.sortKey.compareTo(b.sortKey),
+  };
+}
+
+int _compareNullableDates(DateTime? a, DateTime? b) {
+  if (a == null && b == null) return 0;
+  if (a == null) return 1;
+  if (b == null) return -1;
+  return a.compareTo(b);
+}
+
+bool _matchesGroupCondition(
+  SmartPlaylistGroup group,
+  SmartPlaylistSortCondition condition,
+) {
+  return switch (condition) {
+    SortKeyGreaterThan(:final value) => value < group.sortKey,
+  };
 }
 
 /// Card widget for displaying a smart playlist group inline.
