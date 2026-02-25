@@ -16,6 +16,7 @@ sealed class NowPlayingInfo with _$NowPlayingInfo {
     required String podcastTitle,
     String? artworkUrl,
     Duration? totalDuration,
+    Duration? savedPosition,
     Episode? episode,
   }) = _NowPlayingInfo;
 }

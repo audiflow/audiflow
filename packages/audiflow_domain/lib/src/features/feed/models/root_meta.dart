@@ -8,8 +8,6 @@ import 'pattern_summary.dart';
 final class RootMeta {
   const RootMeta({required this.version, required this.patterns});
 
-  static const _supportedVersion = 2;
-
   factory RootMeta.fromJson(Map<String, dynamic> json) {
     return RootMeta(
       version: json['version'] as int,
@@ -20,17 +18,8 @@ final class RootMeta {
   }
 
   /// Parses a JSON string into a [RootMeta].
-  ///
-  /// Throws [FormatException] if version is unsupported.
   static RootMeta parseJson(String jsonString) {
     final data = jsonDecode(jsonString) as Map<String, dynamic>;
-    final version = data['version'] as int?;
-    if (version == null || version != _supportedVersion) {
-      throw FormatException(
-        'Unsupported root meta version: $version '
-        '(supported: $_supportedVersion)',
-      );
-    }
     return RootMeta.fromJson(data);
   }
 

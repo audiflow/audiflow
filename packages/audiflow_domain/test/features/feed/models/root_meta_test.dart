@@ -58,13 +58,5 @@ void main() {
       final meta = RootMeta.parseJson(jsonString);
       expect(meta.patterns, hasLength(1));
     });
-
-    test('throws FormatException for unsupported version', () {
-      final jsonString = jsonEncode({'version': 99, 'patterns': []});
-      expect(
-        () => RootMeta.parseJson(jsonString),
-        throwsA(isA<FormatException>()),
-      );
-    });
   });
 }

@@ -19,6 +19,14 @@ class MiniPlayer extends ConsumerWidget {
 
   static const double height = 64.0;
 
+  /// Computes progress from saved position when live progress is unavailable.
+  static double _savedProgress(NowPlayingInfo info) {
+    final saved = info.savedPosition;
+    final total = info.totalDuration;
+    if (saved == null || total == null || total == Duration.zero) return 0.0;
+    return saved.inMilliseconds / total.inMilliseconds;
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
@@ -52,7 +60,7 @@ class MiniPlayer extends ConsumerWidget {
             child: Column(
               children: [
                 MiniPlayerProgressBar(
-                  progress: progress?.progress ?? 0.0,
+                  progress: progress?.progress ?? _savedProgress(nowPlaying),
                   bufferedProgress: progress?.bufferedProgress ?? 0.0,
                 ),
                 Expanded(
@@ -173,7 +181,8 @@ class _MiniPlayerPlayPauseButton extends ConsumerWidget {
           if (isPlaying) {
             controller.pause();
           } else {
-            controller.resume();
+            final nowPlaying = ref.read(nowPlayingControllerProvider);
+            controller.togglePlayPause(nowPlaying?.episodeUrl);
           }
         },
       ),

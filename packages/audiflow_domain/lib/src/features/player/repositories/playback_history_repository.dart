@@ -42,6 +42,11 @@ abstract class PlaybackHistoryRepository {
   /// Returns null if no playback history exists or duration is unknown.
   Future<double?> getProgressPercent(int episodeId);
 
+  /// Returns the most recently played incomplete episode, or null.
+  ///
+  /// Used to restore the mini player on app restart.
+  Future<PlaybackHistory?> getLastPlayed();
+
   /// Watches episodes that are in progress (for "Continue Listening").
   ///
   /// Returns episodes that have been started but not completed,

@@ -83,6 +83,9 @@ Future<void> _startApp(String smartPlaylistConfigBaseUrl) async {
   // Initialize audio service for platform media controls
   await container.read(audioHandlerProvider.future);
 
+  // Restore last played episode for mini player
+  await _restoreLastPlayed(container);
+
   // Fetch smart playlist pattern summaries from remote
   final spLogger = container.read(namedLoggerProvider('SmartPlaylist'));
   spLogger.d(
@@ -107,6 +110,44 @@ Future<void> _startApp(String smartPlaylistConfigBaseUrl) async {
       child: const AppLifecycleObserver(child: MyApp()),
     ),
   );
+}
+
+/// Restores the last played episode into [NowPlayingController].
+///
+/// Queries [PlaybackHistoryRepository] for the most recent incomplete episode
+/// and populates the mini player metadata so it appears on app launch.
+Future<void> _restoreLastPlayed(ProviderContainer container) async {
+  try {
+    final historyRepo = container.read(playbackHistoryRepositoryProvider);
+    final lastPlayed = await historyRepo.getLastPlayed();
+    if (lastPlayed == null) return;
+
+    final episodeRepo = container.read(episodeRepositoryProvider);
+    final episode = await episodeRepo.getById(lastPlayed.episodeId);
+    if (episode == null) return;
+
+    final subscriptionRepo = container.read(subscriptionRepositoryProvider);
+    final subscription = await subscriptionRepo.getById(episode.podcastId);
+
+    container
+        .read(nowPlayingControllerProvider.notifier)
+        .setNowPlaying(
+          NowPlayingInfo(
+            episodeUrl: episode.audioUrl,
+            episodeTitle: episode.title,
+            podcastTitle: subscription?.title ?? '',
+            artworkUrl: episode.imageUrl,
+            totalDuration: episode.durationMs != null
+                ? Duration(milliseconds: episode.durationMs!)
+                : lastPlayed.durationMs != null
+                ? Duration(milliseconds: lastPlayed.durationMs!)
+                : null,
+            savedPosition: Duration(milliseconds: lastPlayed.positionMs),
+          ),
+        );
+  } catch (_) {
+    // Non-critical: silently ignore restore failures
+  }
 }
 
 /// Root application widget.
