@@ -4,6 +4,9 @@ import 'package:just_audio/just_audio.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:rxdart/rxdart.dart';
 
+import 'package:logger/logger.dart';
+
+import '../../../common/providers/logger_provider.dart';
 import '../../download/services/download_service.dart';
 import '../../feed/repositories/episode_repository_impl.dart';
 import '../../queue/services/queue_service.dart';
@@ -85,6 +88,7 @@ PlaybackProgress? playbackProgress(Ref ref) {
 @Riverpod(keepAlive: true)
 class AudioPlayerController extends _$AudioPlayerController {
   late final AudioPlayer _player;
+  late final Logger _log;
   StreamSubscription<PlayerState>? _stateSubscription;
   String? _currentUrl;
   int? _currentEpisodeId;
@@ -92,6 +96,7 @@ class AudioPlayerController extends _$AudioPlayerController {
   @override
   PlaybackState build() {
     _player = ref.watch(audioPlayerProvider);
+    _log = ref.watch(namedLoggerProvider('AudioPlayer'));
     _listenToPlayerState();
     _listenToProgress();
     ref.onDispose(_cleanup);
@@ -117,29 +122,40 @@ class AudioPlayerController extends _$AudioPlayerController {
         final processingState = playerState.processingState;
         final playing = playerState.playing;
 
+        _log.d(
+          '[StateStream] processing=$processingState, playing=$playing, '
+          'currentUrl=${_currentUrl != null ? "set" : "null"}, '
+          'episodeId=$_currentEpisodeId',
+        );
+
         if (_currentUrl == null) {
+          _log.d('[StateStream] currentUrl is null -> idle');
           state = const PlaybackState.idle();
           return;
         }
 
         final url = _currentUrl!;
 
-        if (processingState == ProcessingState.loading ||
-            processingState == ProcessingState.buffering) {
-          state = PlaybackState.loading(episodeUrl: url);
-        } else if (playing) {
-          state = PlaybackState.playing(episodeUrl: url);
-        } else if (processingState == ProcessingState.completed) {
+        if (processingState == ProcessingState.completed) {
+          _log.i('[StateStream] COMPLETED detected, advancing queue...');
           // Save final progress before clearing
           await _saveProgressOnStop();
 
           // Try to auto-play next from queue
           await _handlePlaybackComplete();
+          _log.i('[StateStream] _handlePlaybackComplete finished');
+        } else if (processingState == ProcessingState.loading ||
+            processingState == ProcessingState.buffering) {
+          state = PlaybackState.loading(episodeUrl: url);
+        } else if (playing) {
+          state = PlaybackState.playing(episodeUrl: url);
         } else {
+          _log.d('[StateStream] paused (processing=$processingState)');
           state = PlaybackState.paused(episodeUrl: url);
         }
       },
-      onError: (error) {
+      onError: (error, stack) {
+        _log.e('[StateStream] stream error', error: error, stackTrace: stack);
         state = PlaybackState.error(message: error.toString());
       },
     );
@@ -160,36 +176,55 @@ class AudioPlayerController extends _$AudioPlayerController {
   /// If there's a next episode in the queue, starts playing it automatically.
   /// Otherwise, clears the playback state.
   Future<void> _handlePlaybackComplete() async {
-    final queueService = ref.read(queueServiceProvider);
-    final nextEpisode = await queueService.getNextAndRemoveCurrent();
+    try {
+      _log.i('[Complete] Getting next episode from queue...');
+      final queueService = ref.read(queueServiceProvider);
+      final nextEpisode = await queueService.getNextAndRemoveCurrent();
 
-    if (nextEpisode != null) {
-      // Fetch podcast title for the next episode
-      final subscriptionRepo = ref.read(subscriptionRepositoryProvider);
-      final subscription = await subscriptionRepo.getById(
-        nextEpisode.podcastId,
-      );
-      final podcastTitle = subscription?.title ?? '';
+      if (nextEpisode != null) {
+        _log.i(
+          '[Complete] Next episode found: '
+          'id=${nextEpisode.id}, title="${nextEpisode.title}", '
+          'audioUrl=${nextEpisode.audioUrl}',
+        );
 
-      // Auto-play next episode
-      await play(
-        nextEpisode.audioUrl,
-        metadata: NowPlayingInfo(
-          episodeUrl: nextEpisode.audioUrl,
-          episodeTitle: nextEpisode.title,
-          podcastTitle: podcastTitle,
-          artworkUrl: nextEpisode.imageUrl,
-          totalDuration: nextEpisode.durationMs != null
-              ? Duration(milliseconds: nextEpisode.durationMs!)
-              : null,
-        ),
+        // Fetch podcast title for the next episode
+        final subscriptionRepo = ref.read(subscriptionRepositoryProvider);
+        final subscription = await subscriptionRepo.getById(
+          nextEpisode.podcastId,
+        );
+        final podcastTitle = subscription?.title ?? '';
+        _log.d('[Complete] Podcast title: "$podcastTitle"');
+
+        // Auto-play next episode
+        _log.i('[Complete] Calling play() for next episode...');
+        await play(
+          nextEpisode.audioUrl,
+          metadata: NowPlayingInfo(
+            episodeUrl: nextEpisode.audioUrl,
+            episodeTitle: nextEpisode.title,
+            podcastTitle: podcastTitle,
+            artworkUrl: nextEpisode.imageUrl,
+            totalDuration: nextEpisode.durationMs != null
+                ? Duration(milliseconds: nextEpisode.durationMs!)
+                : null,
+          ),
+        );
+        _log.i('[Complete] play() returned successfully');
+      } else {
+        _log.i('[Complete] No next episode, going idle');
+        // No more episodes in queue, go idle
+        state = const PlaybackState.idle();
+        _currentUrl = null;
+        _currentEpisodeId = null;
+        ref.read(nowPlayingControllerProvider.notifier).clear();
+      }
+    } catch (e, stack) {
+      _log.e(
+        '[Complete] ERROR in _handlePlaybackComplete',
+        error: e,
+        stackTrace: stack,
       );
-    } else {
-      // No more episodes in queue, go idle
-      state = const PlaybackState.idle();
-      _currentUrl = null;
-      _currentEpisodeId = null;
-      ref.read(nowPlayingControllerProvider.notifier).clear();
     }
   }
 
@@ -211,14 +246,18 @@ class AudioPlayerController extends _$AudioPlayerController {
   /// Integrates with [PlaybackHistoryService] to track playback progress.
   Future<void> play(String url, {NowPlayingInfo? metadata}) async {
     try {
+      _log.i('[Play] Starting: url=$url');
+
       // Save progress of previous episode before switching
       if (_currentEpisodeId != null && _currentUrl != url) {
+        _log.d('[Play] Saving progress of previous episode $_currentEpisodeId');
         await _saveProgressOnStop();
       }
 
       // Look up episode ID from URL
       final episodeRepo = ref.read(episodeRepositoryProvider);
       final episode = await episodeRepo.getByAudioUrl(url);
+      _log.d('[Play] Episode lookup: ${episode?.id ?? "not found"}');
 
       _currentUrl = url;
       _currentEpisodeId = episode?.id;
@@ -236,9 +275,11 @@ class AudioPlayerController extends _$AudioPlayerController {
         final localPath = await downloadService.getLocalPath(episode.id);
         if (localPath != null) {
           playUrl = 'file://$localPath';
+          _log.d('[Play] Using local file: $playUrl');
         }
       }
 
+      _log.d('[Play] Calling setUrl...');
       await _player.setUrl(playUrl);
 
       // Apply persisted playback speed
@@ -255,8 +296,11 @@ class AudioPlayerController extends _$AudioPlayerController {
         );
       }
 
+      _log.d('[Play] Calling _player.play()...');
       await _player.play();
-    } catch (e) {
+      _log.i('[Play] _player.play() returned');
+    } catch (e, stack) {
+      _log.e('[Play] ERROR', error: e, stackTrace: stack);
       state = PlaybackState.error(message: 'Failed to play audio: $e');
     }
   }
