@@ -1,4 +1,5 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -49,17 +50,6 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
     final displayIsLoading = _isSeeking ? false : isLoading;
 
     return Scaffold(
-      appBar: AppBar(
-        leading: Semantics(
-          button: true,
-          label: l10n.playerCloseLabel,
-          child: IconButton(
-            icon: const Icon(Symbols.keyboard_arrow_down),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
-        ),
-        title: Text(l10n.playerNowPlaying),
-      ),
       body: nowPlaying == null
           ? Center(child: Text(l10n.playerNoAudio))
           : SafeArea(
@@ -67,6 +57,11 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Column(
                   children: [
+                    const _DragHandle(),
+                    _SheetHeader(
+                      title: l10n.playerNowPlaying,
+                      closeLabel: l10n.playerCloseLabel,
+                    ),
                     Expanded(
                       child: Center(
                         child: _PlayerArtwork(
@@ -117,6 +112,65 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
     _beginSeek(wasPlaying);
     await skipAction();
     await _endSeek();
+  }
+}
+
+class _DragHandle extends StatelessWidget {
+  const _DragHandle();
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 8, bottom: 4),
+      child: Center(
+        child: Container(
+          width: 36,
+          height: 5,
+          decoration: BoxDecoration(
+            color: colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+            borderRadius: BorderRadius.circular(2.5),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SheetHeader extends StatelessWidget {
+  const _SheetHeader({required this.title, required this.closeLabel});
+
+  final String title;
+  final String closeLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        children: [
+          const SizedBox(width: 48),
+          Expanded(
+            child: Text(
+              title,
+              style: theme.textTheme.titleSmall,
+              textAlign: TextAlign.center,
+            ),
+          ),
+          Semantics(
+            button: true,
+            label: closeLabel,
+            child: IconButton(
+              icon: const Icon(Symbols.keyboard_arrow_down),
+              onPressed: () => CupertinoSheetRoute.popSheet(context),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

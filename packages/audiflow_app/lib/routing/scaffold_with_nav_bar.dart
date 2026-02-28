@@ -1,4 +1,5 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -31,9 +32,10 @@ class ScaffoldWithNavBar extends ConsumerWidget {
   }
 
   void _onMiniPlayerTap(BuildContext context) {
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute<void>(builder: (context) => const PlayerScreen()));
+    showCupertinoSheet<void>(
+      context: context,
+      builder: (context) => const PlayerScreen(),
+    );
   }
 
   @override
