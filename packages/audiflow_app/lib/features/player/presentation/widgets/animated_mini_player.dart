@@ -51,18 +51,9 @@ class _AnimatedMiniPlayerState extends ConsumerState<AnimatedMiniPlayer>
 
   @override
   Widget build(BuildContext context) {
-    // Watch playback state to determine visibility
-    final playbackState = ref.watch(audioPlayerControllerProvider);
     final nowPlaying = ref.watch(nowPlayingControllerProvider);
 
-    final shouldShow =
-        nowPlaying != null &&
-        playbackState.maybeWhen(
-          playing: (_) => true,
-          paused: (_) => true,
-          loading: (_) => true,
-          orElse: () => false,
-        );
+    final shouldShow = nowPlaying != null;
 
     // Animate based on playback state
     if (shouldShow) {

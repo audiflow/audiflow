@@ -15,6 +15,7 @@ import '../../subscription/repositories/subscription_repository_impl.dart';
 import '../models/now_playing_info.dart';
 import '../models/playback_progress.dart';
 import '../models/playback_state.dart';
+import '../repositories/playback_history_repository_impl.dart';
 import 'now_playing_controller.dart';
 import 'playback_history_service.dart';
 
@@ -281,6 +282,16 @@ class AudioPlayerController extends _$AudioPlayerController {
 
       _log.d('[Play] Calling setUrl...');
       await _player.setUrl(playUrl);
+
+      // Seek to saved position if resuming a previously played episode
+      if (_currentEpisodeId != null) {
+        final historyRepo = ref.read(playbackHistoryRepositoryProvider);
+        final history = await historyRepo.getByEpisodeId(_currentEpisodeId!);
+        if (history != null && 0 < history.positionMs) {
+          _log.d('[Play] Seeking to saved position: ${history.positionMs}ms');
+          await _player.seek(Duration(milliseconds: history.positionMs));
+        }
+      }
 
       // Apply persisted playback speed
       final settingsRepo = ref.read(appSettingsRepositoryProvider);

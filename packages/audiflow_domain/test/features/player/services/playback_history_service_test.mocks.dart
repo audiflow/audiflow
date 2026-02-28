@@ -103,6 +103,14 @@ class MockPlaybackHistoryRepository extends _i1.Mock
           as _i3.Future<double?>);
 
   @override
+  _i3.Future<_i4.PlaybackHistory?> getLastPlayed() =>
+      (super.noSuchMethod(
+            Invocation.method(#getLastPlayed, []),
+            returnValue: _i3.Future<_i4.PlaybackHistory?>.value(),
+          )
+          as _i3.Future<_i4.PlaybackHistory?>);
+
+  @override
   _i3.Stream<List<_i4.PlaybackHistory>> watchInProgress({int? limit = 10}) =>
       (super.noSuchMethod(
             Invocation.method(#watchInProgress, [], {#limit: limit}),

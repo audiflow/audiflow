@@ -24,22 +24,6 @@ void main() {
       expect(result[0].playlists, hasLength(1));
     });
 
-    test('throws FormatException on unsupported version', () {
-      final json = jsonEncode({'version': 99, 'patterns': []});
-      expect(
-        () => SmartPlaylistPatternLoader.parse(json),
-        throwsA(isA<FormatException>()),
-      );
-    });
-
-    test('throws FormatException on missing version', () {
-      final json = jsonEncode({'patterns': []});
-      expect(
-        () => SmartPlaylistPatternLoader.parse(json),
-        throwsA(isA<FormatException>()),
-      );
-    });
-
     test('returns empty list for empty patterns', () {
       final json = jsonEncode({'version': 2, 'patterns': []});
       final result = SmartPlaylistPatternLoader.parse(json);

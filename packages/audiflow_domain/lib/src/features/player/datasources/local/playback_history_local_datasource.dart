@@ -103,6 +103,12 @@ class PlaybackHistoryLocalDatasource {
     }
   }
 
+  /// Returns the most recently played incomplete episode, or null.
+  Future<PlaybackHistory?> getLastPlayed() async {
+    final results = await getInProgress(limit: 1);
+    return results.isEmpty ? null : results.first;
+  }
+
   /// Returns episodes that are in progress (started but not completed).
   ///
   /// Ordered by lastPlayedAt descending, limited to [limit] items.
