@@ -367,6 +367,11 @@ class StreamingXmlParser {
     if (element.name.qualified == 'content:encoded') {
       itemData['contentEncoded'] = elementData;
     }
+
+    // Handle podcast:transcript
+    if (element.name.qualified == 'podcast:transcript') {
+      _addTranscriptToItemData(element, itemData);
+    }
   }
 
   /// Handle iTunes namespace elements for items
@@ -625,6 +630,11 @@ class StreamingXmlParser {
     if (element.name.qualified == 'content:encoded') {
       _state.currentItemData['contentEncoded'] = elementData;
     }
+
+    // Handle podcast:transcript
+    if (element.name.qualified == 'podcast:transcript') {
+      _addTranscriptToItemData(element, _state.currentItemData);
+    }
   }
 
   /// Handle iTunes item element completion
@@ -828,6 +838,29 @@ class StreamingXmlParser {
       list.add(value);
     }
     map[key] = list;
+  }
+
+  /// Extract transcript attributes and add to itemData['transcripts'] list.
+  ///
+  /// Skips elements missing required `url` or `type` attributes.
+  void _addTranscriptToItemData(
+    XmlElement element,
+    Map<String, dynamic> itemData,
+  ) {
+    final url = element.getAttribute('url');
+    final type = element.getAttribute('type');
+    if (url == null || type == null) return;
+
+    final transcripts =
+        itemData['transcripts'] as List<Map<String, dynamic>>? ??
+        <Map<String, dynamic>>[];
+    transcripts.add({
+      'url': url,
+      'type': type,
+      'language': element.getAttribute('language'),
+      'rel': element.getAttribute('rel'),
+    });
+    itemData['transcripts'] = transcripts;
   }
 
   /// Dispose resources

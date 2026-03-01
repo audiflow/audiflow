@@ -54,6 +54,19 @@ class PodcastItem extends PodcastEntity {
     // Extract categories
     final categories = data['categories'] as List<String>? ?? <String>[];
 
+    // Extract transcripts
+    final transcriptMaps = data['transcripts'] as List<Map<String, dynamic>>?;
+    final transcripts = transcriptMaps
+        ?.map(
+          (tr) => PodcastTranscript(
+            url: tr['url'] as String,
+            type: tr['type'] as String,
+            language: tr['language'] as String?,
+            rel: tr['rel'] as String?,
+          ),
+        )
+        .toList();
+
     return PodcastItem.fromData(
       parsedAt: DateTime.now(),
       sourceUrl: sourceUrl ?? '',
@@ -79,6 +92,7 @@ class PodcastItem extends PodcastEntity {
       source: data['source'] as String?,
       isPermaLink: data['isPermaLink'] as bool?,
       contentEncoded: data['contentEncoded'] as String?,
+      transcripts: transcripts,
     );
   }
 
