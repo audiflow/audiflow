@@ -674,7 +674,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
         ),
         scrollController: _scrollController,
         yearGroupingEnabled: true,
-        itemExtent: 84,
+        itemExtent: 88,
       ),
     ];
   }
