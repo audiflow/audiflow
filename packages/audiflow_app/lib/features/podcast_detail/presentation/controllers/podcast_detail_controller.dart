@@ -94,19 +94,6 @@ Future<ParsedFeed> podcastDetail(Ref ref, String feedUrl) async {
     if (subscription != null) {
       final episodeRepo = ref.read(episodeRepositoryProvider);
 
-      final txCount = result.episodes.where((e) => e.hasTranscripts).length;
-      logger.i(
-        '[DIAG] podcastDetail: '
-        'episodes=${result.episodes.length}, '
-        'withTranscripts=$txCount',
-      );
-      for (final ep in result.episodes.where((e) => e.hasTranscripts)) {
-        logger.i(
-          '[DIAG]   "${ep.title}" → '
-          '${ep.transcripts?.map((t) => t.type).toList()}',
-        );
-      }
-
       // Look up smart playlist pattern for this feed
       final pattern = await ref.read(
         smartPlaylistPatternByFeedUrlProvider(feedUrl).future,
