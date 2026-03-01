@@ -372,6 +372,13 @@ class StreamingXmlParser {
     if (element.name.qualified == 'podcast:transcript') {
       _addTranscriptToItemData(element, itemData);
     }
+
+    // Handle psc:chapters (Podlove Simple Chapters)
+    if (element.localName == 'chapters' &&
+        (element.namespaceUri == 'http://podlove.org/simple-chapters' ||
+            element.name.qualified.startsWith('psc:'))) {
+      _extractPscChapters(element, itemData);
+    }
   }
 
   /// Handle iTunes namespace elements for items
@@ -635,6 +642,13 @@ class StreamingXmlParser {
     if (element.name.qualified == 'podcast:transcript') {
       _addTranscriptToItemData(element, _state.currentItemData);
     }
+
+    // Handle psc:chapters (Podlove Simple Chapters)
+    if (element.localName == 'chapters' &&
+        (element.namespaceUri == 'http://podlove.org/simple-chapters' ||
+            element.name.qualified.startsWith('psc:'))) {
+      _extractPscChapters(element, _state.currentItemData);
+    }
   }
 
   /// Handle iTunes item element completion
@@ -861,6 +875,73 @@ class StreamingXmlParser {
       'rel': element.getAttribute('rel'),
     });
     itemData['transcripts'] = transcripts;
+  }
+
+  /// Extract Podlove Simple Chapters from a `<psc:chapters>` element.
+  ///
+  /// Iterates child `<psc:chapter>` elements, extracts attributes,
+  /// and stores valid chapters in `itemData['chapters']`.
+  /// Skips chapters missing required `start` or `title` attributes.
+  void _extractPscChapters(
+    XmlElement element,
+    Map<String, dynamic> itemData,
+  ) {
+    final chapters =
+        itemData['chapters'] as List<Map<String, dynamic>>? ??
+        <Map<String, dynamic>>[];
+
+    for (final child in element.children) {
+      if (child is! XmlElement) continue;
+      if (child.localName != 'chapter') continue;
+
+      final start = child.getAttribute('start');
+      final title = child.getAttribute('title');
+      if (start == null || title == null) continue;
+
+      final startTime = _parseChapterTimestamp(start);
+      if (startTime == null) continue;
+
+      chapters.add({
+        'title': title,
+        'startTime': startTime,
+        'url': child.getAttribute('href'),
+        'imageUrl': child.getAttribute('image'),
+      });
+    }
+
+    if (chapters.isNotEmpty) {
+      itemData['chapters'] = chapters;
+    }
+  }
+
+  /// Parse a Podlove Simple Chapters timestamp to [Duration].
+  ///
+  /// Supports `HH:MM:SS.mmm` and `HH:MM:SS` formats.
+  /// Returns null for unparseable timestamps.
+  Duration? _parseChapterTimestamp(String timestamp) {
+    final parts = timestamp.split(':');
+    if (parts.length != 3) return null;
+
+    try {
+      final hours = int.parse(parts[0]);
+      final minutes = int.parse(parts[1]);
+
+      // Handle optional milliseconds in seconds part
+      final secondsParts = parts[2].split('.');
+      final seconds = int.parse(secondsParts[0]);
+      final milliseconds = 1 < secondsParts.length
+          ? int.parse(secondsParts[1])
+          : 0;
+
+      return Duration(
+        hours: hours,
+        minutes: minutes,
+        seconds: seconds,
+        milliseconds: milliseconds,
+      );
+    } catch (_) {
+      return null;
+    }
   }
 
   /// Dispose resources
