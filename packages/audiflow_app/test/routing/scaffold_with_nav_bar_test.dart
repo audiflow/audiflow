@@ -73,6 +73,13 @@ void main() {
     }
 
     testWidgets('renders NavigationBar with four destinations', (tester) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
       await tester.pumpWidget(buildTestWidget());
       await tester.pumpAndSettle();
 
@@ -101,6 +108,13 @@ void main() {
     });
 
     testWidgets('selectedIndex reflects current tab', (tester) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
       await tester.pumpWidget(buildTestWidget());
       await tester.pumpAndSettle();
 
@@ -112,6 +126,13 @@ void main() {
     });
 
     testWidgets('tapping destination calls goBranch', (tester) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
       await tester.pumpWidget(buildTestWidget());
       await tester.pumpAndSettle();
 

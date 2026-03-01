@@ -1,3 +1,4 @@
+import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -78,48 +79,59 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
 
     return Scaffold(
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Column(
-            children: [
-              const _DragHandle(),
-              _SheetHeaderWithTabs(
-                tabController: _tabController!,
-                hasTranscript: hasTranscriptTab,
-                closeLabel: l10n.playerCloseLabel,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(
+              maxWidth: LayoutConstants.contentMaxWidth,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                children: [
+                  const _DragHandle(),
+                  _SheetHeaderWithTabs(
+                    tabController: _tabController!,
+                    hasTranscript: hasTranscriptTab,
+                    closeLabel: l10n.playerCloseLabel,
+                  ),
+                  Expanded(
+                    child: _PlayerTabBody(
+                      tabController: _tabController!,
+                      hasTranscript: hasTranscriptTab,
+                      episodeId: episodeId,
+                      artworkUrl: nowPlaying.artworkUrl,
+                      episodeTitle: nowPlaying.episodeTitle,
+                      podcastTitle: nowPlaying.podcastTitle,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  _PlayerProgressBar(
+                    progress: progress,
+                    onSeekStart: () => _beginSeek(isPlaying),
+                    onSeekEnd: _endSeek,
+                  ),
+                  const SizedBox(height: 16),
+                  _PlayerControls(
+                    isPlaying: displayIsPlaying,
+                    isLoading: displayIsLoading,
+                    onSkipBackward: () => _handleSkip(
+                      ref
+                          .read(audioPlayerControllerProvider.notifier)
+                          .skipBackward,
+                      isPlaying,
+                    ),
+                    onSkipForward: () => _handleSkip(
+                      ref
+                          .read(audioPlayerControllerProvider.notifier)
+                          .skipForward,
+                      isPlaying,
+                    ),
+                  ),
+                  const _PlaybackSpeedButton(),
+                  const SizedBox(height: 16),
+                ],
               ),
-              Expanded(
-                child: _PlayerTabBody(
-                  tabController: _tabController!,
-                  hasTranscript: hasTranscriptTab,
-                  episodeId: episodeId,
-                  artworkUrl: nowPlaying.artworkUrl,
-                  episodeTitle: nowPlaying.episodeTitle,
-                  podcastTitle: nowPlaying.podcastTitle,
-                ),
-              ),
-              const SizedBox(height: 24),
-              _PlayerProgressBar(
-                progress: progress,
-                onSeekStart: () => _beginSeek(isPlaying),
-                onSeekEnd: _endSeek,
-              ),
-              const SizedBox(height: 16),
-              _PlayerControls(
-                isPlaying: displayIsPlaying,
-                isLoading: displayIsLoading,
-                onSkipBackward: () => _handleSkip(
-                  ref.read(audioPlayerControllerProvider.notifier).skipBackward,
-                  isPlaying,
-                ),
-                onSkipForward: () => _handleSkip(
-                  ref.read(audioPlayerControllerProvider.notifier).skipForward,
-                  isPlaying,
-                ),
-              ),
-              const _PlaybackSpeedButton(),
-              const SizedBox(height: 16),
-            ],
+            ),
           ),
         ),
       ),

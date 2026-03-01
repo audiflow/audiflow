@@ -12,6 +12,7 @@ export 'src/styles/borders.dart';
 
 // Widgets - Cards
 export 'src/widgets/cards/episode_card.dart';
+export 'src/widgets/cards/podcast_artwork_grid_item.dart';
 
 // Widgets - Indicators
 export 'src/widgets/indicators/episode_progress_indicator.dart';
@@ -36,4 +37,5 @@ export 'src/widgets/lists/year_picker_bottom_sheet.dart';
 export 'src/widgets/search/searchable_app_bar.dart';
 
 // Utils
+export 'src/utils/responsive_grid.dart';
 export 'src/utils/search_filter.dart';

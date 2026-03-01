@@ -172,15 +172,45 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   }
 
   Widget _buildResultsList(SearchResult result) {
-    return ListView.builder(
-      key: const Key('search_results_list'),
-      itemCount: result.podcasts.length,
-      itemBuilder: (context, index) {
-        final podcast = result.podcasts[index];
-        return PodcastSearchResultTile(
-          key: Key('search_result_tile_$index'),
-          podcast: podcast,
-          onTap: () => _navigateToPodcastDetail(podcast),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final columnCount = ResponsiveGrid.columnCount(
+          availableWidth: constraints.maxWidth,
+        );
+        // Phone: keep list layout
+        if (columnCount <= 3) {
+          return ListView.builder(
+            key: const Key('search_results_list'),
+            itemCount: result.podcasts.length,
+            itemBuilder: (context, index) {
+              final podcast = result.podcasts[index];
+              return PodcastSearchResultTile(
+                key: Key('search_result_tile_$index'),
+                podcast: podcast,
+                onTap: () => _navigateToPodcastDetail(podcast),
+              );
+            },
+          );
+        }
+        // Tablet: grid layout
+        return GridView.builder(
+          key: const Key('search_results_grid'),
+          padding: const EdgeInsets.all(Spacing.md),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: columnCount,
+            mainAxisSpacing: Spacing.sm,
+            crossAxisSpacing: Spacing.sm,
+            childAspectRatio: 0.8,
+          ),
+          itemCount: result.podcasts.length,
+          itemBuilder: (context, index) {
+            final podcast = result.podcasts[index];
+            return PodcastArtworkGridItem(
+              artworkUrl: podcast.artworkUrl,
+              title: podcast.name,
+              onTap: () => _navigateToPodcastDetail(podcast),
+            );
+          },
         );
       },
     );

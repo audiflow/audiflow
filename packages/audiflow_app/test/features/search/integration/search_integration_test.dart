@@ -16,6 +16,13 @@ void main() {
       testWidgets('tapping search result navigates to podcast detail screen', (
         tester,
       ) async {
+        tester.view.physicalSize = const Size(390, 844);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(() {
+          tester.view.resetPhysicalSize();
+          tester.view.resetDevicePixelRatio();
+        });
+
         String? navigatedPodcastId;
         final mockService = ResultsMockSearchService(count: 3);
         final container = ProviderContainer(
@@ -72,6 +79,13 @@ void main() {
       testWidgets('extracts correct podcast identifier from tapped result', (
         tester,
       ) async {
+        tester.view.physicalSize = const Size(390, 844);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(() {
+          tester.view.resetPhysicalSize();
+          tester.view.resetDevicePixelRatio();
+        });
+
         final mockService = CustomIdMockSearchService(
           ids: ['itunes_12345', 'itunes_67890', 'itunes_11111'],
         );
@@ -204,6 +218,13 @@ void main() {
       testWidgets(
         'complete flow: enter query, submit, receive results, tap result',
         (tester) async {
+          tester.view.physicalSize = const Size(390, 844);
+          tester.view.devicePixelRatio = 1.0;
+          addTearDown(() {
+            tester.view.resetPhysicalSize();
+            tester.view.resetDevicePixelRatio();
+          });
+
           final mockService = ResultsMockSearchService(count: 5);
           String? navigatedPodcastId;
           final container = ProviderContainer(
@@ -352,6 +373,13 @@ void main() {
       );
 
       testWidgets('keyboard dismissal in full flow', (tester) async {
+        tester.view.physicalSize = const Size(390, 844);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(() {
+          tester.view.resetPhysicalSize();
+          tester.view.resetDevicePixelRatio();
+        });
+
         final mockService = ResultsMockSearchService(count: 3);
         final container = ProviderContainer(
           overrides: [
