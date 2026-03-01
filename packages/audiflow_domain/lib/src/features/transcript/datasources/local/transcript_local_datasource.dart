@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 
 import '../../../../common/database/app_database.dart';
+import '../../models/transcript_search_result.dart';
 
 /// Local datasource for transcript CRUD operations using Drift.
 ///
@@ -96,5 +97,43 @@ class TranscriptLocalDatasource {
     return (_db.delete(
       _db.transcriptSegments,
     )..where((s) => s.transcriptId.equals(transcriptId))).go();
+  }
+
+  /// Searches transcript segments using FTS5.
+  ///
+  /// Returns up to 50 results ranked by relevance.
+  /// Returns an empty list when [query] is blank.
+  Future<List<TranscriptSearchResult>> search(String query) async {
+    if (query.trim().isEmpty) return [];
+
+    final results = await _db
+        .customSelect(
+          '''
+          SELECT ts.id, ts.transcript_id, ts.start_ms, ts.end_ms,
+                 ts.body, ts.speaker, et.episode_id
+          FROM transcript_segments_fts fts
+          JOIN transcript_segments ts ON fts.rowid = ts.id
+          JOIN episode_transcripts et ON ts.transcript_id = et.id
+          WHERE fts.body MATCH ?
+          ORDER BY rank
+          LIMIT 50
+          ''',
+          variables: [Variable.withString(query)],
+        )
+        .get();
+
+    return results
+        .map(
+          (row) => TranscriptSearchResult(
+            segmentId: row.read<int>('id'),
+            transcriptId: row.read<int>('transcript_id'),
+            episodeId: row.read<int>('episode_id'),
+            startMs: row.read<int>('start_ms'),
+            endMs: row.read<int>('end_ms'),
+            body: row.read<String>('body'),
+            speaker: row.readNullable<String>('speaker'),
+          ),
+        )
+        .toList();
   }
 }

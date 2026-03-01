@@ -46,11 +46,14 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 17;
+  int get schemaVersion => 18;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
-    onCreate: (m) => m.createAll(),
+    onCreate: (m) async {
+      await m.createAll();
+      await _createFts5Tables();
+    },
     onUpgrade: (m, from, to) async {
       // Migration from v1 to v2: add Subscriptions table
       if (2 <= to && from < 2) {
@@ -147,8 +150,37 @@ class AppDatabase extends _$AppDatabase {
         await m.createTable(transcriptSegments);
         await m.createTable(episodeChapters);
       }
+      // Migration from v17 to v18: add FTS5 for transcript search
+      if (18 <= to && from < 18) {
+        await _createFts5Tables();
+      }
     },
   );
+
+  /// Creates FTS5 virtual table and sync triggers for transcript search.
+  Future<void> _createFts5Tables() async {
+    await customStatement('''
+      CREATE VIRTUAL TABLE IF NOT EXISTS transcript_segments_fts
+      USING fts5(body, content='transcript_segments', content_rowid='id')
+    ''');
+
+    await customStatement('''
+      CREATE TRIGGER IF NOT EXISTS transcript_segments_ai
+      AFTER INSERT ON transcript_segments BEGIN
+        INSERT INTO transcript_segments_fts(rowid, body)
+        VALUES (new.id, new.body);
+      END
+    ''');
+
+    await customStatement('''
+      CREATE TRIGGER IF NOT EXISTS transcript_segments_ad
+      AFTER DELETE ON transcript_segments BEGIN
+        INSERT INTO transcript_segments_fts(
+          transcript_segments_fts, rowid, body
+        ) VALUES('delete', old.id, old.body);
+      END
+    ''');
+  }
 
   /// Opens database connection with background isolate for I/O
   ///

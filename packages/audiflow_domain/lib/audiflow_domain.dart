@@ -162,3 +162,14 @@ export 'src/features/queue/services/queue_service.dart';
 export 'src/features/settings/repositories/app_settings_repository.dart';
 export 'src/features/settings/repositories/app_settings_repository_impl.dart';
 export 'src/features/settings/providers/settings_providers.dart';
+
+// Transcript feature
+export 'src/features/transcript/datasources/local/chapter_local_datasource.dart';
+export 'src/features/transcript/datasources/local/transcript_local_datasource.dart';
+export 'src/features/transcript/models/transcript_search_result.dart';
+export 'src/features/transcript/providers/transcript_providers.dart';
+export 'src/features/transcript/repositories/chapter_repository.dart';
+export 'src/features/transcript/repositories/chapter_repository_impl.dart';
+export 'src/features/transcript/repositories/transcript_repository.dart';
+export 'src/features/transcript/repositories/transcript_repository_impl.dart';
+export 'src/features/transcript/services/transcript_service.dart';
