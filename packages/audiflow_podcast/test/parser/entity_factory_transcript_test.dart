@@ -138,7 +138,7 @@ void main() {
           'chapters': <Map<String, dynamic>>[
             {
               'title': 'Introduction',
-              'startTime': const Duration(seconds: 0),
+              'startTime': Duration.zero,
               'url': 'https://example.com/intro',
               'imageUrl': 'https://example.com/intro.jpg',
             },
@@ -162,7 +162,7 @@ void main() {
         expect(item.chapters![0].title, equals('Introduction'));
         expect(
           item.chapters![0].startTime,
-          equals(const Duration(seconds: 0)),
+          equals(Duration.zero),
         );
         expect(
           item.chapters![0].url,
@@ -188,7 +188,7 @@ void main() {
           'chapters': <Map<String, dynamic>>[
             {
               'title': null,
-              'startTime': const Duration(seconds: 0),
+              'startTime': Duration.zero,
             },
             {
               'title': 'Valid Chapter',
@@ -276,7 +276,7 @@ void main() {
             'chapters': <Map<String, dynamic>>[
               {
                 'title': 'Opening',
-                'startTime': const Duration(seconds: 0),
+                'startTime': Duration.zero,
               },
               {
                 'title': 'Discussion',
