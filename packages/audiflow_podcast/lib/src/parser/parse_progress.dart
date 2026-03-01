@@ -36,6 +36,8 @@ final class ParsedEpisode extends ParseProgress {
     this.episodeNumber,
     this.seasonNumber,
     this.imageUrl,
+    this.transcripts,
+    this.chapters,
   });
 
   final String? guid;
@@ -48,6 +50,38 @@ final class ParsedEpisode extends ParseProgress {
   final Duration? duration;
   final int? episodeNumber;
   final int? seasonNumber;
+  final String? imageUrl;
+  final List<ParsedTranscript>? transcripts;
+  final List<ParsedChapter>? chapters;
+}
+
+/// Transcript metadata extracted from `<podcast:transcript>` elements.
+final class ParsedTranscript {
+  const ParsedTranscript({
+    required this.url,
+    required this.type,
+    this.language,
+    this.rel,
+  });
+
+  final String url;
+  final String type;
+  final String? language;
+  final String? rel;
+}
+
+/// Chapter metadata extracted from `<psc:chapter>` elements.
+final class ParsedChapter {
+  const ParsedChapter({
+    required this.title,
+    required this.startTime,
+    this.url,
+    this.imageUrl,
+  });
+
+  final String title;
+  final Duration startTime;
+  final String? url;
   final String? imageUrl;
 }
 

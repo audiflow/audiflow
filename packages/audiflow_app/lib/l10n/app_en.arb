@@ -365,5 +365,19 @@
   "groupDurationHoursMinutes": "{hours}h{minutes}m",
   "@groupDurationHoursMinutes": { "description": "Duration with hours and minutes for group card", "placeholders": { "hours": { "type": "int" }, "minutes": { "type": "int" } } },
   "groupDurationMinutes": "{minutes}m",
-  "@groupDurationMinutes": { "description": "Duration in minutes for group card", "placeholders": { "minutes": { "type": "int" } } }
+  "@groupDurationMinutes": { "description": "Duration in minutes for group card", "placeholders": { "minutes": { "type": "int" } } },
+
+  "playerTabNowPlaying": "Now Playing",
+  "@playerTabNowPlaying": { "description": "Now Playing tab label in player" },
+  "playerTabTranscript": "Transcript",
+  "@playerTabTranscript": { "description": "Transcript tab label in player" },
+  "playerTranscriptLoading": "Loading transcript...",
+  "@playerTranscriptLoading": { "description": "Transcript loading message" },
+  "playerTranscriptEmpty": "No transcript available",
+  "@playerTranscriptEmpty": { "description": "No transcript available message" },
+  "playerTranscriptJumpToCurrent": "Jump to current",
+  "@playerTranscriptJumpToCurrent": { "description": "Jump to current position button label" },
+
+  "episodeTranscriptAvailable": "Transcript available",
+  "@episodeTranscriptAvailable": { "description": "Accessibility label for transcript indicator icon" }
 }

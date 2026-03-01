@@ -1147,6 +1147,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{minutes}m'**
   String groupDurationMinutes(int minutes);
+
+  /// Now Playing tab label in player
+  ///
+  /// In en, this message translates to:
+  /// **'Now Playing'**
+  String get playerTabNowPlaying;
+
+  /// Transcript tab label in player
+  ///
+  /// In en, this message translates to:
+  /// **'Transcript'**
+  String get playerTabTranscript;
+
+  /// Transcript loading message
+  ///
+  /// In en, this message translates to:
+  /// **'Loading transcript...'**
+  String get playerTranscriptLoading;
+
+  /// No transcript available message
+  ///
+  /// In en, this message translates to:
+  /// **'No transcript available'**
+  String get playerTranscriptEmpty;
+
+  /// Jump to current position button label
+  ///
+  /// In en, this message translates to:
+  /// **'Jump to current'**
+  String get playerTranscriptJumpToCurrent;
+
+  /// Accessibility label for transcript indicator icon
+  ///
+  /// In en, this message translates to:
+  /// **'Transcript available'**
+  String get episodeTranscriptAvailable;
 }
 
 class _AppLocalizationsDelegate

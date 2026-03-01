@@ -55,6 +55,9 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
     final downloadAsync = ref.watch(episodeDownloadProvider(episode.id));
     final downloadTask = downloadAsync.value;
 
+    final hasTranscript =
+        ref.watch(episodeHasTranscriptProvider(episode.id)).value ?? false;
+
     final l10n = AppLocalizations.of(context);
 
     return EpisodeCard(
@@ -69,6 +72,8 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
       isNew: isNew,
       isCompleted: isCompleted,
       isCurrentEpisode: isCurrentEpisode,
+      hasTranscript: hasTranscript,
+      transcriptLabel: l10n.episodeTranscriptAvailable,
       onTap: () => _navigateToDetail(context),
       onPlayPause: () => _onPlayPausePressed(context, ref, audioUrl, isPlaying),
       onLongPress: () => _showContextMenu(context, ref, audioUrl, progress),

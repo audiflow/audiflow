@@ -5,11 +5,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../widgets/transcript_tab.dart';
 
-/// Full player screen placeholder.
+/// Full player screen presented as a Cupertino sheet.
 ///
-/// This screen will be expanded with full playback controls, seek bar,
-/// episode details, and other features in a future update.
+/// Shows playback controls, progress bar, and optionally a transcript
+/// tab when the current episode has transcript or chapter data.
 class PlayerScreen extends ConsumerStatefulWidget {
   const PlayerScreen({super.key});
 
@@ -17,9 +18,11 @@ class PlayerScreen extends ConsumerStatefulWidget {
   ConsumerState<PlayerScreen> createState() => _PlayerScreenState();
 }
 
-class _PlayerScreenState extends ConsumerState<PlayerScreen> {
+class _PlayerScreenState extends ConsumerState<PlayerScreen>
+    with SingleTickerProviderStateMixin {
   bool _isSeeking = false;
   bool _wasPlayingBeforeSeek = false;
+  TabController? _tabController;
 
   void _beginSeek(bool wasPlaying) {
     setState(() {
@@ -35,6 +38,20 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
     setState(() => _isSeeking = false);
   }
 
+  void _ensureTabController({required bool hasTranscript}) {
+    final tabCount = hasTranscript ? 2 : 1;
+    if (_tabController?.length == tabCount) return;
+
+    _tabController?.dispose();
+    _tabController = TabController(length: tabCount, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController?.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -45,63 +62,67 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
     final isPlaying = playbackState is PlaybackPlaying;
     final isLoading = playbackState is PlaybackLoading;
 
-    // During seeking, preserve the play/pause state from before seek started
+    // Preserve play/pause state during seeking
     final displayIsPlaying = _isSeeking ? _wasPlayingBeforeSeek : isPlaying;
     final displayIsLoading = _isSeeking ? false : isLoading;
 
+    if (nowPlaying == null) {
+      return Scaffold(body: Center(child: Text(l10n.playerNoAudio)));
+    }
+
+    final episodeId = nowPlaying.episode?.id;
+    final hasTranscriptTab = episodeId != null;
+
+    // Ensure tab controller exists (short-circuits if tab count unchanged)
+    _ensureTabController(hasTranscript: hasTranscriptTab);
+
     return Scaffold(
-      body: nowPlaying == null
-          ? Center(child: Text(l10n.playerNoAudio))
-          : SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Column(
-                  children: [
-                    const _DragHandle(),
-                    _SheetHeader(
-                      title: l10n.playerNowPlaying,
-                      closeLabel: l10n.playerCloseLabel,
-                    ),
-                    Expanded(
-                      child: Center(
-                        child: _PlayerArtwork(
-                          artworkUrl: nowPlaying.artworkUrl,
-                        ),
-                      ),
-                    ),
-                    _PlayerInfo(
-                      episodeTitle: nowPlaying.episodeTitle,
-                      podcastTitle: nowPlaying.podcastTitle,
-                    ),
-                    const SizedBox(height: 24),
-                    _PlayerProgressBar(
-                      progress: progress,
-                      onSeekStart: () => _beginSeek(isPlaying),
-                      onSeekEnd: _endSeek,
-                    ),
-                    const SizedBox(height: 16),
-                    _PlayerControls(
-                      isPlaying: displayIsPlaying,
-                      isLoading: displayIsLoading,
-                      onSkipBackward: () => _handleSkip(
-                        ref
-                            .read(audioPlayerControllerProvider.notifier)
-                            .skipBackward,
-                        isPlaying,
-                      ),
-                      onSkipForward: () => _handleSkip(
-                        ref
-                            .read(audioPlayerControllerProvider.notifier)
-                            .skipForward,
-                        isPlaying,
-                      ),
-                    ),
-                    const _PlaybackSpeedButton(),
-                    const SizedBox(height: 16),
-                  ],
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Column(
+            children: [
+              const _DragHandle(),
+              _SheetHeaderWithTabs(
+                tabController: _tabController!,
+                hasTranscript: hasTranscriptTab,
+                closeLabel: l10n.playerCloseLabel,
+              ),
+              Expanded(
+                child: _PlayerTabBody(
+                  tabController: _tabController!,
+                  hasTranscript: hasTranscriptTab,
+                  episodeId: episodeId,
+                  artworkUrl: nowPlaying.artworkUrl,
+                  episodeTitle: nowPlaying.episodeTitle,
+                  podcastTitle: nowPlaying.podcastTitle,
                 ),
               ),
-            ),
+              const SizedBox(height: 24),
+              _PlayerProgressBar(
+                progress: progress,
+                onSeekStart: () => _beginSeek(isPlaying),
+                onSeekEnd: _endSeek,
+              ),
+              const SizedBox(height: 16),
+              _PlayerControls(
+                isPlaying: displayIsPlaying,
+                isLoading: displayIsLoading,
+                onSkipBackward: () => _handleSkip(
+                  ref.read(audioPlayerControllerProvider.notifier).skipBackward,
+                  isPlaying,
+                ),
+                onSkipForward: () => _handleSkip(
+                  ref.read(audioPlayerControllerProvider.notifier).skipForward,
+                  isPlaying,
+                ),
+              ),
+              const _PlaybackSpeedButton(),
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -112,6 +133,99 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
     _beginSeek(wasPlaying);
     await skipAction();
     await _endSeek();
+  }
+}
+
+class _SheetHeaderWithTabs extends StatelessWidget {
+  const _SheetHeaderWithTabs({
+    required this.tabController,
+    required this.hasTranscript,
+    required this.closeLabel,
+  });
+
+  final TabController tabController;
+  final bool hasTranscript;
+  final String closeLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        children: [
+          const SizedBox(width: 48),
+          Expanded(
+            child: hasTranscript
+                ? TabBar(
+                    controller: tabController,
+                    tabs: [
+                      Tab(text: l10n.playerTabNowPlaying),
+                      Tab(text: l10n.playerTabTranscript),
+                    ],
+                    labelStyle: theme.textTheme.titleSmall,
+                    indicatorSize: TabBarIndicatorSize.label,
+                    dividerHeight: 0,
+                  )
+                : Text(
+                    l10n.playerNowPlaying,
+                    style: theme.textTheme.titleSmall,
+                    textAlign: TextAlign.center,
+                  ),
+          ),
+          Semantics(
+            button: true,
+            label: closeLabel,
+            child: IconButton(
+              icon: const Icon(Symbols.keyboard_arrow_down),
+              onPressed: () => CupertinoSheetRoute.popSheet(context),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PlayerTabBody extends StatelessWidget {
+  const _PlayerTabBody({
+    required this.tabController,
+    required this.hasTranscript,
+    required this.episodeId,
+    required this.artworkUrl,
+    required this.episodeTitle,
+    required this.podcastTitle,
+  });
+
+  final TabController tabController;
+  final bool hasTranscript;
+  final int? episodeId;
+  final String? artworkUrl;
+  final String episodeTitle;
+  final String podcastTitle;
+
+  @override
+  Widget build(BuildContext context) {
+    final nowPlayingContent = Column(
+      children: [
+        Expanded(
+          child: Center(child: _PlayerArtwork(artworkUrl: artworkUrl)),
+        ),
+        _PlayerInfo(episodeTitle: episodeTitle, podcastTitle: podcastTitle),
+      ],
+    );
+
+    if (!hasTranscript) return nowPlayingContent;
+
+    return TabBarView(
+      controller: tabController,
+      children: [
+        nowPlayingContent,
+        TranscriptTab(episodeId: episodeId!),
+      ],
+    );
   }
 }
 
@@ -138,42 +252,6 @@ class _DragHandle extends StatelessWidget {
   }
 }
 
-class _SheetHeader extends StatelessWidget {
-  const _SheetHeader({required this.title, required this.closeLabel});
-
-  final String title;
-  final String closeLabel;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        children: [
-          const SizedBox(width: 48),
-          Expanded(
-            child: Text(
-              title,
-              style: theme.textTheme.titleSmall,
-              textAlign: TextAlign.center,
-            ),
-          ),
-          Semantics(
-            button: true,
-            label: closeLabel,
-            child: IconButton(
-              icon: const Icon(Symbols.keyboard_arrow_down),
-              onPressed: () => CupertinoSheetRoute.popSheet(context),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _PlayerArtwork extends StatelessWidget {
   const _PlayerArtwork({this.artworkUrl});
 
@@ -195,7 +273,7 @@ class _PlayerArtwork extends StatelessWidget {
               ? Image.network(
                   artworkUrl!,
                   fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) =>
+                  errorBuilder: (_, _, _) =>
                       _Placeholder(colorScheme: colorScheme),
                 )
               : _Placeholder(colorScheme: colorScheme),
@@ -295,7 +373,8 @@ class _PlayerProgressBarState extends ConsumerState<_PlayerProgressBar> {
     return Semantics(
       slider: true,
       value:
-          '${_formatDuration(displayPosition)} of ${_formatDuration(progress?.duration)}',
+          '${_formatDuration(displayPosition)}'
+          ' of ${_formatDuration(progress?.duration)}',
       child: Column(
         children: [
           SliderTheme(
@@ -313,9 +392,7 @@ class _PlayerProgressBarState extends ConsumerState<_PlayerProgressBar> {
                 widget.onSeekStart?.call();
               },
               onChanged: (value) {
-                setState(() {
-                  _dragValue = value;
-                });
+                setState(() => _dragValue = value);
               },
               onChangeEnd: (value) async {
                 final duration = progress?.duration ?? Duration.zero;
@@ -325,7 +402,6 @@ class _PlayerProgressBarState extends ConsumerState<_PlayerProgressBar> {
                 await ref
                     .read(audioPlayerControllerProvider.notifier)
                     .seek(seekPosition);
-                // Parent handles stabilization delay via onSeekEnd
                 await widget.onSeekEnd?.call();
                 if (!mounted) return;
                 setState(() => _isDragging = false);

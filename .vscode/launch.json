@@ -1,0 +1,90 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "audiflow (dev)",
+      "request": "launch",
+      "type": "dart",
+      "program": "packages/audiflow_app/lib/main_dev.dart",
+      "args": [
+        "--flavor",
+        "dev"
+      ]
+    },
+    {
+      "name": "audiflow (dev, profile)",
+      "request": "launch",
+      "type": "dart",
+      "program": "packages/audiflow_app/lib/main_dev.dart",
+      "flutterMode": "profile",
+      "args": [
+        "--flavor",
+        "dev"
+      ]
+    },
+    {
+      "name": "audiflow (dev, release)",
+      "request": "launch",
+      "type": "dart",
+      "program": "packages/audiflow_app/lib/main_dev.dart",
+      "flutterMode": "release",
+      "args": [
+        "--flavor",
+        "dev"
+      ]
+    },
+    {
+      "name": "audiflow (stg)",
+      "request": "launch",
+      "type": "dart",
+      "program": "packages/audiflow_app/lib/main_stg.dart",
+      "args": [
+        "--flavor",
+        "stg"
+      ]
+    },
+    {
+      "name": "audiflow (stg, profile)",
+      "request": "launch",
+      "type": "dart",
+      "program": "packages/audiflow_app/lib/main_stg.dart",
+      "flutterMode": "profile",
+      "args": [
+        "--flavor",
+        "stg"
+      ]
+    },
+    {
+      "name": "audiflow (prod)",
+      "request": "launch",
+      "type": "dart",
+      "program": "packages/audiflow_app/lib/main_prod.dart",
+      "args": [
+        "--flavor",
+        "prod"
+      ]
+    },
+    {
+      "name": "audiflow (prod, profile)",
+      "request": "launch",
+      "type": "dart",
+      "program": "packages/audiflow_app/lib/main_prod.dart",
+      "flutterMode": "profile",
+      "args": [
+        "--flavor",
+        "prod"
+      ]
+    },
+    {
+      "name": "audiflow (prod, release)",
+      "request": "launch",
+      "type": "dart",
+      "program": "packages/audiflow_app/lib/main_prod.dart",
+      "flutterMode": "release",
+      "args": [
+        "--flavor",
+        "prod"
+      ]
+    }
+  ]
+}

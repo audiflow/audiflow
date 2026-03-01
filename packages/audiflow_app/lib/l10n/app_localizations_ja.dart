@@ -569,4 +569,22 @@ class AppLocalizationsJa extends AppLocalizations {
   String groupDurationMinutes(int minutes) {
     return '$minutes分';
   }
+
+  @override
+  String get playerTabNowPlaying => '再生中';
+
+  @override
+  String get playerTabTranscript => '書き起こし';
+
+  @override
+  String get playerTranscriptLoading => '書き起こしを読み込み中...';
+
+  @override
+  String get playerTranscriptEmpty => '書き起こしがありません';
+
+  @override
+  String get playerTranscriptJumpToCurrent => '現在位置へ';
+
+  @override
+  String get episodeTranscriptAvailable => '書き起こしあり';
 }

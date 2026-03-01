@@ -579,4 +579,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String groupDurationMinutes(int minutes) {
     return '${minutes}m';
   }
+
+  @override
+  String get playerTabNowPlaying => 'Now Playing';
+
+  @override
+  String get playerTabTranscript => 'Transcript';
+
+  @override
+  String get playerTranscriptLoading => 'Loading transcript...';
+
+  @override
+  String get playerTranscriptEmpty => 'No transcript available';
+
+  @override
+  String get playerTranscriptJumpToCurrent => 'Jump to current';
+
+  @override
+  String get episodeTranscriptAvailable => 'Transcript available';
 }

@@ -1,5 +1,6 @@
 import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 import '../../styles/spacing.dart';
 
@@ -33,6 +34,8 @@ class EpisodeCard extends StatelessWidget {
     this.isNew = false,
     this.isCompleted = false,
     this.isCurrentEpisode = false,
+    this.hasTranscript = false,
+    this.transcriptLabel,
     this.onTap,
     this.onPlayPause,
     this.onLongPress,
@@ -66,6 +69,12 @@ class EpisodeCard extends StatelessWidget {
   final bool isNew;
   final bool isCompleted;
   final bool isCurrentEpisode;
+
+  /// Whether the episode has a transcript available.
+  final bool hasTranscript;
+
+  /// Accessibility label for the transcript indicator.
+  final String? transcriptLabel;
 
   final VoidCallback? onTap;
   final VoidCallback? onPlayPause;
@@ -195,6 +204,13 @@ class EpisodeCard extends StatelessWidget {
                   ),
                 ),
               ),
+              if (hasTranscript) ...[
+                const SizedBox(width: Spacing.sm),
+                _TranscriptBadge(
+                  color: colorScheme.onSurfaceVariant,
+                  label: transcriptLabel,
+                ),
+              ],
               if (isNew) ...[
                 const SizedBox(width: Spacing.sm),
                 _NewBadge(color: colorScheme.primary),
@@ -293,6 +309,21 @@ class _Thumbnail extends StatelessWidget {
           return null;
         },
       ),
+    );
+  }
+}
+
+class _TranscriptBadge extends StatelessWidget {
+  const _TranscriptBadge({required this.color, this.label});
+
+  final Color color;
+  final String? label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      label: label,
+      child: Icon(Symbols.closed_caption, size: 16, color: color),
     );
   }
 }

@@ -64,6 +64,10 @@ class EpisodeListTile extends ConsumerWidget {
         ? ref.watch(episodeDownloadProvider(episodeId)).value
         : null;
 
+    final hasTranscript = episodeId != null
+        ? ref.watch(episodeHasTranscriptProvider(episodeId)).value ?? false
+        : false;
+
     final l10n = AppLocalizations.of(context);
 
     return EpisodeCard(
@@ -78,6 +82,8 @@ class EpisodeListTile extends ConsumerWidget {
       isNew: isNew,
       isCompleted: isCompleted,
       isCurrentEpisode: isCurrentEpisode,
+      hasTranscript: hasTranscript,
+      transcriptLabel: l10n.episodeTranscriptAvailable,
       onTap: () => _navigateToDetail(context),
       onPlayPause: enclosureUrl != null
           ? () => _onPlayPausePressed(context, ref, enclosureUrl, isPlaying)
