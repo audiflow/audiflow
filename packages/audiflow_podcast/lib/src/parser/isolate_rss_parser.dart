@@ -192,7 +192,82 @@ class IsolateRssParser {
       episodeNumber: int.tryParse(_extractItunesText(item, 'episode') ?? ''),
       seasonNumber: int.tryParse(_extractItunesText(item, 'season') ?? ''),
       imageUrl: _extractItunesImageUrl(item),
+      transcripts: _extractTranscripts(item),
+      chapters: _extractChapters(item),
     );
+  }
+
+  static List<ParsedTranscript>? _extractTranscripts(XmlElement item) {
+    final transcripts = <ParsedTranscript>[];
+    for (final element in item.children.whereType<XmlElement>()) {
+      if (element.localName != 'transcript') continue;
+      final url = element.getAttribute('url');
+      final type = element.getAttribute('type');
+      if (url == null || type == null) continue;
+      transcripts.add(
+        ParsedTranscript(
+          url: url,
+          type: type,
+          language: element.getAttribute('language'),
+          rel: element.getAttribute('rel'),
+        ),
+      );
+    }
+    return transcripts.isEmpty ? null : transcripts;
+  }
+
+  static List<ParsedChapter>? _extractChapters(XmlElement item) {
+    // Find psc:chapters container element
+    XmlElement? chaptersElement;
+    for (final element in item.children.whereType<XmlElement>()) {
+      if (element.localName == 'chapters') {
+        chaptersElement = element;
+        break;
+      }
+    }
+    if (chaptersElement == null) return null;
+
+    final chapters = <ParsedChapter>[];
+    for (final element in chaptersElement.children.whereType<XmlElement>()) {
+      if (element.localName != 'chapter') continue;
+      final title = element.getAttribute('title');
+      final startStr = element.getAttribute('start');
+      if (title == null || startStr == null) continue;
+      final startTime = _parseChapterTimestamp(startStr);
+      if (startTime == null) continue;
+      chapters.add(
+        ParsedChapter(
+          title: title,
+          startTime: startTime,
+          url: element.getAttribute('href'),
+          imageUrl: element.getAttribute('image'),
+        ),
+      );
+    }
+    return chapters.isEmpty ? null : chapters;
+  }
+
+  static Duration? _parseChapterTimestamp(String timestamp) {
+    // Format: HH:MM:SS.mmm or HH:MM:SS
+    final parts = timestamp.split(':');
+    if (parts.length != 3) return null;
+    try {
+      final hours = int.parse(parts[0]);
+      final minutes = int.parse(parts[1]);
+      final secondsParts = parts[2].split('.');
+      final seconds = int.parse(secondsParts[0]);
+      final millis = secondsParts.length == 2
+          ? int.parse(secondsParts[1].padRight(3, '0').substring(0, 3))
+          : 0;
+      return Duration(
+        hours: hours,
+        minutes: minutes,
+        seconds: seconds,
+        milliseconds: millis,
+      );
+    } catch (_) {
+      return null;
+    }
   }
 
   static String? _extractText(XmlElement parent, String elementName) {

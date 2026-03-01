@@ -74,10 +74,14 @@ class EpisodeLocalDatasource {
   }
 
   /// Returns an episode by its audio URL.
+  ///
+  /// Multiple episodes may share the same audio URL across podcasts,
+  /// so this returns the first match.
   Future<Episode?> getByAudioUrl(String audioUrl) {
-    return (_db.select(
-      _db.episodes,
-    )..where((e) => e.audioUrl.equals(audioUrl))).getSingleOrNull();
+    return (_db.select(_db.episodes)
+          ..where((e) => e.audioUrl.equals(audioUrl))
+          ..limit(1))
+        .getSingleOrNull();
   }
 
   /// Returns all episode GUIDs for a podcast.

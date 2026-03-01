@@ -266,7 +266,12 @@ class AudioPlayerController extends _$AudioPlayerController {
 
       // Update now playing controller if metadata is provided
       if (metadata != null) {
-        ref.read(nowPlayingControllerProvider.notifier).setNowPlaying(metadata);
+        // Ensure the episode object is attached so the player screen
+        // can access episodeId for the transcript tab.
+        final enriched = episode != null && metadata.episode == null
+            ? metadata.copyWith(episode: episode)
+            : metadata;
+        ref.read(nowPlayingControllerProvider.notifier).setNowPlaying(enriched);
       }
 
       // Check for local download

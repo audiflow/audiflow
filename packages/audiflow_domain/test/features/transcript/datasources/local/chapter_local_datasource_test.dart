@@ -1,5 +1,4 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
-import 'package:audiflow_domain/src/features/transcript/datasources/local/chapter_local_datasource.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 

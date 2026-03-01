@@ -143,6 +143,7 @@ Future<void> _restoreLastPlayed(ProviderContainer container) async {
                 ? Duration(milliseconds: lastPlayed.durationMs!)
                 : null,
             savedPosition: Duration(milliseconds: lastPlayed.positionMs),
+            episode: episode,
           ),
         );
   } catch (_) {

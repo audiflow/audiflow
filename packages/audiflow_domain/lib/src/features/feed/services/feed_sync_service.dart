@@ -163,7 +163,7 @@ class FeedSyncService {
         xmlContent: xmlContent,
         podcastId: sub.id,
         knownGuids: knownGuids,
-        onBatchReady: (companions) async {
+        onBatchReady: (companions, mediaMetas) async {
           // Apply extractor if available
           if (extractor != null) {
             final enriched = companions.map((c) {
@@ -189,6 +189,14 @@ class FeedSyncService {
             await episodeRepo.upsertEpisodes(enriched);
           } else {
             await episodeRepo.upsertEpisodes(companions);
+          }
+
+          // Store transcript and chapter metadata
+          if (mediaMetas.isNotEmpty) {
+            await episodeRepo.storeTranscriptAndChapterDataFromParsed(
+              sub.id,
+              mediaMetas,
+            );
           }
         },
       )) {

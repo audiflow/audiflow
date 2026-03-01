@@ -23,7 +23,6 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
   bool _isSeeking = false;
   bool _wasPlayingBeforeSeek = false;
   TabController? _tabController;
-  int? _currentEpisodeId;
 
   void _beginSeek(bool wasPlaying) {
     setState(() {
@@ -74,11 +73,8 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
     final episodeId = nowPlaying.episode?.id;
     final hasTranscriptTab = episodeId != null;
 
-    // Recreate tab controller when episode changes
-    if (_currentEpisodeId != episodeId) {
-      _currentEpisodeId = episodeId;
-      _ensureTabController(hasTranscript: hasTranscriptTab);
-    }
+    // Ensure tab controller exists (short-circuits if tab count unchanged)
+    _ensureTabController(hasTranscript: hasTranscriptTab);
 
     return Scaffold(
       body: SafeArea(

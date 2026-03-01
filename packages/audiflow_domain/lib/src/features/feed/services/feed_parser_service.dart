@@ -130,6 +130,26 @@ class FeedParserService {
               images: e.imageUrl != null
                   ? [PodcastImage(url: e.imageUrl!)]
                   : [],
+              transcripts: e.transcripts
+                  ?.map(
+                    (t) => PodcastTranscript(
+                      url: t.url,
+                      type: t.type,
+                      language: t.language,
+                      rel: t.rel,
+                    ),
+                  )
+                  .toList(),
+              chapters: e.chapters
+                  ?.map(
+                    (c) => PodcastChapter(
+                      title: c.title,
+                      startTime: c.startTime,
+                      url: c.url,
+                      imageUrl: c.imageUrl,
+                    ),
+                  )
+                  .toList(),
             ),
           )
           .toList();
@@ -152,18 +172,22 @@ class FeedParserService {
   /// Parses XML content in isolate with progress streaming and batched storage.
   ///
   /// Emits [FeedParseProgress] events for UI updates.
-  /// Calls [onBatchReady] when a batch of episodes is ready to store.
+  /// Calls [onBatchReady] when a batch of episodes is ready to store,
+  /// passing both episode companions and transcript/chapter metadata.
   ///
   /// - [xmlContent]: Raw XML content of the RSS feed
   /// - [podcastId]: Database ID for the podcast (used in companion objects)
   /// - [knownGuids]: Set of episode GUIDs already in the database
-  /// - [onBatchReady]: Callback to persist a batch of episodes
+  /// - [onBatchReady]: Callback to persist episodes and media metadata
   /// - [batchSize]: Number of episodes per batch (default: 20)
   Stream<FeedParseProgress> parseWithProgress({
     required String xmlContent,
     required int podcastId,
     required Set<String> knownGuids,
-    required Future<void> Function(List<EpisodesCompanion> companions)
+    required Future<void> Function(
+      List<EpisodesCompanion> companions,
+      List<ParsedEpisodeMediaMeta> mediaMetas,
+    )
     onBatchReady,
     int batchSize = _defaultBatchSize,
   }) async* {
@@ -171,6 +195,7 @@ class FeedParserService {
     _logger?.d('Known GUIDs: ${knownGuids.length}');
 
     final buffer = <EpisodesCompanion>[];
+    final mediaMetaBuffer = <ParsedEpisodeMediaMeta>[];
     var totalParsed = 0;
 
     await for (final progress in IsolateRssParser.parse(
@@ -202,14 +227,17 @@ class FeedParserService {
           :final episodeNumber,
           :final seasonNumber,
           :final imageUrl,
+          :final transcripts,
+          :final chapters,
         ):
+          final resolvedGuid =
+              guid ??
+              enclosureUrl ??
+              'unknown-${DateTime.now().millisecondsSinceEpoch}';
           buffer.add(
             EpisodesCompanion.insert(
               podcastId: podcastId,
-              guid:
-                  guid ??
-                  enclosureUrl ??
-                  'unknown-${DateTime.now().millisecondsSinceEpoch}',
+              guid: resolvedGuid,
               title: title,
               description: Value(description),
               audioUrl: enclosureUrl ?? '',
@@ -220,11 +248,23 @@ class FeedParserService {
               seasonNumber: Value(seasonNumber),
             ),
           );
+
+          if (transcripts != null || chapters != null) {
+            mediaMetaBuffer.add(
+              ParsedEpisodeMediaMeta(
+                guid: resolvedGuid,
+                transcripts: transcripts,
+                chapters: chapters,
+              ),
+            );
+          }
+
           totalParsed++;
 
           if (batchSize <= buffer.length) {
-            await onBatchReady(buffer.toList());
+            await onBatchReady(buffer.toList(), mediaMetaBuffer.toList());
             buffer.clear();
+            mediaMetaBuffer.clear();
             _logger?.d('Stored batch, total: $totalParsed');
             yield EpisodesBatchStored(totalSoFar: totalParsed);
           }
@@ -232,12 +272,14 @@ class FeedParserService {
         case ParseComplete(:final stoppedEarly):
           // Flush remaining buffer
           if (buffer.isNotEmpty) {
-            await onBatchReady(buffer.toList());
+            await onBatchReady(buffer.toList(), mediaMetaBuffer.toList());
             buffer.clear();
+            mediaMetaBuffer.clear();
           }
 
           _logger?.i(
-            'Parse complete: $totalParsed episodes, stoppedEarly: $stoppedEarly',
+            'Parse complete: $totalParsed episodes, '
+            'stoppedEarly: $stoppedEarly',
           );
           yield FeedParseComplete(
             total: totalParsed,

@@ -1,6 +1,7 @@
 import 'package:audiflow_podcast/audiflow_podcast.dart';
 
 import '../../../common/database/app_database.dart';
+import '../models/feed_parse_progress.dart';
 import '../models/smart_playlist_episode_extractor.dart';
 
 /// Repository interface for episode operations.
@@ -47,6 +48,16 @@ abstract class EpisodeRepository {
   ///
   /// Used for early-stop optimization during RSS parsing.
   Future<Set<String>> getGuidsByPodcastId(int podcastId);
+
+  /// Stores transcript and chapter metadata from parsed RSS data.
+  ///
+  /// Resolves episode database IDs by [podcastId] + guid lookup,
+  /// then persists transcript and chapter metadata. Items whose
+  /// guid cannot be resolved are silently skipped.
+  Future<void> storeTranscriptAndChapterDataFromParsed(
+    int podcastId,
+    List<ParsedEpisodeMediaMeta> mediaMetas,
+  );
 
   /// Gets episodes after a given episode number, ordered ascending.
   ///

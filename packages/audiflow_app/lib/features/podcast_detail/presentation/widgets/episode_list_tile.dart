@@ -65,8 +65,7 @@ class EpisodeListTile extends ConsumerWidget {
         : null;
 
     final hasTranscript = episodeId != null
-        ? ref.watch(episodeHasTranscriptProvider(episodeId)).valueOrNull ??
-              false
+        ? ref.watch(episodeHasTranscriptProvider(episodeId)).value ?? false
         : false;
 
     final l10n = AppLocalizations.of(context);

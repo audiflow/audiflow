@@ -1,5 +1,5 @@
+import 'package:audiflow_domain/src/features/feed/models/feed_parse_progress.dart';
 import 'package:audiflow_podcast/audiflow_podcast.dart';
-import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -46,7 +46,7 @@ void main() {
     await db.close();
   });
 
-  PodcastItem _makeItem({
+  PodcastItem makeItem({
     required String guid,
     required String title,
     required String enclosureUrl,
@@ -68,7 +68,7 @@ void main() {
   group('upsertFromFeedItems', () {
     test('stores transcript metadata during feed sync', () async {
       final items = [
-        _makeItem(
+        makeItem(
           guid: 'ep-1',
           title: 'Episode 1',
           enclosureUrl: 'https://example.com/ep1.mp3',
@@ -120,7 +120,7 @@ void main() {
 
     test('stores chapter data during feed sync', () async {
       final items = [
-        _makeItem(
+        makeItem(
           guid: 'ep-2',
           title: 'Episode 2',
           enclosureUrl: 'https://example.com/ep2.mp3',
@@ -176,7 +176,7 @@ void main() {
 
     test('handles episodes with both transcripts and chapters', () async {
       final items = [
-        _makeItem(
+        makeItem(
           guid: 'ep-3',
           title: 'Episode 3',
           enclosureUrl: 'https://example.com/ep3.mp3',
@@ -208,7 +208,7 @@ void main() {
 
     test('skips transcript/chapter storage for items without them', () async {
       final items = [
-        _makeItem(
+        makeItem(
           guid: 'ep-plain',
           title: 'Plain Episode',
           enclosureUrl: 'https://example.com/plain.mp3',
@@ -233,7 +233,7 @@ void main() {
 
     test('handles mixed items with and without transcript data', () async {
       final items = [
-        _makeItem(
+        makeItem(
           guid: 'ep-with',
           title: 'With Transcripts',
           enclosureUrl: 'https://example.com/with.mp3',
@@ -244,7 +244,7 @@ void main() {
             ),
           ],
         ),
-        _makeItem(
+        makeItem(
           guid: 'ep-without',
           title: 'Without Transcripts',
           enclosureUrl: 'https://example.com/without.mp3',
@@ -277,7 +277,7 @@ void main() {
       // Create repository without optional datasources
       final basicRepo = EpisodeRepositoryImpl(datasource: episodeDatasource);
       final items = [
-        _makeItem(
+        makeItem(
           guid: 'ep-basic',
           title: 'Basic Episode',
           enclosureUrl: 'https://example.com/basic.mp3',
@@ -299,7 +299,7 @@ void main() {
 
     test('skips items without guid', () async {
       final items = [
-        _makeItem(
+        makeItem(
           guid: 'valid-guid',
           title: 'Valid',
           enclosureUrl: 'https://example.com/valid.mp3',
@@ -320,7 +320,7 @@ void main() {
 
     test('upserts transcripts on re-sync', () async {
       final items = [
-        _makeItem(
+        makeItem(
           guid: 'ep-resync',
           title: 'Resync Episode',
           enclosureUrl: 'https://example.com/resync.mp3',
@@ -347,6 +347,128 @@ void main() {
         episodes.first.id,
       );
       expect(transcripts.length, equals(1));
+    });
+  });
+
+  group('storeTranscriptAndChapterDataFromParsed', () {
+    Future<void> insertEpisode(String guid) async {
+      await episodeDatasource.upsert(
+        EpisodesCompanion.insert(
+          podcastId: podcastId,
+          guid: guid,
+          title: 'Episode $guid',
+          audioUrl: 'https://example.com/$guid.mp3',
+        ),
+      );
+    }
+
+    test('stores transcript metas from parsed data', () async {
+      await insertEpisode('ep-parsed-1');
+
+      final mediaMetas = [
+        const ParsedEpisodeMediaMeta(
+          guid: 'ep-parsed-1',
+          transcripts: [
+            ParsedTranscript(
+              url: 'https://example.com/ep1.vtt',
+              type: 'text/vtt',
+              language: 'en',
+              rel: 'captions',
+            ),
+          ],
+        ),
+      ];
+
+      await repository.storeTranscriptAndChapterDataFromParsed(
+        podcastId,
+        mediaMetas,
+      );
+
+      final episodes = await episodeDatasource.getByPodcastId(podcastId);
+      final transcripts = await transcriptDatasource.getMetasByEpisodeId(
+        episodes.first.id,
+      );
+      expect(transcripts.length, equals(1));
+      expect(transcripts.first.url, 'https://example.com/ep1.vtt');
+      expect(transcripts.first.type, 'text/vtt');
+      expect(transcripts.first.language, 'en');
+      expect(transcripts.first.rel, 'captions');
+    });
+
+    test('stores chapter data from parsed data', () async {
+      await insertEpisode('ep-parsed-2');
+
+      final mediaMetas = [
+        const ParsedEpisodeMediaMeta(
+          guid: 'ep-parsed-2',
+          chapters: [
+            ParsedChapter(
+              title: 'Intro',
+              startTime: Duration.zero,
+              url: 'https://example.com/intro',
+            ),
+            ParsedChapter(
+              title: 'Main',
+              startTime: Duration(minutes: 5),
+              imageUrl: 'https://example.com/main.jpg',
+            ),
+          ],
+        ),
+      ];
+
+      await repository.storeTranscriptAndChapterDataFromParsed(
+        podcastId,
+        mediaMetas,
+      );
+
+      final episodes = await episodeDatasource.getByPodcastId(podcastId);
+      final chapters = await chapterDatasource.getByEpisodeId(
+        episodes.first.id,
+      );
+      expect(chapters.length, equals(2));
+      expect(chapters[0].title, 'Intro');
+      expect(chapters[0].startMs, 0);
+      expect(chapters[0].url, 'https://example.com/intro');
+      expect(chapters[1].title, 'Main');
+      expect(chapters[1].startMs, 300000);
+      expect(chapters[1].imageUrl, 'https://example.com/main.jpg');
+    });
+
+    test('skips items without matching episodes', () async {
+      final mediaMetas = [
+        const ParsedEpisodeMediaMeta(
+          guid: 'nonexistent-guid',
+          transcripts: [
+            ParsedTranscript(
+              url: 'https://example.com/ghost.vtt',
+              type: 'text/vtt',
+            ),
+          ],
+        ),
+      ];
+
+      // Should not throw
+      await repository.storeTranscriptAndChapterDataFromParsed(
+        podcastId,
+        mediaMetas,
+      );
+    });
+
+    test('handles empty media metas list', () async {
+      // Should not throw
+      await repository.storeTranscriptAndChapterDataFromParsed(podcastId, []);
+    });
+
+    test('handles items with no transcript or chapter data', () async {
+      await insertEpisode('ep-empty');
+
+      final mediaMetas = [const ParsedEpisodeMediaMeta(guid: 'ep-empty')];
+
+      // Should not throw
+      await repository.storeTranscriptAndChapterDataFromParsed(
+        podcastId,
+        mediaMetas,
+      );
     });
   });
 }

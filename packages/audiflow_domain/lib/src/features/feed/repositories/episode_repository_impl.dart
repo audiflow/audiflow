@@ -8,6 +8,7 @@ import '../../../common/providers/database_provider.dart';
 import '../../transcript/datasources/local/chapter_local_datasource.dart';
 import '../../transcript/datasources/local/transcript_local_datasource.dart';
 import '../datasources/local/episode_local_datasource.dart';
+import '../models/feed_parse_progress.dart';
 import '../models/smart_playlist_episode_extractor.dart';
 import 'episode_repository.dart';
 
@@ -195,6 +196,79 @@ class EpisodeRepositoryImpl implements EpisodeRepository {
 
     if (companions.isNotEmpty) {
       await _chapterDatasource.upsertChapters(companions);
+    }
+  }
+
+  @override
+  Future<void> storeTranscriptAndChapterDataFromParsed(
+    int podcastId,
+    List<ParsedEpisodeMediaMeta> mediaMetas,
+  ) async {
+    final withData = mediaMetas.where((m) => m.hasData);
+    if (withData.isEmpty) return;
+
+    // Resolve episode IDs by guid
+    final guidToId = <String, int>{};
+    for (final meta in withData) {
+      final episode = await _datasource.getByPodcastIdAndGuid(
+        podcastId,
+        meta.guid,
+      );
+      if (episode != null) {
+        guidToId[meta.guid] = episode.id;
+      }
+    }
+    if (guidToId.isEmpty) return;
+
+    // Store transcript metas
+    if (_transcriptDatasource != null) {
+      final transcriptCompanions = <EpisodeTranscriptsCompanion>[];
+      for (final meta in withData) {
+        if (!meta.hasTranscripts) continue;
+        final episodeId = guidToId[meta.guid];
+        if (episodeId == null) continue;
+
+        for (final t in meta.transcripts!) {
+          transcriptCompanions.add(
+            EpisodeTranscriptsCompanion.insert(
+              episodeId: episodeId,
+              url: t.url,
+              type: t.type,
+              language: Value(t.language),
+              rel: Value(t.rel),
+            ),
+          );
+        }
+      }
+      if (transcriptCompanions.isNotEmpty) {
+        await _transcriptDatasource.upsertMetas(transcriptCompanions);
+      }
+    }
+
+    // Store chapters
+    if (_chapterDatasource != null) {
+      final chapterCompanions = <EpisodeChaptersCompanion>[];
+      for (final meta in withData) {
+        if (!meta.hasChapters) continue;
+        final episodeId = guidToId[meta.guid];
+        if (episodeId == null) continue;
+
+        for (final (index, c) in meta.chapters!.indexed) {
+          chapterCompanions.add(
+            EpisodeChaptersCompanion.insert(
+              episodeId: episodeId,
+              sortOrder: index,
+              title: c.title,
+              startMs: c.startTime.inMilliseconds,
+              url: Value(c.url),
+              imageUrl: Value(c.imageUrl),
+            ),
+          );
+        }
+      }
+      if (chapterCompanions.isNotEmpty) {
+        await _chapterDatasource.upsertChapters(chapterCompanions);
+      }
     }
   }
 

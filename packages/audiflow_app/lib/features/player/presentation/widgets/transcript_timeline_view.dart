@@ -199,9 +199,14 @@ class _TranscriptTimelineViewState
 
     // Estimate position: 56px per item
     const estimatedItemHeight = 56.0;
-    final offset = index * estimatedItemHeight;
+    final itemOffset = index * estimatedItemHeight;
+
+    // Place the active segment roughly one-third from the top of the
+    // viewport so it stays visible below the header.
+    final viewportHeight = _scrollController.position.viewportDimension;
+    final centeredOffset = itemOffset - viewportHeight / 3;
     final maxScroll = _scrollController.position.maxScrollExtent;
-    final targetOffset = offset.clamp(0.0, maxScroll);
+    final targetOffset = centeredOffset.clamp(0.0, maxScroll);
 
     _scrollController.animateTo(
       targetOffset,

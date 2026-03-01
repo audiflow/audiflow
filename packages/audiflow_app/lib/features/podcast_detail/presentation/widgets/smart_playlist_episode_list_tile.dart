@@ -56,8 +56,7 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
     final downloadTask = downloadAsync.value;
 
     final hasTranscript =
-        ref.watch(episodeHasTranscriptProvider(episode.id)).valueOrNull ??
-        false;
+        ref.watch(episodeHasTranscriptProvider(episode.id)).value ?? false;
 
     final l10n = AppLocalizations.of(context);
 
