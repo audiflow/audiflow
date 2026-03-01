@@ -22,6 +22,7 @@ final class SmartPlaylistDefinition {
     this.titleExtractor,
     this.showDateRange = false,
     this.showSortOrderToggle = false,
+    this.showSeasonNumber = false,
     this.smartPlaylistEpisodeExtractor,
   });
 
@@ -37,6 +38,7 @@ final class SmartPlaylistDefinition {
       episodeYearHeaders: (json['episodeYearHeaders'] as bool?) ?? false,
       showDateRange: (json['showDateRange'] as bool?) ?? false,
       showSortOrderToggle: (json['showSortOrderToggle'] as bool?) ?? false,
+      showSeasonNumber: (json['showSeasonNumber'] as bool?) ?? false,
       titleFilter: _nonEmpty(json['titleFilter'] as String?),
       excludeFilter: _nonEmpty(json['excludeFilter'] as String?),
       requireFilter: _nonEmpty(json['requireFilter'] as String?),
@@ -114,6 +116,9 @@ final class SmartPlaylistDefinition {
   /// yearHeaderMode. Initial order derives from the first customSort rule.
   final bool showSortOrderToggle;
 
+  /// Whether to prepend a season number label (e.g. "S13") to group titles.
+  final bool showSeasonNumber;
+
   /// Configuration for extracting both season and episode numbers.
   final SmartPlaylistEpisodeExtractor? smartPlaylistEpisodeExtractor;
 
@@ -133,6 +138,7 @@ final class SmartPlaylistDefinition {
       if (episodeYearHeaders) 'episodeYearHeaders': episodeYearHeaders,
       if (showDateRange) 'showDateRange': showDateRange,
       if (showSortOrderToggle) 'showSortOrderToggle': showSortOrderToggle,
+      if (showSeasonNumber) 'showSeasonNumber': showSeasonNumber,
       if (titleFilter != null) 'titleFilter': titleFilter,
       if (excludeFilter != null) 'excludeFilter': excludeFilter,
       if (requireFilter != null) 'requireFilter': requireFilter,

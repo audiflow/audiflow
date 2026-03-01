@@ -64,6 +64,14 @@ class _SmartPlaylistGroupEpisodesScreenState
     super.dispose();
   }
 
+  String _formatGroupTitle() {
+    final group = widget.group;
+    if (widget.parentPlaylist.showSeasonNumber && 0 < group.sortKey) {
+      return 'S${group.sortKey} ${group.displayName}';
+    }
+    return group.displayName;
+  }
+
   void _toggleSortOrder() {
     setState(() {
       _sortOrder = _sortOrder == SortOrder.descending
@@ -79,7 +87,7 @@ class _SmartPlaylistGroupEpisodesScreenState
 
     return Scaffold(
       appBar: SearchableAppBar(
-        title: Text(widget.group.displayName),
+        title: Text(_formatGroupTitle()),
         onSearchChanged: (query) => setState(() => _searchQuery = query),
       ),
       body: CustomScrollView(

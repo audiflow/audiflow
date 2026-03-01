@@ -95,6 +95,7 @@ final class SmartPlaylist {
     this.episodeYearHeaders = false,
     this.showDateRange = false,
     this.showSortOrderToggle = false,
+    this.showSeasonNumber = false,
     this.customSort,
     this.groups,
     @Deprecated('Use yearHeaderMode instead') bool yearGrouped = false,
@@ -131,6 +132,9 @@ final class SmartPlaylist {
   /// Whether to explicitly show the sort order toggle.
   final bool showSortOrderToggle;
 
+  /// Whether to prepend a season number label (e.g. "S13") to group titles.
+  final bool showSeasonNumber;
+
   /// Custom sort specification from the playlist definition.
   final SmartPlaylistSortSpec? customSort;
 
@@ -160,6 +164,7 @@ final class SmartPlaylist {
     bool? episodeYearHeaders,
     bool? showDateRange,
     bool? showSortOrderToggle,
+    bool? showSeasonNumber,
     SmartPlaylistSortSpec? customSort,
     List<SmartPlaylistGroup>? groups,
     @Deprecated('Use yearHeaderMode instead') bool? yearGrouped,
@@ -176,6 +181,7 @@ final class SmartPlaylist {
       episodeYearHeaders: episodeYearHeaders ?? this.episodeYearHeaders,
       showDateRange: showDateRange ?? this.showDateRange,
       showSortOrderToggle: showSortOrderToggle ?? this.showSortOrderToggle,
+      showSeasonNumber: showSeasonNumber ?? this.showSeasonNumber,
       customSort: customSort ?? this.customSort,
       groups: groups ?? subCategories ?? this.groups,
     );
