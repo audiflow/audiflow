@@ -190,5 +190,11 @@
   "dateYesterday": "昨日",
   "groupEpisodeCount": "{count}エピソード",
   "groupDurationHoursMinutes": "{hours}時間{minutes}分",
-  "groupDurationMinutes": "{minutes}分"
+  "groupDurationMinutes": "{minutes}分",
+
+  "playerTabNowPlaying": "再生中",
+  "playerTabTranscript": "書き起こし",
+  "playerTranscriptLoading": "書き起こしを読み込み中...",
+  "playerTranscriptEmpty": "書き起こしがありません",
+  "playerTranscriptJumpToCurrent": "現在位置へ"
 }
