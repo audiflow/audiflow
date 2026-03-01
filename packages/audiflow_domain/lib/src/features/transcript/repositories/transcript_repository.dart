@@ -1,5 +1,3 @@
-import 'package:drift/drift.dart';
-
 import '../../../common/database/app_database.dart';
 
 /// Repository interface for transcript operations.
