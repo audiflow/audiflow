@@ -4989,6 +4989,1405 @@ class QueueItemsCompanion extends UpdateCompanion<QueueItem> {
   }
 }
 
+class $EpisodeTranscriptsTable extends EpisodeTranscripts
+    with TableInfo<$EpisodeTranscriptsTable, EpisodeTranscript> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $EpisodeTranscriptsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _episodeIdMeta = const VerificationMeta(
+    'episodeId',
+  );
+  @override
+  late final GeneratedColumn<int> episodeId = GeneratedColumn<int>(
+    'episode_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES episodes (id)',
+    ),
+  );
+  static const VerificationMeta _urlMeta = const VerificationMeta('url');
+  @override
+  late final GeneratedColumn<String> url = GeneratedColumn<String>(
+    'url',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _typeMeta = const VerificationMeta('type');
+  @override
+  late final GeneratedColumn<String> type = GeneratedColumn<String>(
+    'type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _languageMeta = const VerificationMeta(
+    'language',
+  );
+  @override
+  late final GeneratedColumn<String> language = GeneratedColumn<String>(
+    'language',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _relMeta = const VerificationMeta('rel');
+  @override
+  late final GeneratedColumn<String> rel = GeneratedColumn<String>(
+    'rel',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _fetchedAtMeta = const VerificationMeta(
+    'fetchedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> fetchedAt = GeneratedColumn<DateTime>(
+    'fetched_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    episodeId,
+    url,
+    type,
+    language,
+    rel,
+    fetchedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'episode_transcripts';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<EpisodeTranscript> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('episode_id')) {
+      context.handle(
+        _episodeIdMeta,
+        episodeId.isAcceptableOrUnknown(data['episode_id']!, _episodeIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_episodeIdMeta);
+    }
+    if (data.containsKey('url')) {
+      context.handle(
+        _urlMeta,
+        url.isAcceptableOrUnknown(data['url']!, _urlMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_urlMeta);
+    }
+    if (data.containsKey('type')) {
+      context.handle(
+        _typeMeta,
+        type.isAcceptableOrUnknown(data['type']!, _typeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_typeMeta);
+    }
+    if (data.containsKey('language')) {
+      context.handle(
+        _languageMeta,
+        language.isAcceptableOrUnknown(data['language']!, _languageMeta),
+      );
+    }
+    if (data.containsKey('rel')) {
+      context.handle(
+        _relMeta,
+        rel.isAcceptableOrUnknown(data['rel']!, _relMeta),
+      );
+    }
+    if (data.containsKey('fetched_at')) {
+      context.handle(
+        _fetchedAtMeta,
+        fetchedAt.isAcceptableOrUnknown(data['fetched_at']!, _fetchedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {episodeId, url},
+  ];
+  @override
+  EpisodeTranscript map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return EpisodeTranscript(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      episodeId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}episode_id'],
+      )!,
+      url: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}url'],
+      )!,
+      type: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}type'],
+      )!,
+      language: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}language'],
+      ),
+      rel: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}rel'],
+      ),
+      fetchedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}fetched_at'],
+      ),
+    );
+  }
+
+  @override
+  $EpisodeTranscriptsTable createAlias(String alias) {
+    return $EpisodeTranscriptsTable(attachedDatabase, alias);
+  }
+}
+
+class EpisodeTranscript extends DataClass
+    implements Insertable<EpisodeTranscript> {
+  /// Auto-incrementing primary key.
+  final int id;
+
+  /// Foreign key to Episodes table.
+  final int episodeId;
+
+  /// URL where the transcript file is hosted.
+  final String url;
+
+  /// MIME type of the transcript (e.g., 'text/vtt', 'application/srt').
+  final String type;
+
+  /// Language code for the transcript (nullable).
+  final String? language;
+
+  /// Relationship tag (e.g., 'captions') (nullable).
+  final String? rel;
+
+  /// When the transcript content was last fetched (nullable).
+  final DateTime? fetchedAt;
+  const EpisodeTranscript({
+    required this.id,
+    required this.episodeId,
+    required this.url,
+    required this.type,
+    this.language,
+    this.rel,
+    this.fetchedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['episode_id'] = Variable<int>(episodeId);
+    map['url'] = Variable<String>(url);
+    map['type'] = Variable<String>(type);
+    if (!nullToAbsent || language != null) {
+      map['language'] = Variable<String>(language);
+    }
+    if (!nullToAbsent || rel != null) {
+      map['rel'] = Variable<String>(rel);
+    }
+    if (!nullToAbsent || fetchedAt != null) {
+      map['fetched_at'] = Variable<DateTime>(fetchedAt);
+    }
+    return map;
+  }
+
+  EpisodeTranscriptsCompanion toCompanion(bool nullToAbsent) {
+    return EpisodeTranscriptsCompanion(
+      id: Value(id),
+      episodeId: Value(episodeId),
+      url: Value(url),
+      type: Value(type),
+      language: language == null && nullToAbsent
+          ? const Value.absent()
+          : Value(language),
+      rel: rel == null && nullToAbsent ? const Value.absent() : Value(rel),
+      fetchedAt: fetchedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(fetchedAt),
+    );
+  }
+
+  factory EpisodeTranscript.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return EpisodeTranscript(
+      id: serializer.fromJson<int>(json['id']),
+      episodeId: serializer.fromJson<int>(json['episodeId']),
+      url: serializer.fromJson<String>(json['url']),
+      type: serializer.fromJson<String>(json['type']),
+      language: serializer.fromJson<String?>(json['language']),
+      rel: serializer.fromJson<String?>(json['rel']),
+      fetchedAt: serializer.fromJson<DateTime?>(json['fetchedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'episodeId': serializer.toJson<int>(episodeId),
+      'url': serializer.toJson<String>(url),
+      'type': serializer.toJson<String>(type),
+      'language': serializer.toJson<String?>(language),
+      'rel': serializer.toJson<String?>(rel),
+      'fetchedAt': serializer.toJson<DateTime?>(fetchedAt),
+    };
+  }
+
+  EpisodeTranscript copyWith({
+    int? id,
+    int? episodeId,
+    String? url,
+    String? type,
+    Value<String?> language = const Value.absent(),
+    Value<String?> rel = const Value.absent(),
+    Value<DateTime?> fetchedAt = const Value.absent(),
+  }) => EpisodeTranscript(
+    id: id ?? this.id,
+    episodeId: episodeId ?? this.episodeId,
+    url: url ?? this.url,
+    type: type ?? this.type,
+    language: language.present ? language.value : this.language,
+    rel: rel.present ? rel.value : this.rel,
+    fetchedAt: fetchedAt.present ? fetchedAt.value : this.fetchedAt,
+  );
+  EpisodeTranscript copyWithCompanion(EpisodeTranscriptsCompanion data) {
+    return EpisodeTranscript(
+      id: data.id.present ? data.id.value : this.id,
+      episodeId: data.episodeId.present ? data.episodeId.value : this.episodeId,
+      url: data.url.present ? data.url.value : this.url,
+      type: data.type.present ? data.type.value : this.type,
+      language: data.language.present ? data.language.value : this.language,
+      rel: data.rel.present ? data.rel.value : this.rel,
+      fetchedAt: data.fetchedAt.present ? data.fetchedAt.value : this.fetchedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('EpisodeTranscript(')
+          ..write('id: $id, ')
+          ..write('episodeId: $episodeId, ')
+          ..write('url: $url, ')
+          ..write('type: $type, ')
+          ..write('language: $language, ')
+          ..write('rel: $rel, ')
+          ..write('fetchedAt: $fetchedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, episodeId, url, type, language, rel, fetchedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is EpisodeTranscript &&
+          other.id == this.id &&
+          other.episodeId == this.episodeId &&
+          other.url == this.url &&
+          other.type == this.type &&
+          other.language == this.language &&
+          other.rel == this.rel &&
+          other.fetchedAt == this.fetchedAt);
+}
+
+class EpisodeTranscriptsCompanion extends UpdateCompanion<EpisodeTranscript> {
+  final Value<int> id;
+  final Value<int> episodeId;
+  final Value<String> url;
+  final Value<String> type;
+  final Value<String?> language;
+  final Value<String?> rel;
+  final Value<DateTime?> fetchedAt;
+  const EpisodeTranscriptsCompanion({
+    this.id = const Value.absent(),
+    this.episodeId = const Value.absent(),
+    this.url = const Value.absent(),
+    this.type = const Value.absent(),
+    this.language = const Value.absent(),
+    this.rel = const Value.absent(),
+    this.fetchedAt = const Value.absent(),
+  });
+  EpisodeTranscriptsCompanion.insert({
+    this.id = const Value.absent(),
+    required int episodeId,
+    required String url,
+    required String type,
+    this.language = const Value.absent(),
+    this.rel = const Value.absent(),
+    this.fetchedAt = const Value.absent(),
+  }) : episodeId = Value(episodeId),
+       url = Value(url),
+       type = Value(type);
+  static Insertable<EpisodeTranscript> custom({
+    Expression<int>? id,
+    Expression<int>? episodeId,
+    Expression<String>? url,
+    Expression<String>? type,
+    Expression<String>? language,
+    Expression<String>? rel,
+    Expression<DateTime>? fetchedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (episodeId != null) 'episode_id': episodeId,
+      if (url != null) 'url': url,
+      if (type != null) 'type': type,
+      if (language != null) 'language': language,
+      if (rel != null) 'rel': rel,
+      if (fetchedAt != null) 'fetched_at': fetchedAt,
+    });
+  }
+
+  EpisodeTranscriptsCompanion copyWith({
+    Value<int>? id,
+    Value<int>? episodeId,
+    Value<String>? url,
+    Value<String>? type,
+    Value<String?>? language,
+    Value<String?>? rel,
+    Value<DateTime?>? fetchedAt,
+  }) {
+    return EpisodeTranscriptsCompanion(
+      id: id ?? this.id,
+      episodeId: episodeId ?? this.episodeId,
+      url: url ?? this.url,
+      type: type ?? this.type,
+      language: language ?? this.language,
+      rel: rel ?? this.rel,
+      fetchedAt: fetchedAt ?? this.fetchedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (episodeId.present) {
+      map['episode_id'] = Variable<int>(episodeId.value);
+    }
+    if (url.present) {
+      map['url'] = Variable<String>(url.value);
+    }
+    if (type.present) {
+      map['type'] = Variable<String>(type.value);
+    }
+    if (language.present) {
+      map['language'] = Variable<String>(language.value);
+    }
+    if (rel.present) {
+      map['rel'] = Variable<String>(rel.value);
+    }
+    if (fetchedAt.present) {
+      map['fetched_at'] = Variable<DateTime>(fetchedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('EpisodeTranscriptsCompanion(')
+          ..write('id: $id, ')
+          ..write('episodeId: $episodeId, ')
+          ..write('url: $url, ')
+          ..write('type: $type, ')
+          ..write('language: $language, ')
+          ..write('rel: $rel, ')
+          ..write('fetchedAt: $fetchedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $TranscriptSegmentsTable extends TranscriptSegments
+    with TableInfo<$TranscriptSegmentsTable, TranscriptSegment> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $TranscriptSegmentsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _transcriptIdMeta = const VerificationMeta(
+    'transcriptId',
+  );
+  @override
+  late final GeneratedColumn<int> transcriptId = GeneratedColumn<int>(
+    'transcript_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES episode_transcripts (id)',
+    ),
+  );
+  static const VerificationMeta _startMsMeta = const VerificationMeta(
+    'startMs',
+  );
+  @override
+  late final GeneratedColumn<int> startMs = GeneratedColumn<int>(
+    'start_ms',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _endMsMeta = const VerificationMeta('endMs');
+  @override
+  late final GeneratedColumn<int> endMs = GeneratedColumn<int>(
+    'end_ms',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _bodyMeta = const VerificationMeta('body');
+  @override
+  late final GeneratedColumn<String> body = GeneratedColumn<String>(
+    'body',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _speakerMeta = const VerificationMeta(
+    'speaker',
+  );
+  @override
+  late final GeneratedColumn<String> speaker = GeneratedColumn<String>(
+    'speaker',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    transcriptId,
+    startMs,
+    endMs,
+    body,
+    speaker,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'transcript_segments';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<TranscriptSegment> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('transcript_id')) {
+      context.handle(
+        _transcriptIdMeta,
+        transcriptId.isAcceptableOrUnknown(
+          data['transcript_id']!,
+          _transcriptIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_transcriptIdMeta);
+    }
+    if (data.containsKey('start_ms')) {
+      context.handle(
+        _startMsMeta,
+        startMs.isAcceptableOrUnknown(data['start_ms']!, _startMsMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_startMsMeta);
+    }
+    if (data.containsKey('end_ms')) {
+      context.handle(
+        _endMsMeta,
+        endMs.isAcceptableOrUnknown(data['end_ms']!, _endMsMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_endMsMeta);
+    }
+    if (data.containsKey('body')) {
+      context.handle(
+        _bodyMeta,
+        body.isAcceptableOrUnknown(data['body']!, _bodyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_bodyMeta);
+    }
+    if (data.containsKey('speaker')) {
+      context.handle(
+        _speakerMeta,
+        speaker.isAcceptableOrUnknown(data['speaker']!, _speakerMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  TranscriptSegment map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return TranscriptSegment(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      transcriptId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}transcript_id'],
+      )!,
+      startMs: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}start_ms'],
+      )!,
+      endMs: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}end_ms'],
+      )!,
+      body: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}body'],
+      )!,
+      speaker: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}speaker'],
+      ),
+    );
+  }
+
+  @override
+  $TranscriptSegmentsTable createAlias(String alias) {
+    return $TranscriptSegmentsTable(attachedDatabase, alias);
+  }
+}
+
+class TranscriptSegment extends DataClass
+    implements Insertable<TranscriptSegment> {
+  /// Auto-incrementing primary key.
+  final int id;
+
+  /// Foreign key to EpisodeTranscripts table.
+  final int transcriptId;
+
+  /// Start time in milliseconds.
+  final int startMs;
+
+  /// End time in milliseconds.
+  final int endMs;
+
+  /// The transcript text content.
+  final String body;
+
+  /// Speaker name for this segment (nullable).
+  final String? speaker;
+  const TranscriptSegment({
+    required this.id,
+    required this.transcriptId,
+    required this.startMs,
+    required this.endMs,
+    required this.body,
+    this.speaker,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['transcript_id'] = Variable<int>(transcriptId);
+    map['start_ms'] = Variable<int>(startMs);
+    map['end_ms'] = Variable<int>(endMs);
+    map['body'] = Variable<String>(body);
+    if (!nullToAbsent || speaker != null) {
+      map['speaker'] = Variable<String>(speaker);
+    }
+    return map;
+  }
+
+  TranscriptSegmentsCompanion toCompanion(bool nullToAbsent) {
+    return TranscriptSegmentsCompanion(
+      id: Value(id),
+      transcriptId: Value(transcriptId),
+      startMs: Value(startMs),
+      endMs: Value(endMs),
+      body: Value(body),
+      speaker: speaker == null && nullToAbsent
+          ? const Value.absent()
+          : Value(speaker),
+    );
+  }
+
+  factory TranscriptSegment.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return TranscriptSegment(
+      id: serializer.fromJson<int>(json['id']),
+      transcriptId: serializer.fromJson<int>(json['transcriptId']),
+      startMs: serializer.fromJson<int>(json['startMs']),
+      endMs: serializer.fromJson<int>(json['endMs']),
+      body: serializer.fromJson<String>(json['body']),
+      speaker: serializer.fromJson<String?>(json['speaker']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'transcriptId': serializer.toJson<int>(transcriptId),
+      'startMs': serializer.toJson<int>(startMs),
+      'endMs': serializer.toJson<int>(endMs),
+      'body': serializer.toJson<String>(body),
+      'speaker': serializer.toJson<String?>(speaker),
+    };
+  }
+
+  TranscriptSegment copyWith({
+    int? id,
+    int? transcriptId,
+    int? startMs,
+    int? endMs,
+    String? body,
+    Value<String?> speaker = const Value.absent(),
+  }) => TranscriptSegment(
+    id: id ?? this.id,
+    transcriptId: transcriptId ?? this.transcriptId,
+    startMs: startMs ?? this.startMs,
+    endMs: endMs ?? this.endMs,
+    body: body ?? this.body,
+    speaker: speaker.present ? speaker.value : this.speaker,
+  );
+  TranscriptSegment copyWithCompanion(TranscriptSegmentsCompanion data) {
+    return TranscriptSegment(
+      id: data.id.present ? data.id.value : this.id,
+      transcriptId: data.transcriptId.present
+          ? data.transcriptId.value
+          : this.transcriptId,
+      startMs: data.startMs.present ? data.startMs.value : this.startMs,
+      endMs: data.endMs.present ? data.endMs.value : this.endMs,
+      body: data.body.present ? data.body.value : this.body,
+      speaker: data.speaker.present ? data.speaker.value : this.speaker,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TranscriptSegment(')
+          ..write('id: $id, ')
+          ..write('transcriptId: $transcriptId, ')
+          ..write('startMs: $startMs, ')
+          ..write('endMs: $endMs, ')
+          ..write('body: $body, ')
+          ..write('speaker: $speaker')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, transcriptId, startMs, endMs, body, speaker);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is TranscriptSegment &&
+          other.id == this.id &&
+          other.transcriptId == this.transcriptId &&
+          other.startMs == this.startMs &&
+          other.endMs == this.endMs &&
+          other.body == this.body &&
+          other.speaker == this.speaker);
+}
+
+class TranscriptSegmentsCompanion extends UpdateCompanion<TranscriptSegment> {
+  final Value<int> id;
+  final Value<int> transcriptId;
+  final Value<int> startMs;
+  final Value<int> endMs;
+  final Value<String> body;
+  final Value<String?> speaker;
+  const TranscriptSegmentsCompanion({
+    this.id = const Value.absent(),
+    this.transcriptId = const Value.absent(),
+    this.startMs = const Value.absent(),
+    this.endMs = const Value.absent(),
+    this.body = const Value.absent(),
+    this.speaker = const Value.absent(),
+  });
+  TranscriptSegmentsCompanion.insert({
+    this.id = const Value.absent(),
+    required int transcriptId,
+    required int startMs,
+    required int endMs,
+    required String body,
+    this.speaker = const Value.absent(),
+  }) : transcriptId = Value(transcriptId),
+       startMs = Value(startMs),
+       endMs = Value(endMs),
+       body = Value(body);
+  static Insertable<TranscriptSegment> custom({
+    Expression<int>? id,
+    Expression<int>? transcriptId,
+    Expression<int>? startMs,
+    Expression<int>? endMs,
+    Expression<String>? body,
+    Expression<String>? speaker,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (transcriptId != null) 'transcript_id': transcriptId,
+      if (startMs != null) 'start_ms': startMs,
+      if (endMs != null) 'end_ms': endMs,
+      if (body != null) 'body': body,
+      if (speaker != null) 'speaker': speaker,
+    });
+  }
+
+  TranscriptSegmentsCompanion copyWith({
+    Value<int>? id,
+    Value<int>? transcriptId,
+    Value<int>? startMs,
+    Value<int>? endMs,
+    Value<String>? body,
+    Value<String?>? speaker,
+  }) {
+    return TranscriptSegmentsCompanion(
+      id: id ?? this.id,
+      transcriptId: transcriptId ?? this.transcriptId,
+      startMs: startMs ?? this.startMs,
+      endMs: endMs ?? this.endMs,
+      body: body ?? this.body,
+      speaker: speaker ?? this.speaker,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (transcriptId.present) {
+      map['transcript_id'] = Variable<int>(transcriptId.value);
+    }
+    if (startMs.present) {
+      map['start_ms'] = Variable<int>(startMs.value);
+    }
+    if (endMs.present) {
+      map['end_ms'] = Variable<int>(endMs.value);
+    }
+    if (body.present) {
+      map['body'] = Variable<String>(body.value);
+    }
+    if (speaker.present) {
+      map['speaker'] = Variable<String>(speaker.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TranscriptSegmentsCompanion(')
+          ..write('id: $id, ')
+          ..write('transcriptId: $transcriptId, ')
+          ..write('startMs: $startMs, ')
+          ..write('endMs: $endMs, ')
+          ..write('body: $body, ')
+          ..write('speaker: $speaker')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $EpisodeChaptersTable extends EpisodeChapters
+    with TableInfo<$EpisodeChaptersTable, EpisodeChapter> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $EpisodeChaptersTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _episodeIdMeta = const VerificationMeta(
+    'episodeId',
+  );
+  @override
+  late final GeneratedColumn<int> episodeId = GeneratedColumn<int>(
+    'episode_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES episodes (id)',
+    ),
+  );
+  static const VerificationMeta _sortOrderMeta = const VerificationMeta(
+    'sortOrder',
+  );
+  @override
+  late final GeneratedColumn<int> sortOrder = GeneratedColumn<int>(
+    'sort_order',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+    'title',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _startMsMeta = const VerificationMeta(
+    'startMs',
+  );
+  @override
+  late final GeneratedColumn<int> startMs = GeneratedColumn<int>(
+    'start_ms',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _endMsMeta = const VerificationMeta('endMs');
+  @override
+  late final GeneratedColumn<int> endMs = GeneratedColumn<int>(
+    'end_ms',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _urlMeta = const VerificationMeta('url');
+  @override
+  late final GeneratedColumn<String> url = GeneratedColumn<String>(
+    'url',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _imageUrlMeta = const VerificationMeta(
+    'imageUrl',
+  );
+  @override
+  late final GeneratedColumn<String> imageUrl = GeneratedColumn<String>(
+    'image_url',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    episodeId,
+    sortOrder,
+    title,
+    startMs,
+    endMs,
+    url,
+    imageUrl,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'episode_chapters';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<EpisodeChapter> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('episode_id')) {
+      context.handle(
+        _episodeIdMeta,
+        episodeId.isAcceptableOrUnknown(data['episode_id']!, _episodeIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_episodeIdMeta);
+    }
+    if (data.containsKey('sort_order')) {
+      context.handle(
+        _sortOrderMeta,
+        sortOrder.isAcceptableOrUnknown(data['sort_order']!, _sortOrderMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_sortOrderMeta);
+    }
+    if (data.containsKey('title')) {
+      context.handle(
+        _titleMeta,
+        title.isAcceptableOrUnknown(data['title']!, _titleMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_titleMeta);
+    }
+    if (data.containsKey('start_ms')) {
+      context.handle(
+        _startMsMeta,
+        startMs.isAcceptableOrUnknown(data['start_ms']!, _startMsMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_startMsMeta);
+    }
+    if (data.containsKey('end_ms')) {
+      context.handle(
+        _endMsMeta,
+        endMs.isAcceptableOrUnknown(data['end_ms']!, _endMsMeta),
+      );
+    }
+    if (data.containsKey('url')) {
+      context.handle(
+        _urlMeta,
+        url.isAcceptableOrUnknown(data['url']!, _urlMeta),
+      );
+    }
+    if (data.containsKey('image_url')) {
+      context.handle(
+        _imageUrlMeta,
+        imageUrl.isAcceptableOrUnknown(data['image_url']!, _imageUrlMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {episodeId, sortOrder},
+  ];
+  @override
+  EpisodeChapter map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return EpisodeChapter(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      episodeId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}episode_id'],
+      )!,
+      sortOrder: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sort_order'],
+      )!,
+      title: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}title'],
+      )!,
+      startMs: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}start_ms'],
+      )!,
+      endMs: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}end_ms'],
+      ),
+      url: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}url'],
+      ),
+      imageUrl: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}image_url'],
+      ),
+    );
+  }
+
+  @override
+  $EpisodeChaptersTable createAlias(String alias) {
+    return $EpisodeChaptersTable(attachedDatabase, alias);
+  }
+}
+
+class EpisodeChapter extends DataClass implements Insertable<EpisodeChapter> {
+  /// Auto-incrementing primary key.
+  final int id;
+
+  /// Foreign key to Episodes table.
+  final int episodeId;
+
+  /// Order of this chapter within the episode.
+  final int sortOrder;
+
+  /// Chapter title.
+  final String title;
+
+  /// Start time in milliseconds.
+  final int startMs;
+
+  /// End time in milliseconds (nullable, may extend to next chapter).
+  final int? endMs;
+
+  /// External URL associated with this chapter (nullable).
+  final String? url;
+
+  /// Chapter artwork URL (nullable).
+  final String? imageUrl;
+  const EpisodeChapter({
+    required this.id,
+    required this.episodeId,
+    required this.sortOrder,
+    required this.title,
+    required this.startMs,
+    this.endMs,
+    this.url,
+    this.imageUrl,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['episode_id'] = Variable<int>(episodeId);
+    map['sort_order'] = Variable<int>(sortOrder);
+    map['title'] = Variable<String>(title);
+    map['start_ms'] = Variable<int>(startMs);
+    if (!nullToAbsent || endMs != null) {
+      map['end_ms'] = Variable<int>(endMs);
+    }
+    if (!nullToAbsent || url != null) {
+      map['url'] = Variable<String>(url);
+    }
+    if (!nullToAbsent || imageUrl != null) {
+      map['image_url'] = Variable<String>(imageUrl);
+    }
+    return map;
+  }
+
+  EpisodeChaptersCompanion toCompanion(bool nullToAbsent) {
+    return EpisodeChaptersCompanion(
+      id: Value(id),
+      episodeId: Value(episodeId),
+      sortOrder: Value(sortOrder),
+      title: Value(title),
+      startMs: Value(startMs),
+      endMs: endMs == null && nullToAbsent
+          ? const Value.absent()
+          : Value(endMs),
+      url: url == null && nullToAbsent ? const Value.absent() : Value(url),
+      imageUrl: imageUrl == null && nullToAbsent
+          ? const Value.absent()
+          : Value(imageUrl),
+    );
+  }
+
+  factory EpisodeChapter.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return EpisodeChapter(
+      id: serializer.fromJson<int>(json['id']),
+      episodeId: serializer.fromJson<int>(json['episodeId']),
+      sortOrder: serializer.fromJson<int>(json['sortOrder']),
+      title: serializer.fromJson<String>(json['title']),
+      startMs: serializer.fromJson<int>(json['startMs']),
+      endMs: serializer.fromJson<int?>(json['endMs']),
+      url: serializer.fromJson<String?>(json['url']),
+      imageUrl: serializer.fromJson<String?>(json['imageUrl']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'episodeId': serializer.toJson<int>(episodeId),
+      'sortOrder': serializer.toJson<int>(sortOrder),
+      'title': serializer.toJson<String>(title),
+      'startMs': serializer.toJson<int>(startMs),
+      'endMs': serializer.toJson<int?>(endMs),
+      'url': serializer.toJson<String?>(url),
+      'imageUrl': serializer.toJson<String?>(imageUrl),
+    };
+  }
+
+  EpisodeChapter copyWith({
+    int? id,
+    int? episodeId,
+    int? sortOrder,
+    String? title,
+    int? startMs,
+    Value<int?> endMs = const Value.absent(),
+    Value<String?> url = const Value.absent(),
+    Value<String?> imageUrl = const Value.absent(),
+  }) => EpisodeChapter(
+    id: id ?? this.id,
+    episodeId: episodeId ?? this.episodeId,
+    sortOrder: sortOrder ?? this.sortOrder,
+    title: title ?? this.title,
+    startMs: startMs ?? this.startMs,
+    endMs: endMs.present ? endMs.value : this.endMs,
+    url: url.present ? url.value : this.url,
+    imageUrl: imageUrl.present ? imageUrl.value : this.imageUrl,
+  );
+  EpisodeChapter copyWithCompanion(EpisodeChaptersCompanion data) {
+    return EpisodeChapter(
+      id: data.id.present ? data.id.value : this.id,
+      episodeId: data.episodeId.present ? data.episodeId.value : this.episodeId,
+      sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
+      title: data.title.present ? data.title.value : this.title,
+      startMs: data.startMs.present ? data.startMs.value : this.startMs,
+      endMs: data.endMs.present ? data.endMs.value : this.endMs,
+      url: data.url.present ? data.url.value : this.url,
+      imageUrl: data.imageUrl.present ? data.imageUrl.value : this.imageUrl,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('EpisodeChapter(')
+          ..write('id: $id, ')
+          ..write('episodeId: $episodeId, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('title: $title, ')
+          ..write('startMs: $startMs, ')
+          ..write('endMs: $endMs, ')
+          ..write('url: $url, ')
+          ..write('imageUrl: $imageUrl')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    episodeId,
+    sortOrder,
+    title,
+    startMs,
+    endMs,
+    url,
+    imageUrl,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is EpisodeChapter &&
+          other.id == this.id &&
+          other.episodeId == this.episodeId &&
+          other.sortOrder == this.sortOrder &&
+          other.title == this.title &&
+          other.startMs == this.startMs &&
+          other.endMs == this.endMs &&
+          other.url == this.url &&
+          other.imageUrl == this.imageUrl);
+}
+
+class EpisodeChaptersCompanion extends UpdateCompanion<EpisodeChapter> {
+  final Value<int> id;
+  final Value<int> episodeId;
+  final Value<int> sortOrder;
+  final Value<String> title;
+  final Value<int> startMs;
+  final Value<int?> endMs;
+  final Value<String?> url;
+  final Value<String?> imageUrl;
+  const EpisodeChaptersCompanion({
+    this.id = const Value.absent(),
+    this.episodeId = const Value.absent(),
+    this.sortOrder = const Value.absent(),
+    this.title = const Value.absent(),
+    this.startMs = const Value.absent(),
+    this.endMs = const Value.absent(),
+    this.url = const Value.absent(),
+    this.imageUrl = const Value.absent(),
+  });
+  EpisodeChaptersCompanion.insert({
+    this.id = const Value.absent(),
+    required int episodeId,
+    required int sortOrder,
+    required String title,
+    required int startMs,
+    this.endMs = const Value.absent(),
+    this.url = const Value.absent(),
+    this.imageUrl = const Value.absent(),
+  }) : episodeId = Value(episodeId),
+       sortOrder = Value(sortOrder),
+       title = Value(title),
+       startMs = Value(startMs);
+  static Insertable<EpisodeChapter> custom({
+    Expression<int>? id,
+    Expression<int>? episodeId,
+    Expression<int>? sortOrder,
+    Expression<String>? title,
+    Expression<int>? startMs,
+    Expression<int>? endMs,
+    Expression<String>? url,
+    Expression<String>? imageUrl,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (episodeId != null) 'episode_id': episodeId,
+      if (sortOrder != null) 'sort_order': sortOrder,
+      if (title != null) 'title': title,
+      if (startMs != null) 'start_ms': startMs,
+      if (endMs != null) 'end_ms': endMs,
+      if (url != null) 'url': url,
+      if (imageUrl != null) 'image_url': imageUrl,
+    });
+  }
+
+  EpisodeChaptersCompanion copyWith({
+    Value<int>? id,
+    Value<int>? episodeId,
+    Value<int>? sortOrder,
+    Value<String>? title,
+    Value<int>? startMs,
+    Value<int?>? endMs,
+    Value<String?>? url,
+    Value<String?>? imageUrl,
+  }) {
+    return EpisodeChaptersCompanion(
+      id: id ?? this.id,
+      episodeId: episodeId ?? this.episodeId,
+      sortOrder: sortOrder ?? this.sortOrder,
+      title: title ?? this.title,
+      startMs: startMs ?? this.startMs,
+      endMs: endMs ?? this.endMs,
+      url: url ?? this.url,
+      imageUrl: imageUrl ?? this.imageUrl,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (episodeId.present) {
+      map['episode_id'] = Variable<int>(episodeId.value);
+    }
+    if (sortOrder.present) {
+      map['sort_order'] = Variable<int>(sortOrder.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (startMs.present) {
+      map['start_ms'] = Variable<int>(startMs.value);
+    }
+    if (endMs.present) {
+      map['end_ms'] = Variable<int>(endMs.value);
+    }
+    if (url.present) {
+      map['url'] = Variable<String>(url.value);
+    }
+    if (imageUrl.present) {
+      map['image_url'] = Variable<String>(imageUrl.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('EpisodeChaptersCompanion(')
+          ..write('id: $id, ')
+          ..write('episodeId: $episodeId, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('title: $title, ')
+          ..write('startMs: $startMs, ')
+          ..write('endMs: $endMs, ')
+          ..write('url: $url, ')
+          ..write('imageUrl: $imageUrl')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -5003,6 +6402,13 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $PodcastViewPreferencesTable(this);
   late final $DownloadTasksTable downloadTasks = $DownloadTasksTable(this);
   late final $QueueItemsTable queueItems = $QueueItemsTable(this);
+  late final $EpisodeTranscriptsTable episodeTranscripts =
+      $EpisodeTranscriptsTable(this);
+  late final $TranscriptSegmentsTable transcriptSegments =
+      $TranscriptSegmentsTable(this);
+  late final $EpisodeChaptersTable episodeChapters = $EpisodeChaptersTable(
+    this,
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -5016,6 +6422,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     podcastViewPreferences,
     downloadTasks,
     queueItems,
+    episodeTranscripts,
+    transcriptSegments,
+    episodeChapters,
   ];
 }
 
@@ -5869,6 +7278,53 @@ final class $$EpisodesTableReferences
       manager.$state.copyWith(prefetchedData: cache),
     );
   }
+
+  static MultiTypedResultKey<$EpisodeTranscriptsTable, List<EpisodeTranscript>>
+  _episodeTranscriptsRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.episodeTranscripts,
+        aliasName: $_aliasNameGenerator(
+          db.episodes.id,
+          db.episodeTranscripts.episodeId,
+        ),
+      );
+
+  $$EpisodeTranscriptsTableProcessedTableManager get episodeTranscriptsRefs {
+    final manager = $$EpisodeTranscriptsTableTableManager(
+      $_db,
+      $_db.episodeTranscripts,
+    ).filter((f) => f.episodeId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _episodeTranscriptsRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$EpisodeChaptersTable, List<EpisodeChapter>>
+  _episodeChaptersRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.episodeChapters,
+    aliasName: $_aliasNameGenerator(
+      db.episodes.id,
+      db.episodeChapters.episodeId,
+    ),
+  );
+
+  $$EpisodeChaptersTableProcessedTableManager get episodeChaptersRefs {
+    final manager = $$EpisodeChaptersTableTableManager(
+      $_db,
+      $_db.episodeChapters,
+    ).filter((f) => f.episodeId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _episodeChaptersRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
 }
 
 class $$EpisodesTableFilterComposer
@@ -6019,6 +7475,56 @@ class $$EpisodesTableFilterComposer
           }) => $$QueueItemsTableFilterComposer(
             $db: $db,
             $table: $db.queueItems,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> episodeTranscriptsRefs(
+    Expression<bool> Function($$EpisodeTranscriptsTableFilterComposer f) f,
+  ) {
+    final $$EpisodeTranscriptsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.episodeTranscripts,
+      getReferencedColumn: (t) => t.episodeId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$EpisodeTranscriptsTableFilterComposer(
+            $db: $db,
+            $table: $db.episodeTranscripts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> episodeChaptersRefs(
+    Expression<bool> Function($$EpisodeChaptersTableFilterComposer f) f,
+  ) {
+    final $$EpisodeChaptersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.episodeChapters,
+      getReferencedColumn: (t) => t.episodeId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$EpisodeChaptersTableFilterComposer(
+            $db: $db,
+            $table: $db.episodeChapters,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -6259,6 +7765,57 @@ class $$EpisodesTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> episodeTranscriptsRefs<T extends Object>(
+    Expression<T> Function($$EpisodeTranscriptsTableAnnotationComposer a) f,
+  ) {
+    final $$EpisodeTranscriptsTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.episodeTranscripts,
+          getReferencedColumn: (t) => t.episodeId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$EpisodeTranscriptsTableAnnotationComposer(
+                $db: $db,
+                $table: $db.episodeTranscripts,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+
+  Expression<T> episodeChaptersRefs<T extends Object>(
+    Expression<T> Function($$EpisodeChaptersTableAnnotationComposer a) f,
+  ) {
+    final $$EpisodeChaptersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.episodeChapters,
+      getReferencedColumn: (t) => t.episodeId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$EpisodeChaptersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.episodeChapters,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$EpisodesTableTableManager
@@ -6279,6 +7836,8 @@ class $$EpisodesTableTableManager
             bool playbackHistoriesRefs,
             bool downloadTasksRefs,
             bool queueItemsRefs,
+            bool episodeTranscriptsRefs,
+            bool episodeChaptersRefs,
           })
         > {
   $$EpisodesTableTableManager(_$AppDatabase db, $EpisodesTable table)
@@ -6358,6 +7917,8 @@ class $$EpisodesTableTableManager
                 playbackHistoriesRefs = false,
                 downloadTasksRefs = false,
                 queueItemsRefs = false,
+                episodeTranscriptsRefs = false,
+                episodeChaptersRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
@@ -6365,6 +7926,8 @@ class $$EpisodesTableTableManager
                     if (playbackHistoriesRefs) db.playbackHistories,
                     if (downloadTasksRefs) db.downloadTasks,
                     if (queueItemsRefs) db.queueItems,
+                    if (episodeTranscriptsRefs) db.episodeTranscripts,
+                    if (episodeChaptersRefs) db.episodeChapters,
                   ],
                   addJoins:
                       <
@@ -6463,6 +8026,48 @@ class $$EpisodesTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (episodeTranscriptsRefs)
+                        await $_getPrefetchedData<
+                          Episode,
+                          $EpisodesTable,
+                          EpisodeTranscript
+                        >(
+                          currentTable: table,
+                          referencedTable: $$EpisodesTableReferences
+                              ._episodeTranscriptsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$EpisodesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).episodeTranscriptsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.episodeId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (episodeChaptersRefs)
+                        await $_getPrefetchedData<
+                          Episode,
+                          $EpisodesTable,
+                          EpisodeChapter
+                        >(
+                          currentTable: table,
+                          referencedTable: $$EpisodesTableReferences
+                              ._episodeChaptersRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$EpisodesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).episodeChaptersRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.episodeId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -6488,6 +8093,8 @@ typedef $$EpisodesTableProcessedTableManager =
         bool playbackHistoriesRefs,
         bool downloadTasksRefs,
         bool queueItemsRefs,
+        bool episodeTranscriptsRefs,
+        bool episodeChaptersRefs,
       })
     >;
 typedef $$PlaybackHistoriesTableCreateCompanionBuilder =
@@ -8979,6 +10586,1204 @@ typedef $$QueueItemsTableProcessedTableManager =
       QueueItem,
       PrefetchHooks Function({bool episodeId})
     >;
+typedef $$EpisodeTranscriptsTableCreateCompanionBuilder =
+    EpisodeTranscriptsCompanion Function({
+      Value<int> id,
+      required int episodeId,
+      required String url,
+      required String type,
+      Value<String?> language,
+      Value<String?> rel,
+      Value<DateTime?> fetchedAt,
+    });
+typedef $$EpisodeTranscriptsTableUpdateCompanionBuilder =
+    EpisodeTranscriptsCompanion Function({
+      Value<int> id,
+      Value<int> episodeId,
+      Value<String> url,
+      Value<String> type,
+      Value<String?> language,
+      Value<String?> rel,
+      Value<DateTime?> fetchedAt,
+    });
+
+final class $$EpisodeTranscriptsTableReferences
+    extends
+        BaseReferences<
+          _$AppDatabase,
+          $EpisodeTranscriptsTable,
+          EpisodeTranscript
+        > {
+  $$EpisodeTranscriptsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $EpisodesTable _episodeIdTable(_$AppDatabase db) =>
+      db.episodes.createAlias(
+        $_aliasNameGenerator(db.episodeTranscripts.episodeId, db.episodes.id),
+      );
+
+  $$EpisodesTableProcessedTableManager get episodeId {
+    final $_column = $_itemColumn<int>('episode_id')!;
+
+    final manager = $$EpisodesTableTableManager(
+      $_db,
+      $_db.episodes,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_episodeIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static MultiTypedResultKey<$TranscriptSegmentsTable, List<TranscriptSegment>>
+  _transcriptSegmentsRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.transcriptSegments,
+        aliasName: $_aliasNameGenerator(
+          db.episodeTranscripts.id,
+          db.transcriptSegments.transcriptId,
+        ),
+      );
+
+  $$TranscriptSegmentsTableProcessedTableManager get transcriptSegmentsRefs {
+    final manager = $$TranscriptSegmentsTableTableManager(
+      $_db,
+      $_db.transcriptSegments,
+    ).filter((f) => f.transcriptId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _transcriptSegmentsRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
+class $$EpisodeTranscriptsTableFilterComposer
+    extends Composer<_$AppDatabase, $EpisodeTranscriptsTable> {
+  $$EpisodeTranscriptsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get url => $composableBuilder(
+    column: $table.url,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get language => $composableBuilder(
+    column: $table.language,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get rel => $composableBuilder(
+    column: $table.rel,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get fetchedAt => $composableBuilder(
+    column: $table.fetchedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$EpisodesTableFilterComposer get episodeId {
+    final $$EpisodesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.episodeId,
+      referencedTable: $db.episodes,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$EpisodesTableFilterComposer(
+            $db: $db,
+            $table: $db.episodes,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  Expression<bool> transcriptSegmentsRefs(
+    Expression<bool> Function($$TranscriptSegmentsTableFilterComposer f) f,
+  ) {
+    final $$TranscriptSegmentsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.transcriptSegments,
+      getReferencedColumn: (t) => t.transcriptId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$TranscriptSegmentsTableFilterComposer(
+            $db: $db,
+            $table: $db.transcriptSegments,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$EpisodeTranscriptsTableOrderingComposer
+    extends Composer<_$AppDatabase, $EpisodeTranscriptsTable> {
+  $$EpisodeTranscriptsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get url => $composableBuilder(
+    column: $table.url,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get language => $composableBuilder(
+    column: $table.language,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get rel => $composableBuilder(
+    column: $table.rel,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get fetchedAt => $composableBuilder(
+    column: $table.fetchedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$EpisodesTableOrderingComposer get episodeId {
+    final $$EpisodesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.episodeId,
+      referencedTable: $db.episodes,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$EpisodesTableOrderingComposer(
+            $db: $db,
+            $table: $db.episodes,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$EpisodeTranscriptsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $EpisodeTranscriptsTable> {
+  $$EpisodeTranscriptsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get url =>
+      $composableBuilder(column: $table.url, builder: (column) => column);
+
+  GeneratedColumn<String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => column);
+
+  GeneratedColumn<String> get language =>
+      $composableBuilder(column: $table.language, builder: (column) => column);
+
+  GeneratedColumn<String> get rel =>
+      $composableBuilder(column: $table.rel, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get fetchedAt =>
+      $composableBuilder(column: $table.fetchedAt, builder: (column) => column);
+
+  $$EpisodesTableAnnotationComposer get episodeId {
+    final $$EpisodesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.episodeId,
+      referencedTable: $db.episodes,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$EpisodesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.episodes,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  Expression<T> transcriptSegmentsRefs<T extends Object>(
+    Expression<T> Function($$TranscriptSegmentsTableAnnotationComposer a) f,
+  ) {
+    final $$TranscriptSegmentsTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.transcriptSegments,
+          getReferencedColumn: (t) => t.transcriptId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$TranscriptSegmentsTableAnnotationComposer(
+                $db: $db,
+                $table: $db.transcriptSegments,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+}
+
+class $$EpisodeTranscriptsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $EpisodeTranscriptsTable,
+          EpisodeTranscript,
+          $$EpisodeTranscriptsTableFilterComposer,
+          $$EpisodeTranscriptsTableOrderingComposer,
+          $$EpisodeTranscriptsTableAnnotationComposer,
+          $$EpisodeTranscriptsTableCreateCompanionBuilder,
+          $$EpisodeTranscriptsTableUpdateCompanionBuilder,
+          (EpisodeTranscript, $$EpisodeTranscriptsTableReferences),
+          EpisodeTranscript,
+          PrefetchHooks Function({bool episodeId, bool transcriptSegmentsRefs})
+        > {
+  $$EpisodeTranscriptsTableTableManager(
+    _$AppDatabase db,
+    $EpisodeTranscriptsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$EpisodeTranscriptsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$EpisodeTranscriptsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$EpisodeTranscriptsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> episodeId = const Value.absent(),
+                Value<String> url = const Value.absent(),
+                Value<String> type = const Value.absent(),
+                Value<String?> language = const Value.absent(),
+                Value<String?> rel = const Value.absent(),
+                Value<DateTime?> fetchedAt = const Value.absent(),
+              }) => EpisodeTranscriptsCompanion(
+                id: id,
+                episodeId: episodeId,
+                url: url,
+                type: type,
+                language: language,
+                rel: rel,
+                fetchedAt: fetchedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int episodeId,
+                required String url,
+                required String type,
+                Value<String?> language = const Value.absent(),
+                Value<String?> rel = const Value.absent(),
+                Value<DateTime?> fetchedAt = const Value.absent(),
+              }) => EpisodeTranscriptsCompanion.insert(
+                id: id,
+                episodeId: episodeId,
+                url: url,
+                type: type,
+                language: language,
+                rel: rel,
+                fetchedAt: fetchedAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$EpisodeTranscriptsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback:
+              ({episodeId = false, transcriptSegmentsRefs = false}) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (transcriptSegmentsRefs) db.transcriptSegments,
+                  ],
+                  addJoins:
+                      <
+                        T extends TableManagerState<
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic
+                        >
+                      >(state) {
+                        if (episodeId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.episodeId,
+                                    referencedTable:
+                                        $$EpisodeTranscriptsTableReferences
+                                            ._episodeIdTable(db),
+                                    referencedColumn:
+                                        $$EpisodeTranscriptsTableReferences
+                                            ._episodeIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+
+                        return state;
+                      },
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (transcriptSegmentsRefs)
+                        await $_getPrefetchedData<
+                          EpisodeTranscript,
+                          $EpisodeTranscriptsTable,
+                          TranscriptSegment
+                        >(
+                          currentTable: table,
+                          referencedTable: $$EpisodeTranscriptsTableReferences
+                              ._transcriptSegmentsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$EpisodeTranscriptsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).transcriptSegmentsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.transcriptId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                    ];
+                  },
+                );
+              },
+        ),
+      );
+}
+
+typedef $$EpisodeTranscriptsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $EpisodeTranscriptsTable,
+      EpisodeTranscript,
+      $$EpisodeTranscriptsTableFilterComposer,
+      $$EpisodeTranscriptsTableOrderingComposer,
+      $$EpisodeTranscriptsTableAnnotationComposer,
+      $$EpisodeTranscriptsTableCreateCompanionBuilder,
+      $$EpisodeTranscriptsTableUpdateCompanionBuilder,
+      (EpisodeTranscript, $$EpisodeTranscriptsTableReferences),
+      EpisodeTranscript,
+      PrefetchHooks Function({bool episodeId, bool transcriptSegmentsRefs})
+    >;
+typedef $$TranscriptSegmentsTableCreateCompanionBuilder =
+    TranscriptSegmentsCompanion Function({
+      Value<int> id,
+      required int transcriptId,
+      required int startMs,
+      required int endMs,
+      required String body,
+      Value<String?> speaker,
+    });
+typedef $$TranscriptSegmentsTableUpdateCompanionBuilder =
+    TranscriptSegmentsCompanion Function({
+      Value<int> id,
+      Value<int> transcriptId,
+      Value<int> startMs,
+      Value<int> endMs,
+      Value<String> body,
+      Value<String?> speaker,
+    });
+
+final class $$TranscriptSegmentsTableReferences
+    extends
+        BaseReferences<
+          _$AppDatabase,
+          $TranscriptSegmentsTable,
+          TranscriptSegment
+        > {
+  $$TranscriptSegmentsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $EpisodeTranscriptsTable _transcriptIdTable(_$AppDatabase db) =>
+      db.episodeTranscripts.createAlias(
+        $_aliasNameGenerator(
+          db.transcriptSegments.transcriptId,
+          db.episodeTranscripts.id,
+        ),
+      );
+
+  $$EpisodeTranscriptsTableProcessedTableManager get transcriptId {
+    final $_column = $_itemColumn<int>('transcript_id')!;
+
+    final manager = $$EpisodeTranscriptsTableTableManager(
+      $_db,
+      $_db.episodeTranscripts,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_transcriptIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$TranscriptSegmentsTableFilterComposer
+    extends Composer<_$AppDatabase, $TranscriptSegmentsTable> {
+  $$TranscriptSegmentsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get startMs => $composableBuilder(
+    column: $table.startMs,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get endMs => $composableBuilder(
+    column: $table.endMs,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get body => $composableBuilder(
+    column: $table.body,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get speaker => $composableBuilder(
+    column: $table.speaker,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$EpisodeTranscriptsTableFilterComposer get transcriptId {
+    final $$EpisodeTranscriptsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.transcriptId,
+      referencedTable: $db.episodeTranscripts,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$EpisodeTranscriptsTableFilterComposer(
+            $db: $db,
+            $table: $db.episodeTranscripts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$TranscriptSegmentsTableOrderingComposer
+    extends Composer<_$AppDatabase, $TranscriptSegmentsTable> {
+  $$TranscriptSegmentsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get startMs => $composableBuilder(
+    column: $table.startMs,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get endMs => $composableBuilder(
+    column: $table.endMs,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get body => $composableBuilder(
+    column: $table.body,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get speaker => $composableBuilder(
+    column: $table.speaker,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$EpisodeTranscriptsTableOrderingComposer get transcriptId {
+    final $$EpisodeTranscriptsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.transcriptId,
+      referencedTable: $db.episodeTranscripts,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$EpisodeTranscriptsTableOrderingComposer(
+            $db: $db,
+            $table: $db.episodeTranscripts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$TranscriptSegmentsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $TranscriptSegmentsTable> {
+  $$TranscriptSegmentsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get startMs =>
+      $composableBuilder(column: $table.startMs, builder: (column) => column);
+
+  GeneratedColumn<int> get endMs =>
+      $composableBuilder(column: $table.endMs, builder: (column) => column);
+
+  GeneratedColumn<String> get body =>
+      $composableBuilder(column: $table.body, builder: (column) => column);
+
+  GeneratedColumn<String> get speaker =>
+      $composableBuilder(column: $table.speaker, builder: (column) => column);
+
+  $$EpisodeTranscriptsTableAnnotationComposer get transcriptId {
+    final $$EpisodeTranscriptsTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.transcriptId,
+          referencedTable: $db.episodeTranscripts,
+          getReferencedColumn: (t) => t.id,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$EpisodeTranscriptsTableAnnotationComposer(
+                $db: $db,
+                $table: $db.episodeTranscripts,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return composer;
+  }
+}
+
+class $$TranscriptSegmentsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $TranscriptSegmentsTable,
+          TranscriptSegment,
+          $$TranscriptSegmentsTableFilterComposer,
+          $$TranscriptSegmentsTableOrderingComposer,
+          $$TranscriptSegmentsTableAnnotationComposer,
+          $$TranscriptSegmentsTableCreateCompanionBuilder,
+          $$TranscriptSegmentsTableUpdateCompanionBuilder,
+          (TranscriptSegment, $$TranscriptSegmentsTableReferences),
+          TranscriptSegment,
+          PrefetchHooks Function({bool transcriptId})
+        > {
+  $$TranscriptSegmentsTableTableManager(
+    _$AppDatabase db,
+    $TranscriptSegmentsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$TranscriptSegmentsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$TranscriptSegmentsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$TranscriptSegmentsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> transcriptId = const Value.absent(),
+                Value<int> startMs = const Value.absent(),
+                Value<int> endMs = const Value.absent(),
+                Value<String> body = const Value.absent(),
+                Value<String?> speaker = const Value.absent(),
+              }) => TranscriptSegmentsCompanion(
+                id: id,
+                transcriptId: transcriptId,
+                startMs: startMs,
+                endMs: endMs,
+                body: body,
+                speaker: speaker,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int transcriptId,
+                required int startMs,
+                required int endMs,
+                required String body,
+                Value<String?> speaker = const Value.absent(),
+              }) => TranscriptSegmentsCompanion.insert(
+                id: id,
+                transcriptId: transcriptId,
+                startMs: startMs,
+                endMs: endMs,
+                body: body,
+                speaker: speaker,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$TranscriptSegmentsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({transcriptId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (transcriptId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.transcriptId,
+                                referencedTable:
+                                    $$TranscriptSegmentsTableReferences
+                                        ._transcriptIdTable(db),
+                                referencedColumn:
+                                    $$TranscriptSegmentsTableReferences
+                                        ._transcriptIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$TranscriptSegmentsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $TranscriptSegmentsTable,
+      TranscriptSegment,
+      $$TranscriptSegmentsTableFilterComposer,
+      $$TranscriptSegmentsTableOrderingComposer,
+      $$TranscriptSegmentsTableAnnotationComposer,
+      $$TranscriptSegmentsTableCreateCompanionBuilder,
+      $$TranscriptSegmentsTableUpdateCompanionBuilder,
+      (TranscriptSegment, $$TranscriptSegmentsTableReferences),
+      TranscriptSegment,
+      PrefetchHooks Function({bool transcriptId})
+    >;
+typedef $$EpisodeChaptersTableCreateCompanionBuilder =
+    EpisodeChaptersCompanion Function({
+      Value<int> id,
+      required int episodeId,
+      required int sortOrder,
+      required String title,
+      required int startMs,
+      Value<int?> endMs,
+      Value<String?> url,
+      Value<String?> imageUrl,
+    });
+typedef $$EpisodeChaptersTableUpdateCompanionBuilder =
+    EpisodeChaptersCompanion Function({
+      Value<int> id,
+      Value<int> episodeId,
+      Value<int> sortOrder,
+      Value<String> title,
+      Value<int> startMs,
+      Value<int?> endMs,
+      Value<String?> url,
+      Value<String?> imageUrl,
+    });
+
+final class $$EpisodeChaptersTableReferences
+    extends
+        BaseReferences<_$AppDatabase, $EpisodeChaptersTable, EpisodeChapter> {
+  $$EpisodeChaptersTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $EpisodesTable _episodeIdTable(_$AppDatabase db) =>
+      db.episodes.createAlias(
+        $_aliasNameGenerator(db.episodeChapters.episodeId, db.episodes.id),
+      );
+
+  $$EpisodesTableProcessedTableManager get episodeId {
+    final $_column = $_itemColumn<int>('episode_id')!;
+
+    final manager = $$EpisodesTableTableManager(
+      $_db,
+      $_db.episodes,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_episodeIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$EpisodeChaptersTableFilterComposer
+    extends Composer<_$AppDatabase, $EpisodeChaptersTable> {
+  $$EpisodeChaptersTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get startMs => $composableBuilder(
+    column: $table.startMs,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get endMs => $composableBuilder(
+    column: $table.endMs,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get url => $composableBuilder(
+    column: $table.url,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get imageUrl => $composableBuilder(
+    column: $table.imageUrl,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$EpisodesTableFilterComposer get episodeId {
+    final $$EpisodesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.episodeId,
+      referencedTable: $db.episodes,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$EpisodesTableFilterComposer(
+            $db: $db,
+            $table: $db.episodes,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$EpisodeChaptersTableOrderingComposer
+    extends Composer<_$AppDatabase, $EpisodeChaptersTable> {
+  $$EpisodeChaptersTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get startMs => $composableBuilder(
+    column: $table.startMs,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get endMs => $composableBuilder(
+    column: $table.endMs,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get url => $composableBuilder(
+    column: $table.url,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get imageUrl => $composableBuilder(
+    column: $table.imageUrl,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$EpisodesTableOrderingComposer get episodeId {
+    final $$EpisodesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.episodeId,
+      referencedTable: $db.episodes,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$EpisodesTableOrderingComposer(
+            $db: $db,
+            $table: $db.episodes,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$EpisodeChaptersTableAnnotationComposer
+    extends Composer<_$AppDatabase, $EpisodeChaptersTable> {
+  $$EpisodeChaptersTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get sortOrder =>
+      $composableBuilder(column: $table.sortOrder, builder: (column) => column);
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<int> get startMs =>
+      $composableBuilder(column: $table.startMs, builder: (column) => column);
+
+  GeneratedColumn<int> get endMs =>
+      $composableBuilder(column: $table.endMs, builder: (column) => column);
+
+  GeneratedColumn<String> get url =>
+      $composableBuilder(column: $table.url, builder: (column) => column);
+
+  GeneratedColumn<String> get imageUrl =>
+      $composableBuilder(column: $table.imageUrl, builder: (column) => column);
+
+  $$EpisodesTableAnnotationComposer get episodeId {
+    final $$EpisodesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.episodeId,
+      referencedTable: $db.episodes,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$EpisodesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.episodes,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$EpisodeChaptersTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $EpisodeChaptersTable,
+          EpisodeChapter,
+          $$EpisodeChaptersTableFilterComposer,
+          $$EpisodeChaptersTableOrderingComposer,
+          $$EpisodeChaptersTableAnnotationComposer,
+          $$EpisodeChaptersTableCreateCompanionBuilder,
+          $$EpisodeChaptersTableUpdateCompanionBuilder,
+          (EpisodeChapter, $$EpisodeChaptersTableReferences),
+          EpisodeChapter,
+          PrefetchHooks Function({bool episodeId})
+        > {
+  $$EpisodeChaptersTableTableManager(
+    _$AppDatabase db,
+    $EpisodeChaptersTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$EpisodeChaptersTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$EpisodeChaptersTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$EpisodeChaptersTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> episodeId = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
+                Value<String> title = const Value.absent(),
+                Value<int> startMs = const Value.absent(),
+                Value<int?> endMs = const Value.absent(),
+                Value<String?> url = const Value.absent(),
+                Value<String?> imageUrl = const Value.absent(),
+              }) => EpisodeChaptersCompanion(
+                id: id,
+                episodeId: episodeId,
+                sortOrder: sortOrder,
+                title: title,
+                startMs: startMs,
+                endMs: endMs,
+                url: url,
+                imageUrl: imageUrl,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int episodeId,
+                required int sortOrder,
+                required String title,
+                required int startMs,
+                Value<int?> endMs = const Value.absent(),
+                Value<String?> url = const Value.absent(),
+                Value<String?> imageUrl = const Value.absent(),
+              }) => EpisodeChaptersCompanion.insert(
+                id: id,
+                episodeId: episodeId,
+                sortOrder: sortOrder,
+                title: title,
+                startMs: startMs,
+                endMs: endMs,
+                url: url,
+                imageUrl: imageUrl,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$EpisodeChaptersTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({episodeId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (episodeId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.episodeId,
+                                referencedTable:
+                                    $$EpisodeChaptersTableReferences
+                                        ._episodeIdTable(db),
+                                referencedColumn:
+                                    $$EpisodeChaptersTableReferences
+                                        ._episodeIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$EpisodeChaptersTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $EpisodeChaptersTable,
+      EpisodeChapter,
+      $$EpisodeChaptersTableFilterComposer,
+      $$EpisodeChaptersTableOrderingComposer,
+      $$EpisodeChaptersTableAnnotationComposer,
+      $$EpisodeChaptersTableCreateCompanionBuilder,
+      $$EpisodeChaptersTableUpdateCompanionBuilder,
+      (EpisodeChapter, $$EpisodeChaptersTableReferences),
+      EpisodeChapter,
+      PrefetchHooks Function({bool episodeId})
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -9002,4 +11807,10 @@ class $AppDatabaseManager {
       $$DownloadTasksTableTableManager(_db, _db.downloadTasks);
   $$QueueItemsTableTableManager get queueItems =>
       $$QueueItemsTableTableManager(_db, _db.queueItems);
+  $$EpisodeTranscriptsTableTableManager get episodeTranscripts =>
+      $$EpisodeTranscriptsTableTableManager(_db, _db.episodeTranscripts);
+  $$TranscriptSegmentsTableTableManager get transcriptSegments =>
+      $$TranscriptSegmentsTableTableManager(_db, _db.transcriptSegments);
+  $$EpisodeChaptersTableTableManager get episodeChapters =>
+      $$EpisodeChaptersTableTableManager(_db, _db.episodeChapters);
 }

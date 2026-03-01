@@ -14,6 +14,9 @@ import '../../features/feed/models/smart_playlists.dart';
 import '../../features/player/models/playback_history.dart';
 import '../../features/queue/models/queue_item.dart';
 import '../../features/subscription/models/subscriptions.dart';
+import '../../features/transcript/models/episode_chapter.dart';
+import '../../features/transcript/models/episode_transcript.dart';
+import '../../features/transcript/models/transcript_segment_table.dart';
 
 part 'app_database.g.dart';
 
@@ -30,6 +33,9 @@ part 'app_database.g.dart';
     PodcastViewPreferences,
     DownloadTasks,
     QueueItems,
+    EpisodeTranscripts,
+    TranscriptSegments,
+    EpisodeChapters,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -40,7 +46,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 16;
+  int get schemaVersion => 17;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -134,6 +140,12 @@ class AppDatabase extends _$AppDatabase {
           smartPlaylistGroups,
           smartPlaylistGroups.episodeYearHeaders,
         );
+      }
+      // Migration from v16 to v17: add transcript and chapter tables
+      if (17 <= to && from < 17) {
+        await m.createTable(episodeTranscripts);
+        await m.createTable(transcriptSegments);
+        await m.createTable(episodeChapters);
       }
     },
   );

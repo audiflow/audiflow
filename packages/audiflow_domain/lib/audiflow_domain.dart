@@ -124,7 +124,13 @@ export 'src/common/database/app_database.dart'
         QueueItem,
         QueueItemsCompanion,
         SmartPlaylistEntity,
-        SmartPlaylistsCompanion;
+        SmartPlaylistsCompanion,
+        EpisodeTranscript,
+        EpisodeTranscriptsCompanion,
+        TranscriptSegment,
+        TranscriptSegmentsCompanion,
+        EpisodeChapter,
+        EpisodeChaptersCompanion;
 
 // Subscription feature
 export 'src/features/subscription/extensions/subscription_extensions.dart';
