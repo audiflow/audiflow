@@ -1,0 +1,12 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:05.500
+<v Alice>Welcome to the show.
+
+00:00:05.500 --> 00:00:12.300
+<v Bob>Thanks for having me.
+
+NOTE This is a comment and should be ignored.
+
+00:01:00.000 --> 00:01:10.000
+And that wraps things up.
