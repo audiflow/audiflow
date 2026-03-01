@@ -117,18 +117,24 @@ class QueueService {
     List<int> episodeIds;
 
     if (siblingEpisodeIds != null) {
-      // Fetch sibling episodes and sort by episode number ascending
-      // to build a queue from the current episode toward newer ones.
+      // Sort siblings by publishedAt (chronological) with episodeNumber
+      // as fallback. publishedAt is the correct primary key because it
+      // orders episodes correctly across multiple series within a podcast.
       final siblings = await _episodeRepository.getByIds(siblingEpisodeIds);
       siblings.sort((a, b) {
+        final aPub = a.publishedAt;
+        final bPub = b.publishedAt;
+        if (aPub != null && bPub != null) {
+          final cmp = aPub.compareTo(bPub);
+          if (cmp != 0) return cmp;
+        } else if (aPub != null) {
+          return -1;
+        } else if (bPub != null) {
+          return 1;
+        }
         final aNum = a.episodeNumber;
         final bNum = b.episodeNumber;
         if (aNum != null && bNum != null) return aNum.compareTo(bNum);
-        if (aNum != null) return -1;
-        if (bNum != null) return 1;
-        final aPub = a.publishedAt;
-        final bPub = b.publishedAt;
-        if (aPub != null && bPub != null) return aPub.compareTo(bPub);
         return 0;
       });
 

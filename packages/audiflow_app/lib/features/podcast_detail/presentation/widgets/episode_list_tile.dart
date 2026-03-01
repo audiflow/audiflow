@@ -23,6 +23,7 @@ class EpisodeListTile extends ConsumerWidget {
     this.feedImageUrl,
     this.progress,
     this.lastRefreshedAt,
+    this.siblingEpisodeIds,
   });
 
   final PodcastItem episode;
@@ -37,6 +38,12 @@ class EpisodeListTile extends ConsumerWidget {
 
   /// Subscription's last refresh timestamp for "new" badge logic.
   final DateTime? lastRefreshedAt;
+
+  /// Ordered episode IDs visible in the current list view.
+  ///
+  /// When provided, the adhoc queue is built from these IDs instead of
+  /// falling back to a database query by episode number.
+  final List<int>? siblingEpisodeIds;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -403,6 +410,7 @@ class EpisodeListTile extends ConsumerWidget {
       await queueService.createAdhocQueue(
         startingEpisodeId: episodeId,
         sourceContext: podcastTitle,
+        siblingEpisodeIds: siblingEpisodeIds,
       );
     }
 

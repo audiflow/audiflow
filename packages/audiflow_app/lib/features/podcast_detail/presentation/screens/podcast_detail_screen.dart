@@ -731,6 +731,14 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
         }
 
         final progressMap = progressMapAsync.value ?? {};
+
+        // Collect DB episode IDs in display order for adhoc queue.
+        final siblingEpisodeIds = <int>[
+          for (final ep in displayEpisodes)
+            if (ep.enclosureUrl != null)
+              ?progressMap[ep.enclosureUrl]?.episode.id,
+        ];
+
         final sortHeader = SliverToBoxAdapter(
           child: _buildSortHeader(
             theme,
@@ -747,6 +755,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
             ..._buildYearGroupedEpisodeSlivers(
               displayEpisodes,
               progressMap,
+              siblingEpisodeIds,
               theme,
               sortOrder,
             ),
@@ -771,6 +780,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
                 artworkUrl: podcast.artworkUrl,
                 feedImageUrl: _feedImageUrl,
                 progress: progress,
+                siblingEpisodeIds: siblingEpisodeIds,
               );
             },
           ),
@@ -802,6 +812,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
   List<Widget> _buildYearGroupedEpisodeSlivers(
     List<PodcastItem> episodes,
     EpisodeProgressMap progressMap,
+    List<int> siblingEpisodeIds,
     ThemeData theme,
     SortOrder sortOrder,
   ) {
@@ -838,6 +849,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
           artworkUrl: podcast.artworkUrl,
           feedImageUrl: _feedImageUrl,
           progress: progress,
+          siblingEpisodeIds: siblingEpisodeIds,
         );
       },
       scrollController: _scrollController,
