@@ -44,9 +44,11 @@ void main() {
     testWidgets('renders submit button with search icon', (tester) async {
       await tester.pumpWidget(buildTestWidget());
 
-      expect(find.byType(IconButton), findsOneWidget);
+      expect(find.byKey(const Key('search_submit_button')), findsOneWidget);
 
-      final iconButton = tester.widget<IconButton>(find.byType(IconButton));
+      final iconButton = tester.widget<IconButton>(
+        find.byKey(const Key('search_submit_button')),
+      );
       final icon = iconButton.icon as Icon;
       expect(icon.icon, equals(Icons.search));
     });
@@ -66,7 +68,7 @@ void main() {
       await tester.enterText(find.byType(TextField), 'test query');
       await tester.pump();
 
-      await tester.tap(find.byType(IconButton));
+      await tester.tap(find.byKey(const Key('search_submit_button')));
       await tester.pumpAndSettle();
 
       final state = container.read(podcastSearchControllerProvider);
@@ -118,7 +120,7 @@ void main() {
 
       expect(focusNode.hasFocus, isTrue);
 
-      await tester.tap(find.byType(IconButton));
+      await tester.tap(find.byKey(const Key('search_submit_button')));
       await tester.pumpAndSettle();
 
       expect(focusNode.hasFocus, isFalse);
@@ -161,7 +163,7 @@ void main() {
 
         await tester.enterText(find.byType(TextField), 'test query');
         await tester.pump();
-        await tester.tap(find.byType(IconButton));
+        await tester.tap(find.byKey(const Key('search_submit_button')));
         await tester.pump();
 
         expect(find.byType(CircularProgressIndicator), findsOneWidget);
@@ -182,10 +184,12 @@ void main() {
 
         await tester.enterText(find.byType(TextField), 'test query');
         await tester.pump();
-        await tester.tap(find.byType(IconButton));
+        await tester.tap(find.byKey(const Key('search_submit_button')));
         await tester.pump();
 
-        final iconButton = tester.widget<IconButton>(find.byType(IconButton));
+        final iconButton = tester.widget<IconButton>(
+          find.byKey(const Key('search_submit_button')),
+        );
         expect(iconButton.onPressed, isNull);
       });
 
@@ -210,7 +214,7 @@ void main() {
 
         await tester.enterText(find.byType(TextField), 'test query');
         await tester.pump();
-        await tester.tap(find.byType(IconButton));
+        await tester.tap(find.byKey(const Key('search_submit_button')));
         await tester.pumpAndSettle();
 
         expect(find.byKey(const Key('search_results_list')), findsOneWidget);
@@ -231,7 +235,7 @@ void main() {
 
         await tester.enterText(find.byType(TextField), 'no results query');
         await tester.pump();
-        await tester.tap(find.byType(IconButton));
+        await tester.tap(find.byKey(const Key('search_submit_button')));
         await tester.pumpAndSettle();
 
         expect(find.byKey(const Key('search_empty_state')), findsOneWidget);
@@ -253,7 +257,7 @@ void main() {
 
         await tester.enterText(find.byType(TextField), 'error query');
         await tester.pump();
-        await tester.tap(find.byType(IconButton));
+        await tester.tap(find.byKey(const Key('search_submit_button')));
         await tester.pumpAndSettle();
 
         expect(find.byKey(const Key('search_error_state')), findsOneWidget);
@@ -274,7 +278,7 @@ void main() {
 
         await tester.enterText(find.byType(TextField), 'retry query');
         await tester.pump();
-        await tester.tap(find.byType(IconButton));
+        await tester.tap(find.byKey(const Key('search_submit_button')));
         await tester.pumpAndSettle();
 
         expect(find.byKey(const Key('search_error_state')), findsOneWidget);

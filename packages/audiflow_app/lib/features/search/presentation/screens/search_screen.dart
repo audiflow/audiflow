@@ -64,6 +64,18 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                     decoration: InputDecoration(
                       hintText: l10n.searchHint,
                       border: const OutlineInputBorder(),
+                      suffixIcon: ValueListenableBuilder<TextEditingValue>(
+                        valueListenable: _textController,
+                        builder: (context, value, child) {
+                          if (value.text.isEmpty) {
+                            return const SizedBox.shrink();
+                          }
+                          return IconButton(
+                            icon: const Icon(Icons.clear),
+                            onPressed: _textController.clear,
+                          );
+                        },
+                      ),
                     ),
                     textInputAction: TextInputAction.search,
                     onSubmitted: (_) => _onSearch(),
@@ -71,6 +83,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                 ),
                 const SizedBox(width: Spacing.sm),
                 IconButton(
+                  key: const Key('search_submit_button'),
                   icon: const Icon(Icons.search),
                   // Disable submit button during loading (Requirement 3.2)
                   onPressed: isLoading ? null : _onSearch,

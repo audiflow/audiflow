@@ -61,6 +61,12 @@ class _SearchableAppBarState extends State<SearchableAppBar> {
     widget.onSearchChanged('');
   }
 
+  void _clearText() {
+    _searchController.clear();
+    _debounceTimer?.cancel();
+    widget.onSearchChanged('');
+  }
+
   void _onTextChanged(String text) {
     _debounceTimer?.cancel();
     _debounceTimer = Timer(
@@ -90,9 +96,19 @@ class _SearchableAppBarState extends State<SearchableAppBar> {
       controller: _searchController,
       focusNode: _focusNode,
       onChanged: _onTextChanged,
-      decoration: const InputDecoration(
+      decoration: InputDecoration(
         hintText: 'Search...',
         border: InputBorder.none,
+        suffixIcon: ValueListenableBuilder<TextEditingValue>(
+          valueListenable: _searchController,
+          builder: (context, value, child) {
+            if (value.text.isEmpty) return const SizedBox.shrink();
+            return IconButton(
+              icon: const Icon(Icons.clear),
+              onPressed: _clearText,
+            );
+          },
+        ),
       ),
     );
   }
