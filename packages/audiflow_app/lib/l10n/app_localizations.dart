@@ -1177,6 +1177,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Jump to current'**
   String get playerTranscriptJumpToCurrent;
+
+  /// Accessibility label for transcript indicator icon
+  ///
+  /// In en, this message translates to:
+  /// **'Transcript available'**
+  String get episodeTranscriptAvailable;
 }
 
 class _AppLocalizationsDelegate

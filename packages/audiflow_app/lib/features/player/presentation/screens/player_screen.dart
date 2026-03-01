@@ -277,7 +277,7 @@ class _PlayerArtwork extends StatelessWidget {
               ? Image.network(
                   artworkUrl!,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) =>
+                  errorBuilder: (_, _, _) =>
                       _Placeholder(colorScheme: colorScheme),
                 )
               : _Placeholder(colorScheme: colorScheme),

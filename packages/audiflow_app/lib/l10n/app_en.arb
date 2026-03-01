@@ -376,5 +376,8 @@
   "playerTranscriptEmpty": "No transcript available",
   "@playerTranscriptEmpty": { "description": "No transcript available message" },
   "playerTranscriptJumpToCurrent": "Jump to current",
-  "@playerTranscriptJumpToCurrent": { "description": "Jump to current position button label" }
+  "@playerTranscriptJumpToCurrent": { "description": "Jump to current position button label" },
+
+  "episodeTranscriptAvailable": "Transcript available",
+  "@episodeTranscriptAvailable": { "description": "Accessibility label for transcript indicator icon" }
 }

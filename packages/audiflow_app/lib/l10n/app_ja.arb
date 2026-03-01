@@ -196,5 +196,7 @@
   "playerTabTranscript": "書き起こし",
   "playerTranscriptLoading": "書き起こしを読み込み中...",
   "playerTranscriptEmpty": "書き起こしがありません",
-  "playerTranscriptJumpToCurrent": "現在位置へ"
+  "playerTranscriptJumpToCurrent": "現在位置へ",
+
+  "episodeTranscriptAvailable": "書き起こしあり"
 }

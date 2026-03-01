@@ -584,4 +584,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get playerTranscriptJumpToCurrent => '現在位置へ';
+
+  @override
+  String get episodeTranscriptAvailable => '書き起こしあり';
 }

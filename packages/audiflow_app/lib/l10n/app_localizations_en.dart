@@ -594,4 +594,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get playerTranscriptJumpToCurrent => 'Jump to current';
+
+  @override
+  String get episodeTranscriptAvailable => 'Transcript available';
 }
