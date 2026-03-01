@@ -334,16 +334,61 @@ class EntityFactory {
     };
   }
 
-  /// Extracts chapters from item data (placeholder for future implementation).
+  /// Extracts chapters from item data.
+  ///
+  /// Reads `itemData['chapters']` as a list of maps, skipping entries
+  /// that lack a required `title` or `startTime`.
   List<PodcastChapter>? _extractChapters(Map<String, dynamic> itemData) {
-    // TODO: Implement chapter parsing when chapter support is added
-    return null;
+    final chapterMaps = itemData['chapters'] as List<Map<String, dynamic>>?;
+    if (chapterMaps == null || chapterMaps.isEmpty) return null;
+
+    final chapters = <PodcastChapter>[];
+    for (final ch in chapterMaps) {
+      final title = ch['title'] as String?;
+      final startTime = ch['startTime'] as Duration?;
+      if (title == null || startTime == null) continue;
+
+      chapters.add(
+        PodcastChapter(
+          title: title,
+          startTime: startTime,
+          url: ch['url'] as String?,
+          imageUrl: ch['imageUrl'] as String?,
+        ),
+      );
+    }
+
+    return chapters.isEmpty ? null : chapters;
   }
 
-  /// Extracts transcripts from item data (placeholder for future implementation).
-  List<PodcastTranscript>? _extractTranscripts(Map<String, dynamic> itemData) {
-    // TODO: Implement transcript parsing when transcript support is added
-    return null;
+  /// Extracts transcripts from item data.
+  ///
+  /// Reads `itemData['transcripts']` as a list of maps, skipping entries
+  /// that lack a required `url` or `type`.
+  List<PodcastTranscript>? _extractTranscripts(
+    Map<String, dynamic> itemData,
+  ) {
+    final transcriptMaps =
+        itemData['transcripts'] as List<Map<String, dynamic>>?;
+    if (transcriptMaps == null || transcriptMaps.isEmpty) return null;
+
+    final transcripts = <PodcastTranscript>[];
+    for (final tr in transcriptMaps) {
+      final url = tr['url'] as String?;
+      final type = tr['type'] as String?;
+      if (url == null || type == null) continue;
+
+      transcripts.add(
+        PodcastTranscript(
+          url: url,
+          type: type,
+          language: tr['language'] as String?,
+          rel: tr['rel'] as String?,
+        ),
+      );
+    }
+
+    return transcripts.isEmpty ? null : transcripts;
   }
 
   /// Extracts a required string field with a default value.
