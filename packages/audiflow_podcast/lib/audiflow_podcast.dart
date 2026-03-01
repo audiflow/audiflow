@@ -100,5 +100,8 @@ export 'src/network/http_fetcher.dart' show CacheInfo;
 export 'src/parser/isolate_rss_parser.dart';
 export 'src/parser/parse_progress.dart';
 export 'src/parser/podcast_entity_builder.dart';
+// Transcript parsing
+export 'src/parser/transcript/srt_parser.dart';
+export 'src/parser/transcript/transcript_segment.dart';
 // Core parser
 export 'src/podcast_feed_parser.dart' show CacheOptions, PodcastRssParser;
