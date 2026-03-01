@@ -480,6 +480,7 @@ class _SmartPlaylistEpisodesScreenState
         final group = sorted[index];
         return _SmartPlaylistGroupCard(
           group: group,
+          showSeasonNumber: widget.smartPlaylist.showSeasonNumber,
           thumbnailUrl: group.thumbnailUrl,
           dateRange: group.showDateRange
               ? _formatDateRange(group.earliestDate, group.latestDate)
@@ -550,6 +551,7 @@ class _SmartPlaylistEpisodesScreenState
       sortedYears: sortedYears,
       itemBuilder: (context, group) => _SmartPlaylistGroupCard(
         group: group,
+        showSeasonNumber: widget.smartPlaylist.showSeasonNumber,
         thumbnailUrl: group.thumbnailUrl,
         dateRange: group.showDateRange
             ? _formatDateRange(group.earliestDate, group.latestDate)
@@ -609,6 +611,7 @@ class _SmartPlaylistEpisodesScreenState
       sortedYears: sortedYears,
       itemBuilder: (context, item) => _SmartPlaylistGroupCard(
         group: item.group,
+        showSeasonNumber: widget.smartPlaylist.showSeasonNumber,
         thumbnailUrl: item.group.thumbnailUrl,
         episodeCount: item.filteredEpisodeIds.length,
         dateRange: item.group.showDateRange
@@ -811,6 +814,7 @@ class _YearFilteredGroup {
 class _SmartPlaylistGroupCard extends StatelessWidget {
   const _SmartPlaylistGroupCard({
     required this.group,
+    this.showSeasonNumber = false,
     this.thumbnailUrl,
     this.episodeCount,
     this.dateRange,
@@ -820,6 +824,10 @@ class _SmartPlaylistGroupCard extends StatelessWidget {
   });
 
   final SmartPlaylistGroup group;
+
+  /// Whether to prepend "S{sortKey}" to the group title.
+  final bool showSeasonNumber;
+
   final String? thumbnailUrl;
 
   /// Override episode count (for perEpisode year mode).
@@ -836,6 +844,13 @@ class _SmartPlaylistGroupCard extends StatelessWidget {
   final VoidCallback? onTap;
 
   static const _thumbnailSize = 72.0;
+
+  String _formatTitle() {
+    if (showSeasonNumber && 0 < group.sortKey) {
+      return 'S${group.sortKey} ${group.displayName}';
+    }
+    return group.displayName;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -866,7 +881,7 @@ class _SmartPlaylistGroupCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    group.displayName,
+                    _formatTitle(),
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),

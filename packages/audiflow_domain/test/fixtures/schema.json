@@ -138,6 +138,11 @@
           "default": false,
           "description": "Explicitly show the sort order toggle regardless of yearHeaderMode. Initial order derives from the first customSort rule."
         },
+        "showSeasonNumber": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether to prepend a season number label (e.g. S13) to group titles."
+        },
         "titleFilter": {
           "type": "string",
           "description": "Regex pattern to filter episode titles (include)."

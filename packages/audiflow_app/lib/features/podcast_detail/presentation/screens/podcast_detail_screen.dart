@@ -620,6 +620,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
             final group = sorted[index];
             return _InlineGroupCard(
               group: group,
+              showSeasonNumber: playlist.showSeasonNumber,
               podcastArtworkUrl: podcast.artworkUrl,
               onTap: () => _navigateToGroupEpisodes(playlist, group),
             );
@@ -669,6 +670,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
         sortedYears: sortedYears,
         itemBuilder: (context, group) => _InlineGroupCard(
           group: group,
+          showSeasonNumber: playlist.showSeasonNumber,
           podcastArtworkUrl: podcast.artworkUrl,
           onTap: () => _navigateToGroupEpisodes(playlist, group),
         ),
@@ -1200,11 +1202,13 @@ class _InlineGroupCard extends StatelessWidget {
   const _InlineGroupCard({
     required this.group,
     required this.onTap,
+    this.showSeasonNumber = false,
     this.podcastArtworkUrl,
   });
 
   final SmartPlaylistGroup group;
   final VoidCallback onTap;
+  final bool showSeasonNumber;
   final String? podcastArtworkUrl;
 
   @override
@@ -1252,7 +1256,9 @@ class _InlineGroupCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        group.displayName,
+                        showSeasonNumber && 0 < group.sortKey
+                            ? 'S${group.sortKey} ${group.displayName}'
+                            : group.displayName,
                         style: theme.textTheme.titleSmall,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,

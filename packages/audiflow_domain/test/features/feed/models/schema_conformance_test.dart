@@ -111,6 +111,7 @@ void main() {
         episodeYearHeaders: true,
         showDateRange: true,
         showSortOrderToggle: true,
+        showSeasonNumber: true,
         titleFilter: r'S\d+',
         excludeFilter: r'Trailer',
         requireFilter: r'\[.+\]',
