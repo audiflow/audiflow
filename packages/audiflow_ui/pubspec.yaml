@@ -11,6 +11,7 @@ resolution: workspace
 dependencies:
   flutter:
     sdk: flutter
+  audiflow_core:
   audiflow_domain:
   flutter_screenutil: 5.9.3
   cached_network_image: ^3.3.1

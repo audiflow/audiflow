@@ -45,11 +45,21 @@ Future<void> appMain({
   }
 }
 
+Future<void> _configureOrientation() async {
+  final view = WidgetsBinding.instance.platformDispatcher.views.firstOrNull;
+  final logicalSize = view != null
+      ? view.physicalSize / view.devicePixelRatio
+      : Size.zero;
+  final isTablet = DeviceUtils.isTablet(logicalSize.shortestSide);
+  await SystemChrome.setPreferredOrientations(
+    isTablet
+        ? DeviceOrientation.values
+        : const [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown],
+  );
+}
+
 Future<void> _startApp(String smartPlaylistConfigBaseUrl) async {
-  await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown,
-  ]);
+  await _configureOrientation();
 
   final database = AppDatabase();
   final dio = Dio(

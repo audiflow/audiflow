@@ -96,21 +96,54 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
               ),
             ),
           ),
-          SliverList(
-            delegate: SliverChildBuilderDelegate((context, index) {
-              final subscription = subscriptions[index];
-              return SubscriptionListTile(
-                key: ValueKey(subscription.itunesId),
-                subscription: subscription,
-                onTap: () {
-                  final podcast = subscription.toPodcast();
-                  context.push(
-                    '${AppRoutes.library}/podcast/${podcast.id}',
-                    extra: podcast,
-                  );
-                },
+          SliverLayoutBuilder(
+            builder: (context, constraints) {
+              final columnCount = ResponsiveGrid.columnCount(
+                availableWidth: constraints.crossAxisExtent,
               );
-            }, childCount: subscriptions.length),
+              // Single column: keep list tile layout for phones
+              if (columnCount <= 3) {
+                return SliverList(
+                  delegate: SliverChildBuilderDelegate((context, index) {
+                    final subscription = subscriptions[index];
+                    return SubscriptionListTile(
+                      key: ValueKey(subscription.itunesId),
+                      subscription: subscription,
+                      onTap: () {
+                        final podcast = subscription.toPodcast();
+                        context.push(
+                          '${AppRoutes.library}/podcast/${podcast.id}',
+                          extra: podcast,
+                        );
+                      },
+                    );
+                  }, childCount: subscriptions.length),
+                );
+              }
+              // Multi-column: grid of artwork cards for tablets
+              return SliverGrid(
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: columnCount,
+                  mainAxisSpacing: Spacing.sm,
+                  crossAxisSpacing: Spacing.sm,
+                  childAspectRatio: 0.8,
+                ),
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  final subscription = subscriptions[index];
+                  return PodcastArtworkGridItem(
+                    artworkUrl: subscription.artworkUrl,
+                    title: subscription.title,
+                    onTap: () {
+                      final podcast = subscription.toPodcast();
+                      context.push(
+                        '${AppRoutes.library}/podcast/${podcast.id}',
+                        extra: podcast,
+                      );
+                    },
+                  );
+                }, childCount: subscriptions.length),
+              );
+            },
           ),
         ],
       ),
