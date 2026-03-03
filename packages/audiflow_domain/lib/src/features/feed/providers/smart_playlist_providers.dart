@@ -137,7 +137,7 @@ Future<SmartPlaylistGrouping?> podcastSmartPlaylists(
     logger.d(
       'Matched smart playlist pattern: '
       '"${matchedSummary.displayName}" '
-      'version=${matchedSummary.version}',
+      'dataVersion=${matchedSummary.dataVersion}',
     );
   }
 
@@ -247,7 +247,7 @@ Future<SmartPlaylistGrouping?> _resolveAndPersistSmartPlaylists(
   if (summary != null) {
     logger.d(
       'Matched smart playlist pattern: '
-      '"${summary.displayName}" version=${summary.version}',
+      '"${summary.displayName}" dataVersion=${summary.dataVersion}',
     );
     try {
       config = await repo.getConfig(summary);

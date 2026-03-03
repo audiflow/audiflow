@@ -56,7 +56,8 @@ Map<String, dynamic> _wrapInConfig(
   bool yearGroupedEpisodes = false,
 }) {
   return {
-    'version': 1,
+    'dataVersion': 1,
+    'schemaVersion': 1,
     'patterns': [
       {
         'id': id,
@@ -180,7 +181,8 @@ void main() {
         ],
       );
       final wrapped = {
-        'version': 1,
+        'dataVersion': 1,
+        'schemaVersion': 1,
         'patterns': [config.toJson()],
       };
       expect(validate(wrapped), isEmpty);
@@ -275,10 +277,17 @@ void main() {
       expect(schemaValues, containsAll(['title', 'description']));
     });
 
-    test('schema version is 1', () {
+    test('schema dataVersion is const 1', () {
       final props = schema['properties'] as Map<String, dynamic>;
-      final version = props['version'] as Map<String, dynamic>;
-      expect(version['const'], equals(1));
+      final dataVersion = props['dataVersion'] as Map<String, dynamic>;
+      expect(dataVersion['const'], equals(1));
+    });
+
+    test(r'schema has $id', () {
+      expect(
+        schema[r'$id'],
+        equals('https://audiflow.app/schema/v1/smartplaylist.json'),
+      );
     });
   });
 }

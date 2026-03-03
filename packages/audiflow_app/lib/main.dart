@@ -105,7 +105,8 @@ Future<void> _startApp(String smartPlaylistConfigBaseUrl) async {
   final configRepo = container.read(smartPlaylistConfigRepositoryProvider);
   final rootMeta = await configRepo.fetchRootMeta();
   spLogger.d(
-    'Smart playlist config version=${rootMeta.version}, '
+    'Smart playlist config dataVersion=${rootMeta.dataVersion}, '
+    'schemaVersion=${rootMeta.schemaVersion}, '
     'patterns=${rootMeta.patterns.length}',
   );
   await configRepo.reconcileCache(rootMeta.patterns);

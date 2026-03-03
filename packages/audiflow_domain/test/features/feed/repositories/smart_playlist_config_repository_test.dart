@@ -39,11 +39,12 @@ void main() {
   group('SmartPlaylistConfigRepository', () {
     test('fetchRootMeta returns root meta and caches it', () async {
       fakeResponses['$baseUrl/meta.json'] = jsonEncode({
-        'version': 2,
+        'dataVersion': 1,
+        'schemaVersion': 1,
         'patterns': [
           {
             'id': 'test',
-            'version': 1,
+            'dataVersion': 1,
             'displayName': 'Test',
             'feedUrlHint': 'test.com',
             'playlistCount': 1,
@@ -61,11 +62,12 @@ void main() {
     test('fetchRootMeta falls back to cache on network error', () async {
       await cache.writeRootMeta(
         RootMeta(
-          version: 2,
+          dataVersion: 1,
+          schemaVersion: 1,
           patterns: [
             PatternSummary(
               id: 'cached',
-              version: 1,
+              dataVersion: 1,
               displayName: 'Cached',
               feedUrlHint: 'cached.com',
               playlistCount: 1,
@@ -81,7 +83,7 @@ void main() {
     test('fetchRootMeta returns empty when no cache and '
         'network fails', () async {
       final meta = await repo.fetchRootMeta();
-      expect(meta.version, 2);
+      expect(meta.dataVersion, 1);
       expect(meta.patterns, isEmpty);
     });
 
@@ -90,7 +92,7 @@ void main() {
       await cache.writePatternMeta(
         'old_pattern',
         PatternMeta(
-          version: 1,
+          dataVersion: 1,
           id: 'old_pattern',
           feedUrls: [],
           playlists: ['main'],
@@ -100,7 +102,7 @@ void main() {
       await repo.reconcileCache([
         PatternSummary(
           id: 'current',
-          version: 2,
+          dataVersion: 2,
           displayName: 'Current',
           feedUrlHint: 'current.com',
           playlistCount: 1,
@@ -115,13 +117,18 @@ void main() {
       await cache.writeVersions({'test': 1});
       await cache.writePatternMeta(
         'test',
-        PatternMeta(version: 1, id: 'test', feedUrls: [], playlists: ['main']),
+        PatternMeta(
+          dataVersion: 1,
+          id: 'test',
+          feedUrls: [],
+          playlists: ['main'],
+        ),
       );
 
       await repo.reconcileCache([
         PatternSummary(
           id: 'test',
-          version: 2,
+          dataVersion: 2,
           displayName: 'Test',
           feedUrlHint: 'test.com',
           playlistCount: 1,
@@ -134,7 +141,7 @@ void main() {
 
     test('getConfig fetches and caches when not cached', () async {
       fakeResponses['$baseUrl/test/meta.json'] = jsonEncode({
-        'version': 1,
+        'dataVersion': 1,
         'id': 'test',
         'feedUrls': ['test.com'],
         'playlists': ['main'],
@@ -147,7 +154,7 @@ void main() {
 
       final summary = PatternSummary(
         id: 'test',
-        version: 1,
+        dataVersion: 1,
         displayName: 'Test',
         feedUrlHint: 'test.com',
         playlistCount: 1,
@@ -169,7 +176,7 @@ void main() {
       await cache.writePatternMeta(
         'test',
         PatternMeta(
-          version: 1,
+          dataVersion: 1,
           id: 'test',
           feedUrls: ['test.com'],
           playlists: ['main'],
@@ -187,7 +194,7 @@ void main() {
 
       final summary = PatternSummary(
         id: 'test',
-        version: 1,
+        dataVersion: 1,
         displayName: 'Test',
         feedUrlHint: 'test.com',
         playlistCount: 1,
@@ -200,7 +207,7 @@ void main() {
     test('getConfig deduplicates concurrent requests', () async {
       var fetchCount = 0;
       fakeResponses['$baseUrl/test/meta.json'] = jsonEncode({
-        'version': 1,
+        'dataVersion': 1,
         'id': 'test',
         'feedUrls': ['test.com'],
         'playlists': ['main'],
@@ -230,7 +237,7 @@ void main() {
 
       final summary = PatternSummary(
         id: 'test',
-        version: 1,
+        dataVersion: 1,
         displayName: 'Test',
         feedUrlHint: 'test.com',
         playlistCount: 1,
@@ -253,14 +260,14 @@ void main() {
       repo.setPatternSummaries([
         PatternSummary(
           id: 'coten',
-          version: 1,
+          dataVersion: 1,
           displayName: 'Coten',
           feedUrlHint: 'anchor.fm/s/8c2088c',
           playlistCount: 3,
         ),
         PatternSummary(
           id: 'other',
-          version: 1,
+          dataVersion: 1,
           displayName: 'Other',
           feedUrlHint: 'other.com',
           playlistCount: 1,
@@ -279,7 +286,7 @@ void main() {
       repo.setPatternSummaries([
         PatternSummary(
           id: 'test',
-          version: 1,
+          dataVersion: 1,
           displayName: 'Test',
           feedUrlHint: 'test.com',
           playlistCount: 1,
