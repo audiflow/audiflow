@@ -75,7 +75,10 @@ class _SinglePlaylistToggle extends StatelessWidget {
         ButtonSegment(value: false, label: Text(l10n.episodesLabel)),
         ButtonSegment(
           value: true,
-          label: Text(playlist.displayName, overflow: TextOverflow.ellipsis),
+          label: Text(
+            playlist.formattedDisplayName,
+            overflow: TextOverflow.ellipsis,
+          ),
         ),
       ],
       selected: {isPlaylist},
@@ -128,7 +131,7 @@ class _MultiPlaylistToggle extends StatelessWidget {
         ),
         Expanded(
           child: _PlaylistSegment(
-            label: selected.displayName,
+            label: selected.formattedDisplayName,
             isSelected: playlistSelected,
             colorScheme: colorScheme,
             onSelect: () => onPlaylistSelected(selected),
@@ -157,7 +160,7 @@ class _MultiPlaylistToggle extends StatelessWidget {
         return PopupMenuItem<SmartPlaylist>(
           value: playlist,
           child: Text(
-            playlist.displayName,
+            playlist.formattedDisplayName,
             style: isCurrent
                 ? TextStyle(
                     fontWeight: FontWeight.bold,
