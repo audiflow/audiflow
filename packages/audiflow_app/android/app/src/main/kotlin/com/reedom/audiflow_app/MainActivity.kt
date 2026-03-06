@@ -1,4 +1,4 @@
-package com.example.audiflow_app
+package com.reedom.audiflow_app
 
 import com.ryanheise.audioservice.AudioServiceActivity
 

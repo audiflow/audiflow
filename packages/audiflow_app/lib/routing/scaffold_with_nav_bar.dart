@@ -8,7 +8,7 @@ import 'package:material_symbols_icons/symbols.dart';
 
 import '../features/player/presentation/screens/player_screen.dart';
 import '../features/player/presentation/widgets/animated_mini_player.dart';
-import '../features/voice/presentation/widgets/voice_command_fab.dart';
+// import '../features/voice/presentation/widgets/voice_command_fab.dart';
 import '../features/voice/presentation/widgets/voice_listening_overlay.dart';
 
 /// Adaptive navigation shell for phone or tablet navigation.
@@ -115,7 +115,7 @@ class _PhoneShell extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: navigationShell,
-      floatingActionButton: const VoiceCommandFab(),
+      // floatingActionButton: const VoiceCommandFab(),
       bottomNavigationBar: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -172,7 +172,7 @@ class _TabletPortraitShell extends StatelessWidget {
         ),
         centerTitle: true,
       ),
-      floatingActionButton: const VoiceCommandFab(),
+      // floatingActionButton: const VoiceCommandFab(),
       body: Column(
         children: [
           Expanded(child: navigationShell),
@@ -200,7 +200,7 @@ class _TabletLandscapeShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      floatingActionButton: const VoiceCommandFab(),
+      // floatingActionButton: const VoiceCommandFab(),
       body: Row(
         children: [
           NavigationRail(
