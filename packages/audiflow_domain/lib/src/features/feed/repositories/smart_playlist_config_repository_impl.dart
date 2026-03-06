@@ -32,7 +32,7 @@ class SmartPlaylistConfigRepositoryImpl
     } on Object {
       final cached = await _cache.readRootMeta();
       if (cached != null) return cached;
-      return const RootMeta(version: 2, patterns: []);
+      return const RootMeta(dataVersion: 1, schemaVersion: 1, patterns: []);
     }
   }
 
@@ -56,7 +56,7 @@ class SmartPlaylistConfigRepositoryImpl
     final versions = await _cache.readVersions();
     final cachedVersion = versions[summary.id];
 
-    if (cachedVersion == summary.version) {
+    if (cachedVersion == summary.dataVersion) {
       final config = await _tryLoadFromCache(summary.id);
       if (config != null) return config;
     }
@@ -104,7 +104,7 @@ class SmartPlaylistConfigRepositoryImpl
       playlists.add(playlist);
     }
 
-    versions[summary.id] = summary.version;
+    versions[summary.id] = summary.dataVersion;
     await _cache.writeVersions(versions);
 
     return ConfigAssembler.assemble(meta, playlists);
@@ -123,7 +123,7 @@ class SmartPlaylistConfigRepositoryImpl
   @override
   Future<void> reconcileCache(List<PatternSummary> latest) async {
     final versions = await _cache.readVersions();
-    final latestMap = {for (final s in latest) s.id: s.version};
+    final latestMap = {for (final s in latest) s.id: s.dataVersion};
 
     for (final cachedId in versions.keys.toList()) {
       if (!latestMap.containsKey(cachedId)) {
@@ -133,7 +133,7 @@ class SmartPlaylistConfigRepositoryImpl
 
     for (final summary in latest) {
       final cachedVersion = versions[summary.id];
-      if (cachedVersion != null && cachedVersion != summary.version) {
+      if (cachedVersion != null && cachedVersion != summary.dataVersion) {
         await _cache.evictPattern(summary.id);
       }
     }

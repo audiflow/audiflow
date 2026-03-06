@@ -26,11 +26,12 @@ void main() {
 
     test('fetchRootMeta returns parsed root meta', () async {
       fakeResponses['$baseUrl/meta.json'] = jsonEncode({
-        'version': 2,
+        'dataVersion': 1,
+        'schemaVersion': 1,
         'patterns': [
           {
             'id': 'test',
-            'version': 1,
+            'dataVersion': 1,
             'displayName': 'Test',
             'feedUrlHint': 'test.com',
             'playlistCount': 1,
@@ -45,7 +46,7 @@ void main() {
 
     test('fetchPatternMeta returns parsed pattern meta', () async {
       fakeResponses['$baseUrl/coten_radio/meta.json'] = jsonEncode({
-        'version': 1,
+        'dataVersion': 1,
         'id': 'coten_radio',
         'feedUrls': ['anchor.fm'],
         'playlists': ['regular'],

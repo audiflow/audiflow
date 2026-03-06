@@ -40,11 +40,12 @@ void main() {
 
       test('writes and reads root meta', () async {
         final meta = RootMeta(
-          version: 2,
+          dataVersion: 1,
+          schemaVersion: 1,
           patterns: [
             PatternSummary(
               id: 'test',
-              version: 1,
+              dataVersion: 1,
               displayName: 'Test',
               feedUrlHint: 'test.com',
               playlistCount: 1,
@@ -67,7 +68,7 @@ void main() {
 
       test('writes and reads pattern meta', () async {
         final meta = PatternMeta(
-          version: 1,
+          dataVersion: 1,
           id: 'coten_radio',
           feedUrls: ['anchor.fm'],
           playlists: ['regular'],
@@ -105,7 +106,7 @@ void main() {
     group('evictPattern', () {
       test('removes pattern directory and version entry', () async {
         final meta = PatternMeta(
-          version: 1,
+          dataVersion: 1,
           id: 'old',
           feedUrls: [],
           playlists: ['main'],

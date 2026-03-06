@@ -5,7 +5,7 @@
 final class PatternSummary {
   const PatternSummary({
     required this.id,
-    required this.version,
+    required this.dataVersion,
     required this.displayName,
     required this.feedUrlHint,
     required this.playlistCount,
@@ -14,7 +14,7 @@ final class PatternSummary {
   factory PatternSummary.fromJson(Map<String, dynamic> json) {
     return PatternSummary(
       id: json['id'] as String,
-      version: json['version'] as int,
+      dataVersion: (json['dataVersion'] as int?) ?? 1,
       displayName: json['displayName'] as String,
       feedUrlHint: json['feedUrlHint'] as String,
       playlistCount: json['playlistCount'] as int,
@@ -24,8 +24,8 @@ final class PatternSummary {
   /// Unique identifier for this pattern.
   final String id;
 
-  /// Schema version for cache invalidation.
-  final int version;
+  /// Data version for cache invalidation.
+  final int dataVersion;
 
   /// Human-readable name for display.
   final String displayName;
@@ -40,7 +40,7 @@ final class PatternSummary {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'version': version,
+      'dataVersion': dataVersion,
       'displayName': displayName,
       'feedUrlHint': feedUrlHint,
       'playlistCount': playlistCount,
