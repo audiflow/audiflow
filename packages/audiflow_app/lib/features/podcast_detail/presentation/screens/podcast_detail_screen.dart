@@ -629,7 +629,17 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
       ];
     }
 
-    // Year-grouped display: determine year per group from
+    if (playlist.yearHeaderMode == YearHeaderMode.perEpisode) {
+      return _buildPerEpisodeInlineGroups(
+        displayGroups,
+        episodeMap,
+        playlist,
+        theme,
+        sortOrder,
+      );
+    }
+
+    // firstEpisode mode: determine year per group from
     // first episode's publishedAt.
     final byYear = <int, List<SmartPlaylistGroup>>{};
     for (final group in displayGroups) {
@@ -681,10 +691,85 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
     ];
   }
 
+  /// Builds inline group list for perEpisode year mode.
+  ///
+  /// Each group appears under every year it has episodes in,
+  /// showing year-filtered episode counts and passing
+  /// filtered IDs to navigation.
+  List<Widget> _buildPerEpisodeInlineGroups(
+    List<SmartPlaylistGroup> groups,
+    Map<int, SmartPlaylistEpisodeData> episodeMap,
+    SmartPlaylist playlist,
+    ThemeData theme,
+    SortOrder sortOrder,
+  ) {
+    final byYear = <int, List<_YearFilteredInlineGroup>>{};
+    for (final group in groups) {
+      final yearIds = <int, List<int>>{};
+      for (final id in group.episodeIds) {
+        final ep = episodeMap[id];
+        final year = ep?.episode.publishedAt?.year ?? 0;
+        yearIds.putIfAbsent(year, () => []).add(id);
+      }
+      for (final entry in yearIds.entries) {
+        byYear
+            .putIfAbsent(entry.key, () => [])
+            .add(
+              _YearFilteredInlineGroup(
+                group: group,
+                filteredEpisodeIds: entry.value,
+              ),
+            );
+      }
+    }
+
+    final sortedYears = byYear.keys.toList()
+      ..sort(
+        sortOrder == SortOrder.descending
+            ? (a, b) => b.compareTo(a)
+            : (a, b) => a.compareTo(b),
+      );
+
+    // Count total group appearances across all years.
+    var totalCards = 0;
+    for (final items in byYear.values) {
+      totalCards += items.length;
+    }
+
+    return [
+      SliverToBoxAdapter(
+        child: _buildSortHeader(
+          theme,
+          AppLocalizations.of(context).podcastDetailGroupCount(totalCards),
+          sortOrder,
+        ),
+      ),
+      ...buildYearGroupedSlivers<_YearFilteredInlineGroup>(
+        itemsByYear: {for (final y in sortedYears) y: byYear[y]!},
+        sortedYears: sortedYears,
+        itemBuilder: (context, item) => _InlineGroupCard(
+          group: item.group,
+          showSeasonNumber: playlist.showSeasonNumber,
+          podcastArtworkUrl: podcast.artworkUrl,
+          episodeCountOverride: item.filteredEpisodeIds.length,
+          onTap: () => _navigateToGroupEpisodes(
+            playlist,
+            item.group,
+            filteredEpisodeIds: item.filteredEpisodeIds,
+          ),
+        ),
+        scrollController: _scrollController,
+        yearGroupingEnabled: true,
+        itemExtent: 88,
+      ),
+    ];
+  }
+
   void _navigateToGroupEpisodes(
     SmartPlaylist playlist,
-    SmartPlaylistGroup group,
-  ) {
+    SmartPlaylistGroup group, {
+    List<int>? filteredEpisodeIds,
+  }) {
     final uri = GoRouterState.of(context).uri;
     final directGroupPath = AppRoutes.smartPlaylistDirectGroup
         .replaceFirst(':playlistId', playlist.id)
@@ -699,6 +784,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
         'podcastArtworkUrl': podcast.artworkUrl,
         'feedImageUrl': _feedImageUrl,
         'lastRefreshedAt': _lastRefreshedAt,
+        'filteredEpisodeIds': filteredEpisodeIds,
       },
     );
   }
@@ -1204,12 +1290,17 @@ class _InlineGroupCard extends StatelessWidget {
     required this.onTap,
     this.showSeasonNumber = false,
     this.podcastArtworkUrl,
+    this.episodeCountOverride,
   });
 
   final SmartPlaylistGroup group;
   final VoidCallback onTap;
   final bool showSeasonNumber;
   final String? podcastArtworkUrl;
+
+  /// When set, overrides `group.episodeIds.length` for the
+  /// episode count display (used in perEpisode year mode).
+  final int? episodeCountOverride;
 
   @override
   Widget build(BuildContext context) {
@@ -1224,7 +1315,7 @@ class _InlineGroupCard extends StatelessWidget {
         : null;
 
     final metaLine = StringBuffer(
-      l10n.groupEpisodeCount(group.episodeIds.length),
+      l10n.groupEpisodeCount(episodeCountOverride ?? group.episodeIds.length),
     );
     if (duration != null) {
       metaLine.write('  $duration');
@@ -1331,4 +1422,16 @@ class _InlineGroupCard extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Helper for perEpisode year mode to carry filtered IDs
+/// alongside the original group in inline view.
+class _YearFilteredInlineGroup {
+  const _YearFilteredInlineGroup({
+    required this.group,
+    required this.filteredEpisodeIds,
+  });
+
+  final SmartPlaylistGroup group;
+  final List<int> filteredEpisodeIds;
 }
