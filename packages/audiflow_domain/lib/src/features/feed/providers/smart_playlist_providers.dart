@@ -216,9 +216,9 @@ Future<SmartPlaylistGrouping?> _buildGroupingFromCache(
       sortKey: entity.sortKey,
       episodeIds: episodeIds,
       thumbnailUrl: entity.thumbnailUrl,
-      yearHeaderMode: entity.yearGrouped
-          ? YearHeaderMode.firstEpisode
-          : YearHeaderMode.none,
+      yearHeaderMode: RssMetadataResolver.parseYearHeaderMode(
+        entity.yearHeaderMode,
+      ),
     );
   }).toList();
 
@@ -395,6 +395,7 @@ void _enrichPlaylist(
       resolverType: result.resolverType,
       thumbnailUrl: Value(thumbnailUrl),
       yearGrouped: Value(playlist.yearHeaderMode != YearHeaderMode.none),
+      yearHeaderMode: Value(playlist.yearHeaderMode.name),
     ),
   );
 }
