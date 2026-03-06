@@ -8,17 +8,17 @@ android.apply {
     productFlavors {
         create("dev") {
             dimension = "flavor-type"
-            applicationId = "com.reedom.audiflowapp.dev"
+            applicationId = "com.reedom.audiflow_app.dev"
             resValue(type = "string", name = "app_name", value = "audiflow dev")
         }
         create("stg") {
             dimension = "flavor-type"
-            applicationId = "com.reedom.audiflowapp.stg"
+            applicationId = "com.reedom.audiflow_app.stg"
             resValue(type = "string", name = "app_name", value = "audiflow stg")
         }
         create("prod") {
             dimension = "flavor-type"
-            applicationId = "com.reedom.audiflowapp"
+            applicationId = "com.reedom.audiflow_app"
             resValue(type = "string", name = "app_name", value = "audiflow")
         }
     }
