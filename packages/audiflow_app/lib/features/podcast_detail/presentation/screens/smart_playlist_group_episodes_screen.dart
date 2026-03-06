@@ -65,11 +65,9 @@ class _SmartPlaylistGroupEpisodesScreenState
   }
 
   String _formatGroupTitle() {
-    final group = widget.group;
-    if (widget.parentPlaylist.showSeasonNumber && 0 < group.sortKey) {
-      return 'S${group.sortKey} ${group.displayName}';
-    }
-    return group.displayName;
+    return widget.group.formattedDisplayName(
+      showSeasonNumber: widget.parentPlaylist.showSeasonNumber,
+    );
   }
 
   void _toggleSortOrder() {

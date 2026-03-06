@@ -80,6 +80,14 @@ final class SmartPlaylistGroup {
 
   /// Number of episodes in this group.
   int get episodeCount => episodeIds.length;
+
+  /// Returns display name with optional season number prefix.
+  String formattedDisplayName({required bool showSeasonNumber}) {
+    if (showSeasonNumber && 0 < sortKey) {
+      return 'S$sortKey $displayName';
+    }
+    return displayName;
+  }
 }
 
 /// Represents a smart playlist grouping of episodes within a podcast.
@@ -151,6 +159,14 @@ final class SmartPlaylist {
 
   /// Number of episodes in this smart playlist.
   int get episodeCount => episodeIds.length;
+
+  /// Returns display name with optional season number prefix.
+  String get formattedDisplayName {
+    if (showSeasonNumber && 0 < sortKey) {
+      return 'S$sortKey $displayName';
+    }
+    return displayName;
+  }
 
   /// Creates a copy with optional field overrides.
   SmartPlaylist copyWith({

@@ -71,7 +71,7 @@ class _SmartPlaylistEpisodesScreenState
 
     return Scaffold(
       appBar: SearchableAppBar(
-        title: Text(widget.smartPlaylist.displayName),
+        title: Text(widget.smartPlaylist.formattedDisplayName),
         onSearchChanged: (query) => setState(() => _searchQuery = query),
       ),
       body: CustomScrollView(
@@ -846,10 +846,7 @@ class _SmartPlaylistGroupCard extends StatelessWidget {
   static const _thumbnailSize = 72.0;
 
   String _formatTitle() {
-    if (showSeasonNumber && 0 < group.sortKey) {
-      return 'S${group.sortKey} ${group.displayName}';
-    }
-    return group.displayName;
+    return group.formattedDisplayName(showSeasonNumber: showSeasonNumber);
   }
 
   @override

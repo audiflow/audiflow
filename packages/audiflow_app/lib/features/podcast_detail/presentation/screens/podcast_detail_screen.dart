@@ -1256,9 +1256,9 @@ class _InlineGroupCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        showSeasonNumber && 0 < group.sortKey
-                            ? 'S${group.sortKey} ${group.displayName}'
-                            : group.displayName,
+                        group.formattedDisplayName(
+                          showSeasonNumber: showSeasonNumber,
+                        ),
                         style: theme.textTheme.titleSmall,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
