@@ -14,12 +14,7 @@ void main() {
 
   group('FlavorConfig', () {
     group('current', () {
-      test('throws StateError when not initialized', () {
-        // Reset by testing in isolation; since _current is static,
-        // we rely on the test order. This test runs before initialize().
-        // If _current was previously set, this test will still verify
-        // the getter returns a FlavorConfig.
-        // We test the error path by checking the message pattern.
+      test('returns FlavorConfig after initialization', () {
         FlavorConfig.initialize(FlavorConfig.dev);
         expect(FlavorConfig.current, isA<FlavorConfig>());
       });

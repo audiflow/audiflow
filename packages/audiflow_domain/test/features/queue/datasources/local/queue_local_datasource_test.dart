@@ -25,7 +25,7 @@ void main() {
         );
 
     // Create episodes (FK dependency)
-    for (var i = 1; 4 <= i == false; i++) {
+    for (var i = 1; i < 4; i++) {
       await db
           .into(db.episodes)
           .insert(
