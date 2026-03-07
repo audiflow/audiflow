@@ -43,7 +43,7 @@ void main() {
     await db.close();
   });
 
-  DownloadTasksCompanion _makeTask({
+  DownloadTasksCompanion makeTask({
     required int episodeId,
     bool wifiOnly = true,
   }) {
@@ -57,7 +57,7 @@ void main() {
 
   group('create', () {
     test('inserts download task and returns id', () async {
-      final id = await datasource.create(_makeTask(episodeId: 1));
+      final id = await datasource.create(makeTask(episodeId: 1));
 
       expect(0 < id, true);
     });
@@ -65,7 +65,7 @@ void main() {
 
   group('getById', () {
     test('returns task by id', () async {
-      final id = await datasource.create(_makeTask(episodeId: 1));
+      final id = await datasource.create(makeTask(episodeId: 1));
 
       final task = await datasource.getById(id);
 
@@ -83,7 +83,7 @@ void main() {
 
   group('getByEpisodeId', () {
     test('returns task by episode id', () async {
-      await datasource.create(_makeTask(episodeId: 1));
+      await datasource.create(makeTask(episodeId: 1));
 
       final task = await datasource.getByEpisodeId(1);
 
@@ -106,8 +106,8 @@ void main() {
     });
 
     test('returns all tasks ordered by creation date', () async {
-      await datasource.create(_makeTask(episodeId: 1));
-      await datasource.create(_makeTask(episodeId: 2));
+      await datasource.create(makeTask(episodeId: 1));
+      await datasource.create(makeTask(episodeId: 2));
 
       final tasks = await datasource.getAll();
 
@@ -119,8 +119,8 @@ void main() {
 
   group('getByStatus', () {
     test('returns tasks with matching status', () async {
-      final id1 = await datasource.create(_makeTask(episodeId: 1));
-      await datasource.create(_makeTask(episodeId: 2));
+      final id1 = await datasource.create(makeTask(episodeId: 1));
+      await datasource.create(makeTask(episodeId: 2));
 
       // Mark first as downloading
       await datasource.updateById(
@@ -146,7 +146,7 @@ void main() {
 
   group('updateProgress', () {
     test('updates downloaded bytes and total bytes', () async {
-      final id = await datasource.create(_makeTask(episodeId: 1));
+      final id = await datasource.create(makeTask(episodeId: 1));
 
       await datasource.updateById(
         id,
@@ -165,7 +165,7 @@ void main() {
 
   group('updateById', () {
     test('updates status', () async {
-      final id = await datasource.create(_makeTask(episodeId: 1));
+      final id = await datasource.create(makeTask(episodeId: 1));
 
       await datasource.updateById(
         id,
@@ -181,7 +181,7 @@ void main() {
     });
 
     test('updates error message', () async {
-      final id = await datasource.create(_makeTask(episodeId: 1));
+      final id = await datasource.create(makeTask(episodeId: 1));
 
       await datasource.updateById(
         id,
@@ -199,7 +199,7 @@ void main() {
 
   group('delete', () {
     test('removes task by id', () async {
-      final id = await datasource.create(_makeTask(episodeId: 1));
+      final id = await datasource.create(makeTask(episodeId: 1));
 
       final deleted = await datasource.delete(id);
 
@@ -223,9 +223,9 @@ void main() {
     });
 
     test('counts pending, downloading, and paused tasks', () async {
-      final id1 = await datasource.create(_makeTask(episodeId: 1));
-      final id2 = await datasource.create(_makeTask(episodeId: 2));
-      await datasource.create(_makeTask(episodeId: 3)); // pending
+      final id1 = await datasource.create(makeTask(episodeId: 1));
+      final id2 = await datasource.create(makeTask(episodeId: 2));
+      await datasource.create(makeTask(episodeId: 3)); // pending
 
       await datasource.updateById(
         id1,
@@ -246,8 +246,8 @@ void main() {
     });
 
     test('excludes completed and failed tasks', () async {
-      final id1 = await datasource.create(_makeTask(episodeId: 1));
-      final id2 = await datasource.create(_makeTask(episodeId: 2));
+      final id1 = await datasource.create(makeTask(episodeId: 1));
+      final id2 = await datasource.create(makeTask(episodeId: 2));
 
       await datasource.updateById(
         id1,
@@ -276,8 +276,8 @@ void main() {
     });
 
     test('returns oldest pending task', () async {
-      await datasource.create(_makeTask(episodeId: 1));
-      await datasource.create(_makeTask(episodeId: 2));
+      await datasource.create(makeTask(episodeId: 1));
+      await datasource.create(makeTask(episodeId: 2));
 
       final task = await datasource.getNextPending(isOnWifi: true);
 
@@ -286,8 +286,8 @@ void main() {
     });
 
     test('skips wifiOnly tasks when not on wifi', () async {
-      await datasource.create(_makeTask(episodeId: 1, wifiOnly: true));
-      await datasource.create(_makeTask(episodeId: 2, wifiOnly: false));
+      await datasource.create(makeTask(episodeId: 1, wifiOnly: true));
+      await datasource.create(makeTask(episodeId: 2, wifiOnly: false));
 
       final task = await datasource.getNextPending(isOnWifi: false);
 
@@ -296,7 +296,7 @@ void main() {
     });
 
     test('includes wifiOnly tasks when on wifi', () async {
-      await datasource.create(_makeTask(episodeId: 1, wifiOnly: true));
+      await datasource.create(makeTask(episodeId: 1, wifiOnly: true));
 
       final task = await datasource.getNextPending(isOnWifi: true);
 
@@ -307,7 +307,7 @@ void main() {
 
   group('getCompletedByEpisodeId', () {
     test('returns completed download for episode', () async {
-      final id = await datasource.create(_makeTask(episodeId: 1));
+      final id = await datasource.create(makeTask(episodeId: 1));
       await datasource.updateById(
         id,
         DownloadTasksCompanion(
@@ -323,7 +323,7 @@ void main() {
     });
 
     test('returns null when no completed download', () async {
-      await datasource.create(_makeTask(episodeId: 1));
+      await datasource.create(makeTask(episodeId: 1));
 
       final task = await datasource.getCompletedByEpisodeId(1);
 
@@ -333,8 +333,8 @@ void main() {
 
   group('deleteAllCompleted', () {
     test('removes all completed downloads', () async {
-      final id1 = await datasource.create(_makeTask(episodeId: 1));
-      await datasource.create(_makeTask(episodeId: 2)); // pending
+      final id1 = await datasource.create(makeTask(episodeId: 1));
+      await datasource.create(makeTask(episodeId: 2)); // pending
 
       await datasource.updateById(
         id1,
@@ -360,8 +360,8 @@ void main() {
     });
 
     test('sums total bytes of completed downloads', () async {
-      final id1 = await datasource.create(_makeTask(episodeId: 1));
-      final id2 = await datasource.create(_makeTask(episodeId: 2));
+      final id1 = await datasource.create(makeTask(episodeId: 1));
+      final id2 = await datasource.create(makeTask(episodeId: 2));
 
       await datasource.updateById(
         id1,

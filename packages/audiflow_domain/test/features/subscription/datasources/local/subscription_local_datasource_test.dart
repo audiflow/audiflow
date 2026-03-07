@@ -1,5 +1,4 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
-import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -16,7 +15,7 @@ void main() {
     await db.close();
   });
 
-  SubscriptionsCompanion _makeCompanion({
+  SubscriptionsCompanion makeCompanion({
     String itunesId = 'itunes-1',
     String feedUrl = 'https://example.com/feed.xml',
     String title = 'Test Podcast',
@@ -33,7 +32,7 @@ void main() {
 
   group('insert', () {
     test('inserts subscription and returns it with generated id', () async {
-      final result = await datasource.insert(_makeCompanion());
+      final result = await datasource.insert(makeCompanion());
 
       expect(result.id, 1);
       expect(result.itunesId, 'itunes-1');
@@ -43,9 +42,9 @@ void main() {
     });
 
     test('auto-increments id for multiple inserts', () async {
-      final first = await datasource.insert(_makeCompanion());
+      final first = await datasource.insert(makeCompanion());
       final second = await datasource.insert(
-        _makeCompanion(
+        makeCompanion(
           itunesId: 'itunes-2',
           feedUrl: 'https://example.com/feed2.xml',
         ),
@@ -58,7 +57,7 @@ void main() {
 
   group('deleteByItunesId', () {
     test('deletes existing subscription and returns 1', () async {
-      await datasource.insert(_makeCompanion());
+      await datasource.insert(makeCompanion());
 
       final deleted = await datasource.deleteByItunesId('itunes-1');
 
@@ -111,7 +110,7 @@ void main() {
 
   group('watchAll', () {
     test('emits current subscriptions', () async {
-      await datasource.insert(_makeCompanion());
+      await datasource.insert(makeCompanion());
 
       final result = await datasource.watchAll().first;
 
@@ -127,13 +126,13 @@ void main() {
 
       // Trigger an insert after stream is subscribed
       await Future<void>.delayed(const Duration(milliseconds: 50));
-      await datasource.insert(_makeCompanion());
+      await datasource.insert(makeCompanion());
     });
   });
 
   group('getByItunesId', () {
     test('returns subscription when found', () async {
-      await datasource.insert(_makeCompanion());
+      await datasource.insert(makeCompanion());
 
       final result = await datasource.getByItunesId('itunes-1');
 
@@ -150,7 +149,7 @@ void main() {
 
   group('exists', () {
     test('returns true when subscription exists', () async {
-      await datasource.insert(_makeCompanion());
+      await datasource.insert(makeCompanion());
 
       final result = await datasource.exists('itunes-1');
 
@@ -166,7 +165,7 @@ void main() {
 
   group('existsByFeedUrl', () {
     test('returns true when subscription with feed URL exists', () async {
-      await datasource.insert(_makeCompanion());
+      await datasource.insert(makeCompanion());
 
       final result = await datasource.existsByFeedUrl(
         'https://example.com/feed.xml',
@@ -186,7 +185,7 @@ void main() {
 
   group('getByFeedUrl', () {
     test('returns subscription when found', () async {
-      await datasource.insert(_makeCompanion());
+      await datasource.insert(makeCompanion());
 
       final result = await datasource.getByFeedUrl(
         'https://example.com/feed.xml',
@@ -207,7 +206,7 @@ void main() {
 
   group('getById', () {
     test('returns subscription when found', () async {
-      final inserted = await datasource.insert(_makeCompanion());
+      final inserted = await datasource.insert(makeCompanion());
 
       final result = await datasource.getById(inserted.id);
 
@@ -224,7 +223,7 @@ void main() {
 
   group('updateLastRefreshed', () {
     test('updates lastRefreshedAt timestamp', () async {
-      await datasource.insert(_makeCompanion());
+      await datasource.insert(makeCompanion());
       final timestamp = DateTime(2024, 6, 15);
 
       await datasource.updateLastRefreshed('itunes-1', timestamp);
@@ -246,9 +245,9 @@ void main() {
     });
 
     test('does not affect other subscriptions', () async {
-      await datasource.insert(_makeCompanion());
+      await datasource.insert(makeCompanion());
       await datasource.insert(
-        _makeCompanion(
+        makeCompanion(
           itunesId: 'itunes-2',
           feedUrl: 'https://example.com/feed2.xml',
         ),

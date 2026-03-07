@@ -1,7 +1,6 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_domain/src/common/database/app_database.dart'
-    show SmartPlaylistGroupEntity, SmartPlaylistGroupsCompanion;
-import 'package:drift/drift.dart' hide isNull, isNotNull;
+    show SmartPlaylistGroupsCompanion;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -31,7 +30,7 @@ void main() {
     await db.close();
   });
 
-  SmartPlaylistsCompanion _companion({
+  SmartPlaylistsCompanion makeCompanion({
     int podcastId = 1,
     required int playlistNumber,
     String? displayName,
@@ -49,7 +48,7 @@ void main() {
 
   group('upsert', () {
     test('inserts a new smart playlist', () async {
-      await datasource.upsert(_companion(playlistNumber: 1));
+      await datasource.upsert(makeCompanion(playlistNumber: 1));
 
       final results = await datasource.getByPodcastId(1);
       expect(results, hasLength(1));
@@ -58,9 +57,13 @@ void main() {
     });
 
     test('updates existing smart playlist on conflict', () async {
-      await datasource.upsert(_companion(playlistNumber: 1));
+      await datasource.upsert(makeCompanion(playlistNumber: 1));
       await datasource.upsert(
-        _companion(playlistNumber: 1, displayName: 'Updated Name', sortKey: 99),
+        makeCompanion(
+          playlistNumber: 1,
+          displayName: 'Updated Name',
+          sortKey: 99,
+        ),
       );
 
       final results = await datasource.getByPodcastId(1);
@@ -73,14 +76,14 @@ void main() {
   group('upsertAllForPodcast', () {
     test('replaces all playlists for a podcast atomically', () async {
       // Insert initial playlists
-      await datasource.upsert(_companion(playlistNumber: 1));
-      await datasource.upsert(_companion(playlistNumber: 2));
+      await datasource.upsert(makeCompanion(playlistNumber: 1));
+      await datasource.upsert(makeCompanion(playlistNumber: 2));
 
       // Replace with a different set
       await datasource.upsertAllForPodcast(1, [
-        _companion(playlistNumber: 10, displayName: 'New Playlist A'),
-        _companion(playlistNumber: 20, displayName: 'New Playlist B'),
-        _companion(playlistNumber: 30, displayName: 'New Playlist C'),
+        makeCompanion(playlistNumber: 10, displayName: 'New Playlist A'),
+        makeCompanion(playlistNumber: 20, displayName: 'New Playlist B'),
+        makeCompanion(playlistNumber: 30, displayName: 'New Playlist C'),
       ]);
 
       final results = await datasource.getByPodcastId(1);
@@ -91,8 +94,8 @@ void main() {
     });
 
     test('deletes all when empty companions list', () async {
-      await datasource.upsert(_companion(playlistNumber: 1));
-      await datasource.upsert(_companion(playlistNumber: 2));
+      await datasource.upsert(makeCompanion(playlistNumber: 1));
+      await datasource.upsert(makeCompanion(playlistNumber: 2));
 
       await datasource.upsertAllForPodcast(1, []);
 
@@ -114,10 +117,12 @@ void main() {
             ),
           );
 
-      await datasource.upsert(_companion(podcastId: 1, playlistNumber: 1));
-      await datasource.upsert(_companion(podcastId: 2, playlistNumber: 1));
+      await datasource.upsert(makeCompanion(podcastId: 1, playlistNumber: 1));
+      await datasource.upsert(makeCompanion(podcastId: 2, playlistNumber: 1));
 
-      await datasource.upsertAllForPodcast(1, [_companion(playlistNumber: 99)]);
+      await datasource.upsertAllForPodcast(1, [
+        makeCompanion(playlistNumber: 99),
+      ]);
 
       final podcast1 = await datasource.getByPodcastId(1);
       final podcast2 = await datasource.getByPodcastId(2);
@@ -135,9 +140,9 @@ void main() {
     });
 
     test('returns playlists ordered by sortKey', () async {
-      await datasource.upsert(_companion(playlistNumber: 3, sortKey: 30));
-      await datasource.upsert(_companion(playlistNumber: 1, sortKey: 10));
-      await datasource.upsert(_companion(playlistNumber: 2, sortKey: 20));
+      await datasource.upsert(makeCompanion(playlistNumber: 3, sortKey: 30));
+      await datasource.upsert(makeCompanion(playlistNumber: 1, sortKey: 10));
+      await datasource.upsert(makeCompanion(playlistNumber: 2, sortKey: 20));
 
       final results = await datasource.getByPodcastId(1);
       expect(results, hasLength(3));
@@ -149,7 +154,7 @@ void main() {
 
   group('watchByPodcastId', () {
     test('emits initial state', () async {
-      await datasource.upsert(_companion(playlistNumber: 1));
+      await datasource.upsert(makeCompanion(playlistNumber: 1));
 
       final result = await datasource.watchByPodcastId(1).first;
       expect(result, hasLength(1));
@@ -162,7 +167,7 @@ void main() {
 
       await Future<void>.delayed(const Duration(milliseconds: 50));
 
-      await datasource.upsert(_companion(playlistNumber: 1));
+      await datasource.upsert(makeCompanion(playlistNumber: 1));
       await Future<void>.delayed(const Duration(milliseconds: 50));
 
       await subscription.cancel();
@@ -175,7 +180,7 @@ void main() {
 
   group('getByPodcastIdAndPlaylistNumber', () {
     test('returns matching playlist', () async {
-      await datasource.upsert(_companion(playlistNumber: 5));
+      await datasource.upsert(makeCompanion(playlistNumber: 5));
 
       final result = await datasource.getByPodcastIdAndPlaylistNumber(1, 5);
       expect(result, isNotNull);
@@ -188,7 +193,7 @@ void main() {
     });
 
     test('returns null for wrong podcast', () async {
-      await datasource.upsert(_companion(playlistNumber: 1));
+      await datasource.upsert(makeCompanion(playlistNumber: 1));
 
       final result = await datasource.getByPodcastIdAndPlaylistNumber(999, 1);
       expect(result, isNull);
@@ -197,8 +202,8 @@ void main() {
 
   group('deleteByPodcastId', () {
     test('deletes all playlists for a podcast', () async {
-      await datasource.upsert(_companion(playlistNumber: 1));
-      await datasource.upsert(_companion(playlistNumber: 2));
+      await datasource.upsert(makeCompanion(playlistNumber: 1));
+      await datasource.upsert(makeCompanion(playlistNumber: 2));
 
       final deleted = await datasource.deleteByPodcastId(1);
       expect(deleted, 2);
@@ -220,9 +225,9 @@ void main() {
     });
 
     test('returns correct count', () async {
-      await datasource.upsert(_companion(playlistNumber: 1));
-      await datasource.upsert(_companion(playlistNumber: 2));
-      await datasource.upsert(_companion(playlistNumber: 3));
+      await datasource.upsert(makeCompanion(playlistNumber: 1));
+      await datasource.upsert(makeCompanion(playlistNumber: 2));
+      await datasource.upsert(makeCompanion(playlistNumber: 3));
 
       final count = await datasource.countByPodcastId(1);
       expect(count, 3);

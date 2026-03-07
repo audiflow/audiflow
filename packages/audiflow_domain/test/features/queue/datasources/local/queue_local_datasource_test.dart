@@ -43,7 +43,7 @@ void main() {
     await db.close();
   });
 
-  QueueItemsCompanion _makeItem({
+  QueueItemsCompanion makeItem({
     required int episodeId,
     required int position,
     bool isAdhoc = false,
@@ -60,7 +60,7 @@ void main() {
 
   group('insert', () {
     test('inserts queue item and returns id', () async {
-      final id = await datasource.insert(_makeItem(episodeId: 1, position: 0));
+      final id = await datasource.insert(makeItem(episodeId: 1, position: 0));
 
       expect(0 < id, true);
     });
@@ -74,9 +74,9 @@ void main() {
     });
 
     test('returns items ordered by position ascending', () async {
-      await datasource.insert(_makeItem(episodeId: 2, position: 20));
-      await datasource.insert(_makeItem(episodeId: 1, position: 0));
-      await datasource.insert(_makeItem(episodeId: 3, position: 10));
+      await datasource.insert(makeItem(episodeId: 2, position: 20));
+      await datasource.insert(makeItem(episodeId: 1, position: 0));
+      await datasource.insert(makeItem(episodeId: 3, position: 10));
 
       final items = await datasource.getAll();
 
@@ -89,7 +89,7 @@ void main() {
 
   group('watchAll', () {
     test('emits current queue items', () async {
-      await datasource.insert(_makeItem(episodeId: 1, position: 0));
+      await datasource.insert(makeItem(episodeId: 1, position: 0));
 
       final result = await datasource.watchAll().first;
 
@@ -105,9 +105,9 @@ void main() {
     });
 
     test('returns maximum position value', () async {
-      await datasource.insert(_makeItem(episodeId: 1, position: 0));
-      await datasource.insert(_makeItem(episodeId: 2, position: 30));
-      await datasource.insert(_makeItem(episodeId: 3, position: 10));
+      await datasource.insert(makeItem(episodeId: 1, position: 0));
+      await datasource.insert(makeItem(episodeId: 2, position: 30));
+      await datasource.insert(makeItem(episodeId: 3, position: 10));
 
       final max = await datasource.getMaxPosition();
 
@@ -123,9 +123,9 @@ void main() {
     });
 
     test('returns minimum position value', () async {
-      await datasource.insert(_makeItem(episodeId: 1, position: 5));
-      await datasource.insert(_makeItem(episodeId: 2, position: 30));
-      await datasource.insert(_makeItem(episodeId: 3, position: 10));
+      await datasource.insert(makeItem(episodeId: 1, position: 5));
+      await datasource.insert(makeItem(episodeId: 2, position: 30));
+      await datasource.insert(makeItem(episodeId: 3, position: 10));
 
       final min = await datasource.getMinPosition();
 
@@ -135,7 +135,7 @@ void main() {
 
   group('updatePosition', () {
     test('updates position of a queue item', () async {
-      final id = await datasource.insert(_makeItem(episodeId: 1, position: 0));
+      final id = await datasource.insert(makeItem(episodeId: 1, position: 0));
 
       await datasource.updatePosition(id, 50);
 
@@ -146,7 +146,7 @@ void main() {
 
   group('deleteById', () {
     test('removes a queue item', () async {
-      final id = await datasource.insert(_makeItem(episodeId: 1, position: 0));
+      final id = await datasource.insert(makeItem(episodeId: 1, position: 0));
 
       final deleted = await datasource.deleteById(id);
 
@@ -164,8 +164,8 @@ void main() {
 
   group('deleteAll', () {
     test('removes all queue items', () async {
-      await datasource.insert(_makeItem(episodeId: 1, position: 0));
-      await datasource.insert(_makeItem(episodeId: 2, position: 10));
+      await datasource.insert(makeItem(episodeId: 1, position: 0));
+      await datasource.insert(makeItem(episodeId: 2, position: 10));
 
       final deleted = await datasource.deleteAll();
 
@@ -178,13 +178,13 @@ void main() {
   group('deleteAllAdhoc', () {
     test('removes only adhoc items', () async {
       await datasource.insert(
-        _makeItem(episodeId: 1, position: 0, isAdhoc: false),
+        makeItem(episodeId: 1, position: 0, isAdhoc: false),
       );
       await datasource.insert(
-        _makeItem(episodeId: 2, position: 10, isAdhoc: true),
+        makeItem(episodeId: 2, position: 10, isAdhoc: true),
       );
       await datasource.insert(
-        _makeItem(episodeId: 3, position: 20, isAdhoc: true),
+        makeItem(episodeId: 3, position: 20, isAdhoc: true),
       );
 
       final deleted = await datasource.deleteAllAdhoc();
@@ -199,10 +199,10 @@ void main() {
   group('deleteAllManual', () {
     test('removes only manual items', () async {
       await datasource.insert(
-        _makeItem(episodeId: 1, position: 0, isAdhoc: false),
+        makeItem(episodeId: 1, position: 0, isAdhoc: false),
       );
       await datasource.insert(
-        _makeItem(episodeId: 2, position: 10, isAdhoc: true),
+        makeItem(episodeId: 2, position: 10, isAdhoc: true),
       );
 
       final deleted = await datasource.deleteAllManual();
@@ -223,13 +223,13 @@ void main() {
 
     test('counts only manual items', () async {
       await datasource.insert(
-        _makeItem(episodeId: 1, position: 0, isAdhoc: false),
+        makeItem(episodeId: 1, position: 0, isAdhoc: false),
       );
       await datasource.insert(
-        _makeItem(episodeId: 2, position: 10, isAdhoc: false),
+        makeItem(episodeId: 2, position: 10, isAdhoc: false),
       );
       await datasource.insert(
-        _makeItem(episodeId: 3, position: 20, isAdhoc: true),
+        makeItem(episodeId: 3, position: 20, isAdhoc: true),
       );
 
       final count = await datasource.getManualCount();
@@ -247,10 +247,10 @@ void main() {
 
     test('counts only adhoc items', () async {
       await datasource.insert(
-        _makeItem(episodeId: 1, position: 0, isAdhoc: false),
+        makeItem(episodeId: 1, position: 0, isAdhoc: false),
       );
       await datasource.insert(
-        _makeItem(episodeId: 2, position: 10, isAdhoc: true),
+        makeItem(episodeId: 2, position: 10, isAdhoc: true),
       );
 
       final count = await datasource.getAdhocCount();
@@ -261,8 +261,8 @@ void main() {
 
   group('shiftPositions', () {
     test('shifts all positions by delta', () async {
-      await datasource.insert(_makeItem(episodeId: 1, position: 0));
-      await datasource.insert(_makeItem(episodeId: 2, position: 10));
+      await datasource.insert(makeItem(episodeId: 1, position: 0));
+      await datasource.insert(makeItem(episodeId: 2, position: 10));
 
       await datasource.shiftPositions(5);
 
@@ -274,9 +274,9 @@ void main() {
 
   group('shiftPositionsFrom', () {
     test('shifts positions at or after given position', () async {
-      await datasource.insert(_makeItem(episodeId: 1, position: 0));
-      await datasource.insert(_makeItem(episodeId: 2, position: 10));
-      await datasource.insert(_makeItem(episodeId: 3, position: 20));
+      await datasource.insert(makeItem(episodeId: 1, position: 0));
+      await datasource.insert(makeItem(episodeId: 2, position: 10));
+      await datasource.insert(makeItem(episodeId: 3, position: 20));
 
       await datasource.shiftPositionsFrom(10, 5);
 

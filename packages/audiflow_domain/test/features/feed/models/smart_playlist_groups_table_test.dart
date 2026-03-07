@@ -1,6 +1,6 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_domain/src/common/database/app_database.dart'
-    show SmartPlaylistGroupEntity, SmartPlaylistGroupsCompanion;
+    show SmartPlaylistGroupsCompanion;
 import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';

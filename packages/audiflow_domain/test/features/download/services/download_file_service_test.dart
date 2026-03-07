@@ -83,7 +83,7 @@ void main() {
           url: 'https://example.com/ep.mp3',
           episodeId: 1,
           episodeTitle: 'Test Episode',
-          onProgress: (_, __) {},
+          onProgress: (_, _) {},
         ),
         throwsA(
           isA<DownloadException>().having(
@@ -122,7 +122,7 @@ void main() {
           url: 'https://example.com/ep.mp3',
           episodeId: 1,
           episodeTitle: 'Test Episode',
-          onProgress: (_, __) {},
+          onProgress: (_, _) {},
         ),
         throwsA(
           isA<DownloadException>().having(
@@ -161,7 +161,7 @@ void main() {
           url: 'https://example.com/ep.mp3',
           episodeId: 1,
           episodeTitle: 'Test Episode',
-          onProgress: (_, __) {},
+          onProgress: (_, _) {},
         ),
         throwsA(
           isA<DownloadException>().having(
@@ -200,7 +200,7 @@ void main() {
           url: 'https://example.com/ep.mp3',
           episodeId: 1,
           episodeTitle: 'Test Episode',
-          onProgress: (_, __) {},
+          onProgress: (_, _) {},
         ),
         throwsA(
           isA<DownloadException>().having(
@@ -237,7 +237,7 @@ void main() {
           url: 'https://example.com/ep.mp3',
           episodeId: 1,
           episodeTitle: 'Test',
-          onProgress: (_, __) {},
+          onProgress: (_, _) {},
         );
       } on DownloadException {
         // expected
@@ -277,7 +277,7 @@ void main() {
         episodeId: 1,
         episodeTitle: 'Test',
         resumeFromBytes: 5000,
-        onProgress: (_, __) {},
+        onProgress: (_, _) {},
       );
 
       // Assert
@@ -314,7 +314,7 @@ void main() {
         url: 'https://example.com/ep.mp3',
         episodeId: 1,
         episodeTitle: 'Test',
-        onProgress: (_, __) {},
+        onProgress: (_, _) {},
       );
 
       // Assert
@@ -348,7 +348,7 @@ void main() {
         url: 'https://example.com/ep.mp3',
         episodeId: 42,
         episodeTitle: 'My Episode',
-        onProgress: (_, __) {},
+        onProgress: (_, _) {},
       );
 
       // Assert
@@ -384,7 +384,7 @@ void main() {
           url: 'https://example.com/ep.mp3',
           episodeId: 1,
           episodeTitle: 'Test',
-          onProgress: (_, __) {},
+          onProgress: (_, _) {},
         ),
         throwsA(
           isA<DownloadException>().having(
