@@ -42,6 +42,10 @@
   "playbackAutoCompleteThreshold": "自動完了しきい値",
   "playbackContinuousTitle": "連続再生",
   "playbackContinuousSubtitle": "キュー内の次のエピソードを自動再生",
+  "playbackAutoPlayOrderTitle": "自動再生の順序",
+  "playbackAutoPlayOrderSubtitle": "エピソードリストからの自動キュー追加時の順序",
+  "playbackAutoPlayOrderOldestFirst": "配信順",
+  "playbackAutoPlayOrderAsDisplayed": "表示順",
 
   "downloadsWifiOnlyTitle": "WiFiのみダウンロード",
   "downloadsWifiOnlySubtitle": "WiFi接続時のみダウンロード",
