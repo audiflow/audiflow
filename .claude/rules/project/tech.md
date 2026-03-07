@@ -1,7 +1,7 @@
 # Audiflow v2 - Tech Stack
 
 ## Core Stack
-- **Flutter 3.38.5** / **Dart 3.10.4**
+- **Flutter 3.41.4** / **Dart 3.11.1**
 - **iOS 14.0+** / **Android 8.0+ (API 26+)**
 - **Analyzer**: 10.x (overridden in root pubspec.yaml for Riverpod 4.x compatibility)
 
