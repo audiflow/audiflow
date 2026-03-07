@@ -450,7 +450,7 @@ final class PodcastSmartPlaylistsProvider
 }
 
 String _$podcastSmartPlaylistsHash() =>
-    r'2c19204658bcc3849e48a8c572a3005a44fb270f';
+    r'376a1d548830962b8e47ae1d6b5e4e88f298d4bc';
 
 /// Resolves smart playlists for a podcast by its ID.
 ///

@@ -5,7 +5,10 @@
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'dart:async' as _i4;
 
+import 'package:audiflow_core/audiflow_core.dart' as _i13;
 import 'package:audiflow_domain/src/common/database/app_database.dart' as _i2;
+import 'package:audiflow_domain/src/features/feed/models/feed_parse_progress.dart'
+    as _i10;
 import 'package:audiflow_domain/src/features/feed/models/smart_playlist_episode_extractor.dart'
     as _i9;
 import 'package:audiflow_domain/src/features/feed/repositories/episode_repository.dart'
@@ -14,7 +17,10 @@ import 'package:audiflow_domain/src/features/queue/models/playback_queue.dart'
     as _i5;
 import 'package:audiflow_domain/src/features/queue/repositories/queue_repository.dart'
     as _i3;
+import 'package:audiflow_domain/src/features/settings/repositories/app_settings_repository.dart'
+    as _i11;
 import 'package:audiflow_podcast/audiflow_podcast.dart' as _i8;
+import 'package:flutter/material.dart' as _i12;
 import 'package:mockito/mockito.dart' as _i1;
 import 'package:mockito/src/dummies.dart' as _i6;
 
@@ -241,6 +247,21 @@ class MockEpisodeRepository extends _i1.Mock implements _i7.EpisodeRepository {
           as _i4.Future<Set<String>>);
 
   @override
+  _i4.Future<void> storeTranscriptAndChapterDataFromParsed(
+    int? podcastId,
+    List<_i10.ParsedEpisodeMediaMeta>? mediaMetas,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#storeTranscriptAndChapterDataFromParsed, [
+              podcastId,
+              mediaMetas,
+            ]),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
+
+  @override
   _i4.Future<List<_i2.Episode>> getSubsequentEpisodes({
     required int? podcastId,
     required int? afterEpisodeNumber,
@@ -255,4 +276,270 @@ class MockEpisodeRepository extends _i1.Mock implements _i7.EpisodeRepository {
             returnValue: _i4.Future<List<_i2.Episode>>.value(<_i2.Episode>[]),
           )
           as _i4.Future<List<_i2.Episode>>);
+}
+
+/// A class which mocks [AppSettingsRepository].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockAppSettingsRepository extends _i1.Mock
+    implements _i11.AppSettingsRepository {
+  MockAppSettingsRepository() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  _i12.ThemeMode getThemeMode() =>
+      (super.noSuchMethod(
+            Invocation.method(#getThemeMode, []),
+            returnValue: _i12.ThemeMode.system,
+          )
+          as _i12.ThemeMode);
+
+  @override
+  _i4.Future<void> setThemeMode(_i12.ThemeMode? mode) =>
+      (super.noSuchMethod(
+            Invocation.method(#setThemeMode, [mode]),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
+
+  @override
+  _i4.Future<void> setLocale(String? locale) =>
+      (super.noSuchMethod(
+            Invocation.method(#setLocale, [locale]),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
+
+  @override
+  double getTextScale() =>
+      (super.noSuchMethod(
+            Invocation.method(#getTextScale, []),
+            returnValue: 0.0,
+          )
+          as double);
+
+  @override
+  _i4.Future<void> setTextScale(double? scale) =>
+      (super.noSuchMethod(
+            Invocation.method(#setTextScale, [scale]),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
+
+  @override
+  double getPlaybackSpeed() =>
+      (super.noSuchMethod(
+            Invocation.method(#getPlaybackSpeed, []),
+            returnValue: 0.0,
+          )
+          as double);
+
+  @override
+  _i4.Future<void> setPlaybackSpeed(double? speed) =>
+      (super.noSuchMethod(
+            Invocation.method(#setPlaybackSpeed, [speed]),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
+
+  @override
+  int getSkipForwardSeconds() =>
+      (super.noSuchMethod(
+            Invocation.method(#getSkipForwardSeconds, []),
+            returnValue: 0,
+          )
+          as int);
+
+  @override
+  _i4.Future<void> setSkipForwardSeconds(int? seconds) =>
+      (super.noSuchMethod(
+            Invocation.method(#setSkipForwardSeconds, [seconds]),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
+
+  @override
+  int getSkipBackwardSeconds() =>
+      (super.noSuchMethod(
+            Invocation.method(#getSkipBackwardSeconds, []),
+            returnValue: 0,
+          )
+          as int);
+
+  @override
+  _i4.Future<void> setSkipBackwardSeconds(int? seconds) =>
+      (super.noSuchMethod(
+            Invocation.method(#setSkipBackwardSeconds, [seconds]),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
+
+  @override
+  double getAutoCompleteThreshold() =>
+      (super.noSuchMethod(
+            Invocation.method(#getAutoCompleteThreshold, []),
+            returnValue: 0.0,
+          )
+          as double);
+
+  @override
+  _i4.Future<void> setAutoCompleteThreshold(double? threshold) =>
+      (super.noSuchMethod(
+            Invocation.method(#setAutoCompleteThreshold, [threshold]),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
+
+  @override
+  bool getContinuousPlayback() =>
+      (super.noSuchMethod(
+            Invocation.method(#getContinuousPlayback, []),
+            returnValue: false,
+          )
+          as bool);
+
+  @override
+  _i4.Future<void> setContinuousPlayback(bool? enabled) =>
+      (super.noSuchMethod(
+            Invocation.method(#setContinuousPlayback, [enabled]),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
+
+  @override
+  _i13.AutoPlayOrder getAutoPlayOrder() =>
+      (super.noSuchMethod(
+            Invocation.method(#getAutoPlayOrder, []),
+            returnValue: _i13.AutoPlayOrder.oldestFirst,
+          )
+          as _i13.AutoPlayOrder);
+
+  @override
+  _i4.Future<void> setAutoPlayOrder(_i13.AutoPlayOrder? order) =>
+      (super.noSuchMethod(
+            Invocation.method(#setAutoPlayOrder, [order]),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
+
+  @override
+  bool getWifiOnlyDownload() =>
+      (super.noSuchMethod(
+            Invocation.method(#getWifiOnlyDownload, []),
+            returnValue: false,
+          )
+          as bool);
+
+  @override
+  _i4.Future<void> setWifiOnlyDownload(bool? enabled) =>
+      (super.noSuchMethod(
+            Invocation.method(#setWifiOnlyDownload, [enabled]),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
+
+  @override
+  bool getAutoDeletePlayed() =>
+      (super.noSuchMethod(
+            Invocation.method(#getAutoDeletePlayed, []),
+            returnValue: false,
+          )
+          as bool);
+
+  @override
+  _i4.Future<void> setAutoDeletePlayed(bool? enabled) =>
+      (super.noSuchMethod(
+            Invocation.method(#setAutoDeletePlayed, [enabled]),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
+
+  @override
+  int getMaxConcurrentDownloads() =>
+      (super.noSuchMethod(
+            Invocation.method(#getMaxConcurrentDownloads, []),
+            returnValue: 0,
+          )
+          as int);
+
+  @override
+  _i4.Future<void> setMaxConcurrentDownloads(int? count) =>
+      (super.noSuchMethod(
+            Invocation.method(#setMaxConcurrentDownloads, [count]),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
+
+  @override
+  bool getAutoSync() =>
+      (super.noSuchMethod(
+            Invocation.method(#getAutoSync, []),
+            returnValue: false,
+          )
+          as bool);
+
+  @override
+  _i4.Future<void> setAutoSync(bool? enabled) =>
+      (super.noSuchMethod(
+            Invocation.method(#setAutoSync, [enabled]),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
+
+  @override
+  int getSyncIntervalMinutes() =>
+      (super.noSuchMethod(
+            Invocation.method(#getSyncIntervalMinutes, []),
+            returnValue: 0,
+          )
+          as int);
+
+  @override
+  _i4.Future<void> setSyncIntervalMinutes(int? minutes) =>
+      (super.noSuchMethod(
+            Invocation.method(#setSyncIntervalMinutes, [minutes]),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
+
+  @override
+  bool getWifiOnlySync() =>
+      (super.noSuchMethod(
+            Invocation.method(#getWifiOnlySync, []),
+            returnValue: false,
+          )
+          as bool);
+
+  @override
+  _i4.Future<void> setWifiOnlySync(bool? enabled) =>
+      (super.noSuchMethod(
+            Invocation.method(#setWifiOnlySync, [enabled]),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
+
+  @override
+  _i4.Future<void> clearAll() =>
+      (super.noSuchMethod(
+            Invocation.method(#clearAll, []),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
 }

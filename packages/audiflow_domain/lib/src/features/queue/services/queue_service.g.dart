@@ -61,4 +61,4 @@ final class QueueServiceProvider
   }
 }
 
-String _$queueServiceHash() => r'd8581aa3050ff4d7a0721a5a4e9de60450d99404';
+String _$queueServiceHash() => r'72cc7c5cb9f45f15868c9dd346e4c9984873c2eb';
