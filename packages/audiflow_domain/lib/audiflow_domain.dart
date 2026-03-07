@@ -133,6 +133,7 @@ export 'src/common/database/app_database.dart'
         EpisodeChaptersCompanion;
 
 // Subscription feature
+export 'src/features/subscription/datasources/local/subscription_local_datasource.dart';
 export 'src/features/subscription/extensions/subscription_extensions.dart';
 export 'src/features/subscription/providers/subscription_providers.dart';
 export 'src/features/subscription/repositories/subscription_repository.dart';
@@ -152,6 +153,7 @@ export 'package:audiflow_ai/audiflow_ai.dart'
 export 'package:audiflow_search/audiflow_search.dart' show Podcast;
 
 // Queue feature
+export 'src/features/queue/datasources/local/queue_local_datasource.dart';
 export 'src/features/queue/models/playback_queue.dart';
 export 'src/features/queue/providers/queue_providers.dart';
 export 'src/features/queue/repositories/queue_repository.dart';

@@ -1,5 +1,6 @@
 import 'package:audiflow_domain/src/features/feed/models/feed_parse_progress.dart';
 import 'package:audiflow_podcast/audiflow_podcast.dart';
+import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -347,6 +348,315 @@ void main() {
         episodes.first.id,
       );
       expect(transcripts.length, equals(1));
+    });
+  });
+
+  group('getByPodcastId', () {
+    test('returns episodes ordered by publish date descending', () async {
+      final items = [
+        makeItem(
+          guid: 'ep-old',
+          title: 'Old Episode',
+          enclosureUrl: 'https://example.com/old.mp3',
+        ),
+        makeItem(
+          guid: 'ep-new',
+          title: 'New Episode',
+          enclosureUrl: 'https://example.com/new.mp3',
+        ),
+      ];
+
+      await repository.upsertFromFeedItems(podcastId, items);
+
+      // Set distinct publish dates
+      final episodes = await episodeDatasource.getByPodcastId(podcastId);
+      for (final ep in episodes) {
+        final date = ep.guid == 'ep-old'
+            ? DateTime(2023, 1, 1)
+            : DateTime(2024, 1, 1);
+        await db
+            .into(db.episodes)
+            .insertOnConflictUpdate(
+              EpisodesCompanion(
+                id: Value(ep.id),
+                podcastId: Value(podcastId),
+                guid: Value(ep.guid),
+                title: Value(ep.title),
+                audioUrl: Value(ep.audioUrl),
+                publishedAt: Value(date),
+              ),
+            );
+      }
+
+      final result = await repository.getByPodcastId(podcastId);
+      expect(result.length, equals(2));
+      // Newest first
+      expect(result.first.guid, equals('ep-new'));
+      expect(result.last.guid, equals('ep-old'));
+    });
+
+    test('returns empty list for unknown podcast', () async {
+      final result = await repository.getByPodcastId(9999);
+      expect(result, isEmpty);
+    });
+  });
+
+  group('getById', () {
+    test('returns episode by id', () async {
+      await episodeDatasource.upsert(
+        EpisodesCompanion.insert(
+          podcastId: podcastId,
+          guid: 'find-me',
+          title: 'Find Me',
+          audioUrl: 'https://example.com/find.mp3',
+        ),
+      );
+
+      final episodes = await episodeDatasource.getByPodcastId(podcastId);
+      final id = episodes.first.id;
+
+      final result = await repository.getById(id);
+      expect(result, isNotNull);
+      expect(result!.guid, equals('find-me'));
+    });
+
+    test('returns null for non-existent id', () async {
+      final result = await repository.getById(9999);
+      expect(result, isNull);
+    });
+  });
+
+  group('getByAudioUrl', () {
+    test('returns episode by audio URL', () async {
+      await episodeDatasource.upsert(
+        EpisodesCompanion.insert(
+          podcastId: podcastId,
+          guid: 'audio-url-ep',
+          title: 'Audio URL Episode',
+          audioUrl: 'https://example.com/unique-audio.mp3',
+        ),
+      );
+
+      final result = await repository.getByAudioUrl(
+        'https://example.com/unique-audio.mp3',
+      );
+      expect(result, isNotNull);
+      expect(result!.guid, equals('audio-url-ep'));
+    });
+
+    test('returns null for non-existent audio URL', () async {
+      final result = await repository.getByAudioUrl(
+        'https://example.com/nonexistent.mp3',
+      );
+      expect(result, isNull);
+    });
+  });
+
+  group('upsertEpisodes', () {
+    test('inserts new episodes via companion list', () async {
+      final companions = [
+        EpisodesCompanion.insert(
+          podcastId: podcastId,
+          guid: 'upsert-1',
+          title: 'Upsert 1',
+          audioUrl: 'https://example.com/u1.mp3',
+        ),
+        EpisodesCompanion.insert(
+          podcastId: podcastId,
+          guid: 'upsert-2',
+          title: 'Upsert 2',
+          audioUrl: 'https://example.com/u2.mp3',
+        ),
+      ];
+
+      await repository.upsertEpisodes(companions);
+
+      final episodes = await repository.getByPodcastId(podcastId);
+      expect(episodes.length, equals(2));
+    });
+
+    test('updates existing episodes on conflict', () async {
+      await episodeDatasource.upsert(
+        EpisodesCompanion.insert(
+          podcastId: podcastId,
+          guid: 'conflict-ep',
+          title: 'Original',
+          audioUrl: 'https://example.com/original.mp3',
+        ),
+      );
+
+      final companions = [
+        EpisodesCompanion.insert(
+          podcastId: podcastId,
+          guid: 'conflict-ep',
+          title: 'Updated',
+          audioUrl: 'https://example.com/updated.mp3',
+        ),
+      ];
+
+      await repository.upsertEpisodes(companions);
+
+      final episodes = await repository.getByPodcastId(podcastId);
+      expect(episodes.length, equals(1));
+      expect(episodes.first.title, equals('Updated'));
+    });
+  });
+
+  group('getGuidsByPodcastId', () {
+    test('returns set of guids for podcast', () async {
+      final companions = [
+        EpisodesCompanion.insert(
+          podcastId: podcastId,
+          guid: 'guid-a',
+          title: 'A',
+          audioUrl: 'https://example.com/a.mp3',
+        ),
+        EpisodesCompanion.insert(
+          podcastId: podcastId,
+          guid: 'guid-b',
+          title: 'B',
+          audioUrl: 'https://example.com/b.mp3',
+        ),
+      ];
+
+      await repository.upsertEpisodes(companions);
+
+      final guids = await repository.getGuidsByPodcastId(podcastId);
+      expect(guids, equals({'guid-a', 'guid-b'}));
+    });
+
+    test('returns empty set for unknown podcast', () async {
+      final guids = await repository.getGuidsByPodcastId(9999);
+      expect(guids, isEmpty);
+    });
+  });
+
+  group('getByIds', () {
+    test('returns episodes matching given ids', () async {
+      await episodeDatasource.upsert(
+        EpisodesCompanion.insert(
+          podcastId: podcastId,
+          guid: 'ids-1',
+          title: 'Ids 1',
+          audioUrl: 'https://example.com/ids1.mp3',
+        ),
+      );
+      await episodeDatasource.upsert(
+        EpisodesCompanion.insert(
+          podcastId: podcastId,
+          guid: 'ids-2',
+          title: 'Ids 2',
+          audioUrl: 'https://example.com/ids2.mp3',
+        ),
+      );
+      await episodeDatasource.upsert(
+        EpisodesCompanion.insert(
+          podcastId: podcastId,
+          guid: 'ids-3',
+          title: 'Ids 3',
+          audioUrl: 'https://example.com/ids3.mp3',
+        ),
+      );
+
+      final allEpisodes = await episodeDatasource.getByPodcastId(podcastId);
+      final targetIds = allEpisodes.take(2).map((e) => e.id).toList();
+
+      final result = await repository.getByIds(targetIds);
+      expect(result.length, equals(2));
+    });
+
+    test('returns empty list for empty ids', () async {
+      final result = await repository.getByIds([]);
+      expect(result, isEmpty);
+    });
+  });
+
+  group('getSubsequentEpisodes', () {
+    test('returns episodes after given episode number', () async {
+      for (var i = 1; 6 < i ? false : true; i++) {
+        await episodeDatasource.upsert(
+          EpisodesCompanion.insert(
+            podcastId: podcastId,
+            guid: 'seq-$i',
+            title: 'Episode $i',
+            audioUrl: 'https://example.com/seq$i.mp3',
+            episodeNumber: Value(i),
+          ),
+        );
+      }
+
+      final result = await repository.getSubsequentEpisodes(
+        podcastId: podcastId,
+        afterEpisodeNumber: 3,
+        limit: 10,
+      );
+
+      expect(result.length, equals(3));
+      expect(result.first.episodeNumber, equals(4));
+    });
+
+    test('returns from beginning when afterEpisodeNumber is null', () async {
+      for (var i = 1; 4 < i ? false : true; i++) {
+        await episodeDatasource.upsert(
+          EpisodesCompanion.insert(
+            podcastId: podcastId,
+            guid: 'start-$i',
+            title: 'Episode $i',
+            audioUrl: 'https://example.com/start$i.mp3',
+            episodeNumber: Value(i),
+          ),
+        );
+      }
+
+      final result = await repository.getSubsequentEpisodes(
+        podcastId: podcastId,
+        afterEpisodeNumber: null,
+        limit: 2,
+      );
+
+      expect(result.length, equals(2));
+      expect(result.first.episodeNumber, equals(1));
+      expect(result.last.episodeNumber, equals(2));
+    });
+
+    test('respects limit parameter', () async {
+      for (var i = 1; 10 < i ? false : true; i++) {
+        await episodeDatasource.upsert(
+          EpisodesCompanion.insert(
+            podcastId: podcastId,
+            guid: 'limit-$i',
+            title: 'Episode $i',
+            audioUrl: 'https://example.com/limit$i.mp3',
+            episodeNumber: Value(i),
+          ),
+        );
+      }
+
+      final result = await repository.getSubsequentEpisodes(
+        podcastId: podcastId,
+        afterEpisodeNumber: 0,
+        limit: 3,
+      );
+
+      expect(result.length, equals(3));
+    });
+  });
+
+  group('watchByPodcastId', () {
+    test('emits initial list and updates', () async {
+      await episodeDatasource.upsert(
+        EpisodesCompanion.insert(
+          podcastId: podcastId,
+          guid: 'watch-1',
+          title: 'Watch 1',
+          audioUrl: 'https://example.com/watch1.mp3',
+        ),
+      );
+
+      final stream = repository.watchByPodcastId(podcastId);
+      final first = await stream.first;
+      expect(first.length, equals(1));
+      expect(first.first.guid, equals('watch-1'));
     });
   });
 

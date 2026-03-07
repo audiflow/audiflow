@@ -203,6 +203,112 @@ void main() {
     });
   });
 
+  group('updateSmartPlaylistSort', () {
+    test('persists playlistNumber field with ascending order', () async {
+      await repository.updateSmartPlaylistSort(
+        1,
+        SmartPlaylistSortField.playlistNumber,
+        SortOrder.ascending,
+      );
+      final pref = await repository.getPreference(1);
+
+      expect(
+        pref.smartPlaylistSortField,
+        SmartPlaylistSortField.playlistNumber,
+      );
+      expect(pref.smartPlaylistSortOrder, SortOrder.ascending);
+    });
+
+    test('persists newestEpisodeDate field with descending order', () async {
+      await repository.updateSmartPlaylistSort(
+        1,
+        SmartPlaylistSortField.newestEpisodeDate,
+        SortOrder.descending,
+      );
+      final pref = await repository.getPreference(1);
+
+      expect(
+        pref.smartPlaylistSortField,
+        SmartPlaylistSortField.newestEpisodeDate,
+      );
+      expect(pref.smartPlaylistSortOrder, SortOrder.descending);
+    });
+
+    test('persists progress field', () async {
+      await repository.updateSmartPlaylistSort(
+        1,
+        SmartPlaylistSortField.progress,
+        SortOrder.ascending,
+      );
+      final pref = await repository.getPreference(1);
+
+      expect(pref.smartPlaylistSortField, SmartPlaylistSortField.progress);
+    });
+
+    test('persists alphabetical field', () async {
+      await repository.updateSmartPlaylistSort(
+        1,
+        SmartPlaylistSortField.alphabetical,
+        SortOrder.ascending,
+      );
+      final pref = await repository.getPreference(1);
+
+      expect(pref.smartPlaylistSortField, SmartPlaylistSortField.alphabetical);
+    });
+
+    test('does not affect other preferences', () async {
+      await repository.updateViewMode(1, PodcastViewMode.smartPlaylists);
+      await repository.updateEpisodeFilter(1, EpisodeFilter.unplayed);
+      await repository.updateSmartPlaylistSort(
+        1,
+        SmartPlaylistSortField.newestEpisodeDate,
+        SortOrder.ascending,
+      );
+      final pref = await repository.getPreference(1);
+
+      expect(pref.viewMode, PodcastViewMode.smartPlaylists);
+      expect(pref.episodeFilter, EpisodeFilter.unplayed);
+      expect(
+        pref.smartPlaylistSortField,
+        SmartPlaylistSortField.newestEpisodeDate,
+      );
+      expect(pref.smartPlaylistSortOrder, SortOrder.ascending);
+    });
+  });
+
+  group('updateSelectedPlaylistId', () {
+    test('persists selected playlist ID', () async {
+      await repository.updateSelectedPlaylistId(1, 'season_3');
+      final pref = await repository.getPreference(1);
+
+      expect(pref.selectedPlaylistId, 'season_3');
+    });
+
+    test('sets view mode to smartPlaylists', () async {
+      await repository.updateSelectedPlaylistId(1, 'season_1');
+      final pref = await repository.getPreference(1);
+
+      expect(pref.viewMode, PodcastViewMode.smartPlaylists);
+    });
+
+    test('clears selected playlist ID with null', () async {
+      await repository.updateSelectedPlaylistId(1, 'season_5');
+      await repository.updateSelectedPlaylistId(1, null);
+      final pref = await repository.getPreference(1);
+
+      expect(pref.selectedPlaylistId, isNull);
+    });
+
+    test('does not affect other preferences', () async {
+      await repository.updateEpisodeFilter(1, EpisodeFilter.inProgress);
+      await repository.updateSelectedPlaylistId(1, 'season_2');
+      final pref = await repository.getPreference(1);
+
+      expect(pref.episodeFilter, EpisodeFilter.inProgress);
+      expect(pref.selectedPlaylistId, 'season_2');
+    });
+  });
+
   group('PodcastViewPreferenceData', () {
     test('defaults factory creates correct values', () {
       final data = PodcastViewPreferenceData.defaults(42);
@@ -211,6 +317,25 @@ void main() {
       expect(data.viewMode, PodcastViewMode.episodes);
       expect(data.episodeFilter, EpisodeFilter.all);
       expect(data.episodeSortOrder, SortOrder.descending);
+      expect(
+        data.smartPlaylistSortField,
+        SmartPlaylistSortField.playlistNumber,
+      );
+      expect(data.smartPlaylistSortOrder, SortOrder.descending);
+      expect(data.selectedPlaylistId, isNull);
+    });
+  });
+
+  group('getPreference defaults for smart playlist fields', () {
+    test('returns default smart playlist sort when not set', () async {
+      final pref = await repository.getPreference(1);
+
+      expect(
+        pref.smartPlaylistSortField,
+        SmartPlaylistSortField.playlistNumber,
+      );
+      expect(pref.smartPlaylistSortOrder, SortOrder.descending);
+      expect(pref.selectedPlaylistId, isNull);
     });
   });
 

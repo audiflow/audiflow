@@ -1,4 +1,5 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -485,6 +486,269 @@ void main() {
       final remaining = await repository.getAll();
       expect(remaining, hasLength(1));
       expect(remaining.first.episodeId, 2);
+    });
+  });
+
+  group('getAll', () {
+    test('returns all tasks ordered by creation date', () async {
+      await db
+          .into(db.episodes)
+          .insert(
+            EpisodesCompanion.insert(
+              podcastId: 1,
+              guid: 'ep-2',
+              title: 'Episode 2',
+              audioUrl: 'https://example.com/ep2.mp3',
+            ),
+          );
+
+      await repository.createDownload(
+        episodeId: 1,
+        audioUrl: 'https://example.com/ep1.mp3',
+        wifiOnly: true,
+      );
+      await repository.createDownload(
+        episodeId: 2,
+        audioUrl: 'https://example.com/ep2.mp3',
+        wifiOnly: false,
+      );
+
+      final all = await repository.getAll();
+      expect(all, hasLength(2));
+      expect(all.first.episodeId, 1);
+      expect(all.last.episodeId, 2);
+    });
+
+    test('returns empty list when no tasks exist', () async {
+      final all = await repository.getAll();
+      expect(all, isEmpty);
+    });
+  });
+
+  group('watchAll', () {
+    test('emits initial task list', () async {
+      await repository.createDownload(
+        episodeId: 1,
+        audioUrl: 'https://example.com/ep1.mp3',
+        wifiOnly: true,
+      );
+
+      final first = await repository.watchAll().first;
+      expect(first, hasLength(1));
+      expect(first.first.episodeId, 1);
+    });
+
+    test('emits empty list when no tasks exist', () async {
+      final first = await repository.watchAll().first;
+      expect(first, isEmpty);
+    });
+  });
+
+  group('watchByStatus', () {
+    test('emits tasks matching status', () async {
+      await db
+          .into(db.episodes)
+          .insert(
+            EpisodesCompanion.insert(
+              podcastId: 1,
+              guid: 'ep-2',
+              title: 'Episode 2',
+              audioUrl: 'https://example.com/ep2.mp3',
+            ),
+          );
+
+      final task1 = await repository.createDownload(
+        episodeId: 1,
+        audioUrl: 'https://example.com/ep1.mp3',
+        wifiOnly: false,
+      );
+      await repository.createDownload(
+        episodeId: 2,
+        audioUrl: 'https://example.com/ep2.mp3',
+        wifiOnly: false,
+      );
+
+      await repository.updateStatus(
+        id: task1!.id,
+        status: const DownloadStatus.completed(),
+        localPath: '/path/ep1.mp3',
+      );
+
+      final pendingStream = repository.watchByStatus(
+        const DownloadStatus.pending(),
+      );
+      final pending = await pendingStream.first;
+      expect(pending, hasLength(1));
+      expect(pending.first.episodeId, 2);
+
+      final completedStream = repository.watchByStatus(
+        const DownloadStatus.completed(),
+      );
+      final completed = await completedStream.first;
+      expect(completed, hasLength(1));
+      expect(completed.first.episodeId, 1);
+    });
+  });
+
+  group('watchByEpisodeId', () {
+    test('emits task for episode', () async {
+      await repository.createDownload(
+        episodeId: 1,
+        audioUrl: 'https://example.com/ep1.mp3',
+        wifiOnly: true,
+      );
+
+      final first = await repository.watchByEpisodeId(1).first;
+      expect(first, isNotNull);
+      expect(first!.episodeId, 1);
+    });
+
+    test('emits null for non-existent episode', () async {
+      final first = await repository.watchByEpisodeId(9999).first;
+      expect(first, isNull);
+    });
+  });
+
+  group('getCompletedForEpisode', () {
+    test('returns completed download for episode', () async {
+      final task = await repository.createDownload(
+        episodeId: 1,
+        audioUrl: 'https://example.com/ep1.mp3',
+        wifiOnly: true,
+      );
+
+      await repository.updateStatus(
+        id: task!.id,
+        status: const DownloadStatus.completed(),
+        localPath: '/path/ep1.mp3',
+      );
+
+      final completed = await repository.getCompletedForEpisode(1);
+      expect(completed, isNotNull);
+      expect(completed!.localPath, '/path/ep1.mp3');
+    });
+
+    test('returns null when no completed download exists', () async {
+      await repository.createDownload(
+        episodeId: 1,
+        audioUrl: 'https://example.com/ep1.mp3',
+        wifiOnly: true,
+      );
+
+      final completed = await repository.getCompletedForEpisode(1);
+      expect(completed, isNull);
+    });
+
+    test('returns null for non-existent episode', () async {
+      final completed = await repository.getCompletedForEpisode(9999);
+      expect(completed, isNull);
+    });
+  });
+
+  group('getTotalStorageUsed', () {
+    test('returns sum of totalBytes for completed downloads', () async {
+      await db
+          .into(db.episodes)
+          .insert(
+            EpisodesCompanion.insert(
+              podcastId: 1,
+              guid: 'ep-2',
+              title: 'Episode 2',
+              audioUrl: 'https://example.com/ep2.mp3',
+            ),
+          );
+
+      final task1 = await repository.createDownload(
+        episodeId: 1,
+        audioUrl: 'https://example.com/ep1.mp3',
+        wifiOnly: false,
+      );
+      final task2 = await repository.createDownload(
+        episodeId: 2,
+        audioUrl: 'https://example.com/ep2.mp3',
+        wifiOnly: false,
+      );
+
+      await repository.updateProgress(
+        id: task1!.id,
+        downloadedBytes: 5000,
+        totalBytes: 5000,
+      );
+      await repository.updateStatus(
+        id: task1.id,
+        status: const DownloadStatus.completed(),
+        localPath: '/path/ep1.mp3',
+      );
+
+      await repository.updateProgress(
+        id: task2!.id,
+        downloadedBytes: 3000,
+        totalBytes: 3000,
+      );
+      await repository.updateStatus(
+        id: task2.id,
+        status: const DownloadStatus.completed(),
+        localPath: '/path/ep2.mp3',
+      );
+
+      final totalStorage = await repository.getTotalStorageUsed();
+      expect(totalStorage, equals(8000));
+    });
+
+    test('returns zero when no completed downloads exist', () async {
+      await repository.createDownload(
+        episodeId: 1,
+        audioUrl: 'https://example.com/ep1.mp3',
+        wifiOnly: false,
+      );
+
+      final totalStorage = await repository.getTotalStorageUsed();
+      expect(totalStorage, equals(0));
+    });
+
+    test('excludes non-completed downloads from total', () async {
+      await db
+          .into(db.episodes)
+          .insert(
+            EpisodesCompanion.insert(
+              podcastId: 1,
+              guid: 'ep-2',
+              title: 'Episode 2',
+              audioUrl: 'https://example.com/ep2.mp3',
+            ),
+          );
+
+      final task1 = await repository.createDownload(
+        episodeId: 1,
+        audioUrl: 'https://example.com/ep1.mp3',
+        wifiOnly: false,
+      );
+      await repository.createDownload(
+        episodeId: 2,
+        audioUrl: 'https://example.com/ep2.mp3',
+        wifiOnly: false,
+      );
+
+      await repository.updateProgress(
+        id: task1!.id,
+        downloadedBytes: 5000,
+        totalBytes: 5000,
+      );
+      await repository.updateStatus(
+        id: task1.id,
+        status: const DownloadStatus.completed(),
+        localPath: '/path/ep1.mp3',
+      );
+
+      final totalStorage = await repository.getTotalStorageUsed();
+      expect(totalStorage, equals(5000));
+    });
+  });
+
+  group('incrementRetryCount edge cases', () {
+    test('does nothing for non-existent task', () async {
+      // Should not throw
+      await repository.incrementRetryCount(9999);
     });
   });
 }
