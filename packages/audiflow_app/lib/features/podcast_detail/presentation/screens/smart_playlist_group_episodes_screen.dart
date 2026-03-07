@@ -211,8 +211,9 @@ class _SmartPlaylistGroupEpisodesScreenState
           ];
         }
 
-        // No year headers: always ascending (oldest first)
-        final sorted = displayEpisodes;
+        final sorted = _sortOrder == SortOrder.descending
+            ? displayEpisodes.reversed.toList()
+            : displayEpisodes;
 
         return [
           sortHeaderSliver,
