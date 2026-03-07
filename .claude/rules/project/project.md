@@ -82,4 +82,4 @@ experience and modern Flutter patterns.
 
 ## Repository Management
 
-use jj(jujutsu) for repository management.
+use git for repository management.
