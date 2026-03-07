@@ -26,4 +26,5 @@ export 'src/utils/formatters.dart';
 export 'src/utils/validators.dart';
 
 // Models
+export 'src/models/auto_play_order.dart';
 export 'src/models/episode_data.dart';
