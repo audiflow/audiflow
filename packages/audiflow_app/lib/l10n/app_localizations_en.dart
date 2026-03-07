@@ -124,6 +124,19 @@ class AppLocalizationsEn extends AppLocalizations {
       'Auto-play the next episode in the queue';
 
   @override
+  String get playbackAutoPlayOrderTitle => 'Auto-Play Order';
+
+  @override
+  String get playbackAutoPlayOrderSubtitle =>
+      'Episode order when auto-queuing from a podcast list';
+
+  @override
+  String get playbackAutoPlayOrderOldestFirst => 'Oldest First';
+
+  @override
+  String get playbackAutoPlayOrderAsDisplayed => 'As Displayed';
+
+  @override
   String get downloadsWifiOnlyTitle => 'WiFi-Only Downloads';
 
   @override

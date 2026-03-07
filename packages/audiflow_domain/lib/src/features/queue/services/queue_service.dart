@@ -1,3 +1,4 @@
+import 'package:audiflow_core/audiflow_core.dart';
 import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -5,6 +6,8 @@ import '../../../common/database/app_database.dart';
 import '../../../common/providers/logger_provider.dart';
 import '../../feed/repositories/episode_repository.dart';
 import '../../feed/repositories/episode_repository_impl.dart';
+import '../../settings/providers/settings_providers.dart';
+import '../../settings/repositories/app_settings_repository.dart';
 import '../models/playback_queue.dart';
 import '../repositories/queue_repository.dart';
 import '../repositories/queue_repository_impl.dart';
@@ -19,11 +22,13 @@ part 'queue_service.g.dart';
 QueueService queueService(Ref ref) {
   final repository = ref.watch(queueRepositoryProvider);
   final episodeRepository = ref.watch(episodeRepositoryProvider);
+  final settingsRepository = ref.watch(appSettingsRepositoryProvider);
   final logger = ref.watch(namedLoggerProvider('Queue'));
 
   return QueueService(
     repository: repository,
     episodeRepository: episodeRepository,
+    settingsRepository: settingsRepository,
     logger: logger,
   );
 }
@@ -39,13 +44,16 @@ class QueueService {
   QueueService({
     required QueueRepository repository,
     required EpisodeRepository episodeRepository,
+    required AppSettingsRepository settingsRepository,
     required Logger logger,
   }) : _repository = repository,
        _episodeRepository = episodeRepository,
+       _settingsRepository = settingsRepository,
        _logger = logger;
 
   final QueueRepository _repository;
   final EpisodeRepository _episodeRepository;
+  final AppSettingsRepository _settingsRepository;
   final Logger _logger;
 
   /// Adds an episode to the end of the queue (Play Later).
@@ -117,33 +125,51 @@ class QueueService {
     List<int> episodeIds;
 
     if (siblingEpisodeIds != null) {
-      // Sort siblings by publishedAt (chronological) with episodeNumber
-      // as fallback. publishedAt is the correct primary key because it
-      // orders episodes correctly across multiple series within a podcast.
-      final siblings = await _episodeRepository.getByIds(siblingEpisodeIds);
-      siblings.sort((a, b) {
-        final aPub = a.publishedAt;
-        final bPub = b.publishedAt;
-        if (aPub != null && bPub != null) {
-          final cmp = aPub.compareTo(bPub);
-          if (cmp != 0) return cmp;
-        } else if (aPub != null) {
-          return -1;
-        } else if (bPub != null) {
-          return 1;
-        }
-        final aNum = a.episodeNumber;
-        final bNum = b.episodeNumber;
-        if (aNum != null && bNum != null) return aNum.compareTo(bNum);
-        return 0;
-      });
+      final autoPlayOrder = _settingsRepository.getAutoPlayOrder();
 
-      // Take episodes after the starting episode
-      final startIndex = siblings.indexWhere((e) => e.id == startingEpisodeId);
-      if (0 <= startIndex && startIndex < siblings.length - 1) {
-        episodeIds = siblings.sublist(startIndex + 1).map((e) => e.id).toList();
+      if (autoPlayOrder == AutoPlayOrder.asDisplayed) {
+        // Use IDs in their original display order, just remove
+        // the starting episode and take everything after it.
+        final startIndex = siblingEpisodeIds.indexOf(startingEpisodeId);
+        if (0 <= startIndex && startIndex < siblingEpisodeIds.length - 1) {
+          episodeIds = siblingEpisodeIds.sublist(startIndex + 1);
+        } else {
+          episodeIds = [];
+        }
       } else {
-        episodeIds = [];
+        // Sort siblings by publishedAt (chronological) with
+        // episodeNumber as fallback.
+        final siblings = await _episodeRepository.getByIds(siblingEpisodeIds);
+        siblings.sort((a, b) {
+          final aPub = a.publishedAt;
+          final bPub = b.publishedAt;
+          if (aPub != null && bPub != null) {
+            final cmp = aPub.compareTo(bPub);
+            if (cmp != 0) return cmp;
+          } else if (aPub != null) {
+            return -1;
+          } else if (bPub != null) {
+            return 1;
+          }
+          final aNum = a.episodeNumber;
+          final bNum = b.episodeNumber;
+          if (aNum != null && bNum != null) {
+            return aNum.compareTo(bNum);
+          }
+          return 0;
+        });
+
+        final startIndex = siblings.indexWhere(
+          (e) => e.id == startingEpisodeId,
+        );
+        if (0 <= startIndex && startIndex < siblings.length - 1) {
+          episodeIds = siblings
+              .sublist(startIndex + 1)
+              .map((e) => e.id)
+              .toList();
+        } else {
+          episodeIds = [];
+        }
       }
     } else {
       // Get subsequent episodes (episode number ascending, after starting)

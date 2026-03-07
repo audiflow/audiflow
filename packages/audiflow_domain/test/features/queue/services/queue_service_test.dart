@@ -1,10 +1,11 @@
+import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:logger/logger.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 
-@GenerateMocks([QueueRepository, EpisodeRepository])
+@GenerateMocks([QueueRepository, EpisodeRepository, AppSettingsRepository])
 import 'queue_service_test.mocks.dart';
 
 Episode _episode({
@@ -54,15 +55,22 @@ void _stubReplaceWithAdhoc(MockQueueRepository mock) {
 void main() {
   late MockQueueRepository mockQueueRepo;
   late MockEpisodeRepository mockEpisodeRepo;
+  late MockAppSettingsRepository mockSettingsRepo;
   late QueueService service;
 
   setUp(() {
     provideDummy(const PlaybackQueue());
     mockQueueRepo = MockQueueRepository();
     mockEpisodeRepo = MockEpisodeRepository();
+    mockSettingsRepo = MockAppSettingsRepository();
+    // Default to oldestFirst (existing behavior)
+    when(
+      mockSettingsRepo.getAutoPlayOrder(),
+    ).thenReturn(AutoPlayOrder.oldestFirst);
     service = QueueService(
       repository: mockQueueRepo,
       episodeRepository: mockEpisodeRepo,
+      settingsRepository: mockSettingsRepo,
       logger: Logger(level: Level.off),
     );
   });
@@ -453,6 +461,81 @@ void main() {
             limit: anyNamed('limit'),
           ),
         );
+      });
+    });
+
+    group('with siblingEpisodeIds and asDisplayed order', () {
+      setUp(() {
+        when(
+          mockSettingsRepo.getAutoPlayOrder(),
+        ).thenReturn(AutoPlayOrder.asDisplayed);
+      });
+
+      test('preserves display order without fetching from DB', () async {
+        final siblingIds = [50, 30, 10, 40, 20];
+        final starting = _episode(id: 30, episodeNumber: 3);
+
+        when(mockEpisodeRepo.getById(30)).thenAnswer((_) async => starting);
+        _stubReplaceWithAdhoc(mockQueueRepo);
+
+        await service.createAdhocQueue(
+          startingEpisodeId: 30,
+          sourceContext: 'Group',
+          siblingEpisodeIds: siblingIds,
+        );
+
+        // Should preserve order: after 30 comes [10, 40, 20]
+        verify(
+          mockQueueRepo.replaceWithAdhoc(
+            episodeIds: [10, 40, 20],
+            sourceContext: 'Group',
+          ),
+        ).called(1);
+
+        // Should NOT call getByIds (no sorting needed)
+        verifyNever(mockEpisodeRepo.getByIds(any));
+      });
+
+      test('empty queue when starting episode is last', () async {
+        final siblingIds = [10, 20, 30];
+        final starting = _episode(id: 30, episodeNumber: 3);
+
+        when(mockEpisodeRepo.getById(30)).thenAnswer((_) async => starting);
+        _stubReplaceWithAdhoc(mockQueueRepo);
+
+        await service.createAdhocQueue(
+          startingEpisodeId: 30,
+          sourceContext: 'Group',
+          siblingEpisodeIds: siblingIds,
+        );
+
+        verify(
+          mockQueueRepo.replaceWithAdhoc(
+            episodeIds: [],
+            sourceContext: 'Group',
+          ),
+        ).called(1);
+      });
+
+      test('empty queue when starting episode not in list', () async {
+        final siblingIds = [10, 20];
+        final starting = _episode(id: 99, episodeNumber: 5);
+
+        when(mockEpisodeRepo.getById(99)).thenAnswer((_) async => starting);
+        _stubReplaceWithAdhoc(mockQueueRepo);
+
+        await service.createAdhocQueue(
+          startingEpisodeId: 99,
+          sourceContext: 'Group',
+          siblingEpisodeIds: siblingIds,
+        );
+
+        verify(
+          mockQueueRepo.replaceWithAdhoc(
+            episodeIds: [],
+            sourceContext: 'Group',
+          ),
+        ).called(1);
       });
     });
   });

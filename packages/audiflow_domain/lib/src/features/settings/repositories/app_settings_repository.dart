@@ -1,3 +1,4 @@
+import 'package:audiflow_core/audiflow_core.dart';
 import 'package:flutter/material.dart';
 
 /// Repository interface for reading and writing app settings.
@@ -57,6 +58,12 @@ abstract class AppSettingsRepository {
 
   /// Persists the continuous playback setting.
   Future<void> setContinuousPlayback(bool enabled);
+
+  /// Auto-play order when queuing from a podcast's episode list.
+  AutoPlayOrder getAutoPlayOrder();
+
+  /// Persists the auto-play order preference.
+  Future<void> setAutoPlayOrder(AutoPlayOrder order);
 
   // -- Downloads --
 

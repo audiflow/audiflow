@@ -326,6 +326,30 @@ abstract class AppLocalizations {
   /// **'Auto-play the next episode in the queue'**
   String get playbackContinuousSubtitle;
 
+  /// Auto-play order setting title
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-Play Order'**
+  String get playbackAutoPlayOrderTitle;
+
+  /// Auto-play order setting subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Episode order when auto-queuing from a podcast list'**
+  String get playbackAutoPlayOrderSubtitle;
+
+  /// Auto-play order: chronological
+  ///
+  /// In en, this message translates to:
+  /// **'Oldest First'**
+  String get playbackAutoPlayOrderOldestFirst;
+
+  /// Auto-play order: screen order
+  ///
+  /// In en, this message translates to:
+  /// **'As Displayed'**
+  String get playbackAutoPlayOrderAsDisplayed;
+
   /// WiFi-only downloads setting title
   ///
   /// In en, this message translates to:

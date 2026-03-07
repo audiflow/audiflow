@@ -134,6 +134,28 @@ void main() {
     });
   });
 
+  group('AutoPlayOrder', () {
+    test('returns default when no value stored', () {
+      expect(repository.getAutoPlayOrder(), SettingsDefaults.autoPlayOrder);
+    });
+
+    test('persists and reads oldestFirst', () async {
+      await repository.setAutoPlayOrder(AutoPlayOrder.oldestFirst);
+      expect(repository.getAutoPlayOrder(), AutoPlayOrder.oldestFirst);
+    });
+
+    test('persists and reads asDisplayed', () async {
+      await repository.setAutoPlayOrder(AutoPlayOrder.asDisplayed);
+      expect(repository.getAutoPlayOrder(), AutoPlayOrder.asDisplayed);
+    });
+
+    test('returns default for unknown stored value', () async {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(SettingsKeys.autoPlayOrder, 'unknown');
+      expect(repository.getAutoPlayOrder(), SettingsDefaults.autoPlayOrder);
+    });
+  });
+
   group('WifiOnlyDownload', () {
     test('returns default when no value stored', () {
       expect(

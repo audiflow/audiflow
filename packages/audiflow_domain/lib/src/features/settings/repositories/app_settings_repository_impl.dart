@@ -97,6 +97,17 @@ class AppSettingsRepositoryImpl implements AppSettingsRepository {
     await _ds.setBool(SettingsKeys.continuousPlayback, enabled);
   }
 
+  @override
+  AutoPlayOrder getAutoPlayOrder() {
+    final name = _ds.getString(SettingsKeys.autoPlayOrder);
+    return _parseAutoPlayOrder(name);
+  }
+
+  @override
+  Future<void> setAutoPlayOrder(AutoPlayOrder order) async {
+    await _ds.setString(SettingsKeys.autoPlayOrder, order.name);
+  }
+
   // -- Downloads --
 
   @override
@@ -172,6 +183,7 @@ class AppSettingsRepositoryImpl implements AppSettingsRepository {
       _ds.remove(SettingsKeys.skipBackwardSeconds),
       _ds.remove(SettingsKeys.autoCompleteThreshold),
       _ds.remove(SettingsKeys.continuousPlayback),
+      _ds.remove(SettingsKeys.autoPlayOrder),
       _ds.remove(SettingsKeys.wifiOnlyDownload),
       _ds.remove(SettingsKeys.autoDeletePlayed),
       _ds.remove(SettingsKeys.maxConcurrentDownloads),
@@ -182,6 +194,14 @@ class AppSettingsRepositoryImpl implements AppSettingsRepository {
   }
 
   // -- Helpers --
+
+  AutoPlayOrder _parseAutoPlayOrder(String? name) {
+    return switch (name) {
+      'oldestFirst' => AutoPlayOrder.oldestFirst,
+      'asDisplayed' => AutoPlayOrder.asDisplayed,
+      _ => SettingsDefaults.autoPlayOrder,
+    };
+  }
 
   ThemeMode _parseThemeMode(String? name) {
     return switch (name) {

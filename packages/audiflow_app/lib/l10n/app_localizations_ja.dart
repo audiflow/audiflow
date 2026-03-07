@@ -123,6 +123,18 @@ class AppLocalizationsJa extends AppLocalizations {
   String get playbackContinuousSubtitle => 'キュー内の次のエピソードを自動再生';
 
   @override
+  String get playbackAutoPlayOrderTitle => '自動再生の順序';
+
+  @override
+  String get playbackAutoPlayOrderSubtitle => 'エピソードリストからの自動キュー追加時の順序';
+
+  @override
+  String get playbackAutoPlayOrderOldestFirst => '配信順';
+
+  @override
+  String get playbackAutoPlayOrderAsDisplayed => '表示順';
+
+  @override
   String get downloadsWifiOnlyTitle => 'WiFiのみダウンロード';
 
   @override

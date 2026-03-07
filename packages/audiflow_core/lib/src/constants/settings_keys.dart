@@ -1,3 +1,5 @@
+import '../models/auto_play_order.dart';
+
 /// Keys for SharedPreferences storage of user settings.
 class SettingsKeys {
   SettingsKeys._();
@@ -30,6 +32,9 @@ class SettingsKeys {
 
   /// Whether to auto-play the next episode in the queue.
   static const String continuousPlayback = 'settings_continuous_playback';
+
+  /// Auto-play order when queuing from a podcast's episode list.
+  static const String autoPlayOrder = 'settings_auto_play_order';
 
   // -- Downloads --
 
@@ -76,6 +81,9 @@ class SettingsDefaults {
 
   /// Default continuous playback setting.
   static const bool continuousPlayback = true;
+
+  /// Default auto-play order (chronological, oldest first).
+  static const AutoPlayOrder autoPlayOrder = AutoPlayOrder.oldestFirst;
 
   /// Default Wi-Fi only download setting.
   static const bool wifiOnlyDownload = true;

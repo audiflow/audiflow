@@ -1,3 +1,4 @@
+import 'package:audiflow_core/audiflow_core.dart' show AutoPlayOrder;
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -18,6 +19,7 @@ class PlaybackSettingsScreen extends ConsumerWidget {
     final skipBackward = repo.getSkipBackwardSeconds();
     final threshold = repo.getAutoCompleteThreshold();
     final continuous = repo.getContinuousPlayback();
+    final autoPlayOrder = repo.getAutoPlayOrder();
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settingsPlaybackTitle)),
@@ -46,6 +48,10 @@ class PlaybackSettingsScreen extends ConsumerWidget {
             subtitle: Text(l10n.playbackContinuousSubtitle),
             value: continuous,
             onChanged: (v) => _update(ref, () => repo.setContinuousPlayback(v)),
+          ),
+          _AutoPlayOrderTile(
+            order: autoPlayOrder,
+            onChanged: (v) => _update(ref, () => repo.setAutoPlayOrder(v)),
           ),
         ],
       ),
@@ -205,6 +211,38 @@ class _AutoCompleteThresholdTile extends StatelessWidget {
             divisions: 19,
             label: '$percent%',
             onChanged: onChanged,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AutoPlayOrderTile extends StatelessWidget {
+  const _AutoPlayOrderTile({required this.order, required this.onChanged});
+
+  final AutoPlayOrder order;
+  final ValueChanged<AutoPlayOrder> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return ListTile(
+      title: Text(l10n.playbackAutoPlayOrderTitle),
+      subtitle: Text(l10n.playbackAutoPlayOrderSubtitle),
+      trailing: DropdownButton<AutoPlayOrder>(
+        value: order,
+        onChanged: (v) {
+          if (v != null) onChanged(v);
+        },
+        items: [
+          DropdownMenuItem(
+            value: AutoPlayOrder.oldestFirst,
+            child: Text(l10n.playbackAutoPlayOrderOldestFirst),
+          ),
+          DropdownMenuItem(
+            value: AutoPlayOrder.asDisplayed,
+            child: Text(l10n.playbackAutoPlayOrderAsDisplayed),
           ),
         ],
       ),
