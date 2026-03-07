@@ -1,6 +1,6 @@
 # Communication Language Guidelines
 
-## Git & GitHub & jj(jujutsu)
+## Git & GitHub
 
 | Context | Language |
 |---------|----------|
