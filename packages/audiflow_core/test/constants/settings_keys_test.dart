@@ -15,6 +15,7 @@ void main() {
         SettingsKeys.skipBackwardSeconds,
         SettingsKeys.autoCompleteThreshold,
         SettingsKeys.continuousPlayback,
+        SettingsKeys.autoPlayOrder,
         // Downloads
         SettingsKeys.wifiOnlyDownload,
         SettingsKeys.autoDeletePlayed,
@@ -25,7 +26,7 @@ void main() {
         SettingsKeys.wifiOnlySync,
       };
 
-      expect(keys.length, equals(14));
+      expect(keys.length, equals(15));
     });
 
     group('Appearance keys', () {
@@ -73,6 +74,10 @@ void main() {
           SettingsKeys.continuousPlayback,
           equals('settings_continuous_playback'),
         );
+      });
+
+      test('autoPlayOrder has correct value', () {
+        expect(SettingsKeys.autoPlayOrder, equals('settings_auto_play_order'));
       });
     });
 
@@ -140,6 +145,10 @@ void main() {
 
     test('continuousPlayback defaults to true', () {
       expect(SettingsDefaults.continuousPlayback, isTrue);
+    });
+
+    test('autoPlayOrder defaults to oldestFirst', () {
+      expect(SettingsDefaults.autoPlayOrder, AutoPlayOrder.oldestFirst);
     });
 
     test('wifiOnlyDownload defaults to true', () {
