@@ -97,6 +97,7 @@ class _PodcastArtwork extends StatelessWidget {
       return Container(
         width: 100,
         height: 100,
+        alignment: Alignment.center,
         color: colorScheme.surfaceContainerHighest,
         child: Icon(
           Icons.podcasts,
@@ -123,6 +124,7 @@ class _PodcastArtwork extends StatelessWidget {
       errorBuilder: (context, error, stackTrace) => Container(
         width: 100,
         height: 100,
+        alignment: Alignment.center,
         color: colorScheme.surfaceContainerHighest,
         child: Icon(
           Icons.broken_image,

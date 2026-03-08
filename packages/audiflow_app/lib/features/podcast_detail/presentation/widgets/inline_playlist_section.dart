@@ -156,6 +156,8 @@ List<Widget> _buildPlaylistData({
       ? displayEpisodes.reversed.toList()
       : displayEpisodes;
 
+  final siblingEpisodeIds = sorted.map((d) => d.episode.id).toList();
+
   return [
     if (playlist.showSortOrderToggle)
       SliverToBoxAdapter(
@@ -181,7 +183,7 @@ List<Widget> _buildPlaylistData({
           artworkUrl: artworkUrl,
           feedImageUrl: feedImageUrl,
           progress: data.progress,
-          siblingEpisodeIds: playlist.episodeIds,
+          siblingEpisodeIds: siblingEpisodeIds,
         );
       },
     ),
@@ -427,6 +429,13 @@ List<Widget> _buildYearGroupedPlaylistSlivers({
           : (a, b) => a.compareTo(b),
     );
 
+  // Build flattened sibling IDs from displayed (year-sorted)
+  // episodes to avoid passing negative placeholder IDs.
+  final siblingEpisodeIds = sortedYears
+      .expand((y) => byYear[y]!)
+      .map((d) => d.episode.id)
+      .toList();
+
   return buildYearGroupedSlivers<SmartPlaylistEpisodeData>(
     itemsByYear: byYear,
     sortedYears: sortedYears,
@@ -438,7 +447,7 @@ List<Widget> _buildYearGroupedPlaylistSlivers({
       artworkUrl: artworkUrl,
       feedImageUrl: feedImageUrl,
       progress: data.progress,
-      siblingEpisodeIds: playlist.episodeIds,
+      siblingEpisodeIds: siblingEpisodeIds,
     ),
     scrollController: scrollController,
     yearGroupingEnabled: true,
