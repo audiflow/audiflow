@@ -147,6 +147,7 @@ List<Widget> _buildPlaylistData({
       podcastTitle: podcastTitle,
       artworkUrl: artworkUrl,
       feedImageUrl: feedImageUrl,
+      lastRefreshedAt: lastRefreshedAt,
       scrollController: scrollController,
     );
   }
@@ -406,6 +407,7 @@ List<Widget> _buildYearGroupedPlaylistSlivers({
   required String podcastTitle,
   required String? artworkUrl,
   required String? feedImageUrl,
+  required DateTime? lastRefreshedAt,
   required ScrollController scrollController,
 }) {
   final byYear = <int, List<SmartPlaylistEpisodeData>>{};
@@ -429,6 +431,7 @@ List<Widget> _buildYearGroupedPlaylistSlivers({
     itemsByYear: byYear,
     sortedYears: sortedYears,
     itemBuilder: (context, data) => SmartPlaylistEpisodeListTile(
+      lastRefreshedAt: lastRefreshedAt,
       key: ValueKey(data.episode.id),
       episode: data.episode,
       podcastTitle: podcastTitle,

@@ -14,9 +14,6 @@ class PodcastDetailHeader extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
     return Container(
       padding: const EdgeInsets.all(Spacing.md),
       child: Column(
@@ -34,7 +31,7 @@ class PodcastDetailHeader extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: Spacing.md),
-          _SubscribeButton(podcast: podcast, colorScheme: colorScheme),
+          _SubscribeButton(podcast: podcast),
         ],
       ),
     );
@@ -138,13 +135,13 @@ class _PodcastArtwork extends StatelessWidget {
 }
 
 class _SubscribeButton extends ConsumerWidget {
-  const _SubscribeButton({required this.podcast, required this.colorScheme});
+  const _SubscribeButton({required this.podcast});
 
   final Podcast podcast;
-  final ColorScheme colorScheme;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final colorScheme = Theme.of(context).colorScheme;
     final subscriptionState = ref.watch(
       subscriptionControllerProvider(podcast.id),
     );
