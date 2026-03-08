@@ -167,10 +167,11 @@ List<Widget> _buildEpisodeData({
 
   final progressMap = progressMapAsync.value ?? {};
 
-  final siblingEpisodeIds = <int>[
-    for (final ep in displayEpisodes)
-      if (ep.enclosureUrl != null) ?progressMap[ep.enclosureUrl]?.episode.id,
-  ];
+  final siblingEpisodeIds = displayEpisodes
+      .where((ep) => ep.enclosureUrl != null)
+      .map((ep) => progressMap[ep.enclosureUrl]?.episode.id)
+      .whereType<int>()
+      .toList();
 
   final sortHeader = SliverToBoxAdapter(
     child: Builder(
