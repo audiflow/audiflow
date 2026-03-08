@@ -44,23 +44,23 @@ Kiro-style Spec Driven Development implementation on AI-DLC (AI Development Life
 - Default files: `product.md`, `tech.md`, `structure.md`
 - Custom files are supported (managed via `/kiro:steering-custom`)
 
-## Smart Playlist Schema Conformance
+## Smart Playlist Schema Conformance (v2)
 
-`audiflow_domain` has hand-written smart playlist models (`fromJson()`/`toJson()`) that must stay aligned with the JSON Schema defined in the `audiflow-smartplaylist-editor` repo (`sp_shared/assets/schema.json`).
+`audiflow_domain` has hand-written smart playlist models (`fromJson()`/`toJson()`) that must stay aligned with the JSON Schema defined in `audiflow-smartplaylist-dev/schema/playlist-definition.schema.json`.
 
 ### Vendored schema
 
-A copy of the reference schema lives at `packages/audiflow_domain/test/fixtures/schema.json`. This is the single source of truth for conformance testing.
+A copy of the reference schema lives at `packages/audiflow_domain/test/fixtures/schema.json`. This is the single source of truth for conformance testing. The schema validates `SmartPlaylistDefinition` objects directly (no config envelope wrapper).
 
 ### Conformance tests
 
 `packages/audiflow_domain/test/features/feed/models/schema_conformance_test.dart` validates:
-- **Round-trip tests**: model `toJson()` output wrapped in a config envelope validates against the vendored schema
+- **Round-trip tests**: model `toJson()` output validates directly against the vendored schema
 - **Enum conformance**: Dart enum `.name` values and string constants match the schema's `oneOf`/`enum` definitions
 
 ### Keeping the schema in sync
 
-When `sp_shared/assets/schema.json` changes upstream:
+When the upstream schema changes:
 1. Copy the updated file to `packages/audiflow_domain/test/fixtures/schema.json`
 2. Run `flutter test packages/audiflow_domain/test/features/feed/models/schema_conformance_test.dart`
 3. Fix any failures (update models, enums, or test data to match the new schema)
@@ -69,7 +69,21 @@ When `sp_shared/assets/schema.json` changes upstream:
 ### Test data rules
 
 Always use schema-valid values in test data:
-- Resolver types: `'rss'`, `'category'`, `'year'`, `'titleAppearanceOrder'` (not `'rssSeason'`, `'categoryGroup'`, `'flat'`)
-- Content types: `'episodes'`, `'groups'`
-- Sort fields: use `SmartPlaylistSortField` enum names (match schema)
+- Resolver types: `'rss'`, `'category'`, `'year'`, `'titleAppearanceOrder'`
+- Playlist structures: `'split'`, `'grouped'` (not `'episodes'`, `'groups'`)
+- Sort fields: use `SmartPlaylistSortField` enum names — `publishedAt`, `episodeNumber`, `title` (not `progress`)
 - Sort orders: `'ascending'`, `'descending'`
+- Year binding: `'none'`, `'pinToYear'`, `'splitByYear'` (not `YearHeaderMode` values)
+- Episode filters: use `episodeFilters` with `require`/`exclude` arrays of `EpisodeFilterEntry` (not flat `titleFilter`/`excludeFilter`/`requireFilter`)
+
+### v2 model structure
+
+Key types and their JSON fields:
+- `SmartPlaylistDefinition`: `playlistStructure`, `resolver`, `episodeFilters`, `groupList`, `episodeList`, `episodeExtractor`, `prependSeasonNumber`
+- `SmartPlaylistGroupDef`: `name`, `resolver`, `display`, `episodeList`, `episodeExtractor`
+- `GroupListConfig`: `yearBinding`, `userSortable`, `showDateRange`, `sort`
+- `EpisodeListConfig`: `showYearHeaders`, `sort`, `titleExtractor`
+- `GroupDisplayConfig`: `showDateRange`, `yearBinding`
+- `EpisodeFilters`: `require`, `exclude` (arrays of `EpisodeFilterEntry`)
+- `EpisodeFilterEntry`: `title?`, `description?`
+- `SmartPlaylistSortRule`: `field`, `order` (single rule, not composite)
