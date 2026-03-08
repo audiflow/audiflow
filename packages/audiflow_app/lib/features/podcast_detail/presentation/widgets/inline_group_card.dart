@@ -13,7 +13,7 @@ String? formatDateRange(DateTime? earliest, DateTime? latest, {DateTime? now}) {
   final bothCurrentYear =
       earliest.year == now0.year && latest.year == now0.year;
   final fmt = bothCurrentYear ? DateFormat('M/d') : DateFormat.yMMMd();
-  if (earliest == latest) return fmt.format(earliest);
+  if (DateUtils.isSameDay(earliest, latest)) return fmt.format(earliest);
   return '${fmt.format(earliest)}\u301c${fmt.format(latest)}';
 }
 

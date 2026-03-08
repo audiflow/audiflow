@@ -62,6 +62,8 @@ int compareGroupsByField(
     SmartPlaylistSortField.alphabetical => a.displayName.compareTo(
       b.displayName,
     ),
+    // Progress data is not available at the group level yet;
+    // fall back to sortKey until per-group progress is tracked.
     SmartPlaylistSortField.progress => a.sortKey.compareTo(b.sortKey),
   };
 }
