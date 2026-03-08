@@ -216,9 +216,7 @@ Future<SmartPlaylistGrouping?> _buildGroupingFromCache(
       sortKey: entity.sortKey,
       episodeIds: episodeIds,
       thumbnailUrl: entity.thumbnailUrl,
-      yearHeaderMode: RssMetadataResolver.parseYearHeaderMode(
-        entity.yearHeaderMode,
-      ),
+      yearBinding: RssMetadataResolver.parseYearBinding(entity.yearHeaderMode),
     );
   }).toList();
 
@@ -326,7 +324,6 @@ Future<SmartPlaylistGrouping?> _resolveAndPersistSmartPlaylists(
           earliestDate: Value(g.earliestDate),
           latestDate: Value(g.latestDate),
           totalDurationMs: Value(g.totalDurationMs),
-          episodeYearHeaders: Value(g.episodeYearHeaders),
         );
       }).toList();
       await playlistDatasource.upsertGroupsForPlaylist(
@@ -433,8 +430,8 @@ void _enrichPlaylist(
       sortKey: playlist.sortKey,
       resolverType: result.resolverType,
       thumbnailUrl: Value(thumbnailUrl),
-      yearGrouped: Value(playlist.yearHeaderMode != YearHeaderMode.none),
-      yearHeaderMode: Value(playlist.yearHeaderMode.name),
+      yearGrouped: Value(playlist.yearBinding != YearBinding.none),
+      yearHeaderMode: Value(playlist.yearBinding.name),
     ),
   );
 }
@@ -501,7 +498,6 @@ SmartPlaylistGroup _enrichGroup(
     sortKey: group.sortKey,
     episodeIds: group.episodeIds,
     thumbnailUrl: groupThumb,
-    episodeYearHeaders: group.episodeYearHeaders,
     showDateRange: group.showDateRange,
     earliestDate: earliest,
     latestDate: latest,
