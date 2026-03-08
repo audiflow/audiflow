@@ -182,7 +182,8 @@ class _SubscribeButton extends ConsumerWidget {
         label: Text(AppLocalizations.of(context).commonLoading),
       ),
       error: (error, stack) => FilledButton.icon(
-        onPressed: () => _toggleSubscription(ref),
+        onPressed: () =>
+            ref.invalidate(subscriptionControllerProvider(podcast.id)),
         icon: const Icon(Icons.refresh),
         label: Text(AppLocalizations.of(context).commonRetry),
       ),

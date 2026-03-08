@@ -151,7 +151,7 @@ List<Widget> _buildPlaylistData({
     );
   }
 
-  final sorted = sortOrder == SortOrder.ascending
+  final sorted = sortOrder == SortOrder.descending
       ? displayEpisodes.reversed.toList()
       : displayEpisodes;
 

@@ -191,6 +191,23 @@ void main() {
       expect(find.text('Loading...'), findsOneWidget);
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
+
+    testWidgets('shows Retry button on error state', (tester) async {
+      final container = ProviderContainer(
+        overrides: [
+          subscriptionControllerProvider(
+            'test-id',
+          ).overrideWith(() => _ErrorController()),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(buildTestWidget(container, testPodcast));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Retry'), findsOneWidget);
+      expect(find.byIcon(Icons.refresh), findsOneWidget);
+    });
   });
 }
 
@@ -208,5 +225,13 @@ class _NeverCompleteController extends SubscriptionController {
   @override
   Future<bool> build(String itunesId) {
     return Completer<bool>().future;
+  }
+}
+
+/// Fake controller that immediately throws an error.
+class _ErrorController extends SubscriptionController {
+  @override
+  Future<bool> build(String itunesId) async {
+    throw Exception('Network error');
   }
 }
