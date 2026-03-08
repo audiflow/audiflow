@@ -46,7 +46,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 18;
+  int get schemaVersion => 19;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -110,10 +110,17 @@ class AppDatabase extends _$AppDatabase {
         );
       }
       // Migration from v12 to v13: add new columns to SmartPlaylists
+      // (columns later dropped in v19; use raw SQL for pre-v19 upgrades)
       if (13 <= to && from < 13) {
-        await m.addColumn(smartPlaylists, smartPlaylists.contentType);
+        await customStatement(
+          "ALTER TABLE seasons ADD COLUMN content_type TEXT"
+          " NOT NULL DEFAULT 'episodes'",
+        );
         await m.addColumn(smartPlaylists, smartPlaylists.yearHeaderMode);
-        await m.addColumn(smartPlaylists, smartPlaylists.episodeYearHeaders);
+        await customStatement(
+          'ALTER TABLE seasons ADD COLUMN episode_year_headers'
+          " INTEGER NOT NULL DEFAULT 0",
+        );
         // Migrate yearGrouped data
         await customStatement(
           "UPDATE seasons"
@@ -138,10 +145,11 @@ class AppDatabase extends _$AppDatabase {
         );
       }
       // Migration from v15 to v16: add episodeYearHeaders to groups
+      // (column later dropped in v19; use raw SQL for pre-v19 upgrades)
       if (16 <= to && from < 16) {
-        await m.addColumn(
-          smartPlaylistGroups,
-          smartPlaylistGroups.episodeYearHeaders,
+        await customStatement(
+          'ALTER TABLE smart_playlist_groups'
+          ' ADD COLUMN episode_year_headers INTEGER',
         );
       }
       // Migration from v16 to v17: add transcript and chapter tables
@@ -153,6 +161,14 @@ class AppDatabase extends _$AppDatabase {
       // Migration from v17 to v18: add FTS5 for transcript search
       if (18 <= to && from < 18) {
         await _createFts5Tables();
+      }
+      // Migration from v18 to v19: schema v2 – drop and recreate
+      // smart playlist tables (cache-only, rebuilt on next sync)
+      if (19 <= to && from < 19) {
+        await customStatement('DROP TABLE IF EXISTS smart_playlist_groups');
+        await customStatement('DROP TABLE IF EXISTS seasons');
+        await m.createTable(smartPlaylists);
+        await m.createTable(smartPlaylistGroups);
       }
     },
   );
