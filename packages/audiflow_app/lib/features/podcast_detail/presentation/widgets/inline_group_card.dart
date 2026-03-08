@@ -36,14 +36,12 @@ class InlineGroupCard extends StatelessWidget {
     required this.group,
     required this.onTap,
     this.showSeasonNumber = false,
-    this.podcastArtworkUrl,
     this.episodeCountOverride,
   });
 
   final SmartPlaylistGroup group;
   final VoidCallback onTap;
   final bool showSeasonNumber;
-  final String? podcastArtworkUrl;
 
   /// When set, overrides `group.episodeIds.length` for the
   /// episode count display (used in perEpisode year mode).
@@ -68,6 +66,8 @@ class InlineGroupCard extends StatelessWidget {
       metaLine.write('  $duration');
     }
 
+    final hasThumbnail = group.thumbnailUrl != null;
+
     return Padding(
       padding: const EdgeInsets.symmetric(
         horizontal: Spacing.md,
@@ -86,9 +86,14 @@ class InlineGroupCard extends StatelessWidget {
               vertical: Spacing.sm,
             ),
             child: Row(
+              crossAxisAlignment: hasThumbnail
+                  ? CrossAxisAlignment.start
+                  : CrossAxisAlignment.center,
               children: [
-                _buildThumbnail(colorScheme),
-                const SizedBox(width: Spacing.sm),
+                if (hasThumbnail) ...[
+                  _buildThumbnail(colorScheme),
+                  const SizedBox(width: Spacing.sm),
+                ],
                 Expanded(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -133,26 +138,22 @@ class InlineGroupCard extends StatelessWidget {
   static const _thumbnailSize = 56.0;
 
   Widget _buildThumbnail(ColorScheme colorScheme) {
-    final url = group.thumbnailUrl ?? podcastArtworkUrl;
-    if (url != null) {
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(8),
-        child: ExtendedImage.network(
-          url,
-          width: _thumbnailSize,
-          height: _thumbnailSize,
-          fit: BoxFit.cover,
-          cache: true,
-          loadStateChanged: (state) {
-            if (state.extendedImageLoadState == LoadState.failed) {
-              return _buildPlaceholder(colorScheme);
-            }
-            return null;
-          },
-        ),
-      );
-    }
-    return _buildPlaceholder(colorScheme);
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(8),
+      child: ExtendedImage.network(
+        group.thumbnailUrl!,
+        width: _thumbnailSize,
+        height: _thumbnailSize,
+        fit: BoxFit.cover,
+        cache: true,
+        loadStateChanged: (state) {
+          if (state.extendedImageLoadState == LoadState.failed) {
+            return _buildPlaceholder(colorScheme);
+          }
+          return null;
+        },
+      ),
+    );
   }
 
   Widget _buildPlaceholder(ColorScheme colorScheme) {

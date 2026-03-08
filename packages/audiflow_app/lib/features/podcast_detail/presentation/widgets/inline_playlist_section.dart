@@ -248,7 +248,6 @@ List<Widget> _buildInlineGroupList({
           return InlineGroupCard(
             group: group,
             showSeasonNumber: playlist.showSeasonNumber,
-            podcastArtworkUrl: artworkUrl,
             onTap: () => onNavigateToGroup(playlist, group),
           );
         },
@@ -312,7 +311,6 @@ List<Widget> _buildInlineGroupList({
       itemBuilder: (context, group) => InlineGroupCard(
         group: group,
         showSeasonNumber: playlist.showSeasonNumber,
-        podcastArtworkUrl: artworkUrl,
         onTap: () => onNavigateToGroup(playlist, group),
       ),
       scrollController: scrollController,
@@ -387,7 +385,6 @@ List<Widget> _buildPerEpisodeInlineGroups({
       itemBuilder: (context, item) => InlineGroupCard(
         group: item.group,
         showSeasonNumber: playlist.showSeasonNumber,
-        podcastArtworkUrl: artworkUrl,
         episodeCountOverride: item.filteredEpisodeIds.length,
         onTap: () => onNavigateToGroup(
           playlist,
