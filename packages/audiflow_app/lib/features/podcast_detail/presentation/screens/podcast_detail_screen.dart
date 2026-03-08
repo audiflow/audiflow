@@ -7,10 +7,6 @@ import 'package:audiflow_domain/audiflow_domain.dart'
         SmartPlaylistContentType,
         SmartPlaylistEpisodeData,
         SmartPlaylistGroup,
-        SmartPlaylistSortCondition,
-        SmartPlaylistSortField,
-        SmartPlaylistSortSpec,
-        SortKeyGreaterThan,
         SortOrder,
         YearHeaderMode,
         podcastViewPreferenceControllerProvider,
@@ -18,19 +14,18 @@ import 'package:audiflow_domain/audiflow_domain.dart'
         smartPlaylistPatternByFeedUrlProvider,
         subscriptionByFeedUrlProvider;
 import 'package:audiflow_search/audiflow_search.dart';
-import 'package:extended_image/extended_image.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
-
 import '../../../../l10n/app_localizations.dart';
 import '../../../../routing/app_router.dart';
 import '../../../subscription/presentation/controllers/subscription_controller.dart';
 import '../controllers/podcast_detail_controller.dart';
+import '../utils/group_sorting.dart';
 import '../widgets/episode_filter_chips.dart';
 import '../widgets/episode_list_tile.dart';
+import '../widgets/inline_group_card.dart';
 import '../widgets/smart_playlist_episode_list_tile.dart';
 import '../widgets/smart_playlist_view_toggle.dart';
 
@@ -597,7 +592,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
     }
 
     if (playlist.yearHeaderMode == YearHeaderMode.none) {
-      final sorted = _sortGroupsByCustomSort(
+      final sorted = sortGroupsByCustomSort(
         displayGroups,
         playlist.customSort,
         sortOrder,
@@ -618,7 +613,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
           itemCount: sorted.length,
           itemBuilder: (context, index) {
             final group = sorted[index];
-            return _InlineGroupCard(
+            return InlineGroupCard(
               group: group,
               showSeasonNumber: playlist.showSeasonNumber,
               podcastArtworkUrl: podcast.artworkUrl,
@@ -678,7 +673,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
       ...buildYearGroupedSlivers<SmartPlaylistGroup>(
         itemsByYear: {for (final y in sortedYears) y: byYear[y]!},
         sortedYears: sortedYears,
-        itemBuilder: (context, group) => _InlineGroupCard(
+        itemBuilder: (context, group) => InlineGroupCard(
           group: group,
           showSeasonNumber: playlist.showSeasonNumber,
           podcastArtworkUrl: podcast.artworkUrl,
@@ -703,7 +698,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
     ThemeData theme,
     SortOrder sortOrder,
   ) {
-    final byYear = <int, List<_YearFilteredInlineGroup>>{};
+    final byYear = <int, List<YearFilteredInlineGroup>>{};
     for (final group in groups) {
       final yearIds = <int, List<int>>{};
       for (final id in group.episodeIds) {
@@ -715,7 +710,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
         byYear
             .putIfAbsent(entry.key, () => [])
             .add(
-              _YearFilteredInlineGroup(
+              YearFilteredInlineGroup(
                 group: group,
                 filteredEpisodeIds: entry.value,
               ),
@@ -744,10 +739,10 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
           sortOrder,
         ),
       ),
-      ...buildYearGroupedSlivers<_YearFilteredInlineGroup>(
+      ...buildYearGroupedSlivers<YearFilteredInlineGroup>(
         itemsByYear: {for (final y in sortedYears) y: byYear[y]!},
         sortedYears: sortedYears,
-        itemBuilder: (context, item) => _InlineGroupCard(
+        itemBuilder: (context, item) => InlineGroupCard(
           group: item.group,
           showSeasonNumber: playlist.showSeasonNumber,
           podcastArtworkUrl: podcast.artworkUrl,
@@ -1184,254 +1179,4 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
       ),
     );
   }
-}
-
-/// Formats a date range in Apple Podcasts style.
-String? _formatDateRange(DateTime? earliest, DateTime? latest) {
-  if (earliest == null || latest == null) return null;
-  final now = DateTime.now();
-  final bothCurrentYear = earliest.year == now.year && latest.year == now.year;
-  final fmt = bothCurrentYear ? DateFormat('M/d') : DateFormat.yMMMd();
-  if (earliest == latest) return fmt.format(earliest);
-  return '${fmt.format(earliest)}\u301c${fmt.format(latest)}';
-}
-
-/// Formats duration in ms using localized strings.
-String? _formatDuration(int? totalMs, AppLocalizations l10n) {
-  if (totalMs == null || totalMs == 0) return null;
-  final minutes = totalMs ~/ 60000;
-  final hours = minutes ~/ 60;
-  final remainingMinutes = minutes % 60;
-  if (0 < hours) {
-    return l10n.groupDurationHoursMinutes(hours, remainingMinutes);
-  }
-  return l10n.groupDurationMinutes(minutes);
-}
-
-/// Sorts groups using the playlist's [customSort] rules and
-/// the user's [sortOrder] toggle.
-List<SmartPlaylistGroup> _sortGroupsByCustomSort(
-  List<SmartPlaylistGroup> groups,
-  SmartPlaylistSortSpec? customSort,
-  SortOrder sortOrder,
-) {
-  final sorted = List<SmartPlaylistGroup>.from(groups);
-
-  if (customSort == null || customSort.rules.isEmpty) {
-    sorted.sort((a, b) {
-      final cmp = a.sortKey.compareTo(b.sortKey);
-      return sortOrder == SortOrder.ascending ? cmp : -cmp;
-    });
-    return sorted;
-  }
-
-  // When sortOrder matches the first rule's order, use rules as written.
-  // Otherwise invert.
-  final invert = sortOrder != customSort.rules.first.order;
-
-  sorted.sort((a, b) {
-    for (final rule in customSort.rules) {
-      if (rule.condition != null) {
-        final bothMatch =
-            _matchesGroupCondition(a, rule.condition!) &&
-            _matchesGroupCondition(b, rule.condition!);
-        if (!bothMatch) continue;
-      }
-
-      final cmp = _compareGroupsByField(a, b, rule.field);
-      if (cmp != 0) {
-        final directed = rule.order == SortOrder.ascending ? cmp : -cmp;
-        return invert ? -directed : directed;
-      }
-    }
-    return 0;
-  });
-  return sorted;
-}
-
-int _compareGroupsByField(
-  SmartPlaylistGroup a,
-  SmartPlaylistGroup b,
-  SmartPlaylistSortField field,
-) {
-  return switch (field) {
-    SmartPlaylistSortField.playlistNumber => a.sortKey.compareTo(b.sortKey),
-    SmartPlaylistSortField.newestEpisodeDate => _compareNullableDates(
-      a.latestDate,
-      b.latestDate,
-    ),
-    SmartPlaylistSortField.alphabetical => a.displayName.compareTo(
-      b.displayName,
-    ),
-    SmartPlaylistSortField.progress => a.sortKey.compareTo(b.sortKey),
-  };
-}
-
-int _compareNullableDates(DateTime? a, DateTime? b) {
-  if (a == null && b == null) return 0;
-  if (a == null) return 1;
-  if (b == null) return -1;
-  return a.compareTo(b);
-}
-
-bool _matchesGroupCondition(
-  SmartPlaylistGroup group,
-  SmartPlaylistSortCondition condition,
-) {
-  return switch (condition) {
-    SortKeyGreaterThan(:final value) => value < group.sortKey,
-  };
-}
-
-/// Card widget for displaying a smart playlist group inline.
-class _InlineGroupCard extends StatelessWidget {
-  const _InlineGroupCard({
-    required this.group,
-    required this.onTap,
-    this.showSeasonNumber = false,
-    this.podcastArtworkUrl,
-    this.episodeCountOverride,
-  });
-
-  final SmartPlaylistGroup group;
-  final VoidCallback onTap;
-  final bool showSeasonNumber;
-  final String? podcastArtworkUrl;
-
-  /// When set, overrides `group.episodeIds.length` for the
-  /// episode count display (used in perEpisode year mode).
-  final int? episodeCountOverride;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final l10n = AppLocalizations.of(context);
-    final dateRange = group.showDateRange
-        ? _formatDateRange(group.earliestDate, group.latestDate)
-        : null;
-    final duration = group.showDateRange
-        ? _formatDuration(group.totalDurationMs, l10n)
-        : null;
-
-    final metaLine = StringBuffer(
-      l10n.groupEpisodeCount(episodeCountOverride ?? group.episodeIds.length),
-    );
-    if (duration != null) {
-      metaLine.write('  $duration');
-    }
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: Spacing.md,
-        vertical: Spacing.xxs,
-      ),
-      child: Card(
-        elevation: 0,
-        color: colorScheme.surfaceContainerLow,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: Spacing.md,
-              vertical: Spacing.sm,
-            ),
-            child: Row(
-              children: [
-                _buildThumbnail(colorScheme),
-                const SizedBox(width: Spacing.sm),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        group.formattedDisplayName(
-                          showSeasonNumber: showSeasonNumber,
-                        ),
-                        style: theme.textTheme.titleSmall,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        metaLine.toString(),
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                      if (dateRange != null) ...[
-                        const SizedBox(height: 2),
-                        Text(
-                          dateRange,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-                Icon(Icons.chevron_right, color: colorScheme.onSurfaceVariant),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  static const _thumbnailSize = 56.0;
-
-  Widget _buildThumbnail(ColorScheme colorScheme) {
-    final url = group.thumbnailUrl ?? podcastArtworkUrl;
-    if (url != null) {
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(8),
-        child: ExtendedImage.network(
-          url,
-          width: _thumbnailSize,
-          height: _thumbnailSize,
-          fit: BoxFit.cover,
-          cache: true,
-          loadStateChanged: (state) {
-            if (state.extendedImageLoadState == LoadState.failed) {
-              return _buildPlaceholder(colorScheme);
-            }
-            return null;
-          },
-        ),
-      );
-    }
-    return _buildPlaceholder(colorScheme);
-  }
-
-  Widget _buildPlaceholder(ColorScheme colorScheme) {
-    return Container(
-      width: _thumbnailSize,
-      height: _thumbnailSize,
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Icon(
-        Icons.folder_outlined,
-        size: 24,
-        color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
-      ),
-    );
-  }
-}
-
-/// Helper for perEpisode year mode to carry filtered IDs
-/// alongside the original group in inline view.
-class _YearFilteredInlineGroup {
-  const _YearFilteredInlineGroup({
-    required this.group,
-    required this.filteredEpisodeIds,
-  });
-
-  final SmartPlaylistGroup group;
-  final List<int> filteredEpisodeIds;
 }
