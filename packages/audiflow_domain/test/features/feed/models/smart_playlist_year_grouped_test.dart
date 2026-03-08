@@ -71,19 +71,19 @@ void main() {
 
   group('YearBinding.name round-trip', () {
     test('all modes survive name round-trip via '
-        'parseYearBinding', () {
+        'YearBinding.fromString', () {
       for (final mode in YearBinding.values) {
-        final parsed = RssMetadataResolver.parseYearBinding(mode.name);
+        final parsed = YearBinding.fromString(mode.name);
         expect(parsed, mode, reason: 'Failed for ${mode.name}');
       }
     });
 
     test('null parses to none', () {
-      expect(RssMetadataResolver.parseYearBinding(null), YearBinding.none);
+      expect(YearBinding.fromString(null), YearBinding.none);
     });
 
     test('unknown string parses to none', () {
-      expect(RssMetadataResolver.parseYearBinding('unknown'), YearBinding.none);
+      expect(YearBinding.fromString('unknown'), YearBinding.none);
     });
   });
 }

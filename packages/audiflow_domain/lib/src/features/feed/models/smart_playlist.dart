@@ -8,7 +8,15 @@ enum PlaylistStructure {
 
   /// All resolver results are collected as groups inside a single
   /// parent playlist.
-  grouped,
+  grouped;
+
+  /// Parses a string value to [PlaylistStructure], defaulting to [split].
+  static PlaylistStructure fromString(String? value) {
+    return switch (value) {
+      'grouped' => PlaylistStructure.grouped,
+      _ => PlaylistStructure.split,
+    };
+  }
 }
 
 /// How groups relate to year headers in the group list view.
@@ -21,7 +29,16 @@ enum YearBinding {
   pinToYear,
 
   /// A group appears under each year it has episodes in.
-  splitByYear,
+  splitByYear;
+
+  /// Parses a string value to [YearBinding], defaulting to [none].
+  static YearBinding fromString(String? value) {
+    return switch (value) {
+      'pinToYear' => YearBinding.pinToYear,
+      'splitByYear' => YearBinding.splitByYear,
+      _ => YearBinding.none,
+    };
+  }
 }
 
 /// A group within a smart playlist containing episodes.

@@ -3,7 +3,6 @@ import '../models/smart_playlist.dart';
 import '../models/smart_playlist_definition.dart';
 import '../models/smart_playlist_group_def.dart';
 import '../models/smart_playlist_pattern_config.dart';
-import '../resolvers/rss_metadata_resolver.dart';
 import '../resolvers/smart_playlist_resolver.dart';
 
 /// Service that orchestrates the smart playlist resolver chain.
@@ -70,7 +69,7 @@ class SmartPlaylistResolverService {
 
       resolverType ??= result.resolverType;
 
-      final playlistStructure = RssMetadataResolver.parsePlaylistStructure(
+      final playlistStructure = PlaylistStructure.fromString(
         definition.playlistStructure,
       );
       final yearBinding = definition.groupList?.yearBinding ?? YearBinding.none;
@@ -170,34 +169,54 @@ class SmartPlaylistResolverService {
       return unclaimed;
     }
 
+    // Pre-compile regexes once, outside the per-episode loop.
+    final requireRegexes = filters.require
+        ?.map(
+          (e) => (
+            title: e.title != null
+                ? RegExp(e.title!, caseSensitive: false)
+                : null,
+            description: e.description != null
+                ? RegExp(e.description!, caseSensitive: false)
+                : null,
+          ),
+        )
+        .toList();
+    final excludeRegexes = filters.exclude
+        ?.map(
+          (e) => (
+            title: e.title != null
+                ? RegExp(e.title!, caseSensitive: false)
+                : null,
+            description: e.description != null
+                ? RegExp(e.description!, caseSensitive: false)
+                : null,
+          ),
+        )
+        .toList();
+
     return unclaimed.where((episode) {
       final title = episode.title;
       final description = episode.description;
 
-      // Check require filters (ALL must match)
-      if (filters.require != null) {
-        for (final entry in filters.require!) {
-          if (entry.title != null) {
-            final regex = RegExp(entry.title!, caseSensitive: false);
-            if (!regex.hasMatch(title)) return false;
-          }
-          if (entry.description != null && description != null) {
-            final regex = RegExp(entry.description!, caseSensitive: false);
-            if (!regex.hasMatch(description)) return false;
+      if (requireRegexes != null) {
+        for (final r in requireRegexes) {
+          if (r.title != null && !r.title!.hasMatch(title)) return false;
+          if (r.description != null &&
+              description != null &&
+              !r.description!.hasMatch(description)) {
+            return false;
           }
         }
       }
 
-      // Check exclude filters (ANY match = excluded)
-      if (filters.exclude != null) {
-        for (final entry in filters.exclude!) {
-          if (entry.title != null) {
-            final regex = RegExp(entry.title!, caseSensitive: false);
-            if (regex.hasMatch(title)) return false;
-          }
-          if (entry.description != null && description != null) {
-            final regex = RegExp(entry.description!, caseSensitive: false);
-            if (regex.hasMatch(description)) return false;
+      if (excludeRegexes != null) {
+        for (final r in excludeRegexes) {
+          if (r.title != null && r.title!.hasMatch(title)) return false;
+          if (r.description != null &&
+              description != null &&
+              r.description!.hasMatch(description)) {
+            return false;
           }
         }
       }

@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../../routing/app_router.dart';
+import '../utils/group_sorting.dart';
 import '../widgets/smart_playlist_episode_list_tile.dart';
 
 /// Screen showing episodes within a single smart playlist.
@@ -393,63 +394,15 @@ class _SmartPlaylistEpisodesScreenState
     );
   }
 
-  /// Sorts groups using the playlist's [groupSort] rule and
-  /// the current [_sortOrder] toggle.
-  List<SmartPlaylistGroup> _sortGroups(List<SmartPlaylistGroup> groups) {
-    final sorted = List<SmartPlaylistGroup>.from(groups);
-    final groupSort = widget.smartPlaylist.groupSort;
-
-    if (groupSort == null) {
-      sorted.sort((a, b) {
-        final cmp = a.sortKey.compareTo(b.sortKey);
-        return _sortOrder == SortOrder.ascending ? cmp : -cmp;
-      });
-      return sorted;
-    }
-
-    final invert = _sortOrder != groupSort.order;
-
-    sorted.sort((a, b) {
-      final cmp = _compareGroupsByField(a, b, groupSort.field);
-      if (cmp != 0) {
-        final directed = groupSort.order == SortOrder.ascending ? cmp : -cmp;
-        return invert ? -directed : directed;
-      }
-      return 0;
-    });
-
-    return sorted;
-  }
-
-  int _compareGroupsByField(
-    SmartPlaylistGroup a,
-    SmartPlaylistGroup b,
-    SmartPlaylistSortField field,
-  ) {
-    return switch (field) {
-      SmartPlaylistSortField.playlistNumber => a.sortKey.compareTo(b.sortKey),
-      SmartPlaylistSortField.newestEpisodeDate => _compareNullableDates(
-        a.latestDate,
-        b.latestDate,
-      ),
-      SmartPlaylistSortField.alphabetical => a.displayName.compareTo(
-        b.displayName,
-      ),
-    };
-  }
-
-  int _compareNullableDates(DateTime? a, DateTime? b) {
-    if (a == null && b == null) return 0;
-    if (a == null) return 1;
-    if (b == null) return -1;
-    return a.compareTo(b);
-  }
-
   Widget _buildFlatGroupSliver(
     List<SmartPlaylistGroup> groups,
     ThemeData theme,
   ) {
-    final sorted = _sortGroups(groups);
+    final sorted = sortGroupsBySort(
+      groups,
+      widget.smartPlaylist.groupSort,
+      _sortOrder,
+    );
 
     final l10n = AppLocalizations.of(context);
 

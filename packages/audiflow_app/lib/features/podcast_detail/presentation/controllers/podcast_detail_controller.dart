@@ -634,10 +634,10 @@ SmartPlaylistGrouping? _resolveFromFeedByCategory(
         sortKey: playlists.length,
         episodeIds: allEpisodeIds,
         thumbnailUrl: thumbnailUrl,
-        playlistStructure: _parseFeedPlaylistStructure(
+        playlistStructure: PlaylistStructure.fromString(
           definition.playlistStructure,
         ),
-        yearBinding: _parseFeedYearBinding(
+        yearBinding: YearBinding.fromString(
           definition.groupList?.yearBinding?.name,
         ),
         showDateRange: definition.groupList?.showDateRange ?? false,
@@ -756,8 +756,8 @@ SmartPlaylistGrouping? _resolveFromFeedWithParentPlaylists(
         sortKey: playlists.length,
         episodeIds: allEpisodeIds,
         thumbnailUrl: thumbnailUrl,
-        playlistStructure: _parseFeedPlaylistStructure(def.playlistStructure),
-        yearBinding: _parseFeedYearBinding(def.groupList?.yearBinding?.name),
+        playlistStructure: PlaylistStructure.fromString(def.playlistStructure),
+        yearBinding: YearBinding.fromString(def.groupList?.yearBinding?.name),
         showDateRange: def.groupList?.showDateRange ?? false,
         userSortable: def.groupList?.userSortable ?? true,
         groupSort: def.groupList?.sort,
@@ -827,24 +827,12 @@ List<SmartPlaylistGroup> _buildFeedGroups(
   }).toList()..sort((a, b) => a.sortKey.compareTo(b.sortKey));
 }
 
-PlaylistStructure _parseFeedPlaylistStructure(String? value) {
-  return switch (value) {
-    'grouped' => PlaylistStructure.grouped,
-    _ => PlaylistStructure.split,
-  };
-}
-
-YearBinding _parseFeedYearBinding(String? value) {
-  return switch (value) {
-    'pinToYear' => YearBinding.pinToYear,
-    'splitByYear' => YearBinding.splitByYear,
-    _ => YearBinding.none,
-  };
-}
-
 /// Compiled filter for a single playlist config entry (feed data).
 class _FeedPlaylistFilter {
-  _FeedPlaylistFilter._({this.requireFilters, this.excludeFilters});
+  _FeedPlaylistFilter._({this.requireFilters, this.excludeFilters})
+    : isFallback =
+          (requireFilters == null || requireFilters.isEmpty) &&
+          (excludeFilters == null || excludeFilters.isEmpty);
 
   factory _FeedPlaylistFilter.fromDefinition(SmartPlaylistDefinition def) {
     final filters = def.episodeFilters;
@@ -865,10 +853,7 @@ class _FeedPlaylistFilter {
 
   final List<RegExp>? requireFilters;
   final List<RegExp>? excludeFilters;
-
-  bool get isFallback =>
-      (requireFilters == null || requireFilters!.isEmpty) &&
-      (excludeFilters == null || excludeFilters!.isEmpty);
+  final bool isFallback;
 
   bool matches(String title) {
     if (isFallback) return false;

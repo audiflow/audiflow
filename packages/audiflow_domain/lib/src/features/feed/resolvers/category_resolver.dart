@@ -125,19 +125,4 @@ class CategoryResolver implements SmartPlaylistResolver {
       resolverType: type,
     );
   }
-
-  static PlaylistStructure parsePlaylistStructure(String? value) {
-    return switch (value) {
-      'grouped' => PlaylistStructure.grouped,
-      _ => PlaylistStructure.split,
-    };
-  }
-
-  static YearBinding parseYearBinding(String? value) {
-    return switch (value) {
-      'pinToYear' => YearBinding.pinToYear,
-      'splitByYear' => YearBinding.splitByYear,
-      _ => YearBinding.none,
-    };
-  }
 }

@@ -71,21 +71,6 @@ class RssMetadataResolver implements SmartPlaylistResolver {
     );
   }
 
-  static PlaylistStructure parsePlaylistStructure(String? value) {
-    return switch (value) {
-      'grouped' => PlaylistStructure.grouped,
-      _ => PlaylistStructure.split,
-    };
-  }
-
-  static YearBinding parseYearBinding(String? value) {
-    return switch (value) {
-      'pinToYear' => YearBinding.pinToYear,
-      'splitByYear' => YearBinding.splitByYear,
-      _ => YearBinding.none,
-    };
-  }
-
   String _extractDisplayName({
     required int seasonNumber,
     required List<Episode> episodes,
