@@ -294,7 +294,7 @@ Future<SmartPlaylistGrouping?> _resolveAndPersistSmartPlaylists(
   // Find the latest episode thumbnail for each smart playlist
   final enrichedPlaylists = <SmartPlaylist>[];
   final companions = <SmartPlaylistsCompanion>[];
-  final podcastImage = podcastImageUrl ?? _findPodcastImageUrl(episodes);
+  final podcastImage = podcastImageUrl ?? findPodcastImageUrl(episodes);
 
   for (final playlist in result.playlists) {
     _enrichPlaylist(
@@ -349,21 +349,26 @@ Future<SmartPlaylistGrouping?> _resolveAndPersistSmartPlaylists(
   );
 }
 
-/// Finds the most common imageUrl across all episodes.
+/// Finds the podcast-level imageUrl when a clear majority of
+/// episodes share the same artwork.
 ///
-/// When most episodes share the same imageUrl, it's the
-/// podcast-level artwork (not distinct per-season).
-String? _findPodcastImageUrl(List<Episode> episodes) {
+/// Returns the most common imageUrl only if it appears in more
+/// than half of the episodes that have an imageUrl. This avoids
+/// false positives when seasons use distinct artwork with
+/// similar episode counts.
+@visibleForTesting
+String? findPodcastImageUrl(List<Episode> episodes) {
   final counts = <String, int>{};
+  var totalWithImage = 0;
   for (final ep in episodes) {
     final url = ep.imageUrl;
     if (url != null) {
+      totalWithImage++;
       counts[url] = (counts[url] ?? 0) + 1;
     }
   }
   if (counts.isEmpty) return null;
 
-  // Return the most frequent imageUrl
   String? mostCommon;
   var maxCount = 0;
   for (final entry in counts.entries) {
@@ -372,6 +377,10 @@ String? _findPodcastImageUrl(List<Episode> episodes) {
       mostCommon = entry.key;
     }
   }
+
+  // Require a strict majority to avoid ambiguous cases
+  if (maxCount * 2 <= totalWithImage) return null;
+
   return mostCommon;
 }
 
@@ -651,7 +660,7 @@ Future<SmartPlaylistGrouping?> _reResolveFromEpisodes(
   if (result == null) return null;
 
   // Enrich playlists and their groups with thumbnails
-  final podcastImage = podcastImageUrl ?? _findPodcastImageUrl(episodes);
+  final podcastImage = podcastImageUrl ?? findPodcastImageUrl(episodes);
   final enriched = result.playlists.map((playlist) {
     final playlistEpisodes =
         episodes.where((e) => playlist.episodeIds.contains(e.id)).toList()
