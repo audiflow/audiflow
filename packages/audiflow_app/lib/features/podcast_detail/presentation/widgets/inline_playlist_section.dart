@@ -1,11 +1,11 @@
 import 'package:audiflow_domain/audiflow_domain.dart'
     show
         SmartPlaylist,
-        SmartPlaylistContentType,
+        PlaylistStructure,
         SmartPlaylistEpisodeData,
         SmartPlaylistGroup,
         SortOrder,
-        YearHeaderMode,
+        YearBinding,
         smartPlaylistEpisodesProvider;
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
@@ -113,7 +113,7 @@ List<Widget> _buildPlaylistData({
     ];
   }
 
-  if (playlist.contentType == SmartPlaylistContentType.groups &&
+  if (playlist.playlistStructure == PlaylistStructure.grouped &&
       playlist.groups != null &&
       playlist.groups!.isNotEmpty) {
     return _buildInlineGroupList(
@@ -138,7 +138,7 @@ List<Widget> _buildPlaylistData({
     return [const PodcastDetailSearchEmptyState()];
   }
 
-  if (playlist.yearHeaderMode != YearHeaderMode.none) {
+  if (playlist.yearBinding != YearBinding.none) {
     return _buildYearGroupedPlaylistSlivers(
       episodes: displayEpisodes,
       playlist: playlist,
@@ -158,7 +158,7 @@ List<Widget> _buildPlaylistData({
   final siblingEpisodeIds = sorted.map((d) => d.episode.id).toList();
 
   return [
-    if (playlist.showSortOrderToggle)
+    if (playlist.userSortable)
       SliverToBoxAdapter(
         child: Builder(
           builder: (context) => SortHeader(
@@ -219,15 +219,15 @@ List<Widget> _buildInlineGroupList({
     episodeMap[ep.episode.id] = ep;
   }
 
-  if (playlist.yearHeaderMode == YearHeaderMode.none) {
-    final sorted = sortGroupsByCustomSort(
+  if (playlist.yearBinding == YearBinding.none) {
+    final sorted = sortGroupsBySort(
       displayGroups,
-      playlist.customSort,
+      playlist.groupSort,
       sortOrder,
     );
 
     return [
-      if (playlist.showSortOrderToggle)
+      if (playlist.userSortable)
         SliverToBoxAdapter(
           child: Builder(
             builder: (context) => SortHeader(
@@ -245,7 +245,7 @@ List<Widget> _buildInlineGroupList({
           final group = sorted[index];
           return InlineGroupCard(
             group: group,
-            showSeasonNumber: playlist.showSeasonNumber,
+            prependSeasonNumber: playlist.prependSeasonNumber,
             onTap: () => onNavigateToGroup(playlist, group),
           );
         },
@@ -253,7 +253,7 @@ List<Widget> _buildInlineGroupList({
     ];
   }
 
-  if (playlist.yearHeaderMode == YearHeaderMode.perEpisode) {
+  if (playlist.yearBinding == YearBinding.splitByYear) {
     return _buildPerEpisodeInlineGroups(
       groups: displayGroups,
       episodeMap: episodeMap,
@@ -307,7 +307,7 @@ List<Widget> _buildInlineGroupList({
       sortedYears: sortedYears,
       itemBuilder: (context, group) => InlineGroupCard(
         group: group,
-        showSeasonNumber: playlist.showSeasonNumber,
+        prependSeasonNumber: playlist.prependSeasonNumber,
         onTap: () => onNavigateToGroup(playlist, group),
       ),
       scrollController: scrollController,
@@ -380,7 +380,7 @@ List<Widget> _buildPerEpisodeInlineGroups({
       sortedYears: sortedYears,
       itemBuilder: (context, item) => InlineGroupCard(
         group: item.group,
-        showSeasonNumber: playlist.showSeasonNumber,
+        prependSeasonNumber: playlist.prependSeasonNumber,
         episodeCountOverride: item.filteredEpisodeIds.length,
         onTap: () => onNavigateToGroup(
           playlist,

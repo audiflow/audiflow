@@ -99,7 +99,7 @@ Future<ParsedFeed> podcastDetail(Ref ref, String feedUrl) async {
         smartPlaylistPatternByFeedUrlProvider(feedUrl).future,
       );
       final extractor = pattern?.playlists
-          .map((d) => d.smartPlaylistEpisodeExtractor)
+          .map((d) => d.episodeExtractor)
           .nonNulls
           .firstOrNull;
       logger.d(
@@ -384,22 +384,17 @@ Future<SmartPlaylistGrouping?> sortedPodcastSmartPlaylists(
   final hasParentPlaylists = pattern != null && 1 < pattern.playlists.length;
 
   // For single-playlist configs, use that playlist's
-  // customSort. Multi-playlist configs preserve config order.
-  final customSort = (pattern != null && pattern.playlists.length == 1)
-      ? pattern.playlists.first.customSort
+  // groupSort. Multi-playlist configs preserve config order.
+  final groupSort = (pattern != null && pattern.playlists.length == 1)
+      ? pattern.playlists.first.groupList?.sort
       : null;
   if (hasParentPlaylists) {
     // Preserve config order as-is.
-  } else if (customSort != null) {
-    // Apply composite sorting rules
-    // Pre-fetch dates for all playlists that might need them
+  } else if (groupSort != null) {
     for (final playlist in sortedPlaylists) {
       await getNewestDate(playlist);
     }
 
-    // Partition: numbered playlists vs special playlists
-    // (sortKey=0, e.g., 番外編)
-    // Special playlists always appear at the end
     final numberedPlaylists = sortedPlaylists
         .where((s) => 0 < s.sortKey)
         .toList();
@@ -408,17 +403,13 @@ Future<SmartPlaylistGrouping?> sortedPodcastSmartPlaylists(
         .toList();
 
     numberedPlaylists.sort((a, b) {
-      final comparison = _compareWithCompositeSort(
-        a,
-        b,
-        customSort.rules,
-        newestDates,
-      );
-      // User's order choice inverts ascending/descending
-      return sortOrder == SortOrder.ascending ? comparison : -comparison;
+      final comparison = _compareByField(a, b, groupSort.field, newestDates);
+      final directed = groupSort.order == SortOrder.ascending
+          ? comparison
+          : -comparison;
+      return sortOrder == SortOrder.ascending ? directed : -directed;
     });
 
-    // Special playlists sorted by newest episode date
     specialPlaylists.sort(
       (a, b) => _compareDates(newestDates[a.id], newestDates[b.id]),
     );
@@ -448,45 +439,6 @@ Future<SmartPlaylistGrouping?> sortedPodcastSmartPlaylists(
   );
 }
 
-/// Compares two smart playlists using composite sort rules.
-///
-/// For COTEN RADIO: compares by sortKey (playlist number).
-/// Note: Special playlists (sortKey=0) are partitioned out
-/// before this is called.
-int _compareWithCompositeSort(
-  SmartPlaylist a,
-  SmartPlaylist b,
-  List<SmartPlaylistSortRule> rules,
-  Map<String, DateTime?> newestDates,
-) {
-  for (final rule in rules) {
-    // Check if condition applies to both playlists
-    if (rule.condition != null) {
-      final bothMatch =
-          _checkCondition(a, rule.condition!) &&
-          _checkCondition(b, rule.condition!);
-      if (!bothMatch) continue; // Try next rule
-    }
-
-    // Apply this rule
-    final comparison = _compareByField(a, b, rule.field, newestDates);
-    if (comparison != 0) {
-      // Apply rule's order
-      return rule.order == SortOrder.ascending ? comparison : -comparison;
-    }
-  }
-  return 0;
-}
-
-bool _checkCondition(
-  SmartPlaylist playlist,
-  SmartPlaylistSortCondition condition,
-) {
-  return switch (condition) {
-    SortKeyGreaterThan(:final value) => value < playlist.sortKey,
-  };
-}
-
 int _compareByField(
   SmartPlaylist a,
   SmartPlaylist b,
@@ -502,7 +454,6 @@ int _compareByField(
       newestDates[a.id],
       newestDates[b.id],
     ),
-    SmartPlaylistSortField.progress => a.sortKey.compareTo(b.sortKey), // TODO
   };
 }
 
@@ -655,8 +606,10 @@ SmartPlaylistGrouping? _resolveFromFeedByCategory(
           episodeIds: gEpisodes
               .map((ep) => -(episodes.indexOf(ep) + 1))
               .toList(),
-          episodeYearHeaders: gDef.episodeYearHeaders,
-          showDateRange: gDef.showDateRange ?? definition.showDateRange,
+          showDateRange:
+              gDef.display?.showDateRange ??
+              definition.groupList?.showDateRange ??
+              false,
         ),
       );
     }
@@ -681,12 +634,15 @@ SmartPlaylistGrouping? _resolveFromFeedByCategory(
         sortKey: playlists.length,
         episodeIds: allEpisodeIds,
         thumbnailUrl: thumbnailUrl,
-        contentType: _parseFeedContentType(definition.contentType),
-        yearHeaderMode: _parseFeedYearHeaderMode(definition.yearHeaderMode),
-        episodeYearHeaders: definition.episodeYearHeaders,
-        showDateRange: definition.showDateRange,
-        showSortOrderToggle: definition.showSortOrderToggle,
-        customSort: definition.customSort,
+        playlistStructure: _parseFeedPlaylistStructure(
+          definition.playlistStructure,
+        ),
+        yearBinding: _parseFeedYearBinding(
+          definition.groupList?.yearBinding?.name,
+        ),
+        showDateRange: definition.groupList?.showDateRange ?? false,
+        userSortable: definition.groupList?.userSortable ?? true,
+        groupSort: definition.groupList?.sort,
         groups: smartGroups.isEmpty ? null : smartGroups,
       ),
     );
@@ -748,7 +704,7 @@ SmartPlaylistGrouping? _resolveFromFeedWithParentPlaylists(
     }
 
     if (!matched) {
-      // Find last playlist without titleFilter (fallback).
+      // Find last playlist without filters (fallback).
       final fallbackIdx = _findFeedFallbackIndex(filters);
       if (0 <= fallbackIdx) {
         buckets[fallbackIdx].add(episode);
@@ -770,7 +726,6 @@ SmartPlaylistGrouping? _resolveFromFeedWithParentPlaylists(
       episodes,
       def.nullSeasonGroupKey,
       def.titleExtractor,
-      showDateRange: def.showDateRange,
     );
     final allEpisodeIds = bucketEpisodes
         .map((ep) => -(episodes.indexOf(ep) + 1))
@@ -801,12 +756,11 @@ SmartPlaylistGrouping? _resolveFromFeedWithParentPlaylists(
         sortKey: playlists.length,
         episodeIds: allEpisodeIds,
         thumbnailUrl: thumbnailUrl,
-        contentType: _parseFeedContentType(def.contentType),
-        yearHeaderMode: _parseFeedYearHeaderMode(def.yearHeaderMode),
-        episodeYearHeaders: def.episodeYearHeaders,
-        showDateRange: def.showDateRange,
-        showSortOrderToggle: def.showSortOrderToggle,
-        customSort: def.customSort,
+        playlistStructure: _parseFeedPlaylistStructure(def.playlistStructure),
+        yearBinding: _parseFeedYearBinding(def.groupList?.yearBinding?.name),
+        showDateRange: def.groupList?.showDateRange ?? false,
+        userSortable: def.groupList?.userSortable ?? true,
+        groupSort: def.groupList?.sort,
         groups: groups,
       ),
     );
@@ -832,9 +786,8 @@ List<SmartPlaylistGroup> _buildFeedGroups(
   List<PodcastItem> bucketEpisodes,
   List<PodcastItem> allEpisodes,
   int? groupNullAs,
-  SmartPlaylistTitleExtractor? titleExtractor, {
-  bool showDateRange = false,
-}) {
+  SmartPlaylistTitleExtractor? titleExtractor,
+) {
   final grouped = <int, List<PodcastItem>>{};
   for (final episode in bucketEpisodes) {
     final seasonNum = episode.seasonNumber;
@@ -870,60 +823,64 @@ List<SmartPlaylistGroup> _buildFeedGroups(
       episodeIds: groupEpisodes
           .map((ep) => -(allEpisodes.indexOf(ep) + 1))
           .toList(),
-      showDateRange: showDateRange,
     );
   }).toList()..sort((a, b) => a.sortKey.compareTo(b.sortKey));
 }
 
-SmartPlaylistContentType _parseFeedContentType(String? value) {
+PlaylistStructure _parseFeedPlaylistStructure(String? value) {
   return switch (value) {
-    'groups' => SmartPlaylistContentType.groups,
-    _ => SmartPlaylistContentType.episodes,
+    'grouped' => PlaylistStructure.grouped,
+    _ => PlaylistStructure.split,
   };
 }
 
-YearHeaderMode _parseFeedYearHeaderMode(String? value) {
+YearBinding _parseFeedYearBinding(String? value) {
   return switch (value) {
-    'firstEpisode' => YearHeaderMode.firstEpisode,
-    'perEpisode' => YearHeaderMode.perEpisode,
-    _ => YearHeaderMode.none,
+    'pinToYear' => YearBinding.pinToYear,
+    'splitByYear' => YearBinding.splitByYear,
+    _ => YearBinding.none,
   };
 }
 
 /// Compiled filter for a single playlist config entry (feed data).
 class _FeedPlaylistFilter {
-  _FeedPlaylistFilter._({
-    this.titleFilter,
-    this.excludeFilter,
-    this.requireFilter,
-  });
+  _FeedPlaylistFilter._({this.requireFilters, this.excludeFilters});
 
   factory _FeedPlaylistFilter.fromDefinition(SmartPlaylistDefinition def) {
+    final filters = def.episodeFilters;
+    if (filters == null) {
+      return _FeedPlaylistFilter._();
+    }
     return _FeedPlaylistFilter._(
-      titleFilter: def.titleFilter != null ? RegExp(def.titleFilter!) : null,
-      excludeFilter: def.excludeFilter != null
-          ? RegExp(def.excludeFilter!)
-          : null,
-      requireFilter: def.requireFilter != null
-          ? RegExp(def.requireFilter!)
-          : null,
+      requireFilters: filters.require
+          ?.where((e) => e.title != null)
+          .map((e) => RegExp(e.title!, caseSensitive: false))
+          .toList(),
+      excludeFilters: filters.exclude
+          ?.where((e) => e.title != null)
+          .map((e) => RegExp(e.title!, caseSensitive: false))
+          .toList(),
     );
   }
 
-  final RegExp? titleFilter;
-  final RegExp? excludeFilter;
-  final RegExp? requireFilter;
+  final List<RegExp>? requireFilters;
+  final List<RegExp>? excludeFilters;
 
-  bool get isFallback => titleFilter == null;
+  bool get isFallback =>
+      (requireFilters == null || requireFilters!.isEmpty) &&
+      (excludeFilters == null || excludeFilters!.isEmpty);
 
   bool matches(String title) {
-    if (titleFilter == null) return false;
-    if (!titleFilter!.hasMatch(title)) return false;
-    if (excludeFilter != null && excludeFilter!.hasMatch(title)) {
-      return false;
+    if (isFallback) return false;
+    if (requireFilters != null) {
+      for (final regex in requireFilters!) {
+        if (!regex.hasMatch(title)) return false;
+      }
     }
-    if (requireFilter != null && !requireFilter!.hasMatch(title)) {
-      return false;
+    if (excludeFilters != null) {
+      for (final regex in excludeFilters!) {
+        if (regex.hasMatch(title)) return false;
+      }
     }
     return true;
   }

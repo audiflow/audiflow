@@ -35,13 +35,13 @@ class InlineGroupCard extends StatelessWidget {
     super.key,
     required this.group,
     required this.onTap,
-    this.showSeasonNumber = false,
+    this.prependSeasonNumber = false,
     this.episodeCountOverride,
   });
 
   final SmartPlaylistGroup group;
   final VoidCallback onTap;
-  final bool showSeasonNumber;
+  final bool prependSeasonNumber;
 
   /// When set, overrides `group.episodeIds.length` for the
   /// episode count display (used in perEpisode year mode).
@@ -101,7 +101,7 @@ class InlineGroupCard extends StatelessWidget {
                     children: [
                       Text(
                         group.formattedDisplayName(
-                          showSeasonNumber: showSeasonNumber,
+                          prependSeasonNumber: prependSeasonNumber,
                         ),
                         style: theme.textTheme.titleSmall,
                         maxLines: 1,
