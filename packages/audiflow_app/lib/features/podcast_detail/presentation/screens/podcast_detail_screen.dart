@@ -1,32 +1,26 @@
 import 'package:audiflow_domain/audiflow_domain.dart'
     show
         EpisodeFilter,
-        PodcastItem,
         PodcastViewMode,
         SmartPlaylist,
-        SmartPlaylistContentType,
-        SmartPlaylistEpisodeData,
         SmartPlaylistGroup,
         SortOrder,
-        YearHeaderMode,
         podcastViewPreferenceControllerProvider,
-        smartPlaylistEpisodesProvider,
-        smartPlaylistPatternByFeedUrlProvider,
         subscriptionByFeedUrlProvider;
 import 'package:audiflow_search/audiflow_search.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../../l10n/app_localizations.dart';
 import '../../../../routing/app_router.dart';
-import '../../../subscription/presentation/controllers/subscription_controller.dart';
 import '../controllers/podcast_detail_controller.dart';
-import '../utils/group_sorting.dart';
 import '../widgets/episode_filter_chips.dart';
-import '../widgets/episode_list_tile.dart';
-import '../widgets/inline_group_card.dart';
-import '../widgets/smart_playlist_episode_list_tile.dart';
+import '../widgets/episode_list_section.dart';
+import '../widgets/inline_playlist_section.dart';
+import '../widgets/podcast_detail_empty_states.dart';
+import '../widgets/podcast_detail_header.dart';
 import '../widgets/smart_playlist_view_toggle.dart';
 
 /// Displays podcast details and episode list with
@@ -57,7 +51,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
   /// RSS feed-level image URL for thumbnail deduplication.
   String? _feedImageUrl;
 
-  /// Subscription's last refresh timestamp for "new" badge logic.
+  /// Subscription's last refresh timestamp for "new" badge.
   DateTime? _lastRefreshedAt;
 
   @override
@@ -68,130 +62,35 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
     return Scaffold(
       appBar: SearchableAppBar(
         title: Text(podcast.name, maxLines: 1, overflow: TextOverflow.ellipsis),
         onSearchChanged: (query) => setState(() => _searchQuery = query),
       ),
-      body: _buildBody(context, ref, theme, colorScheme),
+      body: _buildBody(),
     );
   }
 
-  Widget _buildBody(
-    BuildContext context,
-    WidgetRef ref,
-    ThemeData theme,
-    ColorScheme colorScheme,
-  ) {
+  Widget _buildBody() {
     final feedUrl = podcast.feedUrl;
 
     if (feedUrl == null) {
-      return _buildNoFeedUrlState(theme, colorScheme);
+      return const PodcastDetailNoFeedUrlState();
     }
 
     final feedAsync = ref.watch(podcastDetailProvider(feedUrl));
 
     return feedAsync.when(
-      data: (_) => _buildContent(context, ref, theme, feedUrl),
+      data: (_) => _buildContent(feedUrl),
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stack) => _buildErrorState(
-        theme,
-        colorScheme,
-        error.toString(),
-        () => ref.invalidate(podcastDetailProvider(feedUrl)),
+      error: (error, stack) => PodcastDetailErrorState(
+        error: error.toString(),
+        onRetry: () => ref.invalidate(podcastDetailProvider(feedUrl)),
       ),
     );
   }
 
-  Widget _buildNoFeedUrlState(ThemeData theme, ColorScheme colorScheme) {
-    final l10n = AppLocalizations.of(context);
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(Spacing.lg),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.rss_feed_outlined,
-              size: 64,
-              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
-            ),
-            const SizedBox(height: Spacing.md),
-            Text(
-              l10n.podcastDetailFeedUrlMissing,
-              style: theme.textTheme.titleMedium?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: Spacing.sm),
-            Text(
-              l10n.podcastDetailFeedUrlMissingSubtitle,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildErrorState(
-    ThemeData theme,
-    ColorScheme colorScheme,
-    String error,
-    VoidCallback onRetry,
-  ) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(Spacing.lg),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.error_outline,
-              size: 64,
-              color: colorScheme.error.withValues(alpha: 0.7),
-            ),
-            const SizedBox(height: Spacing.md),
-            Text(
-              AppLocalizations.of(context).podcastDetailLoadError,
-              style: theme.textTheme.titleMedium?.copyWith(
-                color: colorScheme.onSurface,
-              ),
-            ),
-            const SizedBox(height: Spacing.sm),
-            Text(
-              error,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
-              textAlign: TextAlign.center,
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: Spacing.lg),
-            FilledButton.icon(
-              onPressed: onRetry,
-              icon: const Icon(Icons.refresh),
-              label: Text(AppLocalizations.of(context).commonRetry),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildContent(
-    BuildContext context,
-    WidgetRef ref,
-    ThemeData theme,
-    String feedUrl,
-  ) {
+  Widget _buildContent(String feedUrl) {
     _feedImageUrl = ref
         .watch(podcastDetailProvider(feedUrl))
         .value
@@ -212,23 +111,19 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
     final filter = prefs?.episodeFilter ?? EpisodeFilter.all;
     final selectedPlaylistId =
         prefs?.selectedPlaylistId ?? _localSelectedPlaylistId;
-
     final sortOrder = prefs?.episodeSortOrder ?? SortOrder.descending;
 
     final filteredAsync = ref.watch(
       filteredSortedEpisodesProvider(feedUrl, filter, sortOrder),
     );
-
     final progressMapAsync = ref.watch(podcastEpisodeProgressProvider(feedUrl));
 
-    // Fetch playlists for toggle
     final playlistsAsync = ref.watch(
       sortedPodcastSmartPlaylistsProvider(feedUrl, podcast.id),
     );
     final grouping = playlistsAsync.value;
     final allPlaylists = grouping?.playlists ?? [];
 
-    // Build ungrouped playlist if needed
     final displayPlaylists = <SmartPlaylist>[
       ...allPlaylists,
       if (grouping != null && grouping.hasUngrouped)
@@ -240,7 +135,6 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
         ),
     ];
 
-    // Resolve selected playlist for inline display
     SmartPlaylist? activePlaylist;
     if (viewMode == PodcastViewMode.smartPlaylists &&
         displayPlaylists.isNotEmpty) {
@@ -260,8 +154,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
       child: CustomScrollView(
         controller: _scrollController,
         slivers: [
-          SliverToBoxAdapter(child: _buildHeader(context, ref, theme)),
-          // View mode toggle
+          SliverToBoxAdapter(child: PodcastDetailHeader(podcast: podcast)),
           if (displayPlaylists.isNotEmpty)
             SliverToBoxAdapter(
               child: Padding(
@@ -274,40 +167,14 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
                   selectedMode: viewMode,
                   selectedPlaylistId: activePlaylist?.id ?? selectedPlaylistId,
                   onEpisodesSelected: () {
-                    if (subscription != null) {
-                      ref
-                          .read(
-                            podcastViewPreferenceControllerProvider(
-                              subscription.id,
-                            ).notifier,
-                          )
-                          .setViewMode(PodcastViewMode.episodes);
-                    } else {
-                      setState(() {
-                        _localViewMode = PodcastViewMode.episodes;
-                      });
-                    }
+                    _onEpisodesViewSelected(subscription?.id);
                   },
                   onPlaylistSelected: (playlist) {
-                    if (subscription != null) {
-                      ref
-                          .read(
-                            podcastViewPreferenceControllerProvider(
-                              subscription.id,
-                            ).notifier,
-                          )
-                          .selectPlaylist(playlist.id);
-                    } else {
-                      setState(() {
-                        _localViewMode = PodcastViewMode.smartPlaylists;
-                        _localSelectedPlaylistId = playlist.id;
-                      });
-                    }
+                    _onPlaylistSelected(subscription?.id, playlist);
                   },
                 ),
               ),
             ),
-          // Filter chips only in episodes view
           if (viewMode == PodcastViewMode.episodes)
             SliverToBoxAdapter(
               child: Padding(
@@ -328,227 +195,68 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
                 ),
               ),
             ),
-          // Content
           if (viewMode == PodcastViewMode.episodes)
-            ..._buildEpisodeList(
-              ref,
-              feedUrl,
-              filteredAsync,
-              progressMapAsync,
-              theme,
-              sortOrder,
+            ...buildEpisodeListSlivers(
+              ref: ref,
+              feedUrl: feedUrl,
+              episodesAsync: filteredAsync,
+              progressMapAsync: progressMapAsync,
+              sortOrder: sortOrder,
+              searchQuery: _searchQuery,
+              podcastTitle: podcast.name,
+              artworkUrl: podcast.artworkUrl,
+              feedImageUrl: _feedImageUrl,
+              lastRefreshedAt: _lastRefreshedAt,
+              scrollController: _scrollController,
+              onToggleSortOrder: _toggleSortOrder,
             )
           else if (activePlaylist != null)
-            ..._buildInlinePlaylistEpisodes(
-              ref,
-              activePlaylist,
-              theme,
-              sortOrder,
+            ...buildInlinePlaylistSlivers(
+              ref: ref,
+              playlist: activePlaylist,
+              feedUrl: podcast.feedUrl,
+              searchQuery: _searchQuery,
+              sortOrder: sortOrder,
+              podcastTitle: podcast.name,
+              artworkUrl: podcast.artworkUrl,
+              feedImageUrl: _feedImageUrl,
+              lastRefreshedAt: _lastRefreshedAt,
+              scrollController: _scrollController,
+              onToggleSortOrder: _toggleSortOrder,
+              onNavigateToGroup: _navigateToGroupEpisodes,
             ),
         ],
       ),
     );
   }
 
-  List<Widget> _buildInlinePlaylistEpisodes(
-    WidgetRef ref,
-    SmartPlaylist playlist,
-    ThemeData theme,
-    SortOrder sortOrder,
-  ) {
-    final hasFeedIds =
-        playlist.episodeIds.isNotEmpty && playlist.episodeIds.first < 0;
-    final feedUrl = podcast.feedUrl;
-
-    final episodesAsync = hasFeedIds && feedUrl != null
-        ? ref.watch(
-            feedSmartPlaylistEpisodesProvider(feedUrl, playlist.episodeIds),
+  void _onEpisodesViewSelected(int? subscriptionId) {
+    if (subscriptionId != null) {
+      ref
+          .read(
+            podcastViewPreferenceControllerProvider(subscriptionId).notifier,
           )
-        : ref.watch(smartPlaylistEpisodesProvider(playlist.episodeIds));
-
-    return episodesAsync.when(
-      data: (episodes) {
-        if (episodes.isEmpty) {
-          return [SliverFillRemaining(child: _buildEmptyPlaylistState(theme))];
-        }
-
-        // Groups-based playlists show group cards, not episodes.
-        if (playlist.contentType == SmartPlaylistContentType.groups &&
-            playlist.groups != null &&
-            playlist.groups!.isNotEmpty) {
-          return _buildInlineGroupList(episodes, playlist, theme, sortOrder);
-        }
-
-        final displayEpisodes = filterBySearchQuery(
-          items: episodes,
-          query: _searchQuery,
-          getTitle: (e) => e.episode.title,
-          getDescription: (e) => e.episode.description,
-        );
-
-        if (displayEpisodes.isEmpty && 2 <= _searchQuery.length) {
-          return [_buildSearchEmptyState(theme)];
-        }
-
-        if (playlist.yearHeaderMode != YearHeaderMode.none) {
-          return _buildYearGroupedPlaylistSlivers(
-            displayEpisodes,
-            playlist,
-            theme,
-            sortOrder,
-          );
-        }
-
-        final sorted = sortOrder == SortOrder.ascending
-            ? displayEpisodes.reversed.toList()
-            : displayEpisodes;
-
-        return [
-          if (playlist.showSortOrderToggle)
-            SliverToBoxAdapter(
-              child: _buildSortHeader(
-                theme,
-                AppLocalizations.of(
-                  context,
-                ).podcastDetailEpisodeCount(sorted.length),
-                sortOrder,
-              ),
-            ),
-          SliverList.builder(
-            itemCount: sorted.length,
-            itemBuilder: (context, index) {
-              final data = sorted[index];
-              return SmartPlaylistEpisodeListTile(
-                lastRefreshedAt: _lastRefreshedAt,
-                key: ValueKey(data.episode.id),
-                episode: data.episode,
-                podcastTitle: podcast.name,
-                artworkUrl: podcast.artworkUrl,
-                feedImageUrl: _feedImageUrl,
-                progress: data.progress,
-                siblingEpisodeIds: playlist.episodeIds,
-              );
-            },
-          ),
-        ];
-      },
-      loading: () => [
-        const SliverToBoxAdapter(
-          child: Padding(
-            padding: EdgeInsets.all(Spacing.lg),
-            child: Center(child: CircularProgressIndicator()),
-          ),
-        ),
-      ],
-      error: (error, _) => [
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.all(Spacing.lg),
-            child: Center(
-              child: Text(
-                AppLocalizations.of(
-                  context,
-                ).podcastDetailEpisodeLoadError(error.toString()),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
+          .setViewMode(PodcastViewMode.episodes);
+    } else {
+      setState(() {
+        _localViewMode = PodcastViewMode.episodes;
+      });
+    }
   }
 
-  List<Widget> _buildYearGroupedPlaylistSlivers(
-    List<SmartPlaylistEpisodeData> episodes,
-    SmartPlaylist playlist,
-    ThemeData theme,
-    SortOrder sortOrder,
-  ) {
-    final byYear = <int, List<SmartPlaylistEpisodeData>>{};
-    for (final data in episodes) {
-      final year = data.episode.publishedAt?.year ?? 0;
-      byYear.putIfAbsent(year, () => []).add(data);
+  void _onPlaylistSelected(int? subscriptionId, SmartPlaylist playlist) {
+    if (subscriptionId != null) {
+      ref
+          .read(
+            podcastViewPreferenceControllerProvider(subscriptionId).notifier,
+          )
+          .selectPlaylist(playlist.id);
+    } else {
+      setState(() {
+        _localViewMode = PodcastViewMode.smartPlaylists;
+        _localSelectedPlaylistId = playlist.id;
+      });
     }
-    if (sortOrder == SortOrder.descending) {
-      for (final key in byYear.keys) {
-        byYear[key] = byYear[key]!.reversed.toList();
-      }
-    }
-    final sortedYears = byYear.keys.toList()
-      ..sort(
-        sortOrder == SortOrder.descending
-            ? (a, b) => b.compareTo(a)
-            : (a, b) => a.compareTo(b),
-      );
-
-    return buildYearGroupedSlivers<SmartPlaylistEpisodeData>(
-      itemsByYear: byYear,
-      sortedYears: sortedYears,
-      itemBuilder: (context, data) => SmartPlaylistEpisodeListTile(
-        key: ValueKey(data.episode.id),
-        episode: data.episode,
-        podcastTitle: podcast.name,
-        artworkUrl: podcast.artworkUrl,
-        feedImageUrl: _feedImageUrl,
-        progress: data.progress,
-        siblingEpisodeIds: playlist.episodeIds,
-      ),
-      scrollController: _scrollController,
-      yearGroupingEnabled: true,
-      itemExtent: episodeCardExtent,
-    );
-  }
-
-  Widget _buildSortHeader(ThemeData theme, String label, SortOrder sortOrder) {
-    final colorScheme = theme.colorScheme;
-    final l10n = AppLocalizations.of(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: Spacing.md,
-        vertical: Spacing.xs,
-      ),
-      child: Row(
-        children: [
-          Text(
-            label,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const Spacer(),
-          InkWell(
-            borderRadius: BorderRadius.circular(16),
-            onTap: _toggleSortOrder,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: Spacing.sm,
-                vertical: Spacing.xxs,
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    sortOrder == SortOrder.ascending
-                        ? Icons.arrow_upward
-                        : Icons.arrow_downward,
-                    size: 16,
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    sortOrder == SortOrder.ascending
-                        ? l10n.podcastDetailOldestFirst
-                        : l10n.podcastDetailNewestFirst,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
   void _toggleSortOrder() {
@@ -567,197 +275,6 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
     ref
         .read(podcastViewPreferenceControllerProvider(subscription.id).notifier)
         .setEpisodeSortOrder(next);
-  }
-
-  List<Widget> _buildInlineGroupList(
-    List<SmartPlaylistEpisodeData> episodes,
-    SmartPlaylist playlist,
-    ThemeData theme,
-    SortOrder sortOrder,
-  ) {
-    final groups = playlist.groups!;
-    final displayGroups = filterBySearchQuery(
-      items: groups,
-      query: _searchQuery,
-      getTitle: (g) => g.displayName,
-    );
-
-    if (displayGroups.isEmpty && 2 <= _searchQuery.length) {
-      return [_buildSearchEmptyState(theme)];
-    }
-
-    final episodeMap = <int, SmartPlaylistEpisodeData>{};
-    for (final ep in episodes) {
-      episodeMap[ep.episode.id] = ep;
-    }
-
-    if (playlist.yearHeaderMode == YearHeaderMode.none) {
-      final sorted = sortGroupsByCustomSort(
-        displayGroups,
-        playlist.customSort,
-        sortOrder,
-      );
-
-      return [
-        if (playlist.showSortOrderToggle)
-          SliverToBoxAdapter(
-            child: _buildSortHeader(
-              theme,
-              AppLocalizations.of(
-                context,
-              ).podcastDetailGroupCount(sorted.length),
-              sortOrder,
-            ),
-          ),
-        SliverList.builder(
-          itemCount: sorted.length,
-          itemBuilder: (context, index) {
-            final group = sorted[index];
-            return InlineGroupCard(
-              group: group,
-              showSeasonNumber: playlist.showSeasonNumber,
-              podcastArtworkUrl: podcast.artworkUrl,
-              onTap: () => _navigateToGroupEpisodes(playlist, group),
-            );
-          },
-        ),
-      ];
-    }
-
-    if (playlist.yearHeaderMode == YearHeaderMode.perEpisode) {
-      return _buildPerEpisodeInlineGroups(
-        displayGroups,
-        episodeMap,
-        playlist,
-        theme,
-        sortOrder,
-      );
-    }
-
-    // firstEpisode mode: determine year per group from
-    // first episode's publishedAt.
-    final byYear = <int, List<SmartPlaylistGroup>>{};
-    for (final group in displayGroups) {
-      var year = 0;
-      if (group.episodeIds.isNotEmpty) {
-        final firstId = group.episodeIds.first;
-        final ep = episodeMap[firstId];
-        year = ep?.episode.publishedAt?.year ?? 0;
-      }
-      byYear.putIfAbsent(year, () => []).add(group);
-    }
-
-    if (sortOrder == SortOrder.descending) {
-      for (final key in byYear.keys) {
-        byYear[key] = byYear[key]!.reversed.toList();
-      }
-    }
-
-    final sortedYears = byYear.keys.toList()
-      ..sort(
-        sortOrder == SortOrder.descending
-            ? (a, b) => b.compareTo(a)
-            : (a, b) => a.compareTo(b),
-      );
-
-    return [
-      SliverToBoxAdapter(
-        child: _buildSortHeader(
-          theme,
-          AppLocalizations.of(
-            context,
-          ).podcastDetailGroupCount(displayGroups.length),
-          sortOrder,
-        ),
-      ),
-      ...buildYearGroupedSlivers<SmartPlaylistGroup>(
-        itemsByYear: {for (final y in sortedYears) y: byYear[y]!},
-        sortedYears: sortedYears,
-        itemBuilder: (context, group) => InlineGroupCard(
-          group: group,
-          showSeasonNumber: playlist.showSeasonNumber,
-          podcastArtworkUrl: podcast.artworkUrl,
-          onTap: () => _navigateToGroupEpisodes(playlist, group),
-        ),
-        scrollController: _scrollController,
-        yearGroupingEnabled: true,
-        itemExtent: 88,
-      ),
-    ];
-  }
-
-  /// Builds inline group list for perEpisode year mode.
-  ///
-  /// Each group appears under every year it has episodes in,
-  /// showing year-filtered episode counts and passing
-  /// filtered IDs to navigation.
-  List<Widget> _buildPerEpisodeInlineGroups(
-    List<SmartPlaylistGroup> groups,
-    Map<int, SmartPlaylistEpisodeData> episodeMap,
-    SmartPlaylist playlist,
-    ThemeData theme,
-    SortOrder sortOrder,
-  ) {
-    final byYear = <int, List<YearFilteredInlineGroup>>{};
-    for (final group in groups) {
-      final yearIds = <int, List<int>>{};
-      for (final id in group.episodeIds) {
-        final ep = episodeMap[id];
-        final year = ep?.episode.publishedAt?.year ?? 0;
-        yearIds.putIfAbsent(year, () => []).add(id);
-      }
-      for (final entry in yearIds.entries) {
-        byYear
-            .putIfAbsent(entry.key, () => [])
-            .add(
-              YearFilteredInlineGroup(
-                group: group,
-                filteredEpisodeIds: entry.value,
-              ),
-            );
-      }
-    }
-
-    final sortedYears = byYear.keys.toList()
-      ..sort(
-        sortOrder == SortOrder.descending
-            ? (a, b) => b.compareTo(a)
-            : (a, b) => a.compareTo(b),
-      );
-
-    // Count total group appearances across all years.
-    var totalCards = 0;
-    for (final items in byYear.values) {
-      totalCards += items.length;
-    }
-
-    return [
-      SliverToBoxAdapter(
-        child: _buildSortHeader(
-          theme,
-          AppLocalizations.of(context).podcastDetailGroupCount(totalCards),
-          sortOrder,
-        ),
-      ),
-      ...buildYearGroupedSlivers<YearFilteredInlineGroup>(
-        itemsByYear: {for (final y in sortedYears) y: byYear[y]!},
-        sortedYears: sortedYears,
-        itemBuilder: (context, item) => InlineGroupCard(
-          group: item.group,
-          showSeasonNumber: playlist.showSeasonNumber,
-          podcastArtworkUrl: podcast.artworkUrl,
-          episodeCountOverride: item.filteredEpisodeIds.length,
-          onTap: () => _navigateToGroupEpisodes(
-            playlist,
-            item.group,
-            filteredEpisodeIds: item.filteredEpisodeIds,
-          ),
-        ),
-        scrollController: _scrollController,
-        yearGroupingEnabled: true,
-        itemExtent: 88,
-      ),
-    ];
   }
 
   void _navigateToGroupEpisodes(
@@ -781,402 +298,6 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
         'lastRefreshedAt': _lastRefreshedAt,
         'filteredEpisodeIds': filteredEpisodeIds,
       },
-    );
-  }
-
-  List<Widget> _buildEpisodeList(
-    WidgetRef ref,
-    String feedUrl,
-    AsyncValue<List<PodcastItem>> episodesAsync,
-    AsyncValue<EpisodeProgressMap> progressMapAsync,
-    ThemeData theme,
-    SortOrder sortOrder,
-  ) {
-    final patternAsync = ref.watch(
-      smartPlaylistPatternByFeedUrlProvider(feedUrl),
-    );
-    final yearGrouped = patternAsync.value?.yearGroupedEpisodes ?? false;
-
-    return episodesAsync.when(
-      data: (episodes) {
-        final displayEpisodes = filterBySearchQuery(
-          items: episodes,
-          query: _searchQuery,
-          getTitle: (e) => e.title,
-          getDescription: (e) => e.description,
-        );
-
-        if (displayEpisodes.isEmpty) {
-          if (2 <= _searchQuery.length) {
-            return [_buildSearchEmptyState(theme)];
-          }
-          return [SliverFillRemaining(child: _buildEmptyFilterState(theme))];
-        }
-
-        final progressMap = progressMapAsync.value ?? {};
-
-        // Collect DB episode IDs in display order for adhoc queue.
-        final siblingEpisodeIds = <int>[
-          for (final ep in displayEpisodes)
-            if (ep.enclosureUrl != null)
-              ?progressMap[ep.enclosureUrl]?.episode.id,
-        ];
-
-        final sortHeader = SliverToBoxAdapter(
-          child: _buildSortHeader(
-            theme,
-            AppLocalizations.of(
-              context,
-            ).podcastDetailEpisodeCount(displayEpisodes.length),
-            sortOrder,
-          ),
-        );
-
-        if (yearGrouped) {
-          return [
-            sortHeader,
-            ..._buildYearGroupedEpisodeSlivers(
-              displayEpisodes,
-              progressMap,
-              siblingEpisodeIds,
-              theme,
-              sortOrder,
-            ),
-          ];
-        }
-
-        return [
-          sortHeader,
-          SliverList.builder(
-            itemCount: displayEpisodes.length,
-            itemBuilder: (context, index) {
-              final episode = displayEpisodes[index];
-              final progress = episode.enclosureUrl != null
-                  ? progressMap[episode.enclosureUrl]
-                  : null;
-
-              return EpisodeListTile(
-                lastRefreshedAt: _lastRefreshedAt,
-                key: ValueKey(episode.guid ?? index),
-                episode: episode,
-                podcastTitle: podcast.name,
-                artworkUrl: podcast.artworkUrl,
-                feedImageUrl: _feedImageUrl,
-                progress: progress,
-                siblingEpisodeIds: siblingEpisodeIds,
-              );
-            },
-          ),
-        ];
-      },
-      loading: () => [
-        const SliverToBoxAdapter(
-          child: Padding(
-            padding: EdgeInsets.all(Spacing.lg),
-            child: Center(child: CircularProgressIndicator()),
-          ),
-        ),
-      ],
-      error: (error, _) => [
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.all(Spacing.lg),
-            child: Text(
-              AppLocalizations.of(
-                context,
-              ).podcastDetailEpisodeLoadError(error.toString()),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  List<Widget> _buildYearGroupedEpisodeSlivers(
-    List<PodcastItem> episodes,
-    EpisodeProgressMap progressMap,
-    List<int> siblingEpisodeIds,
-    ThemeData theme,
-    SortOrder sortOrder,
-  ) {
-    final byYear = <int, List<PodcastItem>>{};
-    for (final episode in episodes) {
-      final dbEpisode = episode.enclosureUrl != null
-          ? progressMap[episode.enclosureUrl]?.episode
-          : null;
-      final year =
-          dbEpisode?.publishedAt?.year ?? episode.publishDate?.year ?? 0;
-      byYear.putIfAbsent(year, () => []).add(episode);
-    }
-    // The provider already returns episodes in the requested sort order,
-    // so no per-year reversal is needed.
-    final sortedYears = byYear.keys.toList()
-      ..sort(
-        sortOrder == SortOrder.descending
-            ? (a, b) => b.compareTo(a)
-            : (a, b) => a.compareTo(b),
-      );
-
-    return buildYearGroupedSlivers<PodcastItem>(
-      itemsByYear: byYear,
-      sortedYears: sortedYears,
-      itemBuilder: (context, episode) {
-        final progress = episode.enclosureUrl != null
-            ? progressMap[episode.enclosureUrl]
-            : null;
-        return EpisodeListTile(
-          lastRefreshedAt: _lastRefreshedAt,
-          key: ValueKey(episode.guid ?? episode.title),
-          episode: episode,
-          podcastTitle: podcast.name,
-          artworkUrl: podcast.artworkUrl,
-          feedImageUrl: _feedImageUrl,
-          progress: progress,
-          siblingEpisodeIds: siblingEpisodeIds,
-        );
-      },
-      scrollController: _scrollController,
-      yearGroupingEnabled: true,
-      itemExtent: episodeCardExtent,
-    );
-  }
-
-  Widget _buildHeader(BuildContext context, WidgetRef ref, ThemeData theme) {
-    final colorScheme = theme.colorScheme;
-
-    return Container(
-      padding: const EdgeInsets.all(Spacing.md),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: _buildArtwork(colorScheme),
-              ),
-              const SizedBox(width: Spacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      podcast.name,
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: Spacing.xs),
-                    Text(
-                      podcast.artistName,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    if (podcast.genres.isNotEmpty) ...[
-                      const SizedBox(height: Spacing.xs),
-                      Text(
-                        podcast.genres.join(', '),
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onSurfaceVariant.withValues(
-                            alpha: 0.7,
-                          ),
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: Spacing.md),
-          _buildSubscribeButton(context, ref, theme),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSubscribeButton(
-    BuildContext context,
-    WidgetRef ref,
-    ThemeData theme,
-  ) {
-    final colorScheme = theme.colorScheme;
-    final subscriptionState = ref.watch(
-      subscriptionControllerProvider(podcast.id),
-    );
-
-    return subscriptionState.when(
-      data: (isSubscribed) {
-        final l10n = AppLocalizations.of(context);
-        if (isSubscribed) {
-          return OutlinedButton.icon(
-            onPressed: () => _toggleSubscription(ref),
-            icon: const Icon(Icons.check),
-            label: Text(l10n.podcastDetailSubscribed),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: colorScheme.primary,
-              side: BorderSide(color: colorScheme.primary),
-            ),
-          );
-        }
-
-        return FilledButton.icon(
-          onPressed: podcast.feedUrl != null
-              ? () => _toggleSubscription(ref)
-              : null,
-          icon: const Icon(Icons.add),
-          label: Text(l10n.podcastDetailSubscribe),
-        );
-      },
-      loading: () => FilledButton.icon(
-        onPressed: null,
-        icon: const SizedBox(
-          width: 16,
-          height: 16,
-          child: CircularProgressIndicator(strokeWidth: 2),
-        ),
-        label: Text(AppLocalizations.of(context).commonLoading),
-      ),
-      error: (error, stack) => FilledButton.icon(
-        onPressed: () => _toggleSubscription(ref),
-        icon: const Icon(Icons.refresh),
-        label: Text(AppLocalizations.of(context).commonRetry),
-      ),
-    );
-  }
-
-  void _toggleSubscription(WidgetRef ref) {
-    ref
-        .read(subscriptionControllerProvider(podcast.id).notifier)
-        .toggleSubscription(podcast);
-  }
-
-  Widget _buildArtwork(ColorScheme colorScheme) {
-    final artworkUrl = podcast.artworkUrl;
-
-    if (artworkUrl == null) {
-      return Container(
-        width: 100,
-        height: 100,
-        color: colorScheme.surfaceContainerHighest,
-        child: Icon(
-          Icons.podcasts,
-          size: 48,
-          color: colorScheme.onSurfaceVariant,
-        ),
-      );
-    }
-
-    return Image.network(
-      artworkUrl,
-      width: 100,
-      height: 100,
-      fit: BoxFit.cover,
-      loadingBuilder: (context, child, progress) {
-        if (progress == null) return child;
-        return Container(
-          width: 100,
-          height: 100,
-          color: colorScheme.surfaceContainerHighest,
-          child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
-        );
-      },
-      errorBuilder: (context, error, stackTrace) => Container(
-        width: 100,
-        height: 100,
-        color: colorScheme.surfaceContainerHighest,
-        child: Icon(
-          Icons.broken_image,
-          size: 48,
-          color: colorScheme.onSurfaceVariant,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSearchEmptyState(ThemeData theme) {
-    final colorScheme = theme.colorScheme;
-    return SliverFillRemaining(
-      child: Center(
-        child: Text(
-          AppLocalizations.of(context).podcastDetailNoResults,
-          style: theme.textTheme.titleMedium?.copyWith(
-            color: colorScheme.onSurfaceVariant,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildEmptyFilterState(ThemeData theme) {
-    final colorScheme = theme.colorScheme;
-    final l10n = AppLocalizations.of(context);
-
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.filter_list_off,
-            size: 64,
-            color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
-          ),
-          const SizedBox(height: Spacing.md),
-          Text(
-            l10n.podcastDetailNoMatchingEpisodes,
-            style: theme.textTheme.titleMedium?.copyWith(
-              color: colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: Spacing.xs),
-          Text(
-            l10n.podcastDetailTryDifferentFilter,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEmptyPlaylistState(ThemeData theme) {
-    final colorScheme = theme.colorScheme;
-    final l10n = AppLocalizations.of(context);
-
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.folder_open_outlined,
-            size: 64,
-            color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
-          ),
-          const SizedBox(height: Spacing.md),
-          Text(
-            l10n.podcastDetailNoEpisodes,
-            style: theme.textTheme.titleMedium?.copyWith(
-              color: colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: Spacing.xs),
-          Text(
-            l10n.podcastDetailPlaylistEmpty,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
