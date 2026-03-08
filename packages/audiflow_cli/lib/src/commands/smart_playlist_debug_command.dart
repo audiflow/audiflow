@@ -144,9 +144,9 @@ class SmartPlaylistDebugCommand {
     }
 
     // Extract season+episode from title prefix
-    if (definition.smartPlaylistEpisodeExtractor != null) {
+    if (definition.episodeExtractor != null) {
       final diagnostics = SmartPlaylistEpisodeExtractorDiagnostics(
-        definition.smartPlaylistEpisodeExtractor!,
+        definition.episodeExtractor!,
       );
       final result = diagnostics.run(episode);
       if (result.hasValues) {

@@ -65,9 +65,8 @@ void main() {
               resolverType: 'category',
               thumbnailUrl: const Value('https://example.com/thumb.jpg'),
               yearGrouped: const Value(true),
-              contentType: const Value('groups'),
-              yearHeaderMode: const Value('firstEpisode'),
-              episodeYearHeaders: const Value(true),
+              playlistStructure: const Value('grouped'),
+              yearHeaderMode: const Value('pinToYear'),
             ),
           );
 
@@ -80,9 +79,8 @@ void main() {
 
       expect(playlist.thumbnailUrl, equals('https://example.com/thumb.jpg'));
       expect(playlist.yearGrouped, isTrue);
-      expect(playlist.contentType, equals('groups'));
-      expect(playlist.yearHeaderMode, equals('firstEpisode'));
-      expect(playlist.episodeYearHeaders, isTrue);
+      expect(playlist.playlistStructure, equals('grouped'));
+      expect(playlist.yearHeaderMode, equals('pinToYear'));
     });
 
     test('default values for optional columns', () async {
@@ -107,9 +105,8 @@ void main() {
 
       expect(playlist.thumbnailUrl, isNull);
       expect(playlist.yearGrouped, isFalse);
-      expect(playlist.contentType, equals('episodes'));
+      expect(playlist.playlistStructure, equals('split'));
       expect(playlist.yearHeaderMode, equals('none'));
-      expect(playlist.episodeYearHeaders, isFalse);
     });
 
     test('composite primary key enforces uniqueness', () async {

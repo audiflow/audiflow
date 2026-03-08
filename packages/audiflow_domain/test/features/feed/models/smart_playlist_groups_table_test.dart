@@ -76,7 +76,6 @@ void main() {
               earliestDate: Value(earliest),
               latestDate: Value(latest),
               totalDurationMs: const Value(7200000),
-              episodeYearHeaders: const Value(true),
             ),
           );
 
@@ -92,7 +91,6 @@ void main() {
       expect(group.earliestDate, equals(earliest));
       expect(group.latestDate, equals(latest));
       expect(group.totalDurationMs, equals(7200000));
-      expect(group.episodeYearHeaders, isTrue);
     });
 
     test('nullable fields default to null', () async {
@@ -121,7 +119,6 @@ void main() {
       expect(group.earliestDate, isNull);
       expect(group.latestDate, isNull);
       expect(group.totalDurationMs, isNull);
-      expect(group.episodeYearHeaders, isNull);
     });
 
     test('composite primary key enforces uniqueness', () async {

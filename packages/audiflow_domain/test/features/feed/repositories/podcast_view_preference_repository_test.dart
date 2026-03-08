@@ -234,17 +234,6 @@ void main() {
       expect(pref.smartPlaylistSortOrder, SortOrder.descending);
     });
 
-    test('persists progress field', () async {
-      await repository.updateSmartPlaylistSort(
-        1,
-        SmartPlaylistSortField.progress,
-        SortOrder.ascending,
-      );
-      final pref = await repository.getPreference(1);
-
-      expect(pref.smartPlaylistSortField, SmartPlaylistSortField.progress);
-    });
-
     test('persists alphabetical field', () async {
       await repository.updateSmartPlaylistSort(
         1,

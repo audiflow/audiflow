@@ -153,7 +153,7 @@ class FeedSyncService {
         smartPlaylistPatternByFeedUrlProvider(sub.feedUrl).future,
       );
       final extractor = patternConfig?.playlists
-          .map((d) => d.smartPlaylistEpisodeExtractor)
+          .map((d) => d.episodeExtractor)
           .nonNulls
           .firstOrNull;
 

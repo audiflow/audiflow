@@ -49,12 +49,6 @@ class SmartPlaylistSortSheet extends StatelessWidget {
             ),
             _buildSortOption(
               context,
-              'Progress (least complete)',
-              SmartPlaylistSortField.progress,
-              SortOrder.ascending,
-            ),
-            _buildSortOption(
-              context,
               'Alphabetical',
               SmartPlaylistSortField.alphabetical,
               SortOrder.ascending,

@@ -44,8 +44,8 @@ class _SmartPlaylistGroupEpisodesScreenState
   void initState() {
     super.initState();
     final parent = widget.parentPlaylist;
-    if (parent.showSortOrderToggle && parent.customSort != null) {
-      _sortOrder = parent.customSort!.rules.first.order;
+    if (parent.userSortable && parent.groupSort != null) {
+      _sortOrder = parent.groupSort!.order;
     } else {
       _sortOrder = SortOrder.descending;
     }
@@ -55,8 +55,7 @@ class _SmartPlaylistGroupEpisodesScreenState
       widget.filteredEpisodeIds ?? widget.group.episodeIds;
 
   bool get _showYearHeaders =>
-      widget.group.episodeYearHeaders ??
-      widget.parentPlaylist.episodeYearHeaders;
+      widget.parentPlaylist.yearBinding != YearBinding.none;
 
   @override
   void dispose() {
@@ -66,7 +65,7 @@ class _SmartPlaylistGroupEpisodesScreenState
 
   String _formatGroupTitle() {
     return widget.group.formattedDisplayName(
-      showSeasonNumber: widget.parentPlaylist.showSeasonNumber,
+      prependSeasonNumber: widget.parentPlaylist.prependSeasonNumber,
     );
   }
 
@@ -182,7 +181,7 @@ class _SmartPlaylistGroupEpisodesScreenState
             child: _buildSortHeader(
               theme,
               showSortSwitch:
-                  _showYearHeaders || widget.parentPlaylist.showSortOrderToggle,
+                  _showYearHeaders || widget.parentPlaylist.userSortable,
               episodeCount: displayEpisodes.length,
             ),
           ),

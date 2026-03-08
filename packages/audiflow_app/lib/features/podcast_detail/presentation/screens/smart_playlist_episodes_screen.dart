@@ -44,8 +44,8 @@ class _SmartPlaylistEpisodesScreenState
   void initState() {
     super.initState();
     final sp = widget.smartPlaylist;
-    if (sp.showSortOrderToggle && sp.customSort != null) {
-      _sortOrder = sp.customSort!.rules.first.order;
+    if (sp.userSortable && sp.groupSort != null) {
+      _sortOrder = sp.groupSort!.order;
     } else {
       _sortOrder = SortOrder.descending;
     }
@@ -91,13 +91,13 @@ class _SmartPlaylistEpisodesScreenState
   }
 
   bool get _showSortToggle =>
-      widget.smartPlaylist.showSortOrderToggle ||
-      widget.smartPlaylist.yearHeaderMode != YearHeaderMode.none;
+      widget.smartPlaylist.userSortable ||
+      widget.smartPlaylist.yearBinding != YearBinding.none;
 
   Widget _buildSortHeader(ThemeData theme, {int? countOverride}) {
     final colorScheme = theme.colorScheme;
     final isGroups =
-        widget.smartPlaylist.contentType == SmartPlaylistContentType.groups;
+        widget.smartPlaylist.playlistStructure == PlaylistStructure.grouped;
     final count =
         countOverride ??
         (isGroups
@@ -161,7 +161,7 @@ class _SmartPlaylistEpisodesScreenState
   }
 
   List<Widget> _buildEpisodeList(BuildContext context, ThemeData theme) {
-    if (widget.smartPlaylist.contentType == SmartPlaylistContentType.groups &&
+    if (widget.smartPlaylist.playlistStructure == PlaylistStructure.grouped &&
         widget.smartPlaylist.groups != null) {
       return _buildGroupList(context, theme);
     }
@@ -199,7 +199,7 @@ class _SmartPlaylistEpisodesScreenState
           return [SliverFillRemaining(child: _buildEmptyState(theme))];
         }
 
-        if (widget.smartPlaylist.yearHeaderMode != YearHeaderMode.none) {
+        if (widget.smartPlaylist.yearBinding != YearBinding.none) {
           return [
             sortHeader,
             ..._buildYearGroupedSlivers(displayEpisodes, theme),
@@ -348,7 +348,7 @@ class _SmartPlaylistEpisodesScreenState
       ];
     }
 
-    if (widget.smartPlaylist.yearHeaderMode == YearHeaderMode.none) {
+    if (widget.smartPlaylist.yearBinding == YearBinding.none) {
       return [sortHeader, _buildFlatGroupSliver(groups, theme)];
     }
 
@@ -393,13 +393,13 @@ class _SmartPlaylistEpisodesScreenState
     );
   }
 
-  /// Sorts groups using the playlist's [customSort] rules and
+  /// Sorts groups using the playlist's [groupSort] rule and
   /// the current [_sortOrder] toggle.
   List<SmartPlaylistGroup> _sortGroups(List<SmartPlaylistGroup> groups) {
     final sorted = List<SmartPlaylistGroup>.from(groups);
-    final customSort = widget.smartPlaylist.customSort;
+    final groupSort = widget.smartPlaylist.groupSort;
 
-    if (customSort == null || customSort.rules.isEmpty) {
+    if (groupSort == null) {
       sorted.sort((a, b) {
         final cmp = a.sortKey.compareTo(b.sortKey);
         return _sortOrder == SortOrder.ascending ? cmp : -cmp;
@@ -407,24 +407,13 @@ class _SmartPlaylistEpisodesScreenState
       return sorted;
     }
 
-    // When _sortOrder matches the first rule's order, use the
-    // rules as written. Otherwise invert.
-    final invert = _sortOrder != customSort.rules.first.order;
+    final invert = _sortOrder != groupSort.order;
 
     sorted.sort((a, b) {
-      for (final rule in customSort.rules) {
-        if (rule.condition != null) {
-          final bothMatch =
-              _matchesGroupCondition(a, rule.condition!) &&
-              _matchesGroupCondition(b, rule.condition!);
-          if (!bothMatch) continue;
-        }
-
-        final cmp = _compareGroupsByField(a, b, rule.field);
-        if (cmp != 0) {
-          final directed = rule.order == SortOrder.ascending ? cmp : -cmp;
-          return invert ? -directed : directed;
-        }
+      final cmp = _compareGroupsByField(a, b, groupSort.field);
+      if (cmp != 0) {
+        final directed = groupSort.order == SortOrder.ascending ? cmp : -cmp;
+        return invert ? -directed : directed;
       }
       return 0;
     });
@@ -446,7 +435,6 @@ class _SmartPlaylistEpisodesScreenState
       SmartPlaylistSortField.alphabetical => a.displayName.compareTo(
         b.displayName,
       ),
-      SmartPlaylistSortField.progress => a.sortKey.compareTo(b.sortKey),
     };
   }
 
@@ -455,15 +443,6 @@ class _SmartPlaylistEpisodesScreenState
     if (a == null) return 1;
     if (b == null) return -1;
     return a.compareTo(b);
-  }
-
-  bool _matchesGroupCondition(
-    SmartPlaylistGroup group,
-    SmartPlaylistSortCondition condition,
-  ) {
-    return switch (condition) {
-      SortKeyGreaterThan(:final value) => value < group.sortKey,
-    };
   }
 
   Widget _buildFlatGroupSliver(
@@ -480,7 +459,7 @@ class _SmartPlaylistEpisodesScreenState
         final group = sorted[index];
         return _SmartPlaylistGroupCard(
           group: group,
-          showSeasonNumber: widget.smartPlaylist.showSeasonNumber,
+          prependSeasonNumber: widget.smartPlaylist.prependSeasonNumber,
           thumbnailUrl: group.thumbnailUrl,
           dateRange: group.showDateRange
               ? _formatDateRange(group.earliestDate, group.latestDate)
@@ -500,9 +479,9 @@ class _SmartPlaylistEpisodesScreenState
     Map<int, SmartPlaylistEpisodeData> episodeMap,
     ThemeData theme,
   ) {
-    final mode = widget.smartPlaylist.yearHeaderMode;
+    final mode = widget.smartPlaylist.yearBinding;
 
-    if (mode == YearHeaderMode.firstEpisode) {
+    if (mode == YearBinding.pinToYear) {
       return _buildFirstEpisodeYearGroups(groups, episodeMap, theme);
     }
 
@@ -551,7 +530,7 @@ class _SmartPlaylistEpisodesScreenState
       sortedYears: sortedYears,
       itemBuilder: (context, group) => _SmartPlaylistGroupCard(
         group: group,
-        showSeasonNumber: widget.smartPlaylist.showSeasonNumber,
+        prependSeasonNumber: widget.smartPlaylist.prependSeasonNumber,
         thumbnailUrl: group.thumbnailUrl,
         dateRange: group.showDateRange
             ? _formatDateRange(group.earliestDate, group.latestDate)
@@ -611,7 +590,7 @@ class _SmartPlaylistEpisodesScreenState
       sortedYears: sortedYears,
       itemBuilder: (context, item) => _SmartPlaylistGroupCard(
         group: item.group,
-        showSeasonNumber: widget.smartPlaylist.showSeasonNumber,
+        prependSeasonNumber: widget.smartPlaylist.prependSeasonNumber,
         thumbnailUrl: item.group.thumbnailUrl,
         episodeCount: item.filteredEpisodeIds.length,
         dateRange: item.group.showDateRange
@@ -814,7 +793,7 @@ class _YearFilteredGroup {
 class _SmartPlaylistGroupCard extends StatelessWidget {
   const _SmartPlaylistGroupCard({
     required this.group,
-    this.showSeasonNumber = false,
+    this.prependSeasonNumber = false,
     this.thumbnailUrl,
     this.episodeCount,
     this.dateRange,
@@ -826,7 +805,7 @@ class _SmartPlaylistGroupCard extends StatelessWidget {
   final SmartPlaylistGroup group;
 
   /// Whether to prepend "S{sortKey}" to the group title.
-  final bool showSeasonNumber;
+  final bool prependSeasonNumber;
 
   final String? thumbnailUrl;
 
@@ -846,7 +825,7 @@ class _SmartPlaylistGroupCard extends StatelessWidget {
   static const _thumbnailSize = 72.0;
 
   String _formatTitle() {
-    return group.formattedDisplayName(showSeasonNumber: showSeasonNumber);
+    return group.formattedDisplayName(prependSeasonNumber: prependSeasonNumber);
   }
 
   @override
