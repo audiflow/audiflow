@@ -17,12 +17,10 @@ class CategoryResolver implements SmartPlaylistResolver {
   String get type => 'category';
 
   @override
-  SmartPlaylistSortSpec get defaultSort => const SmartPlaylistSortSpec([
-    SmartPlaylistSortRule(
-      field: SmartPlaylistSortField.playlistNumber,
-      order: SortOrder.ascending,
-    ),
-  ]);
+  SmartPlaylistSortRule get defaultSort => const SmartPlaylistSortRule(
+    field: SmartPlaylistSortField.playlistNumber,
+    order: SortOrder.ascending,
+  );
 
   @override
   SmartPlaylistGrouping? resolve(
@@ -42,18 +40,9 @@ class CategoryResolver implements SmartPlaylistResolver {
     List<SmartPlaylistGroupDef> groupDefs,
   ) {
     // Separate pattern groups from fallback
-    final patternGroups =
-        <
-          ({
-            RegExp regex,
-            String id,
-            String displayName,
-            bool? episodeYearHeaders,
-          })
-        >[];
+    final patternGroups = <({RegExp regex, String id, String displayName})>[];
     String? fallbackId;
     String? fallbackDisplayName;
-    bool? fallbackEpisodeYearHeaders;
 
     for (final g in groupDefs) {
       if (g.pattern != null) {
@@ -61,12 +50,10 @@ class CategoryResolver implements SmartPlaylistResolver {
           regex: RegExp(g.pattern!),
           id: g.id,
           displayName: g.displayName,
-          episodeYearHeaders: g.episodeYearHeaders,
         ));
       } else {
         fallbackId = g.id;
         fallbackDisplayName = g.displayName;
-        fallbackEpisodeYearHeaders = g.episodeYearHeaders;
       }
     }
 
@@ -101,7 +88,6 @@ class CategoryResolver implements SmartPlaylistResolver {
             id: pg.id,
             displayName: pg.displayName,
             episodeIds: ids,
-            episodeYearHeaders: pg.episodeYearHeaders,
           ),
         );
       }
@@ -113,7 +99,6 @@ class CategoryResolver implements SmartPlaylistResolver {
           id: fallbackId!,
           displayName: fallbackDisplayName!,
           episodeIds: fallbackIds,
-          episodeYearHeaders: fallbackEpisodeYearHeaders,
         ),
       );
     }
@@ -141,18 +126,18 @@ class CategoryResolver implements SmartPlaylistResolver {
     );
   }
 
-  static SmartPlaylistContentType parseContentType(String? value) {
+  static PlaylistStructure parsePlaylistStructure(String? value) {
     return switch (value) {
-      'groups' => SmartPlaylistContentType.groups,
-      _ => SmartPlaylistContentType.episodes,
+      'grouped' => PlaylistStructure.grouped,
+      _ => PlaylistStructure.split,
     };
   }
 
-  static YearHeaderMode parseYearHeaderMode(String? value) {
+  static YearBinding parseYearBinding(String? value) {
     return switch (value) {
-      'firstEpisode' => YearHeaderMode.firstEpisode,
-      'perEpisode' => YearHeaderMode.perEpisode,
-      _ => YearHeaderMode.none,
+      'pinToYear' => YearBinding.pinToYear,
+      'splitByYear' => YearBinding.splitByYear,
+      _ => YearBinding.none,
     };
   }
 }
