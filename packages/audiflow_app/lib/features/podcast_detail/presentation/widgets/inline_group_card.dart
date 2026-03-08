@@ -91,6 +91,7 @@ class InlineGroupCard extends StatelessWidget {
                 const SizedBox(width: Spacing.sm),
                 Expanded(
                   child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
@@ -98,7 +99,7 @@ class InlineGroupCard extends StatelessWidget {
                           showSeasonNumber: showSeasonNumber,
                         ),
                         style: theme.textTheme.titleSmall,
-                        maxLines: 2,
+                        maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 2),
