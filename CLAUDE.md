@@ -71,7 +71,8 @@ When the upstream schema changes:
 Always use schema-valid values in test data:
 - Resolver types: `'rss'`, `'category'`, `'year'`, `'titleAppearanceOrder'`
 - Playlist structures: `'split'`, `'grouped'` (not `'episodes'`, `'groups'`)
-- Sort fields: use `SmartPlaylistSortField` enum names — `publishedAt`, `episodeNumber`, `title` (not `progress`)
+- Group sort fields (`SmartPlaylistSortField`): `playlistNumber`, `newestEpisodeDate`, `alphabetical`
+- Episode sort fields (`EpisodeSortField`): `publishedAt`, `episodeNumber`, `title`
 - Sort orders: `'ascending'`, `'descending'`
 - Year binding: `'none'`, `'pinToYear'`, `'splitByYear'` (not `YearHeaderMode` values)
 - Episode filters: use `episodeFilters` with `require`/`exclude` arrays of `EpisodeFilterEntry` (not flat `titleFilter`/`excludeFilter`/`requireFilter`)
@@ -79,8 +80,8 @@ Always use schema-valid values in test data:
 ### v2 model structure
 
 Key types and their JSON fields:
-- `SmartPlaylistDefinition`: `playlistStructure`, `resolver`, `episodeFilters`, `groupList`, `episodeList`, `episodeExtractor`, `prependSeasonNumber`
-- `SmartPlaylistGroupDef`: `name`, `resolver`, `display`, `episodeList`, `episodeExtractor`
+- `SmartPlaylistDefinition`: `id`, `displayName`, `resolverType`, `playlistStructure`, `episodeFilters`, `groupList`, `episodeList`, `episodeExtractor`, `prependSeasonNumber`
+- `SmartPlaylistGroupDef`: `id`, `displayName`, `pattern`, `display`, `episodeList`, `episodeExtractor`
 - `GroupListConfig`: `yearBinding`, `userSortable`, `showDateRange`, `sort`
 - `EpisodeListConfig`: `showYearHeaders`, `sort`, `titleExtractor`
 - `GroupDisplayConfig`: `showDateRange`, `yearBinding`

@@ -107,7 +107,7 @@ class CategoryResolver implements SmartPlaylistResolver {
 
     // Return each category group as a separate SmartPlaylist.
     // The service wraps these into a parent playlist when
-    // contentType == "groups".
+    // playlistStructure == "grouped".
     final playlists = groups
         .map(
           (g) => SmartPlaylist(
