@@ -95,7 +95,7 @@ void main() {
       expect(tapped, isTrue);
     });
 
-    testWidgets('shows placeholder when no thumbnail URL', (tester) async {
+    testWidgets('hides thumbnail when thumbnailUrl is null', (tester) async {
       final group = SmartPlaylistGroup(
         id: 'group-1',
         displayName: 'Season 1',
@@ -107,7 +107,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.byIcon(Icons.folder_outlined), findsOneWidget);
+      expect(find.byIcon(Icons.folder_outlined), findsNothing);
     });
   });
 

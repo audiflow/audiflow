@@ -18,9 +18,8 @@ const double yearHeaderHeight = 44.0;
 /// because Flutter can compute which items are visible at any offset without
 /// building intermediate items.
 ///
-/// Year offsets are estimated from [estimatedItemExtent] and item counts
-/// for jump-to-year navigation.  Items use [SliverList] so variable-height
-/// tiles render without overlap.
+/// Year offsets are estimated from [itemExtent] and item counts
+/// for jump-to-year navigation.
 ///
 /// A [SliverLayoutBuilder] captures the preceding scroll extent (height of
 /// all slivers before the year-grouped content) so jump-to-year accounts
@@ -140,11 +139,7 @@ List<Widget> buildYearGroupedSlivers<T>({
   for (final year in sortedYears) {
     final items = itemsByYear[year]!;
 
-    if (year == firstYear) {
-      slivers.add(
-        SliverToBoxAdapter(child: SizedBox(height: yearHeaderHeight)),
-      );
-    } else {
+    if (year != firstYear) {
       slivers.add(
         SliverToBoxAdapter(
           child: _InlineYearDivider(year: year, onTap: onYearHeaderTap),

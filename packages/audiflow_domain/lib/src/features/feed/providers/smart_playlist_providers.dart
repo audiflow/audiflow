@@ -235,8 +235,9 @@ Future<SmartPlaylistGrouping?> _resolveAndPersistSmartPlaylists(
   Ref ref,
   int podcastId,
   String feedUrl,
-  dynamic logger,
-) async {
+  dynamic logger, {
+  String? podcastImageUrl,
+}) async {
   final episodeRepo = ref.watch(episodeRepositoryProvider);
   final playlistDatasource = ref.watch(smartPlaylistLocalDatasourceProvider);
 
@@ -293,6 +294,7 @@ Future<SmartPlaylistGrouping?> _resolveAndPersistSmartPlaylists(
   // Find the latest episode thumbnail for each smart playlist
   final enrichedPlaylists = <SmartPlaylist>[];
   final companions = <SmartPlaylistsCompanion>[];
+  final podcastImage = podcastImageUrl ?? findPodcastImageUrl(episodes);
 
   for (final playlist in result.playlists) {
     _enrichPlaylist(
@@ -302,6 +304,7 @@ Future<SmartPlaylistGrouping?> _resolveAndPersistSmartPlaylists(
       podcastId,
       enrichedPlaylists,
       companions,
+      podcastImageUrl: podcastImage,
     );
   }
 
@@ -346,6 +349,41 @@ Future<SmartPlaylistGrouping?> _resolveAndPersistSmartPlaylists(
   );
 }
 
+/// Finds the podcast-level imageUrl when a clear majority of
+/// episodes share the same artwork.
+///
+/// Returns the most common imageUrl only if it appears in more
+/// than half of the episodes that have an imageUrl. This avoids
+/// false positives when seasons use distinct artwork with
+/// similar episode counts.
+@visibleForTesting
+String? findPodcastImageUrl(List<Episode> episodes) {
+  final counts = <String, int>{};
+  var totalWithImage = 0;
+  for (final ep in episodes) {
+    final url = ep.imageUrl;
+    if (url != null) {
+      totalWithImage++;
+      counts[url] = (counts[url] ?? 0) + 1;
+    }
+  }
+  if (counts.isEmpty) return null;
+
+  String? mostCommon;
+  var maxCount = 0;
+  for (final entry in counts.entries) {
+    if (maxCount < entry.value) {
+      maxCount = entry.value;
+      mostCommon = entry.key;
+    }
+  }
+
+  // Require a strict majority to avoid ambiguous cases
+  if (maxCount * 2 <= totalWithImage) return null;
+
+  return mostCommon;
+}
+
 /// Enriches a playlist with thumbnails and builds the
 /// companion for database persistence.
 void _enrichPlaylist(
@@ -354,8 +392,9 @@ void _enrichPlaylist(
   SmartPlaylistGrouping result,
   int podcastId,
   List<SmartPlaylist> enrichedPlaylists,
-  List<SmartPlaylistsCompanion> companions,
-) {
+  List<SmartPlaylistsCompanion> companions, {
+  String? podcastImageUrl,
+}) {
   // Get episodes for this playlist, sorted by publishedAt
   // (newest first)
   final playlistEpisodes =
@@ -380,7 +419,7 @@ void _enrichPlaylist(
 
   // Enrich groups with thumbnails
   final enrichedGroups = playlist.groups?.map((group) {
-    return _enrichGroup(group, episodes);
+    return _enrichGroup(group, episodes, podcastImageUrl: podcastImageUrl);
   }).toList();
 
   enrichedPlaylists.add(
@@ -401,10 +440,14 @@ void _enrichPlaylist(
 }
 
 /// Enriches a group with thumbnail and date/duration metadata.
+///
+/// When [podcastImageUrl] is provided, group thumbnails that match
+/// it are suppressed (set to null) to avoid redundant artwork.
 SmartPlaylistGroup _enrichGroup(
   SmartPlaylistGroup group,
-  List<Episode> episodes,
-) {
+  List<Episode> episodes, {
+  String? podcastImageUrl,
+}) {
   final groupEpisodes =
       episodes.where((e) => group.episodeIds.contains(e.id)).toList()
         ..sort((a, b) {
@@ -421,6 +464,13 @@ SmartPlaylistGroup _enrichGroup(
     if (ep.imageUrl != null) {
       groupThumb = ep.imageUrl;
       break;
+    }
+  }
+
+  // Suppress thumbnail if it matches the podcast-level image
+  if (groupThumb != null && podcastImageUrl != null) {
+    if (groupThumb == podcastImageUrl) {
+      groupThumb = null;
     }
   }
 
@@ -577,8 +627,9 @@ Future<List<SmartPlaylistEpisodeData>> smartPlaylistEpisodes(
 Future<SmartPlaylistGrouping?> _reResolveFromEpisodes(
   Ref ref,
   int podcastId,
-  String feedUrl,
-) async {
+  String feedUrl, {
+  String? podcastImageUrl,
+}) async {
   final episodeRepo = ref.watch(episodeRepositoryProvider);
 
   // Load matching config from repository
@@ -609,6 +660,7 @@ Future<SmartPlaylistGrouping?> _reResolveFromEpisodes(
   if (result == null) return null;
 
   // Enrich playlists and their groups with thumbnails
+  final podcastImage = podcastImageUrl ?? findPodcastImageUrl(episodes);
   final enriched = result.playlists.map((playlist) {
     final playlistEpisodes =
         episodes.where((e) => playlist.episodeIds.contains(e.id)).toList()
@@ -631,7 +683,7 @@ Future<SmartPlaylistGrouping?> _reResolveFromEpisodes(
 
     // Enrich groups with thumbnails
     final enrichedGroups = playlist.groups?.map((group) {
-      return _enrichGroup(group, episodes);
+      return _enrichGroup(group, episodes, podcastImageUrl: podcastImage);
     }).toList();
 
     return playlist.copyWith(

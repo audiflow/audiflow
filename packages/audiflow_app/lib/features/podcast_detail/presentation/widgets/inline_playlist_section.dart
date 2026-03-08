@@ -121,7 +121,6 @@ List<Widget> _buildPlaylistData({
       playlist: playlist,
       searchQuery: searchQuery,
       sortOrder: sortOrder,
-      artworkUrl: artworkUrl,
       scrollController: scrollController,
       onToggleSortOrder: onToggleSortOrder,
       onNavigateToGroup: onNavigateToGroup,
@@ -195,7 +194,6 @@ List<Widget> _buildInlineGroupList({
   required SmartPlaylist playlist,
   required String searchQuery,
   required SortOrder sortOrder,
-  required String? artworkUrl,
   required ScrollController scrollController,
   required VoidCallback onToggleSortOrder,
   required void Function(
@@ -248,7 +246,6 @@ List<Widget> _buildInlineGroupList({
           return InlineGroupCard(
             group: group,
             showSeasonNumber: playlist.showSeasonNumber,
-            podcastArtworkUrl: artworkUrl,
             onTap: () => onNavigateToGroup(playlist, group),
           );
         },
@@ -262,7 +259,6 @@ List<Widget> _buildInlineGroupList({
       episodeMap: episodeMap,
       playlist: playlist,
       sortOrder: sortOrder,
-      artworkUrl: artworkUrl,
       scrollController: scrollController,
       onToggleSortOrder: onToggleSortOrder,
       onNavigateToGroup: onNavigateToGroup,
@@ -312,7 +308,6 @@ List<Widget> _buildInlineGroupList({
       itemBuilder: (context, group) => InlineGroupCard(
         group: group,
         showSeasonNumber: playlist.showSeasonNumber,
-        podcastArtworkUrl: artworkUrl,
         onTap: () => onNavigateToGroup(playlist, group),
       ),
       scrollController: scrollController,
@@ -327,7 +322,6 @@ List<Widget> _buildPerEpisodeInlineGroups({
   required Map<int, SmartPlaylistEpisodeData> episodeMap,
   required SmartPlaylist playlist,
   required SortOrder sortOrder,
-  required String? artworkUrl,
   required ScrollController scrollController,
   required VoidCallback onToggleSortOrder,
   required void Function(
@@ -387,7 +381,6 @@ List<Widget> _buildPerEpisodeInlineGroups({
       itemBuilder: (context, item) => InlineGroupCard(
         group: item.group,
         showSeasonNumber: playlist.showSeasonNumber,
-        podcastArtworkUrl: artworkUrl,
         episodeCountOverride: item.filteredEpisodeIds.length,
         onTap: () => onNavigateToGroup(
           playlist,
