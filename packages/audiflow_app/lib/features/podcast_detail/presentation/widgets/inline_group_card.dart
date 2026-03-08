@@ -7,10 +7,11 @@ import 'package:intl/intl.dart';
 import '../../../../l10n/app_localizations.dart';
 
 /// Formats a date range in Apple Podcasts style.
-String? formatDateRange(DateTime? earliest, DateTime? latest) {
+String? formatDateRange(DateTime? earliest, DateTime? latest, {DateTime? now}) {
   if (earliest == null || latest == null) return null;
-  final now = DateTime.now();
-  final bothCurrentYear = earliest.year == now.year && latest.year == now.year;
+  final now0 = now ?? DateTime.now();
+  final bothCurrentYear =
+      earliest.year == now0.year && latest.year == now0.year;
   final fmt = bothCurrentYear ? DateFormat('M/d') : DateFormat.yMMMd();
   if (earliest == latest) return fmt.format(earliest);
   return '${fmt.format(earliest)}\u301c${fmt.format(latest)}';

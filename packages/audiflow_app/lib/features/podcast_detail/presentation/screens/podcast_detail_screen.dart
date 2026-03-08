@@ -46,6 +46,12 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
   /// Local selected playlist ID for non-subscribed podcasts.
   String? _localSelectedPlaylistId;
 
+  /// Local sort order for non-subscribed podcasts.
+  SortOrder _localSortOrder = SortOrder.descending;
+
+  /// Local episode filter for non-subscribed podcasts.
+  EpisodeFilter _localEpisodeFilter = EpisodeFilter.all;
+
   Podcast get podcast => widget.podcast;
 
   /// RSS feed-level image URL for thumbnail deduplication.
@@ -108,10 +114,10 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
     final prefs = prefsAsync?.value;
 
     final viewMode = prefs?.viewMode ?? _localViewMode;
-    final filter = prefs?.episodeFilter ?? EpisodeFilter.all;
+    final filter = prefs?.episodeFilter ?? _localEpisodeFilter;
     final selectedPlaylistId =
         prefs?.selectedPlaylistId ?? _localSelectedPlaylistId;
-    final sortOrder = prefs?.episodeSortOrder ?? SortOrder.descending;
+    final sortOrder = prefs?.episodeSortOrder ?? _localSortOrder;
 
     final filteredAsync = ref.watch(
       filteredSortedEpisodesProvider(feedUrl, filter, sortOrder),
@@ -190,6 +196,10 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
                             ).notifier,
                           )
                           .setEpisodeFilter(f);
+                    } else {
+                      setState(() {
+                        _localEpisodeFilter = f;
+                      });
                     }
                   },
                 ),
@@ -264,7 +274,14 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
     if (feedUrl == null) return;
     final subscriptionAsync = ref.read(subscriptionByFeedUrlProvider(feedUrl));
     final subscription = subscriptionAsync.value;
-    if (subscription == null) return;
+    if (subscription == null) {
+      setState(() {
+        _localSortOrder = _localSortOrder == SortOrder.descending
+            ? SortOrder.ascending
+            : SortOrder.descending;
+      });
+      return;
+    }
     final prefsAsync = ref.read(
       podcastViewPreferenceControllerProvider(subscription.id),
     );
