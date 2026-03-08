@@ -1,30 +1,28 @@
 import 'smart_playlist_sort.dart';
 
-/// Whether a smart playlist directly contains episodes or groups.
-enum SmartPlaylistContentType {
-  /// Playlist directly contains an episode list.
-  episodes,
+/// Whether a smart playlist splits into separate playlists or
+/// groups inside one playlist.
+enum PlaylistStructure {
+  /// Each resolver result becomes a separate top-level playlist.
+  split,
 
-  /// Playlist contains groups; tapping a group opens its episode list.
-  groups,
+  /// All resolver results are collected as groups inside a single
+  /// parent playlist.
+  grouped,
 }
 
-/// How year headers are applied to groups or episodes.
-enum YearHeaderMode {
+/// How groups relate to year headers in the group list view.
+enum YearBinding {
   /// No year headers.
   none,
 
-  /// Group's year = first episode's publishedAt year. Group appears once.
-  firstEpisode,
+  /// Each group appears once, placed under the year of its
+  /// earliest episode.
+  pinToYear,
 
-  /// Group appears under each year it has episodes in.
-  /// Tapping shows only that year's episodes.
-  perEpisode,
+  /// A group appears under each year it has episodes in.
+  splitByYear,
 }
-
-/// Sub-category within a smart playlist for further episode grouping.
-@Deprecated('Use SmartPlaylistGroup instead')
-typedef SmartPlaylistSubCategory = SmartPlaylistGroup;
 
 /// A group within a smart playlist containing episodes.
 final class SmartPlaylistGroup {
@@ -35,12 +33,10 @@ final class SmartPlaylistGroup {
     this.sortKey = 0,
     this.thumbnailUrl,
     this.yearOverride,
-    this.episodeYearHeaders,
     this.showDateRange = false,
     this.earliestDate,
     this.latestDate,
     this.totalDurationMs,
-    @Deprecated('Use yearOverride instead') bool yearGrouped = false,
   });
 
   /// Unique identifier within the parent playlist.
@@ -58,13 +54,8 @@ final class SmartPlaylistGroup {
   /// Thumbnail URL from the latest episode in this group.
   final String? thumbnailUrl;
 
-  /// Per-group override of the parent playlist's yearHeaderMode.
-  final YearHeaderMode? yearOverride;
-
-  /// Per-group override of the parent playlist's episodeYearHeaders.
-  ///
-  /// When null, inherits the playlist-level setting.
-  final bool? episodeYearHeaders;
+  /// Per-group override of the parent playlist's yearBinding.
+  final YearBinding? yearOverride;
 
   /// Whether this group shows date range and duration metadata.
   final bool showDateRange;
@@ -82,8 +73,8 @@ final class SmartPlaylistGroup {
   int get episodeCount => episodeIds.length;
 
   /// Returns display name with optional season number prefix.
-  String formattedDisplayName({required bool showSeasonNumber}) {
-    if (showSeasonNumber && 0 < sortKey) {
+  String formattedDisplayName({required bool prependSeasonNumber}) {
+    if (prependSeasonNumber && 0 < sortKey) {
       return 'S$sortKey $displayName';
     }
     return displayName;
@@ -98,16 +89,13 @@ final class SmartPlaylist {
     required this.sortKey,
     required this.episodeIds,
     this.thumbnailUrl,
-    this.contentType = SmartPlaylistContentType.episodes,
-    this.yearHeaderMode = YearHeaderMode.none,
-    this.episodeYearHeaders = false,
+    this.playlistStructure = PlaylistStructure.split,
+    this.yearBinding = YearBinding.none,
     this.showDateRange = false,
-    this.showSortOrderToggle = false,
-    this.showSeasonNumber = false,
-    this.customSort,
+    this.userSortable = true,
+    this.prependSeasonNumber = false,
+    this.groupSort,
     this.groups,
-    @Deprecated('Use yearHeaderMode instead') bool yearGrouped = false,
-    @Deprecated('Use groups instead') List<SmartPlaylistGroup>? subCategories,
   });
 
   /// Unique identifier within podcast.
@@ -125,44 +113,33 @@ final class SmartPlaylist {
   /// Thumbnail URL from the latest episode in this smart playlist.
   final String? thumbnailUrl;
 
-  /// Whether this playlist contains episodes directly or groups.
-  final SmartPlaylistContentType contentType;
+  /// Whether this playlist splits into separate playlists or groups.
+  final PlaylistStructure playlistStructure;
 
-  /// How year headers are applied in the group list view.
-  final YearHeaderMode yearHeaderMode;
-
-  /// Whether episodes within groups show year headers.
-  final bool episodeYearHeaders;
+  /// How groups relate to year headers in the group list view.
+  final YearBinding yearBinding;
 
   /// Whether group cards should display a date range.
   final bool showDateRange;
 
-  /// Whether to explicitly show the sort order toggle.
-  final bool showSortOrderToggle;
+  /// Whether the user can toggle the sort order.
+  final bool userSortable;
 
   /// Whether to prepend a season number label (e.g. "S13") to group titles.
-  final bool showSeasonNumber;
+  final bool prependSeasonNumber;
 
-  /// Custom sort specification from the playlist definition.
-  final SmartPlaylistSortSpec? customSort;
+  /// Sort rule for ordering groups within this playlist.
+  final SmartPlaylistSortRule? groupSort;
 
-  /// Groups within this playlist (when contentType == groups).
+  /// Groups within this playlist (when playlistStructure == grouped).
   final List<SmartPlaylistGroup>? groups;
-
-  /// Whether episodes in this playlist are grouped by year.
-  @Deprecated('Use yearHeaderMode instead')
-  bool get yearGrouped => yearHeaderMode != YearHeaderMode.none;
-
-  /// Optional sub-categories for further grouping within this playlist.
-  @Deprecated('Use groups instead')
-  List<SmartPlaylistGroup>? get subCategories => groups;
 
   /// Number of episodes in this smart playlist.
   int get episodeCount => episodeIds.length;
 
   /// Returns display name with optional season number prefix.
   String get formattedDisplayName {
-    if (showSeasonNumber && 0 < sortKey) {
+    if (prependSeasonNumber && 0 < sortKey) {
       return 'S$sortKey $displayName';
     }
     return displayName;
@@ -175,16 +152,13 @@ final class SmartPlaylist {
     int? sortKey,
     List<int>? episodeIds,
     String? thumbnailUrl,
-    SmartPlaylistContentType? contentType,
-    YearHeaderMode? yearHeaderMode,
-    bool? episodeYearHeaders,
+    PlaylistStructure? playlistStructure,
+    YearBinding? yearBinding,
     bool? showDateRange,
-    bool? showSortOrderToggle,
-    bool? showSeasonNumber,
-    SmartPlaylistSortSpec? customSort,
+    bool? userSortable,
+    bool? prependSeasonNumber,
+    SmartPlaylistSortRule? groupSort,
     List<SmartPlaylistGroup>? groups,
-    @Deprecated('Use yearHeaderMode instead') bool? yearGrouped,
-    @Deprecated('Use groups instead') List<SmartPlaylistGroup>? subCategories,
   }) {
     return SmartPlaylist(
       id: id ?? this.id,
@@ -192,14 +166,13 @@ final class SmartPlaylist {
       sortKey: sortKey ?? this.sortKey,
       episodeIds: episodeIds ?? this.episodeIds,
       thumbnailUrl: thumbnailUrl ?? this.thumbnailUrl,
-      contentType: contentType ?? this.contentType,
-      yearHeaderMode: yearHeaderMode ?? this.yearHeaderMode,
-      episodeYearHeaders: episodeYearHeaders ?? this.episodeYearHeaders,
+      playlistStructure: playlistStructure ?? this.playlistStructure,
+      yearBinding: yearBinding ?? this.yearBinding,
       showDateRange: showDateRange ?? this.showDateRange,
-      showSortOrderToggle: showSortOrderToggle ?? this.showSortOrderToggle,
-      showSeasonNumber: showSeasonNumber ?? this.showSeasonNumber,
-      customSort: customSort ?? this.customSort,
-      groups: groups ?? subCategories ?? this.groups,
+      userSortable: userSortable ?? this.userSortable,
+      prependSeasonNumber: prependSeasonNumber ?? this.prependSeasonNumber,
+      groupSort: groupSort ?? this.groupSort,
+      groups: groups ?? this.groups,
     );
   }
 }
