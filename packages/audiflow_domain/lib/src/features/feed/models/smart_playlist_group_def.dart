@@ -1,56 +1,63 @@
+import 'episode_list_config.dart';
+import 'group_display_config.dart';
+import 'smart_playlist_episode_extractor.dart';
+
 /// Static group definition within a playlist.
-///
-/// Groups with a [pattern] match episodes by title regex.
-/// Groups without a pattern act as fallback (catch-all).
 final class SmartPlaylistGroupDef {
   const SmartPlaylistGroupDef({
     required this.id,
     required this.displayName,
     this.pattern,
-    this.episodeYearHeaders,
-    this.showDateRange,
+    this.display,
+    this.episodeList,
+    this.episodeExtractor,
   });
 
-  /// Creates a group definition from JSON configuration.
   factory SmartPlaylistGroupDef.fromJson(Map<String, dynamic> json) {
     return SmartPlaylistGroupDef(
       id: json['id'] as String,
       displayName: json['displayName'] as String,
       pattern: json['pattern'] as String?,
-      episodeYearHeaders: json['episodeYearHeaders'] as bool?,
-      showDateRange: json['showDateRange'] as bool?,
+      display: json['display'] != null
+          ? GroupDisplayConfig.fromJson(json['display'] as Map<String, dynamic>)
+          : null,
+      episodeList: json['episodeList'] != null
+          ? EpisodeListConfig.fromJson(
+              json['episodeList'] as Map<String, dynamic>,
+            )
+          : null,
+      episodeExtractor: json['episodeExtractor'] != null
+          ? SmartPlaylistEpisodeExtractor.fromJson(
+              json['episodeExtractor'] as Map<String, dynamic>,
+            )
+          : null,
     );
   }
 
-  /// Unique identifier for this group within the playlist.
   final String id;
-
-  /// Human-readable name for display.
   final String displayName;
 
-  /// Regex pattern to match episode titles.
-  ///
-  /// When null, this group acts as a catch-all fallback.
+  /// Regex pattern to match episode titles. Null = catch-all.
   final String? pattern;
 
-  /// Per-group override for episode year headers.
-  ///
-  /// When null, inherits the playlist-level setting.
-  final bool? episodeYearHeaders;
+  /// Per-group display overrides for the group card.
+  final GroupDisplayConfig? display;
 
-  /// Per-group override for showing date range and duration.
-  ///
-  /// When null, inherits the playlist-level setting.
-  final bool? showDateRange;
+  /// Per-group override for episode list settings.
+  final EpisodeListConfig? episodeList;
 
-  /// Converts to JSON representation.
+  /// Per-group override for episode number extraction.
+  final SmartPlaylistEpisodeExtractor? episodeExtractor;
+
   Map<String, dynamic> toJson() {
     return {
       'id': id,
       'displayName': displayName,
       if (pattern != null) 'pattern': pattern,
-      if (episodeYearHeaders != null) 'episodeYearHeaders': episodeYearHeaders,
-      if (showDateRange != null) 'showDateRange': showDateRange,
+      if (display != null) 'display': display!.toJson(),
+      if (episodeList != null) 'episodeList': episodeList!.toJson(),
+      if (episodeExtractor != null)
+        'episodeExtractor': episodeExtractor!.toJson(),
     };
   }
 }
