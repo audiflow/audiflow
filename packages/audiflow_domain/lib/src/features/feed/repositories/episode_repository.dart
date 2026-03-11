@@ -3,6 +3,7 @@ import 'package:audiflow_podcast/audiflow_podcast.dart';
 import '../../../common/database/app_database.dart';
 import '../models/feed_parse_progress.dart';
 import '../models/smart_playlist_episode_extractor.dart';
+import '../models/smart_playlist_pattern_config.dart';
 
 /// Repository interface for episode operations.
 ///
@@ -37,6 +38,17 @@ abstract class EpisodeRepository {
     int podcastId,
     List<PodcastItem> items, {
     SmartPlaylistEpisodeExtractor? extractor,
+  });
+
+  /// Upserts episodes with per-group extractor resolution.
+  ///
+  /// For each episode, resolves the most specific extractor by matching
+  /// against group patterns in the [config]. Falls back to definition-level
+  /// extractors when no group match is found.
+  Future<void> upsertFromFeedItemsWithConfig(
+    int podcastId,
+    List<PodcastItem> items, {
+    required SmartPlaylistPatternConfig config,
   });
 
   /// Returns episodes by their IDs.

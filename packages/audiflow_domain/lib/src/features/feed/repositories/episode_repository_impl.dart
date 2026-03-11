@@ -10,6 +10,8 @@ import '../../transcript/datasources/local/transcript_local_datasource.dart';
 import '../datasources/local/episode_local_datasource.dart';
 import '../models/feed_parse_progress.dart';
 import '../models/smart_playlist_episode_extractor.dart';
+import '../models/smart_playlist_pattern_config.dart';
+import '../services/episode_extractor_resolver.dart';
 import 'episode_repository.dart';
 
 part 'episode_repository_impl.g.dart';
@@ -80,6 +82,49 @@ class EpisodeRepositoryImpl implements EpisodeRepository {
       int? seasonNumber = item.seasonNumber;
       int? episodeNumber = item.episodeNumber;
 
+      if (extractor != null) {
+        final episodeData = _PodcastItemEpisodeData(item);
+        final extracted = extractor.extract(episodeData);
+        if (extracted.hasValues) {
+          seasonNumber = extracted.seasonNumber ?? seasonNumber;
+          episodeNumber = extracted.episodeNumber ?? episodeNumber;
+        }
+      }
+
+      return EpisodesCompanion.insert(
+        podcastId: podcastId,
+        guid: item.guid!,
+        title: item.title,
+        description: Value(item.description),
+        audioUrl: item.enclosureUrl!,
+        durationMs: Value(item.duration?.inMilliseconds),
+        publishedAt: Value(item.publishDate),
+        imageUrl: Value(item.primaryImage?.url),
+        episodeNumber: Value(episodeNumber),
+        seasonNumber: Value(seasonNumber),
+      );
+    }).toList();
+
+    await _datasource.upsertAll(companions);
+    await _storeTranscriptAndChapterData(podcastId, validItems);
+  }
+
+  @override
+  Future<void> upsertFromFeedItemsWithConfig(
+    int podcastId,
+    List<PodcastItem> items, {
+    required SmartPlaylistPatternConfig config,
+  }) async {
+    final resolver = EpisodeExtractorResolver();
+    final validItems = items
+        .where((item) => item.guid != null && item.enclosureUrl != null)
+        .toList();
+
+    final companions = validItems.map((item) {
+      int? seasonNumber = item.seasonNumber;
+      int? episodeNumber = item.episodeNumber;
+
+      final extractor = resolver.resolve(item.title, item.description, config);
       if (extractor != null) {
         final episodeData = _PodcastItemEpisodeData(item);
         final extracted = extractor.extract(episodeData);

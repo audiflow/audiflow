@@ -13,6 +13,7 @@ import '../models/feed_sync_result.dart';
 import '../../settings/providers/settings_providers.dart';
 import '../providers/smart_playlist_providers.dart';
 import '../repositories/episode_repository_impl.dart';
+import 'episode_extractor_resolver.dart';
 import 'feed_parser_service.dart';
 
 part 'feed_sync_service.g.dart';
@@ -148,14 +149,13 @@ class FeedSyncService {
       // Get known GUIDs for early termination
       final knownGuids = await episodeRepo.getGuidsByPodcastId(sub.id);
 
-      // Look up smart playlist extractor from pattern config
+      // Look up smart playlist pattern config for per-group extraction
       final patternConfig = await _ref.read(
         smartPlaylistPatternByFeedUrlProvider(sub.feedUrl).future,
       );
-      final extractor = patternConfig?.playlists
-          .map((d) => d.episodeExtractor)
-          .nonNulls
-          .firstOrNull;
+      final resolver = patternConfig != null
+          ? EpisodeExtractorResolver()
+          : null;
 
       // Parse with progress and batch storage
       var newEpisodeCount = 0;
@@ -164,12 +164,21 @@ class FeedSyncService {
         podcastId: sub.id,
         knownGuids: knownGuids,
         onBatchReady: (companions, mediaMetas) async {
-          // Apply extractor if available
-          if (extractor != null) {
+          // Apply per-group extractor resolution if pattern config
+          // is available.
+          if (resolver != null) {
             final enriched = companions.map((c) {
               final title = c.title.value;
+              final extractor = resolver.resolve(
+                title,
+                c.description.value,
+                patternConfig!,
+              );
+              if (extractor == null) return c;
+
               final episodeData = _CompanionEpisodeData(
                 title: title,
+                description: c.description.value,
                 seasonNumber: c.seasonNumber.value,
                 episodeNumber: c.episodeNumber.value,
               );
@@ -245,6 +254,7 @@ class FeedSyncService {
 class _CompanionEpisodeData implements EpisodeData {
   const _CompanionEpisodeData({
     required this.title,
+    this.description,
     this.seasonNumber,
     this.episodeNumber,
   });
@@ -253,7 +263,7 @@ class _CompanionEpisodeData implements EpisodeData {
   final String title;
 
   @override
-  String? get description => null;
+  final String? description;
 
   @override
   final int? seasonNumber;

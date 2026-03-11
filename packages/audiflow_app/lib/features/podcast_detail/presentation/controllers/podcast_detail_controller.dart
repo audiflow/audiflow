@@ -94,26 +94,25 @@ Future<ParsedFeed> podcastDetail(Ref ref, String feedUrl) async {
     if (subscription != null) {
       final episodeRepo = ref.read(episodeRepositoryProvider);
 
-      // Look up smart playlist pattern for this feed
+      // Look up smart playlist pattern for per-group extraction
       final pattern = await ref.read(
         smartPlaylistPatternByFeedUrlProvider(feedUrl).future,
       );
-      final extractor = pattern?.playlists
-          .map((d) => d.episodeExtractor)
-          .nonNulls
-          .firstOrNull;
       logger.d(
         'Smart playlist pattern lookup: '
         'feedUrl=$feedUrl, '
-        'pattern=${pattern?.id}, '
-        'hasExtractor=${extractor != null}',
+        'pattern=${pattern?.id}',
       );
 
-      await episodeRepo.upsertFromFeedItems(
-        subscription.id,
-        result.episodes,
-        extractor: extractor,
-      );
+      if (pattern != null) {
+        await episodeRepo.upsertFromFeedItemsWithConfig(
+          subscription.id,
+          result.episodes,
+          config: pattern,
+        );
+      } else {
+        await episodeRepo.upsertFromFeedItems(subscription.id, result.episodes);
+      }
       logger.d(
         'Persisted ${result.episodes.length} episodes '
         'for subscription',
