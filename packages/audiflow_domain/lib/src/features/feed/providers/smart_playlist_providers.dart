@@ -216,6 +216,7 @@ Future<SmartPlaylistGrouping?> _buildGroupingFromCache(
       sortKey: entity.sortKey,
       episodeIds: episodeIds,
       thumbnailUrl: entity.thumbnailUrl,
+      playlistStructure: PlaylistStructure.fromString(entity.playlistStructure),
       yearBinding: YearBinding.fromString(entity.yearHeaderMode),
     );
   }).toList();
