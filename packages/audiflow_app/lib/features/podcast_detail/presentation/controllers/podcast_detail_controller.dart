@@ -407,7 +407,7 @@ Future<SmartPlaylistGrouping?> sortedPodcastSmartPlaylists(
       final directed = groupSort.order == SortOrder.ascending
           ? comparison
           : -comparison;
-      return sortOrder == SortOrder.ascending ? directed : -directed;
+      return sortOrder != groupSort.order ? -directed : directed;
     });
 
     specialPlaylists.sort(
@@ -568,7 +568,7 @@ SmartPlaylistGrouping? _resolveFromFeedByCategory(
     final defGroups = definition.groups ?? [];
     final matchers = defGroups
         .where((g) => g.pattern != null)
-        .map((g) => (regex: RegExp(g.pattern!), def: g))
+        .map((g) => (regex: RegExp(g.pattern!, caseSensitive: false), def: g))
         .toList();
 
     // Group episodes into sub-groups within this playlist.
