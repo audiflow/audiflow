@@ -14,7 +14,7 @@ final class GroupListConfig {
   factory GroupListConfig.fromJson(Map<String, dynamic> json) {
     return GroupListConfig(
       yearBinding: json['yearBinding'] != null
-          ? YearBinding.values.byName(json['yearBinding'] as String)
+          ? YearBinding.fromString(json['yearBinding'] as String)
           : null,
       userSortable: json['userSortable'] as bool?,
       showDateRange: json['showDateRange'] as bool?,
