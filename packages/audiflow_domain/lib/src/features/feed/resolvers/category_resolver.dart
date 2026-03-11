@@ -47,7 +47,7 @@ class CategoryResolver implements SmartPlaylistResolver {
     for (final g in groupDefs) {
       if (g.pattern != null) {
         patternGroups.add((
-          regex: RegExp(g.pattern!),
+          regex: RegExp(g.pattern!, caseSensitive: false),
           id: g.id,
           displayName: g.displayName,
         ));
