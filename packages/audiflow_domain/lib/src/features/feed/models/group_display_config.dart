@@ -8,7 +8,7 @@ final class GroupDisplayConfig {
     return GroupDisplayConfig(
       showDateRange: json['showDateRange'] as bool?,
       yearBinding: json['yearBinding'] != null
-          ? YearBinding.values.byName(json['yearBinding'] as String)
+          ? YearBinding.fromString(json['yearBinding'] as String)
           : null,
     );
   }
