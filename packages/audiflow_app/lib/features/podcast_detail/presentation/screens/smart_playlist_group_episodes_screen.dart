@@ -54,9 +54,18 @@ class _SmartPlaylistGroupEpisodesScreenState
   List<int> get _episodeIds =>
       widget.filteredEpisodeIds ?? widget.group.episodeIds;
 
+  /// Effective year binding for this group.
+  ///
+  /// Per-group yearOverride takes precedence over the parent playlist's
+  /// yearBinding. Used to decide whether year headers should be shown.
+  YearBinding get _yearBinding =>
+      widget.group.yearOverride ?? widget.parentPlaylist.yearBinding;
+
   bool get _showYearHeaders {
-    // Per-group override takes precedence, then fall back to the
-    // parent playlist's definition-level episodeList.showYearHeaders.
+    // If yearBinding is active, year headers are implied.
+    if (_yearBinding != YearBinding.none) return true;
+    // Per-group showYearHeaders override takes precedence, then fall
+    // back to the parent playlist's definition-level setting.
     final groupOverride = widget.group.showYearHeaders;
     if (groupOverride != null) return groupOverride;
     return widget.parentPlaylist.showYearHeaders;
