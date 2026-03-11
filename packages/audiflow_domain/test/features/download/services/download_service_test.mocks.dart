@@ -15,9 +15,11 @@ import 'package:audiflow_domain/src/features/download/services/download_file_ser
 import 'package:audiflow_domain/src/features/download/services/download_queue_service.dart'
     as _i6;
 import 'package:audiflow_domain/src/features/feed/models/feed_parse_progress.dart'
-    as _i12;
+    as _i13;
 import 'package:audiflow_domain/src/features/feed/models/smart_playlist_episode_extractor.dart'
     as _i11;
+import 'package:audiflow_domain/src/features/feed/models/smart_playlist_pattern_config.dart'
+    as _i12;
 import 'package:audiflow_domain/src/features/feed/repositories/episode_repository.dart'
     as _i9;
 import 'package:audiflow_podcast/audiflow_podcast.dart' as _i10;
@@ -445,6 +447,23 @@ class MockEpisodeRepository extends _i1.Mock implements _i9.EpisodeRepository {
           as _i3.Future<void>);
 
   @override
+  _i3.Future<void> upsertFromFeedItemsWithConfig(
+    int? podcastId,
+    List<_i10.PodcastItem>? items, {
+    required _i12.SmartPlaylistPatternConfig? config,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(
+              #upsertFromFeedItemsWithConfig,
+              [podcastId, items],
+              {#config: config},
+            ),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
+
+  @override
   _i3.Future<List<_i4.Episode>> getByIds(List<int>? ids) =>
       (super.noSuchMethod(
             Invocation.method(#getByIds, [ids]),
@@ -463,7 +482,7 @@ class MockEpisodeRepository extends _i1.Mock implements _i9.EpisodeRepository {
   @override
   _i3.Future<void> storeTranscriptAndChapterDataFromParsed(
     int? podcastId,
-    List<_i12.ParsedEpisodeMediaMeta>? mediaMetas,
+    List<_i13.ParsedEpisodeMediaMeta>? mediaMetas,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#storeTranscriptAndChapterDataFromParsed, [

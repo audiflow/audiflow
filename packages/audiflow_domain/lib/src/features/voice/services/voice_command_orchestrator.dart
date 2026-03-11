@@ -9,6 +9,7 @@ import '../models/voice_recognition_state.dart';
 import '../repositories/speech_recognition_repository.dart';
 import '../repositories/speech_recognition_repository_impl.dart';
 import 'play_podcast_by_name_service.dart';
+import 'voice_command_executor.dart';
 
 part 'voice_command_orchestrator.g.dart';
 
@@ -27,6 +28,7 @@ part 'voice_command_orchestrator.g.dart';
 class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
   late final SpeechRecognitionRepository _speechRepository;
   late final PlayPodcastByNameService _playPodcastService;
+  late final VoiceCommandExecutor _executor;
   late final Logger? _logger;
 
   bool _isInitialized = false;
@@ -36,6 +38,7 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
   VoiceRecognitionState build() {
     _speechRepository = ref.watch(speechRecognitionRepositoryProvider);
     _playPodcastService = ref.watch(playPodcastByNameServiceProvider);
+    _executor = ref.watch(voiceCommandExecutorProvider);
     _logger = ref.watch(namedLoggerProvider('VoiceOrchestrator'));
 
     ref.onDispose(_cleanup);
@@ -205,23 +208,31 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
         case VoiceIntent.play:
           await _handlePlayCommand(command);
         case VoiceIntent.pause:
+          await _executor.pause();
           state = const VoiceRecognitionState.success(message: 'Paused');
         case VoiceIntent.stop:
+          await _executor.stop();
           state = const VoiceRecognitionState.success(message: 'Stopped');
         case VoiceIntent.search:
+          // Search navigation is handled by the UI layer
+          // reacting to the success state with a query parameter.
           final query = command.parameters['query'] ?? '';
           state = VoiceRecognitionState.success(
             message: 'Searching for "$query"',
           );
         case VoiceIntent.skipForward:
+          await _executor.skipForward();
           state = const VoiceRecognitionState.success(
             message: 'Skipping forward',
           );
         case VoiceIntent.skipBackward:
+          await _executor.skipBackward();
           state = const VoiceRecognitionState.success(
             message: 'Skipping backward',
           );
         case VoiceIntent.goToLibrary:
+          // Navigation intents are handled by the UI layer
+          // reacting to the executing/success state.
           state = const VoiceRecognitionState.success(
             message: 'Opening library',
           );
@@ -232,16 +243,23 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
             message: 'Opening settings',
           );
         case VoiceIntent.addToQueue:
+          // addToQueue requires episode context from the UI layer
           state = const VoiceRecognitionState.success(
             message: 'Added to queue',
           );
         case VoiceIntent.removeFromQueue:
+          // removeFromQueue requires queue item ID from the UI layer
           state = const VoiceRecognitionState.success(
             message: 'Removed from queue',
           );
         case VoiceIntent.clearQueue:
+          await _executor.clearQueue();
           state = const VoiceRecognitionState.success(message: 'Queue cleared');
         case VoiceIntent.seek:
+          final seconds = int.tryParse(command.parameters['seconds'] ?? '');
+          if (seconds != null) {
+            await _executor.seek(Duration(seconds: seconds));
+          }
           state = const VoiceRecognitionState.success(message: 'Seeking');
         case VoiceIntent.unknown:
           state = VoiceRecognitionState.error(

@@ -5,12 +5,14 @@
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'dart:async' as _i4;
 
-import 'package:audiflow_core/audiflow_core.dart' as _i13;
+import 'package:audiflow_core/audiflow_core.dart' as _i14;
 import 'package:audiflow_domain/src/common/database/app_database.dart' as _i2;
 import 'package:audiflow_domain/src/features/feed/models/feed_parse_progress.dart'
-    as _i10;
+    as _i11;
 import 'package:audiflow_domain/src/features/feed/models/smart_playlist_episode_extractor.dart'
     as _i9;
+import 'package:audiflow_domain/src/features/feed/models/smart_playlist_pattern_config.dart'
+    as _i10;
 import 'package:audiflow_domain/src/features/feed/repositories/episode_repository.dart'
     as _i7;
 import 'package:audiflow_domain/src/features/queue/models/playback_queue.dart'
@@ -18,9 +20,9 @@ import 'package:audiflow_domain/src/features/queue/models/playback_queue.dart'
 import 'package:audiflow_domain/src/features/queue/repositories/queue_repository.dart'
     as _i3;
 import 'package:audiflow_domain/src/features/settings/repositories/app_settings_repository.dart'
-    as _i11;
+    as _i12;
 import 'package:audiflow_podcast/audiflow_podcast.dart' as _i8;
-import 'package:flutter/material.dart' as _i12;
+import 'package:flutter/material.dart' as _i13;
 import 'package:mockito/mockito.dart' as _i1;
 import 'package:mockito/src/dummies.dart' as _i6;
 
@@ -231,6 +233,23 @@ class MockEpisodeRepository extends _i1.Mock implements _i7.EpisodeRepository {
           as _i4.Future<void>);
 
   @override
+  _i4.Future<void> upsertFromFeedItemsWithConfig(
+    int? podcastId,
+    List<_i8.PodcastItem>? items, {
+    required _i10.SmartPlaylistPatternConfig? config,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(
+              #upsertFromFeedItemsWithConfig,
+              [podcastId, items],
+              {#config: config},
+            ),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
+
+  @override
   _i4.Future<List<_i2.Episode>> getByIds(List<int>? ids) =>
       (super.noSuchMethod(
             Invocation.method(#getByIds, [ids]),
@@ -249,7 +268,7 @@ class MockEpisodeRepository extends _i1.Mock implements _i7.EpisodeRepository {
   @override
   _i4.Future<void> storeTranscriptAndChapterDataFromParsed(
     int? podcastId,
-    List<_i10.ParsedEpisodeMediaMeta>? mediaMetas,
+    List<_i11.ParsedEpisodeMediaMeta>? mediaMetas,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#storeTranscriptAndChapterDataFromParsed, [
@@ -282,21 +301,21 @@ class MockEpisodeRepository extends _i1.Mock implements _i7.EpisodeRepository {
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockAppSettingsRepository extends _i1.Mock
-    implements _i11.AppSettingsRepository {
+    implements _i12.AppSettingsRepository {
   MockAppSettingsRepository() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  _i12.ThemeMode getThemeMode() =>
+  _i13.ThemeMode getThemeMode() =>
       (super.noSuchMethod(
             Invocation.method(#getThemeMode, []),
-            returnValue: _i12.ThemeMode.system,
+            returnValue: _i13.ThemeMode.system,
           )
-          as _i12.ThemeMode);
+          as _i13.ThemeMode);
 
   @override
-  _i4.Future<void> setThemeMode(_i12.ThemeMode? mode) =>
+  _i4.Future<void> setThemeMode(_i13.ThemeMode? mode) =>
       (super.noSuchMethod(
             Invocation.method(#setThemeMode, [mode]),
             returnValue: _i4.Future<void>.value(),
@@ -416,15 +435,15 @@ class MockAppSettingsRepository extends _i1.Mock
           as _i4.Future<void>);
 
   @override
-  _i13.AutoPlayOrder getAutoPlayOrder() =>
+  _i14.AutoPlayOrder getAutoPlayOrder() =>
       (super.noSuchMethod(
             Invocation.method(#getAutoPlayOrder, []),
-            returnValue: _i13.AutoPlayOrder.oldestFirst,
+            returnValue: _i14.AutoPlayOrder.oldestFirst,
           )
-          as _i13.AutoPlayOrder);
+          as _i14.AutoPlayOrder);
 
   @override
-  _i4.Future<void> setAutoPlayOrder(_i13.AutoPlayOrder? order) =>
+  _i4.Future<void> setAutoPlayOrder(_i14.AutoPlayOrder? order) =>
       (super.noSuchMethod(
             Invocation.method(#setAutoPlayOrder, [order]),
             returnValue: _i4.Future<void>.value(),
