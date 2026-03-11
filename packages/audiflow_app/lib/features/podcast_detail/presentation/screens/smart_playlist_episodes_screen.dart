@@ -440,14 +440,115 @@ class _SmartPlaylistEpisodesScreenState
     Map<int, SmartPlaylistEpisodeData> episodeMap,
     ThemeData theme,
   ) {
-    final mode = widget.smartPlaylist.yearBinding;
+    final defaultMode = widget.smartPlaylist.yearBinding;
 
-    if (mode == YearBinding.pinToYear) {
-      return _buildFirstEpisodeYearGroups(groups, episodeMap, theme);
+    // Check if any group has a per-group yearOverride that
+    // differs from the playlist-level default.
+    final hasMixedModes = groups.any(
+      (g) => g.yearOverride != null && g.yearOverride != defaultMode,
+    );
+
+    if (!hasMixedModes) {
+      // All groups use the same mode.
+      if (defaultMode == YearBinding.pinToYear) {
+        return _buildFirstEpisodeYearGroups(groups, episodeMap, theme);
+      }
+      return _buildPerEpisodeYearGroups(groups, episodeMap, theme);
     }
 
-    // perEpisode mode
-    return _buildPerEpisodeYearGroups(groups, episodeMap, theme);
+    // Mixed modes: partition groups by their effective
+    // yearBinding and merge results.
+    return _buildMixedYearGroups(groups, episodeMap, theme, defaultMode);
+  }
+
+  List<Widget> _buildMixedYearGroups(
+    List<SmartPlaylistGroup> groups,
+    Map<int, SmartPlaylistEpisodeData> episodeMap,
+    ThemeData theme,
+    YearBinding defaultMode,
+  ) {
+    // Build a year-keyed map of items, handling each group
+    // according to its effective yearBinding.
+    final byYear = <int, List<_YearFilteredGroup>>{};
+
+    for (final group in groups) {
+      final mode = group.yearOverride ?? defaultMode;
+
+      if (mode == YearBinding.splitByYear) {
+        // Split: group appears under each year it has
+        // episodes in.
+        final yearIds = <int, List<int>>{};
+        for (final id in group.episodeIds) {
+          final ep = episodeMap[id];
+          final year = ep?.episode.publishedAt?.year ?? 0;
+          yearIds.putIfAbsent(year, () => []).add(id);
+        }
+        for (final entry in yearIds.entries) {
+          byYear
+              .putIfAbsent(entry.key, () => [])
+              .add(
+                _YearFilteredGroup(
+                  group: group,
+                  filteredEpisodeIds: entry.value,
+                ),
+              );
+        }
+      } else {
+        // pinToYear: group appears once under first
+        // episode's year.
+        var year = 0;
+        if (group.episodeIds.isNotEmpty) {
+          final firstId = group.episodeIds.first;
+          final ep = episodeMap[firstId];
+          year = ep?.episode.publishedAt?.year ?? 0;
+        }
+        byYear
+            .putIfAbsent(year, () => [])
+            .add(
+              _YearFilteredGroup(
+                group: group,
+                filteredEpisodeIds: group.episodeIds,
+              ),
+            );
+      }
+    }
+
+    final sortedYears = byYear.keys.toList()
+      ..sort(
+        _sortOrder == SortOrder.descending
+            ? (a, b) => b.compareTo(a)
+            : (a, b) => a.compareTo(b),
+      );
+
+    final l10n = AppLocalizations.of(context);
+
+    return buildYearGroupedSlivers<_YearFilteredGroup>(
+      itemsByYear: byYear,
+      sortedYears: sortedYears,
+      itemBuilder: (context, item) => _SmartPlaylistGroupCard(
+        group: item.group,
+        prependSeasonNumber: widget.smartPlaylist.prependSeasonNumber,
+        thumbnailUrl: item.group.thumbnailUrl,
+        episodeCount: item.filteredEpisodeIds.length,
+        dateRange: item.group.showDateRange
+            ? _formatDateRange(item.group.earliestDate, item.group.latestDate)
+            : null,
+        totalDuration: item.group.showDateRange
+            ? _formatDuration(item.group.totalDurationMs, l10n)
+            : null,
+        l10n: l10n,
+        onTap: () => _navigateToGroup(
+          item.group,
+          filteredEpisodeIds:
+              item.filteredEpisodeIds.length != item.group.episodeIds.length
+              ? item.filteredEpisodeIds
+              : null,
+        ),
+      ),
+      scrollController: _scrollController,
+      yearGroupingEnabled: true,
+      itemExtent: _groupCardExtent,
+    );
   }
 
   List<Widget> _buildFirstEpisodeYearGroups(
