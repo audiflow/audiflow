@@ -90,6 +90,7 @@ class SmartPlaylistResolverService {
             sortKey: p.sortKey,
             episodeIds: p.episodeIds,
             thumbnailUrl: p.thumbnailUrl,
+            yearOverride: gDef?.display?.yearBinding,
             showDateRange:
                 gDef?.display?.showDateRange ??
                 definition.groupList?.showDateRange ??
