@@ -13,9 +13,11 @@ import '../../player/repositories/playback_history_repository_impl.dart';
 import '../datasources/local/smart_playlist_cache_datasource.dart';
 import '../datasources/local/smart_playlist_local_datasource.dart';
 import '../datasources/remote/smart_playlist_remote_datasource.dart';
+import '../models/episode_sort_rule.dart';
 import '../models/pattern_summary.dart';
 import '../models/smart_playlist.dart';
 import '../models/smart_playlist_pattern_config.dart';
+import '../models/smart_playlist_sort.dart';
 import '../repositories/episode_repository.dart';
 import '../repositories/episode_repository_impl.dart';
 import '../repositories/smart_playlist_config_repository.dart';
@@ -711,4 +713,53 @@ void sortEpisodeDataByPublishDate(List<SmartPlaylistEpisodeData> data) {
     if (bPub != null) return 1;
     return 0;
   });
+}
+
+/// Sorts [SmartPlaylistEpisodeData] using the given [rule].
+///
+/// When [rule] is null, defaults to publishedAt ascending.
+/// The sort is performed in-place.
+void sortEpisodeData(
+  List<SmartPlaylistEpisodeData> data,
+  EpisodeSortRule? rule,
+) {
+  if (rule == null) {
+    sortEpisodeDataByPublishDate(data);
+    return;
+  }
+
+  final ascending = rule.order == SortOrder.ascending;
+
+  data.sort((a, b) {
+    final cmp = switch (rule.field) {
+      EpisodeSortField.publishedAt => _comparePublishDate(a, b),
+      EpisodeSortField.episodeNumber => _compareEpisodeNumber(a, b),
+      EpisodeSortField.title => a.episode.title.compareTo(b.episode.title),
+    };
+    return ascending ? cmp : -cmp;
+  });
+}
+
+int _comparePublishDate(
+  SmartPlaylistEpisodeData a,
+  SmartPlaylistEpisodeData b,
+) {
+  final aPub = a.episode.publishedAt;
+  final bPub = b.episode.publishedAt;
+  if (aPub != null && bPub != null) return aPub.compareTo(bPub);
+  if (aPub != null) return -1;
+  if (bPub != null) return 1;
+  return 0;
+}
+
+int _compareEpisodeNumber(
+  SmartPlaylistEpisodeData a,
+  SmartPlaylistEpisodeData b,
+) {
+  final aNum = a.episode.episodeNumber;
+  final bNum = b.episode.episodeNumber;
+  if (aNum != null && bNum != null) return aNum.compareTo(bNum);
+  if (aNum != null) return -1;
+  if (bNum != null) return 1;
+  return 0;
 }

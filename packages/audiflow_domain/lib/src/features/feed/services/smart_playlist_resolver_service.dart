@@ -82,6 +82,7 @@ class SmartPlaylistResolverService {
           for (final g in definition.groups ?? <SmartPlaylistGroupDef>[])
             g.id: g,
         };
+        final defEpisodeSort = definition.episodeList?.sort;
         final groups = result.playlists.map((p) {
           final gDef = groupDefMap[p.id];
           return SmartPlaylistGroup(
@@ -96,6 +97,7 @@ class SmartPlaylistResolverService {
                 definition.groupList?.showDateRange ??
                 false,
             showYearHeaders: gDef?.episodeList?.showYearHeaders,
+            episodeSort: gDef?.episodeList?.sort ?? defEpisodeSort,
           );
         }).toList();
         final allEpisodeIds = groups.expand((g) => g.episodeIds).toList();
@@ -113,6 +115,7 @@ class SmartPlaylistResolverService {
             userSortable: definition.groupList?.userSortable ?? true,
             prependSeasonNumber: definition.prependSeasonNumber,
             groupSort: definition.groupList?.sort,
+            episodeSort: defEpisodeSort,
             groups: groups,
           ),
         );
@@ -128,6 +131,7 @@ class SmartPlaylistResolverService {
             userSortable: definition.groupList?.userSortable ?? true,
             prependSeasonNumber: definition.prependSeasonNumber,
             groupSort: definition.groupList?.sort,
+            episodeSort: definition.episodeList?.sort,
           );
         }).toList();
         allPlaylists.addAll(decorated);

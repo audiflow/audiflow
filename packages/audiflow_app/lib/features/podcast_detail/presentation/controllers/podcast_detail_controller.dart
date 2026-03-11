@@ -644,6 +644,7 @@ SmartPlaylistGrouping? _resolveFromFeedByCategory(
         showDateRange: definition.groupList?.showDateRange ?? false,
         userSortable: definition.groupList?.userSortable ?? true,
         groupSort: definition.groupList?.sort,
+        episodeSort: definition.episodeList?.sort,
         groups: smartGroups.isEmpty ? null : smartGroups,
       ),
     );
@@ -762,6 +763,7 @@ SmartPlaylistGrouping? _resolveFromFeedWithParentPlaylists(
         showDateRange: def.groupList?.showDateRange ?? false,
         userSortable: def.groupList?.userSortable ?? true,
         groupSort: def.groupList?.sort,
+        episodeSort: def.episodeList?.sort,
         groups: groups,
       ),
     );

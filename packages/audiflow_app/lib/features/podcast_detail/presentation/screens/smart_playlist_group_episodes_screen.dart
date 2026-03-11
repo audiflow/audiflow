@@ -43,12 +43,14 @@ class _SmartPlaylistGroupEpisodesScreenState
   @override
   void initState() {
     super.initState();
-    final parent = widget.parentPlaylist;
-    if (parent.userSortable && parent.groupSort != null) {
-      _sortOrder = parent.groupSort!.order;
-    } else {
-      _sortOrder = SortOrder.descending;
-    }
+    final groupSort =
+        widget.group.episodeSort ?? widget.parentPlaylist.episodeSort;
+    _sortOrder =
+        groupSort?.order ??
+        (widget.parentPlaylist.userSortable &&
+                widget.parentPlaylist.groupSort != null
+            ? widget.parentPlaylist.groupSort!.order
+            : SortOrder.descending);
   }
 
   List<int> get _episodeIds =>
@@ -224,9 +226,14 @@ class _SmartPlaylistGroupEpisodesScreenState
           ];
         }
 
-        final sorted = _sortOrder == SortOrder.descending
-            ? displayEpisodes.reversed.toList()
-            : displayEpisodes;
+        final effectiveSort =
+            widget.group.episodeSort ?? widget.parentPlaylist.episodeSort;
+        final effectiveRule = EpisodeSortRule(
+          field: effectiveSort?.field ?? EpisodeSortField.publishedAt,
+          order: _sortOrder,
+        );
+        final sorted = List.of(displayEpisodes);
+        sortEpisodeData(sorted, effectiveRule);
 
         return [
           sortHeaderSliver,

@@ -1,3 +1,4 @@
+import 'episode_sort_rule.dart';
 import 'smart_playlist_sort.dart';
 
 /// Whether a smart playlist splits into separate playlists or
@@ -52,6 +53,7 @@ final class SmartPlaylistGroup {
     this.yearOverride,
     this.showDateRange = false,
     this.showYearHeaders,
+    this.episodeSort,
     this.earliestDate,
     this.latestDate,
     this.totalDurationMs,
@@ -81,6 +83,10 @@ final class SmartPlaylistGroup {
   /// Per-group override for showing year separator headers.
   /// When null, inherits from the parent playlist's showYearHeaders.
   final bool? showYearHeaders;
+
+  /// Per-group episode sort rule.
+  /// When null, inherits from the parent playlist's episodeSort.
+  final EpisodeSortRule? episodeSort;
 
   /// Earliest episode publish date in this group.
   final DateTime? earliestDate;
@@ -118,6 +124,7 @@ final class SmartPlaylist {
     this.userSortable = true,
     this.prependSeasonNumber = false,
     this.groupSort,
+    this.episodeSort,
     this.groups,
   });
 
@@ -157,6 +164,10 @@ final class SmartPlaylist {
   /// Sort rule for ordering groups within this playlist.
   final SmartPlaylistSortRule? groupSort;
 
+  /// Sort rule for ordering episodes within this playlist or its groups.
+  /// Groups may override this with their own episodeSort.
+  final EpisodeSortRule? episodeSort;
+
   /// Groups within this playlist (when playlistStructure == grouped).
   final List<SmartPlaylistGroup>? groups;
 
@@ -185,6 +196,7 @@ final class SmartPlaylist {
     bool? userSortable,
     bool? prependSeasonNumber,
     SmartPlaylistSortRule? groupSort,
+    EpisodeSortRule? episodeSort,
     List<SmartPlaylistGroup>? groups,
   }) {
     return SmartPlaylist(
@@ -200,6 +212,7 @@ final class SmartPlaylist {
       userSortable: userSortable ?? this.userSortable,
       prependSeasonNumber: prependSeasonNumber ?? this.prependSeasonNumber,
       groupSort: groupSort ?? this.groupSort,
+      episodeSort: episodeSort ?? this.episodeSort,
       groups: groups ?? this.groups,
     );
   }

@@ -45,11 +45,11 @@ class _SmartPlaylistEpisodesScreenState
   void initState() {
     super.initState();
     final sp = widget.smartPlaylist;
-    if (sp.userSortable && sp.groupSort != null) {
-      _sortOrder = sp.groupSort!.order;
-    } else {
-      _sortOrder = SortOrder.descending;
-    }
+    _sortOrder =
+        sp.episodeSort?.order ??
+        (sp.userSortable && sp.groupSort != null
+            ? sp.groupSort!.order
+            : SortOrder.descending);
   }
 
   @override
@@ -207,9 +207,17 @@ class _SmartPlaylistEpisodesScreenState
           ];
         }
 
-        final sorted = _sortOrder == SortOrder.ascending
-            ? displayEpisodes.reversed.toList()
-            : displayEpisodes;
+        final effectiveRule = widget.smartPlaylist.episodeSort != null
+            ? EpisodeSortRule(
+                field: widget.smartPlaylist.episodeSort!.field,
+                order: _sortOrder,
+              )
+            : EpisodeSortRule(
+                field: EpisodeSortField.publishedAt,
+                order: _sortOrder,
+              );
+        final sorted = List.of(displayEpisodes);
+        sortEpisodeData(sorted, effectiveRule);
 
         return [
           sortHeader,
