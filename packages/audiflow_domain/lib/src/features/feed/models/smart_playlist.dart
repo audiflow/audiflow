@@ -51,6 +51,7 @@ final class SmartPlaylistGroup {
     this.thumbnailUrl,
     this.yearOverride,
     this.showDateRange = false,
+    this.showYearHeaders,
     this.earliestDate,
     this.latestDate,
     this.totalDurationMs,
@@ -76,6 +77,10 @@ final class SmartPlaylistGroup {
 
   /// Whether this group shows date range and duration metadata.
   final bool showDateRange;
+
+  /// Per-group override for showing year separator headers.
+  /// When null, inherits from the parent playlist's showYearHeaders.
+  final bool? showYearHeaders;
 
   /// Earliest episode publish date in this group.
   final DateTime? earliestDate;
@@ -109,6 +114,7 @@ final class SmartPlaylist {
     this.playlistStructure = PlaylistStructure.split,
     this.yearBinding = YearBinding.none,
     this.showDateRange = false,
+    this.showYearHeaders = false,
     this.userSortable = true,
     this.prependSeasonNumber = false,
     this.groupSort,
@@ -138,6 +144,9 @@ final class SmartPlaylist {
 
   /// Whether group cards should display a date range.
   final bool showDateRange;
+
+  /// Whether episode lists show year separator headers.
+  final bool showYearHeaders;
 
   /// Whether the user can toggle the sort order.
   final bool userSortable;
@@ -172,6 +181,7 @@ final class SmartPlaylist {
     PlaylistStructure? playlistStructure,
     YearBinding? yearBinding,
     bool? showDateRange,
+    bool? showYearHeaders,
     bool? userSortable,
     bool? prependSeasonNumber,
     SmartPlaylistSortRule? groupSort,
@@ -186,6 +196,7 @@ final class SmartPlaylist {
       playlistStructure: playlistStructure ?? this.playlistStructure,
       yearBinding: yearBinding ?? this.yearBinding,
       showDateRange: showDateRange ?? this.showDateRange,
+      showYearHeaders: showYearHeaders ?? this.showYearHeaders,
       userSortable: userSortable ?? this.userSortable,
       prependSeasonNumber: prependSeasonNumber ?? this.prependSeasonNumber,
       groupSort: groupSort ?? this.groupSort,

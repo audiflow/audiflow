@@ -54,8 +54,13 @@ class _SmartPlaylistGroupEpisodesScreenState
   List<int> get _episodeIds =>
       widget.filteredEpisodeIds ?? widget.group.episodeIds;
 
-  bool get _showYearHeaders =>
-      widget.parentPlaylist.yearBinding != YearBinding.none;
+  bool get _showYearHeaders {
+    // Per-group override takes precedence, then fall back to the
+    // parent playlist's definition-level episodeList.showYearHeaders.
+    final groupOverride = widget.group.showYearHeaders;
+    if (groupOverride != null) return groupOverride;
+    return widget.parentPlaylist.showYearHeaders;
+  }
 
   @override
   void dispose() {

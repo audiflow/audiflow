@@ -95,6 +95,7 @@ class SmartPlaylistResolverService {
                 gDef?.display?.showDateRange ??
                 definition.groupList?.showDateRange ??
                 false,
+            showYearHeaders: gDef?.episodeList?.showYearHeaders,
           );
         }).toList();
         final allEpisodeIds = groups.expand((g) => g.episodeIds).toList();
@@ -108,6 +109,7 @@ class SmartPlaylistResolverService {
             playlistStructure: playlistStructure,
             yearBinding: yearBinding,
             showDateRange: definition.groupList?.showDateRange ?? false,
+            showYearHeaders: definition.episodeList?.showYearHeaders ?? false,
             userSortable: definition.groupList?.userSortable ?? true,
             prependSeasonNumber: definition.prependSeasonNumber,
             groupSort: definition.groupList?.sort,
@@ -122,6 +124,7 @@ class SmartPlaylistResolverService {
             playlistStructure: playlistStructure,
             yearBinding: yearBinding,
             showDateRange: definition.groupList?.showDateRange ?? false,
+            showYearHeaders: definition.episodeList?.showYearHeaders ?? false,
             userSortable: definition.groupList?.userSortable ?? true,
             prependSeasonNumber: definition.prependSeasonNumber,
             groupSort: definition.groupList?.sort,
