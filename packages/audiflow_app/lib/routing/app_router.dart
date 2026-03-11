@@ -11,6 +11,8 @@ import '../features/queue/presentation/screens/queue_screen.dart';
 import '../features/search/presentation/screens/search_screen.dart';
 import '../features/settings/presentation/screens/about_screen.dart';
 import '../features/settings/presentation/screens/appearance_settings_screen.dart';
+import '../features/download/presentation/screens/download_management_screen.dart';
+import '../features/player/presentation/screens/transcript_screen.dart';
 import '../features/settings/presentation/screens/downloads_settings_screen.dart';
 import '../features/settings/presentation/screens/feed_sync_settings_screen.dart';
 import '../features/settings/presentation/screens/playback_settings_screen.dart';
@@ -38,6 +40,9 @@ class AppRoutes {
   static const String settingsFeedSync = '/settings/feed-sync';
   static const String settingsStorage = '/settings/storage';
   static const String settingsAbout = '/settings/about';
+  static const String settingsDownloadManagement =
+      '/settings/downloads/management';
+  static const String transcript = '/transcript';
 }
 
 /// Root navigator key for the application.
@@ -190,6 +195,13 @@ GoRouter createAppRouter() {
                     path: 'downloads',
                     builder: (context, state) =>
                         const DownloadsSettingsScreen(),
+                    routes: [
+                      GoRoute(
+                        path: 'management',
+                        builder: (context, state) =>
+                            const DownloadManagementScreen(),
+                      ),
+                    ],
                   ),
                   GoRoute(
                     path: 'feed-sync',
@@ -208,6 +220,11 @@ GoRouter createAppRouter() {
             ],
           ),
         ],
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: AppRoutes.transcript,
+        builder: (context, state) => _buildTranscriptScreen(state),
       ),
     ],
   );
@@ -314,6 +331,28 @@ Widget _buildGroupEpisodesScreen(GoRouterState state) {
     feedImageUrl: extra['feedImageUrl'] as String?,
     lastRefreshedAt: extra['lastRefreshedAt'] as DateTime?,
     filteredEpisodeIds: extra['filteredEpisodeIds'] as List<int>?,
+  );
+}
+
+/// Builds the transcript screen from route state.
+Widget _buildTranscriptScreen(GoRouterState state) {
+  final extra = state.extra as Map<String, dynamic>?;
+  if (extra == null) {
+    return const _PodcastNotFoundScreen();
+  }
+
+  final transcriptId = extra['transcriptId'] as int?;
+  final episodeId = extra['episodeId'] as int?;
+  final episodeTitle = extra['episodeTitle'] as String? ?? '';
+
+  if (transcriptId == null || episodeId == null) {
+    return const _PodcastNotFoundScreen();
+  }
+
+  return TranscriptScreen(
+    transcriptId: transcriptId,
+    episodeId: episodeId,
+    episodeTitle: episodeTitle,
   );
 }
 

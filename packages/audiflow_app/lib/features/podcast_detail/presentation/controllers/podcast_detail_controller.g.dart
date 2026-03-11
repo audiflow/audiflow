@@ -184,7 +184,7 @@ final class PodcastDetailProvider
   }
 }
 
-String _$podcastDetailHash() => r'b6c7b8067f6d6f6e6db36a05c419ac53d36a3599';
+String _$podcastDetailHash() => r'5fff67642a8b74e7ef5b3d0936ecf1510f27d2f6';
 
 /// Fetches and provides parsed podcast feed data for a given feed URL.
 ///
@@ -929,7 +929,7 @@ final class SortedPodcastSmartPlaylistsProvider
 }
 
 String _$sortedPodcastSmartPlaylistsHash() =>
-    r'1fac5682390f03d119b90c3145efb7ad7b07165e';
+    r'3a23fe1b6929e4f179b1857855e2b7408fd9720e';
 
 /// Provides sorted smart playlists for a podcast.
 ///
