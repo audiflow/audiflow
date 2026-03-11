@@ -698,7 +698,7 @@ SmartPlaylistGrouping? _resolveFromFeedWithParentPlaylists(
 
     var matched = false;
     for (var f = 0; filters.length - f != 0; f++) {
-      if (filters[f].matches(episode.title)) {
+      if (filters[f].matches(episode.title, description: episode.description)) {
         buckets[f].add(episode);
         matched = true;
         break;
@@ -831,10 +831,10 @@ List<SmartPlaylistGroup> _buildFeedGroups(
 
 /// Compiled filter for a single playlist config entry (feed data).
 class _FeedPlaylistFilter {
-  _FeedPlaylistFilter._({this.requireFilters, this.excludeFilters})
+  _FeedPlaylistFilter._({this.requireEntries, this.excludeEntries})
     : isFallback =
-          (requireFilters == null || requireFilters.isEmpty) &&
-          (excludeFilters == null || excludeFilters.isEmpty);
+          (requireEntries == null || requireEntries.isEmpty) &&
+          (excludeEntries == null || excludeEntries.isEmpty);
 
   factory _FeedPlaylistFilter.fromDefinition(SmartPlaylistDefinition def) {
     final filters = def.episodeFilters;
@@ -842,31 +842,67 @@ class _FeedPlaylistFilter {
       return _FeedPlaylistFilter._();
     }
     return _FeedPlaylistFilter._(
-      requireFilters: filters.require
-          ?.where((e) => e.title != null)
-          .map((e) => RegExp(e.title!, caseSensitive: false))
+      requireEntries: filters.require
+          ?.where((e) => e.title != null || e.description != null)
+          .map(_compileEntry)
           .toList(),
-      excludeFilters: filters.exclude
-          ?.where((e) => e.title != null)
-          .map((e) => RegExp(e.title!, caseSensitive: false))
+      excludeEntries: filters.exclude
+          ?.where((e) => e.title != null || e.description != null)
+          .map(_compileEntry)
           .toList(),
     );
   }
 
-  final List<RegExp>? requireFilters;
-  final List<RegExp>? excludeFilters;
+  static ({RegExp? title, RegExp? description}) _compileEntry(
+    EpisodeFilterEntry e,
+  ) {
+    return (
+      title: e.title != null ? RegExp(e.title!, caseSensitive: false) : null,
+      description: e.description != null
+          ? RegExp(e.description!, caseSensitive: false)
+          : null,
+    );
+  }
+
+  final List<({RegExp? title, RegExp? description})>? requireEntries;
+  final List<({RegExp? title, RegExp? description})>? excludeEntries;
   final bool isFallback;
 
-  bool matches(String title) {
+  /// Checks whether the episode matches this filter.
+  ///
+  /// Uses OR across entries and AND within each entry
+  /// (both title and description must match if specified).
+  bool matches(String title, {String? description}) {
     if (isFallback) return false;
-    if (requireFilters != null) {
-      for (final regex in requireFilters!) {
-        if (!regex.hasMatch(title)) return false;
+
+    // Require: at least one entry must match (OR across entries).
+    if (requireEntries != null && requireEntries!.isNotEmpty) {
+      final matchesAny = requireEntries!.any(
+        (r) => _entryMatches(r, title, description),
+      );
+      if (!matchesAny) return false;
+    }
+
+    // Exclude: if any entry matches, episode is excluded.
+    if (excludeEntries != null) {
+      for (final r in excludeEntries!) {
+        if (_entryMatches(r, title, description)) return false;
       }
     }
-    if (excludeFilters != null) {
-      for (final regex in excludeFilters!) {
-        if (regex.hasMatch(title)) return false;
+
+    return true;
+  }
+
+  /// AND within entry: all specified fields must match.
+  static bool _entryMatches(
+    ({RegExp? title, RegExp? description}) r,
+    String title,
+    String? description,
+  ) {
+    if (r.title != null && !r.title!.hasMatch(title)) return false;
+    if (r.description != null) {
+      if (description == null || !r.description!.hasMatch(description)) {
+        return false;
       }
     }
     return true;
