@@ -610,6 +610,8 @@ SmartPlaylistGrouping? _resolveFromFeedByCategory(
               gDef.display?.showDateRange ??
               definition.groupList?.showDateRange ??
               false,
+          yearOverride: gDef.display?.yearBinding,
+          showYearHeaders: gDef.episodeList?.showYearHeaders,
         ),
       );
     }
