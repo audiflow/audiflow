@@ -350,5 +350,47 @@ void main() {
       // Bonus playlist gets episodes matching requireFilter
       expect(secondIds, unorderedEquals([2, 4]));
     });
+
+    test('require filters use OR across entries', () {
+      final service = SmartPlaylistResolverService(
+        resolvers: [YearResolver()],
+        patterns: [
+          SmartPlaylistPatternConfig(
+            id: 'or_test',
+            feedUrls: ['https://example.com/feed'],
+            playlists: [
+              SmartPlaylistDefinition(
+                id: 'special',
+                displayName: 'Special',
+                resolverType: 'year',
+                episodeFilters: EpisodeFilters(
+                  require: [
+                    EpisodeFilterEntry(title: r'Bonus'),
+                    EpisodeFilterEntry(title: r'Extra'),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      );
+
+      final episodes = [
+        _makeEpisode(1, title: 'Bonus: BTS', publishedAt: DateTime(2024)),
+        _makeEpisode(2, title: 'Extra: Outtakes', publishedAt: DateTime(2024)),
+        _makeEpisode(3, title: 'Regular Ep', publishedAt: DateTime(2024)),
+      ];
+
+      final result = service.resolveSmartPlaylists(
+        podcastGuid: null,
+        feedUrl: 'https://example.com/feed',
+        episodes: episodes,
+      );
+
+      // OR: episodes matching either 'Bonus' or 'Extra' are included
+      expect(result, isNotNull);
+      final ids = result!.playlists[0].episodeIds;
+      expect(ids, unorderedEquals([1, 2]));
+    });
   });
 }

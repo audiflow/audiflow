@@ -15,10 +15,10 @@ final class EpisodeFilters {
     );
   }
 
-  /// Inclusion filters. Episode must match ALL entries.
+  /// Inclusion filters (OR). Episode is included if it matches ANY entry.
   final List<EpisodeFilterEntry>? require;
 
-  /// Exclusion filters. Episode matching ANY entry is excluded.
+  /// Exclusion filters (OR). Episode is excluded if it matches ANY entry.
   final List<EpisodeFilterEntry>? exclude;
 
   /// Whether any filters are defined.

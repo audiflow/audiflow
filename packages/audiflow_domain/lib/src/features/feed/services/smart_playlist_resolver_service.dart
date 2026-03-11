@@ -199,30 +199,38 @@ class SmartPlaylistResolverService {
       final title = episode.title;
       final description = episode.description;
 
-      if (requireRegexes != null) {
-        for (final r in requireRegexes) {
-          if (r.title != null && !r.title!.hasMatch(title)) return false;
-          if (r.description != null &&
-              description != null &&
-              !r.description!.hasMatch(description)) {
-            return false;
-          }
-        }
+      // Require: OR across entries, AND within entry.
+      if (requireRegexes != null && requireRegexes.isNotEmpty) {
+        final matchesAny = requireRegexes.any(
+          (r) => _entryMatches(r, title, description),
+        );
+        if (!matchesAny) return false;
       }
 
+      // Exclude: OR across entries, AND within entry.
       if (excludeRegexes != null) {
         for (final r in excludeRegexes) {
-          if (r.title != null && r.title!.hasMatch(title)) return false;
-          if (r.description != null &&
-              description != null &&
-              r.description!.hasMatch(description)) {
-            return false;
-          }
+          if (_entryMatches(r, title, description)) return false;
         }
       }
 
       return true;
     }).toList();
+  }
+
+  /// Checks if all specified fields in a filter entry match (AND within entry).
+  bool _entryMatches(
+    ({RegExp? title, RegExp? description}) r,
+    String title,
+    String? description,
+  ) {
+    if (r.title != null && !r.title!.hasMatch(title)) return false;
+    if (r.description != null) {
+      if (description == null || !r.description!.hasMatch(description)) {
+        return false;
+      }
+    }
+    return true;
   }
 
   SmartPlaylistPatternConfig? _findMatchingConfig(
