@@ -37,6 +37,9 @@ class InlineGroupCard extends StatelessWidget {
     required this.onTap,
     this.prependSeasonNumber = false,
     this.episodeCountOverride,
+    this.earliestDateOverride,
+    this.latestDateOverride,
+    this.totalDurationMsOverride,
   });
 
   final SmartPlaylistGroup group;
@@ -47,16 +50,33 @@ class InlineGroupCard extends StatelessWidget {
   /// episode count display (used in perEpisode year mode).
   final int? episodeCountOverride;
 
+  /// When set, overrides `group.earliestDate`/`group.latestDate`
+  /// for the date range display (used in split-by-year mode).
+  final DateTime? earliestDateOverride;
+
+  /// See [earliestDateOverride].
+  final DateTime? latestDateOverride;
+
+  /// When set, overrides `group.totalDurationMs` for the
+  /// duration display (used in split-by-year mode).
+  final int? totalDurationMsOverride;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final l10n = AppLocalizations.of(context);
     final dateRange = group.showDateRange
-        ? formatDateRange(group.earliestDate, group.latestDate)
+        ? formatDateRange(
+            earliestDateOverride ?? group.earliestDate,
+            latestDateOverride ?? group.latestDate,
+          )
         : null;
     final duration = group.showDateRange
-        ? formatGroupDuration(group.totalDurationMs, l10n)
+        ? formatGroupDuration(
+            totalDurationMsOverride ?? group.totalDurationMs,
+            l10n,
+          )
         : null;
 
     final metaLine = StringBuffer(
@@ -179,8 +199,20 @@ class YearFilteredInlineGroup {
   const YearFilteredInlineGroup({
     required this.group,
     required this.filteredEpisodeIds,
+    this.earliestDate,
+    this.latestDate,
+    this.totalDurationMs,
   });
 
   final SmartPlaylistGroup group;
   final List<int> filteredEpisodeIds;
+
+  /// Filtered earliest episode date (for split-by-year).
+  final DateTime? earliestDate;
+
+  /// Filtered latest episode date (for split-by-year).
+  final DateTime? latestDate;
+
+  /// Filtered total duration in ms (for split-by-year).
+  final int? totalDurationMs;
 }

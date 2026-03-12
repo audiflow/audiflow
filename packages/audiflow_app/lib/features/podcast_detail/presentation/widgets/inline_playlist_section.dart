@@ -253,7 +253,11 @@ List<Widget> _buildInlineGroupList({
     ];
   }
 
-  if (playlist.yearBinding == YearBinding.splitByYear) {
+  if (playlist.yearBinding == YearBinding.splitByYear &&
+      !displayGroups.any(
+        (g) =>
+            g.yearOverride != null && g.yearOverride != YearBinding.splitByYear,
+      )) {
     return _buildPerEpisodeInlineGroups(
       groups: displayGroups,
       episodeMap: episodeMap,
@@ -265,56 +269,16 @@ List<Widget> _buildInlineGroupList({
     );
   }
 
-  // firstEpisode mode
-  final byYear = <int, List<SmartPlaylistGroup>>{};
-  for (final group in displayGroups) {
-    var year = 0;
-    if (group.episodeIds.isNotEmpty) {
-      final firstId = group.episodeIds.first;
-      final ep = episodeMap[firstId];
-      year = ep?.episode.publishedAt?.year ?? 0;
-    }
-    byYear.putIfAbsent(year, () => []).add(group);
-  }
-
-  if (sortOrder == SortOrder.descending) {
-    for (final key in byYear.keys) {
-      byYear[key] = byYear[key]!.reversed.toList();
-    }
-  }
-
-  final sortedYears = byYear.keys.toList()
-    ..sort(
-      sortOrder == SortOrder.descending
-          ? (a, b) => b.compareTo(a)
-          : (a, b) => a.compareTo(b),
-    );
-
-  return [
-    SliverToBoxAdapter(
-      child: Builder(
-        builder: (context) => SortHeader(
-          label: AppLocalizations.of(
-            context,
-          ).podcastDetailGroupCount(displayGroups.length),
-          sortOrder: sortOrder,
-          onToggleSortOrder: onToggleSortOrder,
-        ),
-      ),
-    ),
-    ...buildYearGroupedSlivers<SmartPlaylistGroup>(
-      itemsByYear: {for (final y in sortedYears) y: byYear[y]!},
-      sortedYears: sortedYears,
-      itemBuilder: (context, group) => InlineGroupCard(
-        group: group,
-        prependSeasonNumber: playlist.prependSeasonNumber,
-        onTap: () => onNavigateToGroup(playlist, group),
-      ),
-      scrollController: scrollController,
-      yearGroupingEnabled: true,
-      itemExtent: 88,
-    ),
-  ];
+  return _buildMixedYearInlineGroups(
+    groups: displayGroups,
+    episodeMap: episodeMap,
+    playlist: playlist,
+    defaultMode: playlist.yearBinding,
+    sortOrder: sortOrder,
+    scrollController: scrollController,
+    onToggleSortOrder: onToggleSortOrder,
+    onNavigateToGroup: onNavigateToGroup,
+  );
 }
 
 List<Widget> _buildPerEpisodeInlineGroups({
@@ -340,12 +304,16 @@ List<Widget> _buildPerEpisodeInlineGroups({
       yearIds.putIfAbsent(year, () => []).add(id);
     }
     for (final entry in yearIds.entries) {
+      final meta = _computeFilteredMeta(entry.value, episodeMap);
       byYear
           .putIfAbsent(entry.key, () => [])
           .add(
             YearFilteredInlineGroup(
               group: group,
               filteredEpisodeIds: entry.value,
+              earliestDate: meta.$1,
+              latestDate: meta.$2,
+              totalDurationMs: meta.$3,
             ),
           );
     }
@@ -357,6 +325,10 @@ List<Widget> _buildPerEpisodeInlineGroups({
           ? (a, b) => b.compareTo(a)
           : (a, b) => a.compareTo(b),
     );
+
+  for (final items in byYear.values) {
+    sortFilteredGroupsInPlace(items, playlist.groupSort, sortOrder);
+  }
 
   var totalCards = 0;
   for (final items in byYear.values) {
@@ -382,6 +354,9 @@ List<Widget> _buildPerEpisodeInlineGroups({
         group: item.group,
         prependSeasonNumber: playlist.prependSeasonNumber,
         episodeCountOverride: item.filteredEpisodeIds.length,
+        earliestDateOverride: item.earliestDate,
+        latestDateOverride: item.latestDate,
+        totalDurationMsOverride: item.totalDurationMs,
         onTap: () => onNavigateToGroup(
           playlist,
           item.group,
@@ -446,4 +421,150 @@ List<Widget> _buildYearGroupedPlaylistSlivers({
     yearGroupingEnabled: true,
     itemExtent: episodeCardExtent,
   );
+}
+
+List<Widget> _buildMixedYearInlineGroups({
+  required List<SmartPlaylistGroup> groups,
+  required Map<int, SmartPlaylistEpisodeData> episodeMap,
+  required SmartPlaylist playlist,
+  required YearBinding defaultMode,
+  required SortOrder sortOrder,
+  required ScrollController scrollController,
+  required VoidCallback onToggleSortOrder,
+  required void Function(
+    SmartPlaylist playlist,
+    SmartPlaylistGroup group, {
+    List<int>? filteredEpisodeIds,
+  })
+  onNavigateToGroup,
+}) {
+  final byYear = <int, List<YearFilteredInlineGroup>>{};
+
+  for (final group in groups) {
+    final mode = group.yearOverride ?? defaultMode;
+
+    if (mode == YearBinding.splitByYear) {
+      final yearIds = <int, List<int>>{};
+      for (final id in group.episodeIds) {
+        final ep = episodeMap[id];
+        final year = ep?.episode.publishedAt?.year ?? 0;
+        yearIds.putIfAbsent(year, () => []).add(id);
+      }
+      for (final entry in yearIds.entries) {
+        final meta = _computeFilteredMeta(entry.value, episodeMap);
+        byYear
+            .putIfAbsent(entry.key, () => [])
+            .add(
+              YearFilteredInlineGroup(
+                group: group,
+                filteredEpisodeIds: entry.value,
+                earliestDate: meta.$1,
+                latestDate: meta.$2,
+                totalDurationMs: meta.$3,
+              ),
+            );
+      }
+    } else {
+      var year = 0;
+      if (group.episodeIds.isNotEmpty) {
+        final firstId = group.episodeIds.first;
+        final ep = episodeMap[firstId];
+        year = ep?.episode.publishedAt?.year ?? 0;
+      }
+      byYear
+          .putIfAbsent(year, () => [])
+          .add(
+            YearFilteredInlineGroup(
+              group: group,
+              filteredEpisodeIds: group.episodeIds,
+            ),
+          );
+    }
+  }
+
+  final sortedYears = byYear.keys.toList()
+    ..sort(
+      sortOrder == SortOrder.descending
+          ? (a, b) => b.compareTo(a)
+          : (a, b) => a.compareTo(b),
+    );
+
+  for (final items in byYear.values) {
+    sortFilteredGroupsInPlace(items, playlist.groupSort, sortOrder);
+  }
+
+  var totalCards = 0;
+  for (final items in byYear.values) {
+    totalCards += items.length;
+  }
+
+  return [
+    SliverToBoxAdapter(
+      child: Builder(
+        builder: (context) => SortHeader(
+          label: AppLocalizations.of(
+            context,
+          ).podcastDetailGroupCount(totalCards),
+          sortOrder: sortOrder,
+          onToggleSortOrder: onToggleSortOrder,
+        ),
+      ),
+    ),
+    ...buildYearGroupedSlivers<YearFilteredInlineGroup>(
+      itemsByYear: {for (final y in sortedYears) y: byYear[y]!},
+      sortedYears: sortedYears,
+      itemBuilder: (context, item) => InlineGroupCard(
+        group: item.group,
+        prependSeasonNumber: playlist.prependSeasonNumber,
+        episodeCountOverride: item.filteredEpisodeIds.length,
+        earliestDateOverride: item.earliestDate,
+        latestDateOverride: item.latestDate,
+        totalDurationMsOverride: item.totalDurationMs,
+        onTap: () => onNavigateToGroup(
+          playlist,
+          item.group,
+          filteredEpisodeIds:
+              item.filteredEpisodeIds.length != item.group.episodeIds.length
+              ? item.filteredEpisodeIds
+              : null,
+        ),
+      ),
+      scrollController: scrollController,
+      yearGroupingEnabled: true,
+      itemExtent: 88,
+    ),
+  ];
+}
+
+/// Computes (earliest, latest, totalDurationMs) for a
+/// filtered subset of episode IDs.
+(DateTime?, DateTime?, int?) _computeFilteredMeta(
+  List<int> episodeIds,
+  Map<int, SmartPlaylistEpisodeData> episodeMap,
+) {
+  DateTime? earliest;
+  DateTime? latest;
+  var totalMs = 0;
+  var hasDuration = false;
+
+  for (final id in episodeIds) {
+    final ep = episodeMap[id]?.episode;
+    if (ep == null) continue;
+    final pub = ep.publishedAt;
+    if (pub != null) {
+      if (earliest == null || pub.isBefore(earliest)) {
+        earliest = pub;
+      }
+      if (latest == null || pub.isAfter(latest)) {
+        latest = pub;
+      }
+    }
+    final dur = ep.durationMs;
+    if (dur != null && 0 < dur) {
+      totalMs += dur;
+      hasDuration = true;
+    }
+  }
+
+  return (earliest, latest, hasDuration ? totalMs : null);
 }
