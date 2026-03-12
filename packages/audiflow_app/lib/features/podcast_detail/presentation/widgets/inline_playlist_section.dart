@@ -1,11 +1,14 @@
 import 'package:audiflow_domain/audiflow_domain.dart'
     show
+        EpisodeSortField,
+        EpisodeSortRule,
         SmartPlaylist,
         PlaylistStructure,
         SmartPlaylistEpisodeData,
         SmartPlaylistGroup,
         SortOrder,
         YearBinding,
+        sortEpisodeData,
         smartPlaylistEpisodesProvider;
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
@@ -151,9 +154,12 @@ List<Widget> _buildPlaylistData({
     );
   }
 
-  final sorted = sortOrder == SortOrder.descending
-      ? displayEpisodes.reversed.toList()
-      : displayEpisodes;
+  final effectiveRule = EpisodeSortRule(
+    field: playlist.episodeSort?.field ?? EpisodeSortField.publishedAt,
+    order: sortOrder,
+  );
+  final sorted = List.of(displayEpisodes);
+  sortEpisodeData(sorted, effectiveRule);
 
   final siblingEpisodeIds = sorted.map((d) => d.episode.id).toList();
 

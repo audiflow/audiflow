@@ -1,3 +1,5 @@
+import '../models/episode_filter_entry.dart';
+import '../models/smart_playlist_definition.dart';
 import '../models/smart_playlist_episode_extractor.dart';
 import '../models/smart_playlist_group_def.dart';
 import '../models/smart_playlist_pattern_config.dart';
@@ -26,13 +28,59 @@ class EpisodeExtractorResolver {
         if (groupExtractor != null) return groupExtractor;
       }
 
-      // Fall back to definition-level extractor if episode matches
-      // definition's filter (or if no filter exists).
-      if (definition.episodeExtractor != null) {
+      // Fall back to definition-level extractor only if episode
+      // matches definition's filters (or if no filter exists).
+      if (definition.episodeExtractor != null &&
+          _matchesDefinition(title, description, definition)) {
         return definition.episodeExtractor;
       }
     }
     return null;
+  }
+
+  /// Checks whether an episode matches a definition's filters.
+  ///
+  /// Returns true if no filters are defined (acts as fallback).
+  bool _matchesDefinition(
+    String title,
+    String? description,
+    SmartPlaylistDefinition definition,
+  ) {
+    final filters = definition.episodeFilters;
+    if (filters == null || !filters.hasFilters) return true;
+
+    if (filters.require != null && filters.require!.isNotEmpty) {
+      final matchesAny = filters.require!.any(
+        (entry) => _entryMatches(entry, title, description),
+      );
+      if (!matchesAny) return false;
+    }
+
+    if (filters.exclude != null && filters.exclude!.isNotEmpty) {
+      final matchesAny = filters.exclude!.any(
+        (entry) => _entryMatches(entry, title, description),
+      );
+      if (matchesAny) return false;
+    }
+
+    return true;
+  }
+
+  /// Checks whether a single filter entry matches the episode.
+  bool _entryMatches(
+    EpisodeFilterEntry entry,
+    String title,
+    String? description,
+  ) {
+    if (entry.title != null) {
+      final regex = RegExp(entry.title!, caseSensitive: false);
+      if (!regex.hasMatch(title)) return false;
+    }
+    if (entry.description != null && description != null) {
+      final regex = RegExp(entry.description!, caseSensitive: false);
+      if (!regex.hasMatch(description)) return false;
+    }
+    return entry.title != null || entry.description != null;
   }
 
   /// Finds a group-level extractor by matching the episode title
