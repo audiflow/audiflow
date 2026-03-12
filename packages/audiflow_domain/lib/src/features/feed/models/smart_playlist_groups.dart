@@ -18,7 +18,6 @@ class SmartPlaylistGroups extends Table {
   DateTimeColumn get earliestDate => dateTime().nullable()();
   DateTimeColumn get latestDate => dateTime().nullable()();
   IntColumn get totalDurationMs => integer().nullable()();
-  BoolColumn get episodeYearHeaders => boolean().nullable()();
 
   @override
   Set<Column> get primaryKey => {podcastId, playlistId, groupId};

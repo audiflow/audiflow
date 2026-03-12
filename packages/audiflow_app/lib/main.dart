@@ -21,7 +21,7 @@ import 'routing/app_router.dart';
 Future<void> appMain({
   required Flavor flavor,
   String smartPlaylistConfigBaseUrl =
-      'https://storage.googleapis.com/audiflow-dev-config',
+      'https://storage.googleapis.com/audiflow-dev-config/v2',
 }) async {
   WidgetsFlutterBinding.ensureInitialized();
 

@@ -5,28 +5,28 @@
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'dart:async' as _i11;
 
-import 'package:audiflow_core/audiflow_core.dart' as _i18;
+import 'package:audiflow_core/audiflow_core.dart' as _i19;
 import 'package:audiflow_domain/src/common/database/app_database.dart' as _i2;
 import 'package:audiflow_domain/src/features/feed/builders/podcast_builder.dart'
     as _i3;
 import 'package:audiflow_domain/src/features/feed/models/feed_parse_progress.dart'
-    as _i15;
+    as _i16;
 import 'package:audiflow_domain/src/features/feed/models/pattern_summary.dart'
     as _i24;
 import 'package:audiflow_domain/src/features/feed/models/root_meta.dart'
-    as _i21;
+    as _i22;
 import 'package:audiflow_domain/src/features/feed/models/smart_playlist_episode_extractor.dart'
     as _i14;
 import 'package:audiflow_domain/src/features/feed/models/smart_playlist_pattern_config.dart'
-    as _i23;
+    as _i15;
 import 'package:audiflow_domain/src/features/feed/repositories/episode_repository.dart'
     as _i12;
 import 'package:audiflow_domain/src/features/feed/repositories/smart_playlist_config_repository.dart'
-    as _i20;
+    as _i21;
 import 'package:audiflow_domain/src/features/feed/services/feed_parser_service.dart'
-    as _i19;
+    as _i20;
 import 'package:audiflow_domain/src/features/settings/repositories/app_settings_repository.dart'
-    as _i16;
+    as _i17;
 import 'package:audiflow_domain/src/features/subscription/repositories/subscription_repository.dart'
     as _i10;
 import 'package:audiflow_podcast/audiflow_podcast.dart' as _i13;
@@ -37,9 +37,9 @@ import 'package:dio/src/dio_mixin.dart' as _i5;
 import 'package:dio/src/options.dart' as _i4;
 import 'package:dio/src/response.dart' as _i8;
 import 'package:dio/src/transformer.dart' as _i7;
-import 'package:flutter/material.dart' as _i17;
+import 'package:flutter/material.dart' as _i18;
 import 'package:mockito/mockito.dart' as _i1;
-import 'package:mockito/src/dummies.dart' as _i22;
+import 'package:mockito/src/dummies.dart' as _i23;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values
@@ -293,6 +293,23 @@ class MockEpisodeRepository extends _i1.Mock implements _i12.EpisodeRepository {
           as _i11.Future<void>);
 
   @override
+  _i11.Future<void> upsertFromFeedItemsWithConfig(
+    int? podcastId,
+    List<_i13.PodcastItem>? items, {
+    required _i15.SmartPlaylistPatternConfig? config,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(
+              #upsertFromFeedItemsWithConfig,
+              [podcastId, items],
+              {#config: config},
+            ),
+            returnValue: _i11.Future<void>.value(),
+            returnValueForMissingStub: _i11.Future<void>.value(),
+          )
+          as _i11.Future<void>);
+
+  @override
   _i11.Future<List<_i2.Episode>> getByIds(List<int>? ids) =>
       (super.noSuchMethod(
             Invocation.method(#getByIds, [ids]),
@@ -311,7 +328,7 @@ class MockEpisodeRepository extends _i1.Mock implements _i12.EpisodeRepository {
   @override
   _i11.Future<void> storeTranscriptAndChapterDataFromParsed(
     int? podcastId,
-    List<_i15.ParsedEpisodeMediaMeta>? mediaMetas,
+    List<_i16.ParsedEpisodeMediaMeta>? mediaMetas,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#storeTranscriptAndChapterDataFromParsed, [
@@ -344,21 +361,21 @@ class MockEpisodeRepository extends _i1.Mock implements _i12.EpisodeRepository {
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockAppSettingsRepository extends _i1.Mock
-    implements _i16.AppSettingsRepository {
+    implements _i17.AppSettingsRepository {
   MockAppSettingsRepository() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  _i17.ThemeMode getThemeMode() =>
+  _i18.ThemeMode getThemeMode() =>
       (super.noSuchMethod(
             Invocation.method(#getThemeMode, []),
-            returnValue: _i17.ThemeMode.system,
+            returnValue: _i18.ThemeMode.system,
           )
-          as _i17.ThemeMode);
+          as _i18.ThemeMode);
 
   @override
-  _i11.Future<void> setThemeMode(_i17.ThemeMode? mode) =>
+  _i11.Future<void> setThemeMode(_i18.ThemeMode? mode) =>
       (super.noSuchMethod(
             Invocation.method(#setThemeMode, [mode]),
             returnValue: _i11.Future<void>.value(),
@@ -478,15 +495,15 @@ class MockAppSettingsRepository extends _i1.Mock
           as _i11.Future<void>);
 
   @override
-  _i18.AutoPlayOrder getAutoPlayOrder() =>
+  _i19.AutoPlayOrder getAutoPlayOrder() =>
       (super.noSuchMethod(
             Invocation.method(#getAutoPlayOrder, []),
-            returnValue: _i18.AutoPlayOrder.oldestFirst,
+            returnValue: _i19.AutoPlayOrder.oldestFirst,
           )
-          as _i18.AutoPlayOrder);
+          as _i19.AutoPlayOrder);
 
   @override
-  _i11.Future<void> setAutoPlayOrder(_i18.AutoPlayOrder? order) =>
+  _i11.Future<void> setAutoPlayOrder(_i19.AutoPlayOrder? order) =>
       (super.noSuchMethod(
             Invocation.method(#setAutoPlayOrder, [order]),
             returnValue: _i11.Future<void>.value(),
@@ -609,7 +626,7 @@ class MockAppSettingsRepository extends _i1.Mock
 /// A class which mocks [FeedParserService].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockFeedParserService extends _i1.Mock implements _i19.FeedParserService {
+class MockFeedParserService extends _i1.Mock implements _i20.FeedParserService {
   MockFeedParserService() {
     _i1.throwOnMissingStub(this);
   }
@@ -652,13 +669,13 @@ class MockFeedParserService extends _i1.Mock implements _i19.FeedParserService {
           as _i11.Future<_i3.ParsedFeed>);
 
   @override
-  _i11.Stream<_i15.FeedParseProgress> parseWithProgress({
+  _i11.Stream<_i16.FeedParseProgress> parseWithProgress({
     required String? xmlContent,
     required int? podcastId,
     required Set<String>? knownGuids,
     required _i11.Future<void> Function(
       List<_i2.EpisodesCompanion>,
-      List<_i15.ParsedEpisodeMediaMeta>,
+      List<_i16.ParsedEpisodeMediaMeta>,
     )?
     onBatchReady,
     int? batchSize = 20,
@@ -671,9 +688,9 @@ class MockFeedParserService extends _i1.Mock implements _i19.FeedParserService {
               #onBatchReady: onBatchReady,
               #batchSize: batchSize,
             }),
-            returnValue: _i11.Stream<_i15.FeedParseProgress>.empty(),
+            returnValue: _i11.Stream<_i16.FeedParseProgress>.empty(),
           )
-          as _i11.Stream<_i15.FeedParseProgress>);
+          as _i11.Stream<_i16.FeedParseProgress>);
 
   @override
   void dispose() => super.noSuchMethod(
@@ -686,38 +703,38 @@ class MockFeedParserService extends _i1.Mock implements _i19.FeedParserService {
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockSmartPlaylistConfigRepository extends _i1.Mock
-    implements _i20.SmartPlaylistConfigRepository {
+    implements _i21.SmartPlaylistConfigRepository {
   MockSmartPlaylistConfigRepository() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  _i11.Future<_i21.RootMeta> fetchRootMeta() =>
+  _i11.Future<_i22.RootMeta> fetchRootMeta() =>
       (super.noSuchMethod(
             Invocation.method(#fetchRootMeta, []),
-            returnValue: _i11.Future<_i21.RootMeta>.value(
-              _i22.dummyValue<_i21.RootMeta>(
+            returnValue: _i11.Future<_i22.RootMeta>.value(
+              _i23.dummyValue<_i22.RootMeta>(
                 this,
                 Invocation.method(#fetchRootMeta, []),
               ),
             ),
           )
-          as _i11.Future<_i21.RootMeta>);
+          as _i11.Future<_i22.RootMeta>);
 
   @override
-  _i11.Future<_i23.SmartPlaylistPatternConfig> getConfig(
+  _i11.Future<_i15.SmartPlaylistPatternConfig> getConfig(
     _i24.PatternSummary? summary,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#getConfig, [summary]),
-            returnValue: _i11.Future<_i23.SmartPlaylistPatternConfig>.value(
-              _i22.dummyValue<_i23.SmartPlaylistPatternConfig>(
+            returnValue: _i11.Future<_i15.SmartPlaylistPatternConfig>.value(
+              _i23.dummyValue<_i15.SmartPlaylistPatternConfig>(
                 this,
                 Invocation.method(#getConfig, [summary]),
               ),
             ),
           )
-          as _i11.Future<_i23.SmartPlaylistPatternConfig>);
+          as _i11.Future<_i15.SmartPlaylistPatternConfig>);
 
   @override
   _i24.PatternSummary? findMatchingPattern(

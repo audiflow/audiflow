@@ -1974,18 +1974,19 @@ class $SmartPlaylistsTable extends SmartPlaylists
     ),
     defaultValue: const Constant(false),
   );
-  static const VerificationMeta _contentTypeMeta = const VerificationMeta(
-    'contentType',
+  static const VerificationMeta _playlistStructureMeta = const VerificationMeta(
+    'playlistStructure',
   );
   @override
-  late final GeneratedColumn<String> contentType = GeneratedColumn<String>(
-    'content_type',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-    defaultValue: const Constant('episodes'),
-  );
+  late final GeneratedColumn<String> playlistStructure =
+      GeneratedColumn<String>(
+        'playlist_structure',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant('split'),
+      );
   static const VerificationMeta _yearHeaderModeMeta = const VerificationMeta(
     'yearHeaderMode',
   );
@@ -1998,20 +1999,6 @@ class $SmartPlaylistsTable extends SmartPlaylists
     requiredDuringInsert: false,
     defaultValue: const Constant('none'),
   );
-  static const VerificationMeta _episodeYearHeadersMeta =
-      const VerificationMeta('episodeYearHeaders');
-  @override
-  late final GeneratedColumn<bool> episodeYearHeaders = GeneratedColumn<bool>(
-    'episode_year_headers',
-    aliasedName,
-    false,
-    type: DriftSqlType.bool,
-    requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("episode_year_headers" IN (0, 1))',
-    ),
-    defaultValue: const Constant(false),
-  );
   @override
   List<GeneratedColumn> get $columns => [
     podcastId,
@@ -2021,9 +2008,8 @@ class $SmartPlaylistsTable extends SmartPlaylists
     resolverType,
     thumbnailUrl,
     yearGrouped,
-    contentType,
+    playlistStructure,
     yearHeaderMode,
-    episodeYearHeaders,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2104,12 +2090,12 @@ class $SmartPlaylistsTable extends SmartPlaylists
         ),
       );
     }
-    if (data.containsKey('content_type')) {
+    if (data.containsKey('playlist_structure')) {
       context.handle(
-        _contentTypeMeta,
-        contentType.isAcceptableOrUnknown(
-          data['content_type']!,
-          _contentTypeMeta,
+        _playlistStructureMeta,
+        playlistStructure.isAcceptableOrUnknown(
+          data['playlist_structure']!,
+          _playlistStructureMeta,
         ),
       );
     }
@@ -2119,15 +2105,6 @@ class $SmartPlaylistsTable extends SmartPlaylists
         yearHeaderMode.isAcceptableOrUnknown(
           data['year_header_mode']!,
           _yearHeaderModeMeta,
-        ),
-      );
-    }
-    if (data.containsKey('episode_year_headers')) {
-      context.handle(
-        _episodeYearHeadersMeta,
-        episodeYearHeaders.isAcceptableOrUnknown(
-          data['episode_year_headers']!,
-          _episodeYearHeadersMeta,
         ),
       );
     }
@@ -2168,17 +2145,13 @@ class $SmartPlaylistsTable extends SmartPlaylists
         DriftSqlType.bool,
         data['${effectivePrefix}year_grouped'],
       )!,
-      contentType: attachedDatabase.typeMapping.read(
+      playlistStructure: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
-        data['${effectivePrefix}content_type'],
+        data['${effectivePrefix}playlist_structure'],
       )!,
       yearHeaderMode: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}year_header_mode'],
-      )!,
-      episodeYearHeaders: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}episode_year_headers'],
       )!,
     );
   }
@@ -2215,14 +2188,11 @@ class SmartPlaylistEntity extends DataClass
   /// Whether this smart playlist groups episodes by year.
   final bool yearGrouped;
 
-  /// Content type for this playlist (e.g., 'episodes').
-  final String contentType;
+  /// Playlist structure ('split' or 'grouped').
+  final String playlistStructure;
 
-  /// Year header display mode ('none', 'firstEpisode', etc.).
+  /// Year binding mode ('none', 'pinToYear', 'splitByYear').
   final String yearHeaderMode;
-
-  /// Whether to show year headers for episodes.
-  final bool episodeYearHeaders;
   const SmartPlaylistEntity({
     required this.podcastId,
     required this.playlistNumber,
@@ -2231,9 +2201,8 @@ class SmartPlaylistEntity extends DataClass
     required this.resolverType,
     this.thumbnailUrl,
     required this.yearGrouped,
-    required this.contentType,
+    required this.playlistStructure,
     required this.yearHeaderMode,
-    required this.episodeYearHeaders,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2247,9 +2216,8 @@ class SmartPlaylistEntity extends DataClass
       map['thumbnail_url'] = Variable<String>(thumbnailUrl);
     }
     map['year_grouped'] = Variable<bool>(yearGrouped);
-    map['content_type'] = Variable<String>(contentType);
+    map['playlist_structure'] = Variable<String>(playlistStructure);
     map['year_header_mode'] = Variable<String>(yearHeaderMode);
-    map['episode_year_headers'] = Variable<bool>(episodeYearHeaders);
     return map;
   }
 
@@ -2264,9 +2232,8 @@ class SmartPlaylistEntity extends DataClass
           ? const Value.absent()
           : Value(thumbnailUrl),
       yearGrouped: Value(yearGrouped),
-      contentType: Value(contentType),
+      playlistStructure: Value(playlistStructure),
       yearHeaderMode: Value(yearHeaderMode),
-      episodeYearHeaders: Value(episodeYearHeaders),
     );
   }
 
@@ -2283,9 +2250,8 @@ class SmartPlaylistEntity extends DataClass
       resolverType: serializer.fromJson<String>(json['resolverType']),
       thumbnailUrl: serializer.fromJson<String?>(json['thumbnailUrl']),
       yearGrouped: serializer.fromJson<bool>(json['yearGrouped']),
-      contentType: serializer.fromJson<String>(json['contentType']),
+      playlistStructure: serializer.fromJson<String>(json['playlistStructure']),
       yearHeaderMode: serializer.fromJson<String>(json['yearHeaderMode']),
-      episodeYearHeaders: serializer.fromJson<bool>(json['episodeYearHeaders']),
     );
   }
   @override
@@ -2299,9 +2265,8 @@ class SmartPlaylistEntity extends DataClass
       'resolverType': serializer.toJson<String>(resolverType),
       'thumbnailUrl': serializer.toJson<String?>(thumbnailUrl),
       'yearGrouped': serializer.toJson<bool>(yearGrouped),
-      'contentType': serializer.toJson<String>(contentType),
+      'playlistStructure': serializer.toJson<String>(playlistStructure),
       'yearHeaderMode': serializer.toJson<String>(yearHeaderMode),
-      'episodeYearHeaders': serializer.toJson<bool>(episodeYearHeaders),
     };
   }
 
@@ -2313,9 +2278,8 @@ class SmartPlaylistEntity extends DataClass
     String? resolverType,
     Value<String?> thumbnailUrl = const Value.absent(),
     bool? yearGrouped,
-    String? contentType,
+    String? playlistStructure,
     String? yearHeaderMode,
-    bool? episodeYearHeaders,
   }) => SmartPlaylistEntity(
     podcastId: podcastId ?? this.podcastId,
     playlistNumber: playlistNumber ?? this.playlistNumber,
@@ -2324,9 +2288,8 @@ class SmartPlaylistEntity extends DataClass
     resolverType: resolverType ?? this.resolverType,
     thumbnailUrl: thumbnailUrl.present ? thumbnailUrl.value : this.thumbnailUrl,
     yearGrouped: yearGrouped ?? this.yearGrouped,
-    contentType: contentType ?? this.contentType,
+    playlistStructure: playlistStructure ?? this.playlistStructure,
     yearHeaderMode: yearHeaderMode ?? this.yearHeaderMode,
-    episodeYearHeaders: episodeYearHeaders ?? this.episodeYearHeaders,
   );
   SmartPlaylistEntity copyWithCompanion(SmartPlaylistsCompanion data) {
     return SmartPlaylistEntity(
@@ -2347,15 +2310,12 @@ class SmartPlaylistEntity extends DataClass
       yearGrouped: data.yearGrouped.present
           ? data.yearGrouped.value
           : this.yearGrouped,
-      contentType: data.contentType.present
-          ? data.contentType.value
-          : this.contentType,
+      playlistStructure: data.playlistStructure.present
+          ? data.playlistStructure.value
+          : this.playlistStructure,
       yearHeaderMode: data.yearHeaderMode.present
           ? data.yearHeaderMode.value
           : this.yearHeaderMode,
-      episodeYearHeaders: data.episodeYearHeaders.present
-          ? data.episodeYearHeaders.value
-          : this.episodeYearHeaders,
     );
   }
 
@@ -2369,9 +2329,8 @@ class SmartPlaylistEntity extends DataClass
           ..write('resolverType: $resolverType, ')
           ..write('thumbnailUrl: $thumbnailUrl, ')
           ..write('yearGrouped: $yearGrouped, ')
-          ..write('contentType: $contentType, ')
-          ..write('yearHeaderMode: $yearHeaderMode, ')
-          ..write('episodeYearHeaders: $episodeYearHeaders')
+          ..write('playlistStructure: $playlistStructure, ')
+          ..write('yearHeaderMode: $yearHeaderMode')
           ..write(')'))
         .toString();
   }
@@ -2385,9 +2344,8 @@ class SmartPlaylistEntity extends DataClass
     resolverType,
     thumbnailUrl,
     yearGrouped,
-    contentType,
+    playlistStructure,
     yearHeaderMode,
-    episodeYearHeaders,
   );
   @override
   bool operator ==(Object other) =>
@@ -2400,9 +2358,8 @@ class SmartPlaylistEntity extends DataClass
           other.resolverType == this.resolverType &&
           other.thumbnailUrl == this.thumbnailUrl &&
           other.yearGrouped == this.yearGrouped &&
-          other.contentType == this.contentType &&
-          other.yearHeaderMode == this.yearHeaderMode &&
-          other.episodeYearHeaders == this.episodeYearHeaders);
+          other.playlistStructure == this.playlistStructure &&
+          other.yearHeaderMode == this.yearHeaderMode);
 }
 
 class SmartPlaylistsCompanion extends UpdateCompanion<SmartPlaylistEntity> {
@@ -2413,9 +2370,8 @@ class SmartPlaylistsCompanion extends UpdateCompanion<SmartPlaylistEntity> {
   final Value<String> resolverType;
   final Value<String?> thumbnailUrl;
   final Value<bool> yearGrouped;
-  final Value<String> contentType;
+  final Value<String> playlistStructure;
   final Value<String> yearHeaderMode;
-  final Value<bool> episodeYearHeaders;
   final Value<int> rowid;
   const SmartPlaylistsCompanion({
     this.podcastId = const Value.absent(),
@@ -2425,9 +2381,8 @@ class SmartPlaylistsCompanion extends UpdateCompanion<SmartPlaylistEntity> {
     this.resolverType = const Value.absent(),
     this.thumbnailUrl = const Value.absent(),
     this.yearGrouped = const Value.absent(),
-    this.contentType = const Value.absent(),
+    this.playlistStructure = const Value.absent(),
     this.yearHeaderMode = const Value.absent(),
-    this.episodeYearHeaders = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   SmartPlaylistsCompanion.insert({
@@ -2438,9 +2393,8 @@ class SmartPlaylistsCompanion extends UpdateCompanion<SmartPlaylistEntity> {
     required String resolverType,
     this.thumbnailUrl = const Value.absent(),
     this.yearGrouped = const Value.absent(),
-    this.contentType = const Value.absent(),
+    this.playlistStructure = const Value.absent(),
     this.yearHeaderMode = const Value.absent(),
-    this.episodeYearHeaders = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : podcastId = Value(podcastId),
        playlistNumber = Value(playlistNumber),
@@ -2455,9 +2409,8 @@ class SmartPlaylistsCompanion extends UpdateCompanion<SmartPlaylistEntity> {
     Expression<String>? resolverType,
     Expression<String>? thumbnailUrl,
     Expression<bool>? yearGrouped,
-    Expression<String>? contentType,
+    Expression<String>? playlistStructure,
     Expression<String>? yearHeaderMode,
-    Expression<bool>? episodeYearHeaders,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -2468,10 +2421,8 @@ class SmartPlaylistsCompanion extends UpdateCompanion<SmartPlaylistEntity> {
       if (resolverType != null) 'resolver_type': resolverType,
       if (thumbnailUrl != null) 'thumbnail_url': thumbnailUrl,
       if (yearGrouped != null) 'year_grouped': yearGrouped,
-      if (contentType != null) 'content_type': contentType,
+      if (playlistStructure != null) 'playlist_structure': playlistStructure,
       if (yearHeaderMode != null) 'year_header_mode': yearHeaderMode,
-      if (episodeYearHeaders != null)
-        'episode_year_headers': episodeYearHeaders,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -2484,9 +2435,8 @@ class SmartPlaylistsCompanion extends UpdateCompanion<SmartPlaylistEntity> {
     Value<String>? resolverType,
     Value<String?>? thumbnailUrl,
     Value<bool>? yearGrouped,
-    Value<String>? contentType,
+    Value<String>? playlistStructure,
     Value<String>? yearHeaderMode,
-    Value<bool>? episodeYearHeaders,
     Value<int>? rowid,
   }) {
     return SmartPlaylistsCompanion(
@@ -2497,9 +2447,8 @@ class SmartPlaylistsCompanion extends UpdateCompanion<SmartPlaylistEntity> {
       resolverType: resolverType ?? this.resolverType,
       thumbnailUrl: thumbnailUrl ?? this.thumbnailUrl,
       yearGrouped: yearGrouped ?? this.yearGrouped,
-      contentType: contentType ?? this.contentType,
+      playlistStructure: playlistStructure ?? this.playlistStructure,
       yearHeaderMode: yearHeaderMode ?? this.yearHeaderMode,
-      episodeYearHeaders: episodeYearHeaders ?? this.episodeYearHeaders,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -2528,14 +2477,11 @@ class SmartPlaylistsCompanion extends UpdateCompanion<SmartPlaylistEntity> {
     if (yearGrouped.present) {
       map['year_grouped'] = Variable<bool>(yearGrouped.value);
     }
-    if (contentType.present) {
-      map['content_type'] = Variable<String>(contentType.value);
+    if (playlistStructure.present) {
+      map['playlist_structure'] = Variable<String>(playlistStructure.value);
     }
     if (yearHeaderMode.present) {
       map['year_header_mode'] = Variable<String>(yearHeaderMode.value);
-    }
-    if (episodeYearHeaders.present) {
-      map['episode_year_headers'] = Variable<bool>(episodeYearHeaders.value);
     }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
@@ -2553,9 +2499,8 @@ class SmartPlaylistsCompanion extends UpdateCompanion<SmartPlaylistEntity> {
           ..write('resolverType: $resolverType, ')
           ..write('thumbnailUrl: $thumbnailUrl, ')
           ..write('yearGrouped: $yearGrouped, ')
-          ..write('contentType: $contentType, ')
+          ..write('playlistStructure: $playlistStructure, ')
           ..write('yearHeaderMode: $yearHeaderMode, ')
-          ..write('episodeYearHeaders: $episodeYearHeaders, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -2692,19 +2637,6 @@ class $SmartPlaylistGroupsTable extends SmartPlaylistGroups
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _episodeYearHeadersMeta =
-      const VerificationMeta('episodeYearHeaders');
-  @override
-  late final GeneratedColumn<bool> episodeYearHeaders = GeneratedColumn<bool>(
-    'episode_year_headers',
-    aliasedName,
-    true,
-    type: DriftSqlType.bool,
-    requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("episode_year_headers" IN (0, 1))',
-    ),
-  );
   @override
   List<GeneratedColumn> get $columns => [
     podcastId,
@@ -2718,7 +2650,6 @@ class $SmartPlaylistGroupsTable extends SmartPlaylistGroups
     earliestDate,
     latestDate,
     totalDurationMs,
-    episodeYearHeaders,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2825,15 +2756,6 @@ class $SmartPlaylistGroupsTable extends SmartPlaylistGroups
         ),
       );
     }
-    if (data.containsKey('episode_year_headers')) {
-      context.handle(
-        _episodeYearHeadersMeta,
-        episodeYearHeaders.isAcceptableOrUnknown(
-          data['episode_year_headers']!,
-          _episodeYearHeadersMeta,
-        ),
-      );
-    }
     return context;
   }
 
@@ -2890,10 +2812,6 @@ class $SmartPlaylistGroupsTable extends SmartPlaylistGroups
         DriftSqlType.int,
         data['${effectivePrefix}total_duration_ms'],
       ),
-      episodeYearHeaders: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}episode_year_headers'],
-      ),
     );
   }
 
@@ -2918,7 +2836,6 @@ class SmartPlaylistGroupEntity extends DataClass
   final DateTime? earliestDate;
   final DateTime? latestDate;
   final int? totalDurationMs;
-  final bool? episodeYearHeaders;
   const SmartPlaylistGroupEntity({
     required this.podcastId,
     required this.playlistId,
@@ -2931,7 +2848,6 @@ class SmartPlaylistGroupEntity extends DataClass
     this.earliestDate,
     this.latestDate,
     this.totalDurationMs,
-    this.episodeYearHeaders,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2956,9 +2872,6 @@ class SmartPlaylistGroupEntity extends DataClass
     }
     if (!nullToAbsent || totalDurationMs != null) {
       map['total_duration_ms'] = Variable<int>(totalDurationMs);
-    }
-    if (!nullToAbsent || episodeYearHeaders != null) {
-      map['episode_year_headers'] = Variable<bool>(episodeYearHeaders);
     }
     return map;
   }
@@ -2986,9 +2899,6 @@ class SmartPlaylistGroupEntity extends DataClass
       totalDurationMs: totalDurationMs == null && nullToAbsent
           ? const Value.absent()
           : Value(totalDurationMs),
-      episodeYearHeaders: episodeYearHeaders == null && nullToAbsent
-          ? const Value.absent()
-          : Value(episodeYearHeaders),
     );
   }
 
@@ -3009,9 +2919,6 @@ class SmartPlaylistGroupEntity extends DataClass
       earliestDate: serializer.fromJson<DateTime?>(json['earliestDate']),
       latestDate: serializer.fromJson<DateTime?>(json['latestDate']),
       totalDurationMs: serializer.fromJson<int?>(json['totalDurationMs']),
-      episodeYearHeaders: serializer.fromJson<bool?>(
-        json['episodeYearHeaders'],
-      ),
     );
   }
   @override
@@ -3029,7 +2936,6 @@ class SmartPlaylistGroupEntity extends DataClass
       'earliestDate': serializer.toJson<DateTime?>(earliestDate),
       'latestDate': serializer.toJson<DateTime?>(latestDate),
       'totalDurationMs': serializer.toJson<int?>(totalDurationMs),
-      'episodeYearHeaders': serializer.toJson<bool?>(episodeYearHeaders),
     };
   }
 
@@ -3045,7 +2951,6 @@ class SmartPlaylistGroupEntity extends DataClass
     Value<DateTime?> earliestDate = const Value.absent(),
     Value<DateTime?> latestDate = const Value.absent(),
     Value<int?> totalDurationMs = const Value.absent(),
-    Value<bool?> episodeYearHeaders = const Value.absent(),
   }) => SmartPlaylistGroupEntity(
     podcastId: podcastId ?? this.podcastId,
     playlistId: playlistId ?? this.playlistId,
@@ -3060,9 +2965,6 @@ class SmartPlaylistGroupEntity extends DataClass
     totalDurationMs: totalDurationMs.present
         ? totalDurationMs.value
         : this.totalDurationMs,
-    episodeYearHeaders: episodeYearHeaders.present
-        ? episodeYearHeaders.value
-        : this.episodeYearHeaders,
   );
   SmartPlaylistGroupEntity copyWithCompanion(
     SmartPlaylistGroupsCompanion data,
@@ -3095,9 +2997,6 @@ class SmartPlaylistGroupEntity extends DataClass
       totalDurationMs: data.totalDurationMs.present
           ? data.totalDurationMs.value
           : this.totalDurationMs,
-      episodeYearHeaders: data.episodeYearHeaders.present
-          ? data.episodeYearHeaders.value
-          : this.episodeYearHeaders,
     );
   }
 
@@ -3114,8 +3013,7 @@ class SmartPlaylistGroupEntity extends DataClass
           ..write('yearOverride: $yearOverride, ')
           ..write('earliestDate: $earliestDate, ')
           ..write('latestDate: $latestDate, ')
-          ..write('totalDurationMs: $totalDurationMs, ')
-          ..write('episodeYearHeaders: $episodeYearHeaders')
+          ..write('totalDurationMs: $totalDurationMs')
           ..write(')'))
         .toString();
   }
@@ -3133,7 +3031,6 @@ class SmartPlaylistGroupEntity extends DataClass
     earliestDate,
     latestDate,
     totalDurationMs,
-    episodeYearHeaders,
   );
   @override
   bool operator ==(Object other) =>
@@ -3149,8 +3046,7 @@ class SmartPlaylistGroupEntity extends DataClass
           other.yearOverride == this.yearOverride &&
           other.earliestDate == this.earliestDate &&
           other.latestDate == this.latestDate &&
-          other.totalDurationMs == this.totalDurationMs &&
-          other.episodeYearHeaders == this.episodeYearHeaders);
+          other.totalDurationMs == this.totalDurationMs);
 }
 
 class SmartPlaylistGroupsCompanion
@@ -3166,7 +3062,6 @@ class SmartPlaylistGroupsCompanion
   final Value<DateTime?> earliestDate;
   final Value<DateTime?> latestDate;
   final Value<int?> totalDurationMs;
-  final Value<bool?> episodeYearHeaders;
   final Value<int> rowid;
   const SmartPlaylistGroupsCompanion({
     this.podcastId = const Value.absent(),
@@ -3180,7 +3075,6 @@ class SmartPlaylistGroupsCompanion
     this.earliestDate = const Value.absent(),
     this.latestDate = const Value.absent(),
     this.totalDurationMs = const Value.absent(),
-    this.episodeYearHeaders = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   SmartPlaylistGroupsCompanion.insert({
@@ -3195,7 +3089,6 @@ class SmartPlaylistGroupsCompanion
     this.earliestDate = const Value.absent(),
     this.latestDate = const Value.absent(),
     this.totalDurationMs = const Value.absent(),
-    this.episodeYearHeaders = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : podcastId = Value(podcastId),
        playlistId = Value(playlistId),
@@ -3215,7 +3108,6 @@ class SmartPlaylistGroupsCompanion
     Expression<DateTime>? earliestDate,
     Expression<DateTime>? latestDate,
     Expression<int>? totalDurationMs,
-    Expression<bool>? episodeYearHeaders,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -3230,8 +3122,6 @@ class SmartPlaylistGroupsCompanion
       if (earliestDate != null) 'earliest_date': earliestDate,
       if (latestDate != null) 'latest_date': latestDate,
       if (totalDurationMs != null) 'total_duration_ms': totalDurationMs,
-      if (episodeYearHeaders != null)
-        'episode_year_headers': episodeYearHeaders,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -3248,7 +3138,6 @@ class SmartPlaylistGroupsCompanion
     Value<DateTime?>? earliestDate,
     Value<DateTime?>? latestDate,
     Value<int?>? totalDurationMs,
-    Value<bool?>? episodeYearHeaders,
     Value<int>? rowid,
   }) {
     return SmartPlaylistGroupsCompanion(
@@ -3263,7 +3152,6 @@ class SmartPlaylistGroupsCompanion
       earliestDate: earliestDate ?? this.earliestDate,
       latestDate: latestDate ?? this.latestDate,
       totalDurationMs: totalDurationMs ?? this.totalDurationMs,
-      episodeYearHeaders: episodeYearHeaders ?? this.episodeYearHeaders,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -3304,9 +3192,6 @@ class SmartPlaylistGroupsCompanion
     if (totalDurationMs.present) {
       map['total_duration_ms'] = Variable<int>(totalDurationMs.value);
     }
-    if (episodeYearHeaders.present) {
-      map['episode_year_headers'] = Variable<bool>(episodeYearHeaders.value);
-    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -3327,7 +3212,6 @@ class SmartPlaylistGroupsCompanion
           ..write('earliestDate: $earliestDate, ')
           ..write('latestDate: $latestDate, ')
           ..write('totalDurationMs: $totalDurationMs, ')
-          ..write('episodeYearHeaders: $episodeYearHeaders, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -8483,9 +8367,8 @@ typedef $$SmartPlaylistsTableCreateCompanionBuilder =
       required String resolverType,
       Value<String?> thumbnailUrl,
       Value<bool> yearGrouped,
-      Value<String> contentType,
+      Value<String> playlistStructure,
       Value<String> yearHeaderMode,
-      Value<bool> episodeYearHeaders,
       Value<int> rowid,
     });
 typedef $$SmartPlaylistsTableUpdateCompanionBuilder =
@@ -8497,9 +8380,8 @@ typedef $$SmartPlaylistsTableUpdateCompanionBuilder =
       Value<String> resolverType,
       Value<String?> thumbnailUrl,
       Value<bool> yearGrouped,
-      Value<String> contentType,
+      Value<String> playlistStructure,
       Value<String> yearHeaderMode,
-      Value<bool> episodeYearHeaders,
       Value<int> rowid,
     });
 
@@ -8575,18 +8457,13 @@ class $$SmartPlaylistsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<String> get contentType => $composableBuilder(
-    column: $table.contentType,
+  ColumnFilters<String> get playlistStructure => $composableBuilder(
+    column: $table.playlistStructure,
     builder: (column) => ColumnFilters(column),
   );
 
   ColumnFilters<String> get yearHeaderMode => $composableBuilder(
     column: $table.yearHeaderMode,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<bool> get episodeYearHeaders => $composableBuilder(
-    column: $table.episodeYearHeaders,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -8653,18 +8530,13 @@ class $$SmartPlaylistsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get contentType => $composableBuilder(
-    column: $table.contentType,
+  ColumnOrderings<String> get playlistStructure => $composableBuilder(
+    column: $table.playlistStructure,
     builder: (column) => ColumnOrderings(column),
   );
 
   ColumnOrderings<String> get yearHeaderMode => $composableBuilder(
     column: $table.yearHeaderMode,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<bool> get episodeYearHeaders => $composableBuilder(
-    column: $table.episodeYearHeaders,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -8729,18 +8601,13 @@ class $$SmartPlaylistsTableAnnotationComposer
     builder: (column) => column,
   );
 
-  GeneratedColumn<String> get contentType => $composableBuilder(
-    column: $table.contentType,
+  GeneratedColumn<String> get playlistStructure => $composableBuilder(
+    column: $table.playlistStructure,
     builder: (column) => column,
   );
 
   GeneratedColumn<String> get yearHeaderMode => $composableBuilder(
     column: $table.yearHeaderMode,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<bool> get episodeYearHeaders => $composableBuilder(
-    column: $table.episodeYearHeaders,
     builder: (column) => column,
   );
 
@@ -8805,9 +8672,8 @@ class $$SmartPlaylistsTableTableManager
                 Value<String> resolverType = const Value.absent(),
                 Value<String?> thumbnailUrl = const Value.absent(),
                 Value<bool> yearGrouped = const Value.absent(),
-                Value<String> contentType = const Value.absent(),
+                Value<String> playlistStructure = const Value.absent(),
                 Value<String> yearHeaderMode = const Value.absent(),
-                Value<bool> episodeYearHeaders = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SmartPlaylistsCompanion(
                 podcastId: podcastId,
@@ -8817,9 +8683,8 @@ class $$SmartPlaylistsTableTableManager
                 resolverType: resolverType,
                 thumbnailUrl: thumbnailUrl,
                 yearGrouped: yearGrouped,
-                contentType: contentType,
+                playlistStructure: playlistStructure,
                 yearHeaderMode: yearHeaderMode,
-                episodeYearHeaders: episodeYearHeaders,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -8831,9 +8696,8 @@ class $$SmartPlaylistsTableTableManager
                 required String resolverType,
                 Value<String?> thumbnailUrl = const Value.absent(),
                 Value<bool> yearGrouped = const Value.absent(),
-                Value<String> contentType = const Value.absent(),
+                Value<String> playlistStructure = const Value.absent(),
                 Value<String> yearHeaderMode = const Value.absent(),
-                Value<bool> episodeYearHeaders = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SmartPlaylistsCompanion.insert(
                 podcastId: podcastId,
@@ -8843,9 +8707,8 @@ class $$SmartPlaylistsTableTableManager
                 resolverType: resolverType,
                 thumbnailUrl: thumbnailUrl,
                 yearGrouped: yearGrouped,
-                contentType: contentType,
+                playlistStructure: playlistStructure,
                 yearHeaderMode: yearHeaderMode,
-                episodeYearHeaders: episodeYearHeaders,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -8929,7 +8792,6 @@ typedef $$SmartPlaylistGroupsTableCreateCompanionBuilder =
       Value<DateTime?> earliestDate,
       Value<DateTime?> latestDate,
       Value<int?> totalDurationMs,
-      Value<bool?> episodeYearHeaders,
       Value<int> rowid,
     });
 typedef $$SmartPlaylistGroupsTableUpdateCompanionBuilder =
@@ -8945,7 +8807,6 @@ typedef $$SmartPlaylistGroupsTableUpdateCompanionBuilder =
       Value<DateTime?> earliestDate,
       Value<DateTime?> latestDate,
       Value<int?> totalDurationMs,
-      Value<bool?> episodeYearHeaders,
       Value<int> rowid,
     });
 
@@ -9044,11 +8905,6 @@ class $$SmartPlaylistGroupsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<bool> get episodeYearHeaders => $composableBuilder(
-    column: $table.episodeYearHeaders,
-    builder: (column) => ColumnFilters(column),
-  );
-
   $$SubscriptionsTableFilterComposer get podcastId {
     final $$SubscriptionsTableFilterComposer composer = $composerBuilder(
       composer: this,
@@ -9132,11 +8988,6 @@ class $$SmartPlaylistGroupsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<bool> get episodeYearHeaders => $composableBuilder(
-    column: $table.episodeYearHeaders,
-    builder: (column) => ColumnOrderings(column),
-  );
-
   $$SubscriptionsTableOrderingComposer get podcastId {
     final $$SubscriptionsTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -9216,11 +9067,6 @@ class $$SmartPlaylistGroupsTableAnnotationComposer
     builder: (column) => column,
   );
 
-  GeneratedColumn<bool> get episodeYearHeaders => $composableBuilder(
-    column: $table.episodeYearHeaders,
-    builder: (column) => column,
-  );
-
   $$SubscriptionsTableAnnotationComposer get podcastId {
     final $$SubscriptionsTableAnnotationComposer composer = $composerBuilder(
       composer: this,
@@ -9292,7 +9138,6 @@ class $$SmartPlaylistGroupsTableTableManager
                 Value<DateTime?> earliestDate = const Value.absent(),
                 Value<DateTime?> latestDate = const Value.absent(),
                 Value<int?> totalDurationMs = const Value.absent(),
-                Value<bool?> episodeYearHeaders = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SmartPlaylistGroupsCompanion(
                 podcastId: podcastId,
@@ -9306,7 +9151,6 @@ class $$SmartPlaylistGroupsTableTableManager
                 earliestDate: earliestDate,
                 latestDate: latestDate,
                 totalDurationMs: totalDurationMs,
-                episodeYearHeaders: episodeYearHeaders,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -9322,7 +9166,6 @@ class $$SmartPlaylistGroupsTableTableManager
                 Value<DateTime?> earliestDate = const Value.absent(),
                 Value<DateTime?> latestDate = const Value.absent(),
                 Value<int?> totalDurationMs = const Value.absent(),
-                Value<bool?> episodeYearHeaders = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SmartPlaylistGroupsCompanion.insert(
                 podcastId: podcastId,
@@ -9336,7 +9179,6 @@ class $$SmartPlaylistGroupsTableTableManager
                 earliestDate: earliestDate,
                 latestDate: latestDate,
                 totalDurationMs: totalDurationMs,
-                episodeYearHeaders: episodeYearHeaders,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

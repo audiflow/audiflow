@@ -37,6 +37,12 @@ export 'src/features/feed/models/pattern_summary.dart';
 export 'src/features/feed/models/root_meta.dart';
 export 'src/features/feed/models/podcast_view_mode.dart';
 export 'src/features/feed/models/smart_playlist.dart';
+export 'src/features/feed/models/episode_filter_entry.dart';
+export 'src/features/feed/models/episode_filters.dart';
+export 'src/features/feed/models/episode_list_config.dart';
+export 'src/features/feed/models/episode_sort_rule.dart';
+export 'src/features/feed/models/group_display_config.dart';
+export 'src/features/feed/models/group_list_config.dart';
 export 'src/features/feed/models/smart_playlist_definition.dart';
 export 'src/features/feed/models/smart_playlist_group_def.dart';
 export 'src/features/feed/models/smart_playlist_pattern.dart';
@@ -96,6 +102,7 @@ export 'src/features/voice/models/voice_recognition_state.dart';
 export 'src/features/voice/repositories/speech_recognition_repository.dart';
 export 'src/features/voice/repositories/speech_recognition_repository_impl.dart';
 export 'src/features/voice/services/play_podcast_by_name_service.dart';
+export 'src/features/voice/services/voice_command_executor.dart';
 export 'src/features/voice/services/voice_command_orchestrator.dart';
 
 // Download feature

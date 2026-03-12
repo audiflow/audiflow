@@ -1,10 +1,15 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:audiflow_domain/src/features/feed/models/episode_filters.dart';
+import 'package:audiflow_domain/src/features/feed/models/episode_filter_entry.dart';
+import 'package:audiflow_domain/src/features/feed/models/episode_list_config.dart';
+import 'package:audiflow_domain/src/features/feed/models/episode_sort_rule.dart';
+import 'package:audiflow_domain/src/features/feed/models/group_list_config.dart';
+import 'package:audiflow_domain/src/features/feed/models/smart_playlist.dart';
 import 'package:audiflow_domain/src/features/feed/models/smart_playlist_definition.dart';
 import 'package:audiflow_domain/src/features/feed/models/smart_playlist_episode_extractor.dart';
 import 'package:audiflow_domain/src/features/feed/models/smart_playlist_group_def.dart';
-import 'package:audiflow_domain/src/features/feed/models/smart_playlist_pattern_config.dart';
 import 'package:audiflow_domain/src/features/feed/models/smart_playlist_sort.dart';
 import 'package:audiflow_domain/src/features/feed/models/smart_playlist_title_extractor.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -46,30 +51,6 @@ List<String> _extractEnum(Map<String, dynamic> property) {
   return [];
 }
 
-/// Wraps playlist definitions in a valid config envelope for schema
-/// validation.
-Map<String, dynamic> _wrapInConfig(
-  List<Map<String, dynamic>> playlists, {
-  String id = 'test',
-  String? podcastGuid,
-  List<String>? feedUrls,
-  bool yearGroupedEpisodes = false,
-}) {
-  return {
-    'dataVersion': 1,
-    'schemaVersion': 1,
-    'patterns': [
-      {
-        'id': id,
-        'podcastGuid': ?podcastGuid,
-        'feedUrls': ?feedUrls,
-        if (yearGroupedEpisodes) 'yearGroupedEpisodes': yearGroupedEpisodes,
-        'playlists': playlists,
-      },
-    ],
-  };
-}
-
 void main() {
   late Map<String, dynamic> schema;
   late Map<String, dynamic> defs;
@@ -96,27 +77,40 @@ void main() {
         id: 'main',
         displayName: 'Main Episodes',
         resolverType: 'rss',
+        playlistStructure: 'split',
       );
-      final wrapped = _wrapInConfig([def.toJson()]);
-      expect(validate(wrapped), isEmpty);
+      expect(validate(def.toJson()), isEmpty);
     });
 
     test('full SmartPlaylistDefinition round-trips', () {
-      const def = SmartPlaylistDefinition(
+      final def = SmartPlaylistDefinition(
         id: 'seasons',
         displayName: 'Seasons',
         resolverType: 'rss',
         priority: 100,
-        contentType: 'groups',
-        yearHeaderMode: 'firstEpisode',
-        episodeYearHeaders: true,
-        showDateRange: true,
-        showSortOrderToggle: true,
-        showSeasonNumber: true,
-        titleFilter: r'S\d+',
-        excludeFilter: r'Trailer',
-        requireFilter: r'\[.+\]',
+        playlistStructure: 'grouped',
+        prependSeasonNumber: true,
+        episodeFilters: EpisodeFilters(
+          require: [EpisodeFilterEntry(title: r'S\d+')],
+          exclude: [EpisodeFilterEntry(title: r'Trailer')],
+        ),
         nullSeasonGroupKey: 0,
+        groupList: GroupListConfig(
+          yearBinding: YearBinding.pinToYear,
+          userSortable: true,
+          showDateRange: true,
+          sort: SmartPlaylistSortRule(
+            field: SmartPlaylistSortField.playlistNumber,
+            order: SortOrder.descending,
+          ),
+        ),
+        episodeList: EpisodeListConfig(
+          showYearHeaders: true,
+          sort: EpisodeSortRule(
+            field: EpisodeSortField.publishedAt,
+            order: SortOrder.descending,
+          ),
+        ),
         groups: [
           SmartPlaylistGroupDef(
             id: 'main',
@@ -125,24 +119,13 @@ void main() {
           ),
           SmartPlaylistGroupDef(id: 'other', displayName: 'Other'),
         ],
-        customSort: SmartPlaylistSortSpec([
-          SmartPlaylistSortRule(
-            field: SmartPlaylistSortField.playlistNumber,
-            order: SortOrder.descending,
-            condition: SortKeyGreaterThan(0),
-          ),
-          SmartPlaylistSortRule(
-            field: SmartPlaylistSortField.newestEpisodeDate,
-            order: SortOrder.descending,
-          ),
-        ]),
         titleExtractor: SmartPlaylistTitleExtractor(
           source: 'title',
           pattern: r'\[(.+?)\]',
           group: 1,
           template: 'Season {value}',
         ),
-        smartPlaylistEpisodeExtractor: SmartPlaylistEpisodeExtractor(
+        episodeExtractor: SmartPlaylistEpisodeExtractor(
           source: 'title',
           pattern: r'\[(\d+)-(\d+)\]',
           seasonGroup: 1,
@@ -150,50 +133,14 @@ void main() {
           fallbackToRss: true,
         ),
       );
-      final wrapped = _wrapInConfig(
-        [def.toJson()],
-        podcastGuid: 'guid-123',
-        feedUrls: ['https://example.com/feed.xml'],
-        yearGroupedEpisodes: true,
-      );
-      expect(validate(wrapped), isEmpty);
-    });
-
-    test('SmartPlaylistPatternConfig round-trips', () {
-      final config = SmartPlaylistPatternConfig(
-        id: 'test-podcast',
-        podcastGuid: 'guid-abc',
-        feedUrls: ['https://example.com/feed'],
-        yearGroupedEpisodes: true,
-        playlists: const [
-          SmartPlaylistDefinition(
-            id: 'main',
-            displayName: 'Main',
-            resolverType: 'category',
-            groups: [
-              SmartPlaylistGroupDef(
-                id: 'g1',
-                displayName: 'Group 1',
-                pattern: r'.*',
-              ),
-            ],
-          ),
-        ],
-      );
-      final wrapped = {
-        'dataVersion': 1,
-        'schemaVersion': 1,
-        'patterns': [config.toJson()],
-      };
-      expect(validate(wrapped), isEmpty);
+      expect(validate(def.toJson()), isEmpty);
     });
   });
 
   group('enum values match vendored schema.json', () {
     test('resolverTypes match schema oneOf', () {
-      final definition =
-          defs['SmartPlaylistDefinition'] as Map<String, dynamic>;
-      final props = definition['properties'] as Map<String, dynamic>;
+      // The v2 schema validates definitions directly at root level
+      final props = schema['properties'] as Map<String, dynamic>;
       final resolverType = props['resolverType'] as Map<String, dynamic>;
       final schemaValues = _extractEnum(resolverType);
 
@@ -206,26 +153,22 @@ void main() {
       );
     });
 
-    test('contentTypes match schema enum', () {
-      final definition =
-          defs['SmartPlaylistDefinition'] as Map<String, dynamic>;
-      final props = definition['properties'] as Map<String, dynamic>;
-      final contentType = props['contentType'] as Map<String, dynamic>;
-      final schemaValues = _extractEnum(contentType);
-      expect(schemaValues, containsAll(['episodes', 'groups']));
+    test('playlistStructure values match schema', () {
+      final props = schema['properties'] as Map<String, dynamic>;
+      final ps = props['playlistStructure'] as Map<String, dynamic>;
+      final schemaValues = _extractEnum(ps);
+      expect(schemaValues, containsAll(['split', 'grouped']));
     });
 
-    test('yearHeaderModes match schema enum', () {
-      final definition =
-          defs['SmartPlaylistDefinition'] as Map<String, dynamic>;
-      final props = definition['properties'] as Map<String, dynamic>;
-      final yearHeaderMode = props['yearHeaderMode'] as Map<String, dynamic>;
-      final schemaValues = _extractEnum(yearHeaderMode);
-      expect(schemaValues, containsAll(['none', 'firstEpisode', 'perEpisode']));
+    test('yearBinding values match schema', () {
+      final yearBinding = defs['YearBinding'] as Map<String, dynamic>;
+      final schemaValues = _extractEnum(yearBinding);
+      final dartValues = YearBinding.values.map((e) => e.name).toList();
+      expect(dartValues, equals(schemaValues));
     });
 
     test('sortFields match schema oneOf', () {
-      final sortRule = defs['SmartPlaylistSortRule'] as Map<String, dynamic>;
+      final sortRule = defs['SortRule'] as Map<String, dynamic>;
       final props = sortRule['properties'] as Map<String, dynamic>;
       final field = props['field'] as Map<String, dynamic>;
       final schemaValues = _extractEnum(field);
@@ -238,27 +181,24 @@ void main() {
     });
 
     test('sortOrders match schema enum', () {
-      final sortRule = defs['SmartPlaylistSortRule'] as Map<String, dynamic>;
-      final props = sortRule['properties'] as Map<String, dynamic>;
-      final order = props['order'] as Map<String, dynamic>;
-      final schemaValues = _extractEnum(order);
+      final sortOrder = defs['SortOrder'] as Map<String, dynamic>;
+      final schemaValues = _extractEnum(sortOrder);
 
       final dartEnumValues = SortOrder.values.map((e) => e.name).toList();
       expect(dartEnumValues, equals(schemaValues));
     });
 
-    test('sortConditionTypes match schema enum', () {
-      final sortCondition =
-          defs['SmartPlaylistSortCondition'] as Map<String, dynamic>;
-      final props = sortCondition['properties'] as Map<String, dynamic>;
-      final type = props['type'] as Map<String, dynamic>;
-      final schemaValues = _extractEnum(type);
-      expect(schemaValues, containsAll(['sortKeyGreaterThan', 'greaterThan']));
+    test('episodeSortField values match schema', () {
+      final episodeSortRule = defs['EpisodeSortRule'] as Map<String, dynamic>;
+      final props = episodeSortRule['properties'] as Map<String, dynamic>;
+      final field = props['field'] as Map<String, dynamic>;
+      final schemaValues = _extractEnum(field);
+      final dartValues = EpisodeSortField.values.map((e) => e.name).toList();
+      expect(dartValues, equals(schemaValues));
     });
 
     test('titleExtractorSources match schema enum', () {
-      final titleExtractor =
-          defs['SmartPlaylistTitleExtractor'] as Map<String, dynamic>;
+      final titleExtractor = defs['TitleExtractor'] as Map<String, dynamic>;
       final props = titleExtractor['properties'] as Map<String, dynamic>;
       final source = props['source'] as Map<String, dynamic>;
       final schemaValues = _extractEnum(source);
@@ -269,24 +209,17 @@ void main() {
     });
 
     test('episodeExtractorSources match schema enum', () {
-      final episodeExtractor =
-          defs['SmartPlaylistEpisodeExtractor'] as Map<String, dynamic>;
+      final episodeExtractor = defs['EpisodeExtractor'] as Map<String, dynamic>;
       final props = episodeExtractor['properties'] as Map<String, dynamic>;
       final source = props['source'] as Map<String, dynamic>;
       final schemaValues = _extractEnum(source);
       expect(schemaValues, containsAll(['title', 'description']));
     });
 
-    test('schema dataVersion is const 1', () {
-      final props = schema['properties'] as Map<String, dynamic>;
-      final dataVersion = props['dataVersion'] as Map<String, dynamic>;
-      expect(dataVersion['const'], equals(1));
-    });
-
     test(r'schema has $id', () {
       expect(
         schema[r'$id'],
-        equals('https://audiflow.app/schema/v1/smartplaylist.json'),
+        equals('https://audiflow.app/schema/v2/playlist-definition.json'),
       );
     });
   });

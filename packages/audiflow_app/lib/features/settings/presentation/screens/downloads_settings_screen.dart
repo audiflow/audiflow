@@ -1,8 +1,10 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../../../../routing/app_router.dart';
 
 /// Screen for configuring download settings: WiFi-only,
 /// auto-delete, and max concurrent downloads.
@@ -21,6 +23,13 @@ class DownloadsSettingsScreen extends ConsumerWidget {
       appBar: AppBar(title: Text(l10n.settingsDownloadsTitle)),
       body: ListView(
         children: [
+          ListTile(
+            leading: const Icon(Icons.download),
+            title: const Text('Manage Downloads'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.go(AppRoutes.settingsDownloadManagement),
+          ),
+          const Divider(),
           SwitchListTile(
             title: Text(l10n.downloadsWifiOnlyTitle),
             subtitle: Text(l10n.downloadsWifiOnlySubtitle),

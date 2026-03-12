@@ -3,7 +3,6 @@ import '../models/smart_playlist.dart';
 import '../models/smart_playlist_definition.dart';
 import '../models/smart_playlist_group_def.dart';
 import '../models/smart_playlist_pattern_config.dart';
-import '../resolvers/rss_metadata_resolver.dart';
 import '../resolvers/smart_playlist_resolver.dart';
 
 /// Service that orchestrates the smart playlist resolver chain.
@@ -70,21 +69,20 @@ class SmartPlaylistResolverService {
 
       resolverType ??= result.resolverType;
 
-      final contentType = RssMetadataResolver.parseContentType(
-        definition.contentType,
+      final playlistStructure = PlaylistStructure.fromString(
+        definition.playlistStructure,
       );
-      final yearHeaderMode = RssMetadataResolver.parseYearHeaderMode(
-        definition.yearHeaderMode,
-      );
+      final yearBinding = definition.groupList?.yearBinding ?? YearBinding.none;
 
-      // When contentType is "groups", the resolver's playlists
+      // When playlistStructure is "grouped", the resolver's playlists
       // become groups inside a single parent playlist named after
       // the definition.
-      if (contentType == SmartPlaylistContentType.groups) {
+      if (playlistStructure == PlaylistStructure.grouped) {
         final groupDefMap = {
           for (final g in definition.groups ?? <SmartPlaylistGroupDef>[])
             g.id: g,
         };
+        final defEpisodeSort = definition.episodeList?.sort;
         final groups = result.playlists.map((p) {
           final gDef = groupDefMap[p.id];
           return SmartPlaylistGroup(
@@ -93,8 +91,13 @@ class SmartPlaylistResolverService {
             sortKey: p.sortKey,
             episodeIds: p.episodeIds,
             thumbnailUrl: p.thumbnailUrl,
-            episodeYearHeaders: gDef?.episodeYearHeaders,
-            showDateRange: gDef?.showDateRange ?? definition.showDateRange,
+            yearOverride: gDef?.display?.yearBinding,
+            showDateRange:
+                gDef?.display?.showDateRange ??
+                definition.groupList?.showDateRange ??
+                false,
+            showYearHeaders: gDef?.episodeList?.showYearHeaders,
+            episodeSort: gDef?.episodeList?.sort ?? defEpisodeSort,
           );
         }).toList();
         final allEpisodeIds = groups.expand((g) => g.episodeIds).toList();
@@ -105,13 +108,14 @@ class SmartPlaylistResolverService {
             displayName: definition.displayName,
             sortKey: allPlaylists.length,
             episodeIds: allEpisodeIds,
-            contentType: contentType,
-            yearHeaderMode: yearHeaderMode,
-            episodeYearHeaders: definition.episodeYearHeaders,
-            showDateRange: definition.showDateRange,
-            showSortOrderToggle: definition.showSortOrderToggle,
-            showSeasonNumber: definition.showSeasonNumber,
-            customSort: definition.customSort,
+            playlistStructure: playlistStructure,
+            yearBinding: yearBinding,
+            showDateRange: definition.groupList?.showDateRange ?? false,
+            showYearHeaders: definition.episodeList?.showYearHeaders ?? false,
+            userSortable: definition.groupList?.userSortable ?? true,
+            prependSeasonNumber: definition.prependSeasonNumber,
+            groupSort: definition.groupList?.sort,
+            episodeSort: defEpisodeSort,
             groups: groups,
           ),
         );
@@ -120,13 +124,14 @@ class SmartPlaylistResolverService {
         // smart playlist.
         final decorated = result.playlists.map((playlist) {
           return playlist.copyWith(
-            contentType: contentType,
-            yearHeaderMode: yearHeaderMode,
-            episodeYearHeaders: definition.episodeYearHeaders,
-            showDateRange: definition.showDateRange,
-            showSortOrderToggle: definition.showSortOrderToggle,
-            showSeasonNumber: definition.showSeasonNumber,
-            customSort: definition.customSort,
+            playlistStructure: playlistStructure,
+            yearBinding: yearBinding,
+            showDateRange: definition.groupList?.showDateRange ?? false,
+            showYearHeaders: definition.episodeList?.showYearHeaders ?? false,
+            userSortable: definition.groupList?.userSortable ?? true,
+            prependSeasonNumber: definition.prependSeasonNumber,
+            groupSort: definition.groupList?.sort,
+            episodeSort: definition.episodeList?.sort,
           );
         }).toList();
         allPlaylists.addAll(decorated);
@@ -167,38 +172,73 @@ class SmartPlaylistResolverService {
         .where((e) => !claimedIds.contains(e.id))
         .toList();
 
-    final hasTitleFilter = definition.titleFilter != null;
-    final hasExcludeFilter = definition.excludeFilter != null;
-    final hasRequireFilter = definition.requireFilter != null;
-
-    // No filters means fallback: gets all unclaimed episodes
-    if (!hasTitleFilter && !hasExcludeFilter && !hasRequireFilter) {
+    final filters = definition.episodeFilters;
+    if (filters == null || !filters.hasFilters) {
       return unclaimed;
     }
 
-    final titleRegex = hasTitleFilter
-        ? RegExp(definition.titleFilter!, caseSensitive: false)
-        : null;
-    final excludeRegex = hasExcludeFilter
-        ? RegExp(definition.excludeFilter!, caseSensitive: false)
-        : null;
-    final requireRegex = hasRequireFilter
-        ? RegExp(definition.requireFilter!, caseSensitive: false)
-        : null;
+    // Pre-compile regexes once, outside the per-episode loop.
+    final requireRegexes = filters.require
+        ?.map(
+          (e) => (
+            title: e.title != null
+                ? RegExp(e.title!, caseSensitive: false)
+                : null,
+            description: e.description != null
+                ? RegExp(e.description!, caseSensitive: false)
+                : null,
+          ),
+        )
+        .toList();
+    final excludeRegexes = filters.exclude
+        ?.map(
+          (e) => (
+            title: e.title != null
+                ? RegExp(e.title!, caseSensitive: false)
+                : null,
+            description: e.description != null
+                ? RegExp(e.description!, caseSensitive: false)
+                : null,
+          ),
+        )
+        .toList();
 
     return unclaimed.where((episode) {
       final title = episode.title;
-      if (titleRegex != null && !titleRegex.hasMatch(title)) {
-        return false;
+      final description = episode.description;
+
+      // Require: OR across entries, AND within entry.
+      if (requireRegexes != null && requireRegexes.isNotEmpty) {
+        final matchesAny = requireRegexes.any(
+          (r) => _entryMatches(r, title, description),
+        );
+        if (!matchesAny) return false;
       }
-      if (excludeRegex != null && excludeRegex.hasMatch(title)) {
-        return false;
+
+      // Exclude: OR across entries, AND within entry.
+      if (excludeRegexes != null) {
+        for (final r in excludeRegexes) {
+          if (_entryMatches(r, title, description)) return false;
+        }
       }
-      if (requireRegex != null && !requireRegex.hasMatch(title)) {
-        return false;
-      }
+
       return true;
     }).toList();
+  }
+
+  /// Checks if all specified fields in a filter entry match (AND within entry).
+  bool _entryMatches(
+    ({RegExp? title, RegExp? description}) r,
+    String title,
+    String? description,
+  ) {
+    if (r.title != null && !r.title!.hasMatch(title)) return false;
+    if (r.description != null) {
+      if (description == null || !r.description!.hasMatch(description)) {
+        return false;
+      }
+    }
+    return true;
   }
 
   SmartPlaylistPatternConfig? _findMatchingConfig(
@@ -245,8 +285,6 @@ class SmartPlaylistResolverService {
   }
 
   static bool _hasFilters(SmartPlaylistDefinition definition) {
-    return definition.titleFilter != null ||
-        definition.excludeFilter != null ||
-        definition.requireFilter != null;
+    return definition.episodeFilters?.hasFilters ?? false;
   }
 }

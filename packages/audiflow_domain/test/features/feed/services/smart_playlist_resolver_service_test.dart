@@ -133,57 +133,62 @@ void main() {
       expect(result!.resolverType, 'rss');
     });
 
-    test('wraps resolver playlists as groups when contentType is groups', () {
-      final serviceWithGroups = SmartPlaylistResolverService(
-        resolvers: [RssMetadataResolver()],
-        patterns: [
-          SmartPlaylistPatternConfig(
-            id: 'test',
-            feedUrls: ['https://example.com/feed'],
-            playlists: [
-              SmartPlaylistDefinition(
-                id: 'regular',
-                displayName: 'Regular Series',
-                resolverType: 'rss',
-                contentType: 'groups',
-                yearHeaderMode: 'firstEpisode',
-              ),
-            ],
-          ),
-        ],
-      );
+    test(
+      'wraps resolver playlists as groups when playlistStructure is grouped',
+      () {
+        final serviceWithGroups = SmartPlaylistResolverService(
+          resolvers: [RssMetadataResolver()],
+          patterns: [
+            SmartPlaylistPatternConfig(
+              id: 'test',
+              feedUrls: ['https://example.com/feed'],
+              playlists: [
+                SmartPlaylistDefinition(
+                  id: 'regular',
+                  displayName: 'Regular Series',
+                  resolverType: 'rss',
+                  playlistStructure: 'grouped',
+                  groupList: GroupListConfig(
+                    yearBinding: YearBinding.pinToYear,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
 
-      final episodes = [
-        _makeEpisode(1, seasonNumber: 1, title: 'S1E1'),
-        _makeEpisode(2, seasonNumber: 1, title: 'S1E2'),
-        _makeEpisode(3, seasonNumber: 2, title: 'S2E1'),
-      ];
+        final episodes = [
+          _makeEpisode(1, seasonNumber: 1, title: 'S1E1'),
+          _makeEpisode(2, seasonNumber: 1, title: 'S1E2'),
+          _makeEpisode(3, seasonNumber: 2, title: 'S2E1'),
+        ];
 
-      final result = serviceWithGroups.resolveSmartPlaylists(
-        podcastGuid: null,
-        feedUrl: 'https://example.com/feed',
-        episodes: episodes,
-      );
+        final result = serviceWithGroups.resolveSmartPlaylists(
+          podcastGuid: null,
+          feedUrl: 'https://example.com/feed',
+          episodes: episodes,
+        );
 
-      expect(result, isNotNull);
-      // One parent playlist, not two separate season playlists
-      expect(result!.playlists, hasLength(1));
+        expect(result, isNotNull);
+        // One parent playlist, not two separate season playlists
+        expect(result!.playlists, hasLength(1));
 
-      final playlist = result.playlists.first;
-      expect(playlist.id, 'regular');
-      expect(playlist.displayName, 'Regular Series');
-      expect(playlist.contentType, SmartPlaylistContentType.groups);
-      expect(playlist.yearHeaderMode, YearHeaderMode.firstEpisode);
-      expect(playlist.episodeIds, unorderedEquals([1, 2, 3]));
+        final playlist = result.playlists.first;
+        expect(playlist.id, 'regular');
+        expect(playlist.displayName, 'Regular Series');
+        expect(playlist.playlistStructure, PlaylistStructure.grouped);
+        expect(playlist.yearBinding, YearBinding.pinToYear);
+        expect(playlist.episodeIds, unorderedEquals([1, 2, 3]));
 
-      // Seasons become groups inside the playlist
-      expect(playlist.groups, isNotNull);
-      expect(playlist.groups, hasLength(2));
-      expect(
-        playlist.groups!.map((g) => g.id),
-        containsAll(['season_1', 'season_2']),
-      );
-    });
+        // Seasons become groups inside the playlist
+        expect(playlist.groups, isNotNull);
+        expect(playlist.groups, hasLength(2));
+        expect(
+          playlist.groups!.map((g) => g.id),
+          containsAll(['season_1', 'season_2']),
+        );
+      },
+    );
 
     test('multiple definitions produce separate parent playlists', () {
       final serviceWithMultiple = SmartPlaylistResolverService(
@@ -197,15 +202,17 @@ void main() {
                 id: 'main',
                 displayName: 'Main',
                 resolverType: 'rss',
-                contentType: 'groups',
+                playlistStructure: 'grouped',
                 priority: 10,
-                titleFilter: r'Main',
+                episodeFilters: EpisodeFilters(
+                  require: [EpisodeFilterEntry(title: r'Main')],
+                ),
               ),
               SmartPlaylistDefinition(
                 id: 'extras',
                 displayName: 'Extras',
                 resolverType: 'rss',
-                contentType: 'groups',
+                playlistStructure: 'grouped',
               ),
             ],
           ),
@@ -244,7 +251,7 @@ void main() {
                 id: 'all',
                 displayName: 'All',
                 resolverType: 'rss',
-                contentType: 'episodes',
+                playlistStructure: 'split',
               ),
             ],
           ),
@@ -268,7 +275,7 @@ void main() {
       expect(result.playlists.first.groups, isNull);
     });
 
-    test('routes episodes by titleFilter and excludeFilter', () {
+    test('routes episodes by episodeFilters', () {
       final serviceWithFilters = SmartPlaylistResolverService(
         resolvers: [RssMetadataResolver(), YearResolver()],
         patterns: [
@@ -281,13 +288,17 @@ void main() {
                 displayName: 'Bonus',
                 resolverType: 'year',
                 priority: 10,
-                requireFilter: r'Bonus',
+                episodeFilters: EpisodeFilters(
+                  require: [EpisodeFilterEntry(title: r'Bonus')],
+                ),
               ),
               SmartPlaylistDefinition(
                 id: 'main',
                 displayName: 'Main',
                 resolverType: 'year',
-                excludeFilter: r'Bonus',
+                episodeFilters: EpisodeFilters(
+                  exclude: [EpisodeFilterEntry(title: r'Bonus')],
+                ),
               ),
             ],
           ),
@@ -338,6 +349,48 @@ void main() {
       expect(firstIds, unorderedEquals([1, 3]));
       // Bonus playlist gets episodes matching requireFilter
       expect(secondIds, unorderedEquals([2, 4]));
+    });
+
+    test('require filters use OR across entries', () {
+      final service = SmartPlaylistResolverService(
+        resolvers: [YearResolver()],
+        patterns: [
+          SmartPlaylistPatternConfig(
+            id: 'or_test',
+            feedUrls: ['https://example.com/feed'],
+            playlists: [
+              SmartPlaylistDefinition(
+                id: 'special',
+                displayName: 'Special',
+                resolverType: 'year',
+                episodeFilters: EpisodeFilters(
+                  require: [
+                    EpisodeFilterEntry(title: r'Bonus'),
+                    EpisodeFilterEntry(title: r'Extra'),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      );
+
+      final episodes = [
+        _makeEpisode(1, title: 'Bonus: BTS', publishedAt: DateTime(2024)),
+        _makeEpisode(2, title: 'Extra: Outtakes', publishedAt: DateTime(2024)),
+        _makeEpisode(3, title: 'Regular Ep', publishedAt: DateTime(2024)),
+      ];
+
+      final result = service.resolveSmartPlaylists(
+        podcastGuid: null,
+        feedUrl: 'https://example.com/feed',
+        episodes: episodes,
+      );
+
+      // OR: episodes matching either 'Bonus' or 'Extra' are included
+      expect(result, isNotNull);
+      final ids = result!.playlists[0].episodeIds;
+      expect(ids, unorderedEquals([1, 2]));
     });
   });
 }

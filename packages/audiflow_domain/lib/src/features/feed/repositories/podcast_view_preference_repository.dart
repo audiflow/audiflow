@@ -215,7 +215,6 @@ class PodcastViewPreferenceRepositoryImpl
   SmartPlaylistSortField _parseSmartPlaylistField(String value) {
     return switch (value) {
       'newestEpisodeDate' => SmartPlaylistSortField.newestEpisodeDate,
-      'progress' => SmartPlaylistSortField.progress,
       'alphabetical' => SmartPlaylistSortField.alphabetical,
       _ => SmartPlaylistSortField.playlistNumber,
     };
@@ -225,7 +224,6 @@ class PodcastViewPreferenceRepositoryImpl
     return switch (field) {
       SmartPlaylistSortField.playlistNumber => 'seasonNumber',
       SmartPlaylistSortField.newestEpisodeDate => 'newestEpisodeDate',
-      SmartPlaylistSortField.progress => 'progress',
       SmartPlaylistSortField.alphabetical => 'alphabetical',
     };
   }

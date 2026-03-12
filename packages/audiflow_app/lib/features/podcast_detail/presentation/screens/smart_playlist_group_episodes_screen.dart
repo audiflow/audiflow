@@ -43,20 +43,35 @@ class _SmartPlaylistGroupEpisodesScreenState
   @override
   void initState() {
     super.initState();
-    final parent = widget.parentPlaylist;
-    if (parent.showSortOrderToggle && parent.customSort != null) {
-      _sortOrder = parent.customSort!.rules.first.order;
-    } else {
-      _sortOrder = SortOrder.descending;
-    }
+    final groupSort =
+        widget.group.episodeSort ?? widget.parentPlaylist.episodeSort;
+    _sortOrder =
+        groupSort?.order ??
+        (widget.parentPlaylist.userSortable &&
+                widget.parentPlaylist.groupSort != null
+            ? widget.parentPlaylist.groupSort!.order
+            : SortOrder.descending);
   }
 
   List<int> get _episodeIds =>
       widget.filteredEpisodeIds ?? widget.group.episodeIds;
 
-  bool get _showYearHeaders =>
-      widget.group.episodeYearHeaders ??
-      widget.parentPlaylist.episodeYearHeaders;
+  /// Effective year binding for this group.
+  ///
+  /// Per-group yearOverride takes precedence over the parent playlist's
+  /// yearBinding. Used to decide whether year headers should be shown.
+  YearBinding get _yearBinding =>
+      widget.group.yearOverride ?? widget.parentPlaylist.yearBinding;
+
+  bool get _showYearHeaders {
+    // If yearBinding is active, year headers are implied.
+    if (_yearBinding != YearBinding.none) return true;
+    // Per-group showYearHeaders override takes precedence, then fall
+    // back to the parent playlist's definition-level setting.
+    final groupOverride = widget.group.showYearHeaders;
+    if (groupOverride != null) return groupOverride;
+    return widget.parentPlaylist.showYearHeaders;
+  }
 
   @override
   void dispose() {
@@ -66,7 +81,7 @@ class _SmartPlaylistGroupEpisodesScreenState
 
   String _formatGroupTitle() {
     return widget.group.formattedDisplayName(
-      showSeasonNumber: widget.parentPlaylist.showSeasonNumber,
+      prependSeasonNumber: widget.parentPlaylist.prependSeasonNumber,
     );
   }
 
@@ -182,7 +197,7 @@ class _SmartPlaylistGroupEpisodesScreenState
             child: _buildSortHeader(
               theme,
               showSortSwitch:
-                  _showYearHeaders || widget.parentPlaylist.showSortOrderToggle,
+                  _showYearHeaders || widget.parentPlaylist.userSortable,
               episodeCount: displayEpisodes.length,
             ),
           ),
@@ -211,9 +226,14 @@ class _SmartPlaylistGroupEpisodesScreenState
           ];
         }
 
-        final sorted = _sortOrder == SortOrder.descending
-            ? displayEpisodes.reversed.toList()
-            : displayEpisodes;
+        final effectiveSort =
+            widget.group.episodeSort ?? widget.parentPlaylist.episodeSort;
+        final effectiveRule = EpisodeSortRule(
+          field: effectiveSort?.field ?? EpisodeSortField.publishedAt,
+          order: _sortOrder,
+        );
+        final sorted = List.of(displayEpisodes);
+        sortEpisodeData(sorted, effectiveRule);
 
         return [
           sortHeaderSliver,

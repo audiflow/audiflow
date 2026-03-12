@@ -5,7 +5,7 @@ import 'package:audiflow_app/features/search/presentation/screens/search_screen.
 import 'package:audiflow_app/features/settings/presentation/screens/settings_screen.dart';
 import 'package:audiflow_app/routing/app_router.dart';
 import 'package:audiflow_app/routing/scaffold_with_nav_bar.dart';
-import 'package:audiflow_search/audiflow_search.dart';
+import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -23,17 +23,24 @@ void main() {
       router.dispose();
     });
 
+    Widget buildTestApp() {
+      return ProviderScope(
+        overrides: [
+          voiceCommandOrchestratorProvider.overrideWith(
+            () => _MockVoiceCommandOrchestrator(),
+          ),
+        ],
+        child: MaterialApp.router(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          routerConfig: router,
+        ),
+      );
+    }
+
     group('Tab Navigation', () {
       testWidgets('default tab is Search', (tester) async {
-        await tester.pumpWidget(
-          ProviderScope(
-            child: MaterialApp.router(
-              localizationsDelegates: AppLocalizations.localizationsDelegates,
-              supportedLocales: AppLocalizations.supportedLocales,
-              routerConfig: router,
-            ),
-          ),
-        );
+        await tester.pumpWidget(buildTestApp());
         await tester.pumpAndSettle();
 
         expect(find.byType(SearchScreen), findsOneWidget);
@@ -51,15 +58,7 @@ void main() {
           tester.view.resetDevicePixelRatio();
         });
 
-        await tester.pumpWidget(
-          ProviderScope(
-            child: MaterialApp.router(
-              localizationsDelegates: AppLocalizations.localizationsDelegates,
-              supportedLocales: AppLocalizations.supportedLocales,
-              routerConfig: router,
-            ),
-          ),
-        );
+        await tester.pumpWidget(buildTestApp());
         await tester.pumpAndSettle();
 
         expect(find.byType(NavigationBar), findsOneWidget);
@@ -71,15 +70,7 @@ void main() {
       });
 
       testWidgets('navigation to Library tab works correctly', (tester) async {
-        await tester.pumpWidget(
-          ProviderScope(
-            child: MaterialApp.router(
-              localizationsDelegates: AppLocalizations.localizationsDelegates,
-              supportedLocales: AppLocalizations.supportedLocales,
-              routerConfig: router,
-            ),
-          ),
-        );
+        await tester.pumpWidget(buildTestApp());
         await tester.pumpAndSettle();
 
         await tester.tap(find.text('Library'));
@@ -89,15 +80,7 @@ void main() {
       });
 
       testWidgets('navigation to Settings tab works correctly', (tester) async {
-        await tester.pumpWidget(
-          ProviderScope(
-            child: MaterialApp.router(
-              localizationsDelegates: AppLocalizations.localizationsDelegates,
-              supportedLocales: AppLocalizations.supportedLocales,
-              routerConfig: router,
-            ),
-          ),
-        );
+        await tester.pumpWidget(buildTestApp());
         await tester.pumpAndSettle();
 
         await tester.tap(find.text('Settings'));
@@ -109,15 +92,7 @@ void main() {
       testWidgets('each tab maintains its own navigation stack', (
         tester,
       ) async {
-        await tester.pumpWidget(
-          ProviderScope(
-            child: MaterialApp.router(
-              localizationsDelegates: AppLocalizations.localizationsDelegates,
-              supportedLocales: AppLocalizations.supportedLocales,
-              routerConfig: router,
-            ),
-          ),
-        );
+        await tester.pumpWidget(buildTestApp());
         await tester.pumpAndSettle();
 
         // Navigate to podcast detail within Search tab (with extra data)
@@ -146,15 +121,7 @@ void main() {
       });
 
       testWidgets('tapping current tab returns to root', (tester) async {
-        await tester.pumpWidget(
-          ProviderScope(
-            child: MaterialApp.router(
-              localizationsDelegates: AppLocalizations.localizationsDelegates,
-              supportedLocales: AppLocalizations.supportedLocales,
-              routerConfig: router,
-            ),
-          ),
-        );
+        await tester.pumpWidget(buildTestApp());
         await tester.pumpAndSettle();
 
         // Navigate to podcast detail within Search tab (with extra data)
@@ -179,15 +146,7 @@ void main() {
 
     group('Route Matching', () {
       testWidgets('search route navigates to SearchScreen', (tester) async {
-        await tester.pumpWidget(
-          ProviderScope(
-            child: MaterialApp.router(
-              localizationsDelegates: AppLocalizations.localizationsDelegates,
-              supportedLocales: AppLocalizations.supportedLocales,
-              routerConfig: router,
-            ),
-          ),
-        );
+        await tester.pumpWidget(buildTestApp());
 
         router.go('/search');
         await tester.pumpAndSettle();
@@ -196,15 +155,7 @@ void main() {
       });
 
       testWidgets('library route navigates to LibraryScreen', (tester) async {
-        await tester.pumpWidget(
-          ProviderScope(
-            child: MaterialApp.router(
-              localizationsDelegates: AppLocalizations.localizationsDelegates,
-              supportedLocales: AppLocalizations.supportedLocales,
-              routerConfig: router,
-            ),
-          ),
-        );
+        await tester.pumpWidget(buildTestApp());
 
         router.go('/library');
         await tester.pumpAndSettle();
@@ -213,15 +164,7 @@ void main() {
       });
 
       testWidgets('settings route navigates to SettingsScreen', (tester) async {
-        await tester.pumpWidget(
-          ProviderScope(
-            child: MaterialApp.router(
-              localizationsDelegates: AppLocalizations.localizationsDelegates,
-              supportedLocales: AppLocalizations.supportedLocales,
-              routerConfig: router,
-            ),
-          ),
-        );
+        await tester.pumpWidget(buildTestApp());
 
         router.go('/settings');
         await tester.pumpAndSettle();
@@ -232,15 +175,7 @@ void main() {
       testWidgets('podcast detail route shows not found without extra', (
         tester,
       ) async {
-        await tester.pumpWidget(
-          ProviderScope(
-            child: MaterialApp.router(
-              localizationsDelegates: AppLocalizations.localizationsDelegates,
-              supportedLocales: AppLocalizations.supportedLocales,
-              routerConfig: router,
-            ),
-          ),
-        );
+        await tester.pumpWidget(buildTestApp());
 
         router.go('/search/podcast/456');
         await tester.pumpAndSettle();
@@ -253,15 +188,7 @@ void main() {
       testWidgets('podcast detail route shows podcast with extra data', (
         tester,
       ) async {
-        await tester.pumpWidget(
-          ProviderScope(
-            child: MaterialApp.router(
-              localizationsDelegates: AppLocalizations.localizationsDelegates,
-              supportedLocales: AppLocalizations.supportedLocales,
-              routerConfig: router,
-            ),
-          ),
-        );
+        await tester.pumpWidget(buildTestApp());
 
         final podcast = Podcast(
           id: '456',
@@ -287,19 +214,17 @@ void main() {
 
     group('ScaffoldWithNavBar', () {
       testWidgets('wraps content with navigation shell', (tester) async {
-        await tester.pumpWidget(
-          ProviderScope(
-            child: MaterialApp.router(
-              localizationsDelegates: AppLocalizations.localizationsDelegates,
-              supportedLocales: AppLocalizations.supportedLocales,
-              routerConfig: router,
-            ),
-          ),
-        );
+        await tester.pumpWidget(buildTestApp());
         await tester.pumpAndSettle();
 
         expect(find.byType(ScaffoldWithNavBar), findsOneWidget);
       });
     });
   });
+}
+
+/// Mock orchestrator that returns idle state.
+class _MockVoiceCommandOrchestrator extends VoiceCommandOrchestrator {
+  @override
+  VoiceRecognitionState build() => const VoiceRecognitionState.idle();
 }

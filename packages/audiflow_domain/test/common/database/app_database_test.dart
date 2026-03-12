@@ -15,8 +15,8 @@ void main() {
   });
 
   group('database creation', () {
-    test('schema version is 18', () {
-      expect(db.schemaVersion, equals(18));
+    test('schema version is 19', () {
+      expect(db.schemaVersion, equals(19));
     });
 
     test('all tables are accessible', () {

@@ -71,7 +71,7 @@ class SmartPlaylistCard extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        if (smartPlaylist.yearHeaderMode != YearHeaderMode.none)
+                        if (smartPlaylist.yearBinding != YearBinding.none)
                           Padding(
                             padding: const EdgeInsets.only(left: Spacing.xs),
                             child: Icon(

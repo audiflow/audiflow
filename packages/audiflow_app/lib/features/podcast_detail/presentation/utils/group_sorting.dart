@@ -1,22 +1,22 @@
 import 'package:audiflow_domain/audiflow_domain.dart'
     show
         SmartPlaylistGroup,
-        SmartPlaylistSortCondition,
         SmartPlaylistSortField,
-        SmartPlaylistSortSpec,
-        SortKeyGreaterThan,
+        SmartPlaylistSortRule,
         SortOrder;
 
-/// Sorts groups using the playlist's [customSort] rules and
+import '../widgets/inline_group_card.dart' show YearFilteredInlineGroup;
+
+/// Sorts groups using the playlist's [groupSort] rule and
 /// the user's [sortOrder] toggle.
-List<SmartPlaylistGroup> sortGroupsByCustomSort(
+List<SmartPlaylistGroup> sortGroupsBySort(
   List<SmartPlaylistGroup> groups,
-  SmartPlaylistSortSpec? customSort,
+  SmartPlaylistSortRule? groupSort,
   SortOrder sortOrder,
 ) {
   final sorted = List<SmartPlaylistGroup>.from(groups);
 
-  if (customSort == null || customSort.rules.isEmpty) {
+  if (groupSort == null) {
     sorted.sort((a, b) {
       final cmp = a.sortKey.compareTo(b.sortKey);
       return sortOrder == SortOrder.ascending ? cmp : -cmp;
@@ -24,24 +24,13 @@ List<SmartPlaylistGroup> sortGroupsByCustomSort(
     return sorted;
   }
 
-  // When sortOrder matches the first rule's order, use rules as written.
-  // Otherwise invert.
-  final invert = sortOrder != customSort.rules.first.order;
+  final invert = sortOrder != groupSort.order;
 
   sorted.sort((a, b) {
-    for (final rule in customSort.rules) {
-      if (rule.condition != null) {
-        final bothMatch =
-            matchesGroupCondition(a, rule.condition!) &&
-            matchesGroupCondition(b, rule.condition!);
-        if (!bothMatch) continue;
-      }
-
-      final cmp = compareGroupsByField(a, b, rule.field);
-      if (cmp != 0) {
-        final directed = rule.order == SortOrder.ascending ? cmp : -cmp;
-        return invert ? -directed : directed;
-      }
+    final cmp = compareGroupsByField(a, b, groupSort.field);
+    if (cmp != 0) {
+      final directed = groupSort.order == SortOrder.ascending ? cmp : -cmp;
+      return invert ? -directed : directed;
     }
     return 0;
   });
@@ -62,9 +51,6 @@ int compareGroupsByField(
     SmartPlaylistSortField.alphabetical => a.displayName.compareTo(
       b.displayName,
     ),
-    // Progress data is not available at the group level yet;
-    // fall back to sortKey until per-group progress is tracked.
-    SmartPlaylistSortField.progress => a.sortKey.compareTo(b.sortKey),
   };
 }
 
@@ -75,11 +61,50 @@ int compareNullableDates(DateTime? a, DateTime? b) {
   return a.compareTo(b);
 }
 
-bool matchesGroupCondition(
-  SmartPlaylistGroup group,
-  SmartPlaylistSortCondition condition,
+/// Sorts [YearFilteredInlineGroup] items within a year bucket.
+///
+/// Uses filtered metadata (latestDate) when available,
+/// falling back to the underlying group's values.
+void sortFilteredGroupsInPlace(
+  List<YearFilteredInlineGroup> items,
+  SmartPlaylistSortRule? groupSort,
+  SortOrder sortOrder,
 ) {
-  return switch (condition) {
-    SortKeyGreaterThan(:final value) => value < group.sortKey,
+  if (groupSort == null) {
+    items.sort((a, b) {
+      final cmp = a.group.sortKey.compareTo(b.group.sortKey);
+      return sortOrder == SortOrder.ascending ? cmp : -cmp;
+    });
+    return;
+  }
+
+  final invert = sortOrder != groupSort.order;
+
+  items.sort((a, b) {
+    final cmp = _compareFilteredByField(a, b, groupSort.field);
+    if (cmp != 0) {
+      final directed = groupSort.order == SortOrder.ascending ? cmp : -cmp;
+      return invert ? -directed : directed;
+    }
+    return 0;
+  });
+}
+
+int _compareFilteredByField(
+  YearFilteredInlineGroup a,
+  YearFilteredInlineGroup b,
+  SmartPlaylistSortField field,
+) {
+  return switch (field) {
+    SmartPlaylistSortField.playlistNumber => a.group.sortKey.compareTo(
+      b.group.sortKey,
+    ),
+    SmartPlaylistSortField.newestEpisodeDate => compareNullableDates(
+      a.latestDate ?? a.group.latestDate,
+      b.latestDate ?? b.group.latestDate,
+    ),
+    SmartPlaylistSortField.alphabetical => a.group.displayName.compareTo(
+      b.group.displayName,
+    ),
   };
 }
