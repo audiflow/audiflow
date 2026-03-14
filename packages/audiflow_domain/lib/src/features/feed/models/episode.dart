@@ -1,48 +1,21 @@
-import 'package:drift/drift.dart';
+import 'package:isar_community/isar.dart';
 
-import '../../subscription/models/subscriptions.dart';
+part 'episode.g.dart';
 
-/// Drift table for podcast episodes.
-///
-/// Persisted when podcast feed is fetched. Upserted on feed refresh
-/// using the composite unique key (podcastId, guid).
-class Episodes extends Table {
-  /// Auto-incrementing primary key.
-  IntColumn get id => integer().autoIncrement()();
+@collection
+class Episode {
+  Id id = Isar.autoIncrement;
 
-  /// Foreign key to Subscriptions table.
-  IntColumn get podcastId => integer().references(Subscriptions, #id)();
+  @Index(composite: [CompositeIndex('guid')], unique: true)
+  late int podcastId;
 
-  /// Unique identifier from RSS feed (guid element).
-  TextColumn get guid => text()();
-
-  /// Episode title.
-  TextColumn get title => text()();
-
-  /// Episode description/show notes (nullable).
-  TextColumn get description => text().nullable()();
-
-  /// URL to the audio file.
-  TextColumn get audioUrl => text()();
-
-  /// Duration in milliseconds (nullable, may not be in feed).
-  IntColumn get durationMs => integer().nullable()();
-
-  /// Publication date (nullable).
-  DateTimeColumn get publishedAt => dateTime().nullable()();
-
-  /// Episode artwork URL (nullable, falls back to podcast artwork).
-  TextColumn get imageUrl => text().nullable()();
-
-  /// Episode number within season (nullable).
-  IntColumn get episodeNumber => integer().nullable()();
-
-  /// Season number (nullable).
-  IntColumn get seasonNumber => integer().nullable()();
-
-  /// Composite unique key for upsert matching.
-  @override
-  List<Set<Column>> get uniqueKeys => [
-    {podcastId, guid},
-  ];
+  late String guid;
+  late String title;
+  String? description;
+  late String audioUrl;
+  int? durationMs;
+  DateTime? publishedAt;
+  String? imageUrl;
+  int? episodeNumber;
+  int? seasonNumber;
 }

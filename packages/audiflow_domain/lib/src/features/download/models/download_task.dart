@@ -1,53 +1,41 @@
-import 'package:drift/drift.dart';
+import 'package:isar_community/isar.dart';
 
-import '../../feed/models/episode.dart';
-import 'download_status.dart';
+part 'download_task.g.dart';
 
-/// Drift table for download tasks.
-///
-/// Tracks episode downloads with progress, status, and retry information.
-class DownloadTasks extends Table {
-  /// Auto-incrementing primary key.
-  IntColumn get id => integer().autoIncrement()();
+@collection
+class DownloadTask {
+  Id id = Isar.autoIncrement;
 
-  /// Foreign key to Episodes table.
-  IntColumn get episodeId => integer().references(Episodes, #id)();
+  @Index(unique: true)
+  late int episodeId;
 
-  /// Original audio URL (cached for offline reference).
-  TextColumn get audioUrl => text()();
-
-  /// Local file path when download completes.
-  TextColumn get localPath => text().nullable()();
-
-  /// Total file size in bytes (from Content-Length header).
-  IntColumn get totalBytes => integer().nullable()();
-
-  /// Bytes downloaded so far.
-  IntColumn get downloadedBytes => integer().withDefault(const Constant(0))();
-
-  /// Download status (stored as int, see [DownloadStatus]).
-  IntColumn get status => integer().withDefault(const Constant(0))();
-
-  /// Whether to only download on WiFi.
-  BoolColumn get wifiOnly => boolean().withDefault(const Constant(true))();
-
-  /// Number of retry attempts.
-  IntColumn get retryCount => integer().withDefault(const Constant(0))();
-
-  /// Last error message for debugging.
-  TextColumn get lastError => text().nullable()();
-
-  /// When the download was requested.
-  DateTimeColumn get createdAt => dateTime()();
-
-  /// When the download completed successfully.
-  DateTimeColumn get completedAt => dateTime().nullable()();
-
-  /// Ensure one download per episode.
-  @override
-  List<Set<Column>> get uniqueKeys => [
-    {episodeId},
-  ];
+  late String audioUrl;
+  String? localPath;
+  int? totalBytes;
+  int downloadedBytes = 0;
+  int status = 0;
+  bool wifiOnly = true;
+  int retryCount = 0;
+  String? lastError;
+  late DateTime createdAt;
+  DateTime? completedAt;
 }
 
-// Extension DownloadTaskStatusX is defined in app_database.dart after code generation
+enum DownloadStatus {
+  pending(0),
+  downloading(1),
+  completed(2),
+  failed(3),
+  paused(4),
+  canceled(5);
+
+  const DownloadStatus(this.value);
+  final int value;
+}
+
+extension DownloadTaskStatusX on DownloadTask {
+  DownloadStatus get downloadStatus => DownloadStatus.values.firstWhere(
+    (e) => e.value == status,
+    orElse: () => DownloadStatus.pending,
+  );
+}

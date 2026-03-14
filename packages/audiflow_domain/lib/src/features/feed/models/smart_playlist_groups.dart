@@ -1,24 +1,26 @@
-import 'package:drift/drift.dart';
+import 'package:isar_community/isar.dart';
 
-import '../../subscription/models/subscriptions.dart';
+part 'smart_playlist_groups.g.dart';
 
-/// Drift table for persisted smart playlist group data.
-@DataClassName('SmartPlaylistGroupEntity')
-class SmartPlaylistGroups extends Table {
-  IntColumn get podcastId => integer().references(Subscriptions, #id)();
-  TextColumn get playlistId => text()();
-  TextColumn get groupId => text()();
-  TextColumn get displayName => text()();
-  IntColumn get sortKey => integer()();
-  TextColumn get thumbnailUrl => text().nullable()();
+@collection
+@Name('SmartPlaylistGroup')
+class SmartPlaylistGroupEntity {
+  Id id = Isar.autoIncrement;
 
-  /// JSON-encoded list of episode IDs.
-  TextColumn get episodeIds => text()();
-  TextColumn get yearOverride => text().nullable()();
-  DateTimeColumn get earliestDate => dateTime().nullable()();
-  DateTimeColumn get latestDate => dateTime().nullable()();
-  IntColumn get totalDurationMs => integer().nullable()();
+  @Index(
+    composite: [CompositeIndex('playlistId'), CompositeIndex('groupId')],
+    unique: true,
+  )
+  late int podcastId;
 
-  @override
-  Set<Column> get primaryKey => {podcastId, playlistId, groupId};
+  late String playlistId;
+  late String groupId;
+  late String displayName;
+  late int sortKey;
+  String? thumbnailUrl;
+  late String episodeIds;
+  String? yearOverride;
+  DateTime? earliestDate;
+  DateTime? latestDate;
+  int? totalDurationMs;
 }

@@ -1,27 +1,18 @@
-import 'package:drift/drift.dart';
+import 'package:isar_community/isar.dart';
 
-import 'episode_transcript.dart';
+part 'transcript_segment_table.g.dart';
 
-/// Drift table for transcript segments (cues/lines).
-///
-/// Populated on demand when the user opens a transcript.
-/// Each segment is a timed text entry within a transcript file.
-class TranscriptSegments extends Table {
-  /// Auto-incrementing primary key.
-  IntColumn get id => integer().autoIncrement()();
+@collection
+class TranscriptSegment {
+  Id id = Isar.autoIncrement;
 
-  /// Foreign key to EpisodeTranscripts table.
-  IntColumn get transcriptId => integer().references(EpisodeTranscripts, #id)();
+  @Index()
+  late int transcriptId;
 
-  /// Start time in milliseconds.
-  IntColumn get startMs => integer()();
+  @Index()
+  late int startMs;
 
-  /// End time in milliseconds.
-  IntColumn get endMs => integer()();
-
-  /// The transcript text content.
-  TextColumn get body => text()();
-
-  /// Speaker name for this segment (nullable).
-  TextColumn get speaker => text().nullable()();
+  late int endMs;
+  late String body;
+  String? speaker;
 }
