@@ -1,50 +1,49 @@
-import 'package:drift/drift.dart';
+import 'package:isar_community/isar.dart';
 
-import '../../../../common/database/app_database.dart';
+import '../../models/subscriptions.dart';
 
-/// Local datasource for subscription operations using Drift.
+/// Local datasource for subscription operations using Isar.
 ///
-/// Provides CRUD operations for the Subscriptions table.
+/// Provides CRUD operations for the Subscription collection.
 class SubscriptionLocalDatasource {
-  SubscriptionLocalDatasource(this._db);
+  SubscriptionLocalDatasource(this._isar);
 
-  final AppDatabase _db;
+  final Isar _isar;
 
   /// Inserts a new subscription into the database.
   ///
   /// Returns the inserted [Subscription] with its auto-generated id.
-  Future<Subscription> insert(SubscriptionsCompanion companion) async {
-    final id = await _db.into(_db.subscriptions).insert(companion);
-    return _db.subscriptions.findById(id);
+  Future<Subscription> insert(Subscription subscription) async {
+    await _isar.writeTxn(() async {
+      await _isar.subscriptions.put(subscription);
+    });
+    return subscription;
   }
 
   /// Deletes a subscription by its iTunes ID.
   ///
-  /// Returns the number of rows affected (1 if deleted, 0 if not found).
-  Future<int> deleteByItunesId(String itunesId) {
-    return (_db.delete(
-      _db.subscriptions,
-    )..where((t) => t.itunesId.equals(itunesId))).go();
+  /// Returns the number of rows affected.
+  Future<int> deleteByItunesId(String itunesId) async {
+    return _isar.writeTxn(
+      () => _isar.subscriptions.filter().itunesIdEqualTo(itunesId).deleteAll(),
+    );
   }
 
   /// Returns all subscriptions ordered by subscription date (newest first).
-  Future<List<Subscription>> getAll() => _orderedQuery().get();
+  Future<List<Subscription>> getAll() {
+    return _isar.subscriptions.where().sortBySubscribedAtDesc().findAll();
+  }
 
   /// Watches all subscriptions, emitting updates when data changes.
-  Stream<List<Subscription>> watchAll() => _orderedQuery().watch();
-
-  /// Creates a query for subscriptions ordered by date (newest first).
-  SimpleSelectStatement<$SubscriptionsTable, Subscription> _orderedQuery() {
-    return _db.select(_db.subscriptions)..orderBy([
-      (t) => OrderingTerm(expression: t.subscribedAt, mode: OrderingMode.desc),
-    ]);
+  Stream<List<Subscription>> watchAll() {
+    return _isar.subscriptions.where().sortBySubscribedAtDesc().watch(
+      fireImmediately: true,
+    );
   }
 
   /// Returns a subscription by its iTunes ID, or null if not found.
   Future<Subscription?> getByItunesId(String itunesId) {
-    return (_db.select(
-      _db.subscriptions,
-    )..where((t) => t.itunesId.equals(itunesId))).getSingleOrNull();
+    return _isar.subscriptions.getByItunesId(itunesId);
   }
 
   /// Returns true if a subscription exists for the given iTunes ID.
@@ -61,30 +60,23 @@ class SubscriptionLocalDatasource {
 
   /// Returns a subscription by its feed URL, or null if not found.
   Future<Subscription?> getByFeedUrl(String feedUrl) {
-    return (_db.select(
-      _db.subscriptions,
-    )..where((t) => t.feedUrl.equals(feedUrl))).getSingleOrNull();
+    return _isar.subscriptions.filter().feedUrlEqualTo(feedUrl).findFirst();
   }
 
   /// Returns a subscription by its database ID, or null if not found.
   Future<Subscription?> getById(int id) {
-    return (_db.select(
-      _db.subscriptions,
-    )..where((t) => t.id.equals(id))).getSingleOrNull();
+    return _isar.subscriptions.get(id);
   }
 
   /// Updates a subscription's lastRefreshedAt timestamp.
-  Future<int> updateLastRefreshed(String itunesId, DateTime timestamp) {
-    return (_db.update(_db.subscriptions)
-          ..where((t) => t.itunesId.equals(itunesId)))
-        .write(SubscriptionsCompanion(lastRefreshedAt: Value(timestamp)));
-  }
-}
+  ///
+  /// Returns 1 if updated, 0 if not found.
+  Future<int> updateLastRefreshed(String itunesId, DateTime timestamp) async {
+    final existing = await _isar.subscriptions.getByItunesId(itunesId);
+    if (existing == null) return 0;
 
-/// Extension to find subscription by id.
-extension SubscriptionByIdExtension on $SubscriptionsTable {
-  Future<Subscription> findById(int id) {
-    final db = attachedDatabase;
-    return (db.select(this)..where((t) => t.id.equals(id))).getSingle();
+    existing.lastRefreshedAt = timestamp;
+    await _isar.writeTxn(() => _isar.subscriptions.put(existing));
+    return 1;
   }
 }

@@ -1,76 +1,75 @@
-import 'package:drift/drift.dart';
+import 'package:isar_community/isar.dart';
 
-import '../../../../common/database/app_database.dart';
+import '../../models/episode.dart';
 
-/// Local datasource for episode operations using Drift.
+/// Local datasource for episode operations using Isar.
 ///
-/// Provides CRUD operations and upsert support for the Episodes table.
+/// Provides CRUD operations and upsert support for the Episode collection.
 class EpisodeLocalDatasource {
-  EpisodeLocalDatasource(this._db);
+  EpisodeLocalDatasource(this._isar);
 
-  final AppDatabase _db;
+  final Isar _isar;
 
   /// Upserts an episode (insert or update on conflict).
   ///
   /// Matches on composite key (podcastId, guid). Returns the episode ID.
-  Future<int> upsert(EpisodesCompanion companion) async {
-    return _db.into(_db.episodes).insertOnConflictUpdate(companion);
+  Future<int> upsert(Episode episode) async {
+    await _isar.writeTxn(() async {
+      final existing = await _isar.episodes.getByPodcastIdGuid(
+        episode.podcastId,
+        episode.guid,
+      );
+      if (existing != null) {
+        episode.id = existing.id;
+      }
+      await _isar.episodes.put(episode);
+    });
+    return episode.id;
   }
 
   /// Upserts multiple episodes in a batch.
-  Future<void> upsertAll(List<EpisodesCompanion> companions) async {
-    await _db.batch((batch) {
-      for (final companion in companions) {
-        batch.insert(
-          _db.episodes,
-          companion,
-          onConflict: DoUpdate(
-            (old) => companion,
-            target: [_db.episodes.podcastId, _db.episodes.guid],
-          ),
+  Future<void> upsertAll(List<Episode> episodes) async {
+    await _isar.writeTxn(() async {
+      for (final episode in episodes) {
+        final existing = await _isar.episodes.getByPodcastIdGuid(
+          episode.podcastId,
+          episode.guid,
         );
+        if (existing != null) {
+          episode.id = existing.id;
+        }
       }
+      await _isar.episodes.putAll(episodes);
     });
   }
 
-  /// Returns all episodes for a podcast, ordered by publish date (newest first).
+  /// Returns all episodes for a podcast, ordered by publish date
+  /// (newest first).
   Future<List<Episode>> getByPodcastId(int podcastId) {
-    return (_db.select(_db.episodes)
-          ..where((e) => e.podcastId.equals(podcastId))
-          ..orderBy([
-            (e) => OrderingTerm(
-              expression: e.publishedAt,
-              mode: OrderingMode.desc,
-            ),
-          ]))
-        .get();
+    return _isar.episodes
+        .filter()
+        .podcastIdEqualTo(podcastId)
+        .sortByPublishedAtDesc()
+        .findAll();
   }
 
   /// Watches episodes for a podcast, emitting updates when data changes.
   Stream<List<Episode>> watchByPodcastId(int podcastId) {
-    return (_db.select(_db.episodes)
-          ..where((e) => e.podcastId.equals(podcastId))
-          ..orderBy([
-            (e) => OrderingTerm(
-              expression: e.publishedAt,
-              mode: OrderingMode.desc,
-            ),
-          ]))
-        .watch();
+    return _isar.episodes
+        .filter()
+        .podcastIdEqualTo(podcastId)
+        .sortByPublishedAtDesc()
+        .watch(fireImmediately: true);
   }
 
   /// Returns an episode by its ID.
   Future<Episode?> getById(int id) {
-    return (_db.select(
-      _db.episodes,
-    )..where((e) => e.id.equals(id))).getSingleOrNull();
+    return _isar.episodes.get(id);
   }
 
   /// Returns an episode by podcast ID and guid.
   Future<Episode?> getByPodcastIdAndGuid(int podcastId, String guid) {
-    return (_db.select(_db.episodes)
-          ..where((e) => e.podcastId.equals(podcastId) & e.guid.equals(guid)))
-        .getSingleOrNull();
+    return _isar.episodes.getByPodcastIdGuid(podcastId, guid);
   }
 
   /// Returns an episode by its audio URL.
@@ -78,57 +77,57 @@ class EpisodeLocalDatasource {
   /// Multiple episodes may share the same audio URL across podcasts,
   /// so this returns the first match.
   Future<Episode?> getByAudioUrl(String audioUrl) {
-    return (_db.select(_db.episodes)
-          ..where((e) => e.audioUrl.equals(audioUrl))
-          ..limit(1))
-        .getSingleOrNull();
+    return _isar.episodes.filter().audioUrlEqualTo(audioUrl).findFirst();
   }
 
   /// Returns all episode GUIDs for a podcast.
   ///
   /// Used for early-stop optimization during RSS parsing.
   Future<Set<String>> getGuidsByPodcastId(int podcastId) async {
-    final results = await (_db.select(
-      _db.episodes,
-    )..where((e) => e.podcastId.equals(podcastId))).map((e) => e.guid).get();
-    return results.toSet();
+    final episodes = await _isar.episodes
+        .filter()
+        .podcastIdEqualTo(podcastId)
+        .findAll();
+    return episodes.map((e) => e.guid).toSet();
   }
 
   /// Deletes all episodes for a podcast.
   Future<int> deleteByPodcastId(int podcastId) {
-    return (_db.delete(
-      _db.episodes,
-    )..where((e) => e.podcastId.equals(podcastId))).go();
+    return _isar.writeTxn(
+      () => _isar.episodes.filter().podcastIdEqualTo(podcastId).deleteAll(),
+    );
   }
 
   /// Returns episodes by their IDs.
   ///
   /// Order is not guaranteed; caller should sort as needed.
-  Future<List<Episode>> getByIds(List<int> ids) {
-    if (ids.isEmpty) return Future.value([]);
-    return (_db.select(_db.episodes)..where((e) => e.id.isIn(ids))).get();
+  Future<List<Episode>> getByIds(List<int> ids) async {
+    if (ids.isEmpty) return [];
+    final results = await _isar.episodes.getAll(ids);
+    return results.whereType<Episode>().toList();
   }
 
-  /// Gets episodes after a given episode number, ordered by episode number ascending.
+  /// Gets episodes after a given episode number, ordered by episode
+  /// number ascending.
   ///
   /// Returns episodes from [podcastId] with episode numbers greater than
-  /// [afterEpisodeNumber]. If [afterEpisodeNumber] is null, returns from the beginning.
+  /// [afterEpisodeNumber]. If [afterEpisodeNumber] is null, returns from
+  /// the beginning.
   Future<List<Episode>> getSubsequentEpisodes({
     required int podcastId,
     required int? afterEpisodeNumber,
     required int limit,
-  }) {
-    final query = _db.select(_db.episodes)
-      ..where((t) => t.podcastId.equals(podcastId));
+  }) async {
+    var query = _isar.episodes.filter().podcastIdEqualTo(podcastId);
 
     if (afterEpisodeNumber != null) {
-      query.where((t) => t.episodeNumber.isBiggerThanValue(afterEpisodeNumber));
+      // episodeNumber > afterEpisodeNumber rewritten as
+      // afterEpisodeNumber < episodeNumber
+      query = query.episodeNumberIsNotNull().and().episodeNumberGreaterThan(
+        afterEpisodeNumber,
+      );
     }
 
-    query
-      ..orderBy([(t) => OrderingTerm.asc(t.episodeNumber)])
-      ..limit(limit);
-
-    return query.get();
+    return query.sortByEpisodeNumber().limit(limit).findAll();
   }
 }

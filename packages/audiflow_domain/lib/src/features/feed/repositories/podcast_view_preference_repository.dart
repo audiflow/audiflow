@@ -1,11 +1,10 @@
-import 'package:drift/drift.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../../common/database/app_database.dart';
 import '../../../common/providers/database_provider.dart';
 import '../datasources/local/podcast_view_preference_local_datasource.dart';
 import '../models/episode_filter.dart';
 import '../models/podcast_view_mode.dart';
+import '../models/podcast_view_preference.dart';
 import '../models/smart_playlist_sort.dart';
 
 part 'podcast_view_preference_repository.g.dart';
@@ -94,33 +93,24 @@ class PodcastViewPreferenceRepositoryImpl
   }
 
   @override
-  Future<void> updateViewMode(int podcastId, PodcastViewMode viewMode) {
-    return _datasource.upsertPreference(
-      PodcastViewPreferencesCompanion(
-        podcastId: Value(podcastId),
-        viewMode: Value(_viewModeToString(viewMode)),
-      ),
-    );
+  Future<void> updateViewMode(int podcastId, PodcastViewMode viewMode) async {
+    final pref = await _getOrCreatePref(podcastId);
+    pref.viewMode = _viewModeToString(viewMode);
+    return _datasource.upsertPreference(pref);
   }
 
   @override
-  Future<void> updateEpisodeFilter(int podcastId, EpisodeFilter filter) {
-    return _datasource.upsertPreference(
-      PodcastViewPreferencesCompanion(
-        podcastId: Value(podcastId),
-        episodeFilter: Value(_filterToString(filter)),
-      ),
-    );
+  Future<void> updateEpisodeFilter(int podcastId, EpisodeFilter filter) async {
+    final pref = await _getOrCreatePref(podcastId);
+    pref.episodeFilter = _filterToString(filter);
+    return _datasource.upsertPreference(pref);
   }
 
   @override
-  Future<void> updateEpisodeSortOrder(int podcastId, SortOrder order) {
-    return _datasource.upsertPreference(
-      PodcastViewPreferencesCompanion(
-        podcastId: Value(podcastId),
-        episodeSortOrder: Value(_orderToString(order)),
-      ),
-    );
+  Future<void> updateEpisodeSortOrder(int podcastId, SortOrder order) async {
+    final pref = await _getOrCreatePref(podcastId);
+    pref.episodeSortOrder = _orderToString(order);
+    return _datasource.upsertPreference(pref);
   }
 
   @override
@@ -128,25 +118,27 @@ class PodcastViewPreferenceRepositoryImpl
     int podcastId,
     SmartPlaylistSortField field,
     SortOrder order,
-  ) {
-    return _datasource.upsertPreference(
-      PodcastViewPreferencesCompanion(
-        podcastId: Value(podcastId),
-        seasonSortField: Value(_smartPlaylistFieldToString(field)),
-        seasonSortOrder: Value(_orderToString(order)),
-      ),
-    );
+  ) async {
+    final pref = await _getOrCreatePref(podcastId);
+    pref.seasonSortField = _smartPlaylistFieldToString(field);
+    pref.seasonSortOrder = _orderToString(order);
+    return _datasource.upsertPreference(pref);
   }
 
   @override
-  Future<void> updateSelectedPlaylistId(int podcastId, String? playlistId) {
-    return _datasource.upsertPreference(
-      PodcastViewPreferencesCompanion(
-        podcastId: Value(podcastId),
-        viewMode: const Value('seasons'),
-        selectedPlaylistId: Value(playlistId),
-      ),
-    );
+  Future<void> updateSelectedPlaylistId(
+    int podcastId,
+    String? playlistId,
+  ) async {
+    final pref = await _getOrCreatePref(podcastId);
+    pref.viewMode = 'seasons';
+    pref.selectedPlaylistId = playlistId;
+    return _datasource.upsertPreference(pref);
+  }
+
+  Future<PodcastViewPreference> _getOrCreatePref(int podcastId) async {
+    final existing = await _datasource.getPreference(podcastId);
+    return existing ?? (PodcastViewPreference()..podcastId = podcastId);
   }
 
   PodcastViewPreferenceData _toData(
@@ -234,8 +226,8 @@ class PodcastViewPreferenceRepositoryImpl
 PodcastViewPreferenceLocalDatasource podcastViewPreferenceLocalDatasource(
   Ref ref,
 ) {
-  final db = ref.watch(databaseProvider);
-  return PodcastViewPreferenceLocalDatasource(db);
+  final isar = ref.watch(isarProvider);
+  return PodcastViewPreferenceLocalDatasource(isar);
 }
 
 /// Provider for [PodcastViewPreferenceRepository].

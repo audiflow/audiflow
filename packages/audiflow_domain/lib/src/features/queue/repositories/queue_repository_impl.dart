@@ -1,11 +1,11 @@
-import 'package:drift/drift.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../../common/database/app_database.dart';
 import '../../../common/providers/database_provider.dart';
 import '../../feed/datasources/local/episode_local_datasource.dart';
+import '../../feed/models/episode.dart';
 import '../datasources/local/queue_local_datasource.dart';
 import '../models/playback_queue.dart';
+import '../models/queue_item.dart';
 import 'queue_repository.dart';
 
 part 'queue_repository_impl.g.dart';
@@ -19,16 +19,16 @@ const int _positionIncrement = 10;
 /// Provides a singleton [QueueRepository] instance.
 @Riverpod(keepAlive: true)
 QueueRepository queueRepository(Ref ref) {
-  final db = ref.watch(databaseProvider);
-  final queueDatasource = QueueLocalDatasource(db);
-  final episodeDatasource = EpisodeLocalDatasource(db);
+  final isar = ref.watch(isarProvider);
+  final queueDatasource = QueueLocalDatasource(isar);
+  final episodeDatasource = EpisodeLocalDatasource(isar);
   return QueueRepositoryImpl(
     queueDatasource: queueDatasource,
     episodeDatasource: episodeDatasource,
   );
 }
 
-/// Implementation of [QueueRepository] using Drift database.
+/// Implementation of [QueueRepository] using Isar database.
 class QueueRepositoryImpl implements QueueRepository {
   QueueRepositoryImpl({
     required QueueLocalDatasource queueDatasource,
@@ -44,14 +44,13 @@ class QueueRepositoryImpl implements QueueRepository {
     final maxPosition = await _queueDatasource.getMaxPosition();
     final newPosition = maxPosition + _positionIncrement;
 
-    final companion = QueueItemsCompanion.insert(
-      episodeId: episodeId,
-      position: newPosition,
-      isAdhoc: const Value(false),
-      addedAt: DateTime.now(),
-    );
+    final item = QueueItem()
+      ..episodeId = episodeId
+      ..position = newPosition
+      ..isAdhoc = false
+      ..addedAt = DateTime.now();
 
-    final id = await _queueDatasource.insert(companion);
+    final id = await _queueDatasource.insert(item);
     final items = await _queueDatasource.getAll();
     return items.firstWhere((item) => item.id == id);
   }
@@ -61,14 +60,13 @@ class QueueRepositoryImpl implements QueueRepository {
     final minPosition = await _queueDatasource.getMinPosition();
     final newPosition = minPosition - _positionIncrement;
 
-    final companion = QueueItemsCompanion.insert(
-      episodeId: episodeId,
-      position: newPosition,
-      isAdhoc: const Value(false),
-      addedAt: DateTime.now(),
-    );
+    final item = QueueItem()
+      ..episodeId = episodeId
+      ..position = newPosition
+      ..isAdhoc = false
+      ..addedAt = DateTime.now();
 
-    final id = await _queueDatasource.insert(companion);
+    final id = await _queueDatasource.insert(item);
     final items = await _queueDatasource.getAll();
     return items.firstWhere((item) => item.id == id);
   }
@@ -87,14 +85,13 @@ class QueueRepositoryImpl implements QueueRepository {
 
     var position = 0;
     for (final episodeId in limitedIds) {
-      final companion = QueueItemsCompanion.insert(
-        episodeId: episodeId,
-        position: position,
-        isAdhoc: const Value(true),
-        sourceContext: Value(sourceContext),
-        addedAt: DateTime.now(),
-      );
-      await _queueDatasource.insert(companion);
+      final item = QueueItem()
+        ..episodeId = episodeId
+        ..position = position
+        ..isAdhoc = true
+        ..sourceContext = sourceContext
+        ..addedAt = DateTime.now();
+      await _queueDatasource.insert(item);
       position += _positionIncrement;
     }
   }

@@ -1,8 +1,8 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../../common/database/app_database.dart';
 import '../../../common/providers/database_provider.dart';
 import '../datasources/local/chapter_local_datasource.dart';
+import '../models/episode_chapter.dart';
 import 'chapter_repository.dart';
 
 part 'chapter_repository_impl.g.dart';
@@ -10,8 +10,8 @@ part 'chapter_repository_impl.g.dart';
 /// Provides a singleton [ChapterRepository] instance.
 @Riverpod(keepAlive: true)
 ChapterRepository chapterRepository(Ref ref) {
-  final db = ref.watch(databaseProvider);
-  return ChapterRepositoryImpl(datasource: ChapterLocalDatasource(db));
+  final isar = ref.watch(isarProvider);
+  return ChapterRepositoryImpl(datasource: ChapterLocalDatasource(isar));
 }
 
 /// Implementation of [ChapterRepository] delegating to local datasource.
@@ -30,8 +30,8 @@ class ChapterRepositoryImpl implements ChapterRepository {
       _datasource.watchByEpisodeId(episodeId);
 
   @override
-  Future<void> upsertChapters(List<EpisodeChaptersCompanion> companions) =>
-      _datasource.upsertChapters(companions);
+  Future<void> upsertChapters(List<EpisodeChapter> chapters) =>
+      _datasource.upsertChapters(chapters);
 
   @override
   Future<int> deleteByEpisodeId(int episodeId) =>

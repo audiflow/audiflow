@@ -1,6 +1,6 @@
 import 'package:audiflow_podcast/audiflow_podcast.dart';
 
-import '../../../common/database/app_database.dart';
+import '../models/episode.dart';
 import '../models/feed_parse_progress.dart';
 import '../models/smart_playlist_episode_extractor.dart';
 import '../models/smart_playlist_pattern_config.dart';
@@ -9,7 +9,8 @@ import '../models/smart_playlist_pattern_config.dart';
 ///
 /// Abstracts the data layer for fetching and persisting podcast episodes.
 abstract class EpisodeRepository {
-  /// Returns all episodes for a podcast, ordered by publish date (newest first).
+  /// Returns all episodes for a podcast, ordered by publish date
+  /// (newest first).
   Future<List<Episode>> getByPodcastId(int podcastId);
 
   /// Watches episodes for a podcast, emitting updates when data changes.
@@ -21,19 +22,18 @@ abstract class EpisodeRepository {
   /// Returns an episode by its audio URL, or null if not found.
   Future<Episode?> getByAudioUrl(String audioUrl);
 
-  /// Upserts episodes for a podcast from RSS feed data.
+  /// Upserts episodes for a podcast.
   ///
   /// Uses the composite unique key (podcastId, guid) for conflict resolution.
-  Future<void> upsertEpisodes(List<EpisodesCompanion> episodes);
+  Future<void> upsertEpisodes(List<Episode> episodes);
 
   /// Upserts episodes from parsed RSS feed items.
   ///
-  /// Converts [PodcastItem] list to [EpisodesCompanion] and persists them.
+  /// Converts [PodcastItem] list to [Episode] objects and persists them.
   /// Items without guid or enclosureUrl are skipped.
   ///
   /// When [extractor] is provided, season and episode numbers are extracted
   /// from episode titles using the pattern, overriding RSS metadata values.
-  /// This is useful for podcasts with unreliable RSS metadata like COTEN RADIO.
   Future<void> upsertFromFeedItems(
     int podcastId,
     List<PodcastItem> items, {

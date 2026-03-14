@@ -1,8 +1,7 @@
-import 'package:drift/drift.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../../common/database/app_database.dart';
 import '../../../common/providers/database_provider.dart';
+import '../../subscription/models/subscriptions.dart';
 import '../datasources/local/subscription_local_datasource.dart';
 import 'subscription_repository.dart';
 
@@ -11,12 +10,12 @@ part 'subscription_repository_impl.g.dart';
 /// Provides a singleton [SubscriptionRepository] instance.
 @Riverpod(keepAlive: true)
 SubscriptionRepository subscriptionRepository(Ref ref) {
-  final db = ref.watch(databaseProvider);
-  final datasource = SubscriptionLocalDatasource(db);
+  final isar = ref.watch(isarProvider);
+  final datasource = SubscriptionLocalDatasource(isar);
   return SubscriptionRepositoryImpl(datasource: datasource);
 }
 
-/// Implementation of [SubscriptionRepository] using Drift database.
+/// Implementation of [SubscriptionRepository] using Isar database.
 class SubscriptionRepositoryImpl implements SubscriptionRepository {
   SubscriptionRepositoryImpl({required SubscriptionLocalDatasource datasource})
     : _datasource = datasource;
@@ -34,19 +33,18 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
     List<String> genres = const <String>[],
     bool explicit = false,
   }) async {
-    final companion = SubscriptionsCompanion.insert(
-      itunesId: itunesId,
-      feedUrl: feedUrl,
-      title: title,
-      artistName: artistName,
-      artworkUrl: Value(artworkUrl),
-      description: Value(description),
-      genres: Value(genres.join(',')),
-      explicit: Value(explicit),
-      subscribedAt: DateTime.now(),
-    );
+    final subscription = Subscription()
+      ..itunesId = itunesId
+      ..feedUrl = feedUrl
+      ..title = title
+      ..artistName = artistName
+      ..artworkUrl = artworkUrl
+      ..description = description
+      ..genres = genres.join(',')
+      ..explicit = explicit
+      ..subscribedAt = DateTime.now();
 
-    return _datasource.insert(companion);
+    return _datasource.insert(subscription);
   }
 
   @override

@@ -1,4 +1,5 @@
-import '../../../common/database/app_database.dart';
+import '../models/episode_transcript.dart';
+import '../models/transcript_segment_table.dart';
 
 /// Repository interface for transcript operations.
 abstract class TranscriptRepository {
@@ -16,10 +17,10 @@ abstract class TranscriptRepository {
   });
 
   /// Upserts transcript metadata records.
-  Future<void> upsertMetas(List<EpisodeTranscriptsCompanion> companions);
+  Future<void> upsertMetas(List<EpisodeTranscript> metas);
 
   /// Bulk inserts transcript segments.
-  Future<void> insertSegments(List<TranscriptSegmentsCompanion> segments);
+  Future<void> insertSegments(List<TranscriptSegment> segments);
 
   /// Marks a transcript as fetched.
   Future<void> markAsFetched(int transcriptId);

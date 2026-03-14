@@ -1,4 +1,4 @@
-import '../../../common/database/app_database.dart';
+import '../models/subscriptions.dart';
 
 /// Repository interface for podcast subscription operations.
 ///
@@ -59,7 +59,8 @@ class SubscriptionException implements Exception {
   String toString() => 'SubscriptionException: $message';
 }
 
-/// Exception thrown when attempting to unsubscribe from a non-existent subscription.
+/// Exception thrown when attempting to unsubscribe from a non-existent
+/// subscription.
 class SubscriptionNotFoundException extends SubscriptionException {
   SubscriptionNotFoundException(String itunesId)
     : super('Subscription not found for iTunes ID: $itunesId');

@@ -1,6 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../../../common/database/app_database.dart';
+import '../../feed/models/episode.dart';
+import '../models/playback_history.dart';
 
 part 'episode_with_progress.freezed.dart';
 

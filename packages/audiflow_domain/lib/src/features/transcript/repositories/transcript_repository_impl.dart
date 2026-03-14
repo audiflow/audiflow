@@ -1,8 +1,9 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../../common/database/app_database.dart';
 import '../../../common/providers/database_provider.dart';
 import '../datasources/local/transcript_local_datasource.dart';
+import '../models/episode_transcript.dart';
+import '../models/transcript_segment_table.dart';
 import 'transcript_repository.dart';
 
 part 'transcript_repository_impl.g.dart';
@@ -10,8 +11,8 @@ part 'transcript_repository_impl.g.dart';
 /// Provides a singleton [TranscriptRepository] instance.
 @Riverpod(keepAlive: true)
 TranscriptRepository transcriptRepository(Ref ref) {
-  final db = ref.watch(databaseProvider);
-  return TranscriptRepositoryImpl(datasource: TranscriptLocalDatasource(db));
+  final isar = ref.watch(isarProvider);
+  return TranscriptRepositoryImpl(datasource: TranscriptLocalDatasource(isar));
 }
 
 /// Implementation of [TranscriptRepository] delegating to local datasource.
@@ -37,11 +38,11 @@ class TranscriptRepositoryImpl implements TranscriptRepository {
   }) => _datasource.getSegments(transcriptId, startMs: startMs, endMs: endMs);
 
   @override
-  Future<void> upsertMetas(List<EpisodeTranscriptsCompanion> companions) =>
-      _datasource.upsertMetas(companions);
+  Future<void> upsertMetas(List<EpisodeTranscript> metas) =>
+      _datasource.upsertMetas(metas);
 
   @override
-  Future<void> insertSegments(List<TranscriptSegmentsCompanion> segments) =>
+  Future<void> insertSegments(List<TranscriptSegment> segments) =>
       _datasource.insertSegments(segments);
 
   @override

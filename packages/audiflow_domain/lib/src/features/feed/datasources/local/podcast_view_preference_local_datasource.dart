@@ -1,36 +1,47 @@
-import '../../../../common/database/app_database.dart';
+import 'package:isar_community/isar.dart';
 
-/// Local datasource for podcast view preferences using Drift.
+import '../../models/podcast_view_preference.dart';
+
+/// Local datasource for podcast view preferences using Isar.
 class PodcastViewPreferenceLocalDatasource {
-  PodcastViewPreferenceLocalDatasource(this._db);
+  PodcastViewPreferenceLocalDatasource(this._isar);
 
-  final AppDatabase _db;
+  final Isar _isar;
 
   /// Gets preference for a podcast, returns null if not set.
   Future<PodcastViewPreference?> getPreference(int podcastId) {
-    return (_db.select(
-      _db.podcastViewPreferences,
-    )..where((p) => p.podcastId.equals(podcastId))).getSingleOrNull();
+    return _isar.podcastViewPreferences.getByPodcastId(podcastId);
   }
 
   /// Watches preference for a podcast (emits null if not set).
   Stream<PodcastViewPreference?> watchPreference(int podcastId) {
-    return (_db.select(
-      _db.podcastViewPreferences,
-    )..where((p) => p.podcastId.equals(podcastId))).watchSingleOrNull();
+    return _isar.podcastViewPreferences
+        .filter()
+        .podcastIdEqualTo(podcastId)
+        .watch(fireImmediately: true)
+        .map((list) => list.isEmpty ? null : list.first);
   }
 
   /// Upserts preference (insert or update on conflict).
-  Future<void> upsertPreference(PodcastViewPreferencesCompanion companion) {
-    return _db
-        .into(_db.podcastViewPreferences)
-        .insertOnConflictUpdate(companion);
+  Future<void> upsertPreference(PodcastViewPreference pref) async {
+    await _isar.writeTxn(() async {
+      final existing = await _isar.podcastViewPreferences.getByPodcastId(
+        pref.podcastId,
+      );
+      if (existing != null) {
+        pref.id = existing.id;
+      }
+      await _isar.podcastViewPreferences.put(pref);
+    });
   }
 
   /// Deletes preference for a podcast.
   Future<int> deletePreference(int podcastId) {
-    return (_db.delete(
-      _db.podcastViewPreferences,
-    )..where((p) => p.podcastId.equals(podcastId))).go();
+    return _isar.writeTxn(
+      () => _isar.podcastViewPreferences
+          .filter()
+          .podcastIdEqualTo(podcastId)
+          .deleteAll(),
+    );
   }
 }
