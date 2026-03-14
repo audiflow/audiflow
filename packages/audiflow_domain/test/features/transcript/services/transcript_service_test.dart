@@ -1,12 +1,7 @@
-import 'package:audiflow_domain/src/common/database/app_database.dart';
-import 'package:audiflow_domain/src/features/transcript/datasources/local/transcript_local_datasource.dart';
-import 'package:audiflow_domain/src/features/transcript/repositories/transcript_repository.dart';
-import 'package:audiflow_domain/src/features/transcript/repositories/transcript_repository_impl.dart';
-import 'package:audiflow_domain/src/features/transcript/services/transcript_service.dart';
+import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:dio/dio.dart';
-import 'package:drift/drift.dart' hide isNull, isNotNull;
-import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:isar_community/isar.dart';
 import 'package:logger/logger.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
@@ -15,15 +10,23 @@ import 'package:mockito/mockito.dart';
 import 'transcript_service_test.mocks.dart';
 
 void main() {
-  late AppDatabase db;
+  late Isar isar;
   late TranscriptRepository repository;
   late MockDio mockDio;
   late TranscriptService service;
   late int episodeId;
 
+  setUpAll(() async {
+    await Isar.initializeIsarCore(download: true);
+  });
+
   setUp(() async {
-    db = AppDatabase.forTesting(NativeDatabase.memory());
-    final datasource = TranscriptLocalDatasource(db);
+    isar = await Isar.open(
+      [EpisodeTranscriptSchema, TranscriptSegmentSchema],
+      directory: '',
+      name: 'test_${DateTime.now().microsecondsSinceEpoch}',
+    );
+    final datasource = TranscriptLocalDatasource(isar);
     repository = TranscriptRepositoryImpl(datasource: datasource);
     mockDio = MockDio();
     service = TranscriptService(
@@ -32,32 +35,12 @@ void main() {
       logger: Logger(level: Level.off),
     );
 
-    // Insert FK dependencies: subscription -> episode
-    final subId = await db
-        .into(db.subscriptions)
-        .insert(
-          SubscriptionsCompanion.insert(
-            itunesId: 'test-1',
-            feedUrl: 'https://example.com/feed.xml',
-            title: 'Test Podcast',
-            artistName: 'Test Artist',
-            subscribedAt: DateTime.now(),
-          ),
-        );
-    episodeId = await db
-        .into(db.episodes)
-        .insert(
-          EpisodesCompanion.insert(
-            podcastId: subId,
-            guid: 'ep-1',
-            title: 'Episode 1',
-            audioUrl: 'https://example.com/ep1.mp3',
-          ),
-        );
+    // Use a fixed episodeId (no FK constraints in Isar)
+    episodeId = 1;
   });
 
   tearDown(() async {
-    await db.close();
+    await isar.close(deleteFromDisk: true);
   });
 
   group('ensureContent', () {
@@ -68,11 +51,10 @@ void main() {
 
     test('returns null when no supported types exist', () async {
       await repository.upsertMetas([
-        EpisodeTranscriptsCompanion.insert(
-          episodeId: episodeId,
-          url: 'https://example.com/ep1.json',
-          type: 'application/json',
-        ),
+        EpisodeTranscript()
+          ..episodeId = episodeId
+          ..url = 'https://example.com/ep1.json'
+          ..type = 'application/json',
       ]);
 
       final result = await service.ensureContent(episodeId);
@@ -80,16 +62,15 @@ void main() {
     });
 
     test('returns transcriptId when content already fetched', () async {
-      final transcriptId = await db
-          .into(db.episodeTranscripts)
-          .insert(
-            EpisodeTranscriptsCompanion.insert(
-              episodeId: episodeId,
-              url: 'https://example.com/ep1.vtt',
-              type: 'text/vtt',
-              fetchedAt: Value(DateTime.now()),
-            ),
-          );
+      final transcript = EpisodeTranscript()
+        ..episodeId = episodeId
+        ..url = 'https://example.com/ep1.vtt'
+        ..type = 'text/vtt'
+        ..fetchedAt = DateTime.now();
+      await repository.upsertMetas([transcript]);
+
+      final metas = await repository.getMetasByEpisodeId(episodeId);
+      final transcriptId = metas.first.id;
 
       final result = await service.ensureContent(episodeId);
       expect(result, equals(transcriptId));
@@ -98,15 +79,13 @@ void main() {
     });
 
     test('fetches, parses, stores segments, and marks as fetched', () async {
-      final transcriptId = await db
-          .into(db.episodeTranscripts)
-          .insert(
-            EpisodeTranscriptsCompanion.insert(
-              episodeId: episodeId,
-              url: 'https://example.com/ep1.vtt',
-              type: 'text/vtt',
-            ),
-          );
+      final transcript = EpisodeTranscript()
+        ..episodeId = episodeId
+        ..url = 'https://example.com/ep1.vtt'
+        ..type = 'text/vtt';
+      await repository.upsertMetas([transcript]);
+      final metas = await repository.getMetasByEpisodeId(episodeId);
+      final transcriptId = metas.first.id;
 
       const vttContent =
           'WEBVTT\n'
@@ -128,7 +107,6 @@ void main() {
       final result = await service.ensureContent(episodeId);
       expect(result, equals(transcriptId));
 
-      // Verify segments were stored
       final segments = await repository.getAllSegments(transcriptId);
       expect(segments.length, equals(2));
       expect(segments[0].body, equals('Hello world'));
@@ -136,30 +114,25 @@ void main() {
       expect(segments[0].endMs, equals(5000));
       expect(segments[1].body, equals('Second line'));
 
-      // Verify marked as fetched
       expect(await repository.isContentFetched(transcriptId), isTrue);
     });
 
     test('prefers VTT over SRT', () async {
-      // Insert SRT first, then VTT
-      await db
-          .into(db.episodeTranscripts)
-          .insert(
-            EpisodeTranscriptsCompanion.insert(
-              episodeId: episodeId,
-              url: 'https://example.com/ep1.srt',
-              type: 'application/srt',
-            ),
-          );
-      final vttId = await db
-          .into(db.episodeTranscripts)
-          .insert(
-            EpisodeTranscriptsCompanion.insert(
-              episodeId: episodeId,
-              url: 'https://example.com/ep1.vtt',
-              type: 'text/vtt',
-            ),
-          );
+      await repository.upsertMetas([
+        EpisodeTranscript()
+          ..episodeId = episodeId
+          ..url = 'https://example.com/ep1.srt'
+          ..type = 'application/srt',
+      ]);
+      await repository.upsertMetas([
+        EpisodeTranscript()
+          ..episodeId = episodeId
+          ..url = 'https://example.com/ep1.vtt'
+          ..type = 'text/vtt',
+      ]);
+
+      final metas = await repository.getMetasByEpisodeId(episodeId);
+      final vttId = metas.firstWhere((m) => m.type == 'text/vtt').id;
 
       const vttContent =
           'WEBVTT\n'
@@ -178,20 +151,16 @@ void main() {
       final result = await service.ensureContent(episodeId);
       expect(result, equals(vttId));
 
-      // Verify the VTT URL was fetched, not the SRT
       verify(mockDio.get<String>('https://example.com/ep1.vtt')).called(1);
     });
 
     test('returns null on DioException', () async {
-      await db
-          .into(db.episodeTranscripts)
-          .insert(
-            EpisodeTranscriptsCompanion.insert(
-              episodeId: episodeId,
-              url: 'https://example.com/ep1.vtt',
-              type: 'text/vtt',
-            ),
-          );
+      await repository.upsertMetas([
+        EpisodeTranscript()
+          ..episodeId = episodeId
+          ..url = 'https://example.com/ep1.vtt'
+          ..type = 'text/vtt',
+      ]);
 
       when(mockDio.get<String>(any)).thenThrow(
         DioException(
@@ -205,15 +174,12 @@ void main() {
     });
 
     test('returns null when fetch returns empty content', () async {
-      await db
-          .into(db.episodeTranscripts)
-          .insert(
-            EpisodeTranscriptsCompanion.insert(
-              episodeId: episodeId,
-              url: 'https://example.com/ep1.vtt',
-              type: 'text/vtt',
-            ),
-          );
+      await repository.upsertMetas([
+        EpisodeTranscript()
+          ..episodeId = episodeId
+          ..url = 'https://example.com/ep1.vtt'
+          ..type = 'text/vtt',
+      ]);
 
       when(mockDio.get<String>(any)).thenAnswer(
         (_) async => Response(
@@ -228,15 +194,12 @@ void main() {
     });
 
     test('returns null when fetch returns null data', () async {
-      await db
-          .into(db.episodeTranscripts)
-          .insert(
-            EpisodeTranscriptsCompanion.insert(
-              episodeId: episodeId,
-              url: 'https://example.com/ep1.vtt',
-              type: 'text/vtt',
-            ),
-          );
+      await repository.upsertMetas([
+        EpisodeTranscript()
+          ..episodeId = episodeId
+          ..url = 'https://example.com/ep1.vtt'
+          ..type = 'text/vtt',
+      ]);
 
       when(mockDio.get<String>(any)).thenAnswer(
         (_) async => Response<String>(
@@ -251,15 +214,13 @@ void main() {
     });
 
     test('stores speaker information from VTT', () async {
-      final transcriptId = await db
-          .into(db.episodeTranscripts)
-          .insert(
-            EpisodeTranscriptsCompanion.insert(
-              episodeId: episodeId,
-              url: 'https://example.com/ep1.vtt',
-              type: 'text/vtt',
-            ),
-          );
+      final transcript = EpisodeTranscript()
+        ..episodeId = episodeId
+        ..url = 'https://example.com/ep1.vtt'
+        ..type = 'text/vtt';
+      await repository.upsertMetas([transcript]);
+      final metas = await repository.getMetasByEpisodeId(episodeId);
+      final transcriptId = metas.first.id;
 
       const vttContent =
           'WEBVTT\n'
@@ -284,15 +245,14 @@ void main() {
     });
 
     test('falls back to SRT when VTT not available', () async {
-      final srtId = await db
-          .into(db.episodeTranscripts)
-          .insert(
-            EpisodeTranscriptsCompanion.insert(
-              episodeId: episodeId,
-              url: 'https://example.com/ep1.srt',
-              type: 'application/srt',
-            ),
-          );
+      await repository.upsertMetas([
+        EpisodeTranscript()
+          ..episodeId = episodeId
+          ..url = 'https://example.com/ep1.srt'
+          ..type = 'application/srt',
+      ]);
+      final metas = await repository.getMetasByEpisodeId(episodeId);
+      final srtId = metas.first.id;
 
       const srtContent =
           '1\n'

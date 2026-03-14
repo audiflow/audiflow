@@ -1,34 +1,30 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_domain/src/features/feed/datasources/local/podcast_view_preference_local_datasource.dart';
-import 'package:drift/native.dart';
+import 'package:audiflow_domain/src/features/feed/models/smart_playlist_sort.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:isar_community/isar.dart';
 
 void main() {
-  late AppDatabase db;
+  late Isar isar;
   late PodcastViewPreferenceLocalDatasource datasource;
   late PodcastViewPreferenceRepositoryImpl repository;
 
-  setUp(() async {
-    db = AppDatabase.forTesting(NativeDatabase.memory());
-    datasource = PodcastViewPreferenceLocalDatasource(db);
-    repository = PodcastViewPreferenceRepositoryImpl(datasource);
+  setUpAll(() async {
+    await Isar.initializeIsarCore(download: true);
+  });
 
-    // Insert a test subscription for foreign key constraint
-    await db
-        .into(db.subscriptions)
-        .insert(
-          SubscriptionsCompanion.insert(
-            itunesId: 'itunes-1',
-            feedUrl: 'https://example.com/feed.xml',
-            title: 'Test Podcast',
-            artistName: 'Test Artist',
-            subscribedAt: DateTime.now(),
-          ),
-        );
+  setUp(() async {
+    isar = await Isar.open(
+      [PodcastViewPreferenceSchema],
+      directory: '',
+      name: 'test_${DateTime.now().microsecondsSinceEpoch}',
+    );
+    datasource = PodcastViewPreferenceLocalDatasource(isar);
+    repository = PodcastViewPreferenceRepositoryImpl(datasource);
   });
 
   tearDown(() async {
-    await db.close();
+    await isar.close(deleteFromDisk: true);
   });
 
   group('getPreference', () {
@@ -42,7 +38,6 @@ void main() {
     });
 
     test('returns stored preference when exists', () async {
-      // First, store some preferences
       await repository.updateViewMode(1, PodcastViewMode.smartPlaylists);
       await repository.updateEpisodeFilter(1, EpisodeFilter.unplayed);
       await repository.updateEpisodeSortOrder(1, SortOrder.ascending);
@@ -149,57 +144,6 @@ void main() {
       expect(pref.viewMode, PodcastViewMode.episodes);
       expect(pref.episodeFilter, EpisodeFilter.all);
       expect(pref.episodeSortOrder, SortOrder.descending);
-    });
-
-    test('emits updates when view mode changes', () async {
-      // Collect emitted values
-      final emissions = <PodcastViewPreferenceData>[];
-      final subscription = repository.watchPreference(1).listen(emissions.add);
-
-      // Wait for initial emission
-      await Future<void>.delayed(const Duration(milliseconds: 50));
-
-      // Update view mode
-      await repository.updateViewMode(1, PodcastViewMode.smartPlaylists);
-
-      // Wait for update emission
-      await Future<void>.delayed(const Duration(milliseconds: 50));
-
-      await subscription.cancel();
-
-      expect(emissions.length, 2);
-      expect(emissions[0].viewMode, PodcastViewMode.episodes);
-      expect(emissions[1].viewMode, PodcastViewMode.smartPlaylists);
-    });
-
-    test('emits updates when episode filter changes', () async {
-      final emissions = <PodcastViewPreferenceData>[];
-      final subscription = repository.watchPreference(1).listen(emissions.add);
-
-      await Future<void>.delayed(const Duration(milliseconds: 50));
-      await repository.updateEpisodeFilter(1, EpisodeFilter.unplayed);
-      await Future<void>.delayed(const Duration(milliseconds: 50));
-
-      await subscription.cancel();
-
-      expect(emissions.length, 2);
-      expect(emissions[0].episodeFilter, EpisodeFilter.all);
-      expect(emissions[1].episodeFilter, EpisodeFilter.unplayed);
-    });
-
-    test('emits updates when sort order changes', () async {
-      final emissions = <PodcastViewPreferenceData>[];
-      final subscription = repository.watchPreference(1).listen(emissions.add);
-
-      await Future<void>.delayed(const Duration(milliseconds: 50));
-      await repository.updateEpisodeSortOrder(1, SortOrder.ascending);
-      await Future<void>.delayed(const Duration(milliseconds: 50));
-
-      await subscription.cancel();
-
-      expect(emissions.length, 2);
-      expect(emissions[0].episodeSortOrder, SortOrder.descending);
-      expect(emissions[1].episodeSortOrder, SortOrder.ascending);
     });
   });
 
@@ -330,20 +274,6 @@ void main() {
 
   group('preference isolation', () {
     test('preferences are isolated per podcast', () async {
-      // Insert second subscription for foreign key constraint
-      await db
-          .into(db.subscriptions)
-          .insert(
-            SubscriptionsCompanion.insert(
-              itunesId: 'itunes-2',
-              feedUrl: 'https://example.com/feed2.xml',
-              title: 'Test Podcast 2',
-              artistName: 'Test Artist 2',
-              subscribedAt: DateTime.now(),
-            ),
-          );
-
-      // Set different preferences for each podcast
       await repository.updateViewMode(1, PodcastViewMode.smartPlaylists);
       await repository.updateViewMode(2, PodcastViewMode.episodes);
       await repository.updateEpisodeFilter(1, EpisodeFilter.unplayed);

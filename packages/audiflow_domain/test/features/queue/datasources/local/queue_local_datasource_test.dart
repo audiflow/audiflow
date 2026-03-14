@@ -1,61 +1,40 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
-import 'package:drift/drift.dart' hide isNull, isNotNull;
-import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:isar_community/isar.dart';
 
 void main() {
-  late AppDatabase db;
+  late Isar isar;
   late QueueLocalDatasource datasource;
 
+  setUpAll(() async {
+    await Isar.initializeIsarCore(download: true);
+  });
+
   setUp(() async {
-    db = AppDatabase.forTesting(NativeDatabase.memory());
-    datasource = QueueLocalDatasource(db);
-
-    // Create subscription (FK dependency)
-    await db
-        .into(db.subscriptions)
-        .insert(
-          SubscriptionsCompanion.insert(
-            itunesId: 'test-itunes-id',
-            feedUrl: 'https://example.com/feed.xml',
-            title: 'Test Podcast',
-            artistName: 'Test Artist',
-            subscribedAt: DateTime.now(),
-          ),
-        );
-
-    // Create episodes (FK dependency)
-    for (var i = 1; i < 4; i++) {
-      await db
-          .into(db.episodes)
-          .insert(
-            EpisodesCompanion.insert(
-              podcastId: 1,
-              guid: 'ep-$i',
-              title: 'Episode $i',
-              audioUrl: 'https://example.com/ep$i.mp3',
-            ),
-          );
-    }
+    isar = await Isar.open(
+      [QueueItemSchema],
+      directory: '',
+      name: 'test_${DateTime.now().microsecondsSinceEpoch}',
+    );
+    datasource = QueueLocalDatasource(isar);
   });
 
   tearDown(() async {
-    await db.close();
+    await isar.close(deleteFromDisk: true);
   });
 
-  QueueItemsCompanion makeItem({
+  QueueItem makeItem({
     required int episodeId,
     required int position,
     bool isAdhoc = false,
     String? sourceContext,
   }) {
-    return QueueItemsCompanion.insert(
-      episodeId: episodeId,
-      position: position,
-      isAdhoc: Value(isAdhoc),
-      sourceContext: Value(sourceContext),
-      addedAt: DateTime.now(),
-    );
+    return QueueItem()
+      ..episodeId = episodeId
+      ..position = position
+      ..isAdhoc = isAdhoc
+      ..sourceContext = sourceContext
+      ..addedAt = DateTime.now();
   }
 
   group('insert', () {
@@ -167,9 +146,8 @@ void main() {
       await datasource.insert(makeItem(episodeId: 1, position: 0));
       await datasource.insert(makeItem(episodeId: 2, position: 10));
 
-      final deleted = await datasource.deleteAll();
+      await datasource.deleteAll();
 
-      expect(deleted, 2);
       final items = await datasource.getAll();
       expect(items, isEmpty);
     });

@@ -1,55 +1,53 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
-import 'package:drift/drift.dart' hide isNull, isNotNull;
-import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:isar_community/isar.dart';
 
 void main() {
-  late AppDatabase db;
+  late Isar isar;
   late PlaybackHistoryRepositoryImpl repository;
+  late PlaybackHistoryLocalDatasource datasource;
+
+  setUpAll(() async {
+    await Isar.initializeIsarCore(download: true);
+  });
 
   setUp(() async {
-    db = AppDatabase.forTesting(NativeDatabase.memory());
-    final datasource = PlaybackHistoryLocalDatasource(db);
+    isar = await Isar.open(
+      [SubscriptionSchema, EpisodeSchema, PlaybackHistorySchema],
+      directory: '',
+      name: 'test_${DateTime.now().microsecondsSinceEpoch}',
+    );
+    datasource = PlaybackHistoryLocalDatasource(isar);
     repository = PlaybackHistoryRepositoryImpl(datasource: datasource);
 
-    // Create subscription (FK dependency)
-    await db
-        .into(db.subscriptions)
-        .insert(
-          SubscriptionsCompanion.insert(
-            itunesId: 'test-itunes-id',
-            feedUrl: 'https://example.com/feed.xml',
-            title: 'Test Podcast',
-            artistName: 'Test Artist',
-            subscribedAt: DateTime.now(),
-          ),
-        );
-
-    // Create episodes (FK dependency)
-    await db
-        .into(db.episodes)
-        .insert(
-          EpisodesCompanion.insert(
-            podcastId: 1,
-            guid: 'ep-1',
-            title: 'Episode 1',
-            audioUrl: 'https://example.com/ep1.mp3',
-          ),
-        );
-    await db
-        .into(db.episodes)
-        .insert(
-          EpisodesCompanion.insert(
-            podcastId: 1,
-            guid: 'ep-2',
-            title: 'Episode 2',
-            audioUrl: 'https://example.com/ep2.mp3',
-          ),
-        );
+    await isar.writeTxn(() async {
+      await isar.subscriptions.put(
+        Subscription()
+          ..itunesId = 'test-itunes-id'
+          ..feedUrl = 'https://example.com/feed.xml'
+          ..title = 'Test Podcast'
+          ..artistName = 'Test Artist'
+          ..subscribedAt = DateTime.now(),
+      );
+      await isar.episodes.put(
+        Episode()
+          ..podcastId = 1
+          ..guid = 'ep-1'
+          ..title = 'Episode 1'
+          ..audioUrl = 'https://example.com/ep1.mp3',
+      );
+      await isar.episodes.put(
+        Episode()
+          ..podcastId = 1
+          ..guid = 'ep-2'
+          ..title = 'Episode 2'
+          ..audioUrl = 'https://example.com/ep2.mp3',
+      );
+    });
   });
 
   tearDown(() async {
-    await db.close();
+    await isar.close(deleteFromDisk: true);
   });
 
   group('saveProgress', () {
@@ -57,7 +55,6 @@ void main() {
       await repository.saveProgress(episodeId: 1, positionMs: 5000);
 
       final result = await repository.getByEpisodeId(1);
-
       expect(result, isNotNull);
       expect(result!.positionMs, 5000);
     });
@@ -70,7 +67,6 @@ void main() {
       );
 
       final result = await repository.getByEpisodeId(1);
-
       expect(result!.durationMs, 60000);
     });
 
@@ -79,7 +75,6 @@ void main() {
       await repository.saveProgress(episodeId: 1, positionMs: 20000);
 
       final result = await repository.getByEpisodeId(1);
-
       expect(result!.positionMs, 20000);
     });
   });
@@ -89,9 +84,7 @@ void main() {
       await repository.saveProgress(episodeId: 1, positionMs: 50000);
       await repository.markCompleted(1);
 
-      final completed = await repository.isCompleted(1);
-
-      expect(completed, true);
+      expect(await repository.isCompleted(1), true);
     });
   });
 
@@ -100,9 +93,7 @@ void main() {
       await repository.markCompleted(1);
       await repository.markIncomplete(1);
 
-      final completed = await repository.isCompleted(1);
-
-      expect(completed, false);
+      expect(await repository.isCompleted(1), false);
     });
   });
 
@@ -112,48 +103,34 @@ void main() {
       await repository.incrementPlayCount(1);
 
       final result = await repository.getByEpisodeId(1);
-
       expect(result!.playCount, 2);
     });
   });
 
   group('isCompleted', () {
     test('returns false when no history', () async {
-      final result = await repository.isCompleted(1);
-
-      expect(result, false);
+      expect(await repository.isCompleted(1), false);
     });
 
     test('returns false when in progress', () async {
       await repository.saveProgress(episodeId: 1, positionMs: 5000);
-
-      final result = await repository.isCompleted(1);
-
-      expect(result, false);
+      expect(await repository.isCompleted(1), false);
     });
 
     test('returns true when completed', () async {
       await repository.markCompleted(1);
-
-      final result = await repository.isCompleted(1);
-
-      expect(result, true);
+      expect(await repository.isCompleted(1), true);
     });
   });
 
   group('getProgressPercent', () {
     test('returns null when no history', () async {
-      final result = await repository.getProgressPercent(1);
-
-      expect(result, isNull);
+      expect(await repository.getProgressPercent(1), isNull);
     });
 
     test('returns null when duration is null', () async {
       await repository.saveProgress(episodeId: 1, positionMs: 5000);
-
-      final result = await repository.getProgressPercent(1);
-
-      expect(result, isNull);
+      expect(await repository.getProgressPercent(1), isNull);
     });
 
     test('returns null when duration is zero', () async {
@@ -162,10 +139,7 @@ void main() {
         positionMs: 5000,
         durationMs: 0,
       );
-
-      final result = await repository.getProgressPercent(1);
-
-      expect(result, isNull);
+      expect(await repository.getProgressPercent(1), isNull);
     });
 
     test('returns correct progress percentage', () async {
@@ -174,10 +148,7 @@ void main() {
         positionMs: 30000,
         durationMs: 60000,
       );
-
-      final result = await repository.getProgressPercent(1);
-
-      expect(result, 0.5);
+      expect(await repository.getProgressPercent(1), 0.5);
     });
 
     test('returns 1.0 when position equals duration', () async {
@@ -186,64 +157,46 @@ void main() {
         positionMs: 60000,
         durationMs: 60000,
       );
-
-      final result = await repository.getProgressPercent(1);
-
-      expect(result, 1.0);
+      expect(await repository.getProgressPercent(1), 1.0);
     });
   });
 
   group('getLastPlayed', () {
     test('returns null when no history', () async {
-      final result = await repository.getLastPlayed();
-
-      expect(result, isNull);
+      expect(await repository.getLastPlayed(), isNull);
     });
 
     test('returns most recently played in-progress episode', () async {
-      // Use direct upsert to control timestamps for deterministic ordering
-      final datasource = PlaybackHistoryLocalDatasource(db);
-      await datasource.upsert(
-        PlaybackHistoriesCompanion.insert(
-          episodeId: const Value(1),
-          positionMs: const Value(5000),
-          lastPlayedAt: Value(DateTime(2024, 1, 1)),
-        ),
-      );
-      await datasource.upsert(
-        PlaybackHistoriesCompanion.insert(
-          episodeId: const Value(2),
-          positionMs: const Value(10000),
-          lastPlayedAt: Value(DateTime(2024, 6, 1)),
-        ),
-      );
+      final h1 = PlaybackHistory()
+        ..episodeId = 1
+        ..positionMs = 5000
+        ..lastPlayedAt = DateTime(2024, 1, 1);
+      final h2 = PlaybackHistory()
+        ..episodeId = 2
+        ..positionMs = 10000
+        ..lastPlayedAt = DateTime(2024, 6, 1);
+      await datasource.upsert(h1);
+      await datasource.upsert(h2);
 
       final result = await repository.getLastPlayed();
-
       expect(result, isNotNull);
       expect(result!.episodeId, 2);
     });
 
     test('excludes completed episodes', () async {
-      final datasource = PlaybackHistoryLocalDatasource(db);
-      await datasource.upsert(
-        PlaybackHistoriesCompanion.insert(
-          episodeId: const Value(1),
-          positionMs: const Value(5000),
-          lastPlayedAt: Value(DateTime(2024, 1, 1)),
-        ),
-      );
-      await datasource.upsert(
-        PlaybackHistoriesCompanion.insert(
-          episodeId: const Value(2),
-          positionMs: const Value(10000),
-          lastPlayedAt: Value(DateTime(2024, 6, 1)),
-        ),
-      );
+      final h1 = PlaybackHistory()
+        ..episodeId = 1
+        ..positionMs = 5000
+        ..lastPlayedAt = DateTime(2024, 1, 1);
+      final h2 = PlaybackHistory()
+        ..episodeId = 2
+        ..positionMs = 10000
+        ..lastPlayedAt = DateTime(2024, 6, 1);
+      await datasource.upsert(h1);
+      await datasource.upsert(h2);
       await repository.markCompleted(2);
 
       final result = await repository.getLastPlayed();
-
       expect(result!.episodeId, 1);
     });
   });
@@ -253,7 +206,6 @@ void main() {
       await repository.saveProgress(episodeId: 1, positionMs: 5000);
 
       final result = await repository.watchInProgress().first;
-
       expect(result, hasLength(1));
       expect(result.first.episodeId, 1);
     });
@@ -265,7 +217,6 @@ void main() {
       await repository.saveProgress(episodeId: 2, positionMs: 10000);
 
       final result = await repository.getByPodcastId(1);
-
       expect(result, hasLength(2));
       expect(result[1]!.positionMs, 5000);
       expect(result[2]!.positionMs, 10000);
@@ -273,7 +224,6 @@ void main() {
 
     test('returns empty map for podcast with no history', () async {
       final result = await repository.getByPodcastId(999);
-
       expect(result, isEmpty);
     });
   });

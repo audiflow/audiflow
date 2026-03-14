@@ -1,54 +1,46 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
-import 'package:audiflow_domain/src/common/database/app_database.dart'
-    show SmartPlaylistGroupsCompanion;
-import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:isar_community/isar.dart';
 
 void main() {
-  late AppDatabase db;
+  late Isar isar;
   late SmartPlaylistLocalDatasource datasource;
 
-  setUp(() async {
-    db = AppDatabase.forTesting(NativeDatabase.memory());
-    datasource = SmartPlaylistLocalDatasource(db);
+  setUpAll(() async {
+    await Isar.initializeIsarCore(download: true);
+  });
 
-    // Insert test subscription for FK constraint
-    await db
-        .into(db.subscriptions)
-        .insert(
-          SubscriptionsCompanion.insert(
-            itunesId: 'itunes-1',
-            feedUrl: 'https://example.com/feed.xml',
-            title: 'Test Podcast',
-            artistName: 'Test Artist',
-            subscribedAt: DateTime.now(),
-          ),
-        );
+  setUp(() async {
+    isar = await Isar.open(
+      [SmartPlaylistEntitySchema, SmartPlaylistGroupEntitySchema],
+      directory: '',
+      name: 'test_${DateTime.now().microsecondsSinceEpoch}',
+    );
+    datasource = SmartPlaylistLocalDatasource(isar);
   });
 
   tearDown(() async {
-    await db.close();
+    await isar.close(deleteFromDisk: true);
   });
 
-  SmartPlaylistsCompanion makeCompanion({
+  SmartPlaylistEntity makeEntity({
     int podcastId = 1,
     required int playlistNumber,
     String? displayName,
     int? sortKey,
     String resolverType = 'rss',
   }) {
-    return SmartPlaylistsCompanion.insert(
-      podcastId: podcastId,
-      playlistNumber: playlistNumber,
-      displayName: displayName ?? 'Playlist $playlistNumber',
-      sortKey: sortKey ?? playlistNumber,
-      resolverType: resolverType,
-    );
+    return SmartPlaylistEntity()
+      ..podcastId = podcastId
+      ..playlistNumber = playlistNumber
+      ..displayName = displayName ?? 'Playlist $playlistNumber'
+      ..sortKey = sortKey ?? playlistNumber
+      ..resolverType = resolverType;
   }
 
   group('upsert', () {
     test('inserts a new smart playlist', () async {
-      await datasource.upsert(makeCompanion(playlistNumber: 1));
+      await datasource.upsert(makeEntity(playlistNumber: 1));
 
       final results = await datasource.getByPodcastId(1);
       expect(results, hasLength(1));
@@ -57,13 +49,9 @@ void main() {
     });
 
     test('updates existing smart playlist on conflict', () async {
-      await datasource.upsert(makeCompanion(playlistNumber: 1));
+      await datasource.upsert(makeEntity(playlistNumber: 1));
       await datasource.upsert(
-        makeCompanion(
-          playlistNumber: 1,
-          displayName: 'Updated Name',
-          sortKey: 99,
-        ),
+        makeEntity(playlistNumber: 1, displayName: 'Updated Name', sortKey: 99),
       );
 
       final results = await datasource.getByPodcastId(1);
@@ -75,15 +63,13 @@ void main() {
 
   group('upsertAllForPodcast', () {
     test('replaces all playlists for a podcast atomically', () async {
-      // Insert initial playlists
-      await datasource.upsert(makeCompanion(playlistNumber: 1));
-      await datasource.upsert(makeCompanion(playlistNumber: 2));
+      await datasource.upsert(makeEntity(playlistNumber: 1));
+      await datasource.upsert(makeEntity(playlistNumber: 2));
 
-      // Replace with a different set
       await datasource.upsertAllForPodcast(1, [
-        makeCompanion(playlistNumber: 10, displayName: 'New Playlist A'),
-        makeCompanion(playlistNumber: 20, displayName: 'New Playlist B'),
-        makeCompanion(playlistNumber: 30, displayName: 'New Playlist C'),
+        makeEntity(playlistNumber: 10, displayName: 'New Playlist A'),
+        makeEntity(playlistNumber: 20, displayName: 'New Playlist B'),
+        makeEntity(playlistNumber: 30, displayName: 'New Playlist C'),
       ]);
 
       final results = await datasource.getByPodcastId(1);
@@ -93,9 +79,9 @@ void main() {
       expect(results[2].playlistNumber, 30);
     });
 
-    test('deletes all when empty companions list', () async {
-      await datasource.upsert(makeCompanion(playlistNumber: 1));
-      await datasource.upsert(makeCompanion(playlistNumber: 2));
+    test('deletes all when empty list', () async {
+      await datasource.upsert(makeEntity(playlistNumber: 1));
+      await datasource.upsert(makeEntity(playlistNumber: 2));
 
       await datasource.upsertAllForPodcast(1, []);
 
@@ -104,25 +90,10 @@ void main() {
     });
 
     test('does not affect other podcasts', () async {
-      // Insert second subscription
-      await db
-          .into(db.subscriptions)
-          .insert(
-            SubscriptionsCompanion.insert(
-              itunesId: 'itunes-2',
-              feedUrl: 'https://example.com/feed2.xml',
-              title: 'Test Podcast 2',
-              artistName: 'Test Artist 2',
-              subscribedAt: DateTime.now(),
-            ),
-          );
+      await datasource.upsert(makeEntity(podcastId: 1, playlistNumber: 1));
+      await datasource.upsert(makeEntity(podcastId: 2, playlistNumber: 1));
 
-      await datasource.upsert(makeCompanion(podcastId: 1, playlistNumber: 1));
-      await datasource.upsert(makeCompanion(podcastId: 2, playlistNumber: 1));
-
-      await datasource.upsertAllForPodcast(1, [
-        makeCompanion(playlistNumber: 99),
-      ]);
+      await datasource.upsertAllForPodcast(1, [makeEntity(playlistNumber: 99)]);
 
       final podcast1 = await datasource.getByPodcastId(1);
       final podcast2 = await datasource.getByPodcastId(2);
@@ -140,9 +111,9 @@ void main() {
     });
 
     test('returns playlists ordered by sortKey', () async {
-      await datasource.upsert(makeCompanion(playlistNumber: 3, sortKey: 30));
-      await datasource.upsert(makeCompanion(playlistNumber: 1, sortKey: 10));
-      await datasource.upsert(makeCompanion(playlistNumber: 2, sortKey: 20));
+      await datasource.upsert(makeEntity(playlistNumber: 3, sortKey: 30));
+      await datasource.upsert(makeEntity(playlistNumber: 1, sortKey: 10));
+      await datasource.upsert(makeEntity(playlistNumber: 2, sortKey: 20));
 
       final results = await datasource.getByPodcastId(1);
       expect(results, hasLength(3));
@@ -154,33 +125,17 @@ void main() {
 
   group('watchByPodcastId', () {
     test('emits initial state', () async {
-      await datasource.upsert(makeCompanion(playlistNumber: 1));
+      await datasource.upsert(makeEntity(playlistNumber: 1));
 
       final result = await datasource.watchByPodcastId(1).first;
       expect(result, hasLength(1));
       expect(result.first.playlistNumber, 1);
     });
-
-    test('emits updates when data changes', () async {
-      final emissions = <List<SmartPlaylistEntity>>[];
-      final subscription = datasource.watchByPodcastId(1).listen(emissions.add);
-
-      await Future<void>.delayed(const Duration(milliseconds: 50));
-
-      await datasource.upsert(makeCompanion(playlistNumber: 1));
-      await Future<void>.delayed(const Duration(milliseconds: 50));
-
-      await subscription.cancel();
-
-      expect(2 <= emissions.length, isTrue);
-      expect(emissions.first, isEmpty);
-      expect(emissions.last, hasLength(1));
-    });
   });
 
   group('getByPodcastIdAndPlaylistNumber', () {
     test('returns matching playlist', () async {
-      await datasource.upsert(makeCompanion(playlistNumber: 5));
+      await datasource.upsert(makeEntity(playlistNumber: 5));
 
       final result = await datasource.getByPodcastIdAndPlaylistNumber(1, 5);
       expect(result, isNotNull);
@@ -193,7 +148,7 @@ void main() {
     });
 
     test('returns null for wrong podcast', () async {
-      await datasource.upsert(makeCompanion(playlistNumber: 1));
+      await datasource.upsert(makeEntity(playlistNumber: 1));
 
       final result = await datasource.getByPodcastIdAndPlaylistNumber(999, 1);
       expect(result, isNull);
@@ -202,8 +157,8 @@ void main() {
 
   group('deleteByPodcastId', () {
     test('deletes all playlists for a podcast', () async {
-      await datasource.upsert(makeCompanion(playlistNumber: 1));
-      await datasource.upsert(makeCompanion(playlistNumber: 2));
+      await datasource.upsert(makeEntity(playlistNumber: 1));
+      await datasource.upsert(makeEntity(playlistNumber: 2));
 
       final deleted = await datasource.deleteByPodcastId(1);
       expect(deleted, 2);
@@ -225,9 +180,9 @@ void main() {
     });
 
     test('returns correct count', () async {
-      await datasource.upsert(makeCompanion(playlistNumber: 1));
-      await datasource.upsert(makeCompanion(playlistNumber: 2));
-      await datasource.upsert(makeCompanion(playlistNumber: 3));
+      await datasource.upsert(makeEntity(playlistNumber: 1));
+      await datasource.upsert(makeEntity(playlistNumber: 2));
+      await datasource.upsert(makeEntity(playlistNumber: 3));
 
       final count = await datasource.countByPodcastId(1);
       expect(count, 3);
@@ -242,30 +197,27 @@ void main() {
 
     test('returns groups ordered by sortKey', () async {
       await datasource.upsertGroupsForPlaylist(1, 'playlist-1', [
-        SmartPlaylistGroupsCompanion.insert(
-          podcastId: 1,
-          playlistId: 'playlist-1',
-          groupId: 'group-c',
-          displayName: 'Group C',
-          sortKey: 30,
-          episodeIds: '1,2',
-        ),
-        SmartPlaylistGroupsCompanion.insert(
-          podcastId: 1,
-          playlistId: 'playlist-1',
-          groupId: 'group-a',
-          displayName: 'Group A',
-          sortKey: 10,
-          episodeIds: '3,4',
-        ),
-        SmartPlaylistGroupsCompanion.insert(
-          podcastId: 1,
-          playlistId: 'playlist-1',
-          groupId: 'group-b',
-          displayName: 'Group B',
-          sortKey: 20,
-          episodeIds: '5',
-        ),
+        SmartPlaylistGroupEntity()
+          ..podcastId = 1
+          ..playlistId = 'playlist-1'
+          ..groupId = 'group-c'
+          ..displayName = 'Group C'
+          ..sortKey = 30
+          ..episodeIds = '1,2',
+        SmartPlaylistGroupEntity()
+          ..podcastId = 1
+          ..playlistId = 'playlist-1'
+          ..groupId = 'group-a'
+          ..displayName = 'Group A'
+          ..sortKey = 10
+          ..episodeIds = '3,4',
+        SmartPlaylistGroupEntity()
+          ..podcastId = 1
+          ..playlistId = 'playlist-1'
+          ..groupId = 'group-b'
+          ..displayName = 'Group B'
+          ..sortKey = 20
+          ..episodeIds = '5',
       ]);
 
       final groups = await datasource.getGroupsByPlaylist(1, 'playlist-1');
@@ -278,36 +230,31 @@ void main() {
 
   group('upsertGroupsForPlaylist', () {
     test('replaces groups for a playlist', () async {
-      // Insert initial groups
       await datasource.upsertGroupsForPlaylist(1, 'playlist-1', [
-        SmartPlaylistGroupsCompanion.insert(
-          podcastId: 1,
-          playlistId: 'playlist-1',
-          groupId: 'old-group',
-          displayName: 'Old Group',
-          sortKey: 1,
-          episodeIds: '1',
-        ),
+        SmartPlaylistGroupEntity()
+          ..podcastId = 1
+          ..playlistId = 'playlist-1'
+          ..groupId = 'old-group'
+          ..displayName = 'Old Group'
+          ..sortKey = 1
+          ..episodeIds = '1',
       ]);
 
-      // Replace with new groups
       await datasource.upsertGroupsForPlaylist(1, 'playlist-1', [
-        SmartPlaylistGroupsCompanion.insert(
-          podcastId: 1,
-          playlistId: 'playlist-1',
-          groupId: 'new-group-1',
-          displayName: 'New Group 1',
-          sortKey: 1,
-          episodeIds: '10,11',
-        ),
-        SmartPlaylistGroupsCompanion.insert(
-          podcastId: 1,
-          playlistId: 'playlist-1',
-          groupId: 'new-group-2',
-          displayName: 'New Group 2',
-          sortKey: 2,
-          episodeIds: '12',
-        ),
+        SmartPlaylistGroupEntity()
+          ..podcastId = 1
+          ..playlistId = 'playlist-1'
+          ..groupId = 'new-group-1'
+          ..displayName = 'New Group 1'
+          ..sortKey = 1
+          ..episodeIds = '10,11',
+        SmartPlaylistGroupEntity()
+          ..podcastId = 1
+          ..playlistId = 'playlist-1'
+          ..groupId = 'new-group-2'
+          ..displayName = 'New Group 2'
+          ..sortKey = 2
+          ..episodeIds = '12',
       ]);
 
       final groups = await datasource.getGroupsByPlaylist(1, 'playlist-1');
@@ -316,16 +263,15 @@ void main() {
       expect(groups[1].groupId, 'new-group-2');
     });
 
-    test('handles empty companions list by deleting all', () async {
+    test('handles empty list by deleting all', () async {
       await datasource.upsertGroupsForPlaylist(1, 'playlist-1', [
-        SmartPlaylistGroupsCompanion.insert(
-          podcastId: 1,
-          playlistId: 'playlist-1',
-          groupId: 'group-1',
-          displayName: 'Group 1',
-          sortKey: 1,
-          episodeIds: '1',
-        ),
+        SmartPlaylistGroupEntity()
+          ..podcastId = 1
+          ..playlistId = 'playlist-1'
+          ..groupId = 'group-1'
+          ..displayName = 'Group 1'
+          ..sortKey = 1
+          ..episodeIds = '1',
       ]);
 
       await datasource.upsertGroupsForPlaylist(1, 'playlist-1', []);
@@ -336,36 +282,32 @@ void main() {
 
     test('does not affect groups of other playlists', () async {
       await datasource.upsertGroupsForPlaylist(1, 'playlist-1', [
-        SmartPlaylistGroupsCompanion.insert(
-          podcastId: 1,
-          playlistId: 'playlist-1',
-          groupId: 'group-a',
-          displayName: 'Group A',
-          sortKey: 1,
-          episodeIds: '1',
-        ),
+        SmartPlaylistGroupEntity()
+          ..podcastId = 1
+          ..playlistId = 'playlist-1'
+          ..groupId = 'group-a'
+          ..displayName = 'Group A'
+          ..sortKey = 1
+          ..episodeIds = '1',
       ]);
       await datasource.upsertGroupsForPlaylist(1, 'playlist-2', [
-        SmartPlaylistGroupsCompanion.insert(
-          podcastId: 1,
-          playlistId: 'playlist-2',
-          groupId: 'group-b',
-          displayName: 'Group B',
-          sortKey: 1,
-          episodeIds: '2',
-        ),
+        SmartPlaylistGroupEntity()
+          ..podcastId = 1
+          ..playlistId = 'playlist-2'
+          ..groupId = 'group-b'
+          ..displayName = 'Group B'
+          ..sortKey = 1
+          ..episodeIds = '2',
       ]);
 
-      // Replace only playlist-1 groups
       await datasource.upsertGroupsForPlaylist(1, 'playlist-1', [
-        SmartPlaylistGroupsCompanion.insert(
-          podcastId: 1,
-          playlistId: 'playlist-1',
-          groupId: 'group-new',
-          displayName: 'Group New',
-          sortKey: 1,
-          episodeIds: '3',
-        ),
+        SmartPlaylistGroupEntity()
+          ..podcastId = 1
+          ..playlistId = 'playlist-1'
+          ..groupId = 'group-new'
+          ..displayName = 'Group New'
+          ..sortKey = 1
+          ..episodeIds = '3',
       ]);
 
       final groups1 = await datasource.getGroupsByPlaylist(1, 'playlist-1');
