@@ -2,7 +2,9 @@ import 'package:audiflow_podcast/audiflow_podcast.dart'
     show TranscriptFileParser;
 import 'package:riverpod/riverpod.dart';
 
-import '../../../common/database/app_database.dart';
+import '../models/episode_chapter.dart';
+import '../models/episode_transcript.dart';
+import '../models/transcript_segment_table.dart';
 import '../repositories/chapter_repository_impl.dart';
 import '../repositories/transcript_repository_impl.dart';
 

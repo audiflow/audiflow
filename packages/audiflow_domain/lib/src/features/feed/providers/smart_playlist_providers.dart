@@ -7,6 +7,7 @@ import '../../../common/providers/logger_provider.dart';
 import '../../../common/providers/platform_providers.dart';
 import '../../../features/subscription/repositories/subscription_repository_impl.dart';
 import '../../player/models/episode_with_progress.dart';
+import '../../player/models/playback_history.dart';
 import '../../player/repositories/playback_history_repository_impl.dart';
 import '../datasources/local/smart_playlist_cache_datasource.dart';
 import '../datasources/local/smart_playlist_local_datasource.dart';

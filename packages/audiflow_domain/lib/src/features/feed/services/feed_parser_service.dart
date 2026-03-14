@@ -1,11 +1,10 @@
 import 'package:audiflow_podcast/audiflow_podcast.dart';
-import 'package:drift/drift.dart';
 import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../../common/database/app_database.dart';
 import '../../../common/providers/logger_provider.dart';
 import '../builders/podcast_builder.dart';
+import '../models/episode.dart';
 import '../models/feed_parse_progress.dart';
 
 part 'feed_parser_service.g.dart';
@@ -173,10 +172,10 @@ class FeedParserService {
   ///
   /// Emits [FeedParseProgress] events for UI updates.
   /// Calls [onBatchReady] when a batch of episodes is ready to store,
-  /// passing both episode companions and transcript/chapter metadata.
+  /// passing both episodes and transcript/chapter metadata.
   ///
   /// - [xmlContent]: Raw XML content of the RSS feed
-  /// - [podcastId]: Database ID for the podcast (used in companion objects)
+  /// - [podcastId]: Database ID for the podcast
   /// - [knownGuids]: Set of episode GUIDs already in the database
   /// - [onBatchReady]: Callback to persist episodes and media metadata
   /// - [batchSize]: Number of episodes per batch (default: 20)
@@ -185,7 +184,7 @@ class FeedParserService {
     required int podcastId,
     required Set<String> knownGuids,
     required Future<void> Function(
-      List<EpisodesCompanion> companions,
+      List<Episode> episodes,
       List<ParsedEpisodeMediaMeta> mediaMetas,
     )
     onBatchReady,
@@ -194,7 +193,7 @@ class FeedParserService {
     _logger?.i('Starting isolate parse for podcast $podcastId');
     _logger?.d('Known GUIDs: ${knownGuids.length}');
 
-    final buffer = <EpisodesCompanion>[];
+    final buffer = <Episode>[];
     final mediaMetaBuffer = <ParsedEpisodeMediaMeta>[];
     var totalParsed = 0;
 
@@ -235,18 +234,17 @@ class FeedParserService {
               enclosureUrl ??
               'unknown-${DateTime.now().millisecondsSinceEpoch}';
           buffer.add(
-            EpisodesCompanion.insert(
-              podcastId: podcastId,
-              guid: resolvedGuid,
-              title: title,
-              description: Value(description),
-              audioUrl: enclosureUrl ?? '',
-              durationMs: Value(duration?.inMilliseconds),
-              publishedAt: Value(publishDate),
-              imageUrl: Value(imageUrl),
-              episodeNumber: Value(episodeNumber),
-              seasonNumber: Value(seasonNumber),
-            ),
+            Episode()
+              ..podcastId = podcastId
+              ..guid = resolvedGuid
+              ..title = title
+              ..description = description
+              ..audioUrl = enclosureUrl ?? ''
+              ..durationMs = duration?.inMilliseconds
+              ..publishedAt = publishDate
+              ..imageUrl = imageUrl
+              ..episodeNumber = episodeNumber
+              ..seasonNumber = seasonNumber,
           );
 
           if (transcripts != null || chapters != null) {

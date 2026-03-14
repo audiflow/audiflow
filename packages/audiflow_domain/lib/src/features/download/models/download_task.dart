@@ -1,5 +1,7 @@
 import 'package:isar_community/isar.dart';
 
+import 'download_status.dart';
+
 part 'download_task.g.dart';
 
 @collection
@@ -19,23 +21,14 @@ class DownloadTask {
   String? lastError;
   late DateTime createdAt;
   DateTime? completedAt;
-}
 
-enum DownloadStatus {
-  pending(0),
-  downloading(1),
-  completed(2),
-  failed(3),
-  paused(4),
-  canceled(5);
+  /// Converts the int [status] to the freezed [DownloadStatus].
+  DownloadStatus get downloadStatus => DownloadStatus.fromDbValue(status);
 
-  const DownloadStatus(this.value);
-  final int value;
-}
-
-extension DownloadTaskStatusX on DownloadTask {
-  DownloadStatus get downloadStatus => DownloadStatus.values.firstWhere(
-    (e) => e.value == status,
-    orElse: () => DownloadStatus.pending,
-  );
+  /// Download progress as a value from 0.0 to 1.0, or null if total is unknown.
+  double? get progress {
+    final total = totalBytes;
+    if (total == null || total == 0) return null;
+    return downloadedBytes / total;
+  }
 }

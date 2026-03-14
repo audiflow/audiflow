@@ -1,6 +1,6 @@
 import 'package:riverpod/riverpod.dart';
 
-import '../../../common/database/app_database.dart';
+import '../models/subscriptions.dart';
 import '../repositories/subscription_repository_impl.dart';
 
 /// Gets subscription by iTunes ID.

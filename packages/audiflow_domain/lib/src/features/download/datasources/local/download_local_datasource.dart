@@ -120,7 +120,7 @@ class DownloadLocalDatasource {
         .filter()
         .statusEqualTo(const DownloadStatus.completed().toDbValue())
         .findAll();
-    return completed.fold(0, (sum, task) => sum + (task.totalBytes ?? 0));
+    return completed.fold<int>(0, (sum, task) => sum + (task.totalBytes ?? 0));
   }
 
   /// Deletes all completed downloads.

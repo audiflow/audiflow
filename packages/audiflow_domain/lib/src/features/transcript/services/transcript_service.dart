@@ -1,12 +1,12 @@
-import 'package:audiflow_podcast/audiflow_podcast.dart';
+import 'package:audiflow_podcast/audiflow_podcast.dart' hide TranscriptSegment;
 import 'package:dio/dio.dart';
-import 'package:drift/drift.dart';
 import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../../common/database/app_database.dart';
 import '../../../common/providers/http_client_provider.dart';
 import '../../../common/providers/logger_provider.dart';
+import '../models/episode_transcript.dart';
+import '../models/transcript_segment_table.dart';
 import '../repositories/transcript_repository.dart';
 import '../repositories/transcript_repository_impl.dart';
 
@@ -69,19 +69,18 @@ class TranscriptService {
       final segments = _parser.parse(content, mimeType: chosen.type);
       if (segments.isEmpty) return null;
 
-      final companions = segments
+      final segmentObjects = segments
           .map(
-            (s) => TranscriptSegmentsCompanion.insert(
-              transcriptId: chosen.id,
-              startMs: s.startMs,
-              endMs: s.endMs,
-              body: s.text,
-              speaker: Value(s.speaker),
-            ),
+            (s) => TranscriptSegment()
+              ..transcriptId = chosen.id
+              ..startMs = s.startMs
+              ..endMs = s.endMs
+              ..body = s.text
+              ..speaker = s.speaker,
           )
           .toList();
 
-      await _repository.insertSegments(companions);
+      await _repository.insertSegments(segmentObjects);
       await _repository.markAsFetched(chosen.id);
 
       _logger.i(

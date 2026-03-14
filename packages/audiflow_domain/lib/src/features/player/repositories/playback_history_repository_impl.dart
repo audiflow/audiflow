@@ -1,7 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../common/providers/database_provider.dart';
-import '../../feed/models/episode.dart';
 import '../datasources/local/playback_history_local_datasource.dart';
 import '../models/playback_history.dart';
 import 'playback_history_repository.dart';

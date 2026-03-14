@@ -69,8 +69,9 @@ class QueueLocalDatasource {
   }
 
   /// Deletes all queue items.
-  Future<int> deleteAll() {
-    return _isar.writeTxn(() => _isar.queueItems.clear());
+  Future<int> deleteAll() async {
+    await _isar.writeTxn(() => _isar.queueItems.clear());
+    return 0;
   }
 
   /// Deletes all adhoc queue items.

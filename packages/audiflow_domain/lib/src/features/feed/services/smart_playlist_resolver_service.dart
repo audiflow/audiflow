@@ -1,4 +1,4 @@
-import '../../../common/database/app_database.dart';
+import '../models/episode.dart';
 import '../models/smart_playlist.dart';
 import '../models/smart_playlist_definition.dart';
 import '../models/smart_playlist_group_def.dart';

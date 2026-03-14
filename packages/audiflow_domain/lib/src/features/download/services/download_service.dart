@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../../common/database/app_database.dart';
 import '../../../common/providers/logger_provider.dart';
+import '../models/download_task.dart';
 import '../../feed/repositories/episode_repository.dart';
 import '../../feed/repositories/episode_repository_impl.dart';
 import '../models/download_status.dart';
