@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart' as intl;
+import 'package:isar_community/isar.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sentry_dio/sentry_dio.dart';
@@ -61,7 +62,24 @@ Future<void> _configureOrientation() async {
 Future<void> _startApp(String smartPlaylistConfigBaseUrl) async {
   await _configureOrientation();
 
-  final database = AppDatabase();
+  final dir = await getApplicationDocumentsDirectory();
+  final isar = await Isar.open(
+    [
+      SubscriptionSchema,
+      EpisodeSchema,
+      PlaybackHistorySchema,
+      SmartPlaylistEntitySchema,
+      SmartPlaylistGroupEntitySchema,
+      PodcastViewPreferenceSchema,
+      DownloadTaskSchema,
+      QueueItemSchema,
+      EpisodeTranscriptSchema,
+      TranscriptSegmentSchema,
+      EpisodeChapterSchema,
+    ],
+    directory: dir.path,
+    name: 'audiflow',
+  );
   final dio = Dio(
     BaseOptions(
       connectTimeout: const Duration(seconds: 30),
@@ -79,7 +97,7 @@ Future<void> _startApp(String smartPlaylistConfigBaseUrl) async {
 
   final container = ProviderContainer(
     overrides: [
-      databaseProvider.overrideWithValue(database),
+      isarProvider.overrideWithValue(isar),
       dioProvider.overrideWithValue(dio),
       cacheDirProvider.overrideWithValue(cacheDir.path),
       sharedPreferencesProvider.overrideWithValue(prefs),
