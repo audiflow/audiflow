@@ -25,12 +25,12 @@ $NowPlayingInfoCopyWith<NowPlayingInfo> get copyWith => _$NowPlayingInfoCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is NowPlayingInfo&&(identical(other.episodeUrl, episodeUrl) || other.episodeUrl == episodeUrl)&&(identical(other.episodeTitle, episodeTitle) || other.episodeTitle == episodeTitle)&&(identical(other.podcastTitle, podcastTitle) || other.podcastTitle == podcastTitle)&&(identical(other.artworkUrl, artworkUrl) || other.artworkUrl == artworkUrl)&&(identical(other.totalDuration, totalDuration) || other.totalDuration == totalDuration)&&(identical(other.savedPosition, savedPosition) || other.savedPosition == savedPosition)&&const DeepCollectionEquality().equals(other.episode, episode));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is NowPlayingInfo&&(identical(other.episodeUrl, episodeUrl) || other.episodeUrl == episodeUrl)&&(identical(other.episodeTitle, episodeTitle) || other.episodeTitle == episodeTitle)&&(identical(other.podcastTitle, podcastTitle) || other.podcastTitle == podcastTitle)&&(identical(other.artworkUrl, artworkUrl) || other.artworkUrl == artworkUrl)&&(identical(other.totalDuration, totalDuration) || other.totalDuration == totalDuration)&&(identical(other.savedPosition, savedPosition) || other.savedPosition == savedPosition)&&(identical(other.episode, episode) || other.episode == episode));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,episodeUrl,episodeTitle,podcastTitle,artworkUrl,totalDuration,savedPosition,const DeepCollectionEquality().hash(episode));
+int get hashCode => Object.hash(runtimeType,episodeUrl,episodeTitle,podcastTitle,artworkUrl,totalDuration,savedPosition,episode);
 
 @override
 String toString() {
@@ -207,7 +207,7 @@ return $default(_that.episodeUrl,_that.episodeTitle,_that.podcastTitle,_that.art
 
 class _NowPlayingInfo implements NowPlayingInfo {
   const _NowPlayingInfo({required this.episodeUrl, required this.episodeTitle, required this.podcastTitle, this.artworkUrl, this.totalDuration, this.savedPosition, this.episode});
-  
+
 
 @override final  String episodeUrl;
 @override final  String episodeTitle;
@@ -227,12 +227,12 @@ _$NowPlayingInfoCopyWith<_NowPlayingInfo> get copyWith => __$NowPlayingInfoCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _NowPlayingInfo&&(identical(other.episodeUrl, episodeUrl) || other.episodeUrl == episodeUrl)&&(identical(other.episodeTitle, episodeTitle) || other.episodeTitle == episodeTitle)&&(identical(other.podcastTitle, podcastTitle) || other.podcastTitle == podcastTitle)&&(identical(other.artworkUrl, artworkUrl) || other.artworkUrl == artworkUrl)&&(identical(other.totalDuration, totalDuration) || other.totalDuration == totalDuration)&&(identical(other.savedPosition, savedPosition) || other.savedPosition == savedPosition)&&const DeepCollectionEquality().equals(other.episode, episode));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _NowPlayingInfo&&(identical(other.episodeUrl, episodeUrl) || other.episodeUrl == episodeUrl)&&(identical(other.episodeTitle, episodeTitle) || other.episodeTitle == episodeTitle)&&(identical(other.podcastTitle, podcastTitle) || other.podcastTitle == podcastTitle)&&(identical(other.artworkUrl, artworkUrl) || other.artworkUrl == artworkUrl)&&(identical(other.totalDuration, totalDuration) || other.totalDuration == totalDuration)&&(identical(other.savedPosition, savedPosition) || other.savedPosition == savedPosition)&&(identical(other.episode, episode) || other.episode == episode));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,episodeUrl,episodeTitle,podcastTitle,artworkUrl,totalDuration,savedPosition,const DeepCollectionEquality().hash(episode));
+int get hashCode => Object.hash(runtimeType,episodeUrl,episodeTitle,podcastTitle,artworkUrl,totalDuration,savedPosition,episode);
 
 @override
 String toString() {

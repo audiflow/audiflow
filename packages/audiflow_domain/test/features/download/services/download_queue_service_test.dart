@@ -18,28 +18,26 @@ DownloadTask _task({
   String? localPath,
   String? lastError,
 }) {
-  return DownloadTask(
-    id: id,
-    episodeId: episodeId,
-    audioUrl: audioUrl,
-    status: status,
-    retryCount: retryCount,
-    downloadedBytes: downloadedBytes,
-    wifiOnly: false,
-    localPath: localPath,
-    lastError: lastError,
-    createdAt: DateTime.now(),
-  );
+  return DownloadTask()
+    ..id = id
+    ..episodeId = episodeId
+    ..audioUrl = audioUrl
+    ..status = status
+    ..retryCount = retryCount
+    ..downloadedBytes = downloadedBytes
+    ..wifiOnly = false
+    ..localPath = localPath
+    ..lastError = lastError
+    ..createdAt = DateTime.now();
 }
 
 Episode _episode({required int id, int podcastId = 1, String? title}) {
-  return Episode(
-    id: id,
-    podcastId: podcastId,
-    guid: 'guid-$id',
-    title: title ?? 'Episode $id',
-    audioUrl: 'https://example.com/ep$id.mp3',
-  );
+  return Episode()
+    ..id = id
+    ..podcastId = podcastId
+    ..guid = 'guid-$id'
+    ..title = title ?? 'Episode $id'
+    ..audioUrl = 'https://example.com/ep$id.mp3';
 }
 
 void main() {

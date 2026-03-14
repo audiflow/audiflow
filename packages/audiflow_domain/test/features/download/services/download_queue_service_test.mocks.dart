@@ -5,22 +5,24 @@
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'dart:async' as _i3;
 
-import 'package:audiflow_domain/src/common/database/app_database.dart' as _i4;
 import 'package:audiflow_domain/src/features/download/models/download_status.dart'
     as _i5;
+import 'package:audiflow_domain/src/features/download/models/download_task.dart'
+    as _i4;
 import 'package:audiflow_domain/src/features/download/repositories/download_repository.dart'
     as _i2;
 import 'package:audiflow_domain/src/features/download/services/download_file_service.dart'
     as _i6;
+import 'package:audiflow_domain/src/features/feed/models/episode.dart' as _i9;
 import 'package:audiflow_domain/src/features/feed/models/feed_parse_progress.dart'
-    as _i12;
+    as _i13;
 import 'package:audiflow_domain/src/features/feed/models/smart_playlist_episode_extractor.dart'
-    as _i10;
-import 'package:audiflow_domain/src/features/feed/models/smart_playlist_pattern_config.dart'
     as _i11;
+import 'package:audiflow_domain/src/features/feed/models/smart_playlist_pattern_config.dart'
+    as _i12;
 import 'package:audiflow_domain/src/features/feed/repositories/episode_repository.dart'
     as _i8;
-import 'package:audiflow_podcast/audiflow_podcast.dart' as _i9;
+import 'package:audiflow_podcast/audiflow_podcast.dart' as _i10;
 import 'package:mockito/mockito.dart' as _i1;
 import 'package:mockito/src/dummies.dart' as _i7;
 
@@ -318,39 +320,39 @@ class MockEpisodeRepository extends _i1.Mock implements _i8.EpisodeRepository {
   }
 
   @override
-  _i3.Future<List<_i4.Episode>> getByPodcastId(int? podcastId) =>
+  _i3.Future<List<_i9.Episode>> getByPodcastId(int? podcastId) =>
       (super.noSuchMethod(
             Invocation.method(#getByPodcastId, [podcastId]),
-            returnValue: _i3.Future<List<_i4.Episode>>.value(<_i4.Episode>[]),
+            returnValue: _i3.Future<List<_i9.Episode>>.value(<_i9.Episode>[]),
           )
-          as _i3.Future<List<_i4.Episode>>);
+          as _i3.Future<List<_i9.Episode>>);
 
   @override
-  _i3.Stream<List<_i4.Episode>> watchByPodcastId(int? podcastId) =>
+  _i3.Stream<List<_i9.Episode>> watchByPodcastId(int? podcastId) =>
       (super.noSuchMethod(
             Invocation.method(#watchByPodcastId, [podcastId]),
-            returnValue: _i3.Stream<List<_i4.Episode>>.empty(),
+            returnValue: _i3.Stream<List<_i9.Episode>>.empty(),
           )
-          as _i3.Stream<List<_i4.Episode>>);
+          as _i3.Stream<List<_i9.Episode>>);
 
   @override
-  _i3.Future<_i4.Episode?> getById(int? id) =>
+  _i3.Future<_i9.Episode?> getById(int? id) =>
       (super.noSuchMethod(
             Invocation.method(#getById, [id]),
-            returnValue: _i3.Future<_i4.Episode?>.value(),
+            returnValue: _i3.Future<_i9.Episode?>.value(),
           )
-          as _i3.Future<_i4.Episode?>);
+          as _i3.Future<_i9.Episode?>);
 
   @override
-  _i3.Future<_i4.Episode?> getByAudioUrl(String? audioUrl) =>
+  _i3.Future<_i9.Episode?> getByAudioUrl(String? audioUrl) =>
       (super.noSuchMethod(
             Invocation.method(#getByAudioUrl, [audioUrl]),
-            returnValue: _i3.Future<_i4.Episode?>.value(),
+            returnValue: _i3.Future<_i9.Episode?>.value(),
           )
-          as _i3.Future<_i4.Episode?>);
+          as _i3.Future<_i9.Episode?>);
 
   @override
-  _i3.Future<void> upsertEpisodes(List<_i4.EpisodesCompanion>? episodes) =>
+  _i3.Future<void> upsertEpisodes(List<_i9.Episode>? episodes) =>
       (super.noSuchMethod(
             Invocation.method(#upsertEpisodes, [episodes]),
             returnValue: _i3.Future<void>.value(),
@@ -361,8 +363,8 @@ class MockEpisodeRepository extends _i1.Mock implements _i8.EpisodeRepository {
   @override
   _i3.Future<void> upsertFromFeedItems(
     int? podcastId,
-    List<_i9.PodcastItem>? items, {
-    _i10.SmartPlaylistEpisodeExtractor? extractor,
+    List<_i10.PodcastItem>? items, {
+    _i11.SmartPlaylistEpisodeExtractor? extractor,
   }) =>
       (super.noSuchMethod(
             Invocation.method(
@@ -378,8 +380,8 @@ class MockEpisodeRepository extends _i1.Mock implements _i8.EpisodeRepository {
   @override
   _i3.Future<void> upsertFromFeedItemsWithConfig(
     int? podcastId,
-    List<_i9.PodcastItem>? items, {
-    required _i11.SmartPlaylistPatternConfig? config,
+    List<_i10.PodcastItem>? items, {
+    required _i12.SmartPlaylistPatternConfig? config,
   }) =>
       (super.noSuchMethod(
             Invocation.method(
@@ -393,12 +395,12 @@ class MockEpisodeRepository extends _i1.Mock implements _i8.EpisodeRepository {
           as _i3.Future<void>);
 
   @override
-  _i3.Future<List<_i4.Episode>> getByIds(List<int>? ids) =>
+  _i3.Future<List<_i9.Episode>> getByIds(List<int>? ids) =>
       (super.noSuchMethod(
             Invocation.method(#getByIds, [ids]),
-            returnValue: _i3.Future<List<_i4.Episode>>.value(<_i4.Episode>[]),
+            returnValue: _i3.Future<List<_i9.Episode>>.value(<_i9.Episode>[]),
           )
-          as _i3.Future<List<_i4.Episode>>);
+          as _i3.Future<List<_i9.Episode>>);
 
   @override
   _i3.Future<Set<String>> getGuidsByPodcastId(int? podcastId) =>
@@ -411,7 +413,7 @@ class MockEpisodeRepository extends _i1.Mock implements _i8.EpisodeRepository {
   @override
   _i3.Future<void> storeTranscriptAndChapterDataFromParsed(
     int? podcastId,
-    List<_i12.ParsedEpisodeMediaMeta>? mediaMetas,
+    List<_i13.ParsedEpisodeMediaMeta>? mediaMetas,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#storeTranscriptAndChapterDataFromParsed, [
@@ -424,7 +426,7 @@ class MockEpisodeRepository extends _i1.Mock implements _i8.EpisodeRepository {
           as _i3.Future<void>);
 
   @override
-  _i3.Future<List<_i4.Episode>> getSubsequentEpisodes({
+  _i3.Future<List<_i9.Episode>> getSubsequentEpisodes({
     required int? podcastId,
     required int? afterEpisodeNumber,
     required int? limit,
@@ -435,7 +437,7 @@ class MockEpisodeRepository extends _i1.Mock implements _i8.EpisodeRepository {
               #afterEpisodeNumber: afterEpisodeNumber,
               #limit: limit,
             }),
-            returnValue: _i3.Future<List<_i4.Episode>>.value(<_i4.Episode>[]),
+            returnValue: _i3.Future<List<_i9.Episode>>.value(<_i9.Episode>[]),
           )
-          as _i3.Future<List<_i4.Episode>>);
+          as _i3.Future<List<_i9.Episode>>);
 }

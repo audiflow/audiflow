@@ -1,6 +1,5 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_domain/src/features/feed/datasources/local/podcast_view_preference_local_datasource.dart';
-import 'package:audiflow_domain/src/features/feed/models/smart_playlist_sort.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:isar_community/isar.dart';
 

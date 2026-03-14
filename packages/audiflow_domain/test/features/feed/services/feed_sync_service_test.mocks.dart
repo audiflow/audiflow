@@ -5,41 +5,43 @@
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'dart:async' as _i11;
 
-import 'package:audiflow_core/audiflow_core.dart' as _i19;
-import 'package:audiflow_domain/src/common/database/app_database.dart' as _i2;
+import 'package:audiflow_core/audiflow_core.dart' as _i20;
 import 'package:audiflow_domain/src/features/feed/builders/podcast_builder.dart'
     as _i3;
+import 'package:audiflow_domain/src/features/feed/models/episode.dart' as _i13;
 import 'package:audiflow_domain/src/features/feed/models/feed_parse_progress.dart'
-    as _i16;
+    as _i17;
 import 'package:audiflow_domain/src/features/feed/models/pattern_summary.dart'
-    as _i24;
+    as _i25;
 import 'package:audiflow_domain/src/features/feed/models/root_meta.dart'
-    as _i22;
+    as _i23;
 import 'package:audiflow_domain/src/features/feed/models/smart_playlist_episode_extractor.dart'
-    as _i14;
-import 'package:audiflow_domain/src/features/feed/models/smart_playlist_pattern_config.dart'
     as _i15;
+import 'package:audiflow_domain/src/features/feed/models/smart_playlist_pattern_config.dart'
+    as _i16;
 import 'package:audiflow_domain/src/features/feed/repositories/episode_repository.dart'
     as _i12;
 import 'package:audiflow_domain/src/features/feed/repositories/smart_playlist_config_repository.dart'
-    as _i21;
+    as _i22;
 import 'package:audiflow_domain/src/features/feed/services/feed_parser_service.dart'
-    as _i20;
+    as _i21;
 import 'package:audiflow_domain/src/features/settings/repositories/app_settings_repository.dart'
-    as _i17;
+    as _i18;
+import 'package:audiflow_domain/src/features/subscription/models/subscriptions.dart'
+    as _i2;
 import 'package:audiflow_domain/src/features/subscription/repositories/subscription_repository.dart'
     as _i10;
-import 'package:audiflow_podcast/audiflow_podcast.dart' as _i13;
+import 'package:audiflow_podcast/audiflow_podcast.dart' as _i14;
 import 'package:dio/src/adapter.dart' as _i6;
-import 'package:dio/src/cancel_token.dart' as _i25;
+import 'package:dio/src/cancel_token.dart' as _i26;
 import 'package:dio/src/dio.dart' as _i9;
 import 'package:dio/src/dio_mixin.dart' as _i5;
 import 'package:dio/src/options.dart' as _i4;
 import 'package:dio/src/response.dart' as _i8;
 import 'package:dio/src/transformer.dart' as _i7;
-import 'package:flutter/material.dart' as _i18;
+import 'package:flutter/material.dart' as _i19;
 import 'package:mockito/mockito.dart' as _i1;
-import 'package:mockito/src/dummies.dart' as _i23;
+import 'package:mockito/src/dummies.dart' as _i24;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values
@@ -235,39 +237,41 @@ class MockEpisodeRepository extends _i1.Mock implements _i12.EpisodeRepository {
   }
 
   @override
-  _i11.Future<List<_i2.Episode>> getByPodcastId(int? podcastId) =>
+  _i11.Future<List<_i13.Episode>> getByPodcastId(int? podcastId) =>
       (super.noSuchMethod(
             Invocation.method(#getByPodcastId, [podcastId]),
-            returnValue: _i11.Future<List<_i2.Episode>>.value(<_i2.Episode>[]),
+            returnValue: _i11.Future<List<_i13.Episode>>.value(
+              <_i13.Episode>[],
+            ),
           )
-          as _i11.Future<List<_i2.Episode>>);
+          as _i11.Future<List<_i13.Episode>>);
 
   @override
-  _i11.Stream<List<_i2.Episode>> watchByPodcastId(int? podcastId) =>
+  _i11.Stream<List<_i13.Episode>> watchByPodcastId(int? podcastId) =>
       (super.noSuchMethod(
             Invocation.method(#watchByPodcastId, [podcastId]),
-            returnValue: _i11.Stream<List<_i2.Episode>>.empty(),
+            returnValue: _i11.Stream<List<_i13.Episode>>.empty(),
           )
-          as _i11.Stream<List<_i2.Episode>>);
+          as _i11.Stream<List<_i13.Episode>>);
 
   @override
-  _i11.Future<_i2.Episode?> getById(int? id) =>
+  _i11.Future<_i13.Episode?> getById(int? id) =>
       (super.noSuchMethod(
             Invocation.method(#getById, [id]),
-            returnValue: _i11.Future<_i2.Episode?>.value(),
+            returnValue: _i11.Future<_i13.Episode?>.value(),
           )
-          as _i11.Future<_i2.Episode?>);
+          as _i11.Future<_i13.Episode?>);
 
   @override
-  _i11.Future<_i2.Episode?> getByAudioUrl(String? audioUrl) =>
+  _i11.Future<_i13.Episode?> getByAudioUrl(String? audioUrl) =>
       (super.noSuchMethod(
             Invocation.method(#getByAudioUrl, [audioUrl]),
-            returnValue: _i11.Future<_i2.Episode?>.value(),
+            returnValue: _i11.Future<_i13.Episode?>.value(),
           )
-          as _i11.Future<_i2.Episode?>);
+          as _i11.Future<_i13.Episode?>);
 
   @override
-  _i11.Future<void> upsertEpisodes(List<_i2.EpisodesCompanion>? episodes) =>
+  _i11.Future<void> upsertEpisodes(List<_i13.Episode>? episodes) =>
       (super.noSuchMethod(
             Invocation.method(#upsertEpisodes, [episodes]),
             returnValue: _i11.Future<void>.value(),
@@ -278,8 +282,8 @@ class MockEpisodeRepository extends _i1.Mock implements _i12.EpisodeRepository {
   @override
   _i11.Future<void> upsertFromFeedItems(
     int? podcastId,
-    List<_i13.PodcastItem>? items, {
-    _i14.SmartPlaylistEpisodeExtractor? extractor,
+    List<_i14.PodcastItem>? items, {
+    _i15.SmartPlaylistEpisodeExtractor? extractor,
   }) =>
       (super.noSuchMethod(
             Invocation.method(
@@ -295,8 +299,8 @@ class MockEpisodeRepository extends _i1.Mock implements _i12.EpisodeRepository {
   @override
   _i11.Future<void> upsertFromFeedItemsWithConfig(
     int? podcastId,
-    List<_i13.PodcastItem>? items, {
-    required _i15.SmartPlaylistPatternConfig? config,
+    List<_i14.PodcastItem>? items, {
+    required _i16.SmartPlaylistPatternConfig? config,
   }) =>
       (super.noSuchMethod(
             Invocation.method(
@@ -310,12 +314,14 @@ class MockEpisodeRepository extends _i1.Mock implements _i12.EpisodeRepository {
           as _i11.Future<void>);
 
   @override
-  _i11.Future<List<_i2.Episode>> getByIds(List<int>? ids) =>
+  _i11.Future<List<_i13.Episode>> getByIds(List<int>? ids) =>
       (super.noSuchMethod(
             Invocation.method(#getByIds, [ids]),
-            returnValue: _i11.Future<List<_i2.Episode>>.value(<_i2.Episode>[]),
+            returnValue: _i11.Future<List<_i13.Episode>>.value(
+              <_i13.Episode>[],
+            ),
           )
-          as _i11.Future<List<_i2.Episode>>);
+          as _i11.Future<List<_i13.Episode>>);
 
   @override
   _i11.Future<Set<String>> getGuidsByPodcastId(int? podcastId) =>
@@ -328,7 +334,7 @@ class MockEpisodeRepository extends _i1.Mock implements _i12.EpisodeRepository {
   @override
   _i11.Future<void> storeTranscriptAndChapterDataFromParsed(
     int? podcastId,
-    List<_i16.ParsedEpisodeMediaMeta>? mediaMetas,
+    List<_i17.ParsedEpisodeMediaMeta>? mediaMetas,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#storeTranscriptAndChapterDataFromParsed, [
@@ -341,7 +347,7 @@ class MockEpisodeRepository extends _i1.Mock implements _i12.EpisodeRepository {
           as _i11.Future<void>);
 
   @override
-  _i11.Future<List<_i2.Episode>> getSubsequentEpisodes({
+  _i11.Future<List<_i13.Episode>> getSubsequentEpisodes({
     required int? podcastId,
     required int? afterEpisodeNumber,
     required int? limit,
@@ -352,30 +358,32 @@ class MockEpisodeRepository extends _i1.Mock implements _i12.EpisodeRepository {
               #afterEpisodeNumber: afterEpisodeNumber,
               #limit: limit,
             }),
-            returnValue: _i11.Future<List<_i2.Episode>>.value(<_i2.Episode>[]),
+            returnValue: _i11.Future<List<_i13.Episode>>.value(
+              <_i13.Episode>[],
+            ),
           )
-          as _i11.Future<List<_i2.Episode>>);
+          as _i11.Future<List<_i13.Episode>>);
 }
 
 /// A class which mocks [AppSettingsRepository].
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockAppSettingsRepository extends _i1.Mock
-    implements _i17.AppSettingsRepository {
+    implements _i18.AppSettingsRepository {
   MockAppSettingsRepository() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  _i18.ThemeMode getThemeMode() =>
+  _i19.ThemeMode getThemeMode() =>
       (super.noSuchMethod(
             Invocation.method(#getThemeMode, []),
-            returnValue: _i18.ThemeMode.system,
+            returnValue: _i19.ThemeMode.system,
           )
-          as _i18.ThemeMode);
+          as _i19.ThemeMode);
 
   @override
-  _i11.Future<void> setThemeMode(_i18.ThemeMode? mode) =>
+  _i11.Future<void> setThemeMode(_i19.ThemeMode? mode) =>
       (super.noSuchMethod(
             Invocation.method(#setThemeMode, [mode]),
             returnValue: _i11.Future<void>.value(),
@@ -495,15 +503,15 @@ class MockAppSettingsRepository extends _i1.Mock
           as _i11.Future<void>);
 
   @override
-  _i19.AutoPlayOrder getAutoPlayOrder() =>
+  _i20.AutoPlayOrder getAutoPlayOrder() =>
       (super.noSuchMethod(
             Invocation.method(#getAutoPlayOrder, []),
-            returnValue: _i19.AutoPlayOrder.oldestFirst,
+            returnValue: _i20.AutoPlayOrder.oldestFirst,
           )
-          as _i19.AutoPlayOrder);
+          as _i20.AutoPlayOrder);
 
   @override
-  _i11.Future<void> setAutoPlayOrder(_i19.AutoPlayOrder? order) =>
+  _i11.Future<void> setAutoPlayOrder(_i20.AutoPlayOrder? order) =>
       (super.noSuchMethod(
             Invocation.method(#setAutoPlayOrder, [order]),
             returnValue: _i11.Future<void>.value(),
@@ -626,7 +634,7 @@ class MockAppSettingsRepository extends _i1.Mock
 /// A class which mocks [FeedParserService].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockFeedParserService extends _i1.Mock implements _i20.FeedParserService {
+class MockFeedParserService extends _i1.Mock implements _i21.FeedParserService {
   MockFeedParserService() {
     _i1.throwOnMissingStub(this);
   }
@@ -634,7 +642,7 @@ class MockFeedParserService extends _i1.Mock implements _i20.FeedParserService {
   @override
   _i11.Future<_i3.ParsedFeed> parseFromUrl(
     String? url, {
-    _i13.CacheOptions? cacheOptions,
+    _i14.CacheOptions? cacheOptions,
   }) =>
       (super.noSuchMethod(
             Invocation.method(
@@ -669,13 +677,13 @@ class MockFeedParserService extends _i1.Mock implements _i20.FeedParserService {
           as _i11.Future<_i3.ParsedFeed>);
 
   @override
-  _i11.Stream<_i16.FeedParseProgress> parseWithProgress({
+  _i11.Stream<_i17.FeedParseProgress> parseWithProgress({
     required String? xmlContent,
     required int? podcastId,
     required Set<String>? knownGuids,
     required _i11.Future<void> Function(
-      List<_i2.EpisodesCompanion>,
-      List<_i16.ParsedEpisodeMediaMeta>,
+      List<_i13.Episode>,
+      List<_i17.ParsedEpisodeMediaMeta>,
     )?
     onBatchReady,
     int? batchSize = 20,
@@ -688,9 +696,9 @@ class MockFeedParserService extends _i1.Mock implements _i20.FeedParserService {
               #onBatchReady: onBatchReady,
               #batchSize: batchSize,
             }),
-            returnValue: _i11.Stream<_i16.FeedParseProgress>.empty(),
+            returnValue: _i11.Stream<_i17.FeedParseProgress>.empty(),
           )
-          as _i11.Stream<_i16.FeedParseProgress>);
+          as _i11.Stream<_i17.FeedParseProgress>);
 
   @override
   void dispose() => super.noSuchMethod(
@@ -703,51 +711,51 @@ class MockFeedParserService extends _i1.Mock implements _i20.FeedParserService {
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockSmartPlaylistConfigRepository extends _i1.Mock
-    implements _i21.SmartPlaylistConfigRepository {
+    implements _i22.SmartPlaylistConfigRepository {
   MockSmartPlaylistConfigRepository() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  _i11.Future<_i22.RootMeta> fetchRootMeta() =>
+  _i11.Future<_i23.RootMeta> fetchRootMeta() =>
       (super.noSuchMethod(
             Invocation.method(#fetchRootMeta, []),
-            returnValue: _i11.Future<_i22.RootMeta>.value(
-              _i23.dummyValue<_i22.RootMeta>(
+            returnValue: _i11.Future<_i23.RootMeta>.value(
+              _i24.dummyValue<_i23.RootMeta>(
                 this,
                 Invocation.method(#fetchRootMeta, []),
               ),
             ),
           )
-          as _i11.Future<_i22.RootMeta>);
+          as _i11.Future<_i23.RootMeta>);
 
   @override
-  _i11.Future<_i15.SmartPlaylistPatternConfig> getConfig(
-    _i24.PatternSummary? summary,
+  _i11.Future<_i16.SmartPlaylistPatternConfig> getConfig(
+    _i25.PatternSummary? summary,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#getConfig, [summary]),
-            returnValue: _i11.Future<_i15.SmartPlaylistPatternConfig>.value(
-              _i23.dummyValue<_i15.SmartPlaylistPatternConfig>(
+            returnValue: _i11.Future<_i16.SmartPlaylistPatternConfig>.value(
+              _i24.dummyValue<_i16.SmartPlaylistPatternConfig>(
                 this,
                 Invocation.method(#getConfig, [summary]),
               ),
             ),
           )
-          as _i11.Future<_i15.SmartPlaylistPatternConfig>);
+          as _i11.Future<_i16.SmartPlaylistPatternConfig>);
 
   @override
-  _i24.PatternSummary? findMatchingPattern(
+  _i25.PatternSummary? findMatchingPattern(
     String? podcastGuid,
     String? feedUrl,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#findMatchingPattern, [podcastGuid, feedUrl]),
           )
-          as _i24.PatternSummary?);
+          as _i25.PatternSummary?);
 
   @override
-  _i11.Future<void> reconcileCache(List<_i24.PatternSummary>? latest) =>
+  _i11.Future<void> reconcileCache(List<_i25.PatternSummary>? latest) =>
       (super.noSuchMethod(
             Invocation.method(#reconcileCache, [latest]),
             returnValue: _i11.Future<void>.value(),
@@ -756,7 +764,7 @@ class MockSmartPlaylistConfigRepository extends _i1.Mock
           as _i11.Future<void>);
 
   @override
-  void setPatternSummaries(List<_i24.PatternSummary>? summaries) =>
+  void setPatternSummaries(List<_i25.PatternSummary>? summaries) =>
       super.noSuchMethod(
         Invocation.method(#setPatternSummaries, [summaries]),
         returnValueForMissingStub: null,
@@ -842,7 +850,7 @@ class MockDio extends _i1.Mock implements _i9.Dio {
     Object? data,
     Map<String, dynamic>? queryParameters,
     _i4.Options? options,
-    _i25.CancelToken? cancelToken,
+    _i26.CancelToken? cancelToken,
   }) =>
       (super.noSuchMethod(
             Invocation.method(
@@ -878,7 +886,7 @@ class MockDio extends _i1.Mock implements _i9.Dio {
     Uri? uri, {
     Object? data,
     _i4.Options? options,
-    _i25.CancelToken? cancelToken,
+    _i26.CancelToken? cancelToken,
   }) =>
       (super.noSuchMethod(
             Invocation.method(
@@ -905,7 +913,7 @@ class MockDio extends _i1.Mock implements _i9.Dio {
     Object? data,
     Map<String, dynamic>? queryParameters,
     _i4.Options? options,
-    _i25.CancelToken? cancelToken,
+    _i26.CancelToken? cancelToken,
     _i4.ProgressCallback? onReceiveProgress,
   }) =>
       (super.noSuchMethod(
@@ -944,7 +952,7 @@ class MockDio extends _i1.Mock implements _i9.Dio {
     Uri? uri, {
     Object? data,
     _i4.Options? options,
-    _i25.CancelToken? cancelToken,
+    _i26.CancelToken? cancelToken,
     _i4.ProgressCallback? onReceiveProgress,
   }) =>
       (super.noSuchMethod(
@@ -982,7 +990,7 @@ class MockDio extends _i1.Mock implements _i9.Dio {
     Object? data,
     Map<String, dynamic>? queryParameters,
     _i4.Options? options,
-    _i25.CancelToken? cancelToken,
+    _i26.CancelToken? cancelToken,
     _i4.ProgressCallback? onSendProgress,
     _i4.ProgressCallback? onReceiveProgress,
   }) =>
@@ -1024,7 +1032,7 @@ class MockDio extends _i1.Mock implements _i9.Dio {
     Uri? uri, {
     Object? data,
     _i4.Options? options,
-    _i25.CancelToken? cancelToken,
+    _i26.CancelToken? cancelToken,
     _i4.ProgressCallback? onSendProgress,
     _i4.ProgressCallback? onReceiveProgress,
   }) =>
@@ -1065,7 +1073,7 @@ class MockDio extends _i1.Mock implements _i9.Dio {
     Object? data,
     Map<String, dynamic>? queryParameters,
     _i4.Options? options,
-    _i25.CancelToken? cancelToken,
+    _i26.CancelToken? cancelToken,
     _i4.ProgressCallback? onSendProgress,
     _i4.ProgressCallback? onReceiveProgress,
   }) =>
@@ -1107,7 +1115,7 @@ class MockDio extends _i1.Mock implements _i9.Dio {
     Uri? uri, {
     Object? data,
     _i4.Options? options,
-    _i25.CancelToken? cancelToken,
+    _i26.CancelToken? cancelToken,
     _i4.ProgressCallback? onSendProgress,
     _i4.ProgressCallback? onReceiveProgress,
   }) =>
@@ -1148,7 +1156,7 @@ class MockDio extends _i1.Mock implements _i9.Dio {
     Object? data,
     Map<String, dynamic>? queryParameters,
     _i4.Options? options,
-    _i25.CancelToken? cancelToken,
+    _i26.CancelToken? cancelToken,
     _i4.ProgressCallback? onSendProgress,
     _i4.ProgressCallback? onReceiveProgress,
   }) =>
@@ -1190,7 +1198,7 @@ class MockDio extends _i1.Mock implements _i9.Dio {
     Uri? uri, {
     Object? data,
     _i4.Options? options,
-    _i25.CancelToken? cancelToken,
+    _i26.CancelToken? cancelToken,
     _i4.ProgressCallback? onSendProgress,
     _i4.ProgressCallback? onReceiveProgress,
   }) =>
@@ -1231,7 +1239,7 @@ class MockDio extends _i1.Mock implements _i9.Dio {
     Object? data,
     Map<String, dynamic>? queryParameters,
     _i4.Options? options,
-    _i25.CancelToken? cancelToken,
+    _i26.CancelToken? cancelToken,
   }) =>
       (super.noSuchMethod(
             Invocation.method(
@@ -1267,7 +1275,7 @@ class MockDio extends _i1.Mock implements _i9.Dio {
     Uri? uri, {
     Object? data,
     _i4.Options? options,
-    _i25.CancelToken? cancelToken,
+    _i26.CancelToken? cancelToken,
   }) =>
       (super.noSuchMethod(
             Invocation.method(
@@ -1294,7 +1302,7 @@ class MockDio extends _i1.Mock implements _i9.Dio {
     dynamic savePath, {
     _i4.ProgressCallback? onReceiveProgress,
     Map<String, dynamic>? queryParameters,
-    _i25.CancelToken? cancelToken,
+    _i26.CancelToken? cancelToken,
     bool? deleteOnError = true,
     _i4.FileAccessMode? fileAccessMode = _i4.FileAccessMode.write,
     String? lengthHeader = 'content-length',
@@ -1343,7 +1351,7 @@ class MockDio extends _i1.Mock implements _i9.Dio {
     Uri? uri,
     dynamic savePath, {
     _i4.ProgressCallback? onReceiveProgress,
-    _i25.CancelToken? cancelToken,
+    _i26.CancelToken? cancelToken,
     bool? deleteOnError = true,
     _i4.FileAccessMode? fileAccessMode = _i4.FileAccessMode.write,
     String? lengthHeader = 'content-length',
@@ -1390,7 +1398,7 @@ class MockDio extends _i1.Mock implements _i9.Dio {
     String? url, {
     Object? data,
     Map<String, dynamic>? queryParameters,
-    _i25.CancelToken? cancelToken,
+    _i26.CancelToken? cancelToken,
     _i4.Options? options,
     _i4.ProgressCallback? onSendProgress,
     _i4.ProgressCallback? onReceiveProgress,
@@ -1432,7 +1440,7 @@ class MockDio extends _i1.Mock implements _i9.Dio {
   _i11.Future<_i8.Response<T>> requestUri<T>(
     Uri? uri, {
     Object? data,
-    _i25.CancelToken? cancelToken,
+    _i26.CancelToken? cancelToken,
     _i4.Options? options,
     _i4.ProgressCallback? onSendProgress,
     _i4.ProgressCallback? onReceiveProgress,

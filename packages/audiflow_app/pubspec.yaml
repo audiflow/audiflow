@@ -48,6 +48,9 @@ dependencies:
   package_info_plus: ^9.0.0
   dio: ^5.9.0
 
+  # Database
+  isar_community: ^3.3.0
+
   # Internal packages
   audiflow_ai:
     path: ../audiflow_ai

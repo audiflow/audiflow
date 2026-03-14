@@ -1,14 +1,13 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-Episode _episode({required int id, String? imageUrl}) => Episode(
-  id: id,
-  podcastId: 1,
-  guid: 'guid-$id',
-  title: 'Episode $id',
-  audioUrl: 'https://example.com/$id.mp3',
-  imageUrl: imageUrl,
-);
+Episode _episode({required int id, String? imageUrl}) => Episode()
+  ..id = id
+  ..podcastId = 1
+  ..guid = 'guid-$id'
+  ..title = 'Episode $id'
+  ..audioUrl = 'https://example.com/$id.mp3'
+  ..imageUrl = imageUrl;
 
 void main() {
   group('findPodcastImageUrl', () {

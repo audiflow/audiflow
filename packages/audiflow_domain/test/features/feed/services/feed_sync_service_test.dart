@@ -22,17 +22,16 @@ Subscription _subscription({
   String title = 'Test Podcast',
   DateTime? lastRefreshedAt,
 }) {
-  return Subscription(
-    id: id,
-    itunesId: itunesId,
-    feedUrl: feedUrl,
-    title: title,
-    artistName: 'Test Artist',
-    genres: '',
-    explicit: false,
-    subscribedAt: DateTime.now(),
-    lastRefreshedAt: lastRefreshedAt,
-  );
+  return Subscription()
+    ..id = id
+    ..itunesId = itunesId
+    ..feedUrl = feedUrl
+    ..title = title
+    ..artistName = 'Test Artist'
+    ..genres = ''
+    ..explicit = false
+    ..subscribedAt = DateTime.now()
+    ..lastRefreshedAt = lastRefreshedAt;
 }
 
 void main() {

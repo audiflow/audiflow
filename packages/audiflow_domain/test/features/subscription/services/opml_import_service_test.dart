@@ -12,19 +12,18 @@ Subscription _subscription({
   required String feedUrl,
   required String title,
 }) {
-  return Subscription(
-    id: id,
-    itunesId: itunesId,
-    feedUrl: feedUrl,
-    title: title,
-    artistName: '',
-    artworkUrl: null,
-    description: null,
-    genres: '',
-    explicit: false,
-    subscribedAt: DateTime.now(),
-    lastRefreshedAt: null,
-  );
+  return Subscription()
+    ..id = id
+    ..itunesId = itunesId
+    ..feedUrl = feedUrl
+    ..title = title
+    ..artistName = ''
+    ..artworkUrl = null
+    ..description = null
+    ..genres = ''
+    ..explicit = false
+    ..subscribedAt = DateTime.now()
+    ..lastRefreshedAt = null;
 }
 
 void main() {

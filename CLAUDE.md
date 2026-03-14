@@ -12,7 +12,7 @@ Part of the audiflow ecosystem. Consumes smart playlist config JSON from sibling
 |---------|------|
 | `audiflow_app` | Main Flutter app: routing, screens, controllers |
 | `audiflow_core` | Shared constants, extensions, utilities, error types |
-| `audiflow_domain` | Business logic, repositories, data sources, Drift models |
+| `audiflow_domain` | Business logic, repositories, data sources, Isar models |
 | `audiflow_podcast` | RSS parsing with streaming support and caching |
 | `audiflow_ui` | Reusable widgets, themes, styles |
 | `audiflow_ai` | On-device AI capabilities (Flutter plugin, iOS/Android) |

@@ -53,4 +53,4 @@ final class QueueRepositoryProvider
   }
 }
 
-String _$queueRepositoryHash() => r'0eb1d4fbea8144d8742b919e52cbee3df016a316';
+String _$queueRepositoryHash() => r'10cc38260869ea27cddf84f387041b058757d96f';

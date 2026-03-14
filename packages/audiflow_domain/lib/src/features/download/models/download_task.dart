@@ -23,9 +23,11 @@ class DownloadTask {
   DateTime? completedAt;
 
   /// Converts the int [status] to the freezed [DownloadStatus].
+  @ignore
   DownloadStatus get downloadStatus => DownloadStatus.fromDbValue(status);
 
   /// Download progress as a value from 0.0 to 1.0, or null if total is unknown.
+  @ignore
   double? get progress {
     final total = totalBytes;
     if (total == null || total == 0) return null;
