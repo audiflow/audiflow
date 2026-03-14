@@ -1,90 +1,54 @@
-# AI-DLC and Spec-Driven Development
+# audiflow
 
-Kiro-style Spec Driven Development implementation on AI-DLC (AI Development Life Cycle)
+Flutter podcast player app (iOS/Android). Monorepo with 8 packages managed by Melos + Flutter workspace.
 
-## Project Context
+## Ecosystem context
 
-### Paths
-- Steering: `.kiro/steering/`
-- Specs: `.kiro/specs/`
+Part of the audiflow ecosystem. Consumes smart playlist config JSON from sibling data repos (`audiflow-smartplaylist` for prod, `audiflow-smartplaylist-dev` for dev/staging). Config schema SSoT lives in `audiflow-smartplaylist-editor/crates/sp_core/assets/`. Model serialization (JSON keys, field structure) must stay aligned with `sp_core` models.
 
-### Steering vs Specification
+## Packages
 
-**Steering** (`.kiro/steering/`) - Guide AI with project-wide rules and context
-**Specs** (`.kiro/specs/`) - Formalize development process for individual features
+| Package | Role |
+|---------|------|
+| `audiflow_app` | Main Flutter app: routing, screens, controllers |
+| `audiflow_core` | Shared constants, extensions, utilities, error types |
+| `audiflow_domain` | Business logic, repositories, data sources, Drift models |
+| `audiflow_podcast` | RSS parsing with streaming support and caching |
+| `audiflow_ui` | Reusable widgets, themes, styles |
+| `audiflow_ai` | On-device AI capabilities (Flutter plugin, iOS/Android) |
+| `audiflow_search` | Podcast search and discovery API client (Dio + Freezed) |
+| `audiflow_cli` | CLI tools for debugging Audiflow features |
 
-### Active Specifications
-- Check `.kiro/specs/` for active specifications
-- Use `/kiro:spec-status [feature-name]` to check progress
+## Responsibilities
 
-## Development Guidelines
-- Think in English, generate responses in English. All Markdown content written to project files (e.g., requirements.md, design.md, tasks.md, research.md, validation reports) MUST be written in the target language configured for this specification (see spec.json.language).
+- Podcast discovery, subscription, and feed management
+- Audio playback with background support and system controls
+- Episode download and queue management
+- Smart playlist config consumption and local caching
 
-## Minimal Workflow
-- Phase 0 (optional): `/kiro:steering`, `/kiro:steering-custom`
-- Phase 1 (Specification):
-  - `/kiro:spec-init "description"`
-  - `/kiro:spec-requirements {feature}`
-  - `/kiro:validate-gap {feature}` (optional: for existing codebase)
-  - `/kiro:spec-design {feature} [-y]`
-  - `/kiro:validate-design {feature}` (optional: design review)
-  - `/kiro:spec-tasks {feature} [-y]`
-- Phase 2 (Implementation): `/kiro:spec-impl {feature} [tasks]`
-  - `/kiro:validate-impl {feature}` (optional: after implementation)
-- Progress check: `/kiro:spec-status {feature}` (use anytime)
+## Non-responsibilities
 
-## Development Rules
-- 3-phase approval workflow: Requirements → Design → Tasks → Implementation
-- Human review required each phase; use `-y` only for intentional fast-track
-- Keep steering current and verify alignment with `/kiro:spec-status`
-- Follow the user's instructions precisely, and within that scope act autonomously: gather the necessary context and complete the requested work end-to-end in this run, asking questions only when essential information is missing or the instructions are critically ambiguous.
+- Schema definition (owned by `audiflow-smartplaylist-editor`)
+- Config authoring/editing (owned by editor)
+- Production config data hosting (owned by `audiflow-smartplaylist`)
 
-## Steering Configuration
-- Load entire `.kiro/steering/` as project memory
-- Default files: `product.md`, `tech.md`, `structure.md`
-- Custom files are supported (managed via `/kiro:steering-custom`)
+## Validation
 
-## Smart Playlist Schema Conformance (v2)
+```bash
+melos run test         # Run all tests
+flutter analyze        # Zero issues required
+melos run codegen      # Code generation
+```
 
-`audiflow_domain` has hand-written smart playlist models (`fromJson()`/`toJson()`) that must stay aligned with the JSON Schema defined in `audiflow-smartplaylist-dev/schema/playlist-definition.schema.json`.
+## Key references
 
-### Vendored schema
+- `.claude/rules/project/` -- architecture, tech stack, branching (loaded automatically)
+- `docs/overview.md` -- detailed purpose and concepts
+- `docs/architecture/` -- system overview, module boundaries, state flow, playback pipeline
+- `docs/integration/smartplaylist.md` -- smart playlist config consumption contract
 
-A copy of the reference schema lives at `packages/audiflow_domain/test/fixtures/schema.json`. This is the single source of truth for conformance testing. The schema validates `SmartPlaylistDefinition` objects directly (no config envelope wrapper).
+## When changing this repository
 
-### Conformance tests
-
-`packages/audiflow_domain/test/features/feed/models/schema_conformance_test.dart` validates:
-- **Round-trip tests**: model `toJson()` output validates directly against the vendored schema
-- **Enum conformance**: Dart enum `.name` values and string constants match the schema's `oneOf`/`enum` definitions
-
-### Keeping the schema in sync
-
-When the upstream schema changes:
-1. Copy the updated file to `packages/audiflow_domain/test/fixtures/schema.json`
-2. Run `flutter test packages/audiflow_domain/test/features/feed/models/schema_conformance_test.dart`
-3. Fix any failures (update models, enums, or test data to match the new schema)
-4. Run `flutter test packages/audiflow_domain` to ensure no regressions
-
-### Test data rules
-
-Always use schema-valid values in test data:
-- Resolver types: `'rss'`, `'category'`, `'year'`, `'titleAppearanceOrder'`
-- Playlist structures: `'split'`, `'grouped'` (not `'episodes'`, `'groups'`)
-- Group sort fields (`SmartPlaylistSortField`): `playlistNumber`, `newestEpisodeDate`, `alphabetical`
-- Episode sort fields (`EpisodeSortField`): `publishedAt`, `episodeNumber`, `title`
-- Sort orders: `'ascending'`, `'descending'`
-- Year binding: `'none'`, `'pinToYear'`, `'splitByYear'` (not `YearHeaderMode` values)
-- Episode filters: use `episodeFilters` with `require`/`exclude` arrays of `EpisodeFilterEntry` (not flat `titleFilter`/`excludeFilter`/`requireFilter`)
-
-### v2 model structure
-
-Key types and their JSON fields:
-- `SmartPlaylistDefinition`: `id`, `displayName`, `resolverType`, `playlistStructure`, `episodeFilters`, `groupList`, `episodeList`, `episodeExtractor`, `prependSeasonNumber`
-- `SmartPlaylistGroupDef`: `id`, `displayName`, `pattern`, `display`, `episodeList`, `episodeExtractor`
-- `GroupListConfig`: `yearBinding`, `userSortable`, `showDateRange`, `sort`
-- `EpisodeListConfig`: `showYearHeaders`, `sort`, `titleExtractor`
-- `GroupDisplayConfig`: `showDateRange`, `yearBinding`
-- `EpisodeFilters`: `require`, `exclude` (arrays of `EpisodeFilterEntry`)
-- `EpisodeFilterEntry`: `title?`, `description?`
-- `SmartPlaylistSortRule`: `field`, `order` (single rule, not composite)
+- Schema/model changes: coordinate with `audiflow-smartplaylist-editor` (sp_core)
+- Run schema conformance tests: `flutter test packages/audiflow_domain/test/features/feed/models/schema_conformance_test.dart`
+- Update vendored schema if upstream changed: copy from `sp_core/assets/*.schema.json`

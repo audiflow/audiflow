@@ -1,3 +1,7 @@
+---
+paths: packages/**/*.dart, pubspec.yaml, "*.env*"
+---
+
 # Audiflow v2 - Tech Stack
 
 ## Core Stack

@@ -1,0 +1,107 @@
+# Smart Playlist Integration
+
+## Purpose
+
+Documents how audiflow consumes smart playlist configurations from external static hosting. This is the primary cross-repo integration in the audiflow ecosystem.
+
+## Scope
+
+This document covers:
+- How the app fetches and caches smart playlist config JSON
+- The resolver chain that groups episodes into smart playlists
+- Model alignment requirements with the editor repo
+
+This document does not cover:
+- Schema definition (see `audiflow-smartplaylist-editor/crates/sp_core/assets/`)
+- Config authoring workflow (see editor repo docs)
+- CI deployment pipelines for data repos
+
+## Responsibilities
+
+- Fetch config JSON from flavor-specific base URL
+- Cache config files locally (mirrors remote directory structure)
+- Version-based cache invalidation via `meta.json`
+- Resolve episodes into smart playlist groups using the resolver chain
+- Display resolved smart playlists in podcast detail screens
+
+## Non-responsibilities
+
+- Defining or modifying the JSON Schema
+- Creating or editing smart playlist configurations
+- Hosting or deploying config data
+- Validating config against schema at runtime (trusted input from CI-validated repos)
+
+## Data sources
+
+| Environment | Base URL | Source repo |
+|-------------|----------|-------------|
+| Production | `https://audiflow.github.io/audiflow-smartplaylist/` | `audiflow-smartplaylist` |
+| Staging | `https://storage.googleapis.com/audiflow-dev-config/` | `audiflow-smartplaylist-dev` |
+
+The base URL is injected via `smartPlaylistConfigBaseUrlProvider`, overridden per flavor in `main_stg.dart` / `main_prod.dart`.
+
+## Key files in audiflow_domain
+
+| File | Role |
+|------|------|
+| `features/feed/datasources/remote/smart_playlist_remote_datasource.dart` | HTTP fetch of config JSON |
+| `features/feed/datasources/local/smart_playlist_cache_datasource.dart` | Local file cache |
+| `features/feed/datasources/local/smart_playlist_local_datasource.dart` | Drift-backed metadata |
+| `features/feed/repositories/smart_playlist_config_repository.dart` | Repository interface |
+| `features/feed/repositories/smart_playlist_config_repository_impl.dart` | Cache-vs-remote coordination |
+| `features/feed/services/smart_playlist_resolver_service.dart` | Resolver chain orchestration |
+| `features/feed/providers/smart_playlist_providers.dart` | Riverpod providers |
+
+## Resolver chain
+
+`SmartPlaylistResolverService` matches a podcast against pattern configs (by GUID or feed URL), then routes each playlist definition to the appropriate resolver:
+
+| Resolver | Type ID | Grouping logic |
+|----------|---------|----------------|
+| RSS metadata | `rss` | Groups by season number from RSS metadata |
+| Category | `category` | Groups by category tags |
+| Year | `year` | Groups by publication year |
+| Title appearance order | `titleAppearanceOrder` | Groups by title pattern matching and appearance order |
+
+Valid resolver types: `rss`, `category`, `year`, `titleAppearanceOrder`. Legacy names (`rssSeason`, `categoryGroup`, `flat`) are not valid.
+
+## Model files
+
+| File | Type | Purpose |
+|------|------|---------|
+| `models/smart_playlist.dart` | Freezed | Resolved smart playlist with episodes |
+| `models/smart_playlist_definition.dart` | Freezed | Config definition (from JSON) |
+| `models/smart_playlist_pattern.dart` | Freezed | Pattern matching config |
+| `models/smart_playlist_groups.dart` | Freezed | Resolved group hierarchy |
+| `models/smart_playlist_group_def.dart` | Freezed | Group definition (from JSON) |
+| `models/smart_playlist_sort.dart` | Freezed | Sort configuration |
+
+## Integration rules
+
+- Model JSON keys must match `sp_core` models in the editor repo exactly
+- Enum string values must match schema `oneOf`/`enum` definitions
+- Schema conformance tests validate round-trip serialization: `packages/audiflow_domain/test/features/feed/models/schema_conformance_test.dart`
+- Vendored schema at `packages/audiflow_domain/test/fixtures/schema.json` must be kept in sync with upstream
+
+## Schema update procedure
+
+1. Copy `schema.json` from `audiflow-smartplaylist-editor/packages/sp_shared/assets/schema.json`
+2. Place at `packages/audiflow_domain/test/fixtures/schema.json`
+3. Run conformance tests: `flutter test packages/audiflow_domain/test/features/feed/models/schema_conformance_test.dart`
+4. Fix any drift (update models, enums, or test data to match)
+5. Run full domain test suite: `flutter test packages/audiflow_domain`
+
+## Related documents
+
+- docs/overview.md -- app-level context
+- docs/architecture/system-overview.md -- where smart playlist fits in data flow
+- docs/specs/smart-playlist.md -- detailed resolver specification
+
+## When to update
+
+Update this document when:
+- Smart playlist config fetch or cache strategy changes
+- New resolver types are added
+- Base URLs or hosting strategy changes
+- Model alignment requirements change
+- Schema update procedure changes
