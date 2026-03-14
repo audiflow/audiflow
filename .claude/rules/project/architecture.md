@@ -1,3 +1,7 @@
+---
+paths: packages/**/*.dart, pubspec.yaml, melos.yaml
+---
+
 # Audiflow v2 - Architecture Reference for Claude
 
 ## Monorepo Structure (Flutter Workspace + Melos)
