@@ -7,15 +7,14 @@ Episode _makeEpisode(
   int? seasonNumber,
   DateTime? publishedAt,
 }) {
-  return Episode(
-    id: id,
-    podcastId: 1,
-    guid: 'guid-$id',
-    title: title ?? 'Episode $id',
-    audioUrl: 'https://example.com/$id.mp3',
-    seasonNumber: seasonNumber,
-    publishedAt: publishedAt ?? DateTime(2024, 1, id),
-  );
+  return Episode()
+    ..id = id
+    ..podcastId = 1
+    ..guid = 'guid-$id'
+    ..title = title ?? 'Episode $id'
+    ..audioUrl = 'https://example.com/$id.mp3'
+    ..seasonNumber = seasonNumber
+    ..publishedAt = publishedAt ?? DateTime(2024, 1, id);
 }
 
 void main() {
@@ -33,13 +32,12 @@ void main() {
       final episodes = [_makeEpisode(1), _makeEpisode(2)];
       final noDateEpisodes = episodes
           .map(
-            (e) => Episode(
-              id: e.id,
-              podcastId: e.podcastId,
-              guid: e.guid,
-              title: e.title,
-              audioUrl: e.audioUrl,
-            ),
+            (e) => Episode()
+              ..id = e.id
+              ..podcastId = e.podcastId
+              ..guid = e.guid
+              ..title = e.title
+              ..audioUrl = e.audioUrl,
           )
           .toList();
 
@@ -103,24 +101,22 @@ void main() {
       );
 
       final episodes = [
-        Episode(
-          id: 1,
-          podcastId: 1,
-          guid: 'g1',
-          title: 'Ep1 First',
-          audioUrl: 'https://x.com/1.mp3',
-          seasonNumber: 1,
-          publishedAt: DateTime(2024, 1, 1),
-        ),
-        Episode(
-          id: 2,
-          podcastId: 1,
-          guid: 'g2',
-          title: 'Ep2 Second',
-          audioUrl: 'https://x.com/2.mp3',
-          seasonNumber: 1,
-          publishedAt: DateTime(2024, 1, 2),
-        ),
+        Episode()
+          ..id = 1
+          ..podcastId = 1
+          ..guid = 'g1'
+          ..title = 'Ep1 First'
+          ..audioUrl = 'https://x.com/1.mp3'
+          ..seasonNumber = 1
+          ..publishedAt = DateTime(2024, 1, 1),
+        Episode()
+          ..id = 2
+          ..podcastId = 1
+          ..guid = 'g2'
+          ..title = 'Ep2 Second'
+          ..audioUrl = 'https://x.com/2.mp3'
+          ..seasonNumber = 1
+          ..publishedAt = DateTime(2024, 1, 2),
       ];
 
       final result = serviceWithPattern.resolveSmartPlaylists(

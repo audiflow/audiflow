@@ -1,27 +1,18 @@
-import 'package:drift/drift.dart';
+import 'package:isar_community/isar.dart';
 
-import '../../feed/models/episode.dart';
+part 'queue_item.g.dart';
 
-/// Queue items table for persistent queue storage.
-///
-/// Supports both manual queue items (user-added) and adhoc queue items
-/// (auto-generated from episode lists).
-class QueueItems extends Table {
-  /// Auto-incrementing primary key.
-  IntColumn get id => integer().autoIncrement()();
+@collection
+class QueueItem {
+  Id id = Isar.autoIncrement;
 
-  /// Reference to the episode in the queue.
-  IntColumn get episodeId => integer().references(Episodes, #id)();
+  @Index()
+  late int episodeId;
 
-  /// Position in the queue (sparse values: 0, 10, 20... for easy insertion).
-  IntColumn get position => integer()();
+  @Index()
+  late int position;
 
-  /// Whether this is an adhoc queue item (true) or manual (false).
-  BoolColumn get isAdhoc => boolean().withDefault(const Constant(false))();
-
-  /// Source context for adhoc items (e.g., "Season 2").
-  TextColumn get sourceContext => text().nullable()();
-
-  /// When this item was added to the queue.
-  DateTimeColumn get addedAt => dateTime()();
+  bool isAdhoc = false;
+  String? sourceContext;
+  late DateTime addedAt;
 }

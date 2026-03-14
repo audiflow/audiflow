@@ -8,19 +8,15 @@ Episode _makeEpisode({
   int? episodeNumber,
   DateTime? publishedAt,
 }) {
-  return Episode(
-    id: id,
-    podcastId: 1,
-    guid: 'guid-$id',
-    title: title,
-    audioUrl: 'https://example.com/$id.mp3',
-    seasonNumber: seasonNumber,
-    episodeNumber: episodeNumber,
-    publishedAt: publishedAt ?? DateTime(2024, 1, 1),
-    description: null,
-    durationMs: null,
-    imageUrl: null,
-  );
+  return Episode()
+    ..id = id
+    ..podcastId = 1
+    ..guid = 'guid-$id'
+    ..title = title
+    ..audioUrl = 'https://example.com/$id.mp3'
+    ..seasonNumber = seasonNumber
+    ..episodeNumber = episodeNumber
+    ..publishedAt = publishedAt ?? DateTime(2024, 1, 1);
 }
 
 void main() {

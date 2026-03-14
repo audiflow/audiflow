@@ -1,58 +1,34 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
-import 'package:drift/drift.dart' hide isNull, isNotNull;
-import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:isar_community/isar.dart';
 
 void main() {
-  late AppDatabase db;
+  late Isar isar;
   late DownloadLocalDatasource datasource;
 
+  setUpAll(() async {
+    await Isar.initializeIsarCore(download: true);
+  });
+
   setUp(() async {
-    db = AppDatabase.forTesting(NativeDatabase.memory());
-    datasource = DownloadLocalDatasource(db);
-
-    // Create subscription (FK dependency)
-    await db
-        .into(db.subscriptions)
-        .insert(
-          SubscriptionsCompanion.insert(
-            itunesId: 'test-itunes-id',
-            feedUrl: 'https://example.com/feed.xml',
-            title: 'Test Podcast',
-            artistName: 'Test Artist',
-            subscribedAt: DateTime.now(),
-          ),
-        );
-
-    // Create episodes (FK dependency)
-    for (var i = 1; i < 5; i++) {
-      await db
-          .into(db.episodes)
-          .insert(
-            EpisodesCompanion.insert(
-              podcastId: 1,
-              guid: 'ep-$i',
-              title: 'Episode $i',
-              audioUrl: 'https://example.com/ep$i.mp3',
-            ),
-          );
-    }
+    isar = await Isar.open(
+      [DownloadTaskSchema],
+      directory: '',
+      name: 'test_${DateTime.now().microsecondsSinceEpoch}',
+    );
+    datasource = DownloadLocalDatasource(isar);
   });
 
   tearDown(() async {
-    await db.close();
+    await isar.close(deleteFromDisk: true);
   });
 
-  DownloadTasksCompanion makeTask({
-    required int episodeId,
-    bool wifiOnly = true,
-  }) {
-    return DownloadTasksCompanion.insert(
-      episodeId: episodeId,
-      audioUrl: 'https://example.com/ep$episodeId.mp3',
-      wifiOnly: Value(wifiOnly),
-      createdAt: DateTime.now(),
-    );
+  DownloadTask makeTask({required int episodeId, bool wifiOnly = true}) {
+    return DownloadTask()
+      ..episodeId = episodeId
+      ..audioUrl = 'https://example.com/ep$episodeId.mp3'
+      ..wifiOnly = wifiOnly
+      ..createdAt = DateTime.now();
   }
 
   group('create', () {
@@ -123,12 +99,9 @@ void main() {
       await datasource.create(makeTask(episodeId: 2));
 
       // Mark first as downloading
-      await datasource.updateById(
-        id1,
-        const DownloadTasksCompanion(
-          status: Value(1), // downloading
-        ),
-      );
+      final task1 = await datasource.getById(id1);
+      task1!.status = const DownloadStatus.downloading().toDbValue();
+      await datasource.updateById(id1, task1);
 
       final pending = await datasource.getByStatus(
         const DownloadStatus.pending(),
@@ -148,18 +121,15 @@ void main() {
     test('updates downloaded bytes and total bytes', () async {
       final id = await datasource.create(makeTask(episodeId: 1));
 
-      await datasource.updateById(
-        id,
-        const DownloadTasksCompanion(
-          downloadedBytes: Value(5000),
-          totalBytes: Value(10000),
-        ),
-      );
-
       final task = await datasource.getById(id);
-      expect(task!.downloadedBytes, 5000);
-      expect(task.totalBytes, 10000);
-      expect(task.progress, 0.5);
+      task!.downloadedBytes = 5000;
+      task.totalBytes = 10000;
+      await datasource.updateById(id, task);
+
+      final updated = await datasource.getById(id);
+      expect(updated!.downloadedBytes, 5000);
+      expect(updated.totalBytes, 10000);
+      expect(updated.progress, 0.5);
     });
   });
 
@@ -167,33 +137,27 @@ void main() {
     test('updates status', () async {
       final id = await datasource.create(makeTask(episodeId: 1));
 
-      await datasource.updateById(
-        id,
-        DownloadTasksCompanion(
-          status: Value(const DownloadStatus.completed().toDbValue()),
-          localPath: const Value('/path/ep1.mp3'),
-        ),
-      );
-
       final task = await datasource.getById(id);
-      expect(task!.downloadStatus, isA<DownloadStatusCompleted>());
-      expect(task.localPath, '/path/ep1.mp3');
+      task!.status = const DownloadStatus.completed().toDbValue();
+      task.localPath = '/path/ep1.mp3';
+      await datasource.updateById(id, task);
+
+      final updated = await datasource.getById(id);
+      expect(updated!.downloadStatus, isA<DownloadStatusCompleted>());
+      expect(updated.localPath, '/path/ep1.mp3');
     });
 
     test('updates error message', () async {
       final id = await datasource.create(makeTask(episodeId: 1));
 
-      await datasource.updateById(
-        id,
-        DownloadTasksCompanion(
-          status: Value(const DownloadStatus.failed().toDbValue()),
-          lastError: const Value('Network error'),
-        ),
-      );
-
       final task = await datasource.getById(id);
-      expect(task!.downloadStatus, isA<DownloadStatusFailed>());
-      expect(task.lastError, 'Network error');
+      task!.status = const DownloadStatus.failed().toDbValue();
+      task.lastError = 'Network error';
+      await datasource.updateById(id, task);
+
+      final updated = await datasource.getById(id);
+      expect(updated!.downloadStatus, isA<DownloadStatusFailed>());
+      expect(updated.lastError, 'Network error');
     });
   });
 
@@ -227,18 +191,13 @@ void main() {
       final id2 = await datasource.create(makeTask(episodeId: 2));
       await datasource.create(makeTask(episodeId: 3)); // pending
 
-      await datasource.updateById(
-        id1,
-        DownloadTasksCompanion(
-          status: Value(const DownloadStatus.downloading().toDbValue()),
-        ),
-      );
-      await datasource.updateById(
-        id2,
-        DownloadTasksCompanion(
-          status: Value(const DownloadStatus.paused().toDbValue()),
-        ),
-      );
+      final task1 = await datasource.getById(id1);
+      task1!.status = const DownloadStatus.downloading().toDbValue();
+      await datasource.updateById(id1, task1);
+
+      final task2 = await datasource.getById(id2);
+      task2!.status = const DownloadStatus.paused().toDbValue();
+      await datasource.updateById(id2, task2);
 
       final count = await datasource.getActiveCount();
 
@@ -249,18 +208,13 @@ void main() {
       final id1 = await datasource.create(makeTask(episodeId: 1));
       final id2 = await datasource.create(makeTask(episodeId: 2));
 
-      await datasource.updateById(
-        id1,
-        DownloadTasksCompanion(
-          status: Value(const DownloadStatus.completed().toDbValue()),
-        ),
-      );
-      await datasource.updateById(
-        id2,
-        DownloadTasksCompanion(
-          status: Value(const DownloadStatus.failed().toDbValue()),
-        ),
-      );
+      final task1 = await datasource.getById(id1);
+      task1!.status = const DownloadStatus.completed().toDbValue();
+      await datasource.updateById(id1, task1);
+
+      final task2 = await datasource.getById(id2);
+      task2!.status = const DownloadStatus.failed().toDbValue();
+      await datasource.updateById(id2, task2);
 
       final count = await datasource.getActiveCount();
 
@@ -308,26 +262,23 @@ void main() {
   group('getCompletedByEpisodeId', () {
     test('returns completed download for episode', () async {
       final id = await datasource.create(makeTask(episodeId: 1));
-      await datasource.updateById(
-        id,
-        DownloadTasksCompanion(
-          status: Value(const DownloadStatus.completed().toDbValue()),
-          localPath: const Value('/path/ep1.mp3'),
-        ),
-      );
+      final task = await datasource.getById(id);
+      task!.status = const DownloadStatus.completed().toDbValue();
+      task.localPath = '/path/ep1.mp3';
+      await datasource.updateById(id, task);
 
-      final task = await datasource.getCompletedByEpisodeId(1);
+      final result = await datasource.getCompletedByEpisodeId(1);
 
-      expect(task, isNotNull);
-      expect(task!.localPath, '/path/ep1.mp3');
+      expect(result, isNotNull);
+      expect(result!.localPath, '/path/ep1.mp3');
     });
 
     test('returns null when no completed download', () async {
       await datasource.create(makeTask(episodeId: 1));
 
-      final task = await datasource.getCompletedByEpisodeId(1);
+      final result = await datasource.getCompletedByEpisodeId(1);
 
-      expect(task, isNull);
+      expect(result, isNull);
     });
   });
 
@@ -336,12 +287,9 @@ void main() {
       final id1 = await datasource.create(makeTask(episodeId: 1));
       await datasource.create(makeTask(episodeId: 2)); // pending
 
-      await datasource.updateById(
-        id1,
-        DownloadTasksCompanion(
-          status: Value(const DownloadStatus.completed().toDbValue()),
-        ),
-      );
+      final task1 = await datasource.getById(id1);
+      task1!.status = const DownloadStatus.completed().toDbValue();
+      await datasource.updateById(id1, task1);
 
       final deleted = await datasource.deleteAllCompleted();
 
@@ -363,20 +311,15 @@ void main() {
       final id1 = await datasource.create(makeTask(episodeId: 1));
       final id2 = await datasource.create(makeTask(episodeId: 2));
 
-      await datasource.updateById(
-        id1,
-        DownloadTasksCompanion(
-          status: Value(const DownloadStatus.completed().toDbValue()),
-          totalBytes: const Value(10000),
-        ),
-      );
-      await datasource.updateById(
-        id2,
-        DownloadTasksCompanion(
-          status: Value(const DownloadStatus.completed().toDbValue()),
-          totalBytes: const Value(20000),
-        ),
-      );
+      final task1 = await datasource.getById(id1);
+      task1!.status = const DownloadStatus.completed().toDbValue();
+      task1.totalBytes = 10000;
+      await datasource.updateById(id1, task1);
+
+      final task2 = await datasource.getById(id2);
+      task2!.status = const DownloadStatus.completed().toDbValue();
+      task2.totalBytes = 20000;
+      await datasource.updateById(id2, task2);
 
       final total = await datasource.getTotalStorageUsed();
 

@@ -1,50 +1,53 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
-import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:isar_community/isar.dart';
 
 void main() {
-  late AppDatabase db;
+  late Isar isar;
   late QueueRepositoryImpl repository;
 
+  setUpAll(() async {
+    await Isar.initializeIsarCore(download: true);
+  });
+
   setUp(() async {
-    db = AppDatabase.forTesting(NativeDatabase.memory());
-    final queueDatasource = QueueLocalDatasource(db);
-    final episodeDatasource = EpisodeLocalDatasource(db);
+    isar = await Isar.open(
+      [SubscriptionSchema, EpisodeSchema, QueueItemSchema],
+      directory: '',
+      name: 'test_${DateTime.now().microsecondsSinceEpoch}',
+    );
+    final queueDatasource = QueueLocalDatasource(isar);
+    final episodeDatasource = EpisodeLocalDatasource(isar);
     repository = QueueRepositoryImpl(
       queueDatasource: queueDatasource,
       episodeDatasource: episodeDatasource,
     );
 
-    // Create subscription (FK dependency)
-    await db
-        .into(db.subscriptions)
-        .insert(
-          SubscriptionsCompanion.insert(
-            itunesId: 'test-itunes-id',
-            feedUrl: 'https://example.com/feed.xml',
-            title: 'Test Podcast',
-            artistName: 'Test Artist',
-            subscribedAt: DateTime.now(),
-          ),
-        );
+    // Create subscription and episodes
+    await isar.writeTxn(() async {
+      await isar.subscriptions.put(
+        Subscription()
+          ..itunesId = 'test-itunes-id'
+          ..feedUrl = 'https://example.com/feed.xml'
+          ..title = 'Test Podcast'
+          ..artistName = 'Test Artist'
+          ..subscribedAt = DateTime.now(),
+      );
 
-    // Create episodes (FK dependency)
-    for (var i = 1; i < 5; i++) {
-      await db
-          .into(db.episodes)
-          .insert(
-            EpisodesCompanion.insert(
-              podcastId: 1,
-              guid: 'ep-$i',
-              title: 'Episode $i',
-              audioUrl: 'https://example.com/ep$i.mp3',
-            ),
-          );
-    }
+      for (var i = 1; i < 5; i++) {
+        await isar.episodes.put(
+          Episode()
+            ..podcastId = 1
+            ..guid = 'ep-$i'
+            ..title = 'Episode $i'
+            ..audioUrl = 'https://example.com/ep$i.mp3',
+        );
+      }
+    });
   });
 
   tearDown(() async {
-    await db.close();
+    await isar.close(deleteFromDisk: true);
   });
 
   group('addToEnd', () {
@@ -182,7 +185,6 @@ void main() {
       final queue = await repository.getQueue();
       final firstItem = queue.manualItems.first;
 
-      // Move first item to last position
       await repository.reorder(firstItem.queueItem.id, 2);
 
       final updated = await repository.getQueue();
@@ -234,8 +236,6 @@ void main() {
       await repository.addToEnd(1);
       await repository.addToEnd(2);
 
-      // Add adhoc items by replacing (this clears manual too)
-      // Instead, add manual first, then test separately
       final queue = await repository.getQueue();
 
       expect(queue.manualItems, hasLength(2));
@@ -245,33 +245,23 @@ void main() {
 
   group('hasManualItems', () {
     test('returns false when queue is empty', () async {
-      final result = await repository.hasManualItems();
-
-      expect(result, false);
+      expect(await repository.hasManualItems(), false);
     });
 
     test('returns true when manual items exist', () async {
       await repository.addToEnd(1);
-
-      final result = await repository.hasManualItems();
-
-      expect(result, true);
+      expect(await repository.hasManualItems(), true);
     });
 
     test('returns false when only adhoc items exist', () async {
       await repository.replaceWithAdhoc(episodeIds: [1], sourceContext: 'Test');
-
-      final result = await repository.hasManualItems();
-
-      expect(result, false);
+      expect(await repository.hasManualItems(), false);
     });
   });
 
   group('getNextEpisode', () {
     test('returns null when queue is empty', () async {
-      final result = await repository.getNextEpisode();
-
-      expect(result, isNull);
+      expect(await repository.getNextEpisode(), isNull);
     });
 
     test('returns first manual item episode', () async {
@@ -279,7 +269,6 @@ void main() {
       await repository.addToEnd(2);
 
       final result = await repository.getNextEpisode();
-
       expect(result, isNotNull);
       expect(result!.id, 1);
     });
@@ -291,7 +280,6 @@ void main() {
       );
 
       final result = await repository.getNextEpisode();
-
       expect(result, isNotNull);
       expect(result!.id, 2);
     });

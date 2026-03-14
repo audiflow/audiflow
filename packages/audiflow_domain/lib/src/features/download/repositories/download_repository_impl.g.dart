@@ -59,4 +59,4 @@ final class DownloadRepositoryProvider
 }
 
 String _$downloadRepositoryHash() =>
-    r'55b95ae70cebe6a38cae30eff2df3bc99265af91';
+    r'01abbebac6a6fc828428dde778dbf62434999333';

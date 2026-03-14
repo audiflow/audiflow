@@ -25,12 +25,12 @@ $QueueItemWithEpisodeCopyWith<QueueItemWithEpisode> get copyWith => _$QueueItemW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is QueueItemWithEpisode&&const DeepCollectionEquality().equals(other.queueItem, queueItem)&&const DeepCollectionEquality().equals(other.episode, episode));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is QueueItemWithEpisode&&(identical(other.queueItem, queueItem) || other.queueItem == queueItem)&&(identical(other.episode, episode) || other.episode == episode));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(queueItem),const DeepCollectionEquality().hash(episode));
+int get hashCode => Object.hash(runtimeType,queueItem,episode);
 
 @override
 String toString() {
@@ -62,10 +62,10 @@ class _$QueueItemWithEpisodeCopyWithImpl<$Res>
 
 /// Create a copy of QueueItemWithEpisode
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? queueItem = freezed,Object? episode = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? queueItem = null,Object? episode = null,}) {
   return _then(_self.copyWith(
-queueItem: freezed == queueItem ? _self.queueItem : queueItem // ignore: cast_nullable_to_non_nullable
-as QueueItem,episode: freezed == episode ? _self.episode : episode // ignore: cast_nullable_to_non_nullable
+queueItem: null == queueItem ? _self.queueItem : queueItem // ignore: cast_nullable_to_non_nullable
+as QueueItem,episode: null == episode ? _self.episode : episode // ignore: cast_nullable_to_non_nullable
 as Episode,
   ));
 }
@@ -202,7 +202,7 @@ return $default(_that.queueItem,_that.episode);case _:
 
 class _QueueItemWithEpisode implements QueueItemWithEpisode {
   const _QueueItemWithEpisode({required this.queueItem, required this.episode});
-  
+
 
 @override final  QueueItem queueItem;
 @override final  Episode episode;
@@ -217,12 +217,12 @@ _$QueueItemWithEpisodeCopyWith<_QueueItemWithEpisode> get copyWith => __$QueueIt
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _QueueItemWithEpisode&&const DeepCollectionEquality().equals(other.queueItem, queueItem)&&const DeepCollectionEquality().equals(other.episode, episode));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _QueueItemWithEpisode&&(identical(other.queueItem, queueItem) || other.queueItem == queueItem)&&(identical(other.episode, episode) || other.episode == episode));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(queueItem),const DeepCollectionEquality().hash(episode));
+int get hashCode => Object.hash(runtimeType,queueItem,episode);
 
 @override
 String toString() {
@@ -254,10 +254,10 @@ class __$QueueItemWithEpisodeCopyWithImpl<$Res>
 
 /// Create a copy of QueueItemWithEpisode
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? queueItem = freezed,Object? episode = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? queueItem = null,Object? episode = null,}) {
   return _then(_QueueItemWithEpisode(
-queueItem: freezed == queueItem ? _self.queueItem : queueItem // ignore: cast_nullable_to_non_nullable
-as QueueItem,episode: freezed == episode ? _self.episode : episode // ignore: cast_nullable_to_non_nullable
+queueItem: null == queueItem ? _self.queueItem : queueItem // ignore: cast_nullable_to_non_nullable
+as QueueItem,episode: null == episode ? _self.episode : episode // ignore: cast_nullable_to_non_nullable
 as Episode,
   ));
 }
@@ -283,12 +283,12 @@ $PlaybackQueueCopyWith<PlaybackQueue> get copyWith => _$PlaybackQueueCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PlaybackQueue&&const DeepCollectionEquality().equals(other.currentEpisode, currentEpisode)&&const DeepCollectionEquality().equals(other.manualItems, manualItems)&&const DeepCollectionEquality().equals(other.adhocItems, adhocItems)&&(identical(other.adhocSourceContext, adhocSourceContext) || other.adhocSourceContext == adhocSourceContext));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PlaybackQueue&&(identical(other.currentEpisode, currentEpisode) || other.currentEpisode == currentEpisode)&&const DeepCollectionEquality().equals(other.manualItems, manualItems)&&const DeepCollectionEquality().equals(other.adhocItems, adhocItems)&&(identical(other.adhocSourceContext, adhocSourceContext) || other.adhocSourceContext == adhocSourceContext));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(currentEpisode),const DeepCollectionEquality().hash(manualItems),const DeepCollectionEquality().hash(adhocItems),adhocSourceContext);
+int get hashCode => Object.hash(runtimeType,currentEpisode,const DeepCollectionEquality().hash(manualItems),const DeepCollectionEquality().hash(adhocItems),adhocSourceContext);
 
 @override
 String toString() {
@@ -462,7 +462,7 @@ return $default(_that.currentEpisode,_that.manualItems,_that.adhocItems,_that.ad
 
 class _PlaybackQueue extends PlaybackQueue {
   const _PlaybackQueue({this.currentEpisode, final  List<QueueItemWithEpisode> manualItems = const [], final  List<QueueItemWithEpisode> adhocItems = const [], this.adhocSourceContext}): _manualItems = manualItems,_adhocItems = adhocItems,super._();
-  
+
 
 /// Currently playing episode (not in queue items).
 @override final  Episode? currentEpisode;
@@ -497,12 +497,12 @@ _$PlaybackQueueCopyWith<_PlaybackQueue> get copyWith => __$PlaybackQueueCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PlaybackQueue&&const DeepCollectionEquality().equals(other.currentEpisode, currentEpisode)&&const DeepCollectionEquality().equals(other._manualItems, _manualItems)&&const DeepCollectionEquality().equals(other._adhocItems, _adhocItems)&&(identical(other.adhocSourceContext, adhocSourceContext) || other.adhocSourceContext == adhocSourceContext));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PlaybackQueue&&(identical(other.currentEpisode, currentEpisode) || other.currentEpisode == currentEpisode)&&const DeepCollectionEquality().equals(other._manualItems, _manualItems)&&const DeepCollectionEquality().equals(other._adhocItems, _adhocItems)&&(identical(other.adhocSourceContext, adhocSourceContext) || other.adhocSourceContext == adhocSourceContext));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(currentEpisode),const DeepCollectionEquality().hash(_manualItems),const DeepCollectionEquality().hash(_adhocItems),adhocSourceContext);
+int get hashCode => Object.hash(runtimeType,currentEpisode,const DeepCollectionEquality().hash(_manualItems),const DeepCollectionEquality().hash(_adhocItems),adhocSourceContext);
 
 @override
 String toString() {

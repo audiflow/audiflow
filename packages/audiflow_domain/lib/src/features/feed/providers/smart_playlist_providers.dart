@@ -1,19 +1,21 @@
-import 'package:drift/drift.dart';
 import 'package:meta/meta.dart' show visibleForTesting;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../../common/database/app_database.dart';
 import '../../../common/providers/database_provider.dart';
 import '../../../common/providers/http_client_provider.dart';
 import '../../../common/providers/logger_provider.dart';
 import '../../../common/providers/platform_providers.dart';
 import '../../../features/subscription/repositories/subscription_repository_impl.dart';
 import '../../player/models/episode_with_progress.dart';
+import '../../player/models/playback_history.dart';
 import '../../player/repositories/playback_history_repository_impl.dart';
 import '../datasources/local/smart_playlist_cache_datasource.dart';
 import '../datasources/local/smart_playlist_local_datasource.dart';
 import '../datasources/remote/smart_playlist_remote_datasource.dart';
+import '../models/episode.dart';
 import '../models/episode_sort_rule.dart';
+import '../models/smart_playlist_groups.dart';
+import '../models/smart_playlists.dart';
 import '../models/pattern_summary.dart';
 import '../models/smart_playlist.dart';
 import '../models/smart_playlist_pattern_config.dart';
@@ -76,8 +78,8 @@ SmartPlaylistConfigRepository smartPlaylistConfigRepository(Ref ref) {
 /// operations.
 @Riverpod(keepAlive: true)
 SmartPlaylistLocalDatasource smartPlaylistLocalDatasource(Ref ref) {
-  final db = ref.watch(databaseProvider);
-  return SmartPlaylistLocalDatasource(db);
+  final isar = ref.watch(isarProvider);
+  return SmartPlaylistLocalDatasource(isar);
 }
 
 /// Provides the smart playlist resolver service with built-in
@@ -294,7 +296,7 @@ Future<SmartPlaylistGrouping?> _resolveAndPersistSmartPlaylists(
 
   // Find the latest episode thumbnail for each smart playlist
   final enrichedPlaylists = <SmartPlaylist>[];
-  final companions = <SmartPlaylistsCompanion>[];
+  final entities = <SmartPlaylistEntity>[];
   final podcastImage = podcastImageUrl ?? findPodcastImageUrl(episodes);
 
   for (final playlist in result.playlists) {
@@ -304,41 +306,40 @@ Future<SmartPlaylistGrouping?> _resolveAndPersistSmartPlaylists(
       result,
       podcastId,
       enrichedPlaylists,
-      companions,
+      entities,
       podcastImageUrl: podcastImage,
     );
   }
 
-  await playlistDatasource.upsertAllForPodcast(podcastId, companions);
+  await playlistDatasource.upsertAllForPodcast(podcastId, entities);
 
   // Persist groups with cached metadata
   for (final playlist in enrichedPlaylists) {
     if (playlist.groups != null && playlist.groups!.isNotEmpty) {
-      final groupCompanions = playlist.groups!.map((g) {
-        return SmartPlaylistGroupsCompanion.insert(
-          podcastId: podcastId,
-          playlistId: playlist.id,
-          groupId: g.id,
-          displayName: g.displayName,
-          sortKey: g.sortKey,
-          thumbnailUrl: Value(g.thumbnailUrl),
-          episodeIds: g.episodeIds.join(','),
-          yearOverride: Value(g.yearOverride?.name),
-          earliestDate: Value(g.earliestDate),
-          latestDate: Value(g.latestDate),
-          totalDurationMs: Value(g.totalDurationMs),
-        );
+      final groupEntities = playlist.groups!.map((g) {
+        return SmartPlaylistGroupEntity()
+          ..podcastId = podcastId
+          ..playlistId = playlist.id
+          ..groupId = g.id
+          ..displayName = g.displayName
+          ..sortKey = g.sortKey
+          ..thumbnailUrl = g.thumbnailUrl
+          ..episodeIds = g.episodeIds.join(',')
+          ..yearOverride = g.yearOverride?.name
+          ..earliestDate = g.earliestDate
+          ..latestDate = g.latestDate
+          ..totalDurationMs = g.totalDurationMs;
       }).toList();
       await playlistDatasource.upsertGroupsForPlaylist(
         podcastId,
         playlist.id,
-        groupCompanions,
+        groupEntities,
       );
     }
   }
 
   logger.d(
-    'Persisted ${companions.length} smart playlists '
+    'Persisted ${entities.length} smart playlists '
     'to database',
   );
 
@@ -385,14 +386,14 @@ String? findPodcastImageUrl(List<Episode> episodes) {
 }
 
 /// Enriches a playlist with thumbnails and builds the
-/// companion for database persistence.
+/// entity for database persistence.
 void _enrichPlaylist(
   SmartPlaylist playlist,
   List<Episode> episodes,
   SmartPlaylistGrouping result,
   int podcastId,
   List<SmartPlaylist> enrichedPlaylists,
-  List<SmartPlaylistsCompanion> companions, {
+  List<SmartPlaylistEntity> entities, {
   String? podcastImageUrl,
 }) {
   // Get episodes for this playlist, sorted by publishedAt
@@ -425,17 +426,16 @@ void _enrichPlaylist(
   enrichedPlaylists.add(
     playlist.copyWith(thumbnailUrl: thumbnailUrl, groups: enrichedGroups),
   );
-  companions.add(
-    SmartPlaylistsCompanion.insert(
-      podcastId: podcastId,
-      playlistNumber: playlist.sortKey,
-      displayName: playlist.displayName,
-      sortKey: playlist.sortKey,
-      resolverType: result.resolverType,
-      thumbnailUrl: Value(thumbnailUrl),
-      yearGrouped: Value(playlist.yearBinding != YearBinding.none),
-      yearHeaderMode: Value(playlist.yearBinding.name),
-    ),
+  entities.add(
+    SmartPlaylistEntity()
+      ..podcastId = podcastId
+      ..playlistNumber = playlist.sortKey
+      ..displayName = playlist.displayName
+      ..sortKey = playlist.sortKey
+      ..resolverType = result.resolverType
+      ..thumbnailUrl = thumbnailUrl
+      ..yearGrouped = playlist.yearBinding != YearBinding.none
+      ..yearHeaderMode = playlist.yearBinding.name,
   );
 }
 

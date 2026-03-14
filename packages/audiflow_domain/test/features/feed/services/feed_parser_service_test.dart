@@ -60,14 +60,14 @@ void main() {
   group('parseWithProgress', () {
     test('emits progress events in correct order', () async {
       final events = <FeedParseProgress>[];
-      final storedCompanions = <EpisodesCompanion>[];
+      final storedEpisodes = <Episode>[];
 
       await for (final event in service.parseWithProgress(
         xmlContent: testXml,
         podcastId: 1,
         knownGuids: {},
-        onBatchReady: (companions, _) async {
-          storedCompanions.addAll(companions);
+        onBatchReady: (episodes, _) async {
+          storedEpisodes.addAll(episodes);
         },
       )) {
         events.add(event);
@@ -78,19 +78,19 @@ void main() {
 
       final complete = events.last as FeedParseComplete;
       expect(complete.total, 2);
-      expect(storedCompanions, hasLength(2));
+      expect(storedEpisodes, hasLength(2));
     });
 
     test('stops early when known GUID found', () async {
       final events = <FeedParseProgress>[];
-      final storedCompanions = <EpisodesCompanion>[];
+      final storedEpisodes = <Episode>[];
 
       await for (final event in service.parseWithProgress(
         xmlContent: testXml,
         podcastId: 1,
         knownGuids: {'known-episode'},
-        onBatchReady: (companions, _) async {
-          storedCompanions.addAll(companions);
+        onBatchReady: (episodes, _) async {
+          storedEpisodes.addAll(episodes);
         },
       )) {
         events.add(event);
@@ -99,7 +99,7 @@ void main() {
       final complete = events.last as FeedParseComplete;
       expect(complete.total, 1);
       expect(complete.stoppedEarly, isTrue);
-      expect(storedCompanions, hasLength(1));
+      expect(storedEpisodes, hasLength(1));
     });
 
     test('emits FeedMetaReady with podcast metadata', () async {

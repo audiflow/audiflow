@@ -199,7 +199,7 @@ final class SmartPlaylistLocalDatasourceProvider
 }
 
 String _$smartPlaylistLocalDatasourceHash() =>
-    r'c117de0a934a4a2311293f89f233c486d9eecfec';
+    r'26566b38297cf48f55a2deb23523031ed19296b6';
 
 /// Provides the smart playlist resolver service with built-in
 /// resolvers.

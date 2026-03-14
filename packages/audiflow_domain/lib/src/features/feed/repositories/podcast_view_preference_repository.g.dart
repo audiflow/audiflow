@@ -62,7 +62,7 @@ final class PodcastViewPreferenceLocalDatasourceProvider
 }
 
 String _$podcastViewPreferenceLocalDatasourceHash() =>
-    r'111d5da9d8e80dcbfeeb846714025b7e1263b81c';
+    r'21c110d3ea164d015d4c28fa693dc75f52ce08e3';
 
 /// Provider for [PodcastViewPreferenceRepository].
 

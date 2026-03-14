@@ -1,61 +1,65 @@
-import 'package:drift/drift.dart' hide isNull, isNotNull;
-import 'package:drift/native.dart';
+import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:audiflow_domain/src/common/database/app_database.dart';
-import 'package:audiflow_domain/src/features/transcript/datasources/local/transcript_local_datasource.dart';
+import 'package:isar_community/isar.dart';
 
 void main() {
-  late AppDatabase db;
+  late Isar isar;
   late TranscriptLocalDatasource datasource;
   late int episodeId;
-  late int transcriptId;
+
+  setUpAll(() async {
+    await Isar.initializeIsarCore(download: true);
+  });
 
   setUp(() async {
-    db = AppDatabase.forTesting(NativeDatabase.memory());
-    datasource = TranscriptLocalDatasource(db);
+    isar = await Isar.open(
+      [
+        SubscriptionSchema,
+        EpisodeSchema,
+        EpisodeTranscriptSchema,
+        TranscriptSegmentSchema,
+      ],
+      directory: '',
+      name: 'test_${DateTime.now().microsecondsSinceEpoch}',
+    );
+    datasource = TranscriptLocalDatasource(isar);
 
     // Insert FK dependencies
-    final subId = await db
-        .into(db.subscriptions)
-        .insert(
-          SubscriptionsCompanion.insert(
-            itunesId: 'test-1',
-            feedUrl: 'https://example.com/feed.xml',
-            title: 'Test',
-            artistName: 'Test',
-            subscribedAt: DateTime.now(),
-          ),
-        );
-    episodeId = await db
-        .into(db.episodes)
-        .insert(
-          EpisodesCompanion.insert(
-            podcastId: subId,
-            guid: 'ep-1',
-            title: 'Episode 1',
-            audioUrl: 'https://example.com/ep1.mp3',
-          ),
-        );
+    await isar.writeTxn(() async {
+      final sub = Subscription()
+        ..itunesId = 'test-1'
+        ..feedUrl = 'https://example.com/feed.xml'
+        ..title = 'Test'
+        ..artistName = 'Test'
+        ..subscribedAt = DateTime.now();
+      await isar.subscriptions.put(sub);
+
+      final ep = Episode()
+        ..podcastId = sub.id
+        ..guid = 'ep-1'
+        ..title = 'Episode 1'
+        ..audioUrl = 'https://example.com/ep1.mp3';
+      await isar.episodes.put(ep);
+      episodeId = ep.id;
+    });
   });
 
   tearDown(() async {
-    await db.close();
+    await isar.close(deleteFromDisk: true);
   });
 
   group('upsertMetas', () {
     test('should insert transcript metadata', () async {
-      final companions = [
-        EpisodeTranscriptsCompanion.insert(
-          episodeId: episodeId,
-          url: 'https://example.com/ep1.vtt',
-          type: 'text/vtt',
-          language: const Value('en'),
-          rel: const Value('captions'),
-        ),
+      final metas = [
+        EpisodeTranscript()
+          ..episodeId = episodeId
+          ..url = 'https://example.com/ep1.vtt'
+          ..type = 'text/vtt'
+          ..language = 'en'
+          ..rel = 'captions',
       ];
 
-      await datasource.upsertMetas(companions);
+      await datasource.upsertMetas(metas);
 
       final results = await datasource.getMetasByEpisodeId(episodeId);
       expect(results.length, equals(1));
@@ -64,14 +68,18 @@ void main() {
     });
 
     test('should update on conflict (same episodeId + url)', () async {
-      final companion = EpisodeTranscriptsCompanion.insert(
-        episodeId: episodeId,
-        url: 'https://example.com/ep1.vtt',
-        type: 'text/vtt',
-      );
+      final meta = EpisodeTranscript()
+        ..episodeId = episodeId
+        ..url = 'https://example.com/ep1.vtt'
+        ..type = 'text/vtt';
 
-      await datasource.upsertMetas([companion]);
-      await datasource.upsertMetas([companion]);
+      await datasource.upsertMetas([meta]);
+      await datasource.upsertMetas([
+        EpisodeTranscript()
+          ..episodeId = episodeId
+          ..url = 'https://example.com/ep1.vtt'
+          ..type = 'text/vtt',
+      ]);
 
       final results = await datasource.getMetasByEpisodeId(episodeId);
       expect(results.length, equals(1));
@@ -79,43 +87,39 @@ void main() {
   });
 
   group('insertSegments / getSegments', () {
+    late int transcriptId;
+
     setUp(() async {
-      transcriptId = await db
-          .into(db.episodeTranscripts)
-          .insert(
-            EpisodeTranscriptsCompanion.insert(
-              episodeId: episodeId,
-              url: 'https://example.com/ep1.vtt',
-              type: 'text/vtt',
-            ),
-          );
+      final transcript = EpisodeTranscript()
+        ..episodeId = episodeId
+        ..url = 'https://example.com/ep1.vtt'
+        ..type = 'text/vtt';
+      await datasource.upsertMetas([transcript]);
+      final metas = await datasource.getMetasByEpisodeId(episodeId);
+      transcriptId = metas.first.id;
     });
 
     test('should insert and query segments by time range', () async {
       final segments = [
-        TranscriptSegmentsCompanion.insert(
-          transcriptId: transcriptId,
-          startMs: 0,
-          endMs: 5000,
-          body: 'First segment',
-        ),
-        TranscriptSegmentsCompanion.insert(
-          transcriptId: transcriptId,
-          startMs: 5000,
-          endMs: 10000,
-          body: 'Second segment',
-        ),
-        TranscriptSegmentsCompanion.insert(
-          transcriptId: transcriptId,
-          startMs: 10000,
-          endMs: 15000,
-          body: 'Third segment',
-        ),
+        TranscriptSegment()
+          ..transcriptId = transcriptId
+          ..startMs = 0
+          ..endMs = 5000
+          ..body = 'First segment',
+        TranscriptSegment()
+          ..transcriptId = transcriptId
+          ..startMs = 5000
+          ..endMs = 10000
+          ..body = 'Second segment',
+        TranscriptSegment()
+          ..transcriptId = transcriptId
+          ..startMs = 10000
+          ..endMs = 15000
+          ..body = 'Third segment',
       ];
 
       await datasource.insertSegments(segments);
 
-      // Query range that overlaps segments 1 and 2 only
       final results = await datasource.getSegments(
         transcriptId,
         startMs: 4000,
@@ -127,18 +131,16 @@ void main() {
 
     test('should return all segments ordered by startMs', () async {
       final segments = [
-        TranscriptSegmentsCompanion.insert(
-          transcriptId: transcriptId,
-          startMs: 10000,
-          endMs: 15000,
-          body: 'Second',
-        ),
-        TranscriptSegmentsCompanion.insert(
-          transcriptId: transcriptId,
-          startMs: 0,
-          endMs: 5000,
-          body: 'First',
-        ),
+        TranscriptSegment()
+          ..transcriptId = transcriptId
+          ..startMs = 10000
+          ..endMs = 15000
+          ..body = 'Second',
+        TranscriptSegment()
+          ..transcriptId = transcriptId
+          ..startMs = 0
+          ..endMs = 5000
+          ..body = 'First',
       ];
 
       await datasource.insertSegments(segments);
@@ -151,16 +153,16 @@ void main() {
   });
 
   group('markAsFetched', () {
+    late int transcriptId;
+
     setUp(() async {
-      transcriptId = await db
-          .into(db.episodeTranscripts)
-          .insert(
-            EpisodeTranscriptsCompanion.insert(
-              episodeId: episodeId,
-              url: 'https://example.com/ep1.vtt',
-              type: 'text/vtt',
-            ),
-          );
+      final transcript = EpisodeTranscript()
+        ..episodeId = episodeId
+        ..url = 'https://example.com/ep1.vtt'
+        ..type = 'text/vtt';
+      await datasource.upsertMetas([transcript]);
+      final metas = await datasource.getMetasByEpisodeId(episodeId);
+      transcriptId = metas.first.id;
     });
 
     test('should set fetchedAt timestamp', () async {
@@ -177,16 +179,16 @@ void main() {
   });
 
   group('isContentFetched', () {
+    late int transcriptId;
+
     setUp(() async {
-      transcriptId = await db
-          .into(db.episodeTranscripts)
-          .insert(
-            EpisodeTranscriptsCompanion.insert(
-              episodeId: episodeId,
-              url: 'https://example.com/ep1.vtt',
-              type: 'text/vtt',
-            ),
-          );
+      final transcript = EpisodeTranscript()
+        ..episodeId = episodeId
+        ..url = 'https://example.com/ep1.vtt'
+        ..type = 'text/vtt';
+      await datasource.upsertMetas([transcript]);
+      final metas = await datasource.getMetasByEpisodeId(episodeId);
+      transcriptId = metas.first.id;
     });
 
     test('should return false when not fetched', () async {
@@ -200,26 +202,25 @@ void main() {
   });
 
   group('deleteSegments', () {
+    late int transcriptId;
+
     setUp(() async {
-      transcriptId = await db
-          .into(db.episodeTranscripts)
-          .insert(
-            EpisodeTranscriptsCompanion.insert(
-              episodeId: episodeId,
-              url: 'https://example.com/ep1.vtt',
-              type: 'text/vtt',
-            ),
-          );
+      final transcript = EpisodeTranscript()
+        ..episodeId = episodeId
+        ..url = 'https://example.com/ep1.vtt'
+        ..type = 'text/vtt';
+      await datasource.upsertMetas([transcript]);
+      final metas = await datasource.getMetasByEpisodeId(episodeId);
+      transcriptId = metas.first.id;
     });
 
     test('should delete all segments for a transcript', () async {
       await datasource.insertSegments([
-        TranscriptSegmentsCompanion.insert(
-          transcriptId: transcriptId,
-          startMs: 0,
-          endMs: 5000,
-          body: 'Segment',
-        ),
+        TranscriptSegment()
+          ..transcriptId = transcriptId
+          ..startMs = 0
+          ..endMs = 5000
+          ..body = 'Segment',
       ]);
 
       final deleted = await datasource.deleteSegments(transcriptId);

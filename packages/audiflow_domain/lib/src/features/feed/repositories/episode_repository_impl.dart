@@ -1,13 +1,14 @@
 import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_podcast/audiflow_podcast.dart';
-import 'package:drift/drift.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../../common/database/app_database.dart';
 import '../../../common/providers/database_provider.dart';
 import '../../transcript/datasources/local/chapter_local_datasource.dart';
 import '../../transcript/datasources/local/transcript_local_datasource.dart';
+import '../../transcript/models/episode_chapter.dart';
+import '../../transcript/models/episode_transcript.dart';
 import '../datasources/local/episode_local_datasource.dart';
+import '../models/episode.dart';
 import '../models/feed_parse_progress.dart';
 import '../models/smart_playlist_episode_extractor.dart';
 import '../models/smart_playlist_pattern_config.dart';
@@ -19,16 +20,16 @@ part 'episode_repository_impl.g.dart';
 /// Provides a singleton [EpisodeRepository] instance.
 @Riverpod(keepAlive: true)
 EpisodeRepository episodeRepository(Ref ref) {
-  final db = ref.watch(databaseProvider);
-  final datasource = EpisodeLocalDatasource(db);
+  final isar = ref.watch(isarProvider);
+  final datasource = EpisodeLocalDatasource(isar);
   return EpisodeRepositoryImpl(
     datasource: datasource,
-    transcriptDatasource: TranscriptLocalDatasource(db),
-    chapterDatasource: ChapterLocalDatasource(db),
+    transcriptDatasource: TranscriptLocalDatasource(isar),
+    chapterDatasource: ChapterLocalDatasource(isar),
   );
 }
 
-/// Implementation of [EpisodeRepository] using Drift database.
+/// Implementation of [EpisodeRepository] using Isar database.
 class EpisodeRepositoryImpl implements EpisodeRepository {
   EpisodeRepositoryImpl({
     required EpisodeLocalDatasource datasource,
@@ -63,7 +64,7 @@ class EpisodeRepositoryImpl implements EpisodeRepository {
   }
 
   @override
-  Future<void> upsertEpisodes(List<EpisodesCompanion> episodes) {
+  Future<void> upsertEpisodes(List<Episode> episodes) {
     return _datasource.upsertAll(episodes);
   }
 
@@ -77,7 +78,7 @@ class EpisodeRepositoryImpl implements EpisodeRepository {
         .where((item) => item.guid != null && item.enclosureUrl != null)
         .toList();
 
-    final companions = validItems.map((item) {
+    final episodes = validItems.map((item) {
       // Apply extraction if extractor is provided
       int? seasonNumber = item.seasonNumber;
       int? episodeNumber = item.episodeNumber;
@@ -91,21 +92,20 @@ class EpisodeRepositoryImpl implements EpisodeRepository {
         }
       }
 
-      return EpisodesCompanion.insert(
-        podcastId: podcastId,
-        guid: item.guid!,
-        title: item.title,
-        description: Value(item.description),
-        audioUrl: item.enclosureUrl!,
-        durationMs: Value(item.duration?.inMilliseconds),
-        publishedAt: Value(item.publishDate),
-        imageUrl: Value(item.primaryImage?.url),
-        episodeNumber: Value(episodeNumber),
-        seasonNumber: Value(seasonNumber),
-      );
+      return Episode()
+        ..podcastId = podcastId
+        ..guid = item.guid!
+        ..title = item.title
+        ..description = item.description
+        ..audioUrl = item.enclosureUrl!
+        ..durationMs = item.duration?.inMilliseconds
+        ..publishedAt = item.publishDate
+        ..imageUrl = item.primaryImage?.url
+        ..episodeNumber = episodeNumber
+        ..seasonNumber = seasonNumber;
     }).toList();
 
-    await _datasource.upsertAll(companions);
+    await _datasource.upsertAll(episodes);
     await _storeTranscriptAndChapterData(podcastId, validItems);
   }
 
@@ -120,7 +120,7 @@ class EpisodeRepositoryImpl implements EpisodeRepository {
         .where((item) => item.guid != null && item.enclosureUrl != null)
         .toList();
 
-    final companions = validItems.map((item) {
+    final episodes = validItems.map((item) {
       int? seasonNumber = item.seasonNumber;
       int? episodeNumber = item.episodeNumber;
 
@@ -134,21 +134,20 @@ class EpisodeRepositoryImpl implements EpisodeRepository {
         }
       }
 
-      return EpisodesCompanion.insert(
-        podcastId: podcastId,
-        guid: item.guid!,
-        title: item.title,
-        description: Value(item.description),
-        audioUrl: item.enclosureUrl!,
-        durationMs: Value(item.duration?.inMilliseconds),
-        publishedAt: Value(item.publishDate),
-        imageUrl: Value(item.primaryImage?.url),
-        episodeNumber: Value(episodeNumber),
-        seasonNumber: Value(seasonNumber),
-      );
+      return Episode()
+        ..podcastId = podcastId
+        ..guid = item.guid!
+        ..title = item.title
+        ..description = item.description
+        ..audioUrl = item.enclosureUrl!
+        ..durationMs = item.duration?.inMilliseconds
+        ..publishedAt = item.publishDate
+        ..imageUrl = item.primaryImage?.url
+        ..episodeNumber = episodeNumber
+        ..seasonNumber = seasonNumber;
     }).toList();
 
-    await _datasource.upsertAll(companions);
+    await _datasource.upsertAll(episodes);
     await _storeTranscriptAndChapterData(podcastId, validItems);
   }
 
@@ -182,65 +181,63 @@ class EpisodeRepositoryImpl implements EpisodeRepository {
     await _storeChapters(hasChapterItems, guidToId);
   }
 
-  /// Builds and upserts transcript metadata companions.
+  /// Builds and upserts transcript metadata.
   Future<void> _storeTranscriptMetas(
     Iterable<PodcastItem> items,
     Map<String, int> guidToId,
   ) async {
     if (_transcriptDatasource == null) return;
 
-    final companions = <EpisodeTranscriptsCompanion>[];
+    final metas = <EpisodeTranscript>[];
     for (final item in items) {
       final episodeId = guidToId[item.guid!];
       if (episodeId == null) continue;
 
       for (final transcript in item.transcripts!) {
-        companions.add(
-          EpisodeTranscriptsCompanion.insert(
-            episodeId: episodeId,
-            url: transcript.url,
-            type: transcript.type,
-            language: Value(transcript.language),
-            rel: Value(transcript.rel),
-          ),
+        metas.add(
+          EpisodeTranscript()
+            ..episodeId = episodeId
+            ..url = transcript.url
+            ..type = transcript.type
+            ..language = transcript.language
+            ..rel = transcript.rel,
         );
       }
     }
 
-    if (companions.isNotEmpty) {
-      await _transcriptDatasource.upsertMetas(companions);
+    if (metas.isNotEmpty) {
+      await _transcriptDatasource.upsertMetas(metas);
     }
   }
 
-  /// Builds and upserts chapter companions.
+  /// Builds and upserts chapters.
   Future<void> _storeChapters(
     Iterable<PodcastItem> items,
     Map<String, int> guidToId,
   ) async {
     if (_chapterDatasource == null) return;
 
-    final companions = <EpisodeChaptersCompanion>[];
+    final chapters = <EpisodeChapter>[];
     for (final item in items) {
       final episodeId = guidToId[item.guid!];
       if (episodeId == null) continue;
 
       for (final (index, chapter) in item.chapters!.indexed) {
-        companions.add(
-          EpisodeChaptersCompanion.insert(
-            episodeId: episodeId,
-            sortOrder: index,
-            title: chapter.title,
-            startMs: chapter.startTime.inMilliseconds,
-            endMs: Value(chapter.endTime?.inMilliseconds),
-            url: Value(chapter.url),
-            imageUrl: Value(chapter.imageUrl),
-          ),
+        chapters.add(
+          EpisodeChapter()
+            ..episodeId = episodeId
+            ..sortOrder = index
+            ..title = chapter.title
+            ..startMs = chapter.startTime.inMilliseconds
+            ..endMs = chapter.endTime?.inMilliseconds
+            ..url = chapter.url
+            ..imageUrl = chapter.imageUrl,
         );
       }
     }
 
-    if (companions.isNotEmpty) {
-      await _chapterDatasource.upsertChapters(companions);
+    if (chapters.isNotEmpty) {
+      await _chapterDatasource.upsertChapters(chapters);
     }
   }
 
@@ -267,52 +264,50 @@ class EpisodeRepositoryImpl implements EpisodeRepository {
 
     // Store transcript metas
     if (_transcriptDatasource != null) {
-      final transcriptCompanions = <EpisodeTranscriptsCompanion>[];
+      final transcriptMetas = <EpisodeTranscript>[];
       for (final meta in withData) {
         if (!meta.hasTranscripts) continue;
         final episodeId = guidToId[meta.guid];
         if (episodeId == null) continue;
 
         for (final t in meta.transcripts!) {
-          transcriptCompanions.add(
-            EpisodeTranscriptsCompanion.insert(
-              episodeId: episodeId,
-              url: t.url,
-              type: t.type,
-              language: Value(t.language),
-              rel: Value(t.rel),
-            ),
+          transcriptMetas.add(
+            EpisodeTranscript()
+              ..episodeId = episodeId
+              ..url = t.url
+              ..type = t.type
+              ..language = t.language
+              ..rel = t.rel,
           );
         }
       }
-      if (transcriptCompanions.isNotEmpty) {
-        await _transcriptDatasource.upsertMetas(transcriptCompanions);
+      if (transcriptMetas.isNotEmpty) {
+        await _transcriptDatasource.upsertMetas(transcriptMetas);
       }
     }
 
     // Store chapters
     if (_chapterDatasource != null) {
-      final chapterCompanions = <EpisodeChaptersCompanion>[];
+      final chapterEntities = <EpisodeChapter>[];
       for (final meta in withData) {
         if (!meta.hasChapters) continue;
         final episodeId = guidToId[meta.guid];
         if (episodeId == null) continue;
 
         for (final (index, c) in meta.chapters!.indexed) {
-          chapterCompanions.add(
-            EpisodeChaptersCompanion.insert(
-              episodeId: episodeId,
-              sortOrder: index,
-              title: c.title,
-              startMs: c.startTime.inMilliseconds,
-              url: Value(c.url),
-              imageUrl: Value(c.imageUrl),
-            ),
+          chapterEntities.add(
+            EpisodeChapter()
+              ..episodeId = episodeId
+              ..sortOrder = index
+              ..title = c.title
+              ..startMs = c.startTime.inMilliseconds
+              ..url = c.url
+              ..imageUrl = c.imageUrl,
           );
         }
       }
-      if (chapterCompanions.isNotEmpty) {
-        await _chapterDatasource.upsertChapters(chapterCompanions);
+      if (chapterEntities.isNotEmpty) {
+        await _chapterDatasource.upsertChapters(chapterEntities);
       }
     }
   }

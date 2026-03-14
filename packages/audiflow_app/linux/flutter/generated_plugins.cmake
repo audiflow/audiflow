@@ -5,6 +5,7 @@
 list(APPEND FLUTTER_PLUGIN_LIST
   dynamic_color
   gtk
+  isar_community_flutter_libs
   sentry_flutter
   url_launcher_linux
 )

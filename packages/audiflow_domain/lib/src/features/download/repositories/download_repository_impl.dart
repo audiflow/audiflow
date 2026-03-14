@@ -1,10 +1,9 @@
-import 'package:drift/drift.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../../common/database/app_database.dart';
 import '../../../common/providers/database_provider.dart';
 import '../datasources/local/download_local_datasource.dart';
 import '../models/download_status.dart';
+import '../models/download_task.dart';
 import 'download_repository.dart';
 
 part 'download_repository_impl.g.dart';
@@ -12,12 +11,12 @@ part 'download_repository_impl.g.dart';
 /// Provides a singleton [DownloadRepository] instance.
 @Riverpod(keepAlive: true)
 DownloadRepository downloadRepository(Ref ref) {
-  final db = ref.watch(databaseProvider);
-  final datasource = DownloadLocalDatasource(db);
+  final isar = ref.watch(isarProvider);
+  final datasource = DownloadLocalDatasource(isar);
   return DownloadRepositoryImpl(datasource: datasource);
 }
 
-/// Implementation of [DownloadRepository] using Drift database.
+/// Implementation of [DownloadRepository] using Isar database.
 class DownloadRepositoryImpl implements DownloadRepository {
   DownloadRepositoryImpl({required DownloadLocalDatasource datasource})
     : _datasource = datasource;
@@ -43,14 +42,13 @@ class DownloadRepositoryImpl implements DownloadRepository {
       await _datasource.delete(existing.id);
     }
 
-    final companion = DownloadTasksCompanion.insert(
-      episodeId: episodeId,
-      audioUrl: audioUrl,
-      wifiOnly: Value(wifiOnly),
-      createdAt: DateTime.now(),
-    );
+    final task = DownloadTask()
+      ..episodeId = episodeId
+      ..audioUrl = audioUrl
+      ..wifiOnly = wifiOnly
+      ..createdAt = DateTime.now();
 
-    final id = await _datasource.create(companion);
+    final id = await _datasource.create(task);
     return _datasource.getById(id);
   }
 
@@ -92,16 +90,15 @@ class DownloadRepositoryImpl implements DownloadRepository {
     required int id,
     required int downloadedBytes,
     int? totalBytes,
-  }) {
-    return _datasource.updateById(
-      id,
-      DownloadTasksCompanion(
-        downloadedBytes: Value(downloadedBytes),
-        totalBytes: totalBytes != null
-            ? Value(totalBytes)
-            : const Value.absent(),
-      ),
-    );
+  }) async {
+    final task = await _datasource.getById(id);
+    if (task == null) return;
+
+    task.downloadedBytes = downloadedBytes;
+    if (totalBytes != null) {
+      task.totalBytes = totalBytes;
+    }
+    await _datasource.updateById(id, task);
   }
 
   @override
@@ -110,18 +107,21 @@ class DownloadRepositoryImpl implements DownloadRepository {
     required DownloadStatus status,
     String? localPath,
     String? lastError,
-  }) {
-    return _datasource.updateById(
-      id,
-      DownloadTasksCompanion(
-        status: Value(status.toDbValue()),
-        localPath: localPath != null ? Value(localPath) : const Value.absent(),
-        lastError: lastError != null ? Value(lastError) : const Value.absent(),
-        completedAt: status is DownloadStatusCompleted
-            ? Value(DateTime.now())
-            : const Value.absent(),
-      ),
-    );
+  }) async {
+    final task = await _datasource.getById(id);
+    if (task == null) return;
+
+    task.status = status.toDbValue();
+    if (localPath != null) {
+      task.localPath = localPath;
+    }
+    if (lastError != null) {
+      task.lastError = lastError;
+    }
+    if (status is DownloadStatusCompleted) {
+      task.completedAt = DateTime.now();
+    }
+    await _datasource.updateById(id, task);
   }
 
   @override
@@ -129,10 +129,8 @@ class DownloadRepositoryImpl implements DownloadRepository {
     final task = await _datasource.getById(id);
     if (task == null) return;
 
-    await _datasource.updateById(
-      id,
-      DownloadTasksCompanion(retryCount: Value(task.retryCount + 1)),
-    );
+    task.retryCount = task.retryCount + 1;
+    await _datasource.updateById(id, task);
   }
 
   @override

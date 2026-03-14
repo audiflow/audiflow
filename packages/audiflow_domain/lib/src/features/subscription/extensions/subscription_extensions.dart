@@ -1,6 +1,6 @@
 import 'package:audiflow_search/audiflow_search.dart';
 
-import '../../../common/database/app_database.dart';
+import '../models/subscriptions.dart';
 
 /// Extension methods for [Subscription] model.
 extension SubscriptionToPodcast on Subscription {

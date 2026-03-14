@@ -1,49 +1,30 @@
-import 'package:audiflow_domain/src/common/database/app_database.dart';
-import 'package:audiflow_domain/src/features/transcript/datasources/local/transcript_local_datasource.dart';
-import 'package:audiflow_domain/src/features/transcript/repositories/transcript_repository.dart';
-import 'package:audiflow_domain/src/features/transcript/repositories/transcript_repository_impl.dart';
-import 'package:drift/drift.dart' hide isNull, isNotNull;
-import 'package:drift/native.dart';
+import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:isar_community/isar.dart';
 
 void main() {
-  late AppDatabase db;
+  late Isar isar;
   late TranscriptLocalDatasource datasource;
   late TranscriptRepository repository;
   late int episodeId;
-  late int transcriptId;
+
+  setUpAll(() async {
+    await Isar.initializeIsarCore(download: true);
+  });
 
   setUp(() async {
-    db = AppDatabase.forTesting(NativeDatabase.memory());
-    datasource = TranscriptLocalDatasource(db);
+    isar = await Isar.open(
+      [EpisodeTranscriptSchema, TranscriptSegmentSchema],
+      directory: '',
+      name: 'test_${DateTime.now().microsecondsSinceEpoch}',
+    );
+    datasource = TranscriptLocalDatasource(isar);
     repository = TranscriptRepositoryImpl(datasource: datasource);
-
-    // Insert FK dependencies
-    final subId = await db
-        .into(db.subscriptions)
-        .insert(
-          SubscriptionsCompanion.insert(
-            itunesId: 'test-1',
-            feedUrl: 'https://example.com/feed.xml',
-            title: 'Test Podcast',
-            artistName: 'Test Artist',
-            subscribedAt: DateTime.now(),
-          ),
-        );
-    episodeId = await db
-        .into(db.episodes)
-        .insert(
-          EpisodesCompanion.insert(
-            podcastId: subId,
-            guid: 'ep-1',
-            title: 'Episode 1',
-            audioUrl: 'https://example.com/ep1.mp3',
-          ),
-        );
+    episodeId = 1;
   });
 
   tearDown(() async {
-    await db.close();
+    await isar.close(deleteFromDisk: true);
   });
 
   group('getMetasByEpisodeId', () {
@@ -54,13 +35,12 @@ void main() {
 
     test('returns transcript metadata for an episode', () async {
       await repository.upsertMetas([
-        EpisodeTranscriptsCompanion.insert(
-          episodeId: episodeId,
-          url: 'https://example.com/ep1.vtt',
-          type: 'text/vtt',
-          language: const Value('en'),
-          rel: const Value('captions'),
-        ),
+        EpisodeTranscript()
+          ..episodeId = episodeId
+          ..url = 'https://example.com/ep1.vtt'
+          ..type = 'text/vtt'
+          ..language = 'en'
+          ..rel = 'captions',
       ]);
 
       final results = await repository.getMetasByEpisodeId(episodeId);
@@ -74,11 +54,10 @@ void main() {
   group('upsertMetas', () {
     test('inserts new transcript metadata', () async {
       await repository.upsertMetas([
-        EpisodeTranscriptsCompanion.insert(
-          episodeId: episodeId,
-          url: 'https://example.com/ep1.srt',
-          type: 'application/x-subrip',
-        ),
+        EpisodeTranscript()
+          ..episodeId = episodeId
+          ..url = 'https://example.com/ep1.srt'
+          ..type = 'application/x-subrip',
       ]);
 
       final results = await repository.getMetasByEpisodeId(episodeId);
@@ -87,14 +66,18 @@ void main() {
     });
 
     test('updates on conflict (same episodeId + url)', () async {
-      final companion = EpisodeTranscriptsCompanion.insert(
-        episodeId: episodeId,
-        url: 'https://example.com/ep1.vtt',
-        type: 'text/vtt',
-      );
+      final meta = EpisodeTranscript()
+        ..episodeId = episodeId
+        ..url = 'https://example.com/ep1.vtt'
+        ..type = 'text/vtt';
 
-      await repository.upsertMetas([companion]);
-      await repository.upsertMetas([companion]);
+      await repository.upsertMetas([meta]);
+      await repository.upsertMetas([
+        EpisodeTranscript()
+          ..episodeId = episodeId
+          ..url = 'https://example.com/ep1.vtt'
+          ..type = 'text/vtt',
+      ]);
 
       final results = await repository.getMetasByEpisodeId(episodeId);
       expect(results.length, equals(1));
@@ -102,32 +85,30 @@ void main() {
   });
 
   group('insertSegments / getAllSegments', () {
+    late int transcriptId;
+
     setUp(() async {
-      transcriptId = await db
-          .into(db.episodeTranscripts)
-          .insert(
-            EpisodeTranscriptsCompanion.insert(
-              episodeId: episodeId,
-              url: 'https://example.com/ep1.vtt',
-              type: 'text/vtt',
-            ),
-          );
+      final transcript = EpisodeTranscript()
+        ..episodeId = episodeId
+        ..url = 'https://example.com/ep1.vtt'
+        ..type = 'text/vtt';
+      await repository.upsertMetas([transcript]);
+      final metas = await repository.getMetasByEpisodeId(episodeId);
+      transcriptId = metas.first.id;
     });
 
     test('inserts and retrieves all segments ordered by startMs', () async {
       await repository.insertSegments([
-        TranscriptSegmentsCompanion.insert(
-          transcriptId: transcriptId,
-          startMs: 10000,
-          endMs: 15000,
-          body: 'Second',
-        ),
-        TranscriptSegmentsCompanion.insert(
-          transcriptId: transcriptId,
-          startMs: 0,
-          endMs: 5000,
-          body: 'First',
-        ),
+        TranscriptSegment()
+          ..transcriptId = transcriptId
+          ..startMs = 10000
+          ..endMs = 15000
+          ..body = 'Second',
+        TranscriptSegment()
+          ..transcriptId = transcriptId
+          ..startMs = 0
+          ..endMs = 5000
+          ..body = 'First',
       ]);
 
       final results = await repository.getAllSegments(transcriptId);
@@ -143,36 +124,33 @@ void main() {
   });
 
   group('getSegments', () {
+    late int transcriptId;
+
     setUp(() async {
-      transcriptId = await db
-          .into(db.episodeTranscripts)
-          .insert(
-            EpisodeTranscriptsCompanion.insert(
-              episodeId: episodeId,
-              url: 'https://example.com/ep1.vtt',
-              type: 'text/vtt',
-            ),
-          );
+      final transcript = EpisodeTranscript()
+        ..episodeId = episodeId
+        ..url = 'https://example.com/ep1.vtt'
+        ..type = 'text/vtt';
+      await repository.upsertMetas([transcript]);
+      final metas = await repository.getMetasByEpisodeId(episodeId);
+      transcriptId = metas.first.id;
 
       await repository.insertSegments([
-        TranscriptSegmentsCompanion.insert(
-          transcriptId: transcriptId,
-          startMs: 0,
-          endMs: 5000,
-          body: 'First segment',
-        ),
-        TranscriptSegmentsCompanion.insert(
-          transcriptId: transcriptId,
-          startMs: 5000,
-          endMs: 10000,
-          body: 'Second segment',
-        ),
-        TranscriptSegmentsCompanion.insert(
-          transcriptId: transcriptId,
-          startMs: 10000,
-          endMs: 15000,
-          body: 'Third segment',
-        ),
+        TranscriptSegment()
+          ..transcriptId = transcriptId
+          ..startMs = 0
+          ..endMs = 5000
+          ..body = 'First segment',
+        TranscriptSegment()
+          ..transcriptId = transcriptId
+          ..startMs = 5000
+          ..endMs = 10000
+          ..body = 'Second segment',
+        TranscriptSegment()
+          ..transcriptId = transcriptId
+          ..startMs = 10000
+          ..endMs = 15000
+          ..body = 'Third segment',
       ]);
     });
 
@@ -200,16 +178,16 @@ void main() {
   });
 
   group('markAsFetched / isContentFetched', () {
+    late int transcriptId;
+
     setUp(() async {
-      transcriptId = await db
-          .into(db.episodeTranscripts)
-          .insert(
-            EpisodeTranscriptsCompanion.insert(
-              episodeId: episodeId,
-              url: 'https://example.com/ep1.vtt',
-              type: 'text/vtt',
-            ),
-          );
+      final transcript = EpisodeTranscript()
+        ..episodeId = episodeId
+        ..url = 'https://example.com/ep1.vtt'
+        ..type = 'text/vtt';
+      await repository.upsertMetas([transcript]);
+      final metas = await repository.getMetasByEpisodeId(episodeId);
+      transcriptId = metas.first.id;
     });
 
     test('returns false when not yet fetched', () async {
@@ -223,32 +201,30 @@ void main() {
   });
 
   group('deleteSegments', () {
+    late int transcriptId;
+
     setUp(() async {
-      transcriptId = await db
-          .into(db.episodeTranscripts)
-          .insert(
-            EpisodeTranscriptsCompanion.insert(
-              episodeId: episodeId,
-              url: 'https://example.com/ep1.vtt',
-              type: 'text/vtt',
-            ),
-          );
+      final transcript = EpisodeTranscript()
+        ..episodeId = episodeId
+        ..url = 'https://example.com/ep1.vtt'
+        ..type = 'text/vtt';
+      await repository.upsertMetas([transcript]);
+      final metas = await repository.getMetasByEpisodeId(episodeId);
+      transcriptId = metas.first.id;
     });
 
     test('deletes all segments and returns count', () async {
       await repository.insertSegments([
-        TranscriptSegmentsCompanion.insert(
-          transcriptId: transcriptId,
-          startMs: 0,
-          endMs: 5000,
-          body: 'Segment 1',
-        ),
-        TranscriptSegmentsCompanion.insert(
-          transcriptId: transcriptId,
-          startMs: 5000,
-          endMs: 10000,
-          body: 'Segment 2',
-        ),
+        TranscriptSegment()
+          ..transcriptId = transcriptId
+          ..startMs = 0
+          ..endMs = 5000
+          ..body = 'Segment 1',
+        TranscriptSegment()
+          ..transcriptId = transcriptId
+          ..startMs = 5000
+          ..endMs = 10000
+          ..body = 'Segment 2',
       ]);
 
       final deleted = await repository.deleteSegments(transcriptId);

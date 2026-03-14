@@ -25,12 +25,12 @@ $EpisodeWithProgressCopyWith<EpisodeWithProgress> get copyWith => _$EpisodeWithP
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is EpisodeWithProgress&&const DeepCollectionEquality().equals(other.episode, episode)&&const DeepCollectionEquality().equals(other.history, history));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is EpisodeWithProgress&&(identical(other.episode, episode) || other.episode == episode)&&(identical(other.history, history) || other.history == history));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(episode),const DeepCollectionEquality().hash(history));
+int get hashCode => Object.hash(runtimeType,episode,history);
 
 @override
 String toString() {
@@ -62,9 +62,9 @@ class _$EpisodeWithProgressCopyWithImpl<$Res>
 
 /// Create a copy of EpisodeWithProgress
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? episode = freezed,Object? history = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? episode = null,Object? history = freezed,}) {
   return _then(_self.copyWith(
-episode: freezed == episode ? _self.episode : episode // ignore: cast_nullable_to_non_nullable
+episode: null == episode ? _self.episode : episode // ignore: cast_nullable_to_non_nullable
 as Episode,history: freezed == history ? _self.history : history // ignore: cast_nullable_to_non_nullable
 as PlaybackHistory?,
   ));
@@ -202,7 +202,7 @@ return $default(_that.episode,_that.history);case _:
 
 class _EpisodeWithProgress extends EpisodeWithProgress {
   const _EpisodeWithProgress({required this.episode, this.history}): super._();
-  
+
 
 @override final  Episode episode;
 @override final  PlaybackHistory? history;
@@ -217,12 +217,12 @@ _$EpisodeWithProgressCopyWith<_EpisodeWithProgress> get copyWith => __$EpisodeWi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _EpisodeWithProgress&&const DeepCollectionEquality().equals(other.episode, episode)&&const DeepCollectionEquality().equals(other.history, history));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _EpisodeWithProgress&&(identical(other.episode, episode) || other.episode == episode)&&(identical(other.history, history) || other.history == history));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(episode),const DeepCollectionEquality().hash(history));
+int get hashCode => Object.hash(runtimeType,episode,history);
 
 @override
 String toString() {
@@ -254,9 +254,9 @@ class __$EpisodeWithProgressCopyWithImpl<$Res>
 
 /// Create a copy of EpisodeWithProgress
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? episode = freezed,Object? history = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? episode = null,Object? history = freezed,}) {
   return _then(_EpisodeWithProgress(
-episode: freezed == episode ? _self.episode : episode // ignore: cast_nullable_to_non_nullable
+episode: null == episode ? _self.episode : episode // ignore: cast_nullable_to_non_nullable
 as Episode,history: freezed == history ? _self.history : history // ignore: cast_nullable_to_non_nullable
 as PlaybackHistory?,
   ));

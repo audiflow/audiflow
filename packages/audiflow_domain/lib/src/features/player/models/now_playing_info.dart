@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../../../common/database/app_database.dart';
+import '../../feed/models/episode.dart';
 
 part 'now_playing_info.freezed.dart';
 

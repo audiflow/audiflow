@@ -1,5 +1,5 @@
-import '../../../common/database/app_database.dart';
 import '../models/download_status.dart';
+import '../models/download_task.dart';
 
 /// Repository interface for download task operations.
 ///
@@ -7,7 +7,8 @@ import '../models/download_status.dart';
 abstract class DownloadRepository {
   /// Creates a new download task for an episode.
   ///
-  /// Returns the created task, or null if episode already has an active download.
+  /// Returns the created task, or null if episode already has an active
+  /// download.
   Future<DownloadTask?> createDownload({
     required int episodeId,
     required String audioUrl,

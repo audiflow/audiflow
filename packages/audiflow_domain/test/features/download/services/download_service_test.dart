@@ -22,17 +22,16 @@ DownloadTask _task({
   String? localPath,
   bool wifiOnly = false,
 }) {
-  return DownloadTask(
-    id: id,
-    episodeId: episodeId,
-    audioUrl: audioUrl,
-    status: status,
-    retryCount: retryCount,
-    downloadedBytes: downloadedBytes,
-    wifiOnly: wifiOnly,
-    localPath: localPath,
-    createdAt: DateTime.now(),
-  );
+  return DownloadTask()
+    ..id = id
+    ..episodeId = episodeId
+    ..audioUrl = audioUrl
+    ..status = status
+    ..retryCount = retryCount
+    ..downloadedBytes = downloadedBytes
+    ..wifiOnly = wifiOnly
+    ..localPath = localPath
+    ..createdAt = DateTime.now();
 }
 
 Episode _episode({
@@ -41,14 +40,13 @@ Episode _episode({
   String? title,
   int? seasonNumber,
 }) {
-  return Episode(
-    id: id,
-    podcastId: podcastId,
-    guid: 'guid-$id',
-    title: title ?? 'Episode $id',
-    audioUrl: 'https://example.com/ep$id.mp3',
-    seasonNumber: seasonNumber,
-  );
+  return Episode()
+    ..id = id
+    ..podcastId = podcastId
+    ..guid = 'guid-$id'
+    ..title = title ?? 'Episode $id'
+    ..audioUrl = 'https://example.com/ep$id.mp3'
+    ..seasonNumber = seasonNumber;
 }
 
 void main() {

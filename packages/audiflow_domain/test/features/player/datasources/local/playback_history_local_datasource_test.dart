@@ -1,64 +1,47 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
-import 'package:drift/drift.dart' hide isNull, isNotNull;
-import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:isar_community/isar.dart';
 
 void main() {
-  late AppDatabase db;
+  late Isar isar;
   late PlaybackHistoryLocalDatasource datasource;
 
+  setUpAll(() async {
+    await Isar.initializeIsarCore(download: true);
+  });
+
   setUp(() async {
-    db = AppDatabase.forTesting(NativeDatabase.memory());
-    datasource = PlaybackHistoryLocalDatasource(db);
+    isar = await Isar.open(
+      [SubscriptionSchema, EpisodeSchema, PlaybackHistorySchema],
+      directory: '',
+      name: 'test_${DateTime.now().microsecondsSinceEpoch}',
+    );
+    datasource = PlaybackHistoryLocalDatasource(isar);
 
-    // Create subscription (FK dependency)
-    await db
-        .into(db.subscriptions)
-        .insert(
-          SubscriptionsCompanion.insert(
-            itunesId: 'test-itunes-id',
-            feedUrl: 'https://example.com/feed.xml',
-            title: 'Test Podcast',
-            artistName: 'Test Artist',
-            subscribedAt: DateTime.now(),
-          ),
-        );
+    // Create subscription and episodes
+    await isar.writeTxn(() async {
+      await isar.subscriptions.put(
+        Subscription()
+          ..itunesId = 'test-itunes-id'
+          ..feedUrl = 'https://example.com/feed.xml'
+          ..title = 'Test Podcast'
+          ..artistName = 'Test Artist'
+          ..subscribedAt = DateTime.now(),
+      );
 
-    // Create episodes (FK dependency)
-    await db
-        .into(db.episodes)
-        .insert(
-          EpisodesCompanion.insert(
-            podcastId: 1,
-            guid: 'ep-1',
-            title: 'Episode 1',
-            audioUrl: 'https://example.com/ep1.mp3',
-          ),
-        );
-    await db
-        .into(db.episodes)
-        .insert(
-          EpisodesCompanion.insert(
-            podcastId: 1,
-            guid: 'ep-2',
-            title: 'Episode 2',
-            audioUrl: 'https://example.com/ep2.mp3',
-          ),
-        );
-    await db
-        .into(db.episodes)
-        .insert(
-          EpisodesCompanion.insert(
-            podcastId: 1,
-            guid: 'ep-3',
-            title: 'Episode 3',
-            audioUrl: 'https://example.com/ep3.mp3',
-          ),
-        );
+      for (var i = 1; i < 4; i++) {
+        final ep = Episode()
+          ..podcastId = 1
+          ..guid = 'ep-$i'
+          ..title = 'Episode $i'
+          ..audioUrl = 'https://example.com/ep$i.mp3';
+        await isar.episodes.put(ep);
+      }
+    });
   });
 
   tearDown(() async {
-    await db.close();
+    await isar.close(deleteFromDisk: true);
   });
 
   group('updateProgress', () {
@@ -171,7 +154,6 @@ void main() {
       final result = await datasource.getByEpisodeId(1);
 
       expect(result!.completedAt, isNotNull);
-      // Position should be preserved
       expect(result.positionMs, 50000);
     });
   });
@@ -210,7 +192,6 @@ void main() {
     test('does nothing when no existing record', () async {
       await datasource.incrementPlayCount(999);
 
-      // No exception thrown, no record created
       final result = await datasource.getByEpisodeId(999);
       expect(result, isNull);
     });
@@ -257,21 +238,16 @@ void main() {
     });
 
     test('returns most recently played in-progress episode', () async {
-      // Use upsert directly to control timestamps for deterministic ordering
-      await datasource.upsert(
-        PlaybackHistoriesCompanion.insert(
-          episodeId: const Value(1),
-          positionMs: const Value(5000),
-          lastPlayedAt: Value(DateTime(2024, 1, 1)),
-        ),
-      );
-      await datasource.upsert(
-        PlaybackHistoriesCompanion.insert(
-          episodeId: const Value(2),
-          positionMs: const Value(10000),
-          lastPlayedAt: Value(DateTime(2024, 6, 1)),
-        ),
-      );
+      final h1 = PlaybackHistory()
+        ..episodeId = 1
+        ..positionMs = 5000
+        ..lastPlayedAt = DateTime(2024, 1, 1);
+      final h2 = PlaybackHistory()
+        ..episodeId = 2
+        ..positionMs = 10000
+        ..lastPlayedAt = DateTime(2024, 6, 1);
+      await datasource.upsert(h1);
+      await datasource.upsert(h2);
 
       final result = await datasource.getLastPlayed();
 
@@ -280,20 +256,16 @@ void main() {
     });
 
     test('excludes completed episodes', () async {
-      await datasource.upsert(
-        PlaybackHistoriesCompanion.insert(
-          episodeId: const Value(1),
-          positionMs: const Value(5000),
-          lastPlayedAt: Value(DateTime(2024, 1, 1)),
-        ),
-      );
-      await datasource.upsert(
-        PlaybackHistoriesCompanion.insert(
-          episodeId: const Value(2),
-          positionMs: const Value(10000),
-          lastPlayedAt: Value(DateTime(2024, 6, 1)),
-        ),
-      );
+      final h1 = PlaybackHistory()
+        ..episodeId = 1
+        ..positionMs = 5000
+        ..lastPlayedAt = DateTime(2024, 1, 1);
+      final h2 = PlaybackHistory()
+        ..episodeId = 2
+        ..positionMs = 10000
+        ..lastPlayedAt = DateTime(2024, 6, 1);
+      await datasource.upsert(h1);
+      await datasource.upsert(h2);
       await datasource.markCompleted(2);
 
       final result = await datasource.getLastPlayed();
@@ -303,13 +275,11 @@ void main() {
     });
 
     test('excludes episodes with position 0', () async {
-      await datasource.upsert(
-        PlaybackHistoriesCompanion.insert(
-          episodeId: const Value(1),
-          positionMs: const Value(0),
-          lastPlayedAt: Value(DateTime.now()),
-        ),
-      );
+      final h = PlaybackHistory()
+        ..episodeId = 1
+        ..positionMs = 0
+        ..lastPlayedAt = DateTime.now();
+      await datasource.upsert(h);
 
       final result = await datasource.getLastPlayed();
 
@@ -329,20 +299,16 @@ void main() {
     });
 
     test('respects limit parameter', () async {
-      await datasource.upsert(
-        PlaybackHistoriesCompanion.insert(
-          episodeId: const Value(1),
-          positionMs: const Value(5000),
-          lastPlayedAt: Value(DateTime(2024, 1, 1)),
-        ),
-      );
-      await datasource.upsert(
-        PlaybackHistoriesCompanion.insert(
-          episodeId: const Value(2),
-          positionMs: const Value(10000),
-          lastPlayedAt: Value(DateTime(2024, 6, 1)),
-        ),
-      );
+      final h1 = PlaybackHistory()
+        ..episodeId = 1
+        ..positionMs = 5000
+        ..lastPlayedAt = DateTime(2024, 1, 1);
+      final h2 = PlaybackHistory()
+        ..episodeId = 2
+        ..positionMs = 10000
+        ..lastPlayedAt = DateTime(2024, 6, 1);
+      await datasource.upsert(h1);
+      await datasource.upsert(h2);
 
       final result = await datasource.getInProgress(limit: 1);
 
@@ -370,28 +336,23 @@ void main() {
     });
 
     test('only returns history for specified podcast', () async {
-      // Create second subscription and episode
-      await db
-          .into(db.subscriptions)
-          .insert(
-            SubscriptionsCompanion.insert(
-              itunesId: 'itunes-2',
-              feedUrl: 'https://example.com/feed2.xml',
-              title: 'Podcast 2',
-              artistName: 'Artist 2',
-              subscribedAt: DateTime.now(),
-            ),
-          );
-      await db
-          .into(db.episodes)
-          .insert(
-            EpisodesCompanion.insert(
-              podcastId: 2,
-              guid: 'ep-other',
-              title: 'Other Episode',
-              audioUrl: 'https://example.com/other.mp3',
-            ),
-          );
+      await isar.writeTxn(() async {
+        await isar.subscriptions.put(
+          Subscription()
+            ..itunesId = 'itunes-2'
+            ..feedUrl = 'https://example.com/feed2.xml'
+            ..title = 'Podcast 2'
+            ..artistName = 'Artist 2'
+            ..subscribedAt = DateTime.now(),
+        );
+        await isar.episodes.put(
+          Episode()
+            ..podcastId = 2
+            ..guid = 'ep-other'
+            ..title = 'Other Episode'
+            ..audioUrl = 'https://example.com/other.mp3',
+        );
+      });
 
       await datasource.updateProgress(episodeId: 1, positionMs: 5000);
       await datasource.updateProgress(episodeId: 4, positionMs: 8000);

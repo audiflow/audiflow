@@ -1,8 +1,8 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../../common/database/app_database.dart';
 import '../../../common/providers/database_provider.dart';
 import '../datasources/local/playback_history_local_datasource.dart';
+import '../models/playback_history.dart';
 import 'playback_history_repository.dart';
 
 part 'playback_history_repository_impl.g.dart';
@@ -10,12 +10,12 @@ part 'playback_history_repository_impl.g.dart';
 /// Provides a singleton [PlaybackHistoryRepository] instance.
 @Riverpod(keepAlive: true)
 PlaybackHistoryRepository playbackHistoryRepository(Ref ref) {
-  final db = ref.watch(databaseProvider);
-  final datasource = PlaybackHistoryLocalDatasource(db);
+  final isar = ref.watch(isarProvider);
+  final datasource = PlaybackHistoryLocalDatasource(isar);
   return PlaybackHistoryRepositoryImpl(datasource: datasource);
 }
 
-/// Implementation of [PlaybackHistoryRepository] using Drift database.
+/// Implementation of [PlaybackHistoryRepository] using Isar database.
 class PlaybackHistoryRepositoryImpl implements PlaybackHistoryRepository {
   PlaybackHistoryRepositoryImpl({
     required PlaybackHistoryLocalDatasource datasource,

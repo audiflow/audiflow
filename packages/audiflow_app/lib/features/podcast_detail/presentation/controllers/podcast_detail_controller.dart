@@ -490,19 +490,18 @@ Future<List<SmartPlaylistEpisodeData>> feedSmartPlaylistEpisodes(
     final item = episodes[index];
     if (item.enclosureUrl == null) continue;
 
-    final episode = Episode(
-      id: id,
-      podcastId: 0,
-      guid: item.guid ?? 'feed_$index',
-      title: item.title,
-      description: item.description,
-      audioUrl: item.enclosureUrl!,
-      durationMs: item.duration?.inMilliseconds,
-      publishedAt: item.publishDate,
-      imageUrl: item.images.isNotEmpty ? item.images.first.url : null,
-      episodeNumber: item.episodeNumber,
-      seasonNumber: item.seasonNumber,
-    );
+    final episode = Episode()
+      ..id = id
+      ..podcastId = 0
+      ..guid = item.guid ?? 'feed_$index'
+      ..title = item.title
+      ..description = item.description
+      ..audioUrl = item.enclosureUrl!
+      ..durationMs = item.duration?.inMilliseconds
+      ..publishedAt = item.publishDate
+      ..imageUrl = item.images.isNotEmpty ? item.images.first.url : null
+      ..episodeNumber = item.episodeNumber
+      ..seasonNumber = item.seasonNumber;
 
     result.add(SmartPlaylistEpisodeData(episode: episode));
   }

@@ -115,29 +115,14 @@ export 'src/features/download/services/download_file_service.dart';
 export 'src/features/download/services/download_queue_service.dart';
 export 'src/features/download/services/download_service.dart';
 
-// Database
-export 'src/common/database/app_database.dart'
-    show
-        AppDatabase,
-        DownloadTask,
-        DownloadTasksCompanion,
-        DownloadTaskStatusX,
-        Subscription,
-        SubscriptionsCompanion,
-        Episode,
-        EpisodesCompanion,
-        PlaybackHistory,
-        PlaybackHistoriesCompanion,
-        QueueItem,
-        QueueItemsCompanion,
-        SmartPlaylistEntity,
-        SmartPlaylistsCompanion,
-        EpisodeTranscript,
-        EpisodeTranscriptsCompanion,
-        TranscriptSegment,
-        TranscriptSegmentsCompanion,
-        EpisodeChapter,
-        EpisodeChaptersCompanion;
+// Isar collection models (schemas for Isar.open)
+export 'src/features/download/models/download_task.dart';
+export 'src/features/feed/models/smart_playlist_groups.dart';
+export 'src/features/queue/models/queue_item.dart';
+export 'src/features/subscription/models/subscriptions.dart';
+export 'src/features/transcript/models/episode_chapter.dart';
+export 'src/features/transcript/models/episode_transcript.dart';
+export 'src/features/transcript/models/transcript_segment_table.dart';
 
 // Subscription feature
 export 'src/features/subscription/datasources/local/subscription_local_datasource.dart';

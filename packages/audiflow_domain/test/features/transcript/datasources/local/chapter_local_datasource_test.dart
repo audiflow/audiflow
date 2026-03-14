@@ -1,65 +1,46 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
-import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:isar_community/isar.dart';
 
 void main() {
-  late AppDatabase db;
+  late Isar isar;
   late ChapterLocalDatasource datasource;
   late int episodeId;
 
-  setUp(() async {
-    db = AppDatabase.forTesting(NativeDatabase.memory());
-    datasource = ChapterLocalDatasource(db);
+  setUpAll(() async {
+    await Isar.initializeIsarCore(download: true);
+  });
 
-    final subId = await db
-        .into(db.subscriptions)
-        .insert(
-          SubscriptionsCompanion.insert(
-            itunesId: 'test-1',
-            feedUrl: 'https://example.com/feed.xml',
-            title: 'Test',
-            artistName: 'Test',
-            subscribedAt: DateTime.now(),
-          ),
-        );
-    episodeId = await db
-        .into(db.episodes)
-        .insert(
-          EpisodesCompanion.insert(
-            podcastId: subId,
-            guid: 'ep-1',
-            title: 'Episode 1',
-            audioUrl: 'https://example.com/ep1.mp3',
-          ),
-        );
+  setUp(() async {
+    isar = await Isar.open(
+      [EpisodeChapterSchema],
+      directory: '',
+      name: 'test_${DateTime.now().microsecondsSinceEpoch}',
+    );
+    datasource = ChapterLocalDatasource(isar);
+
+    // Use a fixed episodeId (no FK in Isar)
+    episodeId = 1;
   });
 
   tearDown(() async {
-    await db.close();
+    await isar.close(deleteFromDisk: true);
   });
 
   group('getByEpisodeId', () {
     test('should return chapters ordered by startMs', () async {
-      await db
-          .into(db.episodeChapters)
-          .insert(
-            EpisodeChaptersCompanion.insert(
-              episodeId: episodeId,
-              sortOrder: 1,
-              title: 'Second',
-              startMs: 60000,
-            ),
-          );
-      await db
-          .into(db.episodeChapters)
-          .insert(
-            EpisodeChaptersCompanion.insert(
-              episodeId: episodeId,
-              sortOrder: 0,
-              title: 'First',
-              startMs: 0,
-            ),
-          );
+      await datasource.upsertChapters([
+        EpisodeChapter()
+          ..episodeId = episodeId
+          ..sortOrder = 1
+          ..title = 'Second'
+          ..startMs = 60000,
+        EpisodeChapter()
+          ..episodeId = episodeId
+          ..sortOrder = 0
+          ..title = 'First'
+          ..startMs = 0,
+      ]);
 
       final chapters = await datasource.getByEpisodeId(episodeId);
       expect(chapters.length, equals(2));
@@ -75,22 +56,18 @@ void main() {
 
   group('upsertChapters', () {
     test('should insert chapters', () async {
-      final companions = [
-        EpisodeChaptersCompanion.insert(
-          episodeId: episodeId,
-          sortOrder: 0,
-          title: 'Introduction',
-          startMs: 0,
-        ),
-        EpisodeChaptersCompanion.insert(
-          episodeId: episodeId,
-          sortOrder: 1,
-          title: 'Main Topic',
-          startMs: 60000,
-        ),
-      ];
-
-      await datasource.upsertChapters(companions);
+      await datasource.upsertChapters([
+        EpisodeChapter()
+          ..episodeId = episodeId
+          ..sortOrder = 0
+          ..title = 'Introduction'
+          ..startMs = 0,
+        EpisodeChapter()
+          ..episodeId = episodeId
+          ..sortOrder = 1
+          ..title = 'Main Topic'
+          ..startMs = 60000,
+      ]);
 
       final results = await datasource.getByEpisodeId(episodeId);
       expect(results.length, equals(2));
@@ -98,23 +75,21 @@ void main() {
     });
 
     test('should update on conflict (same episodeId + sortOrder)', () async {
-      final companion = EpisodeChaptersCompanion.insert(
-        episodeId: episodeId,
-        sortOrder: 0,
-        title: 'Original',
-        startMs: 0,
-      );
+      await datasource.upsertChapters([
+        EpisodeChapter()
+          ..episodeId = episodeId
+          ..sortOrder = 0
+          ..title = 'Original'
+          ..startMs = 0,
+      ]);
 
-      await datasource.upsertChapters([companion]);
-
-      final updated = EpisodeChaptersCompanion.insert(
-        episodeId: episodeId,
-        sortOrder: 0,
-        title: 'Updated',
-        startMs: 0,
-      );
-
-      await datasource.upsertChapters([updated]);
+      await datasource.upsertChapters([
+        EpisodeChapter()
+          ..episodeId = episodeId
+          ..sortOrder = 0
+          ..title = 'Updated'
+          ..startMs = 0,
+      ]);
 
       final results = await datasource.getByEpisodeId(episodeId);
       expect(results.length, equals(1));
@@ -125,12 +100,11 @@ void main() {
   group('deleteByEpisodeId', () {
     test('should delete all chapters for episode', () async {
       await datasource.upsertChapters([
-        EpisodeChaptersCompanion.insert(
-          episodeId: episodeId,
-          sortOrder: 0,
-          title: 'Chapter',
-          startMs: 0,
-        ),
+        EpisodeChapter()
+          ..episodeId = episodeId
+          ..sortOrder = 0
+          ..title = 'Chapter'
+          ..startMs = 0,
       ]);
 
       final deleted = await datasource.deleteByEpisodeId(episodeId);

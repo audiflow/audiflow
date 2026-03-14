@@ -1,8 +1,8 @@
 import 'package:riverpod/riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../../common/database/app_database.dart';
 import '../models/download_status.dart';
+import '../models/download_task.dart';
 import '../repositories/download_repository_impl.dart';
 import '../services/download_service.dart';
 

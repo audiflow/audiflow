@@ -2,14 +2,13 @@ import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 Episode _makeEpisode(int id, String title, DateTime publishedAt) {
-  return Episode(
-    id: id,
-    podcastId: 1,
-    guid: 'guid-$id',
-    title: title,
-    audioUrl: 'https://example.com/$id.mp3',
-    publishedAt: publishedAt,
-  );
+  return Episode()
+    ..id = id
+    ..podcastId = 1
+    ..guid = 'guid-$id'
+    ..title = title
+    ..audioUrl = 'https://example.com/$id.mp3'
+    ..publishedAt = publishedAt;
 }
 
 void main() {

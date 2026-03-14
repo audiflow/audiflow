@@ -1,36 +1,18 @@
-import 'package:drift/drift.dart';
+import 'package:isar_community/isar.dart';
 
-import '../../../features/subscription/models/subscriptions.dart';
+part 'podcast_view_preference.g.dart';
 
-/// Drift table for per-podcast view preferences.
-///
-/// Stores view mode, episode filter, and sort order for each podcast.
-/// Rows are created lazily on first user interaction.
-class PodcastViewPreferences extends Table {
-  /// Foreign key to Subscriptions table.
-  IntColumn get podcastId => integer().references(Subscriptions, #id)();
+@collection
+class PodcastViewPreference {
+  Id id = Isar.autoIncrement;
 
-  /// View mode: 'episodes' or 'seasons'.
-  TextColumn get viewMode => text().withDefault(const Constant('episodes'))();
+  @Index(unique: true)
+  late int podcastId;
 
-  /// Episode filter: 'all', 'unplayed', or 'inProgress'.
-  TextColumn get episodeFilter => text().withDefault(const Constant('all'))();
-
-  /// Episode sort order: 'asc' or 'desc'.
-  TextColumn get episodeSortOrder =>
-      text().withDefault(const Constant('desc'))();
-
-  /// Season sort field: 'seasonNumber', 'newestEpisodeDate', 'progress', 'alphabetical'.
-  TextColumn get seasonSortField =>
-      text().withDefault(const Constant('seasonNumber'))();
-
-  /// Season sort order: 'asc' or 'desc'.
-  TextColumn get seasonSortOrder =>
-      text().withDefault(const Constant('desc'))();
-
-  /// Selected smart playlist ID for inline display.
-  TextColumn get selectedPlaylistId => text().nullable()();
-
-  @override
-  Set<Column> get primaryKey => {podcastId};
+  String viewMode = 'episodes';
+  String episodeFilter = 'all';
+  String episodeSortOrder = 'desc';
+  String seasonSortField = 'seasonNumber';
+  String seasonSortOrder = 'desc';
+  String? selectedPlaylistId;
 }

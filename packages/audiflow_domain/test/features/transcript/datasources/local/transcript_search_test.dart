@@ -1,78 +1,79 @@
-import 'package:drift/drift.dart' hide isNull, isNotNull;
-import 'package:drift/native.dart';
+import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:audiflow_domain/src/common/database/app_database.dart';
-import 'package:audiflow_domain/src/features/transcript/datasources/local/transcript_local_datasource.dart';
+import 'package:isar_community/isar.dart';
 
 void main() {
-  late AppDatabase db;
+  late Isar isar;
   late TranscriptLocalDatasource datasource;
   late int episodeId;
   late int transcriptId;
 
-  setUp(() async {
-    db = AppDatabase.forTesting(NativeDatabase.memory());
-    datasource = TranscriptLocalDatasource(db);
+  setUpAll(() async {
+    await Isar.initializeIsarCore(download: true);
+  });
 
-    final subId = await db
-        .into(db.subscriptions)
-        .insert(
-          SubscriptionsCompanion.insert(
-            itunesId: 'test-1',
-            feedUrl: 'https://example.com/feed.xml',
-            title: 'Test',
-            artistName: 'Test',
-            subscribedAt: DateTime.now(),
-          ),
-        );
-    episodeId = await db
-        .into(db.episodes)
-        .insert(
-          EpisodesCompanion.insert(
-            podcastId: subId,
-            guid: 'ep-1',
-            title: 'Episode 1',
-            audioUrl: 'https://example.com/ep1.mp3',
-          ),
-        );
-    transcriptId = await db
-        .into(db.episodeTranscripts)
-        .insert(
-          EpisodeTranscriptsCompanion.insert(
-            episodeId: episodeId,
-            url: 'https://example.com/ep1.vtt',
-            type: 'text/vtt',
-          ),
-        );
+  setUp(() async {
+    isar = await Isar.open(
+      [
+        SubscriptionSchema,
+        EpisodeSchema,
+        EpisodeTranscriptSchema,
+        TranscriptSegmentSchema,
+      ],
+      directory: '',
+      name: 'test_${DateTime.now().microsecondsSinceEpoch}',
+    );
+    datasource = TranscriptLocalDatasource(isar);
+
+    await isar.writeTxn(() async {
+      final sub = Subscription()
+        ..itunesId = 'test-1'
+        ..feedUrl = 'https://example.com/feed.xml'
+        ..title = 'Test'
+        ..artistName = 'Test'
+        ..subscribedAt = DateTime.now();
+      await isar.subscriptions.put(sub);
+
+      final ep = Episode()
+        ..podcastId = sub.id
+        ..guid = 'ep-1'
+        ..title = 'Episode 1'
+        ..audioUrl = 'https://example.com/ep1.mp3';
+      await isar.episodes.put(ep);
+      episodeId = ep.id;
+
+      final transcript = EpisodeTranscript()
+        ..episodeId = episodeId
+        ..url = 'https://example.com/ep1.vtt'
+        ..type = 'text/vtt';
+      await isar.episodeTranscripts.put(transcript);
+      transcriptId = transcript.id;
+    });
   });
 
   tearDown(() async {
-    await db.close();
+    await isar.close(deleteFromDisk: true);
   });
 
-  group('FTS5 transcript search', () {
+  group('transcript search', () {
     setUp(() async {
       await datasource.insertSegments([
-        TranscriptSegmentsCompanion.insert(
-          transcriptId: transcriptId,
-          startMs: 0,
-          endMs: 5000,
-          body: 'Welcome to our podcast about Flutter development',
-        ),
-        TranscriptSegmentsCompanion.insert(
-          transcriptId: transcriptId,
-          startMs: 5000,
-          endMs: 10000,
-          body: 'Today we discuss state management with Riverpod',
-        ),
-        TranscriptSegmentsCompanion.insert(
-          transcriptId: transcriptId,
-          startMs: 10000,
-          endMs: 15000,
-          body: 'Dart is a great language for mobile development',
-          speaker: const Value('Alice'),
-        ),
+        TranscriptSegment()
+          ..transcriptId = transcriptId
+          ..startMs = 0
+          ..endMs = 5000
+          ..body = 'Welcome to our podcast about Flutter development',
+        TranscriptSegment()
+          ..transcriptId = transcriptId
+          ..startMs = 5000
+          ..endMs = 10000
+          ..body = 'Today we discuss state management with Riverpod',
+        TranscriptSegment()
+          ..transcriptId = transcriptId
+          ..startMs = 10000
+          ..endMs = 15000
+          ..body = 'Dart is a great language for mobile development'
+          ..speaker = 'Alice',
       ]);
     });
 

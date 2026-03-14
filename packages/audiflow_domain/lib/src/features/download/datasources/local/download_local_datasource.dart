@@ -1,147 +1,135 @@
-import 'package:drift/drift.dart';
+import 'package:isar_community/isar.dart';
 
-import '../../../../common/database/app_database.dart';
 import '../../models/download_status.dart';
+import '../../models/download_task.dart';
 
-/// Local datasource for download task operations using Drift.
+/// Local datasource for download task operations using Isar.
 ///
-/// Provides CRUD operations and queries for the DownloadTasks table.
+/// Provides CRUD operations and queries for the DownloadTask collection.
 class DownloadLocalDatasource {
-  DownloadLocalDatasource(this._db);
+  DownloadLocalDatasource(this._isar);
 
-  final AppDatabase _db;
+  final Isar _isar;
 
   /// Creates a new download task. Returns the task ID.
-  Future<int> create(DownloadTasksCompanion companion) {
-    return _db.into(_db.downloadTasks).insert(companion);
+  Future<int> create(DownloadTask task) async {
+    await _isar.writeTxn(() => _isar.downloadTasks.put(task));
+    return task.id;
   }
 
-  /// Updates specific fields of a download task by ID.
-  Future<int> updateById(int id, DownloadTasksCompanion companion) {
-    return (_db.update(
-      _db.downloadTasks,
-    )..where((t) => t.id.equals(id))).write(companion);
+  /// Updates a download task by ID.
+  Future<int> updateById(int id, DownloadTask task) async {
+    task.id = id;
+    await _isar.writeTxn(() => _isar.downloadTasks.put(task));
+    return 1;
   }
 
   /// Deletes a download task by ID.
-  Future<int> delete(int id) {
-    return (_db.delete(_db.downloadTasks)..where((t) => t.id.equals(id))).go();
+  Future<int> delete(int id) async {
+    final deleted = await _isar.writeTxn(() => _isar.downloadTasks.delete(id));
+    return deleted ? 1 : 0;
   }
 
   /// Returns a download task by ID.
   Future<DownloadTask?> getById(int id) {
-    return (_db.select(
-      _db.downloadTasks,
-    )..where((t) => t.id.equals(id))).getSingleOrNull();
+    return _isar.downloadTasks.get(id);
   }
 
   /// Returns a download task by episode ID.
   Future<DownloadTask?> getByEpisodeId(int episodeId) {
-    return (_db.select(
-      _db.downloadTasks,
-    )..where((t) => t.episodeId.equals(episodeId))).getSingleOrNull();
+    return _isar.downloadTasks.getByEpisodeId(episodeId);
   }
 
   /// Watches a download task by episode ID.
   Stream<DownloadTask?> watchByEpisodeId(int episodeId) {
-    return (_db.select(
-      _db.downloadTasks,
-    )..where((t) => t.episodeId.equals(episodeId))).watchSingleOrNull();
+    return _isar.downloadTasks
+        .filter()
+        .episodeIdEqualTo(episodeId)
+        .watch(fireImmediately: true)
+        .map((list) => list.isEmpty ? null : list.first);
   }
 
-  /// Returns all download tasks ordered by creation date (oldest first = FIFO).
+  /// Returns all download tasks ordered by creation date (oldest first).
   Future<List<DownloadTask>> getAll() {
-    return (_db.select(
-      _db.downloadTasks,
-    )..orderBy([(t) => OrderingTerm.asc(t.createdAt)])).get();
+    return _isar.downloadTasks.where().sortByCreatedAt().findAll();
   }
 
   /// Watches all download tasks ordered by creation date.
   Stream<List<DownloadTask>> watchAll() {
-    return (_db.select(
-      _db.downloadTasks,
-    )..orderBy([(t) => OrderingTerm.asc(t.createdAt)])).watch();
+    return _isar.downloadTasks.where().sortByCreatedAt().watch(
+      fireImmediately: true,
+    );
   }
 
   /// Returns download tasks by status.
   Future<List<DownloadTask>> getByStatus(DownloadStatus status) {
-    return (_db.select(_db.downloadTasks)
-          ..where((t) => t.status.equals(status.toDbValue()))
-          ..orderBy([(t) => OrderingTerm.asc(t.createdAt)]))
-        .get();
+    return _isar.downloadTasks
+        .filter()
+        .statusEqualTo(status.toDbValue())
+        .sortByCreatedAt()
+        .findAll();
   }
 
   /// Watches download tasks by status.
   Stream<List<DownloadTask>> watchByStatus(DownloadStatus status) {
-    return (_db.select(_db.downloadTasks)
-          ..where((t) => t.status.equals(status.toDbValue()))
-          ..orderBy([(t) => OrderingTerm.asc(t.createdAt)]))
-        .watch();
+    return _isar.downloadTasks
+        .filter()
+        .statusEqualTo(status.toDbValue())
+        .sortByCreatedAt()
+        .watch(fireImmediately: true);
   }
 
   /// Returns completed downloads for an episode (for playback lookup).
   Future<DownloadTask?> getCompletedByEpisodeId(int episodeId) {
-    return (_db.select(_db.downloadTasks)..where(
-          (t) =>
-              t.episodeId.equals(episodeId) &
-              t.status.equals(const DownloadStatus.completed().toDbValue()),
-        ))
-        .getSingleOrNull();
+    return _isar.downloadTasks
+        .filter()
+        .episodeIdEqualTo(episodeId)
+        .and()
+        .statusEqualTo(const DownloadStatus.completed().toDbValue())
+        .findFirst();
   }
 
   /// Returns the next pending download (FIFO order, respecting wifiOnly).
   Future<DownloadTask?> getNextPending({required bool isOnWifi}) {
-    final query = _db.select(_db.downloadTasks)
-      ..where(
-        (t) => t.status.equals(const DownloadStatus.pending().toDbValue()),
-      );
+    var query = _isar.downloadTasks.filter().statusEqualTo(
+      const DownloadStatus.pending().toDbValue(),
+    );
 
     if (!isOnWifi) {
-      query.where((t) => t.wifiOnly.equals(false));
+      query = query.and().wifiOnlyEqualTo(false);
     }
 
-    query
-      ..orderBy([(t) => OrderingTerm.asc(t.createdAt)])
-      ..limit(1);
-
-    return query.getSingleOrNull();
+    return query.sortByCreatedAt().findFirst();
   }
 
   /// Returns count of active downloads (pending + downloading + paused).
-  Future<int> getActiveCount() async {
-    final activeStatuses = [
-      const DownloadStatus.pending().toDbValue(),
-      const DownloadStatus.downloading().toDbValue(),
-      const DownloadStatus.paused().toDbValue(),
-    ];
-
-    final query = _db.selectOnly(_db.downloadTasks)
-      ..addColumns([_db.downloadTasks.id.count()])
-      ..where(_db.downloadTasks.status.isIn(activeStatuses));
-
-    final result = await query.getSingle();
-    return result.read(_db.downloadTasks.id.count()) ?? 0;
+  Future<int> getActiveCount() {
+    return _isar.downloadTasks
+        .filter()
+        .statusEqualTo(const DownloadStatus.pending().toDbValue())
+        .or()
+        .statusEqualTo(const DownloadStatus.downloading().toDbValue())
+        .or()
+        .statusEqualTo(const DownloadStatus.paused().toDbValue())
+        .count();
   }
 
   /// Returns total storage used by completed downloads.
   Future<int> getTotalStorageUsed() async {
-    final query = _db.selectOnly(_db.downloadTasks)
-      ..addColumns([_db.downloadTasks.totalBytes.sum()])
-      ..where(
-        _db.downloadTasks.status.equals(
-          const DownloadStatus.completed().toDbValue(),
-        ),
-      );
-
-    final result = await query.getSingle();
-    return result.read(_db.downloadTasks.totalBytes.sum()) ?? 0;
+    final completed = await _isar.downloadTasks
+        .filter()
+        .statusEqualTo(const DownloadStatus.completed().toDbValue())
+        .findAll();
+    return completed.fold<int>(0, (sum, task) => sum + (task.totalBytes ?? 0));
   }
 
   /// Deletes all completed downloads.
   Future<int> deleteAllCompleted() {
-    return (_db.delete(_db.downloadTasks)..where(
-          (t) => t.status.equals(const DownloadStatus.completed().toDbValue()),
-        ))
-        .go();
+    return _isar.writeTxn(
+      () => _isar.downloadTasks
+          .filter()
+          .statusEqualTo(const DownloadStatus.completed().toDbValue())
+          .deleteAll(),
+    );
   }
 }

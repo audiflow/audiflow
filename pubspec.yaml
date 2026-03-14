@@ -28,6 +28,21 @@ dev_dependencies:
 
 dependency_overrides:
   analyzer: ^10.0.0
+  isar_community:
+    git:
+      url: https://github.com/reedom/isar-community.git
+      path: packages/isar_community
+      ref: release/3.3.0-a
+  isar_community_flutter_libs:
+    git:
+      url: https://github.com/reedom/isar-community.git
+      path: packages/isar_community_flutter_libs
+      ref: release/3.3.0-a
+  isar_community_generator:
+    git:
+      url: https://github.com/reedom/isar-community.git
+      path: packages/isar_community_generator
+      ref: release/3.3.0-a
 
 flutter:
   uses-material-design: true

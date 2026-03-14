@@ -1,5 +1,6 @@
-import '../../../common/database/app_database.dart';
+import '../../feed/models/episode.dart';
 import '../models/playback_queue.dart';
+import '../models/queue_item.dart';
 
 /// Repository interface for queue operations.
 ///
@@ -18,8 +19,9 @@ abstract class QueueRepository {
 
   /// Replaces the entire queue with adhoc items from an episode list.
   ///
-  /// Clears all existing items and inserts new adhoc items from [episodeIds].
-  /// The [sourceContext] describes where the episodes came from (e.g., "Season 2").
+  /// Clears all existing items and inserts new adhoc items from
+  /// [episodeIds]. The [sourceContext] describes where the episodes
+  /// came from (e.g., "Season 2").
   Future<void> replaceWithAdhoc({
     required List<int> episodeIds,
     required String sourceContext,
@@ -39,7 +41,8 @@ abstract class QueueRepository {
   /// Reorders an item to a new position.
   ///
   /// The [queueItemId] identifies the item to move, and [newIndex] is
-  /// the target index in the combined list (manual items first, then adhoc).
+  /// the target index in the combined list (manual items first, then
+  /// adhoc).
   Future<void> reorder(int queueItemId, int newIndex);
 
   /// Gets the current queue state with episode data joined.

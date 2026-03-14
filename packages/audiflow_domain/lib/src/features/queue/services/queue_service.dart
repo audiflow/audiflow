@@ -2,8 +2,9 @@ import 'package:audiflow_core/audiflow_core.dart';
 import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../../common/database/app_database.dart';
 import '../../../common/providers/logger_provider.dart';
+import '../../feed/models/episode.dart';
+import '../models/queue_item.dart';
 import '../../feed/repositories/episode_repository.dart';
 import '../../feed/repositories/episode_repository_impl.dart';
 import '../../settings/providers/settings_providers.dart';

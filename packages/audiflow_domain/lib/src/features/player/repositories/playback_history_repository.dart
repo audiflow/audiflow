@@ -1,4 +1,4 @@
-import '../../../common/database/app_database.dart';
+import '../models/playback_history.dart';
 
 /// Repository interface for playback history operations.
 ///

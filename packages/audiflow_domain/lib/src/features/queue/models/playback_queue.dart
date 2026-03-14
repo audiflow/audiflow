@@ -1,6 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../../../common/database/app_database.dart';
+import '../../feed/models/episode.dart';
+import '../models/queue_item.dart';
 
 part 'playback_queue.freezed.dart';
 

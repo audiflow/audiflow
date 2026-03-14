@@ -38,10 +38,10 @@ audiflow/
 
 ### audiflow_domain
 - **Type**: Dart package
-- **Dependencies**: `audiflow_core`, `drift`, `dio`, etc.
-- **Contains**: Business logic, services, repositories (interfaces + implementations), data sources, Drift models (used as both domain entities and DTOs)
+- **Dependencies**: `audiflow_core`, `isar_community`, `dio`, etc.
+- **Contains**: Business logic, services, repositories (interfaces + implementations), data sources, Isar models (used as both domain entities and DTOs)
 - **Path**: `packages/audiflow_domain/`
-- **Note**: This package merges traditional data and domain layers for performance. Drift models serve dual purpose as domain entities and database models.
+- **Note**: This package merges traditional data and domain layers for performance. Isar models serve dual purpose as domain entities and database models.
 
 ### audiflow_podcast
 - **Type**: Dart package
@@ -79,14 +79,14 @@ App → UI → Domain → Podcast
 **What goes where:**
 - **App**: Main entry points, flavor configs, root providers, routing setup, presentation layer (screens, controllers)
 - **UI**: Reusable widgets, themes, styles (used across multiple features)
-- **Domain**: Business logic, services, repositories (interfaces + implementations), data sources (Drift, HTTP), models (@collection for Drift, @freezed for non-persisted models)
+- **Domain**: Business logic, services, repositories (interfaces + implementations), data sources (Isar, HTTP), models (@collection for Isar, @freezed for non-persisted models)
 - **Podcast**: RSS parsing, podcast feed models, caching, network fetching for podcast data
 - **Core**: Constants, extensions, utilities, error types, validators, formatters
 
 **Performance-focused design:**
-- Drift models serve as both domain entities and database models (no DTO mapping)
+- Isar models serve as both domain entities and database models (no DTO mapping)
 - Repository interfaces and implementations live together in `audiflow_domain`
-- Direct use of Drift models throughout the app (zero conversion overhead)
+- Direct use of Isar models throughout the app (zero conversion overhead)
 
 ## Package Directory Structures
 
@@ -184,7 +184,7 @@ audiflow_domain/
 │   │   │   │   ├── result.dart
 │   │   │   │   └── paginated_response.dart
 │   │   │   ├── providers/
-│   │   │   │   ├── database_provider.dart        # Drift database instance
+│   │   │   │   ├── database_provider.dart        # Isar database instance
 │   │   │   │   ├── http_client_provider.dart     # Dio client setup
 │   │   │   │   ├── connectivity_provider.dart
 │   │   │   │   └── device_info_provider.dart
@@ -206,31 +206,31 @@ audiflow_domain/
 │   │       │   ├── datasources/remote/itunes_search_datasource.dart
 │   │       │   └── services/search_service.dart
 │   │       ├── subscription/
-│   │       │   ├── models/subscription.dart               # Drift Table
+│   │       │   ├── models/subscription.dart               # Isar Collection
 │   │       │   └── repositories/...
 │   │       ├── feed/
 │   │       │   ├── models/
-│   │       │   │   ├── podcast.dart                       # Drift Table
-│   │       │   │   └── episode.dart                       # Drift Table
+│   │       │   │   ├── podcast.dart                       # Isar Collection
+│   │       │   │   └── episode.dart                       # Isar Collection
 │   │       │   ├── repositories/
 │   │       │   │   ├── feed_repository.dart
 │   │       │   │   └── feed_repository_impl.dart
 │   │       │   ├── datasources/
-│   │       │   │   ├── local/feed_local_datasource.dart   # Drift operations
+│   │       │   │   ├── local/feed_local_datasource.dart   # Isar operations
 │   │       │   │   └── remote/feed_remote_datasource.dart # HTTP operations
 │   │       │   ├── services/
 │   │       │   │   ├── feed_parser_service.dart
 │   │       │   │   └── feed_sync_service.dart
 │   │       │   └── events/feed_events.dart
 │   │       ├── library/
-│   │       │   ├── models/podcast_metadata.dart           # Drift Table
+│   │       │   ├── models/podcast_metadata.dart           # Isar Collection
 │   │       │   └── repositories/...
 │   │       ├── player/
 │   │       │   ├── models/
 │   │       │   │   ├── playback_state.dart                # @freezed (idle/loading/playing/paused/error)
 │   │       │   │   ├── now_playing_info.dart              # @freezed (episode metadata for mini player)
 │   │       │   │   ├── playback_progress.dart             # @freezed (position/duration/buffered with computed progress)
-│   │       │   │   ├── playback_position.dart             # Drift Table
+│   │       │   │   ├── playback_position.dart             # Isar Collection
 │   │       │   │   └── playback_speed.dart                # @freezed
 │   │       │   ├── repositories/
 │   │       │   │   ├── player_repository.dart
@@ -242,11 +242,11 @@ audiflow_domain/
 │   │       │   │   └── audio_handler_service.dart
 │   │       │   └── events/player_events.dart
 │   │       ├── queue/
-│   │       │   ├── models/queue_item.dart                 # Drift Table
+│   │       │   ├── models/queue_item.dart                 # Isar Collection
 │   │       │   └── repositories/...
 │   │       ├── download/
 │   │       │   ├── models/
-│   │       │   │   ├── download_task.dart                 # Drift Table
+│   │       │   │   ├── download_task.dart                 # Isar Collection
 │   │       │   │   └── download_status.dart               # @freezed (enum)
 │   │       │   ├── repositories/
 │   │       │   │   ├── download_repository.dart
@@ -257,7 +257,7 @@ audiflow_domain/
 │   │       │   ├── services/download_service.dart
 │   │       │   └── events/download_events.dart
 │   │       ├── settings/
-│   │       │   ├── models/app_settings.dart               # Drift Table
+│   │       │   ├── models/app_settings.dart               # Isar Collection
 │   │       │   └── repositories/...
 │   │       └── monitoring/
 │   │           ├── models/analytics_event.dart
@@ -360,23 +360,30 @@ class PodcastListController extends _$PodcastListController {
 }
 ```
 
-### 3. Drift Models (Dual-purpose: Domain Entity + Database Model)
+### 3. Isar Models (Dual-purpose: Domain Entity + Database Model)
 ```dart
-// In audiflow_domain/src/features/feed/models/podcast.dart
-import 'package:drift/drift.dart';
+// In audiflow_domain/src/features/feed/models/episode.dart
+import 'package:isar_community/isar.dart';
 
-// Table definition
-class Podcasts extends Table {
-  IntColumn get id => integer().autoIncrement()();
-  TextColumn get feedUrl => text().customConstraint('UNIQUE')();
-  TextColumn get title => text()();
-  TextColumn get description => text().nullable()();
-  TextColumn get imageUrl => text().nullable()();
-  DateTimeColumn get lastFetchedAt => dateTime()();
+part 'episode.g.dart';
+
+@collection
+class Episode {
+  Id id = Isar.autoIncrement;
+
+  @Index(composite: [CompositeIndex('guid')], unique: true)
+  late int podcastId;
+
+  late String guid;
+  late String title;
+  String? description;
+  late String audioUrl;
+  int? durationMs;
+  DateTime? publishedAt;
 }
 
-// Note: Data class (Podcast) is auto-generated by Drift
 // Use throughout the app - no separate DTOs needed
+// Construct with cascade: Episode()..podcastId = 1..guid = 'abc'..title = 'Ep1'..audioUrl = '...'
 ```
 
 ### 4. Event Communication (Cross-Feature)
@@ -447,11 +454,11 @@ class StorageException extends AppException { ... }
 | **New feature presentation** | `audiflow_app` | `lib/features/{feature}/presentation/` | `audiflow_app/lib/features/playlist/presentation/` |
 | **Shared widget** (2+ features) | `audiflow_ui` | `lib/src/widgets/` | `audiflow_ui/lib/src/widgets/cards/podcast_card.dart` |
 | **Business logic** | `audiflow_domain` | `lib/src/features/{feature}/services/` | `audiflow_domain/lib/src/features/feed/services/feed_sync_service.dart` |
-| **Drift table** (extends Table) | `audiflow_domain` | `lib/src/features/{feature}/models/` | `audiflow_domain/lib/src/features/feed/models/podcast.dart` |
+| **Isar collection** (`@collection`) | `audiflow_domain` | `lib/src/features/{feature}/models/` | `audiflow_domain/lib/src/features/feed/models/podcast.dart` |
 | **Non-persisted model** (@freezed) | `audiflow_domain` | `lib/src/features/{feature}/models/` | `audiflow_domain/lib/src/features/discovery/models/search_result.dart` |
 | **Repository interface** | `audiflow_domain` | `lib/src/features/{feature}/repositories/{entity}_repository.dart` | `audiflow_domain/lib/src/features/download/repositories/download_repository.dart` |
 | **Repository impl** | `audiflow_domain` | `lib/src/features/{feature}/repositories/{entity}_repository_impl.dart` | `audiflow_domain/lib/src/features/download/repositories/download_repository_impl.dart` |
-| **Local data access (Drift)** | `audiflow_domain` | `lib/src/features/{feature}/datasources/local/` | `audiflow_domain/lib/src/features/feed/datasources/local/feed_local_datasource.dart` |
+| **Local data access (Isar)** | `audiflow_domain` | `lib/src/features/{feature}/datasources/local/` | `audiflow_domain/lib/src/features/feed/datasources/local/feed_local_datasource.dart` |
 | **Remote data access (HTTP)** | `audiflow_domain` | `lib/src/features/{feature}/datasources/remote/` | `audiflow_domain/lib/src/features/discovery/datasources/remote/itunes_search_datasource.dart` |
 | **Cross-feature events** | `audiflow_domain` | `lib/src/features/{feature}/events/` | `audiflow_domain/lib/src/features/player/events/player_events.dart` |
 | **Riverpod controller** | `audiflow_app` | `lib/features/{feature}/presentation/controllers/` | `audiflow_app/lib/features/queue/presentation/controllers/queue_controller.dart` |
@@ -492,12 +499,12 @@ class StorageException extends AppException { ... }
 - Controllers: `{screen}_controller.dart`
 - Screens: `{screen}_screen.dart`
 - Widgets: `{component}_widget.dart` or `{component}.dart`
-- Models: `{entity}.dart` (extend Table for Drift tables, use @freezed for non-persisted models)
+- Models: `{entity}.dart` (`@collection` for Isar models, `@freezed` for non-persisted models)
 
 **Rule 4: Model annotations**
-- Persisted data → extend `Table` class (Drift generates data classes)
+- Persisted data → use `@collection` annotation (Isar generates serialization)
 - Transient/computed data → use `@freezed`
-- Never create separate DTOs - use Drift-generated data classes directly everywhere
+- Never create separate DTOs - use Isar model classes directly everywhere
 
 ## Code Generation
 
@@ -530,14 +537,14 @@ Keep internal implementation in `lib/src/` and only export what's needed.
 ## Performance Benefits of Merged Architecture
 
 **Why we merged data + domain:**
-1. **Zero mapping overhead** - Drift models used directly, no DTO conversions
+1. **Zero mapping overhead** - Isar models used directly, no DTO conversions
 2. **Simpler codebase** - One less layer to navigate
 3. **Better IDE support** - Direct navigation from UI to models
 4. **Faster development** - Less boilerplate, fewer files
 5. **Type safety maintained** - Repository pattern still enforces contracts
 
 **Trade-offs accepted:**
-- Less flexibility to swap Drift (but we're committed to it)
+- Less flexibility to swap Isar (but we're committed to it)
 - Repository implementations in same package as interfaces (acceptable for this use case)
 
 ## Smart Playlist Config Ecosystem

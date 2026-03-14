@@ -15,15 +15,14 @@ Episode _episode({
   int? episodeNumber,
   DateTime? publishedAt,
 }) {
-  return Episode(
-    id: id,
-    podcastId: podcastId,
-    guid: 'guid-$id',
-    title: title ?? 'Episode $id',
-    audioUrl: 'https://example.com/ep$id.mp3',
-    episodeNumber: episodeNumber,
-    publishedAt: publishedAt,
-  );
+  return Episode()
+    ..id = id
+    ..podcastId = podcastId
+    ..guid = 'guid-$id'
+    ..title = title ?? 'Episode $id'
+    ..audioUrl = 'https://example.com/ep$id.mp3'
+    ..episodeNumber = episodeNumber
+    ..publishedAt = publishedAt;
 }
 
 QueueItem _queueItem({
@@ -33,14 +32,13 @@ QueueItem _queueItem({
   bool isAdhoc = true,
   String? sourceContext,
 }) {
-  return QueueItem(
-    id: id,
-    episodeId: episodeId,
-    position: position,
-    isAdhoc: isAdhoc,
-    sourceContext: sourceContext,
-    addedAt: DateTime.now(),
-  );
+  return QueueItem()
+    ..id = id
+    ..episodeId = episodeId
+    ..position = position
+    ..isAdhoc = isAdhoc
+    ..sourceContext = sourceContext
+    ..addedAt = DateTime.now();
 }
 
 void _stubReplaceWithAdhoc(MockQueueRepository mock) {

@@ -58,4 +58,4 @@ final class ChapterRepositoryProvider
   }
 }
 
-String _$chapterRepositoryHash() => r'95a8a6a22d37e7aaa89ddd7b8a1a7614f8a8d610';
+String _$chapterRepositoryHash() => r'24ee8490a1ddd5f2ffc0b6eabda9bbd3ee4423ab';

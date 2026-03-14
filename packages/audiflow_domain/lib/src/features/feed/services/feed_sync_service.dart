@@ -1,13 +1,13 @@
 import 'package:audiflow_core/audiflow_core.dart' show EpisodeData;
 import 'package:dio/dio.dart';
-import 'package:drift/drift.dart';
 import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../../common/database/app_database.dart';
 import '../../../common/providers/http_client_provider.dart';
 import '../../../common/providers/logger_provider.dart';
+import '../../../features/subscription/models/subscriptions.dart';
 import '../../../features/subscription/repositories/subscription_repository_impl.dart';
+import '../models/episode.dart';
 import '../models/feed_parse_progress.dart';
 import '../models/feed_sync_result.dart';
 import '../../settings/providers/settings_providers.dart';
@@ -163,42 +163,35 @@ class FeedSyncService {
         xmlContent: xmlContent,
         podcastId: sub.id,
         knownGuids: knownGuids,
-        onBatchReady: (companions, mediaMetas) async {
+        onBatchReady: (episodes, mediaMetas) async {
           // Apply per-group extractor resolution if pattern config
           // is available.
           if (resolver != null) {
-            final enriched = companions.map((c) {
-              final title = c.title.value;
+            for (final episode in episodes) {
               final extractor = resolver.resolve(
-                title,
-                c.description.value,
+                episode.title,
+                episode.description,
                 patternConfig!,
               );
-              if (extractor == null) return c;
+              if (extractor == null) continue;
 
-              final episodeData = _CompanionEpisodeData(
-                title: title,
-                description: c.description.value,
-                seasonNumber: c.seasonNumber.value,
-                episodeNumber: c.episodeNumber.value,
+              final episodeData = _EpisodeDataAdapter(
+                title: episode.title,
+                description: episode.description,
+                seasonNumber: episode.seasonNumber,
+                episodeNumber: episode.episodeNumber,
               );
               final extracted = extractor.extract(episodeData);
               if (extracted.hasValues) {
-                return c.copyWith(
-                  seasonNumber: Value(
-                    extracted.seasonNumber ?? c.seasonNumber.value,
-                  ),
-                  episodeNumber: Value(
-                    extracted.episodeNumber ?? c.episodeNumber.value,
-                  ),
-                );
+                episode
+                  ..seasonNumber =
+                      extracted.seasonNumber ?? episode.seasonNumber
+                  ..episodeNumber =
+                      extracted.episodeNumber ?? episode.episodeNumber;
               }
-              return c;
-            }).toList();
-            await episodeRepo.upsertEpisodes(enriched);
-          } else {
-            await episodeRepo.upsertEpisodes(companions);
+            }
           }
+          await episodeRepo.upsertEpisodes(episodes);
 
           // Store transcript and chapter metadata
           if (mediaMetas.isNotEmpty) {
@@ -250,9 +243,9 @@ class FeedSyncService {
   }
 }
 
-/// Adapter for EpisodesCompanion to work with episode extractor.
-class _CompanionEpisodeData implements EpisodeData {
-  const _CompanionEpisodeData({
+/// Adapter for [Episode] to work with episode extractor.
+class _EpisodeDataAdapter implements EpisodeData {
+  const _EpisodeDataAdapter({
     required this.title,
     this.description,
     this.seasonNumber,

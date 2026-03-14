@@ -1,63 +1,69 @@
-import 'package:drift/drift.dart';
+import 'package:isar_community/isar.dart';
 
-import '../../../../common/database/app_database.dart';
+import '../../models/smart_playlist_groups.dart';
+import '../../models/smart_playlists.dart';
 
-/// Local datasource for smart playlist operations using Drift.
+/// Local datasource for smart playlist operations using Isar.
 ///
-/// Provides CRUD operations for the SmartPlaylists table.
-/// Smart playlists use composite primary key
+/// Provides CRUD operations for the SmartPlaylist and SmartPlaylistGroup
+/// collections. Smart playlists use composite unique index
 /// (podcastId, playlistNumber).
 class SmartPlaylistLocalDatasource {
-  SmartPlaylistLocalDatasource(this._db);
+  SmartPlaylistLocalDatasource(this._isar);
 
-  final AppDatabase _db;
+  final Isar _isar;
 
   /// Upserts a smart playlist (insert or update on conflict).
   ///
   /// Matches on composite key (podcastId, playlistNumber).
-  Future<void> upsert(SmartPlaylistsCompanion companion) async {
-    await _db.into(_db.smartPlaylists).insertOnConflictUpdate(companion);
+  Future<void> upsert(SmartPlaylistEntity entity) async {
+    await _isar.writeTxn(() async {
+      final existing = await _isar.smartPlaylistEntitys
+          .getByPodcastIdPlaylistNumber(
+            entity.podcastId,
+            entity.playlistNumber,
+          );
+      if (existing != null) {
+        entity.id = existing.id;
+      }
+      await _isar.smartPlaylistEntitys.put(entity);
+    });
   }
 
-  /// Upserts multiple smart playlists in a batch.
-  ///
   /// Replaces all smart playlists for a podcast atomically.
   Future<void> upsertAllForPodcast(
     int podcastId,
-    List<SmartPlaylistsCompanion> companions,
+    List<SmartPlaylistEntity> entities,
   ) async {
-    await _db.transaction(() async {
-      // Delete existing smart playlists for this podcast
-      await (_db.delete(
-        _db.smartPlaylists,
-      )..where((s) => s.podcastId.equals(podcastId))).go();
+    await _isar.writeTxn(() async {
+      await _isar.smartPlaylistEntitys
+          .filter()
+          .podcastIdEqualTo(podcastId)
+          .deleteAll();
 
-      // Insert new smart playlists
-      if (companions.isNotEmpty) {
-        await _db.batch((batch) {
-          for (final companion in companions) {
-            batch.insert(_db.smartPlaylists, companion);
-          }
-        });
+      if (entities.isNotEmpty) {
+        await _isar.smartPlaylistEntitys.putAll(entities);
       }
     });
   }
 
   /// Returns all smart playlists for a podcast, ordered by sortKey.
   Future<List<SmartPlaylistEntity>> getByPodcastId(int podcastId) {
-    return (_db.select(_db.smartPlaylists)
-          ..where((s) => s.podcastId.equals(podcastId))
-          ..orderBy([(s) => OrderingTerm.asc(s.sortKey)]))
-        .get();
+    return _isar.smartPlaylistEntitys
+        .filter()
+        .podcastIdEqualTo(podcastId)
+        .sortBySortKey()
+        .findAll();
   }
 
   /// Watches smart playlists for a podcast, emitting updates when
   /// data changes.
   Stream<List<SmartPlaylistEntity>> watchByPodcastId(int podcastId) {
-    return (_db.select(_db.smartPlaylists)
-          ..where((s) => s.podcastId.equals(podcastId))
-          ..orderBy([(s) => OrderingTerm.asc(s.sortKey)]))
-        .watch();
+    return _isar.smartPlaylistEntitys
+        .filter()
+        .podcastIdEqualTo(podcastId)
+        .sortBySortKey()
+        .watch(fireImmediately: true);
   }
 
   /// Returns a smart playlist by podcast ID and playlist number.
@@ -65,19 +71,20 @@ class SmartPlaylistLocalDatasource {
     int podcastId,
     int playlistNumber,
   ) {
-    return (_db.select(_db.smartPlaylists)..where(
-          (s) =>
-              s.podcastId.equals(podcastId) &
-              s.playlistNumber.equals(playlistNumber),
-        ))
-        .getSingleOrNull();
+    return _isar.smartPlaylistEntitys.getByPodcastIdPlaylistNumber(
+      podcastId,
+      playlistNumber,
+    );
   }
 
   /// Deletes all smart playlists for a podcast.
   Future<int> deleteByPodcastId(int podcastId) {
-    return (_db.delete(
-      _db.smartPlaylists,
-    )..where((s) => s.podcastId.equals(podcastId))).go();
+    return _isar.writeTxn(
+      () => _isar.smartPlaylistEntitys
+          .filter()
+          .podcastIdEqualTo(podcastId)
+          .deleteAll(),
+    );
   }
 
   /// Returns groups for a playlist.
@@ -85,45 +92,40 @@ class SmartPlaylistLocalDatasource {
     int podcastId,
     String playlistId,
   ) {
-    return (_db.select(_db.smartPlaylistGroups)
-          ..where(
-            (g) =>
-                g.podcastId.equals(podcastId) & g.playlistId.equals(playlistId),
-          )
-          ..orderBy([(g) => OrderingTerm.asc(g.sortKey)]))
-        .get();
+    return _isar.smartPlaylistGroupEntitys
+        .filter()
+        .podcastIdEqualTo(podcastId)
+        .and()
+        .playlistIdEqualTo(playlistId)
+        .sortBySortKey()
+        .findAll();
   }
 
   /// Replaces all groups for a playlist atomically.
   Future<void> upsertGroupsForPlaylist(
     int podcastId,
     String playlistId,
-    List<SmartPlaylistGroupsCompanion> companions,
+    List<SmartPlaylistGroupEntity> groups,
   ) async {
-    await _db.transaction(() async {
-      await (_db.delete(_db.smartPlaylistGroups)..where(
-            (g) =>
-                g.podcastId.equals(podcastId) & g.playlistId.equals(playlistId),
-          ))
-          .go();
+    await _isar.writeTxn(() async {
+      await _isar.smartPlaylistGroupEntitys
+          .filter()
+          .podcastIdEqualTo(podcastId)
+          .and()
+          .playlistIdEqualTo(playlistId)
+          .deleteAll();
 
-      if (companions.isNotEmpty) {
-        await _db.batch((batch) {
-          for (final c in companions) {
-            batch.insert(_db.smartPlaylistGroups, c);
-          }
-        });
+      if (groups.isNotEmpty) {
+        await _isar.smartPlaylistGroupEntitys.putAll(groups);
       }
     });
   }
 
   /// Returns count of smart playlists for a podcast.
-  Future<int> countByPodcastId(int podcastId) async {
-    final count = _db.smartPlaylists.podcastId.count();
-    final query = _db.selectOnly(_db.smartPlaylists)
-      ..addColumns([count])
-      ..where(_db.smartPlaylists.podcastId.equals(podcastId));
-    final result = await query.getSingle();
-    return result.read(count) ?? 0;
+  Future<int> countByPodcastId(int podcastId) {
+    return _isar.smartPlaylistEntitys
+        .filter()
+        .podcastIdEqualTo(podcastId)
+        .count();
   }
 }

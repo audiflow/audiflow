@@ -16,8 +16,8 @@ paths: packages/**/*.dart, pubspec.yaml, "*.env*"
 - Pattern: Use `@riverpod` annotation for all providers
 
 **Database:**
-- `drift` + `sqlite3_flutter_libs`
-- Pattern: Define tables by extending `Table` class, Drift generates data classes
+- `isar_community` + `isar_community_flutter_libs`
+- Pattern: Define collections with `@collection` annotation, use `late` fields and cascade assignment
 
 **Audio:**
 - `just_audio` - Primary player
@@ -80,7 +80,7 @@ paths: packages/**/*.dart, pubspec.yaml, "*.env*"
 → Always use Riverpod with `@riverpod` annotation
 
 **Local data storage?**
-→ Complex data: Drift tables (extend Table class)
+→ Complex data: Isar collections (`@collection` annotation)
 → Simple key-value: SharedPreferences
 
 **Network requests?**
@@ -140,7 +140,7 @@ flutter gen-l10n  # Generate from ARB files
 ```
 
 ## Generated Files
-- `*.g.dart` - Riverpod, JSON, Drift
+- `*.g.dart` - Riverpod, JSON, Isar
 - `*.freezed.dart` - Freezed classes
 - `*.gr.dart` - GoRouter routes
 

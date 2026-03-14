@@ -1,19 +1,27 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
-import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:isar_community/isar.dart';
 
 void main() {
-  late AppDatabase db;
+  late Isar isar;
   late SubscriptionRepositoryImpl repository;
 
+  setUpAll(() async {
+    await Isar.initializeIsarCore(download: true);
+  });
+
   setUp(() async {
-    db = AppDatabase.forTesting(NativeDatabase.memory());
-    final datasource = SubscriptionLocalDatasource(db);
+    isar = await Isar.open(
+      [SubscriptionSchema],
+      directory: '',
+      name: 'test_${DateTime.now().microsecondsSinceEpoch}',
+    );
+    final datasource = SubscriptionLocalDatasource(isar);
     repository = SubscriptionRepositoryImpl(datasource: datasource);
   });
 
   tearDown(() async {
-    await db.close();
+    await isar.close(deleteFromDisk: true);
   });
 
   group('subscribe', () {
@@ -95,15 +103,11 @@ void main() {
         artistName: 'Test Artist',
       );
 
-      final result = await repository.isSubscribed('itunes-1');
-
-      expect(result, true);
+      expect(await repository.isSubscribed('itunes-1'), true);
     });
 
     test('returns false when not subscribed', () async {
-      final result = await repository.isSubscribed('itunes-1');
-
-      expect(result, false);
+      expect(await repository.isSubscribed('itunes-1'), false);
     });
   });
 
@@ -116,27 +120,25 @@ void main() {
         artistName: 'Test Artist',
       );
 
-      final result = await repository.isSubscribedByFeedUrl(
-        'https://example.com/feed.xml',
+      expect(
+        await repository.isSubscribedByFeedUrl('https://example.com/feed.xml'),
+        true,
       );
-
-      expect(result, true);
     });
 
     test('returns false when not subscribed by feed URL', () async {
-      final result = await repository.isSubscribedByFeedUrl(
-        'https://example.com/unknown.xml',
+      expect(
+        await repository.isSubscribedByFeedUrl(
+          'https://example.com/unknown.xml',
+        ),
+        false,
       );
-
-      expect(result, false);
     });
   });
 
   group('getSubscriptions', () {
     test('returns empty list when no subscriptions', () async {
-      final result = await repository.getSubscriptions();
-
-      expect(result, isEmpty);
+      expect(await repository.getSubscriptions(), isEmpty);
     });
 
     test('returns all subscriptions', () async {
@@ -153,9 +155,7 @@ void main() {
         artistName: 'Artist 2',
       );
 
-      final result = await repository.getSubscriptions();
-
-      expect(result, hasLength(2));
+      expect(await repository.getSubscriptions(), hasLength(2));
     });
   });
 
@@ -175,9 +175,7 @@ void main() {
     });
 
     test('returns null for nonexistent iTunes ID', () async {
-      final result = await repository.getSubscription('nonexistent');
-
-      expect(result, isNull);
+      expect(await repository.getSubscription('nonexistent'), isNull);
     });
   });
 
@@ -199,11 +197,10 @@ void main() {
     });
 
     test('returns null for nonexistent feed URL', () async {
-      final result = await repository.getByFeedUrl(
-        'https://example.com/unknown.xml',
+      expect(
+        await repository.getByFeedUrl('https://example.com/unknown.xml'),
+        isNull,
       );
-
-      expect(result, isNull);
     });
   });
 
@@ -223,9 +220,7 @@ void main() {
     });
 
     test('returns null for nonexistent ID', () async {
-      final result = await repository.getById(999);
-
-      expect(result, isNull);
+      expect(await repository.getById(999), isNull);
     });
   });
 

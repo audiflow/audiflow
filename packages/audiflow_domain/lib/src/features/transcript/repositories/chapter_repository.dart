@@ -1,4 +1,4 @@
-import '../../../common/database/app_database.dart';
+import '../models/episode_chapter.dart';
 
 /// Repository interface for chapter operations.
 abstract class ChapterRepository {
@@ -9,7 +9,7 @@ abstract class ChapterRepository {
   Stream<List<EpisodeChapter>> watchByEpisodeId(int episodeId);
 
   /// Upserts chapter records in a batch.
-  Future<void> upsertChapters(List<EpisodeChaptersCompanion> companions);
+  Future<void> upsertChapters(List<EpisodeChapter> chapters);
 
   /// Deletes all chapters for an episode.
   ///

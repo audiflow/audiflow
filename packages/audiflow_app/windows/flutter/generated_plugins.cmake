@@ -6,6 +6,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   app_links
   connectivity_plus
   dynamic_color
+  isar_community_flutter_libs
   sentry_flutter
   share_plus
   speech_to_text_windows

@@ -1,14 +1,13 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-Episode _episode({required int id, DateTime? publishedAt}) => Episode(
-  id: id,
-  podcastId: 1,
-  guid: 'guid-$id',
-  title: 'Episode $id',
-  audioUrl: 'https://example.com/$id.mp3',
-  publishedAt: publishedAt,
-);
+Episode _episode({required int id, DateTime? publishedAt}) => Episode()
+  ..id = id
+  ..podcastId = 1
+  ..guid = 'guid-$id'
+  ..title = 'Episode $id'
+  ..audioUrl = 'https://example.com/$id.mp3'
+  ..publishedAt = publishedAt;
 
 SmartPlaylistEpisodeData _data({required int id, DateTime? publishedAt}) =>
     SmartPlaylistEpisodeData(

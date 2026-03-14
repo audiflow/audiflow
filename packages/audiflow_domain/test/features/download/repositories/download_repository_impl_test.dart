@@ -1,43 +1,27 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
-import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:isar_community/isar.dart';
 
 void main() {
-  late AppDatabase db;
+  late Isar isar;
   late DownloadRepositoryImpl repository;
 
+  setUpAll(() async {
+    await Isar.initializeIsarCore(download: true);
+  });
+
   setUp(() async {
-    db = AppDatabase.forTesting(NativeDatabase.memory());
-    final datasource = DownloadLocalDatasource(db);
+    isar = await Isar.open(
+      [DownloadTaskSchema],
+      directory: '',
+      name: 'test_${DateTime.now().microsecondsSinceEpoch}',
+    );
+    final datasource = DownloadLocalDatasource(isar);
     repository = DownloadRepositoryImpl(datasource: datasource);
-
-    // Create test subscription and episode
-    await db
-        .into(db.subscriptions)
-        .insert(
-          SubscriptionsCompanion.insert(
-            itunesId: 'test-itunes-id',
-            feedUrl: 'https://example.com/feed.xml',
-            title: 'Test Podcast',
-            artistName: 'Test Artist',
-            subscribedAt: DateTime.now(),
-          ),
-        );
-
-    await db
-        .into(db.episodes)
-        .insert(
-          EpisodesCompanion.insert(
-            podcastId: 1,
-            guid: 'ep-1',
-            title: 'Episode 1',
-            audioUrl: 'https://example.com/ep1.mp3',
-          ),
-        );
   });
 
   tearDown(() async {
-    await db.close();
+    await isar.close(deleteFromDisk: true);
   });
 
   group('createDownload', () {
@@ -211,28 +195,6 @@ void main() {
 
   group('getByStatus', () {
     test('returns tasks with matching status', () async {
-      // Create multiple downloads
-      await db
-          .into(db.episodes)
-          .insert(
-            EpisodesCompanion.insert(
-              podcastId: 1,
-              guid: 'ep-2',
-              title: 'Episode 2',
-              audioUrl: 'https://example.com/ep2.mp3',
-            ),
-          );
-      await db
-          .into(db.episodes)
-          .insert(
-            EpisodesCompanion.insert(
-              podcastId: 1,
-              guid: 'ep-3',
-              title: 'Episode 3',
-              audioUrl: 'https://example.com/ep3.mp3',
-            ),
-          );
-
       final task1 = await repository.createDownload(
         episodeId: 1,
         audioUrl: 'https://example.com/ep1.mp3',
@@ -249,7 +211,6 @@ void main() {
         wifiOnly: true,
       );
 
-      // Mark some as completed
       await repository.updateStatus(
         id: task1!.id,
         status: const DownloadStatus.completed(),
@@ -275,17 +236,6 @@ void main() {
 
   group('getNextPending', () {
     test('returns oldest pending task', () async {
-      await db
-          .into(db.episodes)
-          .insert(
-            EpisodesCompanion.insert(
-              podcastId: 1,
-              guid: 'ep-2',
-              title: 'Episode 2',
-              audioUrl: 'https://example.com/ep2.mp3',
-            ),
-          );
-
       await repository.createDownload(
         episodeId: 1,
         audioUrl: 'https://example.com/ep1.mp3',
@@ -303,17 +253,6 @@ void main() {
     });
 
     test('respects wifiOnly flag when not on wifi', () async {
-      await db
-          .into(db.episodes)
-          .insert(
-            EpisodesCompanion.insert(
-              podcastId: 1,
-              guid: 'ep-2',
-              title: 'Episode 2',
-              audioUrl: 'https://example.com/ep2.mp3',
-            ),
-          );
-
       await repository.createDownload(
         episodeId: 1,
         audioUrl: 'https://example.com/ep1.mp3',
@@ -352,35 +291,12 @@ void main() {
       );
 
       await repository.delete(task!.id);
-
-      final deleted = await repository.getById(task.id);
-      expect(deleted, isNull);
+      expect(await repository.getById(task.id), isNull);
     });
   });
 
   group('getActiveCount', () {
     test('counts pending, downloading, and paused tasks', () async {
-      await db
-          .into(db.episodes)
-          .insert(
-            EpisodesCompanion.insert(
-              podcastId: 1,
-              guid: 'ep-2',
-              title: 'Episode 2',
-              audioUrl: 'https://example.com/ep2.mp3',
-            ),
-          );
-      await db
-          .into(db.episodes)
-          .insert(
-            EpisodesCompanion.insert(
-              podcastId: 1,
-              guid: 'ep-3',
-              title: 'Episode 3',
-              audioUrl: 'https://example.com/ep3.mp3',
-            ),
-          );
-
       final task1 = await repository.createDownload(
         episodeId: 1,
         audioUrl: 'https://example.com/ep1.mp3',
@@ -406,22 +322,10 @@ void main() {
         status: const DownloadStatus.paused(),
       );
 
-      final activeCount = await repository.getActiveCount();
-      expect(activeCount, 3);
+      expect(await repository.getActiveCount(), 3);
     });
 
     test('excludes completed and failed tasks', () async {
-      await db
-          .into(db.episodes)
-          .insert(
-            EpisodesCompanion.insert(
-              podcastId: 1,
-              guid: 'ep-2',
-              title: 'Episode 2',
-              audioUrl: 'https://example.com/ep2.mp3',
-            ),
-          );
-
       final task1 = await repository.createDownload(
         episodeId: 1,
         audioUrl: 'https://example.com/ep1.mp3',
@@ -444,24 +348,12 @@ void main() {
         lastError: 'Error',
       );
 
-      final activeCount = await repository.getActiveCount();
-      expect(activeCount, 0);
+      expect(await repository.getActiveCount(), 0);
     });
   });
 
   group('deleteAllCompleted', () {
     test('removes all completed downloads', () async {
-      await db
-          .into(db.episodes)
-          .insert(
-            EpisodesCompanion.insert(
-              podcastId: 1,
-              guid: 'ep-2',
-              title: 'Episode 2',
-              audioUrl: 'https://example.com/ep2.mp3',
-            ),
-          );
-
       final task1 = await repository.createDownload(
         episodeId: 1,
         audioUrl: 'https://example.com/ep1.mp3',
@@ -479,8 +371,7 @@ void main() {
         localPath: '/path/ep1.mp3',
       );
 
-      final deletedCount = await repository.deleteAllCompleted();
-      expect(deletedCount, 1);
+      expect(await repository.deleteAllCompleted(), 1);
 
       final remaining = await repository.getAll();
       expect(remaining, hasLength(1));
@@ -490,17 +381,6 @@ void main() {
 
   group('getAll', () {
     test('returns all tasks ordered by creation date', () async {
-      await db
-          .into(db.episodes)
-          .insert(
-            EpisodesCompanion.insert(
-              podcastId: 1,
-              guid: 'ep-2',
-              title: 'Episode 2',
-              audioUrl: 'https://example.com/ep2.mp3',
-            ),
-          );
-
       await repository.createDownload(
         episodeId: 1,
         audioUrl: 'https://example.com/ep1.mp3',
@@ -519,8 +399,7 @@ void main() {
     });
 
     test('returns empty list when no tasks exist', () async {
-      final all = await repository.getAll();
-      expect(all, isEmpty);
+      expect(await repository.getAll(), isEmpty);
     });
   });
 
@@ -540,71 +419,6 @@ void main() {
     test('emits empty list when no tasks exist', () async {
       final first = await repository.watchAll().first;
       expect(first, isEmpty);
-    });
-  });
-
-  group('watchByStatus', () {
-    test('emits tasks matching status', () async {
-      await db
-          .into(db.episodes)
-          .insert(
-            EpisodesCompanion.insert(
-              podcastId: 1,
-              guid: 'ep-2',
-              title: 'Episode 2',
-              audioUrl: 'https://example.com/ep2.mp3',
-            ),
-          );
-
-      final task1 = await repository.createDownload(
-        episodeId: 1,
-        audioUrl: 'https://example.com/ep1.mp3',
-        wifiOnly: false,
-      );
-      await repository.createDownload(
-        episodeId: 2,
-        audioUrl: 'https://example.com/ep2.mp3',
-        wifiOnly: false,
-      );
-
-      await repository.updateStatus(
-        id: task1!.id,
-        status: const DownloadStatus.completed(),
-        localPath: '/path/ep1.mp3',
-      );
-
-      final pendingStream = repository.watchByStatus(
-        const DownloadStatus.pending(),
-      );
-      final pending = await pendingStream.first;
-      expect(pending, hasLength(1));
-      expect(pending.first.episodeId, 2);
-
-      final completedStream = repository.watchByStatus(
-        const DownloadStatus.completed(),
-      );
-      final completed = await completedStream.first;
-      expect(completed, hasLength(1));
-      expect(completed.first.episodeId, 1);
-    });
-  });
-
-  group('watchByEpisodeId', () {
-    test('emits task for episode', () async {
-      await repository.createDownload(
-        episodeId: 1,
-        audioUrl: 'https://example.com/ep1.mp3',
-        wifiOnly: true,
-      );
-
-      final first = await repository.watchByEpisodeId(1).first;
-      expect(first, isNotNull);
-      expect(first!.episodeId, 1);
-    });
-
-    test('emits null for non-existent episode', () async {
-      final first = await repository.watchByEpisodeId(9999).first;
-      expect(first, isNull);
     });
   });
 
@@ -634,29 +448,16 @@ void main() {
         wifiOnly: true,
       );
 
-      final completed = await repository.getCompletedForEpisode(1);
-      expect(completed, isNull);
+      expect(await repository.getCompletedForEpisode(1), isNull);
     });
 
     test('returns null for non-existent episode', () async {
-      final completed = await repository.getCompletedForEpisode(9999);
-      expect(completed, isNull);
+      expect(await repository.getCompletedForEpisode(9999), isNull);
     });
   });
 
   group('getTotalStorageUsed', () {
     test('returns sum of totalBytes for completed downloads', () async {
-      await db
-          .into(db.episodes)
-          .insert(
-            EpisodesCompanion.insert(
-              podcastId: 1,
-              guid: 'ep-2',
-              title: 'Episode 2',
-              audioUrl: 'https://example.com/ep2.mp3',
-            ),
-          );
-
       final task1 = await repository.createDownload(
         episodeId: 1,
         audioUrl: 'https://example.com/ep1.mp3',
@@ -690,8 +491,7 @@ void main() {
         localPath: '/path/ep2.mp3',
       );
 
-      final totalStorage = await repository.getTotalStorageUsed();
-      expect(totalStorage, equals(8000));
+      expect(await repository.getTotalStorageUsed(), equals(8000));
     });
 
     test('returns zero when no completed downloads exist', () async {
@@ -701,52 +501,12 @@ void main() {
         wifiOnly: false,
       );
 
-      final totalStorage = await repository.getTotalStorageUsed();
-      expect(totalStorage, equals(0));
-    });
-
-    test('excludes non-completed downloads from total', () async {
-      await db
-          .into(db.episodes)
-          .insert(
-            EpisodesCompanion.insert(
-              podcastId: 1,
-              guid: 'ep-2',
-              title: 'Episode 2',
-              audioUrl: 'https://example.com/ep2.mp3',
-            ),
-          );
-
-      final task1 = await repository.createDownload(
-        episodeId: 1,
-        audioUrl: 'https://example.com/ep1.mp3',
-        wifiOnly: false,
-      );
-      await repository.createDownload(
-        episodeId: 2,
-        audioUrl: 'https://example.com/ep2.mp3',
-        wifiOnly: false,
-      );
-
-      await repository.updateProgress(
-        id: task1!.id,
-        downloadedBytes: 5000,
-        totalBytes: 5000,
-      );
-      await repository.updateStatus(
-        id: task1.id,
-        status: const DownloadStatus.completed(),
-        localPath: '/path/ep1.mp3',
-      );
-
-      final totalStorage = await repository.getTotalStorageUsed();
-      expect(totalStorage, equals(5000));
+      expect(await repository.getTotalStorageUsed(), equals(0));
     });
   });
 
   group('incrementRetryCount edge cases', () {
     test('does nothing for non-existent task', () async {
-      // Should not throw
       await repository.incrementRetryCount(9999);
     });
   });

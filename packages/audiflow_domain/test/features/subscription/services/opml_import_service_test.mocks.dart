@@ -5,7 +5,8 @@
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'dart:async' as _i4;
 
-import 'package:audiflow_domain/src/common/database/app_database.dart' as _i2;
+import 'package:audiflow_domain/src/features/subscription/models/subscriptions.dart'
+    as _i2;
 import 'package:audiflow_domain/src/features/subscription/repositories/subscription_repository.dart'
     as _i3;
 import 'package:mockito/mockito.dart' as _i1;
