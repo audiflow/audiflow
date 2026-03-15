@@ -39,7 +39,7 @@ class FlavorConfig {
     name: 'Development',
     apiBaseUrl: 'https://api-dev.audiflow.example.com',
     smartPlaylistConfigBaseUrl:
-        'https://storage.googleapis.com/audiflow-dev-config',
+        'https://audiflow.github.io/audiflow-smartplaylist/assets-dev/v2',
     enableAnalytics: false,
     enableCrashReporting: true,
     enableHttpTracing: true,
@@ -51,7 +51,7 @@ class FlavorConfig {
     name: 'Staging',
     apiBaseUrl: 'https://api-stg.audiflow.example.com',
     smartPlaylistConfigBaseUrl:
-        'https://storage.googleapis.com/audiflow-dev-config',
+        'https://audiflow.github.io/audiflow-smartplaylist/assets-stg/v2',
     enableAnalytics: true,
     enableCrashReporting: true,
     enableHttpTracing: true,
@@ -63,7 +63,7 @@ class FlavorConfig {
     name: 'Production',
     apiBaseUrl: 'https://api.audiflow.example.com',
     smartPlaylistConfigBaseUrl:
-        'https://audiflow.github.io/audiflow-smartplaylist',
+        'https://audiflow.github.io/audiflow-smartplaylist/assets/v2',
     enableAnalytics: true,
     enableCrashReporting: true,
     enableHttpTracing: false,

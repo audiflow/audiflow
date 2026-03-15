@@ -4,7 +4,7 @@ Flutter podcast player app (iOS/Android). Monorepo with 8 packages managed by Me
 
 ## Ecosystem context
 
-Part of the audiflow ecosystem. Consumes smart playlist config JSON from sibling data repos (`audiflow-smartplaylist` for prod, `audiflow-smartplaylist-dev` for dev/staging). Config schema SSoT lives in `audiflow-smartplaylist-editor/crates/sp_core/assets/`. Model serialization (JSON keys, field structure) must stay aligned with `sp_core` models.
+Part of the audiflow ecosystem. Consumes smart playlist config JSON from `audiflow-smartplaylist` (all environments via GitHub Pages). Config schema SSoT lives in `audiflow-smartplaylist-editor/crates/sp_core/assets/`. Model serialization (JSON keys, field structure) must stay aligned with `sp_core` models.
 
 ## Packages
 
