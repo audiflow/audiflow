@@ -73,9 +73,10 @@ Valid resolver types: `rss`, `category`, `year`, `titleAppearanceOrder`. Legacy 
 | `models/smart_playlist.dart` | Freezed | Resolved smart playlist with episodes |
 | `models/smart_playlist_definition.dart` | Freezed | Config definition (from JSON) |
 | `models/smart_playlist_pattern.dart` | Freezed | Pattern matching config |
-| `models/smart_playlist_groups.dart` | Freezed | Resolved group hierarchy |
+| `models/smart_playlist_groups.dart` | Isar + Freezed | Resolved group hierarchy (Isar collection for caching) |
 | `models/smart_playlist_group_def.dart` | Freezed | Group definition (from JSON) |
 | `models/smart_playlist_sort.dart` | Freezed | Sort configuration |
+| `models/smart_playlists.dart` | Isar | Smart playlist Isar collection for local persistence |
 
 ## Integration rules
 
@@ -86,7 +87,7 @@ Valid resolver types: `rss`, `category`, `year`, `titleAppearanceOrder`. Legacy 
 
 ## Schema update procedure
 
-1. Copy `schema.json` from `audiflow-smartplaylist-editor/packages/sp_shared/assets/schema.json`
+1. Copy the relevant schema from `audiflow-smartplaylist-editor/crates/sp_core/assets/`
 2. Place at `packages/audiflow_domain/test/fixtures/schema.json`
 3. Run conformance tests: `flutter test packages/audiflow_domain/test/features/feed/models/schema_conformance_test.dart`
 4. Fix any drift (update models, enums, or test data to match)

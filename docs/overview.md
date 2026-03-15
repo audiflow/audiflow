@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Audiflow is a mobile podcast player for iOS and Android, built with Flutter. It provides podcast discovery, subscription management, audio playback with background support, episode downloads, queue management, and smart playlist consumption. The app follows an offline-first architecture using Drift (SQLite) for local storage.
+Audiflow is a mobile podcast player for iOS and Android, built with Flutter. It provides podcast discovery, subscription management, audio playback with background support, episode downloads, queue management, smart playlist consumption, podcast transcript display, and voice commands. The app follows an offline-first architecture using Isar for local storage.
 
 ## Responsibilities
 
@@ -14,6 +14,8 @@ Audiflow is a mobile podcast player for iOS and Android, built with Flutter. It 
 - Smart playlist config fetching, caching, and rendering
 - Playback position persistence and resume
 - Sleep timer and playback speed control
+- Podcast transcript and chapter display
+- On-device voice command processing
 
 ## Non-responsibilities
 
@@ -41,7 +43,7 @@ Audiflow is a mobile podcast player for iOS and Android, built with Flutter. It 
 ## Key dependencies
 
 - `riverpod` (v3) + code generation: State management
-- `drift` + `sqlite3_flutter_libs`: Local database
+- `isar_community` + `isar_community_flutter_libs`: Local database
 - `just_audio` + `audio_service`: Audio playback and background support
 - `dio` + `dio_cache_interceptor`: HTTP client with caching
 - `go_router` + `go_router_builder`: Type-safe routing

@@ -33,6 +33,7 @@ These providers are created when watched and disposed when no longer observed:
 - Download providers: download tasks, download progress
 - Settings providers: app settings, playback preferences
 - Search/discovery providers: search results, chart data
+- Transcript providers: transcript segments, chapter data
 
 ### 3. UI-only state
 
@@ -56,11 +57,11 @@ Controller (@riverpod class, in audiflow_app)
   |
   v
 Repository (interface in audiflow_domain)
-  |-- local datasource (Drift)  --> read/write SQLite
-  |-- remote datasource (Dio)   --> HTTP fetch
+  |-- local datasource (Isar)     --> read/write Isar collections
+  |-- remote datasource (Dio)     --> HTTP fetch
   |
   v
-Drift-generated data class  --> used directly as domain entity (no DTO mapping)
+Isar collection class  --> used directly as domain entity (no DTO mapping)
 ```
 
 ## Cross-feature communication
