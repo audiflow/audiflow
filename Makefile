@@ -1,4 +1,4 @@
-.PHONY: help bootstrap clean get codegen codegen-watch analyze test test-coverage format check build-dev build-stg build-prod run-dev run-stg run-prod icons splash git-prune-merged
+.PHONY: help bootstrap clean get codegen codegen-watch analyze test test-coverage format check build-android-dev build-android-stg build-android-prod build-ios-dev build-ios-stg build-ios-prod upload-ios-stg upload-ios-prod run-dev run-stg run-prod icons splash git-prune-merged
 
 # Default target
 help:
@@ -24,9 +24,18 @@ help:
 	@echo "  make run-dev          - Run app in dev flavor"
 	@echo "  make run-stg          - Run app in staging flavor"
 	@echo "  make run-prod         - Run app in production flavor"
-	@echo "  make build-dev        - Build dev APK"
-	@echo "  make build-stg        - Build staging APK"
-	@echo "  make build-prod       - Build production release APK"
+	@echo ""
+	@echo "Android:"
+	@echo "  make build-android-dev  - Build dev AAB"
+	@echo "  make build-android-stg  - Build staging AAB"
+	@echo "  make build-android-prod - Build production release AAB"
+	@echo ""
+	@echo "iOS:"
+	@echo "  make build-ios-dev    - Build dev IPA"
+	@echo "  make build-ios-stg    - Build staging IPA"
+	@echo "  make build-ios-prod   - Build production IPA"
+	@echo "  make upload-ios-stg   - Build + upload staging to TestFlight"
+	@echo "  make upload-ios-prod  - Build + upload production to TestFlight"
 	@echo ""
 	@echo "Assets:"
 	@echo "  make icons            - Generate app icons"
@@ -94,17 +103,21 @@ run-prod:
 	@echo "Running production flavor..."
 	cd packages/audiflow_app && flutter run --flavor prod -t lib/main_prod.dart --dart-define-from-file=../../.env.prod
 
-build-dev:
-	@echo "Building dev APK..."
-	cd packages/audiflow_app && flutter build apk --flavor dev -t lib/main_dev.dart --dart-define-from-file=../../.env.dev
+# Android
+build-android-dev:
+	@echo "Building dev AAB..."
+	cd packages/audiflow_app && flutter build appbundle --flavor dev -t lib/main_dev.dart --dart-define-from-file=../../.env.dev
+	open packages/audiflow_app/build/app/outputs/bundle/devRelease/
 
-build-stg:
-	@echo "Building staging APK..."
-	cd packages/audiflow_app && flutter build apk --flavor stg -t lib/main_stg.dart --dart-define-from-file=../../.env.stg
+build-android-stg:
+	@echo "Building staging AAB..."
+	cd packages/audiflow_app && flutter build appbundle --flavor stg -t lib/main_stg.dart --dart-define-from-file=../../.env.stg
+	open packages/audiflow_app/build/app/outputs/bundle/stgRelease/
 
-build-prod:
-	@echo "Building production release APK..."
-	cd packages/audiflow_app && flutter build apk --flavor prod -t lib/main_prod.dart --release --dart-define-from-file=../../.env.prod
+build-android-prod:
+	@echo "Building production release AAB..."
+	cd packages/audiflow_app && flutter build appbundle --flavor prod -t lib/main_prod.dart --release --dart-define-from-file=../../.env.prod
+	open packages/audiflow_app/build/app/outputs/bundle/prodRelease/
 
 # Assets
 icons:
@@ -115,14 +128,32 @@ splash:
 	@echo "Generating splash screens..."
 	cd packages/audiflow_app && dart run flutter_native_splash:create
 
-# iOS specific
+# iOS
 build-ios-dev:
-	@echo "Building iOS dev..."
-	cd packages/audiflow_app && flutter build ios --flavor dev -t lib/main_dev.dart --no-codesign --dart-define-from-file=../../.env.dev
+	@echo "Building iOS dev IPA..."
+	cd packages/audiflow_app && flutter build ipa --flavor dev -t lib/main_dev.dart --dart-define-from-file=../../.env.dev
+
+build-ios-stg:
+	@echo "Building iOS staging IPA..."
+	cd packages/audiflow_app && flutter build ipa --flavor stg -t lib/main_stg.dart --dart-define-from-file=../../.env.stg
 
 build-ios-prod:
-	@echo "Building iOS production..."
-	cd packages/audiflow_app && flutter build ios --flavor prod -t lib/main_prod.dart --release --dart-define-from-file=../../.env.prod
+	@echo "Building iOS production IPA..."
+	cd packages/audiflow_app && flutter build ipa --flavor prod -t lib/main_prod.dart --dart-define-from-file=../../.env.prod
+
+upload-ios-stg: build-ios-stg
+	@echo "Uploading staging IPA to TestFlight..."
+	xcrun altool --upload-app --type ios \
+		-f packages/audiflow_app/build/ios/ipa/*.ipa \
+		--apiKey $(APP_STORE_CONNECT_KEY_ID) \
+		--apiIssuer $(APP_STORE_CONNECT_ISSUER_ID)
+
+upload-ios-prod: build-ios-prod
+	@echo "Uploading production IPA to TestFlight..."
+	xcrun altool --upload-app --type ios \
+		-f packages/audiflow_app/build/ios/ipa/*.ipa \
+		--apiKey $(APP_STORE_CONNECT_KEY_ID) \
+		--apiIssuer $(APP_STORE_CONNECT_ISSUER_ID)
 
 # Utilities
 version:
