@@ -1,0 +1,160 @@
+name: Deploy Staging
+
+on:
+  push:
+    tags:
+      - 'stg-*'
+
+concurrency:
+  group: deploy-stg
+  cancel-in-progress: false
+
+env:
+  FLUTTER_VERSION: '3.41.4'
+
+jobs:
+  prepare:
+    name: Parse version
+    runs-on: ubuntu-latest
+    outputs:
+      version_string: ${{ steps.parse.outputs.version_string }}
+    steps:
+      - name: Parse version from tag
+        id: parse
+        env:
+          GIT_TAG: ${{ github.ref_name }}
+        run: |
+          TAG="${GIT_TAG#stg-}"
+          echo "version_string=$TAG" >> "$GITHUB_OUTPUT"
+          echo "Parsed version: $TAG"
+
+  deploy-ios:
+    name: iOS TestFlight
+    needs: prepare
+    runs-on: macos-latest
+    timeout-minutes: 30
+    env:
+      VERSION_STRING: ${{ needs.prepare.outputs.version_string }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Install Apple certificate
+        env:
+          CERTIFICATE_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
+          CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+        run: |
+          CERTIFICATE_PATH=$RUNNER_TEMP/apple_distribution.p12
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+          KEYCHAIN_PASSWORD=$(openssl rand -hex 16)
+
+          echo "$CERTIFICATE_BASE64" | base64 --decode -o "$CERTIFICATE_PATH"
+
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+          security import "$CERTIFICATE_PATH" -P "$CERTIFICATE_PASSWORD" \
+            -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+          security set-key-partition-list -S apple-tool:,apple: \
+            -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security list-keychains -d user -s "$KEYCHAIN_PATH" login.keychain-db
+
+      - name: Write .env.stg
+        env:
+          ENV_STG: ${{ secrets.ENV_STG }}
+        run: echo "$ENV_STG" > .env.stg
+
+      - name: Bump version
+        run: |
+          cd packages/audiflow_app
+          sed -i '' "s/^version: .*/version: $VERSION_STRING/" pubspec.yaml
+          grep "^version:" pubspec.yaml
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Setup App Store Connect API key
+        env:
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ASC_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
+        run: |
+          mkdir -p ~/.private_keys
+          echo "$ASC_PRIVATE_KEY" > ~/.private_keys/AuthKey_${ASC_KEY_ID}.p8
+
+      - name: Build IPA
+        run: |
+          cd packages/audiflow_app
+          flutter build ipa --flavor stg -t lib/main_stg.dart --dart-define-from-file=../../.env.stg
+
+      - name: Upload to TestFlight
+        env:
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        run: |
+          xcrun altool --upload-app --type ios \
+            -f packages/audiflow_app/build/ios/ipa/*.ipa \
+            --apiKey "$ASC_KEY_ID" \
+            --apiIssuer "$ASC_ISSUER_ID"
+
+      - name: Cleanup keychain
+        if: always()
+        run: security delete-keychain $RUNNER_TEMP/app-signing.keychain-db 2>/dev/null || true
+
+  deploy-android:
+    name: Android Google Play
+    needs: prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      VERSION_STRING: ${{ needs.prepare.outputs.version_string }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: '17'
+
+      - name: Write .env.stg
+        env:
+          ENV_STG: ${{ secrets.ENV_STG }}
+        run: echo "$ENV_STG" > .env.stg
+
+      - name: Bump version
+        run: |
+          cd packages/audiflow_app
+          sed -i "s/^version: .*/version: $VERSION_STRING/" pubspec.yaml
+          grep "^version:" pubspec.yaml
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Build AAB
+        run: |
+          cd packages/audiflow_app
+          flutter build appbundle --flavor stg -t lib/main_stg.dart --dart-define-from-file=../../.env.stg
+
+      - name: Upload to Google Play
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: com.reedom.audiflow_app.stg
+          releaseFiles: packages/audiflow_app/build/app/outputs/bundle/stgRelease/app-stg-release.aab
+          track: internal
