@@ -8,6 +8,8 @@
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
 	<string>$(BUNDLE_DISPLAY_NAME)</string>
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<true/>
 	<key>CFBundleDocumentTypes</key>
 	<array>
 		<dict>
@@ -44,6 +46,8 @@
 	<true/>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Microphone access for voice commands</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Access photos to set custom podcast artwork</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>Voice commands for hands-free podcast control</string>
 	<key>UIApplicationSceneManifest</key>
@@ -72,6 +76,7 @@
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>audio</string>
+		<string>fetch</string>
 	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
