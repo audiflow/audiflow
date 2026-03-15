@@ -12,8 +12,8 @@ Part of the audiflow ecosystem. Consumes smart playlist config JSON from `audifl
 |---------|------|
 | `audiflow_app` | Main Flutter app: routing, screens, controllers |
 | `audiflow_core` | Shared constants, extensions, utilities, error types |
-| `audiflow_domain` | Business logic, repositories, data sources, Isar models |
-| `audiflow_podcast` | RSS parsing with streaming support and caching |
+| `audiflow_domain` | Business logic, repositories, data sources, Isar collections |
+| `audiflow_podcast` | RSS parsing with streaming support, transcript/chapter extraction |
 | `audiflow_ui` | Reusable widgets, themes, styles |
 | `audiflow_ai` | On-device AI capabilities (Flutter plugin, iOS/Android) |
 | `audiflow_search` | Podcast search and discovery API client (Dio + Freezed) |
@@ -25,6 +25,8 @@ Part of the audiflow ecosystem. Consumes smart playlist config JSON from `audifl
 - Audio playback with background support and system controls
 - Episode download and queue management
 - Smart playlist config consumption and local caching
+- Podcast transcript and chapter display
+- On-device voice commands
 
 ## Non-responsibilities
 
@@ -51,4 +53,4 @@ melos run codegen      # Code generation
 
 - Schema/model changes: coordinate with `audiflow-smartplaylist-editor` (sp_core)
 - Run schema conformance tests: `flutter test packages/audiflow_domain/test/features/feed/models/schema_conformance_test.dart`
-- Update vendored schema if upstream changed: copy from `sp_core/assets/*.schema.json`
+- Update vendored schema if upstream changed: copy from `crates/sp_core/assets/*.schema.json`

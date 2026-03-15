@@ -24,7 +24,7 @@ Types: `feat/`, `fix/`, `refactor/`, `chore/`, `docs/`, `test/`
 - Use the "Decision Tree: Where to Add New Code" in `.claude/rules/project/architecture.md`
 - Add or update tests for changed behavior
 - Use `@riverpod` annotation for all new providers
-- Drift tables for persisted data, `@freezed` for transient models
+- Isar collections for persisted data, `@freezed` for transient models
 - Follow layer rules: `App -> UI -> Domain -> Core`
 
 ## Code generation

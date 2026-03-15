@@ -5,12 +5,11 @@
 ```
 audiflow_app -> audiflow_ui -> audiflow_domain -> audiflow_podcast -> audiflow_core
                                     |
-                                    v
-                              audiflow_core
+                                    +-> audiflow_search -> audiflow_core
+                                    +-> audiflow_ai     -> audiflow_core
+                                    +-> audiflow_core
 
-audiflow_ai     -> audiflow_core
-audiflow_search -> audiflow_core
-audiflow_cli    -> audiflow_domain, audiflow_podcast
+audiflow_cli -> audiflow_domain, audiflow_podcast
 ```
 
 ## Modules
@@ -41,8 +40,8 @@ audiflow_cli    -> audiflow_domain, audiflow_podcast
 #### Responsibilities
 - Feature modules: feed, player, queue, download, subscription, settings, voice, transcript
 - Repository interfaces and implementations (co-located)
-- Datasources: local (Drift) and remote (HTTP via Dio)
-- Drift table definitions (serve as domain entities)
+- Datasources: local (Isar) and remote (HTTP via Dio)
+- Isar collection definitions (serve as domain entities)
 - Freezed models for non-persisted state (PlaybackState, NowPlayingInfo, PlaybackProgress)
 - Services for business logic orchestration
 - Riverpod providers for dependency injection and state
@@ -54,7 +53,7 @@ audiflow_cli    -> audiflow_domain, audiflow_podcast
 - Core utilities, constants, error types (delegated to audiflow_core)
 
 #### Depends on
-- audiflow_podcast, audiflow_core
+- audiflow_podcast, audiflow_search, audiflow_ai, audiflow_core
 
 #### Used by
 - audiflow_app, audiflow_ui, audiflow_cli
@@ -88,6 +87,7 @@ audiflow_cli    -> audiflow_domain, audiflow_podcast
 #### Responsibilities
 - Streaming RSS XML parsing (memory-efficient)
 - RSS 2.0 and iTunes namespace support
+- Podcast transcript and chapter tag extraction (`<podcast:transcript>`, `<podcast:chapters>`)
 - HTTP feed fetching with caching and conditional requests
 - Builder interface (`PodcastEntityBuilder`) for zero-copy entity construction
 - Graceful handling of malformed feeds
@@ -135,7 +135,7 @@ audiflow_cli    -> audiflow_domain, audiflow_podcast
 - audiflow_core
 
 #### Used by
-- audiflow_app
+- audiflow_domain
 
 ---
 
@@ -153,7 +153,7 @@ audiflow_cli    -> audiflow_domain, audiflow_podcast
 - audiflow_core
 
 #### Used by
-- audiflow_domain (or audiflow_app, depending on integration)
+- audiflow_domain
 
 ---
 
@@ -176,7 +176,7 @@ audiflow_cli    -> audiflow_domain, audiflow_podcast
 
 - `audiflow_core` must never import any other workspace package
 - `audiflow_app` must never be imported by any other package
-- Drift table definitions live exclusively in `audiflow_domain`
+- Isar collection definitions live exclusively in `audiflow_domain`
 - Reusable widgets (used by 2+ features) must live in `audiflow_ui`, not `audiflow_app`
 - Cross-feature communication uses event streams in `audiflow_domain`, not direct provider coupling
 - Repository interfaces and implementations are co-located in `audiflow_domain` (no separate interface package)

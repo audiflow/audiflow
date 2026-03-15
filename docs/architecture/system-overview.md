@@ -2,7 +2,7 @@
 
 ## Goal
 
-Provide a reliable, offline-first podcast player for iOS and Android with smart playlist support. The system prioritizes fast startup, low memory usage during RSS parsing, and seamless background audio playback.
+Provide a reliable, offline-first podcast player for iOS and Android with smart playlist support, transcript display, and voice commands. The system prioritizes fast startup, low memory usage during RSS parsing, and seamless background audio playback.
 
 ## Context
 
@@ -14,7 +14,7 @@ This repository is part of:
 ## High-level structure
 
 - `audiflow_app`: Presentation layer -- screens, controllers, routing, localization
-- `audiflow_domain`: Business logic -- repositories, datasources, Isar models, services, Riverpod providers
+- `audiflow_domain`: Business logic -- repositories, datasources, Isar collections, services, Riverpod providers
 - `audiflow_core`: Foundation -- constants, extensions, error types, utilities, config
 - `audiflow_podcast`: RSS parsing -- streaming XML parser, feed models, HTTP caching
 - `audiflow_ui`: Shared UI -- reusable widgets, themes, styles
@@ -30,8 +30,9 @@ This repository is part of:
 4. Smart playlist configs are fetched from static hosting, cached locally, resolved into groups
 5. User selects an episode; `audio_player_service` loads audio via `just_audio`
 6. `audio_service` manages background playback, system controls, and audio focus
-7. Playback position is persisted to Drift for resume-on-relaunch
+7. Playback position is persisted to Isar for resume-on-relaunch
 8. Downloads are managed via `flutter_downloader` with queue and WiFi-only options
+9. Transcript metadata is extracted during feed sync; content is fetched lazily on first play
 
 ## Primary interfaces
 

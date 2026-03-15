@@ -55,7 +55,7 @@ Wraps the AudioPlayer to provide:
 6. Audio starts -> `PlaybackState.playing`
 7. `playbackProgressStreamProvider` emits `PlaybackProgress(position, duration, buffered)`
 8. UI rebuilds: mini player shows progress, player screen shows seek bar
-9. Position is periodically saved to Drift for resume capability
+9. Position is periodically saved to Isar for resume capability
 10. On completion: history recorded, queue advanced (if queue has next item)
 
 ## Downloaded episode handling
@@ -68,7 +68,7 @@ When an episode has been downloaded:
 
 ## Queue integration
 
-- `QueueService` manages the playback queue (Drift-backed)
+- `QueueService` manages the playback queue (Isar-backed)
 - On episode completion, `AudioPlayerController` checks queue for next item
 - If queue has next: auto-plays next episode
 - If queue empty and "stop at end" setting: returns to idle

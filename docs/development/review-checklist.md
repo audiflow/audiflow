@@ -23,9 +23,9 @@
 
 ## Data layer
 
-- Are new Drift tables in `audiflow_domain/lib/src/features/<feature>/models/`?
+- Are new Isar collections in `audiflow_domain/lib/src/features/<feature>/models/`?
 - Are non-persisted models using `@freezed`?
-- No separate DTO classes (Drift-generated classes used directly)?
+- No separate DTO classes (Isar collection classes used directly)?
 - Repository interfaces and implementations co-located?
 
 ## Smart playlist / cross-repo
