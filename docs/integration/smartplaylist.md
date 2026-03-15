@@ -35,10 +35,11 @@ This document does not cover:
 
 | Environment | Base URL | Source repo |
 |-------------|----------|-------------|
-| Production | `https://audiflow.github.io/audiflow-smartplaylist/` | `audiflow-smartplaylist` |
-| Staging | `https://storage.googleapis.com/audiflow-dev-config/` | `audiflow-smartplaylist-dev` |
+| Production | `https://audiflow.github.io/audiflow-smartplaylist/assets/v2/` | `audiflow-smartplaylist` |
+| Staging | `https://audiflow.github.io/audiflow-smartplaylist/assets-stg/v2/` | `audiflow-smartplaylist` |
+| Development | `https://audiflow.github.io/audiflow-smartplaylist/assets-dev/v2/` | `audiflow-smartplaylist` |
 
-The base URL is injected via `smartPlaylistConfigBaseUrlProvider`, overridden per flavor in `main_stg.dart` / `main_prod.dart`.
+All environments use the same GitHub Pages host with different asset paths. The base URL is injected via `smartPlaylistConfigBaseUrlProvider`.
 
 ## Key files in audiflow_domain
 
@@ -46,7 +47,7 @@ The base URL is injected via `smartPlaylistConfigBaseUrlProvider`, overridden pe
 |------|------|
 | `features/feed/datasources/remote/smart_playlist_remote_datasource.dart` | HTTP fetch of config JSON |
 | `features/feed/datasources/local/smart_playlist_cache_datasource.dart` | Local file cache |
-| `features/feed/datasources/local/smart_playlist_local_datasource.dart` | Drift-backed metadata |
+| `features/feed/datasources/local/smart_playlist_local_datasource.dart` | Isar-backed metadata |
 | `features/feed/repositories/smart_playlist_config_repository.dart` | Repository interface |
 | `features/feed/repositories/smart_playlist_config_repository_impl.dart` | Cache-vs-remote coordination |
 | `features/feed/services/smart_playlist_resolver_service.dart` | Resolver chain orchestration |

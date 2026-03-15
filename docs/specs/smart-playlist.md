@@ -129,7 +129,7 @@ final class SmartPlaylistDefinition {
 
 ### Split-File Format
 
-Configs stored as a three-level file hierarchy hosted on GCS (dev) and GitHub Pages (prod):
+Configs stored as a three-level file hierarchy hosted on GitHub Pages (all environments):
 
 ```
 meta.json                              # Root: pattern summaries + versions

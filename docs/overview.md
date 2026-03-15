@@ -19,14 +19,13 @@ Audiflow is a mobile podcast player for iOS and Android, built with Flutter. It 
 
 - JSON Schema definition (owned by `audiflow-smartplaylist-editor`)
 - Smart playlist config authoring or editing (owned by editor)
-- Production config data hosting (owned by `audiflow-smartplaylist` via GitHub Pages)
-- Dev/staging config data hosting (owned by `audiflow-smartplaylist-dev` via GCS)
+- Config data hosting (owned by `audiflow-smartplaylist` via GitHub Pages, all environments)
 
 ## Main concepts
 
 - **Pattern**: A smart playlist config matched to a podcast by GUID or feed URL. Contains one or more playlist definitions.
 - **Resolver**: A strategy that groups episodes into smart playlists. Types: `rss`, `category`, `year`, `titleAppearanceOrder`.
-- **Drift table**: A class extending `Table` that serves as both database schema and domain entity (no separate DTOs).
+- **Isar collection**: A class annotated with `@collection` that serves as both database schema and domain entity (no separate DTOs).
 - **Feature module**: A vertical slice containing models, repositories, datasources, services, and events within `audiflow_domain`.
 - **Presentation layer**: Screens, controllers, and widgets in `audiflow_app` that consume domain providers via Riverpod.
 

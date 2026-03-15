@@ -572,36 +572,39 @@ All config data repos, the web editor, and the mobile app must conform to this s
                                     PRs  │
                      ┌───────────────────┼───────────────────┐
                      v                                       v
-     ┌───────────────────────────┐       ┌───────────────────────────────┐
-     │ audiflow-smartplaylist-dev│       │ audiflow-smartplaylist         │
-     │ (dev/stg config data)    │       │ (prod config data)            │
-     └───────────┬───────────────┘       └───────────┬───────────────────┘
-                 │ CI: deploy-config.yml              │ CI: deploy-pages.yml
-                 v                                    v
-     ┌───────────────────────────┐       ┌───────────────────────────────┐
-     │ GCS: audiflow-dev-config  │       │ GitHub Pages                  │
-     │ (dev/stg static hosting)  │       │ (prod static hosting)         │
-     └───────────┬───────────────┘       └───────────┬───────────────────┘
-                 │                                    │
-                 v                                    v
-     main_stg.dart fetches from          main_prod.dart fetches from
-     storage.googleapis.com/             audiflow.github.io/
-     audiflow-dev-config/                audiflow-smartplaylist/
+     ┌───────────────────────────────────────────────────┐
+     │ audiflow/audiflow-smartplaylist                    │
+     │ (all environments config data)                    │
+     └───────────────────────┬─────────────────────────┘
+                             │ CI: deploy-pages.yml
+                             v
+     ┌───────────────────────────────────────────────────┐
+     │ GitHub Pages                                       │
+     │ audiflow.github.io/audiflow-smartplaylist/          │
+     │   /assets/v2/     (prod)                           │
+     │   /assets-stg/v2/ (staging)                        │
+     │   /assets-dev/v2/ (dev)                            │
+     └───────────────────────┬─────────────────────────┘
+                             │
+                             v
+     All flavors fetch from audiflow.github.io/
+     audiflow-smartplaylist/{assets,assets-stg,assets-dev}/v2/
 ```
 
-### 1. Config Data Repositories (Static JSON)
+### 1. Config Data Repository (Static JSON)
 
-Two repos with identical structure, separated by environment:
+Single repo with per-environment asset paths:
 
-| Repo | Environment | CI Deployment | Base URL |
-|------|-------------|---------------|----------|
-| `audiflow/audiflow-smartplaylist` | Production | GitHub Pages (`deploy-pages.yml`) | `https://audiflow.github.io/audiflow-smartplaylist/` |
-| `reedom/audiflow-smartplaylist-dev` | Dev/Staging | GCS bucket (`deploy-config.yml`) | `https://storage.googleapis.com/audiflow-dev-config/` |
+| Repo | Environment | Path | Base URL |
+|------|-------------|------|----------|
+| `audiflow/audiflow-smartplaylist` | Production | `assets/v2/` | `https://audiflow.github.io/audiflow-smartplaylist/assets/v2/` |
+| `audiflow/audiflow-smartplaylist` | Staging | `assets-stg/v2/` | `https://audiflow.github.io/audiflow-smartplaylist/assets-stg/v2/` |
+| `audiflow/audiflow-smartplaylist` | Development | `assets-dev/v2/` | `https://audiflow.github.io/audiflow-smartplaylist/assets-dev/v2/` |
 
-Both repos share the same directory structure (defined in `audiflow-smartplaylist-schema`):
+Each environment path shares the same directory structure:
 
 ```
-{repo}/
+{assets-path}/
 ├── meta.json                     # Root: version + pattern summaries
 ├── coten_radio/
 │   ├── meta.json                 # Pattern: feedUrls, playlistIds, flags
@@ -614,9 +617,8 @@ Both repos share the same directory structure (defined in `audiflow-smartplaylis
     └── playlists/...
 ```
 
-- The web editor submits PRs to these repos
-- CI auto-deploys on merge to main
-- GCS deployment sets cache headers (5min for root meta.json, 30min for pattern files)
+- The web editor submits PRs to this repo
+- CI auto-deploys on merge to main via GitHub Pages
 
 ### 2. Web Editor (`audiflow/audiflow-smartplaylist-editor`)
 
