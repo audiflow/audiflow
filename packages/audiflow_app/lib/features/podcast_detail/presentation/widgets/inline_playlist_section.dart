@@ -15,7 +15,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../l10n/app_localizations.dart';
-import '../controllers/podcast_detail_controller.dart';
 import '../utils/group_sorting.dart';
 import 'episode_list_section.dart';
 import 'inline_group_card.dart';
@@ -42,14 +41,9 @@ List<Widget> buildInlinePlaylistSlivers({
   })
   onNavigateToGroup,
 }) {
-  final hasFeedIds =
-      playlist.episodeIds.isNotEmpty && playlist.episodeIds.first < 0;
-
-  final episodesAsync = hasFeedIds && feedUrl != null
-      ? ref.watch(
-          feedSmartPlaylistEpisodesProvider(feedUrl, playlist.episodeIds),
-        )
-      : ref.watch(smartPlaylistEpisodesProvider(playlist.episodeIds));
+  final episodesAsync = ref.watch(
+    smartPlaylistEpisodesProvider(playlist.episodeIds),
+  );
 
   return episodesAsync.when(
     data: (episodes) => _buildPlaylistData(

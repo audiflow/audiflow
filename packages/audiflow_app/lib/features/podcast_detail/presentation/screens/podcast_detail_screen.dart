@@ -61,6 +61,17 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
   DateTime? _lastRefreshedAt;
 
   @override
+  void initState() {
+    super.initState();
+    // Set metadata hint so podcastDetail can create a cached
+    // subscription for non-subscribed podcasts
+    final feedUrl = podcast.feedUrl;
+    if (feedUrl != null) {
+      PodcastMetadataHints.set(feedUrl, podcast);
+    }
+  }
+
+  @override
   void dispose() {
     _scrollController.dispose();
     super.dispose();

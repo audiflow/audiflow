@@ -118,6 +118,10 @@ String _$feedHttpClientHash() => r'1f78c2cb06966ea95e535a2df41522826f3e0f46';
 /// Uses Dio for network requests to avoid dart:io HttpClient issues on mobile.
 /// Returns [ParsedFeed] containing podcast metadata and episodes.
 /// Throws [PodcastException] if the feed cannot be fetched or parsed.
+///
+/// Always persists episodes to Isar for all podcasts (subscribed or
+/// not). Non-subscribed podcasts get a cached subscription entry so
+/// the full smart playlist resolver pipeline works.
 
 @ProviderFor(podcastDetail)
 final podcastDetailProvider = PodcastDetailFamily._();
@@ -127,6 +131,10 @@ final podcastDetailProvider = PodcastDetailFamily._();
 /// Uses Dio for network requests to avoid dart:io HttpClient issues on mobile.
 /// Returns [ParsedFeed] containing podcast metadata and episodes.
 /// Throws [PodcastException] if the feed cannot be fetched or parsed.
+///
+/// Always persists episodes to Isar for all podcasts (subscribed or
+/// not). Non-subscribed podcasts get a cached subscription entry so
+/// the full smart playlist resolver pipeline works.
 
 final class PodcastDetailProvider
     extends
@@ -141,6 +149,10 @@ final class PodcastDetailProvider
   /// Uses Dio for network requests to avoid dart:io HttpClient issues on mobile.
   /// Returns [ParsedFeed] containing podcast metadata and episodes.
   /// Throws [PodcastException] if the feed cannot be fetched or parsed.
+  ///
+  /// Always persists episodes to Isar for all podcasts (subscribed or
+  /// not). Non-subscribed podcasts get a cached subscription entry so
+  /// the full smart playlist resolver pipeline works.
   PodcastDetailProvider._({
     required PodcastDetailFamily super.from,
     required String super.argument,
@@ -184,13 +196,17 @@ final class PodcastDetailProvider
   }
 }
 
-String _$podcastDetailHash() => r'5fff67642a8b74e7ef5b3d0936ecf1510f27d2f6';
+String _$podcastDetailHash() => r'4e723b887be09052b242b552a960307123e3fffc';
 
 /// Fetches and provides parsed podcast feed data for a given feed URL.
 ///
 /// Uses Dio for network requests to avoid dart:io HttpClient issues on mobile.
 /// Returns [ParsedFeed] containing podcast metadata and episodes.
 /// Throws [PodcastException] if the feed cannot be fetched or parsed.
+///
+/// Always persists episodes to Isar for all podcasts (subscribed or
+/// not). Non-subscribed podcasts get a cached subscription entry so
+/// the full smart playlist resolver pipeline works.
 
 final class PodcastDetailFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<ParsedFeed>, String> {
@@ -208,6 +224,10 @@ final class PodcastDetailFamily extends $Family
   /// Uses Dio for network requests to avoid dart:io HttpClient issues on mobile.
   /// Returns [ParsedFeed] containing podcast metadata and episodes.
   /// Throws [PodcastException] if the feed cannot be fetched or parsed.
+  ///
+  /// Always persists episodes to Isar for all podcasts (subscribed or
+  /// not). Non-subscribed podcasts get a cached subscription entry so
+  /// the full smart playlist resolver pipeline works.
 
   PodcastDetailProvider call(String feedUrl) =>
       PodcastDetailProvider._(argument: feedUrl, from: this);
@@ -854,9 +874,8 @@ final class HasSmartPlaylistViewAfterLoadFamily extends $Family
 
 /// Provides sorted smart playlists for a podcast.
 ///
-/// For subscribed podcasts, uses database-backed resolution.
-/// For non-subscribed podcasts, derives playlists from feed
-/// data directly.
+/// All visited podcasts have episodes in Isar (cached or
+/// subscribed), so database-backed resolution always works.
 
 @ProviderFor(sortedPodcastSmartPlaylists)
 final sortedPodcastSmartPlaylistsProvider =
@@ -864,9 +883,8 @@ final sortedPodcastSmartPlaylistsProvider =
 
 /// Provides sorted smart playlists for a podcast.
 ///
-/// For subscribed podcasts, uses database-backed resolution.
-/// For non-subscribed podcasts, derives playlists from feed
-/// data directly.
+/// All visited podcasts have episodes in Isar (cached or
+/// subscribed), so database-backed resolution always works.
 
 final class SortedPodcastSmartPlaylistsProvider
     extends
@@ -880,9 +898,8 @@ final class SortedPodcastSmartPlaylistsProvider
         $FutureProvider<SmartPlaylistGrouping?> {
   /// Provides sorted smart playlists for a podcast.
   ///
-  /// For subscribed podcasts, uses database-backed resolution.
-  /// For non-subscribed podcasts, derives playlists from feed
-  /// data directly.
+  /// All visited podcasts have episodes in Isar (cached or
+  /// subscribed), so database-backed resolution always works.
   SortedPodcastSmartPlaylistsProvider._({
     required SortedPodcastSmartPlaylistsFamily super.from,
     required (String, String) super.argument,
@@ -929,13 +946,12 @@ final class SortedPodcastSmartPlaylistsProvider
 }
 
 String _$sortedPodcastSmartPlaylistsHash() =>
-    r'3a23fe1b6929e4f179b1857855e2b7408fd9720e';
+    r'c4b0c8fc3f543b6d04e84d8a5bc33bdc44e8ab9d';
 
 /// Provides sorted smart playlists for a podcast.
 ///
-/// For subscribed podcasts, uses database-backed resolution.
-/// For non-subscribed podcasts, derives playlists from feed
-/// data directly.
+/// All visited podcasts have episodes in Isar (cached or
+/// subscribed), so database-backed resolution always works.
 
 final class SortedPodcastSmartPlaylistsFamily extends $Family
     with
@@ -954,9 +970,8 @@ final class SortedPodcastSmartPlaylistsFamily extends $Family
 
   /// Provides sorted smart playlists for a podcast.
   ///
-  /// For subscribed podcasts, uses database-backed resolution.
-  /// For non-subscribed podcasts, derives playlists from feed
-  /// data directly.
+  /// All visited podcasts have episodes in Isar (cached or
+  /// subscribed), so database-backed resolution always works.
 
   SortedPodcastSmartPlaylistsProvider call(String feedUrl, String podcastId) =>
       SortedPodcastSmartPlaylistsProvider._(
@@ -966,131 +981,4 @@ final class SortedPodcastSmartPlaylistsFamily extends $Family
 
   @override
   String toString() => r'sortedPodcastSmartPlaylistsProvider';
-}
-
-/// Resolves smart playlist episodes from feed data using
-/// negative placeholder IDs.
-///
-/// For non-subscribed podcasts, episode IDs are negative
-/// indices into the feed episode list: `-(index + 1)`.
-/// This provider resolves them back to [SmartPlaylistEpisodeData]
-/// by converting [PodcastItem] to synthetic [Episode] objects.
-
-@ProviderFor(feedSmartPlaylistEpisodes)
-final feedSmartPlaylistEpisodesProvider = FeedSmartPlaylistEpisodesFamily._();
-
-/// Resolves smart playlist episodes from feed data using
-/// negative placeholder IDs.
-///
-/// For non-subscribed podcasts, episode IDs are negative
-/// indices into the feed episode list: `-(index + 1)`.
-/// This provider resolves them back to [SmartPlaylistEpisodeData]
-/// by converting [PodcastItem] to synthetic [Episode] objects.
-
-final class FeedSmartPlaylistEpisodesProvider
-    extends
-        $FunctionalProvider<
-          AsyncValue<List<SmartPlaylistEpisodeData>>,
-          List<SmartPlaylistEpisodeData>,
-          FutureOr<List<SmartPlaylistEpisodeData>>
-        >
-    with
-        $FutureModifier<List<SmartPlaylistEpisodeData>>,
-        $FutureProvider<List<SmartPlaylistEpisodeData>> {
-  /// Resolves smart playlist episodes from feed data using
-  /// negative placeholder IDs.
-  ///
-  /// For non-subscribed podcasts, episode IDs are negative
-  /// indices into the feed episode list: `-(index + 1)`.
-  /// This provider resolves them back to [SmartPlaylistEpisodeData]
-  /// by converting [PodcastItem] to synthetic [Episode] objects.
-  FeedSmartPlaylistEpisodesProvider._({
-    required FeedSmartPlaylistEpisodesFamily super.from,
-    required (String, List<int>) super.argument,
-  }) : super(
-         retry: null,
-         name: r'feedSmartPlaylistEpisodesProvider',
-         isAutoDispose: true,
-         dependencies: null,
-         $allTransitiveDependencies: null,
-       );
-
-  @override
-  String debugGetCreateSourceHash() => _$feedSmartPlaylistEpisodesHash();
-
-  @override
-  String toString() {
-    return r'feedSmartPlaylistEpisodesProvider'
-        ''
-        '$argument';
-  }
-
-  @$internal
-  @override
-  $FutureProviderElement<List<SmartPlaylistEpisodeData>> $createElement(
-    $ProviderPointer pointer,
-  ) => $FutureProviderElement(pointer);
-
-  @override
-  FutureOr<List<SmartPlaylistEpisodeData>> create(Ref ref) {
-    final argument = this.argument as (String, List<int>);
-    return feedSmartPlaylistEpisodes(ref, argument.$1, argument.$2);
-  }
-
-  @override
-  bool operator ==(Object other) {
-    return other is FeedSmartPlaylistEpisodesProvider &&
-        other.argument == argument;
-  }
-
-  @override
-  int get hashCode {
-    return argument.hashCode;
-  }
-}
-
-String _$feedSmartPlaylistEpisodesHash() =>
-    r'c2a18869bcb9c7ec96e414bfc4e751c243440edb';
-
-/// Resolves smart playlist episodes from feed data using
-/// negative placeholder IDs.
-///
-/// For non-subscribed podcasts, episode IDs are negative
-/// indices into the feed episode list: `-(index + 1)`.
-/// This provider resolves them back to [SmartPlaylistEpisodeData]
-/// by converting [PodcastItem] to synthetic [Episode] objects.
-
-final class FeedSmartPlaylistEpisodesFamily extends $Family
-    with
-        $FunctionalFamilyOverride<
-          FutureOr<List<SmartPlaylistEpisodeData>>,
-          (String, List<int>)
-        > {
-  FeedSmartPlaylistEpisodesFamily._()
-    : super(
-        retry: null,
-        name: r'feedSmartPlaylistEpisodesProvider',
-        dependencies: null,
-        $allTransitiveDependencies: null,
-        isAutoDispose: true,
-      );
-
-  /// Resolves smart playlist episodes from feed data using
-  /// negative placeholder IDs.
-  ///
-  /// For non-subscribed podcasts, episode IDs are negative
-  /// indices into the feed episode list: `-(index + 1)`.
-  /// This provider resolves them back to [SmartPlaylistEpisodeData]
-  /// by converting [PodcastItem] to synthetic [Episode] objects.
-
-  FeedSmartPlaylistEpisodesProvider call(
-    String feedUrl,
-    List<int> episodeIds,
-  ) => FeedSmartPlaylistEpisodesProvider._(
-    argument: (feedUrl, episodeIds),
-    from: this,
-  );
-
-  @override
-  String toString() => r'feedSmartPlaylistEpisodesProvider';
 }

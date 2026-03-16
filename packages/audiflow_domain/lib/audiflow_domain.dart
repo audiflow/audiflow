@@ -131,6 +131,9 @@ export 'src/features/subscription/providers/subscription_providers.dart';
 export 'src/features/subscription/repositories/subscription_repository.dart';
 export 'src/features/subscription/repositories/subscription_repository_impl.dart';
 
+// Subscription feature - Cache Eviction
+export 'src/features/subscription/services/podcast_cache_eviction_service.dart';
+
 // Subscription feature - OPML
 export 'src/features/subscription/models/opml_entry.dart';
 export 'src/features/subscription/models/opml_import_result.dart';

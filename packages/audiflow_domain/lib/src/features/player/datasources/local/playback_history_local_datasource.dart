@@ -30,49 +30,58 @@ class PlaybackHistoryLocalDatasource {
   }
 
   /// Updates playback position and lastPlayedAt timestamp.
+  ///
+  /// Atomic read-then-write inside a single transaction to
+  /// prevent unique index violations from concurrent calls.
   Future<void> updateProgress({
     required int episodeId,
     required int positionMs,
     int? durationMs,
   }) async {
     final now = DateTime.now();
-    final existing = await getByEpisodeId(episodeId);
+    await _isar.writeTxn(() async {
+      final existing = await _isar.playbackHistorys.getByEpisodeId(episodeId);
 
-    if (existing == null) {
-      final history = PlaybackHistory()
-        ..episodeId = episodeId
-        ..positionMs = positionMs
-        ..durationMs = durationMs
-        ..firstPlayedAt = now
-        ..lastPlayedAt = now
-        ..playCount = 1;
-      await _isar.writeTxn(() => _isar.playbackHistorys.put(history));
-    } else {
-      existing.positionMs = positionMs;
-      if (durationMs != null) {
-        existing.durationMs = durationMs;
+      if (existing == null) {
+        final history = PlaybackHistory()
+          ..episodeId = episodeId
+          ..positionMs = positionMs
+          ..durationMs = durationMs
+          ..firstPlayedAt = now
+          ..lastPlayedAt = now
+          ..playCount = 1;
+        await _isar.playbackHistorys.put(history);
+      } else {
+        existing.positionMs = positionMs;
+        if (durationMs != null) {
+          existing.durationMs = durationMs;
+        }
+        existing.lastPlayedAt = now;
+        await _isar.playbackHistorys.put(existing);
       }
-      existing.lastPlayedAt = now;
-      await _isar.writeTxn(() => _isar.playbackHistorys.put(existing));
-    }
+    });
   }
 
   /// Marks an episode as completed.
+  ///
+  /// Atomic read-then-write inside a single transaction.
   Future<void> markCompleted(int episodeId) async {
     final now = DateTime.now();
-    final existing = await getByEpisodeId(episodeId);
+    await _isar.writeTxn(() async {
+      final existing = await _isar.playbackHistorys.getByEpisodeId(episodeId);
 
-    if (existing == null) {
-      final history = PlaybackHistory()
-        ..episodeId = episodeId
-        ..completedAt = now
-        ..lastPlayedAt = now;
-      await _isar.writeTxn(() => _isar.playbackHistorys.put(history));
-    } else {
-      existing.completedAt = now;
-      existing.lastPlayedAt = now;
-      await _isar.writeTxn(() => _isar.playbackHistorys.put(existing));
-    }
+      if (existing == null) {
+        final history = PlaybackHistory()
+          ..episodeId = episodeId
+          ..completedAt = now
+          ..lastPlayedAt = now;
+        await _isar.playbackHistorys.put(history);
+      } else {
+        existing.completedAt = now;
+        existing.lastPlayedAt = now;
+        await _isar.playbackHistorys.put(existing);
+      }
+    });
   }
 
   /// Marks an episode as incomplete (removes completedAt).
