@@ -507,11 +507,20 @@ class _DescriptionSection extends StatelessWidget {
 
     return Html(
       data: content,
-      onLinkTap: (url, attributes, element) {
+      onLinkTap: (url, attributes, element) async {
         if (url == null || url.isEmpty) return;
         final uri = Uri.tryParse(url);
         if (uri == null) return;
-        launchUrl(uri, mode: LaunchMode.inAppBrowserView);
+
+        // Prefer in-app browser; fall back to external if unavailable
+        // (e.g. iOS simulator doesn't support SFSafariViewController).
+        final launched = await launchUrl(
+          uri,
+          mode: LaunchMode.inAppBrowserView,
+        );
+        if (!launched) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+        }
       },
     );
   }
