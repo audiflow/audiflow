@@ -3,9 +3,11 @@ import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../../../../routing/app_router.dart';
 import '../widgets/transcript_tab.dart';
 
 /// Full player screen presented as a Cupertino sheet.
@@ -102,6 +104,9 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
                       artworkUrl: nowPlaying.artworkUrl,
                       episodeTitle: nowPlaying.episodeTitle,
                       podcastTitle: nowPlaying.podcastTitle,
+                      onPodcastTitleTap: nowPlaying.episode != null
+                          ? () => _navigateToPodcast(nowPlaying.episode!)
+                          : null,
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -145,6 +150,17 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
     _beginSeek(wasPlaying);
     await skipAction();
     await _endSeek();
+  }
+
+  Future<void> _navigateToPodcast(Episode episode) async {
+    final subscriptionRepo = ref.read(subscriptionRepositoryProvider);
+    final subscription = await subscriptionRepo.getById(episode.podcastId);
+    if (subscription == null || !mounted) return;
+
+    final podcast = subscription.toPodcast();
+    final router = GoRouter.of(context);
+    CupertinoSheetRoute.popSheet(context);
+    router.push('${AppRoutes.library}/podcast/${podcast.id}', extra: podcast);
   }
 }
 
@@ -209,6 +225,7 @@ class _PlayerTabBody extends StatelessWidget {
     required this.artworkUrl,
     required this.episodeTitle,
     required this.podcastTitle,
+    this.onPodcastTitleTap,
   });
 
   final TabController tabController;
@@ -217,6 +234,7 @@ class _PlayerTabBody extends StatelessWidget {
   final String? artworkUrl;
   final String episodeTitle;
   final String podcastTitle;
+  final VoidCallback? onPodcastTitleTap;
 
   @override
   Widget build(BuildContext context) {
@@ -225,7 +243,11 @@ class _PlayerTabBody extends StatelessWidget {
         Expanded(
           child: Center(child: _PlayerArtwork(artworkUrl: artworkUrl)),
         ),
-        _PlayerInfo(episodeTitle: episodeTitle, podcastTitle: podcastTitle),
+        _PlayerInfo(
+          episodeTitle: episodeTitle,
+          podcastTitle: podcastTitle,
+          onPodcastTitleTap: onPodcastTitleTap,
+        ),
       ],
     );
 
@@ -314,10 +336,15 @@ class _Placeholder extends StatelessWidget {
 }
 
 class _PlayerInfo extends StatelessWidget {
-  const _PlayerInfo({required this.episodeTitle, required this.podcastTitle});
+  const _PlayerInfo({
+    required this.episodeTitle,
+    required this.podcastTitle,
+    this.onPodcastTitleTap,
+  });
 
   final String episodeTitle;
   final String podcastTitle;
+  final VoidCallback? onPodcastTitleTap;
 
   @override
   Widget build(BuildContext context) {
@@ -342,13 +369,16 @@ class _PlayerInfo extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           ExcludeSemantics(
-            child: Text(
-              podcastTitle,
-              style: theme.textTheme.bodyLarge?.copyWith(
-                color: colorScheme.onSurfaceVariant,
+            child: GestureDetector(
+              onTap: onPodcastTitleTap,
+              child: Text(
+                podcastTitle,
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],
