@@ -3,9 +3,11 @@ import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../../../../routing/app_router.dart';
 import '../widgets/transcript_tab.dart';
 
 /// Full player screen presented as a Cupertino sheet.
@@ -102,6 +104,16 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
                       artworkUrl: nowPlaying.artworkUrl,
                       episodeTitle: nowPlaying.episodeTitle,
                       podcastTitle: nowPlaying.podcastTitle,
+                      onEpisodeTitleTap: nowPlaying.episode != null
+                          ? () => _navigateToEpisode(
+                              nowPlaying.episode!,
+                              nowPlaying.podcastTitle,
+                              nowPlaying.artworkUrl,
+                            )
+                          : null,
+                      onPodcastTitleTap: nowPlaying.episode != null
+                          ? () => _navigateToPodcast(nowPlaying.episode!)
+                          : null,
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -145,6 +157,67 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
     _beginSeek(wasPlaying);
     await skipAction();
     await _endSeek();
+  }
+
+  Future<void> _navigateToPodcast(Episode episode) async {
+    final podcast = await _lookupPodcast(episode.podcastId);
+    if (podcast == null || !mounted) return;
+
+    _popSheetAndPush(
+      '${AppRoutes.library}/podcast/${podcast.id}',
+      extra: podcast,
+    );
+  }
+
+  Future<void> _navigateToEpisode(
+    Episode episode,
+    String podcastTitle,
+    String? artworkUrl,
+  ) async {
+    final podcast = await _lookupPodcast(episode.podcastId);
+    if (podcast == null || !mounted) return;
+
+    final guid = episode.guid;
+    final podcastItem = PodcastItem(
+      parsedAt: DateTime.now(),
+      sourceUrl: episode.audioUrl,
+      title: episode.title,
+      description: episode.description ?? '',
+      publishDate: episode.publishedAt,
+      duration: episode.durationMs != null
+          ? Duration(milliseconds: episode.durationMs!)
+          : null,
+      enclosureUrl: episode.audioUrl,
+      guid: guid,
+      episodeNumber: episode.episodeNumber,
+      seasonNumber: episode.seasonNumber,
+    );
+
+    final episodePath = AppRoutes.episodeDetail.replaceAll(
+      ':episodeGuid',
+      Uri.encodeComponent(guid),
+    );
+    _popSheetAndPush(
+      '${AppRoutes.library}/podcast/${podcast.id}/$episodePath',
+      extra: <String, dynamic>{
+        'episode': podcastItem,
+        'podcastTitle': podcastTitle,
+        'artworkUrl': artworkUrl,
+      },
+    );
+  }
+
+  void _popSheetAndPush(String path, {Object? extra}) {
+    final router = GoRouter.of(context);
+    CupertinoSheetRoute.popSheet(context);
+    router.push(path, extra: extra);
+  }
+
+  Future<Podcast?> _lookupPodcast(int podcastId) async {
+    final subscriptionRepo = ref.read(subscriptionRepositoryProvider);
+    final subscription = await subscriptionRepo.getById(podcastId);
+    if (subscription == null || !mounted) return null;
+    return subscription.toPodcast();
   }
 }
 
@@ -209,6 +282,8 @@ class _PlayerTabBody extends StatelessWidget {
     required this.artworkUrl,
     required this.episodeTitle,
     required this.podcastTitle,
+    this.onEpisodeTitleTap,
+    this.onPodcastTitleTap,
   });
 
   final TabController tabController;
@@ -217,6 +292,8 @@ class _PlayerTabBody extends StatelessWidget {
   final String? artworkUrl;
   final String episodeTitle;
   final String podcastTitle;
+  final VoidCallback? onEpisodeTitleTap;
+  final VoidCallback? onPodcastTitleTap;
 
   @override
   Widget build(BuildContext context) {
@@ -225,7 +302,12 @@ class _PlayerTabBody extends StatelessWidget {
         Expanded(
           child: Center(child: _PlayerArtwork(artworkUrl: artworkUrl)),
         ),
-        _PlayerInfo(episodeTitle: episodeTitle, podcastTitle: podcastTitle),
+        _PlayerInfo(
+          episodeTitle: episodeTitle,
+          podcastTitle: podcastTitle,
+          onEpisodeTitleTap: onEpisodeTitleTap,
+          onPodcastTitleTap: onPodcastTitleTap,
+        ),
       ],
     );
 
@@ -314,10 +396,17 @@ class _Placeholder extends StatelessWidget {
 }
 
 class _PlayerInfo extends StatelessWidget {
-  const _PlayerInfo({required this.episodeTitle, required this.podcastTitle});
+  const _PlayerInfo({
+    required this.episodeTitle,
+    required this.podcastTitle,
+    this.onEpisodeTitleTap,
+    this.onPodcastTitleTap,
+  });
 
   final String episodeTitle;
   final String podcastTitle;
+  final VoidCallback? onEpisodeTitleTap;
+  final VoidCallback? onPodcastTitleTap;
 
   @override
   Widget build(BuildContext context) {
@@ -330,25 +419,31 @@ class _PlayerInfo extends StatelessWidget {
       child: Column(
         children: [
           ExcludeSemantics(
-            child: Text(
-              episodeTitle,
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
+            child: GestureDetector(
+              onTap: onEpisodeTitleTap,
+              child: Text(
+                episodeTitle,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
               ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
             ),
           ),
           const SizedBox(height: 8),
           ExcludeSemantics(
-            child: Text(
-              podcastTitle,
-              style: theme.textTheme.bodyLarge?.copyWith(
-                color: colorScheme.onSurfaceVariant,
+            child: GestureDetector(
+              onTap: onPodcastTitleTap,
+              child: Text(
+                podcastTitle,
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],
