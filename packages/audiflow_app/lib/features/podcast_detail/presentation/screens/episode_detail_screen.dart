@@ -6,6 +6,7 @@ import 'package:flutter_html/flutter_html.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../queue/presentation/controllers/queue_controller.dart';
@@ -488,7 +489,8 @@ class _ActionBar extends StatelessWidget {
   }
 }
 
-/// Shows episode description or content as HTML.
+/// Shows episode description or content as HTML with
+/// clickable links that open in an in-app browser.
 class _DescriptionSection extends StatelessWidget {
   const _DescriptionSection({required this.episode});
 
@@ -503,6 +505,23 @@ class _DescriptionSection extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    return Html(data: content);
+    return Html(
+      data: content,
+      onLinkTap: (url, attributes, element) async {
+        if (url == null || url.isEmpty) return;
+        final uri = Uri.tryParse(url);
+        if (uri == null) return;
+
+        // Prefer in-app browser; fall back to external if unavailable
+        // (e.g. iOS simulator doesn't support SFSafariViewController).
+        final launched = await launchUrl(
+          uri,
+          mode: LaunchMode.inAppBrowserView,
+        );
+        if (!launched) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+        }
+      },
+    );
   }
 }
