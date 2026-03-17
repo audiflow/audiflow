@@ -104,6 +104,17 @@ jobs:
             --apiKey "$ASC_KEY_ID" \
             --apiIssuer "$ASC_ISSUER_ID"
 
+      - name: Upload iOS debug symbols to Sentry
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+        run: |
+          brew install getsentry/tools/sentry-cli
+          sentry-cli debug-files upload \
+            --include-sources \
+            packages/audiflow_app/build/ios/archive/Runner.xcarchive/dSYMs
+
       - name: Cleanup keychain
         if: always()
         run: security delete-keychain $RUNNER_TEMP/app-signing.keychain-db 2>/dev/null || true
@@ -158,3 +169,37 @@ jobs:
           packageName: com.reedom.audiflow_app.stg
           releaseFiles: packages/audiflow_app/build/app/outputs/bundle/stgRelease/app-stg-release.aab
           track: internal
+
+      - name: Upload Android debug symbols to Sentry
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+        run: |
+          curl -sL https://sentry.io/get-cli/ | bash
+          sentry-cli debug-files upload \
+            --include-sources \
+            packages/audiflow_app/build/app/intermediates/merged_native_libs/stgRelease
+
+  sentry-release:
+    name: Create Sentry release
+    needs: [prepare, deploy-ios, deploy-android]
+    runs-on: ubuntu-latest
+    env:
+      SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+      SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+      SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create Sentry release
+        run: |
+          curl -sL https://sentry.io/get-cli/ | bash
+          VERSION="${{ needs.prepare.outputs.version_string }}"
+          sentry-cli releases new "$VERSION"
+          sentry-cli releases set-commits "$VERSION" --auto
+          sentry-cli releases finalize "$VERSION"
+          sentry-cli releases deploys "$VERSION" new -e stg
