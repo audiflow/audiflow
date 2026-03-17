@@ -3,6 +3,8 @@ import 'package:audiflow_podcast/audiflow_podcast.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:isar_community/isar.dart';
 
+import '../../../helpers/isar_test_helper.dart';
+
 void main() {
   late Isar isar;
   late EpisodeLocalDatasource episodeDatasource;
@@ -16,17 +18,13 @@ void main() {
   });
 
   setUp(() async {
-    isar = await Isar.open(
-      [
-        SubscriptionSchema,
-        EpisodeSchema,
-        EpisodeTranscriptSchema,
-        TranscriptSegmentSchema,
-        EpisodeChapterSchema,
-      ],
-      directory: '',
-      name: 'test_${DateTime.now().microsecondsSinceEpoch}',
-    );
+    isar = await openTestIsar([
+      SubscriptionSchema,
+      EpisodeSchema,
+      EpisodeTranscriptSchema,
+      TranscriptSegmentSchema,
+      EpisodeChapterSchema,
+    ]);
     episodeDatasource = EpisodeLocalDatasource(isar);
     transcriptDatasource = TranscriptLocalDatasource(isar);
     chapterDatasource = ChapterLocalDatasource(isar);

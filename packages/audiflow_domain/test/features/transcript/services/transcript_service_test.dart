@@ -3,6 +3,8 @@ import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:isar_community/isar.dart';
 import 'package:logger/logger.dart';
+
+import '../../../helpers/isar_test_helper.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 
@@ -21,11 +23,10 @@ void main() {
   });
 
   setUp(() async {
-    isar = await Isar.open(
-      [EpisodeTranscriptSchema, TranscriptSegmentSchema],
-      directory: '',
-      name: 'test_${DateTime.now().microsecondsSinceEpoch}',
-    );
+    isar = await openTestIsar([
+      EpisodeTranscriptSchema,
+      TranscriptSegmentSchema,
+    ]);
     final datasource = TranscriptLocalDatasource(isar);
     repository = TranscriptRepositoryImpl(datasource: datasource);
     mockDio = MockDio();

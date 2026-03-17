@@ -2,6 +2,8 @@ import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:isar_community/isar.dart';
 
+import '../../../../helpers/isar_test_helper.dart';
+
 void main() {
   late Isar isar;
   late DownloadLocalDatasource datasource;
@@ -11,11 +13,7 @@ void main() {
   });
 
   setUp(() async {
-    isar = await Isar.open(
-      [DownloadTaskSchema],
-      directory: '',
-      name: 'test_${DateTime.now().microsecondsSinceEpoch}',
-    );
+    isar = await openTestIsar([DownloadTaskSchema]);
     datasource = DownloadLocalDatasource(isar);
   });
 

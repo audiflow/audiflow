@@ -63,5 +63,6 @@ app.*.map.json
 
 .kiro/**/.results/
 
-# Isar native binary (downloaded by tests)
+# Isar native binary and lock files (downloaded/created by tests)
 libisar.dylib
+*.isar-lck
