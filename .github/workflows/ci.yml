@@ -65,6 +65,11 @@ jobs:
           for pkg in packages/*/; do
             if [ -d "${pkg}test" ]; then
               echo "Running tests in ${pkg}"
-              (cd "$pkg" && flutter test --test-randomize-ordering-seed=random)
+              EXTRA_ARGS=""
+              if [ "$pkg" = "packages/audiflow_domain/" ]; then
+                # Limit concurrency to avoid Isar OOM on CI runners
+                EXTRA_ARGS="--concurrency=1"
+              fi
+              (cd "$pkg" && flutter test --test-randomize-ordering-seed=random $EXTRA_ARGS)
             fi
           done
