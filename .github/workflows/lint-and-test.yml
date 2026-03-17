@@ -1,0 +1,159 @@
+name: Lint and Test
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+    paths-ignore:
+      - '.claude/**'
+      - '*.md'
+      - 'docs/**'
+      - '.gitignore'
+      - '.gitattributes'
+      - 'LICENSE'
+      - 'CODEOWNERS'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      dart: ${{ steps.filter.outputs.dart }}
+      packages: ${{ steps.affected.outputs.packages }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Detect changed paths
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          list-files: shell
+          filters: |
+            dart:
+              - 'pubspec.yaml'
+              - 'pubspec_overrides.yaml'
+              - 'analysis_options.yaml'
+              - 'packages/**'
+              - '.github/workflows/lint-and-test.yml'
+
+      - name: Resolve affected packages
+        if: steps.filter.outputs.dart == 'true'
+        id: affected
+        env:
+          CHANGED: ${{ steps.filter.outputs.dart_files }}
+        run: |
+          # Dependency graph: package -> dependents (transitive)
+          # audiflow_core -> all
+          # audiflow_podcast -> audiflow_domain audiflow_cli
+          # audiflow_ai -> audiflow_domain audiflow_app
+          # audiflow_search -> audiflow_domain audiflow_app
+          # audiflow_domain -> audiflow_ui audiflow_cli audiflow_app
+          # audiflow_ui -> audiflow_app
+
+          declare -A DEPENDENTS
+          DEPENDENTS[audiflow_core]="audiflow_podcast audiflow_ai audiflow_search audiflow_domain audiflow_ui audiflow_cli audiflow_app"
+          DEPENDENTS[audiflow_podcast]="audiflow_domain audiflow_cli audiflow_app"
+          DEPENDENTS[audiflow_ai]="audiflow_domain audiflow_app"
+          DEPENDENTS[audiflow_search]="audiflow_domain audiflow_app"
+          DEPENDENTS[audiflow_domain]="audiflow_ui audiflow_cli audiflow_app"
+          DEPENDENTS[audiflow_ui]="audiflow_app"
+          DEPENDENTS[audiflow_cli]=""
+          DEPENDENTS[audiflow_app]=""
+
+          ALL_PACKAGES="audiflow_core audiflow_podcast audiflow_ai audiflow_search audiflow_domain audiflow_ui audiflow_cli audiflow_app"
+
+          # Check if root-level files changed (triggers all packages)
+          root_changed=false
+          for file in $CHANGED; do
+            case "$file" in
+              pubspec.yaml|pubspec_overrides.yaml|analysis_options.yaml|.github/workflows/lint-and-test.yml)
+                root_changed=true
+                break
+                ;;
+            esac
+          done
+
+          if [ "$root_changed" = true ]; then
+            echo "packages=$ALL_PACKAGES" >> "$GITHUB_OUTPUT"
+            echo "Root-level change detected, testing all packages"
+            exit 0
+          fi
+
+          # Find directly changed packages
+          declare -A affected
+          for file in $CHANGED; do
+            pkg=$(echo "$file" | sed -n 's|^packages/\([^/]*\)/.*|\1|p')
+            if [ -n "$pkg" ]; then
+              affected[$pkg]=1
+              # Add transitive dependents
+              for dep in ${DEPENDENTS[$pkg]}; do
+                affected[$dep]=1
+              done
+            fi
+          done
+
+          result=""
+          # Preserve topological order
+          for pkg in $ALL_PACKAGES; do
+            if [ -n "${affected[$pkg]}" ]; then
+              result="$result $pkg"
+            fi
+          done
+
+          result=$(echo "$result" | xargs)
+          echo "packages=$result" >> "$GITHUB_OUTPUT"
+          echo "Affected packages: $result"
+
+  analyze:
+    name: Format, Lint & Test
+    needs: changes
+    if: needs.changes.outputs.dart == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.41.4'
+          channel: 'stable'
+          cache: true
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Check formatting
+        run: dart format --output=none --set-exit-if-changed .
+
+      - name: Analyze code
+        run: flutter analyze --fatal-infos
+
+      - name: Run tests
+        env:
+          AFFECTED_PACKAGES: ${{ needs.changes.outputs.packages }}
+        run: |
+          for pkg_name in $AFFECTED_PACKAGES; do
+            pkg="packages/${pkg_name}/"
+            if [ -d "${pkg}test" ]; then
+              echo "::group::Testing ${pkg_name}"
+              EXTRA_ARGS=""
+              if [ "$pkg_name" = "audiflow_domain" ]; then
+                # Limit concurrency to avoid Isar OOM on CI runners
+                EXTRA_ARGS="--concurrency=1"
+              fi
+              (cd "$pkg" && flutter test --test-randomize-ordering-seed=random $EXTRA_ARGS)
+              echo "::endgroup::"
+            else
+              echo "Skipping ${pkg_name} (no tests)"
+            fi
+          done
