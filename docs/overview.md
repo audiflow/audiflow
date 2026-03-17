@@ -49,6 +49,7 @@ Audiflow is a mobile podcast player for iOS and Android, built with Flutter. It 
 - `go_router` + `go_router_builder`: Type-safe routing
 - `freezed` + `json_serializable`: Immutable models and JSON serialization
 - `sentry_flutter`: Error tracking and performance monitoring
+- `url_launcher`: In-app browser and external link handling
 
 ## Read next
 
