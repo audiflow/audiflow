@@ -73,6 +73,10 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
 
   @override
   void dispose() {
+    final feedUrl = podcast.feedUrl;
+    if (feedUrl != null) {
+      PodcastMetadataHints.remove(feedUrl);
+    }
     _scrollController.dispose();
     super.dispose();
   }

@@ -62,9 +62,14 @@ class PodcastCacheEvictionService {
 
     // Phase 2: Enforce cap on remaining cached entries
     final remaining = await _subscriptionRepo.getCachedSubscriptions();
+    // Sort in-memory to handle null lastAccessedAt consistently
+    remaining.sort((a, b) {
+      final aTime = a.lastAccessedAt ?? a.subscribedAt;
+      final bTime = b.lastAccessedAt ?? b.subscribedAt;
+      return aTime.compareTo(bTime);
+    });
     if (maxCachedPodcasts < remaining.length) {
       final toEvict = remaining.length - maxCachedPodcasts;
-      // Already sorted by lastAccessedAt ascending (oldest first)
       for (var i = 0; i < toEvict; i++) {
         await _evictSubscription(remaining[i]);
         evicted++;
@@ -85,14 +90,14 @@ class PodcastCacheEvictionService {
       '${subscription.title} (id=$id)',
     );
 
-    // Collect episode IDs first for cascading history deletes
-    final episodeIds = await _isar.episodes
-        .filter()
-        .podcastIdEqualTo(id)
-        .idProperty()
-        .findAll();
-
     await _isar.writeTxn(() async {
+      // Collect episode IDs inside transaction for atomicity
+      final episodeIds = await _isar.episodes
+          .filter()
+          .podcastIdEqualTo(id)
+          .idProperty()
+          .findAll();
+
       // Bulk delete playback history for all episodes
       if (episodeIds.isNotEmpty) {
         await _isar.playbackHistorys.deleteAllByEpisodeId(episodeIds);

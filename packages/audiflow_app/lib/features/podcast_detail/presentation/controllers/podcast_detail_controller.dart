@@ -120,7 +120,10 @@ Future<ParsedFeed> podcastDetail(Ref ref, String feedUrl) async {
     final subscriptionRepo = ref.read(subscriptionRepositoryProvider);
     var subscription = await subscriptionRepo.getByFeedUrl(feedUrl);
 
-    if (subscription == null) {
+    if (subscription != null) {
+      // Hint no longer needed -- subscription already exists
+      PodcastMetadataHints.remove(feedUrl);
+    } else {
       // Create a cached subscription for non-subscribed podcasts
       final hint = PodcastMetadataHints.get(feedUrl);
       if (hint != null) {
