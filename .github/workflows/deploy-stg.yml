@@ -110,11 +110,18 @@ jobs:
             '</plist>' > packages/audiflow_app/ios/ExportOptions.plist
 
       - name: Build IPA
+        env:
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
         run: |
           cd packages/audiflow_app
           flutter build ipa --flavor stg -t lib/main_stg.dart \
             --dart-define-from-file=../../.env.stg \
-            --export-options-plist=ios/ExportOptions.plist
+            --export-options-plist=ios/ExportOptions.plist \
+            -- -allowProvisioningUpdates \
+            -authenticationKeyPath "$HOME/.private_keys/AuthKey_${ASC_KEY_ID}.p8" \
+            -authenticationKeyID "$ASC_KEY_ID" \
+            -authenticationKeyIssuerID "$ASC_ISSUER_ID"
 
       - name: Upload to TestFlight
         env:
@@ -208,7 +215,7 @@ jobs:
         uses: r0adkll/upload-google-play@v1
         with:
           serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
-          packageName: com.reedom.audiflow_app.stg
+          packageName: com.reedom.audiflow_app
           releaseFiles: packages/audiflow_app/build/app/outputs/bundle/stgRelease/app-stg-release.aab
           track: internal
 
