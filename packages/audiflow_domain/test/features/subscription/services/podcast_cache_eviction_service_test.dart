@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:isar_community/isar.dart';
 import 'package:logger/logger.dart';
 
+import '../../../helpers/isar_test_helper.dart';
+
 void main() {
   late Isar isar;
   late SubscriptionRepositoryImpl subscriptionRepo;
@@ -14,18 +16,14 @@ void main() {
   });
 
   setUp(() async {
-    isar = await Isar.open(
-      [
-        SubscriptionSchema,
-        EpisodeSchema,
-        PlaybackHistorySchema,
-        SmartPlaylistEntitySchema,
-        SmartPlaylistGroupEntitySchema,
-        PodcastViewPreferenceSchema,
-      ],
-      directory: '',
-      name: 'test_${DateTime.now().microsecondsSinceEpoch}',
-    );
+    isar = await openTestIsar([
+      SubscriptionSchema,
+      EpisodeSchema,
+      PlaybackHistorySchema,
+      SmartPlaylistEntitySchema,
+      SmartPlaylistGroupEntitySchema,
+      PodcastViewPreferenceSchema,
+    ]);
     final datasource = SubscriptionLocalDatasource(isar);
     subscriptionRepo = SubscriptionRepositoryImpl(datasource: datasource);
     logger = Logger(level: Level.off);

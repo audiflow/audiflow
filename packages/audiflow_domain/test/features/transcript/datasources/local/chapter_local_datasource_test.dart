@@ -2,6 +2,8 @@ import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:isar_community/isar.dart';
 
+import '../../../../helpers/isar_test_helper.dart';
+
 void main() {
   late Isar isar;
   late ChapterLocalDatasource datasource;
@@ -12,11 +14,7 @@ void main() {
   });
 
   setUp(() async {
-    isar = await Isar.open(
-      [EpisodeChapterSchema],
-      directory: '',
-      name: 'test_${DateTime.now().microsecondsSinceEpoch}',
-    );
+    isar = await openTestIsar([EpisodeChapterSchema]);
     datasource = ChapterLocalDatasource(isar);
 
     // Use a fixed episodeId (no FK in Isar)
