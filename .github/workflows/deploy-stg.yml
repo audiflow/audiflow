@@ -184,7 +184,7 @@ jobs:
             fi
           done
           echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > packages/audiflow_app/android/app/upload-keystore.jks
-          printf 'keyAlias=%s\nkeyPassword=%s\nstoreFile=app/upload-keystore.jks\nstorePassword=%s\n' \
+          printf 'keyAlias=%s\nkeyPassword=%s\nstoreFile=upload-keystore.jks\nstorePassword=%s\n' \
             "$ANDROID_KEY_ALIAS" "$ANDROID_KEY_PASSWORD" "$ANDROID_STORE_PASSWORD" \
             > packages/audiflow_app/android/key.properties
           chmod 600 packages/audiflow_app/android/app/upload-keystore.jks
