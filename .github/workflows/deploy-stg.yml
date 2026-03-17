@@ -148,6 +148,18 @@ jobs:
           ENV_STG: ${{ secrets.ENV_STG }}
         run: echo "$ENV_STG" > .env.stg
 
+      - name: Setup Android signing
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+        run: |
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > packages/audiflow_app/android/app/upload-keystore.jks
+          printf 'keyAlias=%s\nkeyPassword=%s\nstoreFile=app/upload-keystore.jks\nstorePassword=%s\n' \
+            "$ANDROID_KEY_ALIAS" "$ANDROID_KEY_PASSWORD" "$ANDROID_STORE_PASSWORD" \
+            > packages/audiflow_app/android/key.properties
+
       - name: Bump version
         run: |
           cd packages/audiflow_app
