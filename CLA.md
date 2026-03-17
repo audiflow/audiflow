@@ -89,7 +89,10 @@ applicable to the Project.
 
 ## How to Sign
 
-By submitting a pull request to any audiflow project repository, You agree to
-the terms of this Agreement. Your agreement is recorded when you comment
-"I have read the CLA Document and I hereby sign the CLA" on your first pull
-request.
+To sign this Agreement, comment the following on your first pull request to any
+audiflow project repository:
+
+`I have read the CLA Document and I hereby sign the CLA`
+
+Submitting a pull request alone does not constitute signing. Your agreement is
+recorded only when you post the above comment.
