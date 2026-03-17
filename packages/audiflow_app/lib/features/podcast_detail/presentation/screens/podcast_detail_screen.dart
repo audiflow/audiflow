@@ -113,7 +113,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
         : null;
 
     final playlistsAsync = ref.watch(
-      sortedPodcastSmartPlaylistsProvider(feedUrl, podcast.id),
+      sortedPodcastSmartPlaylistsProvider(feedUrl),
     );
 
     // Show single loading indicator until all data is ready
@@ -159,7 +159,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
     final progressMapAsync = ref.watch(podcastEpisodeProgressProvider(feedUrl));
 
     final playlistsAsync = ref.watch(
-      sortedPodcastSmartPlaylistsProvider(feedUrl, podcast.id),
+      sortedPodcastSmartPlaylistsProvider(feedUrl),
     );
     final grouping = playlistsAsync.value;
     final allPlaylists = grouping?.playlists ?? [];

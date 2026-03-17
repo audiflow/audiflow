@@ -37,7 +37,8 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
     final existing = await _datasource.getByItunesId(itunesId);
     if (existing != null && existing.isCached) {
       final promoted = await _datasource.promoteToSubscribed(itunesId);
-      return promoted!;
+      if (promoted != null) return promoted;
+      // Concurrent delete -- fall through to create fresh
     }
 
     final subscription = Subscription()

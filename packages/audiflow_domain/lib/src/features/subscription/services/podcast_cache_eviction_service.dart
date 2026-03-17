@@ -93,14 +93,9 @@ class PodcastCacheEvictionService {
         .findAll();
 
     await _isar.writeTxn(() async {
-      // Delete playback history for each episode
+      // Bulk delete playback history for all episodes
       if (episodeIds.isNotEmpty) {
-        for (final episodeId in episodeIds) {
-          await _isar.playbackHistorys
-              .filter()
-              .episodeIdEqualTo(episodeId)
-              .deleteAll();
-        }
+        await _isar.playbackHistorys.deleteAllByEpisodeId(episodeIds);
       }
 
       // Delete episodes

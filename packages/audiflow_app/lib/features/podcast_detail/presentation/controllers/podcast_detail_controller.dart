@@ -68,6 +68,11 @@ class PodcastMetadataHints {
 
   /// Returns the stored podcast metadata for a feedUrl.
   static Podcast? get(String feedUrl) => _hints[feedUrl];
+
+  /// Removes the stored hint for a feedUrl.
+  static void remove(String feedUrl) {
+    _hints.remove(feedUrl);
+  }
 }
 
 /// Fetches and provides parsed podcast feed data for a given feed URL.
@@ -76,9 +81,9 @@ class PodcastMetadataHints {
 /// Returns [ParsedFeed] containing podcast metadata and episodes.
 /// Throws [PodcastException] if the feed cannot be fetched or parsed.
 ///
-/// Always persists episodes to Isar for all podcasts (subscribed or
-/// not). Non-subscribed podcasts get a cached subscription entry so
-/// the full smart playlist resolver pipeline works.
+/// Persists episodes to Isar when a subscription entry exists or can
+/// be created from metadata hints. Non-subscribed podcasts get a
+/// cached subscription entry so the smart playlist resolver works.
 @riverpod
 Future<ParsedFeed> podcastDetail(Ref ref, String feedUrl) async {
   final logger = ref.watch(namedLoggerProvider('PodcastDetail'));
@@ -130,6 +135,7 @@ Future<ParsedFeed> podcastDetail(Ref ref, String feedUrl) async {
           explicit: hint.explicit,
         );
         logger.d('Created cached subscription id=${subscription.id}');
+        PodcastMetadataHints.remove(feedUrl);
       }
     }
 
@@ -356,7 +362,6 @@ Future<bool> hasSmartPlaylistViewAfterLoad(Ref ref, String feedUrl) async {
 Future<SmartPlaylistGrouping?> sortedPodcastSmartPlaylists(
   Ref ref,
   String feedUrl,
-  String podcastId,
 ) async {
   // Database-backed resolution works for all visited podcasts
   final grouping = await ref.watch(

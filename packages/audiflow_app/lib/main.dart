@@ -161,10 +161,12 @@ void _runCacheEviction(ProviderContainer container, Isar isar) {
 
   // Fire-and-forget -- non-blocking startup
   // ignore: unawaited_futures
-  evictionService.evict().catchError((Object error) {
-    logger.e('Cache eviction failed', error: error);
-    return 0;
-  });
+  evictionService.evict().then(
+    (_) {},
+    onError: (Object error, StackTrace stack) {
+      logger.e('Cache eviction failed', error: error, stackTrace: stack);
+    },
+  );
 }
 
 /// Restores the last played episode into [NowPlayingController].
