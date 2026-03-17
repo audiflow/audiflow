@@ -570,8 +570,8 @@ final class HasSmartPlaylistViewFamily extends $Family
 /// for a podcast by feed URL.
 ///
 /// Looks up the subscription by feedUrl and delegates to
-/// [hasSmartPlaylistView]. Returns false if the podcast is
-/// not subscribed.
+/// [hasSmartPlaylistView]. All visited podcasts have a
+/// subscription entry (real or cached).
 
 @ProviderFor(hasSmartPlaylistViewByFeedUrl)
 final hasSmartPlaylistViewByFeedUrlProvider =
@@ -581,8 +581,8 @@ final hasSmartPlaylistViewByFeedUrlProvider =
 /// for a podcast by feed URL.
 ///
 /// Looks up the subscription by feedUrl and delegates to
-/// [hasSmartPlaylistView]. Returns false if the podcast is
-/// not subscribed.
+/// [hasSmartPlaylistView]. All visited podcasts have a
+/// subscription entry (real or cached).
 
 final class HasSmartPlaylistViewByFeedUrlProvider
     extends $FunctionalProvider<AsyncValue<bool>, bool, FutureOr<bool>>
@@ -591,8 +591,8 @@ final class HasSmartPlaylistViewByFeedUrlProvider
   /// for a podcast by feed URL.
   ///
   /// Looks up the subscription by feedUrl and delegates to
-  /// [hasSmartPlaylistView]. Returns false if the podcast is
-  /// not subscribed.
+  /// [hasSmartPlaylistView]. All visited podcasts have a
+  /// subscription entry (real or cached).
   HasSmartPlaylistViewByFeedUrlProvider._({
     required HasSmartPlaylistViewByFeedUrlFamily super.from,
     required String super.argument,
@@ -644,8 +644,8 @@ String _$hasSmartPlaylistViewByFeedUrlHash() =>
 /// for a podcast by feed URL.
 ///
 /// Looks up the subscription by feedUrl and delegates to
-/// [hasSmartPlaylistView]. Returns false if the podcast is
-/// not subscribed.
+/// [hasSmartPlaylistView]. All visited podcasts have a
+/// subscription entry (real or cached).
 
 final class HasSmartPlaylistViewByFeedUrlFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<bool>, String> {
@@ -662,8 +662,8 @@ final class HasSmartPlaylistViewByFeedUrlFamily extends $Family
   /// for a podcast by feed URL.
   ///
   /// Looks up the subscription by feedUrl and delegates to
-  /// [hasSmartPlaylistView]. Returns false if the podcast is
-  /// not subscribed.
+  /// [hasSmartPlaylistView]. All visited podcasts have a
+  /// subscription entry (real or cached).
 
   HasSmartPlaylistViewByFeedUrlProvider call(String feedUrl) =>
       HasSmartPlaylistViewByFeedUrlProvider._(argument: feedUrl, from: this);
@@ -677,8 +677,8 @@ final class HasSmartPlaylistViewByFeedUrlFamily extends $Family
 ///
 /// Looks up the subscription by feedUrl and returns the
 /// [SmartPlaylistGrouping] if episodes can be grouped into
-/// smart playlists. Returns null if the podcast is not
-/// subscribed or if no resolver can group the episodes.
+/// smart playlists. All visited podcasts have a subscription
+/// entry (real or cached).
 
 @ProviderFor(podcastSmartPlaylistsByFeedUrl)
 final podcastSmartPlaylistsByFeedUrlProvider =
@@ -689,8 +689,8 @@ final podcastSmartPlaylistsByFeedUrlProvider =
 ///
 /// Looks up the subscription by feedUrl and returns the
 /// [SmartPlaylistGrouping] if episodes can be grouped into
-/// smart playlists. Returns null if the podcast is not
-/// subscribed or if no resolver can group the episodes.
+/// smart playlists. All visited podcasts have a subscription
+/// entry (real or cached).
 
 final class PodcastSmartPlaylistsByFeedUrlProvider
     extends
@@ -707,8 +707,8 @@ final class PodcastSmartPlaylistsByFeedUrlProvider
   ///
   /// Looks up the subscription by feedUrl and returns the
   /// [SmartPlaylistGrouping] if episodes can be grouped into
-  /// smart playlists. Returns null if the podcast is not
-  /// subscribed or if no resolver can group the episodes.
+  /// smart playlists. All visited podcasts have a subscription
+  /// entry (real or cached).
   PodcastSmartPlaylistsByFeedUrlProvider._({
     required PodcastSmartPlaylistsByFeedUrlFamily super.from,
     required String super.argument,
@@ -762,8 +762,8 @@ String _$podcastSmartPlaylistsByFeedUrlHash() =>
 ///
 /// Looks up the subscription by feedUrl and returns the
 /// [SmartPlaylistGrouping] if episodes can be grouped into
-/// smart playlists. Returns null if the podcast is not
-/// subscribed or if no resolver can group the episodes.
+/// smart playlists. All visited podcasts have a subscription
+/// entry (real or cached).
 
 final class PodcastSmartPlaylistsByFeedUrlFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<SmartPlaylistGrouping?>, String> {
@@ -781,8 +781,8 @@ final class PodcastSmartPlaylistsByFeedUrlFamily extends $Family
   ///
   /// Looks up the subscription by feedUrl and returns the
   /// [SmartPlaylistGrouping] if episodes can be grouped into
-  /// smart playlists. Returns null if the podcast is not
-  /// subscribed or if no resolver can group the episodes.
+  /// smart playlists. All visited podcasts have a subscription
+  /// entry (real or cached).
 
   PodcastSmartPlaylistsByFeedUrlProvider call(String feedUrl) =>
       PodcastSmartPlaylistsByFeedUrlProvider._(argument: feedUrl, from: this);

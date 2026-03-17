@@ -35,22 +35,28 @@ const SubscriptionSchema = CollectionSchema(
     r'explicit': PropertySchema(id: 3, name: r'explicit', type: IsarType.bool),
     r'feedUrl': PropertySchema(id: 4, name: r'feedUrl', type: IsarType.string),
     r'genres': PropertySchema(id: 5, name: r'genres', type: IsarType.string),
+    r'isCached': PropertySchema(id: 6, name: r'isCached', type: IsarType.bool),
     r'itunesId': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'itunesId',
       type: IsarType.string,
     ),
+    r'lastAccessedAt': PropertySchema(
+      id: 8,
+      name: r'lastAccessedAt',
+      type: IsarType.dateTime,
+    ),
     r'lastRefreshedAt': PropertySchema(
-      id: 7,
+      id: 9,
       name: r'lastRefreshedAt',
       type: IsarType.dateTime,
     ),
     r'subscribedAt': PropertySchema(
-      id: 8,
+      id: 10,
       name: r'subscribedAt',
       type: IsarType.dateTime,
     ),
-    r'title': PropertySchema(id: 9, name: r'title', type: IsarType.string),
+    r'title': PropertySchema(id: 11, name: r'title', type: IsarType.string),
   },
 
   estimateSize: _subscriptionEstimateSize,
@@ -120,10 +126,12 @@ void _subscriptionSerialize(
   writer.writeBool(offsets[3], object.explicit);
   writer.writeString(offsets[4], object.feedUrl);
   writer.writeString(offsets[5], object.genres);
-  writer.writeString(offsets[6], object.itunesId);
-  writer.writeDateTime(offsets[7], object.lastRefreshedAt);
-  writer.writeDateTime(offsets[8], object.subscribedAt);
-  writer.writeString(offsets[9], object.title);
+  writer.writeBool(offsets[6], object.isCached);
+  writer.writeString(offsets[7], object.itunesId);
+  writer.writeDateTime(offsets[8], object.lastAccessedAt);
+  writer.writeDateTime(offsets[9], object.lastRefreshedAt);
+  writer.writeDateTime(offsets[10], object.subscribedAt);
+  writer.writeString(offsets[11], object.title);
 }
 
 Subscription _subscriptionDeserialize(
@@ -140,10 +148,12 @@ Subscription _subscriptionDeserialize(
   object.feedUrl = reader.readString(offsets[4]);
   object.genres = reader.readString(offsets[5]);
   object.id = id;
-  object.itunesId = reader.readString(offsets[6]);
-  object.lastRefreshedAt = reader.readDateTimeOrNull(offsets[7]);
-  object.subscribedAt = reader.readDateTime(offsets[8]);
-  object.title = reader.readString(offsets[9]);
+  object.isCached = reader.readBool(offsets[6]);
+  object.itunesId = reader.readString(offsets[7]);
+  object.lastAccessedAt = reader.readDateTimeOrNull(offsets[8]);
+  object.lastRefreshedAt = reader.readDateTimeOrNull(offsets[9]);
+  object.subscribedAt = reader.readDateTime(offsets[10]);
+  object.title = reader.readString(offsets[11]);
   return object;
 }
 
@@ -167,12 +177,16 @@ P _subscriptionDeserializeProp<P>(
     case 5:
       return (reader.readString(offset)) as P;
     case 6:
-      return (reader.readString(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 7:
-      return (reader.readDateTimeOrNull(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 8:
-      return (reader.readDateTime(offset)) as P;
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 9:
+      return (reader.readDateTimeOrNull(offset)) as P;
+    case 10:
+      return (reader.readDateTime(offset)) as P;
+    case 11:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -1202,6 +1216,15 @@ extension SubscriptionQueryFilter
   }
 
   QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  isCachedEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'isCached', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
   itunesIdEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
@@ -1338,6 +1361,79 @@ extension SubscriptionQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         FilterCondition.greaterThan(property: r'itunesId', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  lastAccessedAtIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'lastAccessedAt'),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  lastAccessedAtIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'lastAccessedAt'),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  lastAccessedAtEqualTo(DateTime? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'lastAccessedAt', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  lastAccessedAtGreaterThan(DateTime? value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'lastAccessedAt',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  lastAccessedAtLessThan(DateTime? value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'lastAccessedAt',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  lastAccessedAtBetween(
+    DateTime? lower,
+    DateTime? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'lastAccessedAt',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
       );
     });
   }
@@ -1701,6 +1797,18 @@ extension SubscriptionQuerySortBy
     });
   }
 
+  QueryBuilder<Subscription, Subscription, QAfterSortBy> sortByIsCached() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isCached', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterSortBy> sortByIsCachedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isCached', Sort.desc);
+    });
+  }
+
   QueryBuilder<Subscription, Subscription, QAfterSortBy> sortByItunesId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'itunesId', Sort.asc);
@@ -1710,6 +1818,20 @@ extension SubscriptionQuerySortBy
   QueryBuilder<Subscription, Subscription, QAfterSortBy> sortByItunesIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'itunesId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterSortBy>
+  sortByLastAccessedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastAccessedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterSortBy>
+  sortByLastAccessedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastAccessedAt', Sort.desc);
     });
   }
 
@@ -1842,6 +1964,18 @@ extension SubscriptionQuerySortThenBy
     });
   }
 
+  QueryBuilder<Subscription, Subscription, QAfterSortBy> thenByIsCached() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isCached', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterSortBy> thenByIsCachedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isCached', Sort.desc);
+    });
+  }
+
   QueryBuilder<Subscription, Subscription, QAfterSortBy> thenByItunesId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'itunesId', Sort.asc);
@@ -1851,6 +1985,20 @@ extension SubscriptionQuerySortThenBy
   QueryBuilder<Subscription, Subscription, QAfterSortBy> thenByItunesIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'itunesId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterSortBy>
+  thenByLastAccessedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastAccessedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterSortBy>
+  thenByLastAccessedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastAccessedAt', Sort.desc);
     });
   }
 
@@ -1942,11 +2090,24 @@ extension SubscriptionQueryWhereDistinct
     });
   }
 
+  QueryBuilder<Subscription, Subscription, QDistinct> distinctByIsCached() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'isCached');
+    });
+  }
+
   QueryBuilder<Subscription, Subscription, QDistinct> distinctByItunesId({
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'itunesId', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QDistinct>
+  distinctByLastAccessedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'lastAccessedAt');
     });
   }
 
@@ -2016,9 +2177,22 @@ extension SubscriptionQueryProperty
     });
   }
 
+  QueryBuilder<Subscription, bool, QQueryOperations> isCachedProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'isCached');
+    });
+  }
+
   QueryBuilder<Subscription, String, QQueryOperations> itunesIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'itunesId');
+    });
+  }
+
+  QueryBuilder<Subscription, DateTime?, QQueryOperations>
+  lastAccessedAtProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'lastAccessedAt');
     });
   }
 

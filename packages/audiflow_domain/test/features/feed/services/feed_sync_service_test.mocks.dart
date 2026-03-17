@@ -226,6 +226,81 @@ class MockSubscriptionRepository extends _i1.Mock
             returnValueForMissingStub: _i11.Future<void>.value(),
           )
           as _i11.Future<void>);
+
+  @override
+  _i11.Future<_i2.Subscription> getOrCreateCached({
+    required String? itunesId,
+    required String? feedUrl,
+    required String? title,
+    required String? artistName,
+    String? artworkUrl,
+    String? description,
+    List<String>? genres,
+    bool? explicit,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#getOrCreateCached, [], {
+              #itunesId: itunesId,
+              #feedUrl: feedUrl,
+              #title: title,
+              #artistName: artistName,
+              #artworkUrl: artworkUrl,
+              #description: description,
+              #genres: genres,
+              #explicit: explicit,
+            }),
+            returnValue: _i11.Future<_i2.Subscription>.value(
+              _FakeSubscription_0(
+                this,
+                Invocation.method(#getOrCreateCached, [], {
+                  #itunesId: itunesId,
+                  #feedUrl: feedUrl,
+                  #title: title,
+                  #artistName: artistName,
+                  #artworkUrl: artworkUrl,
+                  #description: description,
+                  #genres: genres,
+                  #explicit: explicit,
+                }),
+              ),
+            ),
+          )
+          as _i11.Future<_i2.Subscription>);
+
+  @override
+  _i11.Future<_i2.Subscription?> promoteToSubscribed(String? itunesId) =>
+      (super.noSuchMethod(
+            Invocation.method(#promoteToSubscribed, [itunesId]),
+            returnValue: _i11.Future<_i2.Subscription?>.value(),
+          )
+          as _i11.Future<_i2.Subscription?>);
+
+  @override
+  _i11.Future<void> updateLastAccessed(int? id) =>
+      (super.noSuchMethod(
+            Invocation.method(#updateLastAccessed, [id]),
+            returnValue: _i11.Future<void>.value(),
+            returnValueForMissingStub: _i11.Future<void>.value(),
+          )
+          as _i11.Future<void>);
+
+  @override
+  _i11.Future<List<_i2.Subscription>> getCachedSubscriptions() =>
+      (super.noSuchMethod(
+            Invocation.method(#getCachedSubscriptions, []),
+            returnValue: _i11.Future<List<_i2.Subscription>>.value(
+              <_i2.Subscription>[],
+            ),
+          )
+          as _i11.Future<List<_i2.Subscription>>);
+
+  @override
+  _i11.Future<bool> deleteById(int? id) =>
+      (super.noSuchMethod(
+            Invocation.method(#deleteById, [id]),
+            returnValue: _i11.Future<bool>.value(false),
+          )
+          as _i11.Future<bool>);
 }
 
 /// A class which mocks [EpisodeRepository].

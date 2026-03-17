@@ -47,6 +47,37 @@ abstract class SubscriptionRepository {
 
   /// Updates a subscription's lastRefreshedAt timestamp.
   Future<void> updateLastRefreshed(String itunesId, DateTime timestamp);
+
+  /// Returns or creates a cached subscription entry.
+  ///
+  /// If a subscription already exists for [itunesId], returns it.
+  /// Otherwise creates a new entry with [isCached] = true.
+  Future<Subscription> getOrCreateCached({
+    required String itunesId,
+    required String feedUrl,
+    required String title,
+    required String artistName,
+    String? artworkUrl,
+    String? description,
+    List<String> genres,
+    bool explicit,
+  });
+
+  /// Promotes a cached subscription to a real subscription.
+  ///
+  /// Sets [isCached] = false and updates [subscribedAt] to now.
+  /// Returns the promoted subscription, or null if not found.
+  Future<Subscription?> promoteToSubscribed(String itunesId);
+
+  /// Updates the [lastAccessedAt] timestamp for a subscription.
+  Future<void> updateLastAccessed(int id);
+
+  /// Returns all cached (non-subscribed) subscriptions ordered
+  /// by lastAccessedAt ascending.
+  Future<List<Subscription>> getCachedSubscriptions();
+
+  /// Deletes a subscription by its database ID.
+  Future<bool> deleteById(int id);
 }
 
 /// Exception thrown when a subscription operation fails.

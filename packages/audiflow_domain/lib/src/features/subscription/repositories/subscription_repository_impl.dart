@@ -33,6 +33,14 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
     List<String> genres = const <String>[],
     bool explicit = false,
   }) async {
+    // Check for existing cached entry and promote it
+    final existing = await _datasource.getByItunesId(itunesId);
+    if (existing != null && existing.isCached) {
+      final promoted = await _datasource.promoteToSubscribed(itunesId);
+      if (promoted != null) return promoted;
+      // Concurrent delete -- fall through to create fresh
+    }
+
     final subscription = Subscription()
       ..itunesId = itunesId
       ..feedUrl = feedUrl
@@ -93,5 +101,48 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
   @override
   Future<void> updateLastRefreshed(String itunesId, DateTime timestamp) async {
     await _datasource.updateLastRefreshed(itunesId, timestamp);
+  }
+
+  @override
+  Future<Subscription> getOrCreateCached({
+    required String itunesId,
+    required String feedUrl,
+    required String title,
+    required String artistName,
+    String? artworkUrl,
+    String? description,
+    List<String> genres = const <String>[],
+    bool explicit = false,
+  }) {
+    return _datasource.getOrCreateCached(
+      itunesId: itunesId,
+      feedUrl: feedUrl,
+      title: title,
+      artistName: artistName,
+      artworkUrl: artworkUrl,
+      description: description,
+      genres: genres.join(','),
+      explicit: explicit,
+    );
+  }
+
+  @override
+  Future<Subscription?> promoteToSubscribed(String itunesId) {
+    return _datasource.promoteToSubscribed(itunesId);
+  }
+
+  @override
+  Future<void> updateLastAccessed(int id) {
+    return _datasource.updateLastAccessed(id, DateTime.now());
+  }
+
+  @override
+  Future<List<Subscription>> getCachedSubscriptions() {
+    return _datasource.getCachedSubscriptions();
+  }
+
+  @override
+  Future<bool> deleteById(int id) {
+    return _datasource.deleteById(id);
   }
 }

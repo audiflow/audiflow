@@ -61,7 +61,22 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
   DateTime? _lastRefreshedAt;
 
   @override
+  void initState() {
+    super.initState();
+    // Set metadata hint so podcastDetail can create a cached
+    // subscription for non-subscribed podcasts
+    final feedUrl = podcast.feedUrl;
+    if (feedUrl != null) {
+      PodcastMetadataHints.set(feedUrl, podcast);
+    }
+  }
+
+  @override
   void dispose() {
+    final feedUrl = podcast.feedUrl;
+    if (feedUrl != null) {
+      PodcastMetadataHints.remove(feedUrl);
+    }
     _scrollController.dispose();
     super.dispose();
   }
@@ -86,14 +101,37 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
 
     final feedAsync = ref.watch(podcastDetailProvider(feedUrl));
 
-    return feedAsync.when(
-      data: (_) => _buildContent(feedUrl),
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stack) => PodcastDetailErrorState(
-        error: error.toString(),
+    if (feedAsync.hasError) {
+      return PodcastDetailErrorState(
+        error: feedAsync.error.toString(),
         onRetry: () => ref.invalidate(podcastDetailProvider(feedUrl)),
-      ),
+      );
+    }
+
+    // Watch all downstream providers so we can gate on them
+    final subscriptionAsync = ref.watch(subscriptionByFeedUrlProvider(feedUrl));
+    final subscription = subscriptionAsync.value;
+
+    final prefsAsync = subscription != null
+        ? ref.watch(podcastViewPreferenceControllerProvider(subscription.id))
+        : null;
+
+    final playlistsAsync = ref.watch(
+      sortedPodcastSmartPlaylistsProvider(feedUrl),
     );
+
+    // Show single loading indicator until all data is ready
+    final allReady =
+        feedAsync.hasValue &&
+        !subscriptionAsync.isLoading &&
+        (prefsAsync == null || prefsAsync.hasValue) &&
+        !playlistsAsync.isLoading;
+
+    if (!allReady) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    return _buildContent(feedUrl);
   }
 
   Widget _buildContent(String feedUrl) {
@@ -125,7 +163,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
     final progressMapAsync = ref.watch(podcastEpisodeProgressProvider(feedUrl));
 
     final playlistsAsync = ref.watch(
-      sortedPodcastSmartPlaylistsProvider(feedUrl, podcast.id),
+      sortedPodcastSmartPlaylistsProvider(feedUrl),
     );
     final grouping = playlistsAsync.value;
     final allPlaylists = grouping?.playlists ?? [];

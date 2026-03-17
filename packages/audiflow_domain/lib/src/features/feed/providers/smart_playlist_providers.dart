@@ -171,12 +171,11 @@ Future<SmartPlaylistGrouping?> podcastSmartPlaylists(
 }
 
 /// Builds SmartPlaylistGrouping from cached SmartPlaylistEntity
-/// records.
+/// records and their persisted groups.
 ///
-/// When a pattern config matches, re-resolves from episodes
-/// using the resolver service (groups are not cached). For
-/// season-based resolvers without a config match, groups by
-/// episode.seasonNumber.
+/// Reconstructs the full grouping from database entities.
+/// Re-resolves only when config version has changed (upstream
+/// config update).
 Future<SmartPlaylistGrouping?> _buildGroupingFromCache(
   Ref ref,
   int podcastId,
@@ -184,46 +183,96 @@ Future<SmartPlaylistGrouping?> _buildGroupingFromCache(
   EpisodeRepository episodeRepo,
   String feedUrl,
 ) async {
-  final config = await ref.read(
-    smartPlaylistPatternByFeedUrlProvider(feedUrl).future,
-  );
+  final playlistDatasource = ref.watch(smartPlaylistLocalDatasourceProvider);
 
-  // Pattern configs always have playlists with resolvers;
-  // re-resolve from episodes since groups are not persisted.
-  if (config != null) {
-    return _reResolveFromEpisodes(ref, podcastId, feedUrl);
+  // Check if config version has changed
+  final configRepo = ref.watch(smartPlaylistConfigRepositoryProvider);
+  final summary = configRepo.findMatchingPattern(null, feedUrl);
+  if (summary != null) {
+    final cachedVersion = cachedPlaylists.first.configVersion;
+    if (cachedVersion == null || cachedVersion != summary.dataVersion) {
+      // Config has been updated upstream -- re-resolve
+      return _reResolveFromEpisodes(ref, podcastId, feedUrl);
+    }
   }
 
   final episodes = await episodeRepo.getByPodcastId(podcastId);
   if (episodes.isEmpty) return null;
 
   final resolverType = cachedPlaylists.first.resolverType;
-
-  // Season-number-based grouping (generic podcasts)
-  final episodesByPlaylistNum = <int, List<int>>{};
   final ungroupedIds = <int>[];
+  final allGroupedEpisodeIds = <int>{};
 
-  for (final episode in episodes) {
-    final seasonNum = episode.seasonNumber;
-    if (seasonNum != null && 1 <= seasonNum) {
-      episodesByPlaylistNum.putIfAbsent(seasonNum, () => []).add(episode.id);
+  // Reconstruct playlists from cached entities + persisted groups
+  final playlists = <SmartPlaylist>[];
+  for (final entity in cachedPlaylists) {
+    // Use stored playlistId; fall back for legacy records
+    final playlistId = entity.playlistId.isNotEmpty
+        ? entity.playlistId
+        : 'season_${entity.playlistNumber}';
+
+    // Load persisted groups for this playlist
+    final groupEntities = await playlistDatasource.getGroupsByPlaylist(
+      podcastId,
+      playlistId,
+    );
+
+    List<SmartPlaylistGroup>? groups;
+    List<int> episodeIds;
+
+    if (groupEntities.isNotEmpty) {
+      // Reconstruct groups from persisted entities
+      groups = groupEntities.map((g) {
+        final gEpisodeIds = g.episodeIds.isEmpty
+            ? <int>[]
+            : g.episodeIds.split(',').map(int.parse).toList();
+        allGroupedEpisodeIds.addAll(gEpisodeIds);
+        return SmartPlaylistGroup(
+          id: g.groupId,
+          displayName: g.displayName,
+          sortKey: g.sortKey,
+          episodeIds: gEpisodeIds,
+          thumbnailUrl: g.thumbnailUrl,
+          yearOverride: g.yearOverride != null
+              ? YearBinding.fromString(g.yearOverride)
+              : null,
+          earliestDate: g.earliestDate,
+          latestDate: g.latestDate,
+          totalDurationMs: g.totalDurationMs,
+        );
+      }).toList();
+      episodeIds = groups.expand((g) => g.episodeIds).toList();
     } else {
+      // Fallback: season-number-based grouping
+      episodeIds = episodes
+          .where((e) => e.seasonNumber == entity.playlistNumber)
+          .map((e) => e.id)
+          .toList();
+      allGroupedEpisodeIds.addAll(episodeIds);
+    }
+
+    playlists.add(
+      SmartPlaylist(
+        id: playlistId,
+        displayName: entity.displayName,
+        sortKey: entity.sortKey,
+        episodeIds: episodeIds,
+        thumbnailUrl: entity.thumbnailUrl,
+        playlistStructure: PlaylistStructure.fromString(
+          entity.playlistStructure,
+        ),
+        yearBinding: YearBinding.fromString(entity.yearHeaderMode),
+        groups: groups,
+      ),
+    );
+  }
+
+  // Ungrouped = episodes not in any playlist
+  for (final episode in episodes) {
+    if (!allGroupedEpisodeIds.contains(episode.id)) {
       ungroupedIds.add(episode.id);
     }
   }
-
-  final playlists = cachedPlaylists.map((entity) {
-    final episodeIds = episodesByPlaylistNum[entity.playlistNumber] ?? [];
-    return SmartPlaylist(
-      id: 'season_${entity.playlistNumber}',
-      displayName: entity.displayName,
-      sortKey: entity.sortKey,
-      episodeIds: episodeIds,
-      thumbnailUrl: entity.thumbnailUrl,
-      playlistStructure: PlaylistStructure.fromString(entity.playlistStructure),
-      yearBinding: YearBinding.fromString(entity.yearHeaderMode),
-    );
-  }).toList();
 
   return SmartPlaylistGrouping(
     playlists: playlists,
@@ -299,6 +348,8 @@ Future<SmartPlaylistGrouping?> _resolveAndPersistSmartPlaylists(
   final entities = <SmartPlaylistEntity>[];
   final podcastImage = podcastImageUrl ?? findPodcastImageUrl(episodes);
 
+  final configVersion = summary?.dataVersion;
+
   for (final playlist in result.playlists) {
     _enrichPlaylist(
       playlist,
@@ -308,6 +359,7 @@ Future<SmartPlaylistGrouping?> _resolveAndPersistSmartPlaylists(
       enrichedPlaylists,
       entities,
       podcastImageUrl: podcastImage,
+      configVersion: configVersion,
     );
   }
 
@@ -395,6 +447,7 @@ void _enrichPlaylist(
   List<SmartPlaylist> enrichedPlaylists,
   List<SmartPlaylistEntity> entities, {
   String? podcastImageUrl,
+  int? configVersion,
 }) {
   // Get episodes for this playlist, sorted by publishedAt
   // (newest first)
@@ -430,12 +483,14 @@ void _enrichPlaylist(
     SmartPlaylistEntity()
       ..podcastId = podcastId
       ..playlistNumber = playlist.sortKey
+      ..playlistId = playlist.id
       ..displayName = playlist.displayName
       ..sortKey = playlist.sortKey
       ..resolverType = result.resolverType
       ..thumbnailUrl = thumbnailUrl
       ..yearGrouped = playlist.yearBinding != YearBinding.none
-      ..yearHeaderMode = playlist.yearBinding.name,
+      ..yearHeaderMode = playlist.yearBinding.name
+      ..configVersion = configVersion,
   );
 }
 
@@ -525,8 +580,8 @@ Future<bool> hasSmartPlaylistView(Ref ref, int podcastId) async {
 /// for a podcast by feed URL.
 ///
 /// Looks up the subscription by feedUrl and delegates to
-/// [hasSmartPlaylistView]. Returns false if the podcast is
-/// not subscribed.
+/// [hasSmartPlaylistView]. All visited podcasts have a
+/// subscription entry (real or cached).
 @riverpod
 Future<bool> hasSmartPlaylistViewByFeedUrl(Ref ref, String feedUrl) async {
   final subscriptionRepo = ref.watch(subscriptionRepositoryProvider);
@@ -541,8 +596,8 @@ Future<bool> hasSmartPlaylistViewByFeedUrl(Ref ref, String feedUrl) async {
 ///
 /// Looks up the subscription by feedUrl and returns the
 /// [SmartPlaylistGrouping] if episodes can be grouped into
-/// smart playlists. Returns null if the podcast is not
-/// subscribed or if no resolver can group the episodes.
+/// smart playlists. All visited podcasts have a subscription
+/// entry (real or cached).
 @riverpod
 Future<SmartPlaylistGrouping?> podcastSmartPlaylistsByFeedUrl(
   Ref ref,

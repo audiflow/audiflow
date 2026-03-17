@@ -133,11 +133,39 @@ Future<void> _startApp(String smartPlaylistConfigBaseUrl) async {
       .read(patternSummariesProvider.notifier)
       .setSummaries(rootMeta.patterns);
 
+  // Run cache eviction non-blocking after startup
+  _runCacheEviction(container, isar);
+
   runApp(
     UncontrolledProviderScope(
       container: container,
       child: const AppLifecycleObserver(child: MyApp()),
     ),
+  );
+}
+
+/// Runs podcast cache eviction in the background.
+///
+/// Removes stale cached (non-subscribed) podcasts that haven't
+/// been accessed recently. Non-blocking -- errors are logged
+/// but don't affect app startup.
+void _runCacheEviction(ProviderContainer container, Isar isar) {
+  final logger = container.read(namedLoggerProvider('CacheEviction'));
+  final subscriptionRepo = container.read(subscriptionRepositoryProvider);
+
+  final evictionService = PodcastCacheEvictionService(
+    subscriptionRepository: subscriptionRepo,
+    isar: isar,
+    logger: logger,
+  );
+
+  // Fire-and-forget -- non-blocking startup
+  // ignore: unawaited_futures
+  evictionService.evict().then(
+    (_) {},
+    onError: (Object error, StackTrace stack) {
+      logger.e('Cache eviction failed', error: error, stackTrace: stack);
+    },
   );
 }
 
