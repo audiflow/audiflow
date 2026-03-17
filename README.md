@@ -14,3 +14,13 @@ A few resources to get you started if this is your first Flutter project:
 For help getting started with Flutter development, view the
 [online documentation](https://docs.flutter.dev/), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.
+
+## Contributing
+
+Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md)
+before submitting a pull request. All contributors must sign the
+[Contributor License Agreement](CLA.md).
+
+## License
+
+This project is licensed under the [GNU Affero General Public License v3.0](LICENSE).
