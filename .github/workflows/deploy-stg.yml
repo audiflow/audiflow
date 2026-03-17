@@ -89,10 +89,32 @@ jobs:
           mkdir -p ~/.private_keys
           echo "$ASC_PRIVATE_KEY" > ~/.private_keys/AuthKey_${ASC_KEY_ID}.p8
 
+      - name: Write ExportOptions.plist
+        run: |
+          printf '%s\n' \
+            '<?xml version="1.0" encoding="UTF-8"?>' \
+            '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">' \
+            '<plist version="1.0">' \
+            '<dict>' \
+            '  <key>method</key>' \
+            '  <string>app-store-connect</string>' \
+            '  <key>signingStyle</key>' \
+            '  <string>automatic</string>' \
+            '  <key>teamID</key>' \
+            '  <string>R6HMM3C9D7</string>' \
+            '  <key>uploadSymbols</key>' \
+            '  <true/>' \
+            '  <key>manageAppVersionAndBuildNumber</key>' \
+            '  <true/>' \
+            '</dict>' \
+            '</plist>' > packages/audiflow_app/ios/ExportOptions.plist
+
       - name: Build IPA
         run: |
           cd packages/audiflow_app
-          flutter build ipa --flavor stg -t lib/main_stg.dart --dart-define-from-file=../../.env.stg
+          flutter build ipa --flavor stg -t lib/main_stg.dart \
+            --dart-define-from-file=../../.env.stg \
+            --export-options-plist=ios/ExportOptions.plist
 
       - name: Upload to TestFlight
         env:
@@ -148,6 +170,26 @@ jobs:
           ENV_STG: ${{ secrets.ENV_STG }}
         run: echo "$ENV_STG" > .env.stg
 
+      - name: Setup Android signing
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+        run: |
+          for var in ANDROID_KEYSTORE_BASE64 ANDROID_KEY_ALIAS ANDROID_KEY_PASSWORD ANDROID_STORE_PASSWORD; do
+            if [ -z "${!var}" ]; then
+              echo "::error::Missing required secret: $var"
+              exit 1
+            fi
+          done
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > packages/audiflow_app/android/app/upload-keystore.jks
+          printf 'keyAlias=%s\nkeyPassword=%s\nstoreFile=upload-keystore.jks\nstorePassword=%s\n' \
+            "$ANDROID_KEY_ALIAS" "$ANDROID_KEY_PASSWORD" "$ANDROID_STORE_PASSWORD" \
+            > packages/audiflow_app/android/key.properties
+          chmod 600 packages/audiflow_app/android/app/upload-keystore.jks
+          chmod 600 packages/audiflow_app/android/key.properties
+
       - name: Bump version
         run: |
           cd packages/audiflow_app
@@ -180,6 +222,12 @@ jobs:
           sentry-cli debug-files upload \
             --include-sources \
             packages/audiflow_app/build/app/intermediates/merged_native_libs/stgRelease
+
+      - name: Cleanup signing materials
+        if: always()
+        run: |
+          rm -f packages/audiflow_app/android/app/upload-keystore.jks
+          rm -f packages/audiflow_app/android/key.properties
 
   sentry-release:
     name: Create Sentry release
