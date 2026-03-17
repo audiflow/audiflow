@@ -10,7 +10,7 @@ Pod::Spec.new do |s|
   s.description      = <<-DESC
 On-device AI capabilities for Audiflow podcast application using Apple Foundation Models.
                        DESC
-  s.homepage         = 'https://github.com/reedom/audiflow'
+  s.homepage         = 'https://github.com/audiflow/audiflow'
   s.license          = { :type => 'MIT', :file => '../LICENSE' }
   s.author           = { 'Audiflow' => 'support@audiflow.app' }
   s.source           = { :path => '.' }
