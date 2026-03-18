@@ -8,6 +8,7 @@ import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../../routing/app_router.dart';
+import '../../helpers/podcast_lookup.dart';
 import '../widgets/transcript_tab.dart';
 
 /// Full player screen presented as a Cupertino sheet.
@@ -112,7 +113,10 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
                             )
                           : null,
                       onPodcastTitleTap: nowPlaying.episode != null
-                          ? () => _navigateToPodcast(nowPlaying.episode!)
+                          ? () => _navigateToPodcast(
+                              nowPlaying.episode!,
+                              nowPlaying.podcastTitle,
+                            )
                           : null,
                     ),
                   ),
@@ -159,8 +163,8 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
     await _endSeek();
   }
 
-  Future<void> _navigateToPodcast(Episode episode) async {
-    final podcast = await _lookupPodcast(episode.podcastId);
+  Future<void> _navigateToPodcast(Episode episode, String podcastTitle) async {
+    final podcast = await _lookupPodcast(episode.podcastId, podcastTitle);
     if (podcast == null || !mounted) return;
 
     _popSheetAndPush(
@@ -174,7 +178,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
     String podcastTitle,
     String? artworkUrl,
   ) async {
-    final podcast = await _lookupPodcast(episode.podcastId);
+    final podcast = await _lookupPodcast(episode.podcastId, podcastTitle);
     if (podcast == null || !mounted) return;
 
     final guid = episode.guid;
@@ -213,11 +217,14 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
     router.push(path, extra: extra);
   }
 
-  Future<Podcast?> _lookupPodcast(int podcastId) async {
-    final subscriptionRepo = ref.read(subscriptionRepositoryProvider);
-    final subscription = await subscriptionRepo.getById(podcastId);
-    if (subscription == null || !mounted) return null;
-    return subscription.toPodcast();
+  Future<Podcast?> _lookupPodcast(int podcastId, String podcastTitle) async {
+    final result = await lookupPodcastForEpisode(
+      subscriptionRepo: ref.read(subscriptionRepositoryProvider),
+      podcastId: podcastId,
+      podcastTitle: podcastTitle,
+    );
+    if (!mounted) return null;
+    return result;
   }
 }
 
