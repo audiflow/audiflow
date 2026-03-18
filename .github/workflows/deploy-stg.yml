@@ -242,7 +242,8 @@ jobs:
           npm install -g firebase-tools
           firebase appdistribution:distribute \
             packages/audiflow_app/build/app/outputs/flutter-apk/app-stg-release.apk \
-            --app "$FIREBASE_APP_ID"
+            --app "$FIREBASE_APP_ID" \
+            --debug
 
       - name: Cleanup Firebase credentials
         if: always()
