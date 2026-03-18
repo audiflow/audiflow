@@ -488,6 +488,7 @@ void _enrichPlaylist(
       ..sortKey = playlist.sortKey
       ..resolverType = result.resolverType
       ..thumbnailUrl = thumbnailUrl
+      ..playlistStructure = playlist.playlistStructure.name
       ..yearGrouped = playlist.yearBinding != YearBinding.none
       ..yearHeaderMode = playlist.yearBinding.name
       ..configVersion = configVersion,
