@@ -8,6 +8,7 @@ import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../../routing/app_router.dart';
+import '../../helpers/podcast_lookup.dart';
 import '../widgets/transcript_tab.dart';
 
 /// Full player screen presented as a Cupertino sheet.
@@ -216,20 +217,14 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
     router.push(path, extra: extra);
   }
 
-  /// Finds the subscription/podcast for the given episode.
-  ///
-  /// Tries direct ID lookup first. Falls back to title match
-  /// when episode.podcastId references a stale Isar ID (e.g.
-  /// after a schema migration that reassigned subscription IDs).
   Future<Podcast?> _lookupPodcast(int podcastId, String podcastTitle) async {
-    final subscriptionRepo = ref.read(subscriptionRepositoryProvider);
-    var subscription = await subscriptionRepo.getById(podcastId);
-    if (subscription == null && podcastTitle.isNotEmpty) {
-      final all = await subscriptionRepo.getSubscriptions();
-      subscription = all.where((s) => s.title == podcastTitle).firstOrNull;
-    }
-    if (subscription == null || !mounted) return null;
-    return subscription.toPodcast();
+    final result = await lookupPodcastForEpisode(
+      subscriptionRepo: ref.read(subscriptionRepositoryProvider),
+      podcastId: podcastId,
+      podcastTitle: podcastTitle,
+    );
+    if (!mounted) return null;
+    return result;
   }
 }
 
