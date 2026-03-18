@@ -79,6 +79,45 @@ void main() {
       check(result).isNull();
     });
 
+    test(
+      'returns null when ID misses and multiple subscriptions share title',
+      () async {
+        final repoWithDuplicates = FakeSubscriptionRepository(
+          subscriptions: [
+            subscriptionA,
+            Subscription()
+              ..id = 10
+              ..itunesId = '999'
+              ..feedUrl = 'https://example.com/c.xml'
+              ..title = 'Podcast A'
+              ..artistName = 'Other Artist'
+              ..genres = ''
+              ..explicit = false
+              ..subscribedAt = DateTime(2024, 3, 1),
+          ],
+        );
+
+        final result = await lookupPodcastForEpisode(
+          subscriptionRepo: repoWithDuplicates,
+          podcastId: 99, // stale ID, no match
+          podcastTitle:
+              'Podcast A', // ambiguous — two subscriptions share this title
+        );
+
+        check(result).isNull();
+      },
+    );
+
+    test('skips title fallback when podcastTitle is only whitespace', () async {
+      final result = await lookupPodcastForEpisode(
+        subscriptionRepo: fakeRepo,
+        podcastId: 99,
+        podcastTitle: '   ',
+      );
+
+      check(result).isNull();
+    });
+
     test('prefers direct ID match over title match', () async {
       final repoWithConflict = FakeSubscriptionRepository(
         subscriptions: [

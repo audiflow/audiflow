@@ -11,9 +11,12 @@ Future<Podcast?> lookupPodcastForEpisode({
   required String podcastTitle,
 }) async {
   var subscription = await subscriptionRepo.getById(podcastId);
-  if (subscription == null && podcastTitle.isNotEmpty) {
+  if (subscription == null && podcastTitle.trim().isNotEmpty) {
     final all = await subscriptionRepo.getSubscriptions();
-    subscription = all.where((s) => s.title == podcastTitle).firstOrNull;
+    final matches = all.where((s) => s.title == podcastTitle).toList();
+    if (matches.length == 1) {
+      subscription = matches.first;
+    }
   }
   if (subscription == null) return null;
   return subscription.toPodcast();
