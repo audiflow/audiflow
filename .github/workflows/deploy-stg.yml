@@ -224,9 +224,11 @@ jobs:
       - name: Write Firebase service account
         env:
           FIREBASE_SA_JSON: ${{ secrets.FIREBASE_SERVICE_CREDENTIALS_JSON }}
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-sa.json
         run: |
-          printf '%s' "$FIREBASE_SA_JSON" > "${{ runner.temp }}/firebase-sa.json"
-          python3 -c "import json; json.load(open('${{ runner.temp }}/firebase-sa.json'))"
+          printf '%s' "$FIREBASE_SA_JSON" > "$GOOGLE_APPLICATION_CREDENTIALS"
+          chmod 600 "$GOOGLE_APPLICATION_CREDENTIALS"
+          python3 -c "import json; json.load(open('$GOOGLE_APPLICATION_CREDENTIALS'))"
 
       - name: Upload to Firebase App Distribution
         env:
@@ -240,7 +242,9 @@ jobs:
 
       - name: Cleanup Firebase credentials
         if: always()
-        run: rm -f "${{ runner.temp }}/firebase-sa.json"
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-sa.json
+        run: rm -f "$GOOGLE_APPLICATION_CREDENTIALS"
 
       - name: Upload Android debug symbols to Sentry
         env:
