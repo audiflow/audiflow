@@ -112,7 +112,10 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
                             )
                           : null,
                       onPodcastTitleTap: nowPlaying.episode != null
-                          ? () => _navigateToPodcast(nowPlaying.episode!)
+                          ? () => _navigateToPodcast(
+                              nowPlaying.episode!,
+                              nowPlaying.podcastTitle,
+                            )
                           : null,
                     ),
                   ),
@@ -159,8 +162,8 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
     await _endSeek();
   }
 
-  Future<void> _navigateToPodcast(Episode episode) async {
-    final podcast = await _lookupPodcast(episode.podcastId);
+  Future<void> _navigateToPodcast(Episode episode, String podcastTitle) async {
+    final podcast = await _lookupPodcast(episode.podcastId, podcastTitle);
     if (podcast == null || !mounted) return;
 
     _popSheetAndPush(
@@ -174,7 +177,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
     String podcastTitle,
     String? artworkUrl,
   ) async {
-    final podcast = await _lookupPodcast(episode.podcastId);
+    final podcast = await _lookupPodcast(episode.podcastId, podcastTitle);
     if (podcast == null || !mounted) return;
 
     final guid = episode.guid;
@@ -213,9 +216,18 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
     router.push(path, extra: extra);
   }
 
-  Future<Podcast?> _lookupPodcast(int podcastId) async {
+  /// Finds the subscription/podcast for the given episode.
+  ///
+  /// Tries direct ID lookup first. Falls back to title match
+  /// when episode.podcastId references a stale Isar ID (e.g.
+  /// after a schema migration that reassigned subscription IDs).
+  Future<Podcast?> _lookupPodcast(int podcastId, String podcastTitle) async {
     final subscriptionRepo = ref.read(subscriptionRepositoryProvider);
-    final subscription = await subscriptionRepo.getById(podcastId);
+    var subscription = await subscriptionRepo.getById(podcastId);
+    if (subscription == null && podcastTitle.isNotEmpty) {
+      final all = await subscriptionRepo.getSubscriptions();
+      subscription = all.where((s) => s.title == podcastTitle).firstOrNull;
+    }
     if (subscription == null || !mounted) return null;
     return subscription.toPodcast();
   }
