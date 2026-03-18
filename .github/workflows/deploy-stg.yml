@@ -226,6 +226,10 @@ jobs:
           FIREBASE_SA_JSON: ${{ secrets.FIREBASE_SERVICE_CREDENTIALS_JSON }}
           GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-sa.json
         run: |
+          if [ -z "$FIREBASE_SA_JSON" ]; then
+            echo "::error::Missing required secret: FIREBASE_SERVICE_CREDENTIALS_JSON"
+            exit 1
+          fi
           printf '%s' "$FIREBASE_SA_JSON" > "$GOOGLE_APPLICATION_CREDENTIALS"
           chmod 600 "$GOOGLE_APPLICATION_CREDENTIALS"
           python3 -c "import json; json.load(open('$GOOGLE_APPLICATION_CREDENTIALS'))"
