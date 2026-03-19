@@ -118,6 +118,18 @@ void main() {
       check(result).isNull();
     });
 
+    test('trims podcastTitle before matching', () async {
+      final result = await lookupPodcastForEpisode(
+        subscriptionRepo: fakeRepo,
+        podcastId: 99,
+        podcastTitle: '  Podcast B  ',
+      );
+
+      check(result).isNotNull()
+        ..has((p) => p.id, 'id').equals('222')
+        ..has((p) => p.name, 'name').equals('Podcast B');
+    });
+
     test('prefers direct ID match over title match', () async {
       final repoWithConflict = FakeSubscriptionRepository(
         subscriptions: [
