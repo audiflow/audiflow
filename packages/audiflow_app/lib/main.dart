@@ -147,10 +147,17 @@ Future<void> _startApp(String smartPlaylistConfigBaseUrl) async {
     if (settingsRepo.getAutoSync()) {
       await BackgroundTaskRegistrar.register(
         intervalMinutes: settingsRepo.getSyncIntervalMinutes(),
+        wifiOnly: settingsRepo.getWifiOnlySync(),
       );
     }
-  } on UnimplementedError catch (_) {
-    // Workmanager not available on this platform
+  } catch (e, stack) {
+    // Workmanager not available or platform error — non-critical
+    final logger = container.read(namedLoggerProvider('BackgroundRefresh'));
+    logger.w(
+      'Failed to initialize background refresh',
+      error: e,
+      stackTrace: stack,
+    );
   }
 
   runApp(

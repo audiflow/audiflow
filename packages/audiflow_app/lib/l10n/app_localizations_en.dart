@@ -199,6 +199,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get feedSyncInterval12hours => 'Every 12 hours';
 
   @override
+  String get notificationPermissionRequiredTitle => 'Permission required';
+
+  @override
+  String get notificationPermissionRequiredMessage =>
+      'Notification permission was denied. Please enable it in system settings.';
+
+  @override
+  String get notificationPermissionOpenSettings => 'Open Settings';
+
+  @override
   String get storageImageCache => 'Image Cache';
 
   @override

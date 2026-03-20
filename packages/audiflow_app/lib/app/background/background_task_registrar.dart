@@ -5,13 +5,18 @@ class BackgroundTaskRegistrar {
 
   static const taskName = 'com.audiflow.backgroundRefresh';
 
-  static Future<void> register({required int intervalMinutes}) async {
+  static Future<void> register({
+    required int intervalMinutes,
+    bool wifiOnly = false,
+  }) async {
     try {
       await Workmanager().registerPeriodicTask(
         taskName,
         taskName,
         frequency: Duration(minutes: intervalMinutes),
-        constraints: Constraints(networkType: NetworkType.connected),
+        constraints: Constraints(
+          networkType: wifiOnly ? NetworkType.unmetered : NetworkType.connected,
+        ),
         existingWorkPolicy: ExistingPeriodicWorkPolicy.replace,
       );
     } on UnimplementedError {

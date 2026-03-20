@@ -49,6 +49,7 @@ class _AppLifecycleObserverState extends ConsumerState<AppLifecycleObserver> {
     if (settingsRepo.getAutoSync()) {
       await BackgroundTaskRegistrar.register(
         intervalMinutes: settingsRepo.getSyncIntervalMinutes(),
+        wifiOnly: settingsRepo.getWifiOnlySync(),
       );
     } else {
       await BackgroundTaskRegistrar.cancel();

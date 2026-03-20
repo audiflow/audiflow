@@ -470,6 +470,24 @@ abstract class AppLocalizations {
   /// **'Every 12 hours'**
   String get feedSyncInterval12hours;
 
+  /// Title for notification permission dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Permission required'**
+  String get notificationPermissionRequiredTitle;
+
+  /// Body for notification permission dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Notification permission was denied. Please enable it in system settings.'**
+  String get notificationPermissionRequiredMessage;
+
+  /// Button to open system settings for permissions
+  ///
+  /// In en, this message translates to:
+  /// **'Open Settings'**
+  String get notificationPermissionOpenSettings;
+
   /// Image cache setting title
   ///
   /// In en, this message translates to:

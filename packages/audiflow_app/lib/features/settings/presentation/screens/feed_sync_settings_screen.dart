@@ -31,6 +31,7 @@ class _FeedSyncSettingsScreenState
     if (repo.getAutoSync()) {
       await BackgroundTaskRegistrar.register(
         intervalMinutes: repo.getSyncIntervalMinutes(),
+        wifiOnly: repo.getWifiOnlySync(),
       );
     } else {
       await BackgroundTaskRegistrar.cancel();
@@ -42,36 +43,35 @@ class _FeedSyncSettingsScreenState
     bool enabled,
   ) async {
     if (!enabled) {
-      _update(repo, () => repo.setNotifyNewEpisodes(false));
+      await _update(repo, () => repo.setNotifyNewEpisodes(false));
       return;
     }
 
     final status = await Permission.notification.status;
     if (status.isGranted) {
-      _update(repo, () => repo.setNotifyNewEpisodes(true));
+      await _update(repo, () => repo.setNotifyNewEpisodes(true));
       return;
     }
 
     if (status.isPermanentlyDenied) {
       if (!mounted) return;
+      final l10n = AppLocalizations.of(context);
       await showDialog<void>(
         context: context,
         builder: (ctx) => AlertDialog(
-          title: const Text('Permission required'),
-          content: const Text(
-            'Notification permission was denied. Please enable it in system settings.',
-          ),
+          title: Text(l10n.notificationPermissionRequiredTitle),
+          content: Text(l10n.notificationPermissionRequiredMessage),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancel'),
+              child: Text(l10n.commonCancel),
             ),
             TextButton(
               onPressed: () {
                 Navigator.pop(ctx);
                 openAppSettings();
               },
-              child: const Text('Open Settings'),
+              child: Text(l10n.notificationPermissionOpenSettings),
             ),
           ],
         ),
@@ -81,7 +81,7 @@ class _FeedSyncSettingsScreenState
 
     final result = await Permission.notification.request();
     if (result.isGranted) {
-      _update(repo, () => repo.setNotifyNewEpisodes(true));
+      await _update(repo, () => repo.setNotifyNewEpisodes(true));
     }
   }
 

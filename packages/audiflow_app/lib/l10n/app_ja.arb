@@ -69,6 +69,10 @@
   "feedSyncInterval6hours": "6時間ごと",
   "feedSyncInterval12hours": "12時間ごと",
 
+  "notificationPermissionRequiredTitle": "権限が必要です",
+  "notificationPermissionRequiredMessage": "通知の権限が拒否されました。システム設定から有効にしてください。",
+  "notificationPermissionOpenSettings": "設定を開く",
+
   "storageImageCache": "画像キャッシュ",
   "storageImageCacheSubtitle": "一時ファイルとキャッシュ画像を削除",
   "storageClearCache": "キャッシュをクリア",

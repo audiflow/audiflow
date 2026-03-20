@@ -196,6 +196,16 @@ class AppLocalizationsJa extends AppLocalizations {
   String get feedSyncInterval12hours => '12時間ごと';
 
   @override
+  String get notificationPermissionRequiredTitle => '権限が必要です';
+
+  @override
+  String get notificationPermissionRequiredMessage =>
+      '通知の権限が拒否されました。システム設定から有効にしてください。';
+
+  @override
+  String get notificationPermissionOpenSettings => '設定を開く';
+
+  @override
   String get storageImageCache => '画像キャッシュ';
 
   @override
