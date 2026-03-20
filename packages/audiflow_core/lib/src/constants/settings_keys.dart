@@ -58,6 +58,12 @@ class SettingsKeys {
 
   /// Restrict feed sync to Wi-Fi connections.
   static const String wifiOnlySync = 'settings_wifi_only_sync';
+
+  // -- Notifications --
+
+  /// Whether to show local notifications for new episodes found
+  /// during background refresh.
+  static const String notifyNewEpisodes = 'settings_notify_new_episodes';
 }
 
 /// Default values for app settings when no preference has been saved.
@@ -102,4 +108,7 @@ class SettingsDefaults {
 
   /// Default Wi-Fi only sync setting.
   static const bool wifiOnlySync = false;
+
+  /// Default new episode notification setting.
+  static const bool notifyNewEpisodes = true;
 }
