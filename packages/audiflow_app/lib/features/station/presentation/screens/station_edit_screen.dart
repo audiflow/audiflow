@@ -47,7 +47,7 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
       return l10n.stationPodcastRequired;
     }
     if (errorKey == StationEditError.notFound) {
-      return l10n.stationNotFoundMessage;
+      return l10n.stationNotFoundTitle;
     }
     if (StationEditError.isLimitReached(errorKey)) {
       return l10n.stationLimitReached(StationEditError.parseLimitMax(errorKey));

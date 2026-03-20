@@ -132,9 +132,11 @@ class QueueService {
     List<int> episodeIds;
 
     if (siblingEpisodeIds != null) {
-      final autoPlayOrder = _settingsRepository.getAutoPlayOrder();
+      final useDisplayOrder =
+          forceDisplayOrder ||
+          _settingsRepository.getAutoPlayOrder() == AutoPlayOrder.asDisplayed;
 
-      if (forceDisplayOrder || autoPlayOrder == AutoPlayOrder.asDisplayed) {
+      if (useDisplayOrder) {
         // Use IDs in their original display order, just remove
         // the starting episode and take everything after it.
         final startIndex = siblingEpisodeIds.indexOf(startingEpisodeId);
