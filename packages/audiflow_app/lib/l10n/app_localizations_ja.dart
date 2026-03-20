@@ -633,6 +633,5 @@ class AppLocalizationsJa extends AppLocalizations {
   String get podcastAutoDownloadTitle => '新しいエピソードを自動ダウンロード';
 
   @override
-  String get podcastAutoDownloadSubtitle =>
-      'バックグラウンド更新時に新しいエピソードを自動でダウンロード（Wi-Fiのみ）';
+  String get podcastAutoDownloadSubtitle => 'バックグラウンド更新時に新しいエピソードを自動でダウンロード';
 }

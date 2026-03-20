@@ -148,6 +148,7 @@ class BackgroundRefreshService {
     final wifiOnly = _settingsRepo.getWifiOnlyDownload();
 
     for (final episode in toDownload) {
+      if (episode.audioUrl.isEmpty) continue;
       await _downloadRepo.createDownload(
         episodeId: episode.id,
         audioUrl: episode.audioUrl,

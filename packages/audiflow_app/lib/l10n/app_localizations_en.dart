@@ -645,5 +645,5 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get podcastAutoDownloadSubtitle =>
-      'Download new episodes automatically during background refresh (WiFi only)';
+      'Download new episodes automatically during background refresh';
 }

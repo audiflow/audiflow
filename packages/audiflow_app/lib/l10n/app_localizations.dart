@@ -1271,7 +1271,7 @@ abstract class AppLocalizations {
   /// Per-podcast auto-download toggle subtitle
   ///
   /// In en, this message translates to:
-  /// **'Download new episodes automatically during background refresh (WiFi only)'**
+  /// **'Download new episodes automatically during background refresh'**
   String get podcastAutoDownloadSubtitle;
 }
 
