@@ -170,6 +170,18 @@ class AppSettingsRepositoryImpl implements AppSettingsRepository {
     await _ds.setBool(SettingsKeys.wifiOnlySync, enabled);
   }
 
+  // -- Notifications --
+
+  @override
+  bool getNotifyNewEpisodes() =>
+      _ds.getBool(SettingsKeys.notifyNewEpisodes) ??
+      SettingsDefaults.notifyNewEpisodes;
+
+  @override
+  Future<void> setNotifyNewEpisodes(bool enabled) async {
+    await _ds.setBool(SettingsKeys.notifyNewEpisodes, enabled);
+  }
+
   // -- Data management --
 
   @override
@@ -190,6 +202,7 @@ class AppSettingsRepositoryImpl implements AppSettingsRepository {
       _ds.remove(SettingsKeys.autoSync),
       _ds.remove(SettingsKeys.syncIntervalMinutes),
       _ds.remove(SettingsKeys.wifiOnlySync),
+      _ds.remove(SettingsKeys.notifyNewEpisodes),
     ]);
   }
 

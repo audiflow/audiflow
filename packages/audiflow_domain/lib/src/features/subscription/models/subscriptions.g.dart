@@ -27,36 +27,41 @@ const SubscriptionSchema = CollectionSchema(
       name: r'artworkUrl',
       type: IsarType.string,
     ),
-    r'description': PropertySchema(
+    r'autoDownload': PropertySchema(
       id: 2,
+      name: r'autoDownload',
+      type: IsarType.bool,
+    ),
+    r'description': PropertySchema(
+      id: 3,
       name: r'description',
       type: IsarType.string,
     ),
-    r'explicit': PropertySchema(id: 3, name: r'explicit', type: IsarType.bool),
-    r'feedUrl': PropertySchema(id: 4, name: r'feedUrl', type: IsarType.string),
-    r'genres': PropertySchema(id: 5, name: r'genres', type: IsarType.string),
-    r'isCached': PropertySchema(id: 6, name: r'isCached', type: IsarType.bool),
+    r'explicit': PropertySchema(id: 4, name: r'explicit', type: IsarType.bool),
+    r'feedUrl': PropertySchema(id: 5, name: r'feedUrl', type: IsarType.string),
+    r'genres': PropertySchema(id: 6, name: r'genres', type: IsarType.string),
+    r'isCached': PropertySchema(id: 7, name: r'isCached', type: IsarType.bool),
     r'itunesId': PropertySchema(
-      id: 7,
+      id: 8,
       name: r'itunesId',
       type: IsarType.string,
     ),
     r'lastAccessedAt': PropertySchema(
-      id: 8,
+      id: 9,
       name: r'lastAccessedAt',
       type: IsarType.dateTime,
     ),
     r'lastRefreshedAt': PropertySchema(
-      id: 9,
+      id: 10,
       name: r'lastRefreshedAt',
       type: IsarType.dateTime,
     ),
     r'subscribedAt': PropertySchema(
-      id: 10,
+      id: 11,
       name: r'subscribedAt',
       type: IsarType.dateTime,
     ),
-    r'title': PropertySchema(id: 11, name: r'title', type: IsarType.string),
+    r'title': PropertySchema(id: 12, name: r'title', type: IsarType.string),
   },
 
   estimateSize: _subscriptionEstimateSize,
@@ -122,16 +127,17 @@ void _subscriptionSerialize(
 ) {
   writer.writeString(offsets[0], object.artistName);
   writer.writeString(offsets[1], object.artworkUrl);
-  writer.writeString(offsets[2], object.description);
-  writer.writeBool(offsets[3], object.explicit);
-  writer.writeString(offsets[4], object.feedUrl);
-  writer.writeString(offsets[5], object.genres);
-  writer.writeBool(offsets[6], object.isCached);
-  writer.writeString(offsets[7], object.itunesId);
-  writer.writeDateTime(offsets[8], object.lastAccessedAt);
-  writer.writeDateTime(offsets[9], object.lastRefreshedAt);
-  writer.writeDateTime(offsets[10], object.subscribedAt);
-  writer.writeString(offsets[11], object.title);
+  writer.writeBool(offsets[2], object.autoDownload);
+  writer.writeString(offsets[3], object.description);
+  writer.writeBool(offsets[4], object.explicit);
+  writer.writeString(offsets[5], object.feedUrl);
+  writer.writeString(offsets[6], object.genres);
+  writer.writeBool(offsets[7], object.isCached);
+  writer.writeString(offsets[8], object.itunesId);
+  writer.writeDateTime(offsets[9], object.lastAccessedAt);
+  writer.writeDateTime(offsets[10], object.lastRefreshedAt);
+  writer.writeDateTime(offsets[11], object.subscribedAt);
+  writer.writeString(offsets[12], object.title);
 }
 
 Subscription _subscriptionDeserialize(
@@ -143,17 +149,18 @@ Subscription _subscriptionDeserialize(
   final object = Subscription();
   object.artistName = reader.readString(offsets[0]);
   object.artworkUrl = reader.readStringOrNull(offsets[1]);
-  object.description = reader.readStringOrNull(offsets[2]);
-  object.explicit = reader.readBool(offsets[3]);
-  object.feedUrl = reader.readString(offsets[4]);
-  object.genres = reader.readString(offsets[5]);
+  object.autoDownload = reader.readBool(offsets[2]);
+  object.description = reader.readStringOrNull(offsets[3]);
+  object.explicit = reader.readBool(offsets[4]);
+  object.feedUrl = reader.readString(offsets[5]);
+  object.genres = reader.readString(offsets[6]);
   object.id = id;
-  object.isCached = reader.readBool(offsets[6]);
-  object.itunesId = reader.readString(offsets[7]);
-  object.lastAccessedAt = reader.readDateTimeOrNull(offsets[8]);
-  object.lastRefreshedAt = reader.readDateTimeOrNull(offsets[9]);
-  object.subscribedAt = reader.readDateTime(offsets[10]);
-  object.title = reader.readString(offsets[11]);
+  object.isCached = reader.readBool(offsets[7]);
+  object.itunesId = reader.readString(offsets[8]);
+  object.lastAccessedAt = reader.readDateTimeOrNull(offsets[9]);
+  object.lastRefreshedAt = reader.readDateTimeOrNull(offsets[10]);
+  object.subscribedAt = reader.readDateTime(offsets[11]);
+  object.title = reader.readString(offsets[12]);
   return object;
 }
 
@@ -169,24 +176,26 @@ P _subscriptionDeserializeProp<P>(
     case 1:
       return (reader.readStringOrNull(offset)) as P;
     case 2:
-      return (reader.readStringOrNull(offset)) as P;
-    case 3:
       return (reader.readBool(offset)) as P;
+    case 3:
+      return (reader.readStringOrNull(offset)) as P;
     case 4:
-      return (reader.readString(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 5:
       return (reader.readString(offset)) as P;
     case 6:
-      return (reader.readBool(offset)) as P;
-    case 7:
       return (reader.readString(offset)) as P;
+    case 7:
+      return (reader.readBool(offset)) as P;
     case 8:
-      return (reader.readDateTimeOrNull(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 9:
       return (reader.readDateTimeOrNull(offset)) as P;
     case 10:
-      return (reader.readDateTime(offset)) as P;
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 11:
+      return (reader.readDateTime(offset)) as P;
+    case 12:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -699,6 +708,15 @@ extension SubscriptionQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         FilterCondition.greaterThan(property: r'artworkUrl', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  autoDownloadEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'autoDownload', value: value),
       );
     });
   }
@@ -1748,6 +1766,19 @@ extension SubscriptionQuerySortBy
     });
   }
 
+  QueryBuilder<Subscription, Subscription, QAfterSortBy> sortByAutoDownload() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'autoDownload', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterSortBy>
+  sortByAutoDownloadDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'autoDownload', Sort.desc);
+    });
+  }
+
   QueryBuilder<Subscription, Subscription, QAfterSortBy> sortByDescription() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'description', Sort.asc);
@@ -1900,6 +1931,19 @@ extension SubscriptionQuerySortThenBy
   thenByArtworkUrlDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'artworkUrl', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterSortBy> thenByAutoDownload() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'autoDownload', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterSortBy>
+  thenByAutoDownloadDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'autoDownload', Sort.desc);
     });
   }
 
@@ -2060,6 +2104,12 @@ extension SubscriptionQueryWhereDistinct
     });
   }
 
+  QueryBuilder<Subscription, Subscription, QDistinct> distinctByAutoDownload() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'autoDownload');
+    });
+  }
+
   QueryBuilder<Subscription, Subscription, QDistinct> distinctByDescription({
     bool caseSensitive = true,
   }) {
@@ -2150,6 +2200,12 @@ extension SubscriptionQueryProperty
   QueryBuilder<Subscription, String?, QQueryOperations> artworkUrlProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'artworkUrl');
+    });
+  }
+
+  QueryBuilder<Subscription, bool, QQueryOperations> autoDownloadProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'autoDownload');
     });
   }
 

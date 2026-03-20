@@ -45,6 +45,7 @@ dependencies:
   rxdart: ^0.28.0
   meta: ^1.17.0
   xml: ^6.6.1
+  flutter_local_notifications: ^21.0.0
 
 dev_dependencies:
   flutter_test:

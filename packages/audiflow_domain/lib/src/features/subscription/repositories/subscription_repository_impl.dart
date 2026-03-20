@@ -159,4 +159,9 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
     }
     return deleted;
   }
+
+  @override
+  Future<void> updateAutoDownload(int id, {required bool autoDownload}) {
+    return _datasource.updateAutoDownload(id, autoDownload: autoDownload);
+  }
 }

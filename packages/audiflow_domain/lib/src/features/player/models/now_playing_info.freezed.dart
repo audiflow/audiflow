@@ -207,7 +207,7 @@ return $default(_that.episodeUrl,_that.episodeTitle,_that.podcastTitle,_that.art
 
 class _NowPlayingInfo implements NowPlayingInfo {
   const _NowPlayingInfo({required this.episodeUrl, required this.episodeTitle, required this.podcastTitle, this.artworkUrl, this.totalDuration, this.savedPosition, this.episode});
-
+  
 
 @override final  String episodeUrl;
 @override final  String episodeTitle;

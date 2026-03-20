@@ -62,6 +62,16 @@
   "feedSyncInterval4hours": "4時間",
   "feedSyncWifiOnlyTitle": "WiFiのみ同期",
   "feedSyncWifiOnlySubtitle": "WiFi接続時のみフィードを同期",
+  "feedSyncNotifyNewEpisodesTitle": "新しいエピソードの通知",
+  "feedSyncNotifyNewEpisodesSubtitle": "バックグラウンド更新で新しいエピソードが見つかったときに通知を表示",
+  "feedSyncInterval15min": "15分ごと",
+  "feedSyncInterval3hours": "3時間ごと",
+  "feedSyncInterval6hours": "6時間ごと",
+  "feedSyncInterval12hours": "12時間ごと",
+
+  "notificationPermissionRequiredTitle": "権限が必要です",
+  "notificationPermissionRequiredMessage": "通知の権限が拒否されました。システム設定から有効にしてください。",
+  "notificationPermissionOpenSettings": "設定を開く",
 
   "storageImageCache": "画像キャッシュ",
   "storageImageCacheSubtitle": "一時ファイルとキャッシュ画像を削除",
@@ -203,6 +213,9 @@
   "playerTranscriptJumpToCurrent": "現在位置へ",
 
   "episodeTranscriptAvailable": "書き起こしあり",
+
+  "podcastAutoDownloadTitle": "新しいエピソードを自動ダウンロード",
+  "podcastAutoDownloadSubtitle": "バックグラウンド更新時に新しいエピソードを自動でダウンロード",
 
   "stationSectionTitle": "ステーション",
   "stationNew": "新規ステーション",
