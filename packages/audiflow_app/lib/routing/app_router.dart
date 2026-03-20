@@ -2,6 +2,7 @@ import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../l10n/app_localizations.dart';
 import '../features/library/presentation/screens/library_screen.dart';
 import '../features/library/presentation/screens/subscriptions_list_screen.dart';
 import '../features/podcast_detail/presentation/screens/episode_detail_screen.dart';
@@ -437,8 +438,9 @@ class _StationNotFoundScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Station Not Found')),
+      appBar: AppBar(title: Text(l10n.stationNotFoundTitle)),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -446,13 +448,13 @@ class _StationNotFoundScreen extends StatelessWidget {
             const Icon(Icons.error_outline, size: 64),
             const SizedBox(height: 16),
             Text(
-              'Station data not available',
+              l10n.stationNotFoundMessage,
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 8),
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Go Back'),
+              child: Text(l10n.commonGoBack),
             ),
           ],
         ),

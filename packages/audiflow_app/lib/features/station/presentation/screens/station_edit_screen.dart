@@ -130,9 +130,9 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
           maxLength: 50,
           maxLengthEnforcement: MaxLengthEnforcement.enforced,
           textCapitalization: TextCapitalization.words,
-          decoration: const InputDecoration(
-            hintText: 'e.g., News, Tech, Comedy',
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            hintText: AppLocalizations.of(context).stationNameHint,
+            border: const OutlineInputBorder(),
           ),
           onChanged: controller.setName,
         ),
@@ -161,7 +161,7 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
             final actual = subscriptions.where((s) => !s.isCached).toList();
             if (actual.isEmpty) {
               return Text(
-                'No subscriptions yet.',
+                AppLocalizations.of(context).stationNoSubscriptionsYet,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -192,7 +192,8 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
             );
           },
           loading: () => const CircularProgressIndicator.adaptive(),
-          error: (_, _) => const Text('Failed to load subscriptions'),
+          error: (_, _) =>
+              Text(AppLocalizations.of(context).stationNoSubscriptionsYet),
         ),
       ],
     );

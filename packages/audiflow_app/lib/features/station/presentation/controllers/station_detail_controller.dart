@@ -10,7 +10,15 @@ Future<Station?> stationById(Ref ref, int stationId) {
 
 @riverpod
 Stream<List<StationEpisode>> stationEpisodes(Ref ref, int stationId) {
-  return ref.watch(stationEpisodeRepositoryProvider).watchByStation(stationId);
+  final station = ref.watch(stationByIdProvider(stationId));
+  final ascending = station.when(
+    data: (s) => s?.episodeSort == StationEpisodeSort.oldest,
+    loading: () => false,
+    error: (_, _) => false,
+  );
+  return ref
+      .watch(stationEpisodeRepositoryProvider)
+      .watchByStation(stationId, ascending: ascending);
 }
 
 @riverpod

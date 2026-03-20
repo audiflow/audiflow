@@ -136,7 +136,7 @@ final class StationEpisodesProvider
   }
 }
 
-String _$stationEpisodesHash() => r'efe15be6759ad80f19855d28bf025e1f35365064';
+String _$stationEpisodesHash() => r'295b052207d617a6a2a6973cf64c62fe6c57b864';
 
 final class StationEpisodesFamily extends $Family
     with $FunctionalFamilyOverride<Stream<List<StationEpisode>>, int> {

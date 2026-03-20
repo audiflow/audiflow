@@ -783,4 +783,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get stationEditTooltip => 'Edit station';
+
+  @override
+  String get stationNotFoundTitle => 'Station Not Found';
+
+  @override
+  String get stationNotFoundMessage => 'Station data not available';
+
+  @override
+  String get commonGoBack => 'Go Back';
 }

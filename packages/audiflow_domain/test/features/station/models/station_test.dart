@@ -8,6 +8,10 @@ import '../../../helpers/isar_test_helper.dart';
 void main() {
   late Isar isar;
 
+  setUpAll(() async {
+    await Isar.initializeIsarCore(download: true);
+  });
+
   setUp(() async {
     isar = await openTestIsar([StationSchema]);
   });

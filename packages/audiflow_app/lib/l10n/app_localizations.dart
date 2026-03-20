@@ -1495,6 +1495,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Edit station'**
   String get stationEditTooltip;
+
+  /// App bar title for station not found screen
+  ///
+  /// In en, this message translates to:
+  /// **'Station Not Found'**
+  String get stationNotFoundTitle;
+
+  /// Body text for station not found screen
+  ///
+  /// In en, this message translates to:
+  /// **'Station data not available'**
+  String get stationNotFoundMessage;
+
+  /// Go back button label
+  ///
+  /// In en, this message translates to:
+  /// **'Go Back'**
+  String get commonGoBack;
 }
 
 class _AppLocalizationsDelegate

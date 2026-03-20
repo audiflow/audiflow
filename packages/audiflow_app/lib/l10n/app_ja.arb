@@ -259,6 +259,9 @@
   "stationNewestFirst": "新しい順",
   "stationOldestFirst": "古い順",
   "stationEditTooltip": "ステーションを編集",
+  "stationNotFoundTitle": "ステーションが見つかりません",
+  "stationNotFoundMessage": "ステーションのデータが利用できません",
+  "commonGoBack": "戻る",
   "commonCancel": "キャンセル",
   "commonDelete": "削除"
 }

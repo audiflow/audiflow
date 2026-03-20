@@ -10,12 +10,21 @@ class StationPodcastLocalDatasource {
 
   /// Inserts a station–podcast link.
   ///
-  /// Uses [putByStationIdPodcastId] to upsert on the unique composite index,
-  /// so duplicate inserts are silently ignored rather than throwing.
+  /// Performs a safe upsert: looks up an existing row by the unique composite
+  /// index and reuses its Isar id so [put] overwrites rather than throwing.
   Future<void> insert(StationPodcast sp) async {
-    await _isar.writeTxn(
-      () => _isar.stationPodcasts.putByStationIdPodcastId(sp),
-    );
+    await _isar.writeTxn(() async {
+      final existing = await _isar.stationPodcasts
+          .filter()
+          .stationIdEqualTo(sp.stationId)
+          .and()
+          .podcastIdEqualTo(sp.podcastId)
+          .findFirst();
+      if (existing != null) {
+        sp.id = existing.id;
+      }
+      await _isar.stationPodcasts.put(sp);
+    });
   }
 
   /// Returns all links for [stationId].

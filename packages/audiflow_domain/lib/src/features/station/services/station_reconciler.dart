@@ -54,8 +54,10 @@ class StationReconciler {
 
     final toInsert = matchingIds.difference(currentIds);
     final toDelete = currentIds.difference(matchingIds);
+    final toKeep = matchingIds.intersection(currentIds);
 
     final episodeMap = {for (final e in episodes) e.id: e};
+    final currentMap = {for (final e in current) e.episodeId: e};
 
     await _isar.writeTxn(() async {
       if (toDelete.isNotEmpty) {
@@ -65,16 +67,35 @@ class StationReconciler {
             .toList();
         await _isar.stationEpisodes.deleteAll(deleteIds);
       }
-      if (toInsert.isNotEmpty) {
-        final newEntries = toInsert
-            .map(
-              (episodeId) => StationEpisode()
-                ..stationId = stationId
-                ..episodeId = episodeId
-                ..sortKey = episodeMap[episodeId]?.publishedAt,
-            )
-            .toList();
-        await _isar.stationEpisodes.putAll(newEntries);
+
+      final upsertEntries = <StationEpisode>[];
+
+      for (final episodeId in toInsert) {
+        upsertEntries.add(
+          StationEpisode()
+            ..stationId = stationId
+            ..episodeId = episodeId
+            ..sortKey = episodeMap[episodeId]?.publishedAt,
+        );
+      }
+
+      // Update sortKey for existing entries whose publishedAt changed.
+      for (final episodeId in toKeep) {
+        final existing = currentMap[episodeId];
+        final newSortKey = episodeMap[episodeId]?.publishedAt;
+        if (existing != null && existing.sortKey != newSortKey) {
+          upsertEntries.add(
+            StationEpisode()
+              ..id = existing.id
+              ..stationId = stationId
+              ..episodeId = episodeId
+              ..sortKey = newSortKey,
+          );
+        }
+      }
+
+      if (upsertEntries.isNotEmpty) {
+        await _isar.stationEpisodes.putAll(upsertEntries);
       }
     });
   }
@@ -110,6 +131,12 @@ class StationReconciler {
               ..episodeId = episodeId
               ..sortKey = episode.publishedAt,
           );
+        } else if (matches && existing != null) {
+          // Update sortKey if publishedAt changed.
+          if (existing.sortKey != episode.publishedAt) {
+            existing.sortKey = episode.publishedAt;
+            await _isar.stationEpisodes.put(existing);
+          }
         } else if (!matches && existing != null) {
           await _isar.stationEpisodes.delete(existing.id);
         }

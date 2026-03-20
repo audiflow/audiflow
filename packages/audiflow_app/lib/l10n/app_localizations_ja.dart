@@ -768,4 +768,13 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get stationEditTooltip => 'ステーションを編集';
+
+  @override
+  String get stationNotFoundTitle => 'ステーションが見つかりません';
+
+  @override
+  String get stationNotFoundMessage => 'ステーションのデータが利用できません';
+
+  @override
+  String get commonGoBack => '戻る';
 }

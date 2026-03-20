@@ -38,19 +38,20 @@ class StationDetailScreen extends ConsumerWidget {
   }
 
   Widget _buildNotFound(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Station')),
+      appBar: AppBar(title: Text(l10n.stationNotFoundTitle)),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Icon(Icons.error_outline, size: 64),
             const SizedBox(height: Spacing.md),
-            const Text('Station not found'),
+            Text(l10n.stationNotFoundMessage),
             const SizedBox(height: Spacing.sm),
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Go Back'),
+              child: Text(l10n.commonGoBack),
             ),
           ],
         ),
