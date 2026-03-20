@@ -261,7 +261,5 @@
   "stationEditTooltip": "ステーションを編集",
   "stationNotFoundTitle": "ステーションが見つかりません",
   "stationNotFoundMessage": "ステーションのデータが利用できません",
-  "commonGoBack": "戻る",
-  "commonCancel": "キャンセル",
-  "commonDelete": "削除"
+  "commonGoBack": "戻る"
 }

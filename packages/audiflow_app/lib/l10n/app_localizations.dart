@@ -98,7 +98,7 @@ abstract class AppLocalizations {
     Locale('ja'),
   ];
 
-  /// Cancel button label
+  /// Common cancel action
   ///
   /// In en, this message translates to:
   /// **'Cancel'**
@@ -122,7 +122,7 @@ abstract class AppLocalizations {
   /// **'OK'**
   String get commonOk;
 
-  /// Delete button label
+  /// Common delete action
   ///
   /// In en, this message translates to:
   /// **'Delete'**

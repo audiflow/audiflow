@@ -102,14 +102,14 @@ void main() {
 
   Future<void> putDownloadTask({
     required int episodeId,
-    required int status,
+    DownloadStatus downloadStatus = const DownloadStatus.completed(),
   }) async {
     await isar.writeTxn(
       () => isar.downloadTasks.put(
         DownloadTask()
           ..episodeId = episodeId
           ..audioUrl = 'https://example.com/$episodeId.mp3'
-          ..status = status
+          ..status = downloadStatus.toDbValue()
           ..createdAt = DateTime(2026, 1, 1),
       ),
     );
@@ -177,8 +177,7 @@ void main() {
       final epDownloaded = await putEpisode(podcastId: 1, guid: 'downloaded');
       await putEpisode(podcastId: 1, guid: 'not-downloaded');
 
-      // status 3 = DownloadStatus.completed()
-      await putDownloadTask(episodeId: epDownloaded, status: 3);
+      await putDownloadTask(episodeId: epDownloaded);
 
       await reconciler.reconcileFull(stationId);
 
@@ -264,7 +263,7 @@ void main() {
         guid: 'match',
         publishedAt: DateTime.now().subtract(const Duration(days: 5)),
       );
-      await putDownloadTask(episodeId: epMatch, status: 3);
+      await putDownloadTask(episodeId: epMatch);
 
       // Downloaded + recent, but played
       final epPlayed = await putEpisode(
@@ -272,7 +271,7 @@ void main() {
         guid: 'played',
         publishedAt: DateTime.now().subtract(const Duration(days: 2)),
       );
-      await putDownloadTask(episodeId: epPlayed, status: 3);
+      await putDownloadTask(episodeId: epPlayed);
       await putPlaybackHistory(
         episodeId: epPlayed,
         positionMs: 1000,
@@ -292,7 +291,7 @@ void main() {
         guid: 'old',
         publishedAt: DateTime.now().subtract(const Duration(days: 60)),
       );
-      await putDownloadTask(episodeId: epOld, status: 3);
+      await putDownloadTask(episodeId: epOld);
 
       await reconciler.reconcileFull(stationId);
 

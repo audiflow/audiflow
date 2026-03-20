@@ -490,9 +490,5 @@
   "stationNotFoundMessage": "Station data not available",
   "@stationNotFoundMessage": { "description": "Body text for station not found screen" },
   "commonGoBack": "Go Back",
-  "@commonGoBack": { "description": "Go back button label" },
-  "commonCancel": "Cancel",
-  "@commonCancel": { "description": "Cancel button label" },
-  "commonDelete": "Delete",
-  "@commonDelete": { "description": "Delete button label" }
+  "@commonGoBack": { "description": "Go back button label" }
 }
