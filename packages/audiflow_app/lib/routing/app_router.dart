@@ -484,7 +484,7 @@ class _PodcastNotFoundScreen extends StatelessWidget {
             const SizedBox(height: 8),
             TextButton(
               onPressed: () => context.pop(),
-              child: const Text('Go Back'),
+              child: Text(AppLocalizations.of(context).commonGoBack),
             ),
           ],
         ),
@@ -515,7 +515,7 @@ class _SmartPlaylistNotFoundScreen extends StatelessWidget {
             const SizedBox(height: 8),
             TextButton(
               onPressed: () => context.pop(),
-              child: const Text('Go Back'),
+              child: Text(AppLocalizations.of(context).commonGoBack),
             ),
           ],
         ),
@@ -546,7 +546,7 @@ class _EpisodeNotFoundScreen extends StatelessWidget {
             const SizedBox(height: 8),
             TextButton(
               onPressed: () => context.pop(),
-              child: const Text('Go Back'),
+              child: Text(AppLocalizations.of(context).commonGoBack),
             ),
           ],
         ),
