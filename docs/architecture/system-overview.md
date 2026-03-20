@@ -2,7 +2,7 @@
 
 ## Goal
 
-Provide a reliable, offline-first podcast player for iOS and Android with smart playlist support, transcript display, and voice commands. The system prioritizes fast startup, low memory usage during RSS parsing, and seamless background audio playback.
+Provide a reliable, offline-first podcast player for iOS and Android with smart playlist support, station management, transcript display, background feed refresh, and voice commands. The system prioritizes fast startup, low memory usage during RSS parsing, and seamless background audio playback.
 
 ## Context
 
@@ -13,7 +13,7 @@ This repository is part of:
 
 ## High-level structure
 
-- `audiflow_app`: Presentation layer -- screens, controllers, routing, localization
+- `audiflow_app`: Presentation layer -- screens, controllers, routing, localization, background task registration
 - `audiflow_domain`: Business logic -- repositories, datasources, Isar collections, services, Riverpod providers
 - `audiflow_core`: Foundation -- constants, extensions, error types, utilities, config
 - `audiflow_podcast`: RSS parsing -- streaming XML parser, feed models, HTTP caching
@@ -33,11 +33,13 @@ This repository is part of:
 7. Playback position is persisted to Isar for resume-on-relaunch
 8. Downloads are managed via `flutter_downloader` with queue and WiFi-only options
 9. Transcript metadata is extracted during feed sync; content is fetched lazily on first play
+10. Background refresh (via workmanager) periodically syncs feeds and sends new episode notifications
+11. Station reconciler updates station episode lists when feeds sync, episodes download, or subscriptions change
 
 ## Primary interfaces
 
 - Input: RSS feed URLs, iTunes Search API, smart playlist config JSON (HTTP)
-- Output: Audio playback (system audio), UI rendering, local database state
+- Output: Audio playback (system audio), UI rendering, local database state, push notifications (new episodes)
 - External dependencies: iTunes Search API, static hosting (GitHub Pages), podcast RSS feeds
 
 ## Design constraints

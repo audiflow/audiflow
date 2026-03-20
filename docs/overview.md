@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Audiflow is a mobile podcast player for iOS and Android, built with Flutter. It provides podcast discovery, subscription management, audio playback with background support, episode downloads, queue management, smart playlist consumption, podcast transcript display, and voice commands. The app follows an offline-first architecture using Isar for local storage.
+Audiflow is a mobile podcast player for iOS and Android, built with Flutter. It provides podcast discovery, subscription management, audio playback with background support, episode downloads, queue management, smart playlist consumption, podcast transcript display, voice commands, station (custom multi-podcast playlist) management, and background feed refresh with new episode notifications. The app follows an offline-first architecture using Isar for local storage.
 
 ## Responsibilities
 
@@ -16,6 +16,8 @@ Audiflow is a mobile podcast player for iOS and Android, built with Flutter. It 
 - Sleep timer and playback speed control
 - Podcast transcript and chapter display
 - On-device voice command processing
+- Station management (custom multi-podcast playlists with duration filters and episode sorting)
+- Background feed refresh with prioritized sync and new episode notifications
 
 ## Non-responsibilities
 
@@ -30,6 +32,7 @@ Audiflow is a mobile podcast player for iOS and Android, built with Flutter. It 
 - **Isar collection**: A class annotated with `@collection` that serves as both database schema and domain entity (no separate DTOs).
 - **Feature module**: A vertical slice containing models, repositories, datasources, services, and events within `audiflow_domain`.
 - **Presentation layer**: Screens, controllers, and widgets in `audiflow_app` that consume domain providers via Riverpod.
+- **Station**: A user-created playlist that aggregates episodes from multiple subscribed podcasts, with configurable duration filters and episode sorting.
 
 ## Primary entry points
 
@@ -50,6 +53,9 @@ Audiflow is a mobile podcast player for iOS and Android, built with Flutter. It 
 - `freezed` + `json_serializable`: Immutable models and JSON serialization
 - `sentry_flutter`: Error tracking and performance monitoring
 - `url_launcher`: In-app browser and external link handling
+- `workmanager`: Background task scheduling for periodic feed refresh
+- `flutter_local_notifications`: New episode notification delivery
+- `connectivity_plus`: Network connectivity detection
 
 ## Read next
 

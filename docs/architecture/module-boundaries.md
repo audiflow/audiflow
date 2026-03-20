@@ -22,6 +22,7 @@ audiflow_cli -> audiflow_domain, audiflow_podcast
 - Feature presentation: screens, controllers, feature-scoped widgets
 - Localization (ARB files for en, ja)
 - Root ProviderScope and app-level observers
+- Background task registration and workmanager lifecycle
 
 #### Non-responsibilities
 - Business logic, data access, model definitions
@@ -38,7 +39,7 @@ audiflow_cli -> audiflow_domain, audiflow_podcast
 ### Module: audiflow_domain
 
 #### Responsibilities
-- Feature modules: feed, player, queue, download, subscription, settings, voice, transcript
+- Feature modules: feed, player, queue, download, subscription, settings, voice, transcript, station
 - Repository interfaces and implementations (co-located)
 - Datasources: local (Isar) and remote (HTTP via Dio)
 - Isar collection definitions (serve as domain entities)
@@ -46,6 +47,8 @@ audiflow_cli -> audiflow_domain, audiflow_podcast
 - Services for business logic orchestration
 - Riverpod providers for dependency injection and state
 - Cross-feature event streams
+- Background refresh service with prioritized sync
+- Background notification service for new episode alerts
 
 #### Non-responsibilities
 - UI rendering, navigation, routing

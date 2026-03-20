@@ -27,6 +27,8 @@ Part of the audiflow ecosystem. Consumes smart playlist config JSON from `audifl
 - Smart playlist config consumption and local caching
 - Podcast transcript and chapter display
 - On-device voice commands
+- Station management (custom multi-podcast playlists)
+- Background feed refresh and new episode notifications
 
 ## Non-responsibilities
 
