@@ -34,6 +34,7 @@ These providers are created when watched and disposed when no longer observed:
 - Settings providers: app settings, playback preferences
 - Search/discovery providers: search results, chart data
 - Transcript providers: transcript segments, chapter data
+- Station providers: station list, station detail, station edit state, station episode lists
 
 ### 3. UI-only state
 
@@ -71,11 +72,19 @@ Features communicate through event streams, not direct provider coupling:
 ```
 PlayerEvent stream (audiflow_domain)
   |-- PlaybackStarted, PlaybackPaused, PlaybackCompleted
-  |-- Watched by: queue service, history service, analytics
-  |
+  |-- Watched by: queue service, history service, analytics, station reconciler
+
 DownloadEvent stream (audiflow_domain)
   |-- DownloadCompleted, DownloadFailed
-  |-- Watched by: feed service (update episode download status)
+  |-- Watched by: feed service (update episode download status), station reconciler
+
+SubscriptionEvent stream (audiflow_domain)
+  |-- Subscribed, Unsubscribed
+  |-- Watched by: station reconciler (update station podcast membership)
+
+FeedSyncEvent stream (audiflow_domain)
+  |-- SyncCompleted
+  |-- Watched by: station reconciler (reconcile station episodes)
 ```
 
 Pattern: Define a `sealed class` for events, expose via `@Riverpod(keepAlive: true)` stream provider.
