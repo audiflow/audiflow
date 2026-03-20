@@ -35,5 +35,5 @@ Depends only on audiflow_core. Consumed by audiflow_domain (feed sync) and audif
 
 ```bash
 cd packages/audiflow_podcast && flutter test
-flutter analyze packages/audiflow_podcast
+flutter analyze .
 ```

@@ -34,5 +34,5 @@ Depends only on audiflow_core. Consumed by audiflow_domain (discovery feature). 
 
 ```bash
 cd packages/audiflow_search && flutter test
-flutter analyze packages/audiflow_search
+flutter analyze .
 ```

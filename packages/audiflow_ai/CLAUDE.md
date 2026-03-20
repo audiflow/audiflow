@@ -37,5 +37,5 @@ Depends only on audiflow_core. Consumed by audiflow_domain. Derived in part from
 
 ```bash
 cd packages/audiflow_ai && flutter test
-flutter analyze packages/audiflow_ai
+flutter analyze .
 ```

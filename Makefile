@@ -89,9 +89,13 @@ upgrade: ## Upgrade all packages
 ## Git
 
 install-hooks: ## Install git hooks
-	@cp .pre-commit-config.yaml .git/hooks/pre-commit || true
-	@chmod +x .git/hooks/pre-commit || true
-	@echo "Git hooks installed!"
+	@if [ -f .pre-commit-config.yaml ]; then \
+		cp .pre-commit-config.yaml .git/hooks/pre-commit && \
+		chmod +x .git/hooks/pre-commit && \
+		echo "Git hooks installed!"; \
+	else \
+		echo "Warning: .pre-commit-config.yaml not found, skipping hook install"; \
+	fi
 
 git-prune-merged: ## Delete local branches merged into main/develop
 	@git fetch --prune

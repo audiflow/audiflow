@@ -24,7 +24,7 @@ Part of the audiflow Flutter monorepo (`audiflow/packages/audiflow_ui/`). Depend
 
 ```bash
 cd packages/audiflow_ui && flutter test
-flutter analyze packages/audiflow_ui
+flutter analyze .
 ```
 
 ## Key references

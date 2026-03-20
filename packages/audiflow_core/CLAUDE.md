@@ -35,5 +35,5 @@ Leaf dependency in the audiflow monorepo -- no internal package dependencies. Al
 
 ```bash
 cd packages/audiflow_core && flutter test
-flutter analyze packages/audiflow_core
+flutter analyze .
 ```

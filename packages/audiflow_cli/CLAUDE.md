@@ -33,5 +33,5 @@ Depends on audiflow_domain and audiflow_podcast. Uses domain pattern models and 
 
 ```bash
 cd packages/audiflow_cli && flutter test
-flutter analyze packages/audiflow_cli
+flutter analyze .
 ```
