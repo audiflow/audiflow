@@ -10,8 +10,8 @@ class StationPodcastLocalDatasource {
 
   /// Inserts a station–podcast link.
   ///
-  /// Performs a safe upsert: looks up an existing row by the unique composite
-  /// index and reuses its Isar id so [put] overwrites rather than throwing.
+  /// No-op if the (stationId, podcastId) pair already exists, preserving
+  /// the original [addedAt] timestamp.
   Future<void> insert(StationPodcast sp) async {
     await _isar.writeTxn(() async {
       final existing = await _isar.stationPodcasts
@@ -20,9 +20,7 @@ class StationPodcastLocalDatasource {
           .and()
           .podcastIdEqualTo(sp.podcastId)
           .findFirst();
-      if (existing != null) {
-        sp.id = existing.id;
-      }
+      if (existing != null) return;
       await _isar.stationPodcasts.put(sp);
     });
   }
