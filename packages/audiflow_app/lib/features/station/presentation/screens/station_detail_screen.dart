@@ -1,3 +1,4 @@
+import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
@@ -7,6 +8,9 @@ import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../../routing/app_router.dart';
+import '../../../podcast_detail/presentation/controllers/podcast_detail_controller.dart';
+import '../../../podcast_detail/presentation/screens/episode_detail_screen.dart';
+import '../../../queue/presentation/controllers/queue_controller.dart';
 import '../controllers/station_detail_controller.dart';
 
 /// Shows filtered episodes for a single [Station].
@@ -100,12 +104,19 @@ class _StationDetailContent extends ConsumerWidget {
       return _buildEmptyState(context);
     }
 
+    final siblingEpisodeIds = stationEpisodes
+        .map((se) => se.episodeId)
+        .toList();
+
     return ListView.builder(
       itemCount: stationEpisodes.length,
+      itemExtent: episodeCardExtent,
       itemBuilder: (context, index) {
         return _StationEpisodeTile(
           key: ValueKey(stationEpisodes[index].id),
           stationEpisode: stationEpisodes[index],
+          stationName: station.name,
+          siblingEpisodeIds: siblingEpisodeIds,
         );
       },
     );
@@ -147,11 +158,19 @@ class _StationDetailContent extends ConsumerWidget {
   }
 }
 
-/// Loads and renders a single episode from a [StationEpisode] row.
+/// Loads and renders a single episode from a [StationEpisode] row with
+/// playback controls and podcast artwork.
 class _StationEpisodeTile extends ConsumerWidget {
-  const _StationEpisodeTile({required this.stationEpisode, super.key});
+  const _StationEpisodeTile({
+    required this.stationEpisode,
+    required this.stationName,
+    required this.siblingEpisodeIds,
+    super.key,
+  });
 
   final StationEpisode stationEpisode;
+  final String stationName;
+  final List<int> siblingEpisodeIds;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -162,74 +181,220 @@ class _StationEpisodeTile extends ConsumerWidget {
     return episodeAsync.when(
       data: (episode) {
         if (episode == null) return const SizedBox.shrink();
-        return _buildTile(context, episode);
+        return _StationEpisodeCard(
+          episode: episode,
+          stationName: stationName,
+          siblingEpisodeIds: siblingEpisodeIds,
+        );
       },
-      loading: () =>
-          const ListTile(leading: CircularProgressIndicator.adaptive()),
+      loading: () => const SizedBox(height: episodeCardExtent),
       error: (_, _) => const SizedBox.shrink(),
     );
   }
+}
 
-  Widget _buildTile(BuildContext context, Episode episode) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+/// Renders an [EpisodeCard] with playback state and podcast metadata.
+class _StationEpisodeCard extends ConsumerWidget {
+  const _StationEpisodeCard({
+    required this.episode,
+    required this.stationName,
+    required this.siblingEpisodeIds,
+  });
 
-    final duration = episode.durationMs != null
-        ? Duration(milliseconds: episode.durationMs!)
-        : null;
-    final durationText = duration != null ? _formatDuration(duration) : null;
+  final Episode episode;
+  final String stationName;
+  final List<int> siblingEpisodeIds;
 
-    return ListTile(
-      leading: episode.imageUrl != null
-          ? ClipRRect(
-              borderRadius: AppBorders.sm,
-              child: Image.network(
-                episode.imageUrl!,
-                width: 48,
-                height: 48,
-                fit: BoxFit.cover,
-                errorBuilder: (_, _, _) => _placeholderArtwork(colorScheme),
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final audioUrl = episode.audioUrl;
+    final l10n = AppLocalizations.of(context);
+
+    final currentPlayingUrl = ref.watch(currentPlayingEpisodeUrlProvider);
+    final isCurrentEpisode = currentPlayingUrl == audioUrl;
+    final isPlaying = ref.watch(isEpisodePlayingProvider(audioUrl));
+    final isLoading = ref.watch(isEpisodeLoadingProvider(audioUrl));
+
+    final subscriptionAsync = ref.watch(
+      subscriptionByIdProvider(episode.podcastId),
+    );
+    final subscription = subscriptionAsync.value;
+    final podcastTitle = subscription?.title ?? stationName;
+    final artworkUrl = subscription?.artworkUrl;
+
+    return EpisodeCard(
+      title: episode.title,
+      subtitle: _buildSubtitleText(l10n),
+      description: episode.description,
+      thumbnailUrl: episode.imageUrl,
+      podcastArtworkUrl: artworkUrl,
+      isPlaying: isPlaying,
+      isLoading: isLoading,
+      isCurrentEpisode: isCurrentEpisode,
+      onTap: () => _navigateToDetail(context, podcastTitle, artworkUrl),
+      onPlayPause: () => _onPlayPausePressed(
+        context,
+        ref,
+        audioUrl,
+        isPlaying,
+        podcastTitle,
+        artworkUrl,
+      ),
+      actionButtons: [
+        AddToQueueButton(
+          onPlayLater: () {
+            ref.read(queueControllerProvider.notifier).playLater(episode.id);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(l10n.queueAddedToQueue),
+                duration: const Duration(seconds: 1),
               ),
-            )
-          : _placeholderArtwork(colorScheme),
-      title: Text(episode.title, maxLines: 2, overflow: TextOverflow.ellipsis),
-      subtitle: durationText != null
-          ? Text(
-              durationText,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: colorScheme.onSurfaceVariant,
+            );
+          },
+          onPlayNext: () {
+            ref.read(queueControllerProvider.notifier).playNext(episode.id);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(l10n.queuePlayingNext),
+                duration: const Duration(seconds: 1),
               ),
-            )
-          : null,
+            );
+          },
+        ),
+      ],
     );
   }
 
-  Widget _placeholderArtwork(ColorScheme colorScheme) {
-    return ClipRRect(
-      borderRadius: AppBorders.sm,
-      child: Container(
-        width: 48,
-        height: 48,
-        color: colorScheme.surfaceContainerHighest,
-        child: Icon(
-          Icons.podcasts,
-          size: 24,
-          color: colorScheme.onSurfaceVariant,
+  String _buildSubtitleText(AppLocalizations l10n) {
+    final parts = <String>[];
+
+    if (episode.durationMs != null) {
+      parts.add(_formatDuration(episode.durationMs!));
+    }
+
+    if (episode.publishedAt != null) {
+      parts.add(
+        episode.publishedAt!.formatEpisodeDate(
+          todayLabel: l10n.dateToday,
+          yesterdayLabel: l10n.dateYesterday,
+        ),
+      );
+    }
+
+    return parts.join('  ');
+  }
+
+  String _formatDuration(int durationMs) {
+    final duration = Duration(milliseconds: durationMs);
+    final hours = duration.inHours;
+    final minutes = duration.inMinutes.remainder(60);
+
+    if (0 < hours) return '${hours}h ${minutes}min';
+    return '$minutes min';
+  }
+
+  void _navigateToDetail(
+    BuildContext context,
+    String podcastTitle,
+    String? artworkUrl,
+  ) {
+    final podcastItem = PodcastItem(
+      parsedAt: DateTime.now(),
+      sourceUrl: episode.audioUrl,
+      title: episode.title,
+      description: episode.description ?? '',
+      publishDate: episode.publishedAt,
+      duration: episode.durationMs != null
+          ? Duration(milliseconds: episode.durationMs!)
+          : null,
+      enclosureUrl: episode.audioUrl,
+      guid: episode.guid,
+      episodeNumber: episode.episodeNumber,
+      seasonNumber: episode.seasonNumber,
+      images: episode.imageUrl != null
+          ? [PodcastImage(url: episode.imageUrl!)]
+          : const [],
+    );
+
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => EpisodeDetailScreen(
+          episode: podcastItem,
+          podcastTitle: podcastTitle,
+          artworkUrl: artworkUrl,
         ),
       ),
     );
   }
 
-  String _formatDuration(Duration d) {
-    final hours = d.inHours;
-    final minutes = d.inMinutes.remainder(60);
-    final seconds = d.inSeconds.remainder(60);
-    if (0 < hours) {
-      return '${hours}h ${minutes}m';
+  Future<void> _onPlayPausePressed(
+    BuildContext context,
+    WidgetRef ref,
+    String url,
+    bool isPlaying,
+    String podcastTitle,
+    String? artworkUrl,
+  ) async {
+    final controller = ref.read(audioPlayerControllerProvider.notifier);
+
+    if (isPlaying) {
+      controller.pause();
+      return;
     }
-    if (0 < minutes) {
-      return '${minutes}m ${seconds}s';
+
+    if (controller.isLoaded(url)) {
+      controller.resume();
+      return;
     }
-    return '${seconds}s';
+
+    final queueService = ref.read(queueServiceProvider);
+
+    final shouldConfirm = await queueService.shouldConfirmAdhocReplace();
+    if (shouldConfirm) {
+      if (!context.mounted) return;
+      final confirmed = await _showReplaceQueueDialog(context);
+      if (!confirmed) return;
+    }
+
+    await queueService.createAdhocQueue(
+      startingEpisodeId: episode.id,
+      sourceContext: stationName,
+      siblingEpisodeIds: siblingEpisodeIds,
+    );
+
+    controller.play(
+      url,
+      metadata: NowPlayingInfo(
+        episodeUrl: url,
+        episodeTitle: episode.title,
+        podcastTitle: podcastTitle,
+        artworkUrl: artworkUrl ?? episode.imageUrl,
+        totalDuration: episode.durationMs != null
+            ? Duration(milliseconds: episode.durationMs!)
+            : null,
+      ),
+    );
+  }
+
+  Future<bool> _showReplaceQueueDialog(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.episodeReplaceQueueTitle),
+        content: Text(l10n.episodeReplaceQueueContent),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(l10n.commonCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(l10n.episodeReplace),
+          ),
+        ],
+      ),
+    );
+    return result ?? false;
   }
 }
