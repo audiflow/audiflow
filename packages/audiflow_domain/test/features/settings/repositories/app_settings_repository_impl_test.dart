@@ -234,6 +234,24 @@ void main() {
     });
   });
 
+  group('notifyNewEpisodes', () {
+    test('returns default true when no value stored', () {
+      final result = repository.getNotifyNewEpisodes();
+      expect(result, isTrue);
+    });
+
+    test('returns stored value', () async {
+      await repository.setNotifyNewEpisodes(false);
+      expect(repository.getNotifyNewEpisodes(), isFalse);
+    });
+
+    test('clearAll resets to default', () async {
+      await repository.setNotifyNewEpisodes(false);
+      await repository.clearAll();
+      expect(repository.getNotifyNewEpisodes(), isTrue);
+    });
+  });
+
   group('clearAll', () {
     test('restores all settings to defaults', () async {
       // Set several values
