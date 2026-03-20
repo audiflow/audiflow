@@ -242,6 +242,13 @@ Future<SmartPlaylistGrouping?> _buildGroupingFromCache(
         );
       }).toList();
       episodeIds = groups.expand((g) => g.episodeIds).toList();
+    } else if (resolverType == 'year') {
+      // Year-resolved: match by publishedAt year
+      episodeIds = episodes
+          .where((e) => e.publishedAt?.year == entity.playlistNumber)
+          .map((e) => e.id)
+          .toList();
+      allGroupedEpisodeIds.addAll(episodeIds);
     } else {
       // Fallback: season-number-based grouping
       episodeIds = episodes
