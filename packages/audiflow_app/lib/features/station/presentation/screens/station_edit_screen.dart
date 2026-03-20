@@ -43,6 +43,9 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
     if (errorKey == StationEditError.nameRequired) {
       return l10n.stationNameRequired;
     }
+    if (errorKey == StationEditError.podcastRequired) {
+      return l10n.stationPodcastRequired;
+    }
     if (errorKey == StationEditError.notFound) {
       return l10n.stationNotFoundMessage;
     }

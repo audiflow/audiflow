@@ -830,5 +830,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get stationNameRequired => 'Station name is required';
 
   @override
+  String get stationPodcastRequired => 'Select at least one podcast';
+
+  @override
   String get commonGoBack => 'Go Back';
 }

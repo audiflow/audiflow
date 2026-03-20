@@ -814,5 +814,8 @@ class AppLocalizationsJa extends AppLocalizations {
   String get stationNameRequired => 'ステーション名を入力してください';
 
   @override
+  String get stationPodcastRequired => 'ポッドキャストを1つ以上選択してください';
+
+  @override
   String get commonGoBack => '戻る';
 }

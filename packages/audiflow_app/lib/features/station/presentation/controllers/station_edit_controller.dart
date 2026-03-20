@@ -8,6 +8,7 @@ part 'station_edit_controller.g.dart';
 /// Error keys for localization in the UI layer.
 abstract final class StationEditError {
   static const nameRequired = 'name_required';
+  static const podcastRequired = 'podcast_required';
   static const notFound = 'not_found';
   static String limitReached(int max) => 'limit_reached:$max';
 }
@@ -97,6 +98,11 @@ class StationEditController extends _$StationEditController {
     final trimmedName = state.name.trim();
     if (trimmedName.isEmpty) {
       state = state.copyWith(error: StationEditError.nameRequired);
+      return null;
+    }
+
+    if (state.selectedPodcastIds.isEmpty) {
+      state = state.copyWith(error: StationEditError.podcastRequired);
       return null;
     }
 

@@ -1580,6 +1580,12 @@ abstract class AppLocalizations {
   /// **'Station name is required'**
   String get stationNameRequired;
 
+  /// Validation error when no podcast is selected
+  ///
+  /// In en, this message translates to:
+  /// **'Select at least one podcast'**
+  String get stationPodcastRequired;
+
   /// Go back button label
   ///
   /// In en, this message translates to:

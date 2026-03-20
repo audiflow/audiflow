@@ -515,6 +515,8 @@
   "@stationNotFoundMessage": { "description": "Body text for station not found screen" },
   "stationNameRequired": "Station name is required",
   "@stationNameRequired": { "description": "Validation error when station name is empty" },
+  "stationPodcastRequired": "Select at least one podcast",
+  "@stationPodcastRequired": { "description": "Validation error when no podcast is selected" },
   "commonGoBack": "Go Back",
   "@commonGoBack": { "description": "Go back button label" }
 }

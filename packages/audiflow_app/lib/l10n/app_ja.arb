@@ -275,5 +275,6 @@
   "stationNotFoundTitle": "ステーションが見つかりません",
   "stationNotFoundMessage": "ステーションのデータが利用できません",
   "stationNameRequired": "ステーション名を入力してください",
+  "stationPodcastRequired": "ポッドキャストを1つ以上選択してください",
   "commonGoBack": "戻る"
 }
