@@ -52,7 +52,7 @@ class StationDetailScreen extends ConsumerWidget {
             Text(l10n.stationNotFoundMessage),
             const SizedBox(height: Spacing.sm),
             TextButton(
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () => context.pop(),
               child: Text(l10n.commonGoBack),
             ),
           ],

@@ -112,7 +112,7 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
     final saved = await controller.save();
     if (!mounted) return;
     if (saved != null) {
-      Navigator.of(context).pop();
+      context.pop();
     }
   }
 
