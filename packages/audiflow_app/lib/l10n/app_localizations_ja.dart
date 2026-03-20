@@ -177,6 +177,25 @@ class AppLocalizationsJa extends AppLocalizations {
   String get feedSyncWifiOnlySubtitle => 'WiFi接続時のみフィードを同期';
 
   @override
+  String get feedSyncNotifyNewEpisodesTitle => '新しいエピソードの通知';
+
+  @override
+  String get feedSyncNotifyNewEpisodesSubtitle =>
+      'バックグラウンド更新で新しいエピソードが見つかったときに通知を表示';
+
+  @override
+  String get feedSyncInterval15min => '15分ごと';
+
+  @override
+  String get feedSyncInterval3hours => '3時間ごと';
+
+  @override
+  String get feedSyncInterval6hours => '6時間ごと';
+
+  @override
+  String get feedSyncInterval12hours => '12時間ごと';
+
+  @override
   String get storageImageCache => '画像キャッシュ';
 
   @override

@@ -180,6 +180,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get feedSyncWifiOnlySubtitle => 'Only sync feeds over WiFi';
 
   @override
+  String get feedSyncNotifyNewEpisodesTitle => 'New episode notifications';
+
+  @override
+  String get feedSyncNotifyNewEpisodesSubtitle =>
+      'Show a notification when new episodes are found during background refresh';
+
+  @override
+  String get feedSyncInterval15min => 'Every 15 minutes';
+
+  @override
+  String get feedSyncInterval3hours => 'Every 3 hours';
+
+  @override
+  String get feedSyncInterval6hours => 'Every 6 hours';
+
+  @override
+  String get feedSyncInterval12hours => 'Every 12 hours';
+
+  @override
   String get storageImageCache => 'Image Cache';
 
   @override

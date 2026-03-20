@@ -434,6 +434,42 @@ abstract class AppLocalizations {
   /// **'Only sync feeds over WiFi'**
   String get feedSyncWifiOnlySubtitle;
 
+  /// Notify new episodes setting title
+  ///
+  /// In en, this message translates to:
+  /// **'New episode notifications'**
+  String get feedSyncNotifyNewEpisodesTitle;
+
+  /// Notify new episodes setting subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Show a notification when new episodes are found during background refresh'**
+  String get feedSyncNotifyNewEpisodesSubtitle;
+
+  /// 15 minute sync interval
+  ///
+  /// In en, this message translates to:
+  /// **'Every 15 minutes'**
+  String get feedSyncInterval15min;
+
+  /// 3 hours sync interval
+  ///
+  /// In en, this message translates to:
+  /// **'Every 3 hours'**
+  String get feedSyncInterval3hours;
+
+  /// 6 hours sync interval
+  ///
+  /// In en, this message translates to:
+  /// **'Every 6 hours'**
+  String get feedSyncInterval6hours;
+
+  /// 12 hours sync interval
+  ///
+  /// In en, this message translates to:
+  /// **'Every 12 hours'**
+  String get feedSyncInterval12hours;
+
   /// Image cache setting title
   ///
   /// In en, this message translates to:

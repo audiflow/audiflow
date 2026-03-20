@@ -1,21 +1,95 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:permission_handler/permission_handler.dart';
 
+import '../../../../app/background/background_task_registrar.dart';
 import '../../../../l10n/app_localizations.dart';
 
 /// Screen for configuring feed sync settings: auto-sync,
-/// sync interval, and WiFi-only sync.
-class FeedSyncSettingsScreen extends ConsumerWidget {
+/// sync interval, WiFi-only sync, and new episode notifications.
+class FeedSyncSettingsScreen extends ConsumerStatefulWidget {
   const FeedSyncSettingsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<FeedSyncSettingsScreen> createState() =>
+      _FeedSyncSettingsScreenState();
+}
+
+class _FeedSyncSettingsScreenState
+    extends ConsumerState<FeedSyncSettingsScreen> {
+  void _update(AppSettingsRepository repo, Future<void> Function() setter) {
+    setter();
+    ref.invalidate(appSettingsRepositoryProvider);
+    _updateBackgroundRegistration(repo);
+  }
+
+  void _updateBackgroundRegistration(AppSettingsRepository repo) {
+    if (repo.getAutoSync()) {
+      BackgroundTaskRegistrar.register(
+        intervalMinutes: repo.getSyncIntervalMinutes(),
+      );
+    } else {
+      BackgroundTaskRegistrar.cancel();
+    }
+  }
+
+  Future<void> _onNotifyToggleChanged(
+    AppSettingsRepository repo,
+    bool enabled,
+  ) async {
+    if (!enabled) {
+      _update(repo, () => repo.setNotifyNewEpisodes(false));
+      return;
+    }
+
+    final status = await Permission.notification.status;
+    if (status.isGranted) {
+      _update(repo, () => repo.setNotifyNewEpisodes(true));
+      return;
+    }
+
+    if (status.isPermanentlyDenied) {
+      if (!mounted) return;
+      await showDialog<void>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Permission required'),
+          content: const Text(
+            'Notification permission was denied. Please enable it in system settings.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+                openAppSettings();
+              },
+              child: const Text('Open Settings'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    final result = await Permission.notification.request();
+    if (result.isGranted) {
+      _update(repo, () => repo.setNotifyNewEpisodes(true));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final repo = ref.watch(appSettingsRepositoryProvider);
     final autoSync = repo.getAutoSync();
     final interval = repo.getSyncIntervalMinutes();
     final wifiOnly = repo.getWifiOnlySync();
+    final notifyNewEpisodes = repo.getNotifyNewEpisodes();
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settingsFeedSyncTitle)),
@@ -25,7 +99,7 @@ class FeedSyncSettingsScreen extends ConsumerWidget {
             title: Text(l10n.feedSyncAutoSyncTitle),
             subtitle: Text(l10n.feedSyncAutoSyncSubtitle),
             value: autoSync,
-            onChanged: (v) => _update(ref, () => repo.setAutoSync(v)),
+            onChanged: (v) => _update(repo, () => repo.setAutoSync(v)),
           ),
           Visibility(
             visible: autoSync,
@@ -35,10 +109,14 @@ class FeedSyncSettingsScreen extends ConsumerWidget {
                 value: interval,
                 onChanged: (v) {
                   if (v != null) {
-                    _update(ref, () => repo.setSyncIntervalMinutes(v));
+                    _update(repo, () => repo.setSyncIntervalMinutes(v));
                   }
                 },
                 items: [
+                  DropdownMenuItem(
+                    value: 15,
+                    child: Text(l10n.feedSyncInterval15min),
+                  ),
                   DropdownMenuItem(
                     value: 30,
                     child: Text(l10n.feedSyncInterval30min),
@@ -52,8 +130,20 @@ class FeedSyncSettingsScreen extends ConsumerWidget {
                     child: Text(l10n.feedSyncInterval2hours),
                   ),
                   DropdownMenuItem(
+                    value: 180,
+                    child: Text(l10n.feedSyncInterval3hours),
+                  ),
+                  DropdownMenuItem(
                     value: 240,
                     child: Text(l10n.feedSyncInterval4hours),
+                  ),
+                  DropdownMenuItem(
+                    value: 360,
+                    child: Text(l10n.feedSyncInterval6hours),
+                  ),
+                  DropdownMenuItem(
+                    value: 720,
+                    child: Text(l10n.feedSyncInterval12hours),
                   ),
                 ],
               ),
@@ -63,15 +153,19 @@ class FeedSyncSettingsScreen extends ConsumerWidget {
             title: Text(l10n.feedSyncWifiOnlyTitle),
             subtitle: Text(l10n.feedSyncWifiOnlySubtitle),
             value: wifiOnly,
-            onChanged: (v) => _update(ref, () => repo.setWifiOnlySync(v)),
+            onChanged: (v) => _update(repo, () => repo.setWifiOnlySync(v)),
+          ),
+          Visibility(
+            visible: autoSync,
+            child: SwitchListTile(
+              title: Text(l10n.feedSyncNotifyNewEpisodesTitle),
+              subtitle: Text(l10n.feedSyncNotifyNewEpisodesSubtitle),
+              value: notifyNewEpisodes,
+              onChanged: (v) => _onNotifyToggleChanged(repo, v),
+            ),
           ),
         ],
       ),
     );
-  }
-
-  void _update(WidgetRef ref, Future<void> Function() setter) {
-    setter();
-    ref.invalidate(appSettingsRepositoryProvider);
   }
 }
