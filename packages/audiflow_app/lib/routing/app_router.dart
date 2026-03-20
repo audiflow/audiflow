@@ -2,8 +2,12 @@ import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../l10n/app_localizations.dart';
 import '../features/library/presentation/screens/library_screen.dart';
+import '../features/library/presentation/screens/subscriptions_list_screen.dart';
 import '../features/podcast_detail/presentation/screens/episode_detail_screen.dart';
+import '../features/station/presentation/screens/station_detail_screen.dart';
+import '../features/station/presentation/screens/station_edit_screen.dart';
 import '../features/podcast_detail/presentation/screens/podcast_detail_screen.dart';
 import '../features/podcast_detail/presentation/screens/smart_playlist_episodes_screen.dart';
 import '../features/podcast_detail/presentation/screens/smart_playlist_group_episodes_screen.dart';
@@ -34,6 +38,8 @@ class AppRoutes {
   static const String smartPlaylistGroupEpisodesPath = 'group/:groupId';
   static const String smartPlaylistDirectGroup =
       'smart-playlist/:playlistId/group/:groupId';
+  static const String subscriptions = '/library/subscriptions';
+  static const String stationNew = '/library/station/new';
   static const String settingsAppearance = '/settings/appearance';
   static const String settingsPlayback = '/settings/playback';
   static const String settingsDownloads = '/settings/downloads';
@@ -159,6 +165,58 @@ GoRouter createAppRouter() {
                         path: AppRoutes.episodeDetail,
                         builder: (context, state) =>
                             _buildEpisodeDetailScreen(state),
+                      ),
+                    ],
+                  ),
+                  GoRoute(
+                    path: 'station/new',
+                    builder: (context, state) => const StationEditScreen(),
+                  ),
+                  GoRoute(
+                    path: 'station/:stationId',
+                    builder: (context, state) =>
+                        _buildStationDetailScreen(state),
+                    routes: [
+                      GoRoute(
+                        path: 'edit',
+                        builder: (context, state) =>
+                            _buildStationEditScreen(state),
+                      ),
+                    ],
+                  ),
+                  GoRoute(
+                    path: 'subscriptions',
+                    builder: (context, state) =>
+                        const SubscriptionsListScreen(),
+                    routes: [
+                      GoRoute(
+                        path: 'podcast/:id',
+                        builder: (context, state) =>
+                            _buildPodcastDetailScreen(state),
+                        routes: [
+                          GoRoute(
+                            path: AppRoutes.smartPlaylistEpisodes,
+                            builder: (context, state) =>
+                                _buildSmartPlaylistEpisodesScreen(state),
+                            routes: [
+                              GoRoute(
+                                path: AppRoutes.smartPlaylistGroupEpisodesPath,
+                                builder: (context, state) =>
+                                    _buildGroupEpisodesScreen(state),
+                              ),
+                            ],
+                          ),
+                          GoRoute(
+                            path: AppRoutes.smartPlaylistDirectGroup,
+                            builder: (context, state) =>
+                                _buildGroupEpisodesScreen(state),
+                          ),
+                          GoRoute(
+                            path: AppRoutes.episodeDetail,
+                            builder: (context, state) =>
+                                _buildEpisodeDetailScreen(state),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -356,6 +414,55 @@ Widget _buildTranscriptScreen(GoRouterState state) {
   );
 }
 
+/// Builds the station detail screen from route state.
+Widget _buildStationDetailScreen(GoRouterState state) {
+  final stationId = int.tryParse(state.pathParameters['stationId'] ?? '');
+  if (stationId == null) {
+    return const _StationNotFoundScreen();
+  }
+  return StationDetailScreen(stationId: stationId);
+}
+
+/// Builds the station edit screen from route state.
+Widget _buildStationEditScreen(GoRouterState state) {
+  final stationId = int.tryParse(state.pathParameters['stationId'] ?? '');
+  if (stationId == null) {
+    return const _StationNotFoundScreen();
+  }
+  return StationEditScreen(stationId: stationId);
+}
+
+/// Fallback screen shown when station data is not available.
+class _StationNotFoundScreen extends StatelessWidget {
+  const _StationNotFoundScreen();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Scaffold(
+      appBar: AppBar(title: Text(l10n.stationNotFoundTitle)),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, size: 64),
+            const SizedBox(height: 16),
+            Text(
+              l10n.stationNotFoundMessage,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            TextButton(
+              onPressed: () => context.pop(),
+              child: Text(l10n.commonGoBack),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 /// Fallback screen shown when podcast data is not available.
 class _PodcastNotFoundScreen extends StatelessWidget {
   const _PodcastNotFoundScreen();
@@ -376,8 +483,8 @@ class _PodcastNotFoundScreen extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Go Back'),
+              onPressed: () => context.pop(),
+              child: Text(AppLocalizations.of(context).commonGoBack),
             ),
           ],
         ),
@@ -407,8 +514,8 @@ class _SmartPlaylistNotFoundScreen extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Go Back'),
+              onPressed: () => context.pop(),
+              child: Text(AppLocalizations.of(context).commonGoBack),
             ),
           ],
         ),
@@ -438,8 +545,8 @@ class _EpisodeNotFoundScreen extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Go Back'),
+              onPressed: () => context.pop(),
+              child: Text(AppLocalizations.of(context).commonGoBack),
             ),
           ],
         ),

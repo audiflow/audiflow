@@ -9,6 +9,7 @@ import '../../feed/repositories/episode_repository.dart';
 import '../../feed/repositories/episode_repository_impl.dart';
 import '../models/download_status.dart';
 import '../../settings/providers/settings_providers.dart';
+import '../../station/services/station_reconciler_service.dart';
 import '../repositories/download_repository.dart';
 import '../repositories/download_repository_impl.dart';
 import 'download_file_service.dart';
@@ -45,6 +46,7 @@ DownloadService downloadService(Ref ref) {
   final fileService = ref.watch(downloadFileServiceProvider);
   final episodeRepo = ref.watch(episodeRepositoryProvider);
   final logger = ref.watch(namedLoggerProvider('Download'));
+  final reconcilerService = ref.watch(stationReconcilerServiceProvider);
 
   final service = DownloadService(
     repository: repository,
@@ -54,6 +56,7 @@ DownloadService downloadService(Ref ref) {
     logger: logger,
     getWifiOnly: () => ref.read(downloadWifiOnlyProvider),
     getAutoDeletePlayed: () => ref.read(downloadAutoDeletePlayedProvider),
+    reconcilerService: reconcilerService,
   );
 
   ref.onDispose(() => service.dispose());
@@ -70,13 +73,15 @@ class DownloadService {
     required Logger logger,
     required bool Function() getWifiOnly,
     required bool Function() getAutoDeletePlayed,
+    StationReconcilerService? reconcilerService,
   }) : _repository = repository,
        _queueService = queueService,
        _fileService = fileService,
        _episodeRepo = episodeRepository,
        _logger = logger,
        _getWifiOnly = getWifiOnly,
-       _getAutoDeletePlayed = getAutoDeletePlayed;
+       _getAutoDeletePlayed = getAutoDeletePlayed,
+       _reconcilerService = reconcilerService;
 
   final DownloadRepository _repository;
   final DownloadQueueService _queueService;
@@ -85,6 +90,7 @@ class DownloadService {
   final Logger _logger;
   final bool Function() _getWifiOnly;
   final bool Function() _getAutoDeletePlayed;
+  final StationReconcilerService? _reconcilerService;
 
   /// Downloads a single episode.
   ///
@@ -165,6 +171,16 @@ class DownloadService {
 
     await _repository.delete(taskId);
     _logger.i('Deleted download: $taskId');
+
+    // Best-effort station reconciliation.
+    try {
+      await _reconcilerService?.onEpisodeChanged(task.episodeId);
+    } on Exception catch (e) {
+      _logger.w(
+        'Station reconciliation failed for episode ${task.episodeId}',
+        error: e,
+      );
+    }
   }
 
   /// Deletes all completed downloads and their files.
@@ -181,6 +197,18 @@ class DownloadService {
 
     final count = await _repository.deleteAllCompleted();
     _logger.i('Deleted $count completed downloads');
+
+    // Best-effort station reconciliation.
+    for (final task in completed) {
+      try {
+        await _reconcilerService?.onEpisodeChanged(task.episodeId);
+      } on Exception catch (e) {
+        _logger.w(
+          'Station reconciliation failed for episode ${task.episodeId}',
+          error: e,
+        );
+      }
+    }
   }
 
   /// Returns the local file path for an episode if downloaded.

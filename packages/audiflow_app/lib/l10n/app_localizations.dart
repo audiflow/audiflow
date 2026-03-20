@@ -1273,6 +1273,312 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Download new episodes automatically during background refresh'**
   String get podcastAutoDownloadSubtitle;
+
+  /// Section title for Stations
+  ///
+  /// In en, this message translates to:
+  /// **'Stations'**
+  String get stationSectionTitle;
+
+  /// Button label for creating a new station
+  ///
+  /// In en, this message translates to:
+  /// **'New Station'**
+  String get stationNew;
+
+  /// Label for station name input field
+  ///
+  /// In en, this message translates to:
+  /// **'Station Name'**
+  String get stationName;
+
+  /// Placeholder hint for station name input
+  ///
+  /// In en, this message translates to:
+  /// **'e.g., News, Tech, Comedy'**
+  String get stationNameHint;
+
+  /// Label for podcasts in a station
+  ///
+  /// In en, this message translates to:
+  /// **'Podcasts'**
+  String get stationPodcasts;
+
+  /// Label for station filters section
+  ///
+  /// In en, this message translates to:
+  /// **'Filters'**
+  String get stationFilters;
+
+  /// Label for playback order setting
+  ///
+  /// In en, this message translates to:
+  /// **'Playback Order'**
+  String get stationPlaybackOrder;
+
+  /// Option to sort episodes newest first
+  ///
+  /// In en, this message translates to:
+  /// **'Newest First'**
+  String get stationNewest;
+
+  /// Option to sort episodes oldest first
+  ///
+  /// In en, this message translates to:
+  /// **'Oldest First'**
+  String get stationOldest;
+
+  /// Filter option for all episodes
+  ///
+  /// In en, this message translates to:
+  /// **'All Episodes'**
+  String get stationFilterAll;
+
+  /// Filter option for unplayed episodes
+  ///
+  /// In en, this message translates to:
+  /// **'Unplayed'**
+  String get stationFilterUnplayed;
+
+  /// Filter option for episodes in progress
+  ///
+  /// In en, this message translates to:
+  /// **'In Progress'**
+  String get stationFilterInProgress;
+
+  /// Filter option for downloaded episodes only
+  ///
+  /// In en, this message translates to:
+  /// **'Downloaded Only'**
+  String get stationFilterDownloaded;
+
+  /// Filter option for favorited episodes only
+  ///
+  /// In en, this message translates to:
+  /// **'Favorites Only'**
+  String get stationFilterFavorited;
+
+  /// Label for duration filter section
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get stationFilterDuration;
+
+  /// Filter for episodes shorter than specified minutes
+  ///
+  /// In en, this message translates to:
+  /// **'Shorter than {minutes} min'**
+  String stationFilterShorterThan(int minutes);
+
+  /// Filter for episodes longer than specified minutes
+  ///
+  /// In en, this message translates to:
+  /// **'Longer than {minutes} min'**
+  String stationFilterLongerThan(int minutes);
+
+  /// Filter for recently published episodes
+  ///
+  /// In en, this message translates to:
+  /// **'Published within {days} days'**
+  String stationFilterPublishedWithin(int days);
+
+  /// Error message when station limit is reached
+  ///
+  /// In en, this message translates to:
+  /// **'Station limit reached ({max})'**
+  String stationLimitReached(int max);
+
+  /// Confirmation message for deleting a station
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this station?'**
+  String get stationDeleteConfirm;
+
+  /// Episode count display with plural forms
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No episodes} =1{1 episode} other{{count} episodes}}'**
+  String stationEpisodeCount(int count);
+
+  /// Podcast count display with plural forms
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 podcast} other{{count} podcasts}}'**
+  String stationPodcastCount(int count);
+
+  /// Message displayed when station has no matching episodes
+  ///
+  /// In en, this message translates to:
+  /// **'No episodes match your filters'**
+  String get stationEmpty;
+
+  /// Button label to play all episodes in station
+  ///
+  /// In en, this message translates to:
+  /// **'Play All'**
+  String get stationPlayAll;
+
+  /// Hint shown when user has no stations
+  ///
+  /// In en, this message translates to:
+  /// **'No stations yet. Tap + to create one.'**
+  String get stationNoStationsYet;
+
+  /// Hint shown when user has no subscriptions
+  ///
+  /// In en, this message translates to:
+  /// **'No subscriptions yet.'**
+  String get stationNoSubscriptionsYet;
+
+  /// Subtitle for empty station state
+  ///
+  /// In en, this message translates to:
+  /// **'Try adjusting the station filters to see more episodes.'**
+  String get stationEmptySubtitle;
+
+  /// App bar title for editing a station
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Station'**
+  String get stationEditTitle;
+
+  /// Save button label
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get stationSave;
+
+  /// Delete station button label
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Station'**
+  String get stationDelete;
+
+  /// Delete confirmation dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Station'**
+  String get stationDeleteTitle;
+
+  /// Delete confirmation dialog body
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this station? This cannot be undone.'**
+  String get stationDeleteBody;
+
+  /// Section title for playback state filter
+  ///
+  /// In en, this message translates to:
+  /// **'Playback State'**
+  String get stationPlaybackState;
+
+  /// Label for all episodes filter
+  ///
+  /// In en, this message translates to:
+  /// **'All episodes'**
+  String get stationFilterAllLabel;
+
+  /// Label for unplayed filter
+  ///
+  /// In en, this message translates to:
+  /// **'Unplayed only'**
+  String get stationFilterUnplayedLabel;
+
+  /// Label for in-progress filter
+  ///
+  /// In en, this message translates to:
+  /// **'In progress only'**
+  String get stationFilterInProgressLabel;
+
+  /// Label for downloaded filter toggle
+  ///
+  /// In en, this message translates to:
+  /// **'Downloaded only'**
+  String get stationFilterDownloadedLabel;
+
+  /// Label for favorited filter toggle
+  ///
+  /// In en, this message translates to:
+  /// **'Favorited only'**
+  String get stationFilterFavoritedLabel;
+
+  /// Section title for duration filter
+  ///
+  /// In en, this message translates to:
+  /// **'Duration Filter'**
+  String get stationDurationFilter;
+
+  /// Duration filter operator label
+  ///
+  /// In en, this message translates to:
+  /// **'Shorter than'**
+  String get stationShorterThan;
+
+  /// Duration filter operator label
+  ///
+  /// In en, this message translates to:
+  /// **'Longer than'**
+  String get stationLongerThan;
+
+  /// Section title for published-within filter
+  ///
+  /// In en, this message translates to:
+  /// **'Published Within'**
+  String get stationPublishedWithin;
+
+  /// Option for no published-within limit
+  ///
+  /// In en, this message translates to:
+  /// **'No limit'**
+  String get stationNoLimit;
+
+  /// Published within N days option
+  ///
+  /// In en, this message translates to:
+  /// **'Last {days} days'**
+  String stationLastDays(int days);
+
+  /// Section title for sort order
+  ///
+  /// In en, this message translates to:
+  /// **'Episode Order'**
+  String get stationEpisodeOrder;
+
+  /// Sort option label
+  ///
+  /// In en, this message translates to:
+  /// **'Newest first'**
+  String get stationNewestFirst;
+
+  /// Sort option label
+  ///
+  /// In en, this message translates to:
+  /// **'Oldest first'**
+  String get stationOldestFirst;
+
+  /// Tooltip for edit button
+  ///
+  /// In en, this message translates to:
+  /// **'Edit station'**
+  String get stationEditTooltip;
+
+  /// App bar title for station not found screen
+  ///
+  /// In en, this message translates to:
+  /// **'Station Not Found'**
+  String get stationNotFoundTitle;
+
+  /// Body text for station not found screen
+  ///
+  /// In en, this message translates to:
+  /// **'Station data not available'**
+  String get stationNotFoundMessage;
+
+  /// Go back button label
+  ///
+  /// In en, this message translates to:
+  /// **'Go Back'**
+  String get commonGoBack;
 }
 
 class _AppLocalizationsDelegate

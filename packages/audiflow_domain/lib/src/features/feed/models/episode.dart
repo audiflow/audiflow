@@ -18,4 +18,6 @@ class Episode {
   String? imageUrl;
   int? episodeNumber;
   int? seasonNumber;
+  bool isFavorited = false;
+  DateTime? favoritedAt;
 }

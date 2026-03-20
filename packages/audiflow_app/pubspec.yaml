@@ -42,6 +42,9 @@ dependencies:
   cupertino_icons: ^1.0.8
   material_symbols_icons: ^4.2801.0
 
+  # Data classes
+  freezed_annotation: ^3.1.0
+
   # Utilities
   logger: ^2.6.2
   shared_preferences: ^2.5.4
@@ -80,6 +83,7 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   checks: ^0.3.0
   mockito: ^5.6.3
+  freezed: ^3.2.4
   build_runner: ^2.10.5
   riverpod_generator: ^4.0.2
   go_router_builder: ^4.1.3

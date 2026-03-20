@@ -634,4 +634,182 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get podcastAutoDownloadSubtitle => 'バックグラウンド更新時に新しいエピソードを自動でダウンロード';
+
+  @override
+  String get stationSectionTitle => 'ステーション';
+
+  @override
+  String get stationNew => '新規ステーション';
+
+  @override
+  String get stationName => 'ステーション名';
+
+  @override
+  String get stationNameHint => '例: ニュース、テック、お笑い';
+
+  @override
+  String get stationPodcasts => 'ポッドキャスト';
+
+  @override
+  String get stationFilters => 'フィルタ';
+
+  @override
+  String get stationPlaybackOrder => '再生順';
+
+  @override
+  String get stationNewest => '新しい順';
+
+  @override
+  String get stationOldest => '古い順';
+
+  @override
+  String get stationFilterAll => '全エピソード';
+
+  @override
+  String get stationFilterUnplayed => '未再生';
+
+  @override
+  String get stationFilterInProgress => '再生中';
+
+  @override
+  String get stationFilterDownloaded => 'ダウンロード済みのみ';
+
+  @override
+  String get stationFilterFavorited => 'お気に入りのみ';
+
+  @override
+  String get stationFilterDuration => '再生時間';
+
+  @override
+  String stationFilterShorterThan(int minutes) {
+    return '$minutes分未満';
+  }
+
+  @override
+  String stationFilterLongerThan(int minutes) {
+    return '$minutes分以上';
+  }
+
+  @override
+  String stationFilterPublishedWithin(int days) {
+    return '過去$days日以内';
+  }
+
+  @override
+  String stationLimitReached(int max) {
+    return 'ステーション上限に達しました($max)';
+  }
+
+  @override
+  String get stationDeleteConfirm => 'このステーションを削除しますか？';
+
+  @override
+  String stationEpisodeCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countエピソード',
+      zero: 'エピソードなし',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String stationPodcastCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countポッドキャスト',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get stationEmpty => 'フィルタに一致するエピソードがありません';
+
+  @override
+  String get stationPlayAll => 'すべて再生';
+
+  @override
+  String get stationNoStationsYet => 'ステーションがありません。+ をタップして作成してください。';
+
+  @override
+  String get stationNoSubscriptionsYet => 'まだ購読がありません。';
+
+  @override
+  String get stationEmptySubtitle => 'フィルタを調整してみてください。';
+
+  @override
+  String get stationEditTitle => 'ステーションを編集';
+
+  @override
+  String get stationSave => '保存';
+
+  @override
+  String get stationDelete => 'ステーションを削除';
+
+  @override
+  String get stationDeleteTitle => 'ステーションを削除';
+
+  @override
+  String get stationDeleteBody => 'このステーションを削除しますか？この操作は元に戻せません。';
+
+  @override
+  String get stationPlaybackState => '再生状態';
+
+  @override
+  String get stationFilterAllLabel => '全エピソード';
+
+  @override
+  String get stationFilterUnplayedLabel => '未再生のみ';
+
+  @override
+  String get stationFilterInProgressLabel => '再生中のみ';
+
+  @override
+  String get stationFilterDownloadedLabel => 'ダウンロード済みのみ';
+
+  @override
+  String get stationFilterFavoritedLabel => 'お気に入りのみ';
+
+  @override
+  String get stationDurationFilter => '再生時間フィルタ';
+
+  @override
+  String get stationShorterThan => 'より短い';
+
+  @override
+  String get stationLongerThan => 'より長い';
+
+  @override
+  String get stationPublishedWithin => '公開期間';
+
+  @override
+  String get stationNoLimit => '制限なし';
+
+  @override
+  String stationLastDays(int days) {
+    return '過去$days日';
+  }
+
+  @override
+  String get stationEpisodeOrder => 'エピソードの順序';
+
+  @override
+  String get stationNewestFirst => '新しい順';
+
+  @override
+  String get stationOldestFirst => '古い順';
+
+  @override
+  String get stationEditTooltip => 'ステーションを編集';
+
+  @override
+  String get stationNotFoundTitle => 'ステーションが見つかりません';
+
+  @override
+  String get stationNotFoundMessage => 'ステーションのデータが利用できません';
+
+  @override
+  String get commonGoBack => '戻る';
 }

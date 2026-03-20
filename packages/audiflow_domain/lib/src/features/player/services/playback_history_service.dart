@@ -1,6 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../settings/providers/settings_providers.dart';
+import '../../station/services/station_reconciler_service.dart';
 import '../models/playback_progress.dart';
 import '../repositories/playback_history_repository.dart';
 import '../repositories/playback_history_repository_impl.dart';
@@ -12,9 +13,11 @@ part 'playback_history_service.g.dart';
 PlaybackHistoryService playbackHistoryService(Ref ref) {
   final repository = ref.watch(playbackHistoryRepositoryProvider);
   final settingsRepo = ref.watch(appSettingsRepositoryProvider);
+  final reconcilerService = ref.watch(stationReconcilerServiceProvider);
   return PlaybackHistoryService(
     repository,
     getCompletionThreshold: settingsRepo.getAutoCompleteThreshold,
+    reconcilerService: reconcilerService,
   );
 }
 
@@ -25,10 +28,13 @@ class PlaybackHistoryService {
   PlaybackHistoryService(
     this._repository, {
     required double Function() getCompletionThreshold,
-  }) : _getCompletionThreshold = getCompletionThreshold;
+    StationReconcilerService? reconcilerService,
+  }) : _getCompletionThreshold = getCompletionThreshold,
+       _reconcilerService = reconcilerService;
 
   final PlaybackHistoryRepository _repository;
   final double Function() _getCompletionThreshold;
+  final StationReconcilerService? _reconcilerService;
 
   /// Minimum interval between progress saves (15 seconds).
   static const int saveIntervalMs = 15000;
@@ -37,12 +43,14 @@ class PlaybackHistoryService {
   static const int fromBeginningThresholdMs = 5000;
 
   int _lastSavedPositionMs = 0;
+  bool _notifiedInProgressThisSession = false;
 
   /// Called when playback starts for an episode.
   ///
   /// Increments play count if starting from the beginning.
   Future<void> onPlaybackStarted(int episodeId, int positionMs) async {
     _lastSavedPositionMs = positionMs;
+    _notifiedInProgressThisSession = false;
 
     // Increment play count if starting from beginning
     if (positionMs < fromBeginningThresholdMs) {
@@ -73,6 +81,12 @@ class PlaybackHistoryService {
       durationMs: durationMs,
     );
 
+    // Notify stations once per session when episode transitions to in-progress.
+    if (!_notifiedInProgressThisSession && 0 < positionMs) {
+      _notifiedInProgressThisSession = true;
+      await _tryReconcile(episodeId);
+    }
+
     // Auto-complete check
     if (0 < durationMs) {
       final progressPercent = positionMs / durationMs;
@@ -80,6 +94,7 @@ class PlaybackHistoryService {
         final isAlreadyCompleted = await _repository.isCompleted(episodeId);
         if (!isAlreadyCompleted) {
           await _repository.markCompleted(episodeId);
+          await _tryReconcile(episodeId);
         }
       }
     }
@@ -118,13 +133,24 @@ class PlaybackHistoryService {
   }
 
   /// Manually marks an episode as completed.
-  Future<void> markCompleted(int episodeId) {
-    return _repository.markCompleted(episodeId);
+  Future<void> markCompleted(int episodeId) async {
+    await _repository.markCompleted(episodeId);
+    await _tryReconcile(episodeId);
   }
 
   /// Manually marks an episode as incomplete.
-  Future<void> markIncomplete(int episodeId) {
-    return _repository.markIncomplete(episodeId);
+  Future<void> markIncomplete(int episodeId) async {
+    await _repository.markIncomplete(episodeId);
+    await _tryReconcile(episodeId);
+  }
+
+  /// Best-effort station reconciliation — never breaks the calling flow.
+  Future<void> _tryReconcile(int episodeId) async {
+    try {
+      await _reconcilerService?.onEpisodeChanged(episodeId);
+    } on Exception {
+      // Station reconciliation is best-effort; do not break playback.
+    }
   }
 
   /// Resets tracking state (e.g., when app goes to background).

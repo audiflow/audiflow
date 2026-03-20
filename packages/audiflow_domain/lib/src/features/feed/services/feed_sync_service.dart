@@ -7,6 +7,7 @@ import '../../../common/providers/http_client_provider.dart';
 import '../../../common/providers/logger_provider.dart';
 import '../../../features/subscription/models/subscriptions.dart';
 import '../../../features/subscription/repositories/subscription_repository_impl.dart';
+import '../../station/services/station_reconciler_service.dart';
 import '../models/episode.dart';
 import '../models/feed_parse_progress.dart';
 import '../models/feed_sync_result.dart';
@@ -192,6 +193,12 @@ class FeedSyncService {
             }
           }
           await episodeRepo.upsertEpisodes(episodes);
+
+          // Notify stations about newly inserted/updated episodes.
+          final reconcilerService = _ref.read(stationReconcilerServiceProvider);
+          for (final episode in episodes) {
+            await reconcilerService.onEpisodeChanged(episode.id);
+          }
 
           // Store transcript and chapter metadata
           if (mediaMetas.isNotEmpty) {
