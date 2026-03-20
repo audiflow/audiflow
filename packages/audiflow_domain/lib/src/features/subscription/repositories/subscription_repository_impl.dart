@@ -1,6 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../common/providers/database_provider.dart';
+import '../../station/services/station_reconciler_service.dart';
 import '../../subscription/models/subscriptions.dart';
 import '../datasources/local/subscription_local_datasource.dart';
 import 'subscription_repository.dart';
@@ -12,15 +13,23 @@ part 'subscription_repository_impl.g.dart';
 SubscriptionRepository subscriptionRepository(Ref ref) {
   final isar = ref.watch(isarProvider);
   final datasource = SubscriptionLocalDatasource(isar);
-  return SubscriptionRepositoryImpl(datasource: datasource);
+  final reconcilerService = ref.watch(stationReconcilerServiceProvider);
+  return SubscriptionRepositoryImpl(
+    datasource: datasource,
+    reconcilerService: reconcilerService,
+  );
 }
 
 /// Implementation of [SubscriptionRepository] using Isar database.
 class SubscriptionRepositoryImpl implements SubscriptionRepository {
-  SubscriptionRepositoryImpl({required SubscriptionLocalDatasource datasource})
-    : _datasource = datasource;
+  SubscriptionRepositoryImpl({
+    required SubscriptionLocalDatasource datasource,
+    StationReconcilerService? reconcilerService,
+  }) : _datasource = datasource,
+       _reconcilerService = reconcilerService;
 
   final SubscriptionLocalDatasource _datasource;
+  final StationReconcilerService? _reconcilerService;
 
   @override
   Future<Subscription> subscribe({
@@ -142,7 +151,12 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
   }
 
   @override
-  Future<bool> deleteById(int id) {
-    return _datasource.deleteById(id);
+  Future<bool> deleteById(int id) async {
+    final deleted = await _datasource.deleteById(id);
+    if (deleted) {
+      // id IS the podcastId in this codebase (Isar auto-increment).
+      await _reconcilerService?.onSubscriptionDeleted(id);
+    }
+    return deleted;
   }
 }

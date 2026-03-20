@@ -81,6 +81,8 @@ export 'src/features/feed/models/episode.dart';
 export 'src/features/feed/datasources/local/episode_local_datasource.dart';
 export 'src/features/feed/repositories/episode_repository.dart';
 export 'src/features/feed/repositories/episode_repository_impl.dart';
+export 'src/features/feed/repositories/episode_favorite_repository.dart';
+export 'src/features/feed/repositories/episode_favorite_repository_impl.dart';
 
 // Player feature
 export 'src/features/player/models/now_playing_info.dart';

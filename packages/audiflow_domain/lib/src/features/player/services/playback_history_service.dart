@@ -1,6 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../settings/providers/settings_providers.dart';
+import '../../station/services/station_reconciler_service.dart';
 import '../models/playback_progress.dart';
 import '../repositories/playback_history_repository.dart';
 import '../repositories/playback_history_repository_impl.dart';
@@ -12,9 +13,11 @@ part 'playback_history_service.g.dart';
 PlaybackHistoryService playbackHistoryService(Ref ref) {
   final repository = ref.watch(playbackHistoryRepositoryProvider);
   final settingsRepo = ref.watch(appSettingsRepositoryProvider);
+  final reconcilerService = ref.watch(stationReconcilerServiceProvider);
   return PlaybackHistoryService(
     repository,
     getCompletionThreshold: settingsRepo.getAutoCompleteThreshold,
+    reconcilerService: reconcilerService,
   );
 }
 
@@ -25,10 +28,13 @@ class PlaybackHistoryService {
   PlaybackHistoryService(
     this._repository, {
     required double Function() getCompletionThreshold,
-  }) : _getCompletionThreshold = getCompletionThreshold;
+    StationReconcilerService? reconcilerService,
+  }) : _getCompletionThreshold = getCompletionThreshold,
+       _reconcilerService = reconcilerService;
 
   final PlaybackHistoryRepository _repository;
   final double Function() _getCompletionThreshold;
+  final StationReconcilerService? _reconcilerService;
 
   /// Minimum interval between progress saves (15 seconds).
   static const int saveIntervalMs = 15000;
@@ -80,6 +86,8 @@ class PlaybackHistoryService {
         final isAlreadyCompleted = await _repository.isCompleted(episodeId);
         if (!isAlreadyCompleted) {
           await _repository.markCompleted(episodeId);
+          // Notify stations that this episode's completion state changed.
+          await _reconcilerService?.onEpisodeChanged(episodeId);
         }
       }
     }
@@ -118,13 +126,15 @@ class PlaybackHistoryService {
   }
 
   /// Manually marks an episode as completed.
-  Future<void> markCompleted(int episodeId) {
-    return _repository.markCompleted(episodeId);
+  Future<void> markCompleted(int episodeId) async {
+    await _repository.markCompleted(episodeId);
+    await _reconcilerService?.onEpisodeChanged(episodeId);
   }
 
   /// Manually marks an episode as incomplete.
-  Future<void> markIncomplete(int episodeId) {
-    return _repository.markIncomplete(episodeId);
+  Future<void> markIncomplete(int episodeId) async {
+    await _repository.markIncomplete(episodeId);
+    await _reconcilerService?.onEpisodeChanged(episodeId);
   }
 
   /// Resets tracking state (e.g., when app goes to background).
