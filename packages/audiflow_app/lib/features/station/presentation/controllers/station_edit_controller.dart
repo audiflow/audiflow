@@ -168,7 +168,7 @@ class StationEditController extends _$StationEditController {
         ),
       );
       return null;
-    } catch (e) {
+    } on Exception catch (e) {
       state = state.copyWith(isSaving: false, error: e.toString());
       return null;
     }
@@ -191,7 +191,7 @@ class StationEditController extends _$StationEditController {
 
       state = state.copyWith(isSaving: false);
       return true;
-    } catch (e) {
+    } on Exception catch (e) {
       state = state.copyWith(isSaving: false, error: e.toString());
       return false;
     }
