@@ -707,4 +707,80 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get stationPlayAll => 'Play All';
+
+  @override
+  String get stationNoStationsYet => 'No stations yet. Tap + to create one.';
+
+  @override
+  String get stationNoSubscriptionsYet => 'No subscriptions yet.';
+
+  @override
+  String get stationEmptySubtitle =>
+      'Try adjusting the station filters to see more episodes.';
+
+  @override
+  String get stationEditTitle => 'Edit Station';
+
+  @override
+  String get stationSave => 'Save';
+
+  @override
+  String get stationDelete => 'Delete Station';
+
+  @override
+  String get stationDeleteTitle => 'Delete Station';
+
+  @override
+  String get stationDeleteBody =>
+      'Are you sure you want to delete this station? This cannot be undone.';
+
+  @override
+  String get stationPlaybackState => 'Playback State';
+
+  @override
+  String get stationFilterAllLabel => 'All episodes';
+
+  @override
+  String get stationFilterUnplayedLabel => 'Unplayed only';
+
+  @override
+  String get stationFilterInProgressLabel => 'In progress only';
+
+  @override
+  String get stationFilterDownloadedLabel => 'Downloaded only';
+
+  @override
+  String get stationFilterFavoritedLabel => 'Favorited only';
+
+  @override
+  String get stationDurationFilter => 'Duration Filter';
+
+  @override
+  String get stationShorterThan => 'Shorter than';
+
+  @override
+  String get stationLongerThan => 'Longer than';
+
+  @override
+  String get stationPublishedWithin => 'Published Within';
+
+  @override
+  String get stationNoLimit => 'No limit';
+
+  @override
+  String stationLastDays(int days) {
+    return 'Last $days days';
+  }
+
+  @override
+  String get stationEpisodeOrder => 'Episode Order';
+
+  @override
+  String get stationNewestFirst => 'Newest first';
+
+  @override
+  String get stationOldestFirst => 'Oldest first';
+
+  @override
+  String get stationEditTooltip => 'Edit station';
 }

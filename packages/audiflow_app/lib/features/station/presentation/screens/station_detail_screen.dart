@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
+import '../../../../l10n/app_localizations.dart';
 import '../../../../routing/app_router.dart';
 import '../controllers/station_detail_controller.dart';
 
@@ -73,7 +74,7 @@ class _StationDetailContent extends ConsumerWidget {
         actions: [
           IconButton(
             icon: const Icon(Symbols.edit),
-            tooltip: 'Edit station',
+            tooltip: AppLocalizations.of(context).stationEditTooltip,
             onPressed: () =>
                 context.push('${AppRoutes.library}/station/${station.id}/edit'),
           ),
@@ -124,13 +125,13 @@ class _StationDetailContent extends ConsumerWidget {
             ),
             const SizedBox(height: Spacing.md),
             Text(
-              'No episodes match your filters',
+              AppLocalizations.of(context).stationEmpty,
               style: theme.textTheme.headlineSmall,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: Spacing.sm),
             Text(
-              'Try adjusting the station filters to see more episodes.',
+              AppLocalizations.of(context).stationEmptySubtitle,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: colorScheme.onSurfaceVariant,
               ),

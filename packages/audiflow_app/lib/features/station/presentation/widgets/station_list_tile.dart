@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
+import '../../../../l10n/app_localizations.dart';
 import '../../../library/presentation/controllers/library_controller.dart';
 import '../controllers/station_detail_controller.dart';
 
@@ -49,7 +50,8 @@ class StationListTile extends ConsumerWidget {
       ),
       title: Text(station.name, maxLines: 1, overflow: TextOverflow.ellipsis),
       subtitle: Text(
-        '$podcastCount podcasts, $episodeCount episodes',
+        '${AppLocalizations.of(context).stationPodcastCount(podcastCount)}, '
+        '${AppLocalizations.of(context).stationEpisodeCount(episodeCount)}',
         style: theme.textTheme.bodySmall?.copyWith(
           color: colorScheme.onSurfaceVariant,
         ),

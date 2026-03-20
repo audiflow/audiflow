@@ -98,7 +98,7 @@ abstract class AppLocalizations {
     Locale('ja'),
   ];
 
-  /// Common cancel action
+  /// Cancel button label
   ///
   /// In en, this message translates to:
   /// **'Cancel'**
@@ -122,7 +122,7 @@ abstract class AppLocalizations {
   /// **'OK'**
   String get commonOk;
 
-  /// Common delete action
+  /// Delete button label
   ///
   /// In en, this message translates to:
   /// **'Delete'**
@@ -1351,6 +1351,150 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Play All'**
   String get stationPlayAll;
+
+  /// Hint shown when user has no stations
+  ///
+  /// In en, this message translates to:
+  /// **'No stations yet. Tap + to create one.'**
+  String get stationNoStationsYet;
+
+  /// Hint shown when user has no subscriptions
+  ///
+  /// In en, this message translates to:
+  /// **'No subscriptions yet.'**
+  String get stationNoSubscriptionsYet;
+
+  /// Subtitle for empty station state
+  ///
+  /// In en, this message translates to:
+  /// **'Try adjusting the station filters to see more episodes.'**
+  String get stationEmptySubtitle;
+
+  /// App bar title for editing a station
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Station'**
+  String get stationEditTitle;
+
+  /// Save button label
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get stationSave;
+
+  /// Delete station button label
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Station'**
+  String get stationDelete;
+
+  /// Delete confirmation dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Station'**
+  String get stationDeleteTitle;
+
+  /// Delete confirmation dialog body
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this station? This cannot be undone.'**
+  String get stationDeleteBody;
+
+  /// Section title for playback state filter
+  ///
+  /// In en, this message translates to:
+  /// **'Playback State'**
+  String get stationPlaybackState;
+
+  /// Label for all episodes filter
+  ///
+  /// In en, this message translates to:
+  /// **'All episodes'**
+  String get stationFilterAllLabel;
+
+  /// Label for unplayed filter
+  ///
+  /// In en, this message translates to:
+  /// **'Unplayed only'**
+  String get stationFilterUnplayedLabel;
+
+  /// Label for in-progress filter
+  ///
+  /// In en, this message translates to:
+  /// **'In progress only'**
+  String get stationFilterInProgressLabel;
+
+  /// Label for downloaded filter toggle
+  ///
+  /// In en, this message translates to:
+  /// **'Downloaded only'**
+  String get stationFilterDownloadedLabel;
+
+  /// Label for favorited filter toggle
+  ///
+  /// In en, this message translates to:
+  /// **'Favorited only'**
+  String get stationFilterFavoritedLabel;
+
+  /// Section title for duration filter
+  ///
+  /// In en, this message translates to:
+  /// **'Duration Filter'**
+  String get stationDurationFilter;
+
+  /// Duration filter operator label
+  ///
+  /// In en, this message translates to:
+  /// **'Shorter than'**
+  String get stationShorterThan;
+
+  /// Duration filter operator label
+  ///
+  /// In en, this message translates to:
+  /// **'Longer than'**
+  String get stationLongerThan;
+
+  /// Section title for published-within filter
+  ///
+  /// In en, this message translates to:
+  /// **'Published Within'**
+  String get stationPublishedWithin;
+
+  /// Option for no published-within limit
+  ///
+  /// In en, this message translates to:
+  /// **'No limit'**
+  String get stationNoLimit;
+
+  /// Published within N days option
+  ///
+  /// In en, this message translates to:
+  /// **'Last {days} days'**
+  String stationLastDays(int days);
+
+  /// Section title for sort order
+  ///
+  /// In en, this message translates to:
+  /// **'Episode Order'**
+  String get stationEpisodeOrder;
+
+  /// Sort option label
+  ///
+  /// In en, this message translates to:
+  /// **'Newest first'**
+  String get stationNewestFirst;
+
+  /// Sort option label
+  ///
+  /// In en, this message translates to:
+  /// **'Oldest first'**
+  String get stationOldestFirst;
+
+  /// Tooltip for edit button
+  ///
+  /// In en, this message translates to:
+  /// **'Edit station'**
+  String get stationEditTooltip;
 }
 
 class _AppLocalizationsDelegate

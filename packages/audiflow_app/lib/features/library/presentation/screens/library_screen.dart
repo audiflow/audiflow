@@ -54,7 +54,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
       appBar: AppBar(title: Text(l10n.libraryTitle)),
       floatingActionButton: FloatingActionButton(
         onPressed: () => context.push(AppRoutes.stationNew),
-        tooltip: 'New Station',
+        tooltip: l10n.stationNew,
         child: const Icon(Icons.add),
       ),
       body: subscriptionsAsync.when(
@@ -107,7 +107,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Stations',
+                    l10n.stationSectionTitle,
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -124,7 +124,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                   vertical: Spacing.sm,
                 ),
                 child: Text(
-                  'No stations yet. Tap + to create one.',
+                  l10n.stationNoStationsYet,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -168,7 +168,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                   vertical: Spacing.sm,
                 ),
                 child: Text(
-                  'No subscriptions yet.',
+                  l10n.stationNoSubscriptionsYet,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -180,7 +180,9 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
               child: ListTile(
                 leading: const Icon(Icons.podcasts),
                 title: Text(
-                  '${subscriptions.where((s) => !s.isCached).length} podcasts',
+                  l10n.stationPodcastCount(
+                    subscriptions.where((s) => !s.isCached).length,
+                  ),
                 ),
                 trailing: Icon(
                   Symbols.chevron_right,

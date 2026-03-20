@@ -694,4 +694,78 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get stationPlayAll => 'すべて再生';
+
+  @override
+  String get stationNoStationsYet => 'ステーションがありません。+ をタップして作成してください。';
+
+  @override
+  String get stationNoSubscriptionsYet => 'まだ購読がありません。';
+
+  @override
+  String get stationEmptySubtitle => 'フィルタを調整してみてください。';
+
+  @override
+  String get stationEditTitle => 'ステーションを編集';
+
+  @override
+  String get stationSave => '保存';
+
+  @override
+  String get stationDelete => 'ステーションを削除';
+
+  @override
+  String get stationDeleteTitle => 'ステーションを削除';
+
+  @override
+  String get stationDeleteBody => 'このステーションを削除しますか？この操作は元に戻せません。';
+
+  @override
+  String get stationPlaybackState => '再生状態';
+
+  @override
+  String get stationFilterAllLabel => '全エピソード';
+
+  @override
+  String get stationFilterUnplayedLabel => '未再生のみ';
+
+  @override
+  String get stationFilterInProgressLabel => '再生中のみ';
+
+  @override
+  String get stationFilterDownloadedLabel => 'ダウンロード済みのみ';
+
+  @override
+  String get stationFilterFavoritedLabel => 'お気に入りのみ';
+
+  @override
+  String get stationDurationFilter => '再生時間フィルタ';
+
+  @override
+  String get stationShorterThan => 'より短い';
+
+  @override
+  String get stationLongerThan => 'より長い';
+
+  @override
+  String get stationPublishedWithin => '公開期間';
+
+  @override
+  String get stationNoLimit => '制限なし';
+
+  @override
+  String stationLastDays(int days) {
+    return '過去$days日';
+  }
+
+  @override
+  String get stationEpisodeOrder => 'エピソードの順序';
+
+  @override
+  String get stationNewestFirst => '新しい順';
+
+  @override
+  String get stationOldestFirst => '古い順';
+
+  @override
+  String get stationEditTooltip => 'ステーションを編集';
 }

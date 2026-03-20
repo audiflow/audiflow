@@ -8,20 +8,22 @@ class StationEpisodeLocalDatasource {
 
   final Isar _isar;
 
-  /// Watches episodes for [stationId] sorted by [sortKey] descending (newest first).
+  /// Watches episodes for [stationId] sorted by [sortKey].
   ///
+  /// When [ascending] is false (default), sorts newest first.
   /// Optional [limit] and [offset] support pagination.
   Stream<List<StationEpisode>> watchByStation(
     int stationId, {
     int? limit,
     int? offset,
+    bool ascending = false,
   }) {
     // Isar's QueryBuilder type advances on each offset/limit call, so all
     // four combinations are built explicitly to keep the type system happy.
-    final sorted = _isar.stationEpisodes
-        .filter()
-        .stationIdEqualTo(stationId)
-        .sortBySortKeyDesc();
+    final filtered = _isar.stationEpisodes.filter().stationIdEqualTo(stationId);
+    final sorted = ascending
+        ? filtered.sortBySortKey()
+        : filtered.sortBySortKeyDesc();
 
     if (offset != null && limit != null) {
       return sorted.offset(offset).limit(limit).watch(fireImmediately: true);
@@ -59,11 +61,9 @@ class StationEpisodeLocalDatasource {
     );
   }
 
-  /// Deletes episodes belonging to [podcastId] within [stationId] whose
-  /// episode IDs are in [episodeIds].
-  Future<void> deleteByPodcastForStation(
+  /// Deletes episodes within [stationId] whose episode IDs are in [episodeIds].
+  Future<void> deleteByEpisodeIdsForStation(
     int stationId,
-    int podcastId,
     List<int> episodeIds,
   ) async {
     await _isar.writeTxn(

@@ -5,6 +5,7 @@ abstract class StationEpisodeRepository {
     int stationId, {
     int? limit,
     int? offset,
+    bool ascending = false,
   });
   Future<int> countByStation(int stationId);
   Future<void> removeAllForStation(int stationId);

@@ -178,7 +178,7 @@ class StationReconciler {
     return switch (filter.durationOperator) {
       'shorterThan' => durationMs < thresholdMs,
       'longerThan' => thresholdMs < durationMs,
-      _ => true,
+      _ => false,
     };
   }
 
@@ -186,6 +186,6 @@ class StationReconciler {
     final publishedAt = episode.publishedAt;
     if (publishedAt == null) return false;
     final cutoff = DateTime.now().subtract(Duration(days: days));
-    return cutoff.isBefore(publishedAt);
+    return !publishedAt.isBefore(cutoff);
   }
 }

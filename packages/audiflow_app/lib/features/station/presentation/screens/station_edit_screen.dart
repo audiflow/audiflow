@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../l10n/app_localizations.dart';
 import '../../../../routing/app_router.dart';
 import '../../../library/presentation/controllers/library_controller.dart';
 import '../controllers/station_edit_controller.dart';
@@ -57,10 +58,11 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
     }
 
     final isEditMode = widget.stationId != null;
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(isEditMode ? 'Edit Station' : 'New Station'),
+        title: Text(isEditMode ? l10n.stationEditTitle : l10n.stationNew),
         actions: [
           if (editState.isSaving)
             const Padding(
@@ -70,7 +72,7 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
           else
             TextButton(
               onPressed: () => _onSave(controller),
-              child: const Text('Save'),
+              child: Text(l10n.stationSave),
             ),
         ],
       ),
@@ -118,7 +120,10 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Station Name', style: Theme.of(context).textTheme.titleSmall),
+        Text(
+          AppLocalizations.of(context).stationName,
+          style: Theme.of(context).textTheme.titleSmall,
+        ),
         const SizedBox(height: Spacing.xs),
         TextField(
           controller: _nameController,
@@ -126,7 +131,7 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
           maxLengthEnforcement: MaxLengthEnforcement.enforced,
           textCapitalization: TextCapitalization.words,
           decoration: const InputDecoration(
-            hintText: 'e.g. Morning Commute',
+            hintText: 'e.g., News, Tech, Comedy',
             border: OutlineInputBorder(),
           ),
           onChanged: controller.setName,
@@ -146,7 +151,10 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Podcasts', style: theme.textTheme.titleSmall),
+        Text(
+          AppLocalizations.of(context).stationPodcasts,
+          style: theme.textTheme.titleSmall,
+        ),
         const SizedBox(height: Spacing.xs),
         subscriptionsAsync.when(
           data: (subscriptions) {
@@ -200,7 +208,10 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Playback State', style: theme.textTheme.titleSmall),
+        Text(
+          AppLocalizations.of(context).stationPlaybackState,
+          style: theme.textTheme.titleSmall,
+        ),
         const SizedBox(height: Spacing.xs),
         RadioGroup<StationPlaybackState>(
           groupValue: state.playbackState,
@@ -223,11 +234,14 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
     );
   }
 
-  String _playbackStateLabel(StationPlaybackState value) => switch (value) {
-    StationPlaybackState.all => 'All episodes',
-    StationPlaybackState.unplayed => 'Unplayed only',
-    StationPlaybackState.inProgress => 'In progress only',
-  };
+  String _playbackStateLabel(StationPlaybackState value) {
+    final l10n = AppLocalizations.of(context);
+    return switch (value) {
+      StationPlaybackState.all => l10n.stationFilterAllLabel,
+      StationPlaybackState.unplayed => l10n.stationFilterUnplayedLabel,
+      StationPlaybackState.inProgress => l10n.stationFilterInProgressLabel,
+    };
+  }
 
   Widget _buildAttributeFilters(
     StationEditState state,
@@ -238,13 +252,15 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
         SwitchListTile(
           value: state.filterDownloaded,
           onChanged: controller.setFilterDownloaded,
-          title: const Text('Downloaded only'),
+          title: Text(
+            AppLocalizations.of(context).stationFilterDownloadedLabel,
+          ),
           contentPadding: EdgeInsets.zero,
         ),
         SwitchListTile(
           value: state.filterFavorited,
           onChanged: controller.setFilterFavorited,
-          title: const Text('Favorited only'),
+          title: Text(AppLocalizations.of(context).stationFilterFavoritedLabel),
           contentPadding: EdgeInsets.zero,
         ),
       ],
@@ -265,7 +281,10 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Duration Filter', style: theme.textTheme.titleSmall),
+            Text(
+              AppLocalizations.of(context).stationDurationFilter,
+              style: theme.textTheme.titleSmall,
+            ),
             Switch(
               value: filter != null,
               onChanged: (enabled) {
@@ -287,14 +306,16 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
             children: [
               DropdownButton<String>(
                 value: filter.durationOperator,
-                items: const [
+                items: [
                   DropdownMenuItem(
                     value: 'shorterThan',
-                    child: Text('Shorter than'),
+                    child: Text(
+                      AppLocalizations.of(context).stationShorterThan,
+                    ),
                   ),
                   DropdownMenuItem(
                     value: 'longerThan',
-                    child: Text('Longer than'),
+                    child: Text(AppLocalizations.of(context).stationLongerThan),
                   ),
                 ],
                 onChanged: (op) {
@@ -308,12 +329,10 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
               const SizedBox(width: Spacing.sm),
               SizedBox(
                 width: 80,
-                child: TextField(
+                child: TextFormField(
                   keyboardType: TextInputType.number,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  controller: TextEditingController(
-                    text: filter.durationMinutes.toString(),
-                  ),
+                  initialValue: filter.durationMinutes.toString(),
                   decoration: const InputDecoration(
                     suffixText: 'min',
                     border: OutlineInputBorder(),
@@ -347,7 +366,10 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Published Within', style: theme.textTheme.titleSmall),
+        Text(
+          AppLocalizations.of(context).stationPublishedWithin,
+          style: theme.textTheme.titleSmall,
+        ),
         const SizedBox(height: Spacing.xs),
         DropdownButtonFormField<int?>(
           initialValue: state.publishedWithinDays,
@@ -356,7 +378,11 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
               .map(
                 (days) => DropdownMenuItem<int?>(
                   value: days,
-                  child: Text(days == null ? 'No limit' : 'Last $days days'),
+                  child: Text(
+                    days == null
+                        ? AppLocalizations.of(context).stationNoLimit
+                        : AppLocalizations.of(context).stationLastDays(days),
+                  ),
                 ),
               )
               .toList(),
@@ -376,17 +402,20 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Episode Order', style: theme.textTheme.titleSmall),
+        Text(
+          AppLocalizations.of(context).stationEpisodeOrder,
+          style: theme.textTheme.titleSmall,
+        ),
         const SizedBox(height: Spacing.xs),
         SegmentedButton<StationEpisodeSort>(
-          segments: const [
+          segments: [
             ButtonSegment(
               value: StationEpisodeSort.newest,
-              label: Text('Newest first'),
+              label: Text(AppLocalizations.of(context).stationNewestFirst),
             ),
             ButtonSegment(
               value: StationEpisodeSort.oldest,
-              label: Text('Oldest first'),
+              label: Text(AppLocalizations.of(context).stationOldestFirst),
             ),
           ],
           selected: {state.episodeSort},
@@ -411,7 +440,7 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
           side: BorderSide(color: Theme.of(context).colorScheme.error),
         ),
         icon: const Icon(Icons.delete_outline),
-        label: const Text('Delete Station'),
+        label: Text(AppLocalizations.of(context).stationDelete),
         onPressed: () => _onDelete(context, controller),
       ),
     );
@@ -422,25 +451,23 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
     StationEditController controller,
   ) async {
     final router = GoRouter.of(context);
+    final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete Station'),
-        content: const Text(
-          'Are you sure you want to delete this station? '
-          'This cannot be undone.',
-        ),
+        title: Text(l10n.stationDeleteTitle),
+        content: Text(l10n.stationDeleteBody),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
+            child: Text(l10n.commonCancel),
           ),
           TextButton(
             style: TextButton.styleFrom(
               foregroundColor: Theme.of(ctx).colorScheme.error,
             ),
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Delete'),
+            child: Text(l10n.commonDelete),
           ),
         ],
       ),
