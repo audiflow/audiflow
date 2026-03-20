@@ -206,10 +206,12 @@ Future<SmartPlaylistGrouping?> _buildGroupingFromCache(
   // Reconstruct playlists from cached entities + persisted groups
   final playlists = <SmartPlaylist>[];
   for (final entity in cachedPlaylists) {
-    // Use stored playlistId; fall back for legacy records
+    // Use stored playlistId; fall back for legacy records.
+    // Derive prefix from resolverType so year-resolved playlists
+    // get 'year_N' instead of 'season_N'.
     final playlistId = entity.playlistId.isNotEmpty
         ? entity.playlistId
-        : 'season_${entity.playlistNumber}';
+        : '${resolverType == 'year' ? 'year' : 'season'}_${entity.playlistNumber}';
 
     // Load persisted groups for this playlist
     final groupEntities = await playlistDatasource.getGroupsByPlaylist(
