@@ -196,7 +196,7 @@ final class PodcastDetailProvider
   }
 }
 
-String _$podcastDetailHash() => r'a3c016bd7b20cc1e5af39ec72e6206a6fa1afd8f';
+String _$podcastDetailHash() => r'1ed867f45819ac09dee1880ae00285cd9f075008';
 
 /// Fetches and provides parsed podcast feed data for a given feed URL.
 ///
