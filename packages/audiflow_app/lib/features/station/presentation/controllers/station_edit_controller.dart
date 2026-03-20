@@ -14,8 +14,10 @@ abstract final class StationEditError {
   static String limitReached(int max) => '$_limitReachedPrefix$max';
 
   static bool isLimitReached(String key) => key.startsWith(_limitReachedPrefix);
-  static int parseLimitMax(String key) =>
-      int.tryParse(key.substring(_limitReachedPrefix.length)) ?? 0;
+  static int parseLimitMax(String key) {
+    if (!key.startsWith(_limitReachedPrefix)) return 0;
+    return int.tryParse(key.substring(_limitReachedPrefix.length)) ?? 0;
+  }
 }
 
 /// Form state for station create/edit.

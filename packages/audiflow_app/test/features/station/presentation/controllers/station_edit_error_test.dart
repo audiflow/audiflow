@@ -28,6 +28,14 @@ void main() {
       test('returns 0 for non-numeric suffix', () {
         check(StationEditError.parseLimitMax('limit_reached:abc')).equals(0);
       });
+
+      test('returns 0 for key without limit_reached prefix', () {
+        check(StationEditError.parseLimitMax('name_required')).equals(0);
+      });
+
+      test('returns 0 for empty string', () {
+        check(StationEditError.parseLimitMax('')).equals(0);
+      });
     });
   });
 }
