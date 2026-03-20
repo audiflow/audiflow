@@ -43,12 +43,14 @@ class PlaybackHistoryService {
   static const int fromBeginningThresholdMs = 5000;
 
   int _lastSavedPositionMs = 0;
+  bool _notifiedInProgressThisSession = false;
 
   /// Called when playback starts for an episode.
   ///
   /// Increments play count if starting from the beginning.
   Future<void> onPlaybackStarted(int episodeId, int positionMs) async {
     _lastSavedPositionMs = positionMs;
+    _notifiedInProgressThisSession = false;
 
     // Increment play count if starting from beginning
     if (positionMs < fromBeginningThresholdMs) {
@@ -78,6 +80,12 @@ class PlaybackHistoryService {
       positionMs: positionMs,
       durationMs: durationMs,
     );
+
+    // Notify stations once per session when episode transitions to in-progress.
+    if (!_notifiedInProgressThisSession && 0 < positionMs) {
+      _notifiedInProgressThisSession = true;
+      await _reconcilerService?.onEpisodeChanged(episodeId);
+    }
 
     // Auto-complete check
     if (0 < durationMs) {

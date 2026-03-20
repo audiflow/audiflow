@@ -31,7 +31,9 @@ class StationDetailScreen extends ConsumerWidget {
         body: const Center(child: CircularProgressIndicator()),
       ),
       error: (error, _) => Scaffold(
-        appBar: AppBar(title: const Text('Station')),
+        appBar: AppBar(
+          title: Text(AppLocalizations.of(context).stationSectionTitle),
+        ),
         body: Center(child: Text(error.toString())),
       ),
     );
@@ -162,10 +164,8 @@ class _StationEpisodeTile extends ConsumerWidget {
         if (episode == null) return const SizedBox.shrink();
         return _buildTile(context, episode);
       },
-      loading: () => const ListTile(
-        title: Text('Loading...'),
-        leading: CircularProgressIndicator.adaptive(),
-      ),
+      loading: () =>
+          const ListTile(leading: CircularProgressIndicator.adaptive()),
       error: (_, _) => const SizedBox.shrink(),
     );
   }

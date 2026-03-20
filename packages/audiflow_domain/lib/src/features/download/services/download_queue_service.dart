@@ -10,6 +10,7 @@ import '../models/download_task.dart';
 import '../../feed/repositories/episode_repository.dart';
 import '../../feed/repositories/episode_repository_impl.dart';
 import '../models/download_status.dart';
+import '../../station/services/station_reconciler_service.dart';
 import '../repositories/download_repository.dart';
 import '../repositories/download_repository_impl.dart';
 import 'download_file_service.dart';
@@ -32,12 +33,14 @@ DownloadQueueService downloadQueueService(Ref ref) {
   final fileService = ref.watch(downloadFileServiceProvider);
   final episodeRepo = ref.watch(episodeRepositoryProvider);
   final logger = ref.watch(namedLoggerProvider('DownloadQueue'));
+  final reconcilerService = ref.watch(stationReconcilerServiceProvider);
 
   final service = DownloadQueueService(
     repository: repository,
     fileService: fileService,
     episodeRepository: episodeRepo,
     logger: logger,
+    onDownloadCompleted: reconcilerService.onEpisodeChanged,
   );
 
   ref.onDispose(() => service.dispose());
@@ -51,16 +54,19 @@ class DownloadQueueService {
     required DownloadFileService fileService,
     required EpisodeRepository episodeRepository,
     required Logger logger,
+    Future<void> Function(int episodeId)? onDownloadCompleted,
   }) : _repository = repository,
        _fileService = fileService,
        _episodeRepo = episodeRepository,
-       _logger = logger {
+       _logger = logger,
+       _onDownloadCompleted = onDownloadCompleted {
     _init();
   }
 
   final DownloadRepository _repository;
   final DownloadFileService _fileService;
   final EpisodeRepository _episodeRepo;
+  final Future<void> Function(int episodeId)? _onDownloadCompleted;
   final Logger _logger;
 
   StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
@@ -192,6 +198,7 @@ class DownloadQueueService {
       );
 
       _logger.i('Download completed: episodeId=${task.episodeId}');
+      await _onDownloadCompleted?.call(task.episodeId);
     } on DownloadException catch (e) {
       await _handleDownloadError(task, e);
     } catch (e) {
