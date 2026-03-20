@@ -78,6 +78,9 @@ abstract class SubscriptionRepository {
 
   /// Deletes a subscription by its database ID.
   Future<bool> deleteById(int id);
+
+  /// Updates the auto-download setting for a subscription.
+  Future<void> updateAutoDownload(int id, {required bool autoDownload});
 }
 
 /// Exception thrown when a subscription operation fails.

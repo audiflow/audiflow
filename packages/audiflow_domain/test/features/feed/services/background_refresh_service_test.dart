@@ -173,6 +173,9 @@ class FakeSubscriptionRepository implements SubscriptionRepository {
 
   @override
   Future<bool> deleteById(int id) async => false;
+
+  @override
+  Future<void> updateAutoDownload(int id, {required bool autoDownload}) async {}
 }
 
 class FakeEpisodeRepository implements EpisodeRepository {

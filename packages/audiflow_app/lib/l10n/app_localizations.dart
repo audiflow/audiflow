@@ -1243,6 +1243,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Transcript available'**
   String get episodeTranscriptAvailable;
+
+  /// Per-podcast auto-download toggle title
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-download new episodes'**
+  String get podcastAutoDownloadTitle;
+
+  /// Per-podcast auto-download toggle subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Download new episodes automatically during background refresh (WiFi only)'**
+  String get podcastAutoDownloadSubtitle;
 }
 
 class _AppLocalizationsDelegate

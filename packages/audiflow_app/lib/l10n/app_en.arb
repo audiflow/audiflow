@@ -399,5 +399,10 @@
   "@playerTranscriptJumpToCurrent": { "description": "Jump to current position button label" },
 
   "episodeTranscriptAvailable": "Transcript available",
-  "@episodeTranscriptAvailable": { "description": "Accessibility label for transcript indicator icon" }
+  "@episodeTranscriptAvailable": { "description": "Accessibility label for transcript indicator icon" },
+
+  "podcastAutoDownloadTitle": "Auto-download new episodes",
+  "@podcastAutoDownloadTitle": { "description": "Per-podcast auto-download toggle title" },
+  "podcastAutoDownloadSubtitle": "Download new episodes automatically during background refresh (WiFi only)",
+  "@podcastAutoDownloadSubtitle": { "description": "Per-podcast auto-download toggle subtitle" }
 }

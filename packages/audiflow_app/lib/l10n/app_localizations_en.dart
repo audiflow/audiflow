@@ -629,4 +629,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get episodeTranscriptAvailable => 'Transcript available';
+
+  @override
+  String get podcastAutoDownloadTitle => 'Auto-download new episodes';
+
+  @override
+  String get podcastAutoDownloadSubtitle =>
+      'Download new episodes automatically during background refresh (WiFi only)';
 }
