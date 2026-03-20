@@ -88,7 +88,7 @@ class FeedSyncExecutor {
         xmlContent: xmlContent,
         podcastId: sub.id,
         knownGuids: knownGuids,
-        onBatchReady: (episodes, _mediaMetas) async {
+        onBatchReady: (episodes, mediaMetas) async {
           await _episodeRepo.upsertEpisodes(episodes);
         },
       )) {

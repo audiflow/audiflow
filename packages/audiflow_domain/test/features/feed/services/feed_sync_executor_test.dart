@@ -1,6 +1,5 @@
 import 'package:audiflow_core/audiflow_core.dart' show AutoPlayOrder;
 import 'package:audiflow_domain/audiflow_domain.dart';
-import 'package:audiflow_podcast/audiflow_podcast.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart' show ThemeMode;
 import 'package:flutter_test/flutter_test.dart';
@@ -374,14 +373,14 @@ void main() {
     fakeSettingsRepo = _FakeAppSettingsRepository(syncIntervalMinutes: 60);
   });
 
-  FeedSyncExecutor _buildExecutor({
+  FeedSyncExecutor buildExecutor({
     required Dio dio,
     FeedParserService? feedParser,
   }) {
     final parser =
         feedParser ??
         _FakeFeedParserService(
-          (_, __, ___) => Stream.value(
+          (xml, id, guids) => Stream.value(
             const FeedParseComplete(total: 0, stoppedEarly: false),
           ),
         );
@@ -400,7 +399,7 @@ void main() {
         lastRefreshedAt: DateTime.now().subtract(const Duration(minutes: 30)),
       );
 
-      final executor = _buildExecutor(dio: _ErrorDio());
+      final executor = buildExecutor(dio: _ErrorDio());
 
       final result = await executor.syncFeed(sub);
 
@@ -416,12 +415,12 @@ void main() {
       );
 
       final parser = _FakeFeedParserService(
-        (_, __, ___) => Stream.value(
+        (xml, id, guids) => Stream.value(
           const FeedParseComplete(total: 3, stoppedEarly: false),
         ),
       );
 
-      final executor = _buildExecutor(
+      final executor = buildExecutor(
         dio: _FakeDio((_) => _xmlResponse('<rss></rss>')),
         feedParser: parser,
       );
@@ -437,12 +436,12 @@ void main() {
       final sub = _subscription(lastRefreshedAt: null);
 
       final parser = _FakeFeedParserService(
-        (_, __, ___) => Stream.value(
+        (xml, id, guids) => Stream.value(
           const FeedParseComplete(total: 5, stoppedEarly: false),
         ),
       );
 
-      final executor = _buildExecutor(
+      final executor = buildExecutor(
         dio: _FakeDio((_) => _xmlResponse('<rss></rss>')),
         feedParser: parser,
       );
@@ -457,7 +456,7 @@ void main() {
     test('returns error result on network failure', () async {
       final sub = _subscription(lastRefreshedAt: null);
 
-      final executor = _buildExecutor(dio: _ErrorDio());
+      final executor = buildExecutor(dio: _ErrorDio());
 
       final result = await executor.syncFeed(sub);
 
@@ -469,7 +468,7 @@ void main() {
     test('returns failure on empty RSS response', () async {
       final sub = _subscription(lastRefreshedAt: null);
 
-      final executor = _buildExecutor(dio: _FakeDio((_) => _xmlResponse('')));
+      final executor = buildExecutor(dio: _FakeDio((_) => _xmlResponse('')));
 
       final result = await executor.syncFeed(sub);
 
@@ -482,12 +481,12 @@ void main() {
       final sub = _subscription(itunesId: 'itunes-42', lastRefreshedAt: null);
 
       final parser = _FakeFeedParserService(
-        (_, __, ___) => Stream.value(
+        (xml, id, guids) => Stream.value(
           const FeedParseComplete(total: 1, stoppedEarly: false),
         ),
       );
 
-      final executor = _buildExecutor(
+      final executor = buildExecutor(
         dio: _FakeDio((_) => _xmlResponse('<rss></rss>')),
         feedParser: parser,
       );
@@ -504,12 +503,12 @@ void main() {
       );
 
       final parser = _FakeFeedParserService(
-        (_, __, ___) => Stream.value(
+        (xml, id, guids) => Stream.value(
           const FeedParseComplete(total: 0, stoppedEarly: false),
         ),
       );
 
-      final executor = _buildExecutor(
+      final executor = buildExecutor(
         dio: _FakeDio((_) => _xmlResponse('<rss></rss>')),
         feedParser: parser,
       );
