@@ -301,6 +301,22 @@ class MockSubscriptionRepository extends _i1.Mock
             returnValue: _i11.Future<bool>.value(false),
           )
           as _i11.Future<bool>);
+
+  @override
+  _i11.Future<void> updateAutoDownload(
+    int? id, {
+    required bool? autoDownload,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(
+              #updateAutoDownload,
+              [id],
+              {#autoDownload: autoDownload},
+            ),
+            returnValue: _i11.Future<void>.value(),
+            returnValueForMissingStub: _i11.Future<void>.value(),
+          )
+          as _i11.Future<void>);
 }
 
 /// A class which mocks [EpisodeRepository].
@@ -691,6 +707,23 @@ class MockAppSettingsRepository extends _i1.Mock
   _i11.Future<void> setWifiOnlySync(bool? enabled) =>
       (super.noSuchMethod(
             Invocation.method(#setWifiOnlySync, [enabled]),
+            returnValue: _i11.Future<void>.value(),
+            returnValueForMissingStub: _i11.Future<void>.value(),
+          )
+          as _i11.Future<void>);
+
+  @override
+  bool getNotifyNewEpisodes() =>
+      (super.noSuchMethod(
+            Invocation.method(#getNotifyNewEpisodes, []),
+            returnValue: false,
+          )
+          as bool);
+
+  @override
+  _i11.Future<void> setNotifyNewEpisodes(bool? enabled) =>
+      (super.noSuchMethod(
+            Invocation.method(#setNotifyNewEpisodes, [enabled]),
             returnValue: _i11.Future<void>.value(),
             returnValueForMissingStub: _i11.Future<void>.value(),
           )

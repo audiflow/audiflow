@@ -556,6 +556,23 @@ class MockAppSettingsRepository extends _i1.Mock
           as _i4.Future<void>);
 
   @override
+  bool getNotifyNewEpisodes() =>
+      (super.noSuchMethod(
+            Invocation.method(#getNotifyNewEpisodes, []),
+            returnValue: false,
+          )
+          as bool);
+
+  @override
+  _i4.Future<void> setNotifyNewEpisodes(bool? enabled) =>
+      (super.noSuchMethod(
+            Invocation.method(#setNotifyNewEpisodes, [enabled]),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
+
+  @override
   _i4.Future<void> clearAll() =>
       (super.noSuchMethod(
             Invocation.method(#clearAll, []),
