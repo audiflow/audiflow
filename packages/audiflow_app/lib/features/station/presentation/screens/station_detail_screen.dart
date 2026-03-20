@@ -368,7 +368,7 @@ class _StationEpisodeCard extends ConsumerWidget {
         episodeUrl: url,
         episodeTitle: episode.title,
         podcastTitle: podcastTitle,
-        artworkUrl: artworkUrl ?? episode.imageUrl,
+        artworkUrl: episode.imageUrl ?? artworkUrl,
         totalDuration: episode.durationMs != null
             ? Duration(milliseconds: episode.durationMs!)
             : null,
