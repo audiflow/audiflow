@@ -19,16 +19,16 @@ class BackgroundTaskRegistrar {
         ),
         existingWorkPolicy: ExistingPeriodicWorkPolicy.replace,
       );
-    } on UnimplementedError {
-      // Workmanager is not available in test environments.
+    } on Exception {
+      // Workmanager may be unavailable (test, unsupported platform).
     }
   }
 
   static Future<void> cancel() async {
     try {
       await Workmanager().cancelByUniqueName(taskName);
-    } on UnimplementedError {
-      // Workmanager is not available in test environments.
+    } on Exception {
+      // Workmanager may be unavailable (test, unsupported platform).
     }
   }
 }

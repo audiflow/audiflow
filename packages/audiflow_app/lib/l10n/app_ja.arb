@@ -215,5 +215,5 @@
   "episodeTranscriptAvailable": "書き起こしあり",
 
   "podcastAutoDownloadTitle": "新しいエピソードを自動ダウンロード",
-  "podcastAutoDownloadSubtitle": "バックグラウンド更新時に新しいエピソードを自動でダウンロード（Wi-Fiのみ）"
+  "podcastAutoDownloadSubtitle": "バックグラウンド更新時に新しいエピソードを自動でダウンロード"
 }

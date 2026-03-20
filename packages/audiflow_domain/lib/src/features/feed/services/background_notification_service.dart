@@ -59,14 +59,15 @@ class BackgroundNotificationService {
 
     final totalEpisodes = episodesPerPodcast.values.fold(0, (a, b) => a + b);
     final names = episodesPerPodcast.keys.toList();
+    final episodeLabel = totalEpisodes == 1 ? 'episode' : 'episodes';
 
     return switch (names.length) {
-      1 => '$totalEpisodes new episodes from ${names[0]}',
-      2 => '$totalEpisodes new episodes from ${names[0]} and ${names[1]}',
+      1 => '$totalEpisodes new $episodeLabel from ${names[0]}',
+      2 => '$totalEpisodes new $episodeLabel from ${names[0]} and ${names[1]}',
       _ => () {
         final otherCount = names.length - 2;
         final otherLabel = otherCount == 1 ? '1 other' : '$otherCount others';
-        return '$totalEpisodes new episodes from ${names[0]}, ${names[1]}, and $otherLabel';
+        return '$totalEpisodes new $episodeLabel from ${names[0]}, ${names[1]}, and $otherLabel';
       }(),
     };
   }

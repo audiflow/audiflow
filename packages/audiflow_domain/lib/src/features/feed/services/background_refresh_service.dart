@@ -101,11 +101,17 @@ class BackgroundRefreshService {
     }
 
     if (newCountById.isNotEmpty && _settingsRepo.getNotifyNewEpisodes()) {
-      // Build display map keyed by title for notification body.
-      final displayMap = <String, int>{
-        for (final entry in newCountById.entries)
-          titleById[entry.key]!: entry.value,
-      };
+      // Build display map keyed by title, aggregating counts for
+      // duplicate titles (rare but possible).
+      final displayMap = <String, int>{};
+      for (final entry in newCountById.entries) {
+        final title = titleById[entry.key]!;
+        displayMap.update(
+          title,
+          (existing) => existing + entry.value,
+          ifAbsent: () => entry.value,
+        );
+      }
       await _showNotification(displayMap);
     }
 

@@ -42,6 +42,13 @@ void main() {
         final body = BackgroundNotificationService.formatNotificationBody({});
         expect(body, '');
       });
+
+      test('singular episode when total is 1', () {
+        final body = BackgroundNotificationService.formatNotificationBody({
+          'Podcast A': 1,
+        });
+        expect(body, '1 new episode from Podcast A');
+      });
     });
   });
 }

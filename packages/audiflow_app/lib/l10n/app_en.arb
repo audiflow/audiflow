@@ -410,6 +410,6 @@
 
   "podcastAutoDownloadTitle": "Auto-download new episodes",
   "@podcastAutoDownloadTitle": { "description": "Per-podcast auto-download toggle title" },
-  "podcastAutoDownloadSubtitle": "Download new episodes automatically during background refresh (WiFi only)",
+  "podcastAutoDownloadSubtitle": "Download new episodes automatically during background refresh",
   "@podcastAutoDownloadSubtitle": { "description": "Per-podcast auto-download toggle subtitle" }
 }
