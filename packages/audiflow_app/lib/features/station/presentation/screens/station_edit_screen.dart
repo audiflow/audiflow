@@ -39,6 +39,20 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
     super.dispose();
   }
 
+  String _resolveError(AppLocalizations l10n, String errorKey) {
+    if (errorKey == StationEditError.nameRequired) {
+      return l10n.stationNameRequired;
+    }
+    if (errorKey == StationEditError.notFound) {
+      return l10n.stationNotFoundMessage;
+    }
+    if (errorKey.startsWith('limit_reached:')) {
+      final max = int.tryParse(errorKey.split(':').last) ?? 0;
+      return l10n.stationLimitReached(max);
+    }
+    return errorKey;
+  }
+
   @override
   Widget build(BuildContext context) {
     final editState = ref.watch(
@@ -82,7 +96,7 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (editState.error != null)
-              _ErrorBanner(message: editState.error!),
+              _ErrorBanner(message: _resolveError(l10n, editState.error!)),
             _buildNameField(controller),
             const SizedBox(height: Spacing.lg),
             _buildPodcastPicker(context, editState, controller),
@@ -129,7 +143,9 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
           controller: _nameController,
           maxLength: 50,
           maxLengthEnforcement: MaxLengthEnforcement.enforced,
-          textCapitalization: TextCapitalization.words,
+          textCapitalization: TextCapitalization.none,
+          autocorrect: false,
+          keyboardType: TextInputType.text,
           decoration: InputDecoration(
             hintText: AppLocalizations.of(context).stationNameHint,
             border: const OutlineInputBorder(),

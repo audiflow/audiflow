@@ -1574,6 +1574,12 @@ abstract class AppLocalizations {
   /// **'Station data not available'**
   String get stationNotFoundMessage;
 
+  /// Validation error when station name is empty
+  ///
+  /// In en, this message translates to:
+  /// **'Station name is required'**
+  String get stationNameRequired;
+
   /// Go back button label
   ///
   /// In en, this message translates to:

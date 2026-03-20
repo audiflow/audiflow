@@ -513,6 +513,8 @@
   "@stationNotFoundTitle": { "description": "App bar title for station not found screen" },
   "stationNotFoundMessage": "Station data not available",
   "@stationNotFoundMessage": { "description": "Body text for station not found screen" },
+  "stationNameRequired": "Station name is required",
+  "@stationNameRequired": { "description": "Validation error when station name is empty" },
   "commonGoBack": "Go Back",
   "@commonGoBack": { "description": "Go back button label" }
 }

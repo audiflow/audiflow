@@ -811,5 +811,8 @@ class AppLocalizationsJa extends AppLocalizations {
   String get stationNotFoundMessage => 'ステーションのデータが利用できません';
 
   @override
+  String get stationNameRequired => 'ステーション名を入力してください';
+
+  @override
   String get commonGoBack => '戻る';
 }

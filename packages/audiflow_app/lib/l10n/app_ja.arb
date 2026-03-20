@@ -274,5 +274,6 @@
   "stationEditTooltip": "ステーションを編集",
   "stationNotFoundTitle": "ステーションが見つかりません",
   "stationNotFoundMessage": "ステーションのデータが利用できません",
+  "stationNameRequired": "ステーション名を入力してください",
   "commonGoBack": "戻る"
 }

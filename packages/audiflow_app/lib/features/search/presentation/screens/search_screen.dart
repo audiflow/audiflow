@@ -61,6 +61,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                   child: TextField(
                     controller: _textController,
                     focusNode: _focusNode,
+                    textCapitalization: TextCapitalization.none,
+                    autocorrect: false,
+                    keyboardType: TextInputType.text,
                     decoration: InputDecoration(
                       hintText: l10n.searchHint,
                       border: const OutlineInputBorder(),

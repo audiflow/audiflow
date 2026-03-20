@@ -827,5 +827,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get stationNotFoundMessage => 'Station data not available';
 
   @override
+  String get stationNameRequired => 'Station name is required';
+
+  @override
   String get commonGoBack => 'Go Back';
 }
