@@ -408,7 +408,7 @@ cd packages/audiflow_domain && flutter test test/features/feed/services/feed_syn
 
 Expected: FAIL (FeedSyncExecutor not found)
 
-- [ ] **Step 4: Create `FeedSyncExecutor`**
+- [ ] **Step 3: Create `FeedSyncExecutor`**
 
 Create `packages/audiflow_domain/lib/src/features/feed/services/feed_sync_executor.dart`:
 
@@ -552,7 +552,7 @@ class FeedSyncExecutor {
 }
 ```
 
-- [ ] **Step 5: Export `FeedSyncExecutor` from `audiflow_domain.dart`**
+- [ ] **Step 4: Export `FeedSyncExecutor` from `audiflow_domain.dart`**
 
 Add to the barrel file:
 
@@ -560,7 +560,7 @@ Add to the barrel file:
 export 'src/features/feed/services/feed_sync_executor.dart';
 ```
 
-- [ ] **Step 6: Run tests to verify they pass**
+- [ ] **Step 5: Run tests to verify they pass**
 
 ```bash
 cd packages/audiflow_domain && flutter test test/features/feed/services/feed_sync_executor_test.dart
@@ -568,7 +568,7 @@ cd packages/audiflow_domain && flutter test test/features/feed/services/feed_syn
 
 Expected: PASS
 
-- [ ] **Step 7: Refactor `FeedSyncService` to delegate to `FeedSyncExecutor`**
+- [ ] **Step 6: Refactor `FeedSyncService` to delegate to `FeedSyncExecutor`**
 
 Update `feed_sync_service.dart`:
 - Create a `FeedSyncExecutor` in the constructor
@@ -587,7 +587,7 @@ FeedSyncService feedSyncService(Ref ref) {
 
 The `FeedSyncService.syncFeed` method keeps its smart playlist logic but delegates the base RSS fetch/parse/upsert to `FeedSyncExecutor`. The `_shouldSync` and sync interval logic move to the executor.
 
-- [ ] **Step 8: Run all existing feed sync tests to verify no regression**
+- [ ] **Step 7: Run all existing feed sync tests to verify no regression**
 
 ```bash
 cd packages/audiflow_domain && flutter test test/features/feed/services/
@@ -595,7 +595,7 @@ cd packages/audiflow_domain && flutter test test/features/feed/services/
 
 Expected: all PASS
 
-- [ ] **Step 9: Commit**
+- [ ] **Step 8: Commit**
 
 ```bash
 git add packages/audiflow_domain/lib/src/features/feed/services/feed_sync_executor.dart packages/audiflow_domain/lib/src/features/feed/services/feed_sync_service.dart packages/audiflow_domain/test/features/feed/services/feed_sync_executor_test.dart packages/audiflow_domain/lib/audiflow_domain.dart
@@ -610,10 +610,10 @@ git commit -m "refactor(domain): extract FeedSyncExecutor from FeedSyncService"
 - Modify: `packages/audiflow_domain/pubspec.yaml`
 - Modify: `packages/audiflow_app/pubspec.yaml`
 
-- [ ] **Step 1: Add `workmanager` and `flutter_local_notifications` to audiflow_app**
+- [ ] **Step 1: Add `workmanager`, `flutter_local_notifications`, and `permission_handler` to audiflow_app**
 
 ```bash
-cd packages/audiflow_app && flutter pub add workmanager flutter_local_notifications
+cd packages/audiflow_app && flutter pub add workmanager flutter_local_notifications permission_handler
 ```
 
 - [ ] **Step 2: Add `flutter_local_notifications` to audiflow_domain**
@@ -1006,7 +1006,7 @@ cd packages/audiflow_domain && flutter test test/features/feed/services/backgrou
 
 Expected: FAIL
 
-- [ ] **Step 4: Implement `BackgroundRefreshService`**
+- [ ] **Step 3: Implement `BackgroundRefreshService`**
 
 Create `background_refresh_service.dart`:
 
@@ -1163,13 +1163,13 @@ class BackgroundRefreshService {
 }
 ```
 
-- [ ] **Step 5: Export from `audiflow_domain.dart`**
+- [ ] **Step 4: Export from `audiflow_domain.dart`**
 
 ```dart
 export 'src/features/feed/services/background_refresh_service.dart';
 ```
 
-- [ ] **Step 6: Run tests to verify they pass**
+- [ ] **Step 5: Run tests to verify they pass**
 
 ```bash
 cd packages/audiflow_domain && flutter test test/features/feed/services/background_refresh_service_test.dart
@@ -1177,7 +1177,7 @@ cd packages/audiflow_domain && flutter test test/features/feed/services/backgrou
 
 Expected: PASS
 
-- [ ] **Step 7: Commit**
+- [ ] **Step 6: Commit**
 
 ```bash
 git add packages/audiflow_domain/lib/src/features/feed/services/background_refresh_service.dart packages/audiflow_domain/test/features/feed/services/background_refresh_service_test.dart packages/audiflow_domain/lib/audiflow_domain.dart
