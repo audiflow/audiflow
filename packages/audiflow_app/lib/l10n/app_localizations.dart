@@ -1207,6 +1207,150 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Transcript available'**
   String get episodeTranscriptAvailable;
+
+  /// Section title for Stations
+  ///
+  /// In en, this message translates to:
+  /// **'Stations'**
+  String get stationSectionTitle;
+
+  /// Button label for creating a new station
+  ///
+  /// In en, this message translates to:
+  /// **'New Station'**
+  String get stationNew;
+
+  /// Label for station name input field
+  ///
+  /// In en, this message translates to:
+  /// **'Station Name'**
+  String get stationName;
+
+  /// Placeholder hint for station name input
+  ///
+  /// In en, this message translates to:
+  /// **'e.g., News, Tech, Comedy'**
+  String get stationNameHint;
+
+  /// Label for podcasts in a station
+  ///
+  /// In en, this message translates to:
+  /// **'Podcasts'**
+  String get stationPodcasts;
+
+  /// Label for station filters section
+  ///
+  /// In en, this message translates to:
+  /// **'Filters'**
+  String get stationFilters;
+
+  /// Label for playback order setting
+  ///
+  /// In en, this message translates to:
+  /// **'Playback Order'**
+  String get stationPlaybackOrder;
+
+  /// Option to sort episodes newest first
+  ///
+  /// In en, this message translates to:
+  /// **'Newest First'**
+  String get stationNewest;
+
+  /// Option to sort episodes oldest first
+  ///
+  /// In en, this message translates to:
+  /// **'Oldest First'**
+  String get stationOldest;
+
+  /// Filter option for all episodes
+  ///
+  /// In en, this message translates to:
+  /// **'All Episodes'**
+  String get stationFilterAll;
+
+  /// Filter option for unplayed episodes
+  ///
+  /// In en, this message translates to:
+  /// **'Unplayed'**
+  String get stationFilterUnplayed;
+
+  /// Filter option for episodes in progress
+  ///
+  /// In en, this message translates to:
+  /// **'In Progress'**
+  String get stationFilterInProgress;
+
+  /// Filter option for downloaded episodes only
+  ///
+  /// In en, this message translates to:
+  /// **'Downloaded Only'**
+  String get stationFilterDownloaded;
+
+  /// Filter option for favorited episodes only
+  ///
+  /// In en, this message translates to:
+  /// **'Favorites Only'**
+  String get stationFilterFavorited;
+
+  /// Label for duration filter section
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get stationFilterDuration;
+
+  /// Filter for episodes shorter than specified minutes
+  ///
+  /// In en, this message translates to:
+  /// **'Shorter than {minutes} min'**
+  String stationFilterShorterThan(int minutes);
+
+  /// Filter for episodes longer than specified minutes
+  ///
+  /// In en, this message translates to:
+  /// **'Longer than {minutes} min'**
+  String stationFilterLongerThan(int minutes);
+
+  /// Filter for recently published episodes
+  ///
+  /// In en, this message translates to:
+  /// **'Published within {days} days'**
+  String stationFilterPublishedWithin(int days);
+
+  /// Error message when station limit is reached
+  ///
+  /// In en, this message translates to:
+  /// **'Station limit reached ({max})'**
+  String stationLimitReached(int max);
+
+  /// Confirmation message for deleting a station
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this station?'**
+  String get stationDeleteConfirm;
+
+  /// Episode count display with plural forms
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No episodes} =1{1 episode} other{{count} episodes}}'**
+  String stationEpisodeCount(int count);
+
+  /// Podcast count display with plural forms
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 podcast} other{{count} podcasts}}'**
+  String stationPodcastCount(int count);
+
+  /// Message displayed when station has no matching episodes
+  ///
+  /// In en, this message translates to:
+  /// **'No episodes match your filters'**
+  String get stationEmpty;
+
+  /// Button label to play all episodes in station
+  ///
+  /// In en, this message translates to:
+  /// **'Play All'**
+  String get stationPlayAll;
 }
 
 class _AppLocalizationsDelegate

@@ -599,4 +599,99 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get episodeTranscriptAvailable => '書き起こしあり';
+
+  @override
+  String get stationSectionTitle => 'ステーション';
+
+  @override
+  String get stationNew => '新規ステーション';
+
+  @override
+  String get stationName => 'ステーション名';
+
+  @override
+  String get stationNameHint => '例: ニュース、テック、お笑い';
+
+  @override
+  String get stationPodcasts => 'ポッドキャスト';
+
+  @override
+  String get stationFilters => 'フィルタ';
+
+  @override
+  String get stationPlaybackOrder => '再生順';
+
+  @override
+  String get stationNewest => '新しい順';
+
+  @override
+  String get stationOldest => '古い順';
+
+  @override
+  String get stationFilterAll => '全エピソード';
+
+  @override
+  String get stationFilterUnplayed => '未再生';
+
+  @override
+  String get stationFilterInProgress => '再生中';
+
+  @override
+  String get stationFilterDownloaded => 'ダウンロード済みのみ';
+
+  @override
+  String get stationFilterFavorited => 'お気に入りのみ';
+
+  @override
+  String get stationFilterDuration => '再生時間';
+
+  @override
+  String stationFilterShorterThan(int minutes) {
+    return '$minutes分未満';
+  }
+
+  @override
+  String stationFilterLongerThan(int minutes) {
+    return '$minutes分以上';
+  }
+
+  @override
+  String stationFilterPublishedWithin(int days) {
+    return '過去$days日以内';
+  }
+
+  @override
+  String stationLimitReached(int max) {
+    return 'ステーション上限に達しました($max)';
+  }
+
+  @override
+  String get stationDeleteConfirm => 'このステーションを削除しますか？';
+
+  @override
+  String stationEpisodeCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countエピソード',
+      zero: 'エピソードなし',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String stationPodcastCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countポッドキャスト',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get stationEmpty => 'フィルタに一致するエピソードがありません';
+
+  @override
+  String get stationPlayAll => 'すべて再生';
 }

@@ -610,4 +610,101 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get episodeTranscriptAvailable => 'Transcript available';
+
+  @override
+  String get stationSectionTitle => 'Stations';
+
+  @override
+  String get stationNew => 'New Station';
+
+  @override
+  String get stationName => 'Station Name';
+
+  @override
+  String get stationNameHint => 'e.g., News, Tech, Comedy';
+
+  @override
+  String get stationPodcasts => 'Podcasts';
+
+  @override
+  String get stationFilters => 'Filters';
+
+  @override
+  String get stationPlaybackOrder => 'Playback Order';
+
+  @override
+  String get stationNewest => 'Newest First';
+
+  @override
+  String get stationOldest => 'Oldest First';
+
+  @override
+  String get stationFilterAll => 'All Episodes';
+
+  @override
+  String get stationFilterUnplayed => 'Unplayed';
+
+  @override
+  String get stationFilterInProgress => 'In Progress';
+
+  @override
+  String get stationFilterDownloaded => 'Downloaded Only';
+
+  @override
+  String get stationFilterFavorited => 'Favorites Only';
+
+  @override
+  String get stationFilterDuration => 'Duration';
+
+  @override
+  String stationFilterShorterThan(int minutes) {
+    return 'Shorter than $minutes min';
+  }
+
+  @override
+  String stationFilterLongerThan(int minutes) {
+    return 'Longer than $minutes min';
+  }
+
+  @override
+  String stationFilterPublishedWithin(int days) {
+    return 'Published within $days days';
+  }
+
+  @override
+  String stationLimitReached(int max) {
+    return 'Station limit reached ($max)';
+  }
+
+  @override
+  String get stationDeleteConfirm => 'Delete this station?';
+
+  @override
+  String stationEpisodeCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count episodes',
+      one: '1 episode',
+      zero: 'No episodes',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String stationPodcastCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count podcasts',
+      one: '1 podcast',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get stationEmpty => 'No episodes match your filters';
+
+  @override
+  String get stationPlayAll => 'Play All';
 }
