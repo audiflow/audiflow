@@ -72,7 +72,9 @@ class BackgroundRefreshService {
       'BackgroundRefreshService: syncing ${sorted.length} subscriptions',
     );
 
-    final newEpisodesPerPodcast = <String, int>{};
+    // Key by itunesId for uniqueness; track titles separately for display.
+    final newCountById = <String, int>{};
+    final titleById = <String, String>{};
     final stopwatch = Stopwatch()..start();
 
     for (final sub in sorted) {
@@ -89,7 +91,8 @@ class BackgroundRefreshService {
 
       final newCount = result.newEpisodeCount ?? 0;
       if (0 < newCount) {
-        newEpisodesPerPodcast[sub.title] = newCount;
+        newCountById[sub.itunesId] = newCount;
+        titleById[sub.itunesId] = sub.title;
 
         if (sub.autoDownload) {
           await _enqueueAutoDownloads(sub, newCount);
@@ -97,15 +100,19 @@ class BackgroundRefreshService {
       }
     }
 
-    if (newEpisodesPerPodcast.isNotEmpty &&
-        _settingsRepo.getNotifyNewEpisodes()) {
-      await _showNotification(newEpisodesPerPodcast);
+    if (newCountById.isNotEmpty && _settingsRepo.getNotifyNewEpisodes()) {
+      // Build display map keyed by title for notification body.
+      final displayMap = <String, int>{
+        for (final entry in newCountById.entries)
+          titleById[entry.key]!: entry.value,
+      };
+      await _showNotification(displayMap);
     }
 
     _logger?.i(
       'BackgroundRefreshService: finished — '
-      '${newEpisodesPerPodcast.values.fold(0, (a, b) => a + b)} new episodes '
-      'across ${newEpisodesPerPodcast.length} podcasts',
+      '${newCountById.values.fold(0, (a, b) => a + b)} new episodes '
+      'across ${newCountById.length} podcasts',
     );
   }
 

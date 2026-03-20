@@ -140,13 +140,17 @@ Future<void> _startApp(String smartPlaylistConfigBaseUrl) async {
   // Run cache eviction non-blocking after startup
   _runCacheEviction(container, isar);
 
-  // Initialize background refresh
-  await Workmanager().initialize(backgroundCallback);
-  final settingsRepo = container.read(appSettingsRepositoryProvider);
-  if (settingsRepo.getAutoSync()) {
-    await BackgroundTaskRegistrar.register(
-      intervalMinutes: settingsRepo.getSyncIntervalMinutes(),
-    );
+  // Initialize background refresh (guarded for unsupported platforms)
+  try {
+    await Workmanager().initialize(backgroundCallback);
+    final settingsRepo = container.read(appSettingsRepositoryProvider);
+    if (settingsRepo.getAutoSync()) {
+      await BackgroundTaskRegistrar.register(
+        intervalMinutes: settingsRepo.getSyncIntervalMinutes(),
+      );
+    }
+  } on UnimplementedError catch (_) {
+    // Workmanager not available on this platform
   }
 
   runApp(

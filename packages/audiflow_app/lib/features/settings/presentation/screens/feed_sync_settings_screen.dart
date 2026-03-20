@@ -18,19 +18,22 @@ class FeedSyncSettingsScreen extends ConsumerStatefulWidget {
 
 class _FeedSyncSettingsScreenState
     extends ConsumerState<FeedSyncSettingsScreen> {
-  void _update(AppSettingsRepository repo, Future<void> Function() setter) {
-    setter();
+  Future<void> _update(
+    AppSettingsRepository repo,
+    Future<void> Function() setter,
+  ) async {
+    await setter();
     ref.invalidate(appSettingsRepositoryProvider);
-    _updateBackgroundRegistration(repo);
+    await _updateBackgroundRegistration(repo);
   }
 
-  void _updateBackgroundRegistration(AppSettingsRepository repo) {
+  Future<void> _updateBackgroundRegistration(AppSettingsRepository repo) async {
     if (repo.getAutoSync()) {
-      BackgroundTaskRegistrar.register(
+      await BackgroundTaskRegistrar.register(
         intervalMinutes: repo.getSyncIntervalMinutes(),
       );
     } else {
-      BackgroundTaskRegistrar.cancel();
+      await BackgroundTaskRegistrar.cancel();
     }
   }
 
