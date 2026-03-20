@@ -172,8 +172,15 @@ class DownloadService {
     await _repository.delete(taskId);
     _logger.i('Deleted download: $taskId');
 
-    // Notify stations that this episode's download state changed.
-    await _reconcilerService?.onEpisodeChanged(task.episodeId);
+    // Best-effort station reconciliation.
+    try {
+      await _reconcilerService?.onEpisodeChanged(task.episodeId);
+    } on Exception catch (e) {
+      _logger.w(
+        'Station reconciliation failed for episode ${task.episodeId}',
+        error: e,
+      );
+    }
   }
 
   /// Deletes all completed downloads and their files.
@@ -191,9 +198,16 @@ class DownloadService {
     final count = await _repository.deleteAllCompleted();
     _logger.i('Deleted $count completed downloads');
 
-    // Notify stations that each episode's download state changed.
+    // Best-effort station reconciliation.
     for (final task in completed) {
-      await _reconcilerService?.onEpisodeChanged(task.episodeId);
+      try {
+        await _reconcilerService?.onEpisodeChanged(task.episodeId);
+      } on Exception catch (e) {
+        _logger.w(
+          'Station reconciliation failed for episode ${task.episodeId}',
+          error: e,
+        );
+      }
     }
   }
 

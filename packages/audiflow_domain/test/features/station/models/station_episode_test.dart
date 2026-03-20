@@ -16,7 +16,7 @@ void main() {
     isar = await openTestIsar([StationEpisodeSchema]);
   });
 
-  tearDown(() => isar.close());
+  tearDown(() => isar.close(deleteFromDisk: true));
 
   test('StationEpisode persists with sortKey', () async {
     final sortKey = DateTime(2026, 3, 20);

@@ -154,8 +154,12 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
   Future<bool> deleteById(int id) async {
     final deleted = await _datasource.deleteById(id);
     if (deleted) {
-      // id IS the podcastId in this codebase (Isar auto-increment).
-      await _reconcilerService?.onSubscriptionDeleted(id);
+      // Best-effort station cleanup — id IS the podcastId (Isar auto-increment).
+      try {
+        await _reconcilerService?.onSubscriptionDeleted(id);
+      } on Exception {
+        // Station reconciliation is best-effort; do not break delete flow.
+      }
     }
     return deleted;
   }

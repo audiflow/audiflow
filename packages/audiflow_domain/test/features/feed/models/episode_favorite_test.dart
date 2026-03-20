@@ -16,7 +16,7 @@ void main() {
     isar = await openTestIsar([EpisodeSchema]);
   });
 
-  tearDown(() => isar.close());
+  tearDown(() => isar.close(deleteFromDisk: true));
 
   test('isFavorited defaults to false', () {
     final episode = Episode()

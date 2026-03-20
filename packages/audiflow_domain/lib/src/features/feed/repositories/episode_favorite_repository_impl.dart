@@ -38,7 +38,11 @@ class EpisodeFavoriteRepositoryImpl implements EpisodeFavoriteRepository {
 
     await _isar.writeTxn(() => _isar.episodes.put(episode));
 
-    // Trigger reconciliation for stations with favorited filter.
-    await _reconcilerService.onEpisodeChanged(episodeId);
+    // Best-effort station reconciliation.
+    try {
+      await _reconcilerService.onEpisodeChanged(episodeId);
+    } on Exception {
+      // Do not break favorite toggle if reconciliation fails.
+    }
   }
 }

@@ -16,7 +16,7 @@ void main() {
     isar = await openTestIsar([StationSchema]);
   });
 
-  tearDown(() => isar.close());
+  tearDown(() => isar.close(deleteFromDisk: true));
 
   test('Station persists with default filter values', () async {
     final now = DateTime(2026, 3, 20);

@@ -84,7 +84,7 @@ class PlaybackHistoryService {
     // Notify stations once per session when episode transitions to in-progress.
     if (!_notifiedInProgressThisSession && 0 < positionMs) {
       _notifiedInProgressThisSession = true;
-      await _reconcilerService?.onEpisodeChanged(episodeId);
+      await _tryReconcile(episodeId);
     }
 
     // Auto-complete check
@@ -94,8 +94,7 @@ class PlaybackHistoryService {
         final isAlreadyCompleted = await _repository.isCompleted(episodeId);
         if (!isAlreadyCompleted) {
           await _repository.markCompleted(episodeId);
-          // Notify stations that this episode's completion state changed.
-          await _reconcilerService?.onEpisodeChanged(episodeId);
+          await _tryReconcile(episodeId);
         }
       }
     }
@@ -136,13 +135,22 @@ class PlaybackHistoryService {
   /// Manually marks an episode as completed.
   Future<void> markCompleted(int episodeId) async {
     await _repository.markCompleted(episodeId);
-    await _reconcilerService?.onEpisodeChanged(episodeId);
+    await _tryReconcile(episodeId);
   }
 
   /// Manually marks an episode as incomplete.
   Future<void> markIncomplete(int episodeId) async {
     await _repository.markIncomplete(episodeId);
-    await _reconcilerService?.onEpisodeChanged(episodeId);
+    await _tryReconcile(episodeId);
+  }
+
+  /// Best-effort station reconciliation — never breaks the calling flow.
+  Future<void> _tryReconcile(int episodeId) async {
+    try {
+      await _reconcilerService?.onEpisodeChanged(episodeId);
+    } on Exception {
+      // Station reconciliation is best-effort; do not break playback.
+    }
   }
 
   /// Resets tracking state (e.g., when app goes to background).

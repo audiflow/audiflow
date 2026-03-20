@@ -16,7 +16,7 @@ void main() {
     isar = await openTestIsar([StationPodcastSchema]);
   });
 
-  tearDown(() => isar.close());
+  tearDown(() => isar.close(deleteFromDisk: true));
 
   test(
     'StationPodcast persists and composite unique index allows different pairs',
