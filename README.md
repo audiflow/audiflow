@@ -16,8 +16,8 @@ A podcast player for Android and iOS built with Flutter.
 
 ## Requirements
 
-- Flutter 3.41.4+ / Dart 3.11.1+
-- iOS 14.0+ / Android 8.0+ (API 26)
+- Flutter 3.41.4+ / Dart 3.10.0+
+- iOS (configured in Xcode) / Android 8.0+ (API 26)
 - Melos 7.3+
 
 ## Getting Started
@@ -27,14 +27,20 @@ A podcast player for Android and iOS built with Flutter.
 dart pub global activate melos
 
 # Bootstrap all packages
-melos bootstrap
+make bootstrap
 
 # Run code generation
-melos run codegen
+make codegen
 
 # Run the app (development flavor)
-flutter run --flavor dev -t lib/main_dev.dart --dart-define-from-file=.env.dev
+make run-dev
 ```
+
+> **Note:** The `.env.dev`, `.env.stg`, and `.env.prod` files are gitignored.
+> Create them at the repo root with the required environment variables
+> before running. Ask a team member for the values.
+
+Run `make help` to see all available commands.
 
 ## Project Structure
 
@@ -54,32 +60,26 @@ This is a monorepo managed by [Melos](https://melos.invertase.dev/) and Flutter 
 ## Development
 
 ```bash
-# Run all tests
-melos run test
-
-# Run tests for a specific package
-melos run test --scope=audiflow_domain
-
-# Static analysis (zero issues required)
-flutter analyze
-
-# Code generation (after adding annotations)
-melos run codegen
+make test             # Run all tests
+make analyze          # Static analysis (zero issues required)
+make codegen          # Code generation (after adding annotations)
+make check            # Run analyze + test
+make format           # Format code
 ```
 
 ### Build Flavors
 
 ```bash
-# Development
-flutter run --flavor dev -t lib/main_dev.dart --dart-define-from-file=.env.dev
-
-# Staging
-flutter run --flavor stg -t lib/main_stg.dart --dart-define-from-file=.env.stg
-
-# Production
-flutter build apk --flavor prod -t lib/main_prod.dart --release --dart-define-from-file=.env.prod
-flutter build ios --flavor prod -t lib/main_prod.dart --release --dart-define-from-file=.env.prod
+make run-dev            # Run dev flavor
+make run-stg            # Run staging flavor
+make run-prod           # Run production flavor
+make build-android-dev  # Build dev AAB
+make build-ios-dev      # Build dev IPA
 ```
+
+Staging and production builds/deploys run through CI.
+
+See `make help` for the full list of targets.
 
 ## Architecture
 
