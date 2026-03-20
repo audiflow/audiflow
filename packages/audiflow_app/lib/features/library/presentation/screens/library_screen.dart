@@ -9,7 +9,8 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../routing/app_router.dart';
 import '../controllers/library_controller.dart';
 import '../widgets/continue_listening_section.dart';
-import '../widgets/subscription_list_tile.dart';
+import '../../../station/presentation/controllers/station_list_controller.dart';
+import '../../../station/presentation/widgets/station_list_tile.dart';
 
 class LibraryScreen extends ConsumerStatefulWidget {
   const LibraryScreen({super.key});
@@ -46,12 +47,19 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
   @override
   Widget build(BuildContext context) {
     final subscriptionsAsync = ref.watch(librarySubscriptionsProvider);
+    final stationsAsync = ref.watch(stationListProvider);
     final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.libraryTitle)),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => context.push(AppRoutes.stationNew),
+        tooltip: 'New Station',
+        child: const Icon(Icons.add),
+      ),
       body: subscriptionsAsync.when(
-        data: (subscriptions) => _buildContent(context, subscriptions),
+        data: (subscriptions) =>
+            _buildContent(context, subscriptions, stationsAsync),
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stack) => _buildErrorState(
           context,
@@ -62,8 +70,15 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     );
   }
 
-  Widget _buildContent(BuildContext context, List<Subscription> subscriptions) {
-    if (subscriptions.isEmpty) {
+  Widget _buildContent(
+    BuildContext context,
+    List<Subscription> subscriptions,
+    AsyncValue<List<Station>> stationsAsync,
+  ) {
+    final stations = stationsAsync.value ?? [];
+    final hasSubscriptions = subscriptions.where((s) => !s.isCached).isNotEmpty;
+
+    if (!hasSubscriptions && stations.isEmpty) {
       return _buildEmptyState(context);
     }
 
@@ -88,6 +103,55 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                 Spacing.md,
                 Spacing.sm,
               ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Stations',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (stations.isEmpty)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: Spacing.md,
+                  vertical: Spacing.sm,
+                ),
+                child: Text(
+                  'No stations yet. Tap + to create one.',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            )
+          else
+            SliverList(
+              delegate: SliverChildBuilderDelegate((context, index) {
+                final station = stations[index];
+                return StationListTile(
+                  key: ValueKey(station.id),
+                  station: station,
+                  onTap: () => context.push(
+                    '${AppRoutes.library}/station/${station.id}',
+                  ),
+                );
+              }, childCount: stations.length),
+            ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                Spacing.md,
+                Spacing.md,
+                Spacing.md,
+                Spacing.sm,
+              ),
               child: Text(
                 l10n.libraryYourPodcasts,
                 style: theme.textTheme.titleMedium?.copyWith(
@@ -96,55 +160,38 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
               ),
             ),
           ),
-          SliverLayoutBuilder(
-            builder: (context, constraints) {
-              final columnCount = ResponsiveGrid.columnCount(
-                availableWidth: constraints.crossAxisExtent,
-              );
-              // Single column: keep list tile layout for phones
-              if (columnCount <= 3) {
-                return SliverList(
-                  delegate: SliverChildBuilderDelegate((context, index) {
-                    final subscription = subscriptions[index];
-                    return SubscriptionListTile(
-                      key: ValueKey(subscription.itunesId),
-                      subscription: subscription,
-                      onTap: () {
-                        final podcast = subscription.toPodcast();
-                        context.push(
-                          '${AppRoutes.library}/podcast/${podcast.id}',
-                          extra: podcast,
-                        );
-                      },
-                    );
-                  }, childCount: subscriptions.length),
-                );
-              }
-              // Multi-column: grid of artwork cards for tablets
-              return SliverGrid(
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: columnCount,
-                  mainAxisSpacing: Spacing.sm,
-                  crossAxisSpacing: Spacing.sm,
-                  childAspectRatio: 0.8,
+          if (!hasSubscriptions)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: Spacing.md,
+                  vertical: Spacing.sm,
                 ),
-                delegate: SliverChildBuilderDelegate((context, index) {
-                  final subscription = subscriptions[index];
-                  return PodcastArtworkGridItem(
-                    artworkUrl: subscription.artworkUrl,
-                    title: subscription.title,
-                    onTap: () {
-                      final podcast = subscription.toPodcast();
-                      context.push(
-                        '${AppRoutes.library}/podcast/${podcast.id}',
-                        extra: podcast,
-                      );
-                    },
-                  );
-                }, childCount: subscriptions.length),
-              );
-            },
-          ),
+                child: Text(
+                  'No subscriptions yet.',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            )
+          else
+            SliverToBoxAdapter(
+              child: ListTile(
+                leading: const Icon(Icons.podcasts),
+                title: Text(
+                  '${subscriptions.where((s) => !s.isCached).length} podcasts',
+                ),
+                trailing: Icon(
+                  Symbols.chevron_right,
+                  color: theme.colorScheme.onSurfaceVariant.withValues(
+                    alpha: 0.5,
+                  ),
+                ),
+                onTap: () => context.push(AppRoutes.subscriptions),
+              ),
+            ),
+          const SliverToBoxAdapter(child: SizedBox(height: Spacing.xl)),
         ],
       ),
     );
