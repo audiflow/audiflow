@@ -360,6 +360,7 @@ class _StationEpisodeCard extends ConsumerWidget {
       startingEpisodeId: episode.id,
       sourceContext: stationName,
       siblingEpisodeIds: siblingEpisodeIds,
+      forceDisplayOrder: true,
     );
 
     controller.play(
