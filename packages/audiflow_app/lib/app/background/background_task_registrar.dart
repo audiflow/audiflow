@@ -20,7 +20,9 @@ class BackgroundTaskRegistrar {
         existingWorkPolicy: ExistingPeriodicWorkPolicy.replace,
       );
     } on Exception {
-      // Workmanager may be unavailable (test, unsupported platform).
+      // Platform channel or runtime error.
+    } on Error {
+      // UnimplementedError in test / unsupported platform.
     }
   }
 
@@ -28,7 +30,9 @@ class BackgroundTaskRegistrar {
     try {
       await Workmanager().cancelByUniqueName(taskName);
     } on Exception {
-      // Workmanager may be unavailable (test, unsupported platform).
+      // Platform channel or runtime error.
+    } on Error {
+      // UnimplementedError in test / unsupported platform.
     }
   }
 }
