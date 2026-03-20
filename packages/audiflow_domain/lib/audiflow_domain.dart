@@ -65,6 +65,7 @@ export 'src/features/feed/services/feed_sync_executor.dart';
 export 'src/features/feed/services/feed_sync_service.dart';
 export 'src/features/feed/models/feed_sync_result.dart';
 export 'src/features/feed/services/smart_playlist_resolver_service.dart';
+export 'src/features/feed/services/background_notification_service.dart';
 
 // Feed feature - Podcast View Preference
 export 'src/features/feed/models/podcast_view_preference.dart';
