@@ -202,15 +202,21 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
       children: [
         Text('Playback State', style: theme.textTheme.titleSmall),
         const SizedBox(height: Spacing.xs),
-        ...StationPlaybackState.values.map(
-          (value) => RadioListTile<StationPlaybackState>(
-            value: value,
-            groupValue: state.playbackState,
-            onChanged: (v) {
-              if (v != null) controller.setPlaybackState(v);
-            },
-            title: Text(_playbackStateLabel(value)),
-            contentPadding: EdgeInsets.zero,
+        RadioGroup<StationPlaybackState>(
+          groupValue: state.playbackState,
+          onChanged: (v) {
+            if (v != null) controller.setPlaybackState(v);
+          },
+          child: Column(
+            children: StationPlaybackState.values
+                .map(
+                  (value) => RadioListTile<StationPlaybackState>(
+                    value: value,
+                    title: Text(_playbackStateLabel(value)),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                )
+                .toList(),
           ),
         ),
       ],
@@ -344,7 +350,7 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
         Text('Published Within', style: theme.textTheme.titleSmall),
         const SizedBox(height: Spacing.xs),
         DropdownButtonFormField<int?>(
-          value: state.publishedWithinDays,
+          initialValue: state.publishedWithinDays,
           decoration: const InputDecoration(border: OutlineInputBorder()),
           items: options
               .map(
