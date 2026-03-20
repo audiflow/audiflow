@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../features/library/presentation/controllers/library_controller.dart';
+import 'background/background_task_registrar.dart';
 
 /// Observes app lifecycle events and triggers feed syncs.
 ///
@@ -40,6 +41,18 @@ class _AppLifecycleObserverState extends ConsumerState<AppLifecycleObserver> {
 
   void _onResume() {
     _syncFeeds(forceRefresh: false);
+    _updateBackgroundRegistration();
+  }
+
+  Future<void> _updateBackgroundRegistration() async {
+    final settingsRepo = ref.read(appSettingsRepositoryProvider);
+    if (settingsRepo.getAutoSync()) {
+      await BackgroundTaskRegistrar.register(
+        intervalMinutes: settingsRepo.getSyncIntervalMinutes(),
+      );
+    } else {
+      await BackgroundTaskRegistrar.cancel();
+    }
   }
 
   Future<void> _syncFeeds({required bool forceRefresh}) async {
