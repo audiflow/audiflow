@@ -725,7 +725,7 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
-  String get stationEmpty => 'フィルタに一致するエピソードがありません';
+  String get stationEmpty => 'すべて聴き終わりました!';
 
   @override
   String get stationPlayAll => 'すべて再生';
@@ -737,7 +737,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get stationNoSubscriptionsYet => 'まだ購読がありません。';
 
   @override
-  String get stationEmptySubtitle => 'フィルタを調整してみてください。';
+  String get stationEmptySubtitle => '新しいエピソードが自動的に表示されます。';
 
   @override
   String get stationEditTitle => 'ステーションを編集';
@@ -809,6 +809,12 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get stationNotFoundMessage => 'ステーションのデータが利用できません';
+
+  @override
+  String get stationNameRequired => 'ステーション名を入力してください';
+
+  @override
+  String get stationPodcastRequired => 'ポッドキャストを1つ以上選択してください';
 
   @override
   String get commonGoBack => '戻る';

@@ -536,6 +536,65 @@ void main() {
         ).called(1);
       });
     });
+
+    group('with forceDisplayOrder', () {
+      test(
+        'preserves display order even when autoPlayOrder is chronological',
+        () async {
+          // Default setUp uses oldestFirst (chronological), which normally
+          // re-sorts by publishedAt. forceDisplayOrder should bypass that.
+          final siblingIds = [50, 30, 10, 40, 20];
+          final starting = _episode(
+            id: 30,
+            episodeNumber: 3,
+            publishedAt: DateTime(2024, 3),
+          );
+
+          when(mockEpisodeRepo.getById(30)).thenAnswer((_) async => starting);
+          _stubReplaceWithAdhoc(mockQueueRepo);
+
+          await service.createAdhocQueue(
+            startingEpisodeId: 30,
+            sourceContext: 'Station',
+            siblingEpisodeIds: siblingIds,
+            forceDisplayOrder: true,
+          );
+
+          // Should preserve display order: after 30 comes [10, 40, 20]
+          verify(
+            mockQueueRepo.replaceWithAdhoc(
+              episodeIds: [10, 40, 20],
+              sourceContext: 'Station',
+            ),
+          ).called(1);
+
+          // Should NOT fetch episodes from DB for sorting
+          verifyNever(mockEpisodeRepo.getByIds(any));
+        },
+      );
+
+      test('empty queue when starting episode is last in list', () async {
+        final siblingIds = [10, 20, 30];
+        final starting = _episode(id: 30);
+
+        when(mockEpisodeRepo.getById(30)).thenAnswer((_) async => starting);
+        _stubReplaceWithAdhoc(mockQueueRepo);
+
+        await service.createAdhocQueue(
+          startingEpisodeId: 30,
+          sourceContext: 'Station',
+          siblingEpisodeIds: siblingIds,
+          forceDisplayOrder: true,
+        );
+
+        verify(
+          mockQueueRepo.replaceWithAdhoc(
+            episodeIds: [],
+            sourceContext: 'Station',
+          ),
+        ).called(1);
+      });
+    });
   });
 
   group('removeItem', () {

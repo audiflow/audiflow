@@ -20,3 +20,13 @@ final subscriptionByFeedUrlProvider = FutureProvider.autoDispose
       final repo = ref.watch(subscriptionRepositoryProvider);
       return repo.getByFeedUrl(feedUrl);
     });
+
+/// Gets subscription by its database ID.
+///
+/// Used to look up podcast metadata (title, artwork) from an episode's
+/// Episode.podcastId.
+final subscriptionByIdProvider = FutureProvider.autoDispose
+    .family<Subscription?, int>((ref, id) {
+      final repo = ref.watch(subscriptionRepositoryProvider);
+      return repo.getById(id);
+    });

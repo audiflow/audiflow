@@ -457,7 +457,7 @@
   "@stationEpisodeCount": { "description": "Episode count display with plural forms", "placeholders": { "count": { "type": "int" } } },
   "stationPodcastCount": "{count, plural, =1{1 podcast} other{{count} podcasts}}",
   "@stationPodcastCount": { "description": "Podcast count display with plural forms", "placeholders": { "count": { "type": "int" } } },
-  "stationEmpty": "No episodes match your filters",
+  "stationEmpty": "You're all caught up!",
   "@stationEmpty": { "description": "Message displayed when station has no matching episodes" },
   "stationPlayAll": "Play All",
   "@stationPlayAll": { "description": "Button label to play all episodes in station" },
@@ -465,7 +465,7 @@
   "@stationNoStationsYet": { "description": "Hint shown when user has no stations" },
   "stationNoSubscriptionsYet": "No subscriptions yet.",
   "@stationNoSubscriptionsYet": { "description": "Hint shown when user has no subscriptions" },
-  "stationEmptySubtitle": "Try adjusting the station filters to see more episodes.",
+  "stationEmptySubtitle": "New episodes will appear here automatically.",
   "@stationEmptySubtitle": { "description": "Subtitle for empty station state" },
   "stationEditTitle": "Edit Station",
   "@stationEditTitle": { "description": "App bar title for editing a station" },
@@ -513,6 +513,10 @@
   "@stationNotFoundTitle": { "description": "App bar title for station not found screen" },
   "stationNotFoundMessage": "Station data not available",
   "@stationNotFoundMessage": { "description": "Body text for station not found screen" },
+  "stationNameRequired": "Station name is required",
+  "@stationNameRequired": { "description": "Validation error when station name is empty" },
+  "stationPodcastRequired": "Select at least one podcast",
+  "@stationPodcastRequired": { "description": "Validation error when no podcast is selected" },
   "commonGoBack": "Go Back",
   "@commonGoBack": { "description": "Go back button label" }
 }

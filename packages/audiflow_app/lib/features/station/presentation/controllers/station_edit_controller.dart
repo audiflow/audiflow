@@ -5,6 +5,21 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 part 'station_edit_controller.freezed.dart';
 part 'station_edit_controller.g.dart';
 
+/// Error keys for localization in the UI layer.
+abstract final class StationEditError {
+  static const nameRequired = 'name_required';
+  static const podcastRequired = 'podcast_required';
+  static const notFound = 'not_found';
+  static const _limitReachedPrefix = 'limit_reached:';
+  static String limitReached(int max) => '$_limitReachedPrefix$max';
+
+  static bool isLimitReached(String key) => key.startsWith(_limitReachedPrefix);
+  static int parseLimitMax(String key) {
+    if (!key.startsWith(_limitReachedPrefix)) return 0;
+    return int.tryParse(key.substring(_limitReachedPrefix.length)) ?? 0;
+  }
+}
+
 /// Form state for station create/edit.
 @freezed
 sealed class StationEditState with _$StationEditState {
@@ -89,7 +104,12 @@ class StationEditController extends _$StationEditController {
   Future<Station?> save() async {
     final trimmedName = state.name.trim();
     if (trimmedName.isEmpty) {
-      state = state.copyWith(error: 'Station name is required');
+      state = state.copyWith(error: StationEditError.nameRequired);
+      return null;
+    }
+
+    if (state.selectedPodcastIds.isEmpty) {
+      state = state.copyWith(error: StationEditError.podcastRequired);
       return null;
     }
 
@@ -118,7 +138,10 @@ class StationEditController extends _$StationEditController {
       } else {
         final existing = await stationRepo.findById(stationId!);
         if (existing == null) {
-          state = state.copyWith(isSaving: false, error: 'Station not found');
+          state = state.copyWith(
+            isSaving: false,
+            error: StationEditError.notFound,
+          );
           return null;
         }
         existing
@@ -147,11 +170,12 @@ class StationEditController extends _$StationEditController {
     } on StationLimitExceededException {
       state = state.copyWith(
         isSaving: false,
-        error:
-            'Station limit of ${StationLimitExceededException.maxStations} reached',
+        error: StationEditError.limitReached(
+          StationLimitExceededException.maxStations,
+        ),
       );
       return null;
-    } catch (e) {
+    } on Exception catch (e) {
       state = state.copyWith(isSaving: false, error: e.toString());
       return null;
     }
@@ -174,7 +198,7 @@ class StationEditController extends _$StationEditController {
 
       state = state.copyWith(isSaving: false);
       return true;
-    } catch (e) {
+    } on Exception catch (e) {
       state = state.copyWith(isSaving: false, error: e.toString());
       return false;
     }
