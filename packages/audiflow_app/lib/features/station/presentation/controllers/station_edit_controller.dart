@@ -1,65 +1,25 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+part 'station_edit_controller.freezed.dart';
 part 'station_edit_controller.g.dart';
 
 /// Form state for station create/edit.
-class StationEditState {
-  const StationEditState({
-    this.name = '',
-    this.selectedPodcastIds = const {},
-    this.playbackState = StationPlaybackState.all,
-    this.filterDownloaded = false,
-    this.filterFavorited = false,
-    this.durationFilter,
-    this.publishedWithinDays,
-    this.episodeSort = StationEpisodeSort.newest,
-    this.isSaving = false,
-    this.error,
-  });
-
-  final String name;
-  final Set<int> selectedPodcastIds;
-  final StationPlaybackState playbackState;
-  final bool filterDownloaded;
-  final bool filterFavorited;
-  final StationDurationFilter? durationFilter;
-  final int? publishedWithinDays;
-  final StationEpisodeSort episodeSort;
-  final bool isSaving;
-  final String? error;
-
-  StationEditState copyWith({
-    String? name,
-    Set<int>? selectedPodcastIds,
-    StationPlaybackState? playbackState,
-    bool? filterDownloaded,
-    bool? filterFavorited,
-    Object? durationFilter = _sentinel,
-    Object? publishedWithinDays = _sentinel,
-    StationEpisodeSort? episodeSort,
-    bool? isSaving,
-    Object? error = _sentinel,
-  }) {
-    return StationEditState(
-      name: name ?? this.name,
-      selectedPodcastIds: selectedPodcastIds ?? this.selectedPodcastIds,
-      playbackState: playbackState ?? this.playbackState,
-      filterDownloaded: filterDownloaded ?? this.filterDownloaded,
-      filterFavorited: filterFavorited ?? this.filterFavorited,
-      durationFilter: durationFilter == _sentinel
-          ? this.durationFilter
-          : durationFilter as StationDurationFilter?,
-      publishedWithinDays: publishedWithinDays == _sentinel
-          ? this.publishedWithinDays
-          : publishedWithinDays as int?,
-      episodeSort: episodeSort ?? this.episodeSort,
-      isSaving: isSaving ?? this.isSaving,
-      error: error == _sentinel ? this.error : error as String?,
-    );
-  }
-
-  static const Object _sentinel = Object();
+@freezed
+sealed class StationEditState with _$StationEditState {
+  const factory StationEditState({
+    @Default('') String name,
+    @Default({}) Set<int> selectedPodcastIds,
+    @Default(StationPlaybackState.all) StationPlaybackState playbackState,
+    @Default(false) bool filterDownloaded,
+    @Default(false) bool filterFavorited,
+    StationDurationFilter? durationFilter,
+    int? publishedWithinDays,
+    @Default(StationEpisodeSort.newest) StationEpisodeSort episodeSort,
+    @Default(false) bool isSaving,
+    String? error,
+  }) = _StationEditState;
 }
 
 @riverpod
