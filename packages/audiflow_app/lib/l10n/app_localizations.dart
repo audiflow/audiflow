@@ -1409,7 +1409,7 @@ abstract class AppLocalizations {
   /// Message displayed when station has no matching episodes
   ///
   /// In en, this message translates to:
-  /// **'No episodes match your filters'**
+  /// **'You\'re all caught up!'**
   String get stationEmpty;
 
   /// Button label to play all episodes in station
@@ -1433,7 +1433,7 @@ abstract class AppLocalizations {
   /// Subtitle for empty station state
   ///
   /// In en, this message translates to:
-  /// **'Try adjusting the station filters to see more episodes.'**
+  /// **'New episodes will appear here automatically.'**
   String get stationEmptySubtitle;
 
   /// App bar title for editing a station

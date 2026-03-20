@@ -739,7 +739,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get stationEmpty => 'No episodes match your filters';
+  String get stationEmpty => 'You\'re all caught up!';
 
   @override
   String get stationPlayAll => 'Play All';
@@ -752,7 +752,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get stationEmptySubtitle =>
-      'Try adjusting the station filters to see more episodes.';
+      'New episodes will appear here automatically.';
 
   @override
   String get stationEditTitle => 'Edit Station';
