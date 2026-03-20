@@ -37,28 +37,38 @@ const EpisodeSchema = CollectionSchema(
       name: r'episodeNumber',
       type: IsarType.long,
     ),
-    r'guid': PropertySchema(id: 4, name: r'guid', type: IsarType.string),
+    r'favoritedAt': PropertySchema(
+      id: 4,
+      name: r'favoritedAt',
+      type: IsarType.dateTime,
+    ),
+    r'guid': PropertySchema(id: 5, name: r'guid', type: IsarType.string),
     r'imageUrl': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'imageUrl',
       type: IsarType.string,
     ),
+    r'isFavorited': PropertySchema(
+      id: 7,
+      name: r'isFavorited',
+      type: IsarType.bool,
+    ),
     r'podcastId': PropertySchema(
-      id: 6,
+      id: 8,
       name: r'podcastId',
       type: IsarType.long,
     ),
     r'publishedAt': PropertySchema(
-      id: 7,
+      id: 9,
       name: r'publishedAt',
       type: IsarType.dateTime,
     ),
     r'seasonNumber': PropertySchema(
-      id: 8,
+      id: 10,
       name: r'seasonNumber',
       type: IsarType.long,
     ),
-    r'title': PropertySchema(id: 9, name: r'title', type: IsarType.string),
+    r'title': PropertySchema(id: 11, name: r'title', type: IsarType.string),
   },
 
   estimateSize: _episodeEstimateSize,
@@ -129,12 +139,14 @@ void _episodeSerialize(
   writer.writeString(offsets[1], object.description);
   writer.writeLong(offsets[2], object.durationMs);
   writer.writeLong(offsets[3], object.episodeNumber);
-  writer.writeString(offsets[4], object.guid);
-  writer.writeString(offsets[5], object.imageUrl);
-  writer.writeLong(offsets[6], object.podcastId);
-  writer.writeDateTime(offsets[7], object.publishedAt);
-  writer.writeLong(offsets[8], object.seasonNumber);
-  writer.writeString(offsets[9], object.title);
+  writer.writeDateTime(offsets[4], object.favoritedAt);
+  writer.writeString(offsets[5], object.guid);
+  writer.writeString(offsets[6], object.imageUrl);
+  writer.writeBool(offsets[7], object.isFavorited);
+  writer.writeLong(offsets[8], object.podcastId);
+  writer.writeDateTime(offsets[9], object.publishedAt);
+  writer.writeLong(offsets[10], object.seasonNumber);
+  writer.writeString(offsets[11], object.title);
 }
 
 Episode _episodeDeserialize(
@@ -148,13 +160,15 @@ Episode _episodeDeserialize(
   object.description = reader.readStringOrNull(offsets[1]);
   object.durationMs = reader.readLongOrNull(offsets[2]);
   object.episodeNumber = reader.readLongOrNull(offsets[3]);
-  object.guid = reader.readString(offsets[4]);
+  object.favoritedAt = reader.readDateTimeOrNull(offsets[4]);
+  object.guid = reader.readString(offsets[5]);
   object.id = id;
-  object.imageUrl = reader.readStringOrNull(offsets[5]);
-  object.podcastId = reader.readLong(offsets[6]);
-  object.publishedAt = reader.readDateTimeOrNull(offsets[7]);
-  object.seasonNumber = reader.readLongOrNull(offsets[8]);
-  object.title = reader.readString(offsets[9]);
+  object.imageUrl = reader.readStringOrNull(offsets[6]);
+  object.isFavorited = reader.readBool(offsets[7]);
+  object.podcastId = reader.readLong(offsets[8]);
+  object.publishedAt = reader.readDateTimeOrNull(offsets[9]);
+  object.seasonNumber = reader.readLongOrNull(offsets[10]);
+  object.title = reader.readString(offsets[11]);
   return object;
 }
 
@@ -174,16 +188,20 @@ P _episodeDeserializeProp<P>(
     case 3:
       return (reader.readLongOrNull(offset)) as P;
     case 4:
-      return (reader.readString(offset)) as P;
-    case 5:
-      return (reader.readStringOrNull(offset)) as P;
-    case 6:
-      return (reader.readLong(offset)) as P;
-    case 7:
       return (reader.readDateTimeOrNull(offset)) as P;
+    case 5:
+      return (reader.readString(offset)) as P;
+    case 6:
+      return (reader.readStringOrNull(offset)) as P;
+    case 7:
+      return (reader.readBool(offset)) as P;
     case 8:
-      return (reader.readLongOrNull(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 9:
+      return (reader.readDateTimeOrNull(offset)) as P;
+    case 10:
+      return (reader.readLongOrNull(offset)) as P;
+    case 11:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -1010,6 +1028,81 @@ extension EpisodeQueryFilter
     });
   }
 
+  QueryBuilder<Episode, Episode, QAfterFilterCondition> favoritedAtIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'favoritedAt'),
+      );
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterFilterCondition> favoritedAtIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'favoritedAt'),
+      );
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterFilterCondition> favoritedAtEqualTo(
+    DateTime? value,
+  ) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'favoritedAt', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterFilterCondition> favoritedAtGreaterThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'favoritedAt',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterFilterCondition> favoritedAtLessThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'favoritedAt',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterFilterCondition> favoritedAtBetween(
+    DateTime? lower,
+    DateTime? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'favoritedAt',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
   QueryBuilder<Episode, Episode, QAfterFilterCondition> guidEqualTo(
     String value, {
     bool caseSensitive = true,
@@ -1371,6 +1464,16 @@ extension EpisodeQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         FilterCondition.greaterThan(property: r'imageUrl', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterFilterCondition> isFavoritedEqualTo(
+    bool value,
+  ) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'isFavorited', value: value),
       );
     });
   }
@@ -1787,6 +1890,18 @@ extension EpisodeQuerySortBy on QueryBuilder<Episode, Episode, QSortBy> {
     });
   }
 
+  QueryBuilder<Episode, Episode, QAfterSortBy> sortByFavoritedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'favoritedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterSortBy> sortByFavoritedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'favoritedAt', Sort.desc);
+    });
+  }
+
   QueryBuilder<Episode, Episode, QAfterSortBy> sortByGuid() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'guid', Sort.asc);
@@ -1808,6 +1923,18 @@ extension EpisodeQuerySortBy on QueryBuilder<Episode, Episode, QSortBy> {
   QueryBuilder<Episode, Episode, QAfterSortBy> sortByImageUrlDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'imageUrl', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterSortBy> sortByIsFavorited() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isFavorited', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterSortBy> sortByIsFavoritedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isFavorited', Sort.desc);
     });
   }
 
@@ -1910,6 +2037,18 @@ extension EpisodeQuerySortThenBy
     });
   }
 
+  QueryBuilder<Episode, Episode, QAfterSortBy> thenByFavoritedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'favoritedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterSortBy> thenByFavoritedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'favoritedAt', Sort.desc);
+    });
+  }
+
   QueryBuilder<Episode, Episode, QAfterSortBy> thenByGuid() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'guid', Sort.asc);
@@ -1943,6 +2082,18 @@ extension EpisodeQuerySortThenBy
   QueryBuilder<Episode, Episode, QAfterSortBy> thenByImageUrlDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'imageUrl', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterSortBy> thenByIsFavorited() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isFavorited', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QAfterSortBy> thenByIsFavoritedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isFavorited', Sort.desc);
     });
   }
 
@@ -2025,6 +2176,12 @@ extension EpisodeQueryWhereDistinct
     });
   }
 
+  QueryBuilder<Episode, Episode, QDistinct> distinctByFavoritedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'favoritedAt');
+    });
+  }
+
   QueryBuilder<Episode, Episode, QDistinct> distinctByGuid({
     bool caseSensitive = true,
   }) {
@@ -2038,6 +2195,12 @@ extension EpisodeQueryWhereDistinct
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'imageUrl', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<Episode, Episode, QDistinct> distinctByIsFavorited() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'isFavorited');
     });
   }
 
@@ -2100,6 +2263,12 @@ extension EpisodeQueryProperty
     });
   }
 
+  QueryBuilder<Episode, DateTime?, QQueryOperations> favoritedAtProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'favoritedAt');
+    });
+  }
+
   QueryBuilder<Episode, String, QQueryOperations> guidProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'guid');
@@ -2109,6 +2278,12 @@ extension EpisodeQueryProperty
   QueryBuilder<Episode, String?, QQueryOperations> imageUrlProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'imageUrl');
+    });
+  }
+
+  QueryBuilder<Episode, bool, QQueryOperations> isFavoritedProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'isFavorited');
     });
   }
 
