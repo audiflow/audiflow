@@ -180,6 +180,35 @@ class AppLocalizationsEn extends AppLocalizations {
   String get feedSyncWifiOnlySubtitle => 'Only sync feeds over WiFi';
 
   @override
+  String get feedSyncNotifyNewEpisodesTitle => 'New episode notifications';
+
+  @override
+  String get feedSyncNotifyNewEpisodesSubtitle =>
+      'Show a notification when new episodes are found during background refresh';
+
+  @override
+  String get feedSyncInterval15min => 'Every 15 minutes';
+
+  @override
+  String get feedSyncInterval3hours => 'Every 3 hours';
+
+  @override
+  String get feedSyncInterval6hours => 'Every 6 hours';
+
+  @override
+  String get feedSyncInterval12hours => 'Every 12 hours';
+
+  @override
+  String get notificationPermissionRequiredTitle => 'Permission required';
+
+  @override
+  String get notificationPermissionRequiredMessage =>
+      'Notification permission was denied. Please enable it in system settings.';
+
+  @override
+  String get notificationPermissionOpenSettings => 'Open Settings';
+
+  @override
   String get storageImageCache => 'Image Cache';
 
   @override
@@ -610,4 +639,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get episodeTranscriptAvailable => 'Transcript available';
+
+  @override
+  String get podcastAutoDownloadTitle => 'Auto-download new episodes';
+
+  @override
+  String get podcastAutoDownloadSubtitle =>
+      'Download new episodes automatically during background refresh';
 }

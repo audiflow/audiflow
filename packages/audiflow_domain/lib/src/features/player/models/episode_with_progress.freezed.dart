@@ -202,7 +202,7 @@ return $default(_that.episode,_that.history);case _:
 
 class _EpisodeWithProgress extends EpisodeWithProgress {
   const _EpisodeWithProgress({required this.episode, this.history}): super._();
-
+  
 
 @override final  Episode episode;
 @override final  PlaybackHistory? history;

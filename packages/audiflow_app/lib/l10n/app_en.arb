@@ -118,6 +118,25 @@
   "@feedSyncWifiOnlyTitle": { "description": "WiFi-only sync setting title" },
   "feedSyncWifiOnlySubtitle": "Only sync feeds over WiFi",
   "@feedSyncWifiOnlySubtitle": { "description": "WiFi-only sync subtitle" },
+  "feedSyncNotifyNewEpisodesTitle": "New episode notifications",
+  "@feedSyncNotifyNewEpisodesTitle": { "description": "Notify new episodes setting title" },
+  "feedSyncNotifyNewEpisodesSubtitle": "Show a notification when new episodes are found during background refresh",
+  "@feedSyncNotifyNewEpisodesSubtitle": { "description": "Notify new episodes setting subtitle" },
+  "feedSyncInterval15min": "Every 15 minutes",
+  "@feedSyncInterval15min": { "description": "15 minute sync interval" },
+  "feedSyncInterval3hours": "Every 3 hours",
+  "@feedSyncInterval3hours": { "description": "3 hours sync interval" },
+  "feedSyncInterval6hours": "Every 6 hours",
+  "@feedSyncInterval6hours": { "description": "6 hours sync interval" },
+  "feedSyncInterval12hours": "Every 12 hours",
+  "@feedSyncInterval12hours": { "description": "12 hours sync interval" },
+
+  "notificationPermissionRequiredTitle": "Permission required",
+  "@notificationPermissionRequiredTitle": { "description": "Title for notification permission dialog" },
+  "notificationPermissionRequiredMessage": "Notification permission was denied. Please enable it in system settings.",
+  "@notificationPermissionRequiredMessage": { "description": "Body for notification permission dialog" },
+  "notificationPermissionOpenSettings": "Open Settings",
+  "@notificationPermissionOpenSettings": { "description": "Button to open system settings for permissions" },
 
   "storageImageCache": "Image Cache",
   "@storageImageCache": { "description": "Image cache setting title" },
@@ -387,5 +406,10 @@
   "@playerTranscriptJumpToCurrent": { "description": "Jump to current position button label" },
 
   "episodeTranscriptAvailable": "Transcript available",
-  "@episodeTranscriptAvailable": { "description": "Accessibility label for transcript indicator icon" }
+  "@episodeTranscriptAvailable": { "description": "Accessibility label for transcript indicator icon" },
+
+  "podcastAutoDownloadTitle": "Auto-download new episodes",
+  "@podcastAutoDownloadTitle": { "description": "Per-podcast auto-download toggle title" },
+  "podcastAutoDownloadSubtitle": "Download new episodes automatically during background refresh",
+  "@podcastAutoDownloadSubtitle": { "description": "Per-podcast auto-download toggle subtitle" }
 }

@@ -30,4 +30,7 @@ class Subscription {
   ///
   /// Used for cache eviction of non-subscribed podcasts.
   DateTime? lastAccessedAt;
+
+  /// Whether new episodes should be auto-downloaded during background refresh.
+  bool autoDownload = false;
 }

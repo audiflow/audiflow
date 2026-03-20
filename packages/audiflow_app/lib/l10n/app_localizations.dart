@@ -434,6 +434,60 @@ abstract class AppLocalizations {
   /// **'Only sync feeds over WiFi'**
   String get feedSyncWifiOnlySubtitle;
 
+  /// Notify new episodes setting title
+  ///
+  /// In en, this message translates to:
+  /// **'New episode notifications'**
+  String get feedSyncNotifyNewEpisodesTitle;
+
+  /// Notify new episodes setting subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Show a notification when new episodes are found during background refresh'**
+  String get feedSyncNotifyNewEpisodesSubtitle;
+
+  /// 15 minute sync interval
+  ///
+  /// In en, this message translates to:
+  /// **'Every 15 minutes'**
+  String get feedSyncInterval15min;
+
+  /// 3 hours sync interval
+  ///
+  /// In en, this message translates to:
+  /// **'Every 3 hours'**
+  String get feedSyncInterval3hours;
+
+  /// 6 hours sync interval
+  ///
+  /// In en, this message translates to:
+  /// **'Every 6 hours'**
+  String get feedSyncInterval6hours;
+
+  /// 12 hours sync interval
+  ///
+  /// In en, this message translates to:
+  /// **'Every 12 hours'**
+  String get feedSyncInterval12hours;
+
+  /// Title for notification permission dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Permission required'**
+  String get notificationPermissionRequiredTitle;
+
+  /// Body for notification permission dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Notification permission was denied. Please enable it in system settings.'**
+  String get notificationPermissionRequiredMessage;
+
+  /// Button to open system settings for permissions
+  ///
+  /// In en, this message translates to:
+  /// **'Open Settings'**
+  String get notificationPermissionOpenSettings;
+
   /// Image cache setting title
   ///
   /// In en, this message translates to:
@@ -1207,6 +1261,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Transcript available'**
   String get episodeTranscriptAvailable;
+
+  /// Per-podcast auto-download toggle title
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-download new episodes'**
+  String get podcastAutoDownloadTitle;
+
+  /// Per-podcast auto-download toggle subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Download new episodes automatically during background refresh'**
+  String get podcastAutoDownloadSubtitle;
 }
 
 class _AppLocalizationsDelegate

@@ -12,7 +12,11 @@ import 'package:sentry_dio/sentry_dio.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:workmanager/workmanager.dart';
+
 import 'app/app_lifecycle_observer.dart';
+import 'app/background/background_callback.dart';
+import 'app/background/background_task_registrar.dart';
 import 'features/player/services/audio_handler_provider.dart';
 import 'features/settings/presentation/controllers/theme_controller.dart';
 import 'features/settings/presentation/widgets/opml_file_receiver.dart';
@@ -135,6 +139,26 @@ Future<void> _startApp(String smartPlaylistConfigBaseUrl) async {
 
   // Run cache eviction non-blocking after startup
   _runCacheEviction(container, isar);
+
+  // Initialize background refresh (guarded for unsupported platforms)
+  try {
+    await Workmanager().initialize(backgroundCallback);
+    final settingsRepo = container.read(appSettingsRepositoryProvider);
+    if (settingsRepo.getAutoSync()) {
+      await BackgroundTaskRegistrar.register(
+        intervalMinutes: settingsRepo.getSyncIntervalMinutes(),
+        wifiOnly: settingsRepo.getWifiOnlySync(),
+      );
+    }
+  } catch (e, stack) {
+    // Workmanager not available or platform error — non-critical
+    final logger = container.read(namedLoggerProvider('BackgroundRefresh'));
+    logger.w(
+      'Failed to initialize background refresh',
+      error: e,
+      stackTrace: stack,
+    );
+  }
 
   runApp(
     UncontrolledProviderScope(

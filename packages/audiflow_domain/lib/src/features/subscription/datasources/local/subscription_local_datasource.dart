@@ -173,4 +173,15 @@ class SubscriptionLocalDatasource {
     await _isar.writeTxn(() => _isar.subscriptions.put(existing));
     return 1;
   }
+
+  /// Updates the auto-download setting for a subscription.
+  ///
+  /// Does nothing if no subscription is found for the given [id].
+  Future<void> updateAutoDownload(int id, {required bool autoDownload}) async {
+    final existing = await _isar.subscriptions.get(id);
+    if (existing == null) return;
+
+    existing.autoDownload = autoDownload;
+    await _isar.writeTxn(() => _isar.subscriptions.put(existing));
+  }
 }

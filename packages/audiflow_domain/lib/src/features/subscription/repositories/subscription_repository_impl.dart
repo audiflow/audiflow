@@ -145,4 +145,9 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
   Future<bool> deleteById(int id) {
     return _datasource.deleteById(id);
   }
+
+  @override
+  Future<void> updateAutoDownload(int id, {required bool autoDownload}) {
+    return _datasource.updateAutoDownload(id, autoDownload: autoDownload);
+  }
 }

@@ -80,4 +80,8 @@ class FakeSubscriptionRepository implements SubscriptionRepository {
 
   @override
   Future<bool> deleteById(int id) => throw UnimplementedError();
+
+  @override
+  Future<void> updateAutoDownload(int id, {required bool autoDownload}) =>
+      throw UnimplementedError();
 }

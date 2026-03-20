@@ -177,6 +177,35 @@ class AppLocalizationsJa extends AppLocalizations {
   String get feedSyncWifiOnlySubtitle => 'WiFi接続時のみフィードを同期';
 
   @override
+  String get feedSyncNotifyNewEpisodesTitle => '新しいエピソードの通知';
+
+  @override
+  String get feedSyncNotifyNewEpisodesSubtitle =>
+      'バックグラウンド更新で新しいエピソードが見つかったときに通知を表示';
+
+  @override
+  String get feedSyncInterval15min => '15分ごと';
+
+  @override
+  String get feedSyncInterval3hours => '3時間ごと';
+
+  @override
+  String get feedSyncInterval6hours => '6時間ごと';
+
+  @override
+  String get feedSyncInterval12hours => '12時間ごと';
+
+  @override
+  String get notificationPermissionRequiredTitle => '権限が必要です';
+
+  @override
+  String get notificationPermissionRequiredMessage =>
+      '通知の権限が拒否されました。システム設定から有効にしてください。';
+
+  @override
+  String get notificationPermissionOpenSettings => '設定を開く';
+
+  @override
   String get storageImageCache => '画像キャッシュ';
 
   @override
@@ -599,4 +628,10 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get episodeTranscriptAvailable => '書き起こしあり';
+
+  @override
+  String get podcastAutoDownloadTitle => '新しいエピソードを自動ダウンロード';
+
+  @override
+  String get podcastAutoDownloadSubtitle => 'バックグラウンド更新時に新しいエピソードを自動でダウンロード';
 }

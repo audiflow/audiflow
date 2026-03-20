@@ -1,3 +1,5 @@
+import 'package:audiflow_domain/audiflow_domain.dart'
+    show subscriptionByFeedUrlProvider, subscriptionRepositoryProvider;
 import 'package:audiflow_search/audiflow_search.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
@@ -32,6 +34,8 @@ class PodcastDetailHeader extends ConsumerWidget {
           ),
           const SizedBox(height: Spacing.md),
           _SubscribeButton(podcast: podcast),
+          if (podcast.feedUrl != null)
+            _AutoDownloadToggle(feedUrl: podcast.feedUrl!),
         ],
       ),
     );
@@ -193,5 +197,37 @@ class _SubscribeButton extends ConsumerWidget {
     ref
         .read(subscriptionControllerProvider(podcast.id).notifier)
         .toggleSubscription(podcast);
+  }
+}
+
+/// Shows an auto-download toggle for subscribed podcasts only.
+class _AutoDownloadToggle extends ConsumerWidget {
+  const _AutoDownloadToggle({required this.feedUrl});
+
+  final String feedUrl;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final subscriptionAsync = ref.watch(subscriptionByFeedUrlProvider(feedUrl));
+    final subscription = subscriptionAsync.value;
+
+    // Only show for real subscriptions (not cached/non-subscribed)
+    if (subscription == null || subscription.isCached) {
+      return const SizedBox.shrink();
+    }
+
+    final l10n = AppLocalizations.of(context);
+    return SwitchListTile(
+      contentPadding: EdgeInsets.zero,
+      title: Text(l10n.podcastAutoDownloadTitle),
+      subtitle: Text(l10n.podcastAutoDownloadSubtitle),
+      value: subscription.autoDownload,
+      onChanged: (value) async {
+        await ref
+            .read(subscriptionRepositoryProvider)
+            .updateAutoDownload(subscription.id, autoDownload: value);
+        ref.invalidate(subscriptionByFeedUrlProvider(feedUrl));
+      },
+    );
   }
 }

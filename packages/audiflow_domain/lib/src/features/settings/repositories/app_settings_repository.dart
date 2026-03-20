@@ -105,6 +105,14 @@ abstract class AppSettingsRepository {
   /// Persists the Wi-Fi only sync setting.
   Future<void> setWifiOnlySync(bool enabled);
 
+  // -- Notifications --
+
+  /// Whether to show local notifications for new episodes.
+  bool getNotifyNewEpisodes();
+
+  /// Persists the new episode notification setting.
+  Future<void> setNotifyNewEpisodes(bool enabled);
+
   // -- Data management --
 
   /// Removes all persisted settings, restoring defaults.

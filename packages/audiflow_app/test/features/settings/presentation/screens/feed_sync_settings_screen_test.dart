@@ -81,8 +81,10 @@ void main() {
       await tester.tap(find.byType(Switch).first);
       await tester.pumpAndSettle();
 
-      // Sync Interval should now be hidden via Visibility
-      final visibility = tester.widget<Visibility>(find.byType(Visibility));
+      // Sync Interval should now be hidden via Visibility (first Visibility widget)
+      final visibility = tester.firstWidget<Visibility>(
+        find.byType(Visibility),
+      );
       expect(visibility.visible, isFalse);
     });
 
