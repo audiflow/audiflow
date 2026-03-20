@@ -61,6 +61,7 @@ export 'src/features/feed/repositories/smart_playlist_config_repository.dart';
 export 'src/features/feed/repositories/smart_playlist_config_repository_impl.dart';
 export 'src/features/feed/services/config_assembler.dart';
 export 'src/features/feed/services/feed_parser_service.dart';
+export 'src/features/feed/services/feed_sync_executor.dart';
 export 'src/features/feed/services/feed_sync_service.dart';
 export 'src/features/feed/models/feed_sync_result.dart';
 export 'src/features/feed/services/smart_playlist_resolver_service.dart';
