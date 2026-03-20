@@ -300,5 +300,96 @@ void main() {
         PlaylistStructure.grouped,
       );
     });
+
+    test(
+      'cache round-trip preserves year-resolved playlist episode IDs',
+      () async {
+        final episodes = [
+          _episode(
+            id: 10,
+            guid: 'y-ep-1',
+            title: 'Episode from 2024',
+            publishedAt: DateTime(2024, 3),
+          ),
+          _episode(
+            id: 11,
+            guid: 'y-ep-2',
+            title: 'Episode from 2024 later',
+            publishedAt: DateTime(2024, 9),
+          ),
+          _episode(
+            id: 12,
+            guid: 'y-ep-3',
+            title: 'Episode from 2025',
+            publishedAt: DateTime(2025, 1),
+          ),
+        ];
+
+        final summary = PatternSummary(
+          id: 'year-pattern',
+          dataVersion: 1,
+          displayName: 'Year Pattern',
+          feedUrlHint: 'example.com',
+          playlistCount: 1,
+        );
+
+        // A single year definition; the resolver creates one playlist
+        // per unique publication year found in episodes.
+        final config = SmartPlaylistPatternConfig(
+          id: 'year-pattern',
+          feedUrls: ['https://example.com/feed.xml'],
+          playlists: [
+            SmartPlaylistDefinition(
+              id: 'yearly',
+              displayName: 'By Year',
+              resolverType: 'year',
+              playlistStructure: 'split',
+            ),
+          ],
+        );
+
+        final configRepo = _FakeConfigRepository(
+          summary: summary,
+          config: config,
+        );
+
+        final container = makeContainer(
+          subscription: makeSubscription(),
+          episodes: episodes,
+          configRepo: configRepo,
+        );
+        addTearDown(container.dispose);
+
+        // First call: resolves and persists
+        final initial = await readSmartPlaylists(container, 1);
+        expect(initial, isNotNull);
+        expect(initial!.playlists, hasLength(2));
+
+        final initial2024 = initial.playlists
+            .where((p) => p.id == 'year_2024')
+            .first;
+        final initial2025 = initial.playlists
+            .where((p) => p.id == 'year_2025')
+            .first;
+        expect(initial2024.episodeIds, containsAll([10, 11]));
+        expect(initial2025.episodeIds, [12]);
+
+        // Second call: reads from cache (no config fetch)
+        container.invalidate(podcastSmartPlaylistsProvider(1));
+        final cached = await readSmartPlaylists(container, 1);
+
+        expect(cached, isNotNull);
+        expect(cached!.playlists, hasLength(2));
+
+        final cached2024 = cached.playlists
+            .where((p) => p.id == 'year_2024')
+            .first;
+        final cached2025 = cached.playlists
+            .where((p) => p.id == 'year_2025')
+            .first;
+        expect(cached2024.episodeIds, containsAll([10, 11]));
+        expect(cached2025.episodeIds, [12]);
+      },
+    );
   });
 }
