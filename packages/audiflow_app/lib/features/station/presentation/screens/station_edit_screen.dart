@@ -49,9 +49,8 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
     if (errorKey == StationEditError.notFound) {
       return l10n.stationNotFoundMessage;
     }
-    if (errorKey.startsWith('limit_reached:')) {
-      final max = int.tryParse(errorKey.split(':').last) ?? 0;
-      return l10n.stationLimitReached(max);
+    if (StationEditError.isLimitReached(errorKey)) {
+      return l10n.stationLimitReached(StationEditError.parseLimitMax(errorKey));
     }
     return errorKey;
   }

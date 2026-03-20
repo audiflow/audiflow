@@ -10,7 +10,12 @@ abstract final class StationEditError {
   static const nameRequired = 'name_required';
   static const podcastRequired = 'podcast_required';
   static const notFound = 'not_found';
-  static String limitReached(int max) => 'limit_reached:$max';
+  static const _limitReachedPrefix = 'limit_reached:';
+  static String limitReached(int max) => '$_limitReachedPrefix$max';
+
+  static bool isLimitReached(String key) => key.startsWith(_limitReachedPrefix);
+  static int parseLimitMax(String key) =>
+      int.tryParse(key.substring(_limitReachedPrefix.length)) ?? 0;
 }
 
 /// Form state for station create/edit.
