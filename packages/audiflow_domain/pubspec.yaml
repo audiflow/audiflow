@@ -59,6 +59,7 @@ dev_dependencies:
       url: https://github.com/reedom/isar-community.git
       path: packages/isar_community_generator
       ref: release/3.3.0-a
+  checks: ^0.3.0
   mockito: ^5.6.3
   json_schema: ^5.2.2
 
