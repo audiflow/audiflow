@@ -75,8 +75,8 @@ class DownloadsSettingsScreen extends ConsumerWidget {
     );
   }
 
-  void _update(WidgetRef ref, Future<void> Function() setter) {
-    setter();
+  Future<void> _update(WidgetRef ref, Future<void> Function() setter) async {
+    await setter();
     ref.invalidate(appSettingsRepositoryProvider);
   }
 }

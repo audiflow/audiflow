@@ -26,10 +26,10 @@ part 'voice_command_orchestrator.g.dart';
 /// ```
 @Riverpod(keepAlive: true)
 class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
-  late final SpeechRecognitionRepository _speechRepository;
-  late final PlayPodcastByNameService _playPodcastService;
-  late final VoiceCommandExecutor _executor;
-  late final Logger? _logger;
+  late SpeechRecognitionRepository _speechRepository;
+  late PlayPodcastByNameService _playPodcastService;
+  late VoiceCommandExecutor _executor;
+  late Logger? _logger;
 
   bool _isInitialized = false;
   Completer<void>? _listeningCompleter;
@@ -40,6 +40,9 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
     _playPodcastService = ref.watch(playPodcastByNameServiceProvider);
     _executor = ref.watch(voiceCommandExecutorProvider);
     _logger = ref.watch(namedLoggerProvider('VoiceOrchestrator'));
+
+    // Reset initialization flag — dependencies may be new instances
+    _isInitialized = false;
 
     ref.onDispose(_cleanup);
 
