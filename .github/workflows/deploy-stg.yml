@@ -105,6 +105,13 @@ jobs:
           mkdir -p ~/.private_keys
           echo "$ASC_PRIVATE_KEY" > ~/.private_keys/AuthKey_${ASC_KEY_ID}.p8
 
+      - name: Override signing to manual
+        run: |
+          PBXPROJ=packages/audiflow_app/ios/Runner.xcodeproj/project.pbxproj
+          sed -i '' 's/CODE_SIGN_STYLE = Automatic/CODE_SIGN_STYLE = Manual/g' "$PBXPROJ"
+          sed -i '' 's/"CODE_SIGN_IDENTITY\[sdk=iphoneos\*\]" = "iPhone Developer"/"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Distribution"/g' "$PBXPROJ"
+          echo "Patched project.pbxproj for manual signing"
+
       - name: Write ExportOptions.plist
         run: |
           cat > packages/audiflow_app/ios/ExportOptions.plist <<'PLIST'
