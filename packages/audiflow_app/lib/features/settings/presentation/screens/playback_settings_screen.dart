@@ -58,9 +58,13 @@ class PlaybackSettingsScreen extends ConsumerWidget {
     );
   }
 
-  void _updateSpeed(WidgetRef ref, AppSettingsRepository repo, double speed) {
+  Future<void> _updateSpeed(
+    WidgetRef ref,
+    AppSettingsRepository repo,
+    double speed,
+  ) async {
     // Use controller's setSpeed to apply to player and persist in one call
-    ref.read(audioPlayerControllerProvider.notifier).setSpeed(speed);
+    await ref.read(audioPlayerControllerProvider.notifier).setSpeed(speed);
     ref.invalidate(appSettingsRepositoryProvider);
   }
 
