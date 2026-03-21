@@ -4,6 +4,7 @@ import '../../../common/providers/database_provider.dart';
 import '../../feed/datasources/local/episode_local_datasource.dart';
 import '../../feed/models/episode.dart';
 import '../../subscription/datasources/local/subscription_local_datasource.dart';
+import '../../subscription/models/subscriptions.dart';
 import '../datasources/local/queue_local_datasource.dart';
 import '../models/playback_queue.dart';
 import '../models/queue_item.dart';
@@ -205,10 +206,19 @@ class QueueRepositoryImpl implements QueueRepository {
     final episodes = await _episodeDatasource.getByIds(episodeIds);
     final episodeMap = {for (final e in episodes) e.id: e};
 
-    // Batch-fetch subscriptions for artwork fallback
-    final podcastIds = episodes.map((e) => e.podcastId).toSet().toList();
-    final subscriptions = await _subscriptionDatasource.getByIds(podcastIds);
-    final subscriptionMap = {for (final s in subscriptions) s.id: s};
+    // Only fetch subscriptions when some episodes lack artwork
+    final podcastIds = episodes
+        .where((e) => e.imageUrl == null)
+        .map((e) => e.podcastId)
+        .toSet()
+        .toList();
+    final subscriptionMap = <int, Subscription>{};
+    if (podcastIds.isNotEmpty) {
+      final subscriptions = await _subscriptionDatasource.getByIds(podcastIds);
+      for (final s in subscriptions) {
+        subscriptionMap[s.id] = s;
+      }
+    }
 
     // Separate items into manual and adhoc
     final manualItems = <QueueItemWithEpisode>[];
