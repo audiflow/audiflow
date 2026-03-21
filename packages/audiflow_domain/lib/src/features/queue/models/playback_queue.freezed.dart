@@ -14,7 +14,8 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$QueueItemWithEpisode {
 
- QueueItem get queueItem; Episode get episode;
+ QueueItem get queueItem; Episode get episode;/// Resolved artwork URL (episode image, falling back to podcast artwork).
+ String? get artworkUrl;
 /// Create a copy of QueueItemWithEpisode
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +26,16 @@ $QueueItemWithEpisodeCopyWith<QueueItemWithEpisode> get copyWith => _$QueueItemW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is QueueItemWithEpisode&&(identical(other.queueItem, queueItem) || other.queueItem == queueItem)&&(identical(other.episode, episode) || other.episode == episode));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is QueueItemWithEpisode&&(identical(other.queueItem, queueItem) || other.queueItem == queueItem)&&(identical(other.episode, episode) || other.episode == episode)&&(identical(other.artworkUrl, artworkUrl) || other.artworkUrl == artworkUrl));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,queueItem,episode);
+int get hashCode => Object.hash(runtimeType,queueItem,episode,artworkUrl);
 
 @override
 String toString() {
-  return 'QueueItemWithEpisode(queueItem: $queueItem, episode: $episode)';
+  return 'QueueItemWithEpisode(queueItem: $queueItem, episode: $episode, artworkUrl: $artworkUrl)';
 }
 
 
@@ -45,7 +46,7 @@ abstract mixin class $QueueItemWithEpisodeCopyWith<$Res>  {
   factory $QueueItemWithEpisodeCopyWith(QueueItemWithEpisode value, $Res Function(QueueItemWithEpisode) _then) = _$QueueItemWithEpisodeCopyWithImpl;
 @useResult
 $Res call({
- QueueItem queueItem, Episode episode
+ QueueItem queueItem, Episode episode, String? artworkUrl
 });
 
 
@@ -62,11 +63,12 @@ class _$QueueItemWithEpisodeCopyWithImpl<$Res>
 
 /// Create a copy of QueueItemWithEpisode
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? queueItem = null,Object? episode = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? queueItem = null,Object? episode = null,Object? artworkUrl = freezed,}) {
   return _then(_self.copyWith(
 queueItem: null == queueItem ? _self.queueItem : queueItem // ignore: cast_nullable_to_non_nullable
 as QueueItem,episode: null == episode ? _self.episode : episode // ignore: cast_nullable_to_non_nullable
-as Episode,
+as Episode,artworkUrl: freezed == artworkUrl ? _self.artworkUrl : artworkUrl // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 
@@ -148,10 +150,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( QueueItem queueItem,  Episode episode)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( QueueItem queueItem,  Episode episode,  String? artworkUrl)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _QueueItemWithEpisode() when $default != null:
-return $default(_that.queueItem,_that.episode);case _:
+return $default(_that.queueItem,_that.episode,_that.artworkUrl);case _:
   return orElse();
 
 }
@@ -169,10 +171,10 @@ return $default(_that.queueItem,_that.episode);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( QueueItem queueItem,  Episode episode)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( QueueItem queueItem,  Episode episode,  String? artworkUrl)  $default,) {final _that = this;
 switch (_that) {
 case _QueueItemWithEpisode():
-return $default(_that.queueItem,_that.episode);}
+return $default(_that.queueItem,_that.episode,_that.artworkUrl);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -186,10 +188,10 @@ return $default(_that.queueItem,_that.episode);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( QueueItem queueItem,  Episode episode)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( QueueItem queueItem,  Episode episode,  String? artworkUrl)?  $default,) {final _that = this;
 switch (_that) {
 case _QueueItemWithEpisode() when $default != null:
-return $default(_that.queueItem,_that.episode);case _:
+return $default(_that.queueItem,_that.episode,_that.artworkUrl);case _:
   return null;
 
 }
@@ -201,11 +203,13 @@ return $default(_that.queueItem,_that.episode);case _:
 
 
 class _QueueItemWithEpisode implements QueueItemWithEpisode {
-  const _QueueItemWithEpisode({required this.queueItem, required this.episode});
-  
+  const _QueueItemWithEpisode({required this.queueItem, required this.episode, this.artworkUrl});
+
 
 @override final  QueueItem queueItem;
 @override final  Episode episode;
+/// Resolved artwork URL (episode image, falling back to podcast artwork).
+@override final  String? artworkUrl;
 
 /// Create a copy of QueueItemWithEpisode
 /// with the given fields replaced by the non-null parameter values.
@@ -217,16 +221,16 @@ _$QueueItemWithEpisodeCopyWith<_QueueItemWithEpisode> get copyWith => __$QueueIt
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _QueueItemWithEpisode&&(identical(other.queueItem, queueItem) || other.queueItem == queueItem)&&(identical(other.episode, episode) || other.episode == episode));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _QueueItemWithEpisode&&(identical(other.queueItem, queueItem) || other.queueItem == queueItem)&&(identical(other.episode, episode) || other.episode == episode)&&(identical(other.artworkUrl, artworkUrl) || other.artworkUrl == artworkUrl));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,queueItem,episode);
+int get hashCode => Object.hash(runtimeType,queueItem,episode,artworkUrl);
 
 @override
 String toString() {
-  return 'QueueItemWithEpisode(queueItem: $queueItem, episode: $episode)';
+  return 'QueueItemWithEpisode(queueItem: $queueItem, episode: $episode, artworkUrl: $artworkUrl)';
 }
 
 
@@ -237,7 +241,7 @@ abstract mixin class _$QueueItemWithEpisodeCopyWith<$Res> implements $QueueItemW
   factory _$QueueItemWithEpisodeCopyWith(_QueueItemWithEpisode value, $Res Function(_QueueItemWithEpisode) _then) = __$QueueItemWithEpisodeCopyWithImpl;
 @override @useResult
 $Res call({
- QueueItem queueItem, Episode episode
+ QueueItem queueItem, Episode episode, String? artworkUrl
 });
 
 
@@ -254,11 +258,12 @@ class __$QueueItemWithEpisodeCopyWithImpl<$Res>
 
 /// Create a copy of QueueItemWithEpisode
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? queueItem = null,Object? episode = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? queueItem = null,Object? episode = null,Object? artworkUrl = freezed,}) {
   return _then(_QueueItemWithEpisode(
 queueItem: null == queueItem ? _self.queueItem : queueItem // ignore: cast_nullable_to_non_nullable
 as QueueItem,episode: null == episode ? _self.episode : episode // ignore: cast_nullable_to_non_nullable
-as Episode,
+as Episode,artworkUrl: freezed == artworkUrl ? _self.artworkUrl : artworkUrl // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 
@@ -462,7 +467,7 @@ return $default(_that.currentEpisode,_that.manualItems,_that.adhocItems,_that.ad
 
 class _PlaybackQueue extends PlaybackQueue {
   const _PlaybackQueue({this.currentEpisode, final  List<QueueItemWithEpisode> manualItems = const [], final  List<QueueItemWithEpisode> adhocItems = const [], this.adhocSourceContext}): _manualItems = manualItems,_adhocItems = adhocItems,super._();
-  
+
 
 /// Currently playing episode (not in queue items).
 @override final  Episode? currentEpisode;
