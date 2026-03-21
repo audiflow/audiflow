@@ -107,19 +107,27 @@ jobs:
 
       - name: Override signing to manual
         run: |
+          PP_NAME="${{ steps.pp.outputs.name }}"
+          XCCONFIG_DIR=packages/audiflow_app/ios/Flutter
+          SIGNING_SNIPPET="$(printf '\nCODE_SIGN_STYLE=Manual\nCODE_SIGN_IDENTITY=Apple Distribution\nPROVISIONING_PROFILE_SPECIFIER=%s\n' "$PP_NAME")"
+
+          for f in stgDebug.xcconfig stgRelease.xcconfig stgProfile.xcconfig; do
+            echo "$SIGNING_SNIPPET" >> "$XCCONFIG_DIR/$f"
+            echo "Patched $f"
+          done
+
           PBXPROJ=packages/audiflow_app/ios/Runner.xcodeproj/project.pbxproj
           sed -i '' 's/CODE_SIGN_STYLE = Automatic/CODE_SIGN_STYLE = Manual/g' "$PBXPROJ"
-          sed -i '' 's/"CODE_SIGN_IDENTITY\[sdk=iphoneos\*]" = "iPhone Developer"/"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Distribution"/g' "$PBXPROJ"
 
-          if ! grep -q 'CODE_SIGN_STYLE = Manual' "$PBXPROJ"; then
-            echo "::error::Failed to patch CODE_SIGN_STYLE to Manual"
+          if ! grep -q 'CODE_SIGN_STYLE=Manual' "$XCCONFIG_DIR/stgRelease.xcconfig"; then
+            echo "::error::Failed to inject signing settings into stgRelease.xcconfig"
             exit 1
           fi
-          if ! grep -q 'Apple Distribution' "$PBXPROJ"; then
-            echo "::error::Failed to patch CODE_SIGN_IDENTITY to Apple Distribution"
+          if ! grep -q "PROVISIONING_PROFILE_SPECIFIER=$PP_NAME" "$XCCONFIG_DIR/stgRelease.xcconfig"; then
+            echo "::error::Failed to inject provisioning profile into stgRelease.xcconfig"
             exit 1
           fi
-          echo "Patched project.pbxproj for manual signing"
+          echo "Signing overrides applied to stg xcconfigs and pbxproj"
 
       - name: Write ExportOptions.plist
         run: |
