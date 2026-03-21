@@ -31,7 +31,7 @@ jobs:
   deploy-ios:
     name: iOS TestFlight
     needs: prepare
-    runs-on: macos-14
+    runs-on: macos-26
     timeout-minutes: 30
     env:
       VERSION_STRING: ${{ needs.prepare.outputs.version_string }}
