@@ -45,7 +45,12 @@ void main() {
       await tester.pumpWidget(buildTestWidget());
 
       final textField = tester.widget<TextField>(find.byType(TextField));
-      expect(textField.decoration?.prefixIcon, isNotNull);
+      final prefixIcon = textField.decoration?.prefixIcon;
+      expect(prefixIcon, isNotNull);
+      expect(prefixIcon, isA<Icon>());
+      final iconWidget = prefixIcon! as Icon;
+      expect(iconWidget.icon, equals(Icons.search));
+      expect(prefixIcon, isNot(isA<IconButton>()));
     });
 
     testWidgets('keyboard submit action calls controller search method', (
