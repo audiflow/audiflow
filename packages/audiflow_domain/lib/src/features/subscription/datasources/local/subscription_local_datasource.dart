@@ -162,6 +162,15 @@ class SubscriptionLocalDatasource {
     return _isar.subscriptions.get(id);
   }
 
+  /// Returns subscriptions by their database IDs.
+  ///
+  /// Order is not guaranteed; caller should index as needed.
+  Future<List<Subscription>> getByIds(List<int> ids) async {
+    if (ids.isEmpty) return [];
+    final results = await _isar.subscriptions.getAll(ids);
+    return results.whereType<Subscription>().toList();
+  }
+
   /// Updates a subscription's lastRefreshedAt timestamp.
   ///
   /// Returns 1 if updated, 0 if not found.

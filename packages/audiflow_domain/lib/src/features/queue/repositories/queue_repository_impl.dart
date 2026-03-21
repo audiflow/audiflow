@@ -3,6 +3,8 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../common/providers/database_provider.dart';
 import '../../feed/datasources/local/episode_local_datasource.dart';
 import '../../feed/models/episode.dart';
+import '../../subscription/datasources/local/subscription_local_datasource.dart';
+import '../../subscription/models/subscriptions.dart';
 import '../datasources/local/queue_local_datasource.dart';
 import '../models/playback_queue.dart';
 import '../models/queue_item.dart';
@@ -22,9 +24,11 @@ QueueRepository queueRepository(Ref ref) {
   final isar = ref.watch(isarProvider);
   final queueDatasource = QueueLocalDatasource(isar);
   final episodeDatasource = EpisodeLocalDatasource(isar);
+  final subscriptionDatasource = SubscriptionLocalDatasource(isar);
   return QueueRepositoryImpl(
     queueDatasource: queueDatasource,
     episodeDatasource: episodeDatasource,
+    subscriptionDatasource: subscriptionDatasource,
   );
 }
 
@@ -33,11 +37,14 @@ class QueueRepositoryImpl implements QueueRepository {
   QueueRepositoryImpl({
     required QueueLocalDatasource queueDatasource,
     required EpisodeLocalDatasource episodeDatasource,
+    required SubscriptionLocalDatasource subscriptionDatasource,
   }) : _queueDatasource = queueDatasource,
-       _episodeDatasource = episodeDatasource;
+       _episodeDatasource = episodeDatasource,
+       _subscriptionDatasource = subscriptionDatasource;
 
   final QueueLocalDatasource _queueDatasource;
   final EpisodeLocalDatasource _episodeDatasource;
+  final SubscriptionLocalDatasource _subscriptionDatasource;
 
   @override
   Future<QueueItem> addToEnd(int episodeId) async {
@@ -187,6 +194,8 @@ class QueueRepositoryImpl implements QueueRepository {
   }
 
   /// Builds a [PlaybackQueue] by joining queue items with episode data.
+  ///
+  /// Resolves artwork for each item: episode image first, then podcast artwork.
   Future<PlaybackQueue> _buildPlaybackQueue(List<QueueItem> items) async {
     if (items.isEmpty) {
       return const PlaybackQueue();
@@ -197,6 +206,20 @@ class QueueRepositoryImpl implements QueueRepository {
     final episodes = await _episodeDatasource.getByIds(episodeIds);
     final episodeMap = {for (final e in episodes) e.id: e};
 
+    // Only fetch subscriptions when some episodes lack artwork
+    final podcastIds = episodes
+        .where((e) => e.imageUrl == null)
+        .map((e) => e.podcastId)
+        .toSet()
+        .toList();
+    final subscriptionMap = <int, Subscription>{};
+    if (podcastIds.isNotEmpty) {
+      final subscriptions = await _subscriptionDatasource.getByIds(podcastIds);
+      for (final s in subscriptions) {
+        subscriptionMap[s.id] = s;
+      }
+    }
+
     // Separate items into manual and adhoc
     final manualItems = <QueueItemWithEpisode>[];
     final adhocItems = <QueueItemWithEpisode>[];
@@ -206,9 +229,13 @@ class QueueRepositoryImpl implements QueueRepository {
       final episode = episodeMap[item.episodeId];
       if (episode == null) continue;
 
+      final artworkUrl =
+          episode.imageUrl ?? subscriptionMap[episode.podcastId]?.artworkUrl;
+
       final queueItemWithEpisode = QueueItemWithEpisode(
         queueItem: item,
         episode: episode,
+        artworkUrl: artworkUrl,
       );
 
       if (item.isAdhoc) {

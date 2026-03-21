@@ -11,6 +11,9 @@ sealed class QueueItemWithEpisode with _$QueueItemWithEpisode {
   const factory QueueItemWithEpisode({
     required QueueItem queueItem,
     required Episode episode,
+
+    /// Resolved artwork URL (episode image, falling back to podcast artwork).
+    String? artworkUrl,
   }) = _QueueItemWithEpisode;
 }
 

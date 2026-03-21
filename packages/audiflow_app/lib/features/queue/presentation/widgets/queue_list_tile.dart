@@ -1,7 +1,10 @@
+import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
+
+import '../../../../l10n/app_localizations.dart';
 
 /// Widget for displaying a queue item with swipe-to-remove and drag handle.
 ///
@@ -22,6 +25,7 @@ class QueueListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -37,7 +41,12 @@ class QueueListTile extends StatelessWidget {
       ),
       child: ListTile(
         onTap: onTap,
-        leading: ReorderableDragStartListener(
+        leading: MiniPlayerArtwork(
+          imageUrl: item.artworkUrl,
+          size: 40,
+          borderRadius: 6,
+        ),
+        trailing: ReorderableDragStartListener(
           index: index,
           child: Icon(Symbols.drag_handle, color: colorScheme.onSurfaceVariant),
         ),
@@ -47,7 +56,12 @@ class QueueListTile extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           style: theme.textTheme.bodyMedium,
         ),
-        subtitle: _buildSubtitle(theme, colorScheme),
+        subtitle: Text(
+          _buildSubtitleText(l10n),
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: colorScheme.onSurfaceVariant,
+          ),
+        ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: Spacing.md,
           vertical: Spacing.xs,
@@ -56,55 +70,34 @@ class QueueListTile extends StatelessWidget {
     );
   }
 
-  Widget _buildSubtitle(ThemeData theme, ColorScheme colorScheme) {
-    final parts = <Widget>[];
+  String _buildSubtitleText(AppLocalizations l10n) {
+    final parts = <String>[];
 
-    // Format duration if available
     if (item.episode.durationMs != null) {
       final duration = Duration(milliseconds: item.episode.durationMs!);
-      final formatted = _formatDuration(duration);
-      parts.add(
-        Text(
-          formatted,
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: colorScheme.onSurfaceVariant,
-          ),
-        ),
-      );
-    }
-
-    // Add adhoc indicator dot
-    if (item.queueItem.isAdhoc) {
-      if (parts.isNotEmpty) {
-        parts.add(const SizedBox(width: Spacing.sm));
+      final hours = duration.inHours;
+      final minutes = duration.inMinutes.remainder(60);
+      final seconds = duration.inSeconds.remainder(60);
+      if (0 < hours) {
+        parts.add(
+          '$hours:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}',
+        );
+      } else {
+        parts.add(
+          '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}',
+        );
       }
+    }
+
+    if (item.episode.publishedAt != null) {
       parts.add(
-        Container(
-          width: 6,
-          height: 6,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: colorScheme.outline,
-          ),
+        item.episode.publishedAt!.formatEpisodeDate(
+          todayLabel: l10n.dateToday,
+          yesterdayLabel: l10n.dateYesterday,
         ),
       );
     }
 
-    if (parts.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    return Row(mainAxisSize: MainAxisSize.min, children: parts);
-  }
-
-  String _formatDuration(Duration duration) {
-    final hours = duration.inHours;
-    final minutes = duration.inMinutes.remainder(60);
-    final seconds = duration.inSeconds.remainder(60);
-
-    if (0 < hours) {
-      return '$hours:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
-    }
-    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+    return parts.join('  ');
   }
 }
