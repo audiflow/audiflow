@@ -46,56 +46,47 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(podcastSearchControllerProvider);
-    final isLoading = state is SearchLoading;
     final l10n = AppLocalizations.of(context);
 
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.searchTitle)),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(Spacing.md),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _textController,
-                    focusNode: _focusNode,
-                    textCapitalization: TextCapitalization.none,
-                    autocorrect: false,
-                    keyboardType: TextInputType.text,
-                    decoration: InputDecoration(
-                      hintText: l10n.searchHint,
-                      border: const OutlineInputBorder(),
-                      suffixIcon: ValueListenableBuilder<TextEditingValue>(
-                        valueListenable: _textController,
-                        builder: (context, value, child) {
-                          if (value.text.isEmpty) {
-                            return const SizedBox.shrink();
-                          }
-                          return IconButton(
-                            icon: const Icon(Icons.clear),
-                            onPressed: _textController.clear,
-                          );
-                        },
-                      ),
-                    ),
-                    textInputAction: TextInputAction.search,
-                    onSubmitted: (_) => _onSearch(),
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => _focusNode.unfocus(),
+      child: Scaffold(
+        appBar: AppBar(title: Text(l10n.searchTitle)),
+        body: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(Spacing.md),
+              child: TextField(
+                controller: _textController,
+                focusNode: _focusNode,
+                textCapitalization: TextCapitalization.none,
+                autocorrect: false,
+                keyboardType: TextInputType.text,
+                decoration: InputDecoration(
+                  hintText: l10n.searchHint,
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.search),
+                  suffixIcon: ValueListenableBuilder<TextEditingValue>(
+                    valueListenable: _textController,
+                    builder: (context, value, child) {
+                      if (value.text.isEmpty) {
+                        return const SizedBox.shrink();
+                      }
+                      return IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: _textController.clear,
+                      );
+                    },
                   ),
                 ),
-                const SizedBox(width: Spacing.sm),
-                IconButton(
-                  key: const Key('search_submit_button'),
-                  icon: const Icon(Icons.search),
-                  // Disable submit button during loading (Requirement 3.2)
-                  onPressed: isLoading ? null : _onSearch,
-                ),
-              ],
+                textInputAction: TextInputAction.search,
+                onSubmitted: (_) => _onSearch(),
+              ),
             ),
-          ),
-          Expanded(child: _buildContent(state)),
-        ],
+            Expanded(child: _buildContent(state)),
+          ],
+        ),
       ),
     );
   }

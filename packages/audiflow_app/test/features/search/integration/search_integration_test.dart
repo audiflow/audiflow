@@ -64,7 +64,7 @@ void main() {
 
         await tester.enterText(find.byType(TextField), 'test query');
         await tester.pump();
-        await tester.tap(find.byKey(const Key('search_submit_button')));
+        await tester.testTextInput.receiveAction(TextInputAction.search);
         await tester.pumpAndSettle();
 
         expect(find.byKey(const Key('search_result_tile_0')), findsOneWidget);
@@ -127,7 +127,7 @@ void main() {
 
         await tester.enterText(find.byType(TextField), 'test');
         await tester.pump();
-        await tester.tap(find.byKey(const Key('search_submit_button')));
+        await tester.testTextInput.receiveAction(TextInputAction.search);
         await tester.pumpAndSettle();
 
         await tester.tap(find.byKey(const Key('search_result_tile_1')));
@@ -168,7 +168,7 @@ void main() {
         final focusNode = tester.widget<EditableText>(editableText).focusNode;
         expect(focusNode.hasFocus, isTrue);
 
-        await tester.tap(find.byKey(const Key('search_submit_button')));
+        await tester.testTextInput.receiveAction(TextInputAction.search);
         await tester.pump();
 
         expect(focusNode.hasFocus, isFalse);
@@ -268,12 +268,11 @@ void main() {
 
           expect(find.byKey(const Key('search_initial_state')), findsOneWidget);
           expect(find.byType(TextField), findsOneWidget);
-          expect(find.byKey(const Key('search_submit_button')), findsOneWidget);
 
           await tester.enterText(find.byType(TextField), 'technology podcasts');
           await tester.pump();
 
-          await tester.tap(find.byKey(const Key('search_submit_button')));
+          await tester.testTextInput.receiveAction(TextInputAction.search);
           await tester.pump();
 
           await tester.pumpAndSettle();
@@ -317,7 +316,7 @@ void main() {
 
           await tester.enterText(find.byType(TextField), 'test query');
           await tester.pump();
-          await tester.tap(find.byKey(const Key('search_submit_button')));
+          await tester.testTextInput.receiveAction(TextInputAction.search);
           await tester.pumpAndSettle();
 
           expect(find.byKey(const Key('search_error_state')), findsOneWidget);
@@ -362,7 +361,7 @@ void main() {
 
           await tester.enterText(find.byType(TextField), 'xyznonexistent123');
           await tester.pump();
-          await tester.tap(find.byKey(const Key('search_submit_button')));
+          await tester.testTextInput.receiveAction(TextInputAction.search);
           await tester.pumpAndSettle();
 
           expect(find.byKey(const Key('search_empty_state')), findsOneWidget);
@@ -410,7 +409,7 @@ void main() {
 
         expect(focusNode.hasFocus, isTrue);
 
-        await tester.tap(find.byKey(const Key('search_submit_button')));
+        await tester.testTextInput.receiveAction(TextInputAction.search);
         await tester.pumpAndSettle();
 
         expect(focusNode.hasFocus, isFalse);
@@ -440,15 +439,16 @@ void main() {
 
         await tester.enterText(find.byType(TextField), 'test query');
         await tester.pump();
-        await tester.tap(find.byKey(const Key('search_submit_button')));
+        await tester.testTextInput.receiveAction(TextInputAction.search);
         await tester.pump();
 
         expect(find.byType(CircularProgressIndicator), findsOneWidget);
 
-        final iconButton = tester.widget<IconButton>(
-          find.byKey(const Key('search_submit_button')),
-        );
-        expect(iconButton.onPressed, isNull);
+        // Submit again while loading — should not trigger a second search
+        await tester.testTextInput.receiveAction(TextInputAction.search);
+        await tester.pump();
+
+        expect(slowMock.callCount, equals(1));
       });
     });
   });
