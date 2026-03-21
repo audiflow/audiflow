@@ -109,7 +109,16 @@ jobs:
         run: |
           PBXPROJ=packages/audiflow_app/ios/Runner.xcodeproj/project.pbxproj
           sed -i '' 's/CODE_SIGN_STYLE = Automatic/CODE_SIGN_STYLE = Manual/g' "$PBXPROJ"
-          sed -i '' 's/"CODE_SIGN_IDENTITY\[sdk=iphoneos\*\]" = "iPhone Developer"/"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Distribution"/g' "$PBXPROJ"
+          sed -i '' 's/"CODE_SIGN_IDENTITY\[sdk=iphoneos\*]" = "iPhone Developer"/"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Distribution"/g' "$PBXPROJ"
+
+          if ! grep -q 'CODE_SIGN_STYLE = Manual' "$PBXPROJ"; then
+            echo "::error::Failed to patch CODE_SIGN_STYLE to Manual"
+            exit 1
+          fi
+          if ! grep -q 'Apple Distribution' "$PBXPROJ"; then
+            echo "::error::Failed to patch CODE_SIGN_IDENTITY to Apple Distribution"
+            exit 1
+          fi
           echo "Patched project.pbxproj for manual signing"
 
       - name: Write ExportOptions.plist
