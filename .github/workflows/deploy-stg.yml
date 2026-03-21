@@ -146,16 +146,20 @@ jobs:
           </dict>
           </plist>
           PLIST
-          sed -i '' "s/PP_NAME_PLACEHOLDER/${{ steps.pp.outputs.name }}/" packages/audiflow_app/ios/ExportOptions.plist
+          PP_NAME="${{ steps.pp.outputs.name }}"
+          sed -i '' "s|PP_NAME_PLACEHOLDER|${PP_NAME}|" packages/audiflow_app/ios/ExportOptions.plist
+
+          if ! grep -q "$PP_NAME" packages/audiflow_app/ios/ExportOptions.plist; then
+            echo "::error::Failed to inject provisioning profile name into ExportOptions.plist"
+            exit 1
+          fi
 
       - name: Build IPA
         run: |
           cd packages/audiflow_app
           flutter build ipa --flavor stg -t lib/main_stg.dart \
             --dart-define-from-file=../../.env.stg \
-            --export-options-plist=ios/ExportOptions.plist \
-            -- CODE_SIGN_STYLE=Manual \
-            PROVISIONING_PROFILE_SPECIFIER="${{ steps.pp.outputs.name }}"
+            --export-options-plist=ios/ExportOptions.plist
 
       - name: Upload to TestFlight
         env:
@@ -306,9 +310,10 @@ jobs:
           fetch-depth: 0
 
       - name: Create Sentry release
+        env:
+          VERSION: ${{ needs.prepare.outputs.version_string }}
         run: |
           curl -sL https://sentry.io/get-cli/ | bash
-          VERSION="${{ needs.prepare.outputs.version_string }}"
           sentry-cli releases new "$VERSION"
           sentry-cli releases set-commits "$VERSION" --auto
           sentry-cli releases finalize "$VERSION"
