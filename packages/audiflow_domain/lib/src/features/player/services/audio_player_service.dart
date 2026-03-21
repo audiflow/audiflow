@@ -88,8 +88,8 @@ PlaybackProgress? playbackProgress(Ref ref) {
 /// ```
 @Riverpod(keepAlive: true)
 class AudioPlayerController extends _$AudioPlayerController {
-  late final AudioPlayer _player;
-  late final Logger _log;
+  late AudioPlayer _player;
+  late Logger _log;
   StreamSubscription<PlayerState>? _stateSubscription;
   String? _currentUrl;
   int? _currentEpisodeId;

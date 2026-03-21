@@ -89,5 +89,24 @@ void main() {
           .toList();
       expect(tiles[0].value, isFalse);
     });
+
+    testWidgets(
+      'tapping max concurrent segment persists and reflects new value',
+      (tester) async {
+        await tester.pumpWidget(buildTestWidget());
+
+        // Default is 1; tap '3' segment
+        await tester.tap(find.text('3'));
+        await tester.pumpAndSettle();
+
+        final segmented = tester.widget<SegmentedButton<int>>(
+          find.byType(SegmentedButton<int>),
+        );
+        expect(segmented.selected, equals({3}));
+
+        // Verify persisted
+        expect(prefs.getInt('settings_max_concurrent_downloads'), equals(3));
+      },
+    );
   });
 }

@@ -95,5 +95,24 @@ void main() {
       final toggle = tester.widget<SwitchListTile>(find.byType(SwitchListTile));
       expect(toggle.value, isFalse);
     });
+
+    testWidgets(
+      'tapping skip forward segment persists and reflects new value',
+      (tester) async {
+        await tester.pumpWidget(buildTestWidget());
+
+        // Default is 30; tap '45' segment
+        await tester.tap(find.text('45'));
+        await tester.pumpAndSettle();
+
+        final segmented = tester.widget<SegmentedButton<int>>(
+          find.byType(SegmentedButton<int>).first,
+        );
+        expect(segmented.selected, equals({45}));
+
+        // Verify persisted: value survives provider invalidation
+        expect(prefs.getInt('settings_skip_forward_seconds'), equals(45));
+      },
+    );
   });
 }
