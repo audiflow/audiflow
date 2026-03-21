@@ -20,9 +20,11 @@ void main() {
     ]);
     final queueDatasource = QueueLocalDatasource(isar);
     final episodeDatasource = EpisodeLocalDatasource(isar);
+    final subscriptionDatasource = SubscriptionLocalDatasource(isar);
     repository = QueueRepositoryImpl(
       queueDatasource: queueDatasource,
       episodeDatasource: episodeDatasource,
+      subscriptionDatasource: subscriptionDatasource,
     );
 
     // Create subscription and episodes
@@ -285,6 +287,62 @@ void main() {
       expect(result, isNotNull);
       expect(result!.id, 2);
     });
+  });
+
+  group('artwork resolution', () {
+    test('uses episode imageUrl when available', () async {
+      // Add an episode with its own artwork
+      await isar.writeTxn(() async {
+        await isar.episodes.put(
+          Episode()
+            ..id = 10
+            ..podcastId = 1
+            ..guid = 'ep-art'
+            ..title = 'Episode With Art'
+            ..audioUrl = 'https://example.com/ep-art.mp3'
+            ..imageUrl = 'https://example.com/episode-art.jpg',
+        );
+      });
+
+      await repository.addToEnd(10);
+      final queue = await repository.getQueue();
+
+      expect(
+        queue.manualItems.first.artworkUrl,
+        'https://example.com/episode-art.jpg',
+      );
+    });
+
+    test(
+      'falls back to subscription artworkUrl when episode has no image',
+      () async {
+        // Update the subscription to have artwork
+        await isar.writeTxn(() async {
+          final sub = await isar.subscriptions.get(1);
+          sub!.artworkUrl = 'https://example.com/podcast-art.jpg';
+          await isar.subscriptions.put(sub);
+        });
+
+        // Episode 1 has no imageUrl
+        await repository.addToEnd(1);
+        final queue = await repository.getQueue();
+
+        expect(
+          queue.manualItems.first.artworkUrl,
+          'https://example.com/podcast-art.jpg',
+        );
+      },
+    );
+
+    test(
+      'returns null artworkUrl when neither episode nor subscription has image',
+      () async {
+        await repository.addToEnd(1);
+        final queue = await repository.getQueue();
+
+        expect(queue.manualItems.first.artworkUrl, isNull);
+      },
+    );
   });
 
   group('watchQueue', () {
