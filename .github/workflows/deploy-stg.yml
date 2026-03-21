@@ -102,6 +102,10 @@ jobs:
           ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           ASC_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
         run: |
+          if [ -z "$ASC_KEY_ID" ] || [ -z "$ASC_PRIVATE_KEY" ]; then
+            echo "::error::Missing required secrets: APP_STORE_CONNECT_KEY_ID or APP_STORE_CONNECT_PRIVATE_KEY"
+            exit 1
+          fi
           mkdir -p ~/.private_keys
           echo "$ASC_PRIVATE_KEY" > ~/.private_keys/AuthKey_${ASC_KEY_ID}.p8
 
@@ -115,7 +119,8 @@ jobs:
           fi
 
           XCCONFIG_DIR=packages/audiflow_app/ios/Flutter
-          SIGNING_SNIPPET="$(printf '\nCODE_SIGN_STYLE=Manual\nCODE_SIGN_IDENTITY=Apple Distribution\nPROVISIONING_PROFILE_SPECIFIER=%s\n' "$PP_NAME")"
+          SIGNING_SNIPPET="$(printf '\nCODE_SIGN_STYLE=Manual\nCODE_SIGN_IDENTITY=Apple Distribution\nCODE_SIGN_IDENTITY[sdk=iphoneos*]=Apple Distribution\nPROVISIONING_PROFILE_SPECIFIER=%s\nPROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]=%s\n' \
+            "$PP_NAME" "$PP_NAME")"
 
           for f in stgDebug.xcconfig stgRelease.xcconfig stgProfile.xcconfig; do
             echo "$SIGNING_SNIPPET" >> "$XCCONFIG_DIR/$f"
@@ -127,6 +132,10 @@ jobs:
 
           if grep -q 'CODE_SIGN_STYLE = Automatic' "$PBXPROJ"; then
             echo "::error::pbxproj still contains CODE_SIGN_STYLE = Automatic after patching"
+            exit 1
+          fi
+          if ! grep -Fq 'CODE_SIGN_STYLE = Manual' "$PBXPROJ"; then
+            echo "::error::CODE_SIGN_STYLE = Manual not found in pbxproj after patching"
             exit 1
           fi
           if ! grep -Fq 'CODE_SIGN_STYLE=Manual' "$XCCONFIG_DIR/stgRelease.xcconfig"; then
@@ -141,6 +150,7 @@ jobs:
 
       - name: Write ExportOptions.plist
         run: |
+          set -euo pipefail
           cat > packages/audiflow_app/ios/ExportOptions.plist <<'PLIST'
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -170,7 +180,7 @@ jobs:
             exit 1
           fi
           PLIST_PATH=packages/audiflow_app/ios/ExportOptions.plist
-          /usr/libexec/PlistBuddy -c "Set :provisioningProfiles:com.reedom.audiflow.stg $PP_NAME" "$PLIST_PATH"
+          /usr/libexec/PlistBuddy -c "Set :provisioningProfiles:com.reedom.audiflow.stg \"$PP_NAME\"" "$PLIST_PATH"
 
           ACTUAL=$(/usr/libexec/PlistBuddy -c "Print :provisioningProfiles:com.reedom.audiflow.stg" "$PLIST_PATH")
           if [ "$ACTUAL" != "$PP_NAME" ]; then
@@ -308,7 +318,7 @@ jobs:
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
         run: |
-          curl -sL https://sentry.io/get-cli/ | bash
+          npm install -g @sentry/cli
           sentry-cli debug-files upload \
             --include-sources \
             packages/audiflow_app/build/app/intermediates/merged_native_libs/stgRelease
@@ -337,7 +347,7 @@ jobs:
         env:
           VERSION: ${{ needs.prepare.outputs.version_string }}
         run: |
-          curl -sL https://sentry.io/get-cli/ | bash
+          npm install -g @sentry/cli
           sentry-cli releases new "$VERSION"
           sentry-cli releases set-commits "$VERSION" --auto
           sentry-cli releases finalize "$VERSION"
