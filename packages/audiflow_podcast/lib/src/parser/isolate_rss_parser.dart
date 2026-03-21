@@ -5,6 +5,13 @@ import 'package:xml/xml.dart';
 
 import 'parse_progress.dart';
 
+/// Trims whitespace and returns null for blank strings.
+String? _nullIfBlank(String? value) {
+  if (value == null) return null;
+  final trimmed = value.trim();
+  return trimmed.isEmpty ? null : trimmed;
+}
+
 /// Parses RSS feeds in a separate isolate to prevent UI freezes.
 ///
 /// Supports early-stop optimization: stops parsing when a known episode GUID
@@ -29,9 +36,7 @@ class IsolateRssParser {
   ///
   /// Use this for initial load when you need all episodes.
   /// For incremental updates, use [parse] which streams events.
-  static Future<IsolateParsedFeed> parseFeed({
-    required String feedXml,
-  }) async {
+  static Future<IsolateParsedFeed> parseFeed({required String feedXml}) async {
     ParsedPodcastMeta? meta;
     final episodes = <ParsedEpisode>[];
     var didStopEarly = false;
@@ -154,10 +159,7 @@ class IsolateRssParser {
       }
 
       params.sendPort.send(
-        ParseComplete(
-          totalParsed: parsedCount,
-          stoppedEarly: stoppedEarly,
-        ),
+        ParseComplete(totalParsed: parsedCount, stoppedEarly: stoppedEarly),
       );
     } catch (e) {
       params.sendPort.send(_IsolateError(e.toString()));
@@ -201,15 +203,15 @@ class IsolateRssParser {
     final transcripts = <ParsedTranscript>[];
     for (final element in item.children.whereType<XmlElement>()) {
       if (element.localName != 'transcript') continue;
-      final url = element.getAttribute('url');
-      final type = element.getAttribute('type');
+      final url = _nullIfBlank(element.getAttribute('url'));
+      final type = _nullIfBlank(element.getAttribute('type'));
       if (url == null || type == null) continue;
       transcripts.add(
         ParsedTranscript(
           url: url,
           type: type,
-          language: element.getAttribute('language'),
-          rel: element.getAttribute('rel'),
+          language: _nullIfBlank(element.getAttribute('language')),
+          rel: _nullIfBlank(element.getAttribute('rel')),
         ),
       );
     }
@@ -230,8 +232,8 @@ class IsolateRssParser {
     final chapters = <ParsedChapter>[];
     for (final element in chaptersElement.children.whereType<XmlElement>()) {
       if (element.localName != 'chapter') continue;
-      final title = element.getAttribute('title');
-      final startStr = element.getAttribute('start');
+      final title = _nullIfBlank(element.getAttribute('title'));
+      final startStr = _nullIfBlank(element.getAttribute('start'));
       if (title == null || startStr == null) continue;
       final startTime = _parseChapterTimestamp(startStr);
       if (startTime == null) continue;
@@ -239,8 +241,8 @@ class IsolateRssParser {
         ParsedChapter(
           title: title,
           startTime: startTime,
-          url: element.getAttribute('href'),
-          imageUrl: element.getAttribute('image'),
+          url: _nullIfBlank(element.getAttribute('href')),
+          imageUrl: _nullIfBlank(element.getAttribute('image')),
         ),
       );
     }
@@ -271,7 +273,9 @@ class IsolateRssParser {
   }
 
   static String? _extractText(XmlElement parent, String elementName) {
-    return parent.findElements(elementName).firstOrNull?.innerText.trim();
+    return _nullIfBlank(
+      parent.findElements(elementName).firstOrNull?.innerText,
+    );
   }
 
   static String? _extractItunesText(XmlElement parent, String localName) {
@@ -280,7 +284,7 @@ class IsolateRssParser {
           (element.name.qualified.startsWith('itunes:') ||
               element.namespaceUri ==
                   'http://www.itunes.com/dtds/podcast-1.0.dtd')) {
-        return element.innerText.trim();
+        return _nullIfBlank(element.innerText);
       }
     }
     return null;
@@ -292,7 +296,7 @@ class IsolateRssParser {
           (element.name.qualified.startsWith('itunes:') ||
               element.namespaceUri ==
                   'http://www.itunes.com/dtds/podcast-1.0.dtd')) {
-        return element.getAttribute('href');
+        return _nullIfBlank(element.getAttribute('href'));
       }
     }
     return null;
