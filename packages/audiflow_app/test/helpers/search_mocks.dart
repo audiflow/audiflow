@@ -109,9 +109,11 @@ class DelayedMockSearchService implements PodcastSearchService {
 /// Mock service that never completes to test loading state.
 class SlowMockSearchService implements PodcastSearchService {
   final _completer = Completer<SearchResult>();
+  int callCount = 0;
 
   @override
   Future<SearchResult> search(SearchQuery query) {
+    callCount++;
     return _completer.future;
   }
 
