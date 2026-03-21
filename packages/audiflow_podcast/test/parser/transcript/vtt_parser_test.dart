@@ -4,6 +4,14 @@ import 'package:audiflow_podcast/src/parser/transcript/transcript_segment.dart';
 import 'package:audiflow_podcast/src/parser/transcript/vtt_parser.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+/// Resolves fixture path from either package root or workspace root.
+String _fixturePath(String relativePath) {
+  const packageDir = 'packages/audiflow_podcast';
+  final fromPackage = File(relativePath);
+  if (fromPackage.existsSync()) return relativePath;
+  return '$packageDir/$relativePath';
+}
+
 void main() {
   late VttParser parser;
 
@@ -179,7 +187,7 @@ Second line.
     });
 
     test('parses sample.vtt fixture file', () {
-      final file = File('test/fixtures/sample.vtt');
+      final file = File(_fixturePath('test/fixtures/sample.vtt'));
       final content = file.readAsStringSync();
 
       final segments = parser.parse(content);

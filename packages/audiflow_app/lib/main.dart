@@ -220,7 +220,7 @@ Future<void> _restoreLastPlayed(ProviderContainer container) async {
             episodeUrl: episode.audioUrl,
             episodeTitle: episode.title,
             podcastTitle: subscription?.title ?? '',
-            artworkUrl: episode.imageUrl,
+            artworkUrl: episode.imageUrl ?? subscription?.artworkUrl,
             totalDuration: episode.durationMs != null
                 ? Duration(milliseconds: episode.durationMs!)
                 : lastPlayed.durationMs != null

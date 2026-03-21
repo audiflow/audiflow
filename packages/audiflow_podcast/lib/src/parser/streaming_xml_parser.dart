@@ -9,6 +9,13 @@ import '../models/podcast_entity.dart';
 import '../models/podcast_feed.dart';
 import '../models/podcast_item.dart';
 
+/// Trims whitespace and returns null for blank strings.
+String? _nullIfBlank(String? value) {
+  if (value == null) return null;
+  final trimmed = value.trim();
+  return trimmed.isEmpty ? null : trimmed;
+}
+
 /// Streaming XML parser that processes RSS feeds in streaming mode
 /// and emits Feed and Item entities as they are parsed.
 class StreamingXmlParser {
@@ -186,7 +193,10 @@ class StreamingXmlParser {
       r'<itunes:image[^>]*href="([^"]*)"',
     ).firstMatch(channelContent);
     if (itunesImageMatch != null) {
-      _state.currentFeedData['itunesImage'] = itunesImageMatch.group(1);
+      final href = _nullIfBlank(itunesImageMatch.group(1));
+      if (href != null) {
+        _state.currentFeedData['itunesImage'] = href;
+      }
     }
 
     // Extract categories
@@ -404,7 +414,7 @@ class StreamingXmlParser {
         case 'duration':
           itemData['itunesDuration'] = _parseDuration(elementData);
         case 'image':
-          final href = element.getAttribute('href');
+          final href = _nullIfBlank(element.getAttribute('href'));
           if (href != null) {
             itemData['itunesImage'] = href;
           }
@@ -578,12 +588,12 @@ class StreamingXmlParser {
         case 'explicit':
           _state.currentFeedData['itunesExplicit'] = _parseBoolean(elementData);
         case 'image':
-          final href = element.getAttribute('href');
+          final href = _nullIfBlank(element.getAttribute('href'));
           if (href != null) {
             _state.currentFeedData['itunesImage'] = href;
           }
         case 'category':
-          final category = element.getAttribute('text');
+          final category = _nullIfBlank(element.getAttribute('text'));
           if (category != null) {
             _addToList(_state.currentFeedData, 'itunesCategories', category);
           }
@@ -675,7 +685,7 @@ class StreamingXmlParser {
             elementData,
           );
         case 'image':
-          final href = element.getAttribute('href');
+          final href = _nullIfBlank(element.getAttribute('href'));
           if (href != null) {
             _state.currentItemData['itunesImage'] = href;
           }
@@ -818,12 +828,12 @@ class StreamingXmlParser {
 
   /// Parse enclosure element
   Map<String, dynamic>? _parseEnclosureElement(XmlElement element) {
-    final url = element.getAttribute('url');
+    final url = _nullIfBlank(element.getAttribute('url'));
     if (url == null) return null;
 
     return {
       'url': url,
-      'type': element.getAttribute('type'),
+      'type': _nullIfBlank(element.getAttribute('type')),
       'length': int.tryParse(element.getAttribute('length') ?? ''),
     };
   }
@@ -861,8 +871,8 @@ class StreamingXmlParser {
     XmlElement element,
     Map<String, dynamic> itemData,
   ) {
-    final url = element.getAttribute('url');
-    final type = element.getAttribute('type');
+    final url = _nullIfBlank(element.getAttribute('url'));
+    final type = _nullIfBlank(element.getAttribute('type'));
     if (url == null || type == null) return;
 
     final transcripts =
@@ -871,8 +881,8 @@ class StreamingXmlParser {
     transcripts.add({
       'url': url,
       'type': type,
-      'language': element.getAttribute('language'),
-      'rel': element.getAttribute('rel'),
+      'language': _nullIfBlank(element.getAttribute('language')),
+      'rel': _nullIfBlank(element.getAttribute('rel')),
     });
     itemData['transcripts'] = transcripts;
   }
@@ -882,10 +892,7 @@ class StreamingXmlParser {
   /// Iterates child `<psc:chapter>` elements, extracts attributes,
   /// and stores valid chapters in `itemData['chapters']`.
   /// Skips chapters missing required `start` or `title` attributes.
-  void _extractPscChapters(
-    XmlElement element,
-    Map<String, dynamic> itemData,
-  ) {
+  void _extractPscChapters(XmlElement element, Map<String, dynamic> itemData) {
     final chapters =
         itemData['chapters'] as List<Map<String, dynamic>>? ??
         <Map<String, dynamic>>[];
@@ -894,8 +901,8 @@ class StreamingXmlParser {
       if (child is! XmlElement) continue;
       if (child.localName != 'chapter') continue;
 
-      final start = child.getAttribute('start');
-      final title = child.getAttribute('title');
+      final start = _nullIfBlank(child.getAttribute('start'));
+      final title = _nullIfBlank(child.getAttribute('title'));
       if (start == null || title == null) continue;
 
       final startTime = _parseChapterTimestamp(start);
@@ -904,8 +911,8 @@ class StreamingXmlParser {
       chapters.add({
         'title': title,
         'startTime': startTime,
-        'url': child.getAttribute('href'),
-        'imageUrl': child.getAttribute('image'),
+        'url': _nullIfBlank(child.getAttribute('href')),
+        'imageUrl': _nullIfBlank(child.getAttribute('image')),
       });
     }
 
