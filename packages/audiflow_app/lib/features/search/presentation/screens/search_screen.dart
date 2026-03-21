@@ -49,6 +49,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     final l10n = AppLocalizations.of(context);
 
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: () => _focusNode.unfocus(),
       child: Scaffold(
         appBar: AppBar(title: Text(l10n.searchTitle)),
