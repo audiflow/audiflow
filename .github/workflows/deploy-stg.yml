@@ -107,7 +107,13 @@ jobs:
 
       - name: Override signing to manual
         run: |
+          set -euo pipefail
           PP_NAME="${{ steps.pp.outputs.name }}"
+          if [ -z "$PP_NAME" ]; then
+            echo "::error::Provisioning profile name is empty — profile decode may have failed"
+            exit 1
+          fi
+
           XCCONFIG_DIR=packages/audiflow_app/ios/Flutter
           SIGNING_SNIPPET="$(printf '\nCODE_SIGN_STYLE=Manual\nCODE_SIGN_IDENTITY=Apple Distribution\nPROVISIONING_PROFILE_SPECIFIER=%s\n' "$PP_NAME")"
 
@@ -119,11 +125,15 @@ jobs:
           PBXPROJ=packages/audiflow_app/ios/Runner.xcodeproj/project.pbxproj
           sed -i '' 's/CODE_SIGN_STYLE = Automatic/CODE_SIGN_STYLE = Manual/g' "$PBXPROJ"
 
-          if ! grep -q 'CODE_SIGN_STYLE=Manual' "$XCCONFIG_DIR/stgRelease.xcconfig"; then
+          if grep -q 'CODE_SIGN_STYLE = Automatic' "$PBXPROJ"; then
+            echo "::error::pbxproj still contains CODE_SIGN_STYLE = Automatic after patching"
+            exit 1
+          fi
+          if ! grep -Fq 'CODE_SIGN_STYLE=Manual' "$XCCONFIG_DIR/stgRelease.xcconfig"; then
             echo "::error::Failed to inject signing settings into stgRelease.xcconfig"
             exit 1
           fi
-          if ! grep -q "PROVISIONING_PROFILE_SPECIFIER=$PP_NAME" "$XCCONFIG_DIR/stgRelease.xcconfig"; then
+          if ! grep -Fq "PROVISIONING_PROFILE_SPECIFIER=$PP_NAME" "$XCCONFIG_DIR/stgRelease.xcconfig"; then
             echo "::error::Failed to inject provisioning profile into stgRelease.xcconfig"
             exit 1
           fi
@@ -155,10 +165,16 @@ jobs:
           </plist>
           PLIST
           PP_NAME="${{ steps.pp.outputs.name }}"
-          sed -i '' "s|PP_NAME_PLACEHOLDER|${PP_NAME}|" packages/audiflow_app/ios/ExportOptions.plist
+          if [ -z "$PP_NAME" ]; then
+            echo "::error::Provisioning profile name is empty"
+            exit 1
+          fi
+          PLIST_PATH=packages/audiflow_app/ios/ExportOptions.plist
+          /usr/libexec/PlistBuddy -c "Set :provisioningProfiles:com.reedom.audiflow.stg $PP_NAME" "$PLIST_PATH"
 
-          if ! grep -q "$PP_NAME" packages/audiflow_app/ios/ExportOptions.plist; then
-            echo "::error::Failed to inject provisioning profile name into ExportOptions.plist"
+          ACTUAL=$(/usr/libexec/PlistBuddy -c "Print :provisioningProfiles:com.reedom.audiflow.stg" "$PLIST_PATH")
+          if [ "$ACTUAL" != "$PP_NAME" ]; then
+            echo "::error::ExportOptions profile name mismatch: expected '$PP_NAME', got '$ACTUAL'"
             exit 1
           fi
 
