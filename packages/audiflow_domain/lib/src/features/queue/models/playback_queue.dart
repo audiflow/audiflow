@@ -54,4 +54,12 @@ sealed class PlaybackQueue with _$PlaybackQueue {
 
   /// All items in playback order.
   List<QueueItemWithEpisode> get allItems => [...manualItems, ...adhocItems];
+
+  /// Items in playback order, excluding the currently playing episode.
+  List<QueueItemWithEpisode> upNextItems({String? nowPlayingUrl}) {
+    if (nowPlayingUrl == null) return allItems;
+    return allItems
+        .where((item) => item.episode.audioUrl != nowPlayingUrl)
+        .toList();
+  }
 }

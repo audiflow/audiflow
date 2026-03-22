@@ -59,7 +59,7 @@ class QueueScreen extends ConsumerWidget {
       return _buildEmptyState(context);
     }
 
-    final allItems = queue.allItems;
+    final allItems = queue.upNextItems(nowPlayingUrl: nowPlaying?.episodeUrl);
     final l10n = AppLocalizations.of(context);
 
     return CustomScrollView(
