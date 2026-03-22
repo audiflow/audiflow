@@ -661,6 +661,41 @@ void main() {
       expect(result.successCount, 1);
       expect(result.errorCount, 1);
     });
+
+    test('reports all errors when every feed fails', () async {
+      final sub1 = _subscription(
+        id: 10,
+        feedUrl: 'https://example.com/feed1.xml',
+        lastRefreshedAt: null,
+      );
+      final sub2 = _subscription(
+        id: 20,
+        feedUrl: 'https://example.com/feed2.xml',
+        lastRefreshedAt: null,
+      );
+
+      when(mockStationPodcastRepo.getByStation(42)).thenAnswer(
+        (_) async => [
+          makeStationPodcast(stationId: 42, podcastId: 10),
+          makeStationPodcast(stationId: 42, podcastId: 20),
+        ],
+      );
+      when(mockSubscriptionRepo.getById(10)).thenAnswer((_) async => sub1);
+      when(mockSubscriptionRepo.getById(20)).thenAnswer((_) async => sub2);
+
+      when(mockDio.get<String>(any, options: anyNamed('options'))).thenThrow(
+        DioException(
+          requestOptions: RequestOptions(),
+          type: DioExceptionType.connectionError,
+        ),
+      );
+
+      final result = await service.syncStationFeeds(42);
+
+      expect(result.totalCount, 2);
+      expect(result.successCount, 0);
+      expect(result.errorCount, 2);
+    });
   });
 
   group('FeedSyncResult aggregation logic', () {

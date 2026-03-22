@@ -34,8 +34,9 @@ class StationReconciler {
         .findAll();
     final podcastIds = stationPodcasts.map((sp) => sp.podcastId).toList();
 
+    final now = DateTime.now();
     final cutoff = station.publishedWithinDays != null
-        ? DateTime.now().subtract(Duration(days: station.publishedWithinDays!))
+        ? now.subtract(Duration(days: station.publishedWithinDays!))
         : null;
 
     final episodes = <Episode>[];
@@ -67,7 +68,7 @@ class StationReconciler {
 
     final matchingIds = <int>{};
     for (final episode in episodes) {
-      if (await _matchesConditions(episode, station)) {
+      if (await _matchesConditions(episode, station, now: now)) {
         matchingIds.add(episode.id);
       }
     }
@@ -180,7 +181,14 @@ class StationReconciler {
   }
 
   /// Evaluates whether an episode matches all station filter conditions.
-  Future<bool> _matchesConditions(Episode episode, Station station) async {
+  ///
+  /// [now] anchors the time-based filters so that the DB pre-filter
+  /// and in-memory predicate use the same reference instant.
+  Future<bool> _matchesConditions(
+    Episode episode,
+    Station station, {
+    DateTime? now,
+  }) async {
     if (!await _matchesPlaybackState(episode.id, station.playbackStateFilter)) {
       return false;
     }
@@ -194,7 +202,11 @@ class StationReconciler {
       if (!_matchesDuration(episode, station.durationFilter!)) return false;
     }
     if (station.publishedWithinDays != null) {
-      if (!_matchesPublishedWithin(episode, station.publishedWithinDays!)) {
+      if (!_matchesPublishedWithin(
+        episode,
+        station.publishedWithinDays!,
+        now: now,
+      )) {
         return false;
       }
     }
@@ -244,10 +256,10 @@ class StationReconciler {
     };
   }
 
-  bool _matchesPublishedWithin(Episode episode, int days) {
+  bool _matchesPublishedWithin(Episode episode, int days, {DateTime? now}) {
     final publishedAt = episode.publishedAt;
     if (publishedAt == null) return false;
-    final cutoff = DateTime.now().subtract(Duration(days: days));
+    final cutoff = (now ?? DateTime.now()).subtract(Duration(days: days));
     return !publishedAt.isBefore(cutoff);
   }
 }
