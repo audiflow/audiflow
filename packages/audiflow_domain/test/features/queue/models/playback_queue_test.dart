@@ -1,6 +1,6 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:checks/checks.dart';
-import 'package:test/test.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 QueueItemWithEpisode _makeItem({
   required int id,
