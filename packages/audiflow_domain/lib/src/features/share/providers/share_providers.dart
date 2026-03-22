@@ -13,7 +13,9 @@ part 'share_providers.g.dart';
 
 @Riverpod(keepAlive: true)
 ItunesChartsClient itunesChartsClient(Ref ref) {
-  return ItunesChartsClient();
+  final client = ItunesChartsClient();
+  ref.onDispose(client.close);
+  return client;
 }
 
 @riverpod

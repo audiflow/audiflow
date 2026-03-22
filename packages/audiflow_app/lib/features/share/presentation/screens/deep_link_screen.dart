@@ -60,24 +60,27 @@ class _DeepLinkScreenState extends ConsumerState<DeepLinkScreen> {
           :final artworkUrl,
           :final progress,
         ):
-          context.go(
-            '${AppRoutes.search}/podcast/${target.itunesId}',
-            extra: Podcast(
-              id: target.itunesId,
-              name: podcastTitle,
-              artistName: '',
-              feedUrl: feedUrl,
-              artworkUrl: artworkUrl,
-            ),
+          final router = GoRouter.of(context);
+          final podcast = Podcast(
+            id: target.itunesId,
+            name: podcastTitle,
+            artistName: '',
+            feedUrl: feedUrl,
+            artworkUrl: artworkUrl,
           );
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (!mounted) return;
-            context.push(
+          router.go(
+            '${AppRoutes.search}/podcast/${target.itunesId}',
+            extra: podcast,
+          );
+          final episodePath =
               '${AppRoutes.search}/podcast/${target.itunesId}/${AppRoutes.episodeDetail}'
                   .replaceAll(
                     ':episodeGuid',
                     Uri.encodeComponent(episode.guid ?? ''),
-                  ),
+                  );
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            router.push(
+              episodePath,
               extra: <String, dynamic>{
                 'episode': episode,
                 'podcastTitle': podcastTitle,

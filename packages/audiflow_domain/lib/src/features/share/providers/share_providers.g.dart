@@ -55,7 +55,7 @@ final class ItunesChartsClientProvider
 }
 
 String _$itunesChartsClientHash() =>
-    r'c667026c7246bea56683c5203b29474491c3f80e';
+    r'11b33c71a89b9f64ad66d597a3175326067f30f8';
 
 @ProviderFor(shareLinkBuilder)
 final shareLinkBuilderProvider = ShareLinkBuilderProvider._();
