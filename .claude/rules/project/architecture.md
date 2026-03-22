@@ -58,6 +58,24 @@ audiflow/
   - Builder interface for zero-copy entity construction
   - Error resilience with graceful handling of malformed feeds
 
+### audiflow_ai
+- **Type**: Flutter plugin
+- **Dependencies**: `audiflow_core`
+- **Contains**: On-device AI capabilities (voice commands, platform-specific implementations)
+- **Path**: `packages/audiflow_ai/`
+
+### audiflow_search
+- **Type**: Dart package
+- **Dependencies**: `audiflow_core`, `dio`, `freezed`
+- **Contains**: Podcast search and discovery API client
+- **Path**: `packages/audiflow_search/`
+
+### audiflow_cli
+- **Type**: Dart package
+- **Dependencies**: `audiflow_domain`, `audiflow_podcast`, `args`
+- **Contains**: CLI tools for debugging Audiflow features
+- **Path**: `packages/audiflow_cli/`
+
 ### audiflow_ui
 - **Type**: Flutter package
 - **Dependencies**: `audiflow_core`, `audiflow_domain`
@@ -79,7 +97,7 @@ App → UI → Domain → Podcast
 - `audiflow_search` depends on: `audiflow_core`
 - `audiflow_podcast` depends on: `audiflow_core`
 - `audiflow_ai` depends on: `audiflow_core`
-- `audiflow_cli` depends on: `audiflow_domain`, `audiflow_core`
+- `audiflow_cli` depends on: `audiflow_domain`, `audiflow_podcast`
 - `audiflow_core` has NO dependencies on other packages
 
 **What goes where:**
