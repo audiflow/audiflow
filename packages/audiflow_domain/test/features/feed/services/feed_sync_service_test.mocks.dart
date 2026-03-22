@@ -27,13 +27,17 @@ import 'package:audiflow_domain/src/features/feed/services/feed_parser_service.d
     as _i21;
 import 'package:audiflow_domain/src/features/settings/repositories/app_settings_repository.dart'
     as _i18;
+import 'package:audiflow_domain/src/features/station/models/station_podcast.dart'
+    as _i27;
+import 'package:audiflow_domain/src/features/station/repositories/station_podcast_repository.dart'
+    as _i26;
 import 'package:audiflow_domain/src/features/subscription/models/subscriptions.dart'
     as _i2;
 import 'package:audiflow_domain/src/features/subscription/repositories/subscription_repository.dart'
     as _i10;
 import 'package:audiflow_podcast/audiflow_podcast.dart' as _i14;
 import 'package:dio/src/adapter.dart' as _i6;
-import 'package:dio/src/cancel_token.dart' as _i26;
+import 'package:dio/src/cancel_token.dart' as _i28;
 import 'package:dio/src/dio.dart' as _i9;
 import 'package:dio/src/dio_mixin.dart' as _i5;
 import 'package:dio/src/options.dart' as _i4;
@@ -879,6 +883,61 @@ class MockSmartPlaylistConfigRepository extends _i1.Mock
       );
 }
 
+/// A class which mocks [StationPodcastRepository].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockStationPodcastRepository extends _i1.Mock
+    implements _i26.StationPodcastRepository {
+  MockStationPodcastRepository() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  _i11.Future<List<_i27.StationPodcast>> getByStation(int? stationId) =>
+      (super.noSuchMethod(
+            Invocation.method(#getByStation, [stationId]),
+            returnValue: _i11.Future<List<_i27.StationPodcast>>.value(
+              <_i27.StationPodcast>[],
+            ),
+          )
+          as _i11.Future<List<_i27.StationPodcast>>);
+
+  @override
+  _i11.Stream<List<_i27.StationPodcast>> watchByStation(int? stationId) =>
+      (super.noSuchMethod(
+            Invocation.method(#watchByStation, [stationId]),
+            returnValue: _i11.Stream<List<_i27.StationPodcast>>.empty(),
+          )
+          as _i11.Stream<List<_i27.StationPodcast>>);
+
+  @override
+  _i11.Future<void> add(int? stationId, int? podcastId) =>
+      (super.noSuchMethod(
+            Invocation.method(#add, [stationId, podcastId]),
+            returnValue: _i11.Future<void>.value(),
+            returnValueForMissingStub: _i11.Future<void>.value(),
+          )
+          as _i11.Future<void>);
+
+  @override
+  _i11.Future<void> remove(int? stationId, int? podcastId) =>
+      (super.noSuchMethod(
+            Invocation.method(#remove, [stationId, podcastId]),
+            returnValue: _i11.Future<void>.value(),
+            returnValueForMissingStub: _i11.Future<void>.value(),
+          )
+          as _i11.Future<void>);
+
+  @override
+  _i11.Future<void> removeAllForStation(int? stationId) =>
+      (super.noSuchMethod(
+            Invocation.method(#removeAllForStation, [stationId]),
+            returnValue: _i11.Future<void>.value(),
+            returnValueForMissingStub: _i11.Future<void>.value(),
+          )
+          as _i11.Future<void>);
+}
+
 /// A class which mocks [Dio].
 ///
 /// See the documentation for Mockito's code generation for more information.
@@ -958,7 +1017,7 @@ class MockDio extends _i1.Mock implements _i9.Dio {
     Object? data,
     Map<String, dynamic>? queryParameters,
     _i4.Options? options,
-    _i26.CancelToken? cancelToken,
+    _i28.CancelToken? cancelToken,
   }) =>
       (super.noSuchMethod(
             Invocation.method(
@@ -994,7 +1053,7 @@ class MockDio extends _i1.Mock implements _i9.Dio {
     Uri? uri, {
     Object? data,
     _i4.Options? options,
-    _i26.CancelToken? cancelToken,
+    _i28.CancelToken? cancelToken,
   }) =>
       (super.noSuchMethod(
             Invocation.method(
@@ -1021,7 +1080,7 @@ class MockDio extends _i1.Mock implements _i9.Dio {
     Object? data,
     Map<String, dynamic>? queryParameters,
     _i4.Options? options,
-    _i26.CancelToken? cancelToken,
+    _i28.CancelToken? cancelToken,
     _i4.ProgressCallback? onReceiveProgress,
   }) =>
       (super.noSuchMethod(
@@ -1060,7 +1119,7 @@ class MockDio extends _i1.Mock implements _i9.Dio {
     Uri? uri, {
     Object? data,
     _i4.Options? options,
-    _i26.CancelToken? cancelToken,
+    _i28.CancelToken? cancelToken,
     _i4.ProgressCallback? onReceiveProgress,
   }) =>
       (super.noSuchMethod(
@@ -1098,7 +1157,7 @@ class MockDio extends _i1.Mock implements _i9.Dio {
     Object? data,
     Map<String, dynamic>? queryParameters,
     _i4.Options? options,
-    _i26.CancelToken? cancelToken,
+    _i28.CancelToken? cancelToken,
     _i4.ProgressCallback? onSendProgress,
     _i4.ProgressCallback? onReceiveProgress,
   }) =>
@@ -1140,7 +1199,7 @@ class MockDio extends _i1.Mock implements _i9.Dio {
     Uri? uri, {
     Object? data,
     _i4.Options? options,
-    _i26.CancelToken? cancelToken,
+    _i28.CancelToken? cancelToken,
     _i4.ProgressCallback? onSendProgress,
     _i4.ProgressCallback? onReceiveProgress,
   }) =>
@@ -1181,7 +1240,7 @@ class MockDio extends _i1.Mock implements _i9.Dio {
     Object? data,
     Map<String, dynamic>? queryParameters,
     _i4.Options? options,
-    _i26.CancelToken? cancelToken,
+    _i28.CancelToken? cancelToken,
     _i4.ProgressCallback? onSendProgress,
     _i4.ProgressCallback? onReceiveProgress,
   }) =>
@@ -1223,7 +1282,7 @@ class MockDio extends _i1.Mock implements _i9.Dio {
     Uri? uri, {
     Object? data,
     _i4.Options? options,
-    _i26.CancelToken? cancelToken,
+    _i28.CancelToken? cancelToken,
     _i4.ProgressCallback? onSendProgress,
     _i4.ProgressCallback? onReceiveProgress,
   }) =>
@@ -1264,7 +1323,7 @@ class MockDio extends _i1.Mock implements _i9.Dio {
     Object? data,
     Map<String, dynamic>? queryParameters,
     _i4.Options? options,
-    _i26.CancelToken? cancelToken,
+    _i28.CancelToken? cancelToken,
     _i4.ProgressCallback? onSendProgress,
     _i4.ProgressCallback? onReceiveProgress,
   }) =>
@@ -1306,7 +1365,7 @@ class MockDio extends _i1.Mock implements _i9.Dio {
     Uri? uri, {
     Object? data,
     _i4.Options? options,
-    _i26.CancelToken? cancelToken,
+    _i28.CancelToken? cancelToken,
     _i4.ProgressCallback? onSendProgress,
     _i4.ProgressCallback? onReceiveProgress,
   }) =>
@@ -1347,7 +1406,7 @@ class MockDio extends _i1.Mock implements _i9.Dio {
     Object? data,
     Map<String, dynamic>? queryParameters,
     _i4.Options? options,
-    _i26.CancelToken? cancelToken,
+    _i28.CancelToken? cancelToken,
   }) =>
       (super.noSuchMethod(
             Invocation.method(
@@ -1383,7 +1442,7 @@ class MockDio extends _i1.Mock implements _i9.Dio {
     Uri? uri, {
     Object? data,
     _i4.Options? options,
-    _i26.CancelToken? cancelToken,
+    _i28.CancelToken? cancelToken,
   }) =>
       (super.noSuchMethod(
             Invocation.method(
@@ -1410,7 +1469,7 @@ class MockDio extends _i1.Mock implements _i9.Dio {
     dynamic savePath, {
     _i4.ProgressCallback? onReceiveProgress,
     Map<String, dynamic>? queryParameters,
-    _i26.CancelToken? cancelToken,
+    _i28.CancelToken? cancelToken,
     bool? deleteOnError = true,
     _i4.FileAccessMode? fileAccessMode = _i4.FileAccessMode.write,
     String? lengthHeader = 'content-length',
@@ -1459,7 +1518,7 @@ class MockDio extends _i1.Mock implements _i9.Dio {
     Uri? uri,
     dynamic savePath, {
     _i4.ProgressCallback? onReceiveProgress,
-    _i26.CancelToken? cancelToken,
+    _i28.CancelToken? cancelToken,
     bool? deleteOnError = true,
     _i4.FileAccessMode? fileAccessMode = _i4.FileAccessMode.write,
     String? lengthHeader = 'content-length',
@@ -1506,7 +1565,7 @@ class MockDio extends _i1.Mock implements _i9.Dio {
     String? url, {
     Object? data,
     Map<String, dynamic>? queryParameters,
-    _i26.CancelToken? cancelToken,
+    _i28.CancelToken? cancelToken,
     _i4.Options? options,
     _i4.ProgressCallback? onSendProgress,
     _i4.ProgressCallback? onReceiveProgress,
@@ -1548,7 +1607,7 @@ class MockDio extends _i1.Mock implements _i9.Dio {
   _i11.Future<_i8.Response<T>> requestUri<T>(
     Uri? uri, {
     Object? data,
-    _i26.CancelToken? cancelToken,
+    _i28.CancelToken? cancelToken,
     _i4.Options? options,
     _i4.ProgressCallback? onSendProgress,
     _i4.ProgressCallback? onReceiveProgress,

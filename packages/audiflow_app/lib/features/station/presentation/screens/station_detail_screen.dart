@@ -66,29 +66,85 @@ class StationDetailScreen extends ConsumerWidget {
   }
 }
 
-class _StationDetailContent extends ConsumerWidget {
+class _StationDetailContent extends ConsumerStatefulWidget {
   const _StationDetailContent({required this.station});
 
   final Station station;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final episodesAsync = ref.watch(stationEpisodesProvider(station.id));
+  ConsumerState<_StationDetailContent> createState() =>
+      _StationDetailContentState();
+}
+
+class _StationDetailContentState extends ConsumerState<_StationDetailContent> {
+  Future<void>? _activeSyncFuture;
+  late final AppLifecycleListener _lifecycleListener;
+
+  @override
+  void initState() {
+    super.initState();
+    _lifecycleListener = AppLifecycleListener(onResume: _syncStationFeeds);
+    _reconcileAndSync();
+  }
+
+  @override
+  void dispose() {
+    _lifecycleListener.dispose();
+    super.dispose();
+  }
+
+  /// On first open: reconcile existing DB episodes into the station,
+  /// then sync feeds for new ones.  Reconciliation catches episodes
+  /// that were synced by other paths (launch, background) but never
+  /// linked to this station due to early termination.
+  Future<void> _reconcileAndSync() {
+    return _runSync(() async {
+      final reconcilerService = ref.read(stationReconcilerServiceProvider);
+      await reconcilerService.onStationConfigChanged(widget.station.id);
+      final syncService = ref.read(feedSyncServiceProvider);
+      await syncService.syncStationFeeds(widget.station.id);
+    });
+  }
+
+  /// Pull-to-refresh and app resume: sync feeds only.
+  /// New episodes are reconciled per-episode via onBatchReady.
+  Future<void> _syncStationFeeds() {
+    return _runSync(() async {
+      final syncService = ref.read(feedSyncServiceProvider);
+      await syncService.syncStationFeeds(widget.station.id);
+    });
+  }
+
+  /// Runs [action] as the active sync, reusing the in-flight Future
+  /// if one is already running so RefreshIndicator reflects the real
+  /// sync lifecycle.
+  Future<void> _runSync(Future<void> Function() action) {
+    if (_activeSyncFuture != null) return _activeSyncFuture!;
+    _activeSyncFuture = action().whenComplete(() {
+      _activeSyncFuture = null;
+    });
+    return _activeSyncFuture!;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final episodesAsync = ref.watch(stationEpisodesProvider(widget.station.id));
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(station.name),
+        title: Text(widget.station.name),
         actions: [
           IconButton(
             icon: const Icon(Symbols.edit),
             tooltip: AppLocalizations.of(context).stationEditTooltip,
-            onPressed: () =>
-                context.push('${AppRoutes.library}/station/${station.id}/edit'),
+            onPressed: () => context.push(
+              '${AppRoutes.library}/station/${widget.station.id}/edit',
+            ),
           ),
         ],
       ),
       body: episodesAsync.when(
-        data: (episodes) => _buildEpisodeList(context, ref, episodes),
+        data: (episodes) => _buildEpisodeList(context, episodes),
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(child: Text(error.toString())),
       ),
@@ -97,7 +153,6 @@ class _StationDetailContent extends ConsumerWidget {
 
   Widget _buildEpisodeList(
     BuildContext context,
-    WidgetRef ref,
     List<StationEpisode> stationEpisodes,
   ) {
     if (stationEpisodes.isEmpty) {
@@ -108,17 +163,21 @@ class _StationDetailContent extends ConsumerWidget {
         .map((se) => se.episodeId)
         .toList();
 
-    return ListView.builder(
-      itemCount: stationEpisodes.length,
-      itemExtent: episodeCardExtent,
-      itemBuilder: (context, index) {
-        return _StationEpisodeTile(
-          key: ValueKey(stationEpisodes[index].id),
-          stationEpisode: stationEpisodes[index],
-          stationName: station.name,
-          siblingEpisodeIds: siblingEpisodeIds,
-        );
-      },
+    return RefreshIndicator(
+      onRefresh: _syncStationFeeds,
+      child: ListView.builder(
+        physics: const AlwaysScrollableScrollPhysics(),
+        itemCount: stationEpisodes.length,
+        itemExtent: episodeCardExtent,
+        itemBuilder: (context, index) {
+          return _StationEpisodeTile(
+            key: ValueKey(stationEpisodes[index].id),
+            stationEpisode: stationEpisodes[index],
+            stationName: widget.station.name,
+            siblingEpisodeIds: siblingEpisodeIds,
+          );
+        },
+      ),
     );
   }
 

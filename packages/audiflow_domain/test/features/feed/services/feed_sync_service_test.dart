@@ -11,6 +11,7 @@ import 'package:riverpod/riverpod.dart';
   AppSettingsRepository,
   FeedParserService,
   SmartPlaylistConfigRepository,
+  StationPodcastRepository,
   Dio,
 ])
 import 'feed_sync_service_test.mocks.dart';
@@ -40,6 +41,7 @@ void main() {
   late MockAppSettingsRepository mockSettingsRepo;
   late MockFeedParserService mockFeedParser;
   late MockSmartPlaylistConfigRepository mockConfigRepo;
+  late MockStationPodcastRepository mockStationPodcastRepo;
   late MockDio mockDio;
   late ProviderContainer container;
   late FeedSyncService service;
@@ -50,6 +52,7 @@ void main() {
     mockSettingsRepo = MockAppSettingsRepository();
     mockFeedParser = MockFeedParserService();
     mockConfigRepo = MockSmartPlaylistConfigRepository();
+    mockStationPodcastRepo = MockStationPodcastRepository();
     mockDio = MockDio();
 
     // Default settings
@@ -66,6 +69,9 @@ void main() {
         appSettingsRepositoryProvider.overrideWithValue(mockSettingsRepo),
         feedParserServiceProvider.overrideWithValue(mockFeedParser),
         smartPlaylistConfigRepositoryProvider.overrideWithValue(mockConfigRepo),
+        stationPodcastRepositoryProvider.overrideWithValue(
+          mockStationPodcastRepo,
+        ),
         dioProvider.overrideWithValue(mockDio),
       ],
     );
@@ -466,6 +472,229 @@ void main() {
 
       expect(result.success, isFalse);
       expect(result.errorMessage, 'Network error');
+    });
+  });
+
+  group('syncStationFeeds', () {
+    StationPodcast makeStationPodcast({
+      required int stationId,
+      required int podcastId,
+    }) {
+      return StationPodcast()
+        ..stationId = stationId
+        ..podcastId = podcastId
+        ..addedAt = DateTime.now();
+    }
+
+    void stubSuccessfulSync(Subscription sub) {
+      when(mockDio.get<String>(any, options: anyNamed('options'))).thenAnswer(
+        (_) async => Response(
+          data: '<rss></rss>',
+          statusCode: 200,
+          requestOptions: RequestOptions(),
+        ),
+      );
+      when(
+        mockEpisodeRepo.getGuidsByPodcastId(sub.id),
+      ).thenAnswer((_) async => <String>{});
+      when(
+        mockFeedParser.parseWithProgress(
+          xmlContent: anyNamed('xmlContent'),
+          podcastId: anyNamed('podcastId'),
+          knownGuids: anyNamed('knownGuids'),
+          onBatchReady: anyNamed('onBatchReady'),
+        ),
+      ).thenAnswer(
+        (_) => Stream.value(
+          const FeedParseComplete(total: 2, stoppedEarly: false),
+        ),
+      );
+      when(
+        mockSubscriptionRepo.updateLastRefreshed(any, any),
+      ).thenAnswer((_) async {});
+    }
+
+    test('returns empty result when station has no podcasts', () async {
+      when(mockStationPodcastRepo.getByStation(42)).thenAnswer((_) async => []);
+
+      final result = await service.syncStationFeeds(42);
+
+      expect(result.totalCount, 0);
+      expect(result.successCount, 0);
+      verifyNever(mockDio.get<String>(any, options: anyNamed('options')));
+    });
+
+    test('returns empty result when no matching subscriptions', () async {
+      when(mockStationPodcastRepo.getByStation(42)).thenAnswer(
+        (_) async => [makeStationPodcast(stationId: 42, podcastId: 99)],
+      );
+      when(mockSubscriptionRepo.getById(99)).thenAnswer((_) async => null);
+
+      final result = await service.syncStationFeeds(42);
+
+      expect(result.totalCount, 0);
+      expect(result.successCount, 0);
+    });
+
+    test('syncs feeds for all station podcasts', () async {
+      final sub1 = _subscription(
+        id: 10,
+        feedUrl: 'https://example.com/feed1.xml',
+        lastRefreshedAt: DateTime.now().subtract(const Duration(minutes: 5)),
+      );
+      final sub2 = _subscription(
+        id: 20,
+        feedUrl: 'https://example.com/feed2.xml',
+        lastRefreshedAt: DateTime.now().subtract(const Duration(minutes: 5)),
+      );
+
+      when(mockStationPodcastRepo.getByStation(42)).thenAnswer(
+        (_) async => [
+          makeStationPodcast(stationId: 42, podcastId: 10),
+          makeStationPodcast(stationId: 42, podcastId: 20),
+        ],
+      );
+      when(mockSubscriptionRepo.getById(10)).thenAnswer((_) async => sub1);
+      when(mockSubscriptionRepo.getById(20)).thenAnswer((_) async => sub2);
+
+      stubSuccessfulSync(sub1);
+      stubSuccessfulSync(sub2);
+
+      final result = await service.syncStationFeeds(42);
+
+      expect(result.totalCount, 2);
+      expect(result.successCount, 2);
+      expect(result.errorCount, 0);
+      // Force refresh bypasses timing window
+      verify(mockDio.get<String>(any, options: anyNamed('options'))).called(2);
+    });
+
+    test('force refreshes even if recently synced', () async {
+      final sub = _subscription(
+        id: 10,
+        feedUrl: 'https://example.com/feed.xml',
+        lastRefreshedAt: DateTime.now().subtract(const Duration(seconds: 30)),
+      );
+
+      when(mockStationPodcastRepo.getByStation(42)).thenAnswer(
+        (_) async => [makeStationPodcast(stationId: 42, podcastId: 10)],
+      );
+      when(mockSubscriptionRepo.getById(10)).thenAnswer((_) async => sub);
+      stubSuccessfulSync(sub);
+
+      final result = await service.syncStationFeeds(42);
+
+      expect(result.successCount, 1);
+      expect(result.skipCount, 0);
+      verify(mockDio.get<String>(any, options: anyNamed('options'))).called(1);
+    });
+
+    test('handles partial failures', () async {
+      final sub1 = _subscription(
+        id: 10,
+        feedUrl: 'https://example.com/feed1.xml',
+        lastRefreshedAt: null,
+      );
+      final sub2 = _subscription(
+        id: 20,
+        feedUrl: 'https://example.com/feed2.xml',
+        lastRefreshedAt: null,
+      );
+
+      when(mockStationPodcastRepo.getByStation(42)).thenAnswer(
+        (_) async => [
+          makeStationPodcast(stationId: 42, podcastId: 10),
+          makeStationPodcast(stationId: 42, podcastId: 20),
+        ],
+      );
+      when(mockSubscriptionRepo.getById(10)).thenAnswer((_) async => sub1);
+      when(mockSubscriptionRepo.getById(20)).thenAnswer((_) async => sub2);
+
+      // First feed succeeds
+      when(
+        mockDio.get<String>(
+          'https://example.com/feed1.xml',
+          options: anyNamed('options'),
+        ),
+      ).thenAnswer(
+        (_) async => Response(
+          data: '<rss></rss>',
+          statusCode: 200,
+          requestOptions: RequestOptions(),
+        ),
+      );
+      when(
+        mockEpisodeRepo.getGuidsByPodcastId(10),
+      ).thenAnswer((_) async => <String>{});
+      when(
+        mockFeedParser.parseWithProgress(
+          xmlContent: anyNamed('xmlContent'),
+          podcastId: 10,
+          knownGuids: anyNamed('knownGuids'),
+          onBatchReady: anyNamed('onBatchReady'),
+        ),
+      ).thenAnswer(
+        (_) => Stream.value(
+          const FeedParseComplete(total: 1, stoppedEarly: false),
+        ),
+      );
+      when(
+        mockSubscriptionRepo.updateLastRefreshed(any, any),
+      ).thenAnswer((_) async {});
+
+      // Second feed fails
+      when(
+        mockDio.get<String>(
+          'https://example.com/feed2.xml',
+          options: anyNamed('options'),
+        ),
+      ).thenThrow(
+        DioException(
+          requestOptions: RequestOptions(),
+          type: DioExceptionType.connectionError,
+        ),
+      );
+
+      final result = await service.syncStationFeeds(42);
+
+      expect(result.totalCount, 2);
+      expect(result.successCount, 1);
+      expect(result.errorCount, 1);
+    });
+
+    test('reports all errors when every feed fails', () async {
+      final sub1 = _subscription(
+        id: 10,
+        feedUrl: 'https://example.com/feed1.xml',
+        lastRefreshedAt: null,
+      );
+      final sub2 = _subscription(
+        id: 20,
+        feedUrl: 'https://example.com/feed2.xml',
+        lastRefreshedAt: null,
+      );
+
+      when(mockStationPodcastRepo.getByStation(42)).thenAnswer(
+        (_) async => [
+          makeStationPodcast(stationId: 42, podcastId: 10),
+          makeStationPodcast(stationId: 42, podcastId: 20),
+        ],
+      );
+      when(mockSubscriptionRepo.getById(10)).thenAnswer((_) async => sub1);
+      when(mockSubscriptionRepo.getById(20)).thenAnswer((_) async => sub2);
+
+      when(mockDio.get<String>(any, options: anyNamed('options'))).thenThrow(
+        DioException(
+          requestOptions: RequestOptions(),
+          type: DioExceptionType.connectionError,
+        ),
+      );
+
+      final result = await service.syncStationFeeds(42);
+
+      expect(result.totalCount, 2);
+      expect(result.successCount, 0);
+      expect(result.errorCount, 2);
     });
   });
 
