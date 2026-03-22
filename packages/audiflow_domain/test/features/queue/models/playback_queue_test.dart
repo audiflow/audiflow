@@ -50,6 +50,14 @@ void main() {
         check(result).length.equals(3);
       });
 
+      test('returns all items when nowPlayingUrl is empty', () {
+        final queue = PlaybackQueue(manualItems: [itemA, itemB, itemC]);
+
+        final result = queue.upNextItems(nowPlayingUrl: '');
+
+        check(result).length.equals(3);
+      });
+
       test('returns all items when nowPlayingUrl matches nothing', () {
         final queue = PlaybackQueue(manualItems: [itemA, itemB, itemC]);
 

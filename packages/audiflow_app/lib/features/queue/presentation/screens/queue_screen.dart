@@ -59,7 +59,12 @@ class QueueScreen extends ConsumerWidget {
       return _buildEmptyState(context);
     }
 
-    final allItems = queue.upNextItems(nowPlayingUrl: nowPlaying?.episodeUrl);
+    final upNextItems = queue.upNextItems(
+      nowPlayingUrl: nowPlaying?.episodeUrl,
+    );
+    // Offset between filtered list and full list (accounts for the
+    // now-playing item removed by upNextItems).
+    final reorderIndexOffset = queue.allItems.length - upNextItems.length;
     final l10n = AppLocalizations.of(context);
 
     return CustomScrollView(
@@ -68,7 +73,7 @@ class QueueScreen extends ConsumerWidget {
         if (hasNowPlaying) const SliverToBoxAdapter(child: NowPlayingCard()),
 
         // Up Next header
-        if (allItems.isNotEmpty)
+        if (upNextItems.isNotEmpty)
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(
@@ -89,21 +94,24 @@ class QueueScreen extends ConsumerWidget {
           ),
 
         // Queue items list
-        if (allItems.isNotEmpty)
+        if (upNextItems.isNotEmpty)
           SliverReorderableList(
-            itemCount: allItems.length,
+            itemCount: upNextItems.length,
             onReorder: (oldIndex, newIndex) {
               // Adjust newIndex for removal
               if (oldIndex < newIndex) {
                 newIndex -= 1;
               }
-              final item = allItems[oldIndex];
+              final item = upNextItems[oldIndex];
               ref
                   .read(queueControllerProvider.notifier)
-                  .reorderItem(item.queueItem.id, newIndex);
+                  .reorderItem(
+                    item.queueItem.id,
+                    newIndex + reorderIndexOffset,
+                  );
             },
             itemBuilder: (context, index) {
-              final item = allItems[index];
+              final item = upNextItems[index];
               return QueueListTile(
                 key: ValueKey(item.queueItem.id),
                 item: item,
