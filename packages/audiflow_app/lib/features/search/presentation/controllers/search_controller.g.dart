@@ -78,55 +78,22 @@ String _$podcastSearchServiceHash() =>
 
 /// Controller for managing podcast search state and operations.
 ///
-/// This controller coordinates search requests and manages the UI state
-/// transitions between initial, loading, success, and error states.
-///
-/// Note: Named `PodcastSearchController` to avoid collision with Flutter's
-/// built-in `SearchController` from material library.
-///
-/// Usage:
-/// ```dart
-/// final state = ref.watch(podcastSearchControllerProvider);
-/// final controller = ref.read(podcastSearchControllerProvider.notifier);
-///
-/// await controller.search('technology podcasts');
-/// ```
+/// Supports debounced search-as-you-type with IME composing guards
+/// and stale-result display during loading.
 
 @ProviderFor(PodcastSearchController)
 final podcastSearchControllerProvider = PodcastSearchControllerProvider._();
 
 /// Controller for managing podcast search state and operations.
 ///
-/// This controller coordinates search requests and manages the UI state
-/// transitions between initial, loading, success, and error states.
-///
-/// Note: Named `PodcastSearchController` to avoid collision with Flutter's
-/// built-in `SearchController` from material library.
-///
-/// Usage:
-/// ```dart
-/// final state = ref.watch(podcastSearchControllerProvider);
-/// final controller = ref.read(podcastSearchControllerProvider.notifier);
-///
-/// await controller.search('technology podcasts');
-/// ```
+/// Supports debounced search-as-you-type with IME composing guards
+/// and stale-result display during loading.
 final class PodcastSearchControllerProvider
     extends $NotifierProvider<PodcastSearchController, SearchState> {
   /// Controller for managing podcast search state and operations.
   ///
-  /// This controller coordinates search requests and manages the UI state
-  /// transitions between initial, loading, success, and error states.
-  ///
-  /// Note: Named `PodcastSearchController` to avoid collision with Flutter's
-  /// built-in `SearchController` from material library.
-  ///
-  /// Usage:
-  /// ```dart
-  /// final state = ref.watch(podcastSearchControllerProvider);
-  /// final controller = ref.read(podcastSearchControllerProvider.notifier);
-  ///
-  /// await controller.search('technology podcasts');
-  /// ```
+  /// Supports debounced search-as-you-type with IME composing guards
+  /// and stale-result display during loading.
   PodcastSearchControllerProvider._()
     : super(
         from: null,
@@ -155,23 +122,12 @@ final class PodcastSearchControllerProvider
 }
 
 String _$podcastSearchControllerHash() =>
-    r'ff3fbf1473ae4b43d14fb68155db9f4e0445462c';
+    r'66053c3f348426cff3f05c45a6a93049d8303526';
 
 /// Controller for managing podcast search state and operations.
 ///
-/// This controller coordinates search requests and manages the UI state
-/// transitions between initial, loading, success, and error states.
-///
-/// Note: Named `PodcastSearchController` to avoid collision with Flutter's
-/// built-in `SearchController` from material library.
-///
-/// Usage:
-/// ```dart
-/// final state = ref.watch(podcastSearchControllerProvider);
-/// final controller = ref.read(podcastSearchControllerProvider.notifier);
-///
-/// await controller.search('technology podcasts');
-/// ```
+/// Supports debounced search-as-you-type with IME composing guards
+/// and stale-result display during loading.
 
 abstract class _$PodcastSearchController extends $Notifier<SearchState> {
   SearchState build();

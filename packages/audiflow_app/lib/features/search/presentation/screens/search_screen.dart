@@ -22,21 +22,35 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   final _focusNode = FocusNode();
 
   @override
+  void initState() {
+    super.initState();
+    _textController.addListener(_onTextChanged);
+  }
+
+  @override
   void dispose() {
+    _textController.removeListener(_onTextChanged);
     _textController.dispose();
     _focusNode.dispose();
     super.dispose();
+  }
+
+  void _onTextChanged() {
+    final value = _textController.value;
+    final isComposing = value.composing.isValid;
+    ref
+        .read(podcastSearchControllerProvider.notifier)
+        .onQueryChanged(value.text, composing: isComposing);
   }
 
   void _onSearch() {
     final query = _textController.text;
     if (query.trim().isEmpty) return;
 
-    // Dismiss keyboard (Requirement 1.5)
+    // Dismiss keyboard
     _focusNode.unfocus();
 
-    // Call controller search method (Requirements 1.3, 1.4)
-    ref.read(podcastSearchControllerProvider.notifier).search(query);
+    ref.read(podcastSearchControllerProvider.notifier).searchImmediate(query);
   }
 
   void _onRetry() {
@@ -75,7 +89,12 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                       }
                       return IconButton(
                         icon: const Icon(Icons.clear),
-                        onPressed: _textController.clear,
+                        onPressed: () {
+                          _textController.clear();
+                          ref
+                              .read(podcastSearchControllerProvider.notifier)
+                              .clear();
+                        },
                       );
                     },
                   ),
@@ -84,7 +103,12 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                 onSubmitted: (_) => _onSearch(),
               ),
             ),
-            Expanded(child: _buildContent(state)),
+            Expanded(
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                child: _buildContent(state),
+              ),
+            ),
           ],
         ),
       ),
@@ -95,8 +119,14 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     return switch (state) {
       SearchInitial() => _buildInitialState(),
       SearchLoading() => _buildLoadingState(),
+      SearchRefreshing(:final previousResult) => _buildRefreshingState(
+        previousResult,
+      ),
       SearchSuccess(:final result) when result.isEmpty => _buildEmptyState(),
       SearchSuccess(:final result) => _buildResultsList(result),
+      SearchError(:final exception, :final lastResult)
+          when lastResult != null =>
+        _buildErrorWithResults(exception, lastResult),
       SearchError(:final exception) => _buildErrorState(exception),
     };
   }
@@ -175,6 +205,48 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildRefreshingState(SearchResult previousResult) {
+    final l10n = AppLocalizations.of(context);
+    return Column(
+      key: const Key('search_refreshing_state'),
+      children: [
+        Semantics(
+          label: l10n.searchRefreshingLabel,
+          child: const LinearProgressIndicator(),
+        ),
+        Expanded(
+          child: Opacity(
+            opacity: 0.4,
+            child: _buildResultsList(previousResult),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildErrorWithResults(
+    SearchException exception,
+    SearchResult lastResult,
+  ) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    return Column(
+      key: const Key('search_error_with_results_state'),
+      children: [
+        MaterialBanner(
+          content: Text(l10n.searchErrorBanner),
+          backgroundColor: theme.colorScheme.errorContainer,
+          actions: [
+            TextButton(onPressed: _onRetry, child: Text(l10n.commonRetry)),
+          ],
+        ),
+        Expanded(
+          child: Opacity(opacity: 0.4, child: _buildResultsList(lastResult)),
+        ),
+      ],
     );
   }
 

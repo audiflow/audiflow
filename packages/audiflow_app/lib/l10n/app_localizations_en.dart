@@ -398,6 +398,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchErrorGeneric => 'Something went wrong. Please try again.';
 
   @override
+  String get searchErrorBanner => 'Search failed. Showing previous results.';
+
+  @override
+  String get searchRefreshingLabel => 'Loading new results';
+
+  @override
   String get queueTitle => 'Queue';
 
   @override

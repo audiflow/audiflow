@@ -824,6 +824,18 @@ abstract class AppLocalizations {
   /// **'Something went wrong. Please try again.'**
   String get searchErrorGeneric;
 
+  /// Inline error banner when refresh fails but previous results exist
+  ///
+  /// In en, this message translates to:
+  /// **'Search failed. Showing previous results.'**
+  String get searchErrorBanner;
+
+  /// Accessibility label for search refresh progress indicator
+  ///
+  /// In en, this message translates to:
+  /// **'Loading new results'**
+  String get searchRefreshingLabel;
+
   /// Queue screen title
   ///
   /// In en, this message translates to:

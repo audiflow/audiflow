@@ -1,9 +1,17 @@
+import 'dart:async';
+
 import 'package:audiflow_search/audiflow_search.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'search_state.dart';
 
 part 'search_controller.g.dart';
+
+/// Debounce duration for search-as-you-type.
+const _kDebounceDuration = Duration(milliseconds: 500);
+
+/// Minimum query length to trigger a search.
+const _kMinQueryLength = 2;
 
 /// Provider for PodcastSearchService.
 ///
@@ -20,64 +28,125 @@ PodcastSearchService podcastSearchService(Ref ref) {
 
 /// Controller for managing podcast search state and operations.
 ///
-/// This controller coordinates search requests and manages the UI state
-/// transitions between initial, loading, success, and error states.
-///
-/// Note: Named `PodcastSearchController` to avoid collision with Flutter's
-/// built-in `SearchController` from material library.
-///
-/// Usage:
-/// ```dart
-/// final state = ref.watch(podcastSearchControllerProvider);
-/// final controller = ref.read(podcastSearchControllerProvider.notifier);
-///
-/// await controller.search('technology podcasts');
-/// ```
+/// Supports debounced search-as-you-type with IME composing guards
+/// and stale-result display during loading.
 @riverpod
 class PodcastSearchController extends _$PodcastSearchController {
-  String? _lastQuery;
+  Timer? _debounceTimer;
+  String? _lastCompletedQuery;
+  String? _lastAttemptedQuery;
+  String? _pendingQuery;
 
   @override
-  SearchState build() => const SearchInitial();
+  SearchState build() {
+    ref.onDispose(() {
+      _debounceTimer?.cancel();
+    });
+    return const SearchInitial();
+  }
 
-  /// Executes a podcast search with the given query.
+  /// Called on each text change. Debounces and fires search after 500ms.
   ///
-  /// Preconditions:
-  /// - query must not be empty or whitespace-only
-  /// - no search currently in progress (state != SearchLoading)
-  ///
-  /// Postconditions:
-  /// - state transitions to SearchLoading, then SearchSuccess or SearchError
-  /// - _lastQuery is updated to the provided query
-  Future<void> search(String query) async {
-    // Prevent duplicate submissions (Requirement 3.2)
-    if (state is SearchLoading) return;
+  /// Set [composing] to true when the IME is still composing (e.g., CJK input).
+  /// Composing input is ignored to avoid searching incomplete characters.
+  void onQueryChanged(String query, {bool composing = false}) {
+    _debounceTimer?.cancel();
+
+    if (composing) return;
 
     final trimmed = query.trim();
-    if (trimmed.isEmpty) return;
+    if (trimmed.length < _kMinQueryLength) {
+      _clear();
+      return;
+    }
 
-    _lastQuery = trimmed;
-    state = const SearchLoading();
+    _debounceTimer = Timer(_kDebounceDuration, () {
+      _executeSearch(trimmed);
+    });
+  }
 
-    try {
-      final service = ref.read(podcastSearchServiceProvider);
-      final result = await service.search(SearchQuery.validated(term: trimmed));
-      state = SearchSuccess(result: result);
-    } on SearchException catch (e) {
-      state = SearchError(exception: e, lastQuery: trimmed);
+  /// Immediately executes a search, bypassing debounce.
+  ///
+  /// Used for keyboard submit (enter key) and retry.
+  Future<void> searchImmediate(String query) async {
+    _debounceTimer?.cancel();
+
+    final trimmed = query.trim();
+    if (trimmed.length < _kMinQueryLength) return;
+
+    await _executeSearch(trimmed);
+  }
+
+  /// Retries the last attempted search.
+  Future<void> retry() async {
+    final query = _lastAttemptedQuery;
+    if (query != null) {
+      // Reset completed query so dedup doesn't skip retry
+      _lastCompletedQuery = null;
+      await searchImmediate(query);
     }
   }
 
-  /// Retries the last failed search.
-  ///
-  /// Preconditions:
-  /// - _lastQuery must not be null (a previous search must have been attempted)
-  ///
-  /// Postconditions:
-  /// - Equivalent to calling search(_lastQuery)
-  Future<void> retry() async {
-    if (_lastQuery != null) {
-      await search(_lastQuery!);
+  /// Clears results and resets to initial state.
+  void clear() {
+    _clear();
+  }
+
+  void _clear() {
+    _debounceTimer?.cancel();
+    _pendingQuery = null;
+    _lastCompletedQuery = null;
+    state = const SearchInitial();
+  }
+
+  Future<void> _executeSearch(String query) async {
+    // Dedup: skip if same as last completed query
+    if (query == _lastCompletedQuery) return;
+
+    _lastAttemptedQuery = query;
+    _pendingQuery = query;
+
+    // Determine previous result for refreshing state
+    final previousResult = switch (state) {
+      SearchSuccess(:final result) => result,
+      SearchRefreshing(:final previousResult) => previousResult,
+      SearchError(:final lastResult) => lastResult,
+      _ => null,
+    };
+
+    if (previousResult != null) {
+      state = SearchRefreshing(
+        previousResult: previousResult,
+        pendingQuery: query,
+      );
+    } else {
+      state = const SearchLoading();
+    }
+
+    try {
+      final service = ref.read(podcastSearchServiceProvider);
+      final result = await service.search(SearchQuery.validated(term: query));
+
+      // Guard against disposed provider after async gap
+      if (!ref.mounted) return;
+
+      // Discard stale response if query has changed
+      if (_pendingQuery != query) return;
+
+      _lastCompletedQuery = query;
+      state = SearchSuccess(result: result);
+    } on SearchException catch (e) {
+      // Guard against disposed provider after async gap
+      if (!ref.mounted) return;
+
+      // Discard stale error if query has changed
+      if (_pendingQuery != query) return;
+
+      state = SearchError(
+        exception: e,
+        lastQuery: query,
+        lastResult: previousResult,
+      );
     }
   }
 }
