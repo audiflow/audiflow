@@ -22,12 +22,12 @@ Base domain: `https://audiflow.reedom.com`
 
 ## Architecture
 
-### 1. Static Site (`audiflow-link` repo)
+### 1. Static Site (`audiflow-universal-links` repo)
 
 A separate GitHub repository deployed to GitHub Pages at `audiflow.reedom.com`.
 
 ```
-audiflow-link/
+audiflow-universal-links/
 ├── .nojekyll                          # Disable Jekyll processing
 ├── .well-known/
 │   ├── apple-app-site-association     # iOS Universal Links
@@ -299,7 +299,7 @@ User taps link in messaging app
 | Deep link routes | `audiflow_app` | `lib/routing/app_router.dart` (additions) |
 | Share button updates | `audiflow_app` | Existing episode list tile + detail screen files |
 | Share helper | `audiflow_app` | `lib/features/share/presentation/helpers/share_helper.dart` |
-| Static site | Separate repo | `audiflow/audiflow-link` |
+| Static site | Separate repo | `audiflow/audiflow-universal-links` |
 
 ## Localization
 
