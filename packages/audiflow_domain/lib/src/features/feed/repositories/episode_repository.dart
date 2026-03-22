@@ -22,6 +22,9 @@ abstract class EpisodeRepository {
   /// Returns an episode by its audio URL, or null if not found.
   Future<Episode?> getByAudioUrl(String audioUrl);
 
+  /// Returns an episode by podcast ID and GUID, or null if not found.
+  Future<Episode?> getByPodcastIdAndGuid(int podcastId, String guid);
+
   /// Upserts episodes for a podcast.
   ///
   /// Uses the composite unique key (podcastId, guid) for conflict resolution.

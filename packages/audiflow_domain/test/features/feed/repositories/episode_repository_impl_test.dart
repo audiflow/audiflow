@@ -1,5 +1,6 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_podcast/audiflow_podcast.dart';
+import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:isar_community/isar.dart';
 
@@ -514,6 +515,31 @@ void main() {
       );
 
       expect(result.length, equals(3));
+    });
+  });
+
+  group('getByPodcastIdAndGuid', () {
+    test('returns episode when found', () async {
+      final episode = Episode()
+        ..podcastId = podcastId
+        ..guid = 'test-guid-123'
+        ..title = 'Test Episode'
+        ..audioUrl = 'https://example.com/audio.mp3';
+      await isar.writeTxn(() => isar.episodes.put(episode));
+
+      final result = await repository.getByPodcastIdAndGuid(
+        podcastId,
+        'test-guid-123',
+      );
+
+      check(result).isNotNull();
+      check(result!.guid).equals('test-guid-123');
+      check(result.podcastId).equals(podcastId);
+    });
+
+    test('returns null when not found', () async {
+      final result = await repository.getByPodcastIdAndGuid(999, 'nonexistent');
+      check(result).isNull();
     });
   });
 
