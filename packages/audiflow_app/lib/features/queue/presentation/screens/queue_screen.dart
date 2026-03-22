@@ -62,8 +62,8 @@ class QueueScreen extends ConsumerWidget {
     final upNextItems = queue.upNextItems(
       nowPlayingUrl: nowPlaying?.episodeUrl,
     );
-    // Offset between filtered list and full list (accounts for the
-    // now-playing item removed by upNextItems).
+    // upNextItems removes at most one item (the first match), so the
+    // offset is 0 or 1. Safe to use as a constant shift for reorder.
     final reorderIndexOffset = queue.allItems.length - upNextItems.length;
     final l10n = AppLocalizations.of(context);
 

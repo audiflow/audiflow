@@ -55,13 +55,17 @@ sealed class PlaybackQueue with _$PlaybackQueue {
   /// All items in playback order.
   List<QueueItemWithEpisode> get allItems => [...manualItems, ...adhocItems];
 
-  /// Items in playback order, optionally excluding the currently playing
-  /// episode. Returns [allItems] unchanged when [nowPlayingUrl] is null or
-  /// empty.
+  /// Items in playback order, optionally excluding the first item whose
+  /// [Episode.audioUrl] matches [nowPlayingUrl]. Only the first match is
+  /// removed so that deliberately queued duplicates are preserved. Returns
+  /// [allItems] unchanged when [nowPlayingUrl] is null or empty.
   List<QueueItemWithEpisode> upNextItems({String? nowPlayingUrl}) {
     if (nowPlayingUrl == null || nowPlayingUrl.isEmpty) return allItems;
-    return allItems
-        .where((item) => item.episode.audioUrl != nowPlayingUrl)
-        .toList();
+    final items = allItems.toList();
+    final index = items.indexWhere(
+      (item) => item.episode.audioUrl == nowPlayingUrl,
+    );
+    if (0 <= index) items.removeAt(index);
+    return items;
   }
 }

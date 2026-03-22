@@ -66,7 +66,7 @@ void main() {
         check(result).length.equals(3);
       });
 
-      test('excludes from both manual and adhoc items', () {
+      test('excludes matching item from adhoc when manual items present', () {
         final adhocB = _makeItem(
           id: 4,
           title: 'B2',
@@ -83,6 +83,25 @@ void main() {
         check(result).length.equals(2);
         check(result[0].episode.title).equals('A');
         check(result[1].episode.title).equals('C');
+      });
+
+      test('removes only first match when duplicates exist', () {
+        final dupA = _makeItem(
+          id: 5,
+          title: 'A-dup',
+          audioUrl: 'https://a.mp3',
+          isAdhoc: true,
+        );
+        final queue = PlaybackQueue(
+          manualItems: [itemA, itemB],
+          adhocItems: [dupA],
+        );
+
+        final result = queue.upNextItems(nowPlayingUrl: 'https://a.mp3');
+
+        check(result).length.equals(2);
+        check(result[0].episode.title).equals('B');
+        check(result[1].episode.title).equals('A-dup');
       });
 
       test('returns empty when single item matches nowPlayingUrl', () {
