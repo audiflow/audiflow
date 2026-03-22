@@ -350,8 +350,8 @@ class EpisodeListTile extends ConsumerWidget {
     return IconButton(
       icon: const Icon(Icons.share, size: 20),
       iconSize: 20,
-      constraints: const BoxConstraints(minWidth: 40, minHeight: 36),
-      padding: EdgeInsets.zero,
+      constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+      padding: const EdgeInsets.symmetric(horizontal: 6),
       onPressed: null,
     );
   }
