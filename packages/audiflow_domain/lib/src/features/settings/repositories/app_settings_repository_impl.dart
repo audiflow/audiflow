@@ -182,6 +182,20 @@ class AppSettingsRepositoryImpl implements AppSettingsRepository {
     await _ds.setBool(SettingsKeys.notifyNewEpisodes, enabled);
   }
 
+  // -- Search --
+
+  @override
+  String? getSearchCountry() => _ds.getString(SettingsKeys.searchCountry);
+
+  @override
+  Future<void> setSearchCountry(String? country) async {
+    if (country == null) {
+      await _ds.remove(SettingsKeys.searchCountry);
+    } else {
+      await _ds.setString(SettingsKeys.searchCountry, country);
+    }
+  }
+
   // -- Data management --
 
   @override
@@ -203,6 +217,7 @@ class AppSettingsRepositoryImpl implements AppSettingsRepository {
       _ds.remove(SettingsKeys.syncIntervalMinutes),
       _ds.remove(SettingsKeys.wifiOnlySync),
       _ds.remove(SettingsKeys.notifyNewEpisodes),
+      _ds.remove(SettingsKeys.searchCountry),
     ]);
   }
 

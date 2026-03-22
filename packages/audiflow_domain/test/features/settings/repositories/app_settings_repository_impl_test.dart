@@ -252,6 +252,32 @@ void main() {
     });
   });
 
+  group('Search country', () {
+    test('getSearchCountry returns null when not set', () {
+      expect(repository.getSearchCountry(), isNull);
+    });
+
+    test(
+      'setSearchCountry persists and getSearchCountry retrieves it',
+      () async {
+        await repository.setSearchCountry('jp');
+        expect(repository.getSearchCountry(), 'jp');
+      },
+    );
+
+    test('setSearchCountry with null clears the value', () async {
+      await repository.setSearchCountry('gb');
+      await repository.setSearchCountry(null);
+      expect(repository.getSearchCountry(), isNull);
+    });
+
+    test('clearAll removes search country', () async {
+      await repository.setSearchCountry('de');
+      await repository.clearAll();
+      expect(repository.getSearchCountry(), isNull);
+    });
+  });
+
   group('clearAll', () {
     test('restores all settings to defaults', () async {
       // Set several values

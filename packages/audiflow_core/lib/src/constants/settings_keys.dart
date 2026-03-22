@@ -64,6 +64,11 @@ class SettingsKeys {
   /// Whether to show local notifications for new episodes found
   /// during background refresh.
   static const String notifyNewEpisodes = 'settings_notify_new_episodes';
+
+  // -- Search --
+
+  /// iTunes storefront country code for podcast search (ISO 3166-1 alpha-2).
+  static const String searchCountry = 'settings_search_country';
 }
 
 /// Default values for app settings when no preference has been saved.
