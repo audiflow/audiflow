@@ -366,6 +366,17 @@ class MockEpisodeRepository extends _i1.Mock implements _i12.EpisodeRepository {
           as _i11.Future<_i13.Episode?>);
 
   @override
+  _i11.Future<_i13.Episode?> getByPodcastIdAndGuid(
+    int? podcastId,
+    String? guid,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#getByPodcastIdAndGuid, [podcastId, guid]),
+            returnValue: _i11.Future<_i13.Episode?>.value(),
+          )
+          as _i11.Future<_i13.Episode?>);
+
+  @override
   _i11.Future<void> upsertEpisodes(List<_i13.Episode>? episodes) =>
       (super.noSuchMethod(
             Invocation.method(#upsertEpisodes, [episodes]),

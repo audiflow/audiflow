@@ -6,14 +6,21 @@ import 'package:audiflow_domain/audiflow_domain.dart';
 class FakeSubscriptionRepository implements SubscriptionRepository {
   final List<Subscription> _subscriptions = [];
 
-  /// Seeds a subscription with the given [id] and [itunesId].
-  void addSubscription({required int id, required String itunesId}) {
+  /// Seeds a subscription with the given fields.
+  void addSubscription({
+    required int id,
+    required String itunesId,
+    String feedUrl = 'https://example.com/feed.rss',
+    String title = 'Test Podcast',
+    String? artworkUrl,
+  }) {
     final subscription = Subscription()
       ..id = id
       ..itunesId = itunesId
-      ..feedUrl = 'https://example.com/feed.rss'
-      ..title = 'Test Podcast'
+      ..feedUrl = feedUrl
+      ..title = title
       ..artistName = 'Test Artist'
+      ..artworkUrl = artworkUrl
       ..subscribedAt = DateTime(2024);
     _subscriptions.add(subscription);
   }
@@ -54,8 +61,9 @@ class FakeSubscriptionRepository implements SubscriptionRepository {
   Stream<List<Subscription>> watchSubscriptions() => throw UnimplementedError();
 
   @override
-  Future<Subscription?> getSubscription(String itunesId) =>
-      throw UnimplementedError();
+  Future<Subscription?> getSubscription(String itunesId) async {
+    return _subscriptions.where((s) => s.itunesId == itunesId).firstOrNull;
+  }
 
   @override
   Future<Subscription?> getByFeedUrl(String feedUrl) =>
