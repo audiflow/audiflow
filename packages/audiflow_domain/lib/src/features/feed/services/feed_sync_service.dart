@@ -124,11 +124,10 @@ class FeedSyncService {
       );
     }
 
-    final subscriptions = <Subscription>[];
-    for (final sp in stationPodcasts) {
-      final sub = await subscriptionRepo.getById(sp.podcastId);
-      if (sub != null) subscriptions.add(sub);
-    }
+    final lookups = await Future.wait(
+      stationPodcasts.map((sp) => subscriptionRepo.getById(sp.podcastId)),
+    );
+    final subscriptions = lookups.whereType<Subscription>().toList();
 
     if (subscriptions.isEmpty) {
       _logger.w('Station $stationId: no matching subscriptions found');

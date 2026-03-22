@@ -77,7 +77,7 @@ class _StationDetailContent extends ConsumerStatefulWidget {
 }
 
 class _StationDetailContentState extends ConsumerState<_StationDetailContent> {
-  bool _syncing = false;
+  Future<void>? _activeSyncFuture;
   late final AppLifecycleListener _lifecycleListener;
 
   @override
@@ -97,34 +97,33 @@ class _StationDetailContentState extends ConsumerState<_StationDetailContent> {
   /// then sync feeds for new ones.  Reconciliation catches episodes
   /// that were synced by other paths (launch, background) but never
   /// linked to this station due to early termination.
-  Future<void> _reconcileAndSync() async {
-    if (_syncing) return;
-    _syncing = true;
-    try {
+  Future<void> _reconcileAndSync() {
+    return _runSync(() async {
       final reconcilerService = ref.read(stationReconcilerServiceProvider);
       await reconcilerService.onStationConfigChanged(widget.station.id);
       final syncService = ref.read(feedSyncServiceProvider);
       await syncService.syncStationFeeds(widget.station.id);
-    } finally {
-      if (mounted) {
-        setState(() => _syncing = false);
-      }
-    }
+    });
   }
 
   /// Pull-to-refresh and app resume: sync feeds only.
   /// New episodes are reconciled per-episode via onBatchReady.
-  Future<void> _syncStationFeeds() async {
-    if (_syncing) return;
-    _syncing = true;
-    try {
+  Future<void> _syncStationFeeds() {
+    return _runSync(() async {
       final syncService = ref.read(feedSyncServiceProvider);
       await syncService.syncStationFeeds(widget.station.id);
-    } finally {
-      if (mounted) {
-        setState(() => _syncing = false);
-      }
-    }
+    });
+  }
+
+  /// Runs [action] as the active sync, reusing the in-flight Future
+  /// if one is already running so RefreshIndicator reflects the real
+  /// sync lifecycle.
+  Future<void> _runSync(Future<void> Function() action) {
+    if (_activeSyncFuture != null) return _activeSyncFuture!;
+    _activeSyncFuture = action().whenComplete(() {
+      _activeSyncFuture = null;
+    });
+    return _activeSyncFuture!;
   }
 
   @override
@@ -167,6 +166,7 @@ class _StationDetailContentState extends ConsumerState<_StationDetailContent> {
     return RefreshIndicator(
       onRefresh: _syncStationFeeds,
       child: ListView.builder(
+        physics: const AlwaysScrollableScrollPhysics(),
         itemCount: stationEpisodes.length,
         itemExtent: episodeCardExtent,
         itemBuilder: (context, index) {
