@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:isar_community/isar.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -25,6 +26,7 @@ class StationReconcilerService {
 
   /// Called when an episode's state changes (playback, download, favorite).
   Future<void> onEpisodeChanged(int episodeId) async {
+    debugPrint('[Reconciler] onEpisodeChanged: episodeId=$episodeId');
     await _reconciler.reconcileEpisode(episodeId);
   }
 

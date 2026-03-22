@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:isar_community/isar.dart';
 
 import '../../download/models/download_status.dart';
@@ -20,6 +21,9 @@ class StationReconciler {
   /// Full reconciliation: recalculate all episodes for a station.
   ///
   /// Called when station config changes (filters, podcasts added/removed).
+  /// When a [publishedWithinDays] filter is set, only queries episodes
+  /// newer than the cutoff date from the DB, avoiding evaluation of
+  /// the entire episode history.
   Future<void> reconcileFull(int stationId) async {
     final station = await _isar.stations.get(stationId);
     if (station == null) return;
@@ -30,14 +34,36 @@ class StationReconciler {
         .findAll();
     final podcastIds = stationPodcasts.map((sp) => sp.podcastId).toList();
 
+    final cutoff = station.publishedWithinDays != null
+        ? DateTime.now().subtract(Duration(days: station.publishedWithinDays!))
+        : null;
+
     final episodes = <Episode>[];
     for (final podcastId in podcastIds) {
-      final podcastEpisodes = await _isar.episodes
-          .filter()
-          .podcastIdEqualTo(podcastId)
-          .findAll();
-      episodes.addAll(podcastEpisodes);
+      var query = _isar.episodes.filter().podcastIdEqualTo(podcastId);
+      if (cutoff != null) {
+        query = query.and().publishedAtGreaterThan(cutoff);
+      }
+      if (station.filterFavorited) {
+        query = query.and().isFavoritedEqualTo(true);
+      }
+      if (station.durationFilter case final df?) {
+        final thresholdMs = df.durationMinutes * 60 * 1000;
+        query = switch (df.durationOperator) {
+          'shorterThan' => query.and().durationMsLessThan(thresholdMs),
+          'longerThan' => query.and().durationMsGreaterThan(thresholdMs),
+          _ => query,
+        };
+      }
+      episodes.addAll(await query.findAll());
     }
+
+    debugPrint(
+      '[Reconciler] reconcileFull: station=$stationId '
+      'podcasts=${podcastIds.length} '
+      'candidates=${episodes.length} '
+      'cutoff=$cutoff',
+    );
 
     final matchingIds = <int>{};
     for (final episode in episodes) {
@@ -55,6 +81,14 @@ class StationReconciler {
     final toInsert = matchingIds.difference(currentIds);
     final toDelete = currentIds.difference(matchingIds);
     final toKeep = matchingIds.intersection(currentIds);
+
+    debugPrint(
+      '[Reconciler] reconcileFull: '
+      'matching=${matchingIds.length} '
+      'insert=${toInsert.length} '
+      'delete=${toDelete.length} '
+      'keep=${toKeep.length}',
+    );
 
     final episodeMap = {for (final e in episodes) e.id: e};
     final currentMap = {for (final e in current) e.episodeId: e};
@@ -104,12 +138,23 @@ class StationReconciler {
   /// across all stations that include its podcast.
   Future<void> reconcileEpisode(int episodeId) async {
     final episode = await _isar.episodes.get(episodeId);
-    if (episode == null) return;
+    if (episode == null) {
+      debugPrint('[Reconciler] episode $episodeId not found in DB');
+      return;
+    }
 
     final stationPodcasts = await _isar.stationPodcasts
         .filter()
         .podcastIdEqualTo(episode.podcastId)
         .findAll();
+
+    debugPrint(
+      '[Reconciler] ep=$episodeId "${episode.title}" '
+      'podcastId=${episode.podcastId} '
+      'stationLinks=${stationPodcasts.length}',
+    );
+
+    if (stationPodcasts.isEmpty) return;
 
     for (final sp in stationPodcasts) {
       final station = await _isar.stations.get(sp.stationId);
@@ -123,8 +168,17 @@ class StationReconciler {
           .episodeIdEqualTo(episodeId)
           .findFirst();
 
+      debugPrint(
+        '[Reconciler] station="${station.name}" '
+        'matches=$matches existing=${existing != null}',
+      );
+
       await _isar.writeTxn(() async {
         if (matches && existing == null) {
+          debugPrint(
+            '[Reconciler] INSERT ep=$episodeId '
+            'into station="${station.name}"',
+          );
           await _isar.stationEpisodes.put(
             StationEpisode()
               ..stationId = sp.stationId
@@ -132,12 +186,15 @@ class StationReconciler {
               ..sortKey = episode.publishedAt,
           );
         } else if (matches && existing != null) {
-          // Update sortKey if publishedAt changed.
           if (existing.sortKey != episode.publishedAt) {
             existing.sortKey = episode.publishedAt;
             await _isar.stationEpisodes.put(existing);
           }
         } else if (!matches && existing != null) {
+          debugPrint(
+            '[Reconciler] DELETE ep=$episodeId '
+            'from station="${station.name}"',
+          );
           await _isar.stationEpisodes.delete(existing.id);
         }
       });
@@ -146,20 +203,40 @@ class StationReconciler {
 
   /// Evaluates whether an episode matches all station filter conditions.
   Future<bool> _matchesConditions(Episode episode, Station station) async {
-    if (!await _matchesPlaybackState(episode.id, station.playbackStateFilter)) {
+    final playbackMatch = await _matchesPlaybackState(
+      episode.id,
+      station.playbackStateFilter,
+    );
+    if (!playbackMatch) {
+      debugPrint(
+        '[Reconciler] FAIL playbackState '
+        'ep=${episode.id} filter=${station.playbackStateFilter}',
+      );
       return false;
     }
     if (station.filterDownloaded && !await _isDownloaded(episode.id)) {
+      debugPrint('[Reconciler] FAIL downloaded ep=${episode.id}');
       return false;
     }
     if (station.filterFavorited && !episode.isFavorited) {
+      debugPrint('[Reconciler] FAIL favorited ep=${episode.id}');
       return false;
     }
     if (station.durationFilter != null) {
-      if (!_matchesDuration(episode, station.durationFilter!)) return false;
+      if (!_matchesDuration(episode, station.durationFilter!)) {
+        debugPrint(
+          '[Reconciler] FAIL duration '
+          'ep=${episode.id} durationMs=${episode.durationMs}',
+        );
+        return false;
+      }
     }
     if (station.publishedWithinDays != null) {
       if (!_matchesPublishedWithin(episode, station.publishedWithinDays!)) {
+        debugPrint(
+          '[Reconciler] FAIL publishedWithin '
+          'ep=${episode.id} publishedAt=${episode.publishedAt}',
+        );
         return false;
       }
     }

@@ -1,5 +1,6 @@
 import 'package:audiflow_core/audiflow_core.dart' show EpisodeData;
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -139,6 +140,11 @@ class FeedSyncService {
       );
     }
 
+    debugPrint(
+      '[FeedSync] Syncing ${subscriptions.length} feeds for '
+      'station $stationId: '
+      '${subscriptions.map((s) => '"${s.title}" (id=${s.id})').join(', ')}',
+    );
     _logger.i('Syncing ${subscriptions.length} feeds for station $stationId');
 
     final results = await Future.wait(
@@ -253,8 +259,16 @@ class FeedSyncService {
           await episodeRepo.upsertEpisodes(episodes);
 
           // Notify stations about newly inserted/updated episodes.
+          debugPrint(
+            '[FeedSync] onBatchReady: reconciling ${episodes.length} episodes '
+            'for "${sub.title}" (podcastId=${sub.id})',
+          );
           final reconcilerService = _ref.read(stationReconcilerServiceProvider);
           for (final episode in episodes) {
+            debugPrint(
+              '[FeedSync] reconcile ep=${episode.id} '
+              '"${episode.title}"',
+            );
             await reconcilerService.onEpisodeChanged(episode.id);
           }
 

@@ -78,13 +78,42 @@ class _StationDetailContent extends ConsumerStatefulWidget {
 
 class _StationDetailContentState extends ConsumerState<_StationDetailContent> {
   bool _syncing = false;
+  late final AppLifecycleListener _lifecycleListener;
 
   @override
   void initState() {
     super.initState();
-    _syncStationFeeds();
+    _lifecycleListener = AppLifecycleListener(onResume: _syncStationFeeds);
+    _reconcileAndSync();
   }
 
+  @override
+  void dispose() {
+    _lifecycleListener.dispose();
+    super.dispose();
+  }
+
+  /// On first open: reconcile existing DB episodes into the station,
+  /// then sync feeds for new ones.  Reconciliation catches episodes
+  /// that were synced by other paths (launch, background) but never
+  /// linked to this station due to early termination.
+  Future<void> _reconcileAndSync() async {
+    if (_syncing) return;
+    _syncing = true;
+    try {
+      final reconcilerService = ref.read(stationReconcilerServiceProvider);
+      await reconcilerService.onStationConfigChanged(widget.station.id);
+      final syncService = ref.read(feedSyncServiceProvider);
+      await syncService.syncStationFeeds(widget.station.id);
+    } finally {
+      if (mounted) {
+        setState(() => _syncing = false);
+      }
+    }
+  }
+
+  /// Pull-to-refresh and app resume: sync feeds only.
+  /// New episodes are reconciled per-episode via onBatchReady.
   Future<void> _syncStationFeeds() async {
     if (_syncing) return;
     _syncing = true;
