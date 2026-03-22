@@ -1172,7 +1172,7 @@ abstract class AppLocalizations {
   /// **'Episode details'**
   String get episodeDetails;
 
-  /// Tooltip for episode share button
+  /// Tooltip for share episode button
   ///
   /// In en, this message translates to:
   /// **'Share episode'**
