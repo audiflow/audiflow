@@ -252,6 +252,49 @@ void main() {
     });
   });
 
+  group('Search country', () {
+    test('getSearchCountry returns null when not set', () {
+      expect(repository.getSearchCountry(), isNull);
+    });
+
+    test(
+      'setSearchCountry persists and getSearchCountry retrieves it',
+      () async {
+        await repository.setSearchCountry('jp');
+        expect(repository.getSearchCountry(), 'jp');
+      },
+    );
+
+    test('setSearchCountry with null clears the value', () async {
+      await repository.setSearchCountry('gb');
+      await repository.setSearchCountry(null);
+      expect(repository.getSearchCountry(), isNull);
+    });
+
+    test('setSearchCountry normalizes input to lowercase', () async {
+      await repository.setSearchCountry(' JP ');
+      expect(repository.getSearchCountry(), 'jp');
+    });
+
+    test('setSearchCountry ignores invalid codes', () async {
+      await repository.setSearchCountry('jp');
+      await repository.setSearchCountry('abc');
+      expect(repository.getSearchCountry(), 'jp');
+
+      await repository.setSearchCountry('');
+      expect(repository.getSearchCountry(), 'jp');
+
+      await repository.setSearchCountry('1');
+      expect(repository.getSearchCountry(), 'jp');
+    });
+
+    test('clearAll removes search country', () async {
+      await repository.setSearchCountry('de');
+      await repository.clearAll();
+      expect(repository.getSearchCountry(), isNull);
+    });
+  });
+
   group('clearAll', () {
     test('restores all settings to defaults', () async {
       // Set several values

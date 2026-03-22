@@ -836,6 +836,30 @@ abstract class AppLocalizations {
   /// **'Loading new results'**
   String get searchRefreshingLabel;
 
+  /// Label for search region picker
+  ///
+  /// In en, this message translates to:
+  /// **'Search Region'**
+  String get searchRegionLabel;
+
+  /// Current search region indicator
+  ///
+  /// In en, this message translates to:
+  /// **'Searching in {country}'**
+  String searchRegionCurrent(String country);
+
+  /// Title for region picker bottom sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Select Region'**
+  String get searchRegionPickerTitle;
+
+  /// Subtitle for region picker
+  ///
+  /// In en, this message translates to:
+  /// **'iTunes store to search for podcasts'**
+  String get searchRegionPickerSubtitle;
+
   /// Queue screen title
   ///
   /// In en, this message translates to:

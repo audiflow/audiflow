@@ -1,6 +1,26 @@
 import 'dart:async';
 
+import 'package:audiflow_domain/audiflow_domain.dart'
+    hide podcastSearchServiceProvider;
 import 'package:audiflow_search/audiflow_search.dart';
+
+/// Fake AppSettingsRepository that stores search country in memory.
+///
+/// All other settings methods throw [UnimplementedError].
+class FakeAppSettingsRepository implements AppSettingsRepository {
+  String? _searchCountry;
+
+  @override
+  String? getSearchCountry() => _searchCountry;
+
+  @override
+  Future<void> setSearchCountry(String? country) async {
+    _searchCountry = country;
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
+}
 
 /// Mock implementation of PodcastSearchService for testing.
 ///
@@ -18,11 +38,13 @@ class MockPodcastSearchService implements PodcastSearchService {
 
   int searchCallCount = 0;
   String? lastSearchTerm;
+  String? lastSearchCountry;
 
   @override
   Future<SearchResult> search(SearchQuery query) async {
     searchCallCount++;
     lastSearchTerm = query.term;
+    lastSearchCountry = query.country;
 
     if (searchDelay != Duration.zero) {
       await Future<void>.delayed(searchDelay);

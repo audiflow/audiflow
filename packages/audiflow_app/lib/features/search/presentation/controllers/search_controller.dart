@@ -1,5 +1,8 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 
+import 'package:audiflow_core/audiflow_core.dart';
+import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_search/audiflow_search.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -14,11 +17,6 @@ const _kDebounceDuration = Duration(milliseconds: 500);
 const _kMinQueryLength = 2;
 
 /// Provider for PodcastSearchService.
-///
-/// This provider creates a [PodcastSearchService] instance configured with
-/// the iTunes provider for podcast search functionality.
-///
-/// Override this provider in tests to inject mock implementations.
 @Riverpod(keepAlive: true)
 PodcastSearchService podcastSearchService(Ref ref) {
   final provider = ItunesProvider();
@@ -27,22 +25,37 @@ PodcastSearchService podcastSearchService(Ref ref) {
 }
 
 /// Controller for managing podcast search state and operations.
-///
-/// Supports debounced search-as-you-type with IME composing guards
-/// and stale-result display during loading.
 @riverpod
 class PodcastSearchController extends _$PodcastSearchController {
   Timer? _debounceTimer;
-  String? _lastCompletedQuery;
   String? _lastAttemptedQuery;
-  String? _pendingQuery;
+  ({String query, String country})? _pending;
+  ({String query, String country})? _lastCompleted;
+  late String _deviceCountry;
 
   @override
   SearchState build() {
+    _deviceCountry = _resolveDeviceCountry();
     ref.onDispose(() {
       _debounceTimer?.cancel();
     });
     return const SearchInitial();
+  }
+
+  static String _resolveDeviceCountry() {
+    try {
+      return PodcastCountries.extractCountryCode(Platform.localeName);
+    } catch (_) {
+      return PodcastCountries.fallback;
+    }
+  }
+
+  /// The effective country code for the current search.
+  ///
+  /// Priority: saved setting > device locale > fallback 'us'.
+  String get currentCountry {
+    final saved = ref.read(appSettingsRepositoryProvider).getSearchCountry();
+    return saved ?? _deviceCountry;
   }
 
   /// Called on each text change. Debounces and fires search after 500ms.
@@ -77,12 +90,26 @@ class PodcastSearchController extends _$PodcastSearchController {
     await _executeSearch(trimmed);
   }
 
+  /// Called when the user changes the search country.
+  ///
+  /// Persists the selection and re-executes the current search if one exists.
+  Future<void> onCountryChanged(String country) async {
+    await ref.read(appSettingsRepositoryProvider).setSearchCountry(country);
+
+    final query = _lastAttemptedQuery;
+    if (query != null) {
+      _lastCompleted = null;
+      await _executeSearch(query, country: country);
+    } else {
+      ref.notifyListeners();
+    }
+  }
+
   /// Retries the last attempted search.
   Future<void> retry() async {
     final query = _lastAttemptedQuery;
     if (query != null) {
-      // Reset completed query so dedup doesn't skip retry
-      _lastCompletedQuery = null;
+      _lastCompleted = null;
       await searchImmediate(query);
     }
   }
@@ -94,19 +121,20 @@ class PodcastSearchController extends _$PodcastSearchController {
 
   void _clear() {
     _debounceTimer?.cancel();
-    _pendingQuery = null;
-    _lastCompletedQuery = null;
+    _pending = null;
+    _lastCompleted = null;
     state = const SearchInitial();
   }
 
-  Future<void> _executeSearch(String query) async {
-    // Dedup: skip if same as last completed query
-    if (query == _lastCompletedQuery) return;
+  Future<void> _executeSearch(String query, {String? country}) async {
+    final resolvedCountry = country ?? currentCountry;
+    final key = (query: query, country: resolvedCountry);
+
+    if (_lastCompleted == key) return;
 
     _lastAttemptedQuery = query;
-    _pendingQuery = query;
+    _pending = key;
 
-    // Determine previous result for refreshing state
     final previousResult = switch (state) {
       SearchSuccess(:final result) => result,
       SearchRefreshing(:final previousResult) => previousResult,
@@ -125,22 +153,18 @@ class PodcastSearchController extends _$PodcastSearchController {
 
     try {
       final service = ref.read(podcastSearchServiceProvider);
-      final result = await service.search(SearchQuery.validated(term: query));
+      final result = await service.search(
+        SearchQuery.validated(term: query, country: resolvedCountry),
+      );
 
-      // Guard against disposed provider after async gap
       if (!ref.mounted) return;
+      if (_pending != key) return;
 
-      // Discard stale response if query has changed
-      if (_pendingQuery != query) return;
-
-      _lastCompletedQuery = query;
+      _lastCompleted = key;
       state = SearchSuccess(result: result);
     } on SearchException catch (e) {
-      // Guard against disposed provider after async gap
       if (!ref.mounted) return;
-
-      // Discard stale error if query has changed
-      if (_pendingQuery != query) return;
+      if (_pending != key) return;
 
       state = SearchError(
         exception: e,

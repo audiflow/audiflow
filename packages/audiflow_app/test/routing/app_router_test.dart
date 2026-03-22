@@ -1,15 +1,18 @@
-import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_app/features/library/presentation/screens/library_screen.dart';
 import 'package:audiflow_app/features/podcast_detail/presentation/screens/podcast_detail_screen.dart';
 import 'package:audiflow_app/features/search/presentation/screens/search_screen.dart';
 import 'package:audiflow_app/features/settings/presentation/screens/settings_screen.dart';
+import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_app/routing/app_router.dart';
 import 'package:audiflow_app/routing/scaffold_with_nav_bar.dart';
-import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:audiflow_domain/audiflow_domain.dart'
+    hide podcastSearchServiceProvider;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+
+import '../helpers/search_mocks.dart';
 
 void main() {
   group('AppRouter', () {
@@ -28,6 +31,9 @@ void main() {
         overrides: [
           voiceCommandOrchestratorProvider.overrideWith(
             () => _MockVoiceCommandOrchestrator(),
+          ),
+          appSettingsRepositoryProvider.overrideWithValue(
+            FakeAppSettingsRepository(),
           ),
         ],
         child: MaterialApp.router(

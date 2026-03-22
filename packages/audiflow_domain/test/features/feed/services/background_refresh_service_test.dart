@@ -97,6 +97,10 @@ class FakeAppSettingsRepository implements AppSettingsRepository {
   @override
   Future<void> setNotifyNewEpisodes(bool enabled) async {}
   @override
+  String? getSearchCountry() => null;
+  @override
+  Future<void> setSearchCountry(String? country) async {}
+  @override
   Future<void> clearAll() async {}
 }
 

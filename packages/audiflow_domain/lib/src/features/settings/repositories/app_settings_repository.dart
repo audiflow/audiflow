@@ -113,6 +113,14 @@ abstract class AppSettingsRepository {
   /// Persists the new episode notification setting.
   Future<void> setNotifyNewEpisodes(bool enabled);
 
+  // -- Search --
+
+  /// Current search country code, or null for device locale default.
+  String? getSearchCountry();
+
+  /// Persists the search country code. Pass null to reset to device default.
+  Future<void> setSearchCountry(String? country);
+
   // -- Data management --
 
   /// Removes all persisted settings, restoring defaults.

@@ -404,6 +404,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchRefreshingLabel => 'Loading new results';
 
   @override
+  String get searchRegionLabel => 'Search Region';
+
+  @override
+  String searchRegionCurrent(String country) {
+    return 'Searching in $country';
+  }
+
+  @override
+  String get searchRegionPickerTitle => 'Select Region';
+
+  @override
+  String get searchRegionPickerSubtitle =>
+      'iTunes store to search for podcasts';
+
+  @override
   String get queueTitle => 'Queue';
 
   @override

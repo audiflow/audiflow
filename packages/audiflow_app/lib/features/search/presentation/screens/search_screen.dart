@@ -8,7 +8,9 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../routing/app_router.dart';
 import '../controllers/search_controller.dart';
 import '../controllers/search_state.dart';
+import '../widgets/country_picker_sheet.dart';
 import '../widgets/podcast_search_result_tile.dart';
+import '../widgets/search_country_chip.dart';
 
 class SearchScreen extends ConsumerStatefulWidget {
   const SearchScreen({super.key});
@@ -33,6 +35,17 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     _textController.dispose();
     _focusNode.dispose();
     super.dispose();
+  }
+
+  Future<void> _onCountryTap() async {
+    final controller = ref.read(podcastSearchControllerProvider.notifier);
+    final selected = await CountryPickerSheet.show(
+      context,
+      selectedCountry: controller.currentCountry,
+    );
+    if (selected != null && mounted) {
+      await controller.onCountryChanged(selected);
+    }
   }
 
   void _onTextChanged() {
@@ -80,7 +93,12 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                 decoration: InputDecoration(
                   hintText: l10n.searchHint,
                   border: const OutlineInputBorder(),
-                  prefixIcon: const Icon(Icons.search),
+                  prefixIcon: SearchCountryChip(
+                    countryCode: ref
+                        .read(podcastSearchControllerProvider.notifier)
+                        .currentCountry,
+                    onTap: _onCountryTap,
+                  ),
                   suffixIcon: ValueListenableBuilder<TextEditingValue>(
                     valueListenable: _textController,
                     builder: (context, value, child) {

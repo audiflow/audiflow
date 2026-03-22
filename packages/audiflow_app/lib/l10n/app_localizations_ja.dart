@@ -396,6 +396,20 @@ class AppLocalizationsJa extends AppLocalizations {
   String get searchRefreshingLabel => '新しい結果を読み込み中';
 
   @override
+  String get searchRegionLabel => '検索リージョン';
+
+  @override
+  String searchRegionCurrent(String country) {
+    return '$countryで検索中';
+  }
+
+  @override
+  String get searchRegionPickerTitle => 'リージョンを選択';
+
+  @override
+  String get searchRegionPickerSubtitle => 'ポッドキャストを検索するiTunesストア';
+
+  @override
   String get queueTitle => 'キュー';
 
   @override

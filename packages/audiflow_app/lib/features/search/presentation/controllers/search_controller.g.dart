@@ -9,21 +9,11 @@ part of 'search_controller.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 /// Provider for PodcastSearchService.
-///
-/// This provider creates a [PodcastSearchService] instance configured with
-/// the iTunes provider for podcast search functionality.
-///
-/// Override this provider in tests to inject mock implementations.
 
 @ProviderFor(podcastSearchService)
 final podcastSearchServiceProvider = PodcastSearchServiceProvider._();
 
 /// Provider for PodcastSearchService.
-///
-/// This provider creates a [PodcastSearchService] instance configured with
-/// the iTunes provider for podcast search functionality.
-///
-/// Override this provider in tests to inject mock implementations.
 
 final class PodcastSearchServiceProvider
     extends
@@ -34,11 +24,6 @@ final class PodcastSearchServiceProvider
         >
     with $Provider<PodcastSearchService> {
   /// Provider for PodcastSearchService.
-  ///
-  /// This provider creates a [PodcastSearchService] instance configured with
-  /// the iTunes provider for podcast search functionality.
-  ///
-  /// Override this provider in tests to inject mock implementations.
   PodcastSearchServiceProvider._()
     : super(
         from: null,
@@ -77,23 +62,14 @@ String _$podcastSearchServiceHash() =>
     r'9387293b0edcc4809b64ba2bf74d71856f4a8e9c';
 
 /// Controller for managing podcast search state and operations.
-///
-/// Supports debounced search-as-you-type with IME composing guards
-/// and stale-result display during loading.
 
 @ProviderFor(PodcastSearchController)
 final podcastSearchControllerProvider = PodcastSearchControllerProvider._();
 
 /// Controller for managing podcast search state and operations.
-///
-/// Supports debounced search-as-you-type with IME composing guards
-/// and stale-result display during loading.
 final class PodcastSearchControllerProvider
     extends $NotifierProvider<PodcastSearchController, SearchState> {
   /// Controller for managing podcast search state and operations.
-  ///
-  /// Supports debounced search-as-you-type with IME composing guards
-  /// and stale-result display during loading.
   PodcastSearchControllerProvider._()
     : super(
         from: null,
@@ -122,12 +98,9 @@ final class PodcastSearchControllerProvider
 }
 
 String _$podcastSearchControllerHash() =>
-    r'66053c3f348426cff3f05c45a6a93049d8303526';
+    r'22553ac9f5434ce192578c97a327c89eeb5340e7';
 
 /// Controller for managing podcast search state and operations.
-///
-/// Supports debounced search-as-you-type with IME composing guards
-/// and stale-result display during loading.
 
 abstract class _$PodcastSearchController extends $Notifier<SearchState> {
   SearchState build();
