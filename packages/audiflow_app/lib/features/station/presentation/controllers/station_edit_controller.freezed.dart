@@ -210,7 +210,7 @@ return $default(_that.name,_that.selectedPodcastIds,_that.playbackState,_that.fi
 
 class _StationEditState implements StationEditState {
   const _StationEditState({this.name = '', final  Set<int> selectedPodcastIds = const {}, this.playbackState = StationPlaybackState.all, this.filterDownloaded = false, this.filterFavorited = false, this.durationFilter, this.publishedWithinDays, this.episodeSort = StationEpisodeSort.newest, this.isSaving = false, this.error}): _selectedPodcastIds = selectedPodcastIds;
-
+  
 
 @override@JsonKey() final  String name;
  final  Set<int> _selectedPodcastIds;
