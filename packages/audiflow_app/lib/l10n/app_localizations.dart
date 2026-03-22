@@ -1172,7 +1172,7 @@ abstract class AppLocalizations {
   /// **'Episode details'**
   String get episodeDetails;
 
-  /// Tooltip for share episode button
+  /// Tooltip for episode share button
   ///
   /// In en, this message translates to:
   /// **'Share episode'**
@@ -1591,6 +1591,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Go Back'**
   String get commonGoBack;
+
+  /// Snackbar when deep link podcast resolution fails
+  ///
+  /// In en, this message translates to:
+  /// **'Podcast not found'**
+  String get deepLinkPodcastNotFound;
+
+  /// Snackbar when episode resolution fails
+  ///
+  /// In en, this message translates to:
+  /// **'Episode not found'**
+  String get deepLinkEpisodeNotFound;
+
+  /// Snackbar on network failure during deep link resolution
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load, check your connection'**
+  String get deepLinkNetworkError;
+
+  /// Loading screen text during deep link resolution
+  ///
+  /// In en, this message translates to:
+  /// **'Opening link...'**
+  String get deepLinkLoading;
+
+  /// Tooltip for podcast share button
+  ///
+  /// In en, this message translates to:
+  /// **'Share podcast'**
+  String get sharePodcast;
 }
 
 class _AppLocalizationsDelegate

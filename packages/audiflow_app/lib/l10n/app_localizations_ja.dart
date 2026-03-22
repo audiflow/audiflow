@@ -818,4 +818,19 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get commonGoBack => '戻る';
+
+  @override
+  String get deepLinkPodcastNotFound => 'ポッドキャストが見つかりません';
+
+  @override
+  String get deepLinkEpisodeNotFound => 'エピソードが見つかりません';
+
+  @override
+  String get deepLinkNetworkError => '読み込めませんでした。接続を確認してください';
+
+  @override
+  String get deepLinkLoading => 'リンクを開いています...';
+
+  @override
+  String get sharePodcast => 'ポッドキャストを共有';
 }

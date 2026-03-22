@@ -834,4 +834,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get commonGoBack => 'Go Back';
+
+  @override
+  String get deepLinkPodcastNotFound => 'Podcast not found';
+
+  @override
+  String get deepLinkEpisodeNotFound => 'Episode not found';
+
+  @override
+  String get deepLinkNetworkError => 'Could not load, check your connection';
+
+  @override
+  String get deepLinkLoading => 'Opening link...';
+
+  @override
+  String get sharePodcast => 'Share podcast';
 }
