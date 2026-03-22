@@ -257,6 +257,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
               lastRefreshedAt: _lastRefreshedAt,
               scrollController: _scrollController,
               onToggleSortOrder: _toggleSortOrder,
+              subscriptionId: subscription?.id,
             )
           else if (activePlaylist != null)
             ...buildInlinePlaylistSlivers(
@@ -272,6 +273,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
               scrollController: _scrollController,
               onToggleSortOrder: _toggleSortOrder,
               onNavigateToGroup: _navigateToGroupEpisodes,
+              subscriptionId: subscription?.id,
             ),
         ],
       ),

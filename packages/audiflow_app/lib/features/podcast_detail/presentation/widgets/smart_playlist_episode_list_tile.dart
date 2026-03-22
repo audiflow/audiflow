@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../queue/presentation/controllers/queue_controller.dart';
+import '../../../share/presentation/helpers/share_helper.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../controllers/podcast_detail_controller.dart';
 import '../screens/episode_detail_screen.dart';
@@ -22,6 +23,7 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
     this.progress,
     this.siblingEpisodeIds,
     this.lastRefreshedAt,
+    this.subscriptionId,
   });
 
   final Episode episode;
@@ -37,6 +39,9 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
 
   /// Episode IDs in the same group, for adhoc queue building.
   final List<int>? siblingEpisodeIds;
+
+  /// Subscription database ID for building universal share links.
+  final int? subscriptionId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -99,7 +104,7 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
           },
         ),
         _buildDownloadButton(context, ref, downloadTask),
-        _buildShareButton(context),
+        _buildShareButton(context, ref),
       ],
     );
   }
@@ -174,6 +179,7 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
           podcastTitle: podcastTitle,
           artworkUrl: artworkUrl,
           progress: progress,
+          subscriptionId: subscriptionId,
         ),
       ),
     );
@@ -344,13 +350,18 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
     );
   }
 
-  Widget _buildShareButton(BuildContext context) {
+  Widget _buildShareButton(BuildContext context, WidgetRef ref) {
     return IconButton(
       icon: const Icon(Icons.share, size: 20),
       iconSize: 20,
       constraints: const BoxConstraints(minWidth: 40, minHeight: 36),
       padding: EdgeInsets.zero,
-      onPressed: null,
+      onPressed: () => shareEpisode(
+        ref: ref,
+        subscriptionId: subscriptionId,
+        episodeGuid: episode.guid,
+        fallbackLink: null,
+      ),
     );
   }
 

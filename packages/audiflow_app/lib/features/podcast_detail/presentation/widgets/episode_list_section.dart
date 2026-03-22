@@ -93,6 +93,7 @@ List<Widget> buildEpisodeListSlivers({
   required DateTime? lastRefreshedAt,
   required ScrollController scrollController,
   required VoidCallback onToggleSortOrder,
+  int? subscriptionId,
 }) {
   final patternAsync = ref.watch(
     smartPlaylistPatternByFeedUrlProvider(feedUrl),
@@ -112,6 +113,7 @@ List<Widget> buildEpisodeListSlivers({
       scrollController: scrollController,
       onToggleSortOrder: onToggleSortOrder,
       yearGrouped: yearGrouped,
+      subscriptionId: subscriptionId,
     ),
     loading: () => [
       const SliverToBoxAdapter(
@@ -150,6 +152,7 @@ List<Widget> _buildEpisodeData({
   required ScrollController scrollController,
   required VoidCallback onToggleSortOrder,
   required bool yearGrouped,
+  int? subscriptionId,
 }) {
   final displayEpisodes = filterBySearchQuery(
     items: episodes,
@@ -198,6 +201,7 @@ List<Widget> _buildEpisodeData({
         feedImageUrl: feedImageUrl,
         lastRefreshedAt: lastRefreshedAt,
         scrollController: scrollController,
+        subscriptionId: subscriptionId,
       ),
     ];
   }
@@ -221,6 +225,7 @@ List<Widget> _buildEpisodeData({
           feedImageUrl: feedImageUrl,
           progress: progress,
           siblingEpisodeIds: siblingEpisodeIds,
+          subscriptionId: subscriptionId,
         );
       },
     ),
@@ -237,6 +242,7 @@ List<Widget> _buildYearGroupedEpisodeSlivers({
   required String? feedImageUrl,
   required DateTime? lastRefreshedAt,
   required ScrollController scrollController,
+  int? subscriptionId,
 }) {
   final byYear = <int, List<PodcastItem>>{};
   for (final episode in episodes) {
@@ -270,6 +276,7 @@ List<Widget> _buildYearGroupedEpisodeSlivers({
         feedImageUrl: feedImageUrl,
         progress: progress,
         siblingEpisodeIds: siblingEpisodeIds,
+        subscriptionId: subscriptionId,
       );
     },
     scrollController: scrollController,

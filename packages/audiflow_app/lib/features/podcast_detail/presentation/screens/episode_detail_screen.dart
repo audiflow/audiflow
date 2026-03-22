@@ -6,11 +6,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../queue/presentation/controllers/queue_controller.dart';
+import '../../../share/presentation/helpers/share_helper.dart';
 import '../controllers/podcast_detail_controller.dart';
 
 /// Displays full episode details with playback, download,
@@ -22,12 +22,16 @@ class EpisodeDetailScreen extends ConsumerWidget {
     required this.podcastTitle,
     this.artworkUrl,
     this.progress,
+    this.subscriptionId,
   });
 
   final PodcastItem episode;
   final String podcastTitle;
   final String? artworkUrl;
   final EpisodeWithProgress? progress;
+
+  /// Subscription database ID for building universal share links.
+  final int? subscriptionId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -68,13 +72,15 @@ class EpisodeDetailScreen extends ConsumerWidget {
                   )
                 : null,
             actions: [
-              if (episode.link != null)
-                IconButton(
-                  icon: const Icon(Icons.share),
-                  onPressed: () => SharePlus.instance.share(
-                    ShareParams(uri: Uri.parse(episode.link!)),
-                  ),
+              IconButton(
+                icon: const Icon(Icons.share),
+                onPressed: () => shareEpisode(
+                  ref: ref,
+                  subscriptionId: subscriptionId,
+                  episodeGuid: episode.guid,
+                  fallbackLink: episode.link,
                 ),
+              ),
             ],
           ),
           SliverToBoxAdapter(

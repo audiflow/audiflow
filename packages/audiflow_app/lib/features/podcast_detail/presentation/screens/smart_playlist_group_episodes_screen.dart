@@ -17,6 +17,7 @@ class SmartPlaylistGroupEpisodesScreen extends ConsumerStatefulWidget {
     this.feedImageUrl,
     this.lastRefreshedAt,
     this.filteredEpisodeIds,
+    this.subscriptionId,
   });
 
   final SmartPlaylistGroup group;
@@ -28,6 +29,8 @@ class SmartPlaylistGroupEpisodesScreen extends ConsumerStatefulWidget {
 
   /// When perEpisode year mode, only these IDs shown.
   final List<int>? filteredEpisodeIds;
+
+  final int? subscriptionId;
 
   @override
   ConsumerState<SmartPlaylistGroupEpisodesScreen> createState() =>
@@ -250,6 +253,7 @@ class _SmartPlaylistGroupEpisodesScreenState
                 lastRefreshedAt: widget.lastRefreshedAt,
                 progress: data.progress,
                 siblingEpisodeIds: _episodeIds,
+                subscriptionId: widget.subscriptionId,
               );
             },
           ),
@@ -313,6 +317,7 @@ class _SmartPlaylistGroupEpisodesScreenState
         feedImageUrl: widget.feedImageUrl,
         progress: data.progress,
         siblingEpisodeIds: _episodeIds,
+        subscriptionId: widget.subscriptionId,
       ),
       scrollController: _scrollController,
       yearGroupingEnabled: true,

@@ -377,12 +377,14 @@ Widget _buildEpisodeDetailScreen(GoRouterState state) {
   final podcastTitle = extra['podcastTitle'] as String? ?? '';
   final artworkUrl = extra['artworkUrl'] as String?;
   final progress = extra['progress'] as EpisodeWithProgress?;
+  final subscriptionId = extra['subscriptionId'] as int?;
 
   return EpisodeDetailScreen(
     episode: episode,
     podcastTitle: podcastTitle,
     artworkUrl: artworkUrl,
     progress: progress,
+    subscriptionId: subscriptionId,
   );
 }
 
@@ -407,6 +409,7 @@ Widget _buildGroupEpisodesScreen(GoRouterState state) {
     feedImageUrl: extra['feedImageUrl'] as String?,
     lastRefreshedAt: extra['lastRefreshedAt'] as DateTime?,
     filteredEpisodeIds: extra['filteredEpisodeIds'] as List<int>?,
+    subscriptionId: extra['subscriptionId'] as int?,
   );
 }
 
