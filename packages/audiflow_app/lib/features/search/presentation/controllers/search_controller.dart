@@ -50,9 +50,9 @@ class PodcastSearchController extends _$PodcastSearchController {
   /// Set [composing] to true when the IME is still composing (e.g., CJK input).
   /// Composing input is ignored to avoid searching incomplete characters.
   void onQueryChanged(String query, {bool composing = false}) {
-    if (composing) return;
-
     _debounceTimer?.cancel();
+
+    if (composing) return;
 
     final trimmed = query.trim();
     if (trimmed.length < _kMinQueryLength) {

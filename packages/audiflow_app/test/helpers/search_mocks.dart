@@ -28,8 +28,9 @@ class MockPodcastSearchService implements PodcastSearchService {
       await Future<void>.delayed(searchDelay);
     }
 
-    if (searchException != null) {
-      throw searchException!;
+    final exception = searchException;
+    if (exception != null) {
+      throw exception;
     }
 
     return searchResult ??
