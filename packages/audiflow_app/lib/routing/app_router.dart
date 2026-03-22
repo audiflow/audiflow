@@ -17,6 +17,7 @@ import '../features/settings/presentation/screens/about_screen.dart';
 import '../features/settings/presentation/screens/appearance_settings_screen.dart';
 import '../features/download/presentation/screens/download_management_screen.dart';
 import '../features/player/presentation/screens/transcript_screen.dart';
+import '../features/share/presentation/screens/deep_link_screen.dart';
 import '../features/settings/presentation/screens/downloads_settings_screen.dart';
 import '../features/settings/presentation/screens/feed_sync_settings_screen.dart';
 import '../features/settings/presentation/screens/playback_settings_screen.dart';
@@ -49,6 +50,8 @@ class AppRoutes {
   static const String settingsDownloadManagement =
       '/settings/downloads/management';
   static const String transcript = '/transcript';
+  static const String deepLinkPodcast = '/p/:itunesId';
+  static const String deepLinkEpisode = '/p/:itunesId/e/:encodedGuid';
 }
 
 /// Root navigator key for the application.
@@ -283,6 +286,21 @@ GoRouter createAppRouter() {
         parentNavigatorKey: rootNavigatorKey,
         path: AppRoutes.transcript,
         builder: (context, state) => _buildTranscriptScreen(state),
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: '/p/:itunesId',
+        builder: (context, state) {
+          return DeepLinkScreen(uri: state.uri);
+        },
+        routes: [
+          GoRoute(
+            path: 'e/:encodedGuid',
+            builder: (context, state) {
+              return DeepLinkScreen(uri: state.uri);
+            },
+          ),
+        ],
       ),
     ],
   );
