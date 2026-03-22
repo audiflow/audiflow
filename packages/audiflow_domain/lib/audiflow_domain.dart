@@ -200,3 +200,9 @@ export 'src/features/station/repositories/station_episode_repository_impl.dart';
 // Station feature - services
 export 'src/features/station/services/station_reconciler.dart';
 export 'src/features/station/services/station_reconciler_service.dart';
+
+// Share feature
+export 'src/features/share/models/deep_link_target.dart';
+export 'src/features/share/services/share_link_builder.dart';
+export 'src/features/share/services/deep_link_resolver.dart';
+export 'src/features/share/providers/share_providers.dart';
