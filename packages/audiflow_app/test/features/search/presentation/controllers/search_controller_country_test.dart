@@ -50,10 +50,7 @@ void main() {
       await controller.searchImmediate('flutter');
       check(mockService.searchCallCount).equals(1);
 
-      controller.onCountryChanged('gb');
-      // Allow microtasks to settle
-      await Future<void>.delayed(Duration.zero);
-      await Future<void>.delayed(Duration.zero);
+      await controller.onCountryChanged('gb');
 
       check(mockService.searchCallCount).equals(2);
       check(mockService.lastSearchCountry).equals('gb');
@@ -63,8 +60,7 @@ void main() {
       final controller = container.read(
         podcastSearchControllerProvider.notifier,
       );
-      controller.onCountryChanged('gb');
-      await Future<void>.delayed(Duration.zero);
+      await controller.onCountryChanged('gb');
       check(mockService.searchCallCount).equals(0);
     });
   });

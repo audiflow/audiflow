@@ -44,7 +44,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       selectedCountry: controller.currentCountry,
     );
     if (selected != null && mounted) {
-      controller.onCountryChanged(selected);
+      await controller.onCountryChanged(selected);
     }
   }
 

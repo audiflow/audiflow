@@ -271,6 +271,23 @@ void main() {
       expect(repository.getSearchCountry(), isNull);
     });
 
+    test('setSearchCountry normalizes input to lowercase', () async {
+      await repository.setSearchCountry(' JP ');
+      expect(repository.getSearchCountry(), 'jp');
+    });
+
+    test('setSearchCountry ignores invalid codes', () async {
+      await repository.setSearchCountry('jp');
+      await repository.setSearchCountry('abc');
+      expect(repository.getSearchCountry(), 'jp');
+
+      await repository.setSearchCountry('');
+      expect(repository.getSearchCountry(), 'jp');
+
+      await repository.setSearchCountry('1');
+      expect(repository.getSearchCountry(), 'jp');
+    });
+
     test('clearAll removes search country', () async {
       await repository.setSearchCountry('de');
       await repository.clearAll();
