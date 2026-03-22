@@ -622,7 +622,7 @@ class DeepLinkResolverImpl implements DeepLinkResolver {
     }
 
     // Fetch feed and find episode by GUID
-    final feedResult = await _feedParserService.parseFeed(feedUrl);
+    final feedResult = await _feedParserService.parseFromUrl(feedUrl);
     final matchingItem = feedResult.episodes.where(
       (ep) => ep.guid == guid,
     ).firstOrNull;
@@ -829,7 +829,8 @@ class _DeepLinkScreenState extends ConsumerState<DeepLinkScreen> {
   @override
   void initState() {
     super.initState();
-    _resolve();
+    // Defer to ensure Localizations widget is accessible
+    WidgetsBinding.instance.addPostFrameCallback((_) => _resolve());
   }
 
   Future<void> _resolve() async {
