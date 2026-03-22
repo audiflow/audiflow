@@ -253,6 +253,8 @@
   "@searchErrorInvalid": { "description": "Invalid search term error" },
   "searchErrorGeneric": "Something went wrong. Please try again.",
   "@searchErrorGeneric": { "description": "Generic search error" },
+  "searchErrorBanner": "Search failed. Showing previous results.",
+  "@searchErrorBanner": { "description": "Inline error banner when refresh fails but previous results exist" },
 
   "queueTitle": "Queue",
   "@queueTitle": { "description": "Queue screen title" },

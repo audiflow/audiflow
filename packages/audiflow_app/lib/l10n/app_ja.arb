@@ -132,6 +132,8 @@
   "searchErrorRateLimit": "リクエストが多すぎます。しばらくお待ちください。",
   "searchErrorInvalid": "有効な検索ワードを入力してください。",
   "searchErrorGeneric": "エラーが発生しました。もう一度お試しください。",
+  "searchErrorBanner": "検索に失敗しました。以前の結果を表示しています。",
+  "@searchErrorBanner": { "description": "Inline error banner when refresh fails but previous results exist" },
 
   "queueTitle": "キュー",
   "queueUpNext": "次に再生",
