@@ -440,20 +440,14 @@ void main() {
       final stationId = await putStation(publishedWithinDays: 7);
       await linkPodcast(stationId, 1);
 
-      // 100 old episodes that should never be evaluated
-      for (var i = 0; 100 < i; i++) {
-        // ignore: intentional — range test
+      // Old episodes that should be skipped by DB pre-filter
+      for (var i = 0; i < 10; i++) {
+        await putEpisode(
+          podcastId: 1,
+          guid: 'old-$i',
+          publishedAt: DateTime.now().subtract(Duration(days: 30 + i)),
+        );
       }
-      await putEpisode(
-        podcastId: 1,
-        guid: 'old-1',
-        publishedAt: DateTime.now().subtract(const Duration(days: 30)),
-      );
-      await putEpisode(
-        podcastId: 1,
-        guid: 'old-2',
-        publishedAt: DateTime.now().subtract(const Duration(days: 60)),
-      );
 
       // One recent episode
       final epRecent = await putEpisode(

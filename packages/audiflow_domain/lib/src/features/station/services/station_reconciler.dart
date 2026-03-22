@@ -42,7 +42,7 @@ class StationReconciler {
     for (final podcastId in podcastIds) {
       var query = _isar.episodes.filter().podcastIdEqualTo(podcastId);
       if (cutoff != null) {
-        query = query.and().publishedAtGreaterThan(cutoff);
+        query = query.and().publishedAtGreaterThan(cutoff, include: true);
       }
       if (station.filterFavorited) {
         query = query.and().isFavoritedEqualTo(true);
@@ -138,21 +138,12 @@ class StationReconciler {
   /// across all stations that include its podcast.
   Future<void> reconcileEpisode(int episodeId) async {
     final episode = await _isar.episodes.get(episodeId);
-    if (episode == null) {
-      debugPrint('[Reconciler] episode $episodeId not found in DB');
-      return;
-    }
+    if (episode == null) return;
 
     final stationPodcasts = await _isar.stationPodcasts
         .filter()
         .podcastIdEqualTo(episode.podcastId)
         .findAll();
-
-    debugPrint(
-      '[Reconciler] ep=$episodeId "${episode.title}" '
-      'podcastId=${episode.podcastId} '
-      'stationLinks=${stationPodcasts.length}',
-    );
 
     if (stationPodcasts.isEmpty) return;
 
@@ -168,17 +159,8 @@ class StationReconciler {
           .episodeIdEqualTo(episodeId)
           .findFirst();
 
-      debugPrint(
-        '[Reconciler] station="${station.name}" '
-        'matches=$matches existing=${existing != null}',
-      );
-
       await _isar.writeTxn(() async {
         if (matches && existing == null) {
-          debugPrint(
-            '[Reconciler] INSERT ep=$episodeId '
-            'into station="${station.name}"',
-          );
           await _isar.stationEpisodes.put(
             StationEpisode()
               ..stationId = sp.stationId
@@ -191,10 +173,6 @@ class StationReconciler {
             await _isar.stationEpisodes.put(existing);
           }
         } else if (!matches && existing != null) {
-          debugPrint(
-            '[Reconciler] DELETE ep=$episodeId '
-            'from station="${station.name}"',
-          );
           await _isar.stationEpisodes.delete(existing.id);
         }
       });
@@ -203,40 +181,20 @@ class StationReconciler {
 
   /// Evaluates whether an episode matches all station filter conditions.
   Future<bool> _matchesConditions(Episode episode, Station station) async {
-    final playbackMatch = await _matchesPlaybackState(
-      episode.id,
-      station.playbackStateFilter,
-    );
-    if (!playbackMatch) {
-      debugPrint(
-        '[Reconciler] FAIL playbackState '
-        'ep=${episode.id} filter=${station.playbackStateFilter}',
-      );
+    if (!await _matchesPlaybackState(episode.id, station.playbackStateFilter)) {
       return false;
     }
     if (station.filterDownloaded && !await _isDownloaded(episode.id)) {
-      debugPrint('[Reconciler] FAIL downloaded ep=${episode.id}');
       return false;
     }
     if (station.filterFavorited && !episode.isFavorited) {
-      debugPrint('[Reconciler] FAIL favorited ep=${episode.id}');
       return false;
     }
     if (station.durationFilter != null) {
-      if (!_matchesDuration(episode, station.durationFilter!)) {
-        debugPrint(
-          '[Reconciler] FAIL duration '
-          'ep=${episode.id} durationMs=${episode.durationMs}',
-        );
-        return false;
-      }
+      if (!_matchesDuration(episode, station.durationFilter!)) return false;
     }
     if (station.publishedWithinDays != null) {
       if (!_matchesPublishedWithin(episode, station.publishedWithinDays!)) {
-        debugPrint(
-          '[Reconciler] FAIL publishedWithin '
-          'ep=${episode.id} publishedAt=${episode.publishedAt}',
-        );
         return false;
       }
     }
