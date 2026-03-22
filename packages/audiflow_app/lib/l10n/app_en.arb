@@ -528,7 +528,5 @@
   "deepLinkLoading": "Opening link...",
   "@deepLinkLoading": { "description": "Loading screen text during deep link resolution" },
   "sharePodcast": "Share podcast",
-  "@sharePodcast": { "description": "Tooltip for podcast share button" },
-  "shareEpisode": "Share episode",
-  "@shareEpisode": { "description": "Tooltip for episode share button" }
+  "@sharePodcast": { "description": "Tooltip for podcast share button" }
 }

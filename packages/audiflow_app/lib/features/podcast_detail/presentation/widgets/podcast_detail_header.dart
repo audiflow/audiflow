@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../../../share/presentation/helpers/share_helper.dart';
 import '../../../subscription/presentation/controllers/subscription_controller.dart';
 
 /// Displays podcast artwork, metadata, and subscribe button.
@@ -33,7 +34,7 @@ class PodcastDetailHeader extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: Spacing.md),
-          _SubscribeButton(podcast: podcast),
+          _SubscribeButtonRow(podcast: podcast),
           if (podcast.feedUrl != null)
             _AutoDownloadToggle(feedUrl: podcast.feedUrl!),
         ],
@@ -140,8 +141,8 @@ class _PodcastArtwork extends StatelessWidget {
   }
 }
 
-class _SubscribeButton extends ConsumerWidget {
-  const _SubscribeButton({required this.podcast});
+class _SubscribeButtonRow extends ConsumerWidget {
+  const _SubscribeButtonRow({required this.podcast});
 
   final Podcast podcast;
 
@@ -156,14 +157,33 @@ class _SubscribeButton extends ConsumerWidget {
       data: (isSubscribed) {
         final l10n = AppLocalizations.of(context);
         if (isSubscribed) {
-          return OutlinedButton.icon(
-            onPressed: () => _toggleSubscription(ref),
-            icon: const Icon(Icons.check),
-            label: Text(l10n.podcastDetailSubscribed),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: colorScheme.primary,
-              side: BorderSide(color: colorScheme.primary),
-            ),
+          final subscriptionId = podcast.feedUrl != null
+              ? ref
+                    .watch(subscriptionByFeedUrlProvider(podcast.feedUrl!))
+                    .value
+                    ?.id
+              : null;
+          return Row(
+            children: [
+              OutlinedButton.icon(
+                onPressed: () => _toggleSubscription(ref),
+                icon: const Icon(Icons.check),
+                label: Text(l10n.podcastDetailSubscribed),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: colorScheme.primary,
+                  side: BorderSide(color: colorScheme.primary),
+                ),
+              ),
+              if (subscriptionId != null) ...[
+                const SizedBox(width: Spacing.sm),
+                IconButton(
+                  onPressed: () =>
+                      sharePodcast(ref: ref, subscriptionId: subscriptionId),
+                  icon: const Icon(Icons.share_outlined),
+                  tooltip: l10n.sharePodcast,
+                ),
+              ],
+            ],
           );
         }
 

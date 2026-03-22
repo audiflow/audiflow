@@ -281,6 +281,5 @@
   "deepLinkEpisodeNotFound": "エピソードが見つかりません",
   "deepLinkNetworkError": "読み込めませんでした。接続を確認してください",
   "deepLinkLoading": "リンクを開いています...",
-  "sharePodcast": "ポッドキャストを共有",
-  "shareEpisode": "エピソードを共有"
+  "sharePodcast": "ポッドキャストを共有"
 }
