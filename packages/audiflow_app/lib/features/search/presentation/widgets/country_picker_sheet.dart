@@ -6,6 +6,8 @@ import '../../../../l10n/app_localizations.dart';
 
 /// Bottom sheet that displays a list of iTunes storefront countries.
 class CountryPickerSheet extends StatelessWidget {
+  static final _countries = PodcastCountries.all.entries.toList();
+
   const CountryPickerSheet({
     required this.selectedCountry,
     required this.onCountrySelected,
@@ -44,7 +46,7 @@ class CountryPickerSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final countries = PodcastCountries.all.entries.toList();
+    final countries = _countries;
 
     return Column(
       mainAxisSize: MainAxisSize.min,

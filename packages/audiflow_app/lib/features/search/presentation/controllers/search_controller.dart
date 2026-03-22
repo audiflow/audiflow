@@ -28,30 +28,34 @@ PodcastSearchService podcastSearchService(Ref ref) {
 @riverpod
 class PodcastSearchController extends _$PodcastSearchController {
   Timer? _debounceTimer;
-  String? _lastCompletedQuery;
   String? _lastAttemptedQuery;
   String? _pendingQuery;
-  String? _lastCompletedCountry;
+  ({String query, String country})? _lastCompleted;
+  late String _deviceCountry;
 
   @override
   SearchState build() {
+    _deviceCountry = _resolveDeviceCountry();
     ref.onDispose(() {
       _debounceTimer?.cancel();
     });
     return const SearchInitial();
   }
 
-  /// Resolves the effective country code for search.
-  ///
-  /// Priority: saved setting > device locale > fallback 'us'.
-  String _resolveCountry() {
-    final settings = ref.read(appSettingsRepositoryProvider);
+  static String _resolveDeviceCountry() {
     try {
-      return settings.getSearchCountry() ??
-          PodcastCountries.extractCountryCode(Platform.localeName);
+      return PodcastCountries.extractCountryCode(Platform.localeName);
     } catch (_) {
       return PodcastCountries.fallback;
     }
+  }
+
+  /// The effective country code for the current search.
+  ///
+  /// Priority: saved setting > device locale > fallback 'us'.
+  String get currentCountry {
+    final saved = ref.read(appSettingsRepositoryProvider).getSearchCountry();
+    return saved ?? _deviceCountry;
   }
 
   /// Called on each text change. Debounces and fires search after 500ms.
@@ -90,13 +94,11 @@ class PodcastSearchController extends _$PodcastSearchController {
   ///
   /// Persists the selection and re-executes the current search if one exists.
   void onCountryChanged(String country) {
-    final settings = ref.read(appSettingsRepositoryProvider);
-    settings.setSearchCountry(country);
+    ref.read(appSettingsRepositoryProvider).setSearchCountry(country);
 
     final query = _lastAttemptedQuery;
     if (query != null) {
-      _lastCompletedQuery = null;
-      _lastCompletedCountry = null;
+      _lastCompleted = null;
       _executeSearch(query);
     }
   }
@@ -105,9 +107,7 @@ class PodcastSearchController extends _$PodcastSearchController {
   Future<void> retry() async {
     final query = _lastAttemptedQuery;
     if (query != null) {
-      // Reset completed query so dedup doesn't skip retry
-      _lastCompletedQuery = null;
-      _lastCompletedCountry = null;
+      _lastCompleted = null;
       await searchImmediate(query);
     }
   }
@@ -120,18 +120,14 @@ class PodcastSearchController extends _$PodcastSearchController {
   void _clear() {
     _debounceTimer?.cancel();
     _pendingQuery = null;
-    _lastCompletedQuery = null;
-    _lastCompletedCountry = null;
+    _lastCompleted = null;
     state = const SearchInitial();
   }
 
   Future<void> _executeSearch(String query) async {
-    final country = _resolveCountry();
+    final country = currentCountry;
 
-    // Dedup: skip if same query AND same country as last completed
-    if (query == _lastCompletedQuery && country == _lastCompletedCountry) {
-      return;
-    }
+    if (_lastCompleted == (query: query, country: country)) return;
 
     _lastAttemptedQuery = query;
     _pendingQuery = query;
@@ -159,20 +155,13 @@ class PodcastSearchController extends _$PodcastSearchController {
         SearchQuery.validated(term: query, country: country),
       );
 
-      // Guard against disposed provider after async gap
       if (!ref.mounted) return;
-
-      // Discard stale response if query has changed
       if (_pendingQuery != query) return;
 
-      _lastCompletedQuery = query;
-      _lastCompletedCountry = country;
+      _lastCompleted = (query: query, country: country);
       state = SearchSuccess(result: result);
     } on SearchException catch (e) {
-      // Guard against disposed provider after async gap
       if (!ref.mounted) return;
-
-      // Discard stale error if query has changed
       if (_pendingQuery != query) return;
 
       state = SearchError(

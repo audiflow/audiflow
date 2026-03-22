@@ -1,8 +1,3 @@
-import 'dart:io' show Platform;
-
-import 'package:audiflow_core/audiflow_core.dart';
-import 'package:audiflow_domain/audiflow_domain.dart'
-    hide podcastSearchServiceProvider;
 import 'package:audiflow_search/audiflow_search.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
@@ -42,26 +37,14 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     super.dispose();
   }
 
-  String get _currentCountry {
-    final settings = ref.read(appSettingsRepositoryProvider);
-    try {
-      return settings.getSearchCountry() ??
-          PodcastCountries.extractCountryCode(Platform.localeName);
-    } catch (_) {
-      return PodcastCountries.fallback;
-    }
-  }
-
   Future<void> _onCountryTap() async {
+    final controller = ref.read(podcastSearchControllerProvider.notifier);
     final selected = await CountryPickerSheet.show(
       context,
-      selectedCountry: _currentCountry,
+      selectedCountry: controller.currentCountry,
     );
     if (selected != null && mounted) {
-      ref
-          .read(podcastSearchControllerProvider.notifier)
-          .onCountryChanged(selected);
-      setState(() {});
+      controller.onCountryChanged(selected);
     }
   }
 
@@ -140,7 +123,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                   ),
                   const SizedBox(width: Spacing.sm),
                   SearchCountryChip(
-                    countryCode: _currentCountry,
+                    countryCode: ref
+                        .read(podcastSearchControllerProvider.notifier)
+                        .currentCountry,
                     onTap: _onCountryTap,
                   ),
                 ],
