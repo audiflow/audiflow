@@ -24,6 +24,10 @@ class StationPodcastRepositoryImpl implements StationPodcastRepository {
   final StationPodcastLocalDatasource _datasource;
 
   @override
+  Future<List<StationPodcast>> getByStation(int stationId) =>
+      _datasource.getByStation(stationId);
+
+  @override
   Stream<List<StationPodcast>> watchByStation(int stationId) =>
       _datasource.watchByStation(stationId);
 
