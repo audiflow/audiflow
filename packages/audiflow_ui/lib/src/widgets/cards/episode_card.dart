@@ -7,10 +7,9 @@ import '../../styles/spacing.dart';
 /// Fixed height for the episode card, used as itemExtent in sliver lists.
 const double episodeCardExtent = 132.0;
 
-const double _thumbnailSize = 64.0;
+const double _thumbnailSize = 76.0;
 const double _mainRowHeight = 80.0;
 const double _actionRowHeight = 36.0;
-const double _playButtonSize = 48.0;
 
 /// Reusable episode card with fixed-height layout for use in sliver lists.
 ///
@@ -140,12 +139,11 @@ class EpisodeCard extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        if (_showThumbnail) ...[
-          _Thumbnail(url: thumbnailUrl!),
-          const SizedBox(width: Spacing.sm),
-        ],
         Expanded(child: _buildCenter(theme, colorScheme)),
-        _buildPlayButton(colorScheme),
+        if (_showThumbnail) ...[
+          const SizedBox(width: Spacing.sm),
+          _Thumbnail(url: thumbnailUrl!),
+        ],
       ],
     );
   }
@@ -157,7 +155,6 @@ class EpisodeCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Title pinned to top.
           Text(
             title,
             maxLines: 2,
@@ -173,15 +170,13 @@ class EpisodeCard extends StatelessWidget {
                   : null,
             ),
           ),
-          // Description fills remaining space; naturally hidden when the title
-          // consumes all vertical room (same behaviour as Apple Podcasts).
           Expanded(
             child: description != null && description!.isNotEmpty
                 ? Padding(
                     padding: const EdgeInsets.only(top: 2),
                     child: Text(
                       _stripHtml(description!),
-                      maxLines: 1,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: descColor,
@@ -190,9 +185,49 @@ class EpisodeCard extends StatelessWidget {
                   )
                 : const SizedBox.shrink(),
           ),
-          // Metadata row pinned to bottom.
-          const SizedBox(height: 3),
-          Row(
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPlayButton(ColorScheme colorScheme) {
+    if (isLoading) {
+      return const SizedBox(
+        width: 40,
+        height: 36,
+        child: Center(
+          child: SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+        ),
+      );
+    }
+
+    return IconButton(
+      icon: Icon(
+        isPlaying ? Icons.pause_circle_filled : Icons.play_circle_filled,
+        size: 24,
+      ),
+      iconSize: 24,
+      constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+      padding: const EdgeInsets.symmetric(horizontal: 6),
+      color: colorScheme.primary,
+      onPressed: onPlayPause,
+    );
+  }
+
+  Widget _buildActionRow(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Row(
+      children: [
+        _buildPlayButton(colorScheme),
+        const SizedBox(width: Spacing.xs),
+        Expanded(
+          child: Row(
             children: [
               Flexible(
                 child: Text(
@@ -205,51 +240,21 @@ class EpisodeCard extends StatelessWidget {
                 ),
               ),
               if (hasTranscript) ...[
-                const SizedBox(width: Spacing.sm),
+                const SizedBox(width: Spacing.xs),
                 _TranscriptBadge(
                   color: colorScheme.onSurfaceVariant,
                   label: transcriptLabel,
                 ),
               ],
               if (isNew) ...[
-                const SizedBox(width: Spacing.sm),
+                const SizedBox(width: Spacing.xs),
                 _NewBadge(color: colorScheme.primary),
               ],
             ],
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPlayButton(ColorScheme colorScheme) {
-    if (isLoading) {
-      return const SizedBox(
-        width: _playButtonSize,
-        height: _playButtonSize,
-        child: Padding(
-          padding: EdgeInsets.all(12),
-          child: CircularProgressIndicator(strokeWidth: 2),
         ),
-      );
-    }
-
-    return IconButton(
-      icon: Icon(
-        isPlaying ? Icons.pause_circle_filled : Icons.play_circle_filled,
-        size: 40,
-      ),
-      color: colorScheme.primary,
-      onPressed: onPlayPause,
-    );
-  }
-
-  Widget _buildActionRow(BuildContext context) {
-    if (actionButtons.isEmpty) return const SizedBox.shrink();
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: actionButtons,
+        ...actionButtons,
+      ],
     );
   }
 }

@@ -66,8 +66,8 @@ class DownloadStatusIcon extends StatelessWidget {
       icon: Icon(icon, size: size),
       color: color,
       onPressed: onTap,
-      padding: EdgeInsets.zero,
-      constraints: BoxConstraints(minWidth: size + 16, minHeight: size + 16),
+      padding: const EdgeInsets.symmetric(horizontal: 6),
+      constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
     );
   }
 
@@ -75,8 +75,8 @@ class DownloadStatusIcon extends StatelessWidget {
     final progress = task!.progress;
 
     return SizedBox(
-      width: size + 16,
-      height: size + 16,
+      width: 44,
+      height: 44,
       child: Stack(
         alignment: Alignment.center,
         children: [

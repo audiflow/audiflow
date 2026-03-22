@@ -30,6 +30,8 @@ class AddToQueueButton extends StatelessWidget {
       child: IconButton(
         icon: Icon(Symbols.playlist_add, size: iconSize),
         tooltip: tooltip,
+        constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+        padding: const EdgeInsets.symmetric(horizontal: 6),
         onPressed: onPlayLater,
       ),
     );
