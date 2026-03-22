@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:audiflow_podcast/audiflow_podcast.dart';
-import 'package:audiflow_search/src/clients/itunes_charts_client.dart';
+import 'package:audiflow_search/audiflow_search.dart';
 
 import '../../feed/models/episode.dart';
 import '../../feed/repositories/episode_repository.dart';

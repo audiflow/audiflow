@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_domain/src/features/share/models/deep_link_target.dart';
 import 'package:audiflow_domain/src/features/share/services/deep_link_resolver_impl.dart';
-import 'package:audiflow_search/src/clients/itunes_charts_client.dart';
+import 'package:audiflow_search/audiflow_search.dart';
 import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
 

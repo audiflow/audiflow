@@ -73,5 +73,8 @@ export 'src/models/search_result.dart';
 export 'src/providers/itunes_provider.dart';
 export 'src/providers/podcast_provider.dart';
 
+// Clients
+export 'src/clients/itunes_charts_client.dart';
+
 // Services
 export 'src/services/podcast_search_service.dart';
