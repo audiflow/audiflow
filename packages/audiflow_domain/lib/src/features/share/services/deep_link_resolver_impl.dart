@@ -50,9 +50,8 @@ class DeepLinkResolverImpl implements DeepLinkResolver {
         _episodeMinSegments <= segments.length &&
         segments[2] == _episodeSegment;
 
-    final (podcastTitle, feedUrl, artworkUrl) = await _resolvePodcastInfo(
-      itunesId,
-    );
+    final (podcastTitle, feedUrl, artworkUrl, subscriptionId) =
+        await _resolvePodcastInfo(itunesId);
     if (feedUrl == null) return null;
 
     if (!isEpisodeLink) {
@@ -67,12 +66,9 @@ class DeepLinkResolverImpl implements DeepLinkResolver {
     final encodedGuid = segments[3];
     final guid = _decodeBase64UrlGuid(encodedGuid);
 
-    final subscription = await _subscriptionRepository.getSubscription(
-      itunesId,
-    );
-    if (subscription != null) {
+    if (subscriptionId != null) {
       final localEpisode = await _episodeRepository.getByPodcastIdAndGuid(
-        subscription.id,
+        subscriptionId,
         guid,
       );
       if (localEpisode != null) {
@@ -112,10 +108,10 @@ class DeepLinkResolverImpl implements DeepLinkResolver {
 
   bool _isAudioflowLink(Uri uri) => uri.scheme == _scheme && uri.host == _host;
 
-  /// Returns (title, feedUrl, artworkUrl) for the given iTunes ID.
-  ///
-  /// Checks local subscriptions first, then falls back to iTunes API.
-  Future<(String, String?, String?)> _resolvePodcastInfo(
+  /// Returns (title, feedUrl, artworkUrl, subscriptionId) for the given iTunes
+  /// ID. Checks local subscriptions first, then falls back to iTunes API.
+  /// [subscriptionId] is null when the podcast is not locally subscribed.
+  Future<(String, String?, String?, int?)> _resolvePodcastInfo(
     String itunesId,
   ) async {
     final subscription = await _subscriptionRepository.getSubscription(
@@ -126,13 +122,14 @@ class DeepLinkResolverImpl implements DeepLinkResolver {
         subscription.title,
         subscription.feedUrl,
         subscription.artworkUrl,
+        subscription.id,
       );
     }
 
     final podcast = await _itunesChartsClient.lookupPodcast(itunesId);
-    if (podcast == null) return ('', null, null);
+    if (podcast == null) return ('', null, null, null);
 
-    return (podcast.name, podcast.feedUrl, podcast.artworkUrl);
+    return (podcast.name, podcast.feedUrl, podcast.artworkUrl, null);
   }
 
   String _decodeBase64UrlGuid(String encodedGuid) {

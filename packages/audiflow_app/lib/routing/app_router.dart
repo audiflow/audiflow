@@ -289,7 +289,7 @@ GoRouter createAppRouter() {
       ),
       GoRoute(
         parentNavigatorKey: rootNavigatorKey,
-        path: '/p/:itunesId',
+        path: AppRoutes.deepLinkPodcast,
         builder: (context, state) {
           return DeepLinkScreen(uri: state.uri);
         },
