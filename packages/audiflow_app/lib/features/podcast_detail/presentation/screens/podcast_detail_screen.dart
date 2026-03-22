@@ -354,6 +354,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
         'feedImageUrl': _feedImageUrl,
         'lastRefreshedAt': _lastRefreshedAt,
         'filteredEpisodeIds': filteredEpisodeIds,
+        'itunesId': podcast.id,
       },
     );
   }

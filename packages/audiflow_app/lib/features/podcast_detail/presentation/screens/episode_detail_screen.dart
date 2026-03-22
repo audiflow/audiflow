@@ -72,14 +72,23 @@ class EpisodeDetailScreen extends ConsumerWidget {
                   )
                 : null,
             actions: [
-              IconButton(
-                icon: const Icon(Icons.share),
-                onPressed: () => shareEpisode(
-                  ref: ref,
-                  itunesId: itunesId,
-                  episodeGuid: episode.guid,
-                  fallbackLink: episode.link,
-                ),
+              Builder(
+                builder: (context) {
+                  final l10n = AppLocalizations.of(context);
+                  final canShare = itunesId != null || episode.link != null;
+                  return IconButton(
+                    icon: const Icon(Icons.share),
+                    tooltip: l10n.shareEpisode,
+                    onPressed: canShare
+                        ? () => shareEpisode(
+                            ref: ref,
+                            itunesId: itunesId,
+                            episodeGuid: episode.guid,
+                            fallbackLink: episode.link,
+                          )
+                        : null,
+                  );
+                },
               ),
             ],
           ),

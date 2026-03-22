@@ -16,6 +16,7 @@ sealed class DeepLinkTarget with _$DeepLinkTarget {
 
   const factory DeepLinkTarget.episode({
     required String itunesId,
+    required String feedUrl,
     required PodcastItem episode,
     required String podcastTitle,
     String? artworkUrl,

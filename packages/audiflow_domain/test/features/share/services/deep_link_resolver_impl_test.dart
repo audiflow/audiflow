@@ -291,6 +291,7 @@ void main() {
 
           check(result).isNotNull().isA<EpisodeDeepLinkTarget>()
             ..has((t) => t.itunesId, 'itunesId').equals(itunesId)
+            ..has((t) => t.feedUrl, 'feedUrl').equals(feedUrl)
             ..has((t) => t.podcastTitle, 'podcastTitle').equals(podcastTitle)
             ..has((t) => t.episode.title, 'episode.title').equals('Episode One')
             ..has((t) => t.episode.guid, 'episode.guid').equals(guid);
@@ -328,6 +329,24 @@ void main() {
               'episode.title',
             ).equals('Feed Episode')
             ..has((t) => t.episode.guid, 'episode.guid').equals(guid);
+        },
+      );
+
+      test(
+        'falls back to podcast target when GUID is malformed base64',
+        () async {
+          final subs = subsWithPodcast();
+
+          final resolver = _makeResolver(subscriptions: subs);
+          final result = await resolver.resolve(
+            Uri.parse(
+              'https://audiflow.reedom.com/p/$itunesId/e/!!!invalid!!!',
+            ),
+          );
+
+          check(result).isNotNull().isA<PodcastDeepLinkTarget>()
+            ..has((t) => t.itunesId, 'itunesId').equals(itunesId)
+            ..has((t) => t.feedUrl, 'feedUrl').equals(feedUrl);
         },
       );
 

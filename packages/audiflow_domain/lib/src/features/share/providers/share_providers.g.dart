@@ -101,7 +101,7 @@ final class ShareLinkBuilderProvider
   }
 }
 
-String _$shareLinkBuilderHash() => r'd56cdf43b7acf5afead59e8182c4bbeb3a63ca15';
+String _$shareLinkBuilderHash() => r'8bea6372c617d629386099c8eaa79c6a5b8a5156';
 
 @ProviderFor(deepLinkResolver)
 final deepLinkResolverProvider = DeepLinkResolverProvider._();

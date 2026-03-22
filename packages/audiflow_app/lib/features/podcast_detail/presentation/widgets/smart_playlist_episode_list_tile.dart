@@ -351,17 +351,21 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
   }
 
   Widget _buildShareButton(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     return IconButton(
       icon: const Icon(Icons.share, size: 20),
       iconSize: 20,
+      tooltip: l10n.shareEpisode,
       constraints: const BoxConstraints(minWidth: 40, minHeight: 36),
       padding: EdgeInsets.zero,
-      onPressed: () => shareEpisode(
-        ref: ref,
-        itunesId: itunesId,
-        episodeGuid: episode.guid,
-        fallbackLink: null,
-      ),
+      onPressed: itunesId != null
+          ? () => shareEpisode(
+              ref: ref,
+              itunesId: itunesId,
+              episodeGuid: episode.guid,
+              fallbackLink: null,
+            )
+          : null,
     );
   }
 

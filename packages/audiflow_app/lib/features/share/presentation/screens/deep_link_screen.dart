@@ -54,6 +54,7 @@ class _DeepLinkScreenState extends ConsumerState<DeepLinkScreen> {
 
         case EpisodeDeepLinkTarget(
           :final episode,
+          :final feedUrl,
           :final podcastTitle,
           :final artworkUrl,
           :final progress,
@@ -64,6 +65,7 @@ class _DeepLinkScreenState extends ConsumerState<DeepLinkScreen> {
               id: target.itunesId,
               name: podcastTitle,
               artistName: '',
+              feedUrl: feedUrl,
               artworkUrl: artworkUrl,
             ),
           );

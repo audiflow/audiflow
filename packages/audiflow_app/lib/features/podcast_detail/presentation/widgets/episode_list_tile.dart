@@ -353,17 +353,22 @@ class EpisodeListTile extends ConsumerWidget {
   }
 
   Widget _buildShareButton(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final canShare = itunesId != null || episode.link != null;
     return IconButton(
       icon: const Icon(Icons.share, size: 20),
       iconSize: 20,
+      tooltip: l10n.shareEpisode,
       constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
       padding: const EdgeInsets.symmetric(horizontal: 6),
-      onPressed: () => shareEpisode(
-        ref: ref,
-        itunesId: itunesId,
-        episodeGuid: episode.guid,
-        fallbackLink: episode.link,
-      ),
+      onPressed: canShare
+          ? () => shareEpisode(
+              ref: ref,
+              itunesId: itunesId,
+              episodeGuid: episode.guid,
+              fallbackLink: episode.link,
+            )
+          : null,
     );
   }
 

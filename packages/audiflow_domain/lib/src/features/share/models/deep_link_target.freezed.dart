@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$DeepLinkTarget {
 
- String get itunesId; String? get artworkUrl;
+ String get itunesId; String get feedUrl; String? get artworkUrl;
 /// Create a copy of DeepLinkTarget
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $DeepLinkTargetCopyWith<DeepLinkTarget> get copyWith => _$DeepLinkTargetCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is DeepLinkTarget&&(identical(other.itunesId, itunesId) || other.itunesId == itunesId)&&(identical(other.artworkUrl, artworkUrl) || other.artworkUrl == artworkUrl));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is DeepLinkTarget&&(identical(other.itunesId, itunesId) || other.itunesId == itunesId)&&(identical(other.feedUrl, feedUrl) || other.feedUrl == feedUrl)&&(identical(other.artworkUrl, artworkUrl) || other.artworkUrl == artworkUrl));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,itunesId,artworkUrl);
+int get hashCode => Object.hash(runtimeType,itunesId,feedUrl,artworkUrl);
 
 @override
 String toString() {
-  return 'DeepLinkTarget(itunesId: $itunesId, artworkUrl: $artworkUrl)';
+  return 'DeepLinkTarget(itunesId: $itunesId, feedUrl: $feedUrl, artworkUrl: $artworkUrl)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $DeepLinkTargetCopyWith<$Res>  {
   factory $DeepLinkTargetCopyWith(DeepLinkTarget value, $Res Function(DeepLinkTarget) _then) = _$DeepLinkTargetCopyWithImpl;
 @useResult
 $Res call({
- String itunesId, String? artworkUrl
+ String itunesId, String feedUrl, String? artworkUrl
 });
 
 
@@ -62,9 +62,10 @@ class _$DeepLinkTargetCopyWithImpl<$Res>
 
 /// Create a copy of DeepLinkTarget
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? itunesId = null,Object? artworkUrl = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? itunesId = null,Object? feedUrl = null,Object? artworkUrl = freezed,}) {
   return _then(_self.copyWith(
 itunesId: null == itunesId ? _self.itunesId : itunesId // ignore: cast_nullable_to_non_nullable
+as String,feedUrl: null == feedUrl ? _self.feedUrl : feedUrl // ignore: cast_nullable_to_non_nullable
 as String,artworkUrl: freezed == artworkUrl ? _self.artworkUrl : artworkUrl // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
@@ -151,11 +152,11 @@ return episode(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String itunesId,  String feedUrl,  String title,  String? artworkUrl)?  podcast,TResult Function( String itunesId,  PodcastItem episode,  String podcastTitle,  String? artworkUrl,  EpisodeWithProgress? progress)?  episode,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String itunesId,  String feedUrl,  String title,  String? artworkUrl)?  podcast,TResult Function( String itunesId,  String feedUrl,  PodcastItem episode,  String podcastTitle,  String? artworkUrl,  EpisodeWithProgress? progress)?  episode,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case PodcastDeepLinkTarget() when podcast != null:
 return podcast(_that.itunesId,_that.feedUrl,_that.title,_that.artworkUrl);case EpisodeDeepLinkTarget() when episode != null:
-return episode(_that.itunesId,_that.episode,_that.podcastTitle,_that.artworkUrl,_that.progress);case _:
+return episode(_that.itunesId,_that.feedUrl,_that.episode,_that.podcastTitle,_that.artworkUrl,_that.progress);case _:
   return orElse();
 
 }
@@ -173,11 +174,11 @@ return episode(_that.itunesId,_that.episode,_that.podcastTitle,_that.artworkUrl,
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String itunesId,  String feedUrl,  String title,  String? artworkUrl)  podcast,required TResult Function( String itunesId,  PodcastItem episode,  String podcastTitle,  String? artworkUrl,  EpisodeWithProgress? progress)  episode,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String itunesId,  String feedUrl,  String title,  String? artworkUrl)  podcast,required TResult Function( String itunesId,  String feedUrl,  PodcastItem episode,  String podcastTitle,  String? artworkUrl,  EpisodeWithProgress? progress)  episode,}) {final _that = this;
 switch (_that) {
 case PodcastDeepLinkTarget():
 return podcast(_that.itunesId,_that.feedUrl,_that.title,_that.artworkUrl);case EpisodeDeepLinkTarget():
-return episode(_that.itunesId,_that.episode,_that.podcastTitle,_that.artworkUrl,_that.progress);}
+return episode(_that.itunesId,_that.feedUrl,_that.episode,_that.podcastTitle,_that.artworkUrl,_that.progress);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -191,11 +192,11 @@ return episode(_that.itunesId,_that.episode,_that.podcastTitle,_that.artworkUrl,
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String itunesId,  String feedUrl,  String title,  String? artworkUrl)?  podcast,TResult? Function( String itunesId,  PodcastItem episode,  String podcastTitle,  String? artworkUrl,  EpisodeWithProgress? progress)?  episode,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String itunesId,  String feedUrl,  String title,  String? artworkUrl)?  podcast,TResult? Function( String itunesId,  String feedUrl,  PodcastItem episode,  String podcastTitle,  String? artworkUrl,  EpisodeWithProgress? progress)?  episode,}) {final _that = this;
 switch (_that) {
 case PodcastDeepLinkTarget() when podcast != null:
 return podcast(_that.itunesId,_that.feedUrl,_that.title,_that.artworkUrl);case EpisodeDeepLinkTarget() when episode != null:
-return episode(_that.itunesId,_that.episode,_that.podcastTitle,_that.artworkUrl,_that.progress);case _:
+return episode(_that.itunesId,_that.feedUrl,_that.episode,_that.podcastTitle,_that.artworkUrl,_that.progress);case _:
   return null;
 
 }
@@ -211,7 +212,7 @@ class PodcastDeepLinkTarget implements DeepLinkTarget {
   
 
 @override final  String itunesId;
- final  String feedUrl;
+@override final  String feedUrl;
  final  String title;
 @override final  String? artworkUrl;
 
@@ -279,10 +280,11 @@ as String?,
 
 
 class EpisodeDeepLinkTarget implements DeepLinkTarget {
-  const EpisodeDeepLinkTarget({required this.itunesId, required this.episode, required this.podcastTitle, this.artworkUrl, this.progress});
+  const EpisodeDeepLinkTarget({required this.itunesId, required this.feedUrl, required this.episode, required this.podcastTitle, this.artworkUrl, this.progress});
   
 
 @override final  String itunesId;
+@override final  String feedUrl;
  final  PodcastItem episode;
  final  String podcastTitle;
 @override final  String? artworkUrl;
@@ -298,16 +300,16 @@ $EpisodeDeepLinkTargetCopyWith<EpisodeDeepLinkTarget> get copyWith => _$EpisodeD
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is EpisodeDeepLinkTarget&&(identical(other.itunesId, itunesId) || other.itunesId == itunesId)&&(identical(other.episode, episode) || other.episode == episode)&&(identical(other.podcastTitle, podcastTitle) || other.podcastTitle == podcastTitle)&&(identical(other.artworkUrl, artworkUrl) || other.artworkUrl == artworkUrl)&&(identical(other.progress, progress) || other.progress == progress));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is EpisodeDeepLinkTarget&&(identical(other.itunesId, itunesId) || other.itunesId == itunesId)&&(identical(other.feedUrl, feedUrl) || other.feedUrl == feedUrl)&&(identical(other.episode, episode) || other.episode == episode)&&(identical(other.podcastTitle, podcastTitle) || other.podcastTitle == podcastTitle)&&(identical(other.artworkUrl, artworkUrl) || other.artworkUrl == artworkUrl)&&(identical(other.progress, progress) || other.progress == progress));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,itunesId,episode,podcastTitle,artworkUrl,progress);
+int get hashCode => Object.hash(runtimeType,itunesId,feedUrl,episode,podcastTitle,artworkUrl,progress);
 
 @override
 String toString() {
-  return 'DeepLinkTarget.episode(itunesId: $itunesId, episode: $episode, podcastTitle: $podcastTitle, artworkUrl: $artworkUrl, progress: $progress)';
+  return 'DeepLinkTarget.episode(itunesId: $itunesId, feedUrl: $feedUrl, episode: $episode, podcastTitle: $podcastTitle, artworkUrl: $artworkUrl, progress: $progress)';
 }
 
 
@@ -318,7 +320,7 @@ abstract mixin class $EpisodeDeepLinkTargetCopyWith<$Res> implements $DeepLinkTa
   factory $EpisodeDeepLinkTargetCopyWith(EpisodeDeepLinkTarget value, $Res Function(EpisodeDeepLinkTarget) _then) = _$EpisodeDeepLinkTargetCopyWithImpl;
 @override @useResult
 $Res call({
- String itunesId, PodcastItem episode, String podcastTitle, String? artworkUrl, EpisodeWithProgress? progress
+ String itunesId, String feedUrl, PodcastItem episode, String podcastTitle, String? artworkUrl, EpisodeWithProgress? progress
 });
 
 
@@ -335,9 +337,10 @@ class _$EpisodeDeepLinkTargetCopyWithImpl<$Res>
 
 /// Create a copy of DeepLinkTarget
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? itunesId = null,Object? episode = null,Object? podcastTitle = null,Object? artworkUrl = freezed,Object? progress = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? itunesId = null,Object? feedUrl = null,Object? episode = null,Object? podcastTitle = null,Object? artworkUrl = freezed,Object? progress = freezed,}) {
   return _then(EpisodeDeepLinkTarget(
 itunesId: null == itunesId ? _self.itunesId : itunesId // ignore: cast_nullable_to_non_nullable
+as String,feedUrl: null == feedUrl ? _self.feedUrl : feedUrl // ignore: cast_nullable_to_non_nullable
 as String,episode: null == episode ? _self.episode : episode // ignore: cast_nullable_to_non_nullable
 as PodcastItem,podcastTitle: null == podcastTitle ? _self.podcastTitle : podcastTitle // ignore: cast_nullable_to_non_nullable
 as String,artworkUrl: freezed == artworkUrl ? _self.artworkUrl : artworkUrl // ignore: cast_nullable_to_non_nullable

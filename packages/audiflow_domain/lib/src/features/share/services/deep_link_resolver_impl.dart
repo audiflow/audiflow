@@ -64,7 +64,17 @@ class DeepLinkResolverImpl implements DeepLinkResolver {
     }
 
     final encodedGuid = segments[3];
-    final guid = _decodeBase64UrlGuid(encodedGuid);
+    final String guid;
+    try {
+      guid = _decodeBase64UrlGuid(encodedGuid);
+    } on FormatException {
+      return DeepLinkTarget.podcast(
+        itunesId: itunesId,
+        feedUrl: feedUrl,
+        title: podcastTitle,
+        artworkUrl: artworkUrl,
+      );
+    }
 
     if (subscriptionId != null) {
       final localEpisode = await _episodeRepository.getByPodcastIdAndGuid(
@@ -74,6 +84,7 @@ class DeepLinkResolverImpl implements DeepLinkResolver {
       if (localEpisode != null) {
         return DeepLinkTarget.episode(
           itunesId: itunesId,
+          feedUrl: feedUrl,
           episode: _episodeToItem(localEpisode),
           podcastTitle: podcastTitle,
           artworkUrl: artworkUrl,
@@ -90,6 +101,7 @@ class DeepLinkResolverImpl implements DeepLinkResolver {
       if (feedEpisode != null) {
         return DeepLinkTarget.episode(
           itunesId: itunesId,
+          feedUrl: feedUrl,
           episode: feedEpisode,
           podcastTitle: podcastTitle,
           artworkUrl: artworkUrl,
