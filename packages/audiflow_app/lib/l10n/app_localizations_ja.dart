@@ -393,6 +393,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get searchErrorBanner => '検索に失敗しました。以前の結果を表示しています。';
 
   @override
+  String get searchRefreshingLabel => '新しい結果を読み込み中';
+
+  @override
   String get queueTitle => 'キュー';
 
   @override

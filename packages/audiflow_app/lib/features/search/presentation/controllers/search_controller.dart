@@ -72,7 +72,7 @@ class PodcastSearchController extends _$PodcastSearchController {
     _debounceTimer?.cancel();
 
     final trimmed = query.trim();
-    if (trimmed.isEmpty) return;
+    if (trimmed.length < _kMinQueryLength) return;
 
     await _executeSearch(trimmed);
   }

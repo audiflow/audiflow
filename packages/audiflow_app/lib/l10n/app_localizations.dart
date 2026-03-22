@@ -830,6 +830,12 @@ abstract class AppLocalizations {
   /// **'Search failed. Showing previous results.'**
   String get searchErrorBanner;
 
+  /// Accessibility label for search refresh progress indicator
+  ///
+  /// In en, this message translates to:
+  /// **'Loading new results'**
+  String get searchRefreshingLabel;
+
   /// Queue screen title
   ///
   /// In en, this message translates to:

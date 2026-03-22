@@ -134,6 +134,8 @@
   "searchErrorGeneric": "エラーが発生しました。もう一度お試しください。",
   "searchErrorBanner": "検索に失敗しました。以前の結果を表示しています。",
   "@searchErrorBanner": { "description": "Inline error banner when refresh fails but previous results exist" },
+  "searchRefreshingLabel": "新しい結果を読み込み中",
+  "@searchRefreshingLabel": { "description": "Accessibility label for search refresh progress indicator" },
 
   "queueTitle": "キュー",
   "queueUpNext": "次に再生",

@@ -209,11 +209,12 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   }
 
   Widget _buildRefreshingState(SearchResult previousResult) {
+    final l10n = AppLocalizations.of(context);
     return Column(
       key: const Key('search_refreshing_state'),
       children: [
         Semantics(
-          label: 'Loading new results',
+          label: l10n.searchRefreshingLabel,
           child: const LinearProgressIndicator(),
         ),
         Expanded(

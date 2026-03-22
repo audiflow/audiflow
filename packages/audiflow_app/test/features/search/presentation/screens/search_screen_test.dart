@@ -432,7 +432,11 @@ void main() {
         );
         expect(find.byType(MaterialBanner), findsOneWidget);
 
-        final opacityWidget = tester.widget<Opacity>(find.byType(Opacity));
+        final scopedOpacity = find.descendant(
+          of: find.byKey(const Key('search_error_with_results_state')),
+          matching: find.byType(Opacity),
+        );
+        final opacityWidget = tester.widget<Opacity>(scopedOpacity.first);
         expect(opacityWidget.opacity, equals(0.4));
 
         expect(find.byType(PodcastSearchResultTile), findsNWidgets(2));
