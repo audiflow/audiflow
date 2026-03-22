@@ -58,6 +58,9 @@ library;
 export 'src/builders/podcast_search_entity_builder.dart';
 export 'src/builders/search_entity_result.dart';
 
+// Clients
+export 'src/clients/itunes_charts_client.dart';
+
 // Exceptions
 export 'src/exceptions/search_exception.dart';
 export 'src/exceptions/status_code.dart';
@@ -72,9 +75,6 @@ export 'src/models/search_result.dart';
 // Providers
 export 'src/providers/itunes_provider.dart';
 export 'src/providers/podcast_provider.dart';
-
-// Clients
-export 'src/clients/itunes_charts_client.dart';
 
 // Services
 export 'src/services/podcast_search_service.dart';
