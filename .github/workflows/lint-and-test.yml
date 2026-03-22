@@ -7,7 +7,7 @@ on:
       - develop
     paths-ignore:
       - '.claude/**'
-      - '*.md'
+      - '**/*.md'
       - 'docs/**'
       - '.gitignore'
       - '.gitattributes'
