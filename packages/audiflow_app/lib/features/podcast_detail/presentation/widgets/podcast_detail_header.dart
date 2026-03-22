@@ -14,6 +14,24 @@ class PodcastDetailHeader extends ConsumerWidget {
 
   final Podcast podcast;
 
+  void _showArtworkOverlay(BuildContext context, String artworkUrl) {
+    Navigator.of(context).push(
+      PageRouteBuilder<void>(
+        opaque: false,
+        barrierDismissible: true,
+        barrierColor: Colors.black87,
+        transitionDuration: const Duration(milliseconds: 300),
+        reverseTransitionDuration: const Duration(milliseconds: 250),
+        pageBuilder: (context, animation, secondaryAnimation) {
+          return _ArtworkOverlay(
+            artworkUrl: artworkUrl,
+            heroTag: 'podcast_artwork_${podcast.id}',
+          );
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Container(
@@ -24,9 +42,17 @@ class PodcastDetailHeader extends ConsumerWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: _PodcastArtwork(artworkUrl: podcast.artworkUrl),
+              GestureDetector(
+                onTap: podcast.artworkUrl != null
+                    ? () => _showArtworkOverlay(context, podcast.artworkUrl!)
+                    : null,
+                child: Hero(
+                  tag: 'podcast_artwork_${podcast.id}',
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: _PodcastArtwork(artworkUrl: podcast.artworkUrl),
+                  ),
+                ),
               ),
               const SizedBox(width: Spacing.md),
               Expanded(child: _PodcastMetadata(podcast: podcast)),
@@ -197,6 +223,37 @@ class _SubscribeButton extends ConsumerWidget {
     ref
         .read(subscriptionControllerProvider(podcast.id).notifier)
         .toggleSubscription(podcast);
+  }
+}
+
+class _ArtworkOverlay extends StatelessWidget {
+  const _ArtworkOverlay({required this.artworkUrl, required this.heroTag});
+
+  final String artworkUrl;
+  final String heroTag;
+
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.sizeOf(context);
+    final artworkSize = size.width * 0.85;
+
+    return GestureDetector(
+      onTap: () => Navigator.of(context).pop(),
+      child: Center(
+        child: Hero(
+          tag: heroTag,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: Image.network(
+              artworkUrl,
+              width: artworkSize,
+              height: artworkSize,
+              fit: BoxFit.cover,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 
