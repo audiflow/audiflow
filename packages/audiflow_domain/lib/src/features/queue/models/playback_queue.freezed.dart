@@ -204,7 +204,7 @@ return $default(_that.queueItem,_that.episode,_that.artworkUrl);case _:
 
 class _QueueItemWithEpisode implements QueueItemWithEpisode {
   const _QueueItemWithEpisode({required this.queueItem, required this.episode, this.artworkUrl});
-
+  
 
 @override final  QueueItem queueItem;
 @override final  Episode episode;
@@ -467,7 +467,7 @@ return $default(_that.currentEpisode,_that.manualItems,_that.adhocItems,_that.ad
 
 class _PlaybackQueue extends PlaybackQueue {
   const _PlaybackQueue({this.currentEpisode, final  List<QueueItemWithEpisode> manualItems = const [], final  List<QueueItemWithEpisode> adhocItems = const [], this.adhocSourceContext}): _manualItems = manualItems,_adhocItems = adhocItems,super._();
-
+  
 
 /// Currently playing episode (not in queue items).
 @override final  Episode? currentEpisode;

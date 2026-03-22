@@ -66,29 +66,57 @@ class StationDetailScreen extends ConsumerWidget {
   }
 }
 
-class _StationDetailContent extends ConsumerWidget {
+class _StationDetailContent extends ConsumerStatefulWidget {
   const _StationDetailContent({required this.station});
 
   final Station station;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final episodesAsync = ref.watch(stationEpisodesProvider(station.id));
+  ConsumerState<_StationDetailContent> createState() =>
+      _StationDetailContentState();
+}
+
+class _StationDetailContentState extends ConsumerState<_StationDetailContent> {
+  bool _syncing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _syncStationFeeds();
+  }
+
+  Future<void> _syncStationFeeds() async {
+    if (_syncing) return;
+    _syncing = true;
+    try {
+      final syncService = ref.read(feedSyncServiceProvider);
+      await syncService.syncStationFeeds(widget.station.id);
+    } finally {
+      if (mounted) {
+        setState(() => _syncing = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final episodesAsync = ref.watch(stationEpisodesProvider(widget.station.id));
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(station.name),
+        title: Text(widget.station.name),
         actions: [
           IconButton(
             icon: const Icon(Symbols.edit),
             tooltip: AppLocalizations.of(context).stationEditTooltip,
-            onPressed: () =>
-                context.push('${AppRoutes.library}/station/${station.id}/edit'),
+            onPressed: () => context.push(
+              '${AppRoutes.library}/station/${widget.station.id}/edit',
+            ),
           ),
         ],
       ),
       body: episodesAsync.when(
-        data: (episodes) => _buildEpisodeList(context, ref, episodes),
+        data: (episodes) => _buildEpisodeList(context, episodes),
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(child: Text(error.toString())),
       ),
@@ -97,7 +125,6 @@ class _StationDetailContent extends ConsumerWidget {
 
   Widget _buildEpisodeList(
     BuildContext context,
-    WidgetRef ref,
     List<StationEpisode> stationEpisodes,
   ) {
     if (stationEpisodes.isEmpty) {
@@ -108,17 +135,20 @@ class _StationDetailContent extends ConsumerWidget {
         .map((se) => se.episodeId)
         .toList();
 
-    return ListView.builder(
-      itemCount: stationEpisodes.length,
-      itemExtent: episodeCardExtent,
-      itemBuilder: (context, index) {
-        return _StationEpisodeTile(
-          key: ValueKey(stationEpisodes[index].id),
-          stationEpisode: stationEpisodes[index],
-          stationName: station.name,
-          siblingEpisodeIds: siblingEpisodeIds,
-        );
-      },
+    return RefreshIndicator(
+      onRefresh: _syncStationFeeds,
+      child: ListView.builder(
+        itemCount: stationEpisodes.length,
+        itemExtent: episodeCardExtent,
+        itemBuilder: (context, index) {
+          return _StationEpisodeTile(
+            key: ValueKey(stationEpisodes[index].id),
+            stationEpisode: stationEpisodes[index],
+            stationName: widget.station.name,
+            siblingEpisodeIds: siblingEpisodeIds,
+          );
+        },
+      ),
     );
   }
 

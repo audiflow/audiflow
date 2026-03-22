@@ -7,6 +7,7 @@ import '../../../common/providers/http_client_provider.dart';
 import '../../../common/providers/logger_provider.dart';
 import '../../../features/subscription/models/subscriptions.dart';
 import '../../../features/subscription/repositories/subscription_repository_impl.dart';
+import '../../station/repositories/station_podcast_repository_impl.dart';
 import '../../station/services/station_reconciler_service.dart';
 import '../models/episode.dart';
 import '../models/feed_parse_progress.dart';
@@ -99,6 +100,63 @@ class FeedSyncService {
     );
 
     _logger.i('Feed sync complete: $result');
+    return result;
+  }
+
+  /// Syncs only the podcast feeds belonging to a station.
+  ///
+  /// Looks up the station's podcast links, resolves each to a
+  /// [Subscription], and syncs their feeds in parallel.  Always
+  /// forces a refresh regardless of the timing window.
+  Future<FeedSyncResult> syncStationFeeds(int stationId) async {
+    final stationPodcastRepo = _ref.read(stationPodcastRepositoryProvider);
+    final subscriptionRepo = _ref.read(subscriptionRepositoryProvider);
+
+    final stationPodcasts = await stationPodcastRepo.getByStation(stationId);
+    if (stationPodcasts.isEmpty) {
+      _logger.d('Station $stationId has no podcasts to sync');
+      return const FeedSyncResult(
+        totalCount: 0,
+        successCount: 0,
+        skipCount: 0,
+        errorCount: 0,
+      );
+    }
+
+    final subscriptions = <Subscription>[];
+    for (final sp in stationPodcasts) {
+      final sub = await subscriptionRepo.getById(sp.podcastId);
+      if (sub != null) subscriptions.add(sub);
+    }
+
+    if (subscriptions.isEmpty) {
+      _logger.w('Station $stationId: no matching subscriptions found');
+      return const FeedSyncResult(
+        totalCount: 0,
+        successCount: 0,
+        skipCount: 0,
+        errorCount: 0,
+      );
+    }
+
+    _logger.i('Syncing ${subscriptions.length} feeds for station $stationId');
+
+    final results = await Future.wait(
+      subscriptions.map((sub) => syncFeed(sub, forceRefresh: true)),
+    );
+
+    final successCount = results.where((r) => r.success).length;
+    final skipCount = results.where((r) => r.skipped).length;
+    final errorCount = results.where((r) => !r.success && !r.skipped).length;
+
+    final result = FeedSyncResult(
+      totalCount: subscriptions.length,
+      successCount: successCount,
+      skipCount: skipCount,
+      errorCount: errorCount,
+    );
+
+    _logger.i('Station $stationId feed sync complete: $result');
     return result;
   }
 
