@@ -93,7 +93,7 @@ App → UI → Domain → Podcast
 **Dependency flow:**
 - `audiflow_app` depends on: `audiflow_ui`, `audiflow_domain`, `audiflow_ai`, `audiflow_search`, `audiflow_core`
 - `audiflow_ui` depends on: `audiflow_domain`, `audiflow_core`
-- `audiflow_domain` depends on: `audiflow_podcast`, `audiflow_core`
+- `audiflow_domain` depends on: `audiflow_ai`, `audiflow_search`, `audiflow_podcast`, `audiflow_core`
 - `audiflow_search` depends on: `audiflow_core`
 - `audiflow_podcast` depends on: `audiflow_core`
 - `audiflow_ai` depends on: `audiflow_core`

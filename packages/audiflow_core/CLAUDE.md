@@ -13,7 +13,7 @@ Leaf dependency in the audiflow monorepo -- no internal package dependencies. Al
 - Environment config (`Env`)
 - Exception hierarchy (`AppException`, `NetworkException`, `ServerException`, `CacheException`, `ValidationException`, `DownloadException`)
 - Failure types for result-based error handling
-- Extension methods on `String` (`formatEpisodeDate()`, `linkifyUrls`, `plainTextToHtml`, `isBlank`), `DateTime`, `Duration`
+- Extension methods on `String` (`linkifyUrls`, `plainTextToHtml`, `isBlank`), `DateTime` (`formatEpisodeDate()`), `Duration`
 - Validators and formatters
 - Device utilities
 - Shared models (`AutoPlayOrder`, `EpisodeData`)

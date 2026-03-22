@@ -66,7 +66,7 @@ lib/
 
 | Widget | Location | Inputs | Behavior |
 |--------|----------|--------|----------|
-| `EpisodeCard` | `widgets/cards/` | title, subtitle, description, thumbnailUrl, play/new/completed flags, action buttons | Fixed-height row with standardized 48dp touch targets: thumbnail (hidden when same as podcast art), title, metadata, play button, action row. Uses `extended_image` for caching. |
+| `EpisodeCard` | `widgets/cards/` | title, subtitle, description, thumbnailUrl, play/new/completed flags, action buttons | Fixed-height row with standardized 44dp touch targets: thumbnail (hidden when same as podcast art), title, metadata, play button, action row. Uses `extended_image` for caching. |
 | `PodcastArtworkGridItem` | `widgets/cards/` | title, artworkUrl, onTap | Grid cell with artwork image + title label. Placeholder on load/error. |
 | `EpisodeProgressIndicator` | `widgets/indicators/` | isCompleted, isInProgress, remainingTimeFormatted | Shows "Played" checkmark, remaining time text, or nothing. |
 | `MiniPlayerArtwork` | `widgets/player/` | imageUrl, size, borderRadius | Rounded artwork with podcast-icon placeholder fallback. |
