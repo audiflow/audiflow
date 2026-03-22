@@ -1,5 +1,8 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 
+import 'package:audiflow_core/audiflow_core.dart';
+import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_search/audiflow_search.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -14,11 +17,6 @@ const _kDebounceDuration = Duration(milliseconds: 500);
 const _kMinQueryLength = 2;
 
 /// Provider for PodcastSearchService.
-///
-/// This provider creates a [PodcastSearchService] instance configured with
-/// the iTunes provider for podcast search functionality.
-///
-/// Override this provider in tests to inject mock implementations.
 @Riverpod(keepAlive: true)
 PodcastSearchService podcastSearchService(Ref ref) {
   final provider = ItunesProvider();
@@ -27,15 +25,13 @@ PodcastSearchService podcastSearchService(Ref ref) {
 }
 
 /// Controller for managing podcast search state and operations.
-///
-/// Supports debounced search-as-you-type with IME composing guards
-/// and stale-result display during loading.
 @riverpod
 class PodcastSearchController extends _$PodcastSearchController {
   Timer? _debounceTimer;
   String? _lastCompletedQuery;
   String? _lastAttemptedQuery;
   String? _pendingQuery;
+  String? _lastCompletedCountry;
 
   @override
   SearchState build() {
@@ -43,6 +39,19 @@ class PodcastSearchController extends _$PodcastSearchController {
       _debounceTimer?.cancel();
     });
     return const SearchInitial();
+  }
+
+  /// Resolves the effective country code for search.
+  ///
+  /// Priority: saved setting > device locale > fallback 'us'.
+  String _resolveCountry() {
+    final settings = ref.read(appSettingsRepositoryProvider);
+    try {
+      return settings.getSearchCountry() ??
+          PodcastCountries.extractCountryCode(Platform.localeName);
+    } catch (_) {
+      return PodcastCountries.fallback;
+    }
   }
 
   /// Called on each text change. Debounces and fires search after 500ms.
@@ -77,12 +86,28 @@ class PodcastSearchController extends _$PodcastSearchController {
     await _executeSearch(trimmed);
   }
 
+  /// Called when the user changes the search country.
+  ///
+  /// Persists the selection and re-executes the current search if one exists.
+  void onCountryChanged(String country) {
+    final settings = ref.read(appSettingsRepositoryProvider);
+    settings.setSearchCountry(country);
+
+    final query = _lastAttemptedQuery;
+    if (query != null) {
+      _lastCompletedQuery = null;
+      _lastCompletedCountry = null;
+      _executeSearch(query);
+    }
+  }
+
   /// Retries the last attempted search.
   Future<void> retry() async {
     final query = _lastAttemptedQuery;
     if (query != null) {
       // Reset completed query so dedup doesn't skip retry
       _lastCompletedQuery = null;
+      _lastCompletedCountry = null;
       await searchImmediate(query);
     }
   }
@@ -96,12 +121,17 @@ class PodcastSearchController extends _$PodcastSearchController {
     _debounceTimer?.cancel();
     _pendingQuery = null;
     _lastCompletedQuery = null;
+    _lastCompletedCountry = null;
     state = const SearchInitial();
   }
 
   Future<void> _executeSearch(String query) async {
-    // Dedup: skip if same as last completed query
-    if (query == _lastCompletedQuery) return;
+    final country = _resolveCountry();
+
+    // Dedup: skip if same query AND same country as last completed
+    if (query == _lastCompletedQuery && country == _lastCompletedCountry) {
+      return;
+    }
 
     _lastAttemptedQuery = query;
     _pendingQuery = query;
@@ -125,7 +155,9 @@ class PodcastSearchController extends _$PodcastSearchController {
 
     try {
       final service = ref.read(podcastSearchServiceProvider);
-      final result = await service.search(SearchQuery.validated(term: query));
+      final result = await service.search(
+        SearchQuery.validated(term: query, country: country),
+      );
 
       // Guard against disposed provider after async gap
       if (!ref.mounted) return;
@@ -134,6 +166,7 @@ class PodcastSearchController extends _$PodcastSearchController {
       if (_pendingQuery != query) return;
 
       _lastCompletedQuery = query;
+      _lastCompletedCountry = country;
       state = SearchSuccess(result: result);
     } on SearchException catch (e) {
       // Guard against disposed provider after async gap
