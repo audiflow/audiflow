@@ -16,6 +16,7 @@ Depends only on audiflow_core. Consumed by audiflow_domain (feed sync) and audif
 - Builder interface (`PodcastEntityBuilder`) for zero-copy entity construction
 - Isolate-based parsing (`IsolateRssParser`) for background processing
 - Parse progress reporting (`ParseProgress`)
+- Blank-to-null normalization for optional fields (owner name/email, URLs) via `EntityFactory`
 - Graceful handling of malformed feeds (`PodcastParseError`, `NetworkError`, `XmlParsingError`)
 
 ## Non-responsibilities
