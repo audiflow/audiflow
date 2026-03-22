@@ -70,20 +70,23 @@ class _DeepLinkScreenState extends ConsumerState<DeepLinkScreen> {
               artworkUrl: artworkUrl,
             ),
           );
-          context.push(
-            '${AppRoutes.search}/podcast/${target.itunesId}/${AppRoutes.episodeDetail}'
-                .replaceAll(
-                  ':episodeGuid',
-                  Uri.encodeComponent(episode.guid ?? ''),
-                ),
-            extra: <String, dynamic>{
-              'episode': episode,
-              'podcastTitle': podcastTitle,
-              'artworkUrl': artworkUrl,
-              'itunesId': target.itunesId,
-              'progress': progress,
-            },
-          );
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) return;
+            context.push(
+              '${AppRoutes.search}/podcast/${target.itunesId}/${AppRoutes.episodeDetail}'
+                  .replaceAll(
+                    ':episodeGuid',
+                    Uri.encodeComponent(episode.guid ?? ''),
+                  ),
+              extra: <String, dynamic>{
+                'episode': episode,
+                'podcastTitle': podcastTitle,
+                'artworkUrl': artworkUrl,
+                'itunesId': target.itunesId,
+                'progress': progress,
+              },
+            );
+          });
           return;
       }
     } on Exception catch (_) {

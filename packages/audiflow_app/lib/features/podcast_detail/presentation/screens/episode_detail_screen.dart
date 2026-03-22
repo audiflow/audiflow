@@ -75,7 +75,9 @@ class EpisodeDetailScreen extends ConsumerWidget {
               Builder(
                 builder: (context) {
                   final l10n = AppLocalizations.of(context);
-                  final canShare = itunesId != null || episode.link != null;
+                  final canShare =
+                      (itunesId != null && episode.guid != null) ||
+                      episode.link != null;
                   return IconButton(
                     icon: const Icon(Icons.share),
                     tooltip: l10n.shareEpisode,
