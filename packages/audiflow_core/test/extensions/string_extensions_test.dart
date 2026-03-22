@@ -141,7 +141,7 @@ void main() {
       test('handles URL with query parameters', () {
         expect(
           'Link: https://example.com/page?q=test&lang=en'.linkifyUrls,
-          'Link: <a href="https://example.com/page?q=test&lang=en">'
+          'Link: <a href="https://example.com/page?q=test&amp;lang=en">'
           'https://example.com/page?q=test&lang=en</a>',
         );
       });

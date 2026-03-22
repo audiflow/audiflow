@@ -59,27 +59,31 @@ extension StringExtensions on String {
   String get linkifyUrls {
     if (isEmpty) return this;
 
-    // Match URLs not preceded by =" or >' (i.e. not inside href/src attrs
-    // or anchor text). Uses negative lookbehind for common HTML patterns.
+    // Capture an optional prefix character before the URL scheme.
+    // No lookbehind needed — the prefix group handles boundary detection.
     final urlPattern = RegExp(
-      r'(?<!=")(?<=\s|^|>|\()'
-      r'(https?://|ftp://)'
-      r'[^\s<>"\),$]+[^\s<>"\),.;:!?$]',
+      r'([\s>(\x00]|^)'
+      r'((?:https?://|ftp://)[^\s<>"\),$]+[^\s<>"\),.;:!?$])',
+      multiLine: true,
     );
 
     final buffer = StringBuffer();
     var lastEnd = 0;
 
     for (final match in urlPattern.allMatches(this)) {
-      final before = substring(0, match.start);
+      final prefix = match.group(1) ?? '';
+      final url = match.group(2)!;
+      final urlStart = match.start + prefix.length;
+
       // Skip if inside an HTML tag attribute or anchor body
-      if (_isInsideHtmlTag(before) || _isInsideAnchorBody(before)) {
+      if (_isInsideHtmlTag(this, urlStart) ||
+          _isInsideAnchorBody(this, urlStart)) {
         continue;
       }
 
       buffer.write(substring(lastEnd, match.start));
-      final url = match.group(0)!;
-      buffer.write('<a href="$url">$url</a>');
+      final escapedUrl = url.replaceAll('&', '&amp;');
+      buffer.write('$prefix<a href="$escapedUrl">$url</a>');
       lastEnd = match.end;
     }
 
@@ -88,18 +92,21 @@ extension StringExtensions on String {
   }
 }
 
-/// Returns true if the position is inside an HTML tag (between < and >).
-bool _isInsideHtmlTag(String textBefore) {
-  final lastOpen = textBefore.lastIndexOf('<');
-  final lastClose = textBefore.lastIndexOf('>');
-  return lastClose < lastOpen;
+/// Returns true if [position] is inside an HTML tag (between < and >).
+bool _isInsideHtmlTag(String text, int position) {
+  final lastOpen = text.lastIndexOf('<', position);
+  if (0 <= lastOpen) {
+    final lastClose = text.lastIndexOf('>', position);
+    return lastClose < lastOpen;
+  }
+  return false;
 }
 
-/// Returns true if the position is inside an anchor body (<a ...>...</a>).
-bool _isInsideAnchorBody(String textBefore) {
-  final lastAnchorOpen = textBefore.lastIndexOf(RegExp(r'<a[\s>]'));
-  if (lastAnchorOpen != -1) {
-    final lastAnchorClose = textBefore.lastIndexOf('</a>');
+/// Returns true if [position] is inside an anchor body (<a ...>...</a>).
+bool _isInsideAnchorBody(String text, int position) {
+  final lastAnchorOpen = text.lastIndexOf(RegExp(r'<a[\s>]'), position);
+  if (0 <= lastAnchorOpen) {
+    final lastAnchorClose = text.lastIndexOf('</a>', position);
     return lastAnchorClose < lastAnchorOpen;
   }
   return false;
