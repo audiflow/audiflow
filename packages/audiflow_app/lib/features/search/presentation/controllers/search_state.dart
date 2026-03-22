@@ -24,6 +24,23 @@ class SearchLoading extends SearchState {
   const SearchLoading();
 }
 
+/// Refreshing state with previous results visible.
+///
+/// Shown when a new search is triggered while results are already displayed.
+/// The UI should dim previous results and show a progress indicator.
+class SearchRefreshing extends SearchState {
+  const SearchRefreshing({
+    required this.previousResult,
+    required this.pendingQuery,
+  });
+
+  /// The results from the previous successful search.
+  final SearchResult previousResult;
+
+  /// The query currently being searched.
+  final String pendingQuery;
+}
+
 /// Success state with search results.
 ///
 /// This state is shown when a search completes successfully.
@@ -43,7 +60,11 @@ class SearchSuccess extends SearchState {
 /// This state is shown when a search request fails.
 /// The UI should display an error message and a retry button.
 class SearchError extends SearchState {
-  const SearchError({required this.exception, required this.lastQuery});
+  const SearchError({
+    required this.exception,
+    required this.lastQuery,
+    this.lastResult,
+  });
 
   /// The exception that caused the search to fail.
   final SearchException exception;
@@ -52,4 +73,8 @@ class SearchError extends SearchState {
   ///
   /// This is preserved to enable retry functionality.
   final String lastQuery;
+
+  /// Previous successful results, if any.
+  /// When non-null, UI shows dimmed results with an inline error banner.
+  final SearchResult? lastResult;
 }

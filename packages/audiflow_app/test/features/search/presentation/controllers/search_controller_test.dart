@@ -73,6 +73,56 @@ void main() {
       expect(state.exception, equals(exception));
       expect(state.lastQuery, equals('test query'));
     });
+
+    test(
+      'SearchRefreshing is a SearchState with previousResult and pendingQuery',
+      () {
+        final result = SearchResult(
+          totalCount: 1,
+          podcasts: const [],
+          provider: 'test',
+          timestamp: DateTime.now(),
+        );
+        final state = SearchRefreshing(
+          previousResult: result,
+          pendingQuery: 'new',
+        );
+
+        expect(state, isA<SearchState>());
+        expect(state.previousResult, equals(result));
+        expect(state.pendingQuery, equals('new'));
+      },
+    );
+
+    test('SearchError with lastResult preserves previous results', () {
+      final result = SearchResult(
+        totalCount: 1,
+        podcasts: const [],
+        provider: 'test',
+        timestamp: DateTime.now(),
+      );
+      final exception = SearchException.unavailable(
+        providerId: 'test',
+        message: 'Network error',
+      );
+      final state = SearchError(
+        exception: exception,
+        lastQuery: 'query',
+        lastResult: result,
+      );
+
+      expect(state.lastResult, equals(result));
+    });
+
+    test('SearchError without lastResult has null lastResult', () {
+      final exception = SearchException.unavailable(
+        providerId: 'test',
+        message: 'Network error',
+      );
+      final state = SearchError(exception: exception, lastQuery: 'query');
+
+      expect(state.lastResult, isNull);
+    });
   });
 
   group('PodcastSearchController', () {

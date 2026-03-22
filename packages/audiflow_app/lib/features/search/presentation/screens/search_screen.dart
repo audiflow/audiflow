@@ -98,6 +98,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       SearchSuccess(:final result) when result.isEmpty => _buildEmptyState(),
       SearchSuccess(:final result) => _buildResultsList(result),
       SearchError(:final exception) => _buildErrorState(exception),
+      SearchRefreshing(:final previousResult) => _buildResultsList(
+        previousResult,
+      ),
     };
   }
 
