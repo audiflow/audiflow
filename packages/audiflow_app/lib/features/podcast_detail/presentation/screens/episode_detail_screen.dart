@@ -86,7 +86,7 @@ class EpisodeDetailScreen extends ConsumerWidget {
                   // Title
                   Text(
                     episode.title,
-                    style: theme.textTheme.headlineSmall?.copyWith(
+                    style: theme.textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
