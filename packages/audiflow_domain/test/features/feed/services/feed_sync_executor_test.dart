@@ -255,6 +255,12 @@ class _FakeAppSettingsRepository implements AppSettingsRepository {
   Future<void> setNotifyNewEpisodes(bool enabled) => throw UnimplementedError();
 
   @override
+  String? getSearchCountry() => throw UnimplementedError();
+
+  @override
+  Future<void> setSearchCountry(String? country) => throw UnimplementedError();
+
+  @override
   Future<void> clearAll() => throw UnimplementedError();
 }
 
