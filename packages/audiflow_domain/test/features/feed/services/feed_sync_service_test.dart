@@ -476,7 +476,7 @@ void main() {
   });
 
   group('syncStationFeeds', () {
-    StationPodcast _stationPodcast({
+    StationPodcast makeStationPodcast({
       required int stationId,
       required int podcastId,
     }) {
@@ -486,7 +486,7 @@ void main() {
         ..addedAt = DateTime.now();
     }
 
-    void _stubSuccessfulSync(Subscription sub) {
+    void stubSuccessfulSync(Subscription sub) {
       when(mockDio.get<String>(any, options: anyNamed('options'))).thenAnswer(
         (_) async => Response(
           data: '<rss></rss>',
@@ -526,7 +526,7 @@ void main() {
 
     test('returns empty result when no matching subscriptions', () async {
       when(mockStationPodcastRepo.getByStation(42)).thenAnswer(
-        (_) async => [_stationPodcast(stationId: 42, podcastId: 99)],
+        (_) async => [makeStationPodcast(stationId: 42, podcastId: 99)],
       );
       when(mockSubscriptionRepo.getById(99)).thenAnswer((_) async => null);
 
@@ -550,15 +550,15 @@ void main() {
 
       when(mockStationPodcastRepo.getByStation(42)).thenAnswer(
         (_) async => [
-          _stationPodcast(stationId: 42, podcastId: 10),
-          _stationPodcast(stationId: 42, podcastId: 20),
+          makeStationPodcast(stationId: 42, podcastId: 10),
+          makeStationPodcast(stationId: 42, podcastId: 20),
         ],
       );
       when(mockSubscriptionRepo.getById(10)).thenAnswer((_) async => sub1);
       when(mockSubscriptionRepo.getById(20)).thenAnswer((_) async => sub2);
 
-      _stubSuccessfulSync(sub1);
-      _stubSuccessfulSync(sub2);
+      stubSuccessfulSync(sub1);
+      stubSuccessfulSync(sub2);
 
       final result = await service.syncStationFeeds(42);
 
@@ -577,10 +577,10 @@ void main() {
       );
 
       when(mockStationPodcastRepo.getByStation(42)).thenAnswer(
-        (_) async => [_stationPodcast(stationId: 42, podcastId: 10)],
+        (_) async => [makeStationPodcast(stationId: 42, podcastId: 10)],
       );
       when(mockSubscriptionRepo.getById(10)).thenAnswer((_) async => sub);
-      _stubSuccessfulSync(sub);
+      stubSuccessfulSync(sub);
 
       final result = await service.syncStationFeeds(42);
 
@@ -603,8 +603,8 @@ void main() {
 
       when(mockStationPodcastRepo.getByStation(42)).thenAnswer(
         (_) async => [
-          _stationPodcast(stationId: 42, podcastId: 10),
-          _stationPodcast(stationId: 42, podcastId: 20),
+          makeStationPodcast(stationId: 42, podcastId: 10),
+          makeStationPodcast(stationId: 42, podcastId: 20),
         ],
       );
       when(mockSubscriptionRepo.getById(10)).thenAnswer((_) async => sub1);
