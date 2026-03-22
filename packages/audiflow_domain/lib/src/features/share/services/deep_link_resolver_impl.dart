@@ -140,7 +140,7 @@ class DeepLinkResolverImpl implements DeepLinkResolver {
   Future<ParsedFeed?> _parseFeedSafely(String feedUrl) async {
     try {
       return await _feedParserService.parseFromUrl(feedUrl);
-    } on Object {
+    } on Exception {
       return null;
     }
   }

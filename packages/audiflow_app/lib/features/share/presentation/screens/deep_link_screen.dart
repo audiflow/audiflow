@@ -81,7 +81,7 @@ class _DeepLinkScreenState extends ConsumerState<DeepLinkScreen> {
             },
           );
       }
-    } catch (_) {
+    } on Exception catch (_) {
       if (!mounted) return;
       _showErrorAndGoHome(l10n.deepLinkNetworkError);
     }

@@ -217,7 +217,7 @@ The current `onException` handler redirects all unknown routes to `/search`. The
 
 Error handling:
 - Unresolvable podcast: redirect to home screen, show snackbar with `l10n.deepLinkPodcastNotFound`
-- Unresolvable episode: navigate to podcast detail, show snackbar with `l10n.deepLinkEpisodeNotFound`
+- Unresolvable episode: silently navigate to podcast detail (friendlier than an error snackbar)
 - Network failure: redirect to home screen, show snackbar with `l10n.deepLinkNetworkError`
 
 ### 7. Share Button Wiring
