@@ -84,51 +84,41 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           children: [
             Padding(
               padding: const EdgeInsets.all(Spacing.md),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _textController,
-                      focusNode: _focusNode,
-                      textCapitalization: TextCapitalization.none,
-                      autocorrect: false,
-                      keyboardType: TextInputType.text,
-                      decoration: InputDecoration(
-                        hintText: l10n.searchHint,
-                        border: const OutlineInputBorder(),
-                        prefixIcon: const Icon(Icons.search),
-                        suffixIcon: ValueListenableBuilder<TextEditingValue>(
-                          valueListenable: _textController,
-                          builder: (context, value, child) {
-                            if (value.text.isEmpty) {
-                              return const SizedBox.shrink();
-                            }
-                            return IconButton(
-                              icon: const Icon(Icons.clear),
-                              onPressed: () {
-                                _textController.clear();
-                                ref
-                                    .read(
-                                      podcastSearchControllerProvider.notifier,
-                                    )
-                                    .clear();
-                              },
-                            );
-                          },
-                        ),
-                      ),
-                      textInputAction: TextInputAction.search,
-                      onSubmitted: (_) => _onSearch(),
-                    ),
-                  ),
-                  const SizedBox(width: Spacing.sm),
-                  SearchCountryChip(
+              child: TextField(
+                controller: _textController,
+                focusNode: _focusNode,
+                textCapitalization: TextCapitalization.none,
+                autocorrect: false,
+                keyboardType: TextInputType.text,
+                decoration: InputDecoration(
+                  hintText: l10n.searchHint,
+                  border: const OutlineInputBorder(),
+                  prefixIcon: SearchCountryChip(
                     countryCode: ref
                         .read(podcastSearchControllerProvider.notifier)
                         .currentCountry,
                     onTap: _onCountryTap,
                   ),
-                ],
+                  suffixIcon: ValueListenableBuilder<TextEditingValue>(
+                    valueListenable: _textController,
+                    builder: (context, value, child) {
+                      if (value.text.isEmpty) {
+                        return const SizedBox.shrink();
+                      }
+                      return IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          _textController.clear();
+                          ref
+                              .read(podcastSearchControllerProvider.notifier)
+                              .clear();
+                        },
+                      );
+                    },
+                  ),
+                ),
+                textInputAction: TextInputAction.search,
+                onSubmitted: (_) => _onSearch(),
               ),
             ),
             Expanded(

@@ -1,7 +1,6 @@
-import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 
-/// Compact tappable chip displaying the current search country code.
+/// Compact tappable country code indicator sized for TextField prefixIcon.
 class SearchCountryChip extends StatelessWidget {
   const SearchCountryChip({
     required this.countryCode,
@@ -15,18 +14,27 @@ class SearchCountryChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
-    return ActionChip(
-      label: Text(
-        countryCode.toUpperCase(),
-        style: theme.textTheme.labelMedium?.copyWith(
-          fontWeight: FontWeight.w600,
+    return InkWell(
+      borderRadius: BorderRadius.circular(8),
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              countryCode.toUpperCase(),
+              style: theme.textTheme.labelLarge?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: colorScheme.primary,
+              ),
+            ),
+            Icon(Icons.arrow_drop_down, size: 18, color: colorScheme.primary),
+          ],
         ),
       ),
-      avatar: const Icon(Icons.language, size: 18),
-      onPressed: onTap,
-      padding: const EdgeInsets.symmetric(horizontal: Spacing.xs),
-      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
     );
   }
 }

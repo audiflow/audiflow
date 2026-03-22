@@ -2,6 +2,7 @@ import 'package:audiflow_app/features/search/presentation/controllers/search_con
 import 'package:audiflow_app/features/search/presentation/controllers/search_state.dart';
 import 'package:audiflow_app/features/search/presentation/screens/search_screen.dart';
 import 'package:audiflow_app/features/search/presentation/widgets/podcast_search_result_tile.dart';
+import 'package:audiflow_app/features/search/presentation/widgets/search_country_chip.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_domain/audiflow_domain.dart'
     hide podcastSearchServiceProvider;
@@ -48,16 +49,13 @@ void main() {
       expect(find.byType(TextField), findsOneWidget);
     });
 
-    testWidgets('renders search icon prefix in text field', (tester) async {
+    testWidgets('renders country chip prefix in text field', (tester) async {
       await tester.pumpWidget(buildTestWidget());
 
       final textField = tester.widget<TextField>(find.byType(TextField));
       final prefixIcon = textField.decoration?.prefixIcon;
       expect(prefixIcon, isNotNull);
-      expect(prefixIcon, isA<Icon>());
-      final iconWidget = prefixIcon! as Icon;
-      expect(iconWidget.icon, equals(Icons.search));
-      expect(prefixIcon, isNot(isA<IconButton>()));
+      expect(prefixIcon, isA<SearchCountryChip>());
     });
 
     testWidgets('keyboard submit action calls controller search method', (

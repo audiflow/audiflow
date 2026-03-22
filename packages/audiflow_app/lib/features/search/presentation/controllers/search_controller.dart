@@ -100,6 +100,9 @@ class PodcastSearchController extends _$PodcastSearchController {
     if (query != null) {
       _lastCompleted = null;
       _executeSearch(query);
+    } else {
+      // Force rebuild so the country chip updates even with no active search
+      ref.notifyListeners();
     }
   }
 

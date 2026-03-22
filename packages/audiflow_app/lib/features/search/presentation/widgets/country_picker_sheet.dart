@@ -5,8 +5,11 @@ import 'package:flutter/material.dart';
 import '../../../../l10n/app_localizations.dart';
 
 /// Bottom sheet that displays a list of iTunes storefront countries.
-class CountryPickerSheet extends StatelessWidget {
+class CountryPickerSheet extends StatefulWidget {
   static final _countries = PodcastCountries.all.entries.toList();
+
+  /// Fixed height per row — ensures scroll offset calculation is exact.
+  static const _kTileHeight = 72.0;
 
   const CountryPickerSheet({
     required this.selectedCountry,
@@ -43,10 +46,44 @@ class CountryPickerSheet extends StatelessWidget {
   }
 
   @override
+  State<CountryPickerSheet> createState() => _CountryPickerSheetState();
+}
+
+class _CountryPickerSheetState extends State<CountryPickerSheet> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scrollToSelected();
+    });
+  }
+
+  void _scrollToSelected() {
+    final controller = widget.scrollController;
+    if (controller == null || !controller.hasClients) return;
+
+    final index = CountryPickerSheet._countries.indexWhere(
+      (e) => e.key == widget.selectedCountry,
+    );
+    if (index < 0) return;
+
+    // Center the selected item in the visible area
+    final viewportHeight = controller.position.viewportDimension;
+    final targetOffset =
+        index * CountryPickerSheet._kTileHeight -
+        (viewportHeight - CountryPickerSheet._kTileHeight) / 2;
+    final clamped = targetOffset.clamp(
+      0.0,
+      controller.position.maxScrollExtent,
+    );
+    controller.jumpTo(clamped);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final countries = _countries;
+    final countries = CountryPickerSheet._countries;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -77,11 +114,12 @@ class CountryPickerSheet extends StatelessWidget {
         const Divider(),
         Expanded(
           child: ListView.builder(
-            controller: scrollController,
+            controller: widget.scrollController,
             itemCount: countries.length,
+            itemExtent: CountryPickerSheet._kTileHeight,
             itemBuilder: (context, index) {
               final entry = countries[index];
-              final isSelected = entry.key == selectedCountry;
+              final isSelected = entry.key == widget.selectedCountry;
               return ListTile(
                 title: Text(entry.value),
                 subtitle: Text(entry.key.toUpperCase()),
@@ -89,7 +127,7 @@ class CountryPickerSheet extends StatelessWidget {
                     ? Icon(Icons.check, color: theme.colorScheme.primary)
                     : null,
                 selected: isSelected,
-                onTap: () => onCountrySelected(entry.key),
+                onTap: () => widget.onCountrySelected(entry.key),
               );
             },
           ),
