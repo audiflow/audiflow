@@ -522,5 +522,15 @@
   "stationPodcastRequired": "Select at least one podcast",
   "@stationPodcastRequired": { "description": "Validation error when no podcast is selected" },
   "commonGoBack": "Go Back",
-  "@commonGoBack": { "description": "Go back button label" }
+  "@commonGoBack": { "description": "Go back button label" },
+  "deepLinkPodcastNotFound": "Podcast not found",
+  "@deepLinkPodcastNotFound": { "description": "Snackbar when deep link podcast resolution fails" },
+  "deepLinkEpisodeNotFound": "Episode not found",
+  "@deepLinkEpisodeNotFound": { "description": "Snackbar when episode resolution fails" },
+  "deepLinkNetworkError": "Could not load, check your connection",
+  "@deepLinkNetworkError": { "description": "Snackbar on network failure during deep link resolution" },
+  "deepLinkLoading": "Opening link...",
+  "@deepLinkLoading": { "description": "Loading screen text during deep link resolution" },
+  "sharePodcast": "Share podcast",
+  "@sharePodcast": { "description": "Tooltip for podcast share button" }
 }

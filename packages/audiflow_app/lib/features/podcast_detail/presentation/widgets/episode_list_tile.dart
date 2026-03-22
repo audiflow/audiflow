@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../routing/app_router.dart';
 import '../../../queue/presentation/controllers/queue_controller.dart';
+import '../../../share/presentation/helpers/share_helper.dart';
 import '../controllers/podcast_detail_controller.dart';
 
 /// Displays a single episode (PodcastItem) with playback controls.
@@ -24,6 +25,7 @@ class EpisodeListTile extends ConsumerWidget {
     this.progress,
     this.lastRefreshedAt,
     this.siblingEpisodeIds,
+    this.itunesId,
   });
 
   final PodcastItem episode;
@@ -44,6 +46,9 @@ class EpisodeListTile extends ConsumerWidget {
   /// When provided, the adhoc queue is built from these IDs instead of
   /// falling back to a database query by episode number.
   final List<int>? siblingEpisodeIds;
+
+  /// iTunes ID for building universal share links.
+  final String? itunesId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -122,7 +127,7 @@ class EpisodeListTile extends ConsumerWidget {
           ),
         if (episodeId != null)
           _buildDownloadButton(context, ref, episodeId, downloadTask),
-        _buildShareButton(context),
+        _buildShareButton(context, ref),
       ],
     );
   }
@@ -175,6 +180,7 @@ class EpisodeListTile extends ConsumerWidget {
         'podcastTitle': podcastTitle,
         'artworkUrl': artworkUrl,
         'progress': progress,
+        'itunesId': itunesId,
       },
     );
   }
@@ -346,13 +352,24 @@ class EpisodeListTile extends ConsumerWidget {
     );
   }
 
-  Widget _buildShareButton(BuildContext context) {
+  Widget _buildShareButton(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final canShare =
+        (itunesId != null && episode.guid != null) || episode.link != null;
     return IconButton(
       icon: const Icon(Icons.share, size: 20),
       iconSize: 20,
+      tooltip: l10n.shareEpisode,
       constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
       padding: const EdgeInsets.symmetric(horizontal: 6),
-      onPressed: null,
+      onPressed: canShare
+          ? () => shareEpisode(
+              ref: ref,
+              itunesId: itunesId,
+              episodeGuid: episode.guid,
+              fallbackLink: episode.link,
+            )
+          : null,
     );
   }
 

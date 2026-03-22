@@ -58,6 +58,9 @@ library;
 export 'src/builders/podcast_search_entity_builder.dart';
 export 'src/builders/search_entity_result.dart';
 
+// Clients
+export 'src/clients/itunes_charts_client.dart';
+
 // Exceptions
 export 'src/exceptions/search_exception.dart';
 export 'src/exceptions/status_code.dart';

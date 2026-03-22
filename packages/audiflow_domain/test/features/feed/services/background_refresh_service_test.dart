@@ -219,6 +219,9 @@ class FakeEpisodeRepository implements EpisodeRepository {
     List<ParsedEpisodeMediaMeta> mediaMetas,
   ) async {}
   @override
+  Future<Episode?> getByPodcastIdAndGuid(int podcastId, String guid) async =>
+      null;
+  @override
   Future<List<Episode>> getSubsequentEpisodes({
     required int podcastId,
     required int? afterEpisodeNumber,

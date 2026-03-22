@@ -17,6 +17,7 @@ import '../features/settings/presentation/screens/about_screen.dart';
 import '../features/settings/presentation/screens/appearance_settings_screen.dart';
 import '../features/download/presentation/screens/download_management_screen.dart';
 import '../features/player/presentation/screens/transcript_screen.dart';
+import '../features/share/presentation/screens/deep_link_screen.dart';
 import '../features/settings/presentation/screens/downloads_settings_screen.dart';
 import '../features/settings/presentation/screens/feed_sync_settings_screen.dart';
 import '../features/settings/presentation/screens/playback_settings_screen.dart';
@@ -49,6 +50,8 @@ class AppRoutes {
   static const String settingsDownloadManagement =
       '/settings/downloads/management';
   static const String transcript = '/transcript';
+  static const String deepLinkPodcast = '/p/:itunesId';
+  static const String deepLinkEpisode = '/p/:itunesId/e/:encodedGuid';
 }
 
 /// Root navigator key for the application.
@@ -284,6 +287,21 @@ GoRouter createAppRouter() {
         path: AppRoutes.transcript,
         builder: (context, state) => _buildTranscriptScreen(state),
       ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: AppRoutes.deepLinkPodcast,
+        builder: (context, state) {
+          return DeepLinkScreen(uri: state.uri);
+        },
+        routes: [
+          GoRoute(
+            path: 'e/:encodedGuid',
+            builder: (context, state) {
+              return DeepLinkScreen(uri: state.uri);
+            },
+          ),
+        ],
+      ),
     ],
   );
 }
@@ -359,12 +377,14 @@ Widget _buildEpisodeDetailScreen(GoRouterState state) {
   final podcastTitle = extra['podcastTitle'] as String? ?? '';
   final artworkUrl = extra['artworkUrl'] as String?;
   final progress = extra['progress'] as EpisodeWithProgress?;
+  final itunesId = extra['itunesId'] as String?;
 
   return EpisodeDetailScreen(
     episode: episode,
     podcastTitle: podcastTitle,
     artworkUrl: artworkUrl,
     progress: progress,
+    itunesId: itunesId,
   );
 }
 
@@ -389,6 +409,7 @@ Widget _buildGroupEpisodesScreen(GoRouterState state) {
     feedImageUrl: extra['feedImageUrl'] as String?,
     lastRefreshedAt: extra['lastRefreshedAt'] as DateTime?,
     filteredEpisodeIds: extra['filteredEpisodeIds'] as List<int>?,
+    itunesId: extra['itunesId'] as String?,
   );
 }
 

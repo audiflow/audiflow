@@ -234,6 +234,7 @@ class _SmartPlaylistEpisodesScreenState
                 lastRefreshedAt: widget.lastRefreshedAt,
                 progress: data.progress,
                 siblingEpisodeIds: widget.smartPlaylist.episodeIds,
+                itunesId: widget.podcast.id,
               );
             },
           ),
@@ -327,6 +328,7 @@ class _SmartPlaylistEpisodesScreenState
         feedImageUrl: widget.feedImageUrl,
         progress: data.progress,
         siblingEpisodeIds: widget.smartPlaylist.episodeIds,
+        itunesId: widget.podcast.id,
       ),
       scrollController: _scrollController,
       yearGroupingEnabled: true,
@@ -692,6 +694,7 @@ class _SmartPlaylistEpisodesScreenState
         'feedImageUrl': widget.feedImageUrl,
         'lastRefreshedAt': widget.lastRefreshedAt,
         'filteredEpisodeIds': filteredEpisodeIds,
+        'itunesId': widget.podcast.id,
       },
     );
   }

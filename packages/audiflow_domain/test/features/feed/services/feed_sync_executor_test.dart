@@ -139,6 +139,10 @@ class _FakeEpisodeRepository implements EpisodeRepository {
   ) => throw UnimplementedError();
 
   @override
+  Future<Episode?> getByPodcastIdAndGuid(int podcastId, String guid) =>
+      throw UnimplementedError();
+
+  @override
   Future<List<Episode>> getSubsequentEpisodes({
     required int podcastId,
     required int? afterEpisodeNumber,

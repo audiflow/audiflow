@@ -64,6 +64,11 @@ class EpisodeRepositoryImpl implements EpisodeRepository {
   }
 
   @override
+  Future<Episode?> getByPodcastIdAndGuid(int podcastId, String guid) {
+    return _datasource.getByPodcastIdAndGuid(podcastId, guid);
+  }
+
+  @override
   Future<void> upsertEpisodes(List<Episode> episodes) {
     return _datasource.upsertAll(episodes);
   }

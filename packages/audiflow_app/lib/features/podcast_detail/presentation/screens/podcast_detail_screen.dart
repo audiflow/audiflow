@@ -257,6 +257,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
               lastRefreshedAt: _lastRefreshedAt,
               scrollController: _scrollController,
               onToggleSortOrder: _toggleSortOrder,
+              itunesId: podcast.id,
             )
           else if (activePlaylist != null)
             ...buildInlinePlaylistSlivers(
@@ -272,6 +273,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
               scrollController: _scrollController,
               onToggleSortOrder: _toggleSortOrder,
               onNavigateToGroup: _navigateToGroupEpisodes,
+              itunesId: podcast.id,
             ),
         ],
       ),
@@ -352,6 +354,7 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
         'feedImageUrl': _feedImageUrl,
         'lastRefreshedAt': _lastRefreshedAt,
         'filteredEpisodeIds': filteredEpisodeIds,
+        'itunesId': podcast.id,
       },
     );
   }
