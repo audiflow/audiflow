@@ -122,5 +122,138 @@ void main() {
         expect('a b c'.toTitleCase(), 'A B C');
       });
     });
+
+    group('linkifyUrls', () {
+      test('wraps plain http URL in anchor tag', () {
+        expect(
+          'Visit http://example.com for more'.linkifyUrls,
+          'Visit <a href="http://example.com">http://example.com</a> for more',
+        );
+      });
+
+      test('wraps plain https URL in anchor tag', () {
+        expect(
+          'Check https://example.com/path'.linkifyUrls,
+          'Check <a href="https://example.com/path">https://example.com/path</a>',
+        );
+      });
+
+      test('handles URL with query parameters', () {
+        expect(
+          'Link: https://example.com/page?q=test&lang=en'.linkifyUrls,
+          'Link: <a href="https://example.com/page?q=test&lang=en">'
+          'https://example.com/page?q=test&lang=en</a>',
+        );
+      });
+
+      test('handles URL with fragment', () {
+        expect(
+          'See https://example.com/page#section'.linkifyUrls,
+          'See <a href="https://example.com/page#section">'
+          'https://example.com/page#section</a>',
+        );
+      });
+
+      test('does not double-wrap URL already in href attribute', () {
+        const input = '<a href="https://example.com">Click here</a>';
+        expect(input.linkifyUrls, input);
+      });
+
+      test('does not double-wrap URL that is anchor text', () {
+        const input = '<a href="https://example.com">https://example.com</a>';
+        expect(input.linkifyUrls, input);
+      });
+
+      test('handles multiple plain URLs', () {
+        expect(
+          'First http://a.com then https://b.com end'.linkifyUrls,
+          'First <a href="http://a.com">http://a.com</a> '
+          'then <a href="https://b.com">https://b.com</a> end',
+        );
+      });
+
+      test('handles mixed HTML links and plain URLs', () {
+        expect(
+          '<a href="https://existing.com">link</a> and https://plain.com'
+              .linkifyUrls,
+          '<a href="https://existing.com">link</a> and '
+          '<a href="https://plain.com">https://plain.com</a>',
+        );
+      });
+
+      test('returns unchanged string with no URLs', () {
+        const input = 'No links here, just text.';
+        expect(input.linkifyUrls, input);
+      });
+
+      test('returns empty string unchanged', () {
+        expect(''.linkifyUrls, '');
+      });
+
+      test('handles URL at start of string', () {
+        expect(
+          'https://start.com is first'.linkifyUrls,
+          '<a href="https://start.com">https://start.com</a> is first',
+        );
+      });
+
+      test('handles URL at end of string', () {
+        expect(
+          'end with https://end.com'.linkifyUrls,
+          'end with <a href="https://end.com">https://end.com</a>',
+        );
+      });
+
+      test('handles URL with port number', () {
+        expect(
+          'http://localhost:8080/api'.linkifyUrls,
+          '<a href="http://localhost:8080/api">'
+          'http://localhost:8080/api</a>',
+        );
+      });
+
+      test('handles ftp URL', () {
+        expect(
+          'Download from ftp://files.example.com/data'.linkifyUrls,
+          'Download from <a href="ftp://files.example.com/data">'
+          'ftp://files.example.com/data</a>',
+        );
+      });
+
+      test('does not linkify URL inside src attribute', () {
+        const input = '<img src="https://img.example.com/pic.jpg">';
+        expect(input.linkifyUrls, input);
+      });
+
+      test('handles URL followed by punctuation', () {
+        expect(
+          'See https://example.com.'.linkifyUrls,
+          'See <a href="https://example.com">https://example.com</a>.',
+        );
+      });
+
+      test('handles URL followed by comma', () {
+        expect(
+          'Visit https://example.com, then continue'.linkifyUrls,
+          'Visit <a href="https://example.com">https://example.com</a>,'
+          ' then continue',
+        );
+      });
+
+      test('handles URL in parentheses', () {
+        expect(
+          '(https://example.com)'.linkifyUrls,
+          '(<a href="https://example.com">https://example.com</a>)',
+        );
+      });
+
+      test('handles URL with path and trailing slash', () {
+        expect(
+          'https://example.com/path/'.linkifyUrls,
+          '<a href="https://example.com/path/">'
+          'https://example.com/path/</a>',
+        );
+      });
+    });
   });
 }

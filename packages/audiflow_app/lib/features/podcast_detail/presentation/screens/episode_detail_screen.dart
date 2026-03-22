@@ -1,3 +1,4 @@
+import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:extended_image/extended_image.dart';
@@ -506,7 +507,7 @@ class _DescriptionSection extends StatelessWidget {
     }
 
     return Html(
-      data: content,
+      data: content.linkifyUrls,
       onLinkTap: (url, attributes, element) async {
         if (url == null || url.isEmpty) return;
         final uri = Uri.tryParse(url);

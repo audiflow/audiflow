@@ -17,4 +17,56 @@ extension StringExtensions on String {
     if (isEmpty) return this;
     return split(' ').map((word) => word.capitalize()).join(' ');
   }
+
+  /// Wraps plain-text URLs (http, https, ftp) in HTML anchor tags.
+  ///
+  /// URLs already inside HTML attributes (href, src) or anchor tag
+  /// content are left unchanged.
+  String get linkifyUrls {
+    if (isEmpty) return this;
+
+    // Match URLs not preceded by =" or >' (i.e. not inside href/src attrs
+    // or anchor text). Uses negative lookbehind for common HTML patterns.
+    final urlPattern = RegExp(
+      r'(?<!=")(?<=\s|^|>|\()'
+      r'(https?://|ftp://)'
+      r'[^\s<>"\),$]+[^\s<>"\),.;:!?$]',
+    );
+
+    final buffer = StringBuffer();
+    var lastEnd = 0;
+
+    for (final match in urlPattern.allMatches(this)) {
+      final before = substring(0, match.start);
+      // Skip if inside an HTML tag attribute or anchor body
+      if (_isInsideHtmlTag(before) || _isInsideAnchorBody(before)) {
+        continue;
+      }
+
+      buffer.write(substring(lastEnd, match.start));
+      final url = match.group(0)!;
+      buffer.write('<a href="$url">$url</a>');
+      lastEnd = match.end;
+    }
+
+    buffer.write(substring(lastEnd));
+    return buffer.toString();
+  }
+}
+
+/// Returns true if the position is inside an HTML tag (between < and >).
+bool _isInsideHtmlTag(String textBefore) {
+  final lastOpen = textBefore.lastIndexOf('<');
+  final lastClose = textBefore.lastIndexOf('>');
+  return lastClose < lastOpen;
+}
+
+/// Returns true if the position is inside an anchor body (<a ...>...</a>).
+bool _isInsideAnchorBody(String textBefore) {
+  final lastAnchorOpen = textBefore.lastIndexOf(RegExp(r'<a[\s>]'));
+  if (lastAnchorOpen != -1) {
+    final lastAnchorClose = textBefore.lastIndexOf('</a>');
+    return lastAnchorClose < lastAnchorOpen;
+  }
+  return false;
 }
