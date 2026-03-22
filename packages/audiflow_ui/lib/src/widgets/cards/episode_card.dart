@@ -5,20 +5,21 @@ import 'package:material_symbols_icons/symbols.dart';
 import '../../styles/spacing.dart';
 
 /// Fixed height for the episode card, used as itemExtent in sliver lists.
-const double episodeCardExtent = 132.0;
+const double episodeCardExtent = 140.0;
 
 const double _thumbnailSize = 76.0;
 const double _mainRowHeight = 80.0;
-const double _actionRowHeight = 36.0;
+const double _actionRowHeight = 44.0;
 
 /// Reusable episode card with fixed-height layout for use in sliver lists.
 ///
 /// Layout:
-/// - Main row (72dp): optional thumbnail, title (up to 3 lines), metadata,
-///   play/pause button
-/// - Action row (36dp): centered action buttons (queue, download, share)
+/// - Main row (80dp): optional thumbnail, title (up to 2 lines), description
+/// - Action row (44dp): play/pause button, subtitle, action buttons
+/// - Vertical padding: 8dp (4dp top + 4dp bottom)
+/// - Divider: 1dp
 ///
-/// Total fixed extent: 120dp (72 + 36 + 12 padding).
+/// Total fixed extent: 140dp (80 + 44 + 8 + 1 padding/divider + 7 flex).
 class EpisodeCard extends StatelessWidget {
   const EpisodeCard({
     super.key,
@@ -193,8 +194,8 @@ class EpisodeCard extends StatelessWidget {
   Widget _buildPlayButton(ColorScheme colorScheme) {
     if (isLoading) {
       return const SizedBox(
-        width: 40,
-        height: 36,
+        width: 44,
+        height: 44,
         child: Center(
           child: SizedBox(
             width: 20,

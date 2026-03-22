@@ -95,7 +95,7 @@ class DownloadStatusIcon extends StatelessWidget {
             color: colorScheme.primary,
             onPressed: onTap,
             padding: EdgeInsets.zero,
-            constraints: BoxConstraints(minWidth: size, minHeight: size),
+            constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
           ),
         ],
       ),
