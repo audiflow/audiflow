@@ -29,7 +29,7 @@ PodcastSearchService podcastSearchService(Ref ref) {
 class PodcastSearchController extends _$PodcastSearchController {
   Timer? _debounceTimer;
   String? _lastAttemptedQuery;
-  String? _pendingQuery;
+  ({String query, String country})? _pending;
   ({String query, String country})? _lastCompleted;
   late String _deviceCountry;
 
@@ -93,15 +93,14 @@ class PodcastSearchController extends _$PodcastSearchController {
   /// Called when the user changes the search country.
   ///
   /// Persists the selection and re-executes the current search if one exists.
-  void onCountryChanged(String country) {
-    ref.read(appSettingsRepositoryProvider).setSearchCountry(country);
+  Future<void> onCountryChanged(String country) async {
+    await ref.read(appSettingsRepositoryProvider).setSearchCountry(country);
 
     final query = _lastAttemptedQuery;
     if (query != null) {
       _lastCompleted = null;
-      _executeSearch(query);
+      await _executeSearch(query, country: country);
     } else {
-      // Force rebuild so the country chip updates even with no active search
       ref.notifyListeners();
     }
   }
@@ -122,20 +121,20 @@ class PodcastSearchController extends _$PodcastSearchController {
 
   void _clear() {
     _debounceTimer?.cancel();
-    _pendingQuery = null;
+    _pending = null;
     _lastCompleted = null;
     state = const SearchInitial();
   }
 
-  Future<void> _executeSearch(String query) async {
-    final country = currentCountry;
+  Future<void> _executeSearch(String query, {String? country}) async {
+    final resolvedCountry = country ?? currentCountry;
+    final key = (query: query, country: resolvedCountry);
 
-    if (_lastCompleted == (query: query, country: country)) return;
+    if (_lastCompleted == key) return;
 
     _lastAttemptedQuery = query;
-    _pendingQuery = query;
+    _pending = key;
 
-    // Determine previous result for refreshing state
     final previousResult = switch (state) {
       SearchSuccess(:final result) => result,
       SearchRefreshing(:final previousResult) => previousResult,
@@ -155,17 +154,17 @@ class PodcastSearchController extends _$PodcastSearchController {
     try {
       final service = ref.read(podcastSearchServiceProvider);
       final result = await service.search(
-        SearchQuery.validated(term: query, country: country),
+        SearchQuery.validated(term: query, country: resolvedCountry),
       );
 
       if (!ref.mounted) return;
-      if (_pendingQuery != query) return;
+      if (_pending != key) return;
 
-      _lastCompleted = (query: query, country: country);
+      _lastCompleted = key;
       state = SearchSuccess(result: result);
     } on SearchException catch (e) {
       if (!ref.mounted) return;
-      if (_pendingQuery != query) return;
+      if (_pending != key) return;
 
       state = SearchError(
         exception: e,

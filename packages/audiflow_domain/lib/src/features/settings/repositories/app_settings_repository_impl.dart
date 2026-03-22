@@ -191,9 +191,11 @@ class AppSettingsRepositoryImpl implements AppSettingsRepository {
   Future<void> setSearchCountry(String? country) async {
     if (country == null) {
       await _ds.remove(SettingsKeys.searchCountry);
-    } else {
-      await _ds.setString(SettingsKeys.searchCountry, country);
+      return;
     }
+    final normalized = country.trim().toLowerCase();
+    if (!RegExp(r'^[a-z]{2}$').hasMatch(normalized)) return;
+    await _ds.setString(SettingsKeys.searchCountry, normalized);
   }
 
   // -- Data management --
