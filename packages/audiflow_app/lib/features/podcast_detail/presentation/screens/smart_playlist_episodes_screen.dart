@@ -41,12 +41,6 @@ class _SmartPlaylistEpisodesScreenState
   late SortOrder _sortOrder;
   String _searchQuery = '';
 
-  int? get _subscriptionId {
-    final feedUrl = widget.podcast.feedUrl;
-    if (feedUrl == null) return null;
-    return ref.watch(subscriptionByFeedUrlProvider(feedUrl)).value?.id;
-  }
-
   @override
   void initState() {
     super.initState();
@@ -240,7 +234,7 @@ class _SmartPlaylistEpisodesScreenState
                 lastRefreshedAt: widget.lastRefreshedAt,
                 progress: data.progress,
                 siblingEpisodeIds: widget.smartPlaylist.episodeIds,
-                subscriptionId: _subscriptionId,
+                itunesId: widget.podcast.id,
               );
             },
           ),
@@ -334,7 +328,7 @@ class _SmartPlaylistEpisodesScreenState
         feedImageUrl: widget.feedImageUrl,
         progress: data.progress,
         siblingEpisodeIds: widget.smartPlaylist.episodeIds,
-        subscriptionId: _subscriptionId,
+        itunesId: widget.podcast.id,
       ),
       scrollController: _scrollController,
       yearGroupingEnabled: true,
@@ -700,7 +694,7 @@ class _SmartPlaylistEpisodesScreenState
         'feedImageUrl': widget.feedImageUrl,
         'lastRefreshedAt': widget.lastRefreshedAt,
         'filteredEpisodeIds': filteredEpisodeIds,
-        'subscriptionId': _subscriptionId,
+        'itunesId': widget.podcast.id,
       },
     );
   }

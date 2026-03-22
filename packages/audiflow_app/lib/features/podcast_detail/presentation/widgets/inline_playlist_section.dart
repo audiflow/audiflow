@@ -40,7 +40,7 @@ List<Widget> buildInlinePlaylistSlivers({
     List<int>? filteredEpisodeIds,
   })
   onNavigateToGroup,
-  int? subscriptionId,
+  String? itunesId,
 }) {
   final episodesAsync = ref.watch(
     smartPlaylistEpisodesProvider(playlist.episodeIds),
@@ -59,7 +59,7 @@ List<Widget> buildInlinePlaylistSlivers({
       scrollController: scrollController,
       onToggleSortOrder: onToggleSortOrder,
       onNavigateToGroup: onNavigateToGroup,
-      subscriptionId: subscriptionId,
+      itunesId: itunesId,
     ),
     loading: () => [
       const SliverToBoxAdapter(
@@ -105,7 +105,7 @@ List<Widget> _buildPlaylistData({
     List<int>? filteredEpisodeIds,
   })
   onNavigateToGroup,
-  int? subscriptionId,
+  String? itunesId,
 }) {
   if (episodes.isEmpty) {
     return [
@@ -148,7 +148,7 @@ List<Widget> _buildPlaylistData({
       feedImageUrl: feedImageUrl,
       lastRefreshedAt: lastRefreshedAt,
       scrollController: scrollController,
-      subscriptionId: subscriptionId,
+      itunesId: itunesId,
     );
   }
 
@@ -187,7 +187,7 @@ List<Widget> _buildPlaylistData({
           feedImageUrl: feedImageUrl,
           progress: data.progress,
           siblingEpisodeIds: siblingEpisodeIds,
-          subscriptionId: subscriptionId,
+          itunesId: itunesId,
         );
       },
     ),
@@ -384,7 +384,7 @@ List<Widget> _buildYearGroupedPlaylistSlivers({
   required String? feedImageUrl,
   required DateTime? lastRefreshedAt,
   required ScrollController scrollController,
-  int? subscriptionId,
+  String? itunesId,
 }) {
   final byYear = <int, List<SmartPlaylistEpisodeData>>{};
   for (final data in episodes) {
@@ -422,7 +422,7 @@ List<Widget> _buildYearGroupedPlaylistSlivers({
       feedImageUrl: feedImageUrl,
       progress: data.progress,
       siblingEpisodeIds: siblingEpisodeIds,
-      subscriptionId: subscriptionId,
+      itunesId: itunesId,
     ),
     scrollController: scrollController,
     yearGroupingEnabled: true,

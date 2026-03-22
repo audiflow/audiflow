@@ -25,7 +25,7 @@ class EpisodeListTile extends ConsumerWidget {
     this.progress,
     this.lastRefreshedAt,
     this.siblingEpisodeIds,
-    this.subscriptionId,
+    this.itunesId,
   });
 
   final PodcastItem episode;
@@ -47,8 +47,8 @@ class EpisodeListTile extends ConsumerWidget {
   /// falling back to a database query by episode number.
   final List<int>? siblingEpisodeIds;
 
-  /// Subscription database ID for building universal share links.
-  final int? subscriptionId;
+  /// iTunes ID for building universal share links.
+  final String? itunesId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -180,7 +180,7 @@ class EpisodeListTile extends ConsumerWidget {
         'podcastTitle': podcastTitle,
         'artworkUrl': artworkUrl,
         'progress': progress,
-        'subscriptionId': subscriptionId,
+        'itunesId': itunesId,
       },
     );
   }
@@ -360,7 +360,7 @@ class EpisodeListTile extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(horizontal: 6),
       onPressed: () => shareEpisode(
         ref: ref,
-        subscriptionId: subscriptionId,
+        itunesId: itunesId,
         episodeGuid: episode.guid,
         fallbackLink: episode.link,
       ),

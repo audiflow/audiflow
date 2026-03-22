@@ -23,7 +23,7 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
     this.progress,
     this.siblingEpisodeIds,
     this.lastRefreshedAt,
-    this.subscriptionId,
+    this.itunesId,
   });
 
   final Episode episode;
@@ -40,8 +40,8 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
   /// Episode IDs in the same group, for adhoc queue building.
   final List<int>? siblingEpisodeIds;
 
-  /// Subscription database ID for building universal share links.
-  final int? subscriptionId;
+  /// iTunes ID for building universal share links.
+  final String? itunesId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -179,7 +179,7 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
           podcastTitle: podcastTitle,
           artworkUrl: artworkUrl,
           progress: progress,
-          subscriptionId: subscriptionId,
+          itunesId: itunesId,
         ),
       ),
     );
@@ -358,7 +358,7 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
       padding: EdgeInsets.zero,
       onPressed: () => shareEpisode(
         ref: ref,
-        subscriptionId: subscriptionId,
+        itunesId: itunesId,
         episodeGuid: episode.guid,
         fallbackLink: null,
       ),

@@ -157,12 +157,6 @@ class _SubscribeButtonRow extends ConsumerWidget {
       data: (isSubscribed) {
         final l10n = AppLocalizations.of(context);
         if (isSubscribed) {
-          final subscriptionId = podcast.feedUrl != null
-              ? ref
-                    .watch(subscriptionByFeedUrlProvider(podcast.feedUrl!))
-                    .value
-                    ?.id
-              : null;
           return Row(
             children: [
               OutlinedButton.icon(
@@ -174,15 +168,12 @@ class _SubscribeButtonRow extends ConsumerWidget {
                   side: BorderSide(color: colorScheme.primary),
                 ),
               ),
-              if (subscriptionId != null) ...[
-                const SizedBox(width: Spacing.sm),
-                IconButton(
-                  onPressed: () =>
-                      sharePodcast(ref: ref, subscriptionId: subscriptionId),
-                  icon: const Icon(Icons.share_outlined),
-                  tooltip: l10n.sharePodcast,
-                ),
-              ],
+              const SizedBox(width: Spacing.sm),
+              IconButton(
+                onPressed: () => sharePodcast(ref: ref, itunesId: podcast.id),
+                icon: const Icon(Icons.share_outlined),
+                tooltip: l10n.sharePodcast,
+              ),
             ],
           );
         }

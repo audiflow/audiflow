@@ -18,9 +18,7 @@ ItunesChartsClient itunesChartsClient(Ref ref) {
 
 @riverpod
 ShareLinkBuilder shareLinkBuilder(Ref ref) {
-  return ShareLinkBuilderImpl(
-    subscriptionRepository: ref.watch(subscriptionRepositoryProvider),
-  );
+  return ShareLinkBuilderImpl();
 }
 
 @riverpod

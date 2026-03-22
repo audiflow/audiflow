@@ -22,7 +22,7 @@ class EpisodeDetailScreen extends ConsumerWidget {
     required this.podcastTitle,
     this.artworkUrl,
     this.progress,
-    this.subscriptionId,
+    this.itunesId,
   });
 
   final PodcastItem episode;
@@ -30,8 +30,8 @@ class EpisodeDetailScreen extends ConsumerWidget {
   final String? artworkUrl;
   final EpisodeWithProgress? progress;
 
-  /// Subscription database ID for building universal share links.
-  final int? subscriptionId;
+  /// iTunes ID for building universal share links.
+  final String? itunesId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -76,7 +76,7 @@ class EpisodeDetailScreen extends ConsumerWidget {
                 icon: const Icon(Icons.share),
                 onPressed: () => shareEpisode(
                   ref: ref,
-                  subscriptionId: subscriptionId,
+                  itunesId: itunesId,
                   episodeGuid: episode.guid,
                   fallbackLink: episode.link,
                 ),

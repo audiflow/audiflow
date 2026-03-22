@@ -4,13 +4,13 @@ import 'package:share_plus/share_plus.dart';
 
 Future<String?> buildEpisodeShareUrl({
   required ShareLinkBuilder shareLinkBuilder,
-  required int? subscriptionId,
+  required String? itunesId,
   required String? episodeGuid,
   required String? fallbackLink,
 }) async {
-  if (subscriptionId != null && episodeGuid != null) {
+  if (itunesId != null && episodeGuid != null) {
     final url = await shareLinkBuilder.buildEpisodeLink(
-      subscriptionId: subscriptionId,
+      itunesId: itunesId,
       episodeGuid: episodeGuid,
     );
     if (url != null) return url;
@@ -20,13 +20,13 @@ Future<String?> buildEpisodeShareUrl({
 
 Future<void> shareEpisode({
   required WidgetRef ref,
-  required int? subscriptionId,
+  required String? itunesId,
   required String? episodeGuid,
   required String? fallbackLink,
 }) async {
   final url = await buildEpisodeShareUrl(
     shareLinkBuilder: ref.read(shareLinkBuilderProvider),
-    subscriptionId: subscriptionId,
+    itunesId: itunesId,
     episodeGuid: episodeGuid,
     fallbackLink: fallbackLink,
   );
@@ -36,12 +36,12 @@ Future<void> shareEpisode({
 
 Future<void> sharePodcast({
   required WidgetRef ref,
-  required int? subscriptionId,
+  required String? itunesId,
 }) async {
-  if (subscriptionId == null) return;
+  if (itunesId == null) return;
   final url = await ref
       .read(shareLinkBuilderProvider)
-      .buildPodcastLink(subscriptionId: subscriptionId);
+      .buildPodcastLink(itunesId: itunesId);
   if (url == null) return;
   await SharePlus.instance.share(ShareParams(uri: Uri.parse(url)));
 }

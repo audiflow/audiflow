@@ -9,26 +9,26 @@ class FakeShareLinkBuilder implements ShareLinkBuilder {
 
   @override
   Future<String?> buildEpisodeLink({
-    required int subscriptionId,
+    required String itunesId,
     required String episodeGuid,
   }) async => episodeLinkResult;
 
   @override
-  Future<String?> buildPodcastLink({required int subscriptionId}) async =>
+  Future<String?> buildPodcastLink({required String itunesId}) async =>
       podcastLinkResult;
 }
 
 void main() {
   group('buildEpisodeShareUrl', () {
     test(
-      'returns universal link when subscriptionId and guid are available',
+      'returns universal link when itunesId and guid are available',
       () async {
         final builder = FakeShareLinkBuilder()
           ..episodeLinkResult = 'https://audiflow.app/episodes/42/abc-123';
 
         final result = await buildEpisodeShareUrl(
           shareLinkBuilder: builder,
-          subscriptionId: 42,
+          itunesId: '42',
           episodeGuid: 'abc-123',
           fallbackLink: 'https://example.com/fallback',
         );
@@ -43,7 +43,7 @@ void main() {
 
       final result = await buildEpisodeShareUrl(
         shareLinkBuilder: builder,
-        subscriptionId: 42,
+        itunesId: '42',
         episodeGuid: null,
         fallbackLink: 'https://example.com/fallback',
       );
@@ -56,7 +56,7 @@ void main() {
 
       final result = await buildEpisodeShareUrl(
         shareLinkBuilder: builder,
-        subscriptionId: 42,
+        itunesId: '42',
         episodeGuid: 'abc-123',
         fallbackLink: 'https://example.com/fallback',
       );
@@ -69,7 +69,7 @@ void main() {
 
       final result = await buildEpisodeShareUrl(
         shareLinkBuilder: builder,
-        subscriptionId: null,
+        itunesId: null,
         episodeGuid: null,
         fallbackLink: null,
       );
