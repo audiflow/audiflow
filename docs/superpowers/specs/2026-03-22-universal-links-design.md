@@ -111,8 +111,7 @@ In `packages/audiflow_app/android/app/src/main/AndroidManifest.xml`, add an inte
 Located at `lib/src/features/share/services/share_link_builder.dart`.
 
 Responsibilities:
-- Look up `itunesId` from the subscription data given an Isar `Subscription.id`
-- Construct the universal link URL for a podcast or episode
+- Construct the universal link URL for a podcast or episode given an `itunesId`
 - Base64url-encode episode GUIDs (without padding)
 - Abstract over the servicer concept (Apple default, future extensibility)
 
@@ -122,23 +121,21 @@ Public API:
 abstract class ShareLinkBuilder {
   /// Build a universal link for a podcast.
   ///
-  /// [subscriptionId] is the Isar database `Subscription.id`.
-  /// Returns null if the subscription has no known servicer ID.
-  Future<String?> buildPodcastLink({required int subscriptionId});
+  /// [itunesId] is the iTunes collection/track ID for the podcast.
+  Future<String?> buildPodcastLink({required String itunesId});
 
   /// Build a universal link for an episode.
   ///
-  /// [subscriptionId] is the Isar database `Subscription.id`.
+  /// [itunesId] is the iTunes collection/track ID for the podcast.
   /// [episodeGuid] is the RSS GUID for the episode.
-  /// Returns null if the subscription has no known servicer ID.
   Future<String?> buildEpisodeLink({
-    required int subscriptionId,
+    required String itunesId,
     required String episodeGuid,
   });
 }
 ```
 
-Implementation depends on `SubscriptionRepository` to look up `itunesId`. Exposed via a Riverpod provider.
+Callers pass `itunesId` directly (available from `Podcast.id` or subscription data). Exposed via a Riverpod provider.
 
 Share button callers must handle the case where `episode.guid` is null (it is `String?` on `PodcastItem`). When the GUID is null, skip the universal link and fall back to `episode.link`.
 
@@ -225,10 +222,10 @@ Error handling:
 Four locations to update:
 
 #### `EpisodeListTile._buildShareButton`
-- Uses `ShareLinkBuilder` to construct the episode universal link
+- Uses `shareEpisode` helper which calls `ShareLinkBuilder` with `itunesId` to construct the episode universal link
 - Calls `SharePlus.instance.share(ShareParams(uri: ...))` on press
 - If `episode.guid` is null or `ShareLinkBuilder` returns null, falls back to `episode.link`
-- If both are null, share button remains disabled
+- If both are null, share button is disabled
 
 #### `SmartPlaylistEpisodeListTile._buildShareButton`
 - Same behavior as `EpisodeListTile` above
@@ -240,17 +237,17 @@ Four locations to update:
 
 #### Podcast detail screen (new)
 - Add share button to the podcast detail app bar
-- Uses `ShareLinkBuilder.buildPodcastLink()` to construct the podcast universal link
+- Uses `ShareLinkBuilder.buildPodcastLink(itunesId: ...)` to construct the podcast universal link
 
-All share buttons need access to the subscription ID (available via the screen's subscription/podcast context). The `ShareLinkBuilder` provider handles the `itunesId` lookup internally.
+All share buttons receive `itunesId` directly (from `Podcast.id` or route extra data). No subscription lookup is needed at the call site.
 
 ## Data Flow
 
 ### Sharing (outbound)
 
 ```
-User taps share → Widget calls ShareLinkBuilder
-  → ShareLinkBuilder looks up itunesId from SubscriptionRepository by Subscription.id
+User taps share → Widget calls shareEpisode helper → ShareLinkBuilder
+  → ShareLinkBuilder receives itunesId directly (no lookup needed)
   → Base64url-encodes episode GUID (no padding)
   → Constructs URL: https://audiflow.reedom.com/p/{itunesId}/e/{base64url(guid)}
   → Returns URL string

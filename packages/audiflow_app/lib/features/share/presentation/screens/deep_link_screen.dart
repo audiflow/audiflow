@@ -51,6 +51,7 @@ class _DeepLinkScreenState extends ConsumerState<DeepLinkScreen> {
             artworkUrl: artworkUrl,
           );
           context.go('${AppRoutes.search}/podcast/$itunesId', extra: podcast);
+          return;
 
         case EpisodeDeepLinkTarget(
           :final episode,
@@ -79,9 +80,11 @@ class _DeepLinkScreenState extends ConsumerState<DeepLinkScreen> {
               'episode': episode,
               'podcastTitle': podcastTitle,
               'artworkUrl': artworkUrl,
+              'itunesId': target.itunesId,
               'progress': progress,
             },
           );
+          return;
       }
     } on Exception catch (_) {
       if (!mounted) return;

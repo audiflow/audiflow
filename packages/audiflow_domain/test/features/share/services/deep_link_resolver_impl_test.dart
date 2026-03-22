@@ -112,9 +112,14 @@ class FakeItunesChartsClient extends ItunesChartsClient {
 
 class FakeFeedParserService extends FeedParserService {
   List<PodcastItem> _episodes = [];
+  Exception? _exception;
 
   void setEpisodes(List<PodcastItem> episodes) {
     _episodes = episodes;
+  }
+
+  void setException(Exception exception) {
+    _exception = exception;
   }
 
   @override
@@ -122,6 +127,7 @@ class FakeFeedParserService extends FeedParserService {
     String url, {
     CacheOptions? cacheOptions,
   }) async {
+    if (_exception != null) throw _exception!;
     final feed = PodcastFeed.fromData(
       parsedAt: DateTime.now(),
       sourceUrl: url,
@@ -351,7 +357,7 @@ void main() {
       );
 
       test(
-        'falls back to podcast target when episode not found anywhere',
+        'falls back to podcast target when episode not found in feed',
         () async {
           final subs = subsWithPodcast();
           final encodedGuid = encodeGuid('urn:guid:missing');
@@ -366,6 +372,24 @@ void main() {
             ..has((t) => t.feedUrl, 'feedUrl').equals(feedUrl);
         },
       );
+
+      test('propagates exception when feed parsing fails', () async {
+        final subs = subsWithPodcast();
+        final feedParser = FakeFeedParserService();
+        feedParser.setException(Exception('network error'));
+
+        final encodedGuid = encodeGuid(guid);
+        final resolver = _makeResolver(
+          subscriptions: subs,
+          feedParser: feedParser,
+        );
+
+        await check(
+          resolver.resolve(
+            Uri.parse('https://audiflow.reedom.com/p/$itunesId/e/$encodedGuid'),
+          ),
+        ).throws<Exception>();
+      });
     });
   });
 }

@@ -7,7 +7,6 @@ import '../../feed/models/episode.dart';
 import '../../feed/repositories/episode_repository.dart';
 import '../../subscription/repositories/subscription_repository.dart';
 import '../models/deep_link_target.dart';
-import '../../feed/builders/podcast_builder.dart' show ParsedFeed;
 import '../../feed/services/feed_parser_service.dart';
 import 'deep_link_resolver.dart';
 
@@ -85,7 +84,7 @@ class DeepLinkResolverImpl implements DeepLinkResolver {
         return DeepLinkTarget.episode(
           itunesId: itunesId,
           feedUrl: feedUrl,
-          episode: _episodeToItem(localEpisode),
+          episode: _episodeToItem(localEpisode, feedUrl: feedUrl),
           podcastTitle: podcastTitle,
           artworkUrl: artworkUrl,
         );
@@ -93,23 +92,21 @@ class DeepLinkResolverImpl implements DeepLinkResolver {
     }
 
     // Not found locally — parse feed to find episode
-    final parsedFeed = await _parseFeedSafely(feedUrl);
-    if (parsedFeed != null) {
-      final feedEpisode = parsedFeed.episodes
-          .where((item) => item.guid == guid)
-          .firstOrNull;
-      if (feedEpisode != null) {
-        return DeepLinkTarget.episode(
-          itunesId: itunesId,
-          feedUrl: feedUrl,
-          episode: feedEpisode,
-          podcastTitle: podcastTitle,
-          artworkUrl: artworkUrl,
-        );
-      }
+    final parsedFeed = await _feedParserService.parseFromUrl(feedUrl);
+    final feedEpisode = parsedFeed.episodes
+        .where((item) => item.guid == guid)
+        .firstOrNull;
+    if (feedEpisode != null) {
+      return DeepLinkTarget.episode(
+        itunesId: itunesId,
+        feedUrl: feedUrl,
+        episode: feedEpisode,
+        podcastTitle: podcastTitle,
+        artworkUrl: artworkUrl,
+      );
     }
 
-    // Fall back to podcast target when episode cannot be resolved
+    // Fall back to podcast target when GUID not found in feed
     return DeepLinkTarget.podcast(
       itunesId: itunesId,
       feedUrl: feedUrl,
@@ -149,18 +146,10 @@ class DeepLinkResolverImpl implements DeepLinkResolver {
     return utf8.decode(base64Url.decode(normalized));
   }
 
-  Future<ParsedFeed?> _parseFeedSafely(String feedUrl) async {
-    try {
-      return await _feedParserService.parseFromUrl(feedUrl);
-    } on Exception {
-      return null;
-    }
-  }
-
-  PodcastItem _episodeToItem(Episode episode) {
+  PodcastItem _episodeToItem(Episode episode, {required String feedUrl}) {
     return PodcastItem.fromData(
       parsedAt: DateTime.now(),
-      sourceUrl: episode.audioUrl,
+      sourceUrl: feedUrl,
       title: episode.title,
       description: episode.description ?? '',
       publishDate: episode.publishedAt,
