@@ -208,9 +208,9 @@ void main() {
         final container = ProviderContainer(
           overrides: [
             podcastSearchServiceProvider.overrideWithValue(mockService),
-          appSettingsRepositoryProvider.overrideWithValue(
-            FakeAppSettingsRepository(),
-          ),
+            appSettingsRepositoryProvider.overrideWithValue(
+              FakeAppSettingsRepository(),
+            ),
           ],
         );
         addTearDown(container.dispose);
@@ -551,9 +551,9 @@ void main() {
         final container = ProviderContainer(
           overrides: [
             podcastSearchServiceProvider.overrideWithValue(mockService),
-          appSettingsRepositoryProvider.overrideWithValue(
-            FakeAppSettingsRepository(),
-          ),
+            appSettingsRepositoryProvider.overrideWithValue(
+              FakeAppSettingsRepository(),
+            ),
           ],
         );
         addTearDown(container.dispose);
@@ -892,9 +892,9 @@ void main() {
         final container = ProviderContainer(
           overrides: [
             podcastSearchServiceProvider.overrideWithValue(mockService),
-          appSettingsRepositoryProvider.overrideWithValue(
-            FakeAppSettingsRepository(),
-          ),
+            appSettingsRepositoryProvider.overrideWithValue(
+              FakeAppSettingsRepository(),
+            ),
           ],
         );
         addTearDown(container.dispose);
@@ -1011,9 +1011,9 @@ void main() {
         final container = ProviderContainer(
           overrides: [
             podcastSearchServiceProvider.overrideWithValue(mockService),
-          appSettingsRepositoryProvider.overrideWithValue(
-            FakeAppSettingsRepository(),
-          ),
+            appSettingsRepositoryProvider.overrideWithValue(
+              FakeAppSettingsRepository(),
+            ),
           ],
         );
         addTearDown(container.dispose);
@@ -1121,9 +1121,9 @@ void main() {
         final container = ProviderContainer(
           overrides: [
             podcastSearchServiceProvider.overrideWithValue(mockService),
-          appSettingsRepositoryProvider.overrideWithValue(
-            FakeAppSettingsRepository(),
-          ),
+            appSettingsRepositoryProvider.overrideWithValue(
+              FakeAppSettingsRepository(),
+            ),
           ],
         );
         addTearDown(container.dispose);
