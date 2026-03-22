@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:audiflow_domain/audiflow_domain.dart'
     show subscriptionByFeedUrlProvider, subscriptionRepositoryProvider;
 import 'package:audiflow_search/audiflow_search.dart';
@@ -42,15 +44,24 @@ class PodcastDetailHeader extends ConsumerWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              GestureDetector(
-                onTap: podcast.artworkUrl != null
-                    ? () => _showArtworkOverlay(context, podcast.artworkUrl!)
-                    : null,
-                child: Hero(
-                  tag: 'podcast_artwork_${podcast.id}',
-                  child: ClipRRect(
+              Semantics(
+                label: 'View podcast artwork',
+                button: true,
+                child: Material(
+                  type: MaterialType.transparency,
+                  child: InkWell(
                     borderRadius: BorderRadius.circular(8),
-                    child: _PodcastArtwork(artworkUrl: podcast.artworkUrl),
+                    onTap: podcast.artworkUrl != null
+                        ? () =>
+                              _showArtworkOverlay(context, podcast.artworkUrl!)
+                        : null,
+                    child: Hero(
+                      tag: 'podcast_artwork_${podcast.id}',
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: _PodcastArtwork(artworkUrl: podcast.artworkUrl),
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -235,20 +246,47 @@ class _ArtworkOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.sizeOf(context);
-    final artworkSize = size.width * 0.85;
+    final artworkSize = math.min(size.width, size.height) * 0.85;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return GestureDetector(
       onTap: () => Navigator.of(context).pop(),
+      behavior: HitTestBehavior.opaque,
       child: Center(
-        child: Hero(
-          tag: heroTag,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: Image.network(
-              artworkUrl,
-              width: artworkSize,
-              height: artworkSize,
-              fit: BoxFit.cover,
+        child: GestureDetector(
+          onTap: () {},
+          child: Hero(
+            tag: heroTag,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: Image.network(
+                artworkUrl,
+                width: artworkSize,
+                height: artworkSize,
+                fit: BoxFit.cover,
+                loadingBuilder: (context, child, progress) {
+                  if (progress == null) return child;
+                  return Container(
+                    width: artworkSize,
+                    height: artworkSize,
+                    color: colorScheme.surfaceContainerHighest,
+                    child: const Center(
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  );
+                },
+                errorBuilder: (context, error, stackTrace) => Container(
+                  width: artworkSize,
+                  height: artworkSize,
+                  alignment: Alignment.center,
+                  color: colorScheme.surfaceContainerHighest,
+                  child: Icon(
+                    Icons.broken_image,
+                    size: 64,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
             ),
           ),
         ),
