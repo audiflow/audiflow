@@ -337,7 +337,11 @@ class AudioPlayerController extends _$AudioPlayerController {
   }
 
   /// Resumes playback if paused.
+  ///
+  /// No-op when no audio source is loaded (e.g. after app restart before
+  /// the user taps play on an episode).
   Future<void> resume() async {
+    if (_currentUrl == null) return;
     await _player.play();
   }
 
