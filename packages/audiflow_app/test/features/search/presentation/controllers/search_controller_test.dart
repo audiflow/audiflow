@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:audiflow_app/features/search/presentation/controllers/search_controller.dart';
 import 'package:audiflow_app/features/search/presentation/controllers/search_state.dart';
 import 'package:audiflow_search/audiflow_search.dart';
@@ -281,7 +279,7 @@ void main() {
       addTearDown(container.dispose);
 
       // Keep provider alive by listening
-      container.listen(podcastSearchControllerProvider, (_, __) {});
+      container.listen(podcastSearchControllerProvider, (_, _) {});
 
       final controller = container.read(
         podcastSearchControllerProvider.notifier,
@@ -514,7 +512,7 @@ void main() {
         addTearDown(container.dispose);
 
         // Keep provider alive by listening
-        container.listen(podcastSearchControllerProvider, (_, __) {});
+        container.listen(podcastSearchControllerProvider, (_, _) {});
 
         final controller = container.read(
           podcastSearchControllerProvider.notifier,
@@ -553,7 +551,7 @@ void main() {
       addTearDown(container.dispose);
 
       // Keep provider alive by listening
-      container.listen(podcastSearchControllerProvider, (_, __) {});
+      container.listen(podcastSearchControllerProvider, (_, _) {});
 
       final controller = container.read(
         podcastSearchControllerProvider.notifier,
@@ -579,7 +577,7 @@ void main() {
       addTearDown(container.dispose);
 
       // Keep provider alive by listening
-      container.listen(podcastSearchControllerProvider, (_, __) {});
+      container.listen(podcastSearchControllerProvider, (_, _) {});
 
       final controller = container.read(
         podcastSearchControllerProvider.notifier,
@@ -639,7 +637,7 @@ void main() {
       addTearDown(container.dispose);
 
       // Keep provider alive by listening
-      container.listen(podcastSearchControllerProvider, (_, __) {});
+      container.listen(podcastSearchControllerProvider, (_, _) {});
 
       final controller = container.read(
         podcastSearchControllerProvider.notifier,
@@ -666,7 +664,7 @@ void main() {
       addTearDown(container.dispose);
 
       // Keep provider alive by listening
-      container.listen(podcastSearchControllerProvider, (_, __) {});
+      container.listen(podcastSearchControllerProvider, (_, _) {});
 
       final controller = container.read(
         podcastSearchControllerProvider.notifier,
@@ -696,7 +694,7 @@ void main() {
       addTearDown(container.dispose);
 
       // Keep provider alive by listening
-      container.listen(podcastSearchControllerProvider, (_, __) {});
+      container.listen(podcastSearchControllerProvider, (_, _) {});
 
       final controller = container.read(
         podcastSearchControllerProvider.notifier,
@@ -884,7 +882,7 @@ void main() {
       addTearDown(container.dispose);
 
       // Keep provider alive by listening
-      container.listen(podcastSearchControllerProvider, (_, __) {});
+      container.listen(podcastSearchControllerProvider, (_, _) {});
 
       final controller = container.read(
         podcastSearchControllerProvider.notifier,
@@ -941,7 +939,7 @@ void main() {
         addTearDown(container.dispose);
 
         // Keep provider alive by listening
-        container.listen(podcastSearchControllerProvider, (_, __) {});
+        container.listen(podcastSearchControllerProvider, (_, _) {});
 
         final controller = container.read(
           podcastSearchControllerProvider.notifier,
@@ -976,7 +974,7 @@ void main() {
       addTearDown(container.dispose);
 
       // Keep provider alive by listening
-      container.listen(podcastSearchControllerProvider, (_, __) {});
+      container.listen(podcastSearchControllerProvider, (_, _) {});
 
       final controller = container.read(
         podcastSearchControllerProvider.notifier,
@@ -1005,7 +1003,7 @@ void main() {
       );
 
       // Keep provider alive by listening
-      container.listen(podcastSearchControllerProvider, (_, __) {});
+      container.listen(podcastSearchControllerProvider, (_, _) {});
 
       final controller = container.read(
         podcastSearchControllerProvider.notifier,
