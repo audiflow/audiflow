@@ -1,5 +1,4 @@
 import 'package:audiflow_app/features/search/presentation/controllers/search_controller.dart';
-import 'package:audiflow_app/features/search/presentation/controllers/search_state.dart';
 import 'package:audiflow_domain/audiflow_domain.dart'
     hide podcastSearchServiceProvider;
 import 'package:checks/checks.dart';

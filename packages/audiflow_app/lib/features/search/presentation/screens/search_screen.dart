@@ -1,3 +1,8 @@
+import 'dart:io' show Platform;
+
+import 'package:audiflow_core/audiflow_core.dart';
+import 'package:audiflow_domain/audiflow_domain.dart'
+    hide podcastSearchServiceProvider;
 import 'package:audiflow_search/audiflow_search.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
@@ -8,7 +13,9 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../routing/app_router.dart';
 import '../controllers/search_controller.dart';
 import '../controllers/search_state.dart';
+import '../widgets/country_picker_sheet.dart';
 import '../widgets/podcast_search_result_tile.dart';
+import '../widgets/search_country_chip.dart';
 
 class SearchScreen extends ConsumerStatefulWidget {
   const SearchScreen({super.key});
@@ -33,6 +40,29 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     _textController.dispose();
     _focusNode.dispose();
     super.dispose();
+  }
+
+  String get _currentCountry {
+    final settings = ref.read(appSettingsRepositoryProvider);
+    try {
+      return settings.getSearchCountry() ??
+          PodcastCountries.extractCountryCode(Platform.localeName);
+    } catch (_) {
+      return PodcastCountries.fallback;
+    }
+  }
+
+  Future<void> _onCountryTap() async {
+    final selected = await CountryPickerSheet.show(
+      context,
+      selectedCountry: _currentCountry,
+    );
+    if (selected != null && mounted) {
+      ref
+          .read(podcastSearchControllerProvider.notifier)
+          .onCountryChanged(selected);
+      setState(() {});
+    }
   }
 
   void _onTextChanged() {
@@ -71,36 +101,49 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           children: [
             Padding(
               padding: const EdgeInsets.all(Spacing.md),
-              child: TextField(
-                controller: _textController,
-                focusNode: _focusNode,
-                textCapitalization: TextCapitalization.none,
-                autocorrect: false,
-                keyboardType: TextInputType.text,
-                decoration: InputDecoration(
-                  hintText: l10n.searchHint,
-                  border: const OutlineInputBorder(),
-                  prefixIcon: const Icon(Icons.search),
-                  suffixIcon: ValueListenableBuilder<TextEditingValue>(
-                    valueListenable: _textController,
-                    builder: (context, value, child) {
-                      if (value.text.isEmpty) {
-                        return const SizedBox.shrink();
-                      }
-                      return IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () {
-                          _textController.clear();
-                          ref
-                              .read(podcastSearchControllerProvider.notifier)
-                              .clear();
-                        },
-                      );
-                    },
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _textController,
+                      focusNode: _focusNode,
+                      textCapitalization: TextCapitalization.none,
+                      autocorrect: false,
+                      keyboardType: TextInputType.text,
+                      decoration: InputDecoration(
+                        hintText: l10n.searchHint,
+                        border: const OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.search),
+                        suffixIcon: ValueListenableBuilder<TextEditingValue>(
+                          valueListenable: _textController,
+                          builder: (context, value, child) {
+                            if (value.text.isEmpty) {
+                              return const SizedBox.shrink();
+                            }
+                            return IconButton(
+                              icon: const Icon(Icons.clear),
+                              onPressed: () {
+                                _textController.clear();
+                                ref
+                                    .read(
+                                      podcastSearchControllerProvider.notifier,
+                                    )
+                                    .clear();
+                              },
+                            );
+                          },
+                        ),
+                      ),
+                      textInputAction: TextInputAction.search,
+                      onSubmitted: (_) => _onSearch(),
+                    ),
                   ),
-                ),
-                textInputAction: TextInputAction.search,
-                onSubmitted: (_) => _onSearch(),
+                  const SizedBox(width: Spacing.sm),
+                  SearchCountryChip(
+                    countryCode: _currentCountry,
+                    onTap: _onCountryTap,
+                  ),
+                ],
               ),
             ),
             Expanded(

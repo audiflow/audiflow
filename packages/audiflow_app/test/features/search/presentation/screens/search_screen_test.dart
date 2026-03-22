@@ -3,6 +3,8 @@ import 'package:audiflow_app/features/search/presentation/controllers/search_sta
 import 'package:audiflow_app/features/search/presentation/screens/search_screen.dart';
 import 'package:audiflow_app/features/search/presentation/widgets/podcast_search_result_tile.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
+import 'package:audiflow_domain/audiflow_domain.dart'
+    hide podcastSearchServiceProvider;
 import 'package:audiflow_search/audiflow_search.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,9 +15,11 @@ import '../../../../helpers/search_mocks.dart';
 void main() {
   group('SearchScreen', () {
     late MockPodcastSearchService mockService;
+    late FakeAppSettingsRepository fakeSettings;
 
     setUp(() {
       mockService = MockPodcastSearchService();
+      fakeSettings = FakeAppSettingsRepository();
     });
 
     Widget buildTestWidget({ProviderContainer? container}) {
@@ -24,6 +28,7 @@ void main() {
           ProviderContainer(
             overrides: [
               podcastSearchServiceProvider.overrideWithValue(mockService),
+              appSettingsRepositoryProvider.overrideWithValue(fakeSettings),
             ],
           );
 
@@ -61,6 +66,7 @@ void main() {
       final container = ProviderContainer(
         overrides: [
           podcastSearchServiceProvider.overrideWithValue(mockService),
+          appSettingsRepositoryProvider.overrideWithValue(fakeSettings),
         ],
       );
       addTearDown(container.dispose);
@@ -83,6 +89,7 @@ void main() {
       final container = ProviderContainer(
         overrides: [
           podcastSearchServiceProvider.overrideWithValue(mockService),
+          appSettingsRepositoryProvider.overrideWithValue(fakeSettings),
         ],
       );
       addTearDown(container.dispose);
@@ -119,6 +126,7 @@ void main() {
         final container = ProviderContainer(
           overrides: [
             podcastSearchServiceProvider.overrideWithValue(mockService),
+            appSettingsRepositoryProvider.overrideWithValue(fakeSettings),
           ],
         );
         addTearDown(container.dispose);
@@ -135,6 +143,7 @@ void main() {
             podcastSearchServiceProvider.overrideWithValue(
               SlowMockSearchService(),
             ),
+            appSettingsRepositoryProvider.overrideWithValue(fakeSettings),
           ],
         );
         addTearDown(container.dispose);
@@ -163,6 +172,7 @@ void main() {
             podcastSearchServiceProvider.overrideWithValue(
               ResultsMockSearchService(count: 3),
             ),
+            appSettingsRepositoryProvider.overrideWithValue(fakeSettings),
           ],
         );
         addTearDown(container.dispose);
@@ -184,6 +194,7 @@ void main() {
         final container = ProviderContainer(
           overrides: [
             podcastSearchServiceProvider.overrideWithValue(mockService),
+            appSettingsRepositoryProvider.overrideWithValue(fakeSettings),
           ],
         );
         addTearDown(container.dispose);
@@ -206,6 +217,7 @@ void main() {
             podcastSearchServiceProvider.overrideWithValue(
               ErrorMockSearchService(),
             ),
+            appSettingsRepositoryProvider.overrideWithValue(fakeSettings),
           ],
         );
         addTearDown(container.dispose);
@@ -227,6 +239,7 @@ void main() {
         final container = ProviderContainer(
           overrides: [
             podcastSearchServiceProvider.overrideWithValue(retryMock),
+            appSettingsRepositoryProvider.overrideWithValue(fakeSettings),
           ],
         );
         addTearDown(container.dispose);
@@ -264,6 +277,7 @@ void main() {
         final container = ProviderContainer(
           overrides: [
             podcastSearchServiceProvider.overrideWithValue(trackingService),
+            appSettingsRepositoryProvider.overrideWithValue(fakeSettings),
           ],
         );
         addTearDown(container.dispose);
@@ -326,6 +340,7 @@ void main() {
         final container = ProviderContainer(
           overrides: [
             podcastSearchServiceProvider.overrideWithValue(trackingService),
+            appSettingsRepositoryProvider.overrideWithValue(fakeSettings),
           ],
         );
         addTearDown(container.dispose);
@@ -384,6 +399,7 @@ void main() {
         final container = ProviderContainer(
           overrides: [
             podcastSearchServiceProvider.overrideWithValue(trackingService),
+            appSettingsRepositoryProvider.overrideWithValue(fakeSettings),
           ],
         );
         addTearDown(container.dispose);
@@ -449,6 +465,7 @@ void main() {
             podcastSearchServiceProvider.overrideWithValue(
               ErrorMockSearchService(),
             ),
+            appSettingsRepositoryProvider.overrideWithValue(fakeSettings),
           ],
         );
         addTearDown(container.dispose);
@@ -476,6 +493,7 @@ void main() {
           final container = ProviderContainer(
             overrides: [
               podcastSearchServiceProvider.overrideWithValue(trackingService),
+              appSettingsRepositoryProvider.overrideWithValue(fakeSettings),
             ],
           );
           addTearDown(container.dispose);
@@ -509,6 +527,7 @@ void main() {
         final container = ProviderContainer(
           overrides: [
             podcastSearchServiceProvider.overrideWithValue(trackingService),
+            appSettingsRepositoryProvider.overrideWithValue(fakeSettings),
           ],
         );
         addTearDown(container.dispose);
