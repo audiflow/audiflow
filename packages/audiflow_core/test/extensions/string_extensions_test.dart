@@ -255,5 +255,72 @@ void main() {
         );
       });
     });
+
+    group('plainTextToHtml', () {
+      test('returns empty string unchanged', () {
+        expect(''.plainTextToHtml, '');
+      });
+
+      test('skips conversion when content has HTML tags', () {
+        const input = '<p>Already HTML</p>';
+        expect(input.plainTextToHtml, input);
+      });
+
+      test('skips conversion when content has anchor tags', () {
+        const input = '<a href="https://example.com">link</a>';
+        expect(input.plainTextToHtml, input);
+      });
+
+      test('converts single newline to br', () {
+        expect('Line one\nLine two'.plainTextToHtml, 'Line one<br>Line two');
+      });
+
+      test('converts double newlines to paragraph breaks', () {
+        expect(
+          'Para one\n\nPara two'.plainTextToHtml,
+          '<p>Para one</p><p>Para two</p>',
+        );
+      });
+
+      test('converts triple+ spaces to paragraph breaks', () {
+        expect(
+          'First part.   Second part.'.plainTextToHtml,
+          '<p>First part.</p><p>Second part.</p>',
+        );
+      });
+
+      test('handles mixed newlines and multi-spaces', () {
+        expect('A\n\nB   C'.plainTextToHtml, '<p>A</p><p>B</p><p>C</p>');
+      });
+
+      test('preserves single spaces between words', () {
+        expect('Hello world'.plainTextToHtml, 'Hello world');
+      });
+
+      test('trims leading and trailing whitespace in paragraphs', () {
+        expect(
+          'First.   \n\n   Second.'.plainTextToHtml,
+          '<p>First.</p><p>Second.</p>',
+        );
+      });
+
+      test('handles CRLF newlines', () {
+        expect('Line one\r\nLine two'.plainTextToHtml, 'Line one<br>Line two');
+      });
+
+      test('handles real podcast description with multi-space separators', () {
+        const input =
+            '【PR】 日経電子版から、お得なキャンペーンのご案内です。'
+            '   技術革新が加速する今、新聞も進化を続けています。';
+        final result = input.plainTextToHtml;
+        expect(result, contains('<p>'));
+        expect(result, contains('【PR】'));
+        expect(result, contains('技術革新'));
+      });
+
+      test('does not create empty paragraphs', () {
+        expect('A\n\n\n\nB'.plainTextToHtml, '<p>A</p><p>B</p>');
+      });
+    });
   });
 }

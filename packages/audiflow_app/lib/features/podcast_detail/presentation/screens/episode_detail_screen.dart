@@ -507,7 +507,7 @@ class _DescriptionSection extends StatelessWidget {
     }
 
     return Html(
-      data: content.linkifyUrls,
+      data: content.plainTextToHtml.linkifyUrls,
       onLinkTap: (url, attributes, element) async {
         if (url == null || url.isEmpty) return;
         final uri = Uri.tryParse(url);

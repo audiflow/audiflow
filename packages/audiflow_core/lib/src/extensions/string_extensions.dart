@@ -18,6 +18,40 @@ extension StringExtensions on String {
     return split(' ').map((word) => word.capitalize()).join(' ');
   }
 
+  /// Converts plain text to HTML with paragraph breaks.
+  ///
+  /// Splits on double newlines or triple+ spaces into `<p>` blocks.
+  /// Single newlines become `<br>`. If the text already contains HTML
+  /// tags, it is returned unchanged.
+  String get plainTextToHtml {
+    if (isEmpty) return this;
+
+    // Already has HTML tags — skip conversion
+    if (RegExp(r'<[a-z][\s\S]*>', caseSensitive: false).hasMatch(this)) {
+      return this;
+    }
+
+    // Normalize CRLF to LF
+    final normalized = replaceAll('\r\n', '\n');
+
+    // Split into paragraphs on double+ newlines or triple+ spaces
+    final paragraphs = normalized
+        .split(RegExp(r'\n{2,}|[ ]{3,}'))
+        .map((p) => p.trim())
+        .where((p) => p.isNotEmpty)
+        .toList();
+
+    if (paragraphs.length <= 1) {
+      // No paragraph breaks found — just convert single newlines to <br>
+      return normalized.replaceAll('\n', '<br>');
+    }
+
+    // Wrap each paragraph in <p> tags, converting inner newlines to <br>
+    return paragraphs
+        .map((p) => '<p>${p.replaceAll('\n', '<br>')}</p>')
+        .join('');
+  }
+
   /// Wraps plain-text URLs (http, https, ftp) in HTML anchor tags.
   ///
   /// URLs already inside HTML attributes (href, src) or anchor tag
