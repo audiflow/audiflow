@@ -1502,29 +1502,11 @@ abstract class AppLocalizations {
   /// **'Are you sure you want to delete this station? This cannot be undone.'**
   String get stationDeleteBody;
 
-  /// Section title for playback state filter
+  /// Toggle label for hiding playback-completed episodes
   ///
   /// In en, this message translates to:
-  /// **'Playback State'**
-  String get stationPlaybackState;
-
-  /// Label for all episodes filter
-  ///
-  /// In en, this message translates to:
-  /// **'All episodes'**
-  String get stationFilterAllLabel;
-
-  /// Label for unplayed filter
-  ///
-  /// In en, this message translates to:
-  /// **'Unplayed only'**
-  String get stationFilterUnplayedLabel;
-
-  /// Label for in-progress filter
-  ///
-  /// In en, this message translates to:
-  /// **'In progress only'**
-  String get stationFilterInProgressLabel;
+  /// **'Hide completed episodes'**
+  String get stationFilterHideCompletedLabel;
 
   /// Label for downloaded filter toggle
   ///

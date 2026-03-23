@@ -792,16 +792,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Are you sure you want to delete this station? This cannot be undone.';
 
   @override
-  String get stationPlaybackState => 'Playback State';
-
-  @override
-  String get stationFilterAllLabel => 'All episodes';
-
-  @override
-  String get stationFilterUnplayedLabel => 'Unplayed only';
-
-  @override
-  String get stationFilterInProgressLabel => 'In progress only';
+  String get stationFilterHideCompletedLabel => 'Hide completed episodes';
 
   @override
   String get stationFilterDownloadedLabel => 'Downloaded only';
