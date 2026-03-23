@@ -113,8 +113,9 @@ class EpisodeDetailScreen extends ConsumerWidget {
                   const SizedBox(height: Spacing.xs),
 
                   // Podcast title (tappable -> navigates to podcast page)
-                  GestureDetector(
+                  InkWell(
                     onTap: () => _navigateToPodcast(context, ref),
+                    borderRadius: BorderRadius.circular(4),
                     child: Text(
                       podcastTitle,
                       style: theme.textTheme.titleMedium?.copyWith(
@@ -205,11 +206,23 @@ class EpisodeDetailScreen extends ConsumerWidget {
     if (podcastId == null) {
       // Episode not yet in DB — look up by audio URL
       final enclosureUrl = episode.enclosureUrl;
-      if (enclosureUrl == null) return;
-      final episodeRepo = ref.read(episodeRepositoryProvider);
-      final dbEpisode = await episodeRepo.getByAudioUrl(enclosureUrl);
-      if (dbEpisode == null || !context.mounted) return;
-      return _pushPodcastDetail(context, ref, podcastId: dbEpisode.podcastId);
+      if (enclosureUrl != null) {
+        final episodeRepo = ref.read(episodeRepositoryProvider);
+        final dbEpisode = await episodeRepo.getByAudioUrl(enclosureUrl);
+        if (dbEpisode != null && context.mounted) {
+          return _pushPodcastDetail(
+            context,
+            ref,
+            podcastId: dbEpisode.podcastId,
+          );
+        }
+      }
+
+      // Fallback: navigate via deep link when itunesId is available
+      if (itunesId != null && context.mounted) {
+        context.push('/p/$itunesId');
+      }
+      return;
     }
     return _pushPodcastDetail(context, ref, podcastId: podcastId);
   }
