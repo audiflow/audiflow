@@ -121,6 +121,15 @@ abstract class AppSettingsRepository {
   /// Persists the search country code. Pass null to reset to device default.
   Future<void> setSearchCountry(String? country);
 
+  // -- Navigation --
+
+  /// Last selected tab index (0=search, 1=library, 2=queue).
+  int getLastTabIndex();
+
+  /// Persists the last selected tab index.
+  /// Only indices 0-2 are accepted; others are ignored.
+  Future<void> setLastTabIndex(int index);
+
   // -- Data management --
 
   /// Removes all persisted settings, restoring defaults.

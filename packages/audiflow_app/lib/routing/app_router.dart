@@ -81,10 +81,16 @@ final _settingsNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'settings');
 ///   - `/search/podcast/:id`
 /// - `/library`
 /// - `/settings`
-GoRouter createAppRouter() {
+GoRouter createAppRouter({int lastTabIndex = 0}) {
+  final initialLocation = switch (lastTabIndex) {
+    1 => AppRoutes.library,
+    2 => AppRoutes.queue,
+    _ => AppRoutes.search,
+  };
+
   return GoRouter(
     navigatorKey: rootNavigatorKey,
-    initialLocation: AppRoutes.search,
+    initialLocation: initialLocation,
     // File URIs from the share sheet (e.g. file:///...opml)
     // are handled by OpmlFileReceiverController via app_links,
     // not by the router. Redirect to home on unknown routes.

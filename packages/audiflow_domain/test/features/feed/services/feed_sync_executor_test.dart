@@ -265,6 +265,12 @@ class _FakeAppSettingsRepository implements AppSettingsRepository {
   Future<void> setSearchCountry(String? country) => throw UnimplementedError();
 
   @override
+  int getLastTabIndex() => throw UnimplementedError();
+
+  @override
+  Future<void> setLastTabIndex(int index) => throw UnimplementedError();
+
+  @override
   Future<void> clearAll() => throw UnimplementedError();
 }
 

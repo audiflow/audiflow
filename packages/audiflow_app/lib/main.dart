@@ -18,6 +18,7 @@ import 'app/app_lifecycle_observer.dart';
 import 'app/background/background_callback.dart';
 import 'app/background/background_task_registrar.dart';
 import 'features/player/services/audio_handler_provider.dart';
+import 'features/settings/presentation/controllers/last_tab_controller.dart';
 import 'features/settings/presentation/controllers/theme_controller.dart';
 import 'features/settings/presentation/widgets/opml_file_receiver.dart';
 import 'l10n/app_localizations.dart';
@@ -248,7 +249,9 @@ class MyApp extends ConsumerStatefulWidget {
 }
 
 class _MyAppState extends ConsumerState<MyApp> {
-  late final _router = createAppRouter();
+  late final _router = createAppRouter(
+    lastTabIndex: ref.read(lastTabControllerProvider),
+  );
 
   @override
   void dispose() {

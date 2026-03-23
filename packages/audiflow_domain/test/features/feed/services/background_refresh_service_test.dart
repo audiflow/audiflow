@@ -101,6 +101,10 @@ class FakeAppSettingsRepository implements AppSettingsRepository {
   @override
   Future<void> setSearchCountry(String? country) async {}
   @override
+  int getLastTabIndex() => 0;
+  @override
+  Future<void> setLastTabIndex(int index) async {}
+  @override
   Future<void> clearAll() async {}
 }
 

@@ -9,6 +9,7 @@ import 'package:material_symbols_icons/symbols.dart';
 import '../features/player/presentation/screens/player_screen.dart';
 import '../features/player/presentation/widgets/animated_mini_player.dart';
 // import '../features/voice/presentation/widgets/voice_command_fab.dart';
+import '../features/settings/presentation/controllers/last_tab_controller.dart';
 import '../features/voice/presentation/widgets/voice_listening_overlay.dart';
 
 /// Adaptive navigation shell for phone or tablet navigation.
@@ -45,11 +46,12 @@ class ScaffoldWithNavBar extends ConsumerWidget {
     ),
   ];
 
-  void _onDestinationSelected(int index) {
+  void _onDestinationSelected(WidgetRef ref, int index) {
     navigationShell.goBranch(
       index,
       initialLocation: index == navigationShell.currentIndex,
     );
+    ref.read(lastTabControllerProvider.notifier).setLastTab(index);
   }
 
   void _onMiniPlayerTap(BuildContext context) {
@@ -67,26 +69,28 @@ class ScaffoldWithNavBar extends ConsumerWidget {
     final isTablet = DeviceUtils.isTablet(size.shortestSide);
     final isLandscape = size.height < size.width;
 
+    void onDestinationSelected(int index) => _onDestinationSelected(ref, index);
+
     final Widget shell;
     if (isTablet && isLandscape) {
       shell = _TabletLandscapeShell(
         navigationShell: navigationShell,
         currentIndex: navigationShell.currentIndex,
-        onDestinationSelected: _onDestinationSelected,
+        onDestinationSelected: onDestinationSelected,
         onMiniPlayerTap: () => _onMiniPlayerTap(context),
       );
     } else if (isTablet) {
       shell = _TabletPortraitShell(
         navigationShell: navigationShell,
         currentIndex: navigationShell.currentIndex,
-        onDestinationSelected: _onDestinationSelected,
+        onDestinationSelected: onDestinationSelected,
         onMiniPlayerTap: () => _onMiniPlayerTap(context),
       );
     } else {
       shell = _PhoneShell(
         navigationShell: navigationShell,
         currentIndex: navigationShell.currentIndex,
-        onDestinationSelected: _onDestinationSelected,
+        onDestinationSelected: onDestinationSelected,
         onMiniPlayerTap: () => _onMiniPlayerTap(context),
       );
     }

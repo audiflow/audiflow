@@ -69,6 +69,11 @@ class SettingsKeys {
 
   /// iTunes storefront country code for podcast search (ISO 3166-1 alpha-2).
   static const String searchCountry = 'settings_search_country';
+
+  // -- Navigation --
+
+  /// Last selected tab index (0=search, 1=library, 2=queue).
+  static const String lastTabIndex = 'settings_last_tab_index';
 }
 
 /// Default values for app settings when no preference has been saved.
@@ -116,4 +121,10 @@ class SettingsDefaults {
 
   /// Default new episode notification setting.
   static const bool notifyNewEpisodes = true;
+
+  /// Default last tab index (search tab).
+  static const int lastTabIndex = 0;
+
+  /// Maximum persistable tab index (queue = 2).
+  static const int maxPersistableTabIndex = 2;
 }

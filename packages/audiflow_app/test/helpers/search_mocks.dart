@@ -9,6 +9,7 @@ import 'package:audiflow_search/audiflow_search.dart';
 /// All other settings methods throw [UnimplementedError].
 class FakeAppSettingsRepository implements AppSettingsRepository {
   String? _searchCountry;
+  int _lastTabIndex = 0;
 
   @override
   String? getSearchCountry() => _searchCountry;
@@ -16,6 +17,14 @@ class FakeAppSettingsRepository implements AppSettingsRepository {
   @override
   Future<void> setSearchCountry(String? country) async {
     _searchCountry = country;
+  }
+
+  @override
+  int getLastTabIndex() => _lastTabIndex;
+
+  @override
+  Future<void> setLastTabIndex(int index) async {
+    _lastTabIndex = index;
   }
 
   @override

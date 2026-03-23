@@ -6,12 +6,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   group('ScaffoldWithNavBar', () {
     late GoRouter router;
+    late SharedPreferences prefs;
 
-    setUp(() {
+    setUp(() async {
+      SharedPreferences.setMockInitialValues({});
+      prefs = await SharedPreferences.getInstance();
       router = GoRouter(
         initialLocation: '/a',
         routes: [
@@ -60,6 +64,7 @@ void main() {
     Widget buildTestWidget() {
       return ProviderScope(
         overrides: [
+          sharedPreferencesProvider.overrideWithValue(prefs),
           voiceCommandOrchestratorProvider.overrideWith(
             () => _MockVoiceCommandOrchestrator(),
           ),
