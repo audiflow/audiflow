@@ -1,5 +1,43 @@
+const _namedEntities = <String, String>{
+  'amp': '&',
+  'lt': '<',
+  'gt': '>',
+  'quot': '"',
+  'apos': "'",
+  'nbsp': '\u00A0',
+  'copy': '\u00A9',
+  'reg': '\u00AE',
+  'trade': '\u2122',
+  'mdash': '\u2014',
+  'ndash': '\u2013',
+  'hellip': '\u2026',
+  'lsquo': '\u2018',
+  'rsquo': '\u2019',
+  'ldquo': '\u201C',
+  'rdquo': '\u201D',
+  'bull': '\u2022',
+  'middot': '\u00B7',
+  'laquo': '\u00AB',
+  'raquo': '\u00BB',
+};
+
+final _entityPattern = RegExp(r'&(?:#[xX]([0-9a-fA-F]+)|#(\d+)|(\w+));');
+
 /// Extensions for String class
 extension StringExtensions on String {
+  /// Decodes HTML entities (named, numeric, and hex) to their characters.
+  String get htmlEntityDecode {
+    if (isEmpty) return this;
+    return replaceAllMapped(_entityPattern, (match) {
+      final hex = match.group(1);
+      if (hex != null) return String.fromCharCode(int.parse(hex, radix: 16));
+      final decimal = match.group(2);
+      if (decimal != null) return String.fromCharCode(int.parse(decimal));
+      final named = match.group(3)!;
+      return _namedEntities[named] ?? match.group(0)!;
+    });
+  }
+
   /// Check if string is empty or contains only whitespace
   bool get isBlank => trim().isEmpty;
 

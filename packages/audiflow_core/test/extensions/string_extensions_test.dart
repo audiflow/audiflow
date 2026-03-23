@@ -322,5 +322,57 @@ void main() {
         expect('A\n\n\n\nB'.plainTextToHtml, '<p>A</p><p>B</p>');
       });
     });
+
+    group('htmlEntityDecode', () {
+      test('returns empty string unchanged', () {
+        expect(''.htmlEntityDecode, '');
+      });
+
+      test('returns text without entities unchanged', () {
+        expect('Hello world'.htmlEntityDecode, 'Hello world');
+      });
+
+      test('decodes named entities', () {
+        expect('&amp;'.htmlEntityDecode, '&');
+        expect('&lt;'.htmlEntityDecode, '<');
+        expect('&gt;'.htmlEntityDecode, '>');
+        expect('&quot;'.htmlEntityDecode, '"');
+        expect('&apos;'.htmlEntityDecode, "'");
+        expect('&nbsp;'.htmlEntityDecode, '\u00A0');
+      });
+
+      test('decodes numeric entities', () {
+        expect('&#38;'.htmlEntityDecode, '&');
+        expect('&#60;'.htmlEntityDecode, '<');
+        expect('&#62;'.htmlEntityDecode, '>');
+      });
+
+      test('decodes hex entities', () {
+        expect('&#x26;'.htmlEntityDecode, '&');
+        expect('&#x3C;'.htmlEntityDecode, '<');
+        expect('&#X3E;'.htmlEntityDecode, '>');
+      });
+
+      test('decodes mixed entities in text', () {
+        expect(
+          'Tom &amp; Jerry &mdash; Episode &#60;1&#62;'.htmlEntityDecode,
+          'Tom & Jerry \u2014 Episode <1>',
+        );
+      });
+
+      test('decodes common typographic entities', () {
+        expect('&mdash;'.htmlEntityDecode, '\u2014');
+        expect('&ndash;'.htmlEntityDecode, '\u2013');
+        expect('&hellip;'.htmlEntityDecode, '\u2026');
+        expect('&lsquo;'.htmlEntityDecode, '\u2018');
+        expect('&rsquo;'.htmlEntityDecode, '\u2019');
+        expect('&ldquo;'.htmlEntityDecode, '\u201C');
+        expect('&rdquo;'.htmlEntityDecode, '\u201D');
+      });
+
+      test('preserves unknown named entities', () {
+        expect('&unknown;'.htmlEntityDecode, '&unknown;');
+      });
+    });
   });
 }
