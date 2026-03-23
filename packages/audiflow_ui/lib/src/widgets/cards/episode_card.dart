@@ -1,3 +1,4 @@
+import 'package:audiflow_core/audiflow_core.dart';
 import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -157,7 +158,7 @@ class EpisodeCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            title,
+            title.htmlEntityDecode,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: theme.textTheme.titleSmall?.copyWith(
@@ -274,10 +275,12 @@ bool _urlPathEquals(String? a, String? b) {
 final _htmlTagPattern = RegExp(r'<[^>]*>');
 final _whitespacePattern = RegExp(r'\s+');
 
-/// Strips HTML tags and collapses whitespace for plain-text display.
+/// Strips HTML tags, decodes entities, and collapses whitespace for
+/// plain-text display.
 String _stripHtml(String html) {
   return html
       .replaceAll(_htmlTagPattern, ' ')
+      .htmlEntityDecode
       .replaceAll(_whitespacePattern, ' ')
       .trim();
 }

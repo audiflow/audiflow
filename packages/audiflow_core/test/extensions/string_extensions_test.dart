@@ -322,5 +322,92 @@ void main() {
         expect('A\n\n\n\nB'.plainTextToHtml, '<p>A</p><p>B</p>');
       });
     });
+
+    group('htmlEntityDecode', () {
+      test('returns empty string unchanged', () {
+        expect(''.htmlEntityDecode, '');
+      });
+
+      test('returns text without entities unchanged', () {
+        expect('Hello world'.htmlEntityDecode, 'Hello world');
+      });
+
+      test('decodes named entities', () {
+        expect('&amp;'.htmlEntityDecode, '&');
+        expect('&lt;'.htmlEntityDecode, '<');
+        expect('&gt;'.htmlEntityDecode, '>');
+        expect('&quot;'.htmlEntityDecode, '"');
+        expect('&apos;'.htmlEntityDecode, "'");
+        expect('&nbsp;'.htmlEntityDecode, '\u00A0');
+      });
+
+      test('decodes numeric entities', () {
+        expect('&#38;'.htmlEntityDecode, '&');
+        expect('&#60;'.htmlEntityDecode, '<');
+        expect('&#62;'.htmlEntityDecode, '>');
+      });
+
+      test('decodes hex entities', () {
+        expect('&#x26;'.htmlEntityDecode, '&');
+        expect('&#x3C;'.htmlEntityDecode, '<');
+        expect('&#X3E;'.htmlEntityDecode, '>');
+      });
+
+      test('decodes mixed entities in text', () {
+        expect(
+          'Tom &amp; Jerry &mdash; Episode &#60;1&#62;'.htmlEntityDecode,
+          'Tom & Jerry \u2014 Episode <1>',
+        );
+      });
+
+      test('decodes common typographic entities', () {
+        expect('&mdash;'.htmlEntityDecode, '\u2014');
+        expect('&ndash;'.htmlEntityDecode, '\u2013');
+        expect('&hellip;'.htmlEntityDecode, '\u2026');
+        expect('&lsquo;'.htmlEntityDecode, '\u2018');
+        expect('&rsquo;'.htmlEntityDecode, '\u2019');
+        expect('&ldquo;'.htmlEntityDecode, '\u201C');
+        expect('&rdquo;'.htmlEntityDecode, '\u201D');
+      });
+
+      test('preserves unknown named entities', () {
+        expect('&unknown;'.htmlEntityDecode, '&unknown;');
+      });
+
+      test('handles case-insensitive named entities', () {
+        expect('&AMP;'.htmlEntityDecode, '&');
+        expect('&Amp;'.htmlEntityDecode, '&');
+        expect('&NBSP;'.htmlEntityDecode, '\u00A0');
+      });
+
+      test('preserves out-of-range hex entity', () {
+        expect('&#x110000;'.htmlEntityDecode, '&#x110000;');
+      });
+
+      test('preserves surrogate range entity', () {
+        expect('&#xD800;'.htmlEntityDecode, '&#xD800;');
+        expect('&#xDFFF;'.htmlEntityDecode, '&#xDFFF;');
+      });
+
+      test('preserves very large decimal entity', () {
+        expect('&#99999999999;'.htmlEntityDecode, '&#99999999999;');
+      });
+
+      test('decodes valid boundary code points', () {
+        // U+0000 NUL
+        expect('&#0;'.htmlEntityDecode, '\u0000');
+        // U+10FFFF max Unicode
+        expect('&#x10FFFF;'.htmlEntityDecode, '\u{10FFFF}');
+        // Just before surrogate range
+        expect('&#xD7FF;'.htmlEntityDecode, '\uD7FF');
+        // Just after surrogate range
+        expect('&#xE000;'.htmlEntityDecode, '\uE000');
+      });
+
+      test('skips regex for strings without ampersand', () {
+        // Verifies fast-path: no & means no work
+        expect('Hello world 123'.htmlEntityDecode, 'Hello world 123');
+      });
+    });
   });
 }
