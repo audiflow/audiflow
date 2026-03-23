@@ -373,6 +373,41 @@ void main() {
       test('preserves unknown named entities', () {
         expect('&unknown;'.htmlEntityDecode, '&unknown;');
       });
+
+      test('handles case-insensitive named entities', () {
+        expect('&AMP;'.htmlEntityDecode, '&');
+        expect('&Amp;'.htmlEntityDecode, '&');
+        expect('&NBSP;'.htmlEntityDecode, '\u00A0');
+      });
+
+      test('preserves out-of-range hex entity', () {
+        expect('&#x110000;'.htmlEntityDecode, '&#x110000;');
+      });
+
+      test('preserves surrogate range entity', () {
+        expect('&#xD800;'.htmlEntityDecode, '&#xD800;');
+        expect('&#xDFFF;'.htmlEntityDecode, '&#xDFFF;');
+      });
+
+      test('preserves very large decimal entity', () {
+        expect('&#99999999999;'.htmlEntityDecode, '&#99999999999;');
+      });
+
+      test('decodes valid boundary code points', () {
+        // U+0000 NUL
+        expect('&#0;'.htmlEntityDecode, '\u0000');
+        // U+10FFFF max Unicode
+        expect('&#x10FFFF;'.htmlEntityDecode, '\u{10FFFF}');
+        // Just before surrogate range
+        expect('&#xD7FF;'.htmlEntityDecode, '\uD7FF');
+        // Just after surrogate range
+        expect('&#xE000;'.htmlEntityDecode, '\uE000');
+      });
+
+      test('skips regex for strings without ampersand', () {
+        // Verifies fast-path: no & means no work
+        expect('Hello world 123'.htmlEntityDecode, 'Hello world 123');
+      });
     });
   });
 }

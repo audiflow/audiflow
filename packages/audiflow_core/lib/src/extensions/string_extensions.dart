@@ -23,17 +23,32 @@ const _namedEntities = <String, String>{
 
 final _entityPattern = RegExp(r'&(?:#[xX]([0-9a-fA-F]+)|#(\d+)|(\w+));');
 
+/// Parses a numeric code point string and returns the character, or null if
+/// the value is out of the valid Unicode range or in the surrogate range.
+String? _parseCodePoint(String digits, {int radix = 10}) {
+  final value = int.tryParse(digits, radix: radix);
+  if (value == null) return null;
+  // Valid Unicode: 0..0x10FFFF, excluding surrogates 0xD800..0xDFFF.
+  if (value < 0) return null;
+  if (0xD800 <= value && value <= 0xDFFF) return null;
+  if (0x10FFFF < value) return null;
+  return String.fromCharCode(value);
+}
+
 /// Extensions for String class
 extension StringExtensions on String {
   /// Decodes HTML entities (named, numeric, and hex) to their characters.
+  /// Malformed or out-of-range numeric entities are preserved as-is.
   String get htmlEntityDecode {
-    if (isEmpty) return this;
+    if (isEmpty || !contains('&')) return this;
     return replaceAllMapped(_entityPattern, (match) {
       final hex = match.group(1);
-      if (hex != null) return String.fromCharCode(int.parse(hex, radix: 16));
+      if (hex != null) {
+        return _parseCodePoint(hex, radix: 16) ?? match.group(0)!;
+      }
       final decimal = match.group(2);
-      if (decimal != null) return String.fromCharCode(int.parse(decimal));
-      final named = match.group(3)!;
+      if (decimal != null) return _parseCodePoint(decimal) ?? match.group(0)!;
+      final named = match.group(3)!.toLowerCase();
       return _namedEntities[named] ?? match.group(0)!;
     });
   }
