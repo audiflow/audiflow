@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart' as intl;
 import 'package:isar_community/isar.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -249,9 +250,15 @@ class MyApp extends ConsumerStatefulWidget {
 }
 
 class _MyAppState extends ConsumerState<MyApp> {
-  late final _router = createAppRouter(
-    lastTabIndex: ref.read(lastTabControllerProvider),
-  );
+  late final GoRouter _router;
+
+  @override
+  void initState() {
+    super.initState();
+    _router = createAppRouter(
+      lastTabIndex: ref.read(lastTabControllerProvider),
+    );
+  }
 
   @override
   void dispose() {

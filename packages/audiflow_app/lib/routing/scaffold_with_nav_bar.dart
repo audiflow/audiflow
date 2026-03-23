@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/cupertino.dart';
@@ -51,7 +53,7 @@ class ScaffoldWithNavBar extends ConsumerWidget {
       index,
       initialLocation: index == navigationShell.currentIndex,
     );
-    ref.read(lastTabControllerProvider.notifier).setLastTab(index);
+    unawaited(ref.read(lastTabControllerProvider.notifier).setLastTab(index));
   }
 
   void _onMiniPlayerTap(BuildContext context) {
