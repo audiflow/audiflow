@@ -2,7 +2,6 @@ import 'package:isar_community/isar.dart';
 
 import 'station_duration_filter.dart';
 import 'station_episode_sort.dart';
-import 'station_playback_state.dart';
 
 part 'station.g.dart';
 
@@ -18,9 +17,7 @@ class Station {
 
   // -- Filter fields (flat for simple types) --
 
-  /// Stored as string, use [playbackStateFilter] getter.
-  String playbackState = 'all';
-
+  bool hideCompleted = false;
   bool filterDownloaded = false;
   bool filterFavorited = false;
 
@@ -33,13 +30,6 @@ class Station {
   late DateTime updatedAt;
 
   // -- Convenience getters (not persisted) --
-
-  @ignore
-  StationPlaybackState get playbackStateFilter =>
-      StationPlaybackState.fromString(playbackState);
-
-  set playbackStateFilter(StationPlaybackState value) =>
-      playbackState = value.name;
 
   @ignore
   StationEpisodeSort get episodeSort =>

@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$StationEditState {
 
- String get name; Set<int> get selectedPodcastIds; StationPlaybackState get playbackState; bool get filterDownloaded; bool get filterFavorited; StationDurationFilter? get durationFilter; int? get publishedWithinDays; StationEpisodeSort get episodeSort; bool get isSaving; String? get error;
+ String get name; Set<int> get selectedPodcastIds; bool get hideCompleted; bool get filterDownloaded; bool get filterFavorited; StationDurationFilter? get durationFilter; int? get publishedWithinDays; StationEpisodeSort get episodeSort; bool get isSaving; String? get error;
 /// Create a copy of StationEditState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $StationEditStateCopyWith<StationEditState> get copyWith => _$StationEditStateCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is StationEditState&&(identical(other.name, name) || other.name == name)&&const DeepCollectionEquality().equals(other.selectedPodcastIds, selectedPodcastIds)&&(identical(other.playbackState, playbackState) || other.playbackState == playbackState)&&(identical(other.filterDownloaded, filterDownloaded) || other.filterDownloaded == filterDownloaded)&&(identical(other.filterFavorited, filterFavorited) || other.filterFavorited == filterFavorited)&&(identical(other.durationFilter, durationFilter) || other.durationFilter == durationFilter)&&(identical(other.publishedWithinDays, publishedWithinDays) || other.publishedWithinDays == publishedWithinDays)&&(identical(other.episodeSort, episodeSort) || other.episodeSort == episodeSort)&&(identical(other.isSaving, isSaving) || other.isSaving == isSaving)&&(identical(other.error, error) || other.error == error));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is StationEditState&&(identical(other.name, name) || other.name == name)&&const DeepCollectionEquality().equals(other.selectedPodcastIds, selectedPodcastIds)&&(identical(other.hideCompleted, hideCompleted) || other.hideCompleted == hideCompleted)&&(identical(other.filterDownloaded, filterDownloaded) || other.filterDownloaded == filterDownloaded)&&(identical(other.filterFavorited, filterFavorited) || other.filterFavorited == filterFavorited)&&(identical(other.durationFilter, durationFilter) || other.durationFilter == durationFilter)&&(identical(other.publishedWithinDays, publishedWithinDays) || other.publishedWithinDays == publishedWithinDays)&&(identical(other.episodeSort, episodeSort) || other.episodeSort == episodeSort)&&(identical(other.isSaving, isSaving) || other.isSaving == isSaving)&&(identical(other.error, error) || other.error == error));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,name,const DeepCollectionEquality().hash(selectedPodcastIds),playbackState,filterDownloaded,filterFavorited,durationFilter,publishedWithinDays,episodeSort,isSaving,error);
+int get hashCode => Object.hash(runtimeType,name,const DeepCollectionEquality().hash(selectedPodcastIds),hideCompleted,filterDownloaded,filterFavorited,durationFilter,publishedWithinDays,episodeSort,isSaving,error);
 
 @override
 String toString() {
-  return 'StationEditState(name: $name, selectedPodcastIds: $selectedPodcastIds, playbackState: $playbackState, filterDownloaded: $filterDownloaded, filterFavorited: $filterFavorited, durationFilter: $durationFilter, publishedWithinDays: $publishedWithinDays, episodeSort: $episodeSort, isSaving: $isSaving, error: $error)';
+  return 'StationEditState(name: $name, selectedPodcastIds: $selectedPodcastIds, hideCompleted: $hideCompleted, filterDownloaded: $filterDownloaded, filterFavorited: $filterFavorited, durationFilter: $durationFilter, publishedWithinDays: $publishedWithinDays, episodeSort: $episodeSort, isSaving: $isSaving, error: $error)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $StationEditStateCopyWith<$Res>  {
   factory $StationEditStateCopyWith(StationEditState value, $Res Function(StationEditState) _then) = _$StationEditStateCopyWithImpl;
 @useResult
 $Res call({
- String name, Set<int> selectedPodcastIds, StationPlaybackState playbackState, bool filterDownloaded, bool filterFavorited, StationDurationFilter? durationFilter, int? publishedWithinDays, StationEpisodeSort episodeSort, bool isSaving, String? error
+ String name, Set<int> selectedPodcastIds, bool hideCompleted, bool filterDownloaded, bool filterFavorited, StationDurationFilter? durationFilter, int? publishedWithinDays, StationEpisodeSort episodeSort, bool isSaving, String? error
 });
 
 
@@ -62,12 +62,12 @@ class _$StationEditStateCopyWithImpl<$Res>
 
 /// Create a copy of StationEditState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? name = null,Object? selectedPodcastIds = null,Object? playbackState = null,Object? filterDownloaded = null,Object? filterFavorited = null,Object? durationFilter = freezed,Object? publishedWithinDays = freezed,Object? episodeSort = null,Object? isSaving = null,Object? error = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? name = null,Object? selectedPodcastIds = null,Object? hideCompleted = null,Object? filterDownloaded = null,Object? filterFavorited = null,Object? durationFilter = freezed,Object? publishedWithinDays = freezed,Object? episodeSort = null,Object? isSaving = null,Object? error = freezed,}) {
   return _then(_self.copyWith(
 name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,selectedPodcastIds: null == selectedPodcastIds ? _self.selectedPodcastIds : selectedPodcastIds // ignore: cast_nullable_to_non_nullable
-as Set<int>,playbackState: null == playbackState ? _self.playbackState : playbackState // ignore: cast_nullable_to_non_nullable
-as StationPlaybackState,filterDownloaded: null == filterDownloaded ? _self.filterDownloaded : filterDownloaded // ignore: cast_nullable_to_non_nullable
+as Set<int>,hideCompleted: null == hideCompleted ? _self.hideCompleted : hideCompleted // ignore: cast_nullable_to_non_nullable
+as bool,filterDownloaded: null == filterDownloaded ? _self.filterDownloaded : filterDownloaded // ignore: cast_nullable_to_non_nullable
 as bool,filterFavorited: null == filterFavorited ? _self.filterFavorited : filterFavorited // ignore: cast_nullable_to_non_nullable
 as bool,durationFilter: freezed == durationFilter ? _self.durationFilter : durationFilter // ignore: cast_nullable_to_non_nullable
 as StationDurationFilter?,publishedWithinDays: freezed == publishedWithinDays ? _self.publishedWithinDays : publishedWithinDays // ignore: cast_nullable_to_non_nullable
@@ -156,10 +156,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String name,  Set<int> selectedPodcastIds,  StationPlaybackState playbackState,  bool filterDownloaded,  bool filterFavorited,  StationDurationFilter? durationFilter,  int? publishedWithinDays,  StationEpisodeSort episodeSort,  bool isSaving,  String? error)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String name,  Set<int> selectedPodcastIds,  bool hideCompleted,  bool filterDownloaded,  bool filterFavorited,  StationDurationFilter? durationFilter,  int? publishedWithinDays,  StationEpisodeSort episodeSort,  bool isSaving,  String? error)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _StationEditState() when $default != null:
-return $default(_that.name,_that.selectedPodcastIds,_that.playbackState,_that.filterDownloaded,_that.filterFavorited,_that.durationFilter,_that.publishedWithinDays,_that.episodeSort,_that.isSaving,_that.error);case _:
+return $default(_that.name,_that.selectedPodcastIds,_that.hideCompleted,_that.filterDownloaded,_that.filterFavorited,_that.durationFilter,_that.publishedWithinDays,_that.episodeSort,_that.isSaving,_that.error);case _:
   return orElse();
 
 }
@@ -177,10 +177,10 @@ return $default(_that.name,_that.selectedPodcastIds,_that.playbackState,_that.fi
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String name,  Set<int> selectedPodcastIds,  StationPlaybackState playbackState,  bool filterDownloaded,  bool filterFavorited,  StationDurationFilter? durationFilter,  int? publishedWithinDays,  StationEpisodeSort episodeSort,  bool isSaving,  String? error)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String name,  Set<int> selectedPodcastIds,  bool hideCompleted,  bool filterDownloaded,  bool filterFavorited,  StationDurationFilter? durationFilter,  int? publishedWithinDays,  StationEpisodeSort episodeSort,  bool isSaving,  String? error)  $default,) {final _that = this;
 switch (_that) {
 case _StationEditState():
-return $default(_that.name,_that.selectedPodcastIds,_that.playbackState,_that.filterDownloaded,_that.filterFavorited,_that.durationFilter,_that.publishedWithinDays,_that.episodeSort,_that.isSaving,_that.error);}
+return $default(_that.name,_that.selectedPodcastIds,_that.hideCompleted,_that.filterDownloaded,_that.filterFavorited,_that.durationFilter,_that.publishedWithinDays,_that.episodeSort,_that.isSaving,_that.error);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -194,10 +194,10 @@ return $default(_that.name,_that.selectedPodcastIds,_that.playbackState,_that.fi
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String name,  Set<int> selectedPodcastIds,  StationPlaybackState playbackState,  bool filterDownloaded,  bool filterFavorited,  StationDurationFilter? durationFilter,  int? publishedWithinDays,  StationEpisodeSort episodeSort,  bool isSaving,  String? error)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String name,  Set<int> selectedPodcastIds,  bool hideCompleted,  bool filterDownloaded,  bool filterFavorited,  StationDurationFilter? durationFilter,  int? publishedWithinDays,  StationEpisodeSort episodeSort,  bool isSaving,  String? error)?  $default,) {final _that = this;
 switch (_that) {
 case _StationEditState() when $default != null:
-return $default(_that.name,_that.selectedPodcastIds,_that.playbackState,_that.filterDownloaded,_that.filterFavorited,_that.durationFilter,_that.publishedWithinDays,_that.episodeSort,_that.isSaving,_that.error);case _:
+return $default(_that.name,_that.selectedPodcastIds,_that.hideCompleted,_that.filterDownloaded,_that.filterFavorited,_that.durationFilter,_that.publishedWithinDays,_that.episodeSort,_that.isSaving,_that.error);case _:
   return null;
 
 }
@@ -209,8 +209,8 @@ return $default(_that.name,_that.selectedPodcastIds,_that.playbackState,_that.fi
 
 
 class _StationEditState implements StationEditState {
-  const _StationEditState({this.name = '', final  Set<int> selectedPodcastIds = const {}, this.playbackState = StationPlaybackState.all, this.filterDownloaded = false, this.filterFavorited = false, this.durationFilter, this.publishedWithinDays, this.episodeSort = StationEpisodeSort.newest, this.isSaving = false, this.error}): _selectedPodcastIds = selectedPodcastIds;
-  
+  const _StationEditState({this.name = '', final  Set<int> selectedPodcastIds = const {}, this.hideCompleted = false, this.filterDownloaded = false, this.filterFavorited = false, this.durationFilter, this.publishedWithinDays, this.episodeSort = StationEpisodeSort.newest, this.isSaving = false, this.error}): _selectedPodcastIds = selectedPodcastIds;
+
 
 @override@JsonKey() final  String name;
  final  Set<int> _selectedPodcastIds;
@@ -220,7 +220,7 @@ class _StationEditState implements StationEditState {
   return EqualUnmodifiableSetView(_selectedPodcastIds);
 }
 
-@override@JsonKey() final  StationPlaybackState playbackState;
+@override@JsonKey() final  bool hideCompleted;
 @override@JsonKey() final  bool filterDownloaded;
 @override@JsonKey() final  bool filterFavorited;
 @override final  StationDurationFilter? durationFilter;
@@ -239,16 +239,16 @@ _$StationEditStateCopyWith<_StationEditState> get copyWith => __$StationEditStat
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _StationEditState&&(identical(other.name, name) || other.name == name)&&const DeepCollectionEquality().equals(other._selectedPodcastIds, _selectedPodcastIds)&&(identical(other.playbackState, playbackState) || other.playbackState == playbackState)&&(identical(other.filterDownloaded, filterDownloaded) || other.filterDownloaded == filterDownloaded)&&(identical(other.filterFavorited, filterFavorited) || other.filterFavorited == filterFavorited)&&(identical(other.durationFilter, durationFilter) || other.durationFilter == durationFilter)&&(identical(other.publishedWithinDays, publishedWithinDays) || other.publishedWithinDays == publishedWithinDays)&&(identical(other.episodeSort, episodeSort) || other.episodeSort == episodeSort)&&(identical(other.isSaving, isSaving) || other.isSaving == isSaving)&&(identical(other.error, error) || other.error == error));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _StationEditState&&(identical(other.name, name) || other.name == name)&&const DeepCollectionEquality().equals(other._selectedPodcastIds, _selectedPodcastIds)&&(identical(other.hideCompleted, hideCompleted) || other.hideCompleted == hideCompleted)&&(identical(other.filterDownloaded, filterDownloaded) || other.filterDownloaded == filterDownloaded)&&(identical(other.filterFavorited, filterFavorited) || other.filterFavorited == filterFavorited)&&(identical(other.durationFilter, durationFilter) || other.durationFilter == durationFilter)&&(identical(other.publishedWithinDays, publishedWithinDays) || other.publishedWithinDays == publishedWithinDays)&&(identical(other.episodeSort, episodeSort) || other.episodeSort == episodeSort)&&(identical(other.isSaving, isSaving) || other.isSaving == isSaving)&&(identical(other.error, error) || other.error == error));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,name,const DeepCollectionEquality().hash(_selectedPodcastIds),playbackState,filterDownloaded,filterFavorited,durationFilter,publishedWithinDays,episodeSort,isSaving,error);
+int get hashCode => Object.hash(runtimeType,name,const DeepCollectionEquality().hash(_selectedPodcastIds),hideCompleted,filterDownloaded,filterFavorited,durationFilter,publishedWithinDays,episodeSort,isSaving,error);
 
 @override
 String toString() {
-  return 'StationEditState(name: $name, selectedPodcastIds: $selectedPodcastIds, playbackState: $playbackState, filterDownloaded: $filterDownloaded, filterFavorited: $filterFavorited, durationFilter: $durationFilter, publishedWithinDays: $publishedWithinDays, episodeSort: $episodeSort, isSaving: $isSaving, error: $error)';
+  return 'StationEditState(name: $name, selectedPodcastIds: $selectedPodcastIds, hideCompleted: $hideCompleted, filterDownloaded: $filterDownloaded, filterFavorited: $filterFavorited, durationFilter: $durationFilter, publishedWithinDays: $publishedWithinDays, episodeSort: $episodeSort, isSaving: $isSaving, error: $error)';
 }
 
 
@@ -259,7 +259,7 @@ abstract mixin class _$StationEditStateCopyWith<$Res> implements $StationEditSta
   factory _$StationEditStateCopyWith(_StationEditState value, $Res Function(_StationEditState) _then) = __$StationEditStateCopyWithImpl;
 @override @useResult
 $Res call({
- String name, Set<int> selectedPodcastIds, StationPlaybackState playbackState, bool filterDownloaded, bool filterFavorited, StationDurationFilter? durationFilter, int? publishedWithinDays, StationEpisodeSort episodeSort, bool isSaving, String? error
+ String name, Set<int> selectedPodcastIds, bool hideCompleted, bool filterDownloaded, bool filterFavorited, StationDurationFilter? durationFilter, int? publishedWithinDays, StationEpisodeSort episodeSort, bool isSaving, String? error
 });
 
 
@@ -276,12 +276,12 @@ class __$StationEditStateCopyWithImpl<$Res>
 
 /// Create a copy of StationEditState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? name = null,Object? selectedPodcastIds = null,Object? playbackState = null,Object? filterDownloaded = null,Object? filterFavorited = null,Object? durationFilter = freezed,Object? publishedWithinDays = freezed,Object? episodeSort = null,Object? isSaving = null,Object? error = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? name = null,Object? selectedPodcastIds = null,Object? hideCompleted = null,Object? filterDownloaded = null,Object? filterFavorited = null,Object? durationFilter = freezed,Object? publishedWithinDays = freezed,Object? episodeSort = null,Object? isSaving = null,Object? error = freezed,}) {
   return _then(_StationEditState(
 name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,selectedPodcastIds: null == selectedPodcastIds ? _self._selectedPodcastIds : selectedPodcastIds // ignore: cast_nullable_to_non_nullable
-as Set<int>,playbackState: null == playbackState ? _self.playbackState : playbackState // ignore: cast_nullable_to_non_nullable
-as StationPlaybackState,filterDownloaded: null == filterDownloaded ? _self.filterDownloaded : filterDownloaded // ignore: cast_nullable_to_non_nullable
+as Set<int>,hideCompleted: null == hideCompleted ? _self.hideCompleted : hideCompleted // ignore: cast_nullable_to_non_nullable
+as bool,filterDownloaded: null == filterDownloaded ? _self.filterDownloaded : filterDownloaded // ignore: cast_nullable_to_non_nullable
 as bool,filterFavorited: null == filterFavorited ? _self.filterFavorited : filterFavorited // ignore: cast_nullable_to_non_nullable
 as bool,durationFilter: freezed == durationFilter ? _self.durationFilter : durationFilter // ignore: cast_nullable_to_non_nullable
 as StationDurationFilter?,publishedWithinDays: freezed == publishedWithinDays ? _self.publishedWithinDays : publishedWithinDays // ignore: cast_nullable_to_non_nullable

@@ -103,8 +103,6 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
             const SizedBox(height: Spacing.lg),
             _buildPodcastPicker(context, editState, controller),
             const SizedBox(height: Spacing.lg),
-            _buildPlaybackStateSection(context, editState, controller),
-            const SizedBox(height: Spacing.lg),
             _buildAttributeFilters(editState, controller),
             const SizedBox(height: Spacing.lg),
             _buildDurationFilter(context, editState, controller),
@@ -217,57 +215,20 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
     );
   }
 
-  Widget _buildPlaybackStateSection(
-    BuildContext context,
-    StationEditState state,
-    StationEditController controller,
-  ) {
-    final theme = Theme.of(context);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          AppLocalizations.of(context).stationPlaybackState,
-          style: theme.textTheme.titleSmall,
-        ),
-        const SizedBox(height: Spacing.xs),
-        RadioGroup<StationPlaybackState>(
-          groupValue: state.playbackState,
-          onChanged: (v) {
-            if (v != null) controller.setPlaybackState(v);
-          },
-          child: Column(
-            children: StationPlaybackState.values
-                .map(
-                  (value) => RadioListTile<StationPlaybackState>(
-                    value: value,
-                    title: Text(_playbackStateLabel(value)),
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                )
-                .toList(),
-          ),
-        ),
-      ],
-    );
-  }
-
-  String _playbackStateLabel(StationPlaybackState value) {
-    final l10n = AppLocalizations.of(context);
-    return switch (value) {
-      StationPlaybackState.all => l10n.stationFilterAllLabel,
-      StationPlaybackState.unplayed => l10n.stationFilterUnplayedLabel,
-      StationPlaybackState.inProgress => l10n.stationFilterInProgressLabel,
-    };
-  }
-
   Widget _buildAttributeFilters(
     StationEditState state,
     StationEditController controller,
   ) {
     return Column(
       children: [
+        SwitchListTile(
+          value: state.hideCompleted,
+          onChanged: controller.setHideCompleted,
+          title: Text(
+            AppLocalizations.of(context).stationFilterHideCompletedLabel,
+          ),
+          contentPadding: EdgeInsets.zero,
+        ),
         SwitchListTile(
           value: state.filterDownloaded,
           onChanged: controller.setFilterDownloaded,

@@ -32,12 +32,11 @@ void main() {
     check(loaded!.name).equals('My Station');
     check(loaded.sortOrder).equals(0);
     check(loaded.episodeSortType).equals('newest');
-    check(loaded.playbackState).equals('all');
+    check(loaded.hideCompleted).isFalse();
     check(loaded.filterDownloaded).isFalse();
     check(loaded.filterFavorited).isFalse();
     check(loaded.durationFilter).isNull();
     check(loaded.publishedWithinDays).isNull();
-    check(loaded.playbackStateFilter).equals(StationPlaybackState.all);
     check(loaded.episodeSort).equals(StationEpisodeSort.newest);
   });
 
@@ -45,7 +44,7 @@ void main() {
     final now = DateTime(2026, 3, 20);
     final station = Station()
       ..name = 'Filtered Station'
-      ..playbackState = StationPlaybackState.unplayed.name
+      ..hideCompleted = true
       ..filterDownloaded = true
       ..filterFavorited = true
       ..durationFilter = (StationDurationFilter()
@@ -59,7 +58,7 @@ void main() {
 
     final loaded = await isar.stations.get(station.id);
     check(loaded).isNotNull();
-    check(loaded!.playbackStateFilter).equals(StationPlaybackState.unplayed);
+    check(loaded!.hideCompleted).isTrue();
     check(loaded.filterDownloaded).isTrue();
     check(loaded.filterFavorited).isTrue();
     check(loaded.durationFilter).isNotNull();

@@ -30,10 +30,10 @@ void main() {
   });
 
   test('full station lifecycle: create, filter, reconcile, delete', () async {
-    // 1. Create a Station with unplayed + publishedWithin 30 days filters
+    // 1. Create a Station with hideCompleted + publishedWithin 30 days filters
     final station = Station()
       ..name = 'Test Station'
-      ..playbackState = 'unplayed'
+      ..hideCompleted = true
       ..publishedWithinDays = 30
       ..createdAt = DateTime.now()
       ..updatedAt = DateTime.now();

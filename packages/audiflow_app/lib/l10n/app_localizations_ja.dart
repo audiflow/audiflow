@@ -775,16 +775,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get stationDeleteBody => 'このステーションを削除しますか？この操作は元に戻せません。';
 
   @override
-  String get stationPlaybackState => '再生状態';
-
-  @override
-  String get stationFilterAllLabel => '全エピソード';
-
-  @override
-  String get stationFilterUnplayedLabel => '未再生のみ';
-
-  @override
-  String get stationFilterInProgressLabel => '再生中のみ';
+  String get stationFilterHideCompletedLabel => '再生済みを非表示';
 
   @override
   String get stationFilterDownloadedLabel => 'ダウンロード済みのみ';
