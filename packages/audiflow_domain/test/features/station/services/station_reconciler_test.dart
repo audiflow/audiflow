@@ -36,7 +36,7 @@ void main() {
   // ---------------------------------------------------------------------------
 
   Future<int> putStation({
-    String playbackState = 'all',
+    bool hideCompleted = false,
     bool filterDownloaded = false,
     bool filterFavorited = false,
     StationDurationFilter? durationFilter,
@@ -44,7 +44,7 @@ void main() {
   }) async {
     final station = Station()
       ..name = 'Test Station'
-      ..playbackState = playbackState
+      ..hideCompleted = hideCompleted
       ..filterDownloaded = filterDownloaded
       ..filterFavorited = filterFavorited
       ..durationFilter = durationFilter
@@ -128,8 +128,8 @@ void main() {
   // ---------------------------------------------------------------------------
 
   group('reconcileFull', () {
-    test('unplayed filter keeps only episodes without playback', () async {
-      final stationId = await putStation(playbackState: 'unplayed');
+    test('hideCompleted excludes completed episodes', () async {
+      final stationId = await putStation(hideCompleted: true);
       await linkPodcast(stationId, 1);
 
       final epNoHistory = await putEpisode(podcastId: 1, guid: 'no-history');
@@ -146,28 +146,7 @@ void main() {
       await reconciler.reconcileFull(stationId);
 
       final ids = await stationEpisodeIds(stationId);
-      check(ids).deepEquals([epNoHistory]);
-    });
-
-    test('inProgress filter keeps only partially played episodes', () async {
-      final stationId = await putStation(playbackState: 'inProgress');
-      await linkPodcast(stationId, 1);
-
-      await putEpisode(podcastId: 1, guid: 'no-history');
-      final epCompleted = await putEpisode(podcastId: 1, guid: 'completed');
-      final epInProgress = await putEpisode(podcastId: 1, guid: 'in-progress');
-
-      await putPlaybackHistory(
-        episodeId: epCompleted,
-        positionMs: 5000,
-        completedAt: DateTime(2026, 3, 1),
-      );
-      await putPlaybackHistory(episodeId: epInProgress, positionMs: 5000);
-
-      await reconciler.reconcileFull(stationId);
-
-      final ids = await stationEpisodeIds(stationId);
-      check(ids).deepEquals([epInProgress]);
+      check(ids).unorderedEquals([epNoHistory, epInProgress]);
     });
 
     test('downloaded filter keeps only completed downloads', () async {
@@ -251,7 +230,7 @@ void main() {
 
     test('combined filters require ALL conditions to match', () async {
       final stationId = await putStation(
-        playbackState: 'unplayed',
+        hideCompleted: true,
         filterDownloaded: true,
         publishedWithinDays: 30,
       );
@@ -339,7 +318,7 @@ void main() {
     });
 
     test('removes episode when it becomes completed', () async {
-      final stationId = await putStation(playbackState: 'unplayed');
+      final stationId = await putStation(hideCompleted: true);
       await linkPodcast(stationId, 1);
 
       final epId = await putEpisode(podcastId: 1, guid: 'ep1');
@@ -363,7 +342,7 @@ void main() {
 
   group('diff correctness', () {
     test('second reconcileFull is a no-op with unchanged data', () async {
-      final stationId = await putStation(playbackState: 'unplayed');
+      final stationId = await putStation(hideCompleted: true);
       await linkPodcast(stationId, 1);
 
       final epId = await putEpisode(podcastId: 1, guid: 'ep1');

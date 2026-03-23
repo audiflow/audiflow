@@ -181,7 +181,6 @@ export 'src/features/station/models/station.dart';
 export 'src/features/station/models/station_duration_filter.dart';
 export 'src/features/station/models/station_episode.dart';
 export 'src/features/station/models/station_episode_sort.dart';
-export 'src/features/station/models/station_playback_state.dart';
 export 'src/features/station/models/station_podcast.dart';
 
 // Station feature - datasources

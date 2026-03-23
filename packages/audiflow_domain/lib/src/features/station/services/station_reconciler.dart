@@ -8,7 +8,6 @@ import '../../player/models/playback_history.dart';
 import '../models/station.dart';
 import '../models/station_duration_filter.dart';
 import '../models/station_episode.dart';
-import '../models/station_playback_state.dart';
 import '../models/station_podcast.dart';
 
 /// Evaluates episodes against station filter conditions and maintains
@@ -189,7 +188,7 @@ class StationReconciler {
     Station station, {
     DateTime? now,
   }) async {
-    if (!await _matchesPlaybackState(episode.id, station.playbackStateFilter)) {
+    if (station.hideCompleted && await _isCompleted(episode.id)) {
       return false;
     }
     if (station.filterDownloaded && !await _isDownloaded(episode.id)) {
@@ -213,27 +212,12 @@ class StationReconciler {
     return true;
   }
 
-  Future<bool> _matchesPlaybackState(
-    int episodeId,
-    StationPlaybackState state,
-  ) async {
-    if (state == StationPlaybackState.all) return true;
-
+  Future<bool> _isCompleted(int episodeId) async {
     final history = await _isar.playbackHistorys
         .filter()
         .episodeIdEqualTo(episodeId)
         .findFirst();
-
-    return switch (state) {
-      StationPlaybackState.all => true,
-      StationPlaybackState.unplayed =>
-        history == null ||
-            (history.completedAt == null && history.positionMs == 0),
-      StationPlaybackState.inProgress =>
-        history != null &&
-            history.completedAt == null &&
-            0 < history.positionMs,
-    };
+    return history != null && history.completedAt != null;
   }
 
   Future<bool> _isDownloaded(int episodeId) async {

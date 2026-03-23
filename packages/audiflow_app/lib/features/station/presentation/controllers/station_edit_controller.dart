@@ -26,7 +26,7 @@ sealed class StationEditState with _$StationEditState {
   const factory StationEditState({
     @Default('') String name,
     @Default({}) Set<int> selectedPodcastIds,
-    @Default(StationPlaybackState.all) StationPlaybackState playbackState,
+    @Default(false) bool hideCompleted,
     @Default(false) bool filterDownloaded,
     @Default(false) bool filterFavorited,
     StationDurationFilter? durationFilter,
@@ -59,7 +59,7 @@ class StationEditController extends _$StationEditController {
     state = state.copyWith(
       name: station.name,
       selectedPodcastIds: podcasts.map((p) => p.podcastId).toSet(),
-      playbackState: station.playbackStateFilter,
+      hideCompleted: station.hideCompleted,
       filterDownloaded: station.filterDownloaded,
       filterFavorited: station.filterFavorited,
       durationFilter: station.durationFilter,
@@ -70,14 +70,14 @@ class StationEditController extends _$StationEditController {
 
   void setName(String name) => state = state.copyWith(name: name);
 
-  void setPlaybackState(StationPlaybackState value) =>
-      state = state.copyWith(playbackState: value);
-
   void setFilterDownloaded(bool value) =>
       state = state.copyWith(filterDownloaded: value);
 
   void setFilterFavorited(bool value) =>
       state = state.copyWith(filterFavorited: value);
+
+  void setHideCompleted(bool value) =>
+      state = state.copyWith(hideCompleted: value);
 
   void setDurationFilter(StationDurationFilter? value) =>
       state = state.copyWith(durationFilter: value);
@@ -126,7 +126,7 @@ class StationEditController extends _$StationEditController {
       if (stationId == null) {
         final station = Station()
           ..name = trimmedName
-          ..playbackStateFilter = state.playbackState
+          ..hideCompleted = state.hideCompleted
           ..filterDownloaded = state.filterDownloaded
           ..filterFavorited = state.filterFavorited
           ..durationFilter = state.durationFilter
@@ -146,7 +146,7 @@ class StationEditController extends _$StationEditController {
         }
         existing
           ..name = trimmedName
-          ..playbackStateFilter = state.playbackState
+          ..hideCompleted = state.hideCompleted
           ..filterDownloaded = state.filterDownloaded
           ..filterFavorited = state.filterFavorited
           ..durationFilter = state.durationFilter

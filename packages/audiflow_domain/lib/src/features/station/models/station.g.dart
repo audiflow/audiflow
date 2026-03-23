@@ -44,12 +44,12 @@ const StationSchema = CollectionSchema(
       name: r'filterFavorited',
       type: IsarType.bool,
     ),
-    r'name': PropertySchema(id: 5, name: r'name', type: IsarType.string),
-    r'playbackState': PropertySchema(
-      id: 6,
-      name: r'playbackState',
-      type: IsarType.string,
+    r'hideCompleted': PropertySchema(
+      id: 5,
+      name: r'hideCompleted',
+      type: IsarType.bool,
     ),
+    r'name': PropertySchema(id: 6, name: r'name', type: IsarType.string),
     r'publishedWithinDays': PropertySchema(
       id: 7,
       name: r'publishedWithinDays',
@@ -102,7 +102,6 @@ int _stationEstimateSize(
   }
   bytesCount += 3 + object.episodeSortType.length * 3;
   bytesCount += 3 + object.name.length * 3;
-  bytesCount += 3 + object.playbackState.length * 3;
   return bytesCount;
 }
 
@@ -122,8 +121,8 @@ void _stationSerialize(
   writer.writeString(offsets[2], object.episodeSortType);
   writer.writeBool(offsets[3], object.filterDownloaded);
   writer.writeBool(offsets[4], object.filterFavorited);
-  writer.writeString(offsets[5], object.name);
-  writer.writeString(offsets[6], object.playbackState);
+  writer.writeBool(offsets[5], object.hideCompleted);
+  writer.writeString(offsets[6], object.name);
   writer.writeLong(offsets[7], object.publishedWithinDays);
   writer.writeLong(offsets[8], object.sortOrder);
   writer.writeDateTime(offsets[9], object.updatedAt);
@@ -145,9 +144,9 @@ Station _stationDeserialize(
   object.episodeSortType = reader.readString(offsets[2]);
   object.filterDownloaded = reader.readBool(offsets[3]);
   object.filterFavorited = reader.readBool(offsets[4]);
+  object.hideCompleted = reader.readBool(offsets[5]);
   object.id = id;
-  object.name = reader.readString(offsets[5]);
-  object.playbackState = reader.readString(offsets[6]);
+  object.name = reader.readString(offsets[6]);
   object.publishedWithinDays = reader.readLongOrNull(offsets[7]);
   object.sortOrder = reader.readLong(offsets[8]);
   object.updatedAt = reader.readDateTime(offsets[9]);
@@ -177,7 +176,7 @@ P _stationDeserializeProp<P>(
     case 4:
       return (reader.readBool(offset)) as P;
     case 5:
-      return (reader.readString(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 6:
       return (reader.readString(offset)) as P;
     case 7:
@@ -526,6 +525,16 @@ extension StationQueryFilter
     });
   }
 
+  QueryBuilder<Station, Station, QAfterFilterCondition> hideCompletedEqualTo(
+    bool value,
+  ) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'hideCompleted', value: value),
+      );
+    });
+  }
+
   QueryBuilder<Station, Station, QAfterFilterCondition> idEqualTo(Id value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
@@ -725,154 +734,6 @@ extension StationQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         FilterCondition.greaterThan(property: r'name', value: ''),
-      );
-    });
-  }
-
-  QueryBuilder<Station, Station, QAfterFilterCondition> playbackStateEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(
-          property: r'playbackState',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
-    });
-  }
-
-  QueryBuilder<Station, Station, QAfterFilterCondition>
-  playbackStateGreaterThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'playbackState',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
-    });
-  }
-
-  QueryBuilder<Station, Station, QAfterFilterCondition> playbackStateLessThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'playbackState',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
-    });
-  }
-
-  QueryBuilder<Station, Station, QAfterFilterCondition> playbackStateBetween(
-    String lower,
-    String upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'playbackState',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-          caseSensitive: caseSensitive,
-        ),
-      );
-    });
-  }
-
-  QueryBuilder<Station, Station, QAfterFilterCondition> playbackStateStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.startsWith(
-          property: r'playbackState',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
-    });
-  }
-
-  QueryBuilder<Station, Station, QAfterFilterCondition> playbackStateEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.endsWith(
-          property: r'playbackState',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
-    });
-  }
-
-  QueryBuilder<Station, Station, QAfterFilterCondition> playbackStateContains(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.contains(
-          property: r'playbackState',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
-    });
-  }
-
-  QueryBuilder<Station, Station, QAfterFilterCondition> playbackStateMatches(
-    String pattern, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.matches(
-          property: r'playbackState',
-          wildcard: pattern,
-          caseSensitive: caseSensitive,
-        ),
-      );
-    });
-  }
-
-  QueryBuilder<Station, Station, QAfterFilterCondition> playbackStateIsEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'playbackState', value: ''),
-      );
-    });
-  }
-
-  QueryBuilder<Station, Station, QAfterFilterCondition>
-  playbackStateIsNotEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(property: r'playbackState', value: ''),
       );
     });
   }
@@ -1132,6 +993,18 @@ extension StationQuerySortBy on QueryBuilder<Station, Station, QSortBy> {
     });
   }
 
+  QueryBuilder<Station, Station, QAfterSortBy> sortByHideCompleted() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'hideCompleted', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Station, Station, QAfterSortBy> sortByHideCompletedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'hideCompleted', Sort.desc);
+    });
+  }
+
   QueryBuilder<Station, Station, QAfterSortBy> sortByName() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'name', Sort.asc);
@@ -1141,18 +1014,6 @@ extension StationQuerySortBy on QueryBuilder<Station, Station, QSortBy> {
   QueryBuilder<Station, Station, QAfterSortBy> sortByNameDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'name', Sort.desc);
-    });
-  }
-
-  QueryBuilder<Station, Station, QAfterSortBy> sortByPlaybackState() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'playbackState', Sort.asc);
-    });
-  }
-
-  QueryBuilder<Station, Station, QAfterSortBy> sortByPlaybackStateDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'playbackState', Sort.desc);
     });
   }
 
@@ -1243,6 +1104,18 @@ extension StationQuerySortThenBy
     });
   }
 
+  QueryBuilder<Station, Station, QAfterSortBy> thenByHideCompleted() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'hideCompleted', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Station, Station, QAfterSortBy> thenByHideCompletedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'hideCompleted', Sort.desc);
+    });
+  }
+
   QueryBuilder<Station, Station, QAfterSortBy> thenById() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.asc);
@@ -1264,18 +1137,6 @@ extension StationQuerySortThenBy
   QueryBuilder<Station, Station, QAfterSortBy> thenByNameDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'name', Sort.desc);
-    });
-  }
-
-  QueryBuilder<Station, Station, QAfterSortBy> thenByPlaybackState() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'playbackState', Sort.asc);
-    });
-  }
-
-  QueryBuilder<Station, Station, QAfterSortBy> thenByPlaybackStateDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'playbackState', Sort.desc);
     });
   }
 
@@ -1347,22 +1208,17 @@ extension StationQueryWhereDistinct
     });
   }
 
+  QueryBuilder<Station, Station, QDistinct> distinctByHideCompleted() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'hideCompleted');
+    });
+  }
+
   QueryBuilder<Station, Station, QDistinct> distinctByName({
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'name', caseSensitive: caseSensitive);
-    });
-  }
-
-  QueryBuilder<Station, Station, QDistinct> distinctByPlaybackState({
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(
-        r'playbackState',
-        caseSensitive: caseSensitive,
-      );
     });
   }
 
@@ -1424,15 +1280,15 @@ extension StationQueryProperty
     });
   }
 
-  QueryBuilder<Station, String, QQueryOperations> nameProperty() {
+  QueryBuilder<Station, bool, QQueryOperations> hideCompletedProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'name');
+      return query.addPropertyName(r'hideCompleted');
     });
   }
 
-  QueryBuilder<Station, String, QQueryOperations> playbackStateProperty() {
+  QueryBuilder<Station, String, QQueryOperations> nameProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'playbackState');
+      return query.addPropertyName(r'name');
     });
   }
 

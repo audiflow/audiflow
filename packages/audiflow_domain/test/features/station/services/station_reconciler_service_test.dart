@@ -36,13 +36,13 @@ void main() {
   // ---------------------------------------------------------------------------
 
   Future<int> putStation({
-    String playbackState = 'all',
+    bool hideCompleted = false,
     bool filterDownloaded = false,
     bool filterFavorited = false,
   }) async {
     final station = Station()
       ..name = 'Test Station'
-      ..playbackState = playbackState
+      ..hideCompleted = hideCompleted
       ..filterDownloaded = filterDownloaded
       ..filterFavorited = filterFavorited
       ..createdAt = DateTime(2026, 1, 1)
@@ -181,7 +181,7 @@ void main() {
         final updated = Station()
           ..id = station.id
           ..name = station.name
-          ..playbackState = station.playbackState
+          ..hideCompleted = station.hideCompleted
           ..filterDownloaded = station.filterDownloaded
           ..filterFavorited = true
           ..createdAt = station.createdAt
