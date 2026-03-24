@@ -4,6 +4,7 @@
 // Licensed under the MIT License
 
 import '../models/generation_config.dart';
+import '../models/settings_change_payload.dart';
 import '../models/voice_command.dart';
 import '../utils/prompt_templates.dart';
 import 'text_generation_service.dart';
@@ -95,6 +96,17 @@ class VoiceCommandService {
       }
     }
 
+    if (intent == VoiceIntent.changeSettings) {
+      final settingsPayload = _parseSettingsPayload(lines);
+      return VoiceCommand(
+        intent: intent,
+        parameters: parameters,
+        confidence: confidence,
+        rawTranscription: originalTranscription,
+        settingsPayload: settingsPayload,
+      );
+    }
+
     return VoiceCommand(
       intent: intent,
       parameters: parameters,
@@ -127,6 +139,7 @@ class VoiceCommandService {
       'myqueue' ||
       'showqueue' => VoiceIntent.goToQueue,
       'opensettings' || 'settings' => VoiceIntent.openSettings,
+      'changesettings' => VoiceIntent.changeSettings,
       'addtoqueue' || 'add' || 'enqueue' => VoiceIntent.addToQueue,
       'removefromqueue' || 'remove' || 'dequeue' => VoiceIntent.removeFromQueue,
       'clearqueue' || 'clear' || 'emptyqueue' => VoiceIntent.clearQueue,
@@ -171,5 +184,57 @@ class VoiceCommandService {
       return value.clamp(0.0, 1.0);
     }
     return 0.5;
+  }
+
+  SettingsChangePayload? _parseSettingsPayload(List<String> lines) {
+    final values = <String, String>{};
+    for (final line in lines) {
+      final colonIndex = line.indexOf(':');
+      if (0 < colonIndex) {
+        final key = line.substring(0, colonIndex).trim();
+        final value = line.substring(colonIndex + 1).trim();
+        values[key] = value;
+      }
+    }
+
+    final action = values['settingsAction'] ?? '';
+    final key = values['settingsKey'] ?? '';
+
+    return switch (action) {
+      'absolute' => SettingsChangePayload.absolute(
+        key: key,
+        value: values['settingsValue'] ?? '',
+        confidence: _parseConfidence(values['confidence'] ?? '0'),
+      ),
+      'relative' => SettingsChangePayload.relative(
+        key: key,
+        direction: switch (values['settingsDirection']) {
+          'decrease' => ChangeDirection.decrease,
+          _ => ChangeDirection.increase,
+        },
+        magnitude: switch (values['settingsMagnitude']) {
+          'medium' => ChangeMagnitude.medium,
+          'large' => ChangeMagnitude.large,
+          _ => ChangeMagnitude.small,
+        },
+        confidence: _parseConfidence(values['confidence'] ?? '0'),
+      ),
+      'ambiguous' => _parseAmbiguousCandidates(values['candidates'] ?? ''),
+      _ => null,
+    };
+  }
+
+  SettingsChangePayload _parseAmbiguousCandidates(String raw) {
+    final candidates = raw.split(',').map((entry) {
+      final parts = entry.trim().split(':');
+      final keyValue = (parts.firstOrNull ?? '').split('=');
+      return SettingsCandidate(
+        key: keyValue.firstOrNull?.trim() ?? '',
+        value: 1 < keyValue.length ? keyValue[1].trim() : '',
+        confidence:
+            double.tryParse(1 < parts.length ? parts[1].trim() : '0') ?? 0,
+      );
+    }).toList();
+    return SettingsChangePayload.ambiguous(candidates: candidates);
   }
 }

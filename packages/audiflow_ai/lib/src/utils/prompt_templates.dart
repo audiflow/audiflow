@@ -88,6 +88,7 @@ Identify the intent from these categories:
 - Search: search (extract search terms)
 - Navigation: goToLibrary, goToQueue, openSettings
 - Queue: addToQueue, removeFromQueue, clearQueue
+- Settings: changeSettings (change a preference setting)
 - Unknown: if the command doesn't match any category
 
 For "play" commands with a podcast name, extract podcastName parameter.
@@ -109,7 +110,32 @@ Japanese:
 - "The Dailyを再生" -> intent: play, parameters: {podcastName: The Daily}, confidence: 0.95
 - "The Dailyの最新話を再生して" -> intent: play, parameters: {podcastName: The Daily}, confidence: 0.95
 - "一時停止" -> intent: pause, parameters: {}, confidence: 0.95
-- "テクノロジーを検索" -> intent: search, parameters: {query: テクノロジー}, confidence: 0.9''';
+- "テクノロジーを検索" -> intent: search, parameters: {query: テクノロジー}, confidence: 0.9
+
+For "changeSettings" commands, determine the specific setting to change.
+Use the available settings list below to match the user's intent.
+
+{settingsSnapshot}
+
+For absolute changes, respond:
+intent: changeSettings
+settingsAction: absolute
+settingsKey: <key_from_list>
+settingsValue: <target_value>
+confidence: <0.0-1.0>
+
+For relative changes (e.g. "a bit faster", "もうちょっと速く"), respond:
+intent: changeSettings
+settingsAction: relative
+settingsKey: <key_from_list>
+settingsDirection: increase|decrease
+settingsMagnitude: small|medium|large
+confidence: <0.0-1.0>
+
+If multiple settings could match, respond:
+intent: changeSettings
+settingsAction: ambiguous
+candidates: key1=value1:confidence1, key2=value2:confidence2''';
 
   static const _defaultTopicExtraction = '''
 Extract the main topics and themes from the following podcast content.

@@ -399,6 +399,139 @@ confidence: 0.9
           expect(result.confidence, equals(0.0));
         });
       });
+
+      group('settings intents', () {
+        test(
+          'maps changesettings intent string to VoiceIntent.changeSettings',
+          () async {
+            _mockResponse(mockTextGenService, '''
+intent: changeSettings
+settingsAction: absolute
+settingsKey: playbackSpeed
+settingsValue: 1.5
+confidence: 0.92
+''');
+
+            final result = await service.parseCommand(
+              'set playback speed to 1.5',
+            );
+
+            expect(result.intent, equals(VoiceIntent.changeSettings));
+          },
+        );
+
+        test('parses absolute settings payload correctly', () async {
+          _mockResponse(mockTextGenService, '''
+intent: changeSettings
+settingsAction: absolute
+settingsKey: playbackSpeed
+settingsValue: 1.5
+confidence: 0.92
+''');
+
+          final result = await service.parseCommand(
+            'set playback speed to 1.5',
+          );
+
+          expect(result.settingsPayload, isNotNull);
+          final payload = result.settingsPayload!;
+          expect(payload, isA<SettingsChangePayloadAbsolute>());
+          final absolute = payload as SettingsChangePayloadAbsolute;
+          expect(absolute.key, equals('playbackSpeed'));
+          expect(absolute.value, equals('1.5'));
+          expect(absolute.confidence, closeTo(0.92, 0.001));
+        });
+
+        test('parses relative settings payload correctly', () async {
+          _mockResponse(mockTextGenService, '''
+intent: changeSettings
+settingsAction: relative
+settingsKey: playbackSpeed
+settingsDirection: increase
+settingsMagnitude: small
+confidence: 0.85
+''');
+
+          final result = await service.parseCommand('a bit faster');
+
+          expect(result.settingsPayload, isNotNull);
+          final payload = result.settingsPayload!;
+          expect(payload, isA<SettingsChangePayloadRelative>());
+          final relative = payload as SettingsChangePayloadRelative;
+          expect(relative.key, equals('playbackSpeed'));
+          expect(relative.direction, equals(ChangeDirection.increase));
+          expect(relative.magnitude, equals(ChangeMagnitude.small));
+          expect(relative.confidence, closeTo(0.85, 0.001));
+        });
+
+        test(
+          'parses relative settings payload with decrease direction',
+          () async {
+            _mockResponse(mockTextGenService, '''
+intent: changeSettings
+settingsAction: relative
+settingsKey: playbackSpeed
+settingsDirection: decrease
+settingsMagnitude: large
+confidence: 0.88
+''');
+
+            final result = await service.parseCommand('much slower');
+
+            final payload =
+                result.settingsPayload! as SettingsChangePayloadRelative;
+            expect(payload.direction, equals(ChangeDirection.decrease));
+            expect(payload.magnitude, equals(ChangeMagnitude.large));
+          },
+        );
+
+        test(
+          'parses ambiguous settings payload with multiple candidates',
+          () async {
+            _mockResponse(mockTextGenService, '''
+intent: changeSettings
+settingsAction: ambiguous
+candidates: playbackSpeed=1.5:0.7, skipInterval=30:0.6
+confidence: 0.65
+''');
+
+            final result = await service.parseCommand(
+              'change the speed setting',
+            );
+
+            expect(result.settingsPayload, isNotNull);
+            final payload = result.settingsPayload!;
+            expect(payload, isA<SettingsChangePayloadAmbiguous>());
+            final ambiguous = payload as SettingsChangePayloadAmbiguous;
+            expect(ambiguous.candidates, hasLength(2));
+            expect(ambiguous.candidates[0].key, equals('playbackSpeed'));
+            expect(ambiguous.candidates[0].value, equals('1.5'));
+            expect(ambiguous.candidates[0].confidence, closeTo(0.7, 0.001));
+            expect(ambiguous.candidates[1].key, equals('skipInterval'));
+            expect(ambiguous.candidates[1].value, equals('30'));
+            expect(ambiguous.candidates[1].confidence, closeTo(0.6, 0.001));
+          },
+        );
+
+        test(
+          'returns null settingsPayload for unknown settingsAction',
+          () async {
+            _mockResponse(mockTextGenService, '''
+intent: changeSettings
+settingsAction: unknown_action
+settingsKey: playbackSpeed
+confidence: 0.5
+''');
+
+            final result = await service.parseCommand(
+              'do something with settings',
+            );
+
+            expect(result.intent, equals(VoiceIntent.changeSettings));
+            expect(result.settingsPayload, isNull);
+          },
+        );
+      });
     });
   });
 }

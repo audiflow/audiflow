@@ -195,6 +195,16 @@ void main() {
         final lower = template.toLowerCase();
         expect(lower.contains('confidence'), isTrue);
       });
+
+      test('includes settingsSnapshot placeholder for settings context', () {
+        final template = PromptTemplates.voiceCommand;
+        expect(template, contains('{settingsSnapshot}'));
+      });
+
+      test('includes changeSettings intent category', () {
+        final template = PromptTemplates.voiceCommand;
+        expect(template, contains('changeSettings'));
+      });
     });
 
     group('topicExtraction', () {
