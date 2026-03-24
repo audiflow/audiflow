@@ -425,6 +425,7 @@ class _MockAudiflowAi implements AudiflowAi {
   @override
   Future<VoiceCommand> parseVoiceCommand({
     required String transcription,
+    String settingsSnapshot = '',
   }) async {
     return const VoiceCommand(
       intent: VoiceIntent.unknown,

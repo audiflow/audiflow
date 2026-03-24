@@ -5,10 +5,14 @@ import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../common/providers/logger_provider.dart';
+import '../../settings/providers/settings_providers.dart';
 import '../models/voice_recognition_state.dart';
 import '../repositories/speech_recognition_repository.dart';
 import '../repositories/speech_recognition_repository_impl.dart';
 import 'play_podcast_by_name_service.dart';
+import 'settings_intent_resolver.dart';
+import 'settings_metadata_registry.dart';
+import 'settings_snapshot_service.dart';
 import 'voice_command_executor.dart';
 
 part 'voice_command_orchestrator.g.dart';
@@ -30,6 +34,8 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
   late PlayPodcastByNameService _playPodcastService;
   late VoiceCommandExecutor _executor;
   late Logger? _logger;
+  late SettingsIntentResolver _settingsResolver;
+  late SettingsSnapshotService _settingsSnapshotService;
 
   bool _isInitialized = false;
   Completer<void>? _listeningCompleter;
@@ -40,6 +46,13 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
     _playPodcastService = ref.watch(playPodcastByNameServiceProvider);
     _executor = ref.watch(voiceCommandExecutorProvider);
     _logger = ref.watch(namedLoggerProvider('VoiceOrchestrator'));
+
+    final registry = SettingsMetadataRegistry();
+    _settingsResolver = SettingsIntentResolver(registry);
+    _settingsSnapshotService = SettingsSnapshotService(
+      registry: registry,
+      settingsRepository: ref.watch(appSettingsRepositoryProvider),
+    );
 
     // Reset initialization flag — dependencies may be new instances
     _isInitialized = false;
@@ -159,6 +172,66 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
     state = const VoiceRecognitionState.idle();
   }
 
+  /// Confirms a pending low-confidence settings change and applies it.
+  Future<void> confirmSettingsChange(String key, String value) async {
+    _logger?.i('Confirming settings change: $key = $value');
+    final result = await _executor.applySetting(key: key, value: value);
+    if (!result.isSuccess) {
+      state = VoiceRecognitionState.error(
+        message: result.errorMessage ?? 'Failed to apply setting',
+      );
+      return;
+    }
+    final metadata = _settingsResolver.registry.findByKey(key);
+    state = VoiceRecognitionState.settingsAutoApplied(
+      key: key,
+      displayNameKey: metadata?.displayNameKey ?? key,
+      oldValue: result.previousValue ?? '',
+      newValue: value,
+    );
+    unawaited(_resetToIdleAfterDelay());
+  }
+
+  /// Reverts a previously applied setting to [previousValue].
+  Future<void> undoSettingsChange(String key, String previousValue) async {
+    _logger?.i('Undoing settings change: $key -> $previousValue');
+    final result = await _executor.applySetting(key: key, value: previousValue);
+    if (!result.isSuccess) {
+      state = VoiceRecognitionState.error(
+        message: result.errorMessage ?? 'Failed to undo setting',
+      );
+      return;
+    }
+    state = const VoiceRecognitionState.idle();
+  }
+
+  /// Applies the selected candidate from a disambiguation prompt.
+  Future<void> selectSettingsCandidate(
+    SettingsResolutionCandidate candidate,
+  ) async {
+    _logger?.i(
+      'Selecting settings candidate: ${candidate.key} = ${candidate.newValue}',
+    );
+    final result = await _executor.applySetting(
+      key: candidate.key,
+      value: candidate.newValue,
+    );
+    if (!result.isSuccess) {
+      state = VoiceRecognitionState.error(
+        message: result.errorMessage ?? 'Failed to apply setting',
+      );
+      return;
+    }
+    final metadata = _settingsResolver.registry.findByKey(candidate.key);
+    state = VoiceRecognitionState.settingsAutoApplied(
+      key: candidate.key,
+      displayNameKey: metadata?.displayNameKey ?? candidate.key,
+      oldValue: result.previousValue ?? '',
+      newValue: candidate.newValue,
+    );
+    unawaited(_resetToIdleAfterDelay());
+  }
+
   Future<void> _processTranscription(String transcription) async {
     _logger?.i('Processing transcription: "$transcription"');
     state = VoiceRecognitionState.processing(transcription: transcription);
@@ -170,9 +243,13 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
         await AudiflowAi.instance.initialize();
       }
 
+      // Build settings snapshot for injection into the AI prompt
+      final snapshot = _settingsSnapshotService.buildPromptSnapshot();
+
       // Parse the voice command using AI
       final command = await AudiflowAi.instance.parseVoiceCommand(
         transcription: transcription,
+        settingsSnapshot: snapshot,
       );
 
       _logger?.i(
@@ -265,11 +342,7 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
           }
           state = const VoiceRecognitionState.success(message: 'Seeking');
         case VoiceIntent.changeSettings:
-          // Full implementation handled by Task 9 (VoiceCommandExecutor extension).
-          // Placeholder: surface an error until the executor is wired up.
-          state = const VoiceRecognitionState.error(
-            message: 'Settings change not yet supported',
-          );
+          await _handleChangeSettings(command);
         case VoiceIntent.unknown:
           state = VoiceRecognitionState.error(
             message: 'Could not understand: "${command.rawTranscription}"',
@@ -278,6 +351,79 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
     } catch (e) {
       _logger?.e('Failed to execute command', error: e);
       state = VoiceRecognitionState.error(message: 'Failed to execute: $e');
+    }
+  }
+
+  Future<void> _handleChangeSettings(VoiceCommand command) async {
+    final payload = command.settingsPayload;
+    if (payload == null) {
+      state = const VoiceRecognitionState.error(
+        message: 'No settings payload in command',
+      );
+      return;
+    }
+
+    // Build the current values map from the snapshot service
+    final currentValues = <String, String>{};
+    for (final metadata in _settingsResolver.registry.allSettings) {
+      currentValues[metadata.key] = _settingsSnapshotService.getCurrentValue(
+        metadata.key,
+      );
+    }
+
+    final resolution = _settingsResolver.resolve(
+      payload,
+      currentValues: currentValues,
+    );
+
+    switch (resolution) {
+      case SettingsResolutionAutoApply(
+        :final key,
+        :final oldValue,
+        :final newValue,
+      ):
+        final result = await _executor.applySetting(key: key, value: newValue);
+        if (!result.isSuccess) {
+          state = VoiceRecognitionState.error(
+            message: result.errorMessage ?? 'Failed to apply setting',
+          );
+          return;
+        }
+        final metadata = _settingsResolver.registry.findByKey(key);
+        state = VoiceRecognitionState.settingsAutoApplied(
+          key: key,
+          displayNameKey: metadata?.displayNameKey ?? key,
+          oldValue: oldValue,
+          newValue: newValue,
+        );
+        unawaited(_resetToIdleAfterDelay());
+
+      case SettingsResolutionConfirm(
+        :final key,
+        :final oldValue,
+        :final newValue,
+        :final confidence,
+      ):
+        final metadata = _settingsResolver.registry.findByKey(key);
+        state = VoiceRecognitionState.settingsLowConfidence(
+          key: key,
+          displayNameKey: metadata?.displayNameKey ?? key,
+          oldValue: oldValue,
+          newValue: newValue,
+          confidence: confidence,
+        );
+      // No auto-dismiss: UI must call confirmSettingsChange or resetToIdle
+
+      case SettingsResolutionDisambiguate(:final candidates):
+        state = VoiceRecognitionState.settingsDisambiguation(
+          candidates: candidates,
+        );
+      // No auto-dismiss: UI must call selectSettingsCandidate or resetToIdle
+
+      case SettingsResolutionNotFound():
+        state = const VoiceRecognitionState.error(
+          message: 'Could not find a matching setting for that command',
+        );
     }
   }
 
@@ -308,7 +454,9 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
 
   Future<void> _resetToIdleAfterDelay() async {
     await Future<void>.delayed(const Duration(seconds: 3));
-    if (state is VoiceSuccess || state is VoiceError) {
+    if (state is VoiceSuccess ||
+        state is VoiceError ||
+        state is VoiceSettingsAutoApplied) {
       state = const VoiceRecognitionState.idle();
     }
   }

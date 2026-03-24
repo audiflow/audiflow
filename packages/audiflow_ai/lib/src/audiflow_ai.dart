@@ -154,8 +154,14 @@ abstract class AudiflowAi {
 
   /// Parse voice command transcription.
   ///
+  /// [settingsSnapshot] is injected into the prompt so the AI model can
+  /// identify and resolve settings references in the transcription.
+  ///
   /// Throws [AiNotInitializedException] if not initialized.
-  Future<VoiceCommand> parseVoiceCommand({required String transcription});
+  Future<VoiceCommand> parseVoiceCommand({
+    required String transcription,
+    String settingsSnapshot = '',
+  });
 
   /// Open AICore install page (Android only).
   ///
@@ -299,9 +305,13 @@ class AudiflowAiImpl implements AudiflowAi {
   @override
   Future<VoiceCommand> parseVoiceCommand({
     required String transcription,
+    String settingsSnapshot = '',
   }) {
     _ensureInitialized();
-    return _voiceCommand.parseCommand(transcription);
+    return _voiceCommand.parseCommand(
+      transcription,
+      settingsSnapshot: settingsSnapshot,
+    );
   }
 
   @override

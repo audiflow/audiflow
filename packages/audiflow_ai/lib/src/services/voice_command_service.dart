@@ -24,6 +24,9 @@ class VoiceCommandService {
   /// Parses a voice command transcription into a structured [VoiceCommand].
   ///
   /// [transcription] is the raw text from speech-to-text.
+  /// [settingsSnapshot] is an optional prompt-ready block of current settings
+  /// state, injected into the `{settingsSnapshot}` placeholder of the voice
+  /// command prompt template.
   ///
   /// Returns a [VoiceCommand] with:
   /// - [VoiceIntent] indicating the command type
@@ -33,7 +36,10 @@ class VoiceCommandService {
   ///
   /// On error, returns a [VoiceCommand] with [VoiceIntent.unknown] and
   /// confidence of 0.0.
-  Future<VoiceCommand> parseCommand(String transcription) async {
+  Future<VoiceCommand> parseCommand(
+    String transcription, {
+    String settingsSnapshot = '',
+  }) async {
     if (transcription.isEmpty) {
       return VoiceCommand(
         intent: VoiceIntent.unknown,
@@ -47,7 +53,10 @@ class VoiceCommandService {
       // Build prompt using template
       final prompt = PromptTemplates.substituteVariables(
         PromptTemplates.voiceCommand,
-        {'transcription': transcription},
+        {
+          'transcription': transcription,
+          'settingsSnapshot': settingsSnapshot,
+        },
       );
 
       final response = await _textGenService.generateText(

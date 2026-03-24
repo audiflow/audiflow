@@ -211,13 +211,24 @@ class MockVoiceCommandService extends _i1.Mock
   }
 
   @override
-  _i6.Future<_i4.VoiceCommand> parseCommand(String? transcription) =>
+  _i6.Future<_i4.VoiceCommand> parseCommand(
+    String? transcription, {
+    String? settingsSnapshot = '',
+  }) =>
       (super.noSuchMethod(
-            Invocation.method(#parseCommand, [transcription]),
+            Invocation.method(
+              #parseCommand,
+              [transcription],
+              {#settingsSnapshot: settingsSnapshot},
+            ),
             returnValue: _i6.Future<_i4.VoiceCommand>.value(
               _FakeVoiceCommand_2(
                 this,
-                Invocation.method(#parseCommand, [transcription]),
+                Invocation.method(
+                  #parseCommand,
+                  [transcription],
+                  {#settingsSnapshot: settingsSnapshot},
+                ),
               ),
             ),
           )
