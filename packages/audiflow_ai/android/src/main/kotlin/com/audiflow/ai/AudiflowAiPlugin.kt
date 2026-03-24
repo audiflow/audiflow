@@ -54,6 +54,7 @@ class AudiflowAiPlugin : FlutterPlugin, MethodCallHandler {
         private const val METHOD_GENERATE_TEXT = "generateText"
         private const val METHOD_DISPOSE = "dispose"
         private const val METHOD_PROMPT_AICORE_INSTALL = "promptAiCoreInstall"
+        private const val METHOD_RESOLVE_SETTINGS_INTENT = "resolveSettingsIntent"
 
         // Response keys
         private const val KEY_STATUS = "status"
@@ -160,6 +161,7 @@ class AudiflowAiPlugin : FlutterPlugin, MethodCallHandler {
             METHOD_GENERATE_TEXT -> handleGenerateText(call, result)
             METHOD_DISPOSE -> handleDispose(result)
             METHOD_PROMPT_AICORE_INSTALL -> handlePromptAiCoreInstall(result)
+            METHOD_RESOLVE_SETTINGS_INTENT -> handleResolveSettingsIntent(call, result)
             else -> result.notImplemented()
         }
     }
@@ -426,6 +428,31 @@ class AudiflowAiPlugin : FlutterPlugin, MethodCallHandler {
             Log.e(TAG, "Failed to open AICore install page", e)
             result.success(false)
         }
+    }
+
+    /**
+     * Task 5: Resolve a voice transcription into a settings change intent.
+     *
+     * Uses keyword matching against the provided JSON schema to detect the target
+     * setting and the requested value, direction, or magnitude.
+     *
+     * ## Parameters
+     * - transcription: The voice transcription string
+     * - settingsSchema: JSON string conforming to the settings schema format
+     *
+     * ## Response
+     * Map with keys: action, key, value, direction, magnitude, confidence
+     */
+    private fun handleResolveSettingsIntent(call: MethodCall, result: Result) {
+        val transcription = call.argument<String>("transcription")
+        val schemaJson = call.argument<String>("settingsSchema")
+        if (transcription == null || schemaJson == null) {
+            result.error("INVALID_ARGUMENT", "Missing transcription or settingsSchema", null)
+            return
+        }
+        val resolver = SettingsIntentResolver()
+        val resolved = resolver.resolve(transcription, schemaJson)
+        result.success(resolved)
     }
 
     /**
