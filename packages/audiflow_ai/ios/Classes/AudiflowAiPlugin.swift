@@ -30,6 +30,7 @@ public class AudiflowAiPlugin: NSObject, FlutterPlugin {
     private static let methodGenerateText = "generateText"
     private static let methodDispose = "dispose"
     private static let methodPromptAiCoreInstall = "promptAiCoreInstall"
+    private static let methodResolveSettingsIntent = "resolveSettingsIntent"
 
     // Response keys
     private static let keyStatus = "status"
@@ -101,6 +102,9 @@ public class AudiflowAiPlugin: NSObject, FlutterPlugin {
         case AudiflowAiPlugin.methodPromptAiCoreInstall:
             // Not applicable on iOS - AICore is Android-specific
             result(false)
+
+        case AudiflowAiPlugin.methodResolveSettingsIntent:
+            handleResolveSettingsIntent(call: call, result: result)
 
         default:
             result(FlutterMethodNotImplemented)
@@ -380,6 +384,38 @@ public class AudiflowAiPlugin: NSObject, FlutterPlugin {
     private func handleDispose(result: @escaping FlutterResult) {
         disposeResources()
         result([AudiflowAiPlugin.keySuccess: true])
+    }
+
+    // MARK: - Settings Intent Resolution
+
+    /// Resolve a voice transcription into a settings change using keyword matching.
+    ///
+    /// Parses the provided JSON schema to extract settings with synonyms, types, and
+    /// constraints, then matches the transcription against those synonyms. Returns a
+    /// dictionary describing the resolved action (absolute, relative, ambiguous, or
+    /// not_found) along with a confidence score.
+    ///
+    /// ## Parameters
+    /// - transcription: The voice transcription to resolve
+    /// - settingsSchema: JSON string containing the settings schema
+    ///
+    /// ## Requirements Coverage
+    /// - Task 3: iOS SettingsIntentHandler + plugin wiring
+    private func handleResolveSettingsIntent(call: FlutterMethodCall, result: @escaping FlutterResult) {
+        guard let args = call.arguments as? [String: Any],
+              let transcription = args["transcription"] as? String,
+              let schemaJson = args["settingsSchema"] as? String else {
+            result(FlutterError(code: AudiflowAiPlugin.errorInvalidArgument,
+                                message: "Missing transcription or settingsSchema", details: nil))
+            return
+        }
+        if #available(iOS 26.0, *) {
+            let handler = SettingsIntentHandler()
+            let resolved = handler.resolve(transcription: transcription, schemaJson: schemaJson)
+            result(resolved)
+        } else {
+            result(nil)
+        }
     }
 
     // MARK: - Private Helpers
