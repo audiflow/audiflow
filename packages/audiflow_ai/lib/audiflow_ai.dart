@@ -17,6 +17,7 @@ export 'src/models/ai_capability.dart';
 export 'src/models/ai_response.dart';
 export 'src/models/episode_summary.dart';
 export 'src/models/generation_config.dart';
+export 'src/models/settings_change_payload.dart';
 export 'src/models/summarization_config.dart';
 export 'src/models/voice_command.dart';
 // Services
