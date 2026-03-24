@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:audiflow_ai/audiflow_ai.dart';
 import 'package:logger/logger.dart';
@@ -246,29 +247,50 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
       return;
     }
 
-    // No simple match — use AI for fuzzy intent resolution
+    // No simple match — try platform-native NLU for settings resolution first
+    final settingsRepo = ref.read(appSettingsRepositoryProvider);
+    final schemaJson = jsonEncode(
+      _settingsResolver.registry.toJson(settingsRepo),
+    );
+
+    final platformResult = await AudiflowAi.instance.resolveSettingsIntent(
+      transcription: transcription,
+      settingsSchemaJson: schemaJson,
+    );
+
+    if (platformResult != null) {
+      final action = platformResult['action'] as String? ?? 'not_found';
+      if (action != 'not_found') {
+        _logger?.i('Platform NLU resolved: $action');
+        final payload = _buildPayloadFromPlatformResult(platformResult);
+        if (payload != null) {
+          final command = VoiceCommand(
+            intent: VoiceIntent.changeSettings,
+            parameters: const {},
+            confidence:
+                (platformResult['confidence'] as num?)?.toDouble() ?? 0.8,
+            rawTranscription: transcription,
+            settingsPayload: payload,
+          );
+          await _executeCommand(command);
+          return;
+        }
+      }
+    }
+
+    // Platform couldn't resolve as settings — try on-device AI for other commands
     try {
       if (!AudiflowAi.instance.isInitialized) {
         _logger?.i('AI not initialized, attempting initialization');
         await AudiflowAi.instance.initialize();
       }
-
-      final snapshot = _settingsSnapshotService.buildPromptSnapshot();
-
       final command = await AudiflowAi.instance
-          .parseVoiceCommand(
-            transcription: transcription,
-            settingsSnapshot: snapshot,
-          )
+          .parseVoiceCommand(transcription: transcription)
           .timeout(
             const Duration(seconds: 5),
             onTimeout: () => throw TimeoutException('AI call timed out'),
           );
-
-      _logger?.i(
-        'AI parsed command: ${command.intent} with ${command.parameters}',
-      );
-
+      _logger?.i('AI parsed command: ${command.intent}');
       await _executeCommand(command);
     } on AudiflowAiException catch (e) {
       _logger?.e('AI parsing failed', error: e);
@@ -276,7 +298,7 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
         message: 'Could not understand: "$transcription"',
       );
     } catch (e) {
-      _logger?.e('Unexpected error processing command', error: e);
+      _logger?.e('Unexpected error', error: e);
       state = VoiceRecognitionState.error(
         message: 'Failed to process command: $e',
       );
@@ -366,36 +388,35 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
       );
     }
 
-    // Try structured payload first, then parameters fallback, then
-    // transcription-based synonym matching as last resort
-    final payload =
-        command.settingsPayload ??
-        _payloadFromParameters(command.parameters, command.confidence);
+    SettingsResolution? resolution;
 
-    final SettingsResolution resolution;
-    if (payload != null) {
+    if (command.settingsPayload != null) {
+      // Platform NLU produced a structured payload — resolve it directly.
+      _logger?.i('Resolving settings from platform payload');
       resolution = _settingsResolver.resolve(
-        payload,
+        command.settingsPayload!,
         currentValues: currentValues,
       );
     } else {
-      // AI said changeSettings but gave no structured data — match
-      // the raw transcription against registry synonyms
+      // Fall back to transcription-based synonym matching.
+      // The on-device AI reliably identifies "this is a settings command" but
+      // its structured key/value output is too unreliable (e.g. returning
+      // text_scale for a theme change). Our deterministic synonym matcher
+      // with direction detection is more accurate.
       _logger?.i(
-        'No structured payload, trying transcription match: '
-        '"${command.rawTranscription}"',
+        'Resolving settings from transcription: "${command.rawTranscription}"',
       );
-      final fromText = _settingsResolver.resolveFromTranscription(
+      resolution = _settingsResolver.resolveFromTranscription(
         command.rawTranscription,
         currentValues: currentValues,
       );
-      if (fromText == null) {
-        state = VoiceRecognitionState.error(
-          message: 'Could not match a setting: "${command.rawTranscription}"',
-        );
-        return;
-      }
-      resolution = fromText;
+    }
+
+    if (resolution == null) {
+      state = VoiceRecognitionState.error(
+        message: 'Could not match a setting: "${command.rawTranscription}"',
+      );
+      return;
     }
 
     switch (resolution) {
@@ -529,21 +550,47 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
     return _tryParseSearchCommand(text, lower, transcription);
   }
 
-  /// Constructs a [SettingsChangePayload] from the generic parameters map
-  /// when the AI doesn't use the structured settingsAction format.
-  SettingsChangePayload? _payloadFromParameters(
-    Map<String, String> parameters,
-    double confidence,
+  /// Constructs a [SettingsChangePayload] from a platform channel result map.
+  ///
+  /// Returns null when the action is unrecognised or required fields are absent.
+  SettingsChangePayload? _buildPayloadFromPlatformResult(
+    Map<String, dynamic> result,
   ) {
-    final key = parameters['key'];
-    final value = parameters['value'];
-    if (key == null || key.isEmpty) return null;
-    if (value == null || value.isEmpty) return null;
-    return SettingsChangePayload.absolute(
-      key: key,
-      value: value,
-      confidence: confidence,
-    );
+    final action = result['action'] as String?;
+    final key = result['key'] as String?;
+
+    return switch (action) {
+      'absolute' => SettingsChangePayload.absolute(
+        key: key ?? '',
+        value: (result['value'] as String?) ?? '',
+        confidence: (result['confidence'] as num?)?.toDouble() ?? 0.8,
+      ),
+      'relative' => SettingsChangePayload.relative(
+        key: key ?? '',
+        direction: (result['direction'] as String?) == 'decrease'
+            ? ChangeDirection.decrease
+            : ChangeDirection.increase,
+        magnitude: switch (result['magnitude'] as String?) {
+          'medium' => ChangeMagnitude.medium,
+          'large' => ChangeMagnitude.large,
+          _ => ChangeMagnitude.small,
+        },
+        confidence: (result['confidence'] as num?)?.toDouble() ?? 0.8,
+      ),
+      'ambiguous' => SettingsChangePayload.ambiguous(
+        candidates: ((result['candidates'] as List?) ?? [])
+            .cast<Map<String, dynamic>>()
+            .map(
+              (c) => SettingsCandidate(
+                key: c['key'] as String? ?? '',
+                value: c['value'] as String? ?? '',
+                confidence: (c['confidence'] as num?)?.toDouble() ?? 0.5,
+              ),
+            )
+            .toList(),
+      ),
+      _ => null,
+    };
   }
 
   /// Applies a setting and invalidates the settings provider so open
