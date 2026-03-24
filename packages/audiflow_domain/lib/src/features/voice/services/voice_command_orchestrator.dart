@@ -236,17 +236,25 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
     _logger?.i('Processing transcription: "$transcription"');
     state = VoiceRecognitionState.processing(transcription: transcription);
 
+    // Try deterministic pattern matching first — fast, reliable for known
+    // commands (play, pause, skip, navigate). Only fall through to AI for
+    // commands the simple parser can't handle (settings changes, ambiguous).
+    final simpleCommand = _parseSimpleCommand(transcription);
+    if (simpleCommand != null) {
+      _logger?.i('Simple parser matched: ${simpleCommand.intent}');
+      await _executeCommand(simpleCommand);
+      return;
+    }
+
+    // No simple match — use AI for fuzzy intent resolution
     try {
-      // Ensure AI is initialized before parsing
       if (!AudiflowAi.instance.isInitialized) {
         _logger?.i('AI not initialized, attempting initialization');
         await AudiflowAi.instance.initialize();
       }
 
-      // Build settings snapshot for injection into the AI prompt
       final snapshot = _settingsSnapshotService.buildPromptSnapshot();
 
-      // Parse the voice command using AI
       final command = await AudiflowAi.instance
           .parseVoiceCommand(
             transcription: transcription,
@@ -258,25 +266,15 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
           );
 
       _logger?.i(
-        'Parsed command: ${command.intent} with ${command.parameters}',
+        'AI parsed command: ${command.intent} with ${command.parameters}',
       );
 
-      // Execute the command
       await _executeCommand(command);
     } on AudiflowAiException catch (e) {
       _logger?.e('AI parsing failed', error: e);
-      // Fallback to simple pattern matching
-      _logger?.i('Trying fallback parser for: "$transcription"');
-      final fallbackCommand = _parseSimpleCommand(transcription);
-      if (fallbackCommand != null) {
-        _logger?.i('Using fallback command: ${fallbackCommand.intent}');
-        await _executeCommand(fallbackCommand);
-      } else {
-        _logger?.w('Fallback parser could not understand: "$transcription"');
-        state = VoiceRecognitionState.error(
-          message: 'Could not understand: "$transcription"',
-        );
-      }
+      state = VoiceRecognitionState.error(
+        message: 'Could not understand: "$transcription"',
+      );
     } catch (e) {
       _logger?.e('Unexpected error processing command', error: e);
       state = VoiceRecognitionState.error(
