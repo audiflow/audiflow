@@ -361,19 +361,6 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
   }
 
   Future<void> _handleChangeSettings(VoiceCommand command) async {
-    // Use structured payload if available, otherwise construct from parameters
-    // (on-device models often return key/value in the generic parameters map
-    // instead of the settingsAction/settingsKey format)
-    final payload =
-        command.settingsPayload ??
-        _payloadFromParameters(command.parameters, command.confidence);
-    if (payload == null) {
-      state = const VoiceRecognitionState.error(
-        message: 'No settings payload in command',
-      );
-      return;
-    }
-
     // Build the current values map from the snapshot service
     final currentValues = <String, String>{};
     for (final metadata in _settingsResolver.registry.allSettings) {
@@ -382,10 +369,37 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
       );
     }
 
-    final resolution = _settingsResolver.resolve(
-      payload,
-      currentValues: currentValues,
-    );
+    // Try structured payload first, then parameters fallback, then
+    // transcription-based synonym matching as last resort
+    final payload =
+        command.settingsPayload ??
+        _payloadFromParameters(command.parameters, command.confidence);
+
+    final SettingsResolution resolution;
+    if (payload != null) {
+      resolution = _settingsResolver.resolve(
+        payload,
+        currentValues: currentValues,
+      );
+    } else {
+      // AI said changeSettings but gave no structured data — match
+      // the raw transcription against registry synonyms
+      _logger?.i(
+        'No structured payload, trying transcription match: '
+        '"${command.rawTranscription}"',
+      );
+      final fromText = _settingsResolver.resolveFromTranscription(
+        command.rawTranscription,
+        currentValues: currentValues,
+      );
+      if (fromText == null) {
+        state = VoiceRecognitionState.error(
+          message: 'Could not match a setting: "${command.rawTranscription}"',
+        );
+        return;
+      }
+      resolution = fromText;
+    }
 
     switch (resolution) {
       case SettingsResolutionAutoApply(
