@@ -54,9 +54,9 @@ Confidence threshold starts at 0.8, tunable via testing.
 
 ## New Components
 
-### SettingsIntentResolver (`audiflow_ai`)
+### SettingsIntentResolver (`audiflow_domain`)
 
-Core component that takes raw transcription + settings snapshot and asks the on-device AI to resolve which setting to change and to what value.
+Lives in `audiflow_domain` (not `audiflow_ai`) because it depends on `SettingsMetadataRegistry`. It does not make its own AI call -- it receives the already-parsed AI output from `VoiceCommandService` and validates/normalizes it against the registry.
 
 **AI prompt input:**
 ```
@@ -102,10 +102,10 @@ Reads all settings from `AppSettingsRepository`, combines with registry metadata
 
 | File | Change |
 |------|--------|
-| `VoiceCommand` model (`audiflow_ai`) | Add `changeSettings` to intent enum if not present |
-| `VoiceCommandService` (`audiflow_ai`) | Route `changeSettings` intent to `SettingsIntentResolver` |
-| `VoiceCommandExecutor` (`audiflow_domain`) | Handle `changeSettings` -- apply via `AppSettingsRepository` |
-| `VoiceRecognitionState` (`audiflow_domain`) | Add `disambiguation`, `lowConfidence`, `autoApplied` states |
+| `VoiceCommand` model (`audiflow_ai`) | Add `changeSettings` intent; add `SettingsChangePayload` sealed class for settings-specific data (absolute value, or direction + magnitude for relative). Carried alongside the existing `parameters` map, not crammed into it |
+| `VoiceCommandService` (`audiflow_ai`) | Extended prompt includes settings snapshot; for `changeSettings` intent, parse `SettingsChangePayload` from AI response |
+| `VoiceCommandExecutor` (`audiflow_domain`) | Handle `changeSettings` -- add `AppSettingsRepository` dependency; for playback-affecting settings (e.g. speed), also call `AudioPlayerController` imperatively (the executor already holds `_audioController`). Capture previous value before applying for undo support |
+| `VoiceRecognitionState` (`audiflow_domain`) | Add `settingsAutoApplied`, `settingsDisambiguation`, `settingsLowConfidence` states (prefixed to clarify they are settings-specific). Trade-off acknowledged: these are feature-specific states in a shared model, but this keeps the overlay's exhaustive switch simple and the compiler enforces handling everywhere |
 | `VoiceCommandController` (`audiflow_app`) | Handle new states, drive overlay transitions |
 | `VoiceListeningOverlay` (`audiflow_app`) | Render three new confirmation states |
 
@@ -162,6 +162,10 @@ All states render within the existing overlay widget. No new screens or navigati
 ## Playback-affecting Settings
 
 Settings like `playbackSpeed` have immediate audible effects during active playback. When the `VoiceCommandExecutor` applies a playback-related setting, it must also notify the `AudioPlayerController` to apply the change in real time -- not just persist to the repository. The executor checks whether playback is active and coordinates accordingly.
+
+## AI Requirement
+
+Settings commands require the on-device AI to be available. There is no keyword-based fallback -- the existing `_parseSimpleCommand` fallback in the orchestrator does not handle `changeSettings`. If AI is unavailable, the voice command flow falls through to the existing error state ("voice commands unavailable").
 
 ## Not in Scope
 
