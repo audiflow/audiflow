@@ -398,17 +398,12 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
         currentValues: currentValues,
       );
     } else {
-      // Fall back to transcription-based synonym matching.
-      // The on-device AI reliably identifies "this is a settings command" but
-      // its structured key/value output is too unreliable (e.g. returning
-      // text_scale for a theme change). Our deterministic synonym matcher
-      // with direction detection is more accurate.
-      _logger?.i(
-        'Resolving settings from transcription: "${command.rawTranscription}"',
-      );
-      resolution = _settingsResolver.resolveFromTranscription(
-        command.rawTranscription,
-        currentValues: currentValues,
+      // No structured payload from the platform channel — cannot resolve.
+      // Settings resolution requires a structured payload produced by the
+      // platform NLU (Siri App Intents / Google App Actions).
+      _logger?.w(
+        'changeSettings intent without platform payload: '
+        '"${command.rawTranscription}"',
       );
     }
 
