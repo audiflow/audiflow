@@ -27,26 +27,32 @@ class VoiceListeningOverlay extends ConsumerWidget {
       return const SizedBox.shrink();
     }
 
-    return Material(
-      color: Colors.black54,
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: switch (voiceState) {
-            VoiceSettingsAutoApplied() => _buildSettingsAutoAppliedContent(
-              context,
-              ref,
-              voiceState,
-            ),
-            VoiceSettingsDisambiguation() =>
-              _buildSettingsDisambiguationContent(context, ref, voiceState),
-            VoiceSettingsLowConfidence() => _buildSettingsLowConfidenceContent(
-              context,
-              ref,
-              voiceState,
-            ),
-            _ => _buildStandardContent(context, ref, voiceState),
-          },
+    final dismissible = voiceState is VoiceSuccess || voiceState is VoiceError;
+
+    return GestureDetector(
+      onTap: dismissible
+          ? () => ref
+                .read(voiceCommandOrchestratorProvider.notifier)
+                .resetToIdle()
+          : null,
+      child: Material(
+        color: Colors.black54,
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: switch (voiceState) {
+              VoiceSettingsAutoApplied() => _buildSettingsAutoAppliedContent(
+                context,
+                ref,
+                voiceState,
+              ),
+              VoiceSettingsDisambiguation() =>
+                _buildSettingsDisambiguationContent(context, ref, voiceState),
+              VoiceSettingsLowConfidence() =>
+                _buildSettingsLowConfidenceContent(context, ref, voiceState),
+              _ => _buildStandardContent(context, ref, voiceState),
+            },
+          ),
         ),
       ),
     );
