@@ -5,8 +5,8 @@ import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../l10n/app_localizations.dart';
@@ -220,7 +220,11 @@ class EpisodeDetailScreen extends ConsumerWidget {
 
       // Fallback: navigate via deep link when itunesId is available
       if (itunesId != null && context.mounted) {
-        context.push('/p/$itunesId');
+        final path = AppRoutes.deepLinkPodcast.replaceFirst(
+          ':itunesId',
+          Uri.encodeComponent(itunesId!),
+        );
+        context.push(path);
       }
       return;
     }
