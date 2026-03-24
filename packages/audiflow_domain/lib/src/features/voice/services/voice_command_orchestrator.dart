@@ -51,7 +51,7 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
     _settingsResolver = SettingsIntentResolver(registry);
     _settingsSnapshotService = SettingsSnapshotService(
       registry: registry,
-      settingsRepository: ref.watch(appSettingsRepositoryProvider),
+      settingsRepository: ref.read(appSettingsRepositoryProvider),
     );
 
     // Reset initialization flag — dependencies may be new instances
@@ -175,7 +175,7 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
   /// Confirms a pending low-confidence settings change and applies it.
   Future<void> confirmSettingsChange(String key, String value) async {
     _logger?.i('Confirming settings change: $key = $value');
-    final result = await _applySettingAndInvalidate(key: key, value: value);
+    final result = await _applySetting(key: key, value: value);
     if (!result.isSuccess) {
       state = VoiceRecognitionState.error(
         message: result.errorMessage ?? 'Failed to apply setting',
@@ -195,10 +195,7 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
   /// Reverts a previously applied setting to [previousValue].
   Future<void> undoSettingsChange(String key, String previousValue) async {
     _logger?.i('Undoing settings change: $key -> $previousValue');
-    final result = await _applySettingAndInvalidate(
-      key: key,
-      value: previousValue,
-    );
+    final result = await _applySetting(key: key, value: previousValue);
     if (!result.isSuccess) {
       state = VoiceRecognitionState.error(
         message: result.errorMessage ?? 'Failed to undo setting',
@@ -215,7 +212,7 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
     _logger?.i(
       'Selecting settings candidate: ${candidate.key} = ${candidate.newValue}',
     );
-    final result = await _applySettingAndInvalidate(
+    final result = await _applySetting(
       key: candidate.key,
       value: candidate.newValue,
     );
@@ -407,10 +404,7 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
         :final oldValue,
         :final newValue,
       ):
-        final result = await _applySettingAndInvalidate(
-          key: key,
-          value: newValue,
-        );
+        final result = await _applySetting(key: key, value: newValue);
         if (!result.isSuccess) {
           state = VoiceRecognitionState.error(
             message: result.errorMessage ?? 'Failed to apply setting',
@@ -552,12 +546,16 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
     );
   }
 
-  /// Applies a setting and invalidates the settings provider so UI rebuilds.
-  Future<SettingApplyResult> _applySettingAndInvalidate({
+  /// Applies a setting and invalidates the settings provider so open
+  /// settings screens rebuild with the updated value.
+  ///
+  /// Safe because we use [ref.read] (not watch) for the settings repository
+  /// in [build], so invalidation won't trigger an orchestrator rebuild loop.
+  Future<SettingApplyResult> _applySetting({
     required String key,
     required String value,
   }) async {
-    final result = await _applySettingAndInvalidate(key: key, value: value);
+    final result = await _executor.applySetting(key: key, value: value);
     if (result.isSuccess) {
       ref.invalidate(appSettingsRepositoryProvider);
     }
