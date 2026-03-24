@@ -5,10 +5,13 @@ import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../../../../routing/app_router.dart';
+import '../../../player/helpers/podcast_lookup.dart';
 import '../../../queue/presentation/controllers/queue_controller.dart';
 import '../../../share/presentation/helpers/share_helper.dart';
 import '../controllers/podcast_detail_controller.dart';
@@ -109,11 +112,15 @@ class EpisodeDetailScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: Spacing.xs),
 
-                  // Podcast title
-                  Text(
-                    podcastTitle,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      color: colorScheme.primary,
+                  // Podcast title (tappable -> navigates to podcast page)
+                  InkWell(
+                    onTap: () => _navigateToPodcast(context, ref),
+                    borderRadius: BorderRadius.circular(4),
+                    child: Text(
+                      podcastTitle,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: colorScheme.primary,
+                      ),
                     ),
                   ),
                   const SizedBox(height: Spacing.sm),
@@ -192,6 +199,51 @@ class EpisodeDetailScreen extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _navigateToPodcast(BuildContext context, WidgetRef ref) async {
+    final podcastId = progress?.episode.podcastId;
+    if (podcastId == null) {
+      // Episode not yet in DB — look up by audio URL
+      final enclosureUrl = episode.enclosureUrl;
+      if (enclosureUrl != null) {
+        final episodeRepo = ref.read(episodeRepositoryProvider);
+        final dbEpisode = await episodeRepo.getByAudioUrl(enclosureUrl);
+        if (dbEpisode != null && context.mounted) {
+          return _pushPodcastDetail(
+            context,
+            ref,
+            podcastId: dbEpisode.podcastId,
+          );
+        }
+      }
+
+      // Fallback: navigate via deep link when itunesId is available
+      if (itunesId != null && context.mounted) {
+        final path = AppRoutes.deepLinkPodcast.replaceFirst(
+          ':itunesId',
+          Uri.encodeComponent(itunesId!),
+        );
+        context.push(path);
+      }
+      return;
+    }
+    return _pushPodcastDetail(context, ref, podcastId: podcastId);
+  }
+
+  Future<void> _pushPodcastDetail(
+    BuildContext context,
+    WidgetRef ref, {
+    required int podcastId,
+  }) async {
+    final podcast = await lookupPodcastForEpisode(
+      subscriptionRepo: ref.read(subscriptionRepositoryProvider),
+      podcastId: podcastId,
+      podcastTitle: podcastTitle,
+    );
+    if (podcast == null || !context.mounted) return;
+
+    context.push('${AppRoutes.library}/podcast/${podcast.id}', extra: podcast);
   }
 
   Future<void> _onPlayPausePressed(
