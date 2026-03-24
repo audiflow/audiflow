@@ -535,7 +535,8 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
   bool _isResumeCommand(String text, String lower) {
     const enResume = ['play', 'resume', 'start'];
     const jaResume = ['再生', '再生して', '再生する', 'プレイ'];
-    return enResume.contains(lower) || jaResume.any(text.contains);
+    // Exact match only — "再生速度" must NOT match
+    return enResume.contains(lower) || jaResume.contains(text);
   }
 
   VoiceCommand? _tryParsePlayCommand(
@@ -589,8 +590,8 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
 
   bool _isPauseCommand(String text, String lower) {
     const enPause = ['pause', 'stop', 'pause playback'];
-    const jaPause = ['一時停止', '停止', 'ストップ', 'ポーズ'];
-    return enPause.contains(lower) || jaPause.any(text.contains);
+    const jaPause = ['一時停止', '停止', 'ストップ', 'ポーズ', '止めて', '停止して'];
+    return enPause.contains(lower) || jaPause.contains(text);
   }
 
   VoiceCommand? _tryParseSkipCommand(
@@ -601,7 +602,7 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
     // Skip forward
     const enForward = ['skip', 'skip forward', 'next', 'forward'];
     const jaForward = ['スキップ', '早送り', '次へ', '先送り'];
-    if (enForward.contains(lower) || jaForward.any(text.contains)) {
+    if (enForward.contains(lower) || jaForward.contains(text)) {
       return VoiceCommand(
         intent: VoiceIntent.skipForward,
         parameters: const {},
@@ -612,8 +613,8 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
 
     // Skip backward
     const enBackward = ['rewind', 'skip back', 'back', 'go back'];
-    const jaBackward = ['巻き戻し', '戻して', '前へ'];
-    if (enBackward.contains(lower) || jaBackward.any(text.contains)) {
+    const jaBackward = ['巻き戻し', '巻き戻して', '戻して', '前へ'];
+    if (enBackward.contains(lower) || jaBackward.contains(text)) {
       return VoiceCommand(
         intent: VoiceIntent.skipBackward,
         parameters: const {},
@@ -638,7 +639,7 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
       'my library',
     ];
     const jaLibrary = ['ライブラリ', 'マイライブラリ'];
-    if (enLibrary.contains(lower) || jaLibrary.any(text.contains)) {
+    if (enLibrary.contains(lower) || jaLibrary.contains(text)) {
       return VoiceCommand(
         intent: VoiceIntent.goToLibrary,
         parameters: const {},
@@ -650,7 +651,7 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
     // Queue
     const enQueue = ['queue', 'go to queue', 'open queue', 'show queue'];
     const jaQueue = ['キュー', '再生キュー', '待ち行列'];
-    if (enQueue.contains(lower) || jaQueue.any(text.contains)) {
+    if (enQueue.contains(lower) || jaQueue.contains(text)) {
       return VoiceCommand(
         intent: VoiceIntent.goToQueue,
         parameters: const {},
@@ -667,7 +668,7 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
       'preferences',
     ];
     const jaSettings = ['設定', '設定を開く'];
-    if (enSettings.contains(lower) || jaSettings.any(text.contains)) {
+    if (enSettings.contains(lower) || jaSettings.contains(text)) {
       return VoiceCommand(
         intent: VoiceIntent.openSettings,
         parameters: const {},
