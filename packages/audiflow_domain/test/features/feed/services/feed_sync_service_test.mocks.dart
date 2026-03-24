@@ -754,6 +754,23 @@ class MockAppSettingsRepository extends _i1.Mock
           as _i11.Future<void>);
 
   @override
+  int getLastTabIndex() =>
+      (super.noSuchMethod(
+            Invocation.method(#getLastTabIndex, []),
+            returnValue: 0,
+          )
+          as int);
+
+  @override
+  _i11.Future<void> setLastTabIndex(int? index) =>
+      (super.noSuchMethod(
+            Invocation.method(#setLastTabIndex, [index]),
+            returnValue: _i11.Future<void>.value(),
+            returnValueForMissingStub: _i11.Future<void>.value(),
+          )
+          as _i11.Future<void>);
+
+  @override
   _i11.Future<void> clearAll() =>
       (super.noSuchMethod(
             Invocation.method(#clearAll, []),

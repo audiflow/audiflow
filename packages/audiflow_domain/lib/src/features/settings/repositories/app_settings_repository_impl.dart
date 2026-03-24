@@ -198,6 +198,25 @@ class AppSettingsRepositoryImpl implements AppSettingsRepository {
     await _ds.setString(SettingsKeys.searchCountry, normalized);
   }
 
+  // -- Navigation --
+
+  @override
+  int getLastTabIndex() {
+    final stored = _ds.getInt(SettingsKeys.lastTabIndex);
+    if (stored == null) return SettingsDefaults.lastTabIndex;
+    if (0 <= stored && stored <= SettingsDefaults.maxPersistableTabIndex) {
+      return stored;
+    }
+    return SettingsDefaults.lastTabIndex;
+  }
+
+  @override
+  Future<void> setLastTabIndex(int index) async {
+    if (0 <= index && index <= SettingsDefaults.maxPersistableTabIndex) {
+      await _ds.setInt(SettingsKeys.lastTabIndex, index);
+    }
+  }
+
   // -- Data management --
 
   @override
@@ -220,6 +239,7 @@ class AppSettingsRepositoryImpl implements AppSettingsRepository {
       _ds.remove(SettingsKeys.wifiOnlySync),
       _ds.remove(SettingsKeys.notifyNewEpisodes),
       _ds.remove(SettingsKeys.searchCountry),
+      _ds.remove(SettingsKeys.lastTabIndex),
     ]);
   }
 

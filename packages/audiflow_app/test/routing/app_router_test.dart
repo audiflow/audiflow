@@ -11,14 +11,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../helpers/search_mocks.dart';
 
 void main() {
   group('AppRouter', () {
     late GoRouter router;
+    late SharedPreferences prefs;
 
-    setUp(() {
+    setUp(() async {
+      SharedPreferences.setMockInitialValues({});
+      prefs = await SharedPreferences.getInstance();
       router = createAppRouter();
     });
 
@@ -29,6 +33,7 @@ void main() {
     Widget buildTestApp() {
       return ProviderScope(
         overrides: [
+          sharedPreferencesProvider.overrideWithValue(prefs),
           voiceCommandOrchestratorProvider.overrideWith(
             () => _MockVoiceCommandOrchestrator(),
           ),
