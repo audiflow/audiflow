@@ -1,5 +1,6 @@
 import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -130,6 +131,12 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
                   _PlayerControls(
                     isPlaying: displayIsPlaying,
                     isLoading: displayIsLoading,
+                    skipForwardSeconds: ref
+                        .watch(appSettingsRepositoryProvider)
+                        .getSkipForwardSeconds(),
+                    skipBackwardSeconds: ref
+                        .watch(appSettingsRepositoryProvider)
+                        .getSkipBackwardSeconds(),
                     onSkipBackward: () => _handleSkip(
                       ref
                           .read(audioPlayerControllerProvider.notifier)
@@ -570,12 +577,16 @@ class _PlayerControls extends StatelessWidget {
   const _PlayerControls({
     required this.isPlaying,
     required this.isLoading,
+    required this.skipForwardSeconds,
+    required this.skipBackwardSeconds,
     required this.onSkipBackward,
     required this.onSkipForward,
   });
 
   final bool isPlaying;
   final bool isLoading;
+  final int skipForwardSeconds;
+  final int skipBackwardSeconds;
   final VoidCallback onSkipBackward;
   final VoidCallback onSkipForward;
 
@@ -590,7 +601,11 @@ class _PlayerControls extends StatelessWidget {
           button: true,
           label: l10n.playerRewindLabel,
           child: IconButton(
-            icon: const Icon(Symbols.replay_30),
+            icon: SkipDurationIcon(
+              seconds: skipBackwardSeconds,
+              isForward: false,
+              size: 36,
+            ),
             iconSize: 36,
             onPressed: onSkipBackward,
           ),
@@ -602,7 +617,11 @@ class _PlayerControls extends StatelessWidget {
           button: true,
           label: l10n.playerForwardLabel,
           child: IconButton(
-            icon: const Icon(Symbols.forward_30),
+            icon: SkipDurationIcon(
+              seconds: skipForwardSeconds,
+              isForward: true,
+              size: 36,
+            ),
             iconSize: 36,
             onPressed: onSkipForward,
           ),
