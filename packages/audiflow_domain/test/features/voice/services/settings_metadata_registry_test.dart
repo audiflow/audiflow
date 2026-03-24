@@ -100,8 +100,8 @@ void main() {
 
       test('finds continuousPlayback by exact key', () {
         final result = registry.findByKey(SettingsKeys.continuousPlayback);
-        check(result).isNotNull()
-          ..has((m) => m.type, 'type').equals(SettingType.boolean);
+        check(result).isNotNull();
+        check(result!).has((m) => m.type, 'type').equals(SettingType.boolean);
       });
     });
 
@@ -124,11 +124,10 @@ void main() {
         check(metadata).isNotNull();
 
         final constraints = metadata!.constraints;
-        check(constraints).isA<OptionsConstraints>()
-          ..has(
-            (c) => c.values,
-            'values',
-          ).unorderedEquals(['light', 'dark', 'system']);
+        check(constraints)
+            .isA<OptionsConstraints>()
+            .has((c) => c.values, 'values')
+            .unorderedEquals(['light', 'dark', 'system']);
       });
     });
 
@@ -197,33 +196,30 @@ void main() {
         final constraints = registry
             .findByKey(SettingsKeys.locale)!
             .constraints;
-        check(constraints).isA<OptionsConstraints>()
-          ..has(
-            (c) => c.values,
-            'values',
-          ).unorderedEquals(['en', 'ja', 'system']);
+        check(constraints)
+            .isA<OptionsConstraints>()
+            .has((c) => c.values, 'values')
+            .unorderedEquals(['en', 'ja', 'system']);
       });
 
       test('autoPlayOrder has options: newestFirst, oldestFirst', () {
         final constraints = registry
             .findByKey(SettingsKeys.autoPlayOrder)!
             .constraints;
-        check(constraints).isA<OptionsConstraints>()
-          ..has(
-            (c) => c.values,
-            'values',
-          ).unorderedEquals(['newestFirst', 'oldestFirst']);
+        check(constraints)
+            .isA<OptionsConstraints>()
+            .has((c) => c.values, 'values')
+            .unorderedEquals(['newestFirst', 'oldestFirst']);
       });
 
       test('searchCountry has correct country codes', () {
         final constraints = registry
             .findByKey(SettingsKeys.searchCountry)!
             .constraints;
-        check(constraints).isA<OptionsConstraints>()
-          ..has(
-            (c) => c.values,
-            'values',
-          ).unorderedEquals(['us', 'jp', 'gb', 'de', 'fr', 'au', 'ca']);
+        check(constraints)
+            .isA<OptionsConstraints>()
+            .has((c) => c.values, 'values')
+            .unorderedEquals(['us', 'jp', 'gb', 'de', 'fr', 'au', 'ca']);
       });
 
       test('boolean settings use BooleanConstraints', () {
