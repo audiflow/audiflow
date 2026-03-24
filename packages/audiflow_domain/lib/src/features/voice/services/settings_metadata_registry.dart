@@ -2,7 +2,9 @@ import 'dart:collection';
 
 import 'package:audiflow_core/audiflow_core.dart';
 
+import '../../settings/repositories/app_settings_repository.dart';
 import '../models/settings_metadata.dart';
+import 'settings_snapshot_service.dart';
 
 /// Registry of all voice-controllable app settings.
 ///
@@ -334,6 +336,46 @@ class SettingsMetadataRegistry {
 
   /// All registered settings as an unmodifiable list.
   List<SettingMetadata> get allSettings => UnmodifiableListView(_entries);
+
+  /// Serializes the registry and current values to a Map for a platform channel.
+  ///
+  /// Reads current values from [settingsRepo] so the native side receives a
+  /// complete, up-to-date snapshot without an extra round-trip.
+  Map<String, dynamic> toJson(AppSettingsRepository settingsRepo) {
+    final snapshotService = SettingsSnapshotService(
+      registry: this,
+      settingsRepository: settingsRepo,
+    );
+
+    return {
+      'settings': allSettings.map((meta) {
+        return {
+          'key': meta.key,
+          'displayName': meta.displayNameKey,
+          'type': meta.type.name,
+          'currentValue': snapshotService.getCurrentValue(meta.key),
+          'constraints': _constraintsToJson(meta.constraints),
+          'synonyms': meta.synonyms,
+        };
+      }).toList(),
+    };
+  }
+
+  Map<String, dynamic> _constraintsToJson(SettingConstraints c) {
+    return switch (c) {
+      BooleanConstraints() => {'type': 'boolean'},
+      RangeConstraints(:final min, :final max, :final step) => {
+        'type': 'range',
+        'min': min,
+        'max': max,
+        'step': step,
+      },
+      OptionsConstraints(:final values) => {
+        'type': 'options',
+        'values': values,
+      },
+    };
+  }
 
   /// Finds a setting by its exact [SettingsKeys] key, or returns null.
   SettingMetadata? findByKey(String key) => _index[key];
