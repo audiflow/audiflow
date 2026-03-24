@@ -3,6 +3,8 @@
 // Copyright (c) 2025 kekko7072
 // Licensed under the MIT License
 
+import 'settings_change_payload.dart';
+
 /// Intent types for voice commands.
 enum VoiceIntent {
   // Playback intents
@@ -26,6 +28,9 @@ enum VoiceIntent {
   removeFromQueue,
   clearQueue,
 
+  // Settings intents
+  changeSettings,
+
   // Unknown intent
   unknown,
 }
@@ -38,6 +43,7 @@ class VoiceCommand {
     required this.parameters,
     required this.confidence,
     required this.rawTranscription,
+    this.settingsPayload,
   });
 
   /// The parsed intent.
@@ -52,6 +58,10 @@ class VoiceCommand {
   /// The original transcription text.
   final String rawTranscription;
 
+  /// Structured settings change payload, populated when [intent] is
+  /// [VoiceIntent.changeSettings].
+  final SettingsChangePayload? settingsPayload;
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -59,10 +69,12 @@ class VoiceCommand {
           runtimeType == other.runtimeType &&
           intent == other.intent &&
           confidence == other.confidence &&
-          rawTranscription == other.rawTranscription;
+          rawTranscription == other.rawTranscription &&
+          settingsPayload == other.settingsPayload;
 
   @override
-  int get hashCode => Object.hash(intent, confidence, rawTranscription);
+  int get hashCode =>
+      Object.hash(intent, confidence, rawTranscription, settingsPayload);
 
   @override
   String toString() =>
