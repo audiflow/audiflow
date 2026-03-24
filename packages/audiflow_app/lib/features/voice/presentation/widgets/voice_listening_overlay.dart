@@ -262,12 +262,14 @@ class VoiceListeningOverlay extends ConsumerWidget {
 
   Widget _buildStatusText(BuildContext context, VoiceRecognitionState state) {
     final textTheme = Theme.of(context).textTheme;
+    final l10n = AppLocalizations.of(context);
 
     final text = switch (state) {
-      VoiceListening() => 'Listening...',
-      VoiceProcessing() => 'Processing...',
-      VoiceExecuting(command: final cmd) =>
-        'Executing: ${_formatIntent(cmd.intent)}',
+      VoiceListening() => l10n.voiceListening,
+      VoiceProcessing() => l10n.voiceProcessing,
+      VoiceExecuting(command: final cmd) => l10n.voiceExecuting(
+        _formatIntent(cmd.intent),
+      ),
       VoiceSuccess(message: final msg) => msg,
       VoiceError(message: final msg) => msg,
       VoiceIdle() => '',
@@ -329,6 +331,7 @@ class VoiceListeningOverlay extends ConsumerWidget {
   }
 
   Widget _buildCancelButton(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     return TextButton.icon(
       onPressed: () {
         final orchestrator = ref.read(
@@ -338,7 +341,7 @@ class VoiceListeningOverlay extends ConsumerWidget {
       },
       icon: const Icon(Symbols.close, color: Colors.white70),
       label: Text(
-        'Cancel',
+        l10n.cancel,
         style: Theme.of(
           context,
         ).textTheme.labelLarge?.copyWith(color: Colors.white70),

@@ -289,6 +289,10 @@
   "deepLinkLoading": "リンクを開いています...",
   "sharePodcast": "ポッドキャストを共有",
 
+  "voiceListening": "聞いています...",
+  "voiceProcessing": "処理中...",
+  "voiceExecuting": "実行中: {intent}",
+  "voiceCouldNotUnderstand": "認識できませんでした: 「{transcription}」",
   "voiceSettingsWhichSetting": "どの設定を変更しますか？",
   "voiceSettingsChanged": "設定を変更しました",
   "undo": "元に戻す",

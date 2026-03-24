@@ -1640,6 +1640,30 @@ abstract class AppLocalizations {
   /// **'Share podcast'**
   String get sharePodcast;
 
+  /// Status text while voice recognition is active
+  ///
+  /// In en, this message translates to:
+  /// **'Listening...'**
+  String get voiceListening;
+
+  /// Status text while voice command is being parsed
+  ///
+  /// In en, this message translates to:
+  /// **'Processing...'**
+  String get voiceProcessing;
+
+  /// Status text while voice command is being executed
+  ///
+  /// In en, this message translates to:
+  /// **'Executing: {intent}'**
+  String voiceExecuting(String intent);
+
+  /// Error when voice command cannot be parsed
+  ///
+  /// In en, this message translates to:
+  /// **'Could not understand: \"{transcription}\"'**
+  String voiceCouldNotUnderstand(String transcription);
+
   /// Title shown when voice command is ambiguous between multiple settings
   ///
   /// In en, this message translates to:
