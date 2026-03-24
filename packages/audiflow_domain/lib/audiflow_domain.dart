@@ -91,6 +91,7 @@ export 'src/features/feed/repositories/episode_favorite_repository_impl.dart';
 export 'src/features/player/models/now_playing_info.dart';
 export 'src/features/player/models/playback_progress.dart';
 export 'src/features/player/models/playback_state.dart';
+export 'src/features/player/services/audio_playback_controller.dart';
 export 'src/features/player/services/audio_player_service.dart';
 export 'src/features/player/services/now_playing_controller.dart';
 
