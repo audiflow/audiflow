@@ -247,10 +247,15 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
       final snapshot = _settingsSnapshotService.buildPromptSnapshot();
 
       // Parse the voice command using AI
-      final command = await AudiflowAi.instance.parseVoiceCommand(
-        transcription: transcription,
-        settingsSnapshot: snapshot,
-      );
+      final command = await AudiflowAi.instance
+          .parseVoiceCommand(
+            transcription: transcription,
+            settingsSnapshot: snapshot,
+          )
+          .timeout(
+            const Duration(seconds: 5),
+            onTimeout: () => throw TimeoutException('AI call timed out'),
+          );
 
       _logger?.i(
         'Parsed command: ${command.intent} with ${command.parameters}',
