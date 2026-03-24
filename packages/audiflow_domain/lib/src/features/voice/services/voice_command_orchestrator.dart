@@ -360,7 +360,12 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
   }
 
   Future<void> _handleChangeSettings(VoiceCommand command) async {
-    final payload = command.settingsPayload;
+    // Use structured payload if available, otherwise construct from parameters
+    // (on-device models often return key/value in the generic parameters map
+    // instead of the settingsAction/settingsKey format)
+    final payload =
+        command.settingsPayload ??
+        _payloadFromParameters(command.parameters, command.confidence);
     if (payload == null) {
       state = const VoiceRecognitionState.error(
         message: 'No settings payload in command',
@@ -510,6 +515,23 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
 
     // Try search command
     return _tryParseSearchCommand(text, lower, transcription);
+  }
+
+  /// Constructs a [SettingsChangePayload] from the generic parameters map
+  /// when the AI doesn't use the structured settingsAction format.
+  SettingsChangePayload? _payloadFromParameters(
+    Map<String, String> parameters,
+    double confidence,
+  ) {
+    final key = parameters['key'];
+    final value = parameters['value'];
+    if (key == null || key.isEmpty) return null;
+    if (value == null || value.isEmpty) return null;
+    return SettingsChangePayload.absolute(
+      key: key,
+      value: value,
+      confidence: confidence,
+    );
   }
 
   bool _isResumeCommand(String text, String lower) {
