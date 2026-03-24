@@ -109,6 +109,7 @@ export 'src/features/voice/repositories/speech_recognition_repository.dart';
 export 'src/features/voice/repositories/speech_recognition_repository_impl.dart';
 export 'src/features/voice/services/play_podcast_by_name_service.dart';
 export 'src/features/voice/services/settings_metadata_registry.dart';
+export 'src/features/voice/services/settings_snapshot_service.dart';
 export 'src/features/voice/services/voice_command_executor.dart';
 export 'src/features/voice/services/voice_command_orchestrator.dart';
 
