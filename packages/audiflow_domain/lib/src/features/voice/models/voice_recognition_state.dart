@@ -1,6 +1,8 @@
 import 'package:audiflow_ai/audiflow_ai.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import '../services/settings_intent_resolver.dart';
+
 part 'voice_recognition_state.freezed.dart';
 
 /// State machine for voice command recognition flow.
@@ -41,4 +43,26 @@ sealed class VoiceRecognitionState with _$VoiceRecognitionState {
     /// Human-readable error message.
     required String message,
   }) = VoiceError;
+
+  /// Setting was auto-applied (high confidence). Shows undo option.
+  const factory VoiceRecognitionState.settingsAutoApplied({
+    required String key,
+    required String displayNameKey,
+    required String oldValue,
+    required String newValue,
+  }) = VoiceSettingsAutoApplied;
+
+  /// Multiple settings candidates. Shows disambiguation UI.
+  const factory VoiceRecognitionState.settingsDisambiguation({
+    required List<SettingsResolutionCandidate> candidates,
+  }) = VoiceSettingsDisambiguation;
+
+  /// Low confidence settings match. Shows confirmation UI.
+  const factory VoiceRecognitionState.settingsLowConfidence({
+    required String key,
+    required String displayNameKey,
+    required String oldValue,
+    required String newValue,
+    required double confidence,
+  }) = VoiceSettingsLowConfidence;
 }

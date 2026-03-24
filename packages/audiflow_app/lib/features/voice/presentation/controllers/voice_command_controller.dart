@@ -10,7 +10,10 @@ export 'package:audiflow_domain/audiflow_domain.dart'
         VoiceProcessing,
         VoiceExecuting,
         VoiceSuccess,
-        VoiceError;
+        VoiceError,
+        VoiceSettingsAutoApplied,
+        VoiceSettingsDisambiguation,
+        VoiceSettingsLowConfidence;
 
 part 'voice_command_controller.g.dart';
 

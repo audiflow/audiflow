@@ -71,6 +71,20 @@ class VoiceListeningOverlay extends ConsumerWidget {
       ),
       VoiceError() => Icon(Symbols.error, size: 80, color: colorScheme.error),
       VoiceIdle() => const SizedBox.shrink(),
+      // Placeholder rendering for settings states — Task 11 will add proper UI.
+      VoiceSettingsAutoApplied() => Icon(
+        Symbols.check_circle,
+        size: 80,
+        color: colorScheme.tertiary,
+      ),
+      VoiceSettingsDisambiguation() => CircularProgressIndicator(
+        color: colorScheme.primary,
+        strokeWidth: 3,
+      ),
+      VoiceSettingsLowConfidence() => CircularProgressIndicator(
+        color: colorScheme.secondary,
+        strokeWidth: 3,
+      ),
     };
   }
 
@@ -85,6 +99,10 @@ class VoiceListeningOverlay extends ConsumerWidget {
       VoiceSuccess(message: final msg) => msg,
       VoiceError(message: final msg) => msg,
       VoiceIdle() => '',
+      // Placeholder text for settings states — Task 11 will add proper UI.
+      VoiceSettingsAutoApplied() => 'Setting applied',
+      VoiceSettingsDisambiguation() => 'Which setting did you mean?',
+      VoiceSettingsLowConfidence() => 'Confirm setting change?',
     };
 
     final color = switch (state) {
@@ -171,6 +189,7 @@ class VoiceListeningOverlay extends ConsumerWidget {
       VoiceIntent.addToQueue => 'Add to queue',
       VoiceIntent.removeFromQueue => 'Remove from queue',
       VoiceIntent.clearQueue => 'Clear queue',
+      VoiceIntent.changeSettings => 'Change setting',
       VoiceIntent.unknown => 'Unknown',
     };
   }
