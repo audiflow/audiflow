@@ -103,6 +103,7 @@ export 'src/features/player/repositories/playback_history_repository_impl.dart';
 export 'src/features/player/services/playback_history_service.dart';
 
 // Voice feature
+export 'src/features/voice/models/settings_metadata.dart';
 export 'src/features/voice/models/voice_recognition_state.dart';
 export 'src/features/voice/repositories/speech_recognition_repository.dart';
 export 'src/features/voice/repositories/speech_recognition_repository_impl.dart';

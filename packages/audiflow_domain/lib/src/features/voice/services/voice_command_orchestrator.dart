@@ -264,6 +264,12 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
             await _executor.seek(Duration(seconds: seconds));
           }
           state = const VoiceRecognitionState.success(message: 'Seeking');
+        case VoiceIntent.changeSettings:
+          // Full implementation handled by Task 9 (VoiceCommandExecutor extension).
+          // Placeholder: surface an error until the executor is wired up.
+          state = const VoiceRecognitionState.error(
+            message: 'Settings change not yet supported',
+          );
         case VoiceIntent.unknown:
           state = VoiceRecognitionState.error(
             message: 'Could not understand: "${command.rawTranscription}"',
