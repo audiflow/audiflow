@@ -148,12 +148,12 @@ class _CustomNavBar extends StatelessWidget {
   final ValueChanged<int> onDestinationSelected;
 
   // Nav destinations split at center: [Search, Library] | voice | [Queue, Settings]
-  static const _leftDestinations = [
+  static final _leftDestinations = [
     (index: 0, destination: ScaffoldWithNavBar._destinations[0]),
     (index: 1, destination: ScaffoldWithNavBar._destinations[1]),
   ];
 
-  static const _rightDestinations = [
+  static final _rightDestinations = [
     (index: 2, destination: ScaffoldWithNavBar._destinations[2]),
     (index: 3, destination: ScaffoldWithNavBar._destinations[3]),
   ];
