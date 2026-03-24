@@ -49,6 +49,11 @@ class VoiceCommandExecutor {
   final QueueService _queueService;
   final AppSettingsRepository _settingsRepository;
 
+  /// Resumes the current playback.
+  Future<void> resume() async {
+    await _audioController.resume();
+  }
+
   /// Pauses the current playback.
   Future<void> pause() async {
     await _audioController.pause();

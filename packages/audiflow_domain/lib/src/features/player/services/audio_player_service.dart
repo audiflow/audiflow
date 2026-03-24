@@ -343,6 +343,7 @@ class AudioPlayerController extends _$AudioPlayerController
   ///
   /// No-op when no audio source is loaded (e.g. after app restart before
   /// the user taps play on an episode).
+  @override
   Future<void> resume() async {
     if (_currentUrl == null) return;
     await _player.play();

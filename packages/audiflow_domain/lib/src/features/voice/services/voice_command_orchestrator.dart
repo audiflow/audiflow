@@ -435,10 +435,10 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
   Future<void> _handlePlayCommand(VoiceCommand command) async {
     final podcastName = command.parameters['podcastName'];
 
+    // Bare "play" / "再生" without podcast name = resume current playback
     if (podcastName == null || podcastName.isEmpty) {
-      state = const VoiceRecognitionState.error(
-        message: 'Please specify a podcast name',
-      );
+      await _executor.resume();
+      state = const VoiceRecognitionState.success(message: 'Resuming playback');
       return;
     }
 
@@ -476,11 +476,21 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
     final text = transcription.trim();
     final lower = text.toLowerCase();
 
-    // Try play command
+    // Try simple playback commands (bare "再生", "play")
+    if (_isResumeCommand(text, lower)) {
+      return VoiceCommand(
+        intent: VoiceIntent.play,
+        parameters: const {},
+        confidence: 0.9,
+        rawTranscription: transcription,
+      );
+    }
+
+    // Try play command with podcast name
     final playResult = _tryParsePlayCommand(text, lower, transcription);
     if (playResult != null) return playResult;
 
-    // Try pause command
+    // Try pause/stop command
     if (_isPauseCommand(text, lower)) {
       return VoiceCommand(
         intent: VoiceIntent.pause,
@@ -490,8 +500,22 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
       );
     }
 
+    // Try skip commands
+    final skipResult = _tryParseSkipCommand(text, lower, transcription);
+    if (skipResult != null) return skipResult;
+
+    // Try navigation commands
+    final navResult = _tryParseNavigationCommand(text, lower, transcription);
+    if (navResult != null) return navResult;
+
     // Try search command
     return _tryParseSearchCommand(text, lower, transcription);
+  }
+
+  bool _isResumeCommand(String text, String lower) {
+    const enResume = ['play', 'resume', 'start'];
+    const jaResume = ['再生', '再生して', '再生する', 'プレイ'];
+    return enResume.contains(lower) || jaResume.any(text.contains);
   }
 
   VoiceCommand? _tryParsePlayCommand(
@@ -544,13 +568,95 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
   }
 
   bool _isPauseCommand(String text, String lower) {
-    // English
-    if (lower == 'pause' || lower == 'stop' || lower == 'pause playback') {
-      return true;
+    const enPause = ['pause', 'stop', 'pause playback'];
+    const jaPause = ['一時停止', '停止', 'ストップ', 'ポーズ'];
+    return enPause.contains(lower) || jaPause.any(text.contains);
+  }
+
+  VoiceCommand? _tryParseSkipCommand(
+    String text,
+    String lower,
+    String transcription,
+  ) {
+    // Skip forward
+    const enForward = ['skip', 'skip forward', 'next', 'forward'];
+    const jaForward = ['スキップ', '早送り', '次へ', '先送り'];
+    if (enForward.contains(lower) || jaForward.any(text.contains)) {
+      return VoiceCommand(
+        intent: VoiceIntent.skipForward,
+        parameters: const {},
+        confidence: 0.9,
+        rawTranscription: transcription,
+      );
     }
-    // Japanese
-    const japanesePauseKeywords = ['一時停止', '停止', 'ストップ', 'ポーズ'];
-    return japanesePauseKeywords.any(text.contains);
+
+    // Skip backward
+    const enBackward = ['rewind', 'skip back', 'back', 'go back'];
+    const jaBackward = ['巻き戻し', '戻して', '前へ'];
+    if (enBackward.contains(lower) || jaBackward.any(text.contains)) {
+      return VoiceCommand(
+        intent: VoiceIntent.skipBackward,
+        parameters: const {},
+        confidence: 0.9,
+        rawTranscription: transcription,
+      );
+    }
+
+    return null;
+  }
+
+  VoiceCommand? _tryParseNavigationCommand(
+    String text,
+    String lower,
+    String transcription,
+  ) {
+    // Library
+    const enLibrary = [
+      'library',
+      'go to library',
+      'open library',
+      'my library',
+    ];
+    const jaLibrary = ['ライブラリ', 'マイライブラリ'];
+    if (enLibrary.contains(lower) || jaLibrary.any(text.contains)) {
+      return VoiceCommand(
+        intent: VoiceIntent.goToLibrary,
+        parameters: const {},
+        confidence: 0.9,
+        rawTranscription: transcription,
+      );
+    }
+
+    // Queue
+    const enQueue = ['queue', 'go to queue', 'open queue', 'show queue'];
+    const jaQueue = ['キュー', '再生キュー', '待ち行列'];
+    if (enQueue.contains(lower) || jaQueue.any(text.contains)) {
+      return VoiceCommand(
+        intent: VoiceIntent.goToQueue,
+        parameters: const {},
+        confidence: 0.9,
+        rawTranscription: transcription,
+      );
+    }
+
+    // Settings
+    const enSettings = [
+      'settings',
+      'go to settings',
+      'open settings',
+      'preferences',
+    ];
+    const jaSettings = ['設定', '設定を開く'];
+    if (enSettings.contains(lower) || jaSettings.any(text.contains)) {
+      return VoiceCommand(
+        intent: VoiceIntent.openSettings,
+        parameters: const {},
+        confidence: 0.9,
+        rawTranscription: transcription,
+      );
+    }
+
+    return null;
   }
 
   VoiceCommand? _tryParseSearchCommand(

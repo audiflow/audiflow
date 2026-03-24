@@ -88,7 +88,7 @@ class VoiceListeningOverlay extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-    final displayName = _resolveDisplayName(state.displayNameKey);
+    final displayName = _resolveDisplayName(context, state.displayNameKey);
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -150,7 +150,7 @@ class VoiceListeningOverlay extends ConsumerWidget {
                 controller.selectSettingsCandidate(candidate);
               },
               child: Text(
-                '${_resolveDisplayName(candidate.key)}: ${candidate.newValue}',
+                '${_resolveDisplayName(context, candidate.key)}: ${candidate.newValue}',
               ),
             ),
           ),
@@ -183,7 +183,7 @@ class VoiceListeningOverlay extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-    final displayName = _resolveDisplayName(state.displayNameKey);
+    final displayName = _resolveDisplayName(context, state.displayNameKey);
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -366,25 +366,26 @@ class VoiceListeningOverlay extends ConsumerWidget {
     };
   }
 
-  /// Maps a displayNameKey (l10n key) to a human-readable setting name.
-  ///
-  /// Uses direct mapping for known settings keys rather than full l10n
-  /// lookup, as the overlay does not have access to the full ARB key set
-  /// at this call site without a BuildContext threading approach.
-  String _resolveDisplayName(String displayNameKey) {
+  /// Resolves a displayNameKey (ARB key) to its localized string.
+  String _resolveDisplayName(BuildContext context, String displayNameKey) {
+    final l10n = AppLocalizations.of(context);
     return switch (displayNameKey) {
-      'playbackDefaultSpeed' => 'Playback speed',
-      'playbackSkipForward' => 'Skip forward',
-      'playbackSkipBackward' => 'Skip backward',
-      'appearanceThemeMode' => 'Theme',
-      'appearanceLanguage' => 'Language',
-      'appearanceTextSize' => 'Text size',
-      'downloadsWifiOnlyTitle' => 'Wi-Fi only',
-      'downloadsAutoDeleteTitle' => 'Auto-delete',
-      'downloadsMaxConcurrent' => 'Max downloads',
-      'feedSyncInterval' => 'Sync interval',
-      'feedSyncAutoSyncTitle' => 'Auto sync',
-      'playbackContinuousTitle' => 'Continuous play',
+      'appearanceThemeMode' => l10n.appearanceThemeMode,
+      'appearanceLanguage' => l10n.appearanceLanguage,
+      'appearanceTextSize' => l10n.appearanceTextSize,
+      'playbackDefaultSpeed' => l10n.playbackDefaultSpeed,
+      'playbackSkipForward' => l10n.playbackSkipForward,
+      'playbackSkipBackward' => l10n.playbackSkipBackward,
+      'playbackAutoCompleteThreshold' => l10n.playbackAutoCompleteThreshold,
+      'playbackContinuousTitle' => l10n.playbackContinuousTitle,
+      'playbackAutoPlayOrderTitle' => l10n.playbackAutoPlayOrderTitle,
+      'downloadsWifiOnlyTitle' => l10n.downloadsWifiOnlyTitle,
+      'downloadsAutoDeleteTitle' => l10n.downloadsAutoDeleteTitle,
+      'downloadsMaxConcurrent' => l10n.downloadsMaxConcurrent,
+      'feedSyncAutoSyncTitle' => l10n.feedSyncAutoSyncTitle,
+      'feedSyncInterval' => l10n.feedSyncInterval,
+      'feedSyncWifiOnlyTitle' => l10n.feedSyncWifiOnlyTitle,
+      'feedSyncNotifyNewEpisodesTitle' => l10n.feedSyncNotifyNewEpisodesTitle,
       _ => displayNameKey,
     };
   }

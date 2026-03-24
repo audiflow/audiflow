@@ -6,11 +6,15 @@ import 'package:audiflow_domain/audiflow_domain.dart';
 /// the executor notified the audio layer.
 class FakeAudioPlaybackController implements AudioPlaybackController {
   double? lastSetSpeed;
+  bool resumeCalled = false;
   bool pauseCalled = false;
   bool stopCalled = false;
   bool skipForwardCalled = false;
   bool skipBackwardCalled = false;
   Duration? lastSeekPosition;
+
+  @override
+  Future<void> resume() async => resumeCalled = true;
 
   @override
   Future<void> pause() async => pauseCalled = true;

@@ -16,7 +16,7 @@ class SettingsMetadataRegistry {
     // -- Appearance --
     SettingMetadata(
       key: SettingsKeys.themeMode,
-      displayNameKey: 'settings_theme_mode',
+      displayNameKey: 'appearanceThemeMode',
       type: SettingType.enumValue,
       constraints: const SettingConstraints.options(
         values: ['light', 'dark', 'system'],
@@ -37,7 +37,7 @@ class SettingsMetadataRegistry {
     ),
     SettingMetadata(
       key: SettingsKeys.locale,
-      displayNameKey: 'settings_locale',
+      displayNameKey: 'appearanceLanguage',
       type: SettingType.enumValue,
       constraints: const SettingConstraints.options(
         values: ['en', 'ja', 'system'],
@@ -54,7 +54,7 @@ class SettingsMetadataRegistry {
     ),
     SettingMetadata(
       key: SettingsKeys.textScale,
-      displayNameKey: 'settings_text_scale',
+      displayNameKey: 'appearanceTextSize',
       type: SettingType.doubleValue,
       constraints: const SettingConstraints.range(
         min: 0.8,
@@ -77,7 +77,7 @@ class SettingsMetadataRegistry {
     // -- Playback --
     SettingMetadata(
       key: SettingsKeys.playbackSpeed,
-      displayNameKey: 'settings_playback_speed',
+      displayNameKey: 'playbackDefaultSpeed',
       type: SettingType.doubleValue,
       constraints: const SettingConstraints.range(
         min: 0.5,
@@ -98,7 +98,7 @@ class SettingsMetadataRegistry {
     ),
     SettingMetadata(
       key: SettingsKeys.skipForwardSeconds,
-      displayNameKey: 'settings_skip_forward_seconds',
+      displayNameKey: 'playbackSkipForward',
       type: SettingType.intValue,
       constraints: const SettingConstraints.range(min: 5, max: 60, step: 5),
       synonyms: const [
@@ -115,7 +115,7 @@ class SettingsMetadataRegistry {
     ),
     SettingMetadata(
       key: SettingsKeys.skipBackwardSeconds,
-      displayNameKey: 'settings_skip_backward_seconds',
+      displayNameKey: 'playbackSkipBackward',
       type: SettingType.intValue,
       constraints: const SettingConstraints.range(min: 5, max: 60, step: 5),
       synonyms: const [
@@ -132,7 +132,7 @@ class SettingsMetadataRegistry {
     ),
     SettingMetadata(
       key: SettingsKeys.autoCompleteThreshold,
-      displayNameKey: 'settings_auto_complete_threshold',
+      displayNameKey: 'playbackAutoCompleteThreshold',
       type: SettingType.doubleValue,
       constraints: const SettingConstraints.range(
         min: 0.8,
@@ -152,7 +152,7 @@ class SettingsMetadataRegistry {
     ),
     SettingMetadata(
       key: SettingsKeys.continuousPlayback,
-      displayNameKey: 'settings_continuous_playback',
+      displayNameKey: 'playbackContinuousTitle',
       type: SettingType.boolean,
       constraints: const SettingConstraints.boolean(),
       synonyms: const [
@@ -169,7 +169,7 @@ class SettingsMetadataRegistry {
     ),
     SettingMetadata(
       key: SettingsKeys.autoPlayOrder,
-      displayNameKey: 'settings_auto_play_order',
+      displayNameKey: 'playbackAutoPlayOrderTitle',
       type: SettingType.enumValue,
       constraints: const SettingConstraints.options(
         values: ['newestFirst', 'oldestFirst'],
@@ -190,7 +190,7 @@ class SettingsMetadataRegistry {
     // -- Downloads --
     SettingMetadata(
       key: SettingsKeys.wifiOnlyDownload,
-      displayNameKey: 'settings_wifi_only_download',
+      displayNameKey: 'downloadsWifiOnlyTitle',
       type: SettingType.boolean,
       constraints: const SettingConstraints.boolean(),
       synonyms: const [
@@ -206,7 +206,7 @@ class SettingsMetadataRegistry {
     ),
     SettingMetadata(
       key: SettingsKeys.autoDeletePlayed,
-      displayNameKey: 'settings_auto_delete_played',
+      displayNameKey: 'downloadsAutoDeleteTitle',
       type: SettingType.boolean,
       constraints: const SettingConstraints.boolean(),
       synonyms: const [
@@ -222,7 +222,7 @@ class SettingsMetadataRegistry {
     ),
     SettingMetadata(
       key: SettingsKeys.maxConcurrentDownloads,
-      displayNameKey: 'settings_max_concurrent_downloads',
+      displayNameKey: 'downloadsMaxConcurrent',
       type: SettingType.intValue,
       constraints: const SettingConstraints.range(min: 1, max: 5, step: 1),
       synonyms: const [
@@ -240,7 +240,7 @@ class SettingsMetadataRegistry {
     // -- Feed Sync --
     SettingMetadata(
       key: SettingsKeys.autoSync,
-      displayNameKey: 'settings_auto_sync',
+      displayNameKey: 'feedSyncAutoSyncTitle',
       type: SettingType.boolean,
       constraints: const SettingConstraints.boolean(),
       synonyms: const [
@@ -256,7 +256,7 @@ class SettingsMetadataRegistry {
     ),
     SettingMetadata(
       key: SettingsKeys.syncIntervalMinutes,
-      displayNameKey: 'settings_sync_interval_minutes',
+      displayNameKey: 'feedSyncInterval',
       type: SettingType.intValue,
       constraints: const SettingConstraints.range(min: 15, max: 1440, step: 15),
       synonyms: const [
@@ -273,7 +273,7 @@ class SettingsMetadataRegistry {
     ),
     SettingMetadata(
       key: SettingsKeys.wifiOnlySync,
-      displayNameKey: 'settings_wifi_only_sync',
+      displayNameKey: 'feedSyncWifiOnlyTitle',
       type: SettingType.boolean,
       constraints: const SettingConstraints.boolean(),
       synonyms: const [
@@ -291,7 +291,7 @@ class SettingsMetadataRegistry {
     // -- Notifications --
     SettingMetadata(
       key: SettingsKeys.notifyNewEpisodes,
-      displayNameKey: 'settings_notify_new_episodes',
+      displayNameKey: 'feedSyncNotifyNewEpisodesTitle',
       type: SettingType.boolean,
       constraints: const SettingConstraints.boolean(),
       synonyms: const [
@@ -310,7 +310,7 @@ class SettingsMetadataRegistry {
     // -- Search --
     SettingMetadata(
       key: SettingsKeys.searchCountry,
-      displayNameKey: 'settings_search_country',
+      displayNameKey: 'searchCountry',
       type: SettingType.enumValue,
       constraints: const SettingConstraints.options(
         values: ['us', 'jp', 'gb', 'de', 'fr', 'au', 'ca'],

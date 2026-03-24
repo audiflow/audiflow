@@ -19,6 +19,9 @@ abstract class AudioPlaybackController {
   /// Seeks to the specified absolute position.
   Future<void> seek(Duration position);
 
+  /// Resumes playback if paused.
+  Future<void> resume();
+
   /// Sets the playback speed and persists it to settings.
   Future<void> setSpeed(double speed);
 }
