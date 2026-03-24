@@ -287,5 +287,11 @@
   "deepLinkEpisodeNotFound": "エピソードが見つかりません",
   "deepLinkNetworkError": "読み込めませんでした。接続を確認してください",
   "deepLinkLoading": "リンクを開いています...",
-  "sharePodcast": "ポッドキャストを共有"
+  "sharePodcast": "ポッドキャストを共有",
+
+  "voiceSettingsWhichSetting": "どの設定を変更しますか？",
+  "voiceSettingsChanged": "設定を変更しました",
+  "undo": "元に戻す",
+  "confirm": "確認",
+  "cancel": "キャンセル"
 }

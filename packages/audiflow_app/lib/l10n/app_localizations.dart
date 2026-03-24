@@ -1639,6 +1639,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Share podcast'**
   String get sharePodcast;
+
+  /// Title shown when voice command is ambiguous between multiple settings
+  ///
+  /// In en, this message translates to:
+  /// **'Which setting do you mean?'**
+  String get voiceSettingsWhichSetting;
+
+  /// Confirmation message when a setting is auto-applied via voice
+  ///
+  /// In en, this message translates to:
+  /// **'Setting changed'**
+  String get voiceSettingsChanged;
+
+  /// Undo action label
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get undo;
+
+  /// Confirm action label
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get confirm;
+
+  /// Cancel action label
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get cancel;
 }
 
 class _AppLocalizationsDelegate

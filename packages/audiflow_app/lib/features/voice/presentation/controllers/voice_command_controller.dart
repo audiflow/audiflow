@@ -13,7 +13,8 @@ export 'package:audiflow_domain/audiflow_domain.dart'
         VoiceError,
         VoiceSettingsAutoApplied,
         VoiceSettingsDisambiguation,
-        VoiceSettingsLowConfidence;
+        VoiceSettingsLowConfidence,
+        SettingsResolutionCandidate;
 
 part 'voice_command_controller.g.dart';
 
@@ -96,5 +97,25 @@ class VoiceCommandController extends _$VoiceCommandController {
   Future<bool> initialize() async {
     final orchestrator = ref.read(voiceCommandOrchestratorProvider.notifier);
     return orchestrator.initialize();
+  }
+
+  /// Confirms a low-confidence settings change.
+  Future<void> confirmSettingsChange(String key, String value) async {
+    final orchestrator = ref.read(voiceCommandOrchestratorProvider.notifier);
+    await orchestrator.confirmSettingsChange(key, value);
+  }
+
+  /// Undoes the last auto-applied settings change.
+  Future<void> undoSettingsChange(String key, String previousValue) async {
+    final orchestrator = ref.read(voiceCommandOrchestratorProvider.notifier);
+    await orchestrator.undoSettingsChange(key, previousValue);
+  }
+
+  /// Selects a candidate from disambiguation.
+  Future<void> selectSettingsCandidate(
+    SettingsResolutionCandidate candidate,
+  ) async {
+    final orchestrator = ref.read(voiceCommandOrchestratorProvider.notifier);
+    await orchestrator.selectSettingsCandidate(candidate);
   }
 }

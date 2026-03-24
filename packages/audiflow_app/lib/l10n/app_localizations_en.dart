@@ -861,4 +861,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sharePodcast => 'Share podcast';
+
+  @override
+  String get voiceSettingsWhichSetting => 'Which setting do you mean?';
+
+  @override
+  String get voiceSettingsChanged => 'Setting changed';
+
+  @override
+  String get undo => 'Undo';
+
+  @override
+  String get confirm => 'Confirm';
+
+  @override
+  String get cancel => 'Cancel';
 }

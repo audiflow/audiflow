@@ -534,5 +534,16 @@
   "deepLinkLoading": "Opening link...",
   "@deepLinkLoading": { "description": "Loading screen text during deep link resolution" },
   "sharePodcast": "Share podcast",
-  "@sharePodcast": { "description": "Tooltip for podcast share button" }
+  "@sharePodcast": { "description": "Tooltip for podcast share button" },
+
+  "voiceSettingsWhichSetting": "Which setting do you mean?",
+  "@voiceSettingsWhichSetting": { "description": "Title shown when voice command is ambiguous between multiple settings" },
+  "voiceSettingsChanged": "Setting changed",
+  "@voiceSettingsChanged": { "description": "Confirmation message when a setting is auto-applied via voice" },
+  "undo": "Undo",
+  "@undo": { "description": "Undo action label" },
+  "confirm": "Confirm",
+  "@confirm": { "description": "Confirm action label" },
+  "cancel": "Cancel",
+  "@cancel": { "description": "Cancel action label" }
 }

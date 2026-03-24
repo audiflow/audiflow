@@ -844,4 +844,19 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get sharePodcast => 'ポッドキャストを共有';
+
+  @override
+  String get voiceSettingsWhichSetting => 'どの設定を変更しますか？';
+
+  @override
+  String get voiceSettingsChanged => '設定を変更しました';
+
+  @override
+  String get undo => '元に戻す';
+
+  @override
+  String get confirm => '確認';
+
+  @override
+  String get cancel => 'キャンセル';
 }

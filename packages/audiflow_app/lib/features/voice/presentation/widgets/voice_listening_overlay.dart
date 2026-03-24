@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
+import '../../../../l10n/app_localizations.dart';
+import '../controllers/voice_command_controller.dart';
+
 /// Full-screen overlay displayed during voice command interaction.
 ///
 /// Shows:
@@ -10,6 +13,7 @@ import 'package:material_symbols_icons/symbols.dart';
 /// - Real-time partial transcription
 /// - Processing/executing status
 /// - Success/error messages
+/// - Settings confirmation, disambiguation, and undo UI
 /// - Cancel button
 class VoiceListeningOverlay extends ConsumerWidget {
   const VoiceListeningOverlay({super.key});
@@ -28,23 +32,195 @@ class VoiceListeningOverlay extends ConsumerWidget {
       child: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Spacer(),
-              _buildStateIndicator(context, voiceState),
-              const SizedBox(height: 32),
-              _buildStatusText(context, voiceState),
-              const SizedBox(height: 16),
-              _buildTranscriptText(context, voiceState),
-              const Spacer(),
-              if (_showCancelButton(voiceState))
-                _buildCancelButton(context, ref),
-              const SizedBox(height: 48),
-            ],
-          ),
+          child: switch (voiceState) {
+            VoiceSettingsAutoApplied() => _buildSettingsAutoAppliedContent(
+              context,
+              ref,
+              voiceState,
+            ),
+            VoiceSettingsDisambiguation() =>
+              _buildSettingsDisambiguationContent(context, ref, voiceState),
+            VoiceSettingsLowConfidence() => _buildSettingsLowConfidenceContent(
+              context,
+              ref,
+              voiceState,
+            ),
+            _ => _buildStandardContent(context, ref, voiceState),
+          },
         ),
       ),
+    );
+  }
+
+  Widget _buildStandardContent(
+    BuildContext context,
+    WidgetRef ref,
+    VoiceRecognitionState state,
+  ) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Spacer(),
+        _buildStateIndicator(context, state),
+        const SizedBox(height: 32),
+        _buildStatusText(context, state),
+        const SizedBox(height: 16),
+        _buildTranscriptText(context, state),
+        const Spacer(),
+        if (_showCancelButton(state)) _buildCancelButton(context, ref),
+        const SizedBox(height: 48),
+      ],
+    );
+  }
+
+  /// Renders the auto-applied settings state with undo option.
+  Widget _buildSettingsAutoAppliedContent(
+    BuildContext context,
+    WidgetRef ref,
+    VoiceSettingsAutoApplied state,
+  ) {
+    final l10n = AppLocalizations.of(context);
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    final displayName = _resolveDisplayName(state.displayNameKey);
+
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Spacer(),
+        Icon(Symbols.check_circle, size: 48, color: colorScheme.tertiary),
+        const SizedBox(height: 24),
+        Text(
+          '$displayName: ${state.oldValue} -> ${state.newValue}',
+          style: textTheme.titleMedium?.copyWith(color: Colors.white),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 24),
+        TextButton(
+          onPressed: () {
+            final controller = ref.read(
+              voiceCommandControllerProvider.notifier,
+            );
+            controller.undoSettingsChange(state.key, state.oldValue);
+          },
+          child: Text(
+            l10n.undo,
+            style: textTheme.labelLarge?.copyWith(color: Colors.white70),
+          ),
+        ),
+        const Spacer(),
+        const SizedBox(height: 48),
+      ],
+    );
+  }
+
+  /// Renders the disambiguation state with candidate selection cards.
+  Widget _buildSettingsDisambiguationContent(
+    BuildContext context,
+    WidgetRef ref,
+    VoiceSettingsDisambiguation state,
+  ) {
+    final l10n = AppLocalizations.of(context);
+    final textTheme = Theme.of(context).textTheme;
+
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Spacer(),
+        Text(
+          l10n.voiceSettingsWhichSetting,
+          style: textTheme.headlineSmall?.copyWith(color: Colors.white),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 32),
+        ...state.candidates.map(
+          (candidate) => Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: FilledButton.tonal(
+              onPressed: () {
+                final controller = ref.read(
+                  voiceCommandControllerProvider.notifier,
+                );
+                controller.selectSettingsCandidate(candidate);
+              },
+              child: Text(
+                '${_resolveDisplayName(candidate.key)}: ${candidate.newValue}',
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 24),
+        TextButton(
+          onPressed: () {
+            final controller = ref.read(
+              voiceCommandControllerProvider.notifier,
+            );
+            controller.reset();
+          },
+          child: Text(
+            l10n.cancel,
+            style: textTheme.labelLarge?.copyWith(color: Colors.white70),
+          ),
+        ),
+        const Spacer(),
+        const SizedBox(height: 48),
+      ],
+    );
+  }
+
+  /// Renders the low-confidence state with confirm/cancel buttons.
+  Widget _buildSettingsLowConfidenceContent(
+    BuildContext context,
+    WidgetRef ref,
+    VoiceSettingsLowConfidence state,
+  ) {
+    final l10n = AppLocalizations.of(context);
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    final displayName = _resolveDisplayName(state.displayNameKey);
+
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Spacer(),
+        Icon(Symbols.help, size: 48, color: colorScheme.tertiary),
+        const SizedBox(height: 24),
+        Text(
+          '$displayName: ${state.oldValue} -> ${state.newValue}?',
+          style: textTheme.titleMedium?.copyWith(color: Colors.white),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 24),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            TextButton(
+              onPressed: () {
+                final controller = ref.read(
+                  voiceCommandControllerProvider.notifier,
+                );
+                controller.reset();
+              },
+              child: Text(
+                l10n.cancel,
+                style: textTheme.labelLarge?.copyWith(color: Colors.white70),
+              ),
+            ),
+            const SizedBox(width: 16),
+            FilledButton(
+              onPressed: () {
+                final controller = ref.read(
+                  voiceCommandControllerProvider.notifier,
+                );
+                controller.confirmSettingsChange(state.key, state.newValue);
+              },
+              child: Text(l10n.confirm),
+            ),
+          ],
+        ),
+        const Spacer(),
+        const SizedBox(height: 48),
+      ],
     );
   }
 
@@ -71,20 +247,10 @@ class VoiceListeningOverlay extends ConsumerWidget {
       ),
       VoiceError() => Icon(Symbols.error, size: 80, color: colorScheme.error),
       VoiceIdle() => const SizedBox.shrink(),
-      // Placeholder rendering for settings states — Task 11 will add proper UI.
-      VoiceSettingsAutoApplied() => Icon(
-        Symbols.check_circle,
-        size: 80,
-        color: colorScheme.tertiary,
-      ),
-      VoiceSettingsDisambiguation() => CircularProgressIndicator(
-        color: colorScheme.primary,
-        strokeWidth: 3,
-      ),
-      VoiceSettingsLowConfidence() => CircularProgressIndicator(
-        color: colorScheme.secondary,
-        strokeWidth: 3,
-      ),
+      // Settings states are rendered via dedicated content builders above.
+      VoiceSettingsAutoApplied() => const SizedBox.shrink(),
+      VoiceSettingsDisambiguation() => const SizedBox.shrink(),
+      VoiceSettingsLowConfidence() => const SizedBox.shrink(),
     };
   }
 
@@ -99,10 +265,10 @@ class VoiceListeningOverlay extends ConsumerWidget {
       VoiceSuccess(message: final msg) => msg,
       VoiceError(message: final msg) => msg,
       VoiceIdle() => '',
-      // Placeholder text for settings states — Task 11 will add proper UI.
-      VoiceSettingsAutoApplied() => 'Setting applied',
-      VoiceSettingsDisambiguation() => 'Which setting did you mean?',
-      VoiceSettingsLowConfidence() => 'Confirm setting change?',
+      // Settings states are rendered via dedicated content builders above.
+      VoiceSettingsAutoApplied() => '',
+      VoiceSettingsDisambiguation() => '',
+      VoiceSettingsLowConfidence() => '',
     };
 
     final color = switch (state) {
@@ -191,6 +357,29 @@ class VoiceListeningOverlay extends ConsumerWidget {
       VoiceIntent.clearQueue => 'Clear queue',
       VoiceIntent.changeSettings => 'Change setting',
       VoiceIntent.unknown => 'Unknown',
+    };
+  }
+
+  /// Maps a displayNameKey (l10n key) to a human-readable setting name.
+  ///
+  /// Uses direct mapping for known settings keys rather than full l10n
+  /// lookup, as the overlay does not have access to the full ARB key set
+  /// at this call site without a BuildContext threading approach.
+  String _resolveDisplayName(String displayNameKey) {
+    return switch (displayNameKey) {
+      'playbackDefaultSpeed' => 'Playback speed',
+      'playbackSkipForward' => 'Skip forward',
+      'playbackSkipBackward' => 'Skip backward',
+      'appearanceThemeMode' => 'Theme',
+      'appearanceLanguage' => 'Language',
+      'appearanceTextSize' => 'Text size',
+      'downloadsWifiOnlyTitle' => 'Wi-Fi only',
+      'downloadsAutoDeleteTitle' => 'Auto-delete',
+      'downloadsMaxConcurrent' => 'Max downloads',
+      'feedSyncInterval' => 'Sync interval',
+      'feedSyncAutoSyncTitle' => 'Auto sync',
+      'playbackContinuousTitle' => 'Continuous play',
+      _ => displayNameKey,
     };
   }
 }
