@@ -12,8 +12,8 @@ struct AdjustSettingIntent: AppIntent {
     var direction: String
 
     func perform() async throws -> some IntentResult {
-        // Relative changes need current value + step info
-        // For background invocation, this is a simplified version
-        return .result()
+        // Relative changes need current value + step info from the registry,
+        // which is only available via the Flutter-side platform channel.
+        throw SettingsIntentError.adjustNotSupported
     }
 }

@@ -169,41 +169,45 @@ class _CustomNavBar extends StatelessWidget {
 
     final bottomInset = MediaQuery.viewPaddingOf(context).bottom;
 
-    return Container(
-      height: 80 + bottomInset,
-      padding: EdgeInsets.only(bottom: bottomInset),
+    return Material(
       color: backgroundColor,
-      child: Stack(
-        clipBehavior: Clip.none,
-        alignment: Alignment.center,
-        children: [
-          Row(
+      child: SizedBox(
+        height: 80 + bottomInset,
+        child: Padding(
+          padding: EdgeInsets.only(bottom: bottomInset),
+          child: Stack(
+            clipBehavior: Clip.none,
+            alignment: Alignment.center,
             children: [
-              // Left destinations: Search, Library
-              for (final item in _leftDestinations)
-                Expanded(
-                  child: _NavItem(
-                    destination: item.destination,
-                    isSelected: currentIndex == item.index,
-                    onTap: () => onDestinationSelected(item.index),
-                  ),
-                ),
-              // Center placeholder so the voice button has visual space
-              const SizedBox(width: 72),
-              // Right destinations: Queue, Settings
-              for (final item in _rightDestinations)
-                Expanded(
-                  child: _NavItem(
-                    destination: item.destination,
-                    isSelected: currentIndex == item.index,
-                    onTap: () => onDestinationSelected(item.index),
-                  ),
-                ),
+              Row(
+                children: [
+                  // Left destinations: Search, Library
+                  for (final item in _leftDestinations)
+                    Expanded(
+                      child: _NavItem(
+                        destination: item.destination,
+                        isSelected: currentIndex == item.index,
+                        onTap: () => onDestinationSelected(item.index),
+                      ),
+                    ),
+                  // Center placeholder so the voice button has visual space
+                  const SizedBox(width: 72),
+                  // Right destinations: Queue, Settings
+                  for (final item in _rightDestinations)
+                    Expanded(
+                      child: _NavItem(
+                        destination: item.destination,
+                        isSelected: currentIndex == item.index,
+                        onTap: () => onDestinationSelected(item.index),
+                      ),
+                    ),
+                ],
+              ),
+              // Voice button raised above bar
+              Positioned(top: -8, child: const _VoiceNavButton()),
             ],
           ),
-          // Voice button raised above bar
-          Positioned(top: -8, child: const _VoiceNavButton()),
-        ],
+        ),
       ),
     );
   }
@@ -231,37 +235,42 @@ class _NavItem extends StatelessWidget {
         ? colorScheme.onSurface
         : colorScheme.onSurfaceVariant;
 
-    return InkWell(
-      onTap: onTap,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // Indicator pill behind icon when selected
-          Container(
-            width: 64,
-            height: 32,
-            decoration: isSelected
-                ? BoxDecoration(
-                    color: colorScheme.secondaryContainer,
-                    borderRadius: BorderRadius.circular(16),
-                  )
-                : null,
-            child: Icon(
-              isSelected ? destination.selectedIcon : destination.icon,
-              fill: isSelected ? 1 : 0,
-              size: 24,
-              color: iconColor,
+    return Semantics(
+      button: true,
+      selected: isSelected,
+      label: destination.label,
+      child: InkWell(
+        onTap: onTap,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Indicator pill behind icon when selected
+            Container(
+              width: 64,
+              height: 32,
+              decoration: isSelected
+                  ? BoxDecoration(
+                      color: colorScheme.secondaryContainer,
+                      borderRadius: BorderRadius.circular(16),
+                    )
+                  : null,
+              child: Icon(
+                isSelected ? destination.selectedIcon : destination.icon,
+                fill: isSelected ? 1 : 0,
+                size: 24,
+                color: iconColor,
+              ),
             ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            destination.label,
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: labelColor,
-              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+            const SizedBox(height: 4),
+            Text(
+              destination.label,
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: labelColor,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

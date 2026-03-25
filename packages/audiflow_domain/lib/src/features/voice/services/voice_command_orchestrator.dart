@@ -36,7 +36,7 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
   late VoiceCommandExecutor _executor;
   late Logger? _logger;
   late SettingsIntentResolver _settingsResolver;
-  late SettingsSnapshotService _settingsSnapshotService;
+  late SettingsMetadataRegistry _settingsRegistry;
 
   bool _isInitialized = false;
   Completer<void>? _listeningCompleter;
@@ -48,12 +48,8 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
     _executor = ref.watch(voiceCommandExecutorProvider);
     _logger = ref.watch(namedLoggerProvider('VoiceOrchestrator'));
 
-    final registry = SettingsMetadataRegistry();
-    _settingsResolver = SettingsIntentResolver(registry);
-    _settingsSnapshotService = SettingsSnapshotService(
-      registry: registry,
-      settingsRepository: ref.read(appSettingsRepositoryProvider),
-    );
+    _settingsRegistry = SettingsMetadataRegistry();
+    _settingsResolver = SettingsIntentResolver(_settingsRegistry);
 
     // Reset initialization flag — dependencies may be new instances
     _isInitialized = false;
@@ -391,10 +387,17 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
   }
 
   Future<void> _handleChangeSettings(VoiceCommand command) async {
+    // Create snapshot service on-demand with a fresh repository reference
+    // to avoid stale data after _applySetting invalidates the provider.
+    final snapshotService = SettingsSnapshotService(
+      registry: _settingsRegistry,
+      settingsRepository: ref.read(appSettingsRepositoryProvider),
+    );
+
     // Build the current values map from the snapshot service
     final currentValues = <String, String>{};
     for (final metadata in _settingsResolver.registry.allSettings) {
-      currentValues[metadata.key] = _settingsSnapshotService.getCurrentValue(
+      currentValues[metadata.key] = snapshotService.getCurrentValue(
         metadata.key,
       );
     }

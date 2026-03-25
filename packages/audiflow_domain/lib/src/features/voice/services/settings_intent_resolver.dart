@@ -174,7 +174,10 @@ class SettingsIntentResolver {
         final parsed = double.tryParse(rawValue);
         if (parsed == null) return null;
         final clamped = math.max(min, math.min(max, parsed));
-        return _formatValue(metadata.type, clamped, step);
+        // Snap to nearest valid step increment within [min, max].
+        final snapped = ((clamped - min) / step).round() * step + min;
+        final bounded = math.max(min, math.min(max, snapped));
+        return _formatValue(metadata.type, bounded, step);
       }(),
     };
   }
@@ -257,18 +260,43 @@ class SettingsIntentResolver {
       );
     }
 
-    // 2+ candidates: present them to the user for disambiguation.
-    final resolutionCandidates = kept.map((c) {
+    // 2+ candidates: validate values, filter unresolvable, sort by confidence.
+    final resolutionCandidates = <SettingsResolutionCandidate>[];
+    for (final c in kept) {
       final metadata = _registry.findByKey(c.key);
+      if (metadata == null) continue;
+      if (c.value.isEmpty) continue;
+      final validated = _validateAbsoluteValue(metadata, c.value);
+      if (validated == null) continue;
       final oldValue = currentValues[c.key] ?? '';
-      return SettingsResolutionCandidate(
-        key: c.key,
-        displayNameKey: metadata?.displayNameKey ?? c.key,
-        oldValue: oldValue,
-        newValue: c.value,
-        confidence: c.confidence,
+      resolutionCandidates.add(
+        SettingsResolutionCandidate(
+          key: c.key,
+          displayNameKey: metadata.displayNameKey,
+          oldValue: oldValue,
+          newValue: validated,
+          confidence: c.confidence,
+        ),
       );
-    }).toList();
+    }
+
+    if (resolutionCandidates.isEmpty) {
+      return const SettingsResolution.notFound();
+    }
+
+    // Single valid candidate after filtering — apply threshold logic.
+    if (resolutionCandidates.length == 1) {
+      final only = resolutionCandidates.first;
+      return _applyThreshold(
+        key: only.key,
+        oldValue: only.oldValue,
+        newValue: only.newValue,
+        confidence: only.confidence,
+      );
+    }
+
+    // Sort by descending confidence as documented on SettingsResolution.disambiguate.
+    resolutionCandidates.sort((a, b) => b.confidence.compareTo(a.confidence));
 
     return SettingsResolution.disambiguate(candidates: resolutionCandidates);
   }

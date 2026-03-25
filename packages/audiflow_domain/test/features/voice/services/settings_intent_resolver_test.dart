@@ -433,6 +433,165 @@ void main() {
       });
     });
 
+    group('absolute - step-snapping for range values', () {
+      test('non-step-aligned value snaps to nearest step', () {
+        // playbackSpeed step=0.1, value 1.17 → snaps to 1.2
+        final payload = const SettingsChangePayload.absolute(
+          key: SettingsKeys.playbackSpeed,
+          value: '1.17',
+          confidence: 0.9,
+        );
+        final result = resolver.resolve(payload, currentValues: currentValues);
+        check(result)
+            .isA<SettingsResolutionAutoApply>()
+            .has((r) => r.newValue, 'newValue')
+            .equals('1.2');
+      });
+
+      test('value between steps rounds to nearest (down)', () {
+        // playbackSpeed step=0.1, value 1.24 → snaps to 1.2
+        final payload = const SettingsChangePayload.absolute(
+          key: SettingsKeys.playbackSpeed,
+          value: '1.24',
+          confidence: 0.9,
+        );
+        final result = resolver.resolve(payload, currentValues: currentValues);
+        check(result)
+            .isA<SettingsResolutionAutoApply>()
+            .has((r) => r.newValue, 'newValue')
+            .equals('1.2');
+      });
+
+      test('integer step-snapping works for skipForwardSeconds', () {
+        // skipForwardSeconds step=5, value 17 → snaps to 15
+        final payload = const SettingsChangePayload.absolute(
+          key: SettingsKeys.skipForwardSeconds,
+          value: '17',
+          confidence: 0.9,
+        );
+        final result = resolver.resolve(payload, currentValues: currentValues);
+        check(result)
+            .isA<SettingsResolutionAutoApply>()
+            .has((r) => r.newValue, 'newValue')
+            .equals('15');
+      });
+    });
+
+    group('ambiguous - multi-candidate filtering and sorting', () {
+      test('unregistered key is filtered out from multi-candidate', () {
+        final payload = const SettingsChangePayload.ambiguous(
+          candidates: [
+            SettingsCandidate(
+              key: 'unknown_key',
+              value: '1.5',
+              confidence: 0.9,
+            ),
+            SettingsCandidate(
+              key: SettingsKeys.playbackSpeed,
+              value: '1.5',
+              confidence: 0.7,
+            ),
+          ],
+        );
+        final result = resolver.resolve(payload, currentValues: currentValues);
+        // After filtering unknown key, only one valid candidate remains.
+        check(result).isA<SettingsResolutionConfirm>()
+          ..has((r) => r.key, 'key').equals(SettingsKeys.playbackSpeed)
+          ..has((r) => r.newValue, 'newValue').equals('1.5');
+      });
+
+      test('empty-value candidate is filtered out from multi-candidate', () {
+        final payload = const SettingsChangePayload.ambiguous(
+          candidates: [
+            SettingsCandidate(
+              key: SettingsKeys.playbackSpeed,
+              value: '',
+              confidence: 0.9,
+            ),
+            SettingsCandidate(
+              key: SettingsKeys.textScale,
+              value: '1.2',
+              confidence: 0.6,
+            ),
+          ],
+        );
+        final result = resolver.resolve(payload, currentValues: currentValues);
+        check(result).isA<SettingsResolutionConfirm>()
+          ..has((r) => r.key, 'key').equals(SettingsKeys.textScale)
+          ..has((r) => r.newValue, 'newValue').equals('1.2');
+      });
+
+      test('candidates are sorted by descending confidence', () {
+        final payload = const SettingsChangePayload.ambiguous(
+          candidates: [
+            SettingsCandidate(
+              key: SettingsKeys.textScale,
+              value: '1.2',
+              confidence: 0.6,
+            ),
+            SettingsCandidate(
+              key: SettingsKeys.playbackSpeed,
+              value: '1.5',
+              confidence: 0.7,
+            ),
+          ],
+        );
+        final result = resolver.resolve(payload, currentValues: currentValues);
+        final disambiguate = result as SettingsResolutionDisambiguate;
+        // Higher confidence first.
+        check(
+          disambiguate.candidates.first.key,
+        ).equals(SettingsKeys.playbackSpeed);
+        check(disambiguate.candidates.last.key).equals(SettingsKeys.textScale);
+      });
+
+      test('invalid value is filtered; all filtered → notFound', () {
+        final payload = const SettingsChangePayload.ambiguous(
+          candidates: [
+            SettingsCandidate(
+              key: SettingsKeys.continuousPlayback,
+              value: 'maybe',
+              confidence: 0.7,
+            ),
+            SettingsCandidate(
+              key: SettingsKeys.playbackSpeed,
+              value: '',
+              confidence: 0.6,
+            ),
+          ],
+        );
+        final result = resolver.resolve(payload, currentValues: currentValues);
+        check(result).isA<SettingsResolutionNotFound>();
+      });
+
+      test('multi-candidate values are validated and step-snapped', () {
+        final payload = const SettingsChangePayload.ambiguous(
+          candidates: [
+            SettingsCandidate(
+              key: SettingsKeys.playbackSpeed,
+              value: '1.17',
+              confidence: 0.7,
+            ),
+            SettingsCandidate(
+              key: SettingsKeys.textScale,
+              value: '1.24',
+              confidence: 0.6,
+            ),
+          ],
+        );
+        final result = resolver.resolve(payload, currentValues: currentValues);
+        final disambiguate = result as SettingsResolutionDisambiguate;
+        final speed = disambiguate.candidates.firstWhere(
+          (c) => c.key == SettingsKeys.playbackSpeed,
+        );
+        check(speed.newValue).equals('1.2');
+        final scale = disambiguate.candidates.firstWhere(
+          (c) => c.key == SettingsKeys.textScale,
+        );
+        check(scale.newValue).equals('1.2');
+      });
+    });
+
     group('ambiguous - candidate populates oldValue from currentValues', () {
       test('disambiguate result carries correct oldValue', () {
         final values = {
