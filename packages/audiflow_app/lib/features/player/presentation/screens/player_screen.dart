@@ -63,6 +63,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
     final nowPlaying = ref.watch(nowPlayingControllerProvider);
     final playbackState = ref.watch(audioPlayerControllerProvider);
     final progress = ref.watch(playbackProgressProvider);
+    final appSettingsRepo = ref.watch(appSettingsRepositoryProvider);
 
     final isPlaying = playbackState is PlaybackPlaying;
     final isLoading = playbackState is PlaybackLoading;
@@ -131,11 +132,8 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
                   _PlayerControls(
                     isPlaying: displayIsPlaying,
                     isLoading: displayIsLoading,
-                    skipForwardSeconds: ref
-                        .watch(appSettingsRepositoryProvider)
-                        .getSkipForwardSeconds(),
-                    skipBackwardSeconds: ref
-                        .watch(appSettingsRepositoryProvider)
+                    skipForwardSeconds: appSettingsRepo.getSkipForwardSeconds(),
+                    skipBackwardSeconds: appSettingsRepo
                         .getSkipBackwardSeconds(),
                     onSkipBackward: () => _handleSkip(
                       ref
@@ -599,7 +597,7 @@ class _PlayerControls extends StatelessWidget {
       children: [
         Semantics(
           button: true,
-          label: l10n.playerRewindLabel,
+          label: l10n.playerRewindLabel(skipBackwardSeconds),
           child: IconButton(
             icon: SkipDurationIcon(
               seconds: skipBackwardSeconds,
@@ -615,7 +613,7 @@ class _PlayerControls extends StatelessWidget {
         const SizedBox(width: 24),
         Semantics(
           button: true,
-          label: l10n.playerForwardLabel,
+          label: l10n.playerForwardLabel(skipForwardSeconds),
           child: IconButton(
             icon: SkipDurationIcon(
               seconds: skipForwardSeconds,

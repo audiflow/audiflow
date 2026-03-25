@@ -463,10 +463,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playerArtworkLabel => 'Episode artwork';
 
   @override
-  String get playerRewindLabel => 'Rewind 30 seconds';
+  String playerRewindLabel(int seconds) {
+    return 'Rewind $seconds seconds';
+  }
 
   @override
-  String get playerForwardLabel => 'Forward 30 seconds';
+  String playerForwardLabel(int seconds) {
+    return 'Forward $seconds seconds';
+  }
 
   @override
   String get playerLoadingLabel => 'Loading';

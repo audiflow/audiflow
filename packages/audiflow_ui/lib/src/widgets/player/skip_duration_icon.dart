@@ -49,28 +49,33 @@ class SkipDurationIcon extends StatelessWidget {
       return Icon(dedicated, size: size, color: color);
     }
 
-    // Fallback: base icon with text overlay
+    // Fallback: base icon with text overlay.
+    // ExcludeSemantics prevents the icon and overlay text from being
+    // announced by screen readers -- the parent Semantics widget already
+    // provides the accessibility label.
     final baseIcon = isForward ? Symbols.forward : Symbols.replay;
-    return SizedBox(
-      width: size,
-      height: size,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Icon(baseIcon, size: size, color: color),
-          Positioned(
-            bottom: size * 0.18,
-            child: Text(
-              '$seconds',
-              style: TextStyle(
-                fontSize: size * 0.28,
-                fontWeight: FontWeight.w700,
-                color: color ?? IconTheme.of(context).color,
-                height: 1,
+    return ExcludeSemantics(
+      child: SizedBox(
+        width: size,
+        height: size,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Icon(baseIcon, size: size, color: color),
+            Positioned(
+              bottom: size * 0.18,
+              child: Text(
+                '$seconds',
+                style: TextStyle(
+                  fontSize: size * 0.28,
+                  fontWeight: FontWeight.w700,
+                  color: color ?? IconTheme.of(context).color,
+                  height: 1,
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
