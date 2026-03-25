@@ -1,5 +1,6 @@
 import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -62,6 +63,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
     final nowPlaying = ref.watch(nowPlayingControllerProvider);
     final playbackState = ref.watch(audioPlayerControllerProvider);
     final progress = ref.watch(playbackProgressProvider);
+    final appSettingsRepo = ref.watch(appSettingsRepositoryProvider);
 
     final isPlaying = playbackState is PlaybackPlaying;
     final isLoading = playbackState is PlaybackLoading;
@@ -130,6 +132,9 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
                   _PlayerControls(
                     isPlaying: displayIsPlaying,
                     isLoading: displayIsLoading,
+                    skipForwardSeconds: appSettingsRepo.getSkipForwardSeconds(),
+                    skipBackwardSeconds: appSettingsRepo
+                        .getSkipBackwardSeconds(),
                     onSkipBackward: () => _handleSkip(
                       ref
                           .read(audioPlayerControllerProvider.notifier)
@@ -570,12 +575,16 @@ class _PlayerControls extends StatelessWidget {
   const _PlayerControls({
     required this.isPlaying,
     required this.isLoading,
+    required this.skipForwardSeconds,
+    required this.skipBackwardSeconds,
     required this.onSkipBackward,
     required this.onSkipForward,
   });
 
   final bool isPlaying;
   final bool isLoading;
+  final int skipForwardSeconds;
+  final int skipBackwardSeconds;
   final VoidCallback onSkipBackward;
   final VoidCallback onSkipForward;
 
@@ -588,10 +597,13 @@ class _PlayerControls extends StatelessWidget {
       children: [
         Semantics(
           button: true,
-          label: l10n.playerRewindLabel,
+          label: l10n.playerRewindLabel(skipBackwardSeconds),
           child: IconButton(
-            icon: const Icon(Symbols.replay_30),
-            iconSize: 36,
+            icon: SkipDurationIcon(
+              seconds: skipBackwardSeconds,
+              isForward: false,
+              size: 36,
+            ),
             onPressed: onSkipBackward,
           ),
         ),
@@ -600,10 +612,13 @@ class _PlayerControls extends StatelessWidget {
         const SizedBox(width: 24),
         Semantics(
           button: true,
-          label: l10n.playerForwardLabel,
+          label: l10n.playerForwardLabel(skipForwardSeconds),
           child: IconButton(
-            icon: const Icon(Symbols.forward_30),
-            iconSize: 36,
+            icon: SkipDurationIcon(
+              seconds: skipForwardSeconds,
+              isForward: true,
+              size: 36,
+            ),
             onPressed: onSkipForward,
           ),
         ),

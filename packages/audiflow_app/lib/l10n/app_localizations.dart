@@ -947,14 +947,14 @@ abstract class AppLocalizations {
   /// Rewind accessibility label
   ///
   /// In en, this message translates to:
-  /// **'Rewind 30 seconds'**
-  String get playerRewindLabel;
+  /// **'Rewind {seconds} seconds'**
+  String playerRewindLabel(int seconds);
 
   /// Forward accessibility label
   ///
   /// In en, this message translates to:
-  /// **'Forward 30 seconds'**
-  String get playerForwardLabel;
+  /// **'Forward {seconds} seconds'**
+  String playerForwardLabel(int seconds);
 
   /// Loading accessibility label
   ///

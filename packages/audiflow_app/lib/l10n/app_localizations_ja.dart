@@ -452,10 +452,14 @@ class AppLocalizationsJa extends AppLocalizations {
   String get playerArtworkLabel => 'エピソードのアートワーク';
 
   @override
-  String get playerRewindLabel => '30秒巻き戻し';
+  String playerRewindLabel(int seconds) {
+    return '$seconds秒巻き戻し';
+  }
 
   @override
-  String get playerForwardLabel => '30秒早送り';
+  String playerForwardLabel(int seconds) {
+    return '$seconds秒早送り';
+  }
 
   @override
   String get playerLoadingLabel => '読み込み中';
