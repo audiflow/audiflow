@@ -24,19 +24,7 @@ void backgroundCallback() {
     try {
       final dir = await getApplicationDocumentsDirectory();
       isar = await Isar.open(
-        [
-          SubscriptionSchema,
-          EpisodeSchema,
-          DownloadTaskSchema,
-          PlaybackHistorySchema,
-          SmartPlaylistEntitySchema,
-          SmartPlaylistGroupEntitySchema,
-          PodcastViewPreferenceSchema,
-          QueueItemSchema,
-          EpisodeTranscriptSchema,
-          TranscriptSegmentSchema,
-          EpisodeChapterSchema,
-        ],
+        isarSchemas,
         directory: dir.path,
         name: 'audiflow',
       );

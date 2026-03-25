@@ -70,22 +70,7 @@ Future<void> _startApp(String smartPlaylistConfigBaseUrl) async {
 
   final dir = await getApplicationDocumentsDirectory();
   final isar = await Isar.open(
-    [
-      SubscriptionSchema,
-      EpisodeSchema,
-      PlaybackHistorySchema,
-      SmartPlaylistEntitySchema,
-      SmartPlaylistGroupEntitySchema,
-      PodcastViewPreferenceSchema,
-      DownloadTaskSchema,
-      QueueItemSchema,
-      EpisodeTranscriptSchema,
-      TranscriptSegmentSchema,
-      EpisodeChapterSchema,
-      StationSchema,
-      StationPodcastSchema,
-      StationEpisodeSchema,
-    ],
+    isarSchemas,
     directory: dir.path,
     name: 'audiflow',
   );
