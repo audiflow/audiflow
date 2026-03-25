@@ -418,10 +418,7 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
         'No platform payload; attempting Dart-side synonym resolution: '
         '"${command.rawTranscription}"',
       );
-      resolution = _resolveFromTranscription(
-        command.rawTranscription,
-        currentValues: currentValues,
-      );
+      resolution = _resolveFromTranscription(command.rawTranscription);
     }
 
     if (resolution == null) {
@@ -580,10 +577,7 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
   /// synonyms. It can only identify *which* setting the user meant -- not the
   /// target value -- so it returns [SettingsResolution.notFound] to show an
   /// informative error rather than a dead-end disambiguation screen.
-  SettingsResolution? _resolveFromTranscription(
-    String transcription, {
-    required Map<String, String> currentValues,
-  }) {
+  SettingsResolution? _resolveFromTranscription(String transcription) {
     final matches = _settingsRegistry.findBySynonym(transcription);
     if (matches.isEmpty) return null;
 

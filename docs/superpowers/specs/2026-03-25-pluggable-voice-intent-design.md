@@ -98,7 +98,7 @@ Platform channel errors:
 | Platform exception / timeout | Show error state: "Voice settings unavailable" |
 | Invalid value (out of range) | Dart-side `SettingsIntentResolver` rejects, show error |
 
-No fallback to on-device AI. If the platform resolver fails, the user sees an error and can retry.
+No fallback to on-device AI for settings resolution specifically. If the platform resolver returns `not_found` or fails for a settings intent, the user sees an error and can retry. However, the orchestrator's top-level fallback chain does use AI for non-settings intents: when the platform resolver returns `not_found`, the AI is invoked to classify the command as a different intent type (play, pause, search, etc.).
 
 ### Settings schema JSON format
 
