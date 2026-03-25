@@ -299,15 +299,20 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
           );
       _logger?.i('AI parsed command: ${command.intent}');
       await _executeCommand(command);
+    } on TimeoutException catch (e) {
+      _logger?.e('AI parsing timed out', error: e);
+      state = const VoiceRecognitionState.error(
+        message: 'Voice processing timed out, please try again',
+      );
     } on AudiflowAiException catch (e) {
       _logger?.e('AI parsing failed', error: e);
       state = VoiceRecognitionState.error(
         message: 'Could not understand: "$transcription"',
       );
     } catch (e) {
-      _logger?.e('Unexpected error', error: e);
-      state = VoiceRecognitionState.error(
-        message: 'Failed to process command: $e',
+      _logger?.e('Unexpected error processing voice command', error: e);
+      state = const VoiceRecognitionState.error(
+        message: 'Failed to process voice command',
       );
     }
   }

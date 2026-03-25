@@ -116,6 +116,17 @@ class VoiceCommandExecutor {
     try {
       await _applySettingValue(key, value);
       return SettingApplyResult(isSuccess: true, previousValue: previous);
+    } on FormatException catch (e, stack) {
+      _logger.e(
+        'Invalid value format for "$key": "$value"',
+        error: e,
+        stackTrace: stack,
+      );
+      return SettingApplyResult(
+        isSuccess: false,
+        previousValue: previous,
+        errorMessage: 'Invalid value "$value" for this setting',
+      );
     } catch (e, stack) {
       _logger.e(
         'Failed to apply setting "$key" with value "$value"',
@@ -125,7 +136,7 @@ class VoiceCommandExecutor {
       return SettingApplyResult(
         isSuccess: false,
         previousValue: previous,
-        errorMessage: 'Could not apply the requested value for "$key"',
+        errorMessage: 'Could not apply the requested value for this setting',
       );
     }
   }

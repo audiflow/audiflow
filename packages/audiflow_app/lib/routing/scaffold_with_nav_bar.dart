@@ -386,8 +386,14 @@ class _VoiceNavButtonState extends ConsumerState<_VoiceNavButton>
   Widget build(BuildContext context) {
     final voiceState = ref.watch(voiceCommandOrchestratorProvider);
     final isListening = voiceState is VoiceListening;
-    final isProcessing =
-        voiceState is VoiceProcessing || voiceState is VoiceExecuting;
+    // Disable button during processing, executing, and settings interaction
+    // states to prevent overwriting pending disambiguation/confirmation UI.
+    final isBusy =
+        voiceState is VoiceProcessing ||
+        voiceState is VoiceExecuting ||
+        voiceState is VoiceSettingsDisambiguation ||
+        voiceState is VoiceSettingsLowConfidence ||
+        voiceState is VoiceSettingsAutoApplied;
 
     if (isListening) {
       if (!_pulseController.isAnimating) {
@@ -420,7 +426,7 @@ class _VoiceNavButtonState extends ConsumerState<_VoiceNavButton>
                 elevation: 4,
                 child: InkWell(
                   customBorder: const CircleBorder(),
-                  onTap: isProcessing ? null : () => _handleTap(isListening),
+                  onTap: isBusy ? null : () => _handleTap(isListening),
                   child: SizedBox(
                     width: 48,
                     height: 48,
