@@ -77,7 +77,9 @@ void main() {
       );
     }
 
-    testWidgets('renders custom nav bar with four destinations', (tester) async {
+    testWidgets('renders custom nav bar with four destinations', (
+      tester,
+    ) async {
       tester.view.physicalSize = const Size(390, 844);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() {
