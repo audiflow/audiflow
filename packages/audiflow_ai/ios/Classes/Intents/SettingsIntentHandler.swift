@@ -39,7 +39,7 @@ class SettingsIntentHandler {
             let candidates: [[String: Any]] = matches.prefix(3).map {
                 [
                     "key": $0.setting["key"] as? String ?? "",
-                    "value": $0.setting["currentValue"] as? String ?? "",
+                    "value": "",
                     "confidence": 0.6,
                 ]
             }
@@ -121,6 +121,10 @@ class SettingsIntentHandler {
         let max = constraints["max"] as? Double ?? 100
         // Clamp value to [min, max] without using > or >=
         let clamped = Swift.min(max, Swift.max(min, value))
+        let step = constraints["step"] as? Double ?? 1.0
+        if step == step.rounded() && clamped == clamped.rounded() {
+            return String(Int(clamped))
+        }
         return String(clamped)
     }
 

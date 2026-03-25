@@ -150,7 +150,7 @@ class VoiceListeningOverlay extends ConsumerWidget {
                 controller.selectSettingsCandidate(candidate);
               },
               child: Text(
-                '${_resolveDisplayName(context, candidate.key)}: ${candidate.newValue}',
+                '${_resolveDisplayName(context, candidate.displayNameKey)}: ${candidate.newValue}',
               ),
             ),
           ),
@@ -389,6 +389,7 @@ class VoiceListeningOverlay extends ConsumerWidget {
       'feedSyncInterval' => l10n.feedSyncInterval,
       'feedSyncWifiOnlyTitle' => l10n.feedSyncWifiOnlyTitle,
       'feedSyncNotifyNewEpisodesTitle' => l10n.feedSyncNotifyNewEpisodesTitle,
+      'searchRegionLabel' => l10n.searchRegionLabel,
       _ => displayNameKey,
     };
   }

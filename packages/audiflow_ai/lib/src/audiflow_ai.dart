@@ -327,6 +327,8 @@ class AudiflowAiImpl implements AudiflowAi {
             },
           );
       return result;
+    } on MissingPluginException {
+      return null;
     } on PlatformException {
       return null;
     }

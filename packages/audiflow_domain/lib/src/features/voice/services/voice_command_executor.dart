@@ -168,9 +168,9 @@ class VoiceCommandExecutor {
         // Also update the live player so the change is audible immediately.
         await _audioController.setSpeed(speed);
       case SettingsKeys.skipForwardSeconds:
-        await _settingsRepository.setSkipForwardSeconds(int.parse(value));
+        await _settingsRepository.setSkipForwardSeconds(_safeParseInt(value));
       case SettingsKeys.skipBackwardSeconds:
-        await _settingsRepository.setSkipBackwardSeconds(int.parse(value));
+        await _settingsRepository.setSkipBackwardSeconds(_safeParseInt(value));
       case SettingsKeys.autoCompleteThreshold:
         await _settingsRepository.setAutoCompleteThreshold(double.parse(value));
       case SettingsKeys.continuousPlayback:
@@ -182,11 +182,13 @@ class VoiceCommandExecutor {
       case SettingsKeys.autoDeletePlayed:
         await _settingsRepository.setAutoDeletePlayed(_parseBool(value));
       case SettingsKeys.maxConcurrentDownloads:
-        await _settingsRepository.setMaxConcurrentDownloads(int.parse(value));
+        await _settingsRepository.setMaxConcurrentDownloads(
+          _safeParseInt(value),
+        );
       case SettingsKeys.autoSync:
         await _settingsRepository.setAutoSync(_parseBool(value));
       case SettingsKeys.syncIntervalMinutes:
-        await _settingsRepository.setSyncIntervalMinutes(int.parse(value));
+        await _settingsRepository.setSyncIntervalMinutes(_safeParseInt(value));
       case SettingsKeys.wifiOnlySync:
         await _settingsRepository.setWifiOnlySync(_parseBool(value));
       case SettingsKeys.notifyNewEpisodes:
@@ -222,6 +224,9 @@ class VoiceCommandExecutor {
       orElse: () => throw ArgumentError('Invalid AutoPlayOrder value: $value'),
     );
   }
+
+  /// Parses an integer from a string that may contain decimals (e.g. "30.0").
+  static int _safeParseInt(String value) => double.parse(value).toInt();
 
   static bool _parseBool(String value) {
     return switch (value) {

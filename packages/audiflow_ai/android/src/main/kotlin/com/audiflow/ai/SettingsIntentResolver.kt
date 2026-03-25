@@ -49,7 +49,7 @@ class SettingsIntentResolver {
             val candidates = matches.take(3).map { m ->
                 mapOf(
                     "key" to m.setting.optString("key", ""),
-                    "value" to m.setting.optString("currentValue", ""),
+                    "value" to "",
                     "confidence" to 0.6
                 )
             }
@@ -138,7 +138,12 @@ class SettingsIntentResolver {
         val min = constraints?.optDouble("min", 0.0) ?: 0.0
         val max = constraints?.optDouble("max", 100.0) ?: 100.0
         val clamped = value.coerceIn(min, max)
-        return clamped.toString()
+        val step = constraints?.optDouble("step", 1.0) ?: 1.0
+        return if (step == step.toLong().toDouble() && clamped == clamped.toLong().toDouble()) {
+            clamped.toLong().toString()
+        } else {
+            clamped.toString()
+        }
     }
 
     private fun detectDirection(text: String): String? {

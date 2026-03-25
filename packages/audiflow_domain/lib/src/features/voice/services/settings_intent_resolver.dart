@@ -15,6 +15,9 @@ sealed class SettingsResolutionCandidate with _$SettingsResolutionCandidate {
     /// The settings key this candidate targets.
     required String key,
 
+    /// The l10n key used to resolve a localized display name.
+    required String displayNameKey,
+
     /// The current value of the setting before the proposed change.
     required String oldValue,
 
@@ -223,9 +226,11 @@ class SettingsIntentResolver {
 
     // 2+ candidates: present them to the user for disambiguation.
     final resolutionCandidates = kept.map((c) {
+      final metadata = _registry.findByKey(c.key);
       final oldValue = currentValues[c.key] ?? '';
       return SettingsResolutionCandidate(
         key: c.key,
+        displayNameKey: metadata?.displayNameKey ?? c.key,
         oldValue: oldValue,
         newValue: c.value,
         confidence: c.confidence,

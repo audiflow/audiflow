@@ -312,7 +312,7 @@ class SettingsMetadataRegistry {
     // -- Search --
     SettingMetadata(
       key: SettingsKeys.searchCountry,
-      displayNameKey: 'searchCountry',
+      displayNameKey: 'searchRegionLabel',
       type: SettingType.enumValue,
       constraints: const SettingConstraints.options(
         values: ['us', 'jp', 'gb', 'de', 'fr', 'au', 'ca'],

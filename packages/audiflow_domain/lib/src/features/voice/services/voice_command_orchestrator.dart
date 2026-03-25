@@ -574,7 +574,7 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
       ),
       'ambiguous' => SettingsChangePayload.ambiguous(
         candidates: ((result['candidates'] as List?) ?? [])
-            .cast<Map<String, dynamic>>()
+            .map((e) => Map<String, dynamic>.from(e as Map))
             .map(
               (c) => SettingsCandidate(
                 key: c['key'] as String? ?? '',

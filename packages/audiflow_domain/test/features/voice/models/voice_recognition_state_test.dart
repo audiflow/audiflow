@@ -160,6 +160,7 @@ void main() {
         );
         final candidate = SettingsResolutionCandidate(
           key: 'speed',
+          displayNameKey: 'playbackDefaultSpeed',
           oldValue: '1.0',
           newValue: '1.5',
           confidence: 0.6,
@@ -269,6 +270,7 @@ void main() {
       test('holds candidates list', () {
         final candidate = SettingsResolutionCandidate(
           key: 'speed',
+          displayNameKey: 'playbackDefaultSpeed',
           oldValue: '1.0',
           newValue: '1.5',
           confidence: 0.7,
@@ -285,6 +287,7 @@ void main() {
       test('two states with same candidates are equal', () {
         final candidate = SettingsResolutionCandidate(
           key: 'speed',
+          displayNameKey: 'playbackDefaultSpeed',
           oldValue: '1.0',
           newValue: '1.5',
           confidence: 0.7,

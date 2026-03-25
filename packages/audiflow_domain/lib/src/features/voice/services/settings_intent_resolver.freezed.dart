@@ -15,7 +15,8 @@ T _$identity<T>(T value) => value;
 mixin _$SettingsResolutionCandidate {
 
 /// The settings key this candidate targets.
- String get key;/// The current value of the setting before the proposed change.
+ String get key;/// The l10n key used to resolve a localized display name.
+ String get displayNameKey;/// The current value of the setting before the proposed change.
  String get oldValue;/// The proposed new value for the setting.
  String get newValue;/// Confidence score in [0.0, 1.0] for this candidate.
  double get confidence;
@@ -29,16 +30,16 @@ $SettingsResolutionCandidateCopyWith<SettingsResolutionCandidate> get copyWith =
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SettingsResolutionCandidate&&(identical(other.key, key) || other.key == key)&&(identical(other.oldValue, oldValue) || other.oldValue == oldValue)&&(identical(other.newValue, newValue) || other.newValue == newValue)&&(identical(other.confidence, confidence) || other.confidence == confidence));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SettingsResolutionCandidate&&(identical(other.key, key) || other.key == key)&&(identical(other.displayNameKey, displayNameKey) || other.displayNameKey == displayNameKey)&&(identical(other.oldValue, oldValue) || other.oldValue == oldValue)&&(identical(other.newValue, newValue) || other.newValue == newValue)&&(identical(other.confidence, confidence) || other.confidence == confidence));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,key,oldValue,newValue,confidence);
+int get hashCode => Object.hash(runtimeType,key,displayNameKey,oldValue,newValue,confidence);
 
 @override
 String toString() {
-  return 'SettingsResolutionCandidate(key: $key, oldValue: $oldValue, newValue: $newValue, confidence: $confidence)';
+  return 'SettingsResolutionCandidate(key: $key, displayNameKey: $displayNameKey, oldValue: $oldValue, newValue: $newValue, confidence: $confidence)';
 }
 
 
@@ -49,7 +50,7 @@ abstract mixin class $SettingsResolutionCandidateCopyWith<$Res>  {
   factory $SettingsResolutionCandidateCopyWith(SettingsResolutionCandidate value, $Res Function(SettingsResolutionCandidate) _then) = _$SettingsResolutionCandidateCopyWithImpl;
 @useResult
 $Res call({
- String key, String oldValue, String newValue, double confidence
+ String key, String displayNameKey, String oldValue, String newValue, double confidence
 });
 
 
@@ -66,9 +67,10 @@ class _$SettingsResolutionCandidateCopyWithImpl<$Res>
 
 /// Create a copy of SettingsResolutionCandidate
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? key = null,Object? oldValue = null,Object? newValue = null,Object? confidence = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? key = null,Object? displayNameKey = null,Object? oldValue = null,Object? newValue = null,Object? confidence = null,}) {
   return _then(_self.copyWith(
 key: null == key ? _self.key : key // ignore: cast_nullable_to_non_nullable
+as String,displayNameKey: null == displayNameKey ? _self.displayNameKey : displayNameKey // ignore: cast_nullable_to_non_nullable
 as String,oldValue: null == oldValue ? _self.oldValue : oldValue // ignore: cast_nullable_to_non_nullable
 as String,newValue: null == newValue ? _self.newValue : newValue // ignore: cast_nullable_to_non_nullable
 as String,confidence: null == confidence ? _self.confidence : confidence // ignore: cast_nullable_to_non_nullable
@@ -154,10 +156,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String key,  String oldValue,  String newValue,  double confidence)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String key,  String displayNameKey,  String oldValue,  String newValue,  double confidence)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _SettingsResolutionCandidate() when $default != null:
-return $default(_that.key,_that.oldValue,_that.newValue,_that.confidence);case _:
+return $default(_that.key,_that.displayNameKey,_that.oldValue,_that.newValue,_that.confidence);case _:
   return orElse();
 
 }
@@ -175,10 +177,10 @@ return $default(_that.key,_that.oldValue,_that.newValue,_that.confidence);case _
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String key,  String oldValue,  String newValue,  double confidence)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String key,  String displayNameKey,  String oldValue,  String newValue,  double confidence)  $default,) {final _that = this;
 switch (_that) {
 case _SettingsResolutionCandidate():
-return $default(_that.key,_that.oldValue,_that.newValue,_that.confidence);}
+return $default(_that.key,_that.displayNameKey,_that.oldValue,_that.newValue,_that.confidence);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -192,10 +194,10 @@ return $default(_that.key,_that.oldValue,_that.newValue,_that.confidence);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String key,  String oldValue,  String newValue,  double confidence)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String key,  String displayNameKey,  String oldValue,  String newValue,  double confidence)?  $default,) {final _that = this;
 switch (_that) {
 case _SettingsResolutionCandidate() when $default != null:
-return $default(_that.key,_that.oldValue,_that.newValue,_that.confidence);case _:
+return $default(_that.key,_that.displayNameKey,_that.oldValue,_that.newValue,_that.confidence);case _:
   return null;
 
 }
@@ -207,11 +209,13 @@ return $default(_that.key,_that.oldValue,_that.newValue,_that.confidence);case _
 
 
 class _SettingsResolutionCandidate implements SettingsResolutionCandidate {
-  const _SettingsResolutionCandidate({required this.key, required this.oldValue, required this.newValue, required this.confidence});
+  const _SettingsResolutionCandidate({required this.key, required this.displayNameKey, required this.oldValue, required this.newValue, required this.confidence});
   
 
 /// The settings key this candidate targets.
 @override final  String key;
+/// The l10n key used to resolve a localized display name.
+@override final  String displayNameKey;
 /// The current value of the setting before the proposed change.
 @override final  String oldValue;
 /// The proposed new value for the setting.
@@ -229,16 +233,16 @@ _$SettingsResolutionCandidateCopyWith<_SettingsResolutionCandidate> get copyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SettingsResolutionCandidate&&(identical(other.key, key) || other.key == key)&&(identical(other.oldValue, oldValue) || other.oldValue == oldValue)&&(identical(other.newValue, newValue) || other.newValue == newValue)&&(identical(other.confidence, confidence) || other.confidence == confidence));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SettingsResolutionCandidate&&(identical(other.key, key) || other.key == key)&&(identical(other.displayNameKey, displayNameKey) || other.displayNameKey == displayNameKey)&&(identical(other.oldValue, oldValue) || other.oldValue == oldValue)&&(identical(other.newValue, newValue) || other.newValue == newValue)&&(identical(other.confidence, confidence) || other.confidence == confidence));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,key,oldValue,newValue,confidence);
+int get hashCode => Object.hash(runtimeType,key,displayNameKey,oldValue,newValue,confidence);
 
 @override
 String toString() {
-  return 'SettingsResolutionCandidate(key: $key, oldValue: $oldValue, newValue: $newValue, confidence: $confidence)';
+  return 'SettingsResolutionCandidate(key: $key, displayNameKey: $displayNameKey, oldValue: $oldValue, newValue: $newValue, confidence: $confidence)';
 }
 
 
@@ -249,7 +253,7 @@ abstract mixin class _$SettingsResolutionCandidateCopyWith<$Res> implements $Set
   factory _$SettingsResolutionCandidateCopyWith(_SettingsResolutionCandidate value, $Res Function(_SettingsResolutionCandidate) _then) = __$SettingsResolutionCandidateCopyWithImpl;
 @override @useResult
 $Res call({
- String key, String oldValue, String newValue, double confidence
+ String key, String displayNameKey, String oldValue, String newValue, double confidence
 });
 
 
@@ -266,9 +270,10 @@ class __$SettingsResolutionCandidateCopyWithImpl<$Res>
 
 /// Create a copy of SettingsResolutionCandidate
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? key = null,Object? oldValue = null,Object? newValue = null,Object? confidence = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? key = null,Object? displayNameKey = null,Object? oldValue = null,Object? newValue = null,Object? confidence = null,}) {
   return _then(_SettingsResolutionCandidate(
 key: null == key ? _self.key : key // ignore: cast_nullable_to_non_nullable
+as String,displayNameKey: null == displayNameKey ? _self.displayNameKey : displayNameKey // ignore: cast_nullable_to_non_nullable
 as String,oldValue: null == oldValue ? _self.oldValue : oldValue // ignore: cast_nullable_to_non_nullable
 as String,newValue: null == newValue ? _self.newValue : newValue // ignore: cast_nullable_to_non_nullable
 as String,confidence: null == confidence ? _self.confidence : confidence // ignore: cast_nullable_to_non_nullable
