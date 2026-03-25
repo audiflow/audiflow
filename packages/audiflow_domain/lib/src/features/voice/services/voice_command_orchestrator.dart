@@ -577,9 +577,9 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
   /// When the platform NLU is unavailable and the on-device AI classified the
   /// command as `changeSettings` without producing a structured payload, this
   /// method attempts to match the raw transcription against known setting
-  /// synonyms. It can only identify *which* setting the user meant — not the
-  /// target value — so it presents disambiguation candidates with empty values,
-  /// which the UI can use to navigate the user to the right settings screen.
+  /// synonyms. It can only identify *which* setting the user meant -- not the
+  /// target value -- so it returns [SettingsResolution.notFound] to show an
+  /// informative error rather than a dead-end disambiguation screen.
   SettingsResolution? _resolveFromTranscription(
     String transcription, {
     required Map<String, String> currentValues,
@@ -587,24 +587,15 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
     final matches = _settingsRegistry.findBySynonym(transcription);
     if (matches.isEmpty) return null;
 
-    // Build disambiguation candidates with empty values to signal that the
-    // setting was identified but a concrete target value was not extracted.
-    final candidates = <SettingsResolutionCandidate>[];
-    for (final match in matches) {
-      candidates.add(
-        SettingsResolutionCandidate(
-          key: match.metadata.key,
-          displayNameKey: match.metadata.displayNameKey,
-          oldValue: currentValues[match.metadata.key] ?? '',
-          newValue: '',
-          confidence: 0.6,
-        ),
-      );
-    }
-
-    // Present as disambiguation so the UI can show the matched setting(s)
-    // and guide the user to specify a value.
-    return SettingsResolution.disambiguate(candidates: candidates);
+    // Synonym matching identified one or more candidate settings but cannot
+    // extract a target value from the raw transcription. Return notFound so
+    // the caller shows a clear error rather than a disambiguation UI where
+    // all candidates are disabled (empty values).
+    _logger?.i(
+      'Synonym match found ${matches.length} candidate(s) but no value; '
+      'returning notFound',
+    );
+    return const SettingsResolution.notFound();
   }
 
   /// Constructs a [SettingsChangePayload] from a platform channel result map.
