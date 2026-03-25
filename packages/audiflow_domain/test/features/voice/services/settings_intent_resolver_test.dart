@@ -32,7 +32,7 @@ void main() {
       });
     });
 
-    // ─── Absolute payloads ────────────────────────────────────────────────────
+    // ─── Absolute payloads ─────────────────────────────────────────
 
     group('absolute - high confidence → autoApply', () {
       test('confidence 0.8 (threshold) resolves to autoApply', () {
@@ -100,7 +100,7 @@ void main() {
       });
     });
 
-    // ─── Relative payloads ────────────────────────────────────────────────────
+    // ─── Relative payloads ─────────────────────────────────────────
 
     group('relative - increase small', () {
       test('increases by 1 step (0.1) from 1.0', () {
@@ -240,7 +240,7 @@ void main() {
       });
     });
 
-    // ─── Ambiguous payloads ───────────────────────────────────────────────────
+    // ─── Ambiguous payloads ────────────────────────────────────────
 
     group('ambiguous - 2+ candidates above threshold → disambiguate', () {
       test('two candidates both above 0.4 → disambiguate', () {
@@ -369,27 +369,29 @@ void main() {
           check(result).isA<SettingsResolutionNotFound>();
         });
 
-        test('single candidate with out-of-range value → clamped and applied',
-            () {
-          // A value outside the allowed range should be clamped, not rejected.
-          final payload = const SettingsChangePayload.ambiguous(
-            candidates: [
-              SettingsCandidate(
-                key: SettingsKeys.playbackSpeed,
-                value: '5.0', // max is 3.0
-                confidence: 0.9,
-              ),
-            ],
-          );
-          final result = resolver.resolve(
-            payload,
-            currentValues: currentValues,
-          );
-          // Clamped to max (3.0), high confidence → autoApply.
-          check(result).isA<SettingsResolutionAutoApply>()
-            ..has((r) => r.key, 'key').equals(SettingsKeys.playbackSpeed)
-            ..has((r) => r.newValue, 'newValue').equals('3.0');
-        });
+        test(
+          'single candidate with out-of-range value → clamped and applied',
+          () {
+            // Out-of-range values should be clamped, not rejected.
+            final payload = const SettingsChangePayload.ambiguous(
+              candidates: [
+                SettingsCandidate(
+                  key: SettingsKeys.playbackSpeed,
+                  value: '5.0', // max is 3.0
+                  confidence: 0.9,
+                ),
+              ],
+            );
+            final result = resolver.resolve(
+              payload,
+              currentValues: currentValues,
+            );
+            // Clamped to max (3.0), high confidence → autoApply.
+            check(result).isA<SettingsResolutionAutoApply>()
+              ..has((r) => r.key, 'key').equals(SettingsKeys.playbackSpeed)
+              ..has((r) => r.newValue, 'newValue').equals('3.0');
+          },
+        );
 
         test('single candidate with invalid boolean value → notFound', () {
           final payload = const SettingsChangePayload.ambiguous(
