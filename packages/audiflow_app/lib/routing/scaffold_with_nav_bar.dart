@@ -167,8 +167,11 @@ class _CustomNavBar extends StatelessWidget {
     final backgroundColor =
         navBarTheme.backgroundColor ?? colorScheme.surfaceContainer;
 
+    final bottomInset = MediaQuery.viewPaddingOf(context).bottom;
+
     return Container(
-      height: 80,
+      height: 80 + bottomInset,
+      padding: EdgeInsets.only(bottom: bottomInset),
       color: backgroundColor,
       child: Stack(
         clipBehavior: Clip.none,

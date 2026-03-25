@@ -146,13 +146,37 @@ class SettingsIntentResolver {
     if (metadata == null) {
       return const SettingsResolution.notFound();
     }
+
+    // Validate and normalise the value against its constraints.
+    final validated = _validateAbsoluteValue(metadata, newValue);
+    if (validated == null) {
+      return const SettingsResolution.notFound();
+    }
+
     final oldValue = currentValues[key] ?? '';
     return _applyThreshold(
       key: key,
       oldValue: oldValue,
-      newValue: newValue,
+      newValue: validated,
       confidence: confidence,
     );
+  }
+
+  /// Returns a normalised value string if [rawValue] is valid for [metadata],
+  /// or null when the value cannot be reconciled with the constraints.
+  String? _validateAbsoluteValue(SettingMetadata metadata, String rawValue) {
+    return switch (metadata.constraints) {
+      BooleanConstraints() =>
+        (rawValue == 'true' || rawValue == 'false') ? rawValue : null,
+      OptionsConstraints(:final values) =>
+        values.contains(rawValue) ? rawValue : null,
+      RangeConstraints(:final min, :final max, :final step) => () {
+        final parsed = double.tryParse(rawValue);
+        if (parsed == null) return null;
+        final clamped = math.max(min, math.min(max, parsed));
+        return _formatValue(metadata.type, clamped, step);
+      }(),
+    };
   }
 
   SettingsResolution _resolveRelative({

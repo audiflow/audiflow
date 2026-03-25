@@ -207,12 +207,23 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
   }
 
   /// Applies the selected candidate from a disambiguation prompt.
+  ///
+  /// If the candidate has an empty value (key-only disambiguation), the
+  /// setting cannot be applied and the user is shown an error.
   Future<void> selectSettingsCandidate(
     SettingsResolutionCandidate candidate,
   ) async {
     _logger?.i(
       'Selecting settings candidate: ${candidate.key} = ${candidate.newValue}',
     );
+
+    if (candidate.newValue.isEmpty) {
+      state = const VoiceRecognitionState.error(
+        message: 'No value resolved for this setting',
+      );
+      return;
+    }
+
     final result = await _applySetting(
       key: candidate.key,
       value: candidate.newValue,

@@ -47,9 +47,13 @@ class SettingsIntentResolver {
         // Disambiguation: return ambiguous when top two matches tie
         if (1 < matches.size && matches[0].length == matches[1].length) {
             val candidates = matches.take(3).map { m ->
+                val cKey = m.setting.optString("key", "")
+                val cConstraints = m.setting.optJSONObject("constraints")
+                val cType = cConstraints?.optString("type", "") ?: ""
+                val cValue = detectValueForConstraints(text, cType, cConstraints)
                 mapOf(
-                    "key" to m.setting.optString("key", ""),
-                    "value" to "",
+                    "key" to cKey,
+                    "value" to (cValue ?: ""),
                     "confidence" to 0.6
                 )
             }
@@ -100,6 +104,22 @@ class SettingsIntentResolver {
         }
 
         return mapOf("action" to "not_found", "confidence" to 0.3)
+    }
+
+    private fun detectValueForConstraints(
+        text: String,
+        constraintType: String,
+        constraints: JSONObject?,
+    ): String? {
+        return when (constraintType) {
+            "options" -> {
+                val values = constraints?.optJSONArray("values")
+                if (values != null) detectOptionValue(text, values) else null
+            }
+            "boolean" -> detectBoolean(text)
+            "range" -> detectNumeric(text, constraints)
+            else -> null
+        }
     }
 
     // Maps canonical option values to their recognized aliases

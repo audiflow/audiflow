@@ -37,9 +37,13 @@ class SettingsIntentHandler {
         // Check for disambiguation (multiple equally-good matches)
         if 1 < matches.count && matches[0].length == matches[1].length {
             let candidates: [[String: Any]] = matches.prefix(3).map {
-                [
-                    "key": $0.setting["key"] as? String ?? "",
-                    "value": "",
+                let cKey = $0.setting["key"] as? String ?? ""
+                let cConstraints = $0.setting["constraints"] as? [String: Any] ?? [:]
+                let cType = cConstraints["type"] as? String ?? ""
+                let cValue = detectValueForConstraints(text: text, constraintType: cType, constraints: cConstraints)
+                return [
+                    "key": cKey,
+                    "value": cValue ?? "",
                     "confidence": 0.6,
                 ]
             }
@@ -91,6 +95,22 @@ class SettingsIntentHandler {
         "en": ["英語", "english"],
         "ja": ["日本語", "japanese"],
     ]
+
+    private func detectValueForConstraints(text: String, constraintType: String, constraints: [String: Any]) -> String? {
+        switch constraintType {
+        case "options":
+            if let values = constraints["values"] as? [String] {
+                return detectOptionValue(text: text, options: values)
+            }
+            return nil
+        case "boolean":
+            return detectBoolean(text: text)
+        case "range":
+            return detectNumeric(text: text, constraints: constraints)
+        default:
+            return nil
+        }
+    }
 
     private func detectOptionValue(text: String, options: [String]) -> String? {
         for option in options {
