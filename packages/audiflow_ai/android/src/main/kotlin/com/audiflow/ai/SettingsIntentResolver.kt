@@ -145,10 +145,21 @@ class SettingsIntentResolver {
     }
 
     private fun detectBoolean(text: String): String? {
-        val on = listOf("オン", "on", "有効", "使う", "つけ", "enable")
-        val off = listOf("オフ", "off", "無効", "やめ", "消", "disable")
-        on.forEach { if (text.contains(it.lowercase())) return "true" }
+        // Check "off" keywords before "on" to avoid false positives from
+        // substrings (e.g. "notifications" contains "on"). Use word-boundary
+        // regex for short keywords that commonly appear inside other words.
+        val off = listOf("オフ", "無効", "やめ", "消", "disable")
+        val offBoundary = listOf("off")
+        val on = listOf("オン", "有効", "使う", "つけ", "enable")
+        val onBoundary = listOf("on")
         off.forEach { if (text.contains(it.lowercase())) return "false" }
+        offBoundary.forEach { kw ->
+            if (Regex("\\b${Regex.escape(kw)}\\b").containsMatchIn(text)) return "false"
+        }
+        on.forEach { if (text.contains(it.lowercase())) return "true" }
+        onBoundary.forEach { kw ->
+            if (Regex("\\b${Regex.escape(kw)}\\b").containsMatchIn(text)) return "true"
+        }
         return null
     }
 

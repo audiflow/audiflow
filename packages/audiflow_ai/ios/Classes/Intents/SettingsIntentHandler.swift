@@ -125,10 +125,23 @@ class SettingsIntentHandler {
     }
 
     private func detectBoolean(text: String) -> String? {
-        let on = ["オン", "on", "有効", "使う", "つけ", "enable"]
-        let off = ["オフ", "off", "無効", "やめ", "消", "disable"]
-        for kw in on where text.contains(kw.lowercased()) { return "true" }
+        // Check "off" keywords before "on" to avoid false positives from
+        // substrings (e.g. "notifications" contains "on"). Use word-boundary
+        // regex for short keywords that commonly appear inside other words.
+        let off = ["オフ", "無効", "やめ", "消", "disable"]
+        let offBoundary = ["off"]
+        let on = ["オン", "有効", "使う", "つけ", "enable"]
+        let onBoundary = ["on"]
         for kw in off where text.contains(kw.lowercased()) { return "false" }
+        for kw in offBoundary {
+            if text.range(of: "\\b\(NSRegularExpression.escapedPattern(for: kw))\\b",
+                          options: .regularExpression) != nil { return "false" }
+        }
+        for kw in on where text.contains(kw.lowercased()) { return "true" }
+        for kw in onBoundary {
+            if text.range(of: "\\b\(NSRegularExpression.escapedPattern(for: kw))\\b",
+                          options: .regularExpression) != nil { return "true" }
+        }
         return nil
     }
 
