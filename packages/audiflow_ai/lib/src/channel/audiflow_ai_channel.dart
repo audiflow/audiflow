@@ -18,6 +18,7 @@ class AudiflowAiChannel {
   static const String generateText = 'generateText';
   static const String dispose = 'dispose';
   static const String promptAiCoreInstall = 'promptAiCoreInstall';
+  static const String resolveSettingsIntent = 'resolveSettingsIntent';
 
   /// Response keys.
   static const String kStatus = 'status';

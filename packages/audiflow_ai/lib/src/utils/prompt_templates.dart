@@ -88,6 +88,7 @@ Identify the intent from these categories:
 - Search: search (extract search terms)
 - Navigation: goToLibrary, goToQueue, openSettings
 - Queue: addToQueue, removeFromQueue, clearQueue
+- Settings: changeSettings (change a preference setting)
 - Unknown: if the command doesn't match any category
 
 For "play" commands with a podcast name, extract podcastName parameter.

@@ -158,6 +158,13 @@ void main() {
           confidence: 0.85,
           rawTranscription: 'search tech',
         );
+        final candidate = SettingsResolutionCandidate(
+          key: 'speed',
+          displayNameKey: 'playbackDefaultSpeed',
+          oldValue: '1.0',
+          newValue: '1.5',
+          confidence: 0.6,
+        );
 
         final states = <VoiceRecognitionState>[
           const VoiceRecognitionState.idle(),
@@ -166,6 +173,20 @@ void main() {
           VoiceRecognitionState.executing(command: command),
           const VoiceRecognitionState.success(message: 'Found results'),
           const VoiceRecognitionState.error(message: 'No results'),
+          const VoiceRecognitionState.settingsAutoApplied(
+            key: 'speed',
+            displayNameKey: 'playback_speed',
+            oldValue: '1.0',
+            newValue: '1.5',
+          ),
+          VoiceRecognitionState.settingsDisambiguation(candidates: [candidate]),
+          const VoiceRecognitionState.settingsLowConfidence(
+            key: 'speed',
+            displayNameKey: 'playback_speed',
+            oldValue: '1.0',
+            newValue: '1.5',
+            confidence: 0.6,
+          ),
         ];
 
         final results = states.map((state) {
@@ -176,6 +197,9 @@ void main() {
             VoiceExecuting() => 'executing',
             VoiceSuccess() => 'success',
             VoiceError() => 'error',
+            VoiceSettingsAutoApplied() => 'settingsAutoApplied',
+            VoiceSettingsDisambiguation() => 'settingsDisambiguation',
+            VoiceSettingsLowConfidence() => 'settingsLowConfidence',
           };
         }).toList();
 
@@ -186,6 +210,9 @@ void main() {
           'executing',
           'success',
           'error',
+          'settingsAutoApplied',
+          'settingsDisambiguation',
+          'settingsLowConfidence',
         ]);
       });
 
@@ -203,6 +230,112 @@ void main() {
         };
 
         expect(text, 'play music');
+      });
+    });
+
+    group('settingsAutoApplied', () {
+      test('holds all required fields', () {
+        const state = VoiceRecognitionState.settingsAutoApplied(
+          key: 'playback_speed',
+          displayNameKey: 'playback_speed_label',
+          oldValue: '1.0',
+          newValue: '1.5',
+        );
+        expect(state, isA<VoiceSettingsAutoApplied>());
+        final s = state as VoiceSettingsAutoApplied;
+        expect(s.key, 'playback_speed');
+        expect(s.displayNameKey, 'playback_speed_label');
+        expect(s.oldValue, '1.0');
+        expect(s.newValue, '1.5');
+      });
+
+      test('two states with same fields are equal', () {
+        const a = VoiceRecognitionState.settingsAutoApplied(
+          key: 'k',
+          displayNameKey: 'd',
+          oldValue: 'old',
+          newValue: 'new',
+        );
+        const b = VoiceRecognitionState.settingsAutoApplied(
+          key: 'k',
+          displayNameKey: 'd',
+          oldValue: 'old',
+          newValue: 'new',
+        );
+        expect(a, equals(b));
+      });
+    });
+
+    group('settingsDisambiguation', () {
+      test('holds candidates list', () {
+        final candidate = SettingsResolutionCandidate(
+          key: 'speed',
+          displayNameKey: 'playbackDefaultSpeed',
+          oldValue: '1.0',
+          newValue: '1.5',
+          confidence: 0.7,
+        );
+        final state = VoiceRecognitionState.settingsDisambiguation(
+          candidates: [candidate],
+        );
+        expect(state, isA<VoiceSettingsDisambiguation>());
+        final s = state as VoiceSettingsDisambiguation;
+        expect(s.candidates, hasLength(1));
+        expect(s.candidates.first.key, 'speed');
+      });
+
+      test('two states with same candidates are equal', () {
+        final candidate = SettingsResolutionCandidate(
+          key: 'speed',
+          displayNameKey: 'playbackDefaultSpeed',
+          oldValue: '1.0',
+          newValue: '1.5',
+          confidence: 0.7,
+        );
+        final a = VoiceRecognitionState.settingsDisambiguation(
+          candidates: [candidate],
+        );
+        final b = VoiceRecognitionState.settingsDisambiguation(
+          candidates: [candidate],
+        );
+        expect(a, equals(b));
+      });
+    });
+
+    group('settingsLowConfidence', () {
+      test('holds all required fields', () {
+        const state = VoiceRecognitionState.settingsLowConfidence(
+          key: 'skip_silence',
+          displayNameKey: 'skip_silence_label',
+          oldValue: 'false',
+          newValue: 'true',
+          confidence: 0.55,
+        );
+        expect(state, isA<VoiceSettingsLowConfidence>());
+        final s = state as VoiceSettingsLowConfidence;
+        expect(s.key, 'skip_silence');
+        expect(s.displayNameKey, 'skip_silence_label');
+        expect(s.oldValue, 'false');
+        expect(s.newValue, 'true');
+        expect(s.confidence, 0.55);
+      });
+
+      test('two states with same fields are equal', () {
+        const a = VoiceRecognitionState.settingsLowConfidence(
+          key: 'k',
+          displayNameKey: 'd',
+          oldValue: 'old',
+          newValue: 'new',
+          confidence: 0.5,
+        );
+        const b = VoiceRecognitionState.settingsLowConfidence(
+          key: 'k',
+          displayNameKey: 'd',
+          oldValue: 'old',
+          newValue: 'new',
+          confidence: 0.5,
+        );
+        expect(a, equals(b));
       });
     });
 

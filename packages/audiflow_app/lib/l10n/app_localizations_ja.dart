@@ -844,4 +844,50 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get sharePodcast => 'ポッドキャストを共有';
+
+  @override
+  String get voiceCommandButton => '音声コマンド';
+
+  @override
+  String get voiceListening => '聞いています...';
+
+  @override
+  String get voiceProcessing => '処理中...';
+
+  @override
+  String voiceExecuting(String intent) {
+    return '実行中: $intent';
+  }
+
+  @override
+  String voiceCouldNotUnderstand(String transcription) {
+    return '認識できませんでした: 「$transcription」';
+  }
+
+  @override
+  String get voiceSettingsWhichSetting => 'どの設定を変更しますか？';
+
+  @override
+  String get voiceSettingsChanged => '設定を変更しました';
+
+  @override
+  String get undo => '元に戻す';
+
+  @override
+  String get confirm => '確認';
+
+  @override
+  String get cancel => 'キャンセル';
+
+  @override
+  String get navSearch => '検索';
+
+  @override
+  String get navLibrary => 'ライブラリ';
+
+  @override
+  String get navQueue => 'キュー';
+
+  @override
+  String get navSettings => '設定';
 }

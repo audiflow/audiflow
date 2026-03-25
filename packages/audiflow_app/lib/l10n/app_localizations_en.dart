@@ -861,4 +861,50 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sharePodcast => 'Share podcast';
+
+  @override
+  String get voiceCommandButton => 'Voice command';
+
+  @override
+  String get voiceListening => 'Listening...';
+
+  @override
+  String get voiceProcessing => 'Processing...';
+
+  @override
+  String voiceExecuting(String intent) {
+    return 'Executing: $intent';
+  }
+
+  @override
+  String voiceCouldNotUnderstand(String transcription) {
+    return 'Could not understand: \"$transcription\"';
+  }
+
+  @override
+  String get voiceSettingsWhichSetting => 'Which setting do you mean?';
+
+  @override
+  String get voiceSettingsChanged => 'Setting changed';
+
+  @override
+  String get undo => 'Undo';
+
+  @override
+  String get confirm => 'Confirm';
+
+  @override
+  String get cancel => 'Cancel';
+
+  @override
+  String get navSearch => 'Search';
+
+  @override
+  String get navLibrary => 'Library';
+
+  @override
+  String get navQueue => 'Queue';
+
+  @override
+  String get navSettings => 'Settings';
 }

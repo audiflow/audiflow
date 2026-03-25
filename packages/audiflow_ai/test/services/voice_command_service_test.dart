@@ -399,6 +399,42 @@ confidence: 0.9
           expect(result.confidence, equals(0.0));
         });
       });
+
+      group('settings intents', () {
+        test(
+          'maps changesettings intent string to VoiceIntent.changeSettings',
+          () async {
+            _mockResponse(mockTextGenService, '''
+intent: changeSettings
+parameters: {}
+confidence: 0.92
+''');
+
+            final result = await service.parseCommand(
+              'set playback speed to 1.5',
+            );
+
+            expect(result.intent, equals(VoiceIntent.changeSettings));
+          },
+        );
+
+        test(
+          'settingsPayload is null (parsing delegated to platform channel)',
+          () async {
+            _mockResponse(mockTextGenService, '''
+intent: changeSettings
+parameters: {}
+confidence: 0.92
+''');
+
+            final result = await service.parseCommand(
+              'set playback speed to 1.5',
+            );
+
+            expect(result.settingsPayload, isNull);
+          },
+        );
+      });
     });
   });
 }

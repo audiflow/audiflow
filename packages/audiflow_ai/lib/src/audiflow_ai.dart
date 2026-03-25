@@ -157,6 +157,16 @@ abstract class AudiflowAi {
   /// Throws [AiNotInitializedException] if not initialized.
   Future<VoiceCommand> parseVoiceCommand({required String transcription});
 
+  /// Resolve a voice transcription into a settings change using
+  /// platform-native NLU (Siri App Intents / Google App Actions).
+  ///
+  /// Returns a Map with action, key, value, direction, magnitude, confidence.
+  /// Returns null if the platform cannot resolve the intent.
+  Future<Map<String, dynamic>?> resolveSettingsIntent({
+    required String transcription,
+    required String settingsSchemaJson,
+  });
+
   /// Open AICore install page (Android only).
   ///
   /// Returns true if the install page was opened successfully.
@@ -297,11 +307,31 @@ class AudiflowAiImpl implements AudiflowAi {
   }
 
   @override
-  Future<VoiceCommand> parseVoiceCommand({
-    required String transcription,
-  }) {
+  Future<VoiceCommand> parseVoiceCommand({required String transcription}) {
     _ensureInitialized();
     return _voiceCommand.parseCommand(transcription);
+  }
+
+  @override
+  Future<Map<String, dynamic>?> resolveSettingsIntent({
+    required String transcription,
+    required String settingsSchemaJson,
+  }) async {
+    try {
+      final result = await AudiflowAiChannel.channel
+          .invokeMapMethod<String, dynamic>(
+            AudiflowAiChannel.resolveSettingsIntent,
+            {
+              'transcription': transcription,
+              'settingsSchema': settingsSchemaJson,
+            },
+          );
+      return result;
+    } on MissingPluginException {
+      return null;
+    } on PlatformException {
+      return null;
+    }
   }
 
   @override

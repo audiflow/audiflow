@@ -196,6 +196,12 @@ class _MockAudiflowAi implements AudiflowAi {
   );
 
   @override
+  Future<Map<String, dynamic>?> resolveSettingsIntent({
+    required String transcription,
+    required String settingsSchemaJson,
+  }) async => null;
+
+  @override
   Future<bool> promptAiCoreInstall() async => true;
 
   @override

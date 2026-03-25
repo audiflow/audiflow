@@ -16,6 +16,7 @@ import '../models/now_playing_info.dart';
 import '../models/playback_progress.dart';
 import '../models/playback_state.dart';
 import '../repositories/playback_history_repository_impl.dart';
+import 'audio_playback_controller.dart';
 import 'now_playing_controller.dart';
 import 'playback_history_service.dart';
 
@@ -87,7 +88,8 @@ PlaybackProgress? playbackProgress(Ref ref) {
 /// await controller.play('https://example.com/episode.mp3');
 /// ```
 @Riverpod(keepAlive: true)
-class AudioPlayerController extends _$AudioPlayerController {
+class AudioPlayerController extends _$AudioPlayerController
+    implements AudioPlaybackController {
   late AudioPlayer _player;
   late Logger _log;
   StreamSubscription<PlayerState>? _stateSubscription;
@@ -324,6 +326,7 @@ class AudioPlayerController extends _$AudioPlayerController {
   /// Pauses the current playback.
   ///
   /// Saves playback progress to history.
+  @override
   Future<void> pause() async {
     // Save progress on pause
     if (_currentEpisodeId != null) {
@@ -340,6 +343,7 @@ class AudioPlayerController extends _$AudioPlayerController {
   ///
   /// No-op when no audio source is loaded (e.g. after app restart before
   /// the user taps play on an episode).
+  @override
   Future<void> resume() async {
     if (_currentUrl == null) return;
     await _player.play();
@@ -363,6 +367,7 @@ class AudioPlayerController extends _$AudioPlayerController {
   /// Stops playback and clears the current audio source.
   ///
   /// Saves final playback progress to history.
+  @override
   Future<void> stop() async {
     // Save final progress before stopping
     await _saveProgressOnStop();
@@ -397,6 +402,7 @@ class AudioPlayerController extends _$AudioPlayerController {
   ///
   /// Clamps position between zero and duration to prevent invalid seeks.
   /// No-op if no audio is loaded or duration is unknown.
+  @override
   Future<void> seek(Duration position) async {
     if (_currentUrl == null) return;
     final duration = _player.duration;
@@ -409,6 +415,7 @@ class AudioPlayerController extends _$AudioPlayerController {
   /// Skips forward by the user-configured duration.
   ///
   /// Clamped to duration if near the end.
+  @override
   Future<void> skipForward() async {
     if (_currentUrl == null) return;
     final settingsRepo = ref.read(appSettingsRepositoryProvider);
@@ -419,6 +426,7 @@ class AudioPlayerController extends _$AudioPlayerController {
   /// Skips backward by the user-configured duration.
   ///
   /// Clamped to zero if near the start.
+  @override
   Future<void> skipBackward() async {
     if (_currentUrl == null) return;
     final settingsRepo = ref.read(appSettingsRepositoryProvider);
@@ -427,6 +435,7 @@ class AudioPlayerController extends _$AudioPlayerController {
   }
 
   /// Sets the playback speed and persists it to settings.
+  @override
   Future<void> setSpeed(double speed) async {
     await _player.setSpeed(speed);
     final settingsRepo = ref.read(appSettingsRepositoryProvider);

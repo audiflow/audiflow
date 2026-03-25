@@ -1639,6 +1639,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Share podcast'**
   String get sharePodcast;
+
+  /// Semantic label and tooltip for the center voice command button
+  ///
+  /// In en, this message translates to:
+  /// **'Voice command'**
+  String get voiceCommandButton;
+
+  /// Status text while voice recognition is active
+  ///
+  /// In en, this message translates to:
+  /// **'Listening...'**
+  String get voiceListening;
+
+  /// Status text while voice command is being parsed
+  ///
+  /// In en, this message translates to:
+  /// **'Processing...'**
+  String get voiceProcessing;
+
+  /// Status text while voice command is being executed
+  ///
+  /// In en, this message translates to:
+  /// **'Executing: {intent}'**
+  String voiceExecuting(String intent);
+
+  /// Error when voice command cannot be parsed
+  ///
+  /// In en, this message translates to:
+  /// **'Could not understand: \"{transcription}\"'**
+  String voiceCouldNotUnderstand(String transcription);
+
+  /// Title shown when voice command is ambiguous between multiple settings
+  ///
+  /// In en, this message translates to:
+  /// **'Which setting do you mean?'**
+  String get voiceSettingsWhichSetting;
+
+  /// Confirmation message when a setting is auto-applied via voice
+  ///
+  /// In en, this message translates to:
+  /// **'Setting changed'**
+  String get voiceSettingsChanged;
+
+  /// Undo action label
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get undo;
+
+  /// Confirm action label
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get confirm;
+
+  /// Cancel action label
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get cancel;
+
+  /// Navigation bar label for search tab
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get navSearch;
+
+  /// Navigation bar label for library tab
+  ///
+  /// In en, this message translates to:
+  /// **'Library'**
+  String get navLibrary;
+
+  /// Navigation bar label for queue tab
+  ///
+  /// In en, this message translates to:
+  /// **'Queue'**
+  String get navQueue;
+
+  /// Navigation bar label for settings tab
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get navSettings;
 }
 
 class _AppLocalizationsDelegate

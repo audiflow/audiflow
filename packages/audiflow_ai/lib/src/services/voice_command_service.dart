@@ -127,6 +127,7 @@ class VoiceCommandService {
       'myqueue' ||
       'showqueue' => VoiceIntent.goToQueue,
       'opensettings' || 'settings' => VoiceIntent.openSettings,
+      'changesettings' => VoiceIntent.changeSettings,
       'addtoqueue' || 'add' || 'enqueue' => VoiceIntent.addToQueue,
       'removefromqueue' || 'remove' || 'dequeue' => VoiceIntent.removeFromQueue,
       'clearqueue' || 'clear' || 'emptyqueue' => VoiceIntent.clearQueue,

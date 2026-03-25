@@ -37,9 +37,14 @@ void main() {
       expect(VoiceIntent.values, contains(VoiceIntent.unknown));
     });
 
+    test('has changeSettings intent', () {
+      expect(VoiceIntent.values, contains(VoiceIntent.changeSettings));
+    });
+
     test('has expected total number of intents', () {
-      // 6 playback + 1 search + 3 navigation + 3 queue + 1 unknown = 14
-      expect(VoiceIntent.values, hasLength(14));
+      // 6 playback + 1 search + 3 navigation + 3 queue
+      // + 1 settings + 1 unknown = 15
+      expect(VoiceIntent.values, hasLength(15));
     });
   });
 
@@ -313,6 +318,101 @@ void main() {
         );
 
         expect(command1.hashCode, equals(command2.hashCode));
+      });
+    });
+
+    group('settingsPayload', () {
+      test('changeSettings command carries absolute settingsPayload', () {
+        const payload = SettingsChangePayload.absolute(
+          key: 'playback_speed',
+          value: '1.5',
+          confidence: 0.9,
+        );
+        const command = VoiceCommand(
+          intent: VoiceIntent.changeSettings,
+          parameters: {},
+          confidence: 0.9,
+          rawTranscription: 'set playback speed to 1.5',
+          settingsPayload: payload,
+        );
+
+        expect(command.intent, equals(VoiceIntent.changeSettings));
+        expect(command.settingsPayload, equals(payload));
+      });
+
+      test('changeSettings command carries relative settingsPayload', () {
+        const payload = SettingsChangePayload.relative(
+          key: 'volume',
+          direction: ChangeDirection.increase,
+          magnitude: ChangeMagnitude.small,
+          confidence: 0.85,
+        );
+        const command = VoiceCommand(
+          intent: VoiceIntent.changeSettings,
+          parameters: {},
+          confidence: 0.85,
+          rawTranscription: 'turn up the volume a little',
+          settingsPayload: payload,
+        );
+
+        expect(command.settingsPayload, equals(payload));
+      });
+
+      test('non-settings command has null settingsPayload by default', () {
+        const command = VoiceCommand(
+          intent: VoiceIntent.play,
+          parameters: {},
+          confidence: 0.95,
+          rawTranscription: 'play',
+        );
+
+        expect(command.settingsPayload, isNull);
+      });
+
+      test('equality accounts for settingsPayload', () {
+        const payload = SettingsChangePayload.absolute(
+          key: 'skip_forward_seconds',
+          value: '30',
+          confidence: 0.8,
+        );
+        const withPayload = VoiceCommand(
+          intent: VoiceIntent.changeSettings,
+          parameters: {},
+          confidence: 0.8,
+          rawTranscription: 'change skip to 30 seconds',
+          settingsPayload: payload,
+        );
+        const withoutPayload = VoiceCommand(
+          intent: VoiceIntent.changeSettings,
+          parameters: {},
+          confidence: 0.8,
+          rawTranscription: 'change skip to 30 seconds',
+        );
+
+        expect(withPayload, isNot(equals(withoutPayload)));
+      });
+
+      test('hashCode accounts for settingsPayload', () {
+        const payload = SettingsChangePayload.absolute(
+          key: 'skip_forward_seconds',
+          value: '30',
+          confidence: 0.8,
+        );
+        const withPayload = VoiceCommand(
+          intent: VoiceIntent.changeSettings,
+          parameters: {},
+          confidence: 0.8,
+          rawTranscription: 'change skip to 30 seconds',
+          settingsPayload: payload,
+        );
+        const withoutPayload = VoiceCommand(
+          intent: VoiceIntent.changeSettings,
+          parameters: {},
+          confidence: 0.8,
+          rawTranscription: 'change skip to 30 seconds',
+        );
+
+        expect(withPayload.hashCode, isNot(equals(withoutPayload.hashCode)));
       });
     });
 

@@ -55,7 +55,7 @@ extension VoiceRecognitionStatePatterns on VoiceRecognitionState {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( VoiceIdle value)?  idle,TResult Function( VoiceListening value)?  listening,TResult Function( VoiceProcessing value)?  processing,TResult Function( VoiceExecuting value)?  executing,TResult Function( VoiceSuccess value)?  success,TResult Function( VoiceError value)?  error,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( VoiceIdle value)?  idle,TResult Function( VoiceListening value)?  listening,TResult Function( VoiceProcessing value)?  processing,TResult Function( VoiceExecuting value)?  executing,TResult Function( VoiceSuccess value)?  success,TResult Function( VoiceError value)?  error,TResult Function( VoiceSettingsAutoApplied value)?  settingsAutoApplied,TResult Function( VoiceSettingsDisambiguation value)?  settingsDisambiguation,TResult Function( VoiceSettingsLowConfidence value)?  settingsLowConfidence,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case VoiceIdle() when idle != null:
@@ -64,7 +64,10 @@ return listening(_that);case VoiceProcessing() when processing != null:
 return processing(_that);case VoiceExecuting() when executing != null:
 return executing(_that);case VoiceSuccess() when success != null:
 return success(_that);case VoiceError() when error != null:
-return error(_that);case _:
+return error(_that);case VoiceSettingsAutoApplied() when settingsAutoApplied != null:
+return settingsAutoApplied(_that);case VoiceSettingsDisambiguation() when settingsDisambiguation != null:
+return settingsDisambiguation(_that);case VoiceSettingsLowConfidence() when settingsLowConfidence != null:
+return settingsLowConfidence(_that);case _:
   return orElse();
 
 }
@@ -82,7 +85,7 @@ return error(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( VoiceIdle value)  idle,required TResult Function( VoiceListening value)  listening,required TResult Function( VoiceProcessing value)  processing,required TResult Function( VoiceExecuting value)  executing,required TResult Function( VoiceSuccess value)  success,required TResult Function( VoiceError value)  error,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( VoiceIdle value)  idle,required TResult Function( VoiceListening value)  listening,required TResult Function( VoiceProcessing value)  processing,required TResult Function( VoiceExecuting value)  executing,required TResult Function( VoiceSuccess value)  success,required TResult Function( VoiceError value)  error,required TResult Function( VoiceSettingsAutoApplied value)  settingsAutoApplied,required TResult Function( VoiceSettingsDisambiguation value)  settingsDisambiguation,required TResult Function( VoiceSettingsLowConfidence value)  settingsLowConfidence,}){
 final _that = this;
 switch (_that) {
 case VoiceIdle():
@@ -91,7 +94,10 @@ return listening(_that);case VoiceProcessing():
 return processing(_that);case VoiceExecuting():
 return executing(_that);case VoiceSuccess():
 return success(_that);case VoiceError():
-return error(_that);}
+return error(_that);case VoiceSettingsAutoApplied():
+return settingsAutoApplied(_that);case VoiceSettingsDisambiguation():
+return settingsDisambiguation(_that);case VoiceSettingsLowConfidence():
+return settingsLowConfidence(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -105,7 +111,7 @@ return error(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( VoiceIdle value)?  idle,TResult? Function( VoiceListening value)?  listening,TResult? Function( VoiceProcessing value)?  processing,TResult? Function( VoiceExecuting value)?  executing,TResult? Function( VoiceSuccess value)?  success,TResult? Function( VoiceError value)?  error,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( VoiceIdle value)?  idle,TResult? Function( VoiceListening value)?  listening,TResult? Function( VoiceProcessing value)?  processing,TResult? Function( VoiceExecuting value)?  executing,TResult? Function( VoiceSuccess value)?  success,TResult? Function( VoiceError value)?  error,TResult? Function( VoiceSettingsAutoApplied value)?  settingsAutoApplied,TResult? Function( VoiceSettingsDisambiguation value)?  settingsDisambiguation,TResult? Function( VoiceSettingsLowConfidence value)?  settingsLowConfidence,}){
 final _that = this;
 switch (_that) {
 case VoiceIdle() when idle != null:
@@ -114,7 +120,10 @@ return listening(_that);case VoiceProcessing() when processing != null:
 return processing(_that);case VoiceExecuting() when executing != null:
 return executing(_that);case VoiceSuccess() when success != null:
 return success(_that);case VoiceError() when error != null:
-return error(_that);case _:
+return error(_that);case VoiceSettingsAutoApplied() when settingsAutoApplied != null:
+return settingsAutoApplied(_that);case VoiceSettingsDisambiguation() when settingsDisambiguation != null:
+return settingsDisambiguation(_that);case VoiceSettingsLowConfidence() when settingsLowConfidence != null:
+return settingsLowConfidence(_that);case _:
   return null;
 
 }
@@ -131,7 +140,7 @@ return error(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  idle,TResult Function( String? partialTranscript)?  listening,TResult Function( String transcription)?  processing,TResult Function( VoiceCommand command)?  executing,TResult Function( String message)?  success,TResult Function( String message)?  error,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  idle,TResult Function( String? partialTranscript)?  listening,TResult Function( String transcription)?  processing,TResult Function( VoiceCommand command)?  executing,TResult Function( String message)?  success,TResult Function( String message)?  error,TResult Function( String key,  String displayNameKey,  String oldValue,  String newValue)?  settingsAutoApplied,TResult Function( List<SettingsResolutionCandidate> candidates)?  settingsDisambiguation,TResult Function( String key,  String displayNameKey,  String oldValue,  String newValue,  double confidence)?  settingsLowConfidence,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case VoiceIdle() when idle != null:
 return idle();case VoiceListening() when listening != null:
@@ -139,7 +148,10 @@ return listening(_that.partialTranscript);case VoiceProcessing() when processing
 return processing(_that.transcription);case VoiceExecuting() when executing != null:
 return executing(_that.command);case VoiceSuccess() when success != null:
 return success(_that.message);case VoiceError() when error != null:
-return error(_that.message);case _:
+return error(_that.message);case VoiceSettingsAutoApplied() when settingsAutoApplied != null:
+return settingsAutoApplied(_that.key,_that.displayNameKey,_that.oldValue,_that.newValue);case VoiceSettingsDisambiguation() when settingsDisambiguation != null:
+return settingsDisambiguation(_that.candidates);case VoiceSettingsLowConfidence() when settingsLowConfidence != null:
+return settingsLowConfidence(_that.key,_that.displayNameKey,_that.oldValue,_that.newValue,_that.confidence);case _:
   return orElse();
 
 }
@@ -157,7 +169,7 @@ return error(_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  idle,required TResult Function( String? partialTranscript)  listening,required TResult Function( String transcription)  processing,required TResult Function( VoiceCommand command)  executing,required TResult Function( String message)  success,required TResult Function( String message)  error,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  idle,required TResult Function( String? partialTranscript)  listening,required TResult Function( String transcription)  processing,required TResult Function( VoiceCommand command)  executing,required TResult Function( String message)  success,required TResult Function( String message)  error,required TResult Function( String key,  String displayNameKey,  String oldValue,  String newValue)  settingsAutoApplied,required TResult Function( List<SettingsResolutionCandidate> candidates)  settingsDisambiguation,required TResult Function( String key,  String displayNameKey,  String oldValue,  String newValue,  double confidence)  settingsLowConfidence,}) {final _that = this;
 switch (_that) {
 case VoiceIdle():
 return idle();case VoiceListening():
@@ -165,7 +177,10 @@ return listening(_that.partialTranscript);case VoiceProcessing():
 return processing(_that.transcription);case VoiceExecuting():
 return executing(_that.command);case VoiceSuccess():
 return success(_that.message);case VoiceError():
-return error(_that.message);}
+return error(_that.message);case VoiceSettingsAutoApplied():
+return settingsAutoApplied(_that.key,_that.displayNameKey,_that.oldValue,_that.newValue);case VoiceSettingsDisambiguation():
+return settingsDisambiguation(_that.candidates);case VoiceSettingsLowConfidence():
+return settingsLowConfidence(_that.key,_that.displayNameKey,_that.oldValue,_that.newValue,_that.confidence);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -179,7 +194,7 @@ return error(_that.message);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  idle,TResult? Function( String? partialTranscript)?  listening,TResult? Function( String transcription)?  processing,TResult? Function( VoiceCommand command)?  executing,TResult? Function( String message)?  success,TResult? Function( String message)?  error,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  idle,TResult? Function( String? partialTranscript)?  listening,TResult? Function( String transcription)?  processing,TResult? Function( VoiceCommand command)?  executing,TResult? Function( String message)?  success,TResult? Function( String message)?  error,TResult? Function( String key,  String displayNameKey,  String oldValue,  String newValue)?  settingsAutoApplied,TResult? Function( List<SettingsResolutionCandidate> candidates)?  settingsDisambiguation,TResult? Function( String key,  String displayNameKey,  String oldValue,  String newValue,  double confidence)?  settingsLowConfidence,}) {final _that = this;
 switch (_that) {
 case VoiceIdle() when idle != null:
 return idle();case VoiceListening() when listening != null:
@@ -187,7 +202,10 @@ return listening(_that.partialTranscript);case VoiceProcessing() when processing
 return processing(_that.transcription);case VoiceExecuting() when executing != null:
 return executing(_that.command);case VoiceSuccess() when success != null:
 return success(_that.message);case VoiceError() when error != null:
-return error(_that.message);case _:
+return error(_that.message);case VoiceSettingsAutoApplied() when settingsAutoApplied != null:
+return settingsAutoApplied(_that.key,_that.displayNameKey,_that.oldValue,_that.newValue);case VoiceSettingsDisambiguation() when settingsDisambiguation != null:
+return settingsDisambiguation(_that.candidates);case VoiceSettingsLowConfidence() when settingsLowConfidence != null:
+return settingsLowConfidence(_that.key,_that.displayNameKey,_that.oldValue,_that.newValue,_that.confidence);case _:
   return null;
 
 }
@@ -556,6 +574,224 @@ class _$VoiceErrorCopyWithImpl<$Res>
   return _then(VoiceError(
 message: null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
 as String,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class VoiceSettingsAutoApplied implements VoiceRecognitionState {
+  const VoiceSettingsAutoApplied({required this.key, required this.displayNameKey, required this.oldValue, required this.newValue});
+  
+
+ final  String key;
+ final  String displayNameKey;
+ final  String oldValue;
+ final  String newValue;
+
+/// Create a copy of VoiceRecognitionState
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$VoiceSettingsAutoAppliedCopyWith<VoiceSettingsAutoApplied> get copyWith => _$VoiceSettingsAutoAppliedCopyWithImpl<VoiceSettingsAutoApplied>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is VoiceSettingsAutoApplied&&(identical(other.key, key) || other.key == key)&&(identical(other.displayNameKey, displayNameKey) || other.displayNameKey == displayNameKey)&&(identical(other.oldValue, oldValue) || other.oldValue == oldValue)&&(identical(other.newValue, newValue) || other.newValue == newValue));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,key,displayNameKey,oldValue,newValue);
+
+@override
+String toString() {
+  return 'VoiceRecognitionState.settingsAutoApplied(key: $key, displayNameKey: $displayNameKey, oldValue: $oldValue, newValue: $newValue)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $VoiceSettingsAutoAppliedCopyWith<$Res> implements $VoiceRecognitionStateCopyWith<$Res> {
+  factory $VoiceSettingsAutoAppliedCopyWith(VoiceSettingsAutoApplied value, $Res Function(VoiceSettingsAutoApplied) _then) = _$VoiceSettingsAutoAppliedCopyWithImpl;
+@useResult
+$Res call({
+ String key, String displayNameKey, String oldValue, String newValue
+});
+
+
+
+
+}
+/// @nodoc
+class _$VoiceSettingsAutoAppliedCopyWithImpl<$Res>
+    implements $VoiceSettingsAutoAppliedCopyWith<$Res> {
+  _$VoiceSettingsAutoAppliedCopyWithImpl(this._self, this._then);
+
+  final VoiceSettingsAutoApplied _self;
+  final $Res Function(VoiceSettingsAutoApplied) _then;
+
+/// Create a copy of VoiceRecognitionState
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? key = null,Object? displayNameKey = null,Object? oldValue = null,Object? newValue = null,}) {
+  return _then(VoiceSettingsAutoApplied(
+key: null == key ? _self.key : key // ignore: cast_nullable_to_non_nullable
+as String,displayNameKey: null == displayNameKey ? _self.displayNameKey : displayNameKey // ignore: cast_nullable_to_non_nullable
+as String,oldValue: null == oldValue ? _self.oldValue : oldValue // ignore: cast_nullable_to_non_nullable
+as String,newValue: null == newValue ? _self.newValue : newValue // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class VoiceSettingsDisambiguation implements VoiceRecognitionState {
+  const VoiceSettingsDisambiguation({required final  List<SettingsResolutionCandidate> candidates}): _candidates = candidates;
+  
+
+ final  List<SettingsResolutionCandidate> _candidates;
+ List<SettingsResolutionCandidate> get candidates {
+  if (_candidates is EqualUnmodifiableListView) return _candidates;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_candidates);
+}
+
+
+/// Create a copy of VoiceRecognitionState
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$VoiceSettingsDisambiguationCopyWith<VoiceSettingsDisambiguation> get copyWith => _$VoiceSettingsDisambiguationCopyWithImpl<VoiceSettingsDisambiguation>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is VoiceSettingsDisambiguation&&const DeepCollectionEquality().equals(other._candidates, _candidates));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_candidates));
+
+@override
+String toString() {
+  return 'VoiceRecognitionState.settingsDisambiguation(candidates: $candidates)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $VoiceSettingsDisambiguationCopyWith<$Res> implements $VoiceRecognitionStateCopyWith<$Res> {
+  factory $VoiceSettingsDisambiguationCopyWith(VoiceSettingsDisambiguation value, $Res Function(VoiceSettingsDisambiguation) _then) = _$VoiceSettingsDisambiguationCopyWithImpl;
+@useResult
+$Res call({
+ List<SettingsResolutionCandidate> candidates
+});
+
+
+
+
+}
+/// @nodoc
+class _$VoiceSettingsDisambiguationCopyWithImpl<$Res>
+    implements $VoiceSettingsDisambiguationCopyWith<$Res> {
+  _$VoiceSettingsDisambiguationCopyWithImpl(this._self, this._then);
+
+  final VoiceSettingsDisambiguation _self;
+  final $Res Function(VoiceSettingsDisambiguation) _then;
+
+/// Create a copy of VoiceRecognitionState
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? candidates = null,}) {
+  return _then(VoiceSettingsDisambiguation(
+candidates: null == candidates ? _self._candidates : candidates // ignore: cast_nullable_to_non_nullable
+as List<SettingsResolutionCandidate>,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class VoiceSettingsLowConfidence implements VoiceRecognitionState {
+  const VoiceSettingsLowConfidence({required this.key, required this.displayNameKey, required this.oldValue, required this.newValue, required this.confidence});
+  
+
+ final  String key;
+ final  String displayNameKey;
+ final  String oldValue;
+ final  String newValue;
+ final  double confidence;
+
+/// Create a copy of VoiceRecognitionState
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$VoiceSettingsLowConfidenceCopyWith<VoiceSettingsLowConfidence> get copyWith => _$VoiceSettingsLowConfidenceCopyWithImpl<VoiceSettingsLowConfidence>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is VoiceSettingsLowConfidence&&(identical(other.key, key) || other.key == key)&&(identical(other.displayNameKey, displayNameKey) || other.displayNameKey == displayNameKey)&&(identical(other.oldValue, oldValue) || other.oldValue == oldValue)&&(identical(other.newValue, newValue) || other.newValue == newValue)&&(identical(other.confidence, confidence) || other.confidence == confidence));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,key,displayNameKey,oldValue,newValue,confidence);
+
+@override
+String toString() {
+  return 'VoiceRecognitionState.settingsLowConfidence(key: $key, displayNameKey: $displayNameKey, oldValue: $oldValue, newValue: $newValue, confidence: $confidence)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $VoiceSettingsLowConfidenceCopyWith<$Res> implements $VoiceRecognitionStateCopyWith<$Res> {
+  factory $VoiceSettingsLowConfidenceCopyWith(VoiceSettingsLowConfidence value, $Res Function(VoiceSettingsLowConfidence) _then) = _$VoiceSettingsLowConfidenceCopyWithImpl;
+@useResult
+$Res call({
+ String key, String displayNameKey, String oldValue, String newValue, double confidence
+});
+
+
+
+
+}
+/// @nodoc
+class _$VoiceSettingsLowConfidenceCopyWithImpl<$Res>
+    implements $VoiceSettingsLowConfidenceCopyWith<$Res> {
+  _$VoiceSettingsLowConfidenceCopyWithImpl(this._self, this._then);
+
+  final VoiceSettingsLowConfidence _self;
+  final $Res Function(VoiceSettingsLowConfidence) _then;
+
+/// Create a copy of VoiceRecognitionState
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? key = null,Object? displayNameKey = null,Object? oldValue = null,Object? newValue = null,Object? confidence = null,}) {
+  return _then(VoiceSettingsLowConfidence(
+key: null == key ? _self.key : key // ignore: cast_nullable_to_non_nullable
+as String,displayNameKey: null == displayNameKey ? _self.displayNameKey : displayNameKey // ignore: cast_nullable_to_non_nullable
+as String,oldValue: null == oldValue ? _self.oldValue : oldValue // ignore: cast_nullable_to_non_nullable
+as String,newValue: null == newValue ? _self.newValue : newValue // ignore: cast_nullable_to_non_nullable
+as String,confidence: null == confidence ? _self.confidence : confidence // ignore: cast_nullable_to_non_nullable
+as double,
   ));
 }
 

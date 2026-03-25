@@ -102,6 +102,10 @@ class _VoiceCommandFabState extends ConsumerState<VoiceCommandFab>
       ),
       VoiceSuccess() => const Icon(Symbols.check_circle),
       VoiceError() => const Icon(Symbols.error),
+      // Placeholder icons for settings states — Task 11 will add proper UI.
+      VoiceSettingsAutoApplied() => const Icon(Symbols.check_circle),
+      VoiceSettingsDisambiguation() => const Icon(Symbols.help_outline),
+      VoiceSettingsLowConfidence() => const Icon(Symbols.help_outline),
     };
   }
 
@@ -115,6 +119,10 @@ class _VoiceCommandFabState extends ConsumerState<VoiceCommandFab>
       VoiceExecuting() => colorScheme.primaryContainer,
       VoiceSuccess() => colorScheme.tertiaryContainer,
       VoiceError() => colorScheme.errorContainer,
+      // Placeholder colors for settings states — Task 11 will add proper UI.
+      VoiceSettingsAutoApplied() => colorScheme.tertiaryContainer,
+      VoiceSettingsDisambiguation() => colorScheme.primaryContainer,
+      VoiceSettingsLowConfidence() => colorScheme.primaryContainer,
     };
   }
 
@@ -128,6 +136,10 @@ class _VoiceCommandFabState extends ConsumerState<VoiceCommandFab>
       VoiceExecuting() => colorScheme.onPrimaryContainer,
       VoiceSuccess() => colorScheme.onTertiaryContainer,
       VoiceError() => colorScheme.onErrorContainer,
+      // Placeholder colors for settings states — Task 11 will add proper UI.
+      VoiceSettingsAutoApplied() => colorScheme.onTertiaryContainer,
+      VoiceSettingsDisambiguation() => colorScheme.onPrimaryContainer,
+      VoiceSettingsLowConfidence() => colorScheme.onPrimaryContainer,
     };
   }
 
@@ -139,6 +151,10 @@ class _VoiceCommandFabState extends ConsumerState<VoiceCommandFab>
       VoiceExecuting() => 'Executing...',
       VoiceSuccess() => 'Success',
       VoiceError() => 'Error occurred',
+      // Placeholder tooltips for settings states — Task 11 will add proper UI.
+      VoiceSettingsAutoApplied() => 'Setting applied',
+      VoiceSettingsDisambiguation() => 'Disambiguation required',
+      VoiceSettingsLowConfidence() => 'Confirmation required',
     };
   }
 }

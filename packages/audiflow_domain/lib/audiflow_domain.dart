@@ -91,6 +91,7 @@ export 'src/features/feed/repositories/episode_favorite_repository_impl.dart';
 export 'src/features/player/models/now_playing_info.dart';
 export 'src/features/player/models/playback_progress.dart';
 export 'src/features/player/models/playback_state.dart';
+export 'src/features/player/services/audio_playback_controller.dart';
 export 'src/features/player/services/audio_player_service.dart';
 export 'src/features/player/services/now_playing_controller.dart';
 
@@ -103,10 +104,14 @@ export 'src/features/player/repositories/playback_history_repository_impl.dart';
 export 'src/features/player/services/playback_history_service.dart';
 
 // Voice feature
+export 'src/features/voice/models/settings_metadata.dart';
 export 'src/features/voice/models/voice_recognition_state.dart';
 export 'src/features/voice/repositories/speech_recognition_repository.dart';
 export 'src/features/voice/repositories/speech_recognition_repository_impl.dart';
 export 'src/features/voice/services/play_podcast_by_name_service.dart';
+export 'src/features/voice/services/settings_intent_resolver.dart';
+export 'src/features/voice/services/settings_metadata_registry.dart';
+export 'src/features/voice/services/settings_snapshot_service.dart';
 export 'src/features/voice/services/voice_command_executor.dart';
 export 'src/features/voice/services/voice_command_orchestrator.dart';
 
