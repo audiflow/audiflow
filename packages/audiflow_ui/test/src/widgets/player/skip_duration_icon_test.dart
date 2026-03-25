@@ -5,50 +5,6 @@ import 'package:checks/checks.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 void main() {
-  group('skipForwardIconData', () {
-    test('returns forward_5 for 5 seconds', () {
-      check(skipForwardIconData(5)).equals(Symbols.forward_5);
-    });
-
-    test('returns forward_10 for 10 seconds', () {
-      check(skipForwardIconData(10)).equals(Symbols.forward_10);
-    });
-
-    test('returns forward_30 for 30 seconds', () {
-      check(skipForwardIconData(30)).equals(Symbols.forward_30);
-    });
-
-    test('returns null for 15 seconds (no dedicated icon)', () {
-      check(skipForwardIconData(15)).isNull();
-    });
-
-    test('returns null for 45 seconds (no dedicated icon)', () {
-      check(skipForwardIconData(45)).isNull();
-    });
-
-    test('returns null for 60 seconds (no dedicated icon)', () {
-      check(skipForwardIconData(60)).isNull();
-    });
-  });
-
-  group('skipBackwardIconData', () {
-    test('returns replay_5 for 5 seconds', () {
-      check(skipBackwardIconData(5)).equals(Symbols.replay_5);
-    });
-
-    test('returns replay_10 for 10 seconds', () {
-      check(skipBackwardIconData(10)).equals(Symbols.replay_10);
-    });
-
-    test('returns replay_30 for 30 seconds', () {
-      check(skipBackwardIconData(30)).equals(Symbols.replay_30);
-    });
-
-    test('returns null for 15 seconds (no dedicated icon)', () {
-      check(skipBackwardIconData(15)).isNull();
-    });
-  });
-
   group('SkipDurationIcon', () {
     testWidgets('renders dedicated icon for 30s forward', (tester) async {
       await tester.pumpWidget(

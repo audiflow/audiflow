@@ -1,18 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
-/// Returns the Material Symbol [IconData] for a forward-skip of [seconds],
-/// or `null` when no dedicated icon exists (e.g. 15, 45, 60).
-IconData? skipForwardIconData(int seconds) => switch (seconds) {
+IconData? _skipForwardIconData(int seconds) => switch (seconds) {
   5 => Symbols.forward_5,
   10 => Symbols.forward_10,
   30 => Symbols.forward_30,
   _ => null,
 };
 
-/// Returns the Material Symbol [IconData] for a backward-skip of [seconds],
-/// or `null` when no dedicated icon exists (e.g. 15).
-IconData? skipBackwardIconData(int seconds) => switch (seconds) {
+IconData? _skipBackwardIconData(int seconds) => switch (seconds) {
   5 => Symbols.replay_5,
   10 => Symbols.replay_10,
   30 => Symbols.replay_30,
@@ -42,8 +38,8 @@ class SkipDurationIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dedicated = isForward
-        ? skipForwardIconData(seconds)
-        : skipBackwardIconData(seconds);
+        ? _skipForwardIconData(seconds)
+        : _skipBackwardIconData(seconds);
 
     if (dedicated != null) {
       return Icon(dedicated, size: size, color: color);
