@@ -1,12 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
-IconData? _skipForwardIconData(int seconds) => switch (seconds) {
-  5 => Symbols.forward_5,
-  10 => Symbols.forward_10,
-  30 => Symbols.forward_30,
-  _ => null,
-};
+// Forward durations always use flipped replay + text overlay for visual
+// consistency with the backward icons. No dedicated forward_N glyphs.
 
 IconData? _skipBackwardIconData(int seconds) => switch (seconds) {
   5 => Symbols.replay_5,
@@ -18,9 +14,9 @@ IconData? _skipBackwardIconData(int seconds) => switch (seconds) {
 /// Displays a skip-duration icon that dynamically reflects the configured
 /// number of [seconds].
 ///
-/// For 5, 10, and 30 seconds, a dedicated Material Symbol is used (e.g.
-/// `forward_30`, `replay_10`). For other values (15, 45, 60), a base
-/// forward/replay icon is shown with the number overlaid as text.
+/// Backward 5, 10, and 30 use dedicated Material Symbols (`replay_5`, etc.).
+/// All forward durations use a horizontally flipped `replay` icon with a text
+/// overlay so the style is consistent across all values.
 class SkipDurationIcon extends StatelessWidget {
   const SkipDurationIcon({
     required this.seconds,
@@ -37,19 +33,25 @@ class SkipDurationIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dedicated = isForward
-        ? _skipForwardIconData(seconds)
-        : _skipBackwardIconData(seconds);
-
-    if (dedicated != null) {
-      return Icon(dedicated, size: size, color: color);
+    // Backward 5/10/30 use dedicated Material Symbol glyphs.
+    if (!isForward) {
+      final dedicated = _skipBackwardIconData(seconds);
+      if (dedicated != null) {
+        return Icon(dedicated, size: size, color: color);
+      }
     }
 
-    // Fallback: base icon with text overlay.
-    // ExcludeSemantics prevents the icon and overlay text from being
-    // announced by screen readers -- the parent Semantics widget already
-    // provides the accessibility label.
-    final baseIcon = isForward ? Symbols.forward : Symbols.replay;
+    // All forward durations and non-dedicated backward durations use
+    // replay icon + text overlay. Forward flips the icon horizontally.
+    // ExcludeSemantics prevents duplicate screen reader announcements --
+    // the parent Semantics widget already provides the accessibility label.
+    final icon = isForward
+        ? Transform.flip(
+            flipX: true,
+            child: Icon(Symbols.replay, size: size, color: color),
+          )
+        : Icon(Symbols.replay, size: size, color: color);
+
     return ExcludeSemantics(
       child: SizedBox(
         width: size,
@@ -57,9 +59,9 @@ class SkipDurationIcon extends StatelessWidget {
         child: Stack(
           alignment: Alignment.center,
           children: [
-            Icon(baseIcon, size: size, color: color),
-            Positioned(
-              bottom: size * 0.18,
+            icon,
+            Padding(
+              padding: EdgeInsets.only(top: size * 0.16),
               child: Text(
                 '$seconds',
                 style: TextStyle(

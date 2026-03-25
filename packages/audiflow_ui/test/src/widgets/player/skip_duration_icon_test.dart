@@ -6,18 +6,7 @@ import 'package:material_symbols_icons/symbols.dart';
 
 void main() {
   group('SkipDurationIcon', () {
-    testWidgets('renders dedicated icon for 30s forward', (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: SkipDurationIcon(seconds: 30, isForward: true, size: 36),
-          ),
-        ),
-      );
-
-      final iconFinder = find.byIcon(Symbols.forward_30);
-      check(iconFinder.evaluate()).isNotEmpty();
-    });
+    // -- Backward: dedicated icons for 5/10/30 --------------------------
 
     testWidgets('renders dedicated icon for 10s backward', (tester) async {
       await tester.pumpWidget(
@@ -28,60 +17,24 @@ void main() {
         ),
       );
 
-      final iconFinder = find.byIcon(Symbols.replay_10);
-      check(iconFinder.evaluate()).isNotEmpty();
+      check(find.byIcon(Symbols.replay_10).evaluate()).isNotEmpty();
     });
 
-    testWidgets('renders text label for 15s forward (no dedicated icon)', (
-      tester,
-    ) async {
+    testWidgets('renders dedicated icon for 30s backward', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
-            body: SkipDurationIcon(seconds: 15, isForward: true, size: 36),
+            body: SkipDurationIcon(seconds: 30, isForward: false, size: 36),
           ),
         ),
       );
 
-      // Should show the number as text
-      check(find.text('15').evaluate()).isNotEmpty();
-      // Should show the base forward icon
-      check(find.byIcon(Symbols.forward).evaluate()).isNotEmpty();
+      check(find.byIcon(Symbols.replay_30).evaluate()).isNotEmpty();
     });
 
-    testWidgets('renders text label for 45s forward (no dedicated icon)', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: SkipDurationIcon(seconds: 45, isForward: true, size: 36),
-          ),
-        ),
-      );
+    // -- Backward: text overlay for non-dedicated -----------------------
 
-      check(find.text('45').evaluate()).isNotEmpty();
-      check(find.byIcon(Symbols.forward).evaluate()).isNotEmpty();
-    });
-
-    testWidgets('renders text label for 60s forward (no dedicated icon)', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: SkipDurationIcon(seconds: 60, isForward: true, size: 36),
-          ),
-        ),
-      );
-
-      check(find.text('60').evaluate()).isNotEmpty();
-      check(find.byIcon(Symbols.forward).evaluate()).isNotEmpty();
-    });
-
-    testWidgets('renders text label for 15s backward (no dedicated icon)', (
-      tester,
-    ) async {
+    testWidgets('renders text overlay for 15s backward', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
@@ -94,7 +47,56 @@ void main() {
       check(find.byIcon(Symbols.replay).evaluate()).isNotEmpty();
     });
 
-    testWidgets('applies provided size to icon', (tester) async {
+    // -- Forward: always text overlay (flipped replay) ------------------
+
+    testWidgets('renders flipped replay with text for 30s forward', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: SkipDurationIcon(seconds: 30, isForward: true, size: 36),
+          ),
+        ),
+      );
+
+      check(find.text('30').evaluate()).isNotEmpty();
+      check(find.byIcon(Symbols.replay).evaluate()).isNotEmpty();
+    });
+
+    testWidgets('renders flipped replay with text for 15s forward', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: SkipDurationIcon(seconds: 15, isForward: true, size: 36),
+          ),
+        ),
+      );
+
+      check(find.text('15').evaluate()).isNotEmpty();
+      check(find.byIcon(Symbols.replay).evaluate()).isNotEmpty();
+    });
+
+    testWidgets('renders flipped replay with text for 45s forward', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: SkipDurationIcon(seconds: 45, isForward: true, size: 36),
+          ),
+        ),
+      );
+
+      check(find.text('45').evaluate()).isNotEmpty();
+      check(find.byIcon(Symbols.replay).evaluate()).isNotEmpty();
+    });
+
+    // -- Size and color -------------------------------------------------
+
+    testWidgets('applies provided size to overlay icon', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
@@ -103,11 +105,11 @@ void main() {
         ),
       );
 
-      final icon = tester.widget<Icon>(find.byIcon(Symbols.forward_30));
+      final icon = tester.widget<Icon>(find.byIcon(Symbols.replay));
       check(icon.size).equals(48);
     });
 
-    testWidgets('applies provided color to icon', (tester) async {
+    testWidgets('applies provided color to dedicated icon', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
