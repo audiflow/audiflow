@@ -202,14 +202,14 @@ void main() {
             .unorderedEquals(['en', 'ja', 'system']);
       });
 
-      test('autoPlayOrder has options: newestFirst, oldestFirst', () {
+      test('autoPlayOrder has options: oldestFirst, asDisplayed', () {
         final constraints = registry
             .findByKey(SettingsKeys.autoPlayOrder)!
             .constraints;
         check(constraints)
             .isA<OptionsConstraints>()
             .has((c) => c.values, 'values')
-            .unorderedEquals(['newestFirst', 'oldestFirst']);
+            .unorderedEquals(['oldestFirst', 'asDisplayed']);
       });
 
       test('searchCountry has correct country codes', () {
@@ -219,7 +219,16 @@ void main() {
         check(constraints)
             .isA<OptionsConstraints>()
             .has((c) => c.values, 'values')
-            .unorderedEquals(['us', 'jp', 'gb', 'de', 'fr', 'au', 'ca']);
+            .unorderedEquals([
+              'system',
+              'us',
+              'jp',
+              'gb',
+              'de',
+              'fr',
+              'au',
+              'ca',
+            ]);
       });
 
       test('boolean settings use BooleanConstraints', () {

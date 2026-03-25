@@ -412,12 +412,15 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
         currentValues: currentValues,
       );
     } else {
-      // No structured payload from the platform channel — cannot resolve.
-      // Settings resolution requires a structured payload produced by the
-      // platform NLU (Siri App Intents / Google App Actions).
-      _logger?.w(
-        'changeSettings intent without platform payload: '
+      // No structured payload from the platform channel — try Dart-side
+      // keyword matching against the registry synonyms as a fallback.
+      _logger?.i(
+        'No platform payload; attempting Dart-side synonym resolution: '
         '"${command.rawTranscription}"',
+      );
+      resolution = _resolveFromTranscription(
+        command.rawTranscription,
+        currentValues: currentValues,
       );
     }
 
@@ -567,6 +570,57 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
 
     // Try search command
     return _tryParseSearchCommand(text, lower, transcription);
+  }
+
+  /// Dart-side fallback resolution using registry synonym matching.
+  ///
+  /// When the platform NLU is unavailable and the on-device AI classified the
+  /// command as `changeSettings` without producing a structured payload, this
+  /// method attempts to match the raw transcription against known setting
+  /// synonyms and build a resolution directly.
+  SettingsResolution? _resolveFromTranscription(
+    String transcription, {
+    required Map<String, String> currentValues,
+  }) {
+    final matches = _settingsRegistry.findBySynonym(transcription);
+    if (matches.isEmpty) return null;
+
+    // Build candidates from synonym matches, using the AI confidence of 0.6
+    // (lower than platform NLU since keyword matching is less precise).
+    final candidates = <SettingsCandidate>[];
+    for (final match in matches) {
+      final currentValue = currentValues[match.metadata.key] ?? '';
+      // Without a structured value from the AI, pass the current value so the
+      // resolver can at least identify the setting. Concrete value extraction
+      // from free-form text is left to the platform NLU.
+      candidates.add(
+        SettingsCandidate(
+          key: match.metadata.key,
+          value: currentValue,
+          confidence: 0.6,
+        ),
+      );
+    }
+
+    if (candidates.length == 1) {
+      // Single match but no extracted value — present as confirmation rather
+      // than auto-apply so the user can provide the desired value.
+      final only = candidates.first;
+      final metadata = _settingsRegistry.findByKey(only.key);
+      if (metadata == null) return null;
+      return SettingsResolution.confirm(
+        key: only.key,
+        oldValue: currentValues[only.key] ?? '',
+        newValue: only.value,
+        confidence: 0.6,
+      );
+    }
+
+    // Multiple matches — present as disambiguation.
+    return _settingsResolver.resolve(
+      SettingsChangePayload.ambiguous(candidates: candidates),
+      currentValues: currentValues,
+    );
   }
 
   /// Constructs a [SettingsChangePayload] from a platform channel result map.

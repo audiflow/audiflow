@@ -174,7 +174,7 @@ class SettingsMetadataRegistry {
       displayNameKey: 'playbackAutoPlayOrderTitle',
       type: SettingType.enumValue,
       constraints: const SettingConstraints.options(
-        values: ['newestFirst', 'oldestFirst'],
+        values: ['oldestFirst', 'asDisplayed'],
       ),
       synonyms: const [
         'auto play order',
@@ -315,7 +315,7 @@ class SettingsMetadataRegistry {
       displayNameKey: 'searchRegionLabel',
       type: SettingType.enumValue,
       constraints: const SettingConstraints.options(
-        values: ['us', 'jp', 'gb', 'de', 'fr', 'au', 'ca'],
+        values: ['system', 'us', 'jp', 'gb', 'de', 'fr', 'au', 'ca'],
       ),
       synonyms: const [
         'search country',
@@ -379,6 +379,34 @@ class SettingsMetadataRegistry {
 
   /// Finds a setting by its exact [SettingsKeys] key, or returns null.
   SettingMetadata? findByKey(String key) => _index[key];
+
+  /// Finds settings whose synonyms appear in [text] (case-insensitive).
+  ///
+  /// Returns a list of `(metadata, longestMatchLength)` pairs sorted by
+  /// descending match length so the most specific synonym wins. An empty
+  /// list means no synonym matched.
+  List<({SettingMetadata metadata, int matchLength})> findBySynonym(
+    String text,
+  ) {
+    final lower = text.toLowerCase();
+    final matches = <({SettingMetadata metadata, int matchLength})>[];
+    for (final meta in _entries) {
+      var best = 0;
+      for (final synonym in meta.synonyms) {
+        final synonymLower = synonym.toLowerCase();
+        if (lower.contains(synonymLower) && best < synonymLower.length) {
+          best = synonymLower.length;
+        }
+      }
+      if (0 < best) {
+        matches.add((metadata: meta, matchLength: best));
+      }
+    }
+    // Sort by descending match length so the longest (most specific) match
+    // comes first.
+    matches.sort((a, b) => b.matchLength.compareTo(a.matchLength));
+    return matches;
+  }
 
   static Map<String, SettingMetadata> _buildIndex(
     List<SettingMetadata> entries,
