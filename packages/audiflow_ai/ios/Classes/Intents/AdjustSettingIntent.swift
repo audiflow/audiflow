@@ -6,10 +6,10 @@ struct AdjustSettingIntent: AppIntent {
     static var description = IntentDescription("Increase or decrease an Audiflow setting")
 
     @Parameter(title: "Setting Name")
-    var settingName: String
+    var settingName: SettingNameAppEnum
 
     @Parameter(title: "Direction")
-    var direction: String
+    var direction: AdjustDirectionAppEnum
 
     func perform() async throws -> some IntentResult & ProvidesDialog {
         // Relative changes need current value + step info from the registry,

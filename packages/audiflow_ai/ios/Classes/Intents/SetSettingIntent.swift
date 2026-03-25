@@ -6,14 +6,14 @@ struct SetSettingIntent: AppIntent {
     static var description = IntentDescription("Change an Audiflow setting to a specific value")
 
     @Parameter(title: "Setting Name")
-    var settingName: String
+    var settingName: SettingNameAppEnum
 
     @Parameter(title: "Value")
     var value: String
 
     func perform() async throws -> some IntentResult {
-        guard let resolvedKey = SettingsKeyMapping.resolve(settingName) else {
-            throw SettingsIntentError.unknownSetting(settingName)
+        guard let resolvedKey = SettingsKeyMapping.resolve(settingName.rawValue) else {
+            throw SettingsIntentError.unknownSetting(settingName.rawValue)
         }
         // For out-of-app Siri invocation, apply directly via UserDefaults.
         // Flutter SharedPreferences uses UserDefaults on iOS. We must store
