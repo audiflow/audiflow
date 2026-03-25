@@ -90,7 +90,7 @@ class SettingsIntentHandler {
         "dark": ["ダーク", "dark", "暗い", "暗く"],
         "light": ["ライト", "light", "明るい", "明るく"],
         "system": ["システム", "system", "自動", "auto"],
-        "newestFirst": ["新しい順", "newest", "新着順"],
+        "asDisplayed": ["表示順", "display order", "as displayed", "画面順"],
         "oldestFirst": ["古い順", "oldest"],
         "en": ["英語", "english"],
         "ja": ["日本語", "japanese"],

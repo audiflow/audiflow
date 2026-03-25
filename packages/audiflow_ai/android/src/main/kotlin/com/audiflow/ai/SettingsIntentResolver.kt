@@ -127,7 +127,7 @@ class SettingsIntentResolver {
         "dark" to listOf("ダーク", "dark", "暗い", "暗く"),
         "light" to listOf("ライト", "light", "明るい", "明るく"),
         "system" to listOf("システム", "system", "自動", "auto"),
-        "newestFirst" to listOf("新しい順", "newest", "新着順"),
+        "asDisplayed" to listOf("表示順", "display order", "as displayed", "画面順"),
         "oldestFirst" to listOf("古い順", "oldest"),
         "en" to listOf("英語", "english"),
         "ja" to listOf("日本語", "japanese"),
