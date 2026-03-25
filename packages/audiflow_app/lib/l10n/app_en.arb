@@ -536,6 +536,8 @@
   "sharePodcast": "Share podcast",
   "@sharePodcast": { "description": "Tooltip for podcast share button" },
 
+  "voiceCommandButton": "Voice command",
+  "@voiceCommandButton": { "description": "Semantic label and tooltip for the center voice command button" },
   "voiceListening": "Listening...",
   "@voiceListening": { "description": "Status text while voice recognition is active" },
   "voiceProcessing": "Processing...",

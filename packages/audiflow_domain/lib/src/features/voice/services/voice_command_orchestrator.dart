@@ -537,7 +537,17 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
     final playResult = _tryParsePlayCommand(text, lower, transcription);
     if (playResult != null) return playResult;
 
-    // Try pause/stop command
+    // Try stop command (must check before pause — "stop" is distinct)
+    if (_isStopCommand(text, lower)) {
+      return VoiceCommand(
+        intent: VoiceIntent.stop,
+        parameters: const {},
+        confidence: 0.9,
+        rawTranscription: transcription,
+      );
+    }
+
+    // Try pause command
     if (_isPauseCommand(text, lower)) {
       return VoiceCommand(
         intent: VoiceIntent.pause,
@@ -674,9 +684,15 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
     );
   }
 
+  bool _isStopCommand(String text, String lower) {
+    const enStop = ['stop', 'stop playback'];
+    const jaStop = ['停止', 'ストップ', '停止して'];
+    return enStop.contains(lower) || jaStop.contains(text);
+  }
+
   bool _isPauseCommand(String text, String lower) {
-    const enPause = ['pause', 'stop', 'pause playback'];
-    const jaPause = ['一時停止', '停止', 'ストップ', 'ポーズ', '止めて', '停止して'];
+    const enPause = ['pause', 'pause playback'];
+    const jaPause = ['一時停止', 'ポーズ', '止めて'];
     return enPause.contains(lower) || jaPause.contains(text);
   }
 

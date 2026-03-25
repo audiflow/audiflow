@@ -30,7 +30,11 @@ VoiceCommandExecutor voiceCommandExecutor(Ref ref) {
   return VoiceCommandExecutor(
     audioController: ref.watch(audioPlayerControllerProvider.notifier),
     queueService: ref.watch(queueServiceProvider),
-    settingsRepository: ref.watch(appSettingsRepositoryProvider),
+    // Use ref.read to avoid a reactive dependency: the orchestrator
+    // invalidates appSettingsRepositoryProvider after applying a setting,
+    // and ref.watch here would cascade into an orchestrator rebuild that
+    // resets the voice state back to idle.
+    settingsRepository: ref.read(appSettingsRepositoryProvider),
   );
 }
 

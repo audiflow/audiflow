@@ -846,6 +846,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get sharePodcast => 'ポッドキャストを共有';
 
   @override
+  String get voiceCommandButton => '音声コマンド';
+
+  @override
   String get voiceListening => '聞いています...';
 
   @override

@@ -1640,6 +1640,12 @@ abstract class AppLocalizations {
   /// **'Share podcast'**
   String get sharePodcast;
 
+  /// Semantic label and tooltip for the center voice command button
+  ///
+  /// In en, this message translates to:
+  /// **'Voice command'**
+  String get voiceCommandButton;
+
   /// Status text while voice recognition is active
   ///
   /// In en, this message translates to:

@@ -863,6 +863,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sharePodcast => 'Share podcast';
 
   @override
+  String get voiceCommandButton => 'Voice command';
+
+  @override
   String get voiceListening => 'Listening...';
 
   @override

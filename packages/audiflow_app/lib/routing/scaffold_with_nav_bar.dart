@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
+import '../l10n/app_localizations.dart';
 import '../features/player/presentation/screens/player_screen.dart';
 import '../features/player/presentation/widgets/animated_mini_player.dart';
 import '../features/settings/presentation/controllers/last_tab_controller.dart';
@@ -401,19 +402,26 @@ class _VoiceNavButtonState extends ConsumerState<_VoiceNavButton>
         final scale = isListening ? _pulseAnimation.value : 1.0;
         return Transform.scale(
           scale: scale,
-          child: Material(
-            color: bgColor,
-            shape: const CircleBorder(),
-            elevation: 4,
-            child: InkWell(
-              customBorder: const CircleBorder(),
-              onTap: isProcessing ? null : () => _handleTap(isListening),
-              child: SizedBox(
-                width: 48,
-                height: 48,
-                child: IconTheme(
-                  data: IconThemeData(color: fgColor),
-                  child: _buildIcon(voiceState),
+          child: Semantics(
+            button: true,
+            label: AppLocalizations.of(context).voiceCommandButton,
+            child: Tooltip(
+              message: AppLocalizations.of(context).voiceCommandButton,
+              child: Material(
+                color: bgColor,
+                shape: const CircleBorder(),
+                elevation: 4,
+                child: InkWell(
+                  customBorder: const CircleBorder(),
+                  onTap: isProcessing ? null : () => _handleTap(isListening),
+                  child: SizedBox(
+                    width: 48,
+                    height: 48,
+                    child: IconTheme(
+                      data: IconThemeData(color: fgColor),
+                      child: _buildIcon(voiceState),
+                    ),
+                  ),
                 ),
               ),
             ),
