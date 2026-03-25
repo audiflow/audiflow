@@ -146,15 +146,24 @@ class VoiceListeningOverlay extends ConsumerWidget {
             separatorBuilder: (_, _) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
               final candidate = state.candidates[index];
+              final displayName = _resolveDisplayName(
+                context,
+                candidate.displayNameKey,
+              );
+              final hasValue = candidate.newValue.isNotEmpty;
               return FilledButton.tonal(
-                onPressed: () {
-                  final controller = ref.read(
-                    voiceCommandControllerProvider.notifier,
-                  );
-                  controller.selectSettingsCandidate(candidate);
-                },
+                onPressed: hasValue
+                    ? () {
+                        final controller = ref.read(
+                          voiceCommandControllerProvider.notifier,
+                        );
+                        controller.selectSettingsCandidate(candidate);
+                      }
+                    : null,
                 child: Text(
-                  '${_resolveDisplayName(context, candidate.displayNameKey)}: ${candidate.newValue}',
+                  hasValue
+                      ? '$displayName: ${candidate.newValue}'
+                      : displayName,
                 ),
               );
             },

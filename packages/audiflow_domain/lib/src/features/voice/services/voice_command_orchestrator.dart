@@ -622,18 +622,30 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
         value: (result['value'] as String?) ?? '',
         confidence: (result['confidence'] as num?)?.toDouble() ?? 0.8,
       ),
-      'relative' => SettingsChangePayload.relative(
-        key: key ?? '',
-        direction: (result['direction'] as String?) == 'decrease'
-            ? ChangeDirection.decrease
-            : ChangeDirection.increase,
-        magnitude: switch (result['magnitude'] as String?) {
-          'medium' => ChangeMagnitude.medium,
-          'large' => ChangeMagnitude.large,
-          _ => ChangeMagnitude.small,
-        },
-        confidence: (result['confidence'] as num?)?.toDouble() ?? 0.8,
-      ),
+      'relative' => switch (result['direction'] as String?) {
+        'increase' => SettingsChangePayload.relative(
+          key: key ?? '',
+          direction: ChangeDirection.increase,
+          magnitude: switch (result['magnitude'] as String?) {
+            'medium' => ChangeMagnitude.medium,
+            'large' => ChangeMagnitude.large,
+            _ => ChangeMagnitude.small,
+          },
+          confidence: (result['confidence'] as num?)?.toDouble() ?? 0.8,
+        ),
+        'decrease' => SettingsChangePayload.relative(
+          key: key ?? '',
+          direction: ChangeDirection.decrease,
+          magnitude: switch (result['magnitude'] as String?) {
+            'medium' => ChangeMagnitude.medium,
+            'large' => ChangeMagnitude.large,
+            _ => ChangeMagnitude.small,
+          },
+          confidence: (result['confidence'] as num?)?.toDouble() ?? 0.8,
+        ),
+        // Unknown or missing direction -- treat as unrecognized payload
+        _ => null,
+      },
       'ambiguous' => SettingsChangePayload.ambiguous(
         candidates: ((result['candidates'] as List?) ?? [])
             .map((e) => Map<String, dynamic>.from(e as Map))

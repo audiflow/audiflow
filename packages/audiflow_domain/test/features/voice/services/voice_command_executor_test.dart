@@ -3,10 +3,13 @@ import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:checks/checks.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:logger/logger.dart';
 
 import '../../../helpers/fake_app_settings_repository.dart';
 import '../../../helpers/fake_audio_playback_controller.dart';
 import '../../../helpers/fake_queue_service.dart';
+
+final _silentLogger = Logger(level: Level.off, printer: SimplePrinter());
 
 VoiceCommandExecutor _makeExecutor({
   FakeAppSettingsRepository? settingsRepo,
@@ -17,6 +20,7 @@ VoiceCommandExecutor _makeExecutor({
     audioController: audioController ?? FakeAudioPlaybackController(),
     queueService: queueService ?? FakeQueueService(),
     settingsRepository: settingsRepo ?? FakeAppSettingsRepository(),
+    logger: _silentLogger,
   );
 }
 

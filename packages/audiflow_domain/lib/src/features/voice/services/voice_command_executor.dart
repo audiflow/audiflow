@@ -1,8 +1,10 @@
 import 'package:audiflow_core/audiflow_core.dart';
 import 'package:flutter/material.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../common/providers/logger_provider.dart';
 import '../../player/services/audio_playback_controller.dart';
 import '../../player/services/audio_player_service.dart';
 import '../../queue/services/queue_service.dart';
@@ -35,6 +37,7 @@ VoiceCommandExecutor voiceCommandExecutor(Ref ref) {
     // and ref.watch here would cascade into an orchestrator rebuild that
     // resets the voice state back to idle.
     settingsRepository: ref.read(appSettingsRepositoryProvider),
+    logger: ref.watch(namedLoggerProvider('VoiceCommandExecutor')),
   );
 }
 
@@ -45,13 +48,16 @@ class VoiceCommandExecutor {
     required AudioPlaybackController audioController,
     required QueueService queueService,
     required AppSettingsRepository settingsRepository,
+    required Logger logger,
   }) : _audioController = audioController,
        _queueService = queueService,
-       _settingsRepository = settingsRepository;
+       _settingsRepository = settingsRepository,
+       _logger = logger;
 
   final AudioPlaybackController _audioController;
   final QueueService _queueService;
   final AppSettingsRepository _settingsRepository;
+  final Logger _logger;
 
   /// Resumes the current playback.
   Future<void> resume() async {
@@ -110,11 +116,16 @@ class VoiceCommandExecutor {
     try {
       await _applySettingValue(key, value);
       return SettingApplyResult(isSuccess: true, previousValue: previous);
-    } catch (e) {
+    } catch (e, stack) {
+      _logger.e(
+        'Failed to apply setting "$key" with value "$value"',
+        error: e,
+        stackTrace: stack,
+      );
       return SettingApplyResult(
         isSuccess: false,
         previousValue: previous,
-        errorMessage: 'Failed to apply setting "$key": $e',
+        errorMessage: 'Could not apply the requested value for "$key"',
       );
     }
   }
