@@ -59,7 +59,7 @@ void main() {
         expect(find.byType(SettingsScreen), findsNothing);
       });
 
-      testWidgets('displays bottom navigation bar with three destinations', (
+      testWidgets('displays bottom navigation bar with four destinations', (
         tester,
       ) async {
         tester.view.physicalSize = const Size(390, 844);
@@ -72,8 +72,6 @@ void main() {
         await tester.pumpWidget(buildTestApp());
         await tester.pumpAndSettle();
 
-        expect(find.byType(NavigationBar), findsOneWidget);
-        expect(find.byType(NavigationDestination), findsNWidgets(4));
         expect(find.text('Search'), findsOneWidget);
         expect(find.text('Library'), findsOneWidget);
         expect(find.text('Queue'), findsOneWidget);

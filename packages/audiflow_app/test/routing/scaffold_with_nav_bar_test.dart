@@ -77,7 +77,7 @@ void main() {
       );
     }
 
-    testWidgets('renders NavigationBar with four destinations', (tester) async {
+    testWidgets('renders custom nav bar with four destinations', (tester) async {
       tester.view.physicalSize = const Size(390, 844);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() {
@@ -88,8 +88,10 @@ void main() {
       await tester.pumpWidget(buildTestWidget());
       await tester.pumpAndSettle();
 
-      expect(find.byType(NavigationBar), findsOneWidget);
-      expect(find.byType(NavigationDestination), findsNWidgets(4));
+      expect(find.text('Search'), findsOneWidget);
+      expect(find.text('Library'), findsOneWidget);
+      expect(find.text('Queue'), findsOneWidget);
+      expect(find.text('Settings'), findsOneWidget);
     });
 
     testWidgets('displays correct destination labels', (tester) async {
@@ -123,11 +125,8 @@ void main() {
       await tester.pumpWidget(buildTestWidget());
       await tester.pumpAndSettle();
 
-      // Initial tab is 0
-      final navigationBar = tester.widget<NavigationBar>(
-        find.byType(NavigationBar),
-      );
-      expect(navigationBar.selectedIndex, equals(0));
+      // Initial tab is 0 - Tab A should be visible
+      expect(find.text('Tab A'), findsOneWidget);
     });
 
     testWidgets('tapping destination calls goBranch', (tester) async {
@@ -150,11 +149,6 @@ void main() {
 
       // Should now be on Tab B
       expect(find.text('Tab B'), findsOneWidget);
-
-      final navigationBar = tester.widget<NavigationBar>(
-        find.byType(NavigationBar),
-      );
-      expect(navigationBar.selectedIndex, equals(1));
     });
 
     testWidgets('renders navigation shell as body', (tester) async {
