@@ -139,20 +139,25 @@ class VoiceListeningOverlay extends ConsumerWidget {
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 32),
-        ...state.candidates.map(
-          (candidate) => Padding(
-            padding: const EdgeInsets.symmetric(vertical: 6),
-            child: FilledButton.tonal(
-              onPressed: () {
-                final controller = ref.read(
-                  voiceCommandControllerProvider.notifier,
-                );
-                controller.selectSettingsCandidate(candidate);
-              },
-              child: Text(
-                '${_resolveDisplayName(context, candidate.displayNameKey)}: ${candidate.newValue}',
-              ),
-            ),
+        Flexible(
+          child: ListView.separated(
+            shrinkWrap: true,
+            itemCount: state.candidates.length,
+            separatorBuilder: (_, _) => const SizedBox(height: 12),
+            itemBuilder: (context, index) {
+              final candidate = state.candidates[index];
+              return FilledButton.tonal(
+                onPressed: () {
+                  final controller = ref.read(
+                    voiceCommandControllerProvider.notifier,
+                  );
+                  controller.selectSettingsCandidate(candidate);
+                },
+                child: Text(
+                  '${_resolveDisplayName(context, candidate.displayNameKey)}: ${candidate.newValue}',
+                ),
+              );
+            },
           ),
         ),
         const SizedBox(height: 24),

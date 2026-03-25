@@ -878,4 +878,16 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get cancel => 'キャンセル';
+
+  @override
+  String get navSearch => '検索';
+
+  @override
+  String get navLibrary => 'ライブラリ';
+
+  @override
+  String get navQueue => 'キュー';
+
+  @override
+  String get navSettings => '設定';
 }

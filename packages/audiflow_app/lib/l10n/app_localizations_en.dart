@@ -895,4 +895,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cancel => 'Cancel';
+
+  @override
+  String get navSearch => 'Search';
+
+  @override
+  String get navLibrary => 'Library';
+
+  @override
+  String get navQueue => 'Queue';
+
+  @override
+  String get navSettings => 'Settings';
 }

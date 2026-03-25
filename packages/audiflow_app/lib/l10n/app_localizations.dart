@@ -1699,6 +1699,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cancel'**
   String get cancel;
+
+  /// Navigation bar label for search tab
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get navSearch;
+
+  /// Navigation bar label for library tab
+  ///
+  /// In en, this message translates to:
+  /// **'Library'**
+  String get navLibrary;
+
+  /// Navigation bar label for queue tab
+  ///
+  /// In en, this message translates to:
+  /// **'Queue'**
+  String get navQueue;
+
+  /// Navigation bar label for settings tab
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get navSettings;
 }
 
 class _AppLocalizationsDelegate

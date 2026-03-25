@@ -29,24 +29,29 @@ class ScaffoldWithNavBar extends ConsumerWidget {
     _NavDestination(
       icon: Symbols.search,
       selectedIcon: Symbols.search,
-      label: 'Search',
+      resolveLabel: _resolveNavSearch,
     ),
     _NavDestination(
       icon: Symbols.library_music,
       selectedIcon: Symbols.library_music,
-      label: 'Library',
+      resolveLabel: _resolveNavLibrary,
     ),
     _NavDestination(
       icon: Symbols.queue_music,
       selectedIcon: Symbols.queue_music,
-      label: 'Queue',
+      resolveLabel: _resolveNavQueue,
     ),
     _NavDestination(
       icon: Symbols.settings,
       selectedIcon: Symbols.settings,
-      label: 'Settings',
+      resolveLabel: _resolveNavSettings,
     ),
   ];
+
+  static String _resolveNavSearch(AppLocalizations l10n) => l10n.navSearch;
+  static String _resolveNavLibrary(AppLocalizations l10n) => l10n.navLibrary;
+  static String _resolveNavQueue(AppLocalizations l10n) => l10n.navQueue;
+  static String _resolveNavSettings(AppLocalizations l10n) => l10n.navSettings;
 
   void _onDestinationSelected(WidgetRef ref, int index) {
     navigationShell.goBranch(
@@ -229,6 +234,8 @@ class _NavItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
+    final label = destination.resolveLabel(l10n);
     final iconColor = isSelected
         ? colorScheme.onSecondaryContainer
         : colorScheme.onSurfaceVariant;
@@ -239,7 +246,7 @@ class _NavItem extends StatelessWidget {
     return Semantics(
       button: true,
       selected: isSelected,
-      label: destination.label,
+      label: label,
       child: InkWell(
         onTap: onTap,
         child: Column(
@@ -264,7 +271,7 @@ class _NavItem extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              destination.label,
+              label,
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
                 color: labelColor,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
@@ -511,7 +518,7 @@ class _TabletLandscapeShell extends StatelessWidget {
                 NavigationRailDestination(
                   icon: Icon(d.icon),
                   selectedIcon: Icon(d.selectedIcon, fill: 1),
-                  label: Text(d.label),
+                  label: Text(d.resolveLabel(AppLocalizations.of(context))),
                 ),
             ],
           ),
@@ -559,7 +566,7 @@ class _TopTabButton extends StatelessWidget {
               : colorScheme.onSurfaceVariant,
         ),
         label: Text(
-          destination.label,
+          destination.resolveLabel(AppLocalizations.of(context)),
           style: TextStyle(
             color: isSelected
                 ? colorScheme.primary
@@ -573,14 +580,17 @@ class _TopTabButton extends StatelessWidget {
 }
 
 /// Navigation destination data for reuse across all modes.
+///
+/// Uses a label resolver function instead of a static string so that
+/// labels are resolved from [AppLocalizations] at build time.
 class _NavDestination {
   const _NavDestination({
     required this.icon,
     required this.selectedIcon,
-    required this.label,
+    required this.resolveLabel,
   });
 
   final IconData icon;
   final IconData selectedIcon;
-  final String label;
+  final String Function(AppLocalizations l10n) resolveLabel;
 }

@@ -555,5 +555,14 @@
   "confirm": "Confirm",
   "@confirm": { "description": "Confirm action label" },
   "cancel": "Cancel",
-  "@cancel": { "description": "Cancel action label" }
+  "@cancel": { "description": "Cancel action label" },
+
+  "navSearch": "Search",
+  "@navSearch": { "description": "Navigation bar label for search tab" },
+  "navLibrary": "Library",
+  "@navLibrary": { "description": "Navigation bar label for library tab" },
+  "navQueue": "Queue",
+  "@navQueue": { "description": "Navigation bar label for queue tab" },
+  "navSettings": "Settings",
+  "@navSettings": { "description": "Navigation bar label for settings tab" }
 }

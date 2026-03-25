@@ -298,5 +298,10 @@
   "voiceSettingsChanged": "設定を変更しました",
   "undo": "元に戻す",
   "confirm": "確認",
-  "cancel": "キャンセル"
+  "cancel": "キャンセル",
+
+  "navSearch": "検索",
+  "navLibrary": "ライブラリ",
+  "navQueue": "キュー",
+  "navSettings": "設定"
 }
