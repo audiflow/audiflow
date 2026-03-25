@@ -239,11 +239,20 @@ class SettingsIntentResolver {
       if (metadata == null) {
         return const SettingsResolution.notFound();
       }
+      // Validate/normalise the candidate value (may be empty when the platform
+      // could not detect a concrete value for this setting's constraints).
+      if (only.value.isEmpty) {
+        return const SettingsResolution.notFound();
+      }
+      final validated = _validateAbsoluteValue(metadata, only.value);
+      if (validated == null) {
+        return const SettingsResolution.notFound();
+      }
       final oldValue = currentValues[only.key] ?? '';
       return _applyThreshold(
         key: only.key,
         oldValue: oldValue,
-        newValue: only.value,
+        newValue: validated,
         confidence: only.confidence,
       );
     }

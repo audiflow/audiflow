@@ -349,6 +349,64 @@ void main() {
             ..has((r) => r.key, 'key').equals(SettingsKeys.playbackSpeed)
             ..has((r) => r.confidence, 'confidence').equals(0.5);
         });
+
+        test('single candidate with empty value → notFound', () {
+          // This can happen when the platform resolver could not detect a
+          // concrete value for the setting's constraints.
+          final payload = const SettingsChangePayload.ambiguous(
+            candidates: [
+              SettingsCandidate(
+                key: SettingsKeys.playbackSpeed,
+                value: '',
+                confidence: 0.9,
+              ),
+            ],
+          );
+          final result = resolver.resolve(
+            payload,
+            currentValues: currentValues,
+          );
+          check(result).isA<SettingsResolutionNotFound>();
+        });
+
+        test('single candidate with out-of-range value → clamped and applied',
+            () {
+          // A value outside the allowed range should be clamped, not rejected.
+          final payload = const SettingsChangePayload.ambiguous(
+            candidates: [
+              SettingsCandidate(
+                key: SettingsKeys.playbackSpeed,
+                value: '5.0', // max is 3.0
+                confidence: 0.9,
+              ),
+            ],
+          );
+          final result = resolver.resolve(
+            payload,
+            currentValues: currentValues,
+          );
+          // Clamped to max (3.0), high confidence → autoApply.
+          check(result).isA<SettingsResolutionAutoApply>()
+            ..has((r) => r.key, 'key').equals(SettingsKeys.playbackSpeed)
+            ..has((r) => r.newValue, 'newValue').equals('3.0');
+        });
+
+        test('single candidate with invalid boolean value → notFound', () {
+          final payload = const SettingsChangePayload.ambiguous(
+            candidates: [
+              SettingsCandidate(
+                key: SettingsKeys.continuousPlayback,
+                value: 'maybe',
+                confidence: 0.9,
+              ),
+            ],
+          );
+          final result = resolver.resolve(
+            payload,
+            currentValues: currentValues,
+          );
+          check(result).isA<SettingsResolutionNotFound>();
+        });
       },
     );
 
