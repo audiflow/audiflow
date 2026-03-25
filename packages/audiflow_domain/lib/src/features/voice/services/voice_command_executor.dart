@@ -164,8 +164,8 @@ class VoiceCommandExecutor {
         await _settingsRepository.setTextScale(double.parse(value));
       case SettingsKeys.playbackSpeed:
         final speed = double.parse(value);
-        await _settingsRepository.setPlaybackSpeed(speed);
-        // Also update the live player so the change is audible immediately.
+        // setSpeed() persists to the repository AND updates the live player,
+        // so a separate setPlaybackSpeed() call is unnecessary.
         await _audioController.setSpeed(speed);
       case SettingsKeys.skipForwardSeconds:
         await _settingsRepository.setSkipForwardSeconds(_safeParseInt(value));

@@ -36,7 +36,7 @@ void main() {
 
   group('VoiceCommandExecutor.applySetting', () {
     group('playback speed', () {
-      test('updates repo and audio controller', () async {
+      test('delegates to audio controller which persists internally', () async {
         fakeRepo.playbackSpeed = 1.0;
 
         final result = await executor.applySetting(
@@ -45,7 +45,9 @@ void main() {
         );
 
         check(result.isSuccess).isTrue();
-        check(fakeRepo.playbackSpeed).equals(1.5);
+        // The executor delegates to the controller; the real controller
+        // persists to the repository internally, so we only assert the
+        // controller was called with the correct speed.
         check(fakeController.lastSetSpeed).equals(1.5);
       });
 
