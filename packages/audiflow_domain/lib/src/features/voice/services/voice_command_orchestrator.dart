@@ -577,7 +577,9 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
   /// When the platform NLU is unavailable and the on-device AI classified the
   /// command as `changeSettings` without producing a structured payload, this
   /// method attempts to match the raw transcription against known setting
-  /// synonyms and build a resolution directly.
+  /// synonyms. It can only identify *which* setting the user meant — not the
+  /// target value — so it presents disambiguation candidates with empty values,
+  /// which the UI can use to navigate the user to the right settings screen.
   SettingsResolution? _resolveFromTranscription(
     String transcription, {
     required Map<String, String> currentValues,
@@ -585,42 +587,24 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
     final matches = _settingsRegistry.findBySynonym(transcription);
     if (matches.isEmpty) return null;
 
-    // Build candidates from synonym matches, using the AI confidence of 0.6
-    // (lower than platform NLU since keyword matching is less precise).
-    final candidates = <SettingsCandidate>[];
+    // Build disambiguation candidates with empty values to signal that the
+    // setting was identified but a concrete target value was not extracted.
+    final candidates = <SettingsResolutionCandidate>[];
     for (final match in matches) {
-      final currentValue = currentValues[match.metadata.key] ?? '';
-      // Without a structured value from the AI, pass the current value so the
-      // resolver can at least identify the setting. Concrete value extraction
-      // from free-form text is left to the platform NLU.
       candidates.add(
-        SettingsCandidate(
+        SettingsResolutionCandidate(
           key: match.metadata.key,
-          value: currentValue,
+          displayNameKey: match.metadata.displayNameKey,
+          oldValue: currentValues[match.metadata.key] ?? '',
+          newValue: '',
           confidence: 0.6,
         ),
       );
     }
 
-    if (candidates.length == 1) {
-      // Single match but no extracted value — present as confirmation rather
-      // than auto-apply so the user can provide the desired value.
-      final only = candidates.first;
-      final metadata = _settingsRegistry.findByKey(only.key);
-      if (metadata == null) return null;
-      return SettingsResolution.confirm(
-        key: only.key,
-        oldValue: currentValues[only.key] ?? '',
-        newValue: only.value,
-        confidence: 0.6,
-      );
-    }
-
-    // Multiple matches — present as disambiguation.
-    return _settingsResolver.resolve(
-      SettingsChangePayload.ambiguous(candidates: candidates),
-      currentValues: currentValues,
-    );
+    // Present as disambiguation so the UI can show the matched setting(s)
+    // and guide the user to specify a value.
+    return SettingsResolution.disambiguate(candidates: candidates);
   }
 
   /// Constructs a [SettingsChangePayload] from a platform channel result map.
