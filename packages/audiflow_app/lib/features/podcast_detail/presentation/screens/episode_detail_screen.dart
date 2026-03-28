@@ -99,6 +99,10 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
 
     final expandedHeight = imageUrl != null ? 250.0 : 0.0;
 
+    // When there is no artwork the app bar never expands, so buttons
+    // should render in collapsed (theme) style from the start.
+    final effectiveCollapseRatio = imageUrl != null ? _collapseRatio : 1.0;
+
     return Scaffold(
       body: NotificationListener<ScrollNotification>(
         onNotification: (notification) {
@@ -128,7 +132,7 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
                   padding: const EdgeInsets.only(left: Spacing.md),
                   child: OverlayActionButton(
                     icon: Icons.arrow_back,
-                    collapseRatio: _collapseRatio,
+                    collapseRatio: effectiveCollapseRatio,
                     artworkBrightness: _artworkBrightness,
                     onTap: () => Navigator.of(context).pop(),
                     semanticLabel: MaterialLocalizations.of(
@@ -171,7 +175,7 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
                         widget.episode.link != null;
                     return OverlayActionButton(
                       icon: Icons.share,
-                      collapseRatio: _collapseRatio,
+                      collapseRatio: effectiveCollapseRatio,
                       artworkBrightness: _artworkBrightness,
                       semanticLabel: l10n.shareEpisode,
                       onTap: canShare

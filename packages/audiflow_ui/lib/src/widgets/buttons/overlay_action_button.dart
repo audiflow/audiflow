@@ -78,20 +78,25 @@ class OverlayActionButton extends StatelessWidget {
       ),
     );
 
+    final hasLabel = semanticLabel != null && semanticLabel!.isNotEmpty;
+
+    Widget tappable = GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: isEnabled
+          ? button
+          : Opacity(opacity: _disabledOpacity, child: button),
+    );
+
+    if (hasLabel) {
+      tappable = Tooltip(message: semanticLabel!, child: tappable);
+    }
+
     return Semantics(
       button: true,
       enabled: isEnabled,
       label: semanticLabel,
-      child: Tooltip(
-        message: semanticLabel ?? '',
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: onTap,
-          child: isEnabled
-              ? button
-              : Opacity(opacity: _disabledOpacity, child: button),
-        ),
-      ),
+      child: tappable,
     );
   }
 }
