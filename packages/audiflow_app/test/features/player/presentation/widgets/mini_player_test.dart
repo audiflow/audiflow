@@ -1,6 +1,5 @@
 import 'package:audiflow_app/features/player/presentation/widgets/mini_player.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
-import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:checks/checks.dart';
@@ -15,6 +14,9 @@ const _nowPlaying = NowPlayingInfo(
   podcastTitle: 'Test Podcast',
 );
 
+/// Minimal fake that only implements methods used by mini player tests.
+/// All other methods delegate to [noSuchMethod] which throws
+/// [UnimplementedError].
 class _FakeAppSettingsRepository implements AppSettingsRepository {
   _FakeAppSettingsRepository({this.skipForwardSeconds = 30});
 
@@ -24,112 +26,7 @@ class _FakeAppSettingsRepository implements AppSettingsRepository {
   int getSkipForwardSeconds() => skipForwardSeconds;
 
   @override
-  ThemeMode getThemeMode() => ThemeMode.system;
-
-  @override
-  String? getLocale() => null;
-
-  @override
-  double getTextScale() => 1.0;
-
-  @override
-  double getPlaybackSpeed() => 1.0;
-
-  @override
-  Future<void> setSkipForwardSeconds(int seconds) async {}
-
-  @override
-  int getSkipBackwardSeconds() => 10;
-
-  @override
-  Future<void> setSkipBackwardSeconds(int seconds) async {}
-
-  @override
-  double getAutoCompleteThreshold() => 0.95;
-
-  @override
-  Future<void> setAutoCompleteThreshold(double threshold) async {}
-
-  @override
-  bool getContinuousPlayback() => false;
-
-  @override
-  Future<void> setContinuousPlayback(bool enabled) async {}
-
-  @override
-  AutoPlayOrder getAutoPlayOrder() => AutoPlayOrder.oldestFirst;
-
-  @override
-  Future<void> setAutoPlayOrder(AutoPlayOrder order) async {}
-
-  @override
-  bool getWifiOnlyDownload() => false;
-
-  @override
-  Future<void> setWifiOnlyDownload(bool enabled) async {}
-
-  @override
-  bool getAutoDeletePlayed() => false;
-
-  @override
-  Future<void> setAutoDeletePlayed(bool enabled) async {}
-
-  @override
-  int getMaxConcurrentDownloads() => 3;
-
-  @override
-  Future<void> setMaxConcurrentDownloads(int count) async {}
-
-  @override
-  bool getAutoSync() => true;
-
-  @override
-  Future<void> setAutoSync(bool enabled) async {}
-
-  @override
-  int getSyncIntervalMinutes() => 60;
-
-  @override
-  Future<void> setSyncIntervalMinutes(int minutes) async {}
-
-  @override
-  bool getWifiOnlySync() => false;
-
-  @override
-  Future<void> setWifiOnlySync(bool enabled) async {}
-
-  @override
-  bool getNotifyNewEpisodes() => false;
-
-  @override
-  Future<void> setNotifyNewEpisodes(bool enabled) async {}
-
-  @override
-  String? getSearchCountry() => null;
-
-  @override
-  Future<void> setSearchCountry(String? country) async {}
-
-  @override
-  int getLastTabIndex() => 0;
-
-  @override
-  Future<void> setLastTabIndex(int index) async {}
-
-  @override
-  Future<void> clearAll() async {}
-
-  @override
-  Future<void> setThemeMode(ThemeMode mode) async {}
-
-  @override
-  Future<void> setLocale(String? locale) async {}
-
-  @override
-  Future<void> setTextScale(double scale) async {}
-
-  @override
-  Future<void> setPlaybackSpeed(double speed) async {}
+  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
 }
 
 void main() {
@@ -204,7 +101,10 @@ void main() {
     });
 
     testWidgets('preserves play/pause icon during skip', (tester) async {
-      final controller = _StubAudioPlayerController(
+      // Use a controller that transitions to loading during skipForward(),
+      // which would normally flip the icon from pause to a loading spinner.
+      // The _isSeeking freeze logic should prevent the icon from changing.
+      final controller = _StateTransitioningAudioPlayerController(
         const PlaybackState.playing(episodeUrl: 'test'),
       );
 
@@ -230,14 +130,21 @@ void main() {
         find.byIcon(Symbols.pause),
       ).has((f) => f.evaluate().length, 'count').equals(1);
 
-      // Tap skip forward - state freezes during seek
+      // Tap skip forward - controller transitions to loading, but
+      // _isSeeking freeze should keep showing the pause icon
       await tester.tap(find.byType(SkipDurationIcon));
       await tester.pump();
 
-      // Pause icon should still be visible (not flashing to play)
+      // Pause icon should still be visible despite underlying state
+      // being loading (the _isSeeking flag freezes the displayed icon)
       check(
         find.byIcon(Symbols.pause),
       ).has((f) => f.evaluate().length, 'count').equals(1);
+
+      // Verify no loading spinner is shown (proving _isSeeking works)
+      check(
+        find.byType(CircularProgressIndicator),
+      ).has((f) => f.evaluate().length, 'count').equals(0);
 
       // Let the 150ms stabilization delay complete
       await tester.pump(const Duration(milliseconds: 200));
@@ -287,4 +194,20 @@ class _StubAudioPlayerController extends AudioPlayerController {
 
   @override
   Future<void> setSpeed(double speed) async {}
+}
+
+/// Controller that transitions state to [PlaybackLoading] during
+/// [skipForward], simulating the real player behavior where state
+/// temporarily changes during a seek operation.
+class _StateTransitioningAudioPlayerController
+    extends _StubAudioPlayerController {
+  _StateTransitioningAudioPlayerController(super._initial);
+
+  @override
+  Future<void> skipForward() async {
+    skipForwardCalled = true;
+    // Simulate a transient state change that would flip the icon
+    // if the _isSeeking freeze logic were absent
+    state = const PlaybackState.loading(episodeUrl: 'test');
+  }
 }
