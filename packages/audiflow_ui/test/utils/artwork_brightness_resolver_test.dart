@@ -2,6 +2,7 @@ import 'dart:ui' as ui;
 
 import 'package:audiflow_ui/src/utils/artwork_brightness_resolver.dart';
 import 'package:checks/checks.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -14,6 +15,28 @@ Future<ImageProvider> _solidImageProvider(Color color) async {
   final image = await picture.toImage(1, 1);
   final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
   return MemoryImage(byteData!.buffer.asUint8List());
+}
+
+/// An [ImageProvider] that immediately completes with an error.
+///
+/// Used for deterministic fallback testing without network access.
+class _FailingImageProvider extends ImageProvider<_FailingImageProvider> {
+  const _FailingImageProvider();
+
+  @override
+  Future<_FailingImageProvider> obtainKey(ImageConfiguration configuration) {
+    return SynchronousFuture<_FailingImageProvider>(this);
+  }
+
+  @override
+  ImageStreamCompleter loadImage(
+    _FailingImageProvider key,
+    ImageDecoderCallback decode,
+  ) {
+    return OneFrameImageStreamCompleter(
+      Future<ImageInfo>.error(Exception('intentional test failure')),
+    );
+  }
 }
 
 void main() {
@@ -38,13 +61,12 @@ void main() {
 
     testWidgets('returns Brightness.dark as fallback on error', (tester) async {
       // Suppress the image-loading error that Flutter's test binding reports
-      // when a NetworkImage fails — our code handles this gracefully.
+      // when an ImageProvider fails -- our code handles this gracefully.
       final originalOnError = FlutterError.onError;
       FlutterError.onError = (_) {};
       addTearDown(() => FlutterError.onError = originalOnError);
 
-      // An invalid provider that will fail to resolve
-      const provider = NetworkImage('https://invalid.test/no-image.png');
+      const provider = _FailingImageProvider();
       final result = await tester.runAsync(
         () => ArtworkBrightnessResolver.resolve(provider),
       );

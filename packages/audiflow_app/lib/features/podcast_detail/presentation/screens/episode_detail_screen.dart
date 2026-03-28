@@ -103,7 +103,11 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
       body: NotificationListener<ScrollNotification>(
         onNotification: (notification) {
           if (0.0 < expandedHeight) {
-            final collapsed = notification.metrics.pixels / expandedHeight;
+            final topPadding = MediaQuery.of(context).padding.top;
+            final collapseRange = expandedHeight - kToolbarHeight - topPadding;
+            final collapsed = 0.0 < collapseRange
+                ? notification.metrics.pixels / collapseRange
+                : 0.0;
             final clamped = collapsed.clamp(0.0, 1.0);
             if ((clamped - _collapseRatio).abs() > 0.01) {
               setState(() => _collapseRatio = clamped);
@@ -125,6 +129,7 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
                   child: OverlayActionButton(
                     icon: Icons.arrow_back,
                     collapseRatio: _collapseRatio,
+                    artworkBrightness: _artworkBrightness,
                     onTap: () => Navigator.of(context).pop(),
                     semanticLabel: MaterialLocalizations.of(
                       context,
@@ -167,6 +172,7 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
                     return OverlayActionButton(
                       icon: Icons.share,
                       collapseRatio: _collapseRatio,
+                      artworkBrightness: _artworkBrightness,
                       semanticLabel: l10n.shareEpisode,
                       onTap: canShare
                           ? () => shareEpisode(

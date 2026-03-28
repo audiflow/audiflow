@@ -20,20 +20,20 @@ The episode detail screen displays podcast artwork behind the `SliverAppBar`. Th
 
 ## Color extraction
 
-- Package: `palette_generator`
-- Extract dominant color from artwork URL
-- Compute luminance via `Color.computeLuminance()`
+- Approach: top-edge pixel sampling via `ResizeImage` (24x24) + `toByteData`
+- Samples the top 25% of pixels to determine brightness where buttons overlay
+- Compute average luminance via ITU-R BT.709 relative luminance
 - Threshold: `0.5` (below = dark artwork, above = light artwork)
-- Extraction runs once on screen load, cached in widget state
+- Extraction runs once on screen load (deferred via `addPostFrameCallback`), cached in widget state
 - Fallback (no artwork or extraction failure): treat as dark artwork
 
 ### Placement
 
-`ArtworkBrightnessResolver` utility in `audiflow_ui`. Returns a brightness enum (`Brightness.dark` or `Brightness.light`) from an image provider. The episode detail screen consumes this to drive both status bar and button styling.
+`ArtworkBrightnessResolver` utility in `audiflow_ui`. Returns a brightness enum (`Brightness.dark` or `Brightness.light`) from an `ImageProvider`. The episode detail screen consumes this to drive both status bar and button styling.
 
 ## Status bar icons
 
-Wrap `Scaffold` in `AnnotatedRegion<SystemUiOverlayStyle>`:
+Set via `SliverAppBar.systemOverlayStyle`:
 
 | Artwork brightness | `SystemUiOverlayStyle` | Status bar icons |
 |--------------------|------------------------|------------------|
@@ -52,15 +52,15 @@ Replace default `SliverAppBar` leading/actions with custom `OverlayActionButton`
 ### `OverlayActionButton` widget
 
 - Location: `audiflow_ui/lib/src/widgets/buttons/overlay_action_button.dart`
-- Props: `icon` (IconData), `onTap` (VoidCallback), `brightness` (Brightness)
-- Size: 36x36, border-radius 10 (squircle)
+- Props: `icon` (IconData), `onTap` (VoidCallback?), `collapseRatio` (double), `artworkBrightness` (Brightness), `semanticLabel` (String?)
+- Visual size: 36x36, hit target: 48x48, border-radius 10 (squircle)
 - Exported from `audiflow_ui`
 
 ## Affected files
 
 | File | Change |
 |------|--------|
-| `audiflow_ui/pubspec.yaml` | Add `palette_generator` dependency |
+| `audiflow_ui/pubspec.yaml` | No new dependencies (uses built-in `ResizeImage` + pixel sampling) |
 | `audiflow_ui/lib/src/widgets/buttons/overlay_action_button.dart` | New: squircle button widget |
 | `audiflow_ui/lib/src/utils/artwork_brightness_resolver.dart` | New: color extraction utility |
 | `audiflow_ui/lib/audiflow_ui.dart` | Export new files |
