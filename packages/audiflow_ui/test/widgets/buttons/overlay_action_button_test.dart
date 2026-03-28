@@ -5,45 +5,19 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('OverlayActionButton', () {
-    testWidgets('renders white icon on dark brightness', (tester) async {
+    testWidgets('renders white icon with dark scrim', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
-          home: Scaffold(
-            body: OverlayActionButton(
-              icon: Icons.arrow_back,
-              artworkBrightness: Brightness.dark,
-            ),
-          ),
+          home: Scaffold(body: OverlayActionButton(icon: Icons.arrow_back)),
         ),
       );
 
       final icon = tester.widget<Icon>(find.byType(Icon));
       check(icon.color).equals(Colors.white);
 
-      // Verify light scrim (white-based background)
       final container = tester.widget<DecoratedBox>(find.byType(DecoratedBox));
       final decoration = container.decoration as BoxDecoration;
-      check(decoration.color).equals(Colors.white.withValues(alpha: 0.2));
-    });
-
-    testWidgets('renders dark icon on light brightness', (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: OverlayActionButton(
-              icon: Icons.arrow_back,
-              artworkBrightness: Brightness.light,
-            ),
-          ),
-        ),
-      );
-
-      final icon = tester.widget<Icon>(find.byType(Icon));
-      check(icon.color).equals(const Color(0xFF1A1A1A));
-
-      final container = tester.widget<DecoratedBox>(find.byType(DecoratedBox));
-      final decoration = container.decoration as BoxDecoration;
-      check(decoration.color).equals(Colors.black.withValues(alpha: 0.25));
+      check(decoration.color).equals(Colors.black.withValues(alpha: 0.35));
     });
 
     testWidgets('calls onTap when pressed', (tester) async {
@@ -54,7 +28,6 @@ void main() {
           home: Scaffold(
             body: OverlayActionButton(
               icon: Icons.arrow_back,
-              artworkBrightness: Brightness.dark,
               onTap: () => tapped = true,
             ),
           ),
@@ -68,12 +41,7 @@ void main() {
     testWidgets('has correct size and border radius', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
-          home: Scaffold(
-            body: OverlayActionButton(
-              icon: Icons.arrow_back,
-              artworkBrightness: Brightness.dark,
-            ),
-          ),
+          home: Scaffold(body: OverlayActionButton(icon: Icons.arrow_back)),
         ),
       );
 

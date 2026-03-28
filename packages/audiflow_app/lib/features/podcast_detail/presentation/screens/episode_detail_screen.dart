@@ -44,11 +44,15 @@ class EpisodeDetailScreen extends ConsumerStatefulWidget {
 
 class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
   Brightness _artworkBrightness = Brightness.dark;
+  double _collapseRatio = 0.0;
 
   @override
   void initState() {
     super.initState();
-    _resolveArtworkBrightness().ignore();
+    // Defer until after page transition completes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _resolveArtworkBrightness().ignore();
+    });
   }
 
   Future<void> _resolveArtworkBrightness() async {
@@ -56,7 +60,7 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
     if (imageUrl == null) return;
 
     final brightness = await ArtworkBrightnessResolver.resolve(
-      NetworkImage(imageUrl),
+      ExtendedNetworkImageProvider(imageUrl, cache: true),
     );
     if (mounted) {
       setState(() => _artworkBrightness = brightness);
@@ -90,149 +94,170 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
         ? SystemUiOverlayStyle.light
         : SystemUiOverlayStyle.dark;
 
+    final expandedHeight = imageUrl != null ? 250.0 : 0.0;
+
     return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            expandedHeight: imageUrl != null ? 250 : 0,
-            pinned: true,
-            automaticallyImplyLeading: false,
-            systemOverlayStyle: overlayStyle,
-            leading: OverlayActionButton(
-              icon: Icons.arrow_back,
-              artworkBrightness: _artworkBrightness,
-              onTap: () => Navigator.of(context).pop(),
-              semanticLabel: MaterialLocalizations.of(
-                context,
-              ).backButtonTooltip,
-            ),
-            leadingWidth: 52,
-            flexibleSpace: imageUrl != null
-                ? FlexibleSpaceBar(
-                    background: ExtendedImage.network(
-                      imageUrl,
-                      fit: BoxFit.cover,
-                      cache: true,
-                    ),
-                  )
-                : null,
-            actions: [
-              Builder(
-                builder: (context) {
-                  final l10n = AppLocalizations.of(context);
-                  final canShare =
-                      (widget.itunesId != null &&
-                          widget.episode.guid != null) ||
-                      widget.episode.link != null;
-                  return OverlayActionButton(
-                    icon: Icons.share,
-                    artworkBrightness: _artworkBrightness,
-                    semanticLabel: l10n.shareEpisode,
-                    onTap: canShare
-                        ? () => shareEpisode(
-                            ref: ref,
-                            itunesId: widget.itunesId,
-                            episodeGuid: widget.episode.guid,
-                            fallbackLink: widget.episode.link,
-                          )
-                        : null,
-                  );
-                },
-              ),
-              const SizedBox(width: Spacing.sm),
-            ],
-          ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(Spacing.md),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Title
-                  Text(
-                    widget.episode.title,
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+      body: NotificationListener<ScrollNotification>(
+        onNotification: (notification) {
+          if (0.0 < expandedHeight) {
+            final collapsed = notification.metrics.pixels / expandedHeight;
+            final clamped = collapsed.clamp(0.0, 1.0);
+            if ((clamped - _collapseRatio).abs() > 0.01) {
+              setState(() => _collapseRatio = clamped);
+            }
+          }
+          return false;
+        },
+        child: CustomScrollView(
+          slivers: [
+            SliverAppBar(
+              expandedHeight: expandedHeight,
+              pinned: true,
+              automaticallyImplyLeading: false,
+              systemOverlayStyle: overlayStyle,
+              leading: Align(
+                alignment: Alignment.centerLeft,
+                child: Padding(
+                  padding: const EdgeInsets.only(left: Spacing.md),
+                  child: OverlayActionButton(
+                    icon: Icons.arrow_back,
+                    collapseRatio: _collapseRatio,
+                    onTap: () => Navigator.of(context).pop(),
+                    semanticLabel: MaterialLocalizations.of(
+                      context,
+                    ).backButtonTooltip,
                   ),
-                  const SizedBox(height: Spacing.xs),
-
-                  // Podcast title (tappable -> navigates to podcast page)
-                  InkWell(
-                    onTap: () => _navigateToPodcast(context),
-                    borderRadius: BorderRadius.circular(4),
-                    child: Text(
-                      widget.podcastTitle,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        color: colorScheme.primary,
+                ),
+              ),
+              leadingWidth: 36 + Spacing.md + Spacing.sm,
+              flexibleSpace: imageUrl != null
+                  ? FlexibleSpaceBar(
+                      background: ExtendedImage.network(
+                        imageUrl,
+                        fit: BoxFit.cover,
+                        cache: true,
+                      ),
+                    )
+                  : null,
+              actions: [
+                Builder(
+                  builder: (context) {
+                    final l10n = AppLocalizations.of(context);
+                    final canShare =
+                        (widget.itunesId != null &&
+                            widget.episode.guid != null) ||
+                        widget.episode.link != null;
+                    return OverlayActionButton(
+                      icon: Icons.share,
+                      collapseRatio: _collapseRatio,
+                      semanticLabel: l10n.shareEpisode,
+                      onTap: canShare
+                          ? () => shareEpisode(
+                              ref: ref,
+                              itunesId: widget.itunesId,
+                              episodeGuid: widget.episode.guid,
+                              fallbackLink: widget.episode.link,
+                            )
+                          : null,
+                    );
+                  },
+                ),
+                const SizedBox(width: Spacing.md),
+              ],
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(Spacing.md),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Title
+                    Text(
+                      widget.episode.title,
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                  ),
-                  const SizedBox(height: Spacing.sm),
+                    const SizedBox(height: Spacing.xs),
 
-                  // Metadata row
-                  _MetadataRow(episode: widget.episode),
-                  const SizedBox(height: Spacing.md),
-
-                  // Progress indicator
-                  if (widget.progress != null &&
-                      (widget.progress!.isCompleted ||
-                          widget.progress!.isInProgress))
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: Spacing.md),
-                      child: EpisodeProgressIndicator(
-                        isCompleted: widget.progress!.isCompleted,
-                        isInProgress: widget.progress!.isInProgress,
-                        remainingTimeFormatted:
-                            widget.progress!.remainingTimeFormatted,
+                    // Podcast title (tappable -> navigates to podcast page)
+                    InkWell(
+                      onTap: () => _navigateToPodcast(context),
+                      borderRadius: BorderRadius.circular(4),
+                      child: Text(
+                        widget.podcastTitle,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: colorScheme.primary,
+                        ),
                       ),
                     ),
+                    const SizedBox(height: Spacing.sm),
 
-                  // Action bar
-                  _ActionBar(
-                    enclosureUrl: enclosureUrl,
-                    isPlaying: isPlaying,
-                    isLoading: isLoading,
-                    isCompleted: isCompleted,
-                    episodeId: episodeId,
-                    downloadTask: downloadTask,
-                    onPlayPause: enclosureUrl != null
-                        ? () => _onPlayPausePressed(
-                            context,
-                            enclosureUrl,
-                            isPlaying,
-                          )
-                        : null,
-                    onDownloadTap: episodeId != null
-                        ? () => _onDownloadTap(context, episodeId, downloadTask)
-                        : null,
-                    onQueuePlayLater: episodeId != null
-                        ? () {
-                            ref
-                                .read(queueControllerProvider.notifier)
-                                .playLater(episodeId);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(l10n.queueAddedToQueue),
-                                duration: const Duration(seconds: 1),
-                              ),
-                            );
-                          }
-                        : null,
-                    onTogglePlayed: enclosureUrl != null
-                        ? () => _togglePlayedStatus(enclosureUrl, isCompleted)
-                        : null,
-                  ),
+                    // Metadata row
+                    _MetadataRow(episode: widget.episode),
+                    const SizedBox(height: Spacing.md),
 
-                  const Divider(height: Spacing.xl),
+                    // Progress indicator
+                    if (widget.progress != null &&
+                        (widget.progress!.isCompleted ||
+                            widget.progress!.isInProgress))
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: Spacing.md),
+                        child: EpisodeProgressIndicator(
+                          isCompleted: widget.progress!.isCompleted,
+                          isInProgress: widget.progress!.isInProgress,
+                          remainingTimeFormatted:
+                              widget.progress!.remainingTimeFormatted,
+                        ),
+                      ),
 
-                  // Description / show notes
-                  _DescriptionSection(episode: widget.episode),
-                ],
+                    // Action bar
+                    _ActionBar(
+                      enclosureUrl: enclosureUrl,
+                      isPlaying: isPlaying,
+                      isLoading: isLoading,
+                      isCompleted: isCompleted,
+                      episodeId: episodeId,
+                      downloadTask: downloadTask,
+                      onPlayPause: enclosureUrl != null
+                          ? () => _onPlayPausePressed(
+                              context,
+                              enclosureUrl,
+                              isPlaying,
+                            )
+                          : null,
+                      onDownloadTap: episodeId != null
+                          ? () =>
+                                _onDownloadTap(context, episodeId, downloadTask)
+                          : null,
+                      onQueuePlayLater: episodeId != null
+                          ? () {
+                              ref
+                                  .read(queueControllerProvider.notifier)
+                                  .playLater(episodeId);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(l10n.queueAddedToQueue),
+                                  duration: const Duration(seconds: 1),
+                                ),
+                              );
+                            }
+                          : null,
+                      onTogglePlayed: enclosureUrl != null
+                          ? () => _togglePlayedStatus(enclosureUrl, isCompleted)
+                          : null,
+                    ),
+
+                    const Divider(height: Spacing.xl),
+
+                    // Description / show notes
+                    _DescriptionSection(episode: widget.episode),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

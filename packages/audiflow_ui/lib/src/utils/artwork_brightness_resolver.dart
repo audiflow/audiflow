@@ -1,39 +1,83 @@
+import 'dart:async';
+import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
-import 'package:palette_generator/palette_generator.dart';
 
 /// Resolves the perceived brightness of an artwork image.
 ///
-/// Uses [PaletteGenerator] to extract the dominant color, then
-/// checks luminance against a threshold to classify as dark or light.
+/// Decodes the image at a small size and samples pixels from the top
+/// edge to determine whether the overlay area is dark or light.
 class ArtworkBrightnessResolver {
   ArtworkBrightnessResolver._();
 
   static const double _luminanceThreshold = 0.5;
-
-  // Small target size for fast analysis — full resolution is unnecessary
-  static const ui.Size _analysisSize = ui.Size(50, 50);
+  static const int _decodeSize = 24;
 
   /// Resolves brightness from an [ImageProvider].
   ///
-  /// Returns [Brightness.dark] if the dominant color's luminance
-  /// is below the threshold, or as a fallback when extraction fails.
+  /// Returns [Brightness.dark] if the top edge of the image is dark,
+  /// or as a fallback when extraction fails.
   static Future<Brightness> resolve(ImageProvider provider) async {
     try {
-      final palette = await PaletteGenerator.fromImageProvider(
+      final smallProvider = ResizeImage(
         provider,
-        size: _analysisSize,
-        maximumColorCount: 4, // Keep palette quantization cheap
+        width: _decodeSize,
+        height: _decodeSize,
       );
-      final dominantColor = palette.dominantColor?.color;
-      if (dominantColor == null) return Brightness.dark;
 
-      return dominantColor.computeLuminance() < _luminanceThreshold
+      final image = await _resolveImage(smallProvider);
+      final byteData = await image.toByteData(
+        format: ui.ImageByteFormat.rawStraightRgba,
+      );
+      if (byteData == null) return Brightness.dark;
+
+      final luminance = _topEdgeLuminance(byteData, image.width, image.height);
+      return luminance < _luminanceThreshold
           ? Brightness.dark
           : Brightness.light;
     } on Exception {
       return Brightness.dark;
     }
+  }
+
+  /// Average luminance of the top 25% rows of the image.
+  static double _topEdgeLuminance(ByteData bytes, int width, int height) {
+    final rowCount = (height * 0.25).ceil().clamp(1, height);
+    final pixelCount = width * rowCount;
+    var totalLuminance = 0.0;
+
+    for (var y = 0; y < rowCount; y++) {
+      for (var x = 0; x < width; x++) {
+        final offset = (y * width + x) * 4;
+        final r = bytes.getUint8(offset) / 255.0;
+        final g = bytes.getUint8(offset + 1) / 255.0;
+        final b = bytes.getUint8(offset + 2) / 255.0;
+        // Relative luminance (ITU-R BT.709)
+        totalLuminance += 0.2126 * r + 0.7152 * g + 0.0722 * b;
+      }
+    }
+
+    return totalLuminance / pixelCount;
+  }
+
+  static Future<ui.Image> _resolveImage(ImageProvider provider) {
+    final completer = Completer<ui.Image>();
+    final stream = provider.resolve(ImageConfiguration.empty);
+    late ImageStreamListener listener;
+    listener = ImageStreamListener(
+      (info, _) {
+        completer.complete(info.image);
+        stream.removeListener(listener);
+      },
+      onError: (error, _) {
+        if (!completer.isCompleted) {
+          completer.completeError(error);
+        }
+        stream.removeListener(listener);
+      },
+    );
+    stream.addListener(listener);
+    return completer.future;
   }
 }
