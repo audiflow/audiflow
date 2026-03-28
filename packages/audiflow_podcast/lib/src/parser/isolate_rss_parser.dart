@@ -141,6 +141,7 @@ class IsolateRssParser {
               );
             })
             .catchError((Object e) {
+              if (cancelled || controller.isClosed) return;
               controller.addError(e);
               receivePort.close();
               controller.close();
@@ -168,7 +169,17 @@ class IsolateRssParser {
       // --- Metadata: parse only the channel header (before first <item>) ---
       final firstItemIdx = xml.indexOf('<item');
       if (firstItemIdx == -1) {
-        // No items at all — emit metadata from whatever we have
+        // Sanity check: reject non-RSS documents (e.g. HTML error pages)
+        if (!xml.contains('<rss') && !xml.contains('<channel')) {
+          params.sendPort.send(
+            const _IsolateError('Input does not appear to be an RSS feed'),
+          );
+          params.sendPort.send(
+            const ParseComplete(totalParsed: 0, stoppedEarly: false),
+          );
+          return;
+        }
+        // Valid RSS with no items — emit metadata only
         params.sendPort.send(_parseMetadataFromString(xml));
         params.sendPort.send(
           const ParseComplete(totalParsed: 0, stoppedEarly: false),
