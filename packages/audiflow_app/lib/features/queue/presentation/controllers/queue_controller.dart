@@ -54,7 +54,7 @@ class QueueController extends _$QueueController {
         episodeUrl: episode.audioUrl,
         episodeTitle: episode.title,
         podcastTitle: podcastTitle,
-        artworkUrl: episode.imageUrl,
+        artworkUrl: episode.imageUrl ?? subscription?.artworkUrl,
         totalDuration: episode.durationMs != null
             ? Duration(milliseconds: episode.durationMs!)
             : null,
