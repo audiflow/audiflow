@@ -79,7 +79,8 @@ class IsolateRssParser {
   /// - [knownGuids]: Set of episode GUIDs already in the database
   /// - [maxNewEpisodes]: Optional limit on episodes to parse (null = unlimited)
   ///
-  /// Returns a stream of [ParseProgress] events.
+  /// Returns a stream of [ParseProgress] events. The isolate is spawned
+  /// lazily when the first listener attaches.
   ///
   /// Cancelling the stream subscription kills the background isolate
   /// immediately, freeing resources.
@@ -93,53 +94,63 @@ class IsolateRssParser {
     final receivePort = ReceivePort();
     Isolate? isolate;
     StreamSubscription<dynamic>? portSub;
+    var cancelled = false;
 
-    final controller = StreamController<ParseProgress>(
+    late final StreamController<ParseProgress> controller;
+    controller = StreamController<ParseProgress>(
+      onListen: () {
+        Isolate.spawn(
+              _parseInIsolate,
+              _IsolateParams(
+                feedXml: feedXml,
+                knownGuids: knownGuids,
+                maxNewEpisodes: maxNewEpisodes,
+                sendPort: receivePort.sendPort,
+                knownNewestPubDate: knownNewestPubDate,
+                knownNewestGuid: knownNewestGuid,
+              ),
+            )
+            .then((spawned) {
+              if (cancelled) {
+                // Stream was cancelled while the isolate was spawning.
+                spawned.kill(priority: Isolate.immediate);
+                receivePort.close();
+                return;
+              }
+              isolate = spawned;
+              portSub = receivePort.listen(
+                (message) {
+                  if (message is ParseProgress) {
+                    controller.add(message);
+                    if (message is ParseComplete) {
+                      isolate = null;
+                      portSub?.cancel();
+                      receivePort.close();
+                      controller.close();
+                    }
+                  } else if (message is _IsolateError) {
+                    controller.addError(Exception(message.error));
+                  }
+                },
+                onDone: () {
+                  if (!controller.isClosed) controller.close();
+                },
+              );
+            })
+            .catchError((Object e) {
+              controller.addError(e);
+              receivePort.close();
+              controller.close();
+            });
+      },
       onCancel: () {
+        cancelled = true;
         isolate?.kill(priority: Isolate.immediate);
         isolate = null;
         portSub?.cancel();
         receivePort.close();
       },
     );
-
-    Isolate.spawn(
-          _parseInIsolate,
-          _IsolateParams(
-            feedXml: feedXml,
-            knownGuids: knownGuids,
-            maxNewEpisodes: maxNewEpisodes,
-            sendPort: receivePort.sendPort,
-            knownNewestPubDate: knownNewestPubDate,
-            knownNewestGuid: knownNewestGuid,
-          ),
-        )
-        .then((spawned) {
-          isolate = spawned;
-          portSub = receivePort.listen(
-            (message) {
-              if (message is ParseProgress) {
-                controller.add(message);
-                if (message is ParseComplete) {
-                  isolate = null;
-                  portSub?.cancel();
-                  receivePort.close();
-                  controller.close();
-                }
-              } else if (message is _IsolateError) {
-                controller.addError(Exception(message.error));
-              }
-            },
-            onDone: () {
-              if (!controller.isClosed) controller.close();
-            },
-          );
-        })
-        .catchError((Object e) {
-          controller.addError(e);
-          receivePort.close();
-          controller.close();
-        });
 
     return controller.stream;
   }
@@ -180,21 +191,15 @@ class IsolateRssParser {
       final itemOpenTag = RegExp(r'<item[\s>]');
       const itemCloseTag = '</item>';
 
-      var searchFrom = firstItemIdx;
+      final itemMatches = itemOpenTag.allMatches(xml, firstItemIdx).iterator;
 
-      while (searchFrom < xml.length) {
-        final openMatch = itemOpenTag.firstMatch(
-          xml.substring(searchFrom),
-        );
-        if (openMatch == null) break;
-
-        final itemStart = searchFrom + openMatch.start;
+      while (itemMatches.moveNext()) {
+        final itemStart = itemMatches.current.start;
         final closeIdx = xml.indexOf(itemCloseTag, itemStart);
         if (closeIdx == -1) break;
 
         final itemEnd = closeIdx + itemCloseTag.length;
         final itemXml = xml.substring(itemStart, itemEnd);
-        searchFrom = itemEnd;
 
         // Quick-check guid and pubDate via lightweight regex before DOM-parsing
         final guid = _extractTagText(itemXml, 'guid');

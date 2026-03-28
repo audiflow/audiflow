@@ -86,8 +86,9 @@ class FeedParserService {
   /// Parses a podcast RSS feed from raw XML content using isolate.
   ///
   /// This runs parsing in a background isolate to prevent UI freezes.
-  /// Pass [knownGuids] to enable early-stop optimization: parsing stops
-  /// when a known episode GUID is encountered.
+  /// Pass [knownNewestPubDate] and optionally [knownNewestGuid] to enable
+  /// early-stop optimization: parsing stops when an episode at or before
+  /// the cutoff date is encountered (confirmed by GUID match if provided).
   Future<ParsedFeed> parseFromString(
     String xmlContent, {
     DateTime? knownNewestPubDate,
