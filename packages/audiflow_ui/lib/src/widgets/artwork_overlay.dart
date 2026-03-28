@@ -28,6 +28,7 @@ class ArtworkOverlay extends StatelessWidget {
     return Semantics(
       label: 'Dismiss artwork',
       button: true,
+      onTap: () => Navigator.of(context).pop(),
       child: GestureDetector(
         excludeFromSemantics: true,
         onTap: () => Navigator.of(context).pop(),

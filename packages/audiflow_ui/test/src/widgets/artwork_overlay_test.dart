@@ -1,10 +1,30 @@
+import 'dart:io';
+
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:checks/checks.dart';
 import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+/// Provides a transparent 1x1 PNG for all HTTP image requests,
+/// preventing real network calls during widget tests.
+class _FakeHttpOverrides extends HttpOverrides {
+  @override
+  HttpClient createHttpClient(SecurityContext? context) {
+    return super.createHttpClient(context)
+      ..badCertificateCallback = (_, __, ___) => true;
+  }
+}
+
 void main() {
+  setUp(() {
+    HttpOverrides.global = _FakeHttpOverrides();
+  });
+
+  tearDown(() {
+    HttpOverrides.global = null;
+  });
+
   group('ArtworkOverlay', () {
     const imageUrl = 'https://example.com/artwork.jpg';
     const heroTag = 'test_hero';
