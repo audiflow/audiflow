@@ -62,13 +62,50 @@ class FeedSyncExecutor {
 
       _logger?.d('Syncing feed for "${sub.title}"');
 
+      // Build conditional request headers
+      final conditionalHeaders = <String, String>{
+        'Accept': 'application/rss+xml, application/xml, text/xml',
+      };
+      if (sub.httpEtag != null) {
+        conditionalHeaders['If-None-Match'] = sub.httpEtag!;
+      }
+      if (sub.httpLastModified != null) {
+        conditionalHeaders['If-Modified-Since'] = sub.httpLastModified!;
+      }
+
       final response = await _dio.get<String>(
         sub.feedUrl,
         options: Options(
-          headers: {'Accept': 'application/rss+xml, application/xml, text/xml'},
+          headers: conditionalHeaders,
           responseType: ResponseType.plain,
+          validateStatus: (status) => status != null && status < 400,
         ),
       );
+
+      // 304 Not Modified — feed unchanged, skip parsing
+      if (response.statusCode == 304) {
+        _logger?.d('Feed not modified (304) for "${sub.title}"');
+        await _subscriptionRepo.updateLastRefreshed(
+          sub.itunesId,
+          DateTime.now(),
+        );
+        return SingleFeedSyncResult(
+          podcastId: sub.id,
+          success: true,
+          skipped: false,
+        );
+      }
+
+      // Store HTTP cache headers from 200 response
+      final etag = response.headers.value('etag');
+      final lastModified = response.headers.value('last-modified');
+      if (etag != null || lastModified != null) {
+        await _subscriptionRepo.updateHttpCacheHeaders(
+          sub.id,
+          etag: etag,
+          lastModified: lastModified,
+        );
+      }
 
       final xmlContent = response.data;
       if (xmlContent == null || xmlContent.isEmpty) {

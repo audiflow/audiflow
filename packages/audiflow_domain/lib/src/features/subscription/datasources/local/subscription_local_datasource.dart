@@ -193,4 +193,21 @@ class SubscriptionLocalDatasource {
     existing.autoDownload = autoDownload;
     await _isar.writeTxn(() => _isar.subscriptions.put(existing));
   }
+
+  /// Updates HTTP cache headers for conditional requests.
+  ///
+  /// Does nothing if no subscription is found for the given [id].
+  Future<void> updateHttpCacheHeaders(
+    int id, {
+    String? etag,
+    String? lastModified,
+  }) async {
+    final existing = await _isar.subscriptions.get(id);
+    if (existing == null) return;
+
+    existing
+      ..httpEtag = etag
+      ..httpLastModified = lastModified;
+    await _isar.writeTxn(() => _isar.subscriptions.put(existing));
+  }
 }

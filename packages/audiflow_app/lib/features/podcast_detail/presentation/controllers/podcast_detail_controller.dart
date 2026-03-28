@@ -93,11 +93,52 @@ Future<ParsedFeed> podcastDetail(Ref ref, String feedUrl) async {
   final feedParser = ref.watch(feedParserServiceProvider);
 
   try {
+    // Look up existing subscription for conditional request headers
+    final subscriptionRepo = ref.read(subscriptionRepositoryProvider);
+    var subscription = await subscriptionRepo.getByFeedUrl(feedUrl);
+
+    // Build conditional request headers from cached HTTP metadata
+    final conditionalHeaders = <String, String>{};
+    if (subscription != null) {
+      if (subscription.httpEtag != null) {
+        conditionalHeaders['If-None-Match'] = subscription.httpEtag!;
+      }
+      if (subscription.httpLastModified != null) {
+        conditionalHeaders['If-Modified-Since'] =
+            subscription.httpLastModified!;
+      }
+    }
+
     // Fetch XML content using Dio (better mobile compatibility)
     final response = await dio.get<String>(
       feedUrl,
-      options: Options(responseType: ResponseType.plain),
+      options: Options(
+        responseType: ResponseType.plain,
+        headers: conditionalHeaders.isEmpty ? null : conditionalHeaders,
+        validateStatus: (status) => status != null && status < 400,
+      ),
     );
+
+    // 304 Not Modified — feed unchanged, rebuild from Isar
+    if (response.statusCode == 304 && subscription != null) {
+      logger.i('Feed not modified (304), loading episodes from Isar');
+      await subscriptionRepo.updateLastAccessed(subscription.id);
+
+      final episodeRepo = ref.read(episodeRepositoryProvider);
+      final episodes = await episodeRepo.getByPodcastId(subscription.id);
+      final podcastItems = episodes.map(_episodeToItem).toList();
+
+      return ParsedFeed(
+        podcast: PodcastFeed(
+          parsedAt: DateTime.now(),
+          sourceUrl: feedUrl,
+          title: subscription.title,
+          description: subscription.description ?? '',
+          author: subscription.artistName,
+        ),
+        episodes: podcastItems,
+      );
+    }
 
     if (response.data == null || response.data!.isEmpty) {
       throw PodcastException(
@@ -108,15 +149,26 @@ Future<ParsedFeed> podcastDetail(Ref ref, String feedUrl) async {
 
     logger.d('Fetched ${response.data!.length} bytes, parsing...');
 
+    // Store HTTP cache headers from 200 response
+    if (subscription != null) {
+      final etag = response.headers.value('etag');
+      final lastModified = response.headers.value('last-modified');
+      if (etag != null || lastModified != null) {
+        await subscriptionRepo.updateHttpCacheHeaders(
+          subscription.id,
+          etag: etag,
+          lastModified: lastModified,
+        );
+      }
+    }
+
     // Look up newest known episode for pubDate-based early-stop
-    final subscriptionRepo = ref.read(subscriptionRepositoryProvider);
-    final existingSub = await subscriptionRepo.getByFeedUrl(feedUrl);
     DateTime? knownNewestPubDate;
     String? knownNewestGuid;
 
-    if (existingSub != null) {
+    if (subscription != null) {
       final episodeRepo = ref.read(episodeRepositoryProvider);
-      final newest = await episodeRepo.getNewestByPodcastId(existingSub.id);
+      final newest = await episodeRepo.getNewestByPodcastId(subscription.id);
       knownNewestPubDate = newest?.publishedAt;
       knownNewestGuid = newest?.guid;
     }
@@ -132,9 +184,6 @@ Future<ParsedFeed> podcastDetail(Ref ref, String feedUrl) async {
       'Successfully parsed feed: '
       '${result.episodeCount} episodes',
     );
-
-    // Always ensure a subscription entry exists (real or cached)
-    var subscription = existingSub;
 
     if (subscription != null) {
       // Hint no longer needed -- subscription already exists
@@ -155,6 +204,17 @@ Future<ParsedFeed> podcastDetail(Ref ref, String feedUrl) async {
         );
         logger.d('Created cached subscription id=${subscription.id}');
         PodcastMetadataHints.remove(feedUrl);
+
+        // Store HTTP cache headers for newly-created cached subscription
+        final etag = response.headers.value('etag');
+        final lastModified = response.headers.value('last-modified');
+        if (etag != null || lastModified != null) {
+          await subscriptionRepo.updateHttpCacheHeaders(
+            subscription.id,
+            etag: etag,
+            lastModified: lastModified,
+          );
+        }
       }
     }
 
@@ -517,4 +577,28 @@ int _compareDates(DateTime? a, DateTime? b) {
   if (a == null) return 1; // null dates go last
   if (b == null) return -1;
   return a.compareTo(b);
+}
+
+/// Converts an Isar [Episode] to a [PodcastItem] for UI display.
+///
+/// Used when the server returns 304 Not Modified and we rebuild
+/// the feed from persisted episodes instead of re-parsing XML.
+PodcastItem _episodeToItem(Episode episode) {
+  return PodcastItem(
+    parsedAt: DateTime.now(),
+    sourceUrl: '',
+    title: episode.title,
+    description: episode.description ?? '',
+    publishDate: episode.publishedAt,
+    duration: episode.durationMs != null
+        ? Duration(milliseconds: episode.durationMs!)
+        : null,
+    enclosureUrl: episode.audioUrl,
+    guid: episode.guid,
+    episodeNumber: episode.episodeNumber,
+    seasonNumber: episode.seasonNumber,
+    images: episode.imageUrl != null
+        ? [PodcastImage(url: episode.imageUrl!)]
+        : const [],
+  );
 }

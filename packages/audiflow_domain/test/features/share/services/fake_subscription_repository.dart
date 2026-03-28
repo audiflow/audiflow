@@ -102,4 +102,11 @@ class FakeSubscriptionRepository implements SubscriptionRepository {
   @override
   Future<void> updateAutoDownload(int id, {required bool autoDownload}) =>
       throw UnimplementedError();
+
+  @override
+  Future<void> updateHttpCacheHeaders(
+    int id, {
+    String? etag,
+    String? lastModified,
+  }) => throw UnimplementedError();
 }

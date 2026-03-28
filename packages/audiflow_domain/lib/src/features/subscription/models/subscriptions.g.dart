@@ -40,28 +40,38 @@ const SubscriptionSchema = CollectionSchema(
     r'explicit': PropertySchema(id: 4, name: r'explicit', type: IsarType.bool),
     r'feedUrl': PropertySchema(id: 5, name: r'feedUrl', type: IsarType.string),
     r'genres': PropertySchema(id: 6, name: r'genres', type: IsarType.string),
-    r'isCached': PropertySchema(id: 7, name: r'isCached', type: IsarType.bool),
-    r'itunesId': PropertySchema(
+    r'httpEtag': PropertySchema(
+      id: 7,
+      name: r'httpEtag',
+      type: IsarType.string,
+    ),
+    r'httpLastModified': PropertySchema(
       id: 8,
+      name: r'httpLastModified',
+      type: IsarType.string,
+    ),
+    r'isCached': PropertySchema(id: 9, name: r'isCached', type: IsarType.bool),
+    r'itunesId': PropertySchema(
+      id: 10,
       name: r'itunesId',
       type: IsarType.string,
     ),
     r'lastAccessedAt': PropertySchema(
-      id: 9,
+      id: 11,
       name: r'lastAccessedAt',
       type: IsarType.dateTime,
     ),
     r'lastRefreshedAt': PropertySchema(
-      id: 10,
+      id: 12,
       name: r'lastRefreshedAt',
       type: IsarType.dateTime,
     ),
     r'subscribedAt': PropertySchema(
-      id: 11,
+      id: 13,
       name: r'subscribedAt',
       type: IsarType.dateTime,
     ),
-    r'title': PropertySchema(id: 12, name: r'title', type: IsarType.string),
+    r'title': PropertySchema(id: 14, name: r'title', type: IsarType.string),
   },
 
   estimateSize: _subscriptionEstimateSize,
@@ -114,6 +124,18 @@ int _subscriptionEstimateSize(
   }
   bytesCount += 3 + object.feedUrl.length * 3;
   bytesCount += 3 + object.genres.length * 3;
+  {
+    final value = object.httpEtag;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
+    final value = object.httpLastModified;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   bytesCount += 3 + object.itunesId.length * 3;
   bytesCount += 3 + object.title.length * 3;
   return bytesCount;
@@ -132,12 +154,14 @@ void _subscriptionSerialize(
   writer.writeBool(offsets[4], object.explicit);
   writer.writeString(offsets[5], object.feedUrl);
   writer.writeString(offsets[6], object.genres);
-  writer.writeBool(offsets[7], object.isCached);
-  writer.writeString(offsets[8], object.itunesId);
-  writer.writeDateTime(offsets[9], object.lastAccessedAt);
-  writer.writeDateTime(offsets[10], object.lastRefreshedAt);
-  writer.writeDateTime(offsets[11], object.subscribedAt);
-  writer.writeString(offsets[12], object.title);
+  writer.writeString(offsets[7], object.httpEtag);
+  writer.writeString(offsets[8], object.httpLastModified);
+  writer.writeBool(offsets[9], object.isCached);
+  writer.writeString(offsets[10], object.itunesId);
+  writer.writeDateTime(offsets[11], object.lastAccessedAt);
+  writer.writeDateTime(offsets[12], object.lastRefreshedAt);
+  writer.writeDateTime(offsets[13], object.subscribedAt);
+  writer.writeString(offsets[14], object.title);
 }
 
 Subscription _subscriptionDeserialize(
@@ -154,13 +178,15 @@ Subscription _subscriptionDeserialize(
   object.explicit = reader.readBool(offsets[4]);
   object.feedUrl = reader.readString(offsets[5]);
   object.genres = reader.readString(offsets[6]);
+  object.httpEtag = reader.readStringOrNull(offsets[7]);
+  object.httpLastModified = reader.readStringOrNull(offsets[8]);
   object.id = id;
-  object.isCached = reader.readBool(offsets[7]);
-  object.itunesId = reader.readString(offsets[8]);
-  object.lastAccessedAt = reader.readDateTimeOrNull(offsets[9]);
-  object.lastRefreshedAt = reader.readDateTimeOrNull(offsets[10]);
-  object.subscribedAt = reader.readDateTime(offsets[11]);
-  object.title = reader.readString(offsets[12]);
+  object.isCached = reader.readBool(offsets[9]);
+  object.itunesId = reader.readString(offsets[10]);
+  object.lastAccessedAt = reader.readDateTimeOrNull(offsets[11]);
+  object.lastRefreshedAt = reader.readDateTimeOrNull(offsets[12]);
+  object.subscribedAt = reader.readDateTime(offsets[13]);
+  object.title = reader.readString(offsets[14]);
   return object;
 }
 
@@ -186,16 +212,20 @@ P _subscriptionDeserializeProp<P>(
     case 6:
       return (reader.readString(offset)) as P;
     case 7:
-      return (reader.readBool(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 8:
-      return (reader.readString(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 9:
-      return (reader.readDateTimeOrNull(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 10:
-      return (reader.readDateTimeOrNull(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 11:
-      return (reader.readDateTime(offset)) as P;
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 12:
+      return (reader.readDateTimeOrNull(offset)) as P;
+    case 13:
+      return (reader.readDateTime(offset)) as P;
+    case 14:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -1174,6 +1204,324 @@ extension SubscriptionQueryFilter
     });
   }
 
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  httpEtagIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'httpEtag'),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  httpEtagIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'httpEtag'),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  httpEtagEqualTo(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'httpEtag',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  httpEtagGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'httpEtag',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  httpEtagLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'httpEtag',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  httpEtagBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'httpEtag',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  httpEtagStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'httpEtag',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  httpEtagEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'httpEtag',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  httpEtagContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'httpEtag',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  httpEtagMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'httpEtag',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  httpEtagIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'httpEtag', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  httpEtagIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'httpEtag', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  httpLastModifiedIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'httpLastModified'),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  httpLastModifiedIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'httpLastModified'),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  httpLastModifiedEqualTo(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'httpLastModified',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  httpLastModifiedGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'httpLastModified',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  httpLastModifiedLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'httpLastModified',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  httpLastModifiedBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'httpLastModified',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  httpLastModifiedStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'httpLastModified',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  httpLastModifiedEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'httpLastModified',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  httpLastModifiedContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'httpLastModified',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  httpLastModifiedMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'httpLastModified',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  httpLastModifiedIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'httpLastModified', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterFilterCondition>
+  httpLastModifiedIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'httpLastModified', value: ''),
+      );
+    });
+  }
+
   QueryBuilder<Subscription, Subscription, QAfterFilterCondition> idEqualTo(
     Id value,
   ) {
@@ -1828,6 +2176,32 @@ extension SubscriptionQuerySortBy
     });
   }
 
+  QueryBuilder<Subscription, Subscription, QAfterSortBy> sortByHttpEtag() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'httpEtag', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterSortBy> sortByHttpEtagDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'httpEtag', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterSortBy>
+  sortByHttpLastModified() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'httpLastModified', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterSortBy>
+  sortByHttpLastModifiedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'httpLastModified', Sort.desc);
+    });
+  }
+
   QueryBuilder<Subscription, Subscription, QAfterSortBy> sortByIsCached() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isCached', Sort.asc);
@@ -1996,6 +2370,32 @@ extension SubscriptionQuerySortThenBy
     });
   }
 
+  QueryBuilder<Subscription, Subscription, QAfterSortBy> thenByHttpEtag() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'httpEtag', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterSortBy> thenByHttpEtagDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'httpEtag', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterSortBy>
+  thenByHttpLastModified() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'httpLastModified', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QAfterSortBy>
+  thenByHttpLastModifiedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'httpLastModified', Sort.desc);
+    });
+  }
+
   QueryBuilder<Subscription, Subscription, QAfterSortBy> thenById() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.asc);
@@ -2140,6 +2540,24 @@ extension SubscriptionQueryWhereDistinct
     });
   }
 
+  QueryBuilder<Subscription, Subscription, QDistinct> distinctByHttpEtag({
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'httpEtag', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<Subscription, Subscription, QDistinct>
+  distinctByHttpLastModified({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(
+        r'httpLastModified',
+        caseSensitive: caseSensitive,
+      );
+    });
+  }
+
   QueryBuilder<Subscription, Subscription, QDistinct> distinctByIsCached() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'isCached');
@@ -2230,6 +2648,19 @@ extension SubscriptionQueryProperty
   QueryBuilder<Subscription, String, QQueryOperations> genresProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'genres');
+    });
+  }
+
+  QueryBuilder<Subscription, String?, QQueryOperations> httpEtagProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'httpEtag');
+    });
+  }
+
+  QueryBuilder<Subscription, String?, QQueryOperations>
+  httpLastModifiedProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'httpLastModified');
     });
   }
 

@@ -253,4 +253,53 @@ void main() {
       expect(result, hasLength(1));
     });
   });
+
+  group('updateHttpCacheHeaders', () {
+    test('stores etag and lastModified', () async {
+      final sub = await repository.subscribe(
+        itunesId: 'itunes-1',
+        feedUrl: 'https://example.com/feed.xml',
+        title: 'Test Podcast',
+        artistName: 'Test Artist',
+      );
+
+      await repository.updateHttpCacheHeaders(
+        sub.id,
+        etag: '"abc123"',
+        lastModified: 'Sat, 29 Mar 2026 00:00:00 GMT',
+      );
+
+      final result = await repository.getById(sub.id);
+      expect(result!.httpEtag, '"abc123"');
+      expect(result.httpLastModified, 'Sat, 29 Mar 2026 00:00:00 GMT');
+    });
+
+    test('clears headers when called with null values', () async {
+      final sub = await repository.subscribe(
+        itunesId: 'itunes-1',
+        feedUrl: 'https://example.com/feed.xml',
+        title: 'Test Podcast',
+        artistName: 'Test Artist',
+      );
+
+      // First set headers
+      await repository.updateHttpCacheHeaders(
+        sub.id,
+        etag: '"abc123"',
+        lastModified: 'Sat, 29 Mar 2026 00:00:00 GMT',
+      );
+
+      // Then clear them
+      await repository.updateHttpCacheHeaders(sub.id);
+
+      final result = await repository.getById(sub.id);
+      expect(result!.httpEtag, isNull);
+      expect(result.httpLastModified, isNull);
+    });
+
+    test('does nothing for nonexistent ID', () async {
+      // Should not throw
+      await repository.updateHttpCacheHeaders(999, etag: '"abc123"');
+    });
+  });
 }

@@ -321,6 +321,23 @@ class MockSubscriptionRepository extends _i1.Mock
             returnValueForMissingStub: _i11.Future<void>.value(),
           )
           as _i11.Future<void>);
+
+  @override
+  _i11.Future<void> updateHttpCacheHeaders(
+    int? id, {
+    String? etag,
+    String? lastModified,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(
+              #updateHttpCacheHeaders,
+              [id],
+              {#etag: etag, #lastModified: lastModified},
+            ),
+            returnValue: _i11.Future<void>.value(),
+            returnValueForMissingStub: _i11.Future<void>.value(),
+          )
+          as _i11.Future<void>);
 }
 
 /// A class which mocks [EpisodeRepository].

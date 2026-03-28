@@ -81,6 +81,16 @@ abstract class SubscriptionRepository {
 
   /// Updates the auto-download setting for a subscription.
   Future<void> updateAutoDownload(int id, {required bool autoDownload});
+
+  /// Updates HTTP cache headers (ETag / Last-Modified) for a subscription.
+  ///
+  /// Used by conditional requests (If-None-Match / If-Modified-Since)
+  /// to avoid re-downloading unchanged RSS feeds.
+  Future<void> updateHttpCacheHeaders(
+    int id, {
+    String? etag,
+    String? lastModified,
+  });
 }
 
 /// Exception thrown when a subscription operation fails.
