@@ -75,7 +75,7 @@ final class VoiceCommandOrchestratorProvider
 }
 
 String _$voiceCommandOrchestratorHash() =>
-    r'b3150afdf4e2270c0e612e8added3916e45eb65a';
+    r'aa91c4384a92ad6e7c1d7e77fad110e794ff0531';
 
 /// Orchestrates voice command flow from speech recognition to execution.
 ///

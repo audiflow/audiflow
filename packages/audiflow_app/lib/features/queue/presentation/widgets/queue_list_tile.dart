@@ -2,14 +2,16 @@ import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../../../share/presentation/helpers/share_helper.dart';
 
 /// Widget for displaying a queue item with swipe-to-remove and drag handle.
 ///
-/// Shows episode title, duration, and a subtle indicator for adhoc items.
-class QueueListTile extends StatelessWidget {
+/// Shows episode title, duration, download/share actions, and a drag handle.
+class QueueListTile extends ConsumerWidget {
   const QueueListTile({
     super.key,
     required this.item,
@@ -24,10 +26,13 @@ class QueueListTile extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+
+    final episodeId = item.episode.id;
+    final downloadTask = ref.watch(episodeDownloadProvider(episodeId)).value;
 
     return Dismissible(
       key: ValueKey(item.queueItem.id),
@@ -46,9 +51,19 @@ class QueueListTile extends StatelessWidget {
           size: 40,
           borderRadius: 6,
         ),
-        trailing: ReorderableDragStartListener(
-          index: index,
-          child: Icon(Symbols.drag_handle, color: colorScheme.onSurfaceVariant),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildDownloadButton(context, ref, episodeId, downloadTask),
+            _buildShareButton(context, ref),
+            ReorderableDragStartListener(
+              index: index,
+              child: Icon(
+                Symbols.drag_handle,
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
         ),
         title: Text(
           item.episode.title,
@@ -99,5 +114,113 @@ class QueueListTile extends StatelessWidget {
     }
 
     return parts.join('  ');
+  }
+
+  Widget _buildDownloadButton(
+    BuildContext context,
+    WidgetRef ref,
+    int episodeId,
+    DownloadTask? task,
+  ) {
+    return DownloadStatusIcon(
+      task: task,
+      size: 20,
+      onTap: () => _onDownloadTap(context, ref, episodeId, task),
+    );
+  }
+
+  Future<void> _onDownloadTap(
+    BuildContext context,
+    WidgetRef ref,
+    int episodeId,
+    DownloadTask? task,
+  ) async {
+    final downloadService = ref.read(downloadServiceProvider);
+    final messenger = ScaffoldMessenger.of(context);
+    final l10n = AppLocalizations.of(context);
+
+    if (task == null) {
+      await downloadService.downloadEpisode(episodeId);
+      return;
+    }
+
+    task.downloadStatus.when(
+      pending: () async {
+        await downloadService.cancel(task.id);
+        messenger.showSnackBar(SnackBar(content: Text(l10n.downloadCancelled)));
+      },
+      downloading: () async {
+        await downloadService.pause(task.id);
+      },
+      paused: () async {
+        await downloadService.resume(task.id);
+      },
+      completed: () {
+        _showDeleteConfirmation(context, ref, task);
+      },
+      failed: () async {
+        await downloadService.retry(task.id);
+        messenger.showSnackBar(SnackBar(content: Text(l10n.downloadRetrying)));
+      },
+      cancelled: () async {
+        final result = await downloadService.downloadEpisode(episodeId);
+        if (result != null) {
+          messenger.showSnackBar(SnackBar(content: Text(l10n.downloadStarted)));
+        }
+      },
+    );
+  }
+
+  void _showDeleteConfirmation(
+    BuildContext context,
+    WidgetRef ref,
+    DownloadTask task,
+  ) {
+    final l10n = AppLocalizations.of(context);
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.downloadDeleteTitle),
+        content: Text(l10n.downloadDeleteContent),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(l10n.commonCancel),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await ref.read(downloadServiceProvider).delete(task.id);
+              if (context.mounted) {
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text(l10n.downloadDeleted)));
+              }
+            },
+            child: Text(l10n.commonDelete),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildShareButton(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final canShare = item.itunesId != null && item.episode.guid.isNotEmpty;
+    return IconButton(
+      icon: const Icon(Icons.share, size: 20),
+      iconSize: 20,
+      tooltip: l10n.shareEpisode,
+      constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      onPressed: canShare
+          ? () => shareEpisode(
+              ref: ref,
+              itunesId: item.itunesId,
+              episodeGuid: item.episode.guid,
+              fallbackLink: null,
+            )
+          : null,
+    );
   }
 }
