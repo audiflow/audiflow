@@ -10,6 +10,9 @@ export 'src/themes/text_styles.dart';
 export 'src/styles/spacing.dart';
 export 'src/styles/borders.dart';
 
+// Widgets - Buttons
+export 'src/widgets/buttons/overlay_action_button.dart';
+
 // Widgets - Cards
 export 'src/widgets/cards/episode_card.dart';
 export 'src/widgets/cards/podcast_artwork_grid_item.dart';
@@ -40,3 +43,4 @@ export 'src/widgets/search/searchable_app_bar.dart';
 // Utils
 export 'src/utils/responsive_grid.dart';
 export 'src/utils/search_filter.dart';
+export 'src/utils/artwork_brightness_resolver.dart';
