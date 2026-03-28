@@ -45,12 +45,14 @@ class OverlayActionButton extends StatelessWidget {
         ? Colors.white.withValues(alpha: 0.2)
         : Colors.black.withValues(alpha: 0.25);
 
+    final clampedRatio = collapseRatio.clamp(0.0, 1.0);
+
     final iconColor = Color.lerp(
       overlayIconColor,
       themeIconColor,
-      collapseRatio,
+      clampedRatio,
     );
-    final scrimAlpha = (1.0 - collapseRatio);
+    final scrimAlpha = (1.0 - clampedRatio);
 
     return Semantics(
       button: true,

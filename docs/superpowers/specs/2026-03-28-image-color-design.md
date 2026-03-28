@@ -64,7 +64,7 @@ Replace default `SliverAppBar` leading/actions with custom `OverlayActionButton`
 | `audiflow_ui/lib/src/widgets/buttons/overlay_action_button.dart` | New: squircle button widget |
 | `audiflow_ui/lib/src/utils/artwork_brightness_resolver.dart` | New: color extraction utility |
 | `audiflow_ui/lib/audiflow_ui.dart` | Export new files |
-| `audiflow_app/.../episode_detail_screen.dart` | Use `ArtworkBrightnessResolver`, `AnnotatedRegion`, custom leading/actions |
+| `audiflow_app/.../episode_detail_screen.dart` | Use `ArtworkBrightnessResolver`, `SliverAppBar.systemOverlayStyle`, custom leading/actions |
 
 ## Testing
 

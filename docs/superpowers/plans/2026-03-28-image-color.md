@@ -4,9 +4,9 @@
 
 **Goal:** Make the episode detail screen's status bar icons and app bar buttons adapt their color based on podcast artwork brightness.
 
-**Architecture:** Extract dominant color from artwork via `palette_generator`, compute luminance to determine brightness, then use that brightness to drive `AnnotatedRegion<SystemUiOverlayStyle>` and custom squircle-backed action buttons. New reusable widgets live in `audiflow_ui`; the episode detail screen consumes them.
+**Architecture:** For each episode's artwork, sample the top-edge pixels of the image (via `ResizeImage` + `toByteData`) to estimate average brightness, then use that brightness to drive `SliverAppBar.systemOverlayStyle` and the colors of squircle-backed action buttons. The brightness-resolving logic lives in `audiflow_ui`; the episode detail screen consumes it.
 
-**Tech Stack:** `palette_generator` (color extraction), `AnnotatedRegion<SystemUiOverlayStyle>` (status bar), Flutter `Material` (custom app bar buttons)
+**Tech Stack:** Flutter image APIs (`ResizeImage`, `ui.Image.toByteData`) for sampling, luminance utilities for brightness computation, `SliverAppBar.systemOverlayStyle` for the status bar, Flutter `Material` for custom app bar buttons
 
 ---
 

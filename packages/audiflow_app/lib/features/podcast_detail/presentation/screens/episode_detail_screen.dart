@@ -121,7 +121,7 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
               expandedHeight: expandedHeight,
               pinned: true,
               automaticallyImplyLeading: false,
-              systemOverlayStyle: overlayStyle,
+              systemOverlayStyle: imageUrl != null ? overlayStyle : null,
               leading: Align(
                 alignment: Alignment.centerLeft,
                 child: Padding(
@@ -137,7 +137,7 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
                   ),
                 ),
               ),
-              leadingWidth: 36 + Spacing.md + Spacing.sm,
+              leadingWidth: 48 + Spacing.md + Spacing.sm,
               flexibleSpace: imageUrl != null
                   ? FlexibleSpaceBar(
                       background: Semantics(
