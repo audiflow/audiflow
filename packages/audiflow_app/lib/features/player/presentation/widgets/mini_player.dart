@@ -11,7 +11,7 @@ import '../../../../l10n/app_localizations.dart';
 /// Shows episode artwork, title, podcast name, play/pause button, and
 /// a progress bar at the top. Tapping the widget expands to the full
 /// player screen.
-class MiniPlayer extends ConsumerWidget {
+class MiniPlayer extends ConsumerStatefulWidget {
   const MiniPlayer({super.key, this.onTap});
 
   /// Callback when the mini player is tapped.
@@ -28,7 +28,29 @@ class MiniPlayer extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MiniPlayer> createState() => _MiniPlayerState();
+}
+
+class _MiniPlayerState extends ConsumerState<MiniPlayer> {
+  bool _isSeeking = false;
+  bool _wasPlayingBeforeSeek = false;
+
+  Future<void> _handleSkipForward() async {
+    final isPlaying =
+        ref.read(audioPlayerControllerProvider) is PlaybackPlaying;
+    setState(() {
+      _isSeeking = true;
+      _wasPlayingBeforeSeek = isPlaying;
+    });
+    await ref.read(audioPlayerControllerProvider.notifier).skipForward();
+    // Allow player state to stabilize after seek
+    await Future<void>.delayed(const Duration(milliseconds: 150));
+    if (!mounted) return;
+    setState(() => _isSeeking = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final nowPlaying = ref.watch(nowPlayingControllerProvider);
     final playbackState = ref.watch(audioPlayerControllerProvider);
@@ -41,8 +63,10 @@ class MiniPlayer extends ConsumerWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    final isPlaying = playbackState is PlaybackPlaying;
-    final isLoading = playbackState is PlaybackLoading;
+    final isPlaying = _isSeeking
+        ? _wasPlayingBeforeSeek
+        : playbackState is PlaybackPlaying;
+    final isLoading = _isSeeking ? false : playbackState is PlaybackLoading;
 
     return Semantics(
       container: true,
@@ -54,13 +78,15 @@ class MiniPlayer extends ConsumerWidget {
         elevation: 8,
         color: colorScheme.surfaceContainer,
         child: InkWell(
-          onTap: onTap,
+          onTap: widget.onTap,
           child: SizedBox(
-            height: height,
+            height: MiniPlayer.height,
             child: Column(
               children: [
                 MiniPlayerProgressBar(
-                  progress: progress?.progress ?? _savedProgress(nowPlaying),
+                  progress:
+                      progress?.progress ??
+                      MiniPlayer._savedProgress(nowPlaying),
                   bufferedProgress: progress?.bufferedProgress ?? 0.0,
                 ),
                 Expanded(
@@ -76,6 +102,9 @@ class MiniPlayer extends ConsumerWidget {
                         _MiniPlayerInfo(
                           episodeTitle: nowPlaying.episodeTitle,
                           podcastTitle: nowPlaying.podcastTitle,
+                        ),
+                        _MiniPlayerSkipForwardButton(
+                          onPressed: _handleSkipForward,
                         ),
                         _MiniPlayerPlayPauseButton(
                           isPlaying: isPlaying,
@@ -133,6 +162,28 @@ class _MiniPlayerInfo extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _MiniPlayerSkipForwardButton extends ConsumerWidget {
+  const _MiniPlayerSkipForwardButton({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final settingsRepo = ref.watch(appSettingsRepositoryProvider);
+    final skipSeconds = settingsRepo.getSkipForwardSeconds();
+
+    return Semantics(
+      button: true,
+      label: l10n.playerForwardLabel(skipSeconds),
+      child: IconButton(
+        icon: SkipDurationIcon(seconds: skipSeconds, isForward: true, size: 24),
+        onPressed: onPressed,
       ),
     );
   }
