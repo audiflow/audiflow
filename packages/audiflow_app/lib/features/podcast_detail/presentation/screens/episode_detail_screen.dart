@@ -58,6 +58,7 @@ class EpisodeDetailScreen extends ConsumerWidget {
     final isCompleted = progress?.isCompleted ?? false;
 
     final imageUrl = episode.primaryImage?.url ?? artworkUrl;
+    final heroTag = 'episode_artwork_${episode.guid ?? episode.title}';
 
     return Scaffold(
       body: CustomScrollView(
@@ -67,10 +68,24 @@ class EpisodeDetailScreen extends ConsumerWidget {
             pinned: true,
             flexibleSpace: imageUrl != null
                 ? FlexibleSpaceBar(
-                    background: ExtendedImage.network(
-                      imageUrl,
-                      fit: BoxFit.cover,
-                      cache: true,
+                    background: Semantics(
+                      label: 'View episode artwork',
+                      button: true,
+                      child: Material(
+                        type: MaterialType.transparency,
+                        child: InkWell(
+                          onTap: () =>
+                              _showArtworkOverlay(context, imageUrl, heroTag),
+                          child: Hero(
+                            tag: heroTag,
+                            child: ExtendedImage.network(
+                              imageUrl,
+                              fit: BoxFit.cover,
+                              cache: true,
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
                   )
                 : null,
@@ -197,6 +212,25 @@ class EpisodeDetailScreen extends ConsumerWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showArtworkOverlay(
+    BuildContext context,
+    String imageUrl,
+    String heroTag,
+  ) {
+    Navigator.of(context).push(
+      PageRouteBuilder<void>(
+        opaque: false,
+        barrierDismissible: true,
+        barrierColor: Colors.black87,
+        transitionDuration: const Duration(milliseconds: 300),
+        reverseTransitionDuration: const Duration(milliseconds: 250),
+        pageBuilder: (context, animation, secondaryAnimation) {
+          return ArtworkOverlay(imageUrl: imageUrl, heroTag: heroTag);
+        },
       ),
     );
   }
