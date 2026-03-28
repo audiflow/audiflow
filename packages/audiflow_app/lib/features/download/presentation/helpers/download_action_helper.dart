@@ -24,31 +24,25 @@ Future<void> handleDownloadTap({
     return;
   }
 
-  task.downloadStatus.when(
-    pending: () async {
+  switch (task.downloadStatus) {
+    case DownloadStatusPending():
       await downloadService.cancel(task.id);
       messenger.showSnackBar(SnackBar(content: Text(l10n.downloadCancelled)));
-    },
-    downloading: () async {
+    case DownloadStatusDownloading():
       await downloadService.pause(task.id);
-    },
-    paused: () async {
+    case DownloadStatusPaused():
       await downloadService.resume(task.id);
-    },
-    completed: () {
+    case DownloadStatusCompleted():
       showDownloadDeleteConfirmation(context: context, ref: ref, task: task);
-    },
-    failed: () async {
+    case DownloadStatusFailed():
       await downloadService.retry(task.id);
       messenger.showSnackBar(SnackBar(content: Text(l10n.downloadRetrying)));
-    },
-    cancelled: () async {
+    case DownloadStatusCancelled():
       final result = await downloadService.downloadEpisode(episodeId);
       if (result != null) {
         messenger.showSnackBar(SnackBar(content: Text(l10n.downloadStarted)));
       }
-    },
-  );
+  }
 }
 
 /// Shows a confirmation dialog before deleting a completed download.
@@ -80,6 +74,7 @@ void showDownloadDeleteConfirmation({
           onPressed: () async {
             Navigator.pop(dialogContext);
             await ref.read(downloadServiceProvider).delete(task.id);
+            if (!context.mounted) return;
             messenger.showSnackBar(
               SnackBar(content: Text(l10n.downloadDeleted)),
             );
