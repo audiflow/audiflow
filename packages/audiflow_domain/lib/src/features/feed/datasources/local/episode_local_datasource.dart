@@ -91,6 +91,18 @@ class EpisodeLocalDatasource {
     return episodes.map((e) => e.guid).toSet();
   }
 
+  /// Returns the newest episode for a podcast by publishedAt descending.
+  ///
+  /// Used for pubDate-based early-stop optimization during RSS parsing.
+  /// Returns null if no episodes exist for the podcast.
+  Future<Episode?> getNewestByPodcastId(int podcastId) async {
+    return _isar.episodes
+        .filter()
+        .podcastIdEqualTo(podcastId)
+        .sortByPublishedAtDesc()
+        .findFirst();
+  }
+
   /// Deletes all episodes for a podcast.
   Future<int> deleteByPodcastId(int podcastId) {
     return _isar.writeTxn(

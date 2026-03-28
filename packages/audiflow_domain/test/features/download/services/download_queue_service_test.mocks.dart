@@ -422,6 +422,14 @@ class MockEpisodeRepository extends _i1.Mock implements _i8.EpisodeRepository {
           as _i3.Future<Set<String>>);
 
   @override
+  _i3.Future<_i9.Episode?> getNewestByPodcastId(int? podcastId) =>
+      (super.noSuchMethod(
+            Invocation.method(#getNewestByPodcastId, [podcastId]),
+            returnValue: _i3.Future<_i9.Episode?>.value(),
+          )
+          as _i3.Future<_i9.Episode?>);
+
+  @override
   _i3.Future<void> storeTranscriptAndChapterDataFromParsed(
     int? podcastId,
     List<_i13.ParsedEpisodeMediaMeta>? mediaMetas,

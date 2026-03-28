@@ -64,6 +64,12 @@ abstract class EpisodeRepository {
   /// Used for early-stop optimization during RSS parsing.
   Future<Set<String>> getGuidsByPodcastId(int podcastId);
 
+  /// Returns the newest episode for a podcast by publishedAt descending.
+  ///
+  /// Used for pubDate-based early-stop: only the single newest episode
+  /// is needed, avoiding the cost of fetching all GUIDs.
+  Future<Episode?> getNewestByPodcastId(int podcastId);
+
   /// Stores transcript and chapter metadata from parsed RSS data.
   ///
   /// Resolves episode database IDs by [podcastId] + guid lookup,

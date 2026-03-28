@@ -323,6 +323,11 @@ class EpisodeRepositoryImpl implements EpisodeRepository {
   }
 
   @override
+  Future<Episode?> getNewestByPodcastId(int podcastId) {
+    return _datasource.getNewestByPodcastId(podcastId);
+  }
+
+  @override
   Future<List<Episode>> getByIds(List<int> ids) {
     return _datasource.getByIds(ids);
   }
