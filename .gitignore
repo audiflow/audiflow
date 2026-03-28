@@ -48,7 +48,6 @@ app.*.map.json
 .envrc
 .env.*
 *.local.*
-.pre-commit-config.yaml
 
 # FVM Version Cache
 .fvm/
