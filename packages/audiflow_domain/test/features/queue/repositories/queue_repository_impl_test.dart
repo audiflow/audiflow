@@ -345,6 +345,37 @@ void main() {
     );
   });
 
+  group('itunesId mapping', () {
+    test('populates itunesId from subscription', () async {
+      await repository.addToEnd(1);
+
+      final queue = await repository.getQueue();
+
+      expect(queue.manualItems.first.itunesId, 'test-itunes-id');
+    });
+
+    test('returns null itunesId when no subscription exists', () async {
+      // Create an episode whose podcastId has no matching subscription
+      await isar.writeTxn(() async {
+        await isar.episodes.put(
+          Episode()
+            ..id = 20
+            ..podcastId = 999
+            ..guid = 'ep-orphan'
+            ..title = 'Orphan Episode'
+            ..audioUrl = 'https://example.com/ep-orphan.mp3',
+        );
+      });
+
+      await repository.addToEnd(20);
+
+      final queue = await repository.getQueue();
+      final item = queue.manualItems.where((i) => i.episode.id == 20).first;
+
+      expect(item.itunesId, isNull);
+    });
+  });
+
   group('watchQueue', () {
     test('emits current queue state', () async {
       await repository.addToEnd(1);

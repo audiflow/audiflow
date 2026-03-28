@@ -14,6 +14,9 @@ sealed class QueueItemWithEpisode with _$QueueItemWithEpisode {
 
     /// Resolved artwork URL (episode image, falling back to podcast artwork).
     String? artworkUrl,
+
+    /// iTunes ID from the parent subscription, used for share links.
+    String? itunesId,
   }) = _QueueItemWithEpisode;
 }
 

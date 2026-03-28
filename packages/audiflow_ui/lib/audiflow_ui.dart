@@ -10,6 +10,9 @@ export 'src/themes/text_styles.dart';
 export 'src/styles/spacing.dart';
 export 'src/styles/borders.dart';
 
+// Widgets - Artwork
+export 'src/widgets/artwork_overlay.dart';
+
 // Widgets - Buttons
 export 'src/widgets/buttons/overlay_action_button.dart';
 

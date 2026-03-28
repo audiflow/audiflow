@@ -59,4 +59,4 @@ final class VoiceCommandExecutorProvider
 }
 
 String _$voiceCommandExecutorHash() =>
-    r'30c3b82c8e858379c785f451b64e45eb7d0c07fd';
+    r'1a5debfa314a8cb0d19b97c13606365e30bdfcfc';
