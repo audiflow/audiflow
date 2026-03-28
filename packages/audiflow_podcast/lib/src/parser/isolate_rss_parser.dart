@@ -32,10 +32,11 @@ class IsolateParsedFeed {
 class IsolateRssParser {
   IsolateRssParser._();
 
-  /// Parses the complete feed in an isolate and returns all data at once.
+  /// Parses the feed in an isolate and returns metadata + episodes at once.
   ///
-  /// Use this for initial load when you need all episodes.
-  /// For incremental updates, use [parse] which streams events.
+  /// Pass [knownGuids], [knownNewestPubDate], and/or [knownNewestGuid] to
+  /// enable early-stop optimization for incremental updates.
+  /// Omit all cutoff parameters to parse the entire feed.
   static Future<IsolateParsedFeed> parseFeed({
     required String feedXml,
     Set<String> knownGuids = const {},
@@ -121,6 +122,7 @@ class IsolateRssParser {
               isolate = spawned;
               portSub = receivePort.listen(
                 (message) {
+                  if (cancelled || controller.isClosed) return;
                   if (message is ParseProgress) {
                     controller.add(message);
                     if (message is ParseComplete) {
@@ -166,9 +168,8 @@ class IsolateRssParser {
       // --- Metadata: parse only the channel header (before first <item>) ---
       final firstItemIdx = xml.indexOf('<item');
       if (firstItemIdx == -1) {
-        // No items at all — try to emit metadata from whatever we have
-        final meta = _parseMetadataFromString(xml);
-        if (meta != null) params.sendPort.send(meta);
+        // No items at all — emit metadata from whatever we have
+        params.sendPort.send(_parseMetadataFromString(xml));
         params.sendPort.send(
           const ParseComplete(totalParsed: 0, stoppedEarly: false),
         );
@@ -176,16 +177,7 @@ class IsolateRssParser {
       }
 
       final header = xml.substring(0, firstItemIdx);
-      final meta = _parseMetadataFromString(header);
-      if (meta != null) {
-        params.sendPort.send(meta);
-      } else {
-        params.sendPort.send(const _IsolateError('No channel metadata found'));
-        params.sendPort.send(
-          const ParseComplete(totalParsed: 0, stoppedEarly: false),
-        );
-        return;
-      }
+      params.sendPort.send(_parseMetadataFromString(header));
 
       // --- Episodes: scan for <item>...</item> blocks incrementally ---
       var parsedCount = 0;
@@ -253,7 +245,7 @@ class IsolateRssParser {
   /// Extracts channel metadata from the header portion of the XML
   /// (everything before the first <item>) using lightweight regex.
   /// No DOM allocation needed for the header.
-  static ParsedPodcastMeta? _parseMetadataFromString(String headerXml) {
+  static ParsedPodcastMeta _parseMetadataFromString(String headerXml) {
     final title = _extractTagText(headerXml, 'title') ?? 'Untitled Podcast';
 
     // itunes:image uses an href attribute, not text content

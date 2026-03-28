@@ -95,7 +95,7 @@ class EpisodeLocalDatasource {
   ///
   /// Used for pubDate-based early-stop optimization during RSS parsing.
   /// Returns null if no episodes exist for the podcast.
-  Future<Episode?> getNewestByPodcastId(int podcastId) async {
+  Future<Episode?> getNewestByPodcastId(int podcastId) {
     return _isar.episodes
         .filter()
         .podcastIdEqualTo(podcastId)
