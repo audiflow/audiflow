@@ -90,152 +90,149 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
         ? SystemUiOverlayStyle.light
         : SystemUiOverlayStyle.dark;
 
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: overlayStyle,
-      child: Scaffold(
-        body: CustomScrollView(
-          slivers: [
-            SliverAppBar(
-              expandedHeight: imageUrl != null ? 250 : 0,
-              pinned: true,
-              automaticallyImplyLeading: false,
-              leading: OverlayActionButton(
-                icon: Icons.arrow_back,
-                artworkBrightness: _artworkBrightness,
-                onTap: () => Navigator.of(context).pop(),
-                semanticLabel: MaterialLocalizations.of(
-                  context,
-                ).backButtonTooltip,
-              ),
-              leadingWidth: 52,
-              flexibleSpace: imageUrl != null
-                  ? FlexibleSpaceBar(
-                      background: ExtendedImage.network(
-                        imageUrl,
-                        fit: BoxFit.cover,
-                        cache: true,
-                      ),
-                    )
-                  : null,
-              actions: [
-                Builder(
-                  builder: (context) {
-                    final l10n = AppLocalizations.of(context);
-                    final canShare =
-                        (widget.itunesId != null &&
-                            widget.episode.guid != null) ||
-                        widget.episode.link != null;
-                    return OverlayActionButton(
-                      icon: Icons.share,
-                      artworkBrightness: _artworkBrightness,
-                      semanticLabel: l10n.shareEpisode,
-                      onTap: canShare
-                          ? () => shareEpisode(
-                              ref: ref,
-                              itunesId: widget.itunesId,
-                              episodeGuid: widget.episode.guid,
-                              fallbackLink: widget.episode.link,
-                            )
-                          : null,
-                    );
-                  },
-                ),
-                const SizedBox(width: Spacing.sm),
-              ],
+    return Scaffold(
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            expandedHeight: imageUrl != null ? 250 : 0,
+            pinned: true,
+            automaticallyImplyLeading: false,
+            systemOverlayStyle: overlayStyle,
+            leading: OverlayActionButton(
+              icon: Icons.arrow_back,
+              artworkBrightness: _artworkBrightness,
+              onTap: () => Navigator.of(context).pop(),
+              semanticLabel: MaterialLocalizations.of(
+                context,
+              ).backButtonTooltip,
             ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.all(Spacing.md),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Title
-                    Text(
-                      widget.episode.title,
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
+            leadingWidth: 52,
+            flexibleSpace: imageUrl != null
+                ? FlexibleSpaceBar(
+                    background: ExtendedImage.network(
+                      imageUrl,
+                      fit: BoxFit.cover,
+                      cache: true,
+                    ),
+                  )
+                : null,
+            actions: [
+              Builder(
+                builder: (context) {
+                  final l10n = AppLocalizations.of(context);
+                  final canShare =
+                      (widget.itunesId != null &&
+                          widget.episode.guid != null) ||
+                      widget.episode.link != null;
+                  return OverlayActionButton(
+                    icon: Icons.share,
+                    artworkBrightness: _artworkBrightness,
+                    semanticLabel: l10n.shareEpisode,
+                    onTap: canShare
+                        ? () => shareEpisode(
+                            ref: ref,
+                            itunesId: widget.itunesId,
+                            episodeGuid: widget.episode.guid,
+                            fallbackLink: widget.episode.link,
+                          )
+                        : null,
+                  );
+                },
+              ),
+              const SizedBox(width: Spacing.sm),
+            ],
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(Spacing.md),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Title
+                  Text(
+                    widget.episode.title,
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: Spacing.xs),
+
+                  // Podcast title (tappable -> navigates to podcast page)
+                  InkWell(
+                    onTap: () => _navigateToPodcast(context),
+                    borderRadius: BorderRadius.circular(4),
+                    child: Text(
+                      widget.podcastTitle,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: colorScheme.primary,
                       ),
                     ),
-                    const SizedBox(height: Spacing.xs),
+                  ),
+                  const SizedBox(height: Spacing.sm),
 
-                    // Podcast title (tappable -> navigates to podcast page)
-                    InkWell(
-                      onTap: () => _navigateToPodcast(context),
-                      borderRadius: BorderRadius.circular(4),
-                      child: Text(
-                        widget.podcastTitle,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          color: colorScheme.primary,
-                        ),
+                  // Metadata row
+                  _MetadataRow(episode: widget.episode),
+                  const SizedBox(height: Spacing.md),
+
+                  // Progress indicator
+                  if (widget.progress != null &&
+                      (widget.progress!.isCompleted ||
+                          widget.progress!.isInProgress))
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: Spacing.md),
+                      child: EpisodeProgressIndicator(
+                        isCompleted: widget.progress!.isCompleted,
+                        isInProgress: widget.progress!.isInProgress,
+                        remainingTimeFormatted:
+                            widget.progress!.remainingTimeFormatted,
                       ),
                     ),
-                    const SizedBox(height: Spacing.sm),
 
-                    // Metadata row
-                    _MetadataRow(episode: widget.episode),
-                    const SizedBox(height: Spacing.md),
+                  // Action bar
+                  _ActionBar(
+                    enclosureUrl: enclosureUrl,
+                    isPlaying: isPlaying,
+                    isLoading: isLoading,
+                    isCompleted: isCompleted,
+                    episodeId: episodeId,
+                    downloadTask: downloadTask,
+                    onPlayPause: enclosureUrl != null
+                        ? () => _onPlayPausePressed(
+                            context,
+                            enclosureUrl,
+                            isPlaying,
+                          )
+                        : null,
+                    onDownloadTap: episodeId != null
+                        ? () => _onDownloadTap(context, episodeId, downloadTask)
+                        : null,
+                    onQueuePlayLater: episodeId != null
+                        ? () {
+                            ref
+                                .read(queueControllerProvider.notifier)
+                                .playLater(episodeId);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(l10n.queueAddedToQueue),
+                                duration: const Duration(seconds: 1),
+                              ),
+                            );
+                          }
+                        : null,
+                    onTogglePlayed: enclosureUrl != null
+                        ? () => _togglePlayedStatus(enclosureUrl, isCompleted)
+                        : null,
+                  ),
 
-                    // Progress indicator
-                    if (widget.progress != null &&
-                        (widget.progress!.isCompleted ||
-                            widget.progress!.isInProgress))
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: Spacing.md),
-                        child: EpisodeProgressIndicator(
-                          isCompleted: widget.progress!.isCompleted,
-                          isInProgress: widget.progress!.isInProgress,
-                          remainingTimeFormatted:
-                              widget.progress!.remainingTimeFormatted,
-                        ),
-                      ),
+                  const Divider(height: Spacing.xl),
 
-                    // Action bar
-                    _ActionBar(
-                      enclosureUrl: enclosureUrl,
-                      isPlaying: isPlaying,
-                      isLoading: isLoading,
-                      isCompleted: isCompleted,
-                      episodeId: episodeId,
-                      downloadTask: downloadTask,
-                      onPlayPause: enclosureUrl != null
-                          ? () => _onPlayPausePressed(
-                              context,
-                              enclosureUrl,
-                              isPlaying,
-                            )
-                          : null,
-                      onDownloadTap: episodeId != null
-                          ? () =>
-                                _onDownloadTap(context, episodeId, downloadTask)
-                          : null,
-                      onQueuePlayLater: episodeId != null
-                          ? () {
-                              ref
-                                  .read(queueControllerProvider.notifier)
-                                  .playLater(episodeId);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(l10n.queueAddedToQueue),
-                                  duration: const Duration(seconds: 1),
-                                ),
-                              );
-                            }
-                          : null,
-                      onTogglePlayed: enclosureUrl != null
-                          ? () => _togglePlayedStatus(enclosureUrl, isCompleted)
-                          : null,
-                    ),
-
-                    const Divider(height: Spacing.xl),
-
-                    // Description / show notes
-                    _DescriptionSection(episode: widget.episode),
-                  ],
-                ),
+                  // Description / show notes
+                  _DescriptionSection(episode: widget.episode),
+                ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
