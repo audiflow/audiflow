@@ -68,6 +68,5 @@ Replace default `SliverAppBar` leading/actions with custom `OverlayActionButton`
 
 ## Testing
 
-- Unit test `ArtworkBrightnessResolver` with dark/light/null image scenarios
-- Widget test `OverlayActionButton` renders correct colors for each brightness
-- Widget test episode detail screen uses correct `SystemUiOverlayStyle` based on brightness
+- Unit test `ArtworkBrightnessResolver` with dark/light/error-fallback image scenarios
+- Widget test `OverlayActionButton` renders correct colors for each brightness, hit target size, semantics enabled state, and disabled opacity

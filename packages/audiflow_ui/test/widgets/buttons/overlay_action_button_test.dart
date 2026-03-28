@@ -1,3 +1,4 @@
+import 'package:audiflow_ui/src/styles/borders.dart';
 import 'package:audiflow_ui/src/widgets/buttons/overlay_action_button.dart';
 import 'package:checks/checks.dart';
 import 'package:flutter/material.dart';
@@ -88,7 +89,7 @@ void main() {
 
       final container = tester.widget<DecoratedBox>(find.byType(DecoratedBox));
       final decoration = container.decoration as BoxDecoration;
-      check(decoration.borderRadius).equals(BorderRadius.circular(10));
+      check(decoration.borderRadius).equals(AppBorders.md);
     });
 
     testWidgets('semantics enabled is false when onTap is null', (
@@ -129,6 +130,38 @@ void main() {
             .first,
       );
       check(semantics.properties.enabled).equals(true);
+    });
+
+    testWidgets('applies reduced opacity when onTap is null', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(body: OverlayActionButton(icon: Icons.arrow_back)),
+        ),
+      );
+
+      final opacity = tester.widget<Opacity>(
+        find.descendant(
+          of: find.byType(OverlayActionButton),
+          matching: find.byType(Opacity),
+        ),
+      );
+      check(opacity.opacity).equals(0.38);
+    });
+
+    testWidgets('no Opacity widget when onTap is set', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: OverlayActionButton(icon: Icons.arrow_back, onTap: () {}),
+          ),
+        ),
+      );
+
+      final opacityFinder = find.descendant(
+        of: find.byType(OverlayActionButton),
+        matching: find.byType(Opacity),
+      );
+      check(opacityFinder.evaluate().isEmpty).isTrue();
     });
   });
 }
