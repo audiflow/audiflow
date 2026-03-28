@@ -301,6 +301,74 @@ void main() {
       );
     });
 
+    test('infers grouped structure from persisted groups '
+        'even when entity field says split', () async {
+      // Simulate stale DB entities where playlistStructure was
+      // never written (defaults to 'split') but groups were
+      // persisted correctly. This is the Drift→Isar migration
+      // scenario that caused the grouping regression.
+      final subscription = makeSubscription();
+      final episodes = makeSeasonedEpisodes();
+
+      final summary = PatternSummary(
+        id: 'test-pattern',
+        dataVersion: 1,
+        displayName: 'Test Pattern',
+        feedUrlHint: 'example.com',
+        playlistCount: 1,
+      );
+
+      // Manually insert entity with wrong playlistStructure
+      final entity = SmartPlaylistEntity()
+        ..podcastId = 1
+        ..playlistNumber = 0
+        ..playlistId = 'regular'
+        ..displayName = 'Regular'
+        ..sortKey = 0
+        ..resolverType = 'rss'
+        ..playlistStructure =
+            'split' // Wrong: should be 'grouped'
+        ..yearHeaderMode = 'none'
+        ..configVersion = 1;
+
+      await isar.writeTxn(() async {
+        await isar.smartPlaylistEntitys.put(entity);
+      });
+
+      // Persist groups for the playlist
+      final groupEntity = SmartPlaylistGroupEntity()
+        ..podcastId = 1
+        ..playlistId = 'regular'
+        ..groupId = 'season_1'
+        ..displayName = 'Season 1'
+        ..sortKey = 1
+        ..episodeIds = '1,2';
+
+      await datasource.upsertGroupsForPlaylist(1, 'regular', [groupEntity]);
+
+      final container = makeContainer(
+        subscription: subscription,
+        episodes: episodes,
+        configRepo: _FakeConfigRepository(summary: summary),
+      );
+      addTearDown(container.dispose);
+
+      final grouping = await readSmartPlaylists(container, 1);
+
+      expect(grouping, isNotNull);
+      expect(grouping!.playlists, hasLength(1));
+
+      final playlist = grouping.playlists.first;
+      expect(
+        playlist.playlistStructure,
+        PlaylistStructure.grouped,
+        reason: 'Should infer grouped from persisted groups',
+      );
+      expect(playlist.groups, isNotNull);
+      expect(playlist.groups, hasLength(1));
+      expect(playlist.groups!.first.displayName, 'Season 1');
+    });
+
     test(
       'cache round-trip preserves year-resolved playlist episode IDs',
       () async {
