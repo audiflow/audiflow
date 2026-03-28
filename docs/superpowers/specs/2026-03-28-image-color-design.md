@@ -1,0 +1,73 @@
+# Image Color: Adaptive Status Bar and App Bar Buttons
+
+## Problem
+
+The episode detail screen displays podcast artwork behind the `SliverAppBar`. The system status bar icons (clock, battery, signal) and app bar buttons (back, share) use fixed colors that can become invisible against certain artwork.
+
+## Scope
+
+**In scope:** Episode detail screen (`EpisodeDetailScreen`) only.
+
+**Out of scope:** Podcast detail screen (standard `SearchableAppBar`, no artwork overlap), player screen (Cupertino sheet, no system app bar).
+
+## Design decisions
+
+| Decision | Choice | Rationale |
+|----------|--------|-----------|
+| Back/share button visibility | Background shape (not color-only) | Guarantees tap-target visibility on any artwork |
+| Shape | Squircle (border-radius ~10, 36x36) | iOS-native feel |
+| Icon + scrim adaptation | Adaptive (not fixed) | More polished; scrim and icon color flip based on artwork luminance |
+
+## Color extraction
+
+- Package: `palette_generator`
+- Extract dominant color from artwork URL
+- Compute luminance via `Color.computeLuminance()`
+- Threshold: `0.5` (below = dark artwork, above = light artwork)
+- Extraction runs once on screen load, cached in widget state
+- Fallback (no artwork or extraction failure): treat as dark artwork
+
+### Placement
+
+`ArtworkBrightnessResolver` utility in `audiflow_ui`. Returns a brightness enum (`Brightness.dark` or `Brightness.light`) from an image provider. The episode detail screen consumes this to drive both status bar and button styling.
+
+## Status bar icons
+
+Wrap `Scaffold` in `AnnotatedRegion<SystemUiOverlayStyle>`:
+
+| Artwork brightness | `SystemUiOverlayStyle` | Status bar icons |
+|--------------------|------------------------|------------------|
+| Dark | `.light` | White |
+| Light | `.dark` | Black |
+
+## App bar buttons
+
+Replace default `SliverAppBar` leading/actions with custom `OverlayActionButton` widget.
+
+| Artwork brightness | Scrim color | Icon color |
+|--------------------|-------------|------------|
+| Dark | `rgba(255,255,255,0.2)` | White |
+| Light | `rgba(0,0,0,0.25)` | Dark (`#1a1a1a`) |
+
+### `OverlayActionButton` widget
+
+- Location: `audiflow_ui/lib/src/widgets/buttons/overlay_action_button.dart`
+- Props: `icon` (IconData), `onTap` (VoidCallback), `brightness` (Brightness)
+- Size: 36x36, border-radius 10 (squircle)
+- Exported from `audiflow_ui`
+
+## Affected files
+
+| File | Change |
+|------|--------|
+| `audiflow_ui/pubspec.yaml` | Add `palette_generator` dependency |
+| `audiflow_ui/lib/src/widgets/buttons/overlay_action_button.dart` | New: squircle button widget |
+| `audiflow_ui/lib/src/utils/artwork_brightness_resolver.dart` | New: color extraction utility |
+| `audiflow_ui/lib/audiflow_ui.dart` | Export new files |
+| `audiflow_app/.../episode_detail_screen.dart` | Use `ArtworkBrightnessResolver`, `AnnotatedRegion`, custom leading/actions |
+
+## Testing
+
+- Unit test `ArtworkBrightnessResolver` with dark/light/null image scenarios
+- Widget test `OverlayActionButton` renders correct colors for each brightness
+- Widget test episode detail screen uses correct `SystemUiOverlayStyle` based on brightness
