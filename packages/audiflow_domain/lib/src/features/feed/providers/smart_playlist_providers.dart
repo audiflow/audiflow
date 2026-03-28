@@ -260,6 +260,14 @@ Future<SmartPlaylistGrouping?> _buildGroupingFromCache(
       allGroupedEpisodeIds.addAll(episodeIds);
     }
 
+    // Infer structure from persisted groups: if groups exist in
+    // the database the playlist was originally resolved as
+    // "grouped", regardless of what the entity field says. This
+    // handles stale records created before the field was added.
+    final playlistStructure = groups != null && groups.isNotEmpty
+        ? PlaylistStructure.grouped
+        : PlaylistStructure.fromString(entity.playlistStructure);
+
     playlists.add(
       SmartPlaylist(
         id: playlistId,
@@ -267,9 +275,7 @@ Future<SmartPlaylistGrouping?> _buildGroupingFromCache(
         sortKey: entity.sortKey,
         episodeIds: episodeIds,
         thumbnailUrl: entity.thumbnailUrl,
-        playlistStructure: PlaylistStructure.fromString(
-          entity.playlistStructure,
-        ),
+        playlistStructure: playlistStructure,
         yearBinding: YearBinding.fromString(entity.yearHeaderMode),
         groups: groups,
       ),
