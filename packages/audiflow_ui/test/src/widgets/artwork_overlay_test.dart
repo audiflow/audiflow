@@ -1,4 +1,4 @@
-import 'package:audiflow_ui/src/widgets/artwork_overlay.dart';
+import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:checks/checks.dart';
 import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
@@ -88,8 +88,13 @@ void main() {
       await tester.tap(find.text('Open'));
       await tester.pump();
 
-      final clipRRect = tester.widget<ClipRRect>(find.byType(ClipRRect));
-      check(clipRRect.borderRadius).equals(BorderRadius.circular(16));
+      final clipRRect = tester.widget<ClipRRect>(
+        find.descendant(
+          of: find.byType(ArtworkOverlay),
+          matching: find.byType(ClipRRect),
+        ),
+      );
+      check(clipRRect.borderRadius).equals(AppBorders.lg);
     });
   });
 }
