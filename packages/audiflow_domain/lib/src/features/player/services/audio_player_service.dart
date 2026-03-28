@@ -207,7 +207,7 @@ class AudioPlayerController extends _$AudioPlayerController
             episodeUrl: nextEpisode.audioUrl,
             episodeTitle: nextEpisode.title,
             podcastTitle: podcastTitle,
-            artworkUrl: nextEpisode.imageUrl,
+            artworkUrl: nextEpisode.imageUrl ?? subscription?.artworkUrl,
             totalDuration: nextEpisode.durationMs != null
                 ? Duration(milliseconds: nextEpisode.durationMs!)
                 : null,

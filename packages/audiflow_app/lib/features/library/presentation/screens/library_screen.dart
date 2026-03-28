@@ -199,21 +199,25 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     );
   }
 
-  void _onContinueListeningTap(
+  Future<void> _onContinueListeningTap(
     BuildContext context,
     EpisodeWithProgress episode,
-  ) {
+  ) async {
     final controller = ref.read(audioPlayerControllerProvider.notifier);
     final audioUrl = episode.episode.audioUrl;
     final position = Duration(milliseconds: episode.history?.positionMs ?? 0);
+
+    final subscription = await ref
+        .read(subscriptionRepositoryProvider)
+        .getById(episode.episode.podcastId);
 
     controller.play(
       audioUrl,
       metadata: NowPlayingInfo(
         episodeUrl: audioUrl,
         episodeTitle: episode.episode.title,
-        podcastTitle: '',
-        artworkUrl: episode.episode.imageUrl,
+        podcastTitle: subscription?.title ?? '',
+        artworkUrl: episode.episode.imageUrl ?? subscription?.artworkUrl,
         totalDuration: episode.episode.durationMs != null
             ? Duration(milliseconds: episode.episode.durationMs!)
             : null,
