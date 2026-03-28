@@ -36,7 +36,9 @@ class ArtworkBrightnessResolver {
       return luminance < _luminanceThreshold
           ? Brightness.dark
           : Brightness.light;
-    } on Exception {
+    } catch (_) {
+      // Catch all errors (including FlutterError/Error from the image
+      // pipeline) to guarantee the fallback is always returned.
       return Brightness.dark;
     }
   }

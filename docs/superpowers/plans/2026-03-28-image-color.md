@@ -10,40 +10,7 @@
 
 ---
 
-### Task 1: Add `palette_generator` dependency to `audiflow_ui`
-
-**Files:**
-- Modify: `packages/audiflow_ui/pubspec.yaml`
-
-- [ ] **Step 1: Add dependency**
-
-In `packages/audiflow_ui/pubspec.yaml`, add `palette_generator` under `dependencies`:
-
-```yaml
-dependencies:
-  flutter:
-    sdk: flutter
-  audiflow_core:
-  audiflow_domain:
-  palette_generator: ^0.3.3+4
-  flutter_screenutil: 5.9.3
-```
-
-- [ ] **Step 2: Run pub get**
-
-Run: `cd packages/audiflow_ui && flutter pub get`
-Expected: resolves without errors
-
-- [ ] **Step 3: Commit**
-
-```bash
-git add packages/audiflow_ui/pubspec.yaml
-git commit -m "chore(ui): add palette_generator dependency"
-```
-
----
-
-### Task 2: Create `ArtworkBrightnessResolver`
+### Task 1: Create `ArtworkBrightnessResolver`
 
 **Files:**
 - Create: `packages/audiflow_ui/lib/src/utils/artwork_brightness_resolver.dart`
@@ -106,44 +73,14 @@ Expected: FAIL — file not found / class not defined
 
 - [ ] **Step 3: Write implementation**
 
-Create `packages/audiflow_ui/lib/src/utils/artwork_brightness_resolver.dart`:
+Create `packages/audiflow_ui/lib/src/utils/artwork_brightness_resolver.dart`.
 
-```dart
-import 'package:flutter/material.dart';
-import 'package:palette_generator/palette_generator.dart';
-
-/// Resolves the perceived brightness of an artwork image.
-///
-/// Uses [PaletteGenerator] to extract the dominant color, then
-/// checks luminance against a threshold to classify as dark or light.
-class ArtworkBrightnessResolver {
-  ArtworkBrightnessResolver._();
-
-  static const double _luminanceThreshold = 0.5;
-
-  /// Resolves brightness from an [ImageProvider].
-  ///
-  /// Returns [Brightness.dark] if the dominant color's luminance
-  /// is below the threshold, or as a fallback when extraction fails.
-  static Future<Brightness> resolve(ImageProvider provider) async {
-    try {
-      final palette = await PaletteGenerator.fromImageProvider(
-        provider,
-        maximumColorCount: 4,
-      );
-      final dominantColor =
-          palette.dominantColor?.color ?? palette.colors.firstOrNull;
-      if (dominantColor == null) return Brightness.dark;
-
-      return dominantColor.computeLuminance() < _luminanceThreshold
-          ? Brightness.dark
-          : Brightness.light;
-    } on Exception {
-      return Brightness.dark;
-    }
-  }
-}
-```
+Implementation approach (no external dependencies):
+- Use `ResizeImage` to decode artwork at 24x24
+- Call `ui.Image.toByteData(format: rawStraightRgba)` for pixel access
+- Sample the top 25% of rows and compute average luminance (ITU-R BT.709)
+- Return `Brightness.dark` if luminance is below 0.5, otherwise `Brightness.light`
+- Catch all errors (including `FlutterError`) to guarantee fallback
 
 - [ ] **Step 4: Run tests to verify they pass**
 
@@ -495,7 +432,7 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
   }
 ```
 
-Replace the `build` method — wrap Scaffold with `AnnotatedRegion`, replace `SliverAppBar` leading and actions:
+Replace the `build` method — set `SliverAppBar.systemOverlayStyle`, replace leading and actions:
 
 ```dart
   @override
