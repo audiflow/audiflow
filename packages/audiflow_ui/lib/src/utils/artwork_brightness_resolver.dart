@@ -18,10 +18,9 @@ class ArtworkBrightnessResolver {
     try {
       final palette = await PaletteGenerator.fromImageProvider(
         provider,
-        maximumColorCount: 4,
+        maximumColorCount: 4, // Keep palette quantization cheap
       );
-      final dominantColor =
-          palette.dominantColor?.color ?? palette.colors.firstOrNull;
+      final dominantColor = palette.dominantColor?.color;
       if (dominantColor == null) return Brightness.dark;
 
       return dominantColor.computeLuminance() < _luminanceThreshold
