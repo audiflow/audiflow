@@ -48,7 +48,7 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
   @override
   void initState() {
     super.initState();
-    _resolveArtworkBrightness();
+    _resolveArtworkBrightness().ignore();
   }
 
   Future<void> _resolveArtworkBrightness() async {
@@ -140,7 +140,7 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
                     );
                   },
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: Spacing.sm),
               ],
             ),
             SliverToBoxAdapter(
