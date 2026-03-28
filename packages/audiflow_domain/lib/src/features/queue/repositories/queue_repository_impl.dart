@@ -229,13 +229,14 @@ class QueueRepositoryImpl implements QueueRepository {
       final episode = episodeMap[item.episodeId];
       if (episode == null) continue;
 
-      final artworkUrl =
-          episode.imageUrl ?? subscriptionMap[episode.podcastId]?.artworkUrl;
+      final subscription = subscriptionMap[episode.podcastId];
+      final artworkUrl = episode.imageUrl ?? subscription?.artworkUrl;
 
       final queueItemWithEpisode = QueueItemWithEpisode(
         queueItem: item,
         episode: episode,
         artworkUrl: artworkUrl,
+        itunesId: subscription?.itunesId,
       );
 
       if (item.isAdhoc) {

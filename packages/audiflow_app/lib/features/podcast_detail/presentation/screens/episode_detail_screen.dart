@@ -11,6 +11,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../../routing/app_router.dart';
+import '../../../download/presentation/helpers/download_action_helper.dart';
 import '../../../player/helpers/podcast_lookup.dart';
 import '../../../queue/presentation/controllers/queue_controller.dart';
 import '../../../share/presentation/helpers/share_helper.dart';
@@ -174,11 +175,11 @@ class EpisodeDetailScreen extends ConsumerWidget {
                           )
                         : null,
                     onDownloadTap: episodeId != null
-                        ? () => _onDownloadTap(
-                            context,
-                            ref,
-                            episodeId,
-                            downloadTask,
+                        ? () => handleDownloadTap(
+                            context: context,
+                            ref: ref,
+                            episodeId: episodeId,
+                            task: downloadTask,
                           )
                         : null,
                     onQueuePlayLater: episodeId != null
@@ -347,81 +348,6 @@ class EpisodeDetailScreen extends ConsumerWidget {
       ),
     );
     return result ?? false;
-  }
-
-  Future<void> _onDownloadTap(
-    BuildContext context,
-    WidgetRef ref,
-    int episodeId,
-    DownloadTask? task,
-  ) async {
-    final downloadService = ref.read(downloadServiceProvider);
-    final messenger = ScaffoldMessenger.of(context);
-    final l10n = AppLocalizations.of(context);
-
-    if (task == null) {
-      await downloadService.downloadEpisode(episodeId);
-      return;
-    }
-
-    task.downloadStatus.when(
-      pending: () async {
-        await downloadService.cancel(task.id);
-        messenger.showSnackBar(SnackBar(content: Text(l10n.downloadCancelled)));
-      },
-      downloading: () async {
-        await downloadService.pause(task.id);
-      },
-      paused: () async {
-        await downloadService.resume(task.id);
-      },
-      completed: () {
-        _showDeleteConfirmation(context, ref, task);
-      },
-      failed: () async {
-        await downloadService.retry(task.id);
-        messenger.showSnackBar(SnackBar(content: Text(l10n.downloadRetrying)));
-      },
-      cancelled: () async {
-        final result = await downloadService.downloadEpisode(episodeId);
-        if (result != null) {
-          messenger.showSnackBar(SnackBar(content: Text(l10n.downloadStarted)));
-        }
-      },
-    );
-  }
-
-  void _showDeleteConfirmation(
-    BuildContext context,
-    WidgetRef ref,
-    DownloadTask task,
-  ) {
-    final l10n = AppLocalizations.of(context);
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.downloadDeleteTitle),
-        content: Text(l10n.downloadDeleteContent),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(l10n.commonCancel),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              await ref.read(downloadServiceProvider).delete(task.id);
-              if (context.mounted) {
-                ScaffoldMessenger.of(
-                  context,
-                ).showSnackBar(SnackBar(content: Text(l10n.downloadDeleted)));
-              }
-            },
-            child: Text(l10n.commonDelete),
-          ),
-        ],
-      ),
-    );
   }
 
   Future<void> _togglePlayedStatus(
