@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
@@ -58,6 +60,7 @@ class EpisodeDetailScreen extends ConsumerWidget {
     final isCompleted = progress?.isCompleted ?? false;
 
     final imageUrl = episode.primaryImage?.url ?? artworkUrl;
+    final heroTag = 'episode_artwork_${episode.guid ?? episode.title}';
 
     return Scaffold(
       body: CustomScrollView(
@@ -67,10 +70,17 @@ class EpisodeDetailScreen extends ConsumerWidget {
             pinned: true,
             flexibleSpace: imageUrl != null
                 ? FlexibleSpaceBar(
-                    background: ExtendedImage.network(
-                      imageUrl,
-                      fit: BoxFit.cover,
-                      cache: true,
+                    background: GestureDetector(
+                      onTap: () =>
+                          _showArtworkOverlay(context, imageUrl, heroTag),
+                      child: Hero(
+                        tag: heroTag,
+                        child: ExtendedImage.network(
+                          imageUrl,
+                          fit: BoxFit.cover,
+                          cache: true,
+                        ),
+                      ),
                     ),
                   )
                 : null,
@@ -197,6 +207,25 @@ class EpisodeDetailScreen extends ConsumerWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showArtworkOverlay(
+    BuildContext context,
+    String imageUrl,
+    String heroTag,
+  ) {
+    Navigator.of(context).push(
+      PageRouteBuilder<void>(
+        opaque: false,
+        barrierDismissible: true,
+        barrierColor: Colors.black87,
+        transitionDuration: const Duration(milliseconds: 300),
+        reverseTransitionDuration: const Duration(milliseconds: 250),
+        pageBuilder: (context, animation, secondaryAnimation) {
+          return _EpisodeArtworkOverlay(imageUrl: imageUrl, heroTag: heroTag);
+        },
       ),
     );
   }
@@ -555,6 +584,69 @@ class _ActionBar extends StatelessWidget {
             tooltip: isCompleted ? l10n.markAsUnplayed : l10n.markAsPlayed,
           ),
       ],
+    );
+  }
+}
+
+class _EpisodeArtworkOverlay extends StatelessWidget {
+  const _EpisodeArtworkOverlay({required this.imageUrl, required this.heroTag});
+
+  final String imageUrl;
+  final String heroTag;
+
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.sizeOf(context);
+    final artworkSize = math.min(size.width, size.height) * 0.85;
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return GestureDetector(
+      onTap: () => Navigator.of(context).pop(),
+      behavior: HitTestBehavior.opaque,
+      child: Center(
+        child: GestureDetector(
+          onTap: () {},
+          child: Hero(
+            tag: heroTag,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: ExtendedImage.network(
+                imageUrl,
+                width: artworkSize,
+                height: artworkSize,
+                fit: BoxFit.cover,
+                cache: true,
+                loadStateChanged: (state) {
+                  if (state.extendedImageLoadState == LoadState.loading) {
+                    return Container(
+                      width: artworkSize,
+                      height: artworkSize,
+                      color: colorScheme.surfaceContainerHighest,
+                      child: const Center(
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    );
+                  }
+                  if (state.extendedImageLoadState == LoadState.failed) {
+                    return Container(
+                      width: artworkSize,
+                      height: artworkSize,
+                      alignment: Alignment.center,
+                      color: colorScheme.surfaceContainerHighest,
+                      child: Icon(
+                        Icons.broken_image,
+                        size: 64,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    );
+                  }
+                  return null;
+                },
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
