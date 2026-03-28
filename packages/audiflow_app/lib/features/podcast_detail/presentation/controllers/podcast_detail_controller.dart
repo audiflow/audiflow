@@ -134,8 +134,7 @@ Future<ParsedFeed> podcastDetail(Ref ref, String feedUrl) async {
     );
 
     // Always ensure a subscription entry exists (real or cached)
-    var subscription =
-        existingSub ?? await subscriptionRepo.getByFeedUrl(feedUrl);
+    var subscription = existingSub;
 
     if (subscription != null) {
       // Hint no longer needed -- subscription already exists

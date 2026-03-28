@@ -115,6 +115,7 @@ class IsolateRssParser {
                 // Stream was cancelled while the isolate was spawning.
                 spawned.kill(priority: Isolate.immediate);
                 receivePort.close();
+                if (!controller.isClosed) controller.close();
                 return;
               }
               isolate = spawned;
@@ -149,6 +150,9 @@ class IsolateRssParser {
         isolate = null;
         portSub?.cancel();
         receivePort.close();
+        if (!controller.isClosed) {
+          controller.close();
+        }
       },
     );
 
@@ -250,8 +254,7 @@ class IsolateRssParser {
   /// (everything before the first <item>) using lightweight regex.
   /// No DOM allocation needed for the header.
   static ParsedPodcastMeta? _parseMetadataFromString(String headerXml) {
-    final title = _extractTagText(headerXml, 'title');
-    if (title == null) return null;
+    final title = _extractTagText(headerXml, 'title') ?? 'Untitled Podcast';
 
     // itunes:image uses an href attribute, not text content
     final itunesImageMatch = RegExp(
