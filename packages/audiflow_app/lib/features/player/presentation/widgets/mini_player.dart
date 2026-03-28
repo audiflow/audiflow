@@ -36,17 +36,24 @@ class _MiniPlayerState extends ConsumerState<MiniPlayer> {
   bool _wasPlayingBeforeSeek = false;
 
   Future<void> _handleSkipForward() async {
+    // Re-entrancy guard: ignore rapid taps while a seek is in flight
+    if (_isSeeking) return;
+
     final isPlaying =
         ref.read(audioPlayerControllerProvider) is PlaybackPlaying;
     setState(() {
       _isSeeking = true;
       _wasPlayingBeforeSeek = isPlaying;
     });
-    await ref.read(audioPlayerControllerProvider.notifier).skipForward();
-    // Allow player state to stabilize after seek
-    await Future<void>.delayed(const Duration(milliseconds: 150));
-    if (!mounted) return;
-    setState(() => _isSeeking = false);
+    try {
+      await ref.read(audioPlayerControllerProvider.notifier).skipForward();
+      // Allow player state to stabilize after seek
+      await Future<void>.delayed(const Duration(milliseconds: 150));
+    } finally {
+      if (mounted) {
+        setState(() => _isSeeking = false);
+      }
+    }
   }
 
   @override
