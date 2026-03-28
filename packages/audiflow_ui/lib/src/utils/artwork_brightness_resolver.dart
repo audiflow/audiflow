@@ -1,3 +1,5 @@
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 import 'package:palette_generator/palette_generator.dart';
 
@@ -10,6 +12,9 @@ class ArtworkBrightnessResolver {
 
   static const double _luminanceThreshold = 0.5;
 
+  // Small target size for fast analysis — full resolution is unnecessary
+  static const ui.Size _analysisSize = ui.Size(50, 50);
+
   /// Resolves brightness from an [ImageProvider].
   ///
   /// Returns [Brightness.dark] if the dominant color's luminance
@@ -18,6 +23,7 @@ class ArtworkBrightnessResolver {
     try {
       final palette = await PaletteGenerator.fromImageProvider(
         provider,
+        size: _analysisSize,
         maximumColorCount: 4, // Keep palette quantization cheap
       );
       final dominantColor = palette.dominantColor?.color;
