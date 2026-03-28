@@ -10,6 +10,9 @@ export 'src/themes/text_styles.dart';
 export 'src/styles/spacing.dart';
 export 'src/styles/borders.dart';
 
+// Widgets - Artwork
+export 'src/widgets/artwork_overlay.dart';
+
 // Widgets - Cards
 export 'src/widgets/cards/episode_card.dart';
 export 'src/widgets/cards/podcast_artwork_grid_item.dart';
