@@ -129,14 +129,14 @@ class FeedSyncExecutor {
         }
       }
 
-      // Persist HTTP cache headers only after successful parse + upsert
-      if (etag != null || lastModified != null) {
-        await _subscriptionRepo.updateHttpCacheHeaders(
-          sub.id,
-          etag: etag,
-          lastModified: lastModified,
-        );
-      }
+      // Persist HTTP cache headers only after successful parse + upsert.
+      // Always update so previously stored values are cleared when headers
+      // are no longer sent by the server.
+      await _subscriptionRepo.updateHttpCacheHeaders(
+        sub.id,
+        etag: etag,
+        lastModified: lastModified,
+      );
 
       await _subscriptionRepo.updateLastRefreshed(sub.itunesId, DateTime.now());
 

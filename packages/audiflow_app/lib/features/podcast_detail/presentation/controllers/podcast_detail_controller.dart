@@ -232,14 +232,14 @@ Future<ParsedFeed> podcastDetail(Ref ref, String feedUrl) async {
         'for subscription',
       );
 
-      // Persist HTTP cache headers only after successful parse + upsert
-      if (etag != null || lastModified != null) {
-        await subscriptionRepo.updateHttpCacheHeaders(
-          subscription.id,
-          etag: etag,
-          lastModified: lastModified,
-        );
-      }
+      // Persist HTTP cache headers only after successful parse + upsert.
+      // Always update so previously stored values are cleared when headers
+      // are no longer sent by the server.
+      await subscriptionRepo.updateHttpCacheHeaders(
+        subscription.id,
+        etag: etag,
+        lastModified: lastModified,
+      );
 
       // Invalidate all smart playlist providers after
       // episodes are persisted. Both ID-based and
