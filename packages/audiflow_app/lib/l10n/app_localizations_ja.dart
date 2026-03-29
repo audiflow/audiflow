@@ -897,4 +897,49 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get navSettings => '設定';
+
+  @override
+  String get settingsVoiceTitle => '音声';
+
+  @override
+  String get settingsVoiceSubtitle => '音声コマンドと認識';
+
+  @override
+  String get voiceEnabledTitle => '音声コマンド';
+
+  @override
+  String get voiceEnabledSubtitle => 'アプリの音声操作を有効にする';
+
+  @override
+  String get voiceAvailableCommands => '利用可能なコマンド';
+
+  @override
+  String get voiceCommandPlay => '再生 / 再生を再開';
+
+  @override
+  String get voiceCommandPause => '一時停止';
+
+  @override
+  String get voiceCommandStop => '停止';
+
+  @override
+  String get voiceCommandSkipForward => '早送り';
+
+  @override
+  String get voiceCommandSkipBackward => '巻き戻し';
+
+  @override
+  String get voiceCommandSearch => 'ポッドキャストを検索';
+
+  @override
+  String get voiceCommandGoToLibrary => 'ライブラリに移動';
+
+  @override
+  String get voiceCommandGoToQueue => 'キューに移動';
+
+  @override
+  String get voiceCommandOpenSettings => '設定を開く';
+
+  @override
+  String get voiceCommandChangeSettings => '設定を変更';
 }

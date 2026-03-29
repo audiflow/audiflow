@@ -25,6 +25,7 @@ class FakeAppSettingsRepository implements AppSettingsRepository {
   bool notifyNewEpisodes = true;
   String? searchCountry;
   int lastTabIndex = 0;
+  bool voiceEnabled = true;
 
   @override
   ThemeMode getThemeMode() => themeMode;
@@ -145,6 +146,15 @@ class FakeAppSettingsRepository implements AppSettingsRepository {
   @override
   Future<void> setLastTabIndex(int index) async => lastTabIndex = index;
 
+  // -- Voice --
+
+  @override
+  bool getVoiceEnabled() => voiceEnabled;
+
+  @override
+  Future<void> setVoiceEnabled({required bool enabled}) async =>
+      voiceEnabled = enabled;
+
   @override
   Future<void> clearAll() async {
     themeMode = ThemeMode.system;
@@ -165,5 +175,6 @@ class FakeAppSettingsRepository implements AppSettingsRepository {
     notifyNewEpisodes = true;
     searchCountry = null;
     lastTabIndex = 0;
+    voiceEnabled = true;
   }
 }

@@ -217,6 +217,16 @@ class AppSettingsRepositoryImpl implements AppSettingsRepository {
     }
   }
 
+  // -- Voice --
+
+  @override
+  bool getVoiceEnabled() =>
+      _ds.getBool(SettingsKeys.voiceEnabled) ?? SettingsDefaults.voiceEnabled;
+
+  @override
+  Future<void> setVoiceEnabled({required bool enabled}) =>
+      _ds.setBool(SettingsKeys.voiceEnabled, enabled);
+
   // -- Data management --
 
   @override
@@ -240,6 +250,7 @@ class AppSettingsRepositoryImpl implements AppSettingsRepository {
       _ds.remove(SettingsKeys.notifyNewEpisodes),
       _ds.remove(SettingsKeys.searchCountry),
       _ds.remove(SettingsKeys.lastTabIndex),
+      _ds.remove(SettingsKeys.voiceEnabled),
     ]);
   }
 

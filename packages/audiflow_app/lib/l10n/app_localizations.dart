@@ -1729,6 +1729,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Settings'**
   String get navSettings;
+
+  /// Voice settings category title
+  ///
+  /// In en, this message translates to:
+  /// **'Voice'**
+  String get settingsVoiceTitle;
+
+  /// Voice settings category subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Voice commands and recognition'**
+  String get settingsVoiceSubtitle;
+
+  /// Toggle label for enabling voice commands
+  ///
+  /// In en, this message translates to:
+  /// **'Voice Commands'**
+  String get voiceEnabledTitle;
+
+  /// Toggle subtitle for enabling voice commands
+  ///
+  /// In en, this message translates to:
+  /// **'Enable voice control for the app'**
+  String get voiceEnabledSubtitle;
+
+  /// Section header listing available voice commands
+  ///
+  /// In en, this message translates to:
+  /// **'Available Commands'**
+  String get voiceAvailableCommands;
+
+  /// Description of the play/resume voice command
+  ///
+  /// In en, this message translates to:
+  /// **'Play / Resume playback'**
+  String get voiceCommandPlay;
+
+  /// Description of the pause voice command
+  ///
+  /// In en, this message translates to:
+  /// **'Pause playback'**
+  String get voiceCommandPause;
+
+  /// Description of the stop voice command
+  ///
+  /// In en, this message translates to:
+  /// **'Stop playback'**
+  String get voiceCommandStop;
+
+  /// Description of the skip forward voice command
+  ///
+  /// In en, this message translates to:
+  /// **'Skip forward'**
+  String get voiceCommandSkipForward;
+
+  /// Description of the skip backward voice command
+  ///
+  /// In en, this message translates to:
+  /// **'Skip backward'**
+  String get voiceCommandSkipBackward;
+
+  /// Description of the search voice command
+  ///
+  /// In en, this message translates to:
+  /// **'Search for podcasts'**
+  String get voiceCommandSearch;
+
+  /// Description of the go to library voice command
+  ///
+  /// In en, this message translates to:
+  /// **'Go to Library'**
+  String get voiceCommandGoToLibrary;
+
+  /// Description of the go to queue voice command
+  ///
+  /// In en, this message translates to:
+  /// **'Go to Queue'**
+  String get voiceCommandGoToQueue;
+
+  /// Description of the open settings voice command
+  ///
+  /// In en, this message translates to:
+  /// **'Open Settings'**
+  String get voiceCommandOpenSettings;
+
+  /// Description of the change setting voice command
+  ///
+  /// In en, this message translates to:
+  /// **'Change a setting'**
+  String get voiceCommandChangeSettings;
 }
 
 class _AppLocalizationsDelegate

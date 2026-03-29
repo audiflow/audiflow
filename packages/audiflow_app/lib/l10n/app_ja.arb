@@ -306,5 +306,21 @@
   "navSearch": "検索",
   "navLibrary": "ライブラリ",
   "navQueue": "キュー",
-  "navSettings": "設定"
+  "navSettings": "設定",
+
+  "settingsVoiceTitle": "音声",
+  "settingsVoiceSubtitle": "音声コマンドと認識",
+  "voiceEnabledTitle": "音声コマンド",
+  "voiceEnabledSubtitle": "アプリの音声操作を有効にする",
+  "voiceAvailableCommands": "利用可能なコマンド",
+  "voiceCommandPlay": "再生 / 再生を再開",
+  "voiceCommandPause": "一時停止",
+  "voiceCommandStop": "停止",
+  "voiceCommandSkipForward": "早送り",
+  "voiceCommandSkipBackward": "巻き戻し",
+  "voiceCommandSearch": "ポッドキャストを検索",
+  "voiceCommandGoToLibrary": "ライブラリに移動",
+  "voiceCommandGoToQueue": "キューに移動",
+  "voiceCommandOpenSettings": "設定を開く",
+  "voiceCommandChangeSettings": "設定を変更"
 }

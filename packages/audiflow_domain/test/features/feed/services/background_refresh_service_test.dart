@@ -105,6 +105,10 @@ class FakeAppSettingsRepository implements AppSettingsRepository {
   @override
   Future<void> setLastTabIndex(int index) async {}
   @override
+  bool getVoiceEnabled() => true;
+  @override
+  Future<void> setVoiceEnabled({required bool enabled}) async {}
+  @override
   Future<void> clearAll() async {}
 }
 

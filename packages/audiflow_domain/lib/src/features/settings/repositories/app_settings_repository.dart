@@ -130,6 +130,14 @@ abstract class AppSettingsRepository {
   /// Only indices 0-2 are accepted; others are ignored.
   Future<void> setLastTabIndex(int index);
 
+  // -- Voice --
+
+  /// Whether voice commands are enabled.
+  bool getVoiceEnabled();
+
+  /// Persists the voice commands enabled setting.
+  Future<void> setVoiceEnabled({required bool enabled});
+
   // -- Data management --
 
   /// Removes all persisted settings, restoring defaults.

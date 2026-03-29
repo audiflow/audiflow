@@ -914,4 +914,49 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get navSettings => 'Settings';
+
+  @override
+  String get settingsVoiceTitle => 'Voice';
+
+  @override
+  String get settingsVoiceSubtitle => 'Voice commands and recognition';
+
+  @override
+  String get voiceEnabledTitle => 'Voice Commands';
+
+  @override
+  String get voiceEnabledSubtitle => 'Enable voice control for the app';
+
+  @override
+  String get voiceAvailableCommands => 'Available Commands';
+
+  @override
+  String get voiceCommandPlay => 'Play / Resume playback';
+
+  @override
+  String get voiceCommandPause => 'Pause playback';
+
+  @override
+  String get voiceCommandStop => 'Stop playback';
+
+  @override
+  String get voiceCommandSkipForward => 'Skip forward';
+
+  @override
+  String get voiceCommandSkipBackward => 'Skip backward';
+
+  @override
+  String get voiceCommandSearch => 'Search for podcasts';
+
+  @override
+  String get voiceCommandGoToLibrary => 'Go to Library';
+
+  @override
+  String get voiceCommandGoToQueue => 'Go to Queue';
+
+  @override
+  String get voiceCommandOpenSettings => 'Open Settings';
+
+  @override
+  String get voiceCommandChangeSettings => 'Change a setting';
 }

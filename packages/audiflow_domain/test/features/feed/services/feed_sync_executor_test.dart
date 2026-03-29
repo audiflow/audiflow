@@ -288,6 +288,13 @@ class _FakeAppSettingsRepository implements AppSettingsRepository {
   Future<void> setLastTabIndex(int index) => throw UnimplementedError();
 
   @override
+  bool getVoiceEnabled() => true;
+
+  @override
+  Future<void> setVoiceEnabled({required bool enabled}) =>
+      throw UnimplementedError();
+
+  @override
   Future<void> clearAll() => throw UnimplementedError();
 }
 
