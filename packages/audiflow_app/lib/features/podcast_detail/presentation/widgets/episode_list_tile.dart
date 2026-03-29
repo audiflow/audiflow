@@ -212,7 +212,7 @@ class EpisodeListTile extends ConsumerWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (sheetContext) => DraggableScrollableSheet(
+      builder: (_) => DraggableScrollableSheet(
         expand: false,
         initialChildSize: 0.45,
         minChildSize: 0.3,
@@ -285,20 +285,21 @@ class EpisodeListTile extends ConsumerWidget {
                         },
                       ),
                     ],
-                    ListTile(
-                      leading: Icon(
-                        isCompleted ? Icons.replay : Icons.check_circle_outline,
-                      ),
-                      title: Text(
-                        isCompleted ? l10n.markAsUnplayed : l10n.markAsPlayed,
-                      ),
-                      onTap: () {
-                        Navigator.pop(sheetContext);
-                        if (audioUrl != null) {
+                    if (audioUrl != null)
+                      ListTile(
+                        leading: Icon(
+                          isCompleted
+                              ? Icons.replay
+                              : Icons.check_circle_outline,
+                        ),
+                        title: Text(
+                          isCompleted ? l10n.markAsUnplayed : l10n.markAsPlayed,
+                        ),
+                        onTap: () {
+                          Navigator.pop(sheetContext);
                           _togglePlayedStatus(ref, audioUrl, isCompleted);
-                        }
-                      },
-                    ),
+                        },
+                      ),
                     if (episodeId != null)
                       _buildDownloadMenuTile(
                         context,

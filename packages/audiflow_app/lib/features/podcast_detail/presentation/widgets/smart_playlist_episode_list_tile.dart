@@ -204,7 +204,7 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (sheetContext) => DraggableScrollableSheet(
+      builder: (_) => DraggableScrollableSheet(
         expand: false,
         initialChildSize: 0.45,
         minChildSize: 0.3,
