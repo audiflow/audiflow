@@ -301,6 +301,7 @@
   "undo": "元に戻す",
   "confirm": "確認",
   "cancel": "キャンセル",
+  "voiceTapMicToRetry": "マイクをタップしてやり直す",
 
   "navSearch": "検索",
   "navLibrary": "ライブラリ",

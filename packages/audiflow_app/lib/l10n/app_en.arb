@@ -556,6 +556,8 @@
   "@confirm": { "description": "Confirm action label" },
   "cancel": "Cancel",
   "@cancel": { "description": "Cancel action label" },
+  "voiceTapMicToRetry": "Tap mic to try again",
+  "@voiceTapMicToRetry": { "description": "Hint text shown on voice error state" },
 
   "navSearch": "Search",
   "@navSearch": { "description": "Navigation bar label for search tab" },
