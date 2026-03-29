@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../../l10n/app_localizations.dart';
-import '../../../voice/presentation/widgets/voice_trigger_button.dart';
 import '../controllers/queue_controller.dart';
 import '../widgets/clear_queue_button.dart';
 import '../widgets/now_playing_card.dart';
@@ -34,7 +33,6 @@ class QueueScreen extends ConsumerWidget {
             error: (_, _) =>
                 const ClearQueueButton(enabled: false, onClear: _noOp),
           ),
-          const VoiceTriggerButton(),
         ],
       ),
       body: queueAsync.when(

@@ -6,7 +6,6 @@ import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../../routing/app_router.dart';
-import '../../../voice/presentation/widgets/voice_trigger_button.dart';
 import '../widgets/settings_category_card.dart';
 
 /// Main settings screen with category cards.
@@ -21,10 +20,7 @@ class SettingsScreen extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.settingsTitle),
-        actions: const [VoiceTriggerButton()],
-      ),
+      appBar: AppBar(title: Text(l10n.settingsTitle)),
       body: LayoutBuilder(
         builder: (context, constraints) {
           final columnCount = ResponsiveGrid.columnCount(
