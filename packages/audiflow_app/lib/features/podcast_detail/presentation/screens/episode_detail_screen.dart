@@ -197,29 +197,18 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
                     )
                   : null,
               actions: [
-                Builder(
-                  builder: (context) {
-                    final l10n = AppLocalizations.of(context);
-                    final canShare =
-                        (widget.itunesId != null &&
-                            widget.episode.guid != null) ||
-                        widget.episode.link != null;
-                    return OverlayActionButton(
-                      icon: Icons.share,
-                      collapseRatio: effectiveCollapseRatio,
-                      artworkBrightness: _artworkBrightness,
-                      semanticLabel: l10n.shareEpisode,
-                      onTap: canShare
-                          ? () => shareEpisode(
-                              context: context,
-                              ref: ref,
-                              itunesId: widget.itunesId,
-                              episodeGuid: widget.episode.guid,
-                              fallbackLink: widget.episode.link,
-                            )
-                          : null,
-                    );
-                  },
+                OverlayActionButton(
+                  icon: Icons.more_vert,
+                  collapseRatio: effectiveCollapseRatio,
+                  artworkBrightness: _artworkBrightness,
+                  semanticLabel: l10n.episodeMoreActions,
+                  onTap: () => _showContextMenu(
+                    context,
+                    enclosureUrl: enclosureUrl,
+                    episodeId: episodeId,
+                    isCompleted: isCompleted,
+                    downloadTask: downloadTask,
+                  ),
                 ),
                 const SizedBox(width: Spacing.md),
               ],
@@ -256,13 +245,23 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
                     _MetadataRow(episode: widget.episode),
                     const SizedBox(height: Spacing.md),
 
+                    // Progress indicator
+                    if (isCompleted || isInProgress)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: Spacing.md),
+                        child: EpisodeProgressIndicator(
+                          isCompleted: isCompleted,
+                          isInProgress: isInProgress,
+                          remainingTimeFormatted:
+                              effectiveProgress?.remainingTimeFormatted,
+                        ),
+                      ),
+
                     // Action bar
                     _ActionBar(
                       enclosureUrl: enclosureUrl,
                       isPlaying: isPlaying,
                       isLoading: isLoading,
-                      isCompleted: isCompleted,
-                      isInProgress: isInProgress,
                       episodeId: episodeId,
                       downloadTask: downloadTask,
                       onPlayPause: enclosureUrl != null
@@ -292,9 +291,6 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
                                 ),
                               );
                             }
-                          : null,
-                      onTogglePlayed: enclosureUrl != null
-                          ? () => _togglePlayedStatus(enclosureUrl, isCompleted)
                           : null,
                     ),
 
@@ -328,6 +324,181 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
           return ArtworkOverlay(imageUrl: imageUrl, heroTag: heroTag);
         },
       ),
+    );
+  }
+
+  void _showContextMenu(
+    BuildContext context, {
+    required String? enclosureUrl,
+    required int? episodeId,
+    required bool isCompleted,
+    required DownloadTask? downloadTask,
+  }) {
+    final l10n = AppLocalizations.of(context);
+    final canShare =
+        (widget.itunesId != null && widget.episode.guid != null) ||
+        widget.episode.link != null;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => DraggableScrollableSheet(
+        expand: false,
+        initialChildSize: 0.45,
+        minChildSize: 0.3,
+        maxChildSize: 0.7,
+        builder: (sheetContext, scrollController) => SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 32,
+                height: 4,
+                margin: const EdgeInsets.symmetric(vertical: Spacing.sm),
+                decoration: BoxDecoration(
+                  color: Theme.of(
+                    sheetContext,
+                  ).colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: Spacing.md,
+                  vertical: Spacing.xs,
+                ),
+                child: Text(
+                  widget.episode.title,
+                  style: Theme.of(sheetContext).textTheme.titleSmall,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              const Divider(),
+              Expanded(
+                child: ListView(
+                  controller: scrollController,
+                  shrinkWrap: true,
+                  children: [
+                    if (episodeId != null) ...[
+                      ListTile(
+                        leading: const Icon(Icons.playlist_play),
+                        title: Text(l10n.playNext),
+                        onTap: () {
+                          Navigator.pop(sheetContext);
+                          ref
+                              .read(queueControllerProvider.notifier)
+                              .playNext(episodeId);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(l10n.queuePlayingNext),
+                              duration: const Duration(seconds: 1),
+                            ),
+                          );
+                        },
+                      ),
+                      ListTile(
+                        leading: const Icon(Icons.playlist_add),
+                        title: Text(l10n.addToQueue),
+                        onTap: () {
+                          Navigator.pop(sheetContext);
+                          ref
+                              .read(queueControllerProvider.notifier)
+                              .playLater(episodeId);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(l10n.queueAddedToQueue),
+                              duration: const Duration(seconds: 1),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                    if (enclosureUrl != null)
+                      ListTile(
+                        leading: Icon(
+                          isCompleted
+                              ? Icons.check_circle
+                              : Icons.check_circle_outline,
+                        ),
+                        title: Text(
+                          isCompleted ? l10n.markAsUnplayed : l10n.markAsPlayed,
+                        ),
+                        onTap: () {
+                          Navigator.pop(sheetContext);
+                          _togglePlayedStatus(enclosureUrl, isCompleted);
+                        },
+                      ),
+                    if (episodeId != null)
+                      _buildDownloadMenuTile(
+                        context,
+                        sheetContext,
+                        episodeId,
+                        downloadTask,
+                        l10n,
+                      ),
+                    if (canShare)
+                      ListTile(
+                        leading: const Icon(Icons.share),
+                        title: Text(l10n.shareEpisode),
+                        onTap: () {
+                          Navigator.pop(sheetContext);
+                          shareEpisode(
+                            context: context,
+                            ref: ref,
+                            itunesId: widget.itunesId,
+                            episodeGuid: widget.episode.guid,
+                            fallbackLink: widget.episode.link,
+                          );
+                        },
+                      ),
+                    const SizedBox(height: Spacing.sm),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDownloadMenuTile(
+    BuildContext outerContext,
+    BuildContext sheetContext,
+    int episodeId,
+    DownloadTask? task,
+    AppLocalizations l10n,
+  ) {
+    if (task case final DownloadTask nonNullTask
+        when nonNullTask.downloadStatus is DownloadStatusCompleted) {
+      return ListTile(
+        leading: const Icon(Icons.delete_outline),
+        title: Text(l10n.removeDownload),
+        onTap: () {
+          Navigator.pop(sheetContext);
+          showDownloadDeleteConfirmation(
+            context: outerContext,
+            ref: ref,
+            task: nonNullTask,
+          );
+        },
+      );
+    }
+
+    return ListTile(
+      leading: const Icon(Icons.download),
+      title: Text(l10n.downloadEpisode),
+      onTap: () {
+        Navigator.pop(sheetContext);
+        handleDownloadTap(
+          context: outerContext,
+          ref: ref,
+          episodeId: episodeId,
+          task: task,
+        );
+      },
     );
   }
 
@@ -516,34 +687,27 @@ class _MetadataRow extends StatelessWidget {
   }
 }
 
-/// Action bar with play, download, queue, and mark
-/// played buttons.
+/// Action bar with play, download, and queue buttons.
 class _ActionBar extends StatelessWidget {
   const _ActionBar({
     required this.enclosureUrl,
     required this.isPlaying,
     required this.isLoading,
-    required this.isCompleted,
-    required this.isInProgress,
     required this.episodeId,
     required this.downloadTask,
     required this.onPlayPause,
     required this.onDownloadTap,
     required this.onQueuePlayLater,
-    required this.onTogglePlayed,
   });
 
   final String? enclosureUrl;
   final bool isPlaying;
   final bool isLoading;
-  final bool isCompleted;
-  final bool isInProgress;
   final int? episodeId;
   final DownloadTask? downloadTask;
   final VoidCallback? onPlayPause;
   final VoidCallback? onDownloadTap;
   final VoidCallback? onQueuePlayLater;
-  final VoidCallback? onTogglePlayed;
 
   @override
   Widget build(BuildContext context) {
@@ -596,64 +760,7 @@ class _ActionBar extends StatelessWidget {
             onPressed: onQueuePlayLater,
             tooltip: l10n.addToQueue,
           ),
-
-        const Spacer(),
-
-        // Played status (right-aligned, tappable to toggle)
-        if (onTogglePlayed != null)
-          _PlayedStatusChip(
-            isCompleted: isCompleted,
-            isInProgress: isInProgress,
-            onTap: onTogglePlayed!,
-          ),
       ],
-    );
-  }
-}
-
-/// Tappable chip showing played status, right-aligned in the action bar.
-///
-/// - Played: filled primary icon + "Played"
-/// - In progress: outlined icon + "In progress"
-/// - Unplayed: outlined icon + "Unplayed"
-class _PlayedStatusChip extends StatelessWidget {
-  const _PlayedStatusChip({
-    required this.isCompleted,
-    required this.isInProgress,
-    required this.onTap,
-  });
-
-  final bool isCompleted;
-  final bool isInProgress;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final l10n = AppLocalizations.of(context);
-
-    final String label;
-    final IconData icon;
-    final Color iconColor;
-
-    if (isCompleted) {
-      label = l10n.episodeStatusPlayed;
-      icon = Icons.check_circle;
-      iconColor = colorScheme.primary;
-    } else if (isInProgress) {
-      label = l10n.episodeStatusInProgress;
-      icon = Icons.check_circle_outline;
-      iconColor = colorScheme.onSurfaceVariant;
-    } else {
-      label = l10n.episodeStatusUnplayed;
-      icon = Icons.check_circle_outline;
-      iconColor = colorScheme.onSurfaceVariant;
-    }
-
-    return ActionChip(
-      avatar: Icon(icon, size: 18, color: iconColor),
-      label: Text(label),
-      onPressed: onTap,
     );
   }
 }
