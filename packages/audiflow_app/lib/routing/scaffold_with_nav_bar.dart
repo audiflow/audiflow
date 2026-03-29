@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:audiflow_core/audiflow_core.dart';
-import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,14 +11,17 @@ import '../l10n/app_localizations.dart';
 import '../features/player/presentation/screens/player_screen.dart';
 import '../features/player/presentation/widgets/animated_mini_player.dart';
 import '../features/settings/presentation/controllers/last_tab_controller.dart';
-import '../features/voice/presentation/widgets/voice_listening_overlay.dart';
+import '../features/voice/presentation/widgets/voice_command_panel.dart';
+import '../features/voice/presentation/widgets/voice_trigger_button.dart';
 
 /// Adaptive navigation shell for phone or tablet navigation.
 ///
 /// Switches between three modes based on form factor and orientation:
-/// - Phone portrait: bottom custom nav bar with center voice button
+/// - Phone portrait: bottom custom nav bar
 /// - Tablet portrait: top tab bar in [AppBar]
 /// - Tablet landscape: [NavigationRail] on left
+///
+/// A [VoiceCommandPanel] is overlaid in the top-right corner across all modes.
 class ScaffoldWithNavBar extends ConsumerWidget {
   const ScaffoldWithNavBar({required this.navigationShell, super.key});
 
@@ -70,8 +72,6 @@ class ScaffoldWithNavBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final voiceState = ref.watch(voiceCommandOrchestratorProvider);
-    final showOverlay = voiceState is! VoiceIdle;
     final size = MediaQuery.sizeOf(context);
     final isTablet = DeviceUtils.isTablet(size.shortestSide);
     final isLandscape = size.height < size.width;
@@ -103,7 +103,14 @@ class ScaffoldWithNavBar extends ConsumerWidget {
     }
 
     return Stack(
-      children: [shell, if (showOverlay) const VoiceListeningOverlay()],
+      children: [
+        shell,
+        const Positioned(
+          top: 0,
+          right: 8,
+          child: SafeArea(child: VoiceCommandPanel()),
+        ),
+      ],
     );
   }
 }
@@ -140,10 +147,7 @@ class _PhoneShell extends StatelessWidget {
   }
 }
 
-/// Custom bottom nav bar with 4 nav destinations and a center voice button.
-///
-/// Positions the voice button between Library (index 1) and Queue (index 2),
-/// raised slightly above the bar to create a docked FAB effect.
+/// Custom bottom nav bar with 4 nav destinations.
 class _CustomNavBar extends StatelessWidget {
   const _CustomNavBar({
     required this.currentIndex,
@@ -152,17 +156,6 @@ class _CustomNavBar extends StatelessWidget {
 
   final int currentIndex;
   final ValueChanged<int> onDestinationSelected;
-
-  // Nav destinations split at center: [Search, Library] | voice | [Queue, Settings]
-  static final _leftDestinations = [
-    (index: 0, destination: ScaffoldWithNavBar._destinations[0]),
-    (index: 1, destination: ScaffoldWithNavBar._destinations[1]),
-  ];
-
-  static final _rightDestinations = [
-    (index: 2, destination: ScaffoldWithNavBar._destinations[2]),
-    (index: 3, destination: ScaffoldWithNavBar._destinations[3]),
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -181,36 +174,16 @@ class _CustomNavBar extends StatelessWidget {
         height: 80 + bottomInset,
         child: Padding(
           padding: EdgeInsets.only(bottom: bottomInset),
-          child: Stack(
-            clipBehavior: Clip.none,
-            alignment: Alignment.center,
+          child: Row(
             children: [
-              Row(
-                children: [
-                  // Left destinations: Search, Library
-                  for (final item in _leftDestinations)
-                    Expanded(
-                      child: _NavItem(
-                        destination: item.destination,
-                        isSelected: currentIndex == item.index,
-                        onTap: () => onDestinationSelected(item.index),
-                      ),
-                    ),
-                  // Center placeholder so the voice button has visual space
-                  const SizedBox(width: 72),
-                  // Right destinations: Queue, Settings
-                  for (final item in _rightDestinations)
-                    Expanded(
-                      child: _NavItem(
-                        destination: item.destination,
-                        isSelected: currentIndex == item.index,
-                        onTap: () => onDestinationSelected(item.index),
-                      ),
-                    ),
-                ],
-              ),
-              // Voice button raised above bar
-              Positioned(top: -8, child: const _VoiceNavButton()),
+              for (var i = 0; i < ScaffoldWithNavBar._destinations.length; i++)
+                Expanded(
+                  child: _NavItem(
+                    destination: ScaffoldWithNavBar._destinations[i],
+                    isSelected: currentIndex == i,
+                    onTap: () => onDestinationSelected(i),
+                  ),
+                ),
             ],
           ),
         ),
@@ -284,167 +257,6 @@ class _NavItem extends StatelessWidget {
   }
 }
 
-/// Center voice button in the nav bar, slightly raised for a docked-FAB effect.
-class _VoiceNavButton extends ConsumerStatefulWidget {
-  const _VoiceNavButton();
-
-  @override
-  ConsumerState<_VoiceNavButton> createState() => _VoiceNavButtonState();
-}
-
-class _VoiceNavButtonState extends ConsumerState<_VoiceNavButton>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _pulseController;
-  late final Animation<double> _pulseAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _pulseController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1000),
-    );
-    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.15).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
-    );
-  }
-
-  @override
-  void dispose() {
-    _pulseController.dispose();
-    super.dispose();
-  }
-
-  void _handleTap(bool isListening) {
-    final orchestrator = ref.read(voiceCommandOrchestratorProvider.notifier);
-    if (isListening) {
-      orchestrator.cancelVoiceCommand();
-    } else {
-      orchestrator.startVoiceCommand();
-    }
-  }
-
-  Widget _buildIcon(VoiceRecognitionState state) {
-    return switch (state) {
-      VoiceIdle() => const Icon(Symbols.mic, size: 28),
-      VoiceListening() => const Icon(Symbols.mic, fill: 1, size: 28),
-      VoiceProcessing() => const SizedBox(
-        width: 28,
-        height: 28,
-        child: CircularProgressIndicator(strokeWidth: 2),
-      ),
-      VoiceExecuting() => const SizedBox(
-        width: 28,
-        height: 28,
-        child: CircularProgressIndicator(strokeWidth: 2),
-      ),
-      VoiceSuccess() => const Icon(Symbols.check_circle, size: 28),
-      VoiceError() => const Icon(Symbols.error, size: 28),
-      VoiceSettingsAutoApplied() => const Icon(Symbols.check_circle, size: 28),
-      VoiceSettingsDisambiguation() => const Icon(
-        Symbols.help_outline,
-        size: 28,
-      ),
-      VoiceSettingsLowConfidence() => const Icon(
-        Symbols.help_outline,
-        size: 28,
-      ),
-    };
-  }
-
-  Color _backgroundColor(BuildContext context, VoiceRecognitionState state) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return switch (state) {
-      VoiceIdle() => colorScheme.primaryContainer,
-      VoiceListening() => colorScheme.primary,
-      VoiceProcessing() => colorScheme.primaryContainer,
-      VoiceExecuting() => colorScheme.primaryContainer,
-      VoiceSuccess() => colorScheme.tertiaryContainer,
-      VoiceError() => colorScheme.errorContainer,
-      VoiceSettingsAutoApplied() => colorScheme.tertiaryContainer,
-      VoiceSettingsDisambiguation() => colorScheme.primaryContainer,
-      VoiceSettingsLowConfidence() => colorScheme.primaryContainer,
-    };
-  }
-
-  Color _foregroundColor(BuildContext context, VoiceRecognitionState state) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return switch (state) {
-      VoiceIdle() => colorScheme.onPrimaryContainer,
-      VoiceListening() => colorScheme.onPrimary,
-      VoiceProcessing() => colorScheme.onPrimaryContainer,
-      VoiceExecuting() => colorScheme.onPrimaryContainer,
-      VoiceSuccess() => colorScheme.onTertiaryContainer,
-      VoiceError() => colorScheme.onErrorContainer,
-      VoiceSettingsAutoApplied() => colorScheme.onTertiaryContainer,
-      VoiceSettingsDisambiguation() => colorScheme.onPrimaryContainer,
-      VoiceSettingsLowConfidence() => colorScheme.onPrimaryContainer,
-    };
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final voiceState = ref.watch(voiceCommandOrchestratorProvider);
-    final isListening = voiceState is VoiceListening;
-    // Disable button during processing, executing, and settings interaction
-    // states to prevent overwriting pending disambiguation/confirmation UI.
-    final isBusy =
-        voiceState is VoiceProcessing ||
-        voiceState is VoiceExecuting ||
-        voiceState is VoiceSettingsDisambiguation ||
-        voiceState is VoiceSettingsLowConfidence ||
-        voiceState is VoiceSettingsAutoApplied;
-
-    if (isListening) {
-      if (!_pulseController.isAnimating) {
-        _pulseController.repeat(reverse: true);
-      }
-    } else {
-      if (_pulseController.isAnimating) {
-        _pulseController.stop();
-        _pulseController.reset();
-      }
-    }
-
-    final bgColor = _backgroundColor(context, voiceState);
-    final fgColor = _foregroundColor(context, voiceState);
-
-    return AnimatedBuilder(
-      animation: _pulseAnimation,
-      builder: (context, child) {
-        final scale = isListening ? _pulseAnimation.value : 1.0;
-        return Transform.scale(
-          scale: scale,
-          child: Semantics(
-            button: true,
-            label: AppLocalizations.of(context).voiceCommandButton,
-            child: Tooltip(
-              message: AppLocalizations.of(context).voiceCommandButton,
-              child: Material(
-                color: bgColor,
-                shape: const CircleBorder(),
-                elevation: 4,
-                child: InkWell(
-                  customBorder: const CircleBorder(),
-                  onTap: isBusy ? null : () => _handleTap(isListening),
-                  child: SizedBox(
-                    width: 48,
-                    height: 48,
-                    child: IconTheme(
-                      data: IconThemeData(color: fgColor),
-                      child: _buildIcon(voiceState),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
 /// Tablet portrait: top tab bar in AppBar.
 class _TabletPortraitShell extends StatelessWidget {
   const _TabletPortraitShell({
@@ -479,7 +291,10 @@ class _TabletPortraitShell extends StatelessWidget {
         ),
         centerTitle: true,
         actions: const [
-          Padding(padding: EdgeInsets.only(right: 8), child: _VoiceNavButton()),
+          Padding(
+            padding: EdgeInsets.only(right: 8),
+            child: VoiceTriggerButton(),
+          ),
         ],
       ),
       body: Column(
@@ -517,7 +332,7 @@ class _TabletLandscapeShell extends StatelessWidget {
             labelType: NavigationRailLabelType.all,
             leading: const Padding(
               padding: EdgeInsets.only(bottom: 8),
-              child: _VoiceNavButton(),
+              child: VoiceTriggerButton(),
             ),
             destinations: [
               for (final d in ScaffoldWithNavBar._destinations)
