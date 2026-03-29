@@ -20,12 +20,15 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
   AudiflowAudioHandler(this._ref) {
     _log.i('[AudioHandler] Initializing AudiflowAudioHandler');
     _player = _ref.read(audioPlayerProvider);
-    _configureAudioSession();
+    _sessionReady = _configureAudioSession();
     _pipePlaybackState();
   }
 
   final Ref _ref;
   late final AudioPlayer _player;
+
+  /// Completes when the audio session is configured and listeners are active.
+  late final Future<void> _sessionReady;
 
   AudioPlayerController get _controller =>
       _ref.read(audioPlayerControllerProvider.notifier);
@@ -74,7 +77,16 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
 
   Future<void> _configureAudioSession() async {
     final session = await AudioSession.instance;
-    await session.configure(const AudioSessionConfiguration.speech());
+    // Extend speech() with route sharing and deactivation notification
+    // so other audio apps resume gracefully when we stop.
+    await session.configure(
+      AudioSessionConfiguration.speech().copyWith(
+        avAudioSessionRouteSharingPolicy:
+            AVAudioSessionRouteSharingPolicy.defaultPolicy,
+        avAudioSessionSetActiveOptions:
+            AVAudioSessionSetActiveOptions.notifyOthersOnDeactivation,
+      ),
+    );
 
     session.interruptionEventStream.listen((event) {
       if (event.begin) {
@@ -88,7 +100,10 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
         switch (event.type) {
           case AudioInterruptionType.duck:
           case AudioInterruptionType.pause:
-            play();
+            // Reactivate the session before resuming so iOS routes audio
+            // to the speaker again. Without this, just_audio reports
+            // "playing" but the deactivated session produces no sound.
+            _reactivateAndResume(session);
           case AudioInterruptionType.unknown:
             break;
         }
@@ -96,6 +111,19 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
     });
 
     session.becomingNoisyEventStream.listen((_) => pause());
+  }
+
+  Future<void> _reactivateAndResume(AudioSession session) async {
+    try {
+      await session.setActive(true);
+      await play();
+    } catch (e, stack) {
+      _log.e(
+        '[AudioHandler] Failed to reactivate session',
+        error: e,
+        stackTrace: stack,
+      );
+    }
   }
 
   /// Updates the platform media item (lock screen / notification metadata).
@@ -131,7 +159,11 @@ class AudiflowAudioHandler extends audio_service.BaseAudioHandler
   }
 
   @override
-  Future<void> play() async => _controller.resume();
+  Future<void> play() async {
+    // Ensure the audio session is configured before first playback.
+    await _sessionReady;
+    await _controller.resume();
+  }
 
   @override
   Future<void> pause() async => _controller.pause();
