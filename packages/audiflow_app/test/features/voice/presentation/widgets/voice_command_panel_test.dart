@@ -242,6 +242,68 @@ void main() {
       });
     });
 
+    group('executing state', () {
+      testWidgets('shows waveform in processing mode', (tester) async {
+        final command = VoiceCommand(
+          intent: VoiceIntent.play,
+          parameters: const {},
+          confidence: 0.95,
+          rawTranscription: 'play the latest episode',
+        );
+        final fake = _FakeOrchestrator(
+          VoiceRecognitionState.executing(command: command),
+        );
+        final container = _containerFor(fake);
+        addTearDown(container.dispose);
+
+        await tester.pumpWidget(_buildTestApp(container));
+        await tester.pump();
+
+        final waveformFinder = find.byType(WaveformWidget);
+        check(waveformFinder.evaluate().isNotEmpty).isTrue();
+      });
+
+      testWidgets('shows intent name', (tester) async {
+        final command = VoiceCommand(
+          intent: VoiceIntent.play,
+          parameters: const {},
+          confidence: 0.95,
+          rawTranscription: 'play the latest episode',
+        );
+        final fake = _FakeOrchestrator(
+          VoiceRecognitionState.executing(command: command),
+        );
+        final container = _containerFor(fake);
+        addTearDown(container.dispose);
+
+        await tester.pumpWidget(_buildTestApp(container));
+        await tester.pump();
+
+        final intentFinder = find.textContaining('Play');
+        check(intentFinder.evaluate().isNotEmpty).isTrue();
+      });
+
+      testWidgets('shows quoted transcription', (tester) async {
+        final command = VoiceCommand(
+          intent: VoiceIntent.play,
+          parameters: const {},
+          confidence: 0.95,
+          rawTranscription: 'play the latest episode',
+        );
+        final fake = _FakeOrchestrator(
+          VoiceRecognitionState.executing(command: command),
+        );
+        final container = _containerFor(fake);
+        addTearDown(container.dispose);
+
+        await tester.pumpWidget(_buildTestApp(container));
+        await tester.pump();
+
+        final quotedFinder = find.textContaining('"play the latest episode"');
+        check(quotedFinder.evaluate().isNotEmpty).isTrue();
+      });
+    });
+
     group('success state', () {
       testWidgets('shows success message', (tester) async {
         final fake = _FakeOrchestrator(

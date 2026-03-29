@@ -310,6 +310,13 @@ class _ExecutingContent extends StatelessWidget {
             l10n.voiceExecuting(_formatIntent(state.command.intent)),
             style: textTheme.bodyMedium?.copyWith(color: colorScheme.onSurface),
           ),
+          const SizedBox(height: 8),
+          Text(
+            '"${state.command.rawTranscription}"',
+            style: textTheme.bodySmall?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
+          ),
         ],
       ),
     );
@@ -419,7 +426,20 @@ class _SettingsAutoAppliedContent extends ConsumerWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Symbols.check_circle, size: 24, color: colorScheme.tertiary),
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: colorScheme.tertiary.withValues(alpha: 0.15),
+            ),
+            alignment: Alignment.center,
+            child: Icon(
+              Symbols.check_circle,
+              size: 24,
+              color: colorScheme.tertiary,
+            ),
+          ),
           const SizedBox(height: 8),
           Text(
             '$displayName: ${state.oldValue} -> ${state.newValue}',
