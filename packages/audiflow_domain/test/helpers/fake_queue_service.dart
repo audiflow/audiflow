@@ -121,6 +121,9 @@ class _NoOpEpisodeRepository implements EpisodeRepository {
   Future<Set<String>> getGuidsByPodcastId(int podcastId) async => {};
 
   @override
+  Future<Episode?> getNewestByPodcastId(int podcastId) async => null;
+
+  @override
   Future<void> storeTranscriptAndChapterDataFromParsed(
     int podcastId,
     List<ParsedEpisodeMediaMeta> mediaMetas,

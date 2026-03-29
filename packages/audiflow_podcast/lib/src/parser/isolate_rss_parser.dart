@@ -32,18 +32,26 @@ class IsolateParsedFeed {
 class IsolateRssParser {
   IsolateRssParser._();
 
-  /// Parses the complete feed in an isolate and returns all data at once.
+  /// Parses the feed in an isolate and returns metadata + episodes at once.
   ///
-  /// Use this for initial load when you need all episodes.
-  /// For incremental updates, use [parse] which streams events.
-  static Future<IsolateParsedFeed> parseFeed({required String feedXml}) async {
+  /// Pass [knownGuids], [knownNewestPubDate], and/or [knownNewestGuid] to
+  /// enable early-stop optimization for incremental updates.
+  /// Omit all cutoff parameters to parse the entire feed.
+  static Future<IsolateParsedFeed> parseFeed({
+    required String feedXml,
+    Set<String> knownGuids = const {},
+    DateTime? knownNewestPubDate,
+    String? knownNewestGuid,
+  }) async {
     ParsedPodcastMeta? meta;
     final episodes = <ParsedEpisode>[];
     var didStopEarly = false;
 
     await for (final progress in parse(
       feedXml: feedXml,
-      knownGuids: const {},
+      knownGuids: knownGuids,
+      knownNewestPubDate: knownNewestPubDate,
+      knownNewestGuid: knownNewestGuid,
     )) {
       switch (progress) {
         case ParsedPodcastMeta():
@@ -72,81 +80,157 @@ class IsolateRssParser {
   /// - [knownGuids]: Set of episode GUIDs already in the database
   /// - [maxNewEpisodes]: Optional limit on episodes to parse (null = unlimited)
   ///
-  /// Returns a stream of [ParseProgress] events.
+  /// Returns a stream of [ParseProgress] events. The isolate is spawned
+  /// lazily when the first listener attaches.
+  ///
+  /// Cancelling the stream subscription kills the background isolate
+  /// immediately, freeing resources.
   static Stream<ParseProgress> parse({
     required String feedXml,
     required Set<String> knownGuids,
     int? maxNewEpisodes,
-  }) async* {
+    DateTime? knownNewestPubDate,
+    String? knownNewestGuid,
+  }) {
     final receivePort = ReceivePort();
+    Isolate? isolate;
+    StreamSubscription<dynamic>? portSub;
+    var cancelled = false;
 
-    try {
-      await Isolate.spawn(
-        _parseInIsolate,
-        _IsolateParams(
-          feedXml: feedXml,
-          knownGuids: knownGuids,
-          maxNewEpisodes: maxNewEpisodes,
-          sendPort: receivePort.sendPort,
-        ),
-      );
-
-      await for (final message in receivePort) {
-        if (message is ParseProgress) {
-          yield message;
-          if (message is ParseComplete) {
-            break;
-          }
-        } else if (message is _IsolateError) {
-          throw Exception(message.error);
+    late final StreamController<ParseProgress> controller;
+    controller = StreamController<ParseProgress>(
+      onListen: () {
+        Isolate.spawn(
+              _parseInIsolate,
+              _IsolateParams(
+                feedXml: feedXml,
+                knownGuids: knownGuids,
+                maxNewEpisodes: maxNewEpisodes,
+                sendPort: receivePort.sendPort,
+                knownNewestPubDate: knownNewestPubDate,
+                knownNewestGuid: knownNewestGuid,
+              ),
+            )
+            .then((spawned) {
+              if (cancelled) {
+                // Stream was cancelled while the isolate was spawning.
+                spawned.kill(priority: Isolate.immediate);
+                receivePort.close();
+                if (!controller.isClosed) controller.close();
+                return;
+              }
+              isolate = spawned;
+              portSub = receivePort.listen(
+                (message) {
+                  if (cancelled || controller.isClosed) return;
+                  if (message is ParseProgress) {
+                    controller.add(message);
+                    if (message is ParseComplete) {
+                      isolate = null;
+                      portSub?.cancel();
+                      receivePort.close();
+                      controller.close();
+                    }
+                  } else if (message is _IsolateError) {
+                    controller.addError(Exception(message.error));
+                  }
+                },
+                onDone: () {
+                  if (!controller.isClosed) controller.close();
+                },
+              );
+            })
+            .catchError((Object e) {
+              if (cancelled || controller.isClosed) return;
+              controller.addError(e);
+              receivePort.close();
+              controller.close();
+            });
+      },
+      onCancel: () {
+        cancelled = true;
+        isolate?.kill(priority: Isolate.immediate);
+        isolate = null;
+        portSub?.cancel();
+        receivePort.close();
+        if (!controller.isClosed) {
+          controller.close();
         }
-      }
-    } finally {
-      receivePort.close();
-    }
+      },
+    );
+
+    return controller.stream;
   }
 
   static void _parseInIsolate(_IsolateParams params) {
     try {
-      final document = XmlDocument.parse(params.feedXml);
-      final rssElement =
-          document.findElements('rss').firstOrNull ??
-          document.findElements('feed').firstOrNull;
+      final xml = params.feedXml;
 
-      if (rssElement == null) {
-        params.sendPort.send(const _IsolateError('No RSS or Atom feed found'));
+      // --- Metadata: parse only the channel header (before first <item>) ---
+      final firstItemIdx = xml.indexOf('<item');
+      if (firstItemIdx == -1) {
+        // Sanity check: reject non-RSS documents (e.g. HTML error pages)
+        if (!xml.contains('<rss') && !xml.contains('<channel')) {
+          params.sendPort.send(
+            const _IsolateError('Input does not appear to be an RSS feed'),
+          );
+          params.sendPort.send(
+            const ParseComplete(totalParsed: 0, stoppedEarly: false),
+          );
+          return;
+        }
+        // Valid RSS with no items — emit metadata only
+        params.sendPort.send(_parseMetadataFromString(xml));
         params.sendPort.send(
           const ParseComplete(totalParsed: 0, stoppedEarly: false),
         );
         return;
       }
 
-      final channelElement = rssElement.findElements('channel').firstOrNull;
-      if (channelElement == null) {
-        params.sendPort.send(const _IsolateError('No channel element found'));
-        params.sendPort.send(
-          const ParseComplete(totalParsed: 0, stoppedEarly: false),
-        );
-        return;
-      }
+      final header = xml.substring(0, firstItemIdx);
+      params.sendPort.send(_parseMetadataFromString(header));
 
-      // Parse and emit metadata
-      final meta = _parseMetadata(channelElement);
-      params.sendPort.send(meta);
-
-      // Parse episodes with early-stop
+      // --- Episodes: scan for <item>...</item> blocks incrementally ---
       var parsedCount = 0;
       var stoppedEarly = false;
+      final cutoff = params.knownNewestPubDate;
+      final cutoffGuid = params.knownNewestGuid;
+      final itemOpenTag = RegExp(r'<item[\s>]');
+      const itemCloseTag = '</item>';
 
-      for (final itemElement in channelElement.findElements('item')) {
-        final guid = _extractText(itemElement, 'guid');
+      final itemMatches = itemOpenTag.allMatches(xml, firstItemIdx).iterator;
 
-        // Early stop: if we hit a known GUID, stop parsing
+      while (itemMatches.moveNext()) {
+        final itemStart = itemMatches.current.start;
+        final closeIdx = xml.indexOf(itemCloseTag, itemStart);
+        if (closeIdx == -1) break;
+
+        final itemEnd = closeIdx + itemCloseTag.length;
+        final itemXml = xml.substring(itemStart, itemEnd);
+
+        // Quick-check guid and pubDate via lightweight regex before DOM-parsing
+        final guid = _extractTagText(itemXml, 'guid');
+
+        // Early stop: GUID-set match (legacy path, used by parseWithProgress)
         if (guid != null && params.knownGuids.contains(guid)) {
           stoppedEarly = true;
           break;
         }
 
+        // Early stop: pubDate-based cutoff
+        if (cutoff != null) {
+          final pubDateStr = _extractTagText(itemXml, 'pubDate');
+          final pubDate = _parseDate(pubDateStr);
+          if (pubDate != null && !cutoff.isBefore(pubDate)) {
+            if (cutoffGuid == null || cutoffGuid == guid) {
+              stoppedEarly = true;
+              break;
+            }
+          }
+        }
+
+        // Only DOM-parse items we actually need
+        final itemElement = XmlDocument.parse(itemXml).rootElement;
         final episode = _parseEpisode(itemElement);
         params.sendPort.send(episode);
         parsedCount++;
@@ -169,14 +253,44 @@ class IsolateRssParser {
     }
   }
 
-  static ParsedPodcastMeta _parseMetadata(XmlElement channel) {
+  /// Extracts channel metadata from the header portion of the XML
+  /// (everything before the first <item>) using lightweight regex.
+  /// No DOM allocation needed for the header.
+  static ParsedPodcastMeta _parseMetadataFromString(String headerXml) {
+    final title = _extractTagText(headerXml, 'title') ?? 'Untitled Podcast';
+
+    // itunes:image uses an href attribute, not text content
+    final itunesImageMatch = RegExp(
+      r'''<itunes:image[^>]+href=["']([^"']+)["']''',
+    ).firstMatch(headerXml);
+
     return ParsedPodcastMeta(
-      title: _extractText(channel, 'title') ?? 'Untitled Podcast',
-      description: _extractText(channel, 'description') ?? '',
-      author: _extractItunesText(channel, 'author'),
-      imageUrl: _extractItunesImageUrl(channel),
-      language: _extractText(channel, 'language'),
+      title: title,
+      description: _extractTagText(headerXml, 'description') ?? '',
+      author: _extractTagText(headerXml, 'itunes:author'),
+      imageUrl: _nullIfBlank(itunesImageMatch?.group(1)),
+      language: _extractTagText(headerXml, 'language'),
     );
+  }
+
+  /// Lightweight tag text extraction using regex — no DOM allocation.
+  /// Handles both plain text and CDATA content.
+  static final _tagTextCache = <String, RegExp>{};
+
+  static String? _extractTagText(String xml, String tagName) {
+    final re = _tagTextCache.putIfAbsent(
+      tagName,
+      () => RegExp(
+        '<$tagName[^>]*>'
+        r'(?:<!\[CDATA\[)?' // optional CDATA start
+        r'([\s\S]*?)' // content (non-greedy)
+        r'(?:\]\]>)?' // optional CDATA end
+        '</$tagName>',
+        caseSensitive: false,
+      ),
+    );
+    final match = re.firstMatch(xml);
+    return _nullIfBlank(match?.group(1));
   }
 
   static ParsedEpisode _parseEpisode(XmlElement item) {
@@ -393,12 +507,23 @@ class _IsolateParams {
     required this.knownGuids,
     required this.maxNewEpisodes,
     required this.sendPort,
+    this.knownNewestPubDate,
+    this.knownNewestGuid,
   });
 
   final String feedXml;
   final Set<String> knownGuids;
   final int? maxNewEpisodes;
   final SendPort sendPort;
+
+  /// Newest episode publish date already in the database.
+  /// When set, parsing stops at the first episode whose pubDate
+  /// is at or before this date (confirmed by GUID match if available).
+  final DateTime? knownNewestPubDate;
+
+  /// GUID of the newest known episode, used to confirm the pubDate-based
+  /// early-stop when both are provided.
+  final String? knownNewestGuid;
 }
 
 class _IsolateError {

@@ -96,6 +96,9 @@ class _FakeEpisodeRepository implements EpisodeRepository {
   Future<Set<String>> getGuidsByPodcastId(int podcastId) async => {};
 
   @override
+  Future<Episode?> getNewestByPodcastId(int podcastId) async => null;
+
+  @override
   Future<void> upsertEpisodes(List<Episode> episodes) async {
     upsertedEpisodes.addAll(episodes);
   }

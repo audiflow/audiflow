@@ -438,6 +438,14 @@ class MockEpisodeRepository extends _i1.Mock implements _i12.EpisodeRepository {
           as _i11.Future<Set<String>>);
 
   @override
+  _i11.Future<_i13.Episode?> getNewestByPodcastId(int? podcastId) =>
+      (super.noSuchMethod(
+            Invocation.method(#getNewestByPodcastId, [podcastId]),
+            returnValue: _i11.Future<_i13.Episode?>.value(),
+          )
+          as _i11.Future<_i13.Episode?>);
+
+  @override
   _i11.Future<void> storeTranscriptAndChapterDataFromParsed(
     int? podcastId,
     List<_i17.ParsedEpisodeMediaMeta>? mediaMetas,
@@ -813,13 +821,31 @@ class MockFeedParserService extends _i1.Mock implements _i21.FeedParserService {
           as _i11.Future<_i3.ParsedFeed>);
 
   @override
-  _i11.Future<_i3.ParsedFeed> parseFromString(String? xmlContent) =>
+  _i11.Future<_i3.ParsedFeed> parseFromString(
+    String? xmlContent, {
+    DateTime? knownNewestPubDate,
+    String? knownNewestGuid,
+  }) =>
       (super.noSuchMethod(
-            Invocation.method(#parseFromString, [xmlContent]),
+            Invocation.method(
+              #parseFromString,
+              [xmlContent],
+              {
+                #knownNewestPubDate: knownNewestPubDate,
+                #knownNewestGuid: knownNewestGuid,
+              },
+            ),
             returnValue: _i11.Future<_i3.ParsedFeed>.value(
               _FakeParsedFeed_1(
                 this,
-                Invocation.method(#parseFromString, [xmlContent]),
+                Invocation.method(
+                  #parseFromString,
+                  [xmlContent],
+                  {
+                    #knownNewestPubDate: knownNewestPubDate,
+                    #knownNewestGuid: knownNewestGuid,
+                  },
+                ),
               ),
             ),
           )

@@ -86,6 +86,10 @@ class FakeEpisodeRepository implements EpisodeRepository {
       throw UnimplementedError();
 
   @override
+  Future<Episode?> getNewestByPodcastId(int podcastId) =>
+      throw UnimplementedError();
+
+  @override
   Future<void> storeTranscriptAndChapterDataFromParsed(
     int podcastId,
     List<ParsedEpisodeMediaMeta> mediaMetas,

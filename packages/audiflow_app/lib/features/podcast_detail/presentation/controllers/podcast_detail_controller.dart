@@ -108,8 +108,25 @@ Future<ParsedFeed> podcastDetail(Ref ref, String feedUrl) async {
 
     logger.d('Fetched ${response.data!.length} bytes, parsing...');
 
-    // Parse the XML content
-    final result = await feedParser.parseFromString(response.data!);
+    // Look up newest known episode for pubDate-based early-stop
+    final subscriptionRepo = ref.read(subscriptionRepositoryProvider);
+    final existingSub = await subscriptionRepo.getByFeedUrl(feedUrl);
+    DateTime? knownNewestPubDate;
+    String? knownNewestGuid;
+
+    if (existingSub != null) {
+      final episodeRepo = ref.read(episodeRepositoryProvider);
+      final newest = await episodeRepo.getNewestByPodcastId(existingSub.id);
+      knownNewestPubDate = newest?.publishedAt;
+      knownNewestGuid = newest?.guid;
+    }
+
+    // Parse the XML content with early-stop when possible
+    final result = await feedParser.parseFromString(
+      response.data!,
+      knownNewestPubDate: knownNewestPubDate,
+      knownNewestGuid: knownNewestGuid,
+    );
 
     logger.i(
       'Successfully parsed feed: '
@@ -117,8 +134,7 @@ Future<ParsedFeed> podcastDetail(Ref ref, String feedUrl) async {
     );
 
     // Always ensure a subscription entry exists (real or cached)
-    final subscriptionRepo = ref.read(subscriptionRepositoryProvider);
-    var subscription = await subscriptionRepo.getByFeedUrl(feedUrl);
+    var subscription = existingSub;
 
     if (subscription != null) {
       // Hint no longer needed -- subscription already exists

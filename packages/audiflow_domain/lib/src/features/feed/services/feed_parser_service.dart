@@ -86,15 +86,31 @@ class FeedParserService {
   /// Parses a podcast RSS feed from raw XML content using isolate.
   ///
   /// This runs parsing in a background isolate to prevent UI freezes.
-  Future<ParsedFeed> parseFromString(String xmlContent) async {
-    _logger?.d('Parsing podcast feed from string content (isolate)');
+  /// Pass [knownNewestPubDate] and optionally [knownNewestGuid] to enable
+  /// early-stop optimization: parsing stops when an episode at or before
+  /// the cutoff date is encountered (confirmed by GUID match if provided).
+  Future<ParsedFeed> parseFromString(
+    String xmlContent, {
+    DateTime? knownNewestPubDate,
+    String? knownNewestGuid,
+  }) async {
+    _logger?.d(
+      'Parsing feed from string (isolate), '
+      'cutoff: $knownNewestPubDate, guid: $knownNewestGuid',
+    );
 
     try {
       // Use isolate-based parsing to prevent UI freeze
-      final result = await IsolateRssParser.parseFeed(feedXml: xmlContent);
+      final result = await IsolateRssParser.parseFeed(
+        feedXml: xmlContent,
+        knownNewestPubDate: knownNewestPubDate,
+        knownNewestGuid: knownNewestGuid,
+      );
 
       _logger?.i(
-        'Parsed feed: ${result.meta.title} with ${result.episodes.length} episodes',
+        'Parsed feed: ${result.meta.title} '
+        'with ${result.episodes.length} episodes, '
+        'stoppedEarly: ${result.stoppedEarly}',
       );
 
       // Convert ParsedPodcastMeta to PodcastFeed
