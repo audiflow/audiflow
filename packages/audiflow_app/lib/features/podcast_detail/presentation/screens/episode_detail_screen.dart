@@ -3,6 +3,7 @@ import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -19,7 +20,7 @@ import '../controllers/podcast_detail_controller.dart';
 
 /// Displays full episode details with playback, download,
 /// and queue actions.
-class EpisodeDetailScreen extends ConsumerWidget {
+class EpisodeDetailScreen extends ConsumerStatefulWidget {
   const EpisodeDetailScreen({
     super.key,
     required this.episode,
@@ -38,11 +39,41 @@ class EpisodeDetailScreen extends ConsumerWidget {
   final String? itunesId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<EpisodeDetailScreen> createState() =>
+      _EpisodeDetailScreenState();
+}
+
+class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
+  Brightness _artworkBrightness = Brightness.dark;
+  double _collapseRatio = 0.0;
+
+  @override
+  void initState() {
+    super.initState();
+    // Defer until after page transition completes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _resolveArtworkBrightness().ignore();
+    });
+  }
+
+  Future<void> _resolveArtworkBrightness() async {
+    final imageUrl = widget.episode.primaryImage?.url ?? widget.artworkUrl;
+    if (imageUrl == null) return;
+
+    final brightness = await ArtworkBrightnessResolver.resolve(
+      ExtendedNetworkImageProvider(imageUrl, cache: true),
+    );
+    if (mounted) {
+      setState(() => _artworkBrightness = brightness);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final l10n = AppLocalizations.of(context);
-    final enclosureUrl = episode.enclosureUrl;
+    final enclosureUrl = widget.episode.enclosureUrl;
 
     final isPlaying = enclosureUrl != null
         ? ref.watch(isEpisodePlayingProvider(enclosureUrl))
@@ -51,168 +82,213 @@ class EpisodeDetailScreen extends ConsumerWidget {
         ? ref.watch(isEpisodeLoadingProvider(enclosureUrl))
         : false;
 
-    final episodeId = progress?.episode.id;
+    final episodeId = widget.progress?.episode.id;
     final downloadTask = episodeId != null
         ? ref.watch(episodeDownloadProvider(episodeId)).value
         : null;
 
-    final isCompleted = progress?.isCompleted ?? false;
+    final isCompleted = widget.progress?.isCompleted ?? false;
 
-    final imageUrl = episode.primaryImage?.url ?? artworkUrl;
-    final heroTag = 'episode_artwork_${episode.guid ?? episode.title}';
+    final imageUrl = widget.episode.primaryImage?.url ?? widget.artworkUrl;
+    final heroTag =
+        'episode_artwork_${widget.episode.guid ?? widget.episode.title}';
+
+    final overlayStyle = _artworkBrightness == Brightness.dark
+        ? SystemUiOverlayStyle.light
+        : SystemUiOverlayStyle.dark;
+
+    final expandedHeight = imageUrl != null ? 250.0 : 0.0;
+
+    // When there is no artwork the app bar never expands, so buttons
+    // should render in collapsed (theme) style from the start.
+    final effectiveCollapseRatio = imageUrl != null ? _collapseRatio : 1.0;
 
     return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            expandedHeight: imageUrl != null ? 250 : 0,
-            pinned: true,
-            flexibleSpace: imageUrl != null
-                ? FlexibleSpaceBar(
-                    background: Semantics(
-                      label: 'View episode artwork',
-                      button: true,
-                      child: Material(
-                        type: MaterialType.transparency,
-                        child: InkWell(
-                          onTap: () =>
-                              _showArtworkOverlay(context, imageUrl, heroTag),
-                          child: Hero(
-                            tag: heroTag,
-                            child: ExtendedImage.network(
-                              imageUrl,
-                              fit: BoxFit.cover,
-                              cache: true,
+      body: NotificationListener<ScrollNotification>(
+        onNotification: (notification) {
+          if (0.0 < expandedHeight) {
+            final topPadding = MediaQuery.of(context).padding.top;
+            final collapseRange = expandedHeight - kToolbarHeight - topPadding;
+            final collapsed = 0.0 < collapseRange
+                ? notification.metrics.pixels / collapseRange
+                : 0.0;
+            final clamped = collapsed.clamp(0.0, 1.0);
+            if ((clamped - _collapseRatio).abs() > 0.01) {
+              setState(() => _collapseRatio = clamped);
+            }
+          }
+          return false;
+        },
+        child: CustomScrollView(
+          slivers: [
+            SliverAppBar(
+              expandedHeight: expandedHeight,
+              pinned: true,
+              automaticallyImplyLeading: false,
+              systemOverlayStyle: imageUrl != null ? overlayStyle : null,
+              leading: Align(
+                alignment: Alignment.centerLeft,
+                child: Padding(
+                  padding: const EdgeInsets.only(left: Spacing.md),
+                  child: OverlayActionButton(
+                    icon: Icons.arrow_back,
+                    collapseRatio: effectiveCollapseRatio,
+                    artworkBrightness: _artworkBrightness,
+                    onTap: () => Navigator.of(context).pop(),
+                    semanticLabel: MaterialLocalizations.of(
+                      context,
+                    ).backButtonTooltip,
+                  ),
+                ),
+              ),
+              leadingWidth: 48 + Spacing.md + Spacing.sm,
+              flexibleSpace: imageUrl != null
+                  ? FlexibleSpaceBar(
+                      background: Semantics(
+                        label: 'View episode artwork',
+                        button: true,
+                        child: Material(
+                          type: MaterialType.transparency,
+                          child: InkWell(
+                            onTap: () =>
+                                _showArtworkOverlay(context, imageUrl, heroTag),
+                            child: Hero(
+                              tag: heroTag,
+                              child: ExtendedImage.network(
+                                imageUrl,
+                                fit: BoxFit.cover,
+                                cache: true,
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                  )
-                : null,
-            actions: [
-              Builder(
-                builder: (context) {
-                  final l10n = AppLocalizations.of(context);
-                  final canShare =
-                      (itunesId != null && episode.guid != null) ||
-                      episode.link != null;
-                  return IconButton(
-                    icon: const Icon(Icons.share),
-                    tooltip: l10n.shareEpisode,
-                    onPressed: canShare
-                        ? () => shareEpisode(
-                            ref: ref,
-                            itunesId: itunesId,
-                            episodeGuid: episode.guid,
-                            fallbackLink: episode.link,
-                          )
-                        : null,
-                  );
-                },
-              ),
-            ],
-          ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(Spacing.md),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Title
-                  Text(
-                    episode.title,
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: Spacing.xs),
-
-                  // Podcast title (tappable -> navigates to podcast page)
-                  InkWell(
-                    onTap: () => _navigateToPodcast(context, ref),
-                    borderRadius: BorderRadius.circular(4),
-                    child: Text(
-                      podcastTitle,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        color: colorScheme.primary,
+                    )
+                  : null,
+              actions: [
+                Builder(
+                  builder: (context) {
+                    final l10n = AppLocalizations.of(context);
+                    final canShare =
+                        (widget.itunesId != null &&
+                            widget.episode.guid != null) ||
+                        widget.episode.link != null;
+                    return OverlayActionButton(
+                      icon: Icons.share,
+                      collapseRatio: effectiveCollapseRatio,
+                      artworkBrightness: _artworkBrightness,
+                      semanticLabel: l10n.shareEpisode,
+                      onTap: canShare
+                          ? () => shareEpisode(
+                              ref: ref,
+                              itunesId: widget.itunesId,
+                              episodeGuid: widget.episode.guid,
+                              fallbackLink: widget.episode.link,
+                            )
+                          : null,
+                    );
+                  },
+                ),
+                const SizedBox(width: Spacing.md),
+              ],
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(Spacing.md),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Title
+                    Text(
+                      widget.episode.title,
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                  ),
-                  const SizedBox(height: Spacing.sm),
+                    const SizedBox(height: Spacing.xs),
 
-                  // Metadata row
-                  _MetadataRow(episode: episode),
-                  const SizedBox(height: Spacing.md),
-
-                  // Progress indicator
-                  if (progress != null &&
-                      (progress!.isCompleted || progress!.isInProgress))
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: Spacing.md),
-                      child: EpisodeProgressIndicator(
-                        isCompleted: progress!.isCompleted,
-                        isInProgress: progress!.isInProgress,
-                        remainingTimeFormatted:
-                            progress!.remainingTimeFormatted,
+                    // Podcast title (tappable -> navigates to podcast page)
+                    InkWell(
+                      onTap: () => _navigateToPodcast(context),
+                      borderRadius: BorderRadius.circular(4),
+                      child: Text(
+                        widget.podcastTitle,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: colorScheme.primary,
+                        ),
                       ),
                     ),
+                    const SizedBox(height: Spacing.sm),
 
-                  // Action bar
-                  _ActionBar(
-                    enclosureUrl: enclosureUrl,
-                    isPlaying: isPlaying,
-                    isLoading: isLoading,
-                    isCompleted: isCompleted,
-                    episodeId: episodeId,
-                    downloadTask: downloadTask,
-                    onPlayPause: enclosureUrl != null
-                        ? () => _onPlayPausePressed(
-                            context,
-                            ref,
-                            enclosureUrl,
-                            isPlaying,
-                          )
-                        : null,
-                    onDownloadTap: episodeId != null
-                        ? () => handleDownloadTap(
-                            context: context,
-                            ref: ref,
-                            episodeId: episodeId,
-                            task: downloadTask,
-                          )
-                        : null,
-                    onQueuePlayLater: episodeId != null
-                        ? () {
-                            ref
-                                .read(queueControllerProvider.notifier)
-                                .playLater(episodeId);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(l10n.queueAddedToQueue),
-                                duration: const Duration(seconds: 1),
-                              ),
-                            );
-                          }
-                        : null,
-                    onTogglePlayed: enclosureUrl != null
-                        ? () => _togglePlayedStatus(
-                            ref,
-                            enclosureUrl,
-                            isCompleted,
-                          )
-                        : null,
-                  ),
+                    // Metadata row
+                    _MetadataRow(episode: widget.episode),
+                    const SizedBox(height: Spacing.md),
 
-                  const Divider(height: Spacing.xl),
+                    // Progress indicator
+                    if (widget.progress != null &&
+                        (widget.progress!.isCompleted ||
+                            widget.progress!.isInProgress))
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: Spacing.md),
+                        child: EpisodeProgressIndicator(
+                          isCompleted: widget.progress!.isCompleted,
+                          isInProgress: widget.progress!.isInProgress,
+                          remainingTimeFormatted:
+                              widget.progress!.remainingTimeFormatted,
+                        ),
+                      ),
 
-                  // Description / show notes
-                  _DescriptionSection(episode: episode),
-                ],
+                    // Action bar
+                    _ActionBar(
+                      enclosureUrl: enclosureUrl,
+                      isPlaying: isPlaying,
+                      isLoading: isLoading,
+                      isCompleted: isCompleted,
+                      episodeId: episodeId,
+                      downloadTask: downloadTask,
+                      onPlayPause: enclosureUrl != null
+                          ? () => _onPlayPausePressed(
+                              context,
+                              enclosureUrl,
+                              isPlaying,
+                            )
+                          : null,
+                      onDownloadTap: episodeId != null
+                          ? () => handleDownloadTap(
+                              context: context,
+                              ref: ref,
+                              episodeId: episodeId,
+                              task: downloadTask,
+                            )
+                          : null,
+                      onQueuePlayLater: episodeId != null
+                          ? () {
+                              ref
+                                  .read(queueControllerProvider.notifier)
+                                  .playLater(episodeId);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(l10n.queueAddedToQueue),
+                                  duration: const Duration(seconds: 1),
+                                ),
+                              );
+                            }
+                          : null,
+                      onTogglePlayed: enclosureUrl != null
+                          ? () => _togglePlayedStatus(enclosureUrl, isCompleted)
+                          : null,
+                    ),
+
+                    const Divider(height: Spacing.xl),
+
+                    // Description / show notes
+                    _DescriptionSection(episode: widget.episode),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -236,45 +312,40 @@ class EpisodeDetailScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _navigateToPodcast(BuildContext context, WidgetRef ref) async {
-    final podcastId = progress?.episode.podcastId;
+  Future<void> _navigateToPodcast(BuildContext context) async {
+    final podcastId = widget.progress?.episode.podcastId;
     if (podcastId == null) {
-      // Episode not yet in DB — look up by audio URL
-      final enclosureUrl = episode.enclosureUrl;
+      // Episode not yet in DB -- look up by audio URL
+      final enclosureUrl = widget.episode.enclosureUrl;
       if (enclosureUrl != null) {
         final episodeRepo = ref.read(episodeRepositoryProvider);
         final dbEpisode = await episodeRepo.getByAudioUrl(enclosureUrl);
         if (dbEpisode != null && context.mounted) {
-          return _pushPodcastDetail(
-            context,
-            ref,
-            podcastId: dbEpisode.podcastId,
-          );
+          return _pushPodcastDetail(context, podcastId: dbEpisode.podcastId);
         }
       }
 
       // Fallback: navigate via deep link when itunesId is available
-      if (itunesId != null && context.mounted) {
+      if (widget.itunesId != null && context.mounted) {
         final path = AppRoutes.deepLinkPodcast.replaceFirst(
           ':itunesId',
-          Uri.encodeComponent(itunesId!),
+          Uri.encodeComponent(widget.itunesId!),
         );
         context.push(path);
       }
       return;
     }
-    return _pushPodcastDetail(context, ref, podcastId: podcastId);
+    return _pushPodcastDetail(context, podcastId: podcastId);
   }
 
   Future<void> _pushPodcastDetail(
-    BuildContext context,
-    WidgetRef ref, {
+    BuildContext context, {
     required int podcastId,
   }) async {
     final podcast = await lookupPodcastForEpisode(
       subscriptionRepo: ref.read(subscriptionRepositoryProvider),
       podcastId: podcastId,
-      podcastTitle: podcastTitle,
+      podcastTitle: widget.podcastTitle,
     );
     if (podcast == null || !context.mounted) return;
 
@@ -283,7 +354,6 @@ class EpisodeDetailScreen extends ConsumerWidget {
 
   Future<void> _onPlayPausePressed(
     BuildContext context,
-    WidgetRef ref,
     String url,
     bool isPlaying,
   ) async {
@@ -299,7 +369,7 @@ class EpisodeDetailScreen extends ConsumerWidget {
       return;
     }
 
-    final episodeId = progress?.episode.id;
+    final episodeId = widget.progress?.episode.id;
     if (episodeId != null) {
       final queueService = ref.read(queueServiceProvider);
       final shouldConfirm = await queueService.shouldConfirmAdhocReplace();
@@ -312,7 +382,7 @@ class EpisodeDetailScreen extends ConsumerWidget {
 
       await queueService.createAdhocQueue(
         startingEpisodeId: episodeId,
-        sourceContext: podcastTitle,
+        sourceContext: widget.podcastTitle,
       );
     }
 
@@ -320,10 +390,10 @@ class EpisodeDetailScreen extends ConsumerWidget {
       url,
       metadata: NowPlayingInfo(
         episodeUrl: url,
-        episodeTitle: episode.title,
-        podcastTitle: podcastTitle,
-        artworkUrl: artworkUrl ?? episode.primaryImage?.url,
-        totalDuration: episode.duration,
+        episodeTitle: widget.episode.title,
+        podcastTitle: widget.podcastTitle,
+        artworkUrl: widget.artworkUrl ?? widget.episode.primaryImage?.url,
+        totalDuration: widget.episode.duration,
       ),
     );
   }
@@ -351,7 +421,6 @@ class EpisodeDetailScreen extends ConsumerWidget {
   }
 
   Future<void> _togglePlayedStatus(
-    WidgetRef ref,
     String audioUrl,
     bool isCurrentlyCompleted,
   ) async {
