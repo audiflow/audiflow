@@ -9,7 +9,7 @@ void main() {
   group('WaveformAnimationMode', () {
     test('listening mode has correct parameters', () {
       const mode = WaveformAnimationMode.listening;
-      check(mode.durationMs).equals(800);
+      check(mode.duration).equals(const Duration(milliseconds: 800));
       check(mode.minHeight).equals(4.0);
       check(mode.maxHeight).equals(40.0);
       check(mode.bottomColor).equals(const Color(0xFF0D47A1));
@@ -18,7 +18,7 @@ void main() {
 
     test('processing mode has correct parameters', () {
       const mode = WaveformAnimationMode.processing;
-      check(mode.durationMs).equals(2000);
+      check(mode.duration).equals(const Duration(milliseconds: 2000));
       check(mode.minHeight).equals(4.0);
       check(mode.maxHeight).equals(16.0);
       check(mode.bottomColor).equals(const Color(0xFF0D47A1));

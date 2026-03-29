@@ -10,21 +10,22 @@ const double _phaseOffsetPerBar = 0.5;
 /// Defines the visual and timing parameters for each animation state.
 enum WaveformAnimationMode {
   listening(
-    durationMs: 800,
+    duration: Duration(milliseconds: 800),
     minHeight: 4.0,
     maxHeight: 40.0,
     bottomColor: Color(0xFF0D47A1),
     topColor: Color(0xFFFFC107),
   ),
   processing(
-    durationMs: 2000,
+    duration: Duration(milliseconds: 2000),
     minHeight: 4.0,
     maxHeight: 16.0,
     bottomColor: Color(0xFF0D47A1),
     topColor: Color(0xFF1976D2),
   ),
   idle(
-    durationMs: 0,
+    // Duration(milliseconds: 1) avoids AnimationController zero-duration assertion.
+    duration: Duration(milliseconds: 1),
     minHeight: 4.0,
     maxHeight: 4.0,
     bottomColor: Color(0xFF0D47A1),
@@ -32,14 +33,14 @@ enum WaveformAnimationMode {
   );
 
   const WaveformAnimationMode({
-    required this.durationMs,
+    required this.duration,
     required this.minHeight,
     required this.maxHeight,
     required this.bottomColor,
     required this.topColor,
   });
 
-  final int durationMs;
+  final Duration duration;
   final double minHeight;
   final double maxHeight;
   final Color bottomColor;
@@ -110,7 +111,6 @@ class WaveformPainter extends CustomPainter {
           end: Alignment.topCenter,
           colors: [mode.bottomColor, mode.topColor],
         ).createShader(barRect)
-        ..strokeCap = StrokeCap.round
         ..style = PaintingStyle.fill;
 
       canvas.drawRRect(
@@ -152,7 +152,7 @@ class _WaveformWidgetState extends State<WaveformWidget>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: _durationForMode(widget.mode),
+      duration: widget.mode.duration,
     );
     _startAnimationForMode(widget.mode);
   }
@@ -161,17 +161,9 @@ class _WaveformWidgetState extends State<WaveformWidget>
   void didUpdateWidget(WaveformWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.mode != widget.mode) {
-      _controller.duration = _durationForMode(widget.mode);
+      _controller.duration = widget.mode.duration;
       _startAnimationForMode(widget.mode);
     }
-  }
-
-  Duration _durationForMode(WaveformAnimationMode mode) {
-    final ms = mode.durationMs;
-    if (ms == 0) {
-      return const Duration(milliseconds: 1);
-    }
-    return Duration(milliseconds: ms);
   }
 
   void _startAnimationForMode(WaveformAnimationMode mode) {
