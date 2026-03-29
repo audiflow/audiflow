@@ -32,7 +32,6 @@ class AddToQueueButton extends StatelessWidget {
           HapticFeedback.mediumImpact();
           onPlayNext();
         },
-        borderRadius: BorderRadius.circular(22),
         customBorder: const CircleBorder(),
         child: ConstrainedBox(
           constraints: const BoxConstraints(minWidth: 44, minHeight: 44),

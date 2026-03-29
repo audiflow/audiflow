@@ -349,10 +349,8 @@ class EpisodeListTile extends ConsumerWidget {
     DownloadTask? task,
     AppLocalizations l10n,
   ) {
-    final isDownloaded =
-        task != null && task.downloadStatus is DownloadStatusCompleted;
-
-    if (isDownloaded) {
+    if (task case final DownloadTask nonNullTask
+        when nonNullTask.downloadStatus is DownloadStatusCompleted) {
       return ListTile(
         leading: const Icon(Icons.delete_outline),
         title: Text(l10n.removeDownload),
@@ -361,7 +359,7 @@ class EpisodeListTile extends ConsumerWidget {
           showDownloadDeleteConfirmation(
             context: outerContext,
             ref: ref,
-            task: task,
+            task: nonNullTask,
           );
         },
       );
@@ -432,6 +430,7 @@ class EpisodeListTile extends ConsumerWidget {
     return IconButton(
       icon: const Icon(Icons.more_horiz, size: 20),
       iconSize: 20,
+      tooltip: MaterialLocalizations.of(context).moreButtonTooltip,
       constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
       padding: const EdgeInsets.symmetric(horizontal: 6),
       onPressed: () =>

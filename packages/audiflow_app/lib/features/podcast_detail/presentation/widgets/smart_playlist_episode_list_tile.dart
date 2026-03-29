@@ -294,7 +294,7 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
                       downloadTask,
                       l10n,
                     ),
-                    if (itunesId != null)
+                    if (itunesId != null || episode.link != null)
                       ListTile(
                         leading: const Icon(Icons.share),
                         title: Text(l10n.shareEpisode),
@@ -304,7 +304,7 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
                             ref: ref,
                             itunesId: itunesId,
                             episodeGuid: episode.guid,
-                            fallbackLink: null,
+                            fallbackLink: episode.link,
                           );
                         },
                       ),
@@ -334,10 +334,8 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
     DownloadTask? task,
     AppLocalizations l10n,
   ) {
-    final isDownloaded =
-        task != null && task.downloadStatus is DownloadStatusCompleted;
-
-    if (isDownloaded) {
+    if (task case final DownloadTask nonNullTask
+        when nonNullTask.downloadStatus is DownloadStatusCompleted) {
       return ListTile(
         leading: const Icon(Icons.delete_outline),
         title: Text(l10n.removeDownload),
@@ -346,7 +344,7 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
           showDownloadDeleteConfirmation(
             context: outerContext,
             ref: ref,
-            task: task,
+            task: nonNullTask,
           );
         },
       );
@@ -416,6 +414,7 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
     return IconButton(
       icon: const Icon(Icons.more_horiz, size: 20),
       iconSize: 20,
+      tooltip: MaterialLocalizations.of(context).moreButtonTooltip,
       constraints: const BoxConstraints(minWidth: 40, minHeight: 36),
       padding: EdgeInsets.zero,
       onPressed: () =>
