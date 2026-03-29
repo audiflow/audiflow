@@ -128,7 +128,9 @@ Future<ParsedFeed> podcastDetail(Ref ref, String feedUrl) async {
 
       final episodeRepo = ref.read(episodeRepositoryProvider);
       final episodes = await episodeRepo.getByPodcastId(subscription.id);
-      final podcastItems = episodes.map(_episodeToItem).toList();
+      final podcastItems = episodes
+          .map((e) => _episodeToItem(e, feedUrl: feedUrl))
+          .toList();
 
       return ParsedFeed(
         podcast: PodcastFeed(
@@ -574,10 +576,10 @@ int _compareDates(DateTime? a, DateTime? b) {
 ///
 /// Used when the server returns 304 Not Modified and we rebuild
 /// the feed from persisted episodes instead of re-parsing XML.
-PodcastItem _episodeToItem(Episode episode) {
+PodcastItem _episodeToItem(Episode episode, {String feedUrl = ''}) {
   return PodcastItem(
     parsedAt: DateTime.now(),
-    sourceUrl: '',
+    sourceUrl: feedUrl,
     title: episode.title,
     description: episode.description ?? '',
     publishDate: episode.publishedAt,
