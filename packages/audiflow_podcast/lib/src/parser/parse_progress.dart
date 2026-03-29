@@ -36,6 +36,9 @@ final class ParsedEpisode extends ParseProgress {
     this.episodeNumber,
     this.seasonNumber,
     this.imageUrl,
+    this.contentEncoded,
+    this.summary,
+    this.link,
     this.transcripts,
     this.chapters,
   });
@@ -51,6 +54,16 @@ final class ParsedEpisode extends ParseProgress {
   final int? episodeNumber;
   final int? seasonNumber;
   final String? imageUrl;
+
+  /// Rich HTML content from <content:encoded>.
+  final String? contentEncoded;
+
+  /// iTunes summary.
+  final String? summary;
+
+  /// Episode web page URL.
+  final String? link;
+
   final List<ParsedTranscript>? transcripts;
   final List<ParsedChapter>? chapters;
 }

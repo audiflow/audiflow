@@ -33,4 +33,16 @@ class Subscription {
 
   /// Whether new episodes should be auto-downloaded during background refresh.
   bool autoDownload = false;
+
+  /// HTTP ETag header from the last successful feed fetch.
+  ///
+  /// Sent as `If-None-Match` on subsequent requests to avoid
+  /// re-downloading unchanged RSS feeds.
+  String? httpEtag;
+
+  /// HTTP Last-Modified header from the last successful feed fetch.
+  ///
+  /// Sent as `If-Modified-Since` on subsequent requests to avoid
+  /// re-downloading unchanged RSS feeds.
+  String? httpLastModified;
 }

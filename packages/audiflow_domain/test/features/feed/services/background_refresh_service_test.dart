@@ -184,6 +184,13 @@ class FakeSubscriptionRepository implements SubscriptionRepository {
 
   @override
   Future<void> updateAutoDownload(int id, {required bool autoDownload}) async {}
+
+  @override
+  Future<void> updateHttpCacheHeaders(
+    int id, {
+    String? etag,
+    String? lastModified,
+  }) async {}
 }
 
 class FakeEpisodeRepository implements EpisodeRepository {

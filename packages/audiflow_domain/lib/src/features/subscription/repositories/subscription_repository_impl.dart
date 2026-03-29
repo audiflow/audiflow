@@ -168,4 +168,17 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
   Future<void> updateAutoDownload(int id, {required bool autoDownload}) {
     return _datasource.updateAutoDownload(id, autoDownload: autoDownload);
   }
+
+  @override
+  Future<void> updateHttpCacheHeaders(
+    int id, {
+    String? etag,
+    String? lastModified,
+  }) {
+    return _datasource.updateHttpCacheHeaders(
+      id,
+      etag: etag,
+      lastModified: lastModified,
+    );
+  }
 }

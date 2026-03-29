@@ -107,7 +107,10 @@ class EpisodeRepositoryImpl implements EpisodeRepository {
         ..publishedAt = item.publishDate
         ..imageUrl = item.primaryImage?.url
         ..episodeNumber = episodeNumber
-        ..seasonNumber = seasonNumber;
+        ..seasonNumber = seasonNumber
+        ..contentEncoded = item.contentEncoded
+        ..summary = item.summary
+        ..link = item.link;
     }).toList();
 
     await _datasource.upsertAll(episodes);
@@ -149,7 +152,10 @@ class EpisodeRepositoryImpl implements EpisodeRepository {
         ..publishedAt = item.publishDate
         ..imageUrl = item.primaryImage?.url
         ..episodeNumber = episodeNumber
-        ..seasonNumber = seasonNumber;
+        ..seasonNumber = seasonNumber
+        ..contentEncoded = item.contentEncoded
+        ..summary = item.summary
+        ..link = item.link;
     }).toList();
 
     await _datasource.upsertAll(episodes);

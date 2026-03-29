@@ -11,11 +11,25 @@ import 'package:flutter_test/flutter_test.dart';
 class _FakeSubscriptionRepository implements SubscriptionRepository {
   String? lastUpdatedItunesId;
   DateTime? lastUpdatedTimestamp;
+  int? lastCacheHeadersId;
+  String? lastCacheEtag;
+  String? lastCacheLastModified;
 
   @override
   Future<void> updateLastRefreshed(String itunesId, DateTime timestamp) async {
     lastUpdatedItunesId = itunesId;
     lastUpdatedTimestamp = timestamp;
+  }
+
+  @override
+  Future<void> updateHttpCacheHeaders(
+    int id, {
+    String? etag,
+    String? lastModified,
+  }) async {
+    lastCacheHeadersId = id;
+    lastCacheEtag = etag;
+    lastCacheLastModified = lastModified;
   }
 
   // Unused methods for this test suite
@@ -352,12 +366,81 @@ class _ErrorDio implements Dio {
 // Helpers
 // ---------------------------------------------------------------------------
 
+/// A Dio that returns 304 Not Modified.
+class _NotModifiedDio implements Dio {
+  Map<String, dynamic>? lastRequestHeaders;
+
+  @override
+  Future<Response<T>> get<T>(
+    String path, {
+    Object? data,
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+    CancelToken? cancelToken,
+    ProgressCallback? onReceiveProgress,
+  }) async {
+    lastRequestHeaders = options?.headers;
+    return Response<T>(
+      statusCode: 304,
+      requestOptions: RequestOptions(path: path),
+    );
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+/// A Dio that captures request headers and returns a 200 with configurable
+/// response headers.
+class _HeaderCapturingDio implements Dio {
+  _HeaderCapturingDio({
+    String responseBody = '<rss></rss>',
+    this.responseEtag,
+    this.responseLastModified,
+  }) : _responseBody = responseBody;
+
+  final String _responseBody;
+  final String? responseEtag;
+  final String? responseLastModified;
+  Map<String, dynamic>? lastRequestHeaders;
+
+  @override
+  Future<Response<T>> get<T>(
+    String path, {
+    Object? data,
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+    CancelToken? cancelToken,
+    ProgressCallback? onReceiveProgress,
+  }) async {
+    lastRequestHeaders = options?.headers;
+    final headerMap = <String, List<String>>{};
+    if (responseEtag != null) {
+      headerMap['etag'] = [responseEtag!];
+    }
+    if (responseLastModified != null) {
+      headerMap['last-modified'] = [responseLastModified!];
+    }
+    return Response<T>(
+      data: _responseBody as T,
+      statusCode: 200,
+      headers: Headers.fromMap(headerMap),
+      requestOptions: RequestOptions(path: path),
+    );
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
 Subscription _subscription({
   int id = 1,
   String itunesId = 'itunes-1',
   String feedUrl = 'https://example.com/feed.xml',
   String title = 'Test Podcast',
   DateTime? lastRefreshedAt,
+  String? httpEtag,
+  String? httpLastModified,
 }) {
   return Subscription()
     ..id = id
@@ -368,7 +451,9 @@ Subscription _subscription({
     ..genres = ''
     ..explicit = false
     ..subscribedAt = DateTime.now()
-    ..lastRefreshedAt = lastRefreshedAt;
+    ..lastRefreshedAt = lastRefreshedAt
+    ..httpEtag = httpEtag
+    ..httpLastModified = httpLastModified;
 }
 
 Response<String> _xmlResponse(String body) => Response<String>(
@@ -537,5 +622,126 @@ void main() {
       expect(result.success, isTrue);
       expect(result.skipped, isFalse);
     });
+  });
+
+  group('FeedSyncExecutor conditional requests', () {
+    test('sends If-None-Match when subscription has httpEtag', () async {
+      final sub = _subscription(lastRefreshedAt: null, httpEtag: '"abc123"');
+
+      final dio = _NotModifiedDio();
+      final executor = buildExecutor(dio: dio);
+
+      await executor.syncFeed(sub);
+
+      expect(dio.lastRequestHeaders?['If-None-Match'], '"abc123"');
+    });
+
+    test(
+      'sends If-Modified-Since when subscription has httpLastModified',
+      () async {
+        final sub = _subscription(
+          lastRefreshedAt: null,
+          httpLastModified: 'Sat, 29 Mar 2026 00:00:00 GMT',
+        );
+
+        final dio = _NotModifiedDio();
+        final executor = buildExecutor(dio: dio);
+
+        await executor.syncFeed(sub);
+
+        expect(
+          dio.lastRequestHeaders?['If-Modified-Since'],
+          'Sat, 29 Mar 2026 00:00:00 GMT',
+        );
+      },
+    );
+
+    test('returns success on 304 Not Modified', () async {
+      final sub = _subscription(lastRefreshedAt: null, httpEtag: '"abc123"');
+
+      final executor = buildExecutor(dio: _NotModifiedDio());
+
+      final result = await executor.syncFeed(sub);
+
+      expect(result.success, isTrue);
+      expect(result.skipped, isFalse);
+      // lastRefreshedAt should still be updated
+      expect(fakeSubscriptionRepo.lastUpdatedItunesId, sub.itunesId);
+    });
+
+    test(
+      'preserves existing cache headers when 304 omits validators',
+      () async {
+        final sub = _subscription(
+          lastRefreshedAt: null,
+          httpEtag: '"existing-etag"',
+          httpLastModified: 'Fri, 28 Mar 2025 00:00:00 GMT',
+        );
+
+        // _NotModifiedDio returns 304 with no ETag/Last-Modified headers
+        final executor = buildExecutor(dio: _NotModifiedDio());
+
+        await executor.syncFeed(sub);
+
+        // Existing values must be preserved, not cleared
+        expect(fakeSubscriptionRepo.lastCacheHeadersId, sub.id);
+        expect(fakeSubscriptionRepo.lastCacheEtag, '"existing-etag"');
+        expect(
+          fakeSubscriptionRepo.lastCacheLastModified,
+          'Fri, 28 Mar 2025 00:00:00 GMT',
+        );
+      },
+    );
+
+    test('stores HTTP cache headers from 200 response', () async {
+      final sub = _subscription(lastRefreshedAt: null);
+
+      final dio = _HeaderCapturingDio(
+        responseEtag: '"new-etag"',
+        responseLastModified: 'Sat, 29 Mar 2026 12:00:00 GMT',
+      );
+
+      final parser = _FakeFeedParserService(
+        (xml, id, guids) => Stream.value(
+          const FeedParseComplete(total: 0, stoppedEarly: false),
+        ),
+      );
+
+      final executor = buildExecutor(dio: dio, feedParser: parser);
+
+      await executor.syncFeed(sub);
+
+      expect(fakeSubscriptionRepo.lastCacheHeadersId, sub.id);
+      expect(fakeSubscriptionRepo.lastCacheEtag, '"new-etag"');
+      expect(
+        fakeSubscriptionRepo.lastCacheLastModified,
+        'Sat, 29 Mar 2026 12:00:00 GMT',
+      );
+    });
+
+    test(
+      'does not send conditional headers when subscription has none',
+      () async {
+        final sub = _subscription(lastRefreshedAt: null);
+
+        final dio = _HeaderCapturingDio();
+
+        final parser = _FakeFeedParserService(
+          (xml, id, guids) => Stream.value(
+            const FeedParseComplete(total: 0, stoppedEarly: false),
+          ),
+        );
+
+        final executor = buildExecutor(dio: dio, feedParser: parser);
+
+        await executor.syncFeed(sub);
+
+        expect(dio.lastRequestHeaders?.containsKey('If-None-Match'), isFalse);
+        expect(
+          dio.lastRequestHeaders?.containsKey('If-Modified-Since'),
+          isFalse,
+        );
+      },
+    );
   });
 }

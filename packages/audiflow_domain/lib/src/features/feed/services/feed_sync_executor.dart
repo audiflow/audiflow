@@ -62,13 +62,53 @@ class FeedSyncExecutor {
 
       _logger?.d('Syncing feed for "${sub.title}"');
 
+      // Build conditional request headers
+      final conditionalHeaders = <String, String>{
+        'Accept': 'application/rss+xml, application/xml, text/xml',
+      };
+      if (sub.httpEtag != null) {
+        conditionalHeaders['If-None-Match'] = sub.httpEtag!;
+      }
+      if (sub.httpLastModified != null) {
+        conditionalHeaders['If-Modified-Since'] = sub.httpLastModified!;
+      }
+
       final response = await _dio.get<String>(
         sub.feedUrl,
         options: Options(
-          headers: {'Accept': 'application/rss+xml, application/xml, text/xml'},
+          headers: conditionalHeaders,
           responseType: ResponseType.plain,
+          validateStatus: (status) =>
+              status != null &&
+              (status == 304 || (200 <= status && status < 300)),
         ),
       );
+
+      // 304 Not Modified — feed unchanged, skip parsing.
+      // RFC 9110 allows 304 to include updated validators, so persist them.
+      if (response.statusCode == 304) {
+        _logger?.d('Feed not modified (304) for "${sub.title}"');
+        final newEtag = response.headers.value('etag');
+        final newLastModified = response.headers.value('last-modified');
+        await _subscriptionRepo.updateHttpCacheHeaders(
+          sub.id,
+          etag: newEtag ?? sub.httpEtag,
+          lastModified: newLastModified ?? sub.httpLastModified,
+        );
+        await _subscriptionRepo.updateLastRefreshed(
+          sub.itunesId,
+          DateTime.now(),
+        );
+        return SingleFeedSyncResult(
+          podcastId: sub.id,
+          success: true,
+          skipped: false,
+        );
+      }
+
+      // Capture HTTP cache headers — persisted only after successful import
+      final etag = response.headers.value('etag');
+      final lastModified = response.headers.value('last-modified');
 
       final xmlContent = response.data;
       if (xmlContent == null || xmlContent.isEmpty) {
@@ -96,6 +136,15 @@ class FeedSyncExecutor {
           newEpisodeCount = progress.total;
         }
       }
+
+      // Persist HTTP cache headers only after successful parse + upsert.
+      // Always update so previously stored values are cleared when headers
+      // are no longer sent by the server.
+      await _subscriptionRepo.updateHttpCacheHeaders(
+        sub.id,
+        etag: etag,
+        lastModified: lastModified,
+      );
 
       await _subscriptionRepo.updateLastRefreshed(sub.itunesId, DateTime.now());
 

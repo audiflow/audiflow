@@ -142,6 +142,9 @@ class FeedParserService {
               duration: e.duration,
               episodeNumber: e.episodeNumber,
               seasonNumber: e.seasonNumber,
+              contentEncoded: e.contentEncoded,
+              summary: e.summary,
+              link: e.link,
               images: e.imageUrl != null
                   ? [PodcastImage(url: e.imageUrl!)]
                   : [],
@@ -242,6 +245,9 @@ class FeedParserService {
           :final episodeNumber,
           :final seasonNumber,
           :final imageUrl,
+          :final contentEncoded,
+          :final summary,
+          :final link,
           :final transcripts,
           :final chapters,
         ):
@@ -260,7 +266,10 @@ class FeedParserService {
               ..publishedAt = publishDate
               ..imageUrl = imageUrl
               ..episodeNumber = episodeNumber
-              ..seasonNumber = seasonNumber,
+              ..seasonNumber = seasonNumber
+              ..contentEncoded = contentEncoded
+              ..summary = summary
+              ..link = link,
           );
 
           if (transcripts != null || chapters != null) {
