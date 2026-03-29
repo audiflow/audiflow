@@ -204,10 +204,16 @@ class _SubscribeButtonRow extends ConsumerWidget {
                 ),
               ),
               const SizedBox(width: Spacing.sm),
-              IconButton(
-                onPressed: () => sharePodcast(ref: ref, itunesId: podcast.id),
-                icon: const Icon(Icons.share_outlined),
-                tooltip: l10n.sharePodcast,
+              Builder(
+                builder: (iconContext) => IconButton(
+                  onPressed: () => sharePodcast(
+                    context: iconContext,
+                    ref: ref,
+                    itunesId: podcast.id,
+                  ),
+                  icon: const Icon(Icons.share_outlined),
+                  tooltip: l10n.sharePodcast,
+                ),
               ),
             ],
           );

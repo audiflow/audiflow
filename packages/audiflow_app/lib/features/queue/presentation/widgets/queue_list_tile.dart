@@ -146,6 +146,7 @@ class QueueListTile extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(horizontal: 4),
       onPressed: canShare
           ? () => shareEpisode(
+              context: context,
               ref: ref,
               itunesId: item.itunesId,
               episodeGuid: item.episode.guid,

@@ -301,6 +301,7 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
                         onTap: () {
                           Navigator.pop(sheetContext);
                           shareEpisode(
+                            context: context,
                             ref: ref,
                             itunesId: itunesId,
                             episodeGuid: episode.guid,
