@@ -7,6 +7,7 @@ import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../../routing/app_router.dart';
+import '../../../voice/presentation/widgets/voice_trigger_button.dart';
 import '../controllers/library_controller.dart';
 import '../widgets/continue_listening_section.dart';
 import '../../../station/presentation/controllers/station_list_controller.dart';
@@ -51,7 +52,10 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     final l10n = AppLocalizations.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.libraryTitle)),
+      appBar: AppBar(
+        title: Text(l10n.libraryTitle),
+        actions: const [VoiceTriggerButton()],
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => context.push(AppRoutes.stationNew),
         tooltip: l10n.stationNew,

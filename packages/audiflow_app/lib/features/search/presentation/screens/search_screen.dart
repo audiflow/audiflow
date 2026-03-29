@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../../routing/app_router.dart';
+import '../../../voice/presentation/widgets/voice_trigger_button.dart';
 import '../controllers/search_controller.dart';
 import '../controllers/search_state.dart';
 import '../widgets/country_picker_sheet.dart';
@@ -79,7 +80,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       behavior: HitTestBehavior.opaque,
       onTap: () => _focusNode.unfocus(),
       child: Scaffold(
-        appBar: AppBar(title: Text(l10n.searchTitle)),
+        appBar: AppBar(
+          title: Text(l10n.searchTitle),
+          actions: const [VoiceTriggerButton()],
+        ),
         body: Column(
           children: [
             Padding(
