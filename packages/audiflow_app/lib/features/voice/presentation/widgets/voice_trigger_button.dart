@@ -121,9 +121,15 @@ class _VoiceTriggerButtonState extends ConsumerState<VoiceTriggerButton>
     BuildContext context,
     VoiceRecognitionState state,
   ) {
-    if (state is! VoiceListening) return const [];
-    final primary = Theme.of(context).colorScheme.primary;
-    return [BoxShadow(color: primary.withValues(alpha: 0.4), blurRadius: 12)];
+    return switch (state) {
+      VoiceListening() => [
+        BoxShadow(
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.4),
+          blurRadius: 12,
+        ),
+      ],
+      _ => const [],
+    };
   }
 
   @override
