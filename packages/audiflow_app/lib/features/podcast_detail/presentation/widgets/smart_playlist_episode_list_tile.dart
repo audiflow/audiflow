@@ -4,6 +4,7 @@ import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../download/presentation/helpers/download_action_helper.dart';
 import '../../../queue/presentation/controllers/queue_controller.dart';
 import '../../../share/presentation/helpers/share_helper.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -24,6 +25,7 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
     this.siblingEpisodeIds,
     this.lastRefreshedAt,
     this.itunesId,
+    this.feedUrl,
   });
 
   final Episode episode;
@@ -42,6 +44,9 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
 
   /// iTunes ID for building universal share links.
   final String? itunesId;
+
+  /// Feed URL for invalidating the batch progress provider after changes.
+  final String? feedUrl;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -81,7 +86,8 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
       transcriptLabel: l10n.episodeTranscriptAvailable,
       onTap: () => _navigateToDetail(context),
       onPlayPause: () => _onPlayPausePressed(context, ref, audioUrl, isPlaying),
-      onLongPress: () => _showContextMenu(context, ref, audioUrl, progress),
+      onLongPress: () =>
+          _showContextMenu(context, ref, audioUrl, progress, downloadTask),
       actionButtons: [
         AddToQueueButton(
           onPlayLater: () {
@@ -104,7 +110,7 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
           },
         ),
         _buildDownloadButton(context, ref, downloadTask),
-        _buildShareButton(context, ref),
+        _buildMoreButton(context, ref, audioUrl, progress, downloadTask),
       ],
     );
   }
@@ -190,58 +196,173 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
     WidgetRef ref,
     String audioUrl,
     EpisodeWithProgress? progress,
+    DownloadTask? downloadTask,
   ) {
     final isCompleted = progress?.isCompleted ?? false;
+    final l10n = AppLocalizations.of(context);
 
     showModalBottomSheet(
       context: context,
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 32,
-              height: 4,
-              margin: const EdgeInsets.symmetric(vertical: Spacing.sm),
-              decoration: BoxDecoration(
-                color: Theme.of(
-                  context,
-                ).colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
-                borderRadius: BorderRadius.circular(2),
+      isScrollControlled: true,
+      builder: (_) => DraggableScrollableSheet(
+        expand: false,
+        initialChildSize: 0.45,
+        minChildSize: 0.3,
+        maxChildSize: 0.7,
+        builder: (sheetContext, scrollController) => SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 32,
+                height: 4,
+                margin: const EdgeInsets.symmetric(vertical: Spacing.sm),
+                decoration: BoxDecoration(
+                  color: Theme.of(
+                    sheetContext,
+                  ).colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: Spacing.md,
-                vertical: Spacing.xs,
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: Spacing.md,
+                  vertical: Spacing.xs,
+                ),
+                child: Text(
+                  episode.title,
+                  style: Theme.of(sheetContext).textTheme.titleSmall,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                ),
               ),
-              child: Text(
-                episode.title,
-                style: Theme.of(context).textTheme.titleSmall,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
+              const Divider(),
+              Expanded(
+                child: ListView(
+                  controller: scrollController,
+                  shrinkWrap: true,
+                  children: [
+                    ListTile(
+                      leading: const Icon(Icons.playlist_play),
+                      title: Text(l10n.playNext),
+                      onTap: () {
+                        Navigator.pop(sheetContext);
+                        ref
+                            .read(queueControllerProvider.notifier)
+                            .playNext(episode.id);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(l10n.queuePlayingNext),
+                            duration: const Duration(seconds: 1),
+                          ),
+                        );
+                      },
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.playlist_add),
+                      title: Text(l10n.addToQueue),
+                      onTap: () {
+                        Navigator.pop(sheetContext);
+                        ref
+                            .read(queueControllerProvider.notifier)
+                            .playLater(episode.id);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(l10n.queueAddedToQueue),
+                            duration: const Duration(seconds: 1),
+                          ),
+                        );
+                      },
+                    ),
+                    ListTile(
+                      leading: Icon(
+                        isCompleted ? Icons.replay : Icons.check_circle_outline,
+                      ),
+                      title: Text(
+                        isCompleted ? l10n.markAsUnplayed : l10n.markAsPlayed,
+                      ),
+                      onTap: () {
+                        Navigator.pop(sheetContext);
+                        _togglePlayedStatus(ref, audioUrl, isCompleted);
+                      },
+                    ),
+                    _buildDownloadMenuTile(
+                      context,
+                      sheetContext,
+                      ref,
+                      downloadTask,
+                      l10n,
+                    ),
+                    if (itunesId != null || episode.link != null)
+                      ListTile(
+                        leading: const Icon(Icons.share),
+                        title: Text(l10n.shareEpisode),
+                        onTap: () {
+                          Navigator.pop(sheetContext);
+                          shareEpisode(
+                            context: context,
+                            ref: ref,
+                            itunesId: itunesId,
+                            episodeGuid: episode.guid,
+                            fallbackLink: episode.link,
+                          );
+                        },
+                      ),
+                    ListTile(
+                      leading: const Icon(Icons.info_outline),
+                      title: Text(l10n.goToEpisode),
+                      onTap: () {
+                        Navigator.pop(sheetContext);
+                        _navigateToDetail(context);
+                      },
+                    ),
+                    const SizedBox(height: Spacing.sm),
+                  ],
+                ),
               ),
-            ),
-            const Divider(),
-            ListTile(
-              leading: Icon(
-                isCompleted ? Icons.replay : Icons.check_circle_outline,
-              ),
-              title: Text(
-                isCompleted
-                    ? AppLocalizations.of(context).markAsUnplayed
-                    : AppLocalizations.of(context).markAsPlayed,
-              ),
-              onTap: () {
-                Navigator.pop(context);
-                _togglePlayedStatus(ref, audioUrl, isCompleted);
-              },
-            ),
-            const SizedBox(height: Spacing.sm),
-          ],
+            ],
+          ),
         ),
       ),
+    );
+  }
+
+  Widget _buildDownloadMenuTile(
+    BuildContext outerContext,
+    BuildContext sheetContext,
+    WidgetRef ref,
+    DownloadTask? task,
+    AppLocalizations l10n,
+  ) {
+    if (task case final DownloadTask nonNullTask
+        when nonNullTask.downloadStatus is DownloadStatusCompleted) {
+      return ListTile(
+        leading: const Icon(Icons.delete_outline),
+        title: Text(l10n.removeDownload),
+        onTap: () {
+          Navigator.pop(sheetContext);
+          showDownloadDeleteConfirmation(
+            context: outerContext,
+            ref: ref,
+            task: nonNullTask,
+          );
+        },
+      );
+    }
+
+    return ListTile(
+      leading: const Icon(Icons.download),
+      title: Text(l10n.downloadEpisode),
+      onTap: () {
+        Navigator.pop(sheetContext);
+        handleDownloadTap(
+          context: outerContext,
+          ref: ref,
+          episodeId: episode.id,
+          task: task,
+        );
+      },
     );
   }
 
@@ -262,6 +383,9 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
     }
 
     ref.invalidate(episodeProgressProvider(audioUrl));
+    if (feedUrl != null) {
+      ref.invalidate(podcastEpisodeProgressProvider(feedUrl!));
+    }
   }
 
   Widget _buildDownloadButton(
@@ -272,101 +396,30 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
     return DownloadStatusIcon(
       task: task,
       size: 24,
-      onTap: () => _onDownloadTap(context, ref, task),
-    );
-  }
-
-  Future<void> _onDownloadTap(
-    BuildContext context,
-    WidgetRef ref,
-    DownloadTask? task,
-  ) async {
-    final downloadService = ref.read(downloadServiceProvider);
-    final messenger = ScaffoldMessenger.of(context);
-    final l10n = AppLocalizations.of(context);
-
-    if (task == null) {
-      await downloadService.downloadEpisode(episode.id);
-      return;
-    }
-
-    task.downloadStatus.when(
-      pending: () async {
-        await downloadService.cancel(task.id);
-        messenger.showSnackBar(SnackBar(content: Text(l10n.downloadCancelled)));
-      },
-      downloading: () async {
-        await downloadService.pause(task.id);
-      },
-      paused: () async {
-        await downloadService.resume(task.id);
-      },
-      completed: () {
-        _showDeleteConfirmation(context, ref, task);
-      },
-      failed: () async {
-        await downloadService.retry(task.id);
-        messenger.showSnackBar(SnackBar(content: Text(l10n.downloadRetrying)));
-      },
-      cancelled: () async {
-        final result = await downloadService.downloadEpisode(episode.id);
-        if (result != null) {
-          messenger.showSnackBar(SnackBar(content: Text(l10n.downloadStarted)));
-        }
-      },
-    );
-  }
-
-  void _showDeleteConfirmation(
-    BuildContext context,
-    WidgetRef ref,
-    DownloadTask task,
-  ) {
-    final l10n = AppLocalizations.of(context);
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.downloadDeleteTitle),
-        content: Text(l10n.downloadDeleteContent),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(l10n.commonCancel),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              await ref.read(downloadServiceProvider).delete(task.id);
-              if (context.mounted) {
-                ScaffoldMessenger.of(
-                  context,
-                ).showSnackBar(SnackBar(content: Text(l10n.downloadDeleted)));
-              }
-            },
-            child: Text(l10n.commonDelete),
-          ),
-        ],
+      onTap: () => handleDownloadTap(
+        context: context,
+        ref: ref,
+        episodeId: episode.id,
+        task: task,
       ),
     );
   }
 
-  Widget _buildShareButton(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
+  Widget _buildMoreButton(
+    BuildContext context,
+    WidgetRef ref,
+    String audioUrl,
+    EpisodeWithProgress? progress,
+    DownloadTask? downloadTask,
+  ) {
     return IconButton(
-      icon: const Icon(Icons.share, size: 20),
+      icon: const Icon(Icons.more_horiz, size: 20),
       iconSize: 20,
-      tooltip: l10n.shareEpisode,
+      tooltip: MaterialLocalizations.of(context).moreButtonTooltip,
       constraints: const BoxConstraints(minWidth: 40, minHeight: 36),
       padding: EdgeInsets.zero,
-      onPressed: itunesId != null
-          ? () => shareEpisode(
-              context: context,
-              ref: ref,
-              itunesId: itunesId,
-              episodeGuid: episode.guid,
-              fallbackLink: null,
-            )
-          : null,
+      onPressed: () =>
+          _showContextMenu(context, ref, audioUrl, progress, downloadTask),
     );
   }
 

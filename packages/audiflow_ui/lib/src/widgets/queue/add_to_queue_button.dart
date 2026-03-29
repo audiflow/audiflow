@@ -22,17 +22,28 @@ class AddToQueueButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onLongPress: () {
-        HapticFeedback.mediumImpact();
-        onPlayNext();
-      },
-      child: IconButton(
-        icon: Icon(Symbols.playlist_add, size: iconSize),
-        tooltip: tooltip,
-        constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-        padding: const EdgeInsets.symmetric(horizontal: 6),
-        onPressed: onPlayLater,
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Tooltip(
+      message: tooltip,
+      child: InkWell(
+        onTap: onPlayLater,
+        onLongPress: () {
+          HapticFeedback.mediumImpact();
+          onPlayNext();
+        },
+        customBorder: const CircleBorder(),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6),
+            child: Icon(
+              Symbols.playlist_add,
+              size: iconSize,
+              color: colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
       ),
     );
   }
