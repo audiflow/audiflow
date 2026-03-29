@@ -93,15 +93,27 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
     final heroTag =
         'episode_artwork_${widget.episode.guid ?? widget.episode.title}';
 
-    final overlayStyle = _artworkBrightness == Brightness.dark
+    final expandedOverlayStyle = _artworkBrightness == Brightness.dark
         ? SystemUiOverlayStyle.light
         : SystemUiOverlayStyle.dark;
+
+    // When collapsed, use the theme-appropriate style (dark icons on
+    // light surface, light icons on dark surface).
+    final themeBrightness = Theme.of(context).brightness;
+    final collapsedOverlayStyle = themeBrightness == Brightness.light
+        ? SystemUiOverlayStyle.dark
+        : SystemUiOverlayStyle.light;
 
     final expandedHeight = imageUrl != null ? 250.0 : 0.0;
 
     // When there is no artwork the app bar never expands, so buttons
     // should render in collapsed (theme) style from the start.
     final effectiveCollapseRatio = imageUrl != null ? _collapseRatio : 1.0;
+
+    // Switch overlay style at the halfway point of collapse.
+    final overlayStyle = 0.5 < effectiveCollapseRatio
+        ? collapsedOverlayStyle
+        : expandedOverlayStyle;
 
     return Scaffold(
       body: NotificationListener<ScrollNotification>(
