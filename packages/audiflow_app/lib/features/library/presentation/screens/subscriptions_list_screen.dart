@@ -75,18 +75,43 @@ class _SubscriptionsListScreenState
       onRefresh: _onRefresh,
       child: CustomScrollView(
         slivers: [
-          SliverLayoutBuilder(
-            builder: (context, constraints) {
-              final columnCount = ResponsiveGrid.columnCount(
-                availableWidth: constraints.crossAxisExtent,
-              );
-              if (columnCount <= 3) {
-                return SliverList(
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: Spacing.md),
+            sliver: SliverLayoutBuilder(
+              builder: (context, constraints) {
+                final columnCount = ResponsiveGrid.columnCount(
+                  availableWidth: constraints.crossAxisExtent,
+                );
+                if (columnCount <= 3) {
+                  return SliverList(
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      final subscription = subscriptions[index];
+                      return SubscriptionListTile(
+                        key: ValueKey(subscription.itunesId),
+                        subscription: subscription,
+                        onTap: () {
+                          final podcast = subscription.toPodcast();
+                          context.push(
+                            '${AppRoutes.subscriptions}/podcast/${podcast.id}',
+                            extra: podcast,
+                          );
+                        },
+                      );
+                    }, childCount: subscriptions.length),
+                  );
+                }
+                return SliverGrid(
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: columnCount,
+                    mainAxisSpacing: Spacing.sm,
+                    crossAxisSpacing: Spacing.sm,
+                    childAspectRatio: 0.8,
+                  ),
                   delegate: SliverChildBuilderDelegate((context, index) {
                     final subscription = subscriptions[index];
-                    return SubscriptionListTile(
-                      key: ValueKey(subscription.itunesId),
-                      subscription: subscription,
+                    return PodcastArtworkGridItem(
+                      artworkUrl: subscription.artworkUrl,
+                      title: subscription.title,
                       onTap: () {
                         final podcast = subscription.toPodcast();
                         context.push(
@@ -97,30 +122,8 @@ class _SubscriptionsListScreenState
                     );
                   }, childCount: subscriptions.length),
                 );
-              }
-              return SliverGrid(
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: columnCount,
-                  mainAxisSpacing: Spacing.sm,
-                  crossAxisSpacing: Spacing.sm,
-                  childAspectRatio: 0.8,
-                ),
-                delegate: SliverChildBuilderDelegate((context, index) {
-                  final subscription = subscriptions[index];
-                  return PodcastArtworkGridItem(
-                    artworkUrl: subscription.artworkUrl,
-                    title: subscription.title,
-                    onTap: () {
-                      final podcast = subscription.toPodcast();
-                      context.push(
-                        '${AppRoutes.subscriptions}/podcast/${podcast.id}',
-                        extra: podcast,
-                      );
-                    },
-                  );
-                }, childCount: subscriptions.length),
-              );
-            },
+              },
+            ),
           ),
         ],
       ),

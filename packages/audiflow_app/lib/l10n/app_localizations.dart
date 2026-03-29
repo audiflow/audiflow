@@ -1226,6 +1226,12 @@ abstract class AppLocalizations {
   /// **'Mark as unplayed'**
   String get markAsUnplayed;
 
+  /// Tooltip for more actions button on episode detail
+  ///
+  /// In en, this message translates to:
+  /// **'More actions'**
+  String get episodeMoreActions;
+
   /// Action to add episode to playback queue
   ///
   /// In en, this message translates to:

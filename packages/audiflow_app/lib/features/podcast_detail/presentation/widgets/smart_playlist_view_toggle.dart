@@ -135,26 +135,30 @@ class _MultiPlaylistToggle extends StatelessWidget {
             isSelected: playlistSelected,
             colorScheme: colorScheme,
             onSelect: () => onPlaylistSelected(selected),
-            onDropdown: () => _showPlaylistMenu(context),
+            onDropdownFromContext: _showPlaylistMenu,
           ),
         ),
       ],
     );
   }
 
-  void _showPlaylistMenu(BuildContext context) {
-    final renderBox = context.findRenderObject()! as RenderBox;
-    final position = renderBox.localToGlobal(Offset.zero);
-    final size = renderBox.size;
+  void _showPlaylistMenu(BuildContext anchorContext) {
+    final renderBox = anchorContext.findRenderObject()! as RenderBox;
+    final overlay =
+        Overlay.of(anchorContext).context.findRenderObject()! as RenderBox;
+    final buttonOffset = renderBox.localToGlobal(
+      Offset.zero,
+      ancestor: overlay,
+    );
+    final position = RelativeRect.fromRect(
+      Offset(buttonOffset.dx, buttonOffset.dy + renderBox.size.height) &
+          renderBox.size,
+      Offset.zero & overlay.size,
+    );
 
     showMenu<SmartPlaylist>(
-      context: context,
-      position: RelativeRect.fromLTRB(
-        position.dx + size.width / 2,
-        position.dy + size.height,
-        position.dx + size.width,
-        position.dy + size.height + 200,
-      ),
+      context: anchorContext,
+      position: position,
       items: playlists.map((playlist) {
         final isCurrent = playlist.id == selected.id;
         return PopupMenuItem<SmartPlaylist>(
@@ -164,7 +168,7 @@ class _MultiPlaylistToggle extends StatelessWidget {
             style: isCurrent
                 ? TextStyle(
                     fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.primary,
+                    color: Theme.of(anchorContext).colorScheme.primary,
                   )
                 : null,
           ),
@@ -240,14 +244,14 @@ class _PlaylistSegment extends StatelessWidget {
     required this.isSelected,
     required this.colorScheme,
     required this.onSelect,
-    required this.onDropdown,
+    required this.onDropdownFromContext,
   });
 
   final String label;
   final bool isSelected;
   final ColorScheme colorScheme;
   final VoidCallback onSelect;
-  final VoidCallback onDropdown;
+  final ValueChanged<BuildContext> onDropdownFromContext;
 
   @override
   Widget build(BuildContext context) {
@@ -292,14 +296,16 @@ class _PlaylistSegment extends StatelessWidget {
               height: 20,
               color: colorScheme.outline.withValues(alpha: 0.4),
             ),
-            InkWell(
-              onTap: onDropdown,
-              borderRadius: const BorderRadius.horizontal(
-                right: Radius.circular(20),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: Icon(Icons.arrow_drop_down, size: 20, color: fgColor),
+            Builder(
+              builder: (dropdownContext) => InkWell(
+                onTap: () => onDropdownFromContext(dropdownContext),
+                borderRadius: const BorderRadius.horizontal(
+                  right: Radius.circular(20),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: Icon(Icons.arrow_drop_down, size: 20, color: fgColor),
+                ),
               ),
             ),
           ],

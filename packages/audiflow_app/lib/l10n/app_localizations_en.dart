@@ -624,6 +624,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get markAsUnplayed => 'Mark as unplayed';
 
   @override
+  String get episodeMoreActions => 'More actions';
+
+  @override
   String get addToQueue => 'Add to queue';
 
   @override
