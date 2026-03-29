@@ -76,6 +76,8 @@ class ScaffoldWithNavBar extends ConsumerWidget {
     final size = MediaQuery.sizeOf(context);
     final isTablet = DeviceUtils.isTablet(size.shortestSide);
     final isLandscape = size.height < size.width;
+    final repo = ref.watch(appSettingsRepositoryProvider);
+    final voiceEnabled = repo.getVoiceEnabled();
 
     void onDestinationSelected(int index) => _onDestinationSelected(ref, index);
 
@@ -86,6 +88,7 @@ class ScaffoldWithNavBar extends ConsumerWidget {
         currentIndex: navigationShell.currentIndex,
         onDestinationSelected: onDestinationSelected,
         onMiniPlayerTap: () => _onMiniPlayerTap(context),
+        voiceEnabled: voiceEnabled,
       );
     } else if (isTablet) {
       shell = _TabletPortraitShell(
@@ -93,6 +96,7 @@ class ScaffoldWithNavBar extends ConsumerWidget {
         currentIndex: navigationShell.currentIndex,
         onDestinationSelected: onDestinationSelected,
         onMiniPlayerTap: () => _onMiniPlayerTap(context),
+        voiceEnabled: voiceEnabled,
       );
     } else {
       shell = _PhoneShell(
@@ -100,17 +104,19 @@ class ScaffoldWithNavBar extends ConsumerWidget {
         currentIndex: navigationShell.currentIndex,
         onDestinationSelected: onDestinationSelected,
         onMiniPlayerTap: () => _onMiniPlayerTap(context),
+        voiceEnabled: voiceEnabled,
       );
     }
 
     return Stack(
       children: [
         shell,
-        const Positioned(
-          top: 0,
-          right: 8,
-          child: SafeArea(child: VoiceCommandPanel()),
-        ),
+        if (voiceEnabled)
+          const Positioned(
+            top: 0,
+            right: 8,
+            child: SafeArea(child: VoiceCommandPanel()),
+          ),
       ],
     );
   }
@@ -123,12 +129,14 @@ class _PhoneShell extends StatelessWidget {
     required this.currentIndex,
     required this.onDestinationSelected,
     required this.onMiniPlayerTap,
+    required this.voiceEnabled,
   });
 
   final Widget navigationShell;
   final int currentIndex;
   final ValueChanged<int> onDestinationSelected;
   final VoidCallback onMiniPlayerTap;
+  final bool voiceEnabled;
 
   @override
   Widget build(BuildContext context) {
@@ -141,6 +149,7 @@ class _PhoneShell extends StatelessWidget {
           _CustomNavBar(
             currentIndex: currentIndex,
             onDestinationSelected: onDestinationSelected,
+            voiceEnabled: voiceEnabled,
           ),
         ],
       ),
@@ -153,10 +162,12 @@ class _CustomNavBar extends StatelessWidget {
   const _CustomNavBar({
     required this.currentIndex,
     required this.onDestinationSelected,
+    required this.voiceEnabled,
   });
 
   final int currentIndex;
   final ValueChanged<int> onDestinationSelected;
+  final bool voiceEnabled;
 
   static final _leftDestinations = [
     (index: 0, destination: ScaffoldWithNavBar._destinations[0]),
@@ -178,6 +189,34 @@ class _CustomNavBar extends StatelessWidget {
         navBarTheme.backgroundColor ?? colorScheme.surfaceContainer;
 
     final bottomInset = MediaQuery.viewPaddingOf(context).bottom;
+
+    if (!voiceEnabled) {
+      return Material(
+        color: backgroundColor,
+        child: SizedBox(
+          height: 80 + bottomInset,
+          child: Padding(
+            padding: EdgeInsets.only(bottom: bottomInset),
+            child: Row(
+              children: [
+                for (
+                  var i = 0;
+                  i < ScaffoldWithNavBar._destinations.length;
+                  i++
+                )
+                  Expanded(
+                    child: _NavItem(
+                      destination: ScaffoldWithNavBar._destinations[i],
+                      isSelected: currentIndex == i,
+                      onTap: () => onDestinationSelected(i),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
 
     return Material(
       color: backgroundColor,
@@ -295,12 +334,14 @@ class _TabletPortraitShell extends StatelessWidget {
     required this.currentIndex,
     required this.onDestinationSelected,
     required this.onMiniPlayerTap,
+    required this.voiceEnabled,
   });
 
   final Widget navigationShell;
   final int currentIndex;
   final ValueChanged<int> onDestinationSelected;
   final VoidCallback onMiniPlayerTap;
+  final bool voiceEnabled;
 
   @override
   Widget build(BuildContext context) {
@@ -321,11 +362,12 @@ class _TabletPortraitShell extends StatelessWidget {
           ],
         ),
         centerTitle: true,
-        actions: const [
-          Padding(
-            padding: EdgeInsets.only(right: 8),
-            child: VoiceTriggerButton(),
-          ),
+        actions: [
+          if (voiceEnabled)
+            const Padding(
+              padding: EdgeInsets.only(right: 8),
+              child: VoiceTriggerButton(),
+            ),
         ],
       ),
       body: Column(
@@ -345,12 +387,14 @@ class _TabletLandscapeShell extends StatelessWidget {
     required this.currentIndex,
     required this.onDestinationSelected,
     required this.onMiniPlayerTap,
+    required this.voiceEnabled,
   });
 
   final Widget navigationShell;
   final int currentIndex;
   final ValueChanged<int> onDestinationSelected;
   final VoidCallback onMiniPlayerTap;
+  final bool voiceEnabled;
 
   @override
   Widget build(BuildContext context) {
@@ -361,10 +405,12 @@ class _TabletLandscapeShell extends StatelessWidget {
             selectedIndex: currentIndex,
             onDestinationSelected: onDestinationSelected,
             labelType: NavigationRailLabelType.all,
-            leading: const Padding(
-              padding: EdgeInsets.only(bottom: 8),
-              child: VoiceTriggerButton(),
-            ),
+            leading: voiceEnabled
+                ? const Padding(
+                    padding: EdgeInsets.only(bottom: 8),
+                    child: VoiceTriggerButton(),
+                  )
+                : const SizedBox.shrink(),
             destinations: [
               for (final d in ScaffoldWithNavBar._destinations)
                 NavigationRailDestination(
