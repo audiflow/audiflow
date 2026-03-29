@@ -305,5 +305,10 @@
   "navSearch": "検索",
   "navLibrary": "ライブラリ",
   "navQueue": "キュー",
-  "navSettings": "設定"
+  "navSettings": "設定",
+
+  "playNext": "次に再生",
+  "downloadEpisode": "エピソードをダウンロード",
+  "goToEpisode": "エピソードへ移動",
+  "removeDownload": "ダウンロードを削除"
 }

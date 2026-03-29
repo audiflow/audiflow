@@ -18,6 +18,7 @@ class SmartPlaylistGroupEpisodesScreen extends ConsumerStatefulWidget {
     this.lastRefreshedAt,
     this.filteredEpisodeIds,
     this.itunesId,
+    this.feedUrl,
   });
 
   final SmartPlaylistGroup group;
@@ -32,6 +33,9 @@ class SmartPlaylistGroupEpisodesScreen extends ConsumerStatefulWidget {
 
   /// iTunes ID for building universal share links.
   final String? itunesId;
+
+  /// Feed URL for invalidating batch progress after changes.
+  final String? feedUrl;
 
   @override
   ConsumerState<SmartPlaylistGroupEpisodesScreen> createState() =>
@@ -255,6 +259,7 @@ class _SmartPlaylistGroupEpisodesScreenState
                 progress: data.progress,
                 siblingEpisodeIds: _episodeIds,
                 itunesId: widget.itunesId,
+                feedUrl: widget.feedUrl,
               );
             },
           ),
@@ -319,6 +324,7 @@ class _SmartPlaylistGroupEpisodesScreenState
         progress: data.progress,
         siblingEpisodeIds: _episodeIds,
         itunesId: widget.itunesId,
+        feedUrl: widget.feedUrl,
       ),
       scrollController: _scrollController,
       yearGroupingEnabled: true,

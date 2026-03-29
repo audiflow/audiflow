@@ -235,6 +235,7 @@ class _SmartPlaylistEpisodesScreenState
                 progress: data.progress,
                 siblingEpisodeIds: widget.smartPlaylist.episodeIds,
                 itunesId: widget.podcast.id,
+                feedUrl: widget.podcast.feedUrl,
               );
             },
           ),
@@ -329,6 +330,7 @@ class _SmartPlaylistEpisodesScreenState
         progress: data.progress,
         siblingEpisodeIds: widget.smartPlaylist.episodeIds,
         itunesId: widget.podcast.id,
+        feedUrl: widget.podcast.feedUrl,
       ),
       scrollController: _scrollController,
       yearGroupingEnabled: true,
