@@ -78,7 +78,9 @@ class FeedSyncExecutor {
         options: Options(
           headers: conditionalHeaders,
           responseType: ResponseType.plain,
-          validateStatus: (status) => status != null && status < 400,
+          validateStatus: (status) =>
+              status != null &&
+              (status == 304 || (200 <= status && status < 300)),
         ),
       );
 

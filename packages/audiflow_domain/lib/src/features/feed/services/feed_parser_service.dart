@@ -142,6 +142,9 @@ class FeedParserService {
               duration: e.duration,
               episodeNumber: e.episodeNumber,
               seasonNumber: e.seasonNumber,
+              contentEncoded: e.contentEncoded,
+              summary: e.summary,
+              link: e.link,
               images: e.imageUrl != null
                   ? [PodcastImage(url: e.imageUrl!)]
                   : [],
