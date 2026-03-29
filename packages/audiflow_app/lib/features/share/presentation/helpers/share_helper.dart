@@ -20,10 +20,10 @@ Future<String?> buildEpisodeShareUrl({
 }
 
 Rect? _shareOriginFrom(BuildContext context) {
-  final box = context.findRenderObject() as RenderBox?;
-  if (box == null) return null;
-  final origin = box.localToGlobal(Offset.zero);
-  return origin & box.size;
+  final renderObject = context.findRenderObject();
+  if (renderObject is! RenderBox) return null;
+  final origin = renderObject.localToGlobal(Offset.zero);
+  return origin & renderObject.size;
 }
 
 Future<void> shareEpisode({
