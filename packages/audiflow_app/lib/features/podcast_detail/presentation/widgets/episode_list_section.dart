@@ -114,6 +114,7 @@ List<Widget> buildEpisodeListSlivers({
       onToggleSortOrder: onToggleSortOrder,
       yearGrouped: yearGrouped,
       itunesId: itunesId,
+      feedUrl: feedUrl,
     ),
     loading: () => [
       const SliverToBoxAdapter(
@@ -153,6 +154,7 @@ List<Widget> _buildEpisodeData({
   required VoidCallback onToggleSortOrder,
   required bool yearGrouped,
   String? itunesId,
+  String? feedUrl,
 }) {
   final displayEpisodes = filterBySearchQuery(
     items: episodes,
@@ -202,6 +204,7 @@ List<Widget> _buildEpisodeData({
         lastRefreshedAt: lastRefreshedAt,
         scrollController: scrollController,
         itunesId: itunesId,
+        feedUrl: feedUrl,
       ),
     ];
   }
@@ -226,6 +229,7 @@ List<Widget> _buildEpisodeData({
           progress: progress,
           siblingEpisodeIds: siblingEpisodeIds,
           itunesId: itunesId,
+          feedUrl: feedUrl,
         );
       },
     ),
@@ -243,6 +247,7 @@ List<Widget> _buildYearGroupedEpisodeSlivers({
   required DateTime? lastRefreshedAt,
   required ScrollController scrollController,
   String? itunesId,
+  String? feedUrl,
 }) {
   final byYear = <int, List<PodcastItem>>{};
   for (final episode in episodes) {
@@ -277,6 +282,7 @@ List<Widget> _buildYearGroupedEpisodeSlivers({
         progress: progress,
         siblingEpisodeIds: siblingEpisodeIds,
         itunesId: itunesId,
+        feedUrl: feedUrl,
       );
     },
     scrollController: scrollController,

@@ -564,5 +564,14 @@
   "navQueue": "Queue",
   "@navQueue": { "description": "Navigation bar label for queue tab" },
   "navSettings": "Settings",
-  "@navSettings": { "description": "Navigation bar label for settings tab" }
+  "@navSettings": { "description": "Navigation bar label for settings tab" },
+
+  "playNext": "Play next",
+  "@playNext": { "description": "Action to add episode to play next in queue" },
+  "downloadEpisode": "Download episode",
+  "@downloadEpisode": { "description": "Action to download an episode" },
+  "goToEpisode": "Go to episode",
+  "@goToEpisode": { "description": "Action to navigate to episode detail" },
+  "removeDownload": "Remove download",
+  "@removeDownload": { "description": "Action to remove a downloaded episode" }
 }
