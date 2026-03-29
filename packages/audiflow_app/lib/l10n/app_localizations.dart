@@ -1226,6 +1226,24 @@ abstract class AppLocalizations {
   /// **'Mark as unplayed'**
   String get markAsUnplayed;
 
+  /// Episode status label when completed
+  ///
+  /// In en, this message translates to:
+  /// **'Played'**
+  String get episodeStatusPlayed;
+
+  /// Episode status label when not started
+  ///
+  /// In en, this message translates to:
+  /// **'Unplayed'**
+  String get episodeStatusUnplayed;
+
+  /// Episode status label when partially played
+  ///
+  /// In en, this message translates to:
+  /// **'In progress'**
+  String get episodeStatusInProgress;
+
   /// Action to add episode to playback queue
   ///
   /// In en, this message translates to:

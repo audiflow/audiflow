@@ -87,7 +87,26 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
         ? ref.watch(episodeDownloadProvider(episodeId)).value
         : null;
 
-    final isCompleted = widget.progress?.isCompleted ?? false;
+    // Watch reactive progress when enclosureUrl is available;
+    // fall back to the constructor-provided snapshot otherwise.
+    final reactiveProgress = enclosureUrl != null
+        ? ref.watch(episodeProgressProvider(enclosureUrl)).value
+        : null;
+    final effectiveProgress = reactiveProgress ?? widget.progress;
+    // Check if this episode is currently loaded in the player (any state).
+    final playbackState = ref.watch(audioPlayerControllerProvider);
+    final isLoadedInPlayer =
+        enclosureUrl != null &&
+        playbackState.maybeWhen(
+          playing: (url) => url == enclosureUrl,
+          paused: (url) => url == enclosureUrl,
+          loading: (url) => url == enclosureUrl,
+          orElse: () => false,
+        );
+
+    final isCompleted = effectiveProgress?.isCompleted ?? false;
+    final isInProgress =
+        isLoadedInPlayer || (effectiveProgress?.isInProgress ?? false);
 
     final imageUrl = widget.episode.primaryImage?.url ?? widget.artworkUrl;
     final heroTag =
@@ -237,26 +256,13 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
                     _MetadataRow(episode: widget.episode),
                     const SizedBox(height: Spacing.md),
 
-                    // Progress indicator
-                    if (widget.progress != null &&
-                        (widget.progress!.isCompleted ||
-                            widget.progress!.isInProgress))
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: Spacing.md),
-                        child: EpisodeProgressIndicator(
-                          isCompleted: widget.progress!.isCompleted,
-                          isInProgress: widget.progress!.isInProgress,
-                          remainingTimeFormatted:
-                              widget.progress!.remainingTimeFormatted,
-                        ),
-                      ),
-
                     // Action bar
                     _ActionBar(
                       enclosureUrl: enclosureUrl,
                       isPlaying: isPlaying,
                       isLoading: isLoading,
                       isCompleted: isCompleted,
+                      isInProgress: isInProgress,
                       episodeId: episodeId,
                       downloadTask: downloadTask,
                       onPlayPause: enclosureUrl != null
@@ -518,6 +524,7 @@ class _ActionBar extends StatelessWidget {
     required this.isPlaying,
     required this.isLoading,
     required this.isCompleted,
+    required this.isInProgress,
     required this.episodeId,
     required this.downloadTask,
     required this.onPlayPause,
@@ -530,6 +537,7 @@ class _ActionBar extends StatelessWidget {
   final bool isPlaying;
   final bool isLoading;
   final bool isCompleted;
+  final bool isInProgress;
   final int? episodeId;
   final DownloadTask? downloadTask;
   final VoidCallback? onPlayPause;
@@ -589,14 +597,63 @@ class _ActionBar extends StatelessWidget {
             tooltip: l10n.addToQueue,
           ),
 
-        // Mark played/unplayed
+        const Spacer(),
+
+        // Played status (right-aligned, tappable to toggle)
         if (onTogglePlayed != null)
-          IconButton(
-            icon: Icon(isCompleted ? Icons.replay : Icons.check_circle_outline),
-            onPressed: onTogglePlayed,
-            tooltip: isCompleted ? l10n.markAsUnplayed : l10n.markAsPlayed,
+          _PlayedStatusChip(
+            isCompleted: isCompleted,
+            isInProgress: isInProgress,
+            onTap: onTogglePlayed!,
           ),
       ],
+    );
+  }
+}
+
+/// Tappable chip showing played status, right-aligned in the action bar.
+///
+/// - Played: filled primary icon + "Played"
+/// - In progress: outlined icon + "In progress"
+/// - Unplayed: outlined icon + "Unplayed"
+class _PlayedStatusChip extends StatelessWidget {
+  const _PlayedStatusChip({
+    required this.isCompleted,
+    required this.isInProgress,
+    required this.onTap,
+  });
+
+  final bool isCompleted;
+  final bool isInProgress;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
+
+    final String label;
+    final IconData icon;
+    final Color iconColor;
+
+    if (isCompleted) {
+      label = l10n.episodeStatusPlayed;
+      icon = Icons.check_circle;
+      iconColor = colorScheme.primary;
+    } else if (isInProgress) {
+      label = l10n.episodeStatusInProgress;
+      icon = Icons.check_circle_outline;
+      iconColor = colorScheme.onSurfaceVariant;
+    } else {
+      label = l10n.episodeStatusUnplayed;
+      icon = Icons.check_circle_outline;
+      iconColor = colorScheme.onSurfaceVariant;
+    }
+
+    return ActionChip(
+      avatar: Icon(icon, size: 18, color: iconColor),
+      label: Text(label),
+      onPressed: onTap,
     );
   }
 }
