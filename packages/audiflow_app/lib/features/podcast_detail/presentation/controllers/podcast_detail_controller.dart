@@ -149,18 +149,9 @@ Future<ParsedFeed> podcastDetail(Ref ref, String feedUrl) async {
 
     logger.d('Fetched ${response.data!.length} bytes, parsing...');
 
-    // Store HTTP cache headers from 200 response
-    if (subscription != null) {
-      final etag = response.headers.value('etag');
-      final lastModified = response.headers.value('last-modified');
-      if (etag != null || lastModified != null) {
-        await subscriptionRepo.updateHttpCacheHeaders(
-          subscription.id,
-          etag: etag,
-          lastModified: lastModified,
-        );
-      }
-    }
+    // Capture HTTP cache headers — persisted only after successful import
+    final etag = response.headers.value('etag');
+    final lastModified = response.headers.value('last-modified');
 
     // Look up newest known episode for pubDate-based early-stop
     DateTime? knownNewestPubDate;
@@ -204,17 +195,6 @@ Future<ParsedFeed> podcastDetail(Ref ref, String feedUrl) async {
         );
         logger.d('Created cached subscription id=${subscription.id}');
         PodcastMetadataHints.remove(feedUrl);
-
-        // Store HTTP cache headers for newly-created cached subscription
-        final etag = response.headers.value('etag');
-        final lastModified = response.headers.value('last-modified');
-        if (etag != null || lastModified != null) {
-          await subscriptionRepo.updateHttpCacheHeaders(
-            subscription.id,
-            etag: etag,
-            lastModified: lastModified,
-          );
-        }
       }
     }
 
@@ -247,6 +227,15 @@ Future<ParsedFeed> podcastDetail(Ref ref, String feedUrl) async {
         'Persisted ${result.episodes.length} episodes '
         'for subscription',
       );
+
+      // Persist HTTP cache headers only after successful parse + upsert
+      if (etag != null || lastModified != null) {
+        await subscriptionRepo.updateHttpCacheHeaders(
+          subscription.id,
+          etag: etag,
+          lastModified: lastModified,
+        );
+      }
 
       // Invalidate all smart playlist providers after
       // episodes are persisted. Both ID-based and

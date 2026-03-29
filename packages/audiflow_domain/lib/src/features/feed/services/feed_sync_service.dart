@@ -219,16 +219,9 @@ class FeedSyncService {
         );
       }
 
-      // Store HTTP cache headers from 200 response
+      // Capture HTTP cache headers — persisted only after successful import
       final etag = response.headers.value('etag');
       final lastModified = response.headers.value('last-modified');
-      if (etag != null || lastModified != null) {
-        await subscriptionRepo.updateHttpCacheHeaders(
-          sub.id,
-          etag: etag,
-          lastModified: lastModified,
-        );
-      }
 
       final xmlContent = response.data;
       if (xmlContent == null || xmlContent.isEmpty) {
@@ -306,6 +299,15 @@ class FeedSyncService {
         if (progress is FeedParseComplete) {
           newEpisodeCount = progress.total;
         }
+      }
+
+      // Persist HTTP cache headers only after successful parse + upsert
+      if (etag != null || lastModified != null) {
+        await subscriptionRepo.updateHttpCacheHeaders(
+          sub.id,
+          etag: etag,
+          lastModified: lastModified,
+        );
       }
 
       // Update lastRefreshedAt
