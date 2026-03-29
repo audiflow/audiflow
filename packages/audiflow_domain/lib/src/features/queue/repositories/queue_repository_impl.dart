@@ -206,12 +206,8 @@ class QueueRepositoryImpl implements QueueRepository {
     final episodes = await _episodeDatasource.getByIds(episodeIds);
     final episodeMap = {for (final e in episodes) e.id: e};
 
-    // Only fetch subscriptions when some episodes lack artwork
-    final podcastIds = episodes
-        .where((e) => e.imageUrl == null)
-        .map((e) => e.podcastId)
-        .toSet()
-        .toList();
+    // Fetch subscriptions for all episodes (needed for artwork fallback and itunesId)
+    final podcastIds = episodes.map((e) => e.podcastId).toSet().toList();
     final subscriptionMap = <int, Subscription>{};
     if (podcastIds.isNotEmpty) {
       final subscriptions = await _subscriptionDatasource.getByIds(podcastIds);

@@ -192,6 +192,7 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
                       semanticLabel: l10n.shareEpisode,
                       onTap: canShare
                           ? () => shareEpisode(
+                              context: context,
                               ref: ref,
                               itunesId: widget.itunesId,
                               episodeGuid: widget.episode.guid,

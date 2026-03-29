@@ -295,6 +295,7 @@ class EpisodeListTile extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(horizontal: 6),
       onPressed: canShare
           ? () => shareEpisode(
+              context: context,
               ref: ref,
               itunesId: itunesId,
               episodeGuid: episode.guid,

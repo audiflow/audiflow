@@ -360,6 +360,7 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
       padding: EdgeInsets.zero,
       onPressed: itunesId != null
           ? () => shareEpisode(
+              context: context,
               ref: ref,
               itunesId: itunesId,
               episodeGuid: episode.guid,

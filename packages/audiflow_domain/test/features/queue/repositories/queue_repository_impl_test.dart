@@ -354,6 +354,28 @@ void main() {
       expect(queue.manualItems.first.itunesId, 'test-itunes-id');
     });
 
+    test('populates itunesId even when episode has its own imageUrl', () async {
+      // Episode with its own artwork should still get itunesId for sharing
+      await isar.writeTxn(() async {
+        await isar.episodes.put(
+          Episode()
+            ..id = 30
+            ..podcastId = 1
+            ..guid = 'ep-with-art'
+            ..title = 'Episode With Art'
+            ..audioUrl = 'https://example.com/ep-art.mp3'
+            ..imageUrl = 'https://example.com/ep-art.jpg',
+        );
+      });
+
+      await repository.addToEnd(30);
+
+      final queue = await repository.getQueue();
+      final item = queue.manualItems.where((i) => i.episode.id == 30).first;
+
+      expect(item.itunesId, 'test-itunes-id');
+    });
+
     test('returns null itunesId when no subscription exists', () async {
       // Create an episode whose podcastId has no matching subscription
       await isar.writeTxn(() async {
