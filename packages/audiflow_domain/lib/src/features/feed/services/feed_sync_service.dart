@@ -211,10 +211,12 @@ class FeedSyncService {
       // RFC 9110 allows 304 to include updated validators, so persist them.
       if (response.statusCode == 304) {
         _logger.d('Feed not modified (304) for "${sub.title}"');
+        final newEtag = response.headers.value('etag');
+        final newLastModified = response.headers.value('last-modified');
         await subscriptionRepo.updateHttpCacheHeaders(
           sub.id,
-          etag: response.headers.value('etag'),
-          lastModified: response.headers.value('last-modified'),
+          etag: newEtag ?? sub.httpEtag,
+          lastModified: newLastModified ?? sub.httpLastModified,
         );
         await subscriptionRepo.updateLastRefreshed(
           sub.itunesId,

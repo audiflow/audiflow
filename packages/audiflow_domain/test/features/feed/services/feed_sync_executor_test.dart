@@ -669,6 +669,30 @@ void main() {
       expect(fakeSubscriptionRepo.lastUpdatedItunesId, sub.itunesId);
     });
 
+    test(
+      'preserves existing cache headers when 304 omits validators',
+      () async {
+        final sub = _subscription(
+          lastRefreshedAt: null,
+          httpEtag: '"existing-etag"',
+          httpLastModified: 'Fri, 28 Mar 2025 00:00:00 GMT',
+        );
+
+        // _NotModifiedDio returns 304 with no ETag/Last-Modified headers
+        final executor = buildExecutor(dio: _NotModifiedDio());
+
+        await executor.syncFeed(sub);
+
+        // Existing values must be preserved, not cleared
+        expect(fakeSubscriptionRepo.lastCacheHeadersId, sub.id);
+        expect(fakeSubscriptionRepo.lastCacheEtag, '"existing-etag"');
+        expect(
+          fakeSubscriptionRepo.lastCacheLastModified,
+          'Fri, 28 Mar 2025 00:00:00 GMT',
+        );
+      },
+    );
+
     test('stores HTTP cache headers from 200 response', () async {
       final sub = _subscription(lastRefreshedAt: null);
 

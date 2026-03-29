@@ -125,10 +125,12 @@ Future<ParsedFeed> podcastDetail(Ref ref, String feedUrl) async {
     // RFC 9110 allows 304 to include updated validators, so persist them.
     if (response.statusCode == 304 && subscription != null) {
       logger.i('Feed not modified (304), loading episodes from Isar');
+      final responseEtag = response.headers.value('etag');
+      final responseLastModified = response.headers.value('last-modified');
       await subscriptionRepo.updateHttpCacheHeaders(
         subscription.id,
-        etag: response.headers.value('etag'),
-        lastModified: response.headers.value('last-modified'),
+        etag: responseEtag ?? subscription.httpEtag,
+        lastModified: responseLastModified ?? subscription.httpLastModified,
       );
       await subscriptionRepo.updateLastAccessed(subscription.id);
 
