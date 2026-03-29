@@ -207,9 +207,15 @@ class FeedSyncService {
         ),
       );
 
-      // 304 Not Modified — feed unchanged, skip parsing
+      // 304 Not Modified — feed unchanged, skip parsing.
+      // RFC 9110 allows 304 to include updated validators, so persist them.
       if (response.statusCode == 304) {
         _logger.d('Feed not modified (304) for "${sub.title}"');
+        await subscriptionRepo.updateHttpCacheHeaders(
+          sub.id,
+          etag: response.headers.value('etag'),
+          lastModified: response.headers.value('last-modified'),
+        );
         await subscriptionRepo.updateLastRefreshed(
           sub.itunesId,
           DateTime.now(),

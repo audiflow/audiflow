@@ -121,9 +121,15 @@ Future<ParsedFeed> podcastDetail(Ref ref, String feedUrl) async {
       ),
     );
 
-    // 304 Not Modified — feed unchanged, rebuild from Isar
+    // 304 Not Modified — feed unchanged, rebuild from Isar.
+    // RFC 9110 allows 304 to include updated validators, so persist them.
     if (response.statusCode == 304 && subscription != null) {
       logger.i('Feed not modified (304), loading episodes from Isar');
+      await subscriptionRepo.updateHttpCacheHeaders(
+        subscription.id,
+        etag: response.headers.value('etag'),
+        lastModified: response.headers.value('last-modified'),
+      );
       await subscriptionRepo.updateLastAccessed(subscription.id);
 
       final episodeRepo = ref.read(episodeRepositoryProvider);
