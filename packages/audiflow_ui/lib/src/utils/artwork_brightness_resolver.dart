@@ -11,7 +11,7 @@ import 'package:flutter/material.dart';
 class ArtworkBrightnessResolver {
   ArtworkBrightnessResolver._();
 
-  static const double _luminanceThreshold = 0.5;
+  static const double _luminanceThreshold = 0.6;
   static const int _decodeSize = 24;
 
   /// Resolves brightness from an [ImageProvider].
