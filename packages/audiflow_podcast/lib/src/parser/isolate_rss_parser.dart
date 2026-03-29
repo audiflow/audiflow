@@ -308,6 +308,9 @@ class IsolateRssParser {
       episodeNumber: int.tryParse(_extractItunesText(item, 'episode') ?? ''),
       seasonNumber: int.tryParse(_extractItunesText(item, 'season') ?? ''),
       imageUrl: _extractItunesImageUrl(item),
+      contentEncoded: _extractContentEncoded(item),
+      summary: _extractItunesText(item, 'summary'),
+      link: _extractText(item, 'link'),
       transcripts: _extractTranscripts(item),
       chapters: _extractChapters(item),
     );
@@ -398,6 +401,19 @@ class IsolateRssParser {
           (element.name.qualified.startsWith('itunes:') ||
               element.namespaceUri ==
                   'http://www.itunes.com/dtds/podcast-1.0.dtd')) {
+        return _nullIfBlank(element.innerText);
+      }
+    }
+    return null;
+  }
+
+  /// Extracts <content:encoded> text, handling the namespace prefix.
+  static String? _extractContentEncoded(XmlElement parent) {
+    for (final element in parent.children.whereType<XmlElement>()) {
+      if (element.localName == 'encoded' &&
+          (element.name.qualified.startsWith('content:') ||
+              element.namespaceUri ==
+                  'http://purl.org/rss/1.0/modules/content/')) {
         return _nullIfBlank(element.innerText);
       }
     }

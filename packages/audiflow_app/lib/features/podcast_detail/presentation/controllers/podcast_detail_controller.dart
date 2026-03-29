@@ -586,6 +586,9 @@ PodcastItem _episodeToItem(Episode episode) {
     guid: episode.guid,
     episodeNumber: episode.episodeNumber,
     seasonNumber: episode.seasonNumber,
+    contentEncoded: episode.contentEncoded,
+    summary: episode.summary,
+    link: episode.link,
     images: episode.imageUrl != null
         ? [PodcastImage(url: episode.imageUrl!)]
         : const [],
