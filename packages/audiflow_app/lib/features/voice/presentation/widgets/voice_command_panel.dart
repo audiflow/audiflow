@@ -464,7 +464,9 @@ class _SettingsAutoAppliedContent extends ConsumerWidget {
               final controller = ref.read(
                 voiceCommandControllerProvider.notifier,
               );
-              controller.undoSettingsChange(state.key, state.oldValue);
+              unawaited(
+                controller.undoSettingsChange(state.key, state.oldValue),
+              );
             },
             child: Text(l10n.undo),
           ),
@@ -557,11 +559,11 @@ class _DisambiguationCandidate extends ConsumerWidget {
 
     return GestureDetector(
       onTap: hasValue
-          ? () {
+          ? () async {
               final controller = ref.read(
                 voiceCommandControllerProvider.notifier,
               );
-              controller.selectSettingsCandidate(candidate);
+              await controller.selectSettingsCandidate(candidate);
             }
           : null,
       child: Container(
@@ -640,7 +642,9 @@ class _SettingsLowConfidenceContent extends ConsumerWidget {
                   final controller = ref.read(
                     voiceCommandControllerProvider.notifier,
                   );
-                  controller.confirmSettingsChange(state.key, state.newValue);
+                  unawaited(
+                    controller.confirmSettingsChange(state.key, state.newValue),
+                  );
                 },
                 child: Text(l10n.confirm),
               ),

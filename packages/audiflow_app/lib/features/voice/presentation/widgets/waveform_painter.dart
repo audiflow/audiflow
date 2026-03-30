@@ -128,8 +128,7 @@ class WaveformPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(WaveformPainter oldDelegate) {
-    return oldDelegate.animation.value != animation.value ||
-        oldDelegate.mode != mode;
+    return oldDelegate.mode != mode || oldDelegate.animation != animation;
   }
 }
 
