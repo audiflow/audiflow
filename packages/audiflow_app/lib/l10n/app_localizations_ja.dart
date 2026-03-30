@@ -908,6 +908,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsVoiceSubtitle => '音声コマンドと認識';
 
   @override
+  String get voiceExperimentalLabel => '試験的機能';
+
+  @override
+  String get voiceExperimentalDescription =>
+      '音声コマンドは試験的な機能であり、ほとんどのデバイスでは正常に動作しない可能性があります。デバイスのオンデバイスAI性能の向上に伴い、精度や対応状況も改善されていく見込みです。';
+
+  @override
   String get voiceEnabledTitle => '音声コマンド';
 
   @override

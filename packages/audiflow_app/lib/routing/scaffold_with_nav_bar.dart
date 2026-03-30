@@ -13,6 +13,7 @@ import '../features/player/presentation/screens/player_screen.dart';
 import '../features/player/presentation/widgets/animated_mini_player.dart';
 import '../features/settings/presentation/controllers/last_tab_controller.dart';
 import '../features/voice/presentation/widgets/voice_command_panel.dart';
+import '../features/voice/presentation/widgets/voice_debug_panel.dart';
 import '../features/voice/presentation/widgets/voice_trigger_button.dart';
 import '../features/voice/presentation/widgets/voice_trigger_style.dart';
 
@@ -119,8 +120,20 @@ class ScaffoldWithNavBar extends ConsumerWidget {
         shell,
         if (voiceEnabled)
           Positioned(top: panelTop, right: 8, child: const VoiceCommandPanel()),
+        if (voiceEnabled && FlavorConfig.current.flavor != Flavor.prod)
+          Positioned(
+            bottom: _debugPanelBottom(context, isTablet),
+            left: 8,
+            child: const VoiceDebugPanel(),
+          ),
       ],
     );
+  }
+
+  static double _debugPanelBottom(BuildContext context, bool isTablet) {
+    if (isTablet) return 8;
+    // Phone: above the nav bar (80pt) + safe area bottom
+    return 80 + MediaQuery.viewPaddingOf(context).bottom + 8;
   }
 }
 

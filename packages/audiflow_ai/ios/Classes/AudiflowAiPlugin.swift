@@ -60,10 +60,16 @@ public class AudiflowAiPlugin: NSObject, FlutterPlugin {
 
     // MARK: - Properties
 
+    /// Type-erased storage for LanguageModelSession (iOS 26+).
+    /// Access via the `session` computed property which handles availability.
+    private var _sessionStorage: Any?
+
     #if canImport(FoundationModels)
-    /// The language model session for text generation.
     @available(iOS 26.0, *)
-    private var session: LanguageModelSession?
+    private var session: LanguageModelSession? {
+        get { _sessionStorage as? LanguageModelSession }
+        set { _sessionStorage = newValue }
+    }
     #endif
 
     /// The system instructions for the current session.

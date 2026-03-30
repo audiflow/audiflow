@@ -114,6 +114,8 @@ export 'src/features/voice/services/settings_metadata_registry.dart';
 export 'src/features/voice/services/settings_snapshot_service.dart';
 export 'src/features/voice/services/voice_command_executor.dart';
 export 'src/features/voice/services/voice_command_orchestrator.dart';
+export 'src/features/voice/models/voice_debug_info.dart';
+export 'src/features/voice/services/voice_debug_info_notifier.dart';
 
 // Download feature
 export 'src/features/download/models/download_status.dart';

@@ -25,6 +25,7 @@ class VoiceSettingsScreen extends ConsumerWidget {
       appBar: AppBar(title: Text(l10n.settingsVoiceTitle)),
       body: ListView(
         children: [
+          _ExperimentalBanner(l10n: l10n),
           SwitchListTile(
             title: Text(l10n.voiceEnabledTitle),
             subtitle: Text(l10n.voiceEnabledSubtitle),
@@ -132,6 +133,53 @@ class VoiceSettingsScreen extends ConsumerWidget {
       phrasesJa: ['[設定]を[値]に変更'],
     ),
   ];
+}
+
+class _ExperimentalBanner extends StatelessWidget {
+  const _ExperimentalBanner({required this.l10n});
+
+  final AppLocalizations l10n;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: colorScheme.errorContainer,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Symbols.science, color: colorScheme.onErrorContainer, size: 20),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.voiceExperimentalLabel,
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    color: colorScheme.onErrorContainer,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  l10n.voiceExperimentalDescription,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onErrorContainer,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _VoiceCommandInfo {

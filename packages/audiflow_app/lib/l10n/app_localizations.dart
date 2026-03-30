@@ -1748,6 +1748,18 @@ abstract class AppLocalizations {
   /// **'Voice commands and recognition'**
   String get settingsVoiceSubtitle;
 
+  /// Badge label for experimental voice feature
+  ///
+  /// In en, this message translates to:
+  /// **'Experimental'**
+  String get voiceExperimentalLabel;
+
+  /// Warning description for experimental voice feature
+  ///
+  /// In en, this message translates to:
+  /// **'Voice commands are an experimental feature and may not work reliably on most devices. Accuracy and availability will improve as on-device AI capabilities evolve.'**
+  String get voiceExperimentalDescription;
+
   /// Toggle label for enabling voice commands
   ///
   /// In en, this message translates to:

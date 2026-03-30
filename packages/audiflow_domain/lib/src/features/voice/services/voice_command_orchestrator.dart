@@ -7,6 +7,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../common/providers/logger_provider.dart';
 import '../../settings/providers/settings_providers.dart';
+import '../models/voice_debug_info.dart';
 import '../models/voice_recognition_state.dart';
 import '../repositories/speech_recognition_repository.dart';
 import '../repositories/speech_recognition_repository_impl.dart';
@@ -15,6 +16,7 @@ import 'settings_intent_resolver.dart';
 import 'settings_metadata_registry.dart';
 import 'settings_snapshot_service.dart';
 import 'voice_command_executor.dart';
+import 'voice_debug_info_notifier.dart';
 
 part 'voice_command_orchestrator.g.dart';
 
@@ -161,12 +163,18 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
     await _speechRepository.cancelListening();
     _listeningCompleter?.complete();
     _listeningCompleter = null;
-    state = const VoiceRecognitionState.idle();
+    _transitionToIdle();
   }
 
   /// Reset state to idle.
   void resetToIdle() {
+    _transitionToIdle();
+  }
+
+  /// Centralised idle transition that resets both state and debug info.
+  void _transitionToIdle() {
     state = const VoiceRecognitionState.idle();
+    ref.read(voiceDebugInfoProvider.notifier).reset();
   }
 
   /// Confirms a pending low-confidence settings change and applies it.
@@ -199,7 +207,7 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
       );
       return;
     }
-    state = const VoiceRecognitionState.idle();
+    _transitionToIdle();
   }
 
   /// Applies the selected candidate from a disambiguation prompt.
@@ -250,6 +258,9 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
     final simpleCommand = _parseSimpleCommand(transcription);
     if (simpleCommand != null) {
       _logger?.i('Simple parser matched: ${simpleCommand.intent}');
+      ref
+          .read(voiceDebugInfoProvider.notifier)
+          .setParserSource(VoiceParserSource.simplePattern);
       await _executeCommand(simpleCommand);
       return;
     }
@@ -269,6 +280,9 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
       final action = platformResult['action'] as String? ?? 'not_found';
       if (action != 'not_found') {
         _logger?.i('Platform NLU resolved: $action');
+        ref
+            .read(voiceDebugInfoProvider.notifier)
+            .setParserSource(VoiceParserSource.platformNlu);
         final payload = _buildPayloadFromPlatformResult(platformResult);
         if (payload != null) {
           final command = VoiceCommand(
@@ -298,6 +312,9 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
             onTimeout: () => throw TimeoutException('AI call timed out'),
           );
       _logger?.i('AI parsed command: ${command.intent}');
+      ref
+          .read(voiceDebugInfoProvider.notifier)
+          .setParserSource(VoiceParserSource.onDeviceAi);
       await _executeCommand(command);
     } on TimeoutException catch (e) {
       _logger?.e('AI parsing timed out', error: e);
@@ -318,6 +335,7 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
   }
 
   Future<void> _executeCommand(VoiceCommand command) async {
+    ref.read(voiceDebugInfoProvider.notifier).setLastCommand(command);
     state = VoiceRecognitionState.executing(command: command);
 
     try {
@@ -514,7 +532,7 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
     if (state is VoiceSuccess ||
         state is VoiceError ||
         state is VoiceSettingsAutoApplied) {
-      state = const VoiceRecognitionState.idle();
+      _transitionToIdle();
     }
   }
 

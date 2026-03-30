@@ -61,14 +61,14 @@ PODS:
     - Flutter
   - permission_handler_apple (9.3.0):
     - Flutter
-  - SDWebImage (5.21.5):
-    - SDWebImage/Core (= 5.21.5)
-  - SDWebImage/Core (5.21.5)
-  - Sentry/HybridSDK (8.56.2)
-  - sentry_flutter (9.14.0):
+  - SDWebImage (5.21.7):
+    - SDWebImage/Core (= 5.21.7)
+  - SDWebImage/Core (5.21.7)
+  - Sentry/HybridSDK (8.58.0)
+  - sentry_flutter (9.16.0):
     - Flutter
     - FlutterMacOS
-    - Sentry/HybridSDK (= 8.56.2)
+    - Sentry/HybridSDK (= 8.58.0)
   - share_plus (0.0.1):
     - Flutter
   - shared_preferences_foundation (0.0.1):
@@ -163,7 +163,7 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   app_links: a754cbec3c255bd4bbb4d236ecc06f28cd9a7ce8
-  audiflow_ai: 90b6016f10cdeb7ae71bd00be0a82682ff0a0a95
+  audiflow_ai: 2ed807f15ad31f9654c6ae8d4e62fd9390a2cb91
   audio_service: aa99a6ba2ae7565996015322b0bb024e1d25c6fd
   audio_session: 9bb7f6c970f21241b19f5a3658097ae459681ba0
   connectivity_plus: cb623214f4e1f6ef8fe7403d580fdad517d2f7dd
@@ -179,9 +179,9 @@ SPEC CHECKSUMS:
   just_audio: 4e391f57b79cad2b0674030a00453ca5ce817eed
   package_info_plus: af8e2ca6888548050f16fa2f1938db7b5a5df499
   permission_handler_apple: 4ed2196e43d0651e8ff7ca3483a069d469701f2d
-  SDWebImage: e9c98383c7572d713c1a0d7dd2783b10599b9838
-  Sentry: b53951377b78e21a734f5dc8318e333dbfc682d7
-  sentry_flutter: 841fa2fe08dc72eb95e2320b76e3f751f3400cf5
+  SDWebImage: e9fc87c1aab89a8ab1bbd74eba378c6f53be8abf
+  Sentry: d587a8fe91ca13503ecd69a1905f3e8a0fcf61be
+  sentry_flutter: 31101687061fb85211ebab09ce6eb8db4e9ba74f
   share_plus: 50da8cb520a8f0f65671c6c6a99b3617ed10a58a
   shared_preferences_foundation: 7036424c3d8ec98dfe75ff1667cb0cd531ec82bb
   speech_to_text: 3b313d98516d3d0406cea424782ec25470c59d19
@@ -190,6 +190,6 @@ SPEC CHECKSUMS:
   url_launcher_ios: 7a95fa5b60cc718a708b8f2966718e93db0cef1b
   workmanager_apple: 904529ae31e97fc5be632cf628507652294a0778
 
-PODFILE CHECKSUM: b4372b4002a93503713502caf22e660350920a74
+PODFILE CHECKSUM: d1c96bd7252a3488df0adb01362dc15adb2ed598
 
 COCOAPODS: 1.16.2

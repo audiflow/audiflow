@@ -1,5 +1,7 @@
+import 'package:audiflow_app/features/voice/presentation/widgets/voice_debug_panel.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_app/routing/scaffold_with_nav_bar.dart';
+import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -160,6 +162,68 @@ void main() {
       expect(find.byType(ScaffoldWithNavBar), findsOneWidget);
       expect(find.byType(Scaffold), findsOneWidget);
     });
+
+    group('voice debug panel', () {
+      Widget buildActiveVoiceWidget() {
+        return ProviderScope(
+          overrides: [
+            sharedPreferencesProvider.overrideWithValue(prefs),
+            voiceCommandOrchestratorProvider.overrideWith(
+              () => _ActiveVoiceOrchestrator(),
+            ),
+            voiceDebugInfoProvider.overrideWith(() => _FakeDebugInfoNotifier()),
+          ],
+          child: MaterialApp.router(
+            routerConfig: router,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+          ),
+        );
+      }
+
+      testWidgets('shows debug panel on dev build with active voice', (
+        tester,
+      ) async {
+        tester.view.physicalSize = const Size(390, 844);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(() {
+          tester.view.resetPhysicalSize();
+          tester.view.resetDevicePixelRatio();
+        });
+
+        await prefs.setBool(SettingsKeys.voiceEnabled, true);
+        FlavorConfig.initialize(FlavorConfig.dev);
+
+        await tester.pumpWidget(buildActiveVoiceWidget());
+        // Use pump instead of pumpAndSettle: the listening state triggers a
+        // repeating pulse animation that never settles.
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 300));
+
+        expect(find.byType(VoiceDebugPanel), findsOneWidget);
+        expect(find.text('VOICE DEBUG'), findsOneWidget);
+      });
+
+      testWidgets('hides debug panel on prod build', (tester) async {
+        tester.view.physicalSize = const Size(390, 844);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(() {
+          tester.view.resetPhysicalSize();
+          tester.view.resetDevicePixelRatio();
+        });
+
+        await prefs.setBool(SettingsKeys.voiceEnabled, true);
+        FlavorConfig.initialize(FlavorConfig.prod);
+
+        await tester.pumpWidget(buildActiveVoiceWidget());
+        // Use pump instead of pumpAndSettle: the listening state triggers a
+        // repeating pulse animation that never settles.
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 300));
+
+        expect(find.byType(VoiceDebugPanel), findsNothing);
+      });
+    });
   });
 }
 
@@ -167,4 +231,15 @@ void main() {
 class _MockVoiceCommandOrchestrator extends VoiceCommandOrchestrator {
   @override
   VoiceRecognitionState build() => const VoiceRecognitionState.idle();
+}
+
+class _ActiveVoiceOrchestrator extends VoiceCommandOrchestrator {
+  @override
+  VoiceRecognitionState build() =>
+      const VoiceRecognitionState.listening(partialTranscript: 'test');
+}
+
+class _FakeDebugInfoNotifier extends VoiceDebugInfoNotifier {
+  @override
+  VoiceDebugInfo build() => const VoiceDebugInfo();
 }

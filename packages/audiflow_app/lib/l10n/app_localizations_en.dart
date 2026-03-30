@@ -925,6 +925,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsVoiceSubtitle => 'Voice commands and recognition';
 
   @override
+  String get voiceExperimentalLabel => 'Experimental';
+
+  @override
+  String get voiceExperimentalDescription =>
+      'Voice commands are an experimental feature and may not work reliably on most devices. Accuracy and availability will improve as on-device AI capabilities evolve.';
+
+  @override
   String get voiceEnabledTitle => 'Voice Commands';
 
   @override
