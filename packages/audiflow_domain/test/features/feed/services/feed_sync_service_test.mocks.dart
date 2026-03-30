@@ -796,6 +796,23 @@ class MockAppSettingsRepository extends _i1.Mock
           as _i11.Future<void>);
 
   @override
+  bool getVoiceEnabled() =>
+      (super.noSuchMethod(
+            Invocation.method(#getVoiceEnabled, []),
+            returnValue: false,
+          )
+          as bool);
+
+  @override
+  _i11.Future<void> setVoiceEnabled(bool? enabled) =>
+      (super.noSuchMethod(
+            Invocation.method(#setVoiceEnabled, [enabled]),
+            returnValue: _i11.Future<void>.value(),
+            returnValueForMissingStub: _i11.Future<void>.value(),
+          )
+          as _i11.Future<void>);
+
+  @override
   _i11.Future<void> clearAll() =>
       (super.noSuchMethod(
             Invocation.method(#clearAll, []),
