@@ -11,8 +11,7 @@ import 'waveform_painter.dart';
 
 /// Compact floating panel that renders all voice command states.
 ///
-/// Replaces the full-screen [VoiceListeningOverlay] with a glassmorphic
-/// panel anchored to the top-right area. Hidden when idle, it expands
+/// Glassmorphic panel anchored to the top-right area. Hidden when idle, it expands
 /// vertically to fit content and uses animated transitions between states.
 class VoiceCommandPanel extends ConsumerStatefulWidget {
   const VoiceCommandPanel({super.key});
