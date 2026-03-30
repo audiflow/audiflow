@@ -1,6 +1,6 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:checks/checks.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod/riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
