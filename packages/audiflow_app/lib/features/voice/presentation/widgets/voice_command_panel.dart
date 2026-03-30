@@ -101,19 +101,22 @@ class _VoiceCommandPanelState extends ConsumerState<VoiceCommandPanel>
               constraints: BoxConstraints(
                 maxHeight: MediaQuery.sizeOf(context).height * 0.7,
               ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(_cornerRadius),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-                  child: DecoratedBox(
-                    decoration: _panelDecoration(context),
-                    child: AnimatedSize(
-                      duration: _crossfadeDuration,
-                      curve: Curves.easeOut,
-                      alignment: Alignment.topCenter,
-                      child: AnimatedSwitcher(
+              child: DecoratedBox(
+                decoration: _panelShadowDecoration(),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(_cornerRadius),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                    child: DecoratedBox(
+                      decoration: _panelSurfaceDecoration(context),
+                      child: AnimatedSize(
                         duration: _crossfadeDuration,
-                        child: _buildContent(context, voiceState),
+                        curve: Curves.easeOut,
+                        alignment: Alignment.topCenter,
+                        child: AnimatedSwitcher(
+                          duration: _crossfadeDuration,
+                          child: _buildContent(context, voiceState),
+                        ),
                       ),
                     ),
                   ),
@@ -126,14 +129,10 @@ class _VoiceCommandPanelState extends ConsumerState<VoiceCommandPanel>
     );
   }
 
-  BoxDecoration _panelDecoration(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+  /// Outer decoration: shadow only, not clipped by [ClipRRect].
+  BoxDecoration _panelShadowDecoration() {
     return BoxDecoration(
-      color: colorScheme.surface.withValues(alpha: 0.92),
       borderRadius: BorderRadius.circular(_cornerRadius),
-      border: Border.all(
-        color: colorScheme.outlineVariant.withValues(alpha: 0.15),
-      ),
       boxShadow: const [
         BoxShadow(
           offset: Offset(0, 8),
@@ -146,6 +145,17 @@ class _VoiceCommandPanelState extends ConsumerState<VoiceCommandPanel>
           color: Color.fromRGBO(0, 0, 0, 0.2),
         ),
       ],
+    );
+  }
+
+  /// Inner decoration: surface color and border, rendered inside [ClipRRect].
+  BoxDecoration _panelSurfaceDecoration(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return BoxDecoration(
+      color: colorScheme.surface.withValues(alpha: 0.92),
+      border: Border.all(
+        color: colorScheme.outlineVariant.withValues(alpha: 0.15),
+      ),
     );
   }
 
