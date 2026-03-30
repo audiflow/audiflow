@@ -136,7 +136,7 @@ abstract class AppSettingsRepository {
   bool getVoiceEnabled();
 
   /// Persists the voice commands enabled setting.
-  Future<void> setVoiceEnabled({required bool enabled});
+  Future<void> setVoiceEnabled(bool enabled);
 
   // -- Data management --
 

@@ -362,13 +362,7 @@ class _TabletPortraitShell extends StatelessWidget {
           ],
         ),
         centerTitle: true,
-        actions: [
-          if (voiceEnabled)
-            const Padding(
-              padding: EdgeInsets.only(right: 8),
-              child: VoiceTriggerButton(),
-            ),
-        ],
+        actions: [if (voiceEnabled) const VoiceTriggerButton()],
       ),
       body: Column(
         children: [

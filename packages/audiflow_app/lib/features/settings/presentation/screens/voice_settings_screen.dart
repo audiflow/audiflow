@@ -31,7 +31,7 @@ class VoiceSettingsScreen extends ConsumerWidget {
             value: repo.getVoiceEnabled(),
             onChanged: (v) {
               if (!v) _cancelActiveSession(ref);
-              unawaited(_update(ref, () => repo.setVoiceEnabled(enabled: v)));
+              unawaited(_update(ref, () => repo.setVoiceEnabled(v)));
             },
           ),
           Padding(

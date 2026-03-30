@@ -291,8 +291,7 @@ class _FakeAppSettingsRepository implements AppSettingsRepository {
   bool getVoiceEnabled() => true;
 
   @override
-  Future<void> setVoiceEnabled({required bool enabled}) =>
-      throw UnimplementedError();
+  Future<void> setVoiceEnabled(bool enabled) => throw UnimplementedError();
 
   @override
   Future<void> clearAll() => throw UnimplementedError();

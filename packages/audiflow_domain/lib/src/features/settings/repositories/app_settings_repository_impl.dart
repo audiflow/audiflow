@@ -224,7 +224,7 @@ class AppSettingsRepositoryImpl implements AppSettingsRepository {
       _ds.getBool(SettingsKeys.voiceEnabled) ?? SettingsDefaults.voiceEnabled;
 
   @override
-  Future<void> setVoiceEnabled({required bool enabled}) =>
+  Future<void> setVoiceEnabled(bool enabled) =>
       _ds.setBool(SettingsKeys.voiceEnabled, enabled);
 
   // -- Data management --

@@ -152,8 +152,7 @@ class FakeAppSettingsRepository implements AppSettingsRepository {
   bool getVoiceEnabled() => voiceEnabled;
 
   @override
-  Future<void> setVoiceEnabled({required bool enabled}) async =>
-      voiceEnabled = enabled;
+  Future<void> setVoiceEnabled(bool enabled) async => voiceEnabled = enabled;
 
   @override
   Future<void> clearAll() async {
