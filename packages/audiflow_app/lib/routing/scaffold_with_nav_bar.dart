@@ -253,7 +253,7 @@ class _CustomNavBar extends StatelessWidget {
               top: -8,
               left: 0,
               right: 0,
-              child: Center(child: _VoiceCenterButton()),
+              child: const Center(child: _VoiceCenterButton()),
             ),
           ],
         ),
@@ -482,8 +482,7 @@ class _TopTabButton extends StatelessWidget {
 /// Mirrors the state-aware color and icon logic of [VoiceTriggerButton] but
 /// uses a larger circular shape suited for the raised docked-FAB position.
 class _VoiceCenterButton extends ConsumerStatefulWidget {
-  // ignore: prefer_const_constructors_in_immutables
-  _VoiceCenterButton();
+  const _VoiceCenterButton();
 
   @override
   ConsumerState<_VoiceCenterButton> createState() => _VoiceCenterButtonState();
