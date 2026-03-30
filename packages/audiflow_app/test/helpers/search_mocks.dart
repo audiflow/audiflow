@@ -28,6 +28,12 @@ class FakeAppSettingsRepository implements AppSettingsRepository {
   }
 
   @override
+  bool getVoiceEnabled() => true;
+
+  @override
+  Future<void> setVoiceEnabled(bool enabled) async {}
+
+  @override
   dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
 }
 
