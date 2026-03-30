@@ -210,6 +210,7 @@
   "shareEpisode": "エピソードを共有",
   "markAsPlayed": "再生済みにする",
   "markAsUnplayed": "未再生にする",
+  "episodeMoreActions": "その他のアクション",
   "addToQueue": "キューに追加",
   "dateToday": "今日",
   "dateYesterday": "昨日",
@@ -338,5 +339,10 @@
   "voiceIntentRemoveFromQueue": "キューから削除",
   "voiceIntentClearQueue": "キューをクリア",
   "voiceIntentChangeSettings": "設定を変更",
-  "voiceIntentUnknown": "不明"
+  "voiceIntentUnknown": "不明",
+
+  "playNext": "次に再生",
+  "downloadEpisode": "エピソードをダウンロード",
+  "goToEpisode": "エピソードへ移動",
+  "removeDownload": "ダウンロードを削除"
 }

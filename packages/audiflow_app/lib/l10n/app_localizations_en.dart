@@ -624,6 +624,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get markAsUnplayed => 'Mark as unplayed';
 
   @override
+  String get episodeMoreActions => 'More actions';
+
+  @override
   String get addToQueue => 'Add to queue';
 
   @override
@@ -1004,4 +1007,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get voiceIntentUnknown => 'Unknown';
+
+  @override
+  String get playNext => 'Play next';
+
+  @override
+  String get downloadEpisode => 'Download episode';
+
+  @override
+  String get goToEpisode => 'Go to episode';
+
+  @override
+  String get removeDownload => 'Remove download';
 }

@@ -1226,6 +1226,12 @@ abstract class AppLocalizations {
   /// **'Mark as unplayed'**
   String get markAsUnplayed;
 
+  /// Tooltip for more actions button on episode detail
+  ///
+  /// In en, this message translates to:
+  /// **'More actions'**
+  String get episodeMoreActions;
+
   /// Action to add episode to playback queue
   ///
   /// In en, this message translates to:
@@ -1909,6 +1915,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unknown'**
   String get voiceIntentUnknown;
+
+  /// Action to add episode to play next in queue
+  ///
+  /// In en, this message translates to:
+  /// **'Play next'**
+  String get playNext;
+
+  /// Action to download an episode
+  ///
+  /// In en, this message translates to:
+  /// **'Download episode'**
+  String get downloadEpisode;
+
+  /// Action to navigate to episode detail
+  ///
+  /// In en, this message translates to:
+  /// **'Go to episode'**
+  String get goToEpisode;
+
+  /// Action to remove a downloaded episode
+  ///
+  /// In en, this message translates to:
+  /// **'Remove download'**
+  String get removeDownload;
 }
 
 class _AppLocalizationsDelegate

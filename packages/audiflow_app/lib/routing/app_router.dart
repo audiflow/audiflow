@@ -422,6 +422,7 @@ Widget _buildGroupEpisodesScreen(GoRouterState state) {
     lastRefreshedAt: extra['lastRefreshedAt'] as DateTime?,
     filteredEpisodeIds: extra['filteredEpisodeIds'] as List<int>?,
     itunesId: extra['itunesId'] as String?,
+    feedUrl: extra['feedUrl'] as String?,
   );
 }
 
