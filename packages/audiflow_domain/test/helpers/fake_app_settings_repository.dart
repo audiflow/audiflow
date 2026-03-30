@@ -25,7 +25,7 @@ class FakeAppSettingsRepository implements AppSettingsRepository {
   bool notifyNewEpisodes = true;
   String? searchCountry;
   int lastTabIndex = 0;
-  bool voiceEnabled = true;
+  bool voiceEnabled = SettingsDefaults.voiceEnabled;
 
   @override
   ThemeMode getThemeMode() => themeMode;
@@ -175,6 +175,6 @@ class FakeAppSettingsRepository implements AppSettingsRepository {
     notifyNewEpisodes = true;
     searchCountry = null;
     lastTabIndex = 0;
-    voiceEnabled = true;
+    voiceEnabled = SettingsDefaults.voiceEnabled;
   }
 }

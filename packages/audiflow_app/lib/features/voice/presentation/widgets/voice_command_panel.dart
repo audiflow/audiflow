@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:audiflow_domain/audiflow_domain.dart';
@@ -235,9 +236,11 @@ class _ListeningContent extends ConsumerWidget {
           ],
           const SizedBox(height: 12),
           TextButton(
-            onPressed: () => ref
-                .read(voiceCommandOrchestratorProvider.notifier)
-                .cancelVoiceCommand(),
+            onPressed: () => unawaited(
+              ref
+                  .read(voiceCommandOrchestratorProvider.notifier)
+                  .cancelVoiceCommand(),
+            ),
             child: Text(l10n.cancel),
           ),
         ],

@@ -516,9 +516,9 @@ class _VoiceCenterButtonState extends ConsumerState<_VoiceCenterButton>
     final orchestrator = ref.read(voiceCommandOrchestratorProvider.notifier);
     switch (state) {
       case VoiceIdle():
-        orchestrator.startVoiceCommand();
+        unawaited(orchestrator.startVoiceCommand());
       case VoiceListening():
-        orchestrator.cancelVoiceCommand();
+        unawaited(orchestrator.cancelVoiceCommand());
       case VoiceSuccess():
         orchestrator.resetToIdle();
       case VoiceError():

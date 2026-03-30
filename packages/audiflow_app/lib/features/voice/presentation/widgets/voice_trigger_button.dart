@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
@@ -42,9 +44,9 @@ class _VoiceTriggerButtonState extends ConsumerState<VoiceTriggerButton>
     final orchestrator = ref.read(voiceCommandOrchestratorProvider.notifier);
     switch (state) {
       case VoiceIdle():
-        orchestrator.startVoiceCommand();
+        unawaited(orchestrator.startVoiceCommand());
       case VoiceListening():
-        orchestrator.cancelVoiceCommand();
+        unawaited(orchestrator.cancelVoiceCommand());
       case VoiceSuccess():
         orchestrator.resetToIdle();
       case VoiceError():
