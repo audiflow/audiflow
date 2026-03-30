@@ -109,15 +109,16 @@ class ScaffoldWithNavBar extends ConsumerWidget {
       );
     }
 
+    // Tablet landscape has no AppBar, so omit kToolbarHeight offset.
+    final hasAppBar = !(isTablet && isLandscape);
+    final panelTop =
+        MediaQuery.paddingOf(context).top + (hasAppBar ? kToolbarHeight : 8);
+
     return Stack(
       children: [
         shell,
         if (voiceEnabled)
-          Positioned(
-            top: MediaQuery.paddingOf(context).top + kToolbarHeight,
-            right: 8,
-            child: const VoiceCommandPanel(),
-          ),
+          Positioned(top: panelTop, right: 8, child: const VoiceCommandPanel()),
       ],
     );
   }

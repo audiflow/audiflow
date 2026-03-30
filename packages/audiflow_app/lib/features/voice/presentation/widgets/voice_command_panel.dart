@@ -508,19 +508,18 @@ class _SettingsDisambiguationContent extends ConsumerWidget {
           ),
           const SizedBox(height: 12),
           Flexible(
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  for (var i = 0; i < state.candidates.length; i++) ...[
-                    if (0 < i) const SizedBox(height: 8),
-                    _DisambiguationCandidate(
-                      candidate: state.candidates[i],
-                      isHighlighted: i == highestIndex,
-                    ),
-                  ],
+            child: ListView(
+              shrinkWrap: true,
+              padding: EdgeInsets.zero,
+              children: [
+                for (var i = 0; i < state.candidates.length; i++) ...[
+                  if (0 < i) const SizedBox(height: 8),
+                  _DisambiguationCandidate(
+                    candidate: state.candidates[i],
+                    isHighlighted: i == highestIndex,
+                  ),
                 ],
-              ),
+              ],
             ),
           ),
           const SizedBox(height: 12),
