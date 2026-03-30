@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:audiflow_core/audiflow_core.dart' show SettingsDefaults;
 import 'package:audiflow_domain/audiflow_domain.dart'
     hide podcastSearchServiceProvider;
 import 'package:audiflow_search/audiflow_search.dart';
@@ -26,6 +27,12 @@ class FakeAppSettingsRepository implements AppSettingsRepository {
   Future<void> setLastTabIndex(int index) async {
     _lastTabIndex = index;
   }
+
+  @override
+  bool getVoiceEnabled() => SettingsDefaults.voiceEnabled;
+
+  @override
+  Future<void> setVoiceEnabled(bool enabled) async {}
 
   @override
   dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();

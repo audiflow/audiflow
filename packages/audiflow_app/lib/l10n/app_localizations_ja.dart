@@ -887,6 +887,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get cancel => 'キャンセル';
 
   @override
+  String get voiceTapMicToRetry => 'マイクをタップしてやり直す';
+
+  @override
   String get navSearch => '検索';
 
   @override
@@ -897,6 +900,96 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get navSettings => '設定';
+
+  @override
+  String get settingsVoiceTitle => '音声';
+
+  @override
+  String get settingsVoiceSubtitle => '音声コマンドと認識';
+
+  @override
+  String get voiceEnabledTitle => '音声コマンド';
+
+  @override
+  String get voiceEnabledSubtitle => 'アプリの音声操作を有効にする';
+
+  @override
+  String get voiceAvailableCommands => '利用可能なコマンド';
+
+  @override
+  String get voiceCommandPlay => '再生 / 再生を再開';
+
+  @override
+  String get voiceCommandPause => '一時停止';
+
+  @override
+  String get voiceCommandStop => '停止';
+
+  @override
+  String get voiceCommandSkipForward => '早送り';
+
+  @override
+  String get voiceCommandSkipBackward => '巻き戻し';
+
+  @override
+  String get voiceCommandSearch => 'ポッドキャストを検索';
+
+  @override
+  String get voiceCommandGoToLibrary => 'ライブラリに移動';
+
+  @override
+  String get voiceCommandGoToQueue => 'キューに移動';
+
+  @override
+  String get voiceCommandOpenSettings => '設定を開く';
+
+  @override
+  String get voiceCommandChangeSettings => '設定を変更';
+
+  @override
+  String get voiceIntentPlay => '再生';
+
+  @override
+  String get voiceIntentPause => '一時停止';
+
+  @override
+  String get voiceIntentStop => '停止';
+
+  @override
+  String get voiceIntentSkipForward => '早送り';
+
+  @override
+  String get voiceIntentSkipBackward => '巻き戻し';
+
+  @override
+  String get voiceIntentSeek => 'シーク';
+
+  @override
+  String get voiceIntentSearch => '検索';
+
+  @override
+  String get voiceIntentGoToLibrary => 'ライブラリ';
+
+  @override
+  String get voiceIntentGoToQueue => 'キュー';
+
+  @override
+  String get voiceIntentOpenSettings => '設定';
+
+  @override
+  String get voiceIntentAddToQueue => 'キューに追加';
+
+  @override
+  String get voiceIntentRemoveFromQueue => 'キューから削除';
+
+  @override
+  String get voiceIntentClearQueue => 'キューをクリア';
+
+  @override
+  String get voiceIntentChangeSettings => '設定を変更';
+
+  @override
+  String get voiceIntentUnknown => '不明';
 
   @override
   String get playNext => '次に再生';
