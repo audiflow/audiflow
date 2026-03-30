@@ -1,4 +1,3 @@
-import 'package:audiflow_ai/audiflow_ai.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -109,13 +108,16 @@ class _Header extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        const Text(
-          'VOICE DEBUG',
-          style: TextStyle(
-            fontFamily: 'monospace',
-            fontSize: 11,
-            fontWeight: FontWeight.w700,
-            color: Color.fromRGBO(124, 58, 237, 1),
+        const Flexible(
+          child: Text(
+            'VOICE DEBUG',
+            style: TextStyle(
+              fontFamily: 'monospace',
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: Color.fromRGBO(124, 58, 237, 1),
+            ),
+            overflow: TextOverflow.ellipsis,
           ),
         ),
         Text(
