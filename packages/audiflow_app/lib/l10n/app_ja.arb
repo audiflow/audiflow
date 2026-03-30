@@ -311,6 +311,8 @@
 
   "settingsVoiceTitle": "音声",
   "settingsVoiceSubtitle": "音声コマンドと認識",
+  "voiceExperimentalLabel": "試験的機能",
+  "voiceExperimentalDescription": "音声コマンドは試験的な機能であり、ほとんどのデバイスでは正常に動作しない可能性があります。デバイスのオンデバイスAI性能の向上に伴い、精度や対応状況も改善されていく見込みです。",
   "voiceEnabledTitle": "音声コマンド",
   "voiceEnabledSubtitle": "アプリの音声操作を有効にする",
   "voiceAvailableCommands": "利用可能なコマンド",
