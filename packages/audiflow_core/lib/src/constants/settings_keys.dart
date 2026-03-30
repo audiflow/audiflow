@@ -134,5 +134,5 @@ class SettingsDefaults {
   static const int maxPersistableTabIndex = 2;
 
   /// Default voice commands enabled setting.
-  static const bool voiceEnabled = false;
+  static const bool voiceEnabled = true;
 }

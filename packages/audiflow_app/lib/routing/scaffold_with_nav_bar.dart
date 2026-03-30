@@ -112,10 +112,10 @@ class ScaffoldWithNavBar extends ConsumerWidget {
       children: [
         shell,
         if (voiceEnabled)
-          const Positioned(
-            top: 0,
+          Positioned(
+            top: MediaQuery.paddingOf(context).top + kToolbarHeight,
             right: 8,
-            child: SafeArea(child: VoiceCommandPanel()),
+            child: const VoiceCommandPanel(),
           ),
       ],
     );
