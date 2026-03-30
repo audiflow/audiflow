@@ -631,6 +631,7 @@ class _VoiceCenterButtonState extends ConsumerState<_VoiceCenterButton>
 
     return Semantics(
       button: true,
+      enabled: !disabled,
       label: AppLocalizations.of(context).voiceCommandButton,
       child: AnimatedBuilder(
         animation: _pulseAnimation,

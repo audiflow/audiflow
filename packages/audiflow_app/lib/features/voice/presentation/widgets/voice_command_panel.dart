@@ -309,7 +309,7 @@ class _ExecutingContent extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            l10n.voiceExecuting(_formatIntent(state.command.intent)),
+            l10n.voiceExecuting(_formatIntent(context, state.command.intent)),
             style: textTheme.bodyMedium?.copyWith(color: colorScheme.onSurface),
           ),
           const SizedBox(height: 8),
@@ -646,23 +646,24 @@ class _SettingsLowConfidenceContent extends ConsumerWidget {
 // Shared helpers
 // ---------------------------------------------------------------------------
 
-String _formatIntent(VoiceIntent intent) {
+String _formatIntent(BuildContext context, VoiceIntent intent) {
+  final l10n = AppLocalizations.of(context);
   return switch (intent) {
-    VoiceIntent.play => 'Play',
-    VoiceIntent.pause => 'Pause',
-    VoiceIntent.stop => 'Stop',
-    VoiceIntent.skipForward => 'Skip forward',
-    VoiceIntent.skipBackward => 'Skip backward',
-    VoiceIntent.seek => 'Seek',
-    VoiceIntent.search => 'Search',
-    VoiceIntent.goToLibrary => 'Library',
-    VoiceIntent.goToQueue => 'Queue',
-    VoiceIntent.openSettings => 'Settings',
-    VoiceIntent.addToQueue => 'Add to queue',
-    VoiceIntent.removeFromQueue => 'Remove from queue',
-    VoiceIntent.clearQueue => 'Clear queue',
-    VoiceIntent.changeSettings => 'Change setting',
-    VoiceIntent.unknown => 'Unknown',
+    VoiceIntent.play => l10n.voiceIntentPlay,
+    VoiceIntent.pause => l10n.voiceIntentPause,
+    VoiceIntent.stop => l10n.voiceIntentStop,
+    VoiceIntent.skipForward => l10n.voiceIntentSkipForward,
+    VoiceIntent.skipBackward => l10n.voiceIntentSkipBackward,
+    VoiceIntent.seek => l10n.voiceIntentSeek,
+    VoiceIntent.search => l10n.voiceIntentSearch,
+    VoiceIntent.goToLibrary => l10n.voiceIntentGoToLibrary,
+    VoiceIntent.goToQueue => l10n.voiceIntentGoToQueue,
+    VoiceIntent.openSettings => l10n.voiceIntentOpenSettings,
+    VoiceIntent.addToQueue => l10n.voiceIntentAddToQueue,
+    VoiceIntent.removeFromQueue => l10n.voiceIntentRemoveFromQueue,
+    VoiceIntent.clearQueue => l10n.voiceIntentClearQueue,
+    VoiceIntent.changeSettings => l10n.voiceIntentChangeSettings,
+    VoiceIntent.unknown => l10n.voiceIntentUnknown,
   };
 }
 

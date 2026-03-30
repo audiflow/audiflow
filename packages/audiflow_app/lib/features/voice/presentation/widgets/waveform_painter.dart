@@ -83,6 +83,17 @@ class WaveformPainter extends CustomPainter {
     var startX = (size.width - totalWidth) / 2.0;
     final centerY = size.height / 2.0;
 
+    // Hoist paint objects out of the loop to avoid per-bar allocation.
+    final shadowPaint = Paint()
+      ..color = _glowColor.withValues(alpha: 0.35)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4.0);
+    final gradientPaint = Paint()..style = PaintingStyle.fill;
+    final gradient = LinearGradient(
+      begin: Alignment.bottomCenter,
+      end: Alignment.topCenter,
+      colors: [mode.bottomColor, mode.topColor],
+    );
+
     for (var i = 0; i < _barCount; i++) {
       final barHeight = barHeightForIndex(i);
       final barRect = Rect.fromLTWH(
@@ -93,9 +104,6 @@ class WaveformPainter extends CustomPainter {
       );
 
       // Glow shadow beneath the bar.
-      final shadowPaint = Paint()
-        ..color = _glowColor.withValues(alpha: 0.35)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4.0);
       canvas.drawRRect(
         RRect.fromRectAndRadius(
           barRect.inflate(1.0),
@@ -104,15 +112,8 @@ class WaveformPainter extends CustomPainter {
         shadowPaint,
       );
 
-      // Gradient bar.
-      final gradientPaint = Paint()
-        ..shader = LinearGradient(
-          begin: Alignment.bottomCenter,
-          end: Alignment.topCenter,
-          colors: [mode.bottomColor, mode.topColor],
-        ).createShader(barRect)
-        ..style = PaintingStyle.fill;
-
+      // Gradient bar -- reuse paint, only update shader per bar rect.
+      gradientPaint.shader = gradient.createShader(barRect);
       canvas.drawRRect(
         RRect.fromRectAndRadius(
           barRect,

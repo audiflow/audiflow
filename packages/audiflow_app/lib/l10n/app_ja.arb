@@ -322,5 +322,21 @@
   "voiceCommandGoToLibrary": "ライブラリに移動",
   "voiceCommandGoToQueue": "キューに移動",
   "voiceCommandOpenSettings": "設定を開く",
-  "voiceCommandChangeSettings": "設定を変更"
+  "voiceCommandChangeSettings": "設定を変更",
+
+  "voiceIntentPlay": "再生",
+  "voiceIntentPause": "一時停止",
+  "voiceIntentStop": "停止",
+  "voiceIntentSkipForward": "早送り",
+  "voiceIntentSkipBackward": "巻き戻し",
+  "voiceIntentSeek": "シーク",
+  "voiceIntentSearch": "検索",
+  "voiceIntentGoToLibrary": "ライブラリ",
+  "voiceIntentGoToQueue": "キュー",
+  "voiceIntentOpenSettings": "設定",
+  "voiceIntentAddToQueue": "キューに追加",
+  "voiceIntentRemoveFromQueue": "キューから削除",
+  "voiceIntentClearQueue": "キューをクリア",
+  "voiceIntentChangeSettings": "設定を変更",
+  "voiceIntentUnknown": "不明"
 }

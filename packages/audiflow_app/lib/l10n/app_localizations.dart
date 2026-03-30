@@ -1819,6 +1819,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Change a setting'**
   String get voiceCommandChangeSettings;
+
+  /// Voice intent label: play
+  ///
+  /// In en, this message translates to:
+  /// **'Play'**
+  String get voiceIntentPlay;
+
+  /// Voice intent label: pause
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get voiceIntentPause;
+
+  /// Voice intent label: stop
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get voiceIntentStop;
+
+  /// Voice intent label: skip forward
+  ///
+  /// In en, this message translates to:
+  /// **'Skip forward'**
+  String get voiceIntentSkipForward;
+
+  /// Voice intent label: skip backward
+  ///
+  /// In en, this message translates to:
+  /// **'Skip backward'**
+  String get voiceIntentSkipBackward;
+
+  /// Voice intent label: seek
+  ///
+  /// In en, this message translates to:
+  /// **'Seek'**
+  String get voiceIntentSeek;
+
+  /// Voice intent label: search
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get voiceIntentSearch;
+
+  /// Voice intent label: go to library
+  ///
+  /// In en, this message translates to:
+  /// **'Library'**
+  String get voiceIntentGoToLibrary;
+
+  /// Voice intent label: go to queue
+  ///
+  /// In en, this message translates to:
+  /// **'Queue'**
+  String get voiceIntentGoToQueue;
+
+  /// Voice intent label: open settings
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get voiceIntentOpenSettings;
+
+  /// Voice intent label: add to queue
+  ///
+  /// In en, this message translates to:
+  /// **'Add to queue'**
+  String get voiceIntentAddToQueue;
+
+  /// Voice intent label: remove from queue
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from queue'**
+  String get voiceIntentRemoveFromQueue;
+
+  /// Voice intent label: clear queue
+  ///
+  /// In en, this message translates to:
+  /// **'Clear queue'**
+  String get voiceIntentClearQueue;
+
+  /// Voice intent label: change setting
+  ///
+  /// In en, this message translates to:
+  /// **'Change setting'**
+  String get voiceIntentChangeSettings;
+
+  /// Voice intent label: unknown
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get voiceIntentUnknown;
 }
 
 class _AppLocalizationsDelegate

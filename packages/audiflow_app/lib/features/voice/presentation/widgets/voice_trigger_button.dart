@@ -162,6 +162,7 @@ class _VoiceTriggerButtonState extends ConsumerState<VoiceTriggerButton>
       padding: const EdgeInsets.only(right: 4),
       child: Semantics(
         button: true,
+        enabled: !disabled,
         label: AppLocalizations.of(context).voiceCommandButton,
         child: AnimatedBuilder(
           animation: _pulseAnimation,

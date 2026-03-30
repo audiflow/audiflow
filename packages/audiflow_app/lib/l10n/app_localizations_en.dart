@@ -959,4 +959,49 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get voiceCommandChangeSettings => 'Change a setting';
+
+  @override
+  String get voiceIntentPlay => 'Play';
+
+  @override
+  String get voiceIntentPause => 'Pause';
+
+  @override
+  String get voiceIntentStop => 'Stop';
+
+  @override
+  String get voiceIntentSkipForward => 'Skip forward';
+
+  @override
+  String get voiceIntentSkipBackward => 'Skip backward';
+
+  @override
+  String get voiceIntentSeek => 'Seek';
+
+  @override
+  String get voiceIntentSearch => 'Search';
+
+  @override
+  String get voiceIntentGoToLibrary => 'Library';
+
+  @override
+  String get voiceIntentGoToQueue => 'Queue';
+
+  @override
+  String get voiceIntentOpenSettings => 'Settings';
+
+  @override
+  String get voiceIntentAddToQueue => 'Add to queue';
+
+  @override
+  String get voiceIntentRemoveFromQueue => 'Remove from queue';
+
+  @override
+  String get voiceIntentClearQueue => 'Clear queue';
+
+  @override
+  String get voiceIntentChangeSettings => 'Change setting';
+
+  @override
+  String get voiceIntentUnknown => 'Unknown';
 }
