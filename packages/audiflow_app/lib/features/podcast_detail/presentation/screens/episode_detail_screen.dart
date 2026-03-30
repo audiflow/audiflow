@@ -245,8 +245,12 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
                     _MetadataRow(episode: widget.episode),
                     const SizedBox(height: Spacing.md),
 
-                    // Progress indicator
-                    if (isCompleted || isInProgress)
+                    // Progress indicator -- only render the wrapper Padding
+                    // when the indicator will actually display content to
+                    // avoid a blank gap while progress data loads.
+                    if (isCompleted ||
+                        (isInProgress &&
+                            effectiveProgress?.remainingTimeFormatted != null))
                       Padding(
                         padding: const EdgeInsets.only(bottom: Spacing.md),
                         child: EpisodeProgressIndicator(

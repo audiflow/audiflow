@@ -150,9 +150,19 @@ class _MultiPlaylistToggle extends StatelessWidget {
       Offset.zero,
       ancestor: overlay,
     );
+    // Anchor the menu at a zero-height rect along the button's bottom edge
+    // so showMenu positions it directly below without unnecessary
+    // repositioning near screen edges.
+    final buttonBottomLeft = Offset(
+      buttonOffset.dx,
+      buttonOffset.dy + renderBox.size.height,
+    );
+    final buttonBottomRight = Offset(
+      buttonOffset.dx + renderBox.size.width,
+      buttonOffset.dy + renderBox.size.height,
+    );
     final position = RelativeRect.fromRect(
-      Offset(buttonOffset.dx, buttonOffset.dy + renderBox.size.height) &
-          renderBox.size,
+      Rect.fromPoints(buttonBottomLeft, buttonBottomRight),
       Offset.zero & overlay.size,
     );
 

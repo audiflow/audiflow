@@ -30,10 +30,7 @@ class SubscriptionListTile extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: Spacing.md,
-          vertical: Spacing.sm,
-        ),
+        padding: const EdgeInsets.symmetric(vertical: Spacing.sm),
         child: Row(
           children: [
             _buildArtwork(colorScheme),

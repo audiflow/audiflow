@@ -1,6 +1,7 @@
 import 'package:audiflow_app/features/podcast_detail/presentation/controllers/podcast_detail_controller.dart';
 import 'package:audiflow_app/features/podcast_detail/presentation/screens/episode_detail_screen.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
+import 'package:audiflow_app/l10n/app_localizations_en.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
@@ -8,6 +9,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  // Use l10n keys instead of hardcoded English strings so tests survive
+  // copy changes without silent breakage.
+  final l10n = AppLocalizationsEn();
   const testAudioUrl = 'https://example.com/episode.mp3';
   const testPodcastTitle = 'Test Podcast';
 
@@ -197,7 +201,7 @@ void main() {
       await tester.tap(find.byIcon(Icons.more_vert));
       await tester.pumpAndSettle();
 
-      expect(find.text('Play next'), findsOneWidget);
+      expect(find.text(l10n.playNext), findsOneWidget);
     });
 
     testWidgets('context menu shows Add to queue option', (tester) async {
@@ -209,7 +213,7 @@ void main() {
       await tester.tap(find.byIcon(Icons.more_vert));
       await tester.pumpAndSettle();
 
-      expect(find.text('Add to queue'), findsOneWidget);
+      expect(find.text(l10n.addToQueue), findsOneWidget);
     });
 
     testWidgets('context menu shows Mark as played for unplayed episode', (
@@ -223,7 +227,7 @@ void main() {
       await tester.tap(find.byIcon(Icons.more_vert));
       await tester.pumpAndSettle();
 
-      expect(find.text('Mark as played'), findsOneWidget);
+      expect(find.text(l10n.markAsPlayed), findsOneWidget);
     });
 
     testWidgets('context menu shows Mark as unplayed for completed episode', (
@@ -237,7 +241,7 @@ void main() {
       await tester.tap(find.byIcon(Icons.more_vert));
       await tester.pumpAndSettle();
 
-      expect(find.text('Mark as unplayed'), findsOneWidget);
+      expect(find.text(l10n.markAsUnplayed), findsOneWidget);
     });
 
     testWidgets('context menu shows Share option when shareable', (
