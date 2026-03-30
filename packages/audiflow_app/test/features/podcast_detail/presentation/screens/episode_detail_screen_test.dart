@@ -258,7 +258,7 @@ void main() {
       await tester.tap(find.byIcon(Icons.more_vert));
       await tester.pumpAndSettle();
 
-      expect(find.text('Share episode'), findsOneWidget);
+      expect(find.text(l10n.shareEpisode), findsOneWidget);
     });
 
     testWidgets('context menu shows Download option', (tester) async {
@@ -273,7 +273,7 @@ void main() {
       await tester.tap(find.byIcon(Icons.more_vert));
       await tester.pumpAndSettle();
 
-      expect(find.text('Download episode'), findsOneWidget);
+      expect(find.text(l10n.downloadEpisode), findsOneWidget);
     });
   });
 

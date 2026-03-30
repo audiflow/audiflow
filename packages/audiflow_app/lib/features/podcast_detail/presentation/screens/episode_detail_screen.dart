@@ -82,17 +82,20 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
         ? ref.watch(isEpisodeLoadingProvider(enclosureUrl))
         : false;
 
-    final episodeId = widget.progress?.episode.id;
-    final downloadTask = episodeId != null
-        ? ref.watch(episodeDownloadProvider(episodeId)).value
-        : null;
-
     // Watch reactive progress when enclosureUrl is available;
     // fall back to the constructor-provided snapshot otherwise.
     final reactiveProgress = enclosureUrl != null
         ? ref.watch(episodeProgressProvider(enclosureUrl)).value
         : null;
     final effectiveProgress = reactiveProgress ?? widget.progress;
+
+    // Derive episodeId from effectiveProgress so that DB-backed actions
+    // (download, queue) remain available even when the screen is opened
+    // without an initial progress snapshot (e.g. from NowPlayingCard).
+    final episodeId = effectiveProgress?.episode.id;
+    final downloadTask = episodeId != null
+        ? ref.watch(episodeDownloadProvider(episodeId)).value
+        : null;
     // Check if this episode is currently loaded in the player (any state).
     final playbackState = ref.watch(audioPlayerControllerProvider);
     final isLoadedInPlayer =
