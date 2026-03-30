@@ -612,6 +612,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get markAsUnplayed => '未再生にする';
 
   @override
+  String get episodeMoreActions => 'その他のアクション';
+
+  @override
   String get addToQueue => 'キューに追加';
 
   @override
