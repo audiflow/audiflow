@@ -163,7 +163,7 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   app_links: a754cbec3c255bd4bbb4d236ecc06f28cd9a7ce8
-  audiflow_ai: 90b6016f10cdeb7ae71bd00be0a82682ff0a0a95
+  audiflow_ai: 2ed807f15ad31f9654c6ae8d4e62fd9390a2cb91
   audio_service: aa99a6ba2ae7565996015322b0bb024e1d25c6fd
   audio_session: 9bb7f6c970f21241b19f5a3658097ae459681ba0
   connectivity_plus: cb623214f4e1f6ef8fe7403d580fdad517d2f7dd
@@ -190,6 +190,6 @@ SPEC CHECKSUMS:
   url_launcher_ios: 7a95fa5b60cc718a708b8f2966718e93db0cef1b
   workmanager_apple: 904529ae31e97fc5be632cf628507652294a0778
 
-PODFILE CHECKSUM: b4372b4002a93503713502caf22e660350920a74
+PODFILE CHECKSUM: d1c96bd7252a3488df0adb01362dc15adb2ed598
 
 COCOAPODS: 1.16.2
