@@ -10,7 +10,7 @@ Replace the current full-screen overlay + center-docked nav button voice interfa
 |----------|--------|-----------|
 | Visual style | Audio waveform (frequency bars) | Podcast-native, brand-aligned |
 | Overlay type | Compact floating panel | Non-intrusive, quick interactions |
-| Trigger location | Inline app bar icon (all form factors) | Cleaner layout, no center-docked nav button |
+| Trigger location | Phone: center-docked nav button; Tablet: inline app bar icon | Phone needs a prominent, thumb-reachable voice entry point; tablets use app bar for cleaner layout |
 | Settings interactions | Inside floating panel | Consistent interaction model |
 | Animation engine | CustomPainter | Full control, 60fps, zero dependencies |
 | Panel width | Fixed (240pt) | No horizontal resizing; vertical expansion OK for content like disambiguation lists |
@@ -32,7 +32,7 @@ The full-screen overlay (`VoiceListeningOverlay`) is stacked on top of the shell
 |------|--------|---------|
 | `voice_command_fab.dart` | Delete | Unused, superseded by `_VoiceNavButton` |
 | `voice_listening_overlay.dart` | Rewrite to `voice_command_panel.dart` | Compact floating panel with all states |
-| `scaffold_with_nav_bar.dart` | Modify | Remove `_VoiceNavButton`, remove center nav button slot, replace overlay with panel, add `VoiceTriggerButton` to app bar across all form factors |
+| `scaffold_with_nav_bar.dart` | Modify | Replace `_VoiceNavButton` with `_VoiceCenterButton` (phone) and `VoiceTriggerButton` (tablet app bar/rail), replace overlay with panel |
 | (new) `voice_trigger_button.dart` | Create | App bar mic icon with state-aware styling |
 | (new) `waveform_painter.dart` | Create | CustomPainter for animated frequency bars |
 
@@ -183,9 +183,8 @@ Inline app bar action replacing the center-docked nav button.
 ### scaffold_with_nav_bar.dart changes
 
 **Phone layout (`_PhoneShell` / `_CustomNavBar`)**:
-- Remove the center `SizedBox(width: 72)` placeholder from the nav bar `Row`
-- Remove the `Positioned(top: -8, child: _VoiceNavButton())` from the nav bar `Stack`
-- The phone shell currently uses no AppBar. Add a `SliverAppBar` or wrap in a `Scaffold` with an `AppBar` that includes `VoiceTriggerButton` in `actions`. Alternatively, the individual screens already have their own app bars — in that case, each tab screen's app bar gains the `VoiceTriggerButton` in its `actions`. The approach depends on existing screen app bar patterns — the implementer should check each tab screen and add `VoiceTriggerButton` to existing `AppBar.actions` arrays.
+- Replace `_VoiceNavButton` with `_VoiceCenterButton` in the center-docked nav bar slot
+- Phone retains the center-docked button for a prominent, thumb-reachable voice entry point
 
 **Tablet portrait (`_TabletPortraitShell`)**:
 - Replace `_VoiceNavButton()` in `AppBar.actions` with `VoiceTriggerButton()`
@@ -200,7 +199,7 @@ Inline app bar action replacing the center-docked nav button.
 ### Removing old code
 
 - Delete `voice_command_fab.dart` (unused file)
-- Delete `_VoiceNavButton` private class from `scaffold_with_nav_bar.dart`
+- Replace `_VoiceNavButton` with `_VoiceCenterButton` (phone) and `VoiceTriggerButton` (tablet) in `scaffold_with_nav_bar.dart`
 - Remove `voice_listening_overlay.dart` import from `scaffold_with_nav_bar.dart`
 
 ## Testing

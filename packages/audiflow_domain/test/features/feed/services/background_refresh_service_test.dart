@@ -1,4 +1,5 @@
-import 'package:audiflow_core/audiflow_core.dart' show AutoPlayOrder;
+import 'package:audiflow_core/audiflow_core.dart'
+    show AutoPlayOrder, SettingsDefaults;
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart' show ThemeMode;
 import 'package:flutter_test/flutter_test.dart';
@@ -105,7 +106,7 @@ class FakeAppSettingsRepository implements AppSettingsRepository {
   @override
   Future<void> setLastTabIndex(int index) async {}
   @override
-  bool getVoiceEnabled() => true;
+  bool getVoiceEnabled() => SettingsDefaults.voiceEnabled;
   @override
   Future<void> setVoiceEnabled(bool enabled) async {}
   @override
