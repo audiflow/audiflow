@@ -122,7 +122,7 @@ class ScaffoldWithNavBar extends ConsumerWidget {
           Positioned(top: panelTop, right: 8, child: const VoiceCommandPanel()),
         if (voiceEnabled && FlavorConfig.current.flavor != Flavor.prod)
           Positioned(
-            bottom: _debugPanelBottom(context, isTablet, isLandscape),
+            bottom: _debugPanelBottom(context, isTablet),
             left: 8,
             child: const VoiceDebugPanel(),
           ),
@@ -130,11 +130,7 @@ class ScaffoldWithNavBar extends ConsumerWidget {
     );
   }
 
-  static double _debugPanelBottom(
-    BuildContext context,
-    bool isTablet,
-    bool isLandscape,
-  ) {
+  static double _debugPanelBottom(BuildContext context, bool isTablet) {
     if (isTablet) return 8;
     // Phone: above the nav bar (80pt) + safe area bottom
     return 80 + MediaQuery.viewPaddingOf(context).bottom + 8;

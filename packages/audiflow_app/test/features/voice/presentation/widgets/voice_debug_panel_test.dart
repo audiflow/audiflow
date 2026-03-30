@@ -32,7 +32,7 @@ class _FakeDebugInfoNotifier extends VoiceDebugInfoNotifier {
 // Helpers
 // ---------------------------------------------------------------------------
 
-Widget _buildTestApp({
+(Widget, ProviderContainer) _buildTestApp({
   required VoiceRecognitionState voiceState,
   VoiceDebugInfo debugInfo = const VoiceDebugInfo(),
 }) {
@@ -47,7 +47,7 @@ Widget _buildTestApp({
     ],
   );
 
-  return UncontrolledProviderScope(
+  final widget = UncontrolledProviderScope(
     container: container,
     child: MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -55,6 +55,8 @@ Widget _buildTestApp({
       home: const Scaffold(body: Stack(children: [VoiceDebugPanel()])),
     ),
   );
+
+  return (widget, container);
 }
 
 // ---------------------------------------------------------------------------
@@ -64,9 +66,11 @@ Widget _buildTestApp({
 void main() {
   group('VoiceDebugPanel', () {
     testWidgets('renders nothing when idle', (tester) async {
-      await tester.pumpWidget(
-        _buildTestApp(voiceState: const VoiceRecognitionState.idle()),
+      final (widget, container) = _buildTestApp(
+        voiceState: const VoiceRecognitionState.idle(),
       );
+      addTearDown(container.dispose);
+      await tester.pumpWidget(widget);
       await tester.pump();
 
       final finder = find.text('VOICE DEBUG');
@@ -74,13 +78,13 @@ void main() {
     });
 
     testWidgets('shows header and state when listening', (tester) async {
-      await tester.pumpWidget(
-        _buildTestApp(
-          voiceState: const VoiceRecognitionState.listening(
-            partialTranscript: 'play the',
-          ),
+      final (widget, container) = _buildTestApp(
+        voiceState: const VoiceRecognitionState.listening(
+          partialTranscript: 'play the',
         ),
       );
+      addTearDown(container.dispose);
+      await tester.pumpWidget(widget);
       await tester.pump();
 
       check(find.text('VOICE DEBUG').evaluate().isNotEmpty).isTrue();
@@ -98,15 +102,15 @@ void main() {
         rawTranscription: 'play the news',
       );
 
-      await tester.pumpWidget(
-        _buildTestApp(
-          voiceState: VoiceRecognitionState.executing(command: command),
-          debugInfo: VoiceDebugInfo(
-            parserSource: VoiceParserSource.simplePattern,
-            lastCommand: command,
-          ),
+      final (widget, container) = _buildTestApp(
+        voiceState: VoiceRecognitionState.executing(command: command),
+        debugInfo: VoiceDebugInfo(
+          parserSource: VoiceParserSource.simplePattern,
+          lastCommand: command,
         ),
       );
+      addTearDown(container.dispose);
+      await tester.pumpWidget(widget);
       await tester.pump();
 
       check(find.textContaining('EXECUTING').evaluate().isNotEmpty).isTrue();
@@ -118,9 +122,11 @@ void main() {
     });
 
     testWidgets('shows AI status', (tester) async {
-      await tester.pumpWidget(
-        _buildTestApp(voiceState: const VoiceRecognitionState.listening()),
+      final (widget, container) = _buildTestApp(
+        voiceState: const VoiceRecognitionState.listening(),
       );
+      addTearDown(container.dispose);
+      await tester.pumpWidget(widget);
       await tester.pump();
 
       check(find.textContaining('AI:').evaluate().isNotEmpty).isTrue();
@@ -134,15 +140,15 @@ void main() {
         rawTranscription: 'play the news',
       );
 
-      await tester.pumpWidget(
-        _buildTestApp(
-          voiceState: const VoiceRecognitionState.success(message: 'Playing'),
-          debugInfo: VoiceDebugInfo(
-            parserSource: VoiceParserSource.simplePattern,
-            lastCommand: command,
-          ),
+      final (widget, container) = _buildTestApp(
+        voiceState: const VoiceRecognitionState.success(message: 'Playing'),
+        debugInfo: VoiceDebugInfo(
+          parserSource: VoiceParserSource.simplePattern,
+          lastCommand: command,
         ),
       );
+      addTearDown(container.dispose);
+      await tester.pumpWidget(widget);
       await tester.pump();
 
       check(find.textContaining('podcastName').evaluate().isNotEmpty).isTrue();
@@ -156,15 +162,15 @@ void main() {
         rawTranscription: 'pause',
       );
 
-      await tester.pumpWidget(
-        _buildTestApp(
-          voiceState: const VoiceRecognitionState.success(message: 'Paused'),
-          debugInfo: VoiceDebugInfo(
-            parserSource: VoiceParserSource.platformNlu,
-            lastCommand: command,
-          ),
+      final (widget, container) = _buildTestApp(
+        voiceState: const VoiceRecognitionState.success(message: 'Paused'),
+        debugInfo: VoiceDebugInfo(
+          parserSource: VoiceParserSource.platformNlu,
+          lastCommand: command,
         ),
       );
+      addTearDown(container.dispose);
+      await tester.pumpWidget(widget);
       await tester.pump();
 
       check(find.textContaining('0.95').evaluate().isNotEmpty).isTrue();

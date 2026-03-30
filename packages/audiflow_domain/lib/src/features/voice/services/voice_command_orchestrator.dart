@@ -163,12 +163,16 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
     await _speechRepository.cancelListening();
     _listeningCompleter?.complete();
     _listeningCompleter = null;
-    state = const VoiceRecognitionState.idle();
-    ref.read(voiceDebugInfoProvider.notifier).reset();
+    _transitionToIdle();
   }
 
   /// Reset state to idle.
   void resetToIdle() {
+    _transitionToIdle();
+  }
+
+  /// Centralised idle transition that resets both state and debug info.
+  void _transitionToIdle() {
     state = const VoiceRecognitionState.idle();
     ref.read(voiceDebugInfoProvider.notifier).reset();
   }
@@ -203,7 +207,7 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
       );
       return;
     }
-    state = const VoiceRecognitionState.idle();
+    _transitionToIdle();
   }
 
   /// Applies the selected candidate from a disambiguation prompt.
@@ -528,7 +532,7 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
     if (state is VoiceSuccess ||
         state is VoiceError ||
         state is VoiceSettingsAutoApplied) {
-      state = const VoiceRecognitionState.idle();
+      _transitionToIdle();
     }
   }
 
