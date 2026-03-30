@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -27,8 +29,10 @@ class VoiceSettingsScreen extends ConsumerWidget {
             title: Text(l10n.voiceEnabledTitle),
             subtitle: Text(l10n.voiceEnabledSubtitle),
             value: repo.getVoiceEnabled(),
-            onChanged: (v) =>
-                _update(ref, () => repo.setVoiceEnabled(enabled: v)),
+            onChanged: (v) {
+              if (!v) _cancelActiveSession(ref);
+              _update(ref, () => repo.setVoiceEnabled(enabled: v));
+            },
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
@@ -57,6 +61,13 @@ class VoiceSettingsScreen extends ConsumerWidget {
   Future<void> _update(WidgetRef ref, Future<void> Function() setter) async {
     await setter();
     ref.invalidate(appSettingsRepositoryProvider);
+  }
+
+  /// When disabling voice, cancel any in-flight session so the orchestrator
+  /// does not continue recording/processing in the background.
+  void _cancelActiveSession(WidgetRef ref) {
+    final orchestrator = ref.read(voiceCommandOrchestratorProvider.notifier);
+    unawaited(orchestrator.cancelVoiceCommand());
   }
 
   static final _commands = [

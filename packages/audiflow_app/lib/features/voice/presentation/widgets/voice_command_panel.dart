@@ -492,13 +492,22 @@ class _SettingsDisambiguationContent extends ConsumerWidget {
             style: textTheme.bodyMedium?.copyWith(color: colorScheme.onSurface),
           ),
           const SizedBox(height: 12),
-          for (var i = 0; i < state.candidates.length; i++) ...[
-            if (0 < i) const SizedBox(height: 8),
-            _DisambiguationCandidate(
-              candidate: state.candidates[i],
-              isHighlighted: i == highestIndex,
+          Flexible(
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (var i = 0; i < state.candidates.length; i++) ...[
+                    if (0 < i) const SizedBox(height: 8),
+                    _DisambiguationCandidate(
+                      candidate: state.candidates[i],
+                      isHighlighted: i == highestIndex,
+                    ),
+                  ],
+                ],
+              ),
             ),
-          ],
+          ),
           const SizedBox(height: 12),
           TextButton(
             onPressed: () {
