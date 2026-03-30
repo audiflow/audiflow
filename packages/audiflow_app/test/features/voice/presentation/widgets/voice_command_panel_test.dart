@@ -98,6 +98,15 @@ Widget _buildTestApp(
   );
 }
 
+/// Resolves [AppLocalizations] from the tester's element tree.
+///
+/// Uses [Scaffold] as the lookup point because localizations are
+/// registered below [MaterialApp] in the widget tree.
+AppLocalizations _l10nOf(WidgetTester tester) {
+  final context = tester.element(find.byType(Scaffold));
+  return AppLocalizations.of(context);
+}
+
 ProviderContainer _containerFor(
   _FakeOrchestrator fake, {
   _FakeController? controller,
@@ -192,7 +201,8 @@ void main() {
         await tester.pump();
 
         // Find cancel text button
-        final cancelFinder = find.text('Cancel');
+        final l10n = _l10nOf(tester);
+        final cancelFinder = find.text(l10n.cancel);
         check(cancelFinder.evaluate().isNotEmpty).isTrue();
       });
 
@@ -204,7 +214,8 @@ void main() {
         await tester.pumpWidget(_buildTestApp(container));
         await tester.pump();
 
-        await tester.tap(find.text('Cancel'));
+        final l10n = _l10nOf(tester);
+        await tester.tap(find.text(l10n.cancel));
         await tester.pump();
 
         check(fake.cancelCalled).isTrue();
@@ -408,7 +419,8 @@ void main() {
         await tester.pumpWidget(_buildTestApp(container));
         await tester.pump();
 
-        final hintFinder = find.text('Tap mic to try again');
+        final l10n = _l10nOf(tester);
+        final hintFinder = find.text(l10n.voiceTapMicToRetry);
         check(hintFinder.evaluate().isNotEmpty).isTrue();
       });
     });
@@ -442,11 +454,12 @@ void main() {
         await tester.pump();
 
         // Should show "Which setting?" header
-        final headerFinder = find.text('Which setting do you mean?');
+        final l10n = _l10nOf(tester);
+        final headerFinder = find.text(l10n.voiceSettingsWhichSetting);
         check(headerFinder.evaluate().isNotEmpty).isTrue();
 
         // Should show cancel button
-        final cancelFinder = find.text('Cancel');
+        final cancelFinder = find.text(l10n.cancel);
         check(cancelFinder.evaluate().isNotEmpty).isTrue();
       });
     });
@@ -474,7 +487,8 @@ void main() {
         check(iconFinder.evaluate().isNotEmpty).isTrue();
 
         // Undo button
-        final undoFinder = find.text('Undo');
+        final l10n = _l10nOf(tester);
+        final undoFinder = find.text(l10n.undo);
         check(undoFinder.evaluate().isNotEmpty).isTrue();
       });
     });
@@ -503,8 +517,9 @@ void main() {
         check(iconFinder.evaluate().isNotEmpty).isTrue();
 
         // Confirm and Cancel buttons
-        check(find.text('Confirm').evaluate().isNotEmpty).isTrue();
-        check(find.text('Cancel').evaluate().isNotEmpty).isTrue();
+        final l10n = _l10nOf(tester);
+        check(find.text(l10n.confirm).evaluate().isNotEmpty).isTrue();
+        check(find.text(l10n.cancel).evaluate().isNotEmpty).isTrue();
       });
     });
   });
