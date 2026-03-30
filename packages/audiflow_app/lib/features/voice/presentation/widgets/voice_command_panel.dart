@@ -557,42 +557,48 @@ class _DisambiguationCandidate extends ConsumerWidget {
 
     final confidencePercent = (candidate.confidence * 100).toInt();
 
-    return GestureDetector(
-      onTap: hasValue
-          ? () async {
-              final controller = ref.read(
-                voiceCommandControllerProvider.notifier,
-              );
-              await controller.selectSettingsCandidate(candidate);
-            }
-          : null,
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
+    return Semantics(
+      button: true,
+      enabled: hasValue,
+      child: Material(
+        color: isHighlighted
+            ? colorScheme.primary.withValues(alpha: 0.1)
+            : colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(8),
+        child: InkWell(
           borderRadius: BorderRadius.circular(8),
-          color: isHighlighted
-              ? colorScheme.primary.withValues(alpha: 0.1)
-              : colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                hasValue ? '$displayName: ${candidate.newValue}' : displayName,
-                style: textTheme.bodySmall?.copyWith(
-                  color: colorScheme.onSurface,
+          onTap: hasValue
+              ? () async {
+                  final controller = ref.read(
+                    voiceCommandControllerProvider.notifier,
+                  );
+                  await controller.selectSettingsCandidate(candidate);
+                }
+              : null,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    hasValue
+                        ? '$displayName: ${candidate.newValue}'
+                        : displayName,
+                    style: textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurface,
+                    ),
+                  ),
                 ),
-              ),
+                const SizedBox(width: 4),
+                Text(
+                  '$confidencePercent%',
+                  style: textTheme.labelSmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(width: 4),
-            Text(
-              '$confidencePercent%',
-              style: textTheme.labelSmall?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );

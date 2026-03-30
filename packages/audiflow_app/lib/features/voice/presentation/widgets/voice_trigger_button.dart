@@ -6,10 +6,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
+import 'voice_trigger_style.dart';
+
 /// Inline app bar button that shows current voice state and triggers commands.
 ///
 /// Designed for placement in [AppBar.actions]. The widget wraps itself in a
 /// [Padding] with 4pt right inset for proper app bar spacing.
+///
+/// Uses a 48x48 hit area (Material minimum) around a 36x36 visual container.
 class VoiceTriggerButton extends ConsumerStatefulWidget {
   const VoiceTriggerButton({super.key});
 
@@ -60,87 +64,13 @@ class _VoiceTriggerButtonState extends ConsumerState<VoiceTriggerButton>
     }
   }
 
-  bool _isTapDisabled(VoiceRecognitionState state) {
-    return switch (state) {
-      VoiceIdle() => false,
-      VoiceListening() => false,
-      VoiceSuccess() => false,
-      VoiceError() => false,
-      VoiceProcessing() => true,
-      VoiceExecuting() => true,
-      VoiceSettingsAutoApplied() => true,
-      VoiceSettingsDisambiguation() => true,
-      VoiceSettingsLowConfidence() => true,
-    };
-  }
-
-  Color _backgroundColor(BuildContext context, VoiceRecognitionState state) {
-    final cs = Theme.of(context).colorScheme;
-    return switch (state) {
-      VoiceIdle() => cs.primary.withValues(alpha: 0.1),
-      VoiceListening() => cs.primary.withValues(alpha: 0.25),
-      VoiceProcessing() => cs.primary.withValues(alpha: 0.15),
-      VoiceExecuting() => cs.primary.withValues(alpha: 0.15),
-      VoiceSuccess() => cs.tertiary.withValues(alpha: 0.15),
-      VoiceError() => cs.error.withValues(alpha: 0.15),
-      VoiceSettingsAutoApplied() => cs.secondary.withValues(alpha: 0.15),
-      VoiceSettingsDisambiguation() => cs.secondary.withValues(alpha: 0.15),
-      VoiceSettingsLowConfidence() => cs.secondary.withValues(alpha: 0.15),
-    };
-  }
-
-  Color _iconColor(BuildContext context, VoiceRecognitionState state) {
-    final cs = Theme.of(context).colorScheme;
-    return switch (state) {
-      VoiceIdle() => cs.primary,
-      // Accent amber per visual spec.
-      VoiceListening() => const Color(0xFFFFC107),
-      VoiceProcessing() => cs.primary,
-      VoiceExecuting() => cs.primary,
-      VoiceSuccess() => cs.tertiary,
-      VoiceError() => cs.error,
-      VoiceSettingsAutoApplied() => cs.secondary,
-      VoiceSettingsDisambiguation() => cs.secondary,
-      VoiceSettingsLowConfidence() => cs.secondary,
-    };
-  }
-
-  double _iconFill(VoiceRecognitionState state) {
-    return switch (state) {
-      VoiceListening() => 1,
-      VoiceIdle() => 0,
-      VoiceProcessing() => 0,
-      VoiceExecuting() => 0,
-      VoiceSuccess() => 0,
-      VoiceError() => 0,
-      VoiceSettingsAutoApplied() => 0,
-      VoiceSettingsDisambiguation() => 0,
-      VoiceSettingsLowConfidence() => 0,
-    };
-  }
-
-  List<BoxShadow> _boxShadows(
-    BuildContext context,
-    VoiceRecognitionState state,
-  ) {
-    return switch (state) {
-      VoiceListening() => [
-        BoxShadow(
-          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.4),
-          blurRadius: 12,
-        ),
-      ],
-      _ => const [],
-    };
-  }
-
   @override
   Widget build(BuildContext context) {
     final voiceState = ref.watch(voiceCommandOrchestratorProvider);
+    final cs = Theme.of(context).colorScheme;
 
-    final isPulsing =
-        voiceState is VoiceProcessing || voiceState is VoiceExecuting;
-    if (isPulsing) {
+    final pulsing = VoiceTriggerStyle.isPulsing(voiceState);
+    if (pulsing) {
       if (!_pulseController.isAnimating) {
         _pulseController.repeat(reverse: true);
       }
@@ -152,11 +82,11 @@ class _VoiceTriggerButtonState extends ConsumerState<VoiceTriggerButton>
       }
     }
 
-    final bgColor = _backgroundColor(context, voiceState);
-    final iconColor = _iconColor(context, voiceState);
-    final fill = _iconFill(voiceState);
-    final shadows = _boxShadows(context, voiceState);
-    final disabled = _isTapDisabled(voiceState);
+    final bgColor = AppBarTriggerStyle.backgroundColor(cs, voiceState);
+    final iconColor = AppBarTriggerStyle.iconColor(cs, voiceState);
+    final fill = VoiceTriggerStyle.iconFill(voiceState);
+    final shadows = AppBarTriggerStyle.boxShadows(cs, voiceState);
+    final disabled = VoiceTriggerStyle.isTapDisabled(voiceState);
 
     return Padding(
       padding: const EdgeInsets.only(right: 4),
@@ -167,22 +97,37 @@ class _VoiceTriggerButtonState extends ConsumerState<VoiceTriggerButton>
         child: AnimatedBuilder(
           animation: _pulseAnimation,
           builder: (context, child) {
-            final opacity = isPulsing ? _pulseAnimation.value : 1.0;
+            final opacity = pulsing ? _pulseAnimation.value : 1.0;
             return Opacity(opacity: opacity, child: child);
           },
-          child: GestureDetector(
-            onTap: disabled ? null : () => _handleTap(voiceState),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              curve: Curves.easeInOut,
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: bgColor,
+          child: SizedBox(
+            width: 48,
+            height: 48,
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
                 borderRadius: BorderRadius.circular(10),
-                boxShadow: shadows,
+                onTap: disabled ? null : () => _handleTap(voiceState),
+                child: Center(
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    curve: Curves.easeInOut,
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: bgColor,
+                      borderRadius: BorderRadius.circular(10),
+                      boxShadow: shadows,
+                    ),
+                    child: Icon(
+                      Symbols.mic,
+                      fill: fill,
+                      size: 20,
+                      color: iconColor,
+                    ),
+                  ),
+                ),
               ),
-              child: Icon(Symbols.mic, fill: fill, size: 20, color: iconColor),
             ),
           ),
         ),

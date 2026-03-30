@@ -14,6 +14,7 @@ import '../features/player/presentation/widgets/animated_mini_player.dart';
 import '../features/settings/presentation/controllers/last_tab_controller.dart';
 import '../features/voice/presentation/widgets/voice_command_panel.dart';
 import '../features/voice/presentation/widgets/voice_trigger_button.dart';
+import '../features/voice/presentation/widgets/voice_trigger_style.dart';
 
 /// Adaptive navigation shell for phone or tablet navigation.
 ///
@@ -524,94 +525,16 @@ class _VoiceCenterButtonState extends ConsumerState<_VoiceCenterButton>
     }
   }
 
-  bool _isTapDisabled(VoiceRecognitionState state) {
-    return switch (state) {
-      VoiceIdle() => false,
-      VoiceListening() => false,
-      VoiceSuccess() => false,
-      VoiceError() => false,
-      VoiceProcessing() => true,
-      VoiceExecuting() => true,
-      VoiceSettingsAutoApplied() => true,
-      VoiceSettingsDisambiguation() => true,
-      VoiceSettingsLowConfidence() => true,
-    };
-  }
-
-  Color _backgroundColor(BuildContext context, VoiceRecognitionState state) {
-    final cs = Theme.of(context).colorScheme;
-    return switch (state) {
-      VoiceIdle() => cs.primary,
-      VoiceListening() => cs.primary,
-      VoiceProcessing() => cs.primary.withValues(alpha: 0.7),
-      VoiceExecuting() => cs.primary.withValues(alpha: 0.7),
-      VoiceSuccess() => cs.tertiary,
-      VoiceError() => cs.error,
-      VoiceSettingsAutoApplied() => cs.secondary,
-      VoiceSettingsDisambiguation() => cs.secondary,
-      VoiceSettingsLowConfidence() => cs.secondary,
-    };
-  }
-
-  Color _iconColor(BuildContext context, VoiceRecognitionState state) {
-    final cs = Theme.of(context).colorScheme;
-    return switch (state) {
-      VoiceIdle() => cs.onPrimary,
-      VoiceListening() => const Color(0xFFFFC107),
-      VoiceProcessing() => cs.onPrimary,
-      VoiceExecuting() => cs.onPrimary,
-      VoiceSuccess() => cs.onTertiary,
-      VoiceError() => cs.onError,
-      VoiceSettingsAutoApplied() => cs.onSecondary,
-      VoiceSettingsDisambiguation() => cs.onSecondary,
-      VoiceSettingsLowConfidence() => cs.onSecondary,
-    };
-  }
-
-  double _iconFill(VoiceRecognitionState state) {
-    return switch (state) {
-      VoiceListening() => 1,
-      VoiceIdle() => 0,
-      VoiceProcessing() => 0,
-      VoiceExecuting() => 0,
-      VoiceSuccess() => 0,
-      VoiceError() => 0,
-      VoiceSettingsAutoApplied() => 0,
-      VoiceSettingsDisambiguation() => 0,
-      VoiceSettingsLowConfidence() => 0,
-    };
-  }
-
-  List<BoxShadow> _boxShadows(
-    BuildContext context,
-    VoiceRecognitionState state,
-  ) {
-    final cs = Theme.of(context).colorScheme;
-    return switch (state) {
-      VoiceListening() => [
-        BoxShadow(
-          color: cs.primary.withValues(alpha: 0.5),
-          blurRadius: 16,
-          spreadRadius: 2,
-        ),
-      ],
-      _ => [
-        BoxShadow(
-          color: cs.shadow.withValues(alpha: 0.2),
-          blurRadius: 8,
-          offset: const Offset(0, 2),
-        ),
-      ],
-    };
-  }
+  // Style methods delegate to shared VoiceTriggerStyle / CenterButtonStyle
+  // to avoid duplicating the state-to-style mapping across widgets.
 
   @override
   Widget build(BuildContext context) {
     final voiceState = ref.watch(voiceCommandOrchestratorProvider);
 
-    final isPulsing =
-        voiceState is VoiceProcessing || voiceState is VoiceExecuting;
-    if (isPulsing) {
+    final cs = Theme.of(context).colorScheme;
+    final pulsing = VoiceTriggerStyle.isPulsing(voiceState);
+    if (pulsing) {
       if (!_pulseController.isAnimating) {
         _pulseController.repeat(reverse: true);
       }
@@ -623,11 +546,11 @@ class _VoiceCenterButtonState extends ConsumerState<_VoiceCenterButton>
       }
     }
 
-    final bgColor = _backgroundColor(context, voiceState);
-    final iconColor = _iconColor(context, voiceState);
-    final fill = _iconFill(voiceState);
-    final shadows = _boxShadows(context, voiceState);
-    final disabled = _isTapDisabled(voiceState);
+    final bgColor = CenterButtonStyle.backgroundColor(cs, voiceState);
+    final iconColor = CenterButtonStyle.iconColor(cs, voiceState);
+    final fill = VoiceTriggerStyle.iconFill(voiceState);
+    final shadows = CenterButtonStyle.boxShadows(cs, voiceState);
+    final disabled = VoiceTriggerStyle.isTapDisabled(voiceState);
 
     return Semantics(
       button: true,
@@ -636,7 +559,7 @@ class _VoiceCenterButtonState extends ConsumerState<_VoiceCenterButton>
       child: AnimatedBuilder(
         animation: _pulseAnimation,
         builder: (context, child) {
-          final opacity = isPulsing ? _pulseAnimation.value : 1.0;
+          final opacity = pulsing ? _pulseAnimation.value : 1.0;
           return Opacity(opacity: opacity, child: child);
         },
         child: GestureDetector(
