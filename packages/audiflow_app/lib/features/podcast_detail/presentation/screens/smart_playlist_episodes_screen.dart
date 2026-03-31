@@ -37,7 +37,8 @@ class SmartPlaylistEpisodesScreen extends ConsumerStatefulWidget {
 
 class _SmartPlaylistEpisodesScreenState
     extends ConsumerState<SmartPlaylistEpisodesScreen> {
-  final _scrollController = ScrollController();
+  ScrollController get _scrollController => PrimaryScrollController.of(context);
+
   late SortOrder _sortOrder;
   String _searchQuery = '';
 
@@ -50,12 +51,6 @@ class _SmartPlaylistEpisodesScreenState
         (sp.userSortable && sp.groupSort != null
             ? sp.groupSort!.order
             : SortOrder.descending);
-  }
-
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
   }
 
   void _toggleSortOrder() {

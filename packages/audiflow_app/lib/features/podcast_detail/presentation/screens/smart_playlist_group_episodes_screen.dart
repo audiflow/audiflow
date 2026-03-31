@@ -44,7 +44,8 @@ class SmartPlaylistGroupEpisodesScreen extends ConsumerStatefulWidget {
 
 class _SmartPlaylistGroupEpisodesScreenState
     extends ConsumerState<SmartPlaylistGroupEpisodesScreen> {
-  final _scrollController = ScrollController();
+  ScrollController get _scrollController => PrimaryScrollController.of(context);
+
   late SortOrder _sortOrder;
   String _searchQuery = '';
 
@@ -79,12 +80,6 @@ class _SmartPlaylistGroupEpisodesScreenState
     final groupOverride = widget.group.showYearHeaders;
     if (groupOverride != null) return groupOverride;
     return widget.parentPlaylist.showYearHeaders;
-  }
-
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
   }
 
   String _formatGroupTitle() {

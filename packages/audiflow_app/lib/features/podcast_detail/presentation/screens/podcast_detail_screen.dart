@@ -36,7 +36,7 @@ class PodcastDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
-  final _scrollController = ScrollController();
+  ScrollController get _scrollController => PrimaryScrollController.of(context);
 
   String _searchQuery = '';
 
@@ -77,7 +77,6 @@ class _PodcastDetailScreenState extends ConsumerState<PodcastDetailScreen> {
     if (feedUrl != null) {
       PodcastMetadataHints.remove(feedUrl);
     }
-    _scrollController.dispose();
     super.dispose();
   }
 
