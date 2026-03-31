@@ -41,13 +41,14 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
   SettingsMetadataRegistry? _settingsRegistry;
 
   StateError _buildNotCalledError(String fieldName) => StateError(
-        'VoiceCommandOrchestrator.$fieldName accessed before build() was called',
-      );
+    'VoiceCommandOrchestrator.$fieldName accessed before build() was called',
+  );
 
   SpeechRecognitionRepository get _speech =>
       _speechRepository ?? (throw _buildNotCalledError('_speechRepository'));
   PlayPodcastByNameService get _playPodcast =>
-      _playPodcastService ?? (throw _buildNotCalledError('_playPodcastService'));
+      _playPodcastService ??
+      (throw _buildNotCalledError('_playPodcastService'));
   VoiceCommandExecutor get _exec =>
       _executor ?? (throw _buildNotCalledError('_executor'));
   SettingsIntentResolver get _settings =>
