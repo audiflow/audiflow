@@ -202,8 +202,8 @@ void main() {
       await tester.tap(find.text('Open'));
       await tester.pump();
 
-      // Tap the center of the screen (where the artwork is)
-      final center = tester.getCenter(find.byType(ArtworkOverlay));
+      // Tap the artwork widget directly
+      final center = tester.getCenter(find.byType(ExtendedImage));
       await tester.tapAt(center);
       await tester.pump();
 
