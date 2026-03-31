@@ -41,10 +41,14 @@ Future<void> appMain({
 
   const sentryDsn = String.fromEnvironment('SENTRY_DSN');
 
+  const sentryEnvironment = String.fromEnvironment('SENTRY_ENVIRONMENT');
+
   if (flavorConfig.enableCrashReporting && sentryDsn.isNotEmpty) {
     await SentryFlutter.init((options) {
       options.dsn = sentryDsn;
-      options.environment = flavor.name;
+      options.environment = sentryEnvironment.isNotEmpty
+          ? sentryEnvironment
+          : flavor.name;
       options.tracesSampleRate = 0;
     }, appRunner: () => _startApp(smartPlaylistConfigBaseUrl));
   } else {
