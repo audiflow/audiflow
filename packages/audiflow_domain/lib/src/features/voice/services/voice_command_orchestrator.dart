@@ -40,16 +40,20 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
   SettingsIntentResolver? _settingsResolver;
   SettingsMetadataRegistry? _settingsRegistry;
 
+  StateError _buildNotCalledError(String fieldName) => StateError(
+        'VoiceCommandOrchestrator.$fieldName accessed before build() was called',
+      );
+
   SpeechRecognitionRepository get _speech =>
-      _speechRepository ?? (throw StateError('build() not called'));
+      _speechRepository ?? (throw _buildNotCalledError('_speechRepository'));
   PlayPodcastByNameService get _playPodcast =>
-      _playPodcastService ?? (throw StateError('build() not called'));
+      _playPodcastService ?? (throw _buildNotCalledError('_playPodcastService'));
   VoiceCommandExecutor get _exec =>
-      _executor ?? (throw StateError('build() not called'));
+      _executor ?? (throw _buildNotCalledError('_executor'));
   SettingsIntentResolver get _settings =>
-      _settingsResolver ?? (throw StateError('build() not called'));
+      _settingsResolver ?? (throw _buildNotCalledError('_settingsResolver'));
   SettingsMetadataRegistry get _registry =>
-      _settingsRegistry ?? (throw StateError('build() not called'));
+      _settingsRegistry ?? (throw _buildNotCalledError('_settingsRegistry'));
 
   bool _isInitialized = false;
   Completer<void>? _listeningCompleter;
