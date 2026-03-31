@@ -28,12 +28,18 @@ class VoiceTriggerStyle {
     return state is VoiceProcessing || state is VoiceExecuting;
   }
 
-  /// Mic icon for the current voice state (filled when listening, outlined
-  /// otherwise).
-  static IconData micIcon(VoiceRecognitionState state) {
+  /// Icon fill value (1 = filled, 0 = outline).
+  static double iconFill(VoiceRecognitionState state) {
     return switch (state) {
-      VoiceListening() => Icons.mic,
-      _ => Icons.mic_outlined,
+      VoiceListening() => 1,
+      VoiceIdle() => 0,
+      VoiceProcessing() => 0,
+      VoiceExecuting() => 0,
+      VoiceSuccess() => 0,
+      VoiceError() => 0,
+      VoiceSettingsAutoApplied() => 0,
+      VoiceSettingsDisambiguation() => 0,
+      VoiceSettingsLowConfidence() => 0,
     };
   }
 }

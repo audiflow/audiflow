@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
+
 import '../../../../l10n/app_localizations.dart';
 
 /// Button widget with double-tap confirmation to clear the queue.
@@ -74,7 +76,7 @@ class _ClearQueueButtonState extends State<ClearQueueButton> {
 
     return IconButton(
       onPressed: widget.enabled ? _handleTap : null,
-      icon: const Icon(Icons.delete_sweep),
+      icon: const Icon(Symbols.delete_sweep),
       tooltip: l10n.queueClearTooltip,
     );
   }

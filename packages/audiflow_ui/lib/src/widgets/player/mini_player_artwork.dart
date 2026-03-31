@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 /// Artwork widget for the mini player.
 ///
@@ -73,7 +74,7 @@ class _MiniPlayerArtworkPlaceholder extends StatelessWidget {
     return Container(
       color: colorScheme.surfaceContainerHighest,
       child: Icon(
-        Icons.podcasts,
+        Symbols.podcasts,
         color: colorScheme.onSurfaceVariant,
         size: size * 0.5,
       ),

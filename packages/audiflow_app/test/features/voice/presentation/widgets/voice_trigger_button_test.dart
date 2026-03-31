@@ -5,6 +5,7 @@ import 'package:checks/checks.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 // ---------------------------------------------------------------------------
 // Fakes
@@ -71,7 +72,7 @@ ProviderContainer _containerFor(_FakeOrchestrator fake) {
 void main() {
   group('VoiceTriggerButton', () {
     group('idle state', () {
-      testWidgets('renders outlined mic icon when idle', (tester) async {
+      testWidgets('renders mic outline icon (fill 0)', (tester) async {
         final fake = _FakeOrchestrator(const VoiceRecognitionState.idle());
         final container = _containerFor(fake);
         addTearDown(container.dispose);
@@ -79,9 +80,9 @@ void main() {
         await tester.pumpWidget(_buildTestApp(container));
         await tester.pump();
 
-        // Outline mic when idle
+        // Outline mic: fill == 0 — find the Icon widget with Symbols.mic
         final iconFinder = find.byWidgetPredicate(
-          (w) => w is Icon && w.icon == Icons.mic_outlined,
+          (w) => w is Icon && w.icon == Symbols.mic && (w.fill ?? 0) != 1,
         );
         check(iconFinder.evaluate().length).equals(1);
       });
@@ -102,7 +103,7 @@ void main() {
     });
 
     group('listening state', () {
-      testWidgets('renders filled mic icon when listening', (tester) async {
+      testWidgets('renders filled mic icon (fill 1)', (tester) async {
         final fake = _FakeOrchestrator(const VoiceRecognitionState.listening());
         final container = _containerFor(fake);
         addTearDown(container.dispose);
@@ -111,7 +112,7 @@ void main() {
         await tester.pump();
 
         final iconFinder = find.byWidgetPredicate(
-          (w) => w is Icon && w.icon == Icons.mic,
+          (w) => w is Icon && w.icon == Symbols.mic && w.fill == 1,
         );
         check(iconFinder.evaluate().length).equals(1);
       });
@@ -125,7 +126,7 @@ void main() {
         await tester.pump();
 
         final iconFinder = find.byWidgetPredicate(
-          (w) => w is Icon && w.icon == Icons.mic,
+          (w) => w is Icon && w.icon == Symbols.mic && w.fill == 1,
         );
         final icon = tester.widget<Icon>(iconFinder);
         check(icon.color).equals(const Color(0xFFFFC107));

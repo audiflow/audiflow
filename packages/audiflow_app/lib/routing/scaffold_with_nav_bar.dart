@@ -6,6 +6,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 import '../l10n/app_localizations.dart';
 import '../features/player/presentation/screens/player_screen.dart';
@@ -31,23 +32,23 @@ class ScaffoldWithNavBar extends ConsumerWidget {
 
   static const _destinations = [
     _NavDestination(
-      icon: Icons.search_outlined,
-      selectedIcon: Icons.search,
+      icon: Symbols.search,
+      selectedIcon: Symbols.search,
       resolveLabel: _resolveNavSearch,
     ),
     _NavDestination(
-      icon: Icons.library_music_outlined,
-      selectedIcon: Icons.library_music,
+      icon: Symbols.library_music,
+      selectedIcon: Symbols.library_music,
       resolveLabel: _resolveNavLibrary,
     ),
     _NavDestination(
-      icon: Icons.queue_music_outlined,
-      selectedIcon: Icons.queue_music,
+      icon: Symbols.queue_music,
+      selectedIcon: Symbols.queue_music,
       resolveLabel: _resolveNavQueue,
     ),
     _NavDestination(
-      icon: Icons.settings_outlined,
-      selectedIcon: Icons.settings,
+      icon: Symbols.settings,
+      selectedIcon: Symbols.settings,
       resolveLabel: _resolveNavSettings,
     ),
   ];
@@ -321,6 +322,7 @@ class _NavItem extends StatelessWidget {
                   : null,
               child: Icon(
                 isSelected ? destination.selectedIcon : destination.icon,
+                fill: isSelected ? 1 : 0,
                 size: 24,
                 color: iconColor,
               ),
@@ -422,7 +424,7 @@ class _TabletLandscapeShell extends StatelessWidget {
               for (final d in ScaffoldWithNavBar._destinations)
                 NavigationRailDestination(
                   icon: Icon(d.icon),
-                  selectedIcon: Icon(d.selectedIcon),
+                  selectedIcon: Icon(d.selectedIcon, fill: 1),
                   label: Text(d.resolveLabel(AppLocalizations.of(context))),
                 ),
             ],
@@ -463,7 +465,8 @@ class _TopTabButton extends StatelessWidget {
       child: TextButton.icon(
         onPressed: onTap,
         icon: Icon(
-          isSelected ? destination.selectedIcon : destination.icon,
+          destination.icon,
+          fill: isSelected ? 1 : 0,
           size: 20,
           color: isSelected
               ? colorScheme.primary
@@ -559,7 +562,7 @@ class _VoiceCenterButtonState extends ConsumerState<_VoiceCenterButton>
 
     final bgColor = CenterButtonStyle.backgroundColor(cs, voiceState);
     final iconColor = CenterButtonStyle.iconColor(cs, voiceState);
-    final micIcon = VoiceTriggerStyle.micIcon(voiceState);
+    final fill = VoiceTriggerStyle.iconFill(voiceState);
     final shadows = CenterButtonStyle.boxShadows(cs, voiceState);
     final disabled = VoiceTriggerStyle.isTapDisabled(voiceState);
 
@@ -585,7 +588,7 @@ class _VoiceCenterButtonState extends ConsumerState<_VoiceCenterButton>
               shape: BoxShape.circle,
               boxShadow: shadows,
             ),
-            child: Icon(micIcon, size: 24, color: iconColor),
+            child: Icon(Symbols.mic, fill: fill, size: 24, color: iconColor),
           ),
         ),
       ),

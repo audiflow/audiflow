@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -111,11 +112,10 @@ void main() {
       await tester.pumpWidget(buildTestWidget());
       await tester.pumpAndSettle();
 
-      // Index 0 (search) is selected by default -> filled icon
-      expect(find.byIcon(Icons.search), findsOneWidget);
-      expect(find.byIcon(Icons.library_music_outlined), findsOneWidget);
-      expect(find.byIcon(Icons.queue_music_outlined), findsOneWidget);
-      expect(find.byIcon(Icons.settings_outlined), findsOneWidget);
+      expect(find.byIcon(Symbols.search), findsOneWidget);
+      expect(find.byIcon(Symbols.library_music), findsOneWidget);
+      expect(find.byIcon(Symbols.queue_music), findsOneWidget);
+      expect(find.byIcon(Symbols.settings), findsOneWidget);
     });
 
     testWidgets('selectedIndex reflects current tab', (tester) async {

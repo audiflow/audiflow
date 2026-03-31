@@ -2,6 +2,7 @@ import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../../routing/app_router.dart';
@@ -39,43 +40,43 @@ class SettingsScreen extends StatelessWidget {
                 childAspectRatio: 0.95,
                 children: [
                   SettingsCategoryCard(
-                    icon: Icons.palette,
+                    icon: Symbols.palette,
                     title: l10n.settingsAppearanceTitle,
                     subtitle: l10n.settingsAppearanceSubtitle,
                     onTap: () => context.go(AppRoutes.settingsAppearance),
                   ),
                   SettingsCategoryCard(
-                    icon: Icons.play_circle,
+                    icon: Symbols.play_circle,
                     title: l10n.settingsPlaybackTitle,
                     subtitle: l10n.settingsPlaybackSubtitle,
                     onTap: () => context.go(AppRoutes.settingsPlayback),
                   ),
                   SettingsCategoryCard(
-                    icon: Icons.download,
+                    icon: Symbols.download,
                     title: l10n.settingsDownloadsTitle,
                     subtitle: l10n.settingsDownloadsSubtitle,
                     onTap: () => context.go(AppRoutes.settingsDownloads),
                   ),
                   SettingsCategoryCard(
-                    icon: Icons.sync,
+                    icon: Symbols.sync,
                     title: l10n.settingsFeedSyncTitle,
                     subtitle: l10n.settingsFeedSyncSubtitle,
                     onTap: () => context.go(AppRoutes.settingsFeedSync),
                   ),
                   SettingsCategoryCard(
-                    icon: Icons.storage,
+                    icon: Symbols.storage,
                     title: l10n.settingsStorageTitle,
                     subtitle: l10n.settingsStorageSubtitle,
                     onTap: () => context.go(AppRoutes.settingsStorage),
                   ),
                   SettingsCategoryCard(
-                    icon: Icons.mic,
+                    icon: Symbols.mic,
                     title: l10n.settingsVoiceTitle,
                     subtitle: l10n.settingsVoiceSubtitle,
                     onTap: () => context.go(AppRoutes.settingsVoice),
                   ),
                   SettingsCategoryCard(
-                    icon: Icons.info,
+                    icon: Symbols.info,
                     title: l10n.settingsAboutTitle,
                     subtitle: l10n.settingsAboutSubtitle,
                     onTap: () => context.go(AppRoutes.settingsAbout),
