@@ -25,10 +25,14 @@ void backgroundCallback() {
     var sentryInitialized = false;
     try {
       const sentryDsn = String.fromEnvironment('SENTRY_DSN');
+      const sentryEnvironment = String.fromEnvironment('SENTRY_ENVIRONMENT');
       if (sentryDsn.isNotEmpty) {
         await Sentry.init((options) {
           options.dsn = sentryDsn;
           options.tracesSampleRate = 0;
+          if (sentryEnvironment.isNotEmpty) {
+            options.environment = sentryEnvironment;
+          }
         });
         sentryInitialized = true;
       }
