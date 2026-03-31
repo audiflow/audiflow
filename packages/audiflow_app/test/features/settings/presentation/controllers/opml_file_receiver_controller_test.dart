@@ -6,7 +6,6 @@ import 'package:checks/checks.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:path/path.dart' as p;
 
 import '../../../../helpers/fakes.dart';
 
@@ -104,7 +103,7 @@ void main() {
     test('processes file:// URI with .opml extension', () async {
       // Write a temporary OPML file
       final tmpDir = Directory.systemTemp.createTempSync('opml_test');
-      final file = File(p.join(tmpDir.path, 'test.opml'));
+      final file = File('${tmpDir.path}/test.opml');
       file.writeAsStringSync(_validOpml);
       addTearDown(() => tmpDir.deleteSync(recursive: true));
 
