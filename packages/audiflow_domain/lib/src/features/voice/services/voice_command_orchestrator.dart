@@ -33,12 +33,23 @@ part 'voice_command_orchestrator.g.dart';
 /// ```
 @Riverpod(keepAlive: true)
 class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
-  late SpeechRecognitionRepository _speechRepository;
-  late PlayPodcastByNameService _playPodcastService;
-  late VoiceCommandExecutor _executor;
-  late Logger? _logger;
-  late SettingsIntentResolver _settingsResolver;
-  late SettingsMetadataRegistry _settingsRegistry;
+  SpeechRecognitionRepository? _speechRepository;
+  PlayPodcastByNameService? _playPodcastService;
+  VoiceCommandExecutor? _executor;
+  Logger? _logger;
+  SettingsIntentResolver? _settingsResolver;
+  SettingsMetadataRegistry? _settingsRegistry;
+
+  SpeechRecognitionRepository get _speech =>
+      _speechRepository ?? (throw StateError('build() not called'));
+  PlayPodcastByNameService get _playPodcast =>
+      _playPodcastService ?? (throw StateError('build() not called'));
+  VoiceCommandExecutor get _exec =>
+      _executor ?? (throw StateError('build() not called'));
+  SettingsIntentResolver get _settings =>
+      _settingsResolver ?? (throw StateError('build() not called'));
+  SettingsMetadataRegistry get _registry =>
+      _settingsRegistry ?? (throw StateError('build() not called'));
 
   bool _isInitialized = false;
   Completer<void>? _listeningCompleter;
@@ -50,8 +61,9 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
     _executor = ref.watch(voiceCommandExecutorProvider);
     _logger = ref.watch(namedLoggerProvider('VoiceOrchestrator'));
 
-    _settingsRegistry = SettingsMetadataRegistry();
-    _settingsResolver = SettingsIntentResolver(_settingsRegistry);
+    final registry = SettingsMetadataRegistry();
+    _settingsRegistry = registry;
+    _settingsResolver = SettingsIntentResolver(registry);
 
     // Reset initialization flag — dependencies may be new instances
     _isInitialized = false;
@@ -70,7 +82,7 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
     _logger?.i('Initializing voice command system');
 
     // Initialize speech recognition
-    final speechAvailable = await _speechRepository.initialize();
+    final speechAvailable = await _speech.initialize();
     if (!speechAvailable) {
       _logger?.w('Speech recognition not available');
       state = const VoiceRecognitionState.error(
@@ -119,7 +131,7 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
     _listeningCompleter = Completer<void>();
     String? finalTranscription;
 
-    final started = await _speechRepository.startListening(
+    final started = await _speech.startListening(
       onResult: (text, isFinal) {
         if (isFinal) {
           finalTranscription = text;
@@ -160,7 +172,7 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
   /// Cancel the current voice command operation.
   Future<void> cancelVoiceCommand() async {
     _logger?.i('Cancelling voice command');
-    await _speechRepository.cancelListening();
+    await _speech.cancelListening();
     _listeningCompleter?.complete();
     _listeningCompleter = null;
     _transitionToIdle();
@@ -187,7 +199,7 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
       );
       return;
     }
-    final metadata = _settingsResolver.registry.findByKey(key);
+    final metadata = _settings.registry.findByKey(key);
     state = VoiceRecognitionState.settingsAutoApplied(
       key: key,
       displayNameKey: metadata?.displayNameKey ?? key,
@@ -238,7 +250,7 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
       );
       return;
     }
-    final metadata = _settingsResolver.registry.findByKey(candidate.key);
+    final metadata = _settings.registry.findByKey(candidate.key);
     state = VoiceRecognitionState.settingsAutoApplied(
       key: candidate.key,
       displayNameKey: metadata?.displayNameKey ?? candidate.key,
@@ -267,9 +279,7 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
 
     // No simple match — try platform-native NLU for settings resolution first
     final settingsRepo = ref.read(appSettingsRepositoryProvider);
-    final schemaJson = jsonEncode(
-      _settingsResolver.registry.toJson(settingsRepo),
-    );
+    final schemaJson = jsonEncode(_settings.registry.toJson(settingsRepo));
 
     final platformResult = await AudiflowAi.instance.resolveSettingsIntent(
       transcription: transcription,
@@ -343,10 +353,10 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
         case VoiceIntent.play:
           await _handlePlayCommand(command);
         case VoiceIntent.pause:
-          await _executor.pause();
+          await _exec.pause();
           state = const VoiceRecognitionState.success(message: 'Paused');
         case VoiceIntent.stop:
-          await _executor.stop();
+          await _exec.stop();
           state = const VoiceRecognitionState.success(message: 'Stopped');
         case VoiceIntent.search:
           // Search navigation is handled by the UI layer
@@ -356,12 +366,12 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
             message: 'Searching for "$query"',
           );
         case VoiceIntent.skipForward:
-          await _executor.skipForward();
+          await _exec.skipForward();
           state = const VoiceRecognitionState.success(
             message: 'Skipping forward',
           );
         case VoiceIntent.skipBackward:
-          await _executor.skipBackward();
+          await _exec.skipBackward();
           state = const VoiceRecognitionState.success(
             message: 'Skipping backward',
           );
@@ -388,12 +398,12 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
             message: 'Removed from queue',
           );
         case VoiceIntent.clearQueue:
-          await _executor.clearQueue();
+          await _exec.clearQueue();
           state = const VoiceRecognitionState.success(message: 'Queue cleared');
         case VoiceIntent.seek:
           final seconds = int.tryParse(command.parameters['seconds'] ?? '');
           if (seconds != null) {
-            await _executor.seek(Duration(seconds: seconds));
+            await _exec.seek(Duration(seconds: seconds));
           }
           state = const VoiceRecognitionState.success(message: 'Seeking');
         case VoiceIntent.changeSettings:
@@ -413,13 +423,13 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
     // Create snapshot service on-demand with a fresh repository reference
     // to avoid stale data after _applySetting invalidates the provider.
     final snapshotService = SettingsSnapshotService(
-      registry: _settingsRegistry,
+      registry: _registry,
       settingsRepository: ref.read(appSettingsRepositoryProvider),
     );
 
     // Build the current values map from the snapshot service
     final currentValues = <String, String>{};
-    for (final metadata in _settingsResolver.registry.allSettings) {
+    for (final metadata in _settings.registry.allSettings) {
       currentValues[metadata.key] = snapshotService.getCurrentValue(
         metadata.key,
       );
@@ -430,7 +440,7 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
     if (command.settingsPayload != null) {
       // Platform NLU produced a structured payload — resolve it directly.
       _logger?.i('Resolving settings from platform payload');
-      resolution = _settingsResolver.resolve(
+      resolution = _settings.resolve(
         command.settingsPayload!,
         currentValues: currentValues,
       );
@@ -464,7 +474,7 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
           );
           return;
         }
-        final metadata = _settingsResolver.registry.findByKey(key);
+        final metadata = _settings.registry.findByKey(key);
         state = VoiceRecognitionState.settingsAutoApplied(
           key: key,
           displayNameKey: metadata?.displayNameKey ?? key,
@@ -479,7 +489,7 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
         :final newValue,
         :final confidence,
       ):
-        final metadata = _settingsResolver.registry.findByKey(key);
+        final metadata = _settings.registry.findByKey(key);
         state = VoiceRecognitionState.settingsLowConfidence(
           key: key,
           displayNameKey: metadata?.displayNameKey ?? key,
@@ -507,7 +517,7 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
 
     // Bare "play" / "再生" without podcast name = resume current playback
     if (podcastName == null || podcastName.isEmpty) {
-      await _executor.resume();
+      await _exec.resume();
       state = const VoiceRecognitionState.success(message: 'Resuming playback');
       return;
     }
@@ -515,7 +525,7 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
     _logger?.i('Playing latest episode of: $podcastName');
 
     try {
-      await _playPodcastService.playLatestEpisode(podcastName);
+      await _playPodcast.playLatestEpisode(podcastName);
       state = VoiceRecognitionState.success(
         message: 'Playing latest episode of "$podcastName"',
       );
@@ -601,7 +611,7 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
   /// target value -- so it returns [SettingsResolution.notFound] to show an
   /// informative error rather than a dead-end disambiguation screen.
   SettingsResolution? _resolveFromTranscription(String transcription) {
-    final matches = _settingsRegistry.findBySynonym(transcription);
+    final matches = _registry.findBySynonym(transcription);
     if (matches.isEmpty) return null;
 
     // Synonym matching identified one or more candidate settings but cannot
@@ -679,7 +689,7 @@ class VoiceCommandOrchestrator extends _$VoiceCommandOrchestrator {
     required String key,
     required String value,
   }) async {
-    final result = await _executor.applySetting(key: key, value: value);
+    final result = await _exec.applySetting(key: key, value: value);
     if (result.isSuccess) {
       ref.invalidate(appSettingsRepositoryProvider);
     }
