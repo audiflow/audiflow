@@ -20,19 +20,25 @@ class MainActivity : AudioServiceActivity() {
                         result.error("INVALID_ARGUMENT", "URI is required", null)
                         return@setMethodCallHandler
                     }
-                    try {
-                        val uri = Uri.parse(uriString)
-                        val content = contentResolver.openInputStream(uri)?.use {
-                            it.bufferedReader().readText()
+                    Thread {
+                        try {
+                            val uri = Uri.parse(uriString)
+                            val content = contentResolver.openInputStream(uri)?.use {
+                                it.bufferedReader().readText()
+                            }
+                            if (content != null) {
+                                runOnUiThread { result.success(content) }
+                            } else {
+                                runOnUiThread {
+                                    result.error("READ_FAILED", "Could not read URI", null)
+                                }
+                            }
+                        } catch (e: Exception) {
+                            val message = e.message
+                                ?: "Failed to read URI: ${e::class.java.simpleName}"
+                            runOnUiThread { result.error("READ_FAILED", message, null) }
                         }
-                        if (content != null) {
-                            result.success(content)
-                        } else {
-                            result.error("READ_FAILED", "Could not read URI", null)
-                        }
-                    } catch (e: Exception) {
-                        result.error("READ_FAILED", e.message, null)
-                    }
+                    }.start()
                 }
                 else -> result.notImplemented()
             }

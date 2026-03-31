@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:app_links/app_links.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -58,6 +59,9 @@ class OpmlFileReceiverController extends _$OpmlFileReceiverController {
   }
 
   Future<void> _handleUri(Uri uri) async {
+    const supportedSchemes = {'file', 'content'};
+    if (!supportedSchemes.contains(uri.scheme)) return;
+
     final uriString = uri.toString();
     final isOpml = uriString.endsWith('.opml') || uriString.endsWith('.xml');
     // content:// URIs may lack a file extension; accept them unconditionally
@@ -99,18 +103,25 @@ class OpmlFileReceiverController extends _$OpmlFileReceiverController {
   /// Reads file content from either a file:// or content:// URI.
   Future<String> _readContent(Uri uri) async {
     if (uri.scheme == 'content') {
-      // Android content:// URIs require ContentResolver via platform channel
-      final result = await _channel.invokeMethod<String>(
-        'readContentUri',
-        uri.toString(),
-      );
-      if (result == null) {
-        throw const FormatException('Failed to read content from URI');
+      try {
+        final result = await _channel.invokeMethod<String>(
+          'readContentUri',
+          uri.toString(),
+        );
+        if (result == null) {
+          throw const FormatException('Failed to read content from URI');
+        }
+        return result;
+      } on PlatformException catch (e) {
+        throw FormatException(e.message ?? 'Failed to read content from URI');
       }
-      return result;
     }
     return File(uri.toFilePath()).readAsString();
   }
+
+  /// Exposes [_handleUri] for unit testing.
+  @visibleForTesting
+  Future<void> handleUriForTest(Uri uri) => _handleUri(uri);
 
   /// Resets state to idle after navigation has been handled.
   void reset() {
