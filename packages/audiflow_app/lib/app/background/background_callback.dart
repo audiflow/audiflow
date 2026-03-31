@@ -59,11 +59,7 @@ void backgroundCallback() {
 
     try {
       final dir = await getApplicationDocumentsDirectory();
-      isar = await Isar.open(
-        isarSchemas,
-        directory: dir.path,
-        name: 'audiflow',
-      );
+      isar = await openIsarWithRecovery(directory: dir.path, logger: logger);
 
       if (sentryInitialized) {
         Sentry.addBreadcrumb(

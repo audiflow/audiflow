@@ -73,11 +73,7 @@ Future<void> _startApp(String smartPlaylistConfigBaseUrl) async {
   await _configureOrientation();
 
   final dir = await getApplicationDocumentsDirectory();
-  final isar = await Isar.open(
-    isarSchemas,
-    directory: dir.path,
-    name: 'audiflow',
-  );
+  final isar = await openIsarWithRecovery(directory: dir.path);
   final dio = Dio(
     BaseOptions(
       connectTimeout: const Duration(seconds: 30),
