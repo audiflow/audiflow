@@ -71,7 +71,7 @@ ProviderContainer _containerFor(_FakeOrchestrator fake) {
 void main() {
   group('VoiceTriggerButton', () {
     group('idle state', () {
-      testWidgets('renders mic outline icon (fill 0)', (tester) async {
+      testWidgets('renders outlined mic icon when idle', (tester) async {
         final fake = _FakeOrchestrator(const VoiceRecognitionState.idle());
         final container = _containerFor(fake);
         addTearDown(container.dispose);
@@ -102,7 +102,7 @@ void main() {
     });
 
     group('listening state', () {
-      testWidgets('renders filled mic icon (fill 1)', (tester) async {
+      testWidgets('renders filled mic icon when listening', (tester) async {
         final fake = _FakeOrchestrator(const VoiceRecognitionState.listening());
         final container = _containerFor(fake);
         addTearDown(container.dispose);
