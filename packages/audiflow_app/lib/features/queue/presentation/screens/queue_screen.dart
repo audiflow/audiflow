@@ -2,7 +2,6 @@ import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../controllers/queue_controller.dart';
@@ -141,7 +140,7 @@ class QueueScreen extends ConsumerWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Symbols.queue_music,
+              Icons.queue_music,
               size: 64,
               color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
             ),

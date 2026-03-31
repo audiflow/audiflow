@@ -2,7 +2,6 @@ import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../library/presentation/controllers/library_controller.dart';
@@ -57,7 +56,7 @@ class StationListTile extends ConsumerWidget {
         ),
       ),
       trailing: Icon(
-        Symbols.chevron_right,
+        Icons.chevron_right,
         color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
       ),
       onTap: onTap,

@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
 
 // Forward durations always use flipped replay + text overlay for visual
 // consistency with the backward icons. No dedicated forward_N glyphs.
 
 IconData? _skipBackwardIconData(int seconds) => switch (seconds) {
-  5 => Symbols.replay_5,
-  10 => Symbols.replay_10,
-  30 => Symbols.replay_30,
+  5 => Icons.replay_5,
+  10 => Icons.replay_10,
+  30 => Icons.replay_30,
   _ => null,
 };
 
@@ -48,9 +47,9 @@ class SkipDurationIcon extends StatelessWidget {
     final icon = isForward
         ? Transform.flip(
             flipX: true,
-            child: Icon(Symbols.replay, size: size, color: color),
+            child: Icon(Icons.replay, size: size, color: color),
           )
-        : Icon(Symbols.replay, size: size, color: color);
+        : Icon(Icons.replay, size: size, color: color);
 
     return ExcludeSemantics(
       child: SizedBox(

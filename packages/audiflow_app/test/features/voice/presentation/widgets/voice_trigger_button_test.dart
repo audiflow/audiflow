@@ -5,7 +5,6 @@ import 'package:checks/checks.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:material_symbols_icons/symbols.dart';
 
 // ---------------------------------------------------------------------------
 // Fakes
@@ -80,9 +79,9 @@ void main() {
         await tester.pumpWidget(_buildTestApp(container));
         await tester.pump();
 
-        // Outline mic: fill == 0 — find the Icon widget with Symbols.mic
+        // Outline mic when idle
         final iconFinder = find.byWidgetPredicate(
-          (w) => w is Icon && w.icon == Symbols.mic && (w.fill ?? 0) != 1,
+          (w) => w is Icon && w.icon == Icons.mic_outlined,
         );
         check(iconFinder.evaluate().length).equals(1);
       });
@@ -112,7 +111,7 @@ void main() {
         await tester.pump();
 
         final iconFinder = find.byWidgetPredicate(
-          (w) => w is Icon && w.icon == Symbols.mic && w.fill == 1,
+          (w) => w is Icon && w.icon == Icons.mic,
         );
         check(iconFinder.evaluate().length).equals(1);
       });
@@ -126,7 +125,7 @@ void main() {
         await tester.pump();
 
         final iconFinder = find.byWidgetPredicate(
-          (w) => w is Icon && w.icon == Symbols.mic && w.fill == 1,
+          (w) => w is Icon && w.icon == Icons.mic,
         );
         final icon = tester.widget<Icon>(iconFinder);
         check(icon.color).equals(const Color(0xFFFFC107));

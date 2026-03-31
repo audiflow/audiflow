@@ -1,7 +1,6 @@
 import 'package:audiflow_core/audiflow_core.dart';
 import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
 
 import '../../styles/spacing.dart';
 
@@ -332,7 +331,7 @@ class _TranscriptBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     return Semantics(
       label: label,
-      child: Icon(Symbols.closed_caption, size: 16, color: color),
+      child: Icon(Icons.closed_caption, size: 16, color: color),
     );
   }
 }

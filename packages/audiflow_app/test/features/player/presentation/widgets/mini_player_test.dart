@@ -6,7 +6,6 @@ import 'package:checks/checks.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:material_symbols_icons/symbols.dart';
 
 const _nowPlaying = NowPlayingInfo(
   episodeUrl: 'https://example.com/episode.mp3',
@@ -127,7 +126,7 @@ void main() {
 
       // Verify pause icon is shown (playing state)
       check(
-        find.byIcon(Symbols.pause),
+        find.byIcon(Icons.pause),
       ).has((f) => f.evaluate().length, 'count').equals(1);
 
       // Tap skip forward - controller transitions to loading, but
@@ -138,7 +137,7 @@ void main() {
       // Pause icon should still be visible despite underlying state
       // being loading (the _isSeeking flag freezes the displayed icon)
       check(
-        find.byIcon(Symbols.pause),
+        find.byIcon(Icons.pause),
       ).has((f) => f.evaluate().length, 'count').equals(1);
 
       // Verify no loading spinner is shown (proving _isSeeking works)

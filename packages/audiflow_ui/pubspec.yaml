@@ -16,7 +16,6 @@ dependencies:
   flutter_screenutil: 5.9.3
   cached_network_image: ^3.3.1
   extended_image: ^10.0.1
-  material_symbols_icons: ^4.2892.0
   dynamic_color: ^1.8.0
   sliver_tools: ^0.2.12
 
