@@ -25,19 +25,24 @@ void backgroundCallback() {
     var sentryInitialized = false;
     try {
       const sentryDsn = String.fromEnvironment('SENTRY_DSN');
-      const sentryEnvironment = String.fromEnvironment('SENTRY_ENVIRONMENT');
+      const sentryEnvironment = String.fromEnvironment(
+        'SENTRY_ENVIRONMENT',
+        defaultValue: 'unknown',
+      );
       if (sentryDsn.isNotEmpty) {
         await Sentry.init((options) {
           options.dsn = sentryDsn;
           options.tracesSampleRate = 0;
-          if (sentryEnvironment.isNotEmpty) {
-            options.environment = sentryEnvironment;
-          }
+          options.environment = sentryEnvironment;
         });
         sentryInitialized = true;
       }
-    } catch (e) {
-      logger.w('Sentry init failed, continuing without telemetry', error: e);
+    } catch (e, stack) {
+      logger.w(
+        'Sentry init failed, continuing without telemetry',
+        error: e,
+        stackTrace: stack,
+      );
     }
 
     if (sentryInitialized) {
