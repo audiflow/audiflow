@@ -912,6 +912,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.13.0"
+  material_symbols_icons:
+    dependency: transitive
+    description:
+      name: material_symbols_icons
+      sha256: "1cbe8f84d56e64c616fc3543e6ce22ae06d8bd27068e8fba2622581691d24080"
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.2928.0"
   melos:
     dependency: "direct dev"
     description:

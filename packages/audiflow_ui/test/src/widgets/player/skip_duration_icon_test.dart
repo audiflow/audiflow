@@ -2,6 +2,7 @@ import 'package:audiflow_ui/src/widgets/player/skip_duration_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:checks/checks.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 void main() {
   group('SkipDurationIcon', () {
@@ -16,7 +17,7 @@ void main() {
         ),
       );
 
-      check(find.byIcon(Icons.replay_10).evaluate()).isNotEmpty();
+      check(find.byIcon(Symbols.replay_10).evaluate()).isNotEmpty();
     });
 
     testWidgets('renders dedicated icon for 30s backward', (tester) async {
@@ -28,7 +29,7 @@ void main() {
         ),
       );
 
-      check(find.byIcon(Icons.replay_30).evaluate()).isNotEmpty();
+      check(find.byIcon(Symbols.replay_30).evaluate()).isNotEmpty();
     });
 
     // -- Backward: text overlay for non-dedicated -----------------------
@@ -43,7 +44,7 @@ void main() {
       );
 
       check(find.text('15').evaluate()).isNotEmpty();
-      check(find.byIcon(Icons.replay).evaluate()).isNotEmpty();
+      check(find.byIcon(Symbols.replay).evaluate()).isNotEmpty();
     });
 
     // -- Forward: always text overlay (flipped replay) ------------------
@@ -60,7 +61,7 @@ void main() {
       );
 
       check(find.text('30').evaluate()).isNotEmpty();
-      check(find.byIcon(Icons.replay).evaluate()).isNotEmpty();
+      check(find.byIcon(Symbols.replay).evaluate()).isNotEmpty();
     });
 
     testWidgets('renders flipped replay with text for 15s forward', (
@@ -75,7 +76,7 @@ void main() {
       );
 
       check(find.text('15').evaluate()).isNotEmpty();
-      check(find.byIcon(Icons.replay).evaluate()).isNotEmpty();
+      check(find.byIcon(Symbols.replay).evaluate()).isNotEmpty();
     });
 
     testWidgets('renders flipped replay with text for 45s forward', (
@@ -90,7 +91,7 @@ void main() {
       );
 
       check(find.text('45').evaluate()).isNotEmpty();
-      check(find.byIcon(Icons.replay).evaluate()).isNotEmpty();
+      check(find.byIcon(Symbols.replay).evaluate()).isNotEmpty();
     });
 
     // -- Size and color -------------------------------------------------
@@ -104,7 +105,7 @@ void main() {
         ),
       );
 
-      final icon = tester.widget<Icon>(find.byIcon(Icons.replay));
+      final icon = tester.widget<Icon>(find.byIcon(Symbols.replay));
       check(icon.size).equals(48);
     });
 
@@ -122,7 +123,7 @@ void main() {
         ),
       );
 
-      final icon = tester.widget<Icon>(find.byIcon(Icons.replay_10));
+      final icon = tester.widget<Icon>(find.byIcon(Symbols.replay_10));
       check(icon.color).equals(Colors.red);
     });
   });

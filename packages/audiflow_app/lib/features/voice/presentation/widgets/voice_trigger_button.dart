@@ -4,6 +4,8 @@ import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:material_symbols_icons/symbols.dart';
+
 import 'voice_trigger_style.dart';
 
 /// Inline app bar button that shows current voice state and triggers commands.
@@ -82,7 +84,7 @@ class _VoiceTriggerButtonState extends ConsumerState<VoiceTriggerButton>
 
     final bgColor = AppBarTriggerStyle.backgroundColor(cs, voiceState);
     final iconColor = AppBarTriggerStyle.iconColor(cs, voiceState);
-    final micIcon = VoiceTriggerStyle.micIcon(voiceState);
+    final fill = VoiceTriggerStyle.iconFill(voiceState);
     final shadows = AppBarTriggerStyle.boxShadows(cs, voiceState);
     final disabled = VoiceTriggerStyle.isTapDisabled(voiceState);
 
@@ -117,7 +119,12 @@ class _VoiceTriggerButtonState extends ConsumerState<VoiceTriggerButton>
                       borderRadius: BorderRadius.circular(10),
                       boxShadow: shadows,
                     ),
-                    child: Icon(micIcon, size: 20, color: iconColor),
+                    child: Icon(
+                      Symbols.mic,
+                      fill: fill,
+                      size: 20,
+                      color: iconColor,
+                    ),
                   ),
                 ),
               ),

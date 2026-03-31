@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../controllers/voice_command_controller.dart';
@@ -358,7 +359,7 @@ class _SuccessContent extends StatelessWidget {
             ),
             alignment: Alignment.center,
             child: Icon(
-              Icons.check_circle,
+              Symbols.check_circle,
               size: 24,
               color: colorScheme.tertiary,
             ),
@@ -399,7 +400,7 @@ class _ErrorContent extends StatelessWidget {
               color: colorScheme.error.withValues(alpha: 0.15),
             ),
             alignment: Alignment.center,
-            child: Icon(Icons.error, size: 24, color: colorScheme.error),
+            child: Icon(Symbols.error, size: 24, color: colorScheme.error),
           ),
           const SizedBox(height: 12),
           Text(
@@ -446,7 +447,7 @@ class _SettingsAutoAppliedContent extends ConsumerWidget {
             ),
             alignment: Alignment.center,
             child: Icon(
-              Icons.check_circle,
+              Symbols.check_circle,
               size: 24,
               color: colorScheme.tertiary,
             ),
@@ -620,7 +621,7 @@ class _SettingsLowConfidenceContent extends ConsumerWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.help, size: 24, color: colorScheme.tertiary),
+          Icon(Symbols.help, size: 24, color: colorScheme.tertiary),
           const SizedBox(height: 8),
           Text(
             '$displayName: ${state.oldValue} -> ${state.newValue}?',

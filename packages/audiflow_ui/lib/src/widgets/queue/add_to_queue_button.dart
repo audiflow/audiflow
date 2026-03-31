@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 /// Button to add episode to queue.
 ///
@@ -37,7 +38,7 @@ class AddToQueueButton extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 6),
             child: Icon(
-              Icons.playlist_add,
+              Symbols.playlist_add,
               size: iconSize,
               color: colorScheme.onSurfaceVariant,
             ),
