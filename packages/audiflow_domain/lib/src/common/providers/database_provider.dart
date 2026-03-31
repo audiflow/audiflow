@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:isar_community/isar.dart';
+import 'package:logger/logger.dart';
 import 'package:riverpod/riverpod.dart';
 
 import '../../features/download/models/download_task.dart';
@@ -36,6 +39,38 @@ const List<CollectionSchema<dynamic>> isarSchemas = [
   StationPodcastSchema,
   StationEpisodeSchema,
 ];
+
+/// Opens Isar with schema mismatch recovery.
+///
+/// On [IsarError] (e.g. collection ID mismatch after app update),
+/// deletes the existing database files and retries. Data loss is
+/// acceptable because subscriptions and episodes are re-synced from RSS.
+Future<Isar> openIsarWithRecovery({
+  required String directory,
+  String name = 'audiflow',
+  Logger? logger,
+}) async {
+  try {
+    return await Isar.open(isarSchemas, directory: directory, name: name);
+  } on IsarError catch (e) {
+    logger?.w('Isar open failed, deleting database for recovery', error: e);
+    await _deleteIsarFiles(directory: directory, name: name);
+    return Isar.open(isarSchemas, directory: directory, name: name);
+  }
+}
+
+Future<void> _deleteIsarFiles({
+  required String directory,
+  required String name,
+}) async {
+  final extensions = ['', '.lock'];
+  for (final ext in extensions) {
+    final file = File('$directory/$name.isar$ext');
+    if (file.existsSync()) {
+      await file.delete();
+    }
+  }
+}
 
 final isarProvider = Provider<Isar>((ref) {
   throw UnimplementedError('isarProvider must be overridden at startup');
