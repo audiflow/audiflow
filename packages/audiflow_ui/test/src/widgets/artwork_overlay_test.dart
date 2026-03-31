@@ -197,18 +197,18 @@ void main() {
       check(find.byType(ArtworkOverlay).evaluate()).isEmpty();
     });
 
-    testWidgets('does not dismiss when tapping artwork area', (tester) async {
+    testWidgets('dismisses when tapping artwork area', (tester) async {
       await tester.pumpWidget(buildSubject());
       await tester.tap(find.text('Open'));
       await tester.pump();
 
-      // Tap the center of the screen (where the artwork is)
-      final center = tester.getCenter(find.byType(ArtworkOverlay));
+      // Tap the artwork widget directly
+      final center = tester.getCenter(find.byType(ExtendedImage));
       await tester.tapAt(center);
       await tester.pump();
 
-      // Overlay should still be visible
-      check(find.byType(ArtworkOverlay).evaluate()).isNotEmpty();
+      // Overlay should be dismissed
+      check(find.byType(ArtworkOverlay).evaluate()).isEmpty();
     });
 
     testWidgets('renders ClipRRect with border radius', (tester) async {
