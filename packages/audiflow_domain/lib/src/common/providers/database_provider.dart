@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:isar_community/isar.dart';
 import 'package:logger/logger.dart';
+import 'package:path/path.dart' as p;
 import 'package:riverpod/riverpod.dart';
 
 import '../../features/download/models/download_task.dart';
@@ -40,11 +41,15 @@ const List<CollectionSchema<dynamic>> isarSchemas = [
   StationEpisodeSchema,
 ];
 
-/// Opens Isar with schema mismatch recovery.
+/// Opens Isar with automatic recovery on any [IsarError].
 ///
-/// On [IsarError] (e.g. collection ID mismatch after app update),
-/// deletes the existing database files and retries. Data loss is
-/// acceptable because subscriptions and episodes are re-synced from RSS.
+/// When Isar fails to open (e.g. schema mismatch after app update,
+/// corrupted files, or other internal errors), deletes all database
+/// files matching `$name.isar*` and retries. Data loss is acceptable
+/// because subscriptions and episodes are re-synced from RSS.
+///
+/// Note: [IsarError] extends [Error] with only a `message` string and
+/// no structured error codes, so narrowing the catch is not feasible.
 Future<Isar> openIsarWithRecovery({
   required String directory,
   String name = 'audiflow',
@@ -52,8 +57,12 @@ Future<Isar> openIsarWithRecovery({
 }) async {
   try {
     return await Isar.open(isarSchemas, directory: directory, name: name);
-  } on IsarError catch (e) {
-    logger?.w('Isar open failed, deleting database for recovery', error: e);
+  } on IsarError catch (e, stack) {
+    logger?.w(
+      'Isar open failed, deleting database for recovery',
+      error: e,
+      stackTrace: stack,
+    );
     await _deleteIsarFiles(directory: directory, name: name);
     return Isar.open(isarSchemas, directory: directory, name: name);
   }
@@ -63,11 +72,24 @@ Future<void> _deleteIsarFiles({
   required String directory,
   required String name,
 }) async {
-  final extensions = ['', '.lock'];
-  for (final ext in extensions) {
-    final file = File('$directory/$name.isar$ext');
-    if (file.existsSync()) {
-      await file.delete();
+  final dir = Directory(directory);
+  if (!await dir.exists()) {
+    return;
+  }
+
+  final prefix = '$name.isar';
+  await for (final entity in dir.list()) {
+    if (entity is! File) {
+      continue;
+    }
+
+    final fileName = p.basename(entity.path);
+    if (fileName.startsWith(prefix)) {
+      try {
+        await entity.delete();
+      } on FileSystemException {
+        // Ignore failures during cleanup; recovery will retry opening Isar.
+      }
     }
   }
 }
