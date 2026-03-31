@@ -2,9 +2,12 @@ import 'dart:io';
 
 import 'package:app_links/app_links.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
+import 'package:flutter/services.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'opml_file_receiver_controller.g.dart';
+
+const _channel = MethodChannel('com.reedom.audiflow_app/content_resolver');
 
 /// Sealed result type for externally received OPML file.
 sealed class OpmlFileReceiverState {}
@@ -55,15 +58,16 @@ class OpmlFileReceiverController extends _$OpmlFileReceiverController {
   }
 
   Future<void> _handleUri(Uri uri) async {
-    final path = uri.toFilePath();
-    if (!path.endsWith('.opml') && !path.endsWith('.xml')) {
-      return;
-    }
+    final uriString = uri.toString();
+    final isOpml = uriString.endsWith('.opml') || uriString.endsWith('.xml');
+    // content:// URIs may lack a file extension; accept them unconditionally
+    // and let the parser reject non-OPML content below.
+    if (uri.scheme == 'file' && !isOpml) return;
 
     state = OpmlFileReceiverLoading();
 
     try {
-      final content = await File(path).readAsString();
+      final content = await _readContent(uri);
       final parser = OpmlParserService();
       final entries = parser.parse(content);
 
@@ -90,6 +94,22 @@ class OpmlFileReceiverController extends _$OpmlFileReceiverController {
     } on Exception catch (e) {
       state = OpmlFileReceiverError(e.toString());
     }
+  }
+
+  /// Reads file content from either a file:// or content:// URI.
+  Future<String> _readContent(Uri uri) async {
+    if (uri.scheme == 'content') {
+      // Android content:// URIs require ContentResolver via platform channel
+      final result = await _channel.invokeMethod<String>(
+        'readContentUri',
+        uri.toString(),
+      );
+      if (result == null) {
+        throw const FormatException('Failed to read content from URI');
+      }
+      return result;
+    }
+    return File(uri.toFilePath()).readAsString();
   }
 
   /// Resets state to idle after navigation has been handled.
