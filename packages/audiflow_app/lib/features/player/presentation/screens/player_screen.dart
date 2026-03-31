@@ -5,7 +5,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../../routing/app_router.dart';
@@ -276,7 +275,7 @@ class _SheetHeaderWithTabs extends StatelessWidget {
             button: true,
             label: closeLabel,
             child: IconButton(
-              icon: const Icon(Symbols.keyboard_arrow_down),
+              icon: const Icon(Icons.keyboard_arrow_down),
               onPressed: () => CupertinoSheetRoute.popSheet(context),
             ),
           ),
@@ -399,7 +398,7 @@ class _Placeholder extends StatelessWidget {
     return Container(
       color: colorScheme.surfaceContainerHighest,
       child: Icon(
-        Symbols.podcasts,
+        Icons.podcasts,
         color: colorScheme.onSurfaceVariant,
         size: 100,
       ),
@@ -659,7 +658,7 @@ class _PlayerPlayPauseButton extends ConsumerWidget {
       button: true,
       label: isPlaying ? l10n.playerPauseLabel : l10n.playerPlayLabel,
       child: IconButton.filled(
-        icon: Icon(isPlaying ? Symbols.pause : Symbols.play_arrow, fill: 1),
+        icon: Icon(isPlaying ? Icons.pause : Icons.play_arrow),
         iconSize: 40,
         style: IconButton.styleFrom(
           backgroundColor: colorScheme.primary,

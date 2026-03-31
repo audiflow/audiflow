@@ -7,7 +7,6 @@ import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:material_symbols_icons/symbols.dart';
 
 void main() {
   group('LibraryScreen', () {
@@ -75,7 +74,7 @@ void main() {
       await tester.pumpWidget(buildTestWidget(container));
       await tester.pumpAndSettle();
 
-      expect(find.byIcon(Symbols.library_music), findsOneWidget);
+      expect(find.byIcon(Icons.library_music), findsOneWidget);
     });
 
     testWidgets('displays empty state text when no subscriptions', (

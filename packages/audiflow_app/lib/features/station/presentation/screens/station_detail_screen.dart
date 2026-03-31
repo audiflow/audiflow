@@ -4,7 +4,6 @@ import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../../routing/app_router.dart';
@@ -135,7 +134,7 @@ class _StationDetailContentState extends ConsumerState<_StationDetailContent> {
         title: Text(widget.station.name),
         actions: [
           IconButton(
-            icon: const Icon(Symbols.edit),
+            icon: const Icon(Icons.edit),
             tooltip: AppLocalizations.of(context).stationEditTooltip,
             onPressed: () => context.push(
               '${AppRoutes.library}/station/${widget.station.id}/edit',
@@ -192,7 +191,7 @@ class _StationDetailContentState extends ConsumerState<_StationDetailContent> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Symbols.radio,
+              Icons.radio,
               size: 64,
               color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
             ),

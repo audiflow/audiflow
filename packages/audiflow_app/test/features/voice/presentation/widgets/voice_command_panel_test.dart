@@ -7,7 +7,6 @@ import 'package:checks/checks.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:material_symbols_icons/symbols.dart';
 
 // ---------------------------------------------------------------------------
 // Fakes
@@ -340,7 +339,7 @@ void main() {
         await tester.pump();
 
         final iconFinder = find.byWidgetPredicate(
-          (w) => w is Icon && w.icon == Symbols.check_circle,
+          (w) => w is Icon && w.icon == Icons.check_circle,
         );
         check(iconFinder.evaluate().isNotEmpty).isTrue();
       });
@@ -388,7 +387,7 @@ void main() {
         await tester.pump();
 
         final iconFinder = find.byWidgetPredicate(
-          (w) => w is Icon && w.icon == Symbols.error,
+          (w) => w is Icon && w.icon == Icons.error,
         );
         check(iconFinder.evaluate().isNotEmpty).isTrue();
       });
@@ -482,7 +481,7 @@ void main() {
 
         // Check icon
         final iconFinder = find.byWidgetPredicate(
-          (w) => w is Icon && w.icon == Symbols.check_circle,
+          (w) => w is Icon && w.icon == Icons.check_circle,
         );
         check(iconFinder.evaluate().isNotEmpty).isTrue();
 
@@ -512,7 +511,7 @@ void main() {
 
         // Help icon
         final iconFinder = find.byWidgetPredicate(
-          (w) => w is Icon && w.icon == Symbols.help,
+          (w) => w is Icon && w.icon == Icons.help,
         );
         check(iconFinder.evaluate().isNotEmpty).isTrue();
 

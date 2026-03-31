@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../../l10n/app_localizations.dart';
 
@@ -73,61 +72,61 @@ class VoiceSettingsScreen extends ConsumerWidget {
 
   static final _commands = [
     _VoiceCommandInfo(
-      icon: Symbols.play_arrow,
+      icon: Icons.play_arrow,
       descriptionResolver: (l10n) => l10n.voiceCommandPlay,
       phrasesEn: ['play', 'resume', 'start'],
       phrasesJa: ['再生', '再生して', 'プレイ'],
     ),
     _VoiceCommandInfo(
-      icon: Symbols.pause,
+      icon: Icons.pause,
       descriptionResolver: (l10n) => l10n.voiceCommandPause,
       phrasesEn: ['pause', 'hold'],
       phrasesJa: ['一時停止', '止めて'],
     ),
     _VoiceCommandInfo(
-      icon: Symbols.stop,
+      icon: Icons.stop,
       descriptionResolver: (l10n) => l10n.voiceCommandStop,
       phrasesEn: ['stop'],
       phrasesJa: ['停止'],
     ),
     _VoiceCommandInfo(
-      icon: Symbols.skip_next,
+      icon: Icons.skip_next,
       descriptionResolver: (l10n) => l10n.voiceCommandSkipForward,
       phrasesEn: ['skip', 'skip forward', 'next', 'forward'],
       phrasesJa: ['スキップ', '早送り', '次へ'],
     ),
     _VoiceCommandInfo(
-      icon: Symbols.skip_previous,
+      icon: Icons.skip_previous,
       descriptionResolver: (l10n) => l10n.voiceCommandSkipBackward,
       phrasesEn: ['skip back', 'rewind', 'previous', 'back'],
       phrasesJa: ['戻す', '巻き戻し', '前へ'],
     ),
     _VoiceCommandInfo(
-      icon: Symbols.search,
+      icon: Icons.search,
       descriptionResolver: (l10n) => l10n.voiceCommandSearch,
       phrasesEn: ['search [query]'],
       phrasesJa: ['[query]を検索'],
     ),
     _VoiceCommandInfo(
-      icon: Symbols.library_music,
+      icon: Icons.library_music,
       descriptionResolver: (l10n) => l10n.voiceCommandGoToLibrary,
       phrasesEn: ['go to library', 'open library'],
       phrasesJa: ['ライブラリを開く'],
     ),
     _VoiceCommandInfo(
-      icon: Symbols.queue_music,
+      icon: Icons.queue_music,
       descriptionResolver: (l10n) => l10n.voiceCommandGoToQueue,
       phrasesEn: ['go to queue', 'open queue'],
       phrasesJa: ['キューを開く'],
     ),
     _VoiceCommandInfo(
-      icon: Symbols.settings,
+      icon: Icons.settings,
       descriptionResolver: (l10n) => l10n.voiceCommandOpenSettings,
       phrasesEn: ['open settings'],
       phrasesJa: ['設定を開く'],
     ),
     _VoiceCommandInfo(
-      icon: Symbols.tune,
+      icon: Icons.tune,
       descriptionResolver: (l10n) => l10n.voiceCommandChangeSettings,
       phrasesEn: ['change [setting] to [value]'],
       phrasesJa: ['[設定]を[値]に変更'],
@@ -153,7 +152,7 @@ class _ExperimentalBanner extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Symbols.science, color: colorScheme.onErrorContainer, size: 20),
+          Icon(Icons.science, color: colorScheme.onErrorContainer, size: 20),
           const SizedBox(width: 12),
           Expanded(
             child: Column(

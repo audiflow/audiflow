@@ -2,7 +2,6 @@ import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../../l10n/app_localizations.dart';
 
@@ -228,11 +227,7 @@ class _MiniPlayerPlayPauseButton extends ConsumerWidget {
       button: true,
       label: isPlaying ? l10n.playerPauseLabel : l10n.playerPlayLabel,
       child: IconButton(
-        icon: Icon(
-          isPlaying ? Symbols.pause : Symbols.play_arrow,
-          fill: 1,
-          size: 32,
-        ),
+        icon: Icon(isPlaying ? Icons.pause : Icons.play_arrow, size: 32),
         color: colorScheme.primary,
         onPressed: () {
           final controller = ref.read(audioPlayerControllerProvider.notifier);

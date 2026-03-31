@@ -3,7 +3,6 @@ import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../download/presentation/helpers/download_action_helper.dart';
@@ -43,7 +42,7 @@ class QueueListTile extends ConsumerWidget {
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: Spacing.md),
         color: colorScheme.error,
-        child: Icon(Symbols.delete, color: colorScheme.onError),
+        child: Icon(Icons.delete, color: colorScheme.onError),
       ),
       child: ListTile(
         onTap: onTap,
@@ -60,7 +59,7 @@ class QueueListTile extends ConsumerWidget {
             ReorderableDragStartListener(
               index: index,
               child: Icon(
-                Symbols.drag_handle,
+                Icons.drag_handle,
                 color: colorScheme.onSurfaceVariant,
               ),
             ),
