@@ -13,7 +13,7 @@ IconData? _skipBackwardIconData(int seconds) => switch (seconds) {
 /// Displays a skip-duration icon that dynamically reflects the configured
 /// number of [seconds].
 ///
-/// Backward 5, 10, and 30 use dedicated Material Symbols (`replay_5`, etc.).
+/// Backward 5, 10, and 30 use built-in Material Icons (`replay_5`, etc.).
 /// All forward durations use a horizontally flipped `replay` icon with a text
 /// overlay so the style is consistent across all values.
 class SkipDurationIcon extends StatelessWidget {
@@ -32,7 +32,7 @@ class SkipDurationIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Backward 5/10/30 use dedicated Material Symbol glyphs.
+    // Backward 5/10/30 use built-in Material Icon glyphs.
     if (!isForward) {
       final dedicated = _skipBackwardIconData(seconds);
       if (dedicated != null) {
