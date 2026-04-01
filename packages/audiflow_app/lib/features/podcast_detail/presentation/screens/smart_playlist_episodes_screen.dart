@@ -37,7 +37,12 @@ class SmartPlaylistEpisodesScreen extends ConsumerStatefulWidget {
 
 class _SmartPlaylistEpisodesScreenState
     extends ConsumerState<SmartPlaylistEpisodesScreen> {
-  final _scrollController = ScrollController();
+  ScrollController? _fallbackScrollController;
+
+  ScrollController get _scrollController =>
+      PrimaryScrollController.maybeOf(context) ??
+      (_fallbackScrollController ??= ScrollController());
+
   late SortOrder _sortOrder;
   String _searchQuery = '';
 
@@ -54,7 +59,7 @@ class _SmartPlaylistEpisodesScreenState
 
   @override
   void dispose() {
-    _scrollController.dispose();
+    _fallbackScrollController?.dispose();
     super.dispose();
   }
 
