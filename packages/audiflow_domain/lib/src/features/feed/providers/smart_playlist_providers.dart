@@ -91,6 +91,7 @@ SmartPlaylistLocalDatasource smartPlaylistLocalDatasource(Ref ref) {
 /// operates in auto-detect mode (empty patterns list).
 @Riverpod(keepAlive: true)
 SmartPlaylistResolverService smartPlaylistResolverService(Ref ref) {
+  final logger = ref.watch(namedLoggerProvider('SmartPlaylistResolverService'));
   return SmartPlaylistResolverService(
     resolvers: [
       RssMetadataResolver(),
@@ -99,6 +100,7 @@ SmartPlaylistResolverService smartPlaylistResolverService(Ref ref) {
       YearResolver(),
     ],
     patterns: [],
+    logger: logger,
   );
 }
 
@@ -309,7 +311,7 @@ Future<SmartPlaylistGrouping?> _resolveAndPersistSmartPlaylists(
   Ref ref,
   int podcastId,
   String feedUrl,
-  dynamic logger, {
+  Logger logger, {
   String? podcastImageUrl,
 }) async {
   final episodeRepo = ref.watch(episodeRepositoryProvider);
@@ -339,7 +341,7 @@ Future<SmartPlaylistGrouping?> _resolveAndPersistSmartPlaylists(
       YearResolver(),
     ],
     patterns: config != null ? [config] : [],
-    logger: logger is Logger ? logger : null,
+    logger: logger,
   );
 
   final episodes = await episodeRepo.getByPodcastId(podcastId);
@@ -716,6 +718,7 @@ Future<SmartPlaylistGrouping?> _reResolveFromEpisodes(
   String feedUrl, {
   String? podcastImageUrl,
 }) async {
+  final logger = ref.watch(namedLoggerProvider('ReResolveSmartPlaylists'));
   final episodeRepo = ref.watch(episodeRepositoryProvider);
 
   // Load matching config from repository
@@ -738,6 +741,7 @@ Future<SmartPlaylistGrouping?> _reResolveFromEpisodes(
       YearResolver(),
     ],
     patterns: config != null ? [config] : [],
+    logger: logger,
   );
 
   final episodes = await episodeRepo.getByPodcastId(podcastId);
