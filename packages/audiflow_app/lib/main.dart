@@ -263,8 +263,7 @@ class _MyAppState extends ConsumerState<MyApp> {
 
     // Handle cold start: check if app was launched by notification
     final launchDetails = await plugin.getNotificationAppLaunchDetails();
-    if (launchDetails != null &&
-        (launchDetails.didNotificationLaunchApp ?? false)) {
+    if (launchDetails != null && launchDetails.didNotificationLaunchApp) {
       final route = NotificationTapHandler.parseNotificationRoute(
         launchDetails.notificationResponse?.payload,
       );
