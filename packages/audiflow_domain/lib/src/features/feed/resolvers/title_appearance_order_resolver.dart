@@ -22,7 +22,7 @@ import 'smart_playlist_resolver.dart';
 /// group's pattern with capture group 1.
 class TitleAppearanceOrderResolver implements SmartPlaylistResolver {
   @override
-  String get type => 'title_appearance';
+  String get type => 'titleAppearanceOrder';
 
   @override
   SmartPlaylistSortRule get defaultSort => const SmartPlaylistSortRule(

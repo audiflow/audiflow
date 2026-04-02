@@ -19,8 +19,8 @@ void main() {
       resolver = TitleAppearanceOrderResolver();
     });
 
-    test('type is "title_appearance"', () {
-      expect(resolver.type, 'title_appearance');
+    test('type is "titleAppearanceOrder"', () {
+      expect(resolver.type, 'titleAppearanceOrder');
     });
 
     test('returns null when no definition provided', () {
@@ -36,7 +36,7 @@ void main() {
       const definition = SmartPlaylistDefinition(
         id: 'test',
         displayName: 'Test',
-        resolverType: 'title_appearance',
+        resolverType: 'titleAppearanceOrder',
         groups: [
           SmartPlaylistGroupDef(
             id: 'extract',
@@ -79,7 +79,7 @@ void main() {
       const definition = SmartPlaylistDefinition(
         id: 'test',
         displayName: 'Test',
-        resolverType: 'title_appearance',
+        resolverType: 'titleAppearanceOrder',
         groups: [
           SmartPlaylistGroupDef(
             id: 'extract',
@@ -104,7 +104,7 @@ void main() {
       const definition = SmartPlaylistDefinition(
         id: 'test',
         displayName: 'Test',
-        resolverType: 'title_appearance',
+        resolverType: 'titleAppearanceOrder',
         groups: [
           SmartPlaylistGroupDef(
             id: 'extract',

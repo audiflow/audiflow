@@ -1,3 +1,4 @@
+import 'package:logger/logger.dart';
 import 'package:meta/meta.dart' show visibleForTesting;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -26,6 +27,7 @@ import '../repositories/smart_playlist_config_repository.dart';
 import '../repositories/smart_playlist_config_repository_impl.dart';
 import '../resolvers/category_resolver.dart';
 import '../resolvers/rss_metadata_resolver.dart';
+import '../resolvers/title_appearance_order_resolver.dart';
 import '../resolvers/year_resolver.dart';
 import '../services/smart_playlist_resolver_service.dart';
 
@@ -89,9 +91,16 @@ SmartPlaylistLocalDatasource smartPlaylistLocalDatasource(Ref ref) {
 /// operates in auto-detect mode (empty patterns list).
 @Riverpod(keepAlive: true)
 SmartPlaylistResolverService smartPlaylistResolverService(Ref ref) {
+  final logger = ref.watch(namedLoggerProvider('SmartPlaylistResolverService'));
   return SmartPlaylistResolverService(
-    resolvers: [RssMetadataResolver(), CategoryResolver(), YearResolver()],
+    resolvers: [
+      RssMetadataResolver(),
+      CategoryResolver(),
+      TitleAppearanceOrderResolver(),
+      YearResolver(),
+    ],
     patterns: [],
+    logger: logger,
   );
 }
 
@@ -302,7 +311,7 @@ Future<SmartPlaylistGrouping?> _resolveAndPersistSmartPlaylists(
   Ref ref,
   int podcastId,
   String feedUrl,
-  dynamic logger, {
+  Logger logger, {
   String? podcastImageUrl,
 }) async {
   final episodeRepo = ref.watch(episodeRepositoryProvider);
@@ -325,8 +334,14 @@ Future<SmartPlaylistGrouping?> _resolveAndPersistSmartPlaylists(
   }
 
   final resolverService = SmartPlaylistResolverService(
-    resolvers: [RssMetadataResolver(), CategoryResolver(), YearResolver()],
+    resolvers: [
+      RssMetadataResolver(),
+      CategoryResolver(),
+      TitleAppearanceOrderResolver(),
+      YearResolver(),
+    ],
     patterns: config != null ? [config] : [],
+    logger: logger,
   );
 
   final episodes = await episodeRepo.getByPodcastId(podcastId);
@@ -703,6 +718,7 @@ Future<SmartPlaylistGrouping?> _reResolveFromEpisodes(
   String feedUrl, {
   String? podcastImageUrl,
 }) async {
+  final logger = ref.watch(namedLoggerProvider('ReResolveSmartPlaylists'));
   final episodeRepo = ref.watch(episodeRepositoryProvider);
 
   // Load matching config from repository
@@ -718,8 +734,14 @@ Future<SmartPlaylistGrouping?> _reResolveFromEpisodes(
   }
 
   final resolverService = SmartPlaylistResolverService(
-    resolvers: [RssMetadataResolver(), CategoryResolver(), YearResolver()],
+    resolvers: [
+      RssMetadataResolver(),
+      CategoryResolver(),
+      TitleAppearanceOrderResolver(),
+      YearResolver(),
+    ],
     patterns: config != null ? [config] : [],
+    logger: logger,
   );
 
   final episodes = await episodeRepo.getByPodcastId(podcastId);
