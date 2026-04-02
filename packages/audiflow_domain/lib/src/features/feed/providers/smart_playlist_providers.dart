@@ -1,3 +1,4 @@
+import 'package:logger/logger.dart';
 import 'package:meta/meta.dart' show visibleForTesting;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -26,6 +27,7 @@ import '../repositories/smart_playlist_config_repository.dart';
 import '../repositories/smart_playlist_config_repository_impl.dart';
 import '../resolvers/category_resolver.dart';
 import '../resolvers/rss_metadata_resolver.dart';
+import '../resolvers/title_appearance_order_resolver.dart';
 import '../resolvers/year_resolver.dart';
 import '../services/smart_playlist_resolver_service.dart';
 
@@ -90,7 +92,12 @@ SmartPlaylistLocalDatasource smartPlaylistLocalDatasource(Ref ref) {
 @Riverpod(keepAlive: true)
 SmartPlaylistResolverService smartPlaylistResolverService(Ref ref) {
   return SmartPlaylistResolverService(
-    resolvers: [RssMetadataResolver(), CategoryResolver(), YearResolver()],
+    resolvers: [
+      RssMetadataResolver(),
+      CategoryResolver(),
+      TitleAppearanceOrderResolver(),
+      YearResolver(),
+    ],
     patterns: [],
   );
 }
@@ -325,8 +332,14 @@ Future<SmartPlaylistGrouping?> _resolveAndPersistSmartPlaylists(
   }
 
   final resolverService = SmartPlaylistResolverService(
-    resolvers: [RssMetadataResolver(), CategoryResolver(), YearResolver()],
+    resolvers: [
+      RssMetadataResolver(),
+      CategoryResolver(),
+      TitleAppearanceOrderResolver(),
+      YearResolver(),
+    ],
     patterns: config != null ? [config] : [],
+    logger: logger is Logger ? logger : null,
   );
 
   final episodes = await episodeRepo.getByPodcastId(podcastId);
@@ -718,7 +731,12 @@ Future<SmartPlaylistGrouping?> _reResolveFromEpisodes(
   }
 
   final resolverService = SmartPlaylistResolverService(
-    resolvers: [RssMetadataResolver(), CategoryResolver(), YearResolver()],
+    resolvers: [
+      RssMetadataResolver(),
+      CategoryResolver(),
+      TitleAppearanceOrderResolver(),
+      YearResolver(),
+    ],
     patterns: config != null ? [config] : [],
   );
 

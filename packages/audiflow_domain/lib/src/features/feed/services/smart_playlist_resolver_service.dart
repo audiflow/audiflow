@@ -1,3 +1,5 @@
+import 'package:logger/logger.dart';
+
 import '../models/episode.dart';
 import '../models/smart_playlist.dart';
 import '../models/smart_playlist_definition.dart';
@@ -15,11 +17,13 @@ class SmartPlaylistResolverService {
   SmartPlaylistResolverService({
     required List<SmartPlaylistResolver> resolvers,
     required List<SmartPlaylistPatternConfig> patterns,
+    this.logger,
   }) : _resolvers = resolvers,
        _patterns = patterns;
 
   final List<SmartPlaylistResolver> _resolvers;
   final List<SmartPlaylistPatternConfig> _patterns;
+  final Logger? logger;
 
   /// Attempts to group episodes into smart playlists.
   ///
@@ -56,16 +60,39 @@ class SmartPlaylistResolverService {
     String? resolverType;
 
     final sorted = _sortByProcessingOrder(config.playlists);
+    logger?.d(
+      'Resolving ${sorted.length} definitions, '
+      'available resolvers: ${_resolvers.map((r) => r.type).toList()}',
+    );
 
     for (final definition in sorted) {
       final filtered = _filterEpisodes(episodes, definition, claimedIds);
+      logger?.d(
+        'Definition "${definition.id}" '
+        'resolverType=${definition.resolverType}, '
+        'filtered=${filtered.length}/${episodes.length} episodes',
+      );
       if (filtered.isEmpty) continue;
 
       final resolver = _findResolverByType(definition.resolverType);
-      if (resolver == null) continue;
+      if (resolver == null) {
+        logger?.w('No resolver found for type "${definition.resolverType}"');
+        continue;
+      }
 
       final result = resolver.resolve(filtered, definition);
-      if (result == null) continue;
+      if (result == null) {
+        logger?.d(
+          'Resolver "${definition.resolverType}" returned null '
+          'for "${definition.id}"',
+        );
+        continue;
+      }
+      logger?.d(
+        'Resolver "${definition.resolverType}" produced '
+        '${result.playlists.length} playlists, '
+        '${result.ungroupedEpisodeIds.length} ungrouped',
+      );
 
       resolverType ??= result.resolverType;
 
