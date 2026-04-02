@@ -1,5 +1,6 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../l10n/app_localizations.dart';
@@ -54,6 +55,8 @@ class AppRoutes {
   static const String transcript = '/transcript';
   static const String deepLinkPodcast = '/p/:itunesId';
   static const String deepLinkEpisode = '/p/:itunesId/e/:encodedGuid';
+  static const String notificationEpisode =
+      '/notification/episode/:podcastId/:episodeId';
 }
 
 /// Root navigator key for the application.
@@ -313,6 +316,14 @@ GoRouter createAppRouter({int lastTabIndex = 0}) {
             },
           ),
         ],
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: AppRoutes.notificationEpisode,
+        builder: (context, state) => _NotificationEpisodeScreen(
+          podcastId: int.tryParse(state.pathParameters['podcastId'] ?? '') ?? 0,
+          episodeId: int.tryParse(state.pathParameters['episodeId'] ?? '') ?? 0,
+        ),
       ),
     ],
   );
@@ -586,5 +597,110 @@ class _EpisodeNotFoundScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+/// Resolves notification tap to the episode detail screen.
+///
+/// Looks up [Episode] and [Subscription] from Isar by ID, converts
+/// to [PodcastItem], and renders [EpisodeDetailScreen]. Falls back
+/// to library if either lookup fails.
+class _NotificationEpisodeScreen extends ConsumerStatefulWidget {
+  const _NotificationEpisodeScreen({
+    required this.podcastId,
+    required this.episodeId,
+  });
+
+  final int podcastId;
+  final int episodeId;
+
+  @override
+  ConsumerState<_NotificationEpisodeScreen> createState() =>
+      _NotificationEpisodeScreenState();
+}
+
+class _NotificationEpisodeScreenState
+    extends ConsumerState<_NotificationEpisodeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _resolve());
+  }
+
+  Future<void> _resolve() async {
+    final episodeRepo = ref.read(episodeRepositoryProvider);
+    final subscriptionRepo = ref.read(subscriptionRepositoryProvider);
+
+    final episode = await episodeRepo.getById(widget.episodeId);
+    if (episode == null || episode.podcastId != widget.podcastId || !mounted) {
+      if (mounted) context.go(AppRoutes.library);
+      return;
+    }
+
+    final subscription = await subscriptionRepo.getById(widget.podcastId);
+    if (subscription == null || !mounted) {
+      if (mounted) context.go(AppRoutes.library);
+      return;
+    }
+
+    final podcastItem = PodcastItem(
+      parsedAt: DateTime.now(),
+      sourceUrl: episode.audioUrl,
+      title: episode.title,
+      description: episode.description ?? '',
+      guid: episode.guid,
+      enclosureUrl: episode.audioUrl,
+      duration: episode.durationMs != null
+          ? Duration(milliseconds: episode.durationMs!)
+          : null,
+      publishDate: episode.publishedAt,
+      episodeNumber: episode.episodeNumber,
+      seasonNumber: episode.seasonNumber,
+      images: episode.imageUrl != null
+          ? [PodcastImage(url: episode.imageUrl!)]
+          : const [],
+      contentEncoded: episode.contentEncoded,
+      summary: episode.summary,
+      link: episode.link,
+    );
+
+    if (!mounted) return;
+
+    // Capture all navigation data before router.go() disposes this widget.
+    final router = GoRouter.of(context);
+    final itunesId = subscription.itunesId;
+    final podcast = Podcast(
+      id: itunesId,
+      name: subscription.title,
+      artistName: subscription.artistName,
+      feedUrl: subscription.feedUrl,
+      artworkUrl: subscription.artworkUrl,
+    );
+    final episodePath =
+        '${AppRoutes.library}/podcast/${widget.podcastId}/${AppRoutes.episodeDetail}'
+            .replaceAll(':episodeGuid', Uri.encodeComponent(episode.guid));
+    final episodeExtra = <String, dynamic>{
+      'episode': podcastItem,
+      'podcastTitle': subscription.title,
+      'artworkUrl': subscription.artworkUrl,
+      'itunesId': itunesId,
+    };
+
+    // Navigate: library -> podcast detail -> episode detail.
+    // Use Future.microtask chain with captured router reference so
+    // navigation does not depend on this widget remaining mounted.
+    router.go(AppRoutes.library);
+    await Future<void>.microtask(() {});
+    router.push(
+      '${AppRoutes.library}/podcast/${widget.podcastId}',
+      extra: podcast,
+    );
+    await Future<void>.microtask(() {});
+    router.push(episodePath, extra: episodeExtra);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(body: Center(child: CircularProgressIndicator()));
   }
 }

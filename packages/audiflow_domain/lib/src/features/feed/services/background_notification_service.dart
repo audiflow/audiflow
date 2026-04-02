@@ -1,5 +1,26 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:logger/logger.dart';
+import 'package:meta/meta.dart';
+
+import '../models/new_episode_notification.dart';
+
+/// Detail record for a single notification to display.
+///
+/// Exposed only for testing; not part of the public API contract.
+@visibleForTesting
+class NotificationDetail {
+  const NotificationDetail({
+    required this.id,
+    required this.title,
+    required this.body,
+    required this.payload,
+  });
+
+  final int id;
+  final String title;
+  final String body;
+  final String payload;
+}
 
 class BackgroundNotificationService {
   BackgroundNotificationService({Logger? logger}) : _logger = logger;
@@ -9,7 +30,6 @@ class BackgroundNotificationService {
   static const _channelId = 'audiflow_new_episodes';
   static const _channelName = 'New Episodes';
   static const _channelDescription = 'Notifications for new podcast episodes';
-  static const _notificationId = 1001;
 
   Future<FlutterLocalNotificationsPlugin> initialize() async {
     final plugin = FlutterLocalNotificationsPlugin();
@@ -21,16 +41,14 @@ class BackgroundNotificationService {
     return plugin;
   }
 
-  Future<void> showNewEpisodesNotification(
+  /// Shows one notification per [NewEpisodeNotification].
+  Future<void> showPerEpisodeNotifications(
     FlutterLocalNotificationsPlugin plugin,
-    Map<String, int> newEpisodesPerPodcast,
+    List<NewEpisodeNotification> notifications,
   ) async {
-    if (newEpisodesPerPodcast.isEmpty) return;
+    final details = buildNotificationDetails(notifications);
 
-    final body = formatNotificationBody(newEpisodesPerPodcast);
-    if (body.isEmpty) return;
-
-    const details = NotificationDetails(
+    const notificationDetails = NotificationDetails(
       android: AndroidNotificationDetails(
         _channelId,
         _channelName,
@@ -41,34 +59,39 @@ class BackgroundNotificationService {
       iOS: DarwinNotificationDetails(),
     );
 
-    try {
-      await plugin.show(
-        id: _notificationId,
-        title: 'New episodes available',
-        body: body,
-        notificationDetails: details,
-      );
-      _logger?.i('Showed notification: $body');
-    } catch (e, stack) {
-      _logger?.e('Failed to show notification', error: e, stackTrace: stack);
+    for (final detail in details) {
+      try {
+        await plugin.show(
+          id: detail.id,
+          title: detail.title,
+          body: detail.body,
+          payload: detail.payload,
+          notificationDetails: notificationDetails,
+        );
+        _logger?.i('Showed notification: ${detail.title} — ${detail.body}');
+      } catch (e, stack) {
+        _logger?.e('Failed to show notification', error: e, stackTrace: stack);
+      }
     }
   }
 
-  static String formatNotificationBody(Map<String, int> episodesPerPodcast) {
-    if (episodesPerPodcast.isEmpty) return '';
-
-    final totalEpisodes = episodesPerPodcast.values.fold(0, (a, b) => a + b);
-    final names = episodesPerPodcast.keys.toList();
-    final episodeLabel = totalEpisodes == 1 ? 'episode' : 'episodes';
-
-    return switch (names.length) {
-      1 => '$totalEpisodes new $episodeLabel from ${names[0]}',
-      2 => '$totalEpisodes new $episodeLabel from ${names[0]} and ${names[1]}',
-      _ => () {
-        final otherCount = names.length - 2;
-        final otherLabel = otherCount == 1 ? '1 other' : '$otherCount others';
-        return '$totalEpisodes new $episodeLabel from ${names[0]}, ${names[1]}, and $otherLabel';
-      }(),
-    };
+  /// Builds notification detail records from episode notifications.
+  ///
+  /// Uses [NewEpisodeNotification.episodeId] as the notification ID
+  /// so re-notifying the same episode replaces the previous one.
+  @visibleForTesting
+  static List<NotificationDetail> buildNotificationDetails(
+    List<NewEpisodeNotification> notifications,
+  ) {
+    return notifications
+        .map(
+          (n) => NotificationDetail(
+            id: n.episodeId,
+            title: n.podcastTitle,
+            body: n.episodeTitle,
+            payload: n.toPayload(),
+          ),
+        )
+        .toList();
   }
 }

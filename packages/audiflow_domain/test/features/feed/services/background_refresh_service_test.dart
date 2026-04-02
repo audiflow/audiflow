@@ -314,43 +314,8 @@ class FakeDownloadRepository implements DownloadRepository {
   Future<int> deleteAllCompleted() async => 0;
 }
 
-class FakeFeedSyncExecutor {
-  FakeFeedSyncExecutor({SingleFeedSyncResult? result})
-    : _result =
-          result ??
-          const SingleFeedSyncResult(
-            podcastId: 0,
-            success: true,
-            skipped: false,
-          );
-
-  final SingleFeedSyncResult _result;
-  final List<Subscription> syncedSubscriptions = [];
-
-  Future<SingleFeedSyncResult> syncFeed(Subscription sub) async {
-    syncedSubscriptions.add(sub);
-    return SingleFeedSyncResult(
-      podcastId: sub.id,
-      success: _result.success,
-      skipped: _result.skipped,
-      newEpisodeCount: _result.newEpisodeCount,
-      errorMessage: _result.errorMessage,
-    );
-  }
-}
-
-class FakeBackgroundNotificationService {
-  int showNotificationCallCount = 0;
-
-  Future<void> showNewEpisodesNotification(
-    Map<String, int> newEpisodesPerPodcast,
-  ) async {
-    showNotificationCallCount++;
-  }
-}
-
 // ---------------------------------------------------------------------------
-// Helper: build a minimal Subscription
+// Helpers
 // ---------------------------------------------------------------------------
 
 Subscription _makeSubscription({
@@ -371,6 +336,19 @@ Subscription _makeSubscription({
     ..autoDownload = autoDownload;
 }
 
+Episode _makeEpisode({
+  required int id,
+  required int podcastId,
+  required String title,
+}) {
+  return Episode()
+    ..id = id
+    ..podcastId = podcastId
+    ..guid = 'guid_$id'
+    ..title = title
+    ..audioUrl = 'https://example.com/audio/$id.mp3';
+}
+
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
@@ -384,22 +362,32 @@ void main() {
       );
       final episodeRepo = FakeEpisodeRepository();
       final downloadRepo = FakeDownloadRepository();
-      final syncExecutor = FakeFeedSyncExecutor();
-      final notificationService = FakeBackgroundNotificationService();
+      var syncCallCount = 0;
+      var notifyCallCount = 0;
 
       final service = BackgroundRefreshService(
         subscriptionRepo: subscriptionRepo,
         episodeRepo: episodeRepo,
         downloadRepo: downloadRepo,
         settingsRepo: settings,
-        syncFeed: syncExecutor.syncFeed,
-        showNotification: notificationService.showNewEpisodesNotification,
+        syncFeed: (sub) async {
+          syncCallCount++;
+          return SingleFeedSyncResult(
+            podcastId: sub.id,
+            success: true,
+            skipped: false,
+          );
+        },
+        showNotification: (notifications) async {
+          notifyCallCount++;
+        },
       );
 
       await service.execute();
 
       expect(subscriptionRepo.getSubscriptionsCalled, isFalse);
-      expect(syncExecutor.syncedSubscriptions, isEmpty);
+      expect(syncCallCount, 0);
+      expect(notifyCallCount, 0);
     });
 
     test(
@@ -435,29 +423,168 @@ void main() {
         );
         final episodeRepo = FakeEpisodeRepository();
         final downloadRepo = FakeDownloadRepository();
-        final syncExecutor = FakeFeedSyncExecutor();
-        final notificationService = FakeBackgroundNotificationService();
+        final syncedIds = <int>[];
 
         final service = BackgroundRefreshService(
           subscriptionRepo: subscriptionRepo,
           episodeRepo: episodeRepo,
           downloadRepo: downloadRepo,
           settingsRepo: settings,
-          syncFeed: syncExecutor.syncFeed,
-          showNotification: notificationService.showNewEpisodesNotification,
-          // Small budget so all run without timing out
+          syncFeed: (sub) async {
+            syncedIds.add(sub.id);
+            return SingleFeedSyncResult(
+              podcastId: sub.id,
+              success: true,
+              skipped: false,
+            );
+          },
+          showNotification: (_) async {},
           timeBudget: const Duration(seconds: 60),
         );
 
         await service.execute();
 
-        // Expected order: B (Jan 9) → C (Jan 7) → A (falls back to Jan 5)
-        expect(syncExecutor.syncedSubscriptions.map((s) => s.id).toList(), [
-          2,
-          3,
-          1,
-        ]);
+        // Expected order: B (Jan 9) -> C (Jan 7) -> A (falls back to Jan 5)
+        expect(syncedIds, [2, 3, 1]);
       },
     );
+
+    test('collects per-episode notifications and calls callback', () async {
+      final sub = _makeSubscription(id: 10, title: 'My Podcast');
+      final episodes = [
+        _makeEpisode(id: 101, podcastId: 10, title: 'Episode 1'),
+        _makeEpisode(id: 102, podcastId: 10, title: 'Episode 2'),
+      ];
+
+      final settings = FakeAppSettingsRepository(
+        autoSync: true,
+        notifyNewEpisodes: true,
+      );
+      final subscriptionRepo = FakeSubscriptionRepository(subscriptions: [sub]);
+      final episodeRepo = FakeEpisodeRepository(
+        episodesByPodcastId: {10: episodes},
+      );
+      final downloadRepo = FakeDownloadRepository();
+      List<NewEpisodeNotification>? capturedNotifications;
+
+      final service = BackgroundRefreshService(
+        subscriptionRepo: subscriptionRepo,
+        episodeRepo: episodeRepo,
+        downloadRepo: downloadRepo,
+        settingsRepo: settings,
+        syncFeed: (sub) async => SingleFeedSyncResult(
+          podcastId: sub.id,
+          success: true,
+          skipped: false,
+          newEpisodeCount: 2,
+        ),
+        showNotification: (notifications) async {
+          capturedNotifications = notifications;
+        },
+        timeBudget: const Duration(seconds: 60),
+      );
+
+      await service.execute();
+
+      expect(capturedNotifications, isNotNull);
+      expect(capturedNotifications!.length, 2);
+      expect(capturedNotifications![0].episodeId, 101);
+      expect(capturedNotifications![0].podcastTitle, 'My Podcast');
+      expect(capturedNotifications![0].episodeTitle, 'Episode 1');
+      expect(capturedNotifications![1].episodeId, 102);
+      expect(capturedNotifications![1].episodeTitle, 'Episode 2');
+    });
+
+    test('caps notifications at 7', () async {
+      // 3 podcasts x 4 new episodes each = 12, but capped at 7
+      final subscriptions = [
+        _makeSubscription(id: 1, title: 'Podcast 1'),
+        _makeSubscription(id: 2, title: 'Podcast 2'),
+        _makeSubscription(id: 3, title: 'Podcast 3'),
+      ];
+      final episodesByPodcastId = <int, List<Episode>>{};
+      for (final sub in subscriptions) {
+        episodesByPodcastId[sub.id] = List.generate(
+          4,
+          (i) => _makeEpisode(
+            id: sub.id * 100 + i,
+            podcastId: sub.id,
+            title: 'Episode $i of ${sub.title}',
+          ),
+        );
+      }
+
+      final settings = FakeAppSettingsRepository(
+        autoSync: true,
+        notifyNewEpisodes: true,
+      );
+      final subscriptionRepo = FakeSubscriptionRepository(
+        subscriptions: subscriptions,
+      );
+      final episodeRepo = FakeEpisodeRepository(
+        episodesByPodcastId: episodesByPodcastId,
+      );
+      final downloadRepo = FakeDownloadRepository();
+      List<NewEpisodeNotification>? capturedNotifications;
+
+      final service = BackgroundRefreshService(
+        subscriptionRepo: subscriptionRepo,
+        episodeRepo: episodeRepo,
+        downloadRepo: downloadRepo,
+        settingsRepo: settings,
+        syncFeed: (sub) async => SingleFeedSyncResult(
+          podcastId: sub.id,
+          success: true,
+          skipped: false,
+          newEpisodeCount: 4,
+        ),
+        showNotification: (notifications) async {
+          capturedNotifications = notifications;
+        },
+        timeBudget: const Duration(seconds: 60),
+      );
+
+      await service.execute();
+
+      expect(capturedNotifications, isNotNull);
+      expect(capturedNotifications!.length, 7);
+    });
+
+    test('does not notify when setting is disabled', () async {
+      final sub = _makeSubscription(id: 1, title: 'Podcast 1');
+      final episodes = [_makeEpisode(id: 11, podcastId: 1, title: 'Episode 1')];
+
+      final settings = FakeAppSettingsRepository(
+        autoSync: true,
+        notifyNewEpisodes: false,
+      );
+      final subscriptionRepo = FakeSubscriptionRepository(subscriptions: [sub]);
+      final episodeRepo = FakeEpisodeRepository(
+        episodesByPodcastId: {1: episodes},
+      );
+      final downloadRepo = FakeDownloadRepository();
+      var notifyCallCount = 0;
+
+      final service = BackgroundRefreshService(
+        subscriptionRepo: subscriptionRepo,
+        episodeRepo: episodeRepo,
+        downloadRepo: downloadRepo,
+        settingsRepo: settings,
+        syncFeed: (sub) async => SingleFeedSyncResult(
+          podcastId: sub.id,
+          success: true,
+          skipped: false,
+          newEpisodeCount: 1,
+        ),
+        showNotification: (_) async {
+          notifyCallCount++;
+        },
+        timeBudget: const Duration(seconds: 60),
+      );
+
+      await service.execute();
+
+      expect(notifyCallCount, 0);
+    });
   });
 }
