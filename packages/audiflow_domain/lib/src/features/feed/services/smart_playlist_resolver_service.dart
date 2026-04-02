@@ -17,13 +17,14 @@ class SmartPlaylistResolverService {
   SmartPlaylistResolverService({
     required List<SmartPlaylistResolver> resolvers,
     required List<SmartPlaylistPatternConfig> patterns,
-    this.logger,
-  }) : _resolvers = resolvers,
-       _patterns = patterns;
+    Logger? logger,
+  })  : _resolvers = resolvers,
+        _patterns = patterns,
+        _logger = logger;
 
   final List<SmartPlaylistResolver> _resolvers;
   final List<SmartPlaylistPatternConfig> _patterns;
-  final Logger? logger;
+  final Logger? _logger;
 
   /// Attempts to group episodes into smart playlists.
   ///
