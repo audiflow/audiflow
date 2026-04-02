@@ -5,15 +5,19 @@ import '../../settings/repositories/app_settings_repository.dart';
 import '../../subscription/models/subscriptions.dart';
 import '../../subscription/repositories/subscription_repository.dart';
 import '../models/feed_sync_result.dart';
+import '../models/new_episode_notification.dart';
 import '../repositories/episode_repository.dart';
 
 /// Callback type for syncing a single podcast feed.
 typedef SyncFeedCallback =
     Future<SingleFeedSyncResult> Function(Subscription sub);
 
-/// Callback type for showing a new-episodes notification.
+/// Callback type for showing per-episode notifications.
 typedef ShowNotificationCallback =
-    Future<void> Function(Map<String, int> newEpisodesPerPodcast);
+    Future<void> Function(List<NewEpisodeNotification> notifications);
+
+/// Maximum number of notifications per background refresh cycle.
+const _maxNotifications = 7;
 
 /// Orchestrates background feed refresh for all subscriptions.
 ///
@@ -51,14 +55,6 @@ class BackgroundRefreshService {
   final Logger? _logger;
   final Duration _timeBudget;
 
-  /// Runs the background refresh cycle.
-  ///
-  /// 1. Exits early when auto-sync is disabled in settings.
-  /// 2. Sorts subscriptions by last-accessed time (descending).
-  /// 3. Syncs each feed in order, stopping when the time budget is exhausted.
-  /// 4. Enqueues auto-downloads for newly discovered episodes.
-  /// 5. Shows a notification if new episodes were found and notifications
-  ///    are enabled.
   Future<void> execute() async {
     if (!_settingsRepo.getAutoSync()) {
       _logger?.d('BackgroundRefreshService: auto-sync disabled, skipping');
@@ -72,9 +68,7 @@ class BackgroundRefreshService {
       'BackgroundRefreshService: syncing ${sorted.length} subscriptions',
     );
 
-    // Key by itunesId for uniqueness; track titles separately for display.
-    final newCountById = <String, int>{};
-    final titleById = <String, String>{};
+    final allNotifications = <NewEpisodeNotification>[];
     final stopwatch = Stopwatch()..start();
 
     for (final sub in sorted) {
@@ -91,41 +85,40 @@ class BackgroundRefreshService {
 
       final newCount = result.newEpisodeCount ?? 0;
       if (0 < newCount) {
-        newCountById[sub.itunesId] = newCount;
-        titleById[sub.itunesId] = sub.title;
-
         if (sub.autoDownload) {
           await _enqueueAutoDownloads(sub, newCount);
+        }
+
+        if (allNotifications.length < _maxNotifications) {
+          final remaining = _maxNotifications - allNotifications.length;
+          final episodes = await _episodeRepo.getByPodcastId(sub.id);
+          final newestCount = newCount < remaining ? newCount : remaining;
+          final newest = episodes.take(newestCount);
+
+          for (final episode in newest) {
+            allNotifications.add(
+              NewEpisodeNotification(
+                episodeId: episode.id,
+                podcastId: sub.id,
+                podcastTitle: sub.title,
+                episodeTitle: episode.title,
+              ),
+            );
+          }
         }
       }
     }
 
-    if (newCountById.isNotEmpty && _settingsRepo.getNotifyNewEpisodes()) {
-      // Build display map keyed by title, aggregating counts for
-      // duplicate titles (rare but possible).
-      final displayMap = <String, int>{};
-      for (final entry in newCountById.entries) {
-        final title = titleById[entry.key]!;
-        displayMap.update(
-          title,
-          (existing) => existing + entry.value,
-          ifAbsent: () => entry.value,
-        );
-      }
-      await _showNotification(displayMap);
+    if (allNotifications.isNotEmpty && _settingsRepo.getNotifyNewEpisodes()) {
+      await _showNotification(allNotifications);
     }
 
+    final totalNew = allNotifications.length;
     _logger?.i(
-      'BackgroundRefreshService: finished — '
-      '${newCountById.values.fold(0, (a, b) => a + b)} new episodes '
-      'across ${newCountById.length} podcasts',
+      'BackgroundRefreshService: finished — $totalNew new episodes notified',
     );
   }
 
-  /// Sorts [subscriptions] by effective last-access time, descending.
-  ///
-  /// Uses [Subscription.lastAccessedAt] when available, falling back to
-  /// [Subscription.subscribedAt] when it is null.
   List<Subscription> _sortByLastAccessed(List<Subscription> subscriptions) {
     final sorted = List<Subscription>.of(subscriptions);
     sorted.sort((a, b) {
@@ -136,14 +129,11 @@ class BackgroundRefreshService {
     return sorted;
   }
 
-  /// Enqueues download tasks for the newest [newEpisodeCount] episodes of
-  /// [sub].
   Future<void> _enqueueAutoDownloads(
     Subscription sub,
     int newEpisodeCount,
   ) async {
     final episodes = await _episodeRepo.getByPodcastId(sub.id);
-    // Episodes are ordered newest-first by the repository contract.
     final toDownload = episodes.take(newEpisodeCount);
     final wifiOnly = _settingsRepo.getWifiOnlyDownload();
 
