@@ -148,9 +148,12 @@ void backgroundCallback() {
           }
           return result;
         },
-        showNotification: (map) async {
+        showNotification: (notifications) async {
           final plugin = await notificationService.initialize();
-          await notificationService.showNewEpisodesNotification(plugin, map);
+          await notificationService.showPerEpisodeNotifications(
+            plugin,
+            notifications,
+          );
         },
         logger: logger,
       );
