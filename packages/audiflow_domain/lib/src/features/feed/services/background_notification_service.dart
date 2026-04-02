@@ -1,9 +1,13 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:logger/logger.dart';
+import 'package:meta/meta.dart';
 
 import '../models/new_episode_notification.dart';
 
 /// Detail record for a single notification to display.
+///
+/// Exposed only for testing; not part of the public API contract.
+@visibleForTesting
 class NotificationDetail {
   const NotificationDetail({
     required this.id,
@@ -75,6 +79,7 @@ class BackgroundNotificationService {
   ///
   /// Uses [NewEpisodeNotification.episodeId] as the notification ID
   /// so re-notifying the same episode replaces the previous one.
+  @visibleForTesting
   static List<NotificationDetail> buildNotificationDetails(
     List<NewEpisodeNotification> notifications,
   ) {

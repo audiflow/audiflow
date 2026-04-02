@@ -632,7 +632,7 @@ class _NotificationEpisodeScreenState
     final subscriptionRepo = ref.read(subscriptionRepositoryProvider);
 
     final episode = await episodeRepo.getById(widget.episodeId);
-    if (episode == null || !mounted) {
+    if (episode == null || episode.podcastId != widget.podcastId || !mounted) {
       if (mounted) context.go(AppRoutes.library);
       return;
     }

@@ -4,6 +4,7 @@ import '../../download/repositories/download_repository.dart';
 import '../../settings/repositories/app_settings_repository.dart';
 import '../../subscription/models/subscriptions.dart';
 import '../../subscription/repositories/subscription_repository.dart';
+import '../models/episode.dart';
 import '../models/feed_sync_result.dart';
 import '../models/new_episode_notification.dart';
 import '../repositories/episode_repository.dart';
@@ -70,6 +71,7 @@ class BackgroundRefreshService {
 
     final notificationsEnabled = _settingsRepo.getNotifyNewEpisodes();
     final allNotifications = <NewEpisodeNotification>[];
+    var totalNewEpisodes = 0;
     final stopwatch = Stopwatch()..start();
 
     for (final sub in sorted) {
@@ -86,14 +88,26 @@ class BackgroundRefreshService {
 
       final newCount = result.newEpisodeCount ?? 0;
       if (0 < newCount) {
+        totalNewEpisodes += newCount;
+
+        // Fetch episodes once and reuse for both auto-download and
+        // notification collection to avoid duplicate Isar reads.
+        final needsEpisodes =
+            sub.autoDownload ||
+            (notificationsEnabled &&
+                allNotifications.length < _maxNotifications);
+
+        final episodes = needsEpisodes
+            ? await _episodeRepo.getByPodcastId(sub.id)
+            : const <Episode>[];
+
         if (sub.autoDownload) {
-          await _enqueueAutoDownloads(sub, newCount);
+          await _enqueueAutoDownloads(sub, newCount, episodes: episodes);
         }
 
         if (notificationsEnabled &&
             allNotifications.length < _maxNotifications) {
           final remaining = _maxNotifications - allNotifications.length;
-          final episodes = await _episodeRepo.getByPodcastId(sub.id);
           final newestCount = newCount < remaining ? newCount : remaining;
           final newest = episodes.take(newestCount);
 
@@ -115,10 +129,9 @@ class BackgroundRefreshService {
       await _showNotification(allNotifications);
     }
 
-    final totalNew = allNotifications.length;
     _logger?.i(
-      'BackgroundRefreshService: finished — $totalNew new episodes '
-      '${notificationsEnabled ? "notified" : "found (notifications disabled)"}',
+      'BackgroundRefreshService: finished — $totalNewEpisodes new episodes '
+      '${notificationsEnabled ? "(${allNotifications.length} notified)" : "(notifications disabled)"}',
     );
   }
 
@@ -134,9 +147,9 @@ class BackgroundRefreshService {
 
   Future<void> _enqueueAutoDownloads(
     Subscription sub,
-    int newEpisodeCount,
-  ) async {
-    final episodes = await _episodeRepo.getByPodcastId(sub.id);
+    int newEpisodeCount, {
+    required List<Episode> episodes,
+  }) async {
     final toDownload = episodes.take(newEpisodeCount);
     final wifiOnly = _settingsRepo.getWifiOnlyDownload();
 
