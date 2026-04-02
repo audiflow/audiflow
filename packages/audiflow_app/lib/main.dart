@@ -13,9 +13,11 @@ import 'package:sentry_dio/sentry_dio.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:workmanager/workmanager.dart';
 
 import 'app/app_lifecycle_observer.dart';
+import 'app/notification/notification_tap_handler.dart';
 import 'app/background/background_callback.dart';
 import 'app/background/background_task_registrar.dart';
 import 'features/player/services/audio_handler_provider.dart';
@@ -243,6 +245,35 @@ class _MyAppState extends ConsumerState<MyApp> {
     _router = createAppRouter(
       lastTabIndex: ref.read(lastTabControllerProvider),
     );
+    _initNotificationTapHandler();
+  }
+
+  Future<void> _initNotificationTapHandler() async {
+    final handler = NotificationTapHandler(router: _router);
+    final plugin = FlutterLocalNotificationsPlugin();
+    const initSettings = InitializationSettings(
+      android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+      iOS: DarwinInitializationSettings(),
+    );
+    await plugin.initialize(
+      settings: initSettings,
+      onDidReceiveNotificationResponse:
+          handler.onDidReceiveNotificationResponse,
+    );
+
+    // Handle cold start: check if app was launched by notification
+    final launchDetails = await plugin.getNotificationAppLaunchDetails();
+    if (launchDetails != null &&
+        (launchDetails.didNotificationLaunchApp ?? false)) {
+      final route = NotificationTapHandler.parseNotificationRoute(
+        launchDetails.notificationResponse?.payload,
+      );
+      if (route != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _router.push(route);
+        });
+      }
+    }
   }
 
   @override
