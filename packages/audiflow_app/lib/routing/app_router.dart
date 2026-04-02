@@ -659,6 +659,9 @@ class _NotificationEpisodeScreenState
       images: episode.imageUrl != null
           ? [PodcastImage(url: episode.imageUrl!)]
           : const [],
+      contentEncoded: episode.contentEncoded,
+      summary: episode.summary,
+      link: episode.link,
     );
 
     if (!mounted) return;
