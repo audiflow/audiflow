@@ -61,14 +61,14 @@ class SmartPlaylistResolverService {
     String? resolverType;
 
     final sorted = _sortByProcessingOrder(config.playlists);
-    logger?.d(
+    _logger?.d(
       'Resolving ${sorted.length} definitions, '
       'available resolvers: ${_resolvers.map((r) => r.type).toList()}',
     );
 
     for (final definition in sorted) {
       final filtered = _filterEpisodes(episodes, definition, claimedIds);
-      logger?.d(
+      _logger?.d(
         'Definition "${definition.id}" '
         'resolverType=${definition.resolverType}, '
         'filtered=${filtered.length}/${episodes.length} episodes',
@@ -77,19 +77,19 @@ class SmartPlaylistResolverService {
 
       final resolver = _findResolverByType(definition.resolverType);
       if (resolver == null) {
-        logger?.w('No resolver found for type "${definition.resolverType}"');
+        _logger?.w('No resolver found for type "${definition.resolverType}"');
         continue;
       }
 
       final result = resolver.resolve(filtered, definition);
       if (result == null) {
-        logger?.d(
+        _logger?.d(
           'Resolver "${definition.resolverType}" returned null '
           'for "${definition.id}"',
         );
         continue;
       }
-      logger?.d(
+      _logger?.d(
         'Resolver "${definition.resolverType}" produced '
         '${result.playlists.length} playlists, '
         '${result.ungroupedEpisodeIds.length} ungrouped',
