@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:dio/dio.dart';
@@ -245,7 +247,7 @@ class _MyAppState extends ConsumerState<MyApp> {
     _router = createAppRouter(
       lastTabIndex: ref.read(lastTabControllerProvider),
     );
-    _initNotificationTapHandler();
+    unawaited(_initNotificationTapHandler());
   }
 
   Future<void> _initNotificationTapHandler() async {

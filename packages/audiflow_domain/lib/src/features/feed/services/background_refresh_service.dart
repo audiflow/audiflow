@@ -68,6 +68,7 @@ class BackgroundRefreshService {
       'BackgroundRefreshService: syncing ${sorted.length} subscriptions',
     );
 
+    final notificationsEnabled = _settingsRepo.getNotifyNewEpisodes();
     final allNotifications = <NewEpisodeNotification>[];
     final stopwatch = Stopwatch()..start();
 
@@ -89,7 +90,8 @@ class BackgroundRefreshService {
           await _enqueueAutoDownloads(sub, newCount);
         }
 
-        if (allNotifications.length < _maxNotifications) {
+        if (notificationsEnabled &&
+            allNotifications.length < _maxNotifications) {
           final remaining = _maxNotifications - allNotifications.length;
           final episodes = await _episodeRepo.getByPodcastId(sub.id);
           final newestCount = newCount < remaining ? newCount : remaining;
@@ -109,13 +111,14 @@ class BackgroundRefreshService {
       }
     }
 
-    if (allNotifications.isNotEmpty && _settingsRepo.getNotifyNewEpisodes()) {
+    if (allNotifications.isNotEmpty) {
       await _showNotification(allNotifications);
     }
 
     final totalNew = allNotifications.length;
     _logger?.i(
-      'BackgroundRefreshService: finished — $totalNew new episodes notified',
+      'BackgroundRefreshService: finished — $totalNew new episodes '
+      '${notificationsEnabled ? "notified" : "found (notifications disabled)"}',
     );
   }
 

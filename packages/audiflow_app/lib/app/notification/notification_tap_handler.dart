@@ -24,11 +24,13 @@ class NotificationTapHandler {
     if (payload == null || payload.isEmpty) return null;
 
     try {
-      final data = jsonDecode(payload) as Map<String, dynamic>;
-      if (data['type'] != 'new_episode') return null;
+      final decoded = jsonDecode(payload);
+      if (decoded is! Map<String, dynamic>) return null;
+      if (decoded['type'] != 'new_episode') return null;
 
-      final episodeId = data['episodeId'] as int;
-      final podcastId = data['podcastId'] as int;
+      final episodeId = decoded['episodeId'];
+      final podcastId = decoded['podcastId'];
+      if (episodeId is! int || podcastId is! int) return null;
 
       return '/notification/episode/$podcastId/$episodeId';
     } on Exception {

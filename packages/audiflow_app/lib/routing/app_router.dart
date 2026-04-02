@@ -638,6 +638,10 @@ class _NotificationEpisodeScreenState
     }
 
     final subscription = await subscriptionRepo.getById(widget.podcastId);
+    if (subscription == null || !mounted) {
+      if (mounted) context.go(AppRoutes.library);
+      return;
+    }
 
     final podcastItem = PodcastItem(
       parsedAt: DateTime.now(),
@@ -659,40 +663,37 @@ class _NotificationEpisodeScreenState
 
     if (!mounted) return;
 
+    // Capture all navigation data before router.go() disposes this widget.
     final router = GoRouter.of(context);
-    final itunesId = subscription?.itunesId ?? '';
+    final itunesId = subscription.itunesId;
+    final podcast = Podcast(
+      id: itunesId,
+      name: subscription.title,
+      artistName: subscription.artistName,
+      feedUrl: subscription.feedUrl,
+      artworkUrl: subscription.artworkUrl,
+    );
+    final episodePath =
+        '${AppRoutes.library}/podcast/${widget.podcastId}/${AppRoutes.episodeDetail}'
+            .replaceAll(':episodeGuid', Uri.encodeComponent(episode.guid));
+    final episodeExtra = <String, dynamic>{
+      'episode': podcastItem,
+      'podcastTitle': subscription.title,
+      'artworkUrl': subscription.artworkUrl,
+      'itunesId': itunesId,
+    };
 
-    // Navigate: library -> podcast detail -> episode detail
+    // Navigate: library -> podcast detail -> episode detail.
+    // Use Future.microtask chain with captured router reference so
+    // navigation does not depend on this widget remaining mounted.
     router.go(AppRoutes.library);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      final podcast = Podcast(
-        id: itunesId,
-        name: subscription?.title ?? '',
-        artistName: subscription?.artistName ?? '',
-        feedUrl: subscription?.feedUrl ?? '',
-        artworkUrl: subscription?.artworkUrl,
-      );
-      router.push(
-        '${AppRoutes.library}/podcast/${widget.podcastId}',
-        extra: podcast,
-      );
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        final episodePath =
-            '${AppRoutes.library}/podcast/${widget.podcastId}/${AppRoutes.episodeDetail}'
-                .replaceAll(':episodeGuid', Uri.encodeComponent(episode.guid));
-        router.push(
-          episodePath,
-          extra: <String, dynamic>{
-            'episode': podcastItem,
-            'podcastTitle': subscription?.title ?? '',
-            'artworkUrl': subscription?.artworkUrl,
-            'itunesId': itunesId,
-          },
-        );
-      });
-    });
+    await Future<void>.microtask(() {});
+    router.push(
+      '${AppRoutes.library}/podcast/${widget.podcastId}',
+      extra: podcast,
+    );
+    await Future<void>.microtask(() {});
+    router.push(episodePath, extra: episodeExtra);
   }
 
   @override
