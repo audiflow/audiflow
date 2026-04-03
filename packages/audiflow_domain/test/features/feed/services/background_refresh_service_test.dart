@@ -551,7 +551,7 @@ void main() {
     });
 
     test(
-      'continues syncing subsequent subscriptions after one fails',
+      'continues syncing subsequent subscriptions after one fails and rethrows summary',
       () async {
         final subs = [
           _makeSubscription(id: 1, title: 'Podcast 1'),
@@ -587,10 +587,20 @@ void main() {
           timeBudget: const Duration(seconds: 60),
         );
 
-        await service.execute();
+        await expectLater(
+          () => service.execute(),
+          throwsA(
+            isA<Exception>().having(
+              (e) => e.toString(),
+              'message',
+              contains('1 feed(s) failed to sync'),
+            ),
+          ),
+        );
 
         // All three subscriptions must be attempted despite sub 1 throwing.
-        expect(syncedIds, [1, 2, 3]);
+        // Sort order: id=3 (Jan 3) → id=2 (Jan 2) → id=1 (Jan 1, oldest).
+        expect(syncedIds, [3, 2, 1]);
       },
     );
 
