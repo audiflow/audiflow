@@ -32,6 +32,7 @@ class _FeedSyncSettingsScreenState
       await BackgroundTaskRegistrar.register(
         intervalMinutes: repo.getSyncIntervalMinutes(),
         wifiOnly: repo.getWifiOnlySync(),
+        replaceExisting: true,
       );
     } else {
       await BackgroundTaskRegistrar.cancel();

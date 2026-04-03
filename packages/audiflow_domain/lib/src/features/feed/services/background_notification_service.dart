@@ -35,7 +35,15 @@ class BackgroundNotificationService {
     final plugin = FlutterLocalNotificationsPlugin();
     const initSettings = InitializationSettings(
       android: AndroidInitializationSettings('@mipmap/ic_launcher'),
-      iOS: DarwinInitializationSettings(),
+      // Background isolate must NOT request permissions — they must already
+      // be granted via the foreground initialization in main.dart.
+      // Requesting in background silently fails on iOS, preventing all
+      // subsequent notifications from being shown.
+      iOS: DarwinInitializationSettings(
+        requestAlertPermission: false,
+        requestBadgePermission: false,
+        requestSoundPermission: false,
+      ),
     );
     await plugin.initialize(settings: initSettings);
     return plugin;
@@ -59,6 +67,8 @@ class BackgroundNotificationService {
       iOS: DarwinNotificationDetails(),
     );
 
+    final errors = <(Object, StackTrace)>[];
+
     for (final detail in details) {
       try {
         await plugin.show(
@@ -71,7 +81,19 @@ class BackgroundNotificationService {
         _logger?.i('Showed notification: ${detail.title} — ${detail.body}');
       } catch (e, stack) {
         _logger?.e('Failed to show notification', error: e, stackTrace: stack);
+        errors.add((e, stack));
       }
+    }
+
+    if (errors.isNotEmpty) {
+      final (firstError, firstStack) = errors.first;
+      Error.throwWithStackTrace(
+        Exception(
+          'Failed to show ${errors.length}/${details.length} notification(s): '
+          '$firstError',
+        ),
+        firstStack,
+      );
     }
   }
 
