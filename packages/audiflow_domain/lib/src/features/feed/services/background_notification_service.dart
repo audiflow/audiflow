@@ -22,6 +22,42 @@ class NotificationDetail {
   final String payload;
 }
 
+/// Abstracts the `show` call on [FlutterLocalNotificationsPlugin] so tests can
+/// inject a fake without subclassing the plugin (which has a private
+/// constructor in v21+).
+@visibleForTesting
+abstract interface class NotificationsShowDelegate {
+  Future<void> show({
+    required int id,
+    String? title,
+    String? body,
+    NotificationDetails? notificationDetails,
+    String? payload,
+  });
+}
+
+/// Thin adapter wrapping [FlutterLocalNotificationsPlugin].
+class _PluginShowDelegate implements NotificationsShowDelegate {
+  const _PluginShowDelegate(this._plugin);
+
+  final FlutterLocalNotificationsPlugin _plugin;
+
+  @override
+  Future<void> show({
+    required int id,
+    String? title,
+    String? body,
+    NotificationDetails? notificationDetails,
+    String? payload,
+  }) => _plugin.show(
+    id: id,
+    title: title,
+    body: body,
+    notificationDetails: notificationDetails,
+    payload: payload,
+  );
+}
+
 class BackgroundNotificationService {
   BackgroundNotificationService({Logger? logger}) : _logger = logger;
 
@@ -53,6 +89,20 @@ class BackgroundNotificationService {
   Future<void> showPerEpisodeNotifications(
     FlutterLocalNotificationsPlugin plugin,
     List<NewEpisodeNotification> notifications,
+  ) => _showWithDelegate(_PluginShowDelegate(plugin), notifications);
+
+  /// Shows notifications via an injectable [NotificationsShowDelegate].
+  ///
+  /// Exposed for testing only.
+  @visibleForTesting
+  Future<void> showPerEpisodeNotificationsViaDelegate(
+    NotificationsShowDelegate delegate,
+    List<NewEpisodeNotification> notifications,
+  ) => _showWithDelegate(delegate, notifications);
+
+  Future<void> _showWithDelegate(
+    NotificationsShowDelegate delegate,
+    List<NewEpisodeNotification> notifications,
   ) async {
     final details = buildNotificationDetails(notifications);
 
@@ -71,7 +121,7 @@ class BackgroundNotificationService {
 
     for (final detail in details) {
       try {
-        await plugin.show(
+        await delegate.show(
           id: detail.id,
           title: detail.title,
           body: detail.body,

@@ -550,6 +550,50 @@ void main() {
       expect(capturedNotifications!.length, 7);
     });
 
+    test(
+      'continues syncing subsequent subscriptions after one fails',
+      () async {
+        final subs = [
+          _makeSubscription(id: 1, title: 'Podcast 1'),
+          _makeSubscription(id: 2, title: 'Podcast 2'),
+          _makeSubscription(id: 3, title: 'Podcast 3'),
+        ];
+
+        final settings = FakeAppSettingsRepository(autoSync: true);
+        final subscriptionRepo = FakeSubscriptionRepository(
+          subscriptions: subs,
+        );
+        final episodeRepo = FakeEpisodeRepository();
+        final downloadRepo = FakeDownloadRepository();
+        final syncedIds = <int>[];
+
+        final service = BackgroundRefreshService(
+          subscriptionRepo: subscriptionRepo,
+          episodeRepo: episodeRepo,
+          downloadRepo: downloadRepo,
+          settingsRepo: settings,
+          syncFeed: (sub) async {
+            syncedIds.add(sub.id);
+            if (sub.id == 1) {
+              throw Exception('simulated feed failure for subscription 1');
+            }
+            return SingleFeedSyncResult(
+              podcastId: sub.id,
+              success: true,
+              skipped: false,
+            );
+          },
+          showNotification: (_) async {},
+          timeBudget: const Duration(seconds: 60),
+        );
+
+        await service.execute();
+
+        // All three subscriptions must be attempted despite sub 1 throwing.
+        expect(syncedIds, [1, 2, 3]);
+      },
+    );
+
     test('does not notify when setting is disabled', () async {
       final sub = _makeSubscription(id: 1, title: 'Podcast 1');
       final episodes = [_makeEpisode(id: 11, podcastId: 1, title: 'Episode 1')];
