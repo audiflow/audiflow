@@ -17,6 +17,7 @@ import 'background_task_registrar.dart';
 // Temporary diagnostic helper for background refresh Sentry investigation.
 // Remove once the issue is resolved.
 void _bgDebug(String message) {
+  if (!kDebugMode) return;
   final stamped = '[BG-DEBUG ${DateTime.now().toIso8601String()}] $message';
   debugPrint(stamped);
   developer.log(stamped, name: 'BackgroundRefresh');
