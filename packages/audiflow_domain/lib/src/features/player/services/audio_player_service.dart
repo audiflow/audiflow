@@ -290,13 +290,21 @@ class AudioPlayerController extends _$AudioPlayerController
       _log.d('[Play] Calling setUrl...');
       await _player.setUrl(playUrl);
 
-      // Seek to saved position if resuming a previously played episode
+      // Seek to saved position if resuming a previously played episode.
+      // If position is within 2s of the end, replay from start instead.
       if (_currentEpisodeId != null) {
         final historyRepo = ref.read(playbackHistoryRepositoryProvider);
         final history = await historyRepo.getByEpisodeId(_currentEpisodeId!);
         if (history != null && 0 < history.positionMs) {
-          _log.d('[Play] Seeking to saved position: ${history.positionMs}ms');
-          await _player.seek(Duration(milliseconds: history.positionMs));
+          final nearEnd =
+              history.durationMs != null &&
+              history.durationMs! - history.positionMs <= 2000;
+          if (nearEnd) {
+            _log.d('[Play] Position near end, replaying from start');
+          } else {
+            _log.d('[Play] Seeking to saved position: ${history.positionMs}ms');
+            await _player.seek(Duration(milliseconds: history.positionMs));
+          }
         }
       }
 
