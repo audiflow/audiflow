@@ -12,10 +12,15 @@ abstract class PlaybackHistoryRepository {
   ///
   /// Updates position and optionally duration. Creates a new record
   /// if this is the first time playing the episode.
+  ///
+  /// [listenedDeltaMs] and [realtimeDeltaMs] are incremental durations
+  /// to accumulate into the episode's total statistics.
   Future<void> saveProgress({
     required int episodeId,
     required int positionMs,
     int? durationMs,
+    int listenedDeltaMs = 0,
+    int realtimeDeltaMs = 0,
   });
 
   /// Marks an episode as completed.

@@ -346,5 +346,17 @@
   "playNext": "次に再生",
   "downloadEpisode": "エピソードをダウンロード",
   "goToEpisode": "エピソードへ移動",
-  "removeDownload": "ダウンロードを削除"
+  "removeDownload": "ダウンロードを削除",
+  "statsTitle": "タイトル",
+  "statsPodcast": "ポッドキャスト",
+  "statsDuration": "再生時間",
+  "statsPublished": "公開日",
+  "statsTimesCompleted": "完了回数",
+  "statsTimesStarted": "再生回数",
+  "statsTotalListened": "総再生時間",
+  "statsRealtime": "実時間",
+  "statsFirstPlayed": "初回再生",
+  "statsLastPlayed": "最終再生",
+  "statsNever": "未再生",
+  "statsSection": "統計"
 }

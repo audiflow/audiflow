@@ -48,12 +48,16 @@ class MockPlaybackHistoryRepository extends _i1.Mock
     required int? episodeId,
     required int? positionMs,
     int? durationMs,
+    int? listenedDeltaMs = 0,
+    int? realtimeDeltaMs = 0,
   }) =>
       (super.noSuchMethod(
             Invocation.method(#saveProgress, [], {
               #episodeId: episodeId,
               #positionMs: positionMs,
               #durationMs: durationMs,
+              #listenedDeltaMs: listenedDeltaMs,
+              #realtimeDeltaMs: realtimeDeltaMs,
             }),
             returnValue: _i3.Future<void>.value(),
             returnValueForMissingStub: _i3.Future<void>.value(),

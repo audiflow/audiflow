@@ -29,7 +29,11 @@ class PlaybackHistoryLocalDatasource {
     });
   }
 
-  /// Updates playback position and lastPlayedAt timestamp.
+  /// Updates playback position, lastPlayedAt, and accumulated listen time.
+  ///
+  /// [listenedDeltaMs] and [realtimeDeltaMs] are incremental durations to
+  /// add to the running totals. Pass 0 when no accumulation is needed
+  /// (e.g. first save of a session).
   ///
   /// Atomic read-then-write inside a single transaction to
   /// prevent unique index violations from concurrent calls.
@@ -37,6 +41,8 @@ class PlaybackHistoryLocalDatasource {
     required int episodeId,
     required int positionMs,
     int? durationMs,
+    int listenedDeltaMs = 0,
+    int realtimeDeltaMs = 0,
   }) async {
     final now = DateTime.now();
     await _isar.writeTxn(() async {
@@ -49,7 +55,9 @@ class PlaybackHistoryLocalDatasource {
           ..durationMs = durationMs
           ..firstPlayedAt = now
           ..lastPlayedAt = now
-          ..playCount = 1;
+          ..playCount = 1
+          ..totalListenedMs = listenedDeltaMs
+          ..totalRealtimeMs = realtimeDeltaMs;
         await _isar.playbackHistorys.put(history);
       } else {
         existing.positionMs = positionMs;
@@ -57,6 +65,8 @@ class PlaybackHistoryLocalDatasource {
           existing.durationMs = durationMs;
         }
         existing.lastPlayedAt = now;
+        existing.totalListenedMs = existing.totalListenedMs + listenedDeltaMs;
+        existing.totalRealtimeMs = existing.totalRealtimeMs + realtimeDeltaMs;
         await _isar.playbackHistorys.put(existing);
       }
     });
@@ -74,11 +84,13 @@ class PlaybackHistoryLocalDatasource {
         final history = PlaybackHistory()
           ..episodeId = episodeId
           ..completedAt = now
-          ..lastPlayedAt = now;
+          ..lastPlayedAt = now
+          ..completedCount = 1;
         await _isar.playbackHistorys.put(history);
       } else {
         existing.completedAt = now;
         existing.lastPlayedAt = now;
+        existing.completedCount = existing.completedCount + 1;
         await _isar.playbackHistorys.put(existing);
       }
     });

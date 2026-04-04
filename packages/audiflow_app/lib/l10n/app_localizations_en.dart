@@ -1026,4 +1026,40 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get removeDownload => 'Remove download';
+
+  @override
+  String get statsTitle => 'Title';
+
+  @override
+  String get statsPodcast => 'Podcast';
+
+  @override
+  String get statsDuration => 'Duration';
+
+  @override
+  String get statsPublished => 'Published';
+
+  @override
+  String get statsTimesCompleted => 'Times completed';
+
+  @override
+  String get statsTimesStarted => 'Times started';
+
+  @override
+  String get statsTotalListened => 'Total listened';
+
+  @override
+  String get statsRealtime => 'Realtime';
+
+  @override
+  String get statsFirstPlayed => 'First played';
+
+  @override
+  String get statsLastPlayed => 'Last played';
+
+  @override
+  String get statsNever => 'Never';
+
+  @override
+  String get statsSection => 'Statistics';
 }
