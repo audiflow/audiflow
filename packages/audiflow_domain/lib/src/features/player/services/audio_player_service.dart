@@ -95,6 +95,7 @@ class AudioPlayerController extends _$AudioPlayerController
   StreamSubscription<PlayerState>? _stateSubscription;
   String? _currentUrl;
   int? _currentEpisodeId;
+  bool _isLoadingSource = false;
 
   @override
   PlaybackState build() {
@@ -112,7 +113,9 @@ class AudioPlayerController extends _$AudioPlayerController
       next,
     ) {
       final progress = next.value;
-      if (progress == null || _currentEpisodeId == null) return;
+      if (progress == null || _currentEpisodeId == null || _isLoadingSource) {
+        return;
+      }
 
       final historyService = ref.read(playbackHistoryServiceProvider);
       historyService.onProgressUpdate(_currentEpisodeId!, progress);
@@ -288,7 +291,9 @@ class AudioPlayerController extends _$AudioPlayerController
       }
 
       _log.d('[Play] Calling setUrl...');
+      _isLoadingSource = true;
       await _player.setUrl(playUrl);
+      _isLoadingSource = false;
 
       // Seek to saved position if resuming a previously played episode.
       // If position is within 2s of the end, replay from start instead.
