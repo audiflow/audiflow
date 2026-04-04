@@ -310,7 +310,8 @@ class AudioPlayerController extends _$AudioPlayerController
         if (history != null && 0 < history.positionMs) {
           final nearEnd =
               history.durationMs != null &&
-              history.durationMs! - history.positionMs <= 2000;
+              0 < history.durationMs! &&
+              history.durationMs! - 2000 < history.positionMs;
           if (nearEnd) {
             _log.d('[Play] Position near end, replaying from start');
           } else {
