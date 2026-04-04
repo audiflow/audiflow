@@ -26,10 +26,21 @@ class PodcastSortOrderController extends _$PodcastSortOrderController {
   }
 
   /// Persists [order] and updates state.
+  ///
+  /// Sets [AsyncError] if the write to SharedPreferences fails.
   Future<void> setSortOrder(PodcastSortOrder order) async {
     final prefs = ref.read(sharedPreferencesProvider);
-    await prefs.setString(_podcastSortOrderKey, order.name);
-    state = AsyncData(order);
+    final persisted = await prefs.setString(_podcastSortOrderKey, order.name);
+
+    if (persisted) {
+      state = AsyncData(order);
+      return;
+    }
+
+    state = AsyncError(
+      Exception('Failed to persist podcast sort order.'),
+      StackTrace.current,
+    );
   }
 }
 
