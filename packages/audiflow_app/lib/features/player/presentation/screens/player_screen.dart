@@ -186,30 +186,14 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
     final podcast = await _lookupPodcast(episode.podcastId, podcastTitle);
     if (podcast == null || !mounted) return;
 
-    final guid = episode.guid;
-    final podcastItem = PodcastItem(
-      parsedAt: DateTime.now(),
-      sourceUrl: episode.audioUrl,
-      title: episode.title,
-      description: episode.description ?? '',
-      publishDate: episode.publishedAt,
-      duration: episode.durationMs != null
-          ? Duration(milliseconds: episode.durationMs!)
-          : null,
-      enclosureUrl: episode.audioUrl,
-      guid: guid,
-      episodeNumber: episode.episodeNumber,
-      seasonNumber: episode.seasonNumber,
-    );
-
     final episodePath = AppRoutes.episodeDetail.replaceAll(
       ':episodeGuid',
-      Uri.encodeComponent(guid),
+      Uri.encodeComponent(episode.guid),
     );
     _popSheetAndPush(
       '${AppRoutes.library}/podcast/${podcast.id}/$episodePath',
       extra: <String, dynamic>{
-        'episode': podcastItem,
+        'episode': episode.toPodcastItem(feedUrl: podcast.feedUrl ?? ''),
         'podcastTitle': podcastTitle,
         'artworkUrl': artworkUrl,
       },

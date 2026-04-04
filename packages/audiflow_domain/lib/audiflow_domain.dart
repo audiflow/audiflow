@@ -82,6 +82,7 @@ export 'src/features/feed/datasources/local/smart_playlist_local_datasource.dart
 
 // Feed feature - Episodes
 export 'src/features/feed/models/episode.dart';
+export 'src/features/feed/models/episode_ext.dart';
 export 'src/features/feed/datasources/local/episode_local_datasource.dart';
 export 'src/features/feed/repositories/episode_repository.dart';
 export 'src/features/feed/repositories/episode_repository_impl.dart';
