@@ -219,19 +219,17 @@ class QueueService {
     _logger.d('Reordered queue item $queueItemId to index $newIndex');
   }
 
-  /// Gets the next episode and removes the current first item.
+  /// Gets the next episode to play and removes it from the queue.
   ///
   /// This is typically called when playback completes and the player
   /// needs to advance to the next episode. Returns the next episode
   /// to play, or null if the queue is empty.
   Future<Episode?> getNextAndRemoveCurrent() async {
-    // Remove the current first item
-    await _repository.removeFirst();
-
-    // Get the new next episode
+    // Read the next episode before removing it from the queue
     final nextEpisode = await _repository.getNextEpisode();
 
     if (nextEpisode != null) {
+      await _repository.removeFirst();
       _logger.i('Next episode: ${nextEpisode.title}');
     } else {
       _logger.d('Queue is now empty');

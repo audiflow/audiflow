@@ -628,27 +628,55 @@ void main() {
   });
 
   group('getNextAndRemoveCurrent', () {
-    test('removes first item and returns next episode', () async {
+    test('returns next episode and removes it from queue', () async {
       final nextEpisode = _episode(id: 2);
 
-      when(mockQueueRepo.removeFirst()).thenAnswer((_) async {});
       when(mockQueueRepo.getNextEpisode()).thenAnswer((_) async => nextEpisode);
+      when(mockQueueRepo.removeFirst()).thenAnswer((_) async {});
 
       final result = await service.getNextAndRemoveCurrent();
 
       expect(result, isNotNull);
       expect(result!.id, 2);
-      verify(mockQueueRepo.removeFirst()).called(1);
       verify(mockQueueRepo.getNextEpisode()).called(1);
+      verify(mockQueueRepo.removeFirst()).called(1);
     });
 
-    test('returns null when queue is empty', () async {
-      when(mockQueueRepo.removeFirst()).thenAnswer((_) async {});
+    test('returns null and does not remove when queue is empty', () async {
       when(mockQueueRepo.getNextEpisode()).thenAnswer((_) async => null);
 
       final result = await service.getNextAndRemoveCurrent();
 
       expect(result, isNull);
+      verifyNever(mockQueueRepo.removeFirst());
+    });
+
+    test('returns episodes in FIFO order across successive calls', () async {
+      final ep2 = _episode(id: 2, title: 'Episode 2');
+      final ep3 = _episode(id: 3, title: 'Episode 3');
+
+      // Use a stateful fake: a mutable list that getNextEpisode reads
+      // from and removeFirst mutates, so call ordering matters.
+      final queue = [ep2, ep3];
+
+      when(
+        mockQueueRepo.getNextEpisode(),
+      ).thenAnswer((_) async => queue.isEmpty ? null : queue.first);
+      when(mockQueueRepo.removeFirst()).thenAnswer((_) async {
+        if (queue.isNotEmpty) queue.removeAt(0);
+      });
+
+      // First advance: should return ep2
+      final first = await service.getNextAndRemoveCurrent();
+      expect(first?.id, 2);
+
+      // Second advance: should return ep3
+      final second = await service.getNextAndRemoveCurrent();
+      expect(second?.id, 3);
+
+      // Third advance: queue empty
+      final third = await service.getNextAndRemoveCurrent();
+      expect(third, isNull);
     });
   });
 
