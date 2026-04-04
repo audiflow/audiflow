@@ -19,6 +19,27 @@ void main() {
   });
 
   group('onProgressUpdate', () {
+    test('skips save when duration is zero (source not loaded)', () async {
+      const episodeId = 1;
+      final progress = PlaybackProgress(
+        position: const Duration(seconds: 20),
+        duration: Duration.zero,
+        bufferedPosition: Duration.zero,
+      );
+
+      await service.onProgressUpdate(episodeId, progress);
+
+      verifyNever(
+        mockRepository.saveProgress(
+          episodeId: anyNamed('episodeId'),
+          positionMs: anyNamed('positionMs'),
+          durationMs: anyNamed('durationMs'),
+        ),
+      );
+      verifyNever(mockRepository.isCompleted(any));
+      verifyNever(mockRepository.markCompleted(any));
+    });
+
     test('saves progress when interval exceeded', () async {
       const episodeId = 1;
       final progress = PlaybackProgress(
@@ -49,17 +70,17 @@ void main() {
 
     test('does not save progress when interval not exceeded', () async {
       const episodeId = 1;
-      // First call at 20 seconds will save (delta from 0 is 20000 >= 15000)
+      // First call at 6 seconds will save (delta from 0 is 6000 >= 5000)
       final progress1 = PlaybackProgress(
-        position: const Duration(seconds: 20),
+        position: const Duration(seconds: 6),
         duration: const Duration(minutes: 30),
-        bufferedPosition: const Duration(seconds: 25),
+        bufferedPosition: const Duration(seconds: 10),
       );
-      // Second call at 25 seconds won't save (delta from 20 is 5000 < 15000)
+      // Second call at 9 seconds won't save (delta from 6 is 3000 < 5000)
       final progress2 = PlaybackProgress(
-        position: const Duration(seconds: 25),
+        position: const Duration(seconds: 9),
         duration: const Duration(minutes: 30),
-        bufferedPosition: const Duration(seconds: 30),
+        bufferedPosition: const Duration(seconds: 14),
       );
 
       when(
@@ -74,11 +95,11 @@ void main() {
       await service.onProgressUpdate(episodeId, progress1);
       await service.onProgressUpdate(episodeId, progress2);
 
-      // Only first call should save (second is within 15 second interval)
+      // Only first call should save (second is within 5 second interval)
       verify(
         mockRepository.saveProgress(
           episodeId: episodeId,
-          positionMs: 20000,
+          positionMs: 6000,
           durationMs: 1800000,
         ),
       ).called(1);
@@ -237,18 +258,18 @@ void main() {
   group('reset', () {
     test('resets tracking state allowing immediate save', () async {
       const episodeId = 1;
-      // First call at 20 seconds will save (delta from 0 is 20000 >= 15000)
+      // First call at 6 seconds will save (delta from 0 is 6000 >= 5000)
       final progress1 = PlaybackProgress(
-        position: const Duration(seconds: 20),
+        position: const Duration(seconds: 6),
         duration: const Duration(minutes: 30),
-        bufferedPosition: const Duration(seconds: 25),
+        bufferedPosition: const Duration(seconds: 10),
       );
       // After reset, _lastSavedPositionMs goes back to 0
-      // So 20 seconds again will save (delta from 0 is 20000 >= 15000)
+      // So 6 seconds again will save (delta from 0 is 6000 >= 5000)
       final progress2 = PlaybackProgress(
-        position: const Duration(seconds: 20),
+        position: const Duration(seconds: 6),
         duration: const Duration(minutes: 30),
-        bufferedPosition: const Duration(seconds: 25),
+        bufferedPosition: const Duration(seconds: 10),
       );
 
       when(
@@ -272,7 +293,7 @@ void main() {
       verify(
         mockRepository.saveProgress(
           episodeId: episodeId,
-          positionMs: 20000,
+          positionMs: 6000,
           durationMs: 1800000,
         ),
       ).called(2);

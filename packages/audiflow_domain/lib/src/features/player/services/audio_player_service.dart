@@ -95,6 +95,7 @@ class AudioPlayerController extends _$AudioPlayerController
   StreamSubscription<PlayerState>? _stateSubscription;
   String? _currentUrl;
   int? _currentEpisodeId;
+  bool _isLoadingSource = false;
 
   @override
   PlaybackState build() {
@@ -112,7 +113,9 @@ class AudioPlayerController extends _$AudioPlayerController
       next,
     ) {
       final progress = next.value;
-      if (progress == null || _currentEpisodeId == null) return;
+      if (progress == null || _currentEpisodeId == null || _isLoadingSource) {
+        return;
+      }
 
       final historyService = ref.read(playbackHistoryServiceProvider);
       historyService.onProgressUpdate(_currentEpisodeId!, progress);
@@ -165,7 +168,7 @@ class AudioPlayerController extends _$AudioPlayerController
   }
 
   Future<void> _saveProgressOnStop() async {
-    if (_currentEpisodeId == null) return;
+    if (_currentEpisodeId == null || _isLoadingSource) return;
 
     final progress = ref.read(playbackProgressProvider);
     if (progress == null) return;
@@ -262,41 +265,61 @@ class AudioPlayerController extends _$AudioPlayerController
       final episode = await episodeRepo.getByAudioUrl(url);
       _log.d('[Play] Episode lookup: ${episode?.id ?? "not found"}');
 
-      _currentUrl = url;
-      _currentEpisodeId = episode?.id;
-      state = PlaybackState.loading(episodeUrl: url);
+      // Guard progress listener (and pause/stop save paths) before mutating
+      // current-episode state. Without this, awaited work below can yield to
+      // the progress listener which would save stale position data under the
+      // new episode ID.
+      _isLoadingSource = true;
+      try {
+        _currentUrl = url;
+        _currentEpisodeId = episode?.id;
+        state = PlaybackState.loading(episodeUrl: url);
 
-      // Update now playing controller if metadata is provided
-      if (metadata != null) {
-        // Ensure the episode object is attached so the player screen
-        // can access episodeId for the transcript tab.
-        final enriched = episode != null && metadata.episode == null
-            ? metadata.copyWith(episode: episode)
-            : metadata;
-        ref.read(nowPlayingControllerProvider.notifier).setNowPlaying(enriched);
-      }
-
-      // Check for local download
-      String playUrl = url;
-      if (episode != null) {
-        final downloadService = ref.read(downloadServiceProvider);
-        final localPath = await downloadService.getLocalPath(episode.id);
-        if (localPath != null) {
-          playUrl = 'file://$localPath';
-          _log.d('[Play] Using local file: $playUrl');
+        // Update now playing controller if metadata is provided
+        if (metadata != null) {
+          // Ensure the episode object is attached so the player screen
+          // can access episodeId for the transcript tab.
+          final enriched = episode != null && metadata.episode == null
+              ? metadata.copyWith(episode: episode)
+              : metadata;
+          ref
+              .read(nowPlayingControllerProvider.notifier)
+              .setNowPlaying(enriched);
         }
+
+        // Check for local download
+        String playUrl = url;
+        if (episode != null) {
+          final downloadService = ref.read(downloadServiceProvider);
+          final localPath = await downloadService.getLocalPath(episode.id);
+          if (localPath != null) {
+            playUrl = 'file://$localPath';
+            _log.d('[Play] Using local file: $playUrl');
+          }
+        }
+
+        _log.d('[Play] Calling setUrl...');
+        await _player.setUrl(playUrl);
+      } finally {
+        _isLoadingSource = false;
       }
 
-      _log.d('[Play] Calling setUrl...');
-      await _player.setUrl(playUrl);
-
-      // Seek to saved position if resuming a previously played episode
+      // Seek to saved position if resuming a previously played episode.
+      // If position is within 2s of the end, replay from start instead.
       if (_currentEpisodeId != null) {
         final historyRepo = ref.read(playbackHistoryRepositoryProvider);
         final history = await historyRepo.getByEpisodeId(_currentEpisodeId!);
         if (history != null && 0 < history.positionMs) {
-          _log.d('[Play] Seeking to saved position: ${history.positionMs}ms');
-          await _player.seek(Duration(milliseconds: history.positionMs));
+          final nearEnd =
+              history.durationMs != null &&
+              0 < history.durationMs! &&
+              history.durationMs! - 2000 <= history.positionMs;
+          if (nearEnd) {
+            _log.d('[Play] Position near end, replaying from start');
+          } else {
+            _log.d('[Play] Seeking to saved position: ${history.positionMs}ms');
+            await _player.seek(Duration(milliseconds: history.positionMs));
+          }
         }
       }
 
@@ -328,8 +351,9 @@ class AudioPlayerController extends _$AudioPlayerController
   /// Saves playback progress to history.
   @override
   Future<void> pause() async {
-    // Save progress on pause
-    if (_currentEpisodeId != null) {
+    // Save progress on pause — skip during source loading to avoid
+    // persisting stale data from the previous episode.
+    if (_currentEpisodeId != null && !_isLoadingSource) {
       final progress = ref.read(playbackProgressProvider);
       if (progress != null) {
         final historyService = ref.read(playbackHistoryServiceProvider);

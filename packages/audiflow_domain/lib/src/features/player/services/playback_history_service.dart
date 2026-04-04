@@ -36,8 +36,8 @@ class PlaybackHistoryService {
   final double Function() _getCompletionThreshold;
   final StationReconcilerService? _reconcilerService;
 
-  /// Minimum interval between progress saves (15 seconds).
-  static const int saveIntervalMs = 15000;
+  /// Minimum interval between progress saves (5 seconds).
+  static const int saveIntervalMs = 5000;
 
   /// Position threshold for considering playback "from beginning" (5 seconds).
   static const int fromBeginningThresholdMs = 5000;
@@ -60,7 +60,7 @@ class PlaybackHistoryService {
 
   /// Called on each progress update during playback.
   ///
-  /// Throttles saves to every 15 seconds. Auto-marks as completed
+  /// Throttles saves to every 5 seconds. Auto-marks as completed
   /// when progress reaches 95%.
   Future<void> onProgressUpdate(
     int episodeId,
@@ -69,7 +69,11 @@ class PlaybackHistoryService {
     final positionMs = progress.position.inMilliseconds;
     final durationMs = progress.duration.inMilliseconds;
 
-    // Throttle saves to every 15 seconds
+    // Skip when source hasn't loaded yet — position data is stale from
+    // the previous episode during track transitions.
+    if (durationMs == 0) return;
+
+    // Throttle saves to every 5 seconds
     final delta = (positionMs - _lastSavedPositionMs).abs();
     if (delta < saveIntervalMs) return;
 
