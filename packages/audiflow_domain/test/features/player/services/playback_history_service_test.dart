@@ -1,6 +1,5 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:logger/logger.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 
@@ -15,7 +14,6 @@ void main() {
     mockRepository = MockPlaybackHistoryRepository();
     service = PlaybackHistoryService(
       mockRepository,
-      log: Logger(level: Level.off),
       getCompletionThreshold: () => 0.95,
     );
   });

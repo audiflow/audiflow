@@ -1,7 +1,5 @@
-import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../../common/providers/logger_provider.dart';
 import '../../settings/providers/settings_providers.dart';
 import '../../station/services/station_reconciler_service.dart';
 import '../models/playback_progress.dart';
@@ -16,10 +14,8 @@ PlaybackHistoryService playbackHistoryService(Ref ref) {
   final repository = ref.watch(playbackHistoryRepositoryProvider);
   final settingsRepo = ref.watch(appSettingsRepositoryProvider);
   final reconcilerService = ref.watch(stationReconcilerServiceProvider);
-  final log = ref.watch(namedLoggerProvider('PlaybackHistory'));
   return PlaybackHistoryService(
     repository,
-    log: log,
     getCompletionThreshold: settingsRepo.getAutoCompleteThreshold,
     reconcilerService: reconcilerService,
   );
@@ -31,15 +27,12 @@ PlaybackHistoryService playbackHistoryService(Ref ref) {
 class PlaybackHistoryService {
   PlaybackHistoryService(
     this._repository, {
-    required Logger log,
     required double Function() getCompletionThreshold,
     StationReconcilerService? reconcilerService,
-  }) : _log = log,
-       _getCompletionThreshold = getCompletionThreshold,
+  }) : _getCompletionThreshold = getCompletionThreshold,
        _reconcilerService = reconcilerService;
 
   final PlaybackHistoryRepository _repository;
-  final Logger _log;
   final double Function() _getCompletionThreshold;
   final StationReconcilerService? _reconcilerService;
 
@@ -56,10 +49,6 @@ class PlaybackHistoryService {
   ///
   /// Increments play count if starting from the beginning.
   Future<void> onPlaybackStarted(int episodeId, int positionMs) async {
-    _log.i(
-      '[Started] episodeId=$episodeId, positionMs=$positionMs, '
-      'fromBeginning=${positionMs < fromBeginningThresholdMs}',
-    );
     _lastSavedPositionMs = positionMs;
     _notifiedInProgressThisSession = false;
 
@@ -82,27 +71,16 @@ class PlaybackHistoryService {
 
     // Skip when source hasn't loaded yet — position data is stale from
     // the previous episode during track transitions.
-    if (durationMs == 0) {
-      _log.d('[Skipped] episodeId=$episodeId, dur=0 (source not loaded)');
-      return;
-    }
+    // Skip when source hasn't loaded yet — position data is stale from
+    // the previous episode during track transitions.
+    if (durationMs == 0) return;
 
     // Throttle saves to every 5 seconds
     final delta = (positionMs - _lastSavedPositionMs).abs();
-    if (delta < saveIntervalMs) {
-      _log.d(
-        '[Throttled] episodeId=$episodeId, delta=${delta}ms, '
-        'need=${saveIntervalMs}ms',
-      );
-      return;
-    }
+    if (delta < saveIntervalMs) return;
 
     _lastSavedPositionMs = positionMs;
 
-    _log.i(
-      '[Save] episodeId=$episodeId, pos=${positionMs}ms, '
-      'dur=${durationMs}ms',
-    );
     await _repository.saveProgress(
       episodeId: episodeId,
       positionMs: positionMs,
@@ -135,11 +113,6 @@ class PlaybackHistoryService {
     int episodeId,
     PlaybackProgress progress,
   ) async {
-    _log.i(
-      '[Paused] episodeId=$episodeId, '
-      'pos=${progress.position.inMilliseconds}ms, '
-      'dur=${progress.duration.inMilliseconds}ms',
-    );
     _lastSavedPositionMs = progress.position.inMilliseconds;
 
     await _repository.saveProgress(
@@ -156,11 +129,6 @@ class PlaybackHistoryService {
     int episodeId,
     PlaybackProgress progress,
   ) async {
-    _log.i(
-      '[Stopped] episodeId=$episodeId, '
-      'pos=${progress.position.inMilliseconds}ms, '
-      'dur=${progress.duration.inMilliseconds}ms',
-    );
     await _repository.saveProgress(
       episodeId: episodeId,
       positionMs: progress.position.inMilliseconds,
