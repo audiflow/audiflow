@@ -142,6 +142,7 @@ Future<void> _startApp(String smartPlaylistConfigBaseUrl) async {
       await BackgroundTaskRegistrar.register(
         intervalMinutes: settingsRepo.getSyncIntervalMinutes(),
         wifiOnly: settingsRepo.getWifiOnlySync(),
+        inputData: BackgroundTaskRegistrar.buildInputData(settingsRepo),
       );
     }
   } catch (e, stack) {

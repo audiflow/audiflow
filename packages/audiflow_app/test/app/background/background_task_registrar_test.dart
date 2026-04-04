@@ -15,7 +15,10 @@ void main() {
       // Workmanager throws UnimplementedError in test environments;
       // register() should swallow it gracefully.
       await expectLater(
-        BackgroundTaskRegistrar.register(intervalMinutes: 60),
+        BackgroundTaskRegistrar.register(
+          intervalMinutes: 60,
+          inputData: const {},
+        ),
         completes,
       );
     });
