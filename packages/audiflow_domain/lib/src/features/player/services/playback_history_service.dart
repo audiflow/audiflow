@@ -60,7 +60,7 @@ class PlaybackHistoryService {
 
   /// Called on each progress update during playback.
   ///
-  /// Throttles saves to every 15 seconds. Auto-marks as completed
+  /// Throttles saves to every 5 seconds. Auto-marks as completed
   /// when progress reaches 95%.
   Future<void> onProgressUpdate(
     int episodeId,
@@ -69,8 +69,6 @@ class PlaybackHistoryService {
     final positionMs = progress.position.inMilliseconds;
     final durationMs = progress.duration.inMilliseconds;
 
-    // Skip when source hasn't loaded yet — position data is stale from
-    // the previous episode during track transitions.
     // Skip when source hasn't loaded yet — position data is stale from
     // the previous episode during track transitions.
     if (durationMs == 0) return;

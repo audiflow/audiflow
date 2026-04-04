@@ -265,6 +265,11 @@ class AudioPlayerController extends _$AudioPlayerController
       final episode = await episodeRepo.getByAudioUrl(url);
       _log.d('[Play] Episode lookup: ${episode?.id ?? "not found"}');
 
+      // Guard progress listener before mutating current-episode state.
+      // Without this, awaited work below can yield to the progress listener
+      // which would save stale position data under the new episode ID.
+      _isLoadingSource = true;
+
       _currentUrl = url;
       _currentEpisodeId = episode?.id;
       state = PlaybackState.loading(episodeUrl: url);
@@ -291,9 +296,11 @@ class AudioPlayerController extends _$AudioPlayerController
       }
 
       _log.d('[Play] Calling setUrl...');
-      _isLoadingSource = true;
-      await _player.setUrl(playUrl);
-      _isLoadingSource = false;
+      try {
+        await _player.setUrl(playUrl);
+      } finally {
+        _isLoadingSource = false;
+      }
 
       // Seek to saved position if resuming a previously played episode.
       // If position is within 2s of the end, replay from start instead.

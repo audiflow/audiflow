@@ -19,6 +19,27 @@ void main() {
   });
 
   group('onProgressUpdate', () {
+    test('skips save when duration is zero (source not loaded)', () async {
+      const episodeId = 1;
+      final progress = PlaybackProgress(
+        position: const Duration(seconds: 20),
+        duration: Duration.zero,
+        bufferedPosition: Duration.zero,
+      );
+
+      await service.onProgressUpdate(episodeId, progress);
+
+      verifyNever(
+        mockRepository.saveProgress(
+          episodeId: anyNamed('episodeId'),
+          positionMs: anyNamed('positionMs'),
+          durationMs: anyNamed('durationMs'),
+        ),
+      );
+      verifyNever(mockRepository.isCompleted(any));
+      verifyNever(mockRepository.markCompleted(any));
+    });
+
     test('saves progress when interval exceeded', () async {
       const episodeId = 1;
       final progress = PlaybackProgress(
