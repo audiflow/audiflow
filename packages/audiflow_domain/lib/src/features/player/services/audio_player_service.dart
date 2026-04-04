@@ -168,7 +168,7 @@ class AudioPlayerController extends _$AudioPlayerController
   }
 
   Future<void> _saveProgressOnStop() async {
-    if (_currentEpisodeId == null) return;
+    if (_currentEpisodeId == null || _isLoadingSource) return;
 
     final progress = ref.read(playbackProgressProvider);
     if (progress == null) return;
@@ -265,38 +265,40 @@ class AudioPlayerController extends _$AudioPlayerController
       final episode = await episodeRepo.getByAudioUrl(url);
       _log.d('[Play] Episode lookup: ${episode?.id ?? "not found"}');
 
-      // Guard progress listener before mutating current-episode state.
-      // Without this, awaited work below can yield to the progress listener
-      // which would save stale position data under the new episode ID.
+      // Guard progress listener (and pause/stop save paths) before mutating
+      // current-episode state. Without this, awaited work below can yield to
+      // the progress listener which would save stale position data under the
+      // new episode ID.
       _isLoadingSource = true;
-
-      _currentUrl = url;
-      _currentEpisodeId = episode?.id;
-      state = PlaybackState.loading(episodeUrl: url);
-
-      // Update now playing controller if metadata is provided
-      if (metadata != null) {
-        // Ensure the episode object is attached so the player screen
-        // can access episodeId for the transcript tab.
-        final enriched = episode != null && metadata.episode == null
-            ? metadata.copyWith(episode: episode)
-            : metadata;
-        ref.read(nowPlayingControllerProvider.notifier).setNowPlaying(enriched);
-      }
-
-      // Check for local download
-      String playUrl = url;
-      if (episode != null) {
-        final downloadService = ref.read(downloadServiceProvider);
-        final localPath = await downloadService.getLocalPath(episode.id);
-        if (localPath != null) {
-          playUrl = 'file://$localPath';
-          _log.d('[Play] Using local file: $playUrl');
-        }
-      }
-
-      _log.d('[Play] Calling setUrl...');
       try {
+        _currentUrl = url;
+        _currentEpisodeId = episode?.id;
+        state = PlaybackState.loading(episodeUrl: url);
+
+        // Update now playing controller if metadata is provided
+        if (metadata != null) {
+          // Ensure the episode object is attached so the player screen
+          // can access episodeId for the transcript tab.
+          final enriched = episode != null && metadata.episode == null
+              ? metadata.copyWith(episode: episode)
+              : metadata;
+          ref
+              .read(nowPlayingControllerProvider.notifier)
+              .setNowPlaying(enriched);
+        }
+
+        // Check for local download
+        String playUrl = url;
+        if (episode != null) {
+          final downloadService = ref.read(downloadServiceProvider);
+          final localPath = await downloadService.getLocalPath(episode.id);
+          if (localPath != null) {
+            playUrl = 'file://$localPath';
+            _log.d('[Play] Using local file: $playUrl');
+          }
+        }
+
+        _log.d('[Play] Calling setUrl...');
         await _player.setUrl(playUrl);
       } finally {
         _isLoadingSource = false;
@@ -311,7 +313,7 @@ class AudioPlayerController extends _$AudioPlayerController
           final nearEnd =
               history.durationMs != null &&
               0 < history.durationMs! &&
-              history.durationMs! - 2000 < history.positionMs;
+              history.durationMs! - 2000 <= history.positionMs;
           if (nearEnd) {
             _log.d('[Play] Position near end, replaying from start');
           } else {
@@ -349,8 +351,9 @@ class AudioPlayerController extends _$AudioPlayerController
   /// Saves playback progress to history.
   @override
   Future<void> pause() async {
-    // Save progress on pause
-    if (_currentEpisodeId != null) {
+    // Save progress on pause — skip during source loading to avoid
+    // persisting stale data from the previous episode.
+    if (_currentEpisodeId != null && !_isLoadingSource) {
       final progress = ref.read(playbackProgressProvider);
       if (progress != null) {
         final historyService = ref.read(playbackHistoryServiceProvider);
