@@ -28,9 +28,9 @@ class _FeedSyncSettingsScreenState
     await _updateBackgroundRegistration(repo, replaceExisting: replaceExisting);
   }
 
-  // Use [replaceExisting] true only when the scheduling parameters change
-  // (interval, wifi-only). Passing true resets the periodic task timer,
-  // which would perpetually delay execution if called on every settings change.
+  // Use [replaceExisting] true when the scheduling parameters or background
+  // behavior settings change (interval, wifi-only, notifications). Passing
+  // true resets the periodic task timer, so avoid it for cosmetic changes.
   Future<void> _updateBackgroundRegistration(
     AppSettingsRepository repo, {
     bool replaceExisting = false,
