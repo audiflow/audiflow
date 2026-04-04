@@ -687,7 +687,8 @@ Conformance tests at `packages/audiflow_domain/test/features/feed/models/schema_
 Always use these exact values in test data. Never use legacy names like `rssSeason`, `categoryGroup`, or `flat`.
 
 **To update the vendored schemas:**
-1. Copy all `*.schema.json` from `crates/sp_core/assets/` to `packages/audiflow_domain/test/fixtures/`
+1. Copy all `*.schema.json` from `audiflow-smartplaylist-schema` (canonical source) to `packages/audiflow_domain/test/fixtures/`
+   - Note: `audiflow-smartplaylist-editor/crates/sp_core/assets/` is kept in sync via CI but the schema repo is authoritative
 2. Run conformance tests: `flutter test packages/audiflow_domain/test/features/feed/models/schema_conformance_test.dart`
 3. Fix any drift (update models/enums/test data to match)
 4. Run full suite: `flutter test packages/audiflow_domain`

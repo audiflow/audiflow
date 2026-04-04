@@ -136,9 +136,9 @@ void main() {
     });
   });
 
-  group('enum values match vendored schema.json', () {
+  group('enum values match vendored playlist-definition schema', () {
     test('resolverTypes match schema oneOf', () {
-      // The v2 schema validates definitions directly at root level
+      // The v3 schema validates definitions directly at root level
       final props = schema['properties'] as Map<String, dynamic>;
       final resolverType = props['resolverType'] as Map<String, dynamic>;
       final schemaValues = _extractEnum(resolverType);
