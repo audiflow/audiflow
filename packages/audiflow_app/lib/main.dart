@@ -55,24 +55,20 @@ Future<void> appMain({
             ? sentryEnvironment
             : flavor.name;
         options.tracesSampleRate = 0;
-        options.debug = true;
+        options.debug = kDebugMode;
       },
       appRunner: () async {
-        // Diagnostic: verify Sentry pipeline on boot.
-        final sentryId = await Sentry.captureMessage(
-          'app-boot: Sentry initialized',
-          level: SentryLevel.info,
-        );
-        debugPrint('[SENTRY-DIAG] boot captureMessage sentryId=$sentryId');
         await _startApp(smartPlaylistConfigBaseUrl);
       },
     );
   } else {
-    debugPrint(
-      '[SENTRY-DIAG] Sentry SKIPPED — '
-      'enableCrashReporting=${flavorConfig.enableCrashReporting}, '
-      'dsnEmpty=${sentryDsn.isEmpty}',
-    );
+    if (kDebugMode) {
+      debugPrint(
+        '[SENTRY-DIAG] Sentry SKIPPED — '
+        'enableCrashReporting=${flavorConfig.enableCrashReporting}, '
+        'dsnEmpty=${sentryDsn.isEmpty}',
+      );
+    }
     await _startApp(smartPlaylistConfigBaseUrl);
   }
 }

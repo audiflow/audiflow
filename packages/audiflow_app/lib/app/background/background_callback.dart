@@ -3,6 +3,7 @@ import 'dart:developer' as developer;
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:isar_community/isar.dart';
 import 'package:logger/logger.dart';
@@ -25,8 +26,9 @@ void _bgDebug(String message) {
 void backgroundCallback() {
   Workmanager().executeTask((taskName, inputData) async {
     // Ensure platform channels are available in the background isolate.
-    // Without this, plugins like SharedPreferences (Pigeon-based) fail with
-    // "Unable to establish connection on channel" errors.
+    // Without this, plugins that use platform channels (Isar, connectivity_plus,
+    // path_provider, etc.) fail with "Unable to establish connection on channel"
+    // errors.
     WidgetsFlutterBinding.ensureInitialized();
 
     _bgDebug('executeTask called — taskName=$taskName');
@@ -58,7 +60,7 @@ void backgroundCallback() {
           options.dsn = sentryDsn;
           options.tracesSampleRate = 0;
           options.environment = sentryEnvironment;
-          options.debug = true;
+          options.debug = kDebugMode;
         });
         sentryInitialized = true;
         _bgDebug('Sentry.init succeeded');
@@ -81,12 +83,6 @@ void backgroundCallback() {
           category: 'background',
         ),
       );
-      // Diagnostic: send a message event so we know the pipeline works.
-      final sentryId = await Sentry.captureMessage(
-        'bg-refresh: started',
-        level: SentryLevel.info,
-      );
-      _bgDebug('captureMessage sentryId=$sentryId');
     }
 
     Isar? isar;
@@ -229,12 +225,6 @@ void backgroundCallback() {
             category: 'background',
           ),
         );
-        // Diagnostic: send completion event with breadcrumb trail attached.
-        final sentryId = await Sentry.captureMessage(
-          'bg-refresh: completed',
-          level: SentryLevel.info,
-        );
-        _bgDebug('completion captureMessage sentryId=$sentryId');
       }
     } catch (e, stack) {
       _bgDebug('background refresh FAILED: $e');

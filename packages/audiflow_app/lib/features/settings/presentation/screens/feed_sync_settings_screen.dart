@@ -52,13 +52,21 @@ class _FeedSyncSettingsScreenState
     bool enabled,
   ) async {
     if (!enabled) {
-      await _update(repo, () => repo.setNotifyNewEpisodes(false));
+      await _update(
+        repo,
+        () => repo.setNotifyNewEpisodes(false),
+        replaceExisting: true,
+      );
       return;
     }
 
     final status = await Permission.notification.status;
     if (status.isGranted) {
-      await _update(repo, () => repo.setNotifyNewEpisodes(true));
+      await _update(
+        repo,
+        () => repo.setNotifyNewEpisodes(true),
+        replaceExisting: true,
+      );
       return;
     }
 
@@ -90,7 +98,11 @@ class _FeedSyncSettingsScreenState
 
     final result = await Permission.notification.request();
     if (result.isGranted) {
-      await _update(repo, () => repo.setNotifyNewEpisodes(true));
+      await _update(
+        repo,
+        () => repo.setNotifyNewEpisodes(true),
+        replaceExisting: true,
+      );
     }
   }
 
