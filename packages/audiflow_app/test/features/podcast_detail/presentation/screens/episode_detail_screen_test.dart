@@ -191,7 +191,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Title appears in the screen header, stats table, and bottom sheet
-      expect(find.text('Test Episode Title'), findsAtLeast(2));
+      expect(find.text('Test Episode Title'), findsNWidgets(3));
     });
 
     testWidgets('context menu shows Play next option', (tester) async {
