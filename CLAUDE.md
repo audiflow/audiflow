@@ -55,4 +55,4 @@ melos run codegen      # Code generation
 
 - Schema/model changes: coordinate with `audiflow-smartplaylist-editor` (sp_core)
 - Run schema conformance tests: `flutter test packages/audiflow_domain/test/features/feed/models/schema_conformance_test.dart`
-- Update vendored schema if upstream changed: copy from `crates/sp_core/assets/*.schema.json`
+- Update vendored schema if upstream changed: copy from `audiflow-smartplaylist-schema` (canonical source)

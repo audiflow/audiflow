@@ -1,17 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:audiflow_domain/src/features/feed/models/episode_filters.dart';
-import 'package:audiflow_domain/src/features/feed/models/episode_filter_entry.dart';
-import 'package:audiflow_domain/src/features/feed/models/episode_list_config.dart';
-import 'package:audiflow_domain/src/features/feed/models/episode_sort_rule.dart';
-import 'package:audiflow_domain/src/features/feed/models/group_list_config.dart';
-import 'package:audiflow_domain/src/features/feed/models/smart_playlist.dart';
-import 'package:audiflow_domain/src/features/feed/models/smart_playlist_definition.dart';
-import 'package:audiflow_domain/src/features/feed/models/smart_playlist_episode_extractor.dart';
-import 'package:audiflow_domain/src/features/feed/models/smart_playlist_group_def.dart';
-import 'package:audiflow_domain/src/features/feed/models/smart_playlist_sort.dart';
-import 'package:audiflow_domain/src/features/feed/models/smart_playlist_title_extractor.dart';
+import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:json_schema/json_schema.dart';
 
@@ -32,9 +22,9 @@ String _fixturePath(String relativePath) {
   throw StateError('Fixture not found: $relativePath');
 }
 
-/// Loads and parses the vendored schema.json.
-Map<String, dynamic> _loadSchema() {
-  final file = File(_fixturePath('schema.json'));
+/// Loads and parses a vendored schema file.
+Map<String, dynamic> _loadSchema(String filename) {
+  final file = File(_fixturePath(filename));
   return jsonDecode(file.readAsStringSync()) as Map<String, dynamic>;
 }
 
@@ -55,12 +45,21 @@ void main() {
   late Map<String, dynamic> schema;
   late Map<String, dynamic> defs;
   late JsonSchema jsonSchema;
+  late Map<String, dynamic> patternIndexSchema;
+  late JsonSchema patternIndexJsonSchema;
+  late Map<String, dynamic> patternMetaSchema;
+  late JsonSchema patternMetaJsonSchema;
 
   setUpAll(() {
-    schema = _loadSchema();
+    schema = _loadSchema('playlist-definition.schema.json');
     defs = schema[r'$defs'] as Map<String, dynamic>;
-    final schemaString = jsonEncode(schema);
-    jsonSchema = JsonSchema.create(schemaString);
+    jsonSchema = JsonSchema.create(jsonEncode(schema));
+
+    patternIndexSchema = _loadSchema('pattern-index.schema.json');
+    patternIndexJsonSchema = JsonSchema.create(jsonEncode(patternIndexSchema));
+
+    patternMetaSchema = _loadSchema('pattern-meta.schema.json');
+    patternMetaJsonSchema = JsonSchema.create(jsonEncode(patternMetaSchema));
   });
 
   /// Validates a parsed JSON object against the schema.
@@ -137,9 +136,9 @@ void main() {
     });
   });
 
-  group('enum values match vendored schema.json', () {
+  group('enum values match vendored playlist-definition schema', () {
     test('resolverTypes match schema oneOf', () {
-      // The v2 schema validates definitions directly at root level
+      // The v3 schema validates definitions directly at root level
       final props = schema['properties'] as Map<String, dynamic>;
       final resolverType = props['resolverType'] as Map<String, dynamic>;
       final schemaValues = _extractEnum(resolverType);
@@ -216,11 +215,88 @@ void main() {
       expect(schemaValues, containsAll(['title', 'description']));
     });
 
-    test(r'schema has $id', () {
+    test(r'playlist-definition schema has v3 $id', () {
       expect(
         schema[r'$id'],
-        equals('https://audiflow.app/schema/v2/playlist-definition.json'),
+        equals('https://audiflow.app/schema/v3/playlist-definition.json'),
       );
+    });
+
+    test(r'pattern-index schema has v3 $id', () {
+      expect(
+        patternIndexSchema[r'$id'],
+        equals('https://audiflow.app/schema/v3/pattern-index.json'),
+      );
+    });
+
+    test(r'pattern-meta schema has v3 $id', () {
+      expect(
+        patternMetaSchema[r'$id'],
+        equals('https://audiflow.app/schema/v3/pattern-meta.json'),
+      );
+    });
+  });
+
+  group('RootMeta toJson validates against pattern-index schema', () {
+    List<String> validatePatternIndex(Object? parsed) {
+      final result = patternIndexJsonSchema.validate(parsed);
+      if (result.isValid) return const [];
+      return result.errors.map((e) => e.message).toList();
+    }
+
+    test('minimal RootMeta round-trips', () {
+      final meta = RootMeta(dataVersion: 1, schemaVersion: 3, patterns: []);
+      expect(validatePatternIndex(meta.toJson()), isEmpty);
+    });
+
+    test('full RootMeta with patterns round-trips', () {
+      final meta = RootMeta(
+        dataVersion: 5,
+        schemaVersion: 3,
+        patterns: [
+          PatternSummary(
+            id: 'coten_radio',
+            dataVersion: 2,
+            displayName: 'Coten Radio',
+            feedUrlHint: 'anchor.fm/s/8c2088c',
+            playlistCount: 3,
+          ),
+        ],
+      );
+      expect(validatePatternIndex(meta.toJson()), isEmpty);
+    });
+  });
+
+  group('PatternMeta toJson validates against pattern-meta schema', () {
+    List<String> validatePatternMeta(Object? parsed) {
+      final result = patternMetaJsonSchema.validate(parsed);
+      if (result.isValid) return const [];
+      return result.errors.map((e) => e.message).toList();
+    }
+
+    test('minimal PatternMeta round-trips', () {
+      final meta = PatternMeta(
+        dataVersion: 1,
+        id: 'test_pattern',
+        feedUrls: ['https://example.com/feed.xml'],
+        playlists: ['main'],
+      );
+      expect(validatePatternMeta(meta.toJson()), isEmpty);
+    });
+
+    test('full PatternMeta round-trips', () {
+      final meta = PatternMeta(
+        dataVersion: 3,
+        id: 'coten_radio',
+        podcastGuid: 'abc-123-def',
+        feedUrls: [
+          'https://anchor.fm/s/8c2088c/podcast/rss',
+          'https://alt-feed.example.com/rss',
+        ],
+        yearGroupedEpisodes: true,
+        playlists: ['regular', 'short', 'extras'],
+      );
+      expect(validatePatternMeta(meta.toJson()), isEmpty);
     });
   });
 }
