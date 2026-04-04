@@ -5,7 +5,7 @@ import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:checks/checks.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:test/test.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 /// Fake [EpisodeRepository] that returns canned newest episodes.
 class _FakeEpisodeRepository implements EpisodeRepository {
@@ -172,7 +172,7 @@ void main() {
     test('sorts by latest episode pubDate (default)', () async {
       // Keep a persistent listener so auto-dispose does not tear down
       // the stream provider between reads.
-      final sub = container.listen(sortedSubscriptionsProvider, (_, __) {});
+      final sub = container.listen(sortedSubscriptionsProvider, (_, _) {});
       addTearDown(sub.close);
 
       subsController.add([podcastA, podcastB, podcastC]);
@@ -182,7 +182,7 @@ void main() {
     });
 
     test('sorts by subscription date', () async {
-      final sub = container.listen(sortedSubscriptionsProvider, (_, __) {});
+      final sub = container.listen(sortedSubscriptionsProvider, (_, _) {});
       addTearDown(sub.close);
 
       final notifier = container.read(
@@ -198,7 +198,7 @@ void main() {
     });
 
     test('sorts alphabetically', () async {
-      final sub = container.listen(sortedSubscriptionsProvider, (_, __) {});
+      final sub = container.listen(sortedSubscriptionsProvider, (_, _) {});
       addTearDown(sub.close);
 
       final notifier = container.read(
@@ -213,7 +213,7 @@ void main() {
     });
 
     test('podcasts with no episodes sort last for latestEpisode', () async {
-      final sub = container.listen(sortedSubscriptionsProvider, (_, __) {});
+      final sub = container.listen(sortedSubscriptionsProvider, (_, _) {});
       addTearDown(sub.close);
 
       final podcastD = _sub(4, 'Delta Podcast', now);
