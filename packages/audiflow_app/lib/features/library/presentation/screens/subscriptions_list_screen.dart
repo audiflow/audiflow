@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
@@ -61,9 +63,11 @@ class _SubscriptionsListScreenState
             data: (currentOrder) => _SortMenuButton(
               currentOrder: currentOrder,
               onSelected: (order) {
-                ref
-                    .read(podcastSortOrderControllerProvider.notifier)
-                    .setSortOrder(order);
+                unawaited(
+                  ref
+                      .read(podcastSortOrderControllerProvider.notifier)
+                      .setSortOrder(order),
+                );
               },
             ),
             loading: () => const SizedBox.shrink(),

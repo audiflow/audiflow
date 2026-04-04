@@ -92,7 +92,7 @@ final class PodcastSortOrderControllerProvider
 }
 
 String _$podcastSortOrderControllerHash() =>
-    r'podcast_sort_order_controller_hash';
+    r'2137365fc2bdcae12afdf5abbaf3cbfdff1839bb';
 
 /// Manages the persisted podcast sort order preference.
 
@@ -175,7 +175,7 @@ final class NewestEpisodeDateProvider
   }
 }
 
-String _$newestEpisodeDateHash() => r'newest_episode_date_hash';
+String _$newestEpisodeDateHash() => r'd7d79d38e49bb505405e55034d5a71d5f14ef3dc';
 
 final class NewestEpisodeDateFamily extends $Family
     with $FunctionalFamilyOverride<Stream<DateTime?>, int> {
@@ -243,4 +243,5 @@ final class SortedSubscriptionsProvider
   }
 }
 
-String _$sortedSubscriptionsHash() => r'sorted_subscriptions_hash';
+String _$sortedSubscriptionsHash() =>
+    r'9ff991e92a76a8931c6692c8edb8f864fd682ebe';

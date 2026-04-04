@@ -20,21 +20,9 @@ New enum in `audiflow_domain/src/features/feed/models/podcast_sort_order.dart`:
 enum PodcastSortOrder { latestEpisode, subscribedAt, alphabetical }
 ```
 
-### Repository
+### Persistence
 
-New repository pair in `audiflow_domain/src/features/feed/repositories/`:
-
-- `podcast_sort_order_repository.dart` -- interface with `get()`, `set()`, `watch()`.
-- `podcast_sort_order_repository_impl.dart` -- SharedPreferences-backed implementation.
-
-The repository stores the enum name as a string key in SharedPreferences and exposes a reactive `Stream` via `watch()`.
-
-### Providers
-
-New file `audiflow_domain/src/features/feed/providers/podcast_sort_order_providers.dart`:
-
-- `podcastSortOrderRepositoryProvider` -- singleton repository instance.
-- `podcastSortOrderProvider` -- watches the persisted sort order stream.
+Persistence is handled by `PodcastSortOrderController` (a Riverpod `AsyncNotifier`) in `audiflow_app/lib/features/library/presentation/controllers/library_controller.dart`. It reads/writes the enum name as a string key in SharedPreferences directly, without a separate domain-layer repository. This keeps the implementation simple for a single key-value preference.
 
 ## Sorting Strategy
 
@@ -60,9 +48,9 @@ Switch from `librarySubscriptionsProvider` to `sortedSubscriptionsProvider`.
 ### Localization
 
 New keys in `app_en.arb` and `app_ja.arb`:
-- `sortByLatestEpisode` -- "Latest episode"
-- `sortBySubscribedAt` -- "Subscription date"
-- `sortByAlphabetical` -- "Alphabetical"
+- `librarySortByLatestEpisode` -- "Latest episode"
+- `librarySortBySubscribedAt` -- "Subscription date"
+- `librarySortByAlphabetical` -- "Alphabetical"
 
 ## File Changes
 

@@ -80,13 +80,21 @@ Future<List<Subscription>> sortedSubscriptions(Ref ref) async {
 
 List<Subscription> _sortBySubscribedAt(List<Subscription> subscriptions) {
   final sorted = List.of(subscriptions);
-  sorted.sort((a, b) => b.subscribedAt.compareTo(a.subscribedAt));
+  sorted.sort((a, b) {
+    final cmp = b.subscribedAt.compareTo(a.subscribedAt);
+    if (cmp != 0) return cmp;
+    return _tiebreaker(a, b);
+  });
   return sorted;
 }
 
 List<Subscription> _sortAlphabetically(List<Subscription> subscriptions) {
   final sorted = List.of(subscriptions);
-  sorted.sort((a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()));
+  sorted.sort((a, b) {
+    final cmp = a.title.toLowerCase().compareTo(b.title.toLowerCase());
+    if (cmp != 0) return cmp;
+    return a.id.compareTo(b.id);
+  });
   return sorted;
 }
 
@@ -110,11 +118,31 @@ Future<List<Subscription>> _sortByLatestEpisode(
   sorted.sort((a, b) {
     final aDate = a.latestPubDate;
     final bDate = b.latestPubDate;
-    if (aDate != null && bDate != null) return bDate.compareTo(aDate);
+    if (aDate != null && bDate != null) {
+      final cmp = bDate.compareTo(aDate);
+      if (cmp != 0) return cmp;
+      return _tiebreaker(a.subscription, b.subscription);
+    }
     if (aDate != null) return -1;
     if (bDate != null) return 1;
-    return b.subscription.subscribedAt.compareTo(a.subscription.subscribedAt);
+    final cmp = b.subscription.subscribedAt.compareTo(
+      a.subscription.subscribedAt,
+    );
+    if (cmp != 0) return cmp;
+    return _tiebreaker(a.subscription, b.subscription);
   });
 
   return sorted.map((e) => e.subscription).toList();
+}
+
+/// Deterministic secondary sort: title (case-insensitive), then id.
+///
+/// Dart's [List.sort] is not stable, so ties in the primary key can
+/// reorder unpredictably between rebuilds.  This ensures a consistent
+/// order for any two subscriptions that compare equal on the primary
+/// sort dimension.
+int _tiebreaker(Subscription a, Subscription b) {
+  final titleCmp = a.title.toLowerCase().compareTo(b.title.toLowerCase());
+  if (titleCmp != 0) return titleCmp;
+  return a.id.compareTo(b.id);
 }

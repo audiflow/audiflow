@@ -4,7 +4,7 @@
 
 **Goal:** Allow users to sort their subscribed podcasts by latest episode pubDate, subscription date, or alphabetically, with the choice persisted across app restarts.
 
-**Architecture:** Add a `PodcastSortOrder` enum and a SharedPreferences-backed repository in `audiflow_domain`. A new Riverpod controller in `audiflow_app` combines the persisted sort order with the subscription stream and episode queries to produce a sorted list. The `SubscriptionsListScreen` gets a `PopupMenuButton` in its AppBar.
+**Architecture:** Add a `PodcastSortOrder` enum in `audiflow_domain`. A new `PodcastSortOrderController` (Riverpod `AsyncNotifier`) in `audiflow_app` persists the sort order directly via SharedPreferences and combines it with the subscription stream and episode queries to produce a sorted list. The `SubscriptionsListScreen` gets a `PopupMenuButton` in its AppBar.
 
 **Tech Stack:** Dart, Flutter, Riverpod (code generation), SharedPreferences, Isar
 
