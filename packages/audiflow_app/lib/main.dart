@@ -48,14 +48,31 @@ Future<void> appMain({
   const sentryEnvironment = String.fromEnvironment('SENTRY_ENVIRONMENT');
 
   if (flavorConfig.enableCrashReporting && sentryDsn.isNotEmpty) {
-    await SentryFlutter.init((options) {
-      options.dsn = sentryDsn;
-      options.environment = sentryEnvironment.isNotEmpty
-          ? sentryEnvironment
-          : flavor.name;
-      options.tracesSampleRate = 0;
-    }, appRunner: () => _startApp(smartPlaylistConfigBaseUrl));
+    await SentryFlutter.init(
+      (options) {
+        options.dsn = sentryDsn;
+        options.environment = sentryEnvironment.isNotEmpty
+            ? sentryEnvironment
+            : flavor.name;
+        options.tracesSampleRate = 0;
+        options.debug = true;
+      },
+      appRunner: () async {
+        // Diagnostic: verify Sentry pipeline on boot.
+        final sentryId = await Sentry.captureMessage(
+          'app-boot: Sentry initialized',
+          level: SentryLevel.info,
+        );
+        debugPrint('[SENTRY-DIAG] boot captureMessage sentryId=$sentryId');
+        await _startApp(smartPlaylistConfigBaseUrl);
+      },
+    );
   } else {
+    debugPrint(
+      '[SENTRY-DIAG] Sentry SKIPPED — '
+      'enableCrashReporting=${flavorConfig.enableCrashReporting}, '
+      'dsnEmpty=${sentryDsn.isEmpty}',
+    );
     await _startApp(smartPlaylistConfigBaseUrl);
   }
 }
