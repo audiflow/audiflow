@@ -43,7 +43,14 @@ Stream<DateTime?> newestEpisodeDate(Ref ref, int podcastId) {
   final episodeRepo = ref.watch(episodeRepositoryProvider);
   return episodeRepo.watchByPodcastId(podcastId).map((episodes) {
     if (episodes.isEmpty) return null;
-    return episodes.first.publishedAt;
+    // Compute max publishedAt explicitly -- the interface does not
+    // guarantee any ordering for watchByPodcastId.
+    return episodes.fold<DateTime?>(null, (latest, e) {
+      final pub = e.publishedAt;
+      if (pub == null) return latest;
+      if (latest == null || latest.isBefore(pub)) return pub;
+      return latest;
+    });
   });
 }
 
