@@ -30,7 +30,8 @@ class BackgroundTaskRegistrar {
   ///
   /// When [replaceExisting] is true, any pending task is cancelled and
   /// rescheduled from scratch (`now + interval`). Use this when the user
-  /// changes sync settings (interval, wifi-only).
+  /// changes sync settings (interval, wifi-only, notifications) so that
+  /// the updated [inputData] snapshot takes effect immediately.
   ///
   /// When false (default), the existing schedule is preserved if a task
   /// is already registered. This avoids resetting the timer on every app
