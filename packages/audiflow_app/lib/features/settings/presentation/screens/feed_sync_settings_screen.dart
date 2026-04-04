@@ -20,18 +20,26 @@ class _FeedSyncSettingsScreenState
     extends ConsumerState<FeedSyncSettingsScreen> {
   Future<void> _update(
     AppSettingsRepository repo,
-    Future<void> Function() setter,
-  ) async {
+    Future<void> Function() setter, {
+    bool replaceExisting = false,
+  }) async {
     await setter();
     ref.invalidate(appSettingsRepositoryProvider);
-    await _updateBackgroundRegistration(repo);
+    await _updateBackgroundRegistration(repo, replaceExisting: replaceExisting);
   }
 
-  Future<void> _updateBackgroundRegistration(AppSettingsRepository repo) async {
+  // Use [replaceExisting] true only when the scheduling parameters change
+  // (interval, wifi-only). Passing true resets the periodic task timer,
+  // which would perpetually delay execution if called on every settings change.
+  Future<void> _updateBackgroundRegistration(
+    AppSettingsRepository repo, {
+    bool replaceExisting = false,
+  }) async {
     if (repo.getAutoSync()) {
       await BackgroundTaskRegistrar.register(
         intervalMinutes: repo.getSyncIntervalMinutes(),
         wifiOnly: repo.getWifiOnlySync(),
+        replaceExisting: replaceExisting,
       );
     } else {
       await BackgroundTaskRegistrar.cancel();
@@ -112,7 +120,11 @@ class _FeedSyncSettingsScreenState
                 value: interval,
                 onChanged: (v) {
                   if (v != null) {
-                    _update(repo, () => repo.setSyncIntervalMinutes(v));
+                    _update(
+                      repo,
+                      () => repo.setSyncIntervalMinutes(v),
+                      replaceExisting: true,
+                    );
                   }
                 },
                 items: [
@@ -156,7 +168,11 @@ class _FeedSyncSettingsScreenState
             title: Text(l10n.feedSyncWifiOnlyTitle),
             subtitle: Text(l10n.feedSyncWifiOnlySubtitle),
             value: wifiOnly,
-            onChanged: (v) => _update(repo, () => repo.setWifiOnlySync(v)),
+            onChanged: (v) => _update(
+              repo,
+              () => repo.setWifiOnlySync(v),
+              replaceExisting: true,
+            ),
           ),
           Visibility(
             visible: autoSync,

@@ -22,6 +22,42 @@ class NotificationDetail {
   final String payload;
 }
 
+/// Abstracts the `show` call on [FlutterLocalNotificationsPlugin] so tests can
+/// inject a fake without subclassing the plugin (which has a private
+/// constructor in v21+).
+@visibleForTesting
+abstract interface class NotificationsShowDelegate {
+  Future<void> show({
+    required int id,
+    String? title,
+    String? body,
+    NotificationDetails? notificationDetails,
+    String? payload,
+  });
+}
+
+/// Thin adapter wrapping [FlutterLocalNotificationsPlugin].
+class _PluginShowDelegate implements NotificationsShowDelegate {
+  const _PluginShowDelegate(this._plugin);
+
+  final FlutterLocalNotificationsPlugin _plugin;
+
+  @override
+  Future<void> show({
+    required int id,
+    String? title,
+    String? body,
+    NotificationDetails? notificationDetails,
+    String? payload,
+  }) => _plugin.show(
+    id: id,
+    title: title,
+    body: body,
+    notificationDetails: notificationDetails,
+    payload: payload,
+  );
+}
+
 class BackgroundNotificationService {
   BackgroundNotificationService({Logger? logger}) : _logger = logger;
 
@@ -35,7 +71,15 @@ class BackgroundNotificationService {
     final plugin = FlutterLocalNotificationsPlugin();
     const initSettings = InitializationSettings(
       android: AndroidInitializationSettings('@mipmap/ic_launcher'),
-      iOS: DarwinInitializationSettings(),
+      // Background isolate must NOT request permissions — they must already
+      // be granted via the foreground initialization in main.dart.
+      // Requesting in background silently fails on iOS, preventing all
+      // subsequent notifications from being shown.
+      iOS: DarwinInitializationSettings(
+        requestAlertPermission: false,
+        requestBadgePermission: false,
+        requestSoundPermission: false,
+      ),
     );
     await plugin.initialize(settings: initSettings);
     return plugin;
@@ -44,6 +88,20 @@ class BackgroundNotificationService {
   /// Shows one notification per [NewEpisodeNotification].
   Future<void> showPerEpisodeNotifications(
     FlutterLocalNotificationsPlugin plugin,
+    List<NewEpisodeNotification> notifications,
+  ) => _showWithDelegate(_PluginShowDelegate(plugin), notifications);
+
+  /// Shows notifications via an injectable [NotificationsShowDelegate].
+  ///
+  /// Exposed for testing only.
+  @visibleForTesting
+  Future<void> showPerEpisodeNotificationsViaDelegate(
+    NotificationsShowDelegate delegate,
+    List<NewEpisodeNotification> notifications,
+  ) => _showWithDelegate(delegate, notifications);
+
+  Future<void> _showWithDelegate(
+    NotificationsShowDelegate delegate,
     List<NewEpisodeNotification> notifications,
   ) async {
     final details = buildNotificationDetails(notifications);
@@ -59,9 +117,11 @@ class BackgroundNotificationService {
       iOS: DarwinNotificationDetails(),
     );
 
+    final errors = <(Object, StackTrace)>[];
+
     for (final detail in details) {
       try {
-        await plugin.show(
+        await delegate.show(
           id: detail.id,
           title: detail.title,
           body: detail.body,
@@ -71,7 +131,19 @@ class BackgroundNotificationService {
         _logger?.i('Showed notification: ${detail.title} — ${detail.body}');
       } catch (e, stack) {
         _logger?.e('Failed to show notification', error: e, stackTrace: stack);
+        errors.add((e, stack));
       }
+    }
+
+    if (errors.isNotEmpty) {
+      final (firstError, firstStack) = errors.first;
+      Error.throwWithStackTrace(
+        Exception(
+          'Failed to show ${errors.length}/${details.length} notification(s): '
+          '$firstError',
+        ),
+        firstStack,
+      );
     }
   }
 

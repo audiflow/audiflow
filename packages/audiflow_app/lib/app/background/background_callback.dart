@@ -149,11 +149,38 @@ void backgroundCallback() {
           return result;
         },
         showNotification: (notifications) async {
-          final plugin = await notificationService.initialize();
-          await notificationService.showPerEpisodeNotifications(
-            plugin,
-            notifications,
-          );
+          if (sentryInitialized) {
+            Sentry.addBreadcrumb(
+              Breadcrumb(
+                message: 'Showing ${notifications.length} notification(s)',
+                category: 'background.notification',
+              ),
+            );
+          }
+          try {
+            final plugin = await notificationService.initialize();
+            await notificationService.showPerEpisodeNotifications(
+              plugin,
+              notifications,
+            );
+            if (sentryInitialized) {
+              Sentry.addBreadcrumb(
+                Breadcrumb(
+                  message: 'Notifications dispatched: ${notifications.length}',
+                  category: 'background.notification',
+                ),
+              );
+            }
+          } catch (e, stack) {
+            logger.e(
+              'Failed to show notifications',
+              error: e,
+              stackTrace: stack,
+            );
+            if (sentryInitialized) {
+              await Sentry.captureException(e, stackTrace: stack);
+            }
+          }
         },
         logger: logger,
       );

@@ -71,6 +71,7 @@ class BackgroundRefreshService {
 
     final notificationsEnabled = _settingsRepo.getNotifyNewEpisodes();
     final allNotifications = <NewEpisodeNotification>[];
+    final syncErrors = <(String, Object, StackTrace)>[];
     var totalNewEpisodes = 0;
     final stopwatch = Stopwatch()..start();
 
@@ -84,44 +85,53 @@ class BackgroundRefreshService {
         break;
       }
 
-      final result = await _syncFeed(sub);
+      try {
+        final result = await _syncFeed(sub);
 
-      final newCount = result.newEpisodeCount ?? 0;
-      if (0 < newCount) {
-        totalNewEpisodes += newCount;
+        final newCount = result.newEpisodeCount ?? 0;
+        if (0 < newCount) {
+          totalNewEpisodes += newCount;
 
-        // Fetch episodes once and reuse for both auto-download and
-        // notification collection to avoid duplicate Isar reads.
-        final needsEpisodes =
-            sub.autoDownload ||
-            (notificationsEnabled &&
-                allNotifications.length < _maxNotifications);
+          // Fetch episodes once and reuse for both auto-download and
+          // notification collection to avoid duplicate Isar reads.
+          final needsEpisodes =
+              sub.autoDownload ||
+              (notificationsEnabled &&
+                  allNotifications.length < _maxNotifications);
 
-        final episodes = needsEpisodes
-            ? await _episodeRepo.getByPodcastId(sub.id)
-            : const <Episode>[];
+          final episodes = needsEpisodes
+              ? await _episodeRepo.getByPodcastId(sub.id)
+              : const <Episode>[];
 
-        if (sub.autoDownload) {
-          await _enqueueAutoDownloads(sub, newCount, episodes: episodes);
-        }
+          if (sub.autoDownload) {
+            await _enqueueAutoDownloads(sub, newCount, episodes: episodes);
+          }
 
-        if (notificationsEnabled &&
-            allNotifications.length < _maxNotifications) {
-          final remaining = _maxNotifications - allNotifications.length;
-          final newestCount = newCount < remaining ? newCount : remaining;
-          final newest = episodes.take(newestCount);
+          if (notificationsEnabled &&
+              allNotifications.length < _maxNotifications) {
+            final remaining = _maxNotifications - allNotifications.length;
+            final newestCount = newCount < remaining ? newCount : remaining;
+            final newest = episodes.take(newestCount);
 
-          for (final episode in newest) {
-            allNotifications.add(
-              NewEpisodeNotification(
-                episodeId: episode.id,
-                podcastId: sub.id,
-                podcastTitle: sub.title,
-                episodeTitle: episode.title,
-              ),
-            );
+            for (final episode in newest) {
+              allNotifications.add(
+                NewEpisodeNotification(
+                  episodeId: episode.id,
+                  podcastId: sub.id,
+                  podcastTitle: sub.title,
+                  episodeTitle: episode.title,
+                ),
+              );
+            }
           }
         }
+      } catch (e, stack) {
+        _logger?.e(
+          'BackgroundRefreshService: failed to process "${sub.title}"',
+          error: e,
+          stackTrace: stack,
+        );
+        syncErrors.add((sub.title, e, stack));
       }
     }
 
@@ -133,6 +143,15 @@ class BackgroundRefreshService {
       'BackgroundRefreshService: finished — $totalNewEpisodes new episodes '
       '${notificationsEnabled ? "(${allNotifications.length} notified)" : "(notifications disabled)"}',
     );
+
+    if (syncErrors.isNotEmpty) {
+      final first = syncErrors.first;
+      final titles = syncErrors.map((r) => r.$1).join(', ');
+      Error.throwWithStackTrace(
+        Exception('${syncErrors.length} feed(s) failed to sync: $titles'),
+        first.$3,
+      );
+    }
   }
 
   List<Subscription> _sortByLastAccessed(List<Subscription> subscriptions) {
