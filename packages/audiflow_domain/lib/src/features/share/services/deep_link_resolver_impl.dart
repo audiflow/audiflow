@@ -1,9 +1,8 @@
 import 'dart:convert';
 
-import 'package:audiflow_podcast/audiflow_podcast.dart';
 import 'package:audiflow_search/audiflow_search.dart';
 
-import '../../feed/models/episode.dart';
+import '../../feed/models/episode_ext.dart';
 import '../../feed/repositories/episode_repository.dart';
 import '../../subscription/repositories/subscription_repository.dart';
 import '../models/deep_link_target.dart';
@@ -84,7 +83,7 @@ class DeepLinkResolverImpl implements DeepLinkResolver {
         return DeepLinkTarget.episode(
           itunesId: itunesId,
           feedUrl: feedUrl,
-          episode: _episodeToItem(localEpisode, feedUrl: feedUrl),
+          episode: localEpisode.toPodcastItem(feedUrl: feedUrl),
           podcastTitle: podcastTitle,
           artworkUrl: artworkUrl,
         );
@@ -144,25 +143,5 @@ class DeepLinkResolverImpl implements DeepLinkResolver {
   String _decodeBase64UrlGuid(String encodedGuid) {
     final normalized = base64Url.normalize(encodedGuid);
     return utf8.decode(base64Url.decode(normalized));
-  }
-
-  PodcastItem _episodeToItem(Episode episode, {required String feedUrl}) {
-    return PodcastItem.fromData(
-      parsedAt: DateTime.now(),
-      sourceUrl: feedUrl,
-      title: episode.title,
-      description: episode.description ?? '',
-      publishDate: episode.publishedAt,
-      duration: episode.durationMs != null
-          ? Duration(milliseconds: episode.durationMs!)
-          : null,
-      enclosureUrl: episode.audioUrl,
-      guid: episode.guid,
-      episodeNumber: episode.episodeNumber,
-      seasonNumber: episode.seasonNumber,
-      images: episode.imageUrl != null
-          ? [PodcastImage(url: episode.imageUrl!)]
-          : const [],
-    );
   }
 }

@@ -137,7 +137,7 @@ Future<ParsedFeed> podcastDetail(Ref ref, String feedUrl) async {
       final episodeRepo = ref.read(episodeRepositoryProvider);
       final episodes = await episodeRepo.getByPodcastId(subscription.id);
       final podcastItems = episodes
-          .map((e) => _episodeToItem(e, feedUrl: feedUrl))
+          .map((e) => e.toPodcastItem(feedUrl: feedUrl))
           .toList();
 
       return ParsedFeed(
@@ -578,31 +578,4 @@ int _compareDates(DateTime? a, DateTime? b) {
   if (a == null) return 1; // null dates go last
   if (b == null) return -1;
   return a.compareTo(b);
-}
-
-/// Converts an Isar [Episode] to a [PodcastItem] for UI display.
-///
-/// Used when the server returns 304 Not Modified and we rebuild
-/// the feed from persisted episodes instead of re-parsing XML.
-PodcastItem _episodeToItem(Episode episode, {String feedUrl = ''}) {
-  return PodcastItem(
-    parsedAt: DateTime.now(),
-    sourceUrl: feedUrl,
-    title: episode.title,
-    description: episode.description ?? '',
-    publishDate: episode.publishedAt,
-    duration: episode.durationMs != null
-        ? Duration(milliseconds: episode.durationMs!)
-        : null,
-    enclosureUrl: episode.audioUrl,
-    guid: episode.guid,
-    episodeNumber: episode.episodeNumber,
-    seasonNumber: episode.seasonNumber,
-    contentEncoded: episode.contentEncoded,
-    summary: episode.summary,
-    link: episode.link,
-    images: episode.imageUrl != null
-        ? [PodcastImage(url: episode.imageUrl!)]
-        : const [],
-  );
 }

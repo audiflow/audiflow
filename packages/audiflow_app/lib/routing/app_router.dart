@@ -643,27 +643,6 @@ class _NotificationEpisodeScreenState
       return;
     }
 
-    final podcastItem = PodcastItem(
-      parsedAt: DateTime.now(),
-      sourceUrl: episode.audioUrl,
-      title: episode.title,
-      description: episode.description ?? '',
-      guid: episode.guid,
-      enclosureUrl: episode.audioUrl,
-      duration: episode.durationMs != null
-          ? Duration(milliseconds: episode.durationMs!)
-          : null,
-      publishDate: episode.publishedAt,
-      episodeNumber: episode.episodeNumber,
-      seasonNumber: episode.seasonNumber,
-      images: episode.imageUrl != null
-          ? [PodcastImage(url: episode.imageUrl!)]
-          : const [],
-      contentEncoded: episode.contentEncoded,
-      summary: episode.summary,
-      link: episode.link,
-    );
-
     if (!mounted) return;
 
     // Capture all navigation data before router.go() disposes this widget.
@@ -680,7 +659,7 @@ class _NotificationEpisodeScreenState
         '${AppRoutes.library}/podcast/${widget.podcastId}/${AppRoutes.episodeDetail}'
             .replaceAll(':episodeGuid', Uri.encodeComponent(episode.guid));
     final episodeExtra = <String, dynamic>{
-      'episode': podcastItem,
+      'episode': episode.toPodcastItem(feedUrl: subscription.feedUrl),
       'podcastTitle': subscription.title,
       'artworkUrl': subscription.artworkUrl,
       'itunesId': itunesId,

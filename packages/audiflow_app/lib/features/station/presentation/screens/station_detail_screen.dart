@@ -356,28 +356,10 @@ class _StationEpisodeCard extends ConsumerWidget {
     String podcastTitle,
     String? artworkUrl,
   ) {
-    final podcastItem = PodcastItem(
-      parsedAt: DateTime.now(),
-      sourceUrl: episode.audioUrl,
-      title: episode.title,
-      description: episode.description ?? '',
-      publishDate: episode.publishedAt,
-      duration: episode.durationMs != null
-          ? Duration(milliseconds: episode.durationMs!)
-          : null,
-      enclosureUrl: episode.audioUrl,
-      guid: episode.guid,
-      episodeNumber: episode.episodeNumber,
-      seasonNumber: episode.seasonNumber,
-      images: episode.imageUrl != null
-          ? [PodcastImage(url: episode.imageUrl!)]
-          : const [],
-    );
-
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => EpisodeDetailScreen(
-          episode: podcastItem,
+          episode: episode.toPodcastItem(),
           podcastTitle: podcastTitle,
           artworkUrl: artworkUrl,
         ),
