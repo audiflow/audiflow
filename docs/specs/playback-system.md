@@ -97,7 +97,7 @@ Reusable sub-widgets (`MiniPlayerArtwork`, `MiniPlayerProgressBar`) in `audiflow
 
 ### Auto-Play Next
 
-On playback completion, `AudioPlayerController` calls `QueueService.getNextAndRemoveCurrent()`. If an episode is returned, playback starts automatically. If null, playback stops.
+On playback completion, `AudioPlayerController` calls `QueueService.popNextEpisode()`. If an episode is returned, playback starts automatically. If null, playback stops.
 
 ## Download System
 

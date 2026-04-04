@@ -182,7 +182,7 @@ class AudioPlayerController extends _$AudioPlayerController
     try {
       _log.i('[Complete] Getting next episode from queue...');
       final queueService = ref.read(queueServiceProvider);
-      final nextEpisode = await queueService.getNextAndRemoveCurrent();
+      final nextEpisode = await queueService.popNextEpisode();
 
       if (nextEpisode != null) {
         _log.i(
