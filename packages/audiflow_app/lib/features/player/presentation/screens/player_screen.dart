@@ -193,7 +193,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
     _popSheetAndPush(
       '${AppRoutes.library}/podcast/${podcast.id}/$episodePath',
       extra: <String, dynamic>{
-        'episode': episode.toPodcastItem(),
+        'episode': episode.toPodcastItem(feedUrl: podcast.feedUrl ?? ''),
         'podcastTitle': podcastTitle,
         'artworkUrl': artworkUrl,
       },

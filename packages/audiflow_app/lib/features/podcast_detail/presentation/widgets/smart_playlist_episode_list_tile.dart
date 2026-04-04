@@ -163,7 +163,7 @@ class SmartPlaylistEpisodeListTile extends ConsumerWidget {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => EpisodeDetailScreen(
-          episode: episode.toPodcastItem(),
+          episode: episode.toPodcastItem(feedUrl: feedUrl ?? ''),
           podcastTitle: podcastTitle,
           artworkUrl: artworkUrl,
           progress: progress,
