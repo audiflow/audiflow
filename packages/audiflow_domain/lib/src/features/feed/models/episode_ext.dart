@@ -3,7 +3,7 @@ import 'package:audiflow_podcast/audiflow_podcast.dart';
 import 'episode.dart';
 
 /// Extension to convert a persisted [Episode] into a [PodcastItem] for UI
-/// display.  Centralises the mapping so that every call site carries all
+/// display. Centralises the mapping so that every call site carries all
 /// available fields (description, summary, contentEncoded, link, etc.).
 extension EpisodeToPodcastItem on Episode {
   PodcastItem toPodcastItem({String feedUrl = ''}) {
