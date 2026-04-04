@@ -364,6 +364,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get libraryLoadError => 'Failed to load subscriptions';
 
   @override
+  String get librarySortByLatestEpisode => 'Latest episode';
+
+  @override
+  String get librarySortBySubscribedAt => 'Subscription date';
+
+  @override
+  String get librarySortByAlphabetical => 'Alphabetical';
+
+  @override
   String get searchTitle => 'Search Podcasts';
 
   @override

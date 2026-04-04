@@ -758,6 +758,24 @@ abstract class AppLocalizations {
   /// **'Failed to load subscriptions'**
   String get libraryLoadError;
 
+  /// Sort podcasts by latest episode date
+  ///
+  /// In en, this message translates to:
+  /// **'Latest episode'**
+  String get librarySortByLatestEpisode;
+
+  /// Sort podcasts by subscription date
+  ///
+  /// In en, this message translates to:
+  /// **'Subscription date'**
+  String get librarySortBySubscribedAt;
+
+  /// Sort podcasts alphabetically
+  ///
+  /// In en, this message translates to:
+  /// **'Alphabetical'**
+  String get librarySortByAlphabetical;
+
   /// Search screen title
   ///
   /// In en, this message translates to:
