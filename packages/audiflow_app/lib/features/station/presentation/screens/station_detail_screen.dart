@@ -289,7 +289,12 @@ class _StationEpisodeCard extends ConsumerWidget {
       isPlaying: isPlaying,
       isLoading: isLoading,
       isCurrentEpisode: isCurrentEpisode,
-      onTap: () => _navigateToDetail(context, podcastTitle, artworkUrl),
+      onTap: () => _navigateToDetail(
+        context,
+        podcastTitle,
+        artworkUrl,
+        feedUrl: subscription?.feedUrl,
+      ),
       onPlayPause: () => _onPlayPausePressed(
         context,
         ref,
@@ -354,12 +359,13 @@ class _StationEpisodeCard extends ConsumerWidget {
   void _navigateToDetail(
     BuildContext context,
     String podcastTitle,
-    String? artworkUrl,
-  ) {
+    String? artworkUrl, {
+    String? feedUrl,
+  }) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => EpisodeDetailScreen(
-          episode: episode.toPodcastItem(),
+          episode: episode.toPodcastItem(feedUrl: feedUrl ?? ''),
           podcastTitle: podcastTitle,
           artworkUrl: artworkUrl,
         ),
