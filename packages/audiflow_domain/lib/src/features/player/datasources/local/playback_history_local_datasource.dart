@@ -64,6 +64,7 @@ class PlaybackHistoryLocalDatasource {
         if (durationMs != null) {
           existing.durationMs = durationMs;
         }
+        existing.firstPlayedAt ??= now;
         existing.lastPlayedAt = now;
         existing.totalListenedMs = existing.totalListenedMs + listenedDeltaMs;
         existing.totalRealtimeMs = existing.totalRealtimeMs + realtimeDeltaMs;
@@ -83,14 +84,19 @@ class PlaybackHistoryLocalDatasource {
       if (existing == null) {
         final history = PlaybackHistory()
           ..episodeId = episodeId
+          ..firstPlayedAt = now
           ..completedAt = now
           ..lastPlayedAt = now
           ..completedCount = 1;
         await _isar.playbackHistorys.put(history);
       } else {
-        existing.completedAt = now;
+        existing.firstPlayedAt ??= now;
         existing.lastPlayedAt = now;
-        existing.completedCount = existing.completedCount + 1;
+        // Only increment when transitioning from incomplete to complete
+        if (existing.completedAt == null) {
+          existing.completedCount = existing.completedCount + 1;
+        }
+        existing.completedAt = now;
         await _isar.playbackHistorys.put(existing);
       }
     });

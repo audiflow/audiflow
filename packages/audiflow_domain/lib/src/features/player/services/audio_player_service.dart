@@ -118,10 +118,12 @@ class AudioPlayerController extends _$AudioPlayerController
       }
 
       final historyService = ref.read(playbackHistoryServiceProvider);
-      historyService.onProgressUpdate(
-        _currentEpisodeId!,
-        progress,
-        speed: _player.speed,
+      unawaited(
+        historyService.onProgressUpdate(
+          _currentEpisodeId!,
+          progress,
+          speed: _player.speed,
+        ),
       );
     });
   }
@@ -382,6 +384,7 @@ class AudioPlayerController extends _$AudioPlayerController
   @override
   Future<void> resume() async {
     if (_currentUrl == null) return;
+    ref.read(playbackHistoryServiceProvider).onPlaybackResumed();
     await _player.play();
   }
 

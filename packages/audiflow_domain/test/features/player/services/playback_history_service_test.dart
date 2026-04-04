@@ -621,7 +621,7 @@ void main() {
       ).called(1);
     });
 
-    test('first progress update after start has zero deltas', () async {
+    test('first progress update after start has valid deltas', () async {
       const episodeId = 1;
 
       when(
@@ -656,6 +656,76 @@ void main() {
         mockRepository.saveProgress(
           episodeId: episodeId,
           positionMs: 6000,
+          durationMs: 1800000,
+          listenedDeltaMs: 6000,
+          realtimeDeltaMs: 6000,
+        ),
+      ).called(1);
+    });
+  });
+
+  group('onPlaybackResumed', () {
+    test('rebaselines lastSaveTime so pause duration is excluded', () async {
+      const episodeId = 1;
+
+      when(
+        mockRepository.saveProgress(
+          episodeId: anyNamed('episodeId'),
+          positionMs: anyNamed('positionMs'),
+          durationMs: anyNamed('durationMs'),
+          listenedDeltaMs: anyNamed('listenedDeltaMs'),
+          realtimeDeltaMs: anyNamed('realtimeDeltaMs'),
+        ),
+      ).thenAnswer((_) async {});
+      when(mockRepository.isCompleted(any)).thenAnswer((_) async => false);
+      when(mockRepository.incrementPlayCount(any)).thenAnswer((_) async {});
+
+      // Start playback at position 0
+      await service.onPlaybackStarted(episodeId, 0);
+
+      // Play for 6s
+      now = now.add(const Duration(seconds: 6));
+      await service.onProgressUpdate(
+        episodeId,
+        PlaybackProgress(
+          position: const Duration(seconds: 6),
+          duration: const Duration(minutes: 30),
+          bufferedPosition: const Duration(seconds: 10),
+        ),
+      );
+
+      // Pause (saves at position 6s)
+      await service.onPlaybackPaused(
+        episodeId,
+        PlaybackProgress(
+          position: const Duration(seconds: 6),
+          duration: const Duration(minutes: 30),
+          bufferedPosition: const Duration(seconds: 10),
+        ),
+      );
+
+      // Wait 60s while paused
+      now = now.add(const Duration(seconds: 60));
+
+      // Resume — rebaselines _lastSaveTime
+      service.onPlaybackResumed();
+
+      // Play for 6 more seconds after resume
+      now = now.add(const Duration(seconds: 6));
+      await service.onProgressUpdate(
+        episodeId,
+        PlaybackProgress(
+          position: const Duration(seconds: 12),
+          duration: const Duration(minutes: 30),
+          bufferedPosition: const Duration(seconds: 20),
+        ),
+      );
+
+      // The realtime delta should be ~6s (not 66s which includes pause)
+      verify(
+        mockRepository.saveProgress(
+          episodeId: episodeId,
+          positionMs: 12000,
           durationMs: 1800000,
           listenedDeltaMs: 6000,
           realtimeDeltaMs: 6000,

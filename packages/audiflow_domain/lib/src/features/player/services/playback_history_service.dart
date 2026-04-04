@@ -204,6 +204,14 @@ class PlaybackHistoryService {
     }
   }
 
+  /// Called when playback resumes after a pause.
+  ///
+  /// Rebaselines [_lastSaveTime] so that the pause duration is not
+  /// counted as real-time in the next [onProgressUpdate].
+  void onPlaybackResumed() {
+    _lastSaveTime = _clock();
+  }
+
   /// Resets tracking state (e.g., when app goes to background).
   void reset() {
     _lastSavedPositionMs = 0;

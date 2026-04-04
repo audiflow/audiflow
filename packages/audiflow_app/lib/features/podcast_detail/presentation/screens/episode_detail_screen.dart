@@ -921,7 +921,7 @@ class _EpisodeStatsSection extends StatelessWidget {
   }
 
   String _formatMs(int ms) {
-    if (ms == 0) return '0:00';
+    if (ms == 0) return '00:00';
     final duration = Duration(milliseconds: ms);
     final hours = duration.inHours;
     final minutes = duration.inMinutes.remainder(60);
@@ -929,7 +929,7 @@ class _EpisodeStatsSection extends StatelessWidget {
     if (0 < hours) {
       return '$hours:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
     }
-    return '$minutes:${seconds.toString().padLeft(2, '0')}';
+    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
   }
 }
 
