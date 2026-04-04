@@ -33,11 +33,29 @@ class PodcastSortOrderController extends _$PodcastSortOrderController {
   }
 }
 
+/// Watches the newest episode for a given podcast, emitting its
+/// [Episode.publishedAt] whenever the episode list changes.
+///
+/// Used by [sortedSubscriptionsProvider] to keep the latest-episode
+/// sort order reactive to background feed refreshes.
+@riverpod
+Stream<DateTime?> newestEpisodeDate(Ref ref, int podcastId) {
+  final episodeRepo = ref.watch(episodeRepositoryProvider);
+  return episodeRepo.watchByPodcastId(podcastId).map((episodes) {
+    if (episodes.isEmpty) return null;
+    return episodes.first.publishedAt;
+  });
+}
+
 /// Provides subscriptions sorted by the user's selected sort order.
 ///
 /// Combines [librarySubscriptionsProvider] with
 /// [podcastSortOrderControllerProvider] and episode data
 /// (for latestEpisode sort).
+///
+/// When [PodcastSortOrder.latestEpisode] is active, watches
+/// per-podcast episode streams so the sort order updates reactively
+/// when new episodes arrive (e.g. after a background feed refresh).
 @riverpod
 Future<List<Subscription>> sortedSubscriptions(Ref ref) async {
   final subscriptions = await ref.watch(librarySubscriptionsProvider.future);
@@ -49,8 +67,7 @@ Future<List<Subscription>> sortedSubscriptions(Ref ref) async {
     case PodcastSortOrder.alphabetical:
       return _sortAlphabetically(subscriptions);
     case PodcastSortOrder.latestEpisode:
-      final episodeRepo = ref.watch(episodeRepositoryProvider);
-      return _sortByLatestEpisode(subscriptions, episodeRepo);
+      return _sortByLatestEpisode(subscriptions, ref);
   }
 }
 
@@ -66,14 +83,17 @@ List<Subscription> _sortAlphabetically(List<Subscription> subscriptions) {
   return sorted;
 }
 
+/// Sorts subscriptions by their newest episode date, watching each
+/// podcast's episode stream so the order updates reactively.
 Future<List<Subscription>> _sortByLatestEpisode(
   List<Subscription> subscriptions,
-  EpisodeRepository episodeRepo,
+  Ref ref,
 ) async {
-  // Fetch newest episode date per podcast in parallel.
+  // Watch newest episode date per podcast -- establishes reactive
+  // dependencies so this provider recomputes when episodes change.
   final futures = subscriptions.map((s) async {
-    final episode = await episodeRepo.getNewestByPodcastId(s.id);
-    return (subscription: s, latestPubDate: episode?.publishedAt);
+    final date = await ref.watch(newestEpisodeDateProvider(s.id).future);
+    return (subscription: s, latestPubDate: date);
   });
   final entries = await Future.wait(futures);
 

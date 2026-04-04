@@ -7,25 +7,49 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-/// Fake [EpisodeRepository] that returns canned newest episodes.
+/// Fake [EpisodeRepository] that returns canned newest episodes via streams.
 class _FakeEpisodeRepository implements EpisodeRepository {
   _FakeEpisodeRepository({this.newestEpisodes = const {}});
 
   /// Map of podcastId -> newest Episode.
   final Map<int, Episode> newestEpisodes;
 
+  /// Per-podcast episode stream controllers, created on demand.
+  ///
+  /// Non-broadcast so the initial value is buffered until listened to.
+  final Map<int, StreamController<List<Episode>>> _controllers = {};
+
+  @override
+  Stream<List<Episode>> watchByPodcastId(int podcastId) {
+    final controller = _controllers.putIfAbsent(podcastId, () {
+      final sc = StreamController<List<Episode>>();
+      final episode = newestEpisodes[podcastId];
+      sc.add(episode != null ? [episode] : []);
+      return sc;
+    });
+    return controller.stream;
+  }
+
+  /// Pushes updated episodes to the stream for [podcastId].
+  void emitEpisodes(int podcastId, List<Episode> episodes) {
+    _controllers[podcastId]?.add(episodes);
+  }
+
   @override
   Future<Episode?> getNewestByPodcastId(int podcastId) async {
     return newestEpisodes[podcastId];
+  }
+
+  void dispose() {
+    for (final controller in _controllers.values) {
+      controller.close();
+    }
   }
 
   // -- Unused methods --
 
   @override
   Future<List<Episode>> getByPodcastId(int podcastId) =>
-      throw UnimplementedError();
-  @override
-  Stream<List<Episode>> watchByPodcastId(int podcastId) =>
       throw UnimplementedError();
   @override
   Future<Episode?> getById(int id) => throw UnimplementedError();
@@ -124,6 +148,7 @@ void main() {
   group('sortedSubscriptionsProvider', () {
     late ProviderContainer container;
     late StreamController<List<Subscription>> subsController;
+    late _FakeEpisodeRepository fakeEpisodeRepo;
 
     final now = DateTime(2026, 4, 1);
     final podcastA = _sub(1, 'Alpha Podcast', now);
@@ -148,6 +173,9 @@ void main() {
       final prefs = await SharedPreferences.getInstance();
 
       subsController = StreamController<List<Subscription>>();
+      fakeEpisodeRepo = _FakeEpisodeRepository(
+        newestEpisodes: {1: episodeA, 2: episodeB, 3: episodeC},
+      );
 
       container = ProviderContainer(
         overrides: [
@@ -155,11 +183,7 @@ void main() {
           librarySubscriptionsProvider.overrideWith(
             (ref) => subsController.stream,
           ),
-          episodeRepositoryProvider.overrideWithValue(
-            _FakeEpisodeRepository(
-              newestEpisodes: {1: episodeA, 2: episodeB, 3: episodeC},
-            ),
-          ),
+          episodeRepositoryProvider.overrideWithValue(fakeEpisodeRepo),
         ],
       );
     });
@@ -167,6 +191,7 @@ void main() {
     tearDown(() {
       container.dispose();
       subsController.close();
+      fakeEpisodeRepo.dispose();
     });
 
     test('sorts by latest episode pubDate (default)', () async {

@@ -116,6 +116,85 @@ abstract class _$PodcastSortOrderController
   }
 }
 
+/// Watches the newest episode for a given podcast, emitting its
+/// [Episode.publishedAt] whenever the episode list changes.
+///
+/// Used by [sortedSubscriptionsProvider] to keep the latest-episode
+/// sort order reactive to background feed refreshes.
+
+@ProviderFor(newestEpisodeDate)
+final newestEpisodeDateProvider = NewestEpisodeDateFamily._();
+
+/// Watches the newest episode for a given podcast, emitting its
+/// [Episode.publishedAt] whenever the episode list changes.
+
+final class NewestEpisodeDateProvider
+    extends
+        $FunctionalProvider<AsyncValue<DateTime?>, DateTime?, Stream<DateTime?>>
+    with $FutureModifier<DateTime?>, $StreamProvider<DateTime?> {
+  NewestEpisodeDateProvider._({
+    required NewestEpisodeDateFamily super.from,
+    required int super.argument,
+  }) : super(
+         retry: null,
+         name: r'newestEpisodeDateProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$newestEpisodeDateHash();
+
+  @override
+  String toString() {
+    return r'newestEpisodeDateProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $StreamProviderElement<DateTime?> $createElement($ProviderPointer pointer) =>
+      $StreamProviderElement(pointer);
+
+  @override
+  Stream<DateTime?> create(Ref ref) {
+    final argument = this.argument as int;
+    return newestEpisodeDate(ref, argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is NewestEpisodeDateProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$newestEpisodeDateHash() => r'newest_episode_date_hash';
+
+final class NewestEpisodeDateFamily extends $Family
+    with $FunctionalFamilyOverride<Stream<DateTime?>, int> {
+  NewestEpisodeDateFamily._()
+    : super(
+        retry: null,
+        name: r'newestEpisodeDateProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  NewestEpisodeDateProvider call(int podcastId) =>
+      NewestEpisodeDateProvider._(argument: podcastId, from: this);
+
+  @override
+  String toString() => r'newestEpisodeDateProvider';
+}
+
 /// Provides subscriptions sorted by the user's selected sort order.
 ///
 /// Combines [librarySubscriptionsProvider] with
