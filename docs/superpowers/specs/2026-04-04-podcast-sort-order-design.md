@@ -31,7 +31,7 @@ Persistence is handled by `PodcastSortOrderController` (a Riverpod `AsyncNotifie
 
 All sorting happens in a new `sortedSubscriptionsProvider` in `library_controller.dart` that combines:
 1. `librarySubscriptionsProvider` (existing reactive subscription stream)
-2. `podcastSortOrderProvider` (persisted sort order)
+2. `podcastSortOrderControllerProvider` (persisted sort order)
 3. Episode queries (only for `latestEpisode` sort)
 
 ## Presentation Layer
@@ -41,7 +41,7 @@ All sorting happens in a new `sortedSubscriptionsProvider` in `library_controlle
 Add a `PopupMenuButton<PodcastSortOrder>` in the AppBar `actions`:
 - Three menu items with labels from l10n.
 - Current selection indicated with a leading check icon.
-- On selection, update the persisted sort order via the repository.
+- On selection, update the persisted sort order via the controller.
 
 Switch from `librarySubscriptionsProvider` to `sortedSubscriptionsProvider`.
 
@@ -57,14 +57,11 @@ New keys in `app_en.arb` and `app_ja.arb`:
 | Layer | File | Change |
 |-------|------|--------|
 | Domain model | `audiflow_domain/.../feed/models/podcast_sort_order.dart` | New enum |
-| Domain repo | `audiflow_domain/.../feed/repositories/podcast_sort_order_repository.dart` | Interface |
-| Domain repo | `audiflow_domain/.../feed/repositories/podcast_sort_order_repository_impl.dart` | SharedPreferences impl |
-| Domain providers | `audiflow_domain/.../feed/providers/podcast_sort_order_providers.dart` | Riverpod providers |
 | Domain export | `audiflow_domain/lib/audiflow_domain.dart` | Export new files |
-| App controller | `audiflow_app/.../library/presentation/controllers/library_controller.dart` | `sortedSubscriptionsProvider` |
+| App controller | `audiflow_app/.../library/presentation/controllers/library_controller.dart` | `PodcastSortOrderController`, `sortedSubscriptionsProvider` |
 | App screen | `audiflow_app/.../library/presentation/screens/subscriptions_list_screen.dart` | PopupMenuButton, use sorted provider |
 | App l10n | `app_en.arb`, `app_ja.arb` | Sort option labels |
-| Tests | Unit tests for repository, provider, sorting logic; widget test for sort menu | |
+| Tests | Unit tests for enum, controller, sorting logic; widget test for sort menu | |
 
 ## Out of Scope
 

@@ -78,11 +78,10 @@ class _SubscriptionsListScreenState
       body: subscriptionsAsync.when(
         data: (subscriptions) => _buildContent(context, subscriptions),
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => _buildErrorState(
-          context,
-          error.toString(),
-          () => ref.invalidate(sortedSubscriptionsProvider),
-        ),
+        error: (error, _) => _buildErrorState(context, error.toString(), () {
+          ref.invalidate(librarySubscriptionsProvider);
+          ref.invalidate(sortedSubscriptionsProvider);
+        }),
       ),
     );
   }
