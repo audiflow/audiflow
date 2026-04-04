@@ -627,56 +627,88 @@ void main() {
     });
   });
 
-  group('getNextAndRemoveCurrent', () {
-    test('returns next episode and removes it from queue', () async {
-      final nextEpisode = _episode(id: 2);
+  group('popNextEpisode', () {
+    test('returns next episode and removes it by ID', () async {
+      final episode = _episode(id: 2);
+      final qItem = _queueItem(id: 10, episodeId: 2);
+      final queue = PlaybackQueue(
+        adhocItems: [QueueItemWithEpisode(queueItem: qItem, episode: episode)],
+      );
 
-      when(mockQueueRepo.getNextEpisode()).thenAnswer((_) async => nextEpisode);
-      when(mockQueueRepo.removeFirst()).thenAnswer((_) async {});
+      when(mockQueueRepo.getQueue()).thenAnswer((_) async => queue);
+      when(mockQueueRepo.remove(any)).thenAnswer((_) async {});
 
-      final result = await service.getNextAndRemoveCurrent();
+      final result = await service.popNextEpisode();
 
       expect(result, isNotNull);
       expect(result!.id, 2);
-      verify(mockQueueRepo.getNextEpisode()).called(1);
-      verify(mockQueueRepo.removeFirst()).called(1);
+      verify(mockQueueRepo.getQueue()).called(1);
+      verify(mockQueueRepo.remove(10)).called(1);
     });
 
     test('returns null and does not remove when queue is empty', () async {
-      when(mockQueueRepo.getNextEpisode()).thenAnswer((_) async => null);
+      when(
+        mockQueueRepo.getQueue(),
+      ).thenAnswer((_) async => const PlaybackQueue());
 
-      final result = await service.getNextAndRemoveCurrent();
+      final result = await service.popNextEpisode();
 
       expect(result, isNull);
-      verifyNever(mockQueueRepo.removeFirst());
+      verifyNever(mockQueueRepo.remove(any));
     });
 
     test('returns episodes in FIFO order across successive calls', () async {
       final ep2 = _episode(id: 2, title: 'Episode 2');
       final ep3 = _episode(id: 3, title: 'Episode 3');
+      final qItem2 = _queueItem(id: 10, episodeId: 2, position: 0);
+      final qItem3 = _queueItem(id: 11, episodeId: 3, position: 10);
 
-      // Use a stateful fake: a mutable list that getNextEpisode reads
-      // from and removeFirst mutates, so call ordering matters.
-      final queue = [ep2, ep3];
+      // Stateful fake: mutable list that getQueue reads from and
+      // remove mutates, so the data reflects real queue behavior.
+      final items = [
+        QueueItemWithEpisode(queueItem: qItem2, episode: ep2),
+        QueueItemWithEpisode(queueItem: qItem3, episode: ep3),
+      ];
 
       when(
-        mockQueueRepo.getNextEpisode(),
-      ).thenAnswer((_) async => queue.isEmpty ? null : queue.first);
-      when(mockQueueRepo.removeFirst()).thenAnswer((_) async {
-        if (queue.isNotEmpty) queue.removeAt(0);
+        mockQueueRepo.getQueue(),
+      ).thenAnswer((_) async => PlaybackQueue(adhocItems: List.of(items)));
+      when(mockQueueRepo.remove(any)).thenAnswer((invocation) async {
+        final id = invocation.positionalArguments.first as int;
+        items.removeWhere((i) => i.queueItem.id == id);
       });
 
-      // First advance: should return ep2
-      final first = await service.getNextAndRemoveCurrent();
+      // First pop: should return ep2
+      final first = await service.popNextEpisode();
       expect(first?.id, 2);
 
-      // Second advance: should return ep3
-      final second = await service.getNextAndRemoveCurrent();
+      // Second pop: should return ep3
+      final second = await service.popNextEpisode();
       expect(second?.id, 3);
 
-      // Third advance: queue empty
-      final third = await service.getNextAndRemoveCurrent();
+      // Third pop: queue empty
+      final third = await service.popNextEpisode();
       expect(third, isNull);
+    });
+
+    test('skips orphan queue items with missing episodes', () async {
+      // Simulate orphan: queue has item id=10 (episodeId=99, no episode
+      // join) followed by item id=11 (episodeId=3). _buildPlaybackQueue
+      // drops the orphan, so nextItem points to id=11.
+      final ep3 = _episode(id: 3);
+      final qItem3 = _queueItem(id: 11, episodeId: 3);
+      final queue = PlaybackQueue(
+        adhocItems: [QueueItemWithEpisode(queueItem: qItem3, episode: ep3)],
+      );
+
+      when(mockQueueRepo.getQueue()).thenAnswer((_) async => queue);
+      when(mockQueueRepo.remove(any)).thenAnswer((_) async {});
+
+      final result = await service.popNextEpisode();
+
+      expect(result?.id, 3);
+      // Removes the correct item (id=11), not the orphan at DB head
+      verify(mockQueueRepo.remove(11)).called(1);
     });
   });
 
