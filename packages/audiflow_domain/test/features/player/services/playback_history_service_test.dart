@@ -9,12 +9,17 @@ import 'playback_history_service_test.mocks.dart';
 void main() {
   late MockPlaybackHistoryRepository mockRepository;
   late PlaybackHistoryService service;
+  late DateTime now;
+
+  DateTime clock() => now;
 
   setUp(() {
     mockRepository = MockPlaybackHistoryRepository();
+    now = DateTime(2026, 1, 1, 12, 0, 0);
     service = PlaybackHistoryService(
       mockRepository,
       getCompletionThreshold: () => 0.95,
+      clock: clock,
     );
   });
 
@@ -34,6 +39,8 @@ void main() {
           episodeId: anyNamed('episodeId'),
           positionMs: anyNamed('positionMs'),
           durationMs: anyNamed('durationMs'),
+          listenedDeltaMs: anyNamed('listenedDeltaMs'),
+          realtimeDeltaMs: anyNamed('realtimeDeltaMs'),
         ),
       );
       verifyNever(mockRepository.isCompleted(any));
@@ -53,6 +60,8 @@ void main() {
           episodeId: anyNamed('episodeId'),
           positionMs: anyNamed('positionMs'),
           durationMs: anyNamed('durationMs'),
+          listenedDeltaMs: anyNamed('listenedDeltaMs'),
+          realtimeDeltaMs: anyNamed('realtimeDeltaMs'),
         ),
       ).thenAnswer((_) async {});
       when(mockRepository.isCompleted(any)).thenAnswer((_) async => false);
@@ -64,6 +73,8 @@ void main() {
           episodeId: episodeId,
           positionMs: 20000,
           durationMs: 1800000,
+          listenedDeltaMs: 0,
+          realtimeDeltaMs: 0,
         ),
       ).called(1);
     });
@@ -88,11 +99,14 @@ void main() {
           episodeId: anyNamed('episodeId'),
           positionMs: anyNamed('positionMs'),
           durationMs: anyNamed('durationMs'),
+          listenedDeltaMs: anyNamed('listenedDeltaMs'),
+          realtimeDeltaMs: anyNamed('realtimeDeltaMs'),
         ),
       ).thenAnswer((_) async {});
       when(mockRepository.isCompleted(any)).thenAnswer((_) async => false);
 
       await service.onProgressUpdate(episodeId, progress1);
+      now = now.add(const Duration(seconds: 3));
       await service.onProgressUpdate(episodeId, progress2);
 
       // Only first call should save (second is within 5 second interval)
@@ -101,6 +115,8 @@ void main() {
           episodeId: episodeId,
           positionMs: 6000,
           durationMs: 1800000,
+          listenedDeltaMs: anyNamed('listenedDeltaMs'),
+          realtimeDeltaMs: anyNamed('realtimeDeltaMs'),
         ),
       ).called(1);
     });
@@ -118,6 +134,8 @@ void main() {
           episodeId: anyNamed('episodeId'),
           positionMs: anyNamed('positionMs'),
           durationMs: anyNamed('durationMs'),
+          listenedDeltaMs: anyNamed('listenedDeltaMs'),
+          realtimeDeltaMs: anyNamed('realtimeDeltaMs'),
         ),
       ).thenAnswer((_) async {});
       when(mockRepository.isCompleted(any)).thenAnswer((_) async => false);
@@ -141,6 +159,8 @@ void main() {
           episodeId: anyNamed('episodeId'),
           positionMs: anyNamed('positionMs'),
           durationMs: anyNamed('durationMs'),
+          listenedDeltaMs: anyNamed('listenedDeltaMs'),
+          realtimeDeltaMs: anyNamed('realtimeDeltaMs'),
         ),
       ).thenAnswer((_) async {});
       when(mockRepository.isCompleted(any)).thenAnswer((_) async => true);
@@ -187,6 +207,8 @@ void main() {
           episodeId: anyNamed('episodeId'),
           positionMs: anyNamed('positionMs'),
           durationMs: anyNamed('durationMs'),
+          listenedDeltaMs: anyNamed('listenedDeltaMs'),
+          realtimeDeltaMs: anyNamed('realtimeDeltaMs'),
         ),
       ).thenAnswer((_) async {});
 
@@ -197,6 +219,8 @@ void main() {
           episodeId: episodeId,
           positionMs: 30000,
           durationMs: 1800000,
+          listenedDeltaMs: anyNamed('listenedDeltaMs'),
+          realtimeDeltaMs: anyNamed('realtimeDeltaMs'),
         ),
       ).called(1);
     });
@@ -216,6 +240,8 @@ void main() {
           episodeId: anyNamed('episodeId'),
           positionMs: anyNamed('positionMs'),
           durationMs: anyNamed('durationMs'),
+          listenedDeltaMs: anyNamed('listenedDeltaMs'),
+          realtimeDeltaMs: anyNamed('realtimeDeltaMs'),
         ),
       ).thenAnswer((_) async {});
 
@@ -226,6 +252,8 @@ void main() {
           episodeId: episodeId,
           positionMs: 45000,
           durationMs: 1800000,
+          listenedDeltaMs: anyNamed('listenedDeltaMs'),
+          realtimeDeltaMs: anyNamed('realtimeDeltaMs'),
         ),
       ).called(1);
     });
@@ -277,6 +305,8 @@ void main() {
           episodeId: anyNamed('episodeId'),
           positionMs: anyNamed('positionMs'),
           durationMs: anyNamed('durationMs'),
+          listenedDeltaMs: anyNamed('listenedDeltaMs'),
+          realtimeDeltaMs: anyNamed('realtimeDeltaMs'),
         ),
       ).thenAnswer((_) async {});
       when(mockRepository.isCompleted(any)).thenAnswer((_) async => false);
@@ -287,6 +317,8 @@ void main() {
       // Reset state - _lastSavedPositionMs goes back to 0
       service.reset();
 
+      now = now.add(const Duration(seconds: 10));
+
       // Second update should save because state was reset (delta from 0)
       await service.onProgressUpdate(episodeId, progress2);
 
@@ -295,8 +327,410 @@ void main() {
           episodeId: episodeId,
           positionMs: 6000,
           durationMs: 1800000,
+          listenedDeltaMs: anyNamed('listenedDeltaMs'),
+          realtimeDeltaMs: anyNamed('realtimeDeltaMs'),
         ),
       ).called(2);
+    });
+  });
+
+  group('listen time accumulation', () {
+    test('accumulates content and realtime at 1x speed', () async {
+      const episodeId = 1;
+
+      when(
+        mockRepository.saveProgress(
+          episodeId: anyNamed('episodeId'),
+          positionMs: anyNamed('positionMs'),
+          durationMs: anyNamed('durationMs'),
+          listenedDeltaMs: anyNamed('listenedDeltaMs'),
+          realtimeDeltaMs: anyNamed('realtimeDeltaMs'),
+        ),
+      ).thenAnswer((_) async {});
+      when(mockRepository.isCompleted(any)).thenAnswer((_) async => false);
+      when(mockRepository.incrementPlayCount(any)).thenAnswer((_) async {});
+
+      // Start playback
+      await service.onPlaybackStarted(episodeId, 0);
+
+      // First save: 6s of wall-clock and 6s of content since onPlaybackStarted
+      now = now.add(const Duration(seconds: 6));
+      await service.onProgressUpdate(
+        episodeId,
+        PlaybackProgress(
+          position: const Duration(seconds: 6),
+          duration: const Duration(minutes: 30),
+          bufferedPosition: const Duration(seconds: 10),
+        ),
+      );
+
+      // Second save: 5s of wall-clock, 5s of content at 1x
+      now = now.add(const Duration(seconds: 5));
+      await service.onProgressUpdate(
+        episodeId,
+        PlaybackProgress(
+          position: const Duration(seconds: 11),
+          duration: const Duration(minutes: 30),
+          bufferedPosition: const Duration(seconds: 15),
+        ),
+      );
+
+      // Verify second save has deltas
+      verify(
+        mockRepository.saveProgress(
+          episodeId: episodeId,
+          positionMs: 11000,
+          durationMs: 1800000,
+          listenedDeltaMs: 5000,
+          realtimeDeltaMs: 5000,
+        ),
+      ).called(1);
+    });
+
+    test('accumulates content and realtime at 1.5x speed', () async {
+      const episodeId = 1;
+
+      when(
+        mockRepository.saveProgress(
+          episodeId: anyNamed('episodeId'),
+          positionMs: anyNamed('positionMs'),
+          durationMs: anyNamed('durationMs'),
+          listenedDeltaMs: anyNamed('listenedDeltaMs'),
+          realtimeDeltaMs: anyNamed('realtimeDeltaMs'),
+        ),
+      ).thenAnswer((_) async {});
+      when(mockRepository.isCompleted(any)).thenAnswer((_) async => false);
+      when(mockRepository.incrementPlayCount(any)).thenAnswer((_) async {});
+
+      await service.onPlaybackStarted(episodeId, 0);
+
+      // First save establishes baseline
+      now = now.add(const Duration(seconds: 6));
+      await service.onProgressUpdate(
+        episodeId,
+        PlaybackProgress(
+          position: const Duration(seconds: 9), // 6s wall * 1.5x = 9s content
+          duration: const Duration(minutes: 30),
+          bufferedPosition: const Duration(seconds: 15),
+        ),
+        speed: 1.5,
+      );
+
+      // Second save: 5s wall, 7.5s content at 1.5x
+      now = now.add(const Duration(seconds: 5));
+      await service.onProgressUpdate(
+        episodeId,
+        PlaybackProgress(
+          position: const Duration(milliseconds: 16500), // 9000 + 7500
+          duration: const Duration(minutes: 30),
+          bufferedPosition: const Duration(seconds: 20),
+        ),
+        speed: 1.5,
+      );
+
+      // Content delta = 16500 - 9000 = 7500
+      // Realtime delta = 5000
+      verify(
+        mockRepository.saveProgress(
+          episodeId: episodeId,
+          positionMs: 16500,
+          durationMs: 1800000,
+          listenedDeltaMs: 7500,
+          realtimeDeltaMs: 5000,
+        ),
+      ).called(1);
+    });
+
+    test('does not accumulate on seek (large position jump)', () async {
+      const episodeId = 1;
+
+      when(
+        mockRepository.saveProgress(
+          episodeId: anyNamed('episodeId'),
+          positionMs: anyNamed('positionMs'),
+          durationMs: anyNamed('durationMs'),
+          listenedDeltaMs: anyNamed('listenedDeltaMs'),
+          realtimeDeltaMs: anyNamed('realtimeDeltaMs'),
+        ),
+      ).thenAnswer((_) async {});
+      when(mockRepository.isCompleted(any)).thenAnswer((_) async => false);
+      when(mockRepository.incrementPlayCount(any)).thenAnswer((_) async {});
+
+      await service.onPlaybackStarted(episodeId, 0);
+
+      // First save at 6s
+      now = now.add(const Duration(seconds: 6));
+      await service.onProgressUpdate(
+        episodeId,
+        PlaybackProgress(
+          position: const Duration(seconds: 6),
+          duration: const Duration(minutes: 30),
+          bufferedPosition: const Duration(seconds: 10),
+        ),
+      );
+
+      // Seek forward to 120s but only 5s of wall-clock passed
+      now = now.add(const Duration(seconds: 5));
+      await service.onProgressUpdate(
+        episodeId,
+        PlaybackProgress(
+          position: const Duration(seconds: 120),
+          duration: const Duration(minutes: 30),
+          bufferedPosition: const Duration(seconds: 125),
+        ),
+      );
+
+      // The 114s content delta is way more than 3x of (5s * 1.0) = 15s
+      // So it should be detected as a seek with 0 deltas
+      verify(
+        mockRepository.saveProgress(
+          episodeId: episodeId,
+          positionMs: 120000,
+          durationMs: 1800000,
+          listenedDeltaMs: 0,
+          realtimeDeltaMs: 0,
+        ),
+      ).called(1);
+    });
+
+    test('does not accumulate on backward seek', () async {
+      const episodeId = 1;
+
+      when(
+        mockRepository.saveProgress(
+          episodeId: anyNamed('episodeId'),
+          positionMs: anyNamed('positionMs'),
+          durationMs: anyNamed('durationMs'),
+          listenedDeltaMs: anyNamed('listenedDeltaMs'),
+          realtimeDeltaMs: anyNamed('realtimeDeltaMs'),
+        ),
+      ).thenAnswer((_) async {});
+      when(mockRepository.isCompleted(any)).thenAnswer((_) async => false);
+      when(mockRepository.incrementPlayCount(any)).thenAnswer((_) async {});
+
+      await service.onPlaybackStarted(episodeId, 60000);
+
+      // First save at 66s
+      now = now.add(const Duration(seconds: 6));
+      await service.onProgressUpdate(
+        episodeId,
+        PlaybackProgress(
+          position: const Duration(seconds: 66),
+          duration: const Duration(minutes: 30),
+          bufferedPosition: const Duration(seconds: 70),
+        ),
+      );
+
+      // Seek backward to 10s
+      now = now.add(const Duration(seconds: 5));
+      await service.onProgressUpdate(
+        episodeId,
+        PlaybackProgress(
+          position: const Duration(seconds: 10),
+          duration: const Duration(minutes: 30),
+          bufferedPosition: const Duration(seconds: 15),
+        ),
+      );
+
+      // Negative content delta -> 0 deltas
+      verify(
+        mockRepository.saveProgress(
+          episodeId: episodeId,
+          positionMs: 10000,
+          durationMs: 1800000,
+          listenedDeltaMs: 0,
+          realtimeDeltaMs: 0,
+        ),
+      ).called(1);
+    });
+
+    test('accumulates on pause with speed', () async {
+      const episodeId = 1;
+
+      when(
+        mockRepository.saveProgress(
+          episodeId: anyNamed('episodeId'),
+          positionMs: anyNamed('positionMs'),
+          durationMs: anyNamed('durationMs'),
+          listenedDeltaMs: anyNamed('listenedDeltaMs'),
+          realtimeDeltaMs: anyNamed('realtimeDeltaMs'),
+        ),
+      ).thenAnswer((_) async {});
+      when(mockRepository.incrementPlayCount(any)).thenAnswer((_) async {});
+
+      await service.onPlaybackStarted(episodeId, 0);
+
+      // 10s wall-clock, 20s content at 2x
+      now = now.add(const Duration(seconds: 10));
+      await service.onPlaybackPaused(
+        episodeId,
+        PlaybackProgress(
+          position: const Duration(seconds: 20),
+          duration: const Duration(minutes: 30),
+          bufferedPosition: const Duration(seconds: 25),
+        ),
+        speed: 2.0,
+      );
+
+      verify(
+        mockRepository.saveProgress(
+          episodeId: episodeId,
+          positionMs: 20000,
+          durationMs: 1800000,
+          listenedDeltaMs: 20000,
+          realtimeDeltaMs: 10000,
+        ),
+      ).called(1);
+    });
+
+    test('accumulates on stop with speed', () async {
+      const episodeId = 1;
+
+      when(
+        mockRepository.saveProgress(
+          episodeId: anyNamed('episodeId'),
+          positionMs: anyNamed('positionMs'),
+          durationMs: anyNamed('durationMs'),
+          listenedDeltaMs: anyNamed('listenedDeltaMs'),
+          realtimeDeltaMs: anyNamed('realtimeDeltaMs'),
+        ),
+      ).thenAnswer((_) async {});
+      when(mockRepository.incrementPlayCount(any)).thenAnswer((_) async {});
+
+      await service.onPlaybackStarted(episodeId, 0);
+
+      now = now.add(const Duration(seconds: 8));
+      await service.onPlaybackStopped(
+        episodeId,
+        PlaybackProgress(
+          position: const Duration(seconds: 12), // 8s wall * 1.5x = 12s
+          duration: const Duration(minutes: 30),
+          bufferedPosition: const Duration(seconds: 15),
+        ),
+        speed: 1.5,
+      );
+
+      verify(
+        mockRepository.saveProgress(
+          episodeId: episodeId,
+          positionMs: 12000,
+          durationMs: 1800000,
+          listenedDeltaMs: 12000,
+          realtimeDeltaMs: 8000,
+        ),
+      ).called(1);
+    });
+
+    test('first progress update after start has valid deltas', () async {
+      const episodeId = 1;
+
+      when(
+        mockRepository.saveProgress(
+          episodeId: anyNamed('episodeId'),
+          positionMs: anyNamed('positionMs'),
+          durationMs: anyNamed('durationMs'),
+          listenedDeltaMs: anyNamed('listenedDeltaMs'),
+          realtimeDeltaMs: anyNamed('realtimeDeltaMs'),
+        ),
+      ).thenAnswer((_) async {});
+      when(mockRepository.isCompleted(any)).thenAnswer((_) async => false);
+      when(mockRepository.incrementPlayCount(any)).thenAnswer((_) async {});
+
+      await service.onPlaybackStarted(episodeId, 0);
+
+      // 6s of content, 6s of wall — but this is the first save after start,
+      // so _lastSaveTime was set during onPlaybackStarted
+      now = now.add(const Duration(seconds: 6));
+      await service.onProgressUpdate(
+        episodeId,
+        PlaybackProgress(
+          position: const Duration(seconds: 6),
+          duration: const Duration(minutes: 30),
+          bufferedPosition: const Duration(seconds: 10),
+        ),
+      );
+
+      // First save after onPlaybackStarted has valid deltas because
+      // onPlaybackStarted sets _lastSaveTime
+      verify(
+        mockRepository.saveProgress(
+          episodeId: episodeId,
+          positionMs: 6000,
+          durationMs: 1800000,
+          listenedDeltaMs: 6000,
+          realtimeDeltaMs: 6000,
+        ),
+      ).called(1);
+    });
+  });
+
+  group('onPlaybackResumed', () {
+    test('rebaselines lastSaveTime so pause duration is excluded', () async {
+      const episodeId = 1;
+
+      when(
+        mockRepository.saveProgress(
+          episodeId: anyNamed('episodeId'),
+          positionMs: anyNamed('positionMs'),
+          durationMs: anyNamed('durationMs'),
+          listenedDeltaMs: anyNamed('listenedDeltaMs'),
+          realtimeDeltaMs: anyNamed('realtimeDeltaMs'),
+        ),
+      ).thenAnswer((_) async {});
+      when(mockRepository.isCompleted(any)).thenAnswer((_) async => false);
+      when(mockRepository.incrementPlayCount(any)).thenAnswer((_) async {});
+
+      // Start playback at position 0
+      await service.onPlaybackStarted(episodeId, 0);
+
+      // Play for 6s
+      now = now.add(const Duration(seconds: 6));
+      await service.onProgressUpdate(
+        episodeId,
+        PlaybackProgress(
+          position: const Duration(seconds: 6),
+          duration: const Duration(minutes: 30),
+          bufferedPosition: const Duration(seconds: 10),
+        ),
+      );
+
+      // Pause (saves at position 6s)
+      await service.onPlaybackPaused(
+        episodeId,
+        PlaybackProgress(
+          position: const Duration(seconds: 6),
+          duration: const Duration(minutes: 30),
+          bufferedPosition: const Duration(seconds: 10),
+        ),
+      );
+
+      // Wait 60s while paused
+      now = now.add(const Duration(seconds: 60));
+
+      // Resume — rebaselines _lastSaveTime
+      service.onPlaybackResumed();
+
+      // Play for 6 more seconds after resume
+      now = now.add(const Duration(seconds: 6));
+      await service.onProgressUpdate(
+        episodeId,
+        PlaybackProgress(
+          position: const Duration(seconds: 12),
+          duration: const Duration(minutes: 30),
+          bufferedPosition: const Duration(seconds: 20),
+        ),
+      );
+
+      // The realtime delta should be ~6s (not 66s which includes pause)
+      verify(
+        mockRepository.saveProgress(
+          episodeId: episodeId,
+          positionMs: 12000,
+          durationMs: 1800000,
+          listenedDeltaMs: 6000,
+          realtimeDeltaMs: 6000,
+        ),
+      ).called(1);
     });
   });
 }

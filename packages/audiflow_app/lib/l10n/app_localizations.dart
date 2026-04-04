@@ -1951,6 +1951,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Remove download'**
   String get removeDownload;
+
+  /// Label for episode title in statistics table
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get statsTitle;
+
+  /// Label for podcast name in statistics table
+  ///
+  /// In en, this message translates to:
+  /// **'Podcast'**
+  String get statsPodcast;
+
+  /// Label for episode duration in statistics table
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get statsDuration;
+
+  /// Label for publish date in statistics table
+  ///
+  /// In en, this message translates to:
+  /// **'Published'**
+  String get statsPublished;
+
+  /// Label for completion count in statistics table
+  ///
+  /// In en, this message translates to:
+  /// **'Times completed'**
+  String get statsTimesCompleted;
+
+  /// Label for play count in statistics table
+  ///
+  /// In en, this message translates to:
+  /// **'Times started'**
+  String get statsTimesStarted;
+
+  /// Label for total content duration listened
+  ///
+  /// In en, this message translates to:
+  /// **'Total listened'**
+  String get statsTotalListened;
+
+  /// Label for total wall-clock listening time
+  ///
+  /// In en, this message translates to:
+  /// **'Realtime'**
+  String get statsRealtime;
+
+  /// Label for first playback date
+  ///
+  /// In en, this message translates to:
+  /// **'First played'**
+  String get statsFirstPlayed;
+
+  /// Label for most recent playback date
+  ///
+  /// In en, this message translates to:
+  /// **'Last played'**
+  String get statsLastPlayed;
+
+  /// Shown when episode has never been played
+  ///
+  /// In en, this message translates to:
+  /// **'Never'**
+  String get statsNever;
+
+  /// Section header for episode statistics
+  ///
+  /// In en, this message translates to:
+  /// **'Statistics'**
+  String get statsSection;
 }
 
 class _AppLocalizationsDelegate

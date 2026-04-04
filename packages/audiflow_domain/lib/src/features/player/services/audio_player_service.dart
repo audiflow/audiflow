@@ -118,7 +118,13 @@ class AudioPlayerController extends _$AudioPlayerController
       }
 
       final historyService = ref.read(playbackHistoryServiceProvider);
-      historyService.onProgressUpdate(_currentEpisodeId!, progress);
+      unawaited(
+        historyService.onProgressUpdate(
+          _currentEpisodeId!,
+          progress,
+          speed: _player.speed,
+        ),
+      );
     });
   }
 
@@ -174,7 +180,11 @@ class AudioPlayerController extends _$AudioPlayerController
     if (progress == null) return;
 
     final historyService = ref.read(playbackHistoryServiceProvider);
-    await historyService.onPlaybackStopped(_currentEpisodeId!, progress);
+    await historyService.onPlaybackStopped(
+      _currentEpisodeId!,
+      progress,
+      speed: _player.speed,
+    );
   }
 
   /// Handles playback completion by attempting to play the next episode.
@@ -357,7 +367,11 @@ class AudioPlayerController extends _$AudioPlayerController
       final progress = ref.read(playbackProgressProvider);
       if (progress != null) {
         final historyService = ref.read(playbackHistoryServiceProvider);
-        await historyService.onPlaybackPaused(_currentEpisodeId!, progress);
+        await historyService.onPlaybackPaused(
+          _currentEpisodeId!,
+          progress,
+          speed: _player.speed,
+        );
       }
     }
     await _player.pause();
@@ -370,6 +384,7 @@ class AudioPlayerController extends _$AudioPlayerController
   @override
   Future<void> resume() async {
     if (_currentUrl == null) return;
+    ref.read(playbackHistoryServiceProvider).onPlaybackResumed();
     await _player.play();
   }
 

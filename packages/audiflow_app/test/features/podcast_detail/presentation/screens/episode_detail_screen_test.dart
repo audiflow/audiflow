@@ -98,14 +98,16 @@ void main() {
       await tester.pumpWidget(buildTestWidget());
       await tester.pumpAndSettle();
 
-      expect(find.text('Test Episode Title'), findsOneWidget);
+      // Title appears in header and stats table
+      expect(find.text('Test Episode Title'), findsNWidgets(2));
     });
 
     testWidgets('renders podcast title', (tester) async {
       await tester.pumpWidget(buildTestWidget());
       await tester.pumpAndSettle();
 
-      expect(find.text(testPodcastTitle), findsOneWidget);
+      // Podcast name appears in header and stats table
+      expect(find.text(testPodcastTitle), findsNWidgets(2));
     });
 
     testWidgets('renders play button when not playing', (tester) async {
@@ -188,8 +190,8 @@ void main() {
       await tester.tap(find.byIcon(Icons.more_vert));
       await tester.pumpAndSettle();
 
-      // Title appears in both the screen and the bottom sheet header
-      expect(find.text('Test Episode Title'), findsNWidgets(2));
+      // Title appears in the screen header, stats table, and bottom sheet
+      expect(find.text('Test Episode Title'), findsNWidgets(3));
     });
 
     testWidgets('context menu shows Play next option', (tester) async {

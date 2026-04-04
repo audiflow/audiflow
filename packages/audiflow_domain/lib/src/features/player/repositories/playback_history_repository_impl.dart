@@ -33,11 +33,15 @@ class PlaybackHistoryRepositoryImpl implements PlaybackHistoryRepository {
     required int episodeId,
     required int positionMs,
     int? durationMs,
+    int listenedDeltaMs = 0,
+    int realtimeDeltaMs = 0,
   }) {
     return _datasource.updateProgress(
       episodeId: episodeId,
       positionMs: positionMs,
       durationMs: durationMs,
+      listenedDeltaMs: listenedDeltaMs,
+      realtimeDeltaMs: realtimeDeltaMs,
     );
   }
 

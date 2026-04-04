@@ -305,6 +305,15 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
 
                     // Description / show notes
                     _DescriptionSection(episode: widget.episode),
+
+                    const Divider(height: Spacing.xl),
+
+                    // Episode info + statistics
+                    _EpisodeStatsSection(
+                      episode: widget.episode,
+                      podcastTitle: widget.podcastTitle,
+                      progress: effectiveProgress,
+                    ),
                   ],
                 ),
               ),
@@ -807,4 +816,126 @@ class _DescriptionSection extends StatelessWidget {
       },
     );
   }
+}
+
+/// Displays episode info and playback statistics in a two-column table.
+class _EpisodeStatsSection extends StatelessWidget {
+  const _EpisodeStatsSection({
+    required this.episode,
+    required this.podcastTitle,
+    required this.progress,
+  });
+
+  final PodcastItem episode;
+  final String podcastTitle;
+  final EpisodeWithProgress? progress;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
+    final history = progress?.history;
+    final dateFormat = DateFormat.yMMMd();
+
+    final rows = <_StatsRow>[
+      _StatsRow(label: l10n.statsTitle, value: episode.title),
+      _StatsRow(label: l10n.statsPodcast, value: podcastTitle),
+      if (episode.formattedDuration != null)
+        _StatsRow(label: l10n.statsDuration, value: episode.formattedDuration!),
+      if (episode.publishDate != null)
+        _StatsRow(
+          label: l10n.statsPublished,
+          value: dateFormat.format(episode.publishDate!),
+        ),
+      _StatsRow(
+        label: l10n.statsTimesCompleted,
+        value: '${history?.completedCount ?? 0}',
+      ),
+      _StatsRow(
+        label: l10n.statsTimesStarted,
+        value: '${history?.playCount ?? 0}',
+      ),
+      _StatsRow(
+        label: l10n.statsTotalListened,
+        value: _formatMs(history?.totalListenedMs ?? 0),
+      ),
+      _StatsRow(
+        label: l10n.statsRealtime,
+        value: _formatMs(history?.totalRealtimeMs ?? 0),
+      ),
+      _StatsRow(
+        label: l10n.statsFirstPlayed,
+        value: history?.firstPlayedAt != null
+            ? dateFormat.format(history!.firstPlayedAt!)
+            : l10n.statsNever,
+      ),
+      _StatsRow(
+        label: l10n.statsLastPlayed,
+        value: history?.lastPlayedAt != null
+            ? dateFormat.format(history!.lastPlayedAt!)
+            : l10n.statsNever,
+      ),
+    ];
+
+    final labelStyle = theme.textTheme.bodySmall?.copyWith(
+      color: theme.colorScheme.onSurfaceVariant,
+    );
+    final valueStyle = theme.textTheme.bodySmall;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l10n.statsSection,
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: Spacing.sm),
+        Table(
+          columnWidths: const {0: IntrinsicColumnWidth(), 1: FlexColumnWidth()},
+          defaultVerticalAlignment: TableCellVerticalAlignment.baseline,
+          textBaseline: TextBaseline.alphabetic,
+          children: rows
+              .map(
+                (row) => TableRow(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(
+                        right: Spacing.md,
+                        bottom: Spacing.xs,
+                      ),
+                      child: Text(row.label, style: labelStyle),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: Spacing.xs),
+                      child: Text(row.value, style: valueStyle),
+                    ),
+                  ],
+                ),
+              )
+              .toList(),
+        ),
+      ],
+    );
+  }
+
+  String _formatMs(int ms) {
+    if (ms == 0) return '00:00';
+    final duration = Duration(milliseconds: ms);
+    final hours = duration.inHours;
+    final minutes = duration.inMinutes.remainder(60);
+    final seconds = duration.inSeconds.remainder(60);
+    if (0 < hours) {
+      return '$hours:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+    }
+    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+  }
+}
+
+class _StatsRow {
+  const _StatsRow({required this.label, required this.value});
+
+  final String label;
+  final String value;
 }

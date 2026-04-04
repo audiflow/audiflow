@@ -1009,4 +1009,40 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get removeDownload => 'ダウンロードを削除';
+
+  @override
+  String get statsTitle => 'タイトル';
+
+  @override
+  String get statsPodcast => 'ポッドキャスト';
+
+  @override
+  String get statsDuration => '再生時間';
+
+  @override
+  String get statsPublished => '公開日';
+
+  @override
+  String get statsTimesCompleted => '完了回数';
+
+  @override
+  String get statsTimesStarted => '再生回数';
+
+  @override
+  String get statsTotalListened => '総再生時間';
+
+  @override
+  String get statsRealtime => '実時間';
+
+  @override
+  String get statsFirstPlayed => '初回再生';
+
+  @override
+  String get statsLastPlayed => '最終再生';
+
+  @override
+  String get statsNever => '未再生';
+
+  @override
+  String get statsSection => '統計';
 }
