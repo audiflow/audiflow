@@ -98,14 +98,16 @@ void main() {
       await tester.pumpWidget(buildTestWidget());
       await tester.pumpAndSettle();
 
-      expect(find.text('Test Episode Title'), findsAtLeast(1));
+      // Title appears in header and stats table
+      expect(find.text('Test Episode Title'), findsNWidgets(2));
     });
 
     testWidgets('renders podcast title', (tester) async {
       await tester.pumpWidget(buildTestWidget());
       await tester.pumpAndSettle();
 
-      expect(find.text(testPodcastTitle), findsAtLeast(1));
+      // Podcast name appears in header and stats table
+      expect(find.text(testPodcastTitle), findsNWidgets(2));
     });
 
     testWidgets('renders play button when not playing', (tester) async {

@@ -353,7 +353,7 @@ void main() {
       // Start playback
       await service.onPlaybackStarted(episodeId, 0);
 
-      // First save has no prior reference -> 0 deltas
+      // First save: 6s of wall-clock and 6s of content since onPlaybackStarted
       now = now.add(const Duration(seconds: 6));
       await service.onProgressUpdate(
         episodeId,
