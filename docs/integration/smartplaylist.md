@@ -35,9 +35,9 @@ This document does not cover:
 
 | Environment | Base URL | Source repo |
 |-------------|----------|-------------|
-| Production | `https://audiflow.github.io/audiflow-smartplaylist/assets/v2/` | `audiflow-smartplaylist` |
-| Staging | `https://audiflow.github.io/audiflow-smartplaylist/assets-stg/v2/` | `audiflow-smartplaylist` |
-| Development | `https://audiflow.github.io/audiflow-smartplaylist/assets-dev/v2/` | `audiflow-smartplaylist` |
+| Production | `https://audiflow.github.io/audiflow-smartplaylist/assets/v3/` | `audiflow-smartplaylist` |
+| Staging | `https://audiflow.github.io/audiflow-smartplaylist/assets-stg/v3/` | `audiflow-smartplaylist` |
+| Development | `https://audiflow.github.io/audiflow-smartplaylist/assets-dev/v3/` | `audiflow-smartplaylist` |
 
 All environments use the same GitHub Pages host with different asset paths. The base URL is injected via `smartPlaylistConfigBaseUrlProvider`.
 

@@ -578,7 +578,7 @@ Smart playlist configurations (curated episode groupings per podcast) are manage
 ### Schema (Single Source of Truth)
 
 **[`audiflow/audiflow-smartplaylist-schema`](https://github.com/audiflow/audiflow-smartplaylist-schema)** is the canonical source for:
-- JSON Schema definitions (`schema.json`, `playlist-definition.schema.json`)
+- JSON Schema definitions (`playlist-definition.schema.json`, `pattern-index.schema.json`, `pattern-meta.schema.json`)
 - File structure documentation (`docs/file-structure.md`)
 - Validation scripts (`scripts/validate.sh`)
 - Example configurations (`examples/`)
@@ -605,14 +605,14 @@ All config data repos, the web editor, and the mobile app must conform to this s
      ┌───────────────────────────────────────────────────┐
      │ GitHub Pages                                       │
      │ audiflow.github.io/audiflow-smartplaylist/          │
-     │   /assets/v2/     (prod)                           │
-     │   /assets-stg/v2/ (staging)                        │
-     │   /assets-dev/v2/ (dev)                            │
+     │   /assets/v3/     (prod)                           │
+     │   /assets-stg/v3/ (staging)                        │
+     │   /assets-dev/v3/ (dev)                            │
      └───────────────────────┬─────────────────────────┘
                              │
                              v
      All flavors fetch from audiflow.github.io/
-     audiflow-smartplaylist/{assets,assets-stg,assets-dev}/v2/
+     audiflow-smartplaylist/{assets,assets-stg,assets-dev}/v3/
 ```
 
 ### 1. Config Data Repository (Static JSON)
@@ -621,9 +621,9 @@ Single repo with per-environment asset paths:
 
 | Repo | Environment | Path | Base URL |
 |------|-------------|------|----------|
-| `audiflow/audiflow-smartplaylist` | Production | `assets/v2/` | `https://audiflow.github.io/audiflow-smartplaylist/assets/v2/` |
-| `audiflow/audiflow-smartplaylist` | Staging | `assets-stg/v2/` | `https://audiflow.github.io/audiflow-smartplaylist/assets-stg/v2/` |
-| `audiflow/audiflow-smartplaylist` | Development | `assets-dev/v2/` | `https://audiflow.github.io/audiflow-smartplaylist/assets-dev/v2/` |
+| `audiflow/audiflow-smartplaylist` | Production | `assets/v3/` | `https://audiflow.github.io/audiflow-smartplaylist/assets/v3/` |
+| `audiflow/audiflow-smartplaylist` | Staging | `assets-stg/v3/` | `https://audiflow.github.io/audiflow-smartplaylist/assets-stg/v3/` |
+| `audiflow/audiflow-smartplaylist` | Development | `assets-dev/v3/` | `https://audiflow.github.io/audiflow-smartplaylist/assets-dev/v3/` |
 
 Each environment path shares the same directory structure:
 
@@ -672,18 +672,22 @@ In `audiflow_domain`, the `feed` feature handles smart playlist configs:
 
 ### Schema Conformance Testing
 
-A vendored copy of the reference JSON Schema lives at `packages/audiflow_domain/test/fixtures/schema.json` (copied from `audiflow-smartplaylist-editor/packages/sp_shared/assets/schema.json`).
+Vendored copies of the v3 JSON Schemas live at `packages/audiflow_domain/test/fixtures/` (copied from `audiflow-smartplaylist-editor/crates/sp_core/assets/`):
+- `playlist-definition.schema.json` — validates `SmartPlaylistDefinition`
+- `pattern-index.schema.json` — validates `RootMeta` / `PatternSummary`
+- `pattern-meta.schema.json` — validates `PatternMeta`
 
 Conformance tests at `packages/audiflow_domain/test/features/feed/models/schema_conformance_test.dart` validate that:
 - Model `toJson()` output validates against the schema (round-trip tests)
 - Dart enum names and string constants match schema `oneOf`/`enum` definitions
+- `RootMeta` and `PatternMeta` toJson round-trips validate against their respective schemas
 
 **Valid resolver types** (from schema): `rss`, `category`, `year`, `titleAppearanceOrder`
 
 Always use these exact values in test data. Never use legacy names like `rssSeason`, `categoryGroup`, or `flat`.
 
-**To update the vendored schema:**
-1. Copy `sp_shared/assets/schema.json` to `packages/audiflow_domain/test/fixtures/schema.json`
+**To update the vendored schemas:**
+1. Copy all `*.schema.json` from `crates/sp_core/assets/` to `packages/audiflow_domain/test/fixtures/`
 2. Run conformance tests: `flutter test packages/audiflow_domain/test/features/feed/models/schema_conformance_test.dart`
 3. Fix any drift (update models/enums/test data to match)
 4. Run full suite: `flutter test packages/audiflow_domain`

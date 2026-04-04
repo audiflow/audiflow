@@ -5,5 +5,5 @@ import 'main.dart' as app;
 Future<void> main() => app.appMain(
   flavor: Flavor.stg,
   smartPlaylistConfigBaseUrl:
-      'https://audiflow.github.io/audiflow-smartplaylist/assets-stg/v2',
+      'https://audiflow.github.io/audiflow-smartplaylist/assets-stg/v3',
 );
