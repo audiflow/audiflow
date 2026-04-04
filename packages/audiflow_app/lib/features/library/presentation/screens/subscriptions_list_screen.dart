@@ -71,7 +71,18 @@ class _SubscriptionsListScreenState
               },
             ),
             loading: () => const SizedBox.shrink(),
-            error: (_, _) => const SizedBox.shrink(),
+            // On error, fall back to default sort order so the sort
+            // menu remains accessible instead of disappearing.
+            error: (_, _) => _SortMenuButton(
+              currentOrder: PodcastSortOrder.latestEpisode,
+              onSelected: (order) {
+                unawaited(
+                  ref
+                      .read(podcastSortOrderControllerProvider.notifier)
+                      .setSortOrder(order),
+                );
+              },
+            ),
           ),
         ],
       ),
