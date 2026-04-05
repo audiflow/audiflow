@@ -14,8 +14,8 @@ final stationByIdProvider = StationByIdFamily._();
 
 final class StationByIdProvider
     extends
-        $FunctionalProvider<AsyncValue<Station?>, Station?, FutureOr<Station?>>
-    with $FutureModifier<Station?>, $FutureProvider<Station?> {
+        $FunctionalProvider<AsyncValue<Station?>, Station?, Stream<Station?>>
+    with $FutureModifier<Station?>, $StreamProvider<Station?> {
   StationByIdProvider._({
     required StationByIdFamily super.from,
     required int super.argument,
@@ -39,11 +39,11 @@ final class StationByIdProvider
 
   @$internal
   @override
-  $FutureProviderElement<Station?> $createElement($ProviderPointer pointer) =>
-      $FutureProviderElement(pointer);
+  $StreamProviderElement<Station?> $createElement($ProviderPointer pointer) =>
+      $StreamProviderElement(pointer);
 
   @override
-  FutureOr<Station?> create(Ref ref) {
+  Stream<Station?> create(Ref ref) {
     final argument = this.argument as int;
     return stationById(ref, argument);
   }
@@ -59,10 +59,10 @@ final class StationByIdProvider
   }
 }
 
-String _$stationByIdHash() => r'5ba4d7b08a9104b369773fe5332b1b64bbae5a48';
+String _$stationByIdHash() => r'2fd1643ae01b65b21c4849c2793f030fc08d6607';
 
 final class StationByIdFamily extends $Family
-    with $FunctionalFamilyOverride<FutureOr<Station?>, int> {
+    with $FunctionalFamilyOverride<Stream<Station?>, int> {
   StationByIdFamily._()
     : super(
         retry: null,

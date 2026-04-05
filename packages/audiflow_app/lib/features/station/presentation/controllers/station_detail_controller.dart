@@ -4,8 +4,8 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 part 'station_detail_controller.g.dart';
 
 @riverpod
-Future<Station?> stationById(Ref ref, int stationId) {
-  return ref.watch(stationRepositoryProvider).findById(stationId);
+Stream<Station?> stationById(Ref ref, int stationId) {
+  return ref.watch(stationRepositoryProvider).watchById(stationId);
 }
 
 @riverpod

@@ -29,6 +29,9 @@ class StationRepositoryImpl implements StationRepository {
   Future<Station?> findById(int id) => _datasource.getById(id);
 
   @override
+  Stream<Station?> watchById(int id) => _datasource.watchById(id);
+
+  @override
   Future<Station> create(Station station) async {
     final count = await _datasource.count();
     // Reject if the limit has already been reached.

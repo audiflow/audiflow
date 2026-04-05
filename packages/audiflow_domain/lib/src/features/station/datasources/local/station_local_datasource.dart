@@ -17,6 +17,10 @@ class StationLocalDatasource {
   /// Returns the station with [id], or null if not found.
   Future<Station?> getById(int id) => _isar.stations.get(id);
 
+  /// Watches the station with [id] for changes.
+  Stream<Station?> watchById(int id) =>
+      _isar.stations.watchObject(id, fireImmediately: true);
+
   /// Returns all stations sorted by [sortOrder] ascending.
   Future<List<Station>> getAll() =>
       _isar.stations.where().sortBySortOrder().findAll();
