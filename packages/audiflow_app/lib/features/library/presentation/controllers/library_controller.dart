@@ -77,7 +77,14 @@ Stream<DateTime?> newestEpisodeDate(Ref ref, int podcastId) {
 @riverpod
 Future<List<Subscription>> sortedSubscriptions(Ref ref) async {
   final subscriptions = await ref.watch(librarySubscriptionsProvider.future);
-  final sortOrder = await ref.watch(podcastSortOrderControllerProvider.future);
+  // Default to latestEpisode if the sort order fails to load so a
+  // persistence error does not take down the entire subscription list.
+  PodcastSortOrder sortOrder;
+  try {
+    sortOrder = await ref.watch(podcastSortOrderControllerProvider.future);
+  } on Exception {
+    sortOrder = PodcastSortOrder.latestEpisode;
+  }
 
   switch (sortOrder) {
     case PodcastSortOrder.subscribedAt:

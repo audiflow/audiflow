@@ -205,9 +205,9 @@ void main() {
       );
     });
 
-    tearDown(() {
+    tearDown(() async {
       container.dispose();
-      subsController.close();
+      await subsController.close();
       fakeEpisodeRepo.dispose();
     });
 
@@ -265,10 +265,14 @@ void main() {
       // B has an episode, D does not -> B first, D last
       check(result.map((s) => s.id).toList()).deepEquals([2, 4]);
     });
+  });
 
+  group('newestEpisodeDate max computation', () {
     test(
       'picks max publishedAt from multi-episode out-of-order list',
       () async {
+        final now = DateTime(2026, 4, 1);
+
         // Podcast 5 has multiple episodes with out-of-order and null dates.
         // The newest publishedAt is March 25.
         final multiEpisodes = [
@@ -286,15 +290,14 @@ void main() {
         final podcastE = _sub(5, 'Echo Podcast', now);
         final podcastF = _sub(6, 'Foxtrot Podcast', now);
 
-        // Rebuild container with multi-episode data.
-        container.dispose();
-        subsController = StreamController<List<Subscription>>();
+        final subsController = StreamController<List<Subscription>>();
         final multiRepo = _FakeEpisodeRepository(
           episodeLists: {5: multiEpisodes, 6: singleEpisode},
         );
+
         SharedPreferences.setMockInitialValues({});
         final prefs = await SharedPreferences.getInstance();
-        container = ProviderContainer(
+        final container = ProviderContainer(
           overrides: [
             sharedPreferencesProvider.overrideWithValue(prefs),
             librarySubscriptionsProvider.overrideWith(
@@ -306,13 +309,16 @@ void main() {
 
         final sub = container.listen(sortedSubscriptionsProvider, (_, _) {});
         addTearDown(sub.close);
-        addTearDown(multiRepo.dispose);
 
         subsController.add([podcastF, podcastE]);
 
         final result = await container.read(sortedSubscriptionsProvider.future);
         // E (max March 25) before F (March 20)
         check(result.map((s) => s.id).toList()).deepEquals([5, 6]);
+
+        container.dispose();
+        await subsController.close();
+        multiRepo.dispose();
       },
     );
   });
