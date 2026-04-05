@@ -60,4 +60,17 @@ void main() {
       check(all.first.sortKey).equals(DateTime(2026, 3, 20));
     },
   );
+
+  test('StationEpisode persists podcastSortKey', () async {
+    final se = StationEpisode()
+      ..stationId = 1
+      ..episodeId = 100
+      ..sortKey = DateTime(2026, 4, 5)
+      ..podcastSortKey = 2;
+
+    await isar.writeTxn(() => isar.stationEpisodes.put(se));
+    final loaded = await isar.stationEpisodes.get(se.id);
+    check(loaded).isNotNull();
+    check(loaded!.podcastSortKey).equals(2);
+  });
 }

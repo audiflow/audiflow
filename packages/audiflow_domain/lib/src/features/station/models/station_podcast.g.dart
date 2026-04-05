@@ -22,13 +22,23 @@ const StationPodcastSchema = CollectionSchema(
       name: r'addedAt',
       type: IsarType.dateTime,
     ),
-    r'podcastId': PropertySchema(
+    r'episodeLimit': PropertySchema(
       id: 1,
+      name: r'episodeLimit',
+      type: IsarType.long,
+    ),
+    r'podcastId': PropertySchema(
+      id: 2,
       name: r'podcastId',
       type: IsarType.long,
     ),
+    r'sortOrder': PropertySchema(
+      id: 3,
+      name: r'sortOrder',
+      type: IsarType.long,
+    ),
     r'stationId': PropertySchema(
-      id: 2,
+      id: 4,
       name: r'stationId',
       type: IsarType.long,
     ),
@@ -84,8 +94,10 @@ void _stationPodcastSerialize(
   Map<Type, List<int>> allOffsets,
 ) {
   writer.writeDateTime(offsets[0], object.addedAt);
-  writer.writeLong(offsets[1], object.podcastId);
-  writer.writeLong(offsets[2], object.stationId);
+  writer.writeLong(offsets[1], object.episodeLimit);
+  writer.writeLong(offsets[2], object.podcastId);
+  writer.writeLong(offsets[3], object.sortOrder);
+  writer.writeLong(offsets[4], object.stationId);
 }
 
 StationPodcast _stationPodcastDeserialize(
@@ -96,9 +108,11 @@ StationPodcast _stationPodcastDeserialize(
 ) {
   final object = StationPodcast();
   object.addedAt = reader.readDateTime(offsets[0]);
+  object.episodeLimit = reader.readLongOrNull(offsets[1]);
   object.id = id;
-  object.podcastId = reader.readLong(offsets[1]);
-  object.stationId = reader.readLong(offsets[2]);
+  object.podcastId = reader.readLong(offsets[2]);
+  object.sortOrder = reader.readLong(offsets[3]);
+  object.stationId = reader.readLong(offsets[4]);
   return object;
 }
 
@@ -112,8 +126,12 @@ P _stationPodcastDeserializeProp<P>(
     case 0:
       return (reader.readDateTime(offset)) as P;
     case 1:
-      return (reader.readLong(offset)) as P;
+      return (reader.readLongOrNull(offset)) as P;
     case 2:
+      return (reader.readLong(offset)) as P;
+    case 3:
+      return (reader.readLong(offset)) as P;
+    case 4:
       return (reader.readLong(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -616,6 +634,79 @@ extension StationPodcastQueryFilter
     });
   }
 
+  QueryBuilder<StationPodcast, StationPodcast, QAfterFilterCondition>
+  episodeLimitIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'episodeLimit'),
+      );
+    });
+  }
+
+  QueryBuilder<StationPodcast, StationPodcast, QAfterFilterCondition>
+  episodeLimitIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'episodeLimit'),
+      );
+    });
+  }
+
+  QueryBuilder<StationPodcast, StationPodcast, QAfterFilterCondition>
+  episodeLimitEqualTo(int? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'episodeLimit', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<StationPodcast, StationPodcast, QAfterFilterCondition>
+  episodeLimitGreaterThan(int? value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'episodeLimit',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<StationPodcast, StationPodcast, QAfterFilterCondition>
+  episodeLimitLessThan(int? value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'episodeLimit',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<StationPodcast, StationPodcast, QAfterFilterCondition>
+  episodeLimitBetween(
+    int? lower,
+    int? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'episodeLimit',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
   QueryBuilder<StationPodcast, StationPodcast, QAfterFilterCondition> idEqualTo(
     Id value,
   ) {
@@ -727,6 +818,61 @@ extension StationPodcastQueryFilter
   }
 
   QueryBuilder<StationPodcast, StationPodcast, QAfterFilterCondition>
+  sortOrderEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'sortOrder', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<StationPodcast, StationPodcast, QAfterFilterCondition>
+  sortOrderGreaterThan(int value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'sortOrder',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<StationPodcast, StationPodcast, QAfterFilterCondition>
+  sortOrderLessThan(int value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'sortOrder',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<StationPodcast, StationPodcast, QAfterFilterCondition>
+  sortOrderBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'sortOrder',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<StationPodcast, StationPodcast, QAfterFilterCondition>
   stationIdEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
@@ -803,6 +949,20 @@ extension StationPodcastQuerySortBy
     });
   }
 
+  QueryBuilder<StationPodcast, StationPodcast, QAfterSortBy>
+  sortByEpisodeLimit() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'episodeLimit', Sort.asc);
+    });
+  }
+
+  QueryBuilder<StationPodcast, StationPodcast, QAfterSortBy>
+  sortByEpisodeLimitDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'episodeLimit', Sort.desc);
+    });
+  }
+
   QueryBuilder<StationPodcast, StationPodcast, QAfterSortBy> sortByPodcastId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'podcastId', Sort.asc);
@@ -813,6 +973,19 @@ extension StationPodcastQuerySortBy
   sortByPodcastIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'podcastId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<StationPodcast, StationPodcast, QAfterSortBy> sortBySortOrder() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'sortOrder', Sort.asc);
+    });
+  }
+
+  QueryBuilder<StationPodcast, StationPodcast, QAfterSortBy>
+  sortBySortOrderDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'sortOrder', Sort.desc);
     });
   }
 
@@ -845,6 +1018,20 @@ extension StationPodcastQuerySortThenBy
     });
   }
 
+  QueryBuilder<StationPodcast, StationPodcast, QAfterSortBy>
+  thenByEpisodeLimit() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'episodeLimit', Sort.asc);
+    });
+  }
+
+  QueryBuilder<StationPodcast, StationPodcast, QAfterSortBy>
+  thenByEpisodeLimitDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'episodeLimit', Sort.desc);
+    });
+  }
+
   QueryBuilder<StationPodcast, StationPodcast, QAfterSortBy> thenById() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.asc);
@@ -867,6 +1054,19 @@ extension StationPodcastQuerySortThenBy
   thenByPodcastIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'podcastId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<StationPodcast, StationPodcast, QAfterSortBy> thenBySortOrder() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'sortOrder', Sort.asc);
+    });
+  }
+
+  QueryBuilder<StationPodcast, StationPodcast, QAfterSortBy>
+  thenBySortOrderDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'sortOrder', Sort.desc);
     });
   }
 
@@ -893,9 +1093,23 @@ extension StationPodcastQueryWhereDistinct
   }
 
   QueryBuilder<StationPodcast, StationPodcast, QDistinct>
+  distinctByEpisodeLimit() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'episodeLimit');
+    });
+  }
+
+  QueryBuilder<StationPodcast, StationPodcast, QDistinct>
   distinctByPodcastId() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'podcastId');
+    });
+  }
+
+  QueryBuilder<StationPodcast, StationPodcast, QDistinct>
+  distinctBySortOrder() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'sortOrder');
     });
   }
 
@@ -921,9 +1135,21 @@ extension StationPodcastQueryProperty
     });
   }
 
+  QueryBuilder<StationPodcast, int?, QQueryOperations> episodeLimitProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'episodeLimit');
+    });
+  }
+
   QueryBuilder<StationPodcast, int, QQueryOperations> podcastIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'podcastId');
+    });
+  }
+
+  QueryBuilder<StationPodcast, int, QQueryOperations> sortOrderProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'sortOrder');
     });
   }
 

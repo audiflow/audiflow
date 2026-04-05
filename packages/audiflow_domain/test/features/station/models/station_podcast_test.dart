@@ -69,4 +69,32 @@ void main() {
       check(all.first.addedAt).equals(now);
     },
   );
+
+  test('StationPodcast persists episodeLimit and sortOrder', () async {
+    final sp = StationPodcast()
+      ..stationId = 1
+      ..podcastId = 42
+      ..addedAt = DateTime(2026, 4, 1)
+      ..episodeLimit = 5
+      ..sortOrder = 2;
+
+    await isar.writeTxn(() => isar.stationPodcasts.put(sp));
+    final loaded = await isar.stationPodcasts.get(sp.id);
+    check(loaded).isNotNull();
+    check(loaded!.episodeLimit).equals(5);
+    check(loaded.sortOrder).equals(2);
+  });
+
+  test('StationPodcast null episodeLimit means use station default', () async {
+    final sp = StationPodcast()
+      ..stationId = 1
+      ..podcastId = 43
+      ..addedAt = DateTime(2026, 4, 1);
+
+    await isar.writeTxn(() => isar.stationPodcasts.put(sp));
+    final loaded = await isar.stationPodcasts.get(sp.id);
+    check(loaded).isNotNull();
+    check(loaded!.episodeLimit).isNull();
+    check(loaded.sortOrder).equals(0);
+  });
 }
