@@ -241,8 +241,8 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
     showModalBottomSheet<void>(
       context: context,
       builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+        child: ListView(
+          shrinkWrap: true,
           children: options.map((opt) {
             final label = opt == null
                 ? l10n.stationAllEpisodes
