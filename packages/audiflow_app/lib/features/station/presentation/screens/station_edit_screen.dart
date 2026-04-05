@@ -456,9 +456,12 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
             letterSpacing: 1.2,
           ),
         ),
-        TextButton(
-          onPressed: () => _onPodcastSortButtonTap(state, controller),
-          child: Text(sortLabel),
+        GestureDetector(
+          onLongPress: () => _onPodcastSortButtonLongPress(state, controller),
+          child: TextButton(
+            onPressed: () => _onPodcastSortButtonTap(state, controller),
+            child: Text(sortLabel),
+          ),
         ),
       ],
     );
@@ -468,12 +471,24 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
     StationEditState state,
     StationEditController controller,
   ) {
-    if (state.podcastSort == StationPodcastSort.manual && !_isReorderMode) {
-      // First tap in manual mode enters reorder; second tap opens sort picker
-      // so users can switch to a different sort mode.
+    if (_isReorderMode) {
+      // "Done" exits reorder mode without opening the sort picker.
+      setState(() => _isReorderMode = false);
+      return;
+    }
+    if (state.podcastSort == StationPodcastSort.manual) {
+      // In manual mode (not reordering): enter reorder mode.
       setState(() => _isReorderMode = true);
       return;
     }
+    _showPodcastSortSheet(state, controller);
+  }
+
+  void _onPodcastSortButtonLongPress(
+    StationEditState state,
+    StationEditController controller,
+  ) {
+    // Long press always opens the sort picker regardless of mode.
     if (_isReorderMode) {
       setState(() => _isReorderMode = false);
     }

@@ -41,10 +41,10 @@ class StationReconciler {
       final rawLimit = sp.episodeLimit ?? station.defaultEpisodeLimit;
       final limit = (rawLimit == null || rawLimit == 0) ? null : rawLimit;
 
-      // Apply count limit purely by date — attribute filters (favorited,
-      // duration, completed, downloaded) are evaluated in _matchesConditions
-      // so the limit always selects the N most-recent episodes regardless of
-      // filter match.
+      // Apply count limit purely by date (ties broken by id desc) — attribute
+      // filters (favorited, duration, completed, downloaded) are evaluated in
+      // _matchesConditions so the limit always selects the N most-recent
+      // episodes regardless of filter match.
       final sorted = _isar.episodes
           .filter()
           .podcastIdEqualTo(sp.podcastId)
@@ -196,10 +196,11 @@ class StationReconciler {
         }
       });
 
-      // Evict displaced siblings: when a count limit is active and a new
-      // episode was added, older episodes beyond the top N must be removed.
+      // Sync siblings: when a count limit is active, ensure exactly the
+      // top N episodes for this podcast are in the station (evict excess
+      // and backfill replacements when an episode drops out).
       if (limit != null) {
-        await _evictExcessEpisodes(sp.stationId, sp.podcastId, limit);
+        await _syncPodcastTopN(sp.stationId, station, sp, limit);
       }
     }
   }
@@ -207,71 +208,91 @@ class StationReconciler {
   /// Returns true if the episode is within the top [limit] newest episodes
   /// for its podcast. If [limit] is null, always returns true.
   ///
-  /// Ties on publishedAt are broken by episode id (higher id = newer) so that
-  /// episodes with identical or null dates don't all pass the limit together.
+  /// Uses the same ordering as [reconcileFull] (publishedAt desc, id desc)
+  /// to ensure consistent top-N selection between full and incremental paths.
   Future<bool> _isWithinCountLimit(
     Episode episode,
     int podcastId,
     int? limit,
   ) async {
     if (limit == null) return true;
-    final publishedAt = episode.publishedAt ?? DateTime(1970);
 
-    // Count episodes strictly newer by date.
-    final strictlyNewer = await _isar.episodes
+    // Fetch the top N episode IDs using the same sort as reconcileFull.
+    final topN = await _isar.episodes
         .filter()
         .podcastIdEqualTo(podcastId)
-        .and()
-        .publishedAtGreaterThan(publishedAt)
-        .count();
+        .sortByPublishedAtDesc()
+        .limit(limit)
+        .findAll();
+    final topNIds = topN.map((e) => e.id).toSet();
 
-    // Among episodes with the same date, count those with a higher id
-    // (tie-breaker: higher id = newer arrival).
-    final sameDateHigherId = await _isar.episodes
-        .filter()
-        .podcastIdEqualTo(podcastId)
-        .and()
-        .publishedAtEqualTo(publishedAt)
-        .and()
-        .idGreaterThan(episode.id)
-        .count();
-
-    return (strictlyNewer + sameDateHigherId) < limit;
+    return topNIds.contains(episode.id);
   }
 
-  /// Removes the oldest station episodes for a specific podcast when the
-  /// count exceeds [limit]. Called after incremental reconciliation to evict
-  /// displaced siblings.
-  Future<void> _evictExcessEpisodes(
+  /// Ensures the station contains exactly the correct top-N episodes for a
+  /// single podcast. Evicts episodes that fell outside the top N and
+  /// backfills replacements that should now be included.
+  Future<void> _syncPodcastTopN(
     int stationId,
-    int podcastId,
+    Station station,
+    StationPodcast sp,
     int limit,
   ) async {
-    // Collect episode IDs belonging to this podcast in the station.
-    final podcastEpisodeIds = await _isar.episodes
+    // Determine the top N episodes (same ordering as reconcileFull).
+    final topN = await _isar.episodes
         .filter()
-        .podcastIdEqualTo(podcastId)
-        .idProperty()
+        .podcastIdEqualTo(sp.podcastId)
+        .sortByPublishedAtDesc()
+        .limit(limit)
         .findAll();
-    final podcastIdSet = podcastEpisodeIds.toSet();
+    final topNIds = topN.map((e) => e.id).toSet();
+
+    // Collect current station entries for this podcast.
+    final podcastEpisodes = await _isar.episodes
+        .filter()
+        .podcastIdEqualTo(sp.podcastId)
+        .findAll();
+    final podcastIdSet = podcastEpisodes.map((e) => e.id).toSet();
 
     final stationEntries = await _isar.stationEpisodes
         .filter()
         .stationIdEqualTo(stationId)
-        .sortBySortKeyDesc()
         .findAll();
-
-    // Filter to entries belonging to this podcast.
     final podcastEntries = stationEntries
         .where((e) => podcastIdSet.contains(e.episodeId))
         .toList();
+    final currentEpisodeIds = podcastEntries.map((e) => e.episodeId).toSet();
 
-    if (podcastEntries.length <= limit) return;
+    // Evict entries no longer in the top N.
+    final toEvict = podcastEntries
+        .where((e) => !topNIds.contains(e.episodeId))
+        .map((e) => e.id)
+        .toList();
 
-    // Entries are sorted newest-first; remove those beyond the limit.
-    final excess = podcastEntries.sublist(limit);
-    final deleteIds = excess.map((e) => e.id).toList();
-    await _isar.writeTxn(() => _isar.stationEpisodes.deleteAll(deleteIds));
+    // Backfill episodes in top N that are not yet in the station.
+    final toBackfill = <StationEpisode>[];
+    for (final ep in topN) {
+      if (currentEpisodeIds.contains(ep.id)) continue;
+      if (!await _matchesConditions(ep, station)) continue;
+      toBackfill.add(
+        StationEpisode()
+          ..stationId = stationId
+          ..episodeId = ep.id
+          ..sortKey = ep.publishedAt
+          ..podcastSortKey = sp.sortOrder,
+      );
+    }
+
+    if (toEvict.isEmpty && toBackfill.isEmpty) return;
+
+    await _isar.writeTxn(() async {
+      if (toEvict.isNotEmpty) {
+        await _isar.stationEpisodes.deleteAll(toEvict);
+      }
+      if (toBackfill.isNotEmpty) {
+        await _isar.stationEpisodes.putAll(toBackfill);
+      }
+    });
   }
 
   /// Evaluates whether an episode matches all station attribute filter
