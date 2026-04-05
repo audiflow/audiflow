@@ -861,6 +861,85 @@ class AppLocalizationsEn extends AppLocalizations {
   String get stationPodcastRequired => 'Select at least one podcast';
 
   @override
+  String get stationEpisodes => 'Episodes';
+
+  @override
+  String stationLatestN(int count) {
+    return 'Latest $count';
+  }
+
+  @override
+  String get stationAllEpisodes => 'All';
+
+  @override
+  String get stationGroupByPodcast => 'Group by podcast';
+
+  @override
+  String get stationPodcastSortSubscribeOld => 'Subscribe (old)';
+
+  @override
+  String get stationPodcastSortSubscribeNew => 'Subscribe (new)';
+
+  @override
+  String get stationPodcastSortNameAz => 'Name A-Z';
+
+  @override
+  String get stationPodcastSortNameZa => 'Name Z-A';
+
+  @override
+  String get stationPodcastSortManual => 'Manual';
+
+  @override
+  String get stationReorder => 'Reorder';
+
+  @override
+  String get stationReorderDone => 'Done';
+
+  @override
+  String get stationSelectPodcasts => 'Select podcasts...';
+
+  @override
+  String stationSelectPodcastsCount(int selected, int total) {
+    return '$selected / $total';
+  }
+
+  @override
+  String get stationPickerTitle => 'Select Podcasts';
+
+  @override
+  String get stationPickerSearch => 'Search podcasts...';
+
+  @override
+  String stationPickerSubscribed(int count) {
+    return '$count subscribed';
+  }
+
+  @override
+  String stationPickerResults(int count) {
+    return '$count results';
+  }
+
+  @override
+  String get stationPickerSortNameAz => 'Name A-Z';
+
+  @override
+  String get stationPickerSortNameZa => 'Name Z-A';
+
+  @override
+  String get stationPickerSortRecentlySubscribed => 'Recently subscribed';
+
+  @override
+  String get stationPickerSortRecentlyUpdated => 'Recently updated';
+
+  @override
+  String stationDefault(int count) {
+    return 'Default ($count)';
+  }
+
+  @override
+  String get stationDefaultAll => 'Default (All)';
+
+  @override
   String get commonGoBack => 'Go Back';
 
   @override
