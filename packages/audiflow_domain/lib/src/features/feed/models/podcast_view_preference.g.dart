@@ -81,7 +81,7 @@ const PodcastViewPreferenceSchema = CollectionSchema(
   getId: _podcastViewPreferenceGetId,
   getLinks: _podcastViewPreferenceGetLinks,
   attach: _podcastViewPreferenceAttach,
-  version: '3.3.0',
+  version: '3.3.2',
 );
 
 int _podcastViewPreferenceEstimateSize(

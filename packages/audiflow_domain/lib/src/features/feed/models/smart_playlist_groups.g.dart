@@ -103,7 +103,7 @@ const SmartPlaylistGroupEntitySchema = CollectionSchema(
   getId: _smartPlaylistGroupEntityGetId,
   getLinks: _smartPlaylistGroupEntityGetLinks,
   attach: _smartPlaylistGroupEntityAttach,
-  version: '3.3.0',
+  version: '3.3.2',
 );
 
 int _smartPlaylistGroupEntityEstimateSize(

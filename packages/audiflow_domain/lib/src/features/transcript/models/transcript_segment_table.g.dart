@@ -67,7 +67,7 @@ const TranscriptSegmentSchema = CollectionSchema(
   getId: _transcriptSegmentGetId,
   getLinks: _transcriptSegmentGetLinks,
   attach: _transcriptSegmentAttach,
-  version: '3.3.0',
+  version: '3.3.2',
 );
 
 int _transcriptSegmentEstimateSize(

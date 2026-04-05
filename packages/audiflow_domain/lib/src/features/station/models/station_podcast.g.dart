@@ -65,7 +65,7 @@ const StationPodcastSchema = CollectionSchema(
   getId: _stationPodcastGetId,
   getLinks: _stationPodcastGetLinks,
   attach: _stationPodcastAttach,
-  version: '3.3.0',
+  version: '3.3.2',
 );
 
 int _stationPodcastEstimateSize(

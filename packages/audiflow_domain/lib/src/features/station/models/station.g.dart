@@ -79,7 +79,7 @@ const StationSchema = CollectionSchema(
   getId: _stationGetId,
   getLinks: _stationGetLinks,
   attach: _stationAttach,
-  version: '3.3.0',
+  version: '3.3.2',
 );
 
 int _stationEstimateSize(

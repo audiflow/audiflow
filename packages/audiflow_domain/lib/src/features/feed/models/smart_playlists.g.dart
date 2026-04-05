@@ -102,7 +102,7 @@ const SmartPlaylistEntitySchema = CollectionSchema(
   getId: _smartPlaylistEntityGetId,
   getLinks: _smartPlaylistEntityGetLinks,
   attach: _smartPlaylistEntityAttach,
-  version: '3.3.0',
+  version: '3.3.2',
 );
 
 int _smartPlaylistEntityEstimateSize(
