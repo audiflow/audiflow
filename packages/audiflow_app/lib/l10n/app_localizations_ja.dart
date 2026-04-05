@@ -812,17 +812,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get stationLongerThan => 'より長い';
 
   @override
-  String get stationPublishedWithin => '公開期間';
-
-  @override
-  String get stationNoLimit => '制限なし';
-
-  @override
-  String stationLastDays(int days) {
-    return '過去$days日';
-  }
-
-  @override
   String get stationEpisodeOrder => 'エピソードの順序';
 
   @override

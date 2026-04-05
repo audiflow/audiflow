@@ -468,9 +468,14 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
     StationEditState state,
     StationEditController controller,
   ) {
-    if (state.podcastSort == StationPodcastSort.manual) {
-      setState(() => _isReorderMode = !_isReorderMode);
+    if (state.podcastSort == StationPodcastSort.manual && !_isReorderMode) {
+      // First tap in manual mode enters reorder; second tap opens sort picker
+      // so users can switch to a different sort mode.
+      setState(() => _isReorderMode = true);
       return;
+    }
+    if (_isReorderMode) {
+      setState(() => _isReorderMode = false);
     }
     _showPodcastSortSheet(state, controller);
   }
@@ -618,8 +623,10 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
     final theme = Theme.of(context);
     final isExpanded = _expandedPodcastId == podcastId;
     final perPodcastLimit = state.podcastEpisodeLimits[podcastId];
-    // null = use default
-    final effectiveLimit = perPodcastLimit ?? state.defaultEpisodeLimit;
+    // null = use default; allEpisodesSentinel (0) = explicit "all episodes"
+    final effectiveLimit = perPodcastLimit == allEpisodesSentinel
+        ? null
+        : (perPodcastLimit ?? state.defaultEpisodeLimit);
     final limitLabel = effectiveLimit == null
         ? l10n.stationAllEpisodes
         : l10n.stationLatestN(effectiveLimit);
@@ -685,19 +692,18 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
             final label = opt == null
                 ? l10n.stationAllEpisodes
                 : l10n.stationLatestN(opt);
-            // Selected when key exists in map with matching value.
-            final isSelected =
-                state.podcastEpisodeLimits.containsKey(podcastId) &&
-                state.podcastEpisodeLimits[podcastId] == opt;
+            // For "All" chip (opt == null), selected when sentinel is stored.
+            // For numeric chips, selected when map contains exact value.
+            final isSelected = opt == null
+                ? state.podcastEpisodeLimits[podcastId] == allEpisodesSentinel
+                : (state.podcastEpisodeLimits.containsKey(podcastId) &&
+                      state.podcastEpisodeLimits[podcastId] == opt);
             return ChoiceChip(
               label: Text(label),
               selected: isSelected,
               selectedColor: theme.colorScheme.primaryContainer,
               onSelected: (_) {
                 if (opt == null) {
-                  // "All" means explicit null override.
-                  // We need a way to store null as an override. We store
-                  // the value directly — the controller supports int?.
                   _setAllEpisodesOverride(controller, podcastId);
                 } else {
                   controller.setPodcastEpisodeLimit(podcastId, opt);
@@ -710,21 +716,13 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
     );
   }
 
-  // Sentinel to distinguish "not in map" from "in map with null" in local
-  // comparison logic. Only used for chip selection logic in this widget.
-
   void _setAllEpisodesOverride(
     StationEditController controller,
     int podcastId,
   ) {
-    // The domain model stores null limit as "no limit" (all episodes).
-    // But setPodcastEpisodeLimit(id, null) removes the override (use default).
-    // We need a different approach: store a special value or re-examine the API.
-    // Looking at the controller: limits.remove(id) when value==null.
-    // So we cannot store "all" as an explicit per-podcast override via null.
-    // For now, selecting "All" chip removes the key (same as Default behavior
-    // when default is also All). This is a known limitation of the domain API.
-    controller.setPodcastEpisodeLimit(podcastId, null);
+    // Store the sentinel value (0) to distinguish "explicitly all episodes"
+    // from "use station default" (null / absent from map).
+    controller.setPodcastEpisodeLimit(podcastId, allEpisodesSentinel);
   }
 
   Widget _buildPodcastArtwork(BuildContext context, String? artworkUrl) {

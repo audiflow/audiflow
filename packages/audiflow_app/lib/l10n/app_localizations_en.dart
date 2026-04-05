@@ -829,17 +829,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get stationLongerThan => 'Longer than';
 
   @override
-  String get stationPublishedWithin => 'Published Within';
-
-  @override
-  String get stationNoLimit => 'No limit';
-
-  @override
-  String stationLastDays(int days) {
-    return 'Last $days days';
-  }
-
-  @override
   String get stationEpisodeOrder => 'Episode Order';
 
   @override

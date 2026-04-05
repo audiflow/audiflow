@@ -37,23 +37,18 @@ class StationReconciler {
     final episodes = <Episode>[];
 
     for (final sp in stationPodcasts) {
-      final limit = sp.episodeLimit ?? station.defaultEpisodeLimit;
+      // episodeLimit 0 means "explicitly all episodes" (per-podcast override).
+      final rawLimit = sp.episodeLimit ?? station.defaultEpisodeLimit;
+      final limit = (rawLimit == null || rawLimit == 0) ? null : rawLimit;
 
-      var query = _isar.episodes.filter().podcastIdEqualTo(sp.podcastId);
-
-      if (station.filterFavorited) {
-        query = query.and().isFavoritedEqualTo(true);
-      }
-      if (station.durationFilter case final df?) {
-        final thresholdMs = df.durationMinutes * 60 * 1000;
-        query = switch (df.durationOperator) {
-          'shorterThan' => query.and().durationMsLessThan(thresholdMs),
-          'longerThan' => query.and().durationMsGreaterThan(thresholdMs),
-          _ => query,
-        };
-      }
-
-      final sorted = query.sortByPublishedAtDesc();
+      // Apply count limit purely by date — attribute filters (favorited,
+      // duration, completed, downloaded) are evaluated in _matchesConditions
+      // so the limit always selects the N most-recent episodes regardless of
+      // filter match.
+      final sorted = _isar.episodes
+          .filter()
+          .podcastIdEqualTo(sp.podcastId)
+          .sortByPublishedAtDesc();
       final podcastEpisodes = limit != null
           ? await sorted.limit(limit).findAll()
           : await sorted.findAll();
@@ -163,7 +158,8 @@ class StationReconciler {
       final station = await _isar.stations.get(sp.stationId);
       if (station == null) continue;
 
-      final limit = sp.episodeLimit ?? station.defaultEpisodeLimit;
+      final rawLimit = sp.episodeLimit ?? station.defaultEpisodeLimit;
+      final limit = (rawLimit == null || rawLimit == 0) ? null : rawLimit;
       final withinLimit = await _isWithinCountLimit(
         episode,
         episode.podcastId,

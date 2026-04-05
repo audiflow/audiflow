@@ -5,6 +5,11 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 part 'station_edit_controller.freezed.dart';
 part 'station_edit_controller.g.dart';
 
+/// Sentinel value stored in [StationEditState.podcastEpisodeLimits] to
+/// represent an explicit "all episodes" override, distinct from the absence
+/// of an override (which falls back to the station default).
+const int allEpisodesSentinel = 0;
+
 /// Error keys for localization in the UI layer.
 abstract final class StationEditError {
   static const nameRequired = 'name_required';
@@ -79,6 +84,8 @@ class StationEditController extends _$StationEditController {
       orderedIds.add(p.podcastId);
       sortOrders[p.podcastId] = p.sortOrder;
       if (p.episodeLimit != null) {
+        // episodeLimit == 0 in the DB means "explicitly all episodes"
+        // (distinct from null which means "use station default").
         limits[p.podcastId] = p.episodeLimit;
       }
     }
@@ -126,6 +133,10 @@ class StationEditController extends _$StationEditController {
   void setPodcastSort(StationPodcastSort value) =>
       state = state.copyWith(podcastSort: value);
 
+  /// Sets a per-podcast episode limit override.
+  ///
+  /// Pass `null` to remove the override (use station default).
+  /// Pass [allEpisodesSentinel] to explicitly override as "all episodes".
   void setPodcastEpisodeLimit(int podcastId, int? limit) {
     final limits = Map<int, int?>.from(state.podcastEpisodeLimits);
     if (limit == null) {
@@ -169,6 +180,50 @@ class StationEditController extends _$StationEditController {
       podcastSortOrder: currentOrder,
       originalSortOrders: originalOrders,
     );
+  }
+
+  /// Computes the podcast order based on [state.podcastSort].
+  ///
+  /// For [StationPodcastSort.manual], returns the existing
+  /// [state.podcastSortOrder]. For automatic modes, fetches subscription
+  /// metadata and sorts accordingly.
+  Future<List<int>> _resolvedPodcastOrder() async {
+    final selected = state.selectedPodcastIds;
+    final manualOrder = state.podcastSortOrder
+        .where(selected.contains)
+        .toList();
+
+    if (state.podcastSort == StationPodcastSort.manual) return manualOrder;
+
+    final subRepo = ref.read(subscriptionRepositoryProvider);
+    final subMap = <int, Subscription>{};
+    for (final id in selected) {
+      final sub = await subRepo.getById(id);
+      if (sub != null) subMap[id] = sub;
+    }
+
+    final ids = selected.toList();
+    ids.sort((a, b) {
+      final subA = subMap[a];
+      final subB = subMap[b];
+      if (subA == null || subB == null) return 0;
+      return switch (state.podcastSort) {
+        StationPodcastSort.nameAsc => subA.title.toLowerCase().compareTo(
+          subB.title.toLowerCase(),
+        ),
+        StationPodcastSort.nameDesc => subB.title.toLowerCase().compareTo(
+          subA.title.toLowerCase(),
+        ),
+        StationPodcastSort.subscribeAsc => subA.subscribedAt.compareTo(
+          subB.subscribedAt,
+        ),
+        StationPodcastSort.subscribeDesc => subB.subscribedAt.compareTo(
+          subA.subscribedAt,
+        ),
+        StationPodcastSort.manual => 0,
+      };
+    });
+    return ids;
   }
 
   /// Persists the station and reconciles podcast membership.
@@ -236,14 +291,17 @@ class StationEditController extends _$StationEditController {
 
       // Sync podcast membership with sort order and per-podcast limits.
       await podcastRepo.removeAllForStation(saved.id);
-      for (var i = 0; i < state.podcastSortOrder.length; i++) {
-        final podcastId = state.podcastSortOrder[i];
+      final resolvedOrder = await _resolvedPodcastOrder();
+      for (var i = 0; i < resolvedOrder.length; i++) {
+        final podcastId = resolvedOrder[i];
         if (!state.selectedPodcastIds.contains(podcastId)) continue;
+        final limitOverride = state.podcastEpisodeLimits[podcastId];
+        // allEpisodesSentinel (0) persists as 0; null means no override.
         await podcastRepo.add(
           saved.id,
           podcastId,
           sortOrder: i,
-          episodeLimit: state.podcastEpisodeLimits[podcastId],
+          episodeLimit: limitOverride,
         );
       }
 

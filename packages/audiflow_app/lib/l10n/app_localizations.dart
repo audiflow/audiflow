@@ -1568,24 +1568,6 @@ abstract class AppLocalizations {
   /// **'Longer than'**
   String get stationLongerThan;
 
-  /// Section title for published-within filter
-  ///
-  /// In en, this message translates to:
-  /// **'Published Within'**
-  String get stationPublishedWithin;
-
-  /// Option for no published-within limit
-  ///
-  /// In en, this message translates to:
-  /// **'No limit'**
-  String get stationNoLimit;
-
-  /// Published within N days option
-  ///
-  /// In en, this message translates to:
-  /// **'Last {days} days'**
-  String stationLastDays(int days);
-
   /// Section title for sort order
   ///
   /// In en, this message translates to:
