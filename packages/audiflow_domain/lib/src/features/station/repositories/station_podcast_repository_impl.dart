@@ -48,6 +48,10 @@ class StationPodcastRepositoryImpl implements StationPodcastRepository {
   }
 
   @override
+  Future<void> update(StationPodcast stationPodcast) =>
+      _datasource.update(stationPodcast);
+
+  @override
   Future<void> remove(int stationId, int podcastId) =>
       _datasource.delete(stationId, podcastId);
 

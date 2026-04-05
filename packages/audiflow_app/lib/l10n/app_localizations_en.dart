@@ -930,8 +930,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get stationPickerSortRecentlyUpdated => 'Recently updated';
 
   @override
-  String stationDefault(int count) {
-    return 'Default ($count)';
+  String stationDefault(String label) {
+    return 'Default ($label)';
   }
 
   @override

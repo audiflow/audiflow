@@ -222,11 +222,13 @@ class StationEditController extends _$StationEditController {
     if (state.podcastSort == StationPodcastSort.manual) return manualOrder;
 
     final subRepo = ref.read(subscriptionRepositoryProvider);
-    final subMap = <int, Subscription>{};
-    for (final id in selected) {
-      final sub = await subRepo.getById(id);
-      if (sub != null) subMap[id] = sub;
-    }
+    final entries = await Future.wait(
+      selected.map((id) async => MapEntry(id, await subRepo.getById(id))),
+    );
+    final subMap = <int, Subscription>{
+      for (final entry in entries)
+        if (entry.value != null) entry.key: entry.value!,
+    };
 
     final ids = selected.toList();
     ids.sort((a, b) {
@@ -315,20 +317,45 @@ class StationEditController extends _$StationEditController {
         saved = existing;
       }
 
-      // Sync podcast membership with sort order and per-podcast limits.
-      await podcastRepo.removeAllForStation(saved.id);
+      // Diff-based sync: compare desired state with current DB state to
+      // preserve addedAt and reduce unnecessary writes.
       final resolvedOrder = await _resolvedPodcastOrder();
+      final currentLinks = await podcastRepo.getByStation(saved.id);
+      final currentMap = {for (final sp in currentLinks) sp.podcastId: sp};
+      final desiredPodcastIds = <int>{};
+
       for (var i = 0; i < resolvedOrder.length; i++) {
         final podcastId = resolvedOrder[i];
         if (!state.selectedPodcastIds.contains(podcastId)) continue;
+        desiredPodcastIds.add(podcastId);
         final limitOverride = state.podcastEpisodeLimits[podcastId];
-        // allEpisodesSentinel (0) persists as 0; null means no override.
-        await podcastRepo.add(
-          saved.id,
-          podcastId,
-          sortOrder: i,
-          episodeLimit: limitOverride,
-        );
+
+        final existing = currentMap[podcastId];
+        if (existing != null) {
+          // Update in place if sortOrder or episodeLimit changed.
+          if (existing.sortOrder != i ||
+              existing.episodeLimit != limitOverride) {
+            existing
+              ..sortOrder = i
+              ..episodeLimit = limitOverride;
+            await podcastRepo.update(existing);
+          }
+        } else {
+          // Insert new link.
+          await podcastRepo.add(
+            saved.id,
+            podcastId,
+            sortOrder: i,
+            episodeLimit: limitOverride,
+          );
+        }
+      }
+
+      // Remove links no longer in the selection.
+      for (final existing in currentLinks) {
+        if (!desiredPodcastIds.contains(existing.podcastId)) {
+          await podcastRepo.remove(saved.id, existing.podcastId);
+        }
       }
 
       await reconciler.onStationConfigChanged(saved.id);

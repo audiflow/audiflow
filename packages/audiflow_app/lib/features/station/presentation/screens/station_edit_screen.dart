@@ -521,7 +521,7 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
-          'PODCASTS',
+          l10n.stationPodcasts.toUpperCase(),
           style: theme.textTheme.labelSmall?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
             letterSpacing: 1.2,
@@ -715,13 +715,25 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
-          trailing: Text(
-            '$limitLabel ${isExpanded ? '˄' : '˅'}',
-            style: TextStyle(
-              color: isExpanded
-                  ? theme.colorScheme.primary
-                  : theme.colorScheme.onSurfaceVariant,
-            ),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                limitLabel,
+                style: TextStyle(
+                  color: isExpanded
+                      ? theme.colorScheme.primary
+                      : theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(width: 4),
+              Icon(
+                isExpanded ? Icons.expand_less : Icons.expand_more,
+                color: isExpanded
+                    ? theme.colorScheme.primary
+                    : theme.colorScheme.onSurfaceVariant,
+              ),
+            ],
           ),
           onTap: () {
             setState(() => _expandedPodcastId = isExpanded ? null : podcastId);
@@ -744,8 +756,8 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
     const options = <int?>[1, 2, 3, 4, 5, 10, null]; // null = All
     final defaultLimit = state.defaultEpisodeLimit;
     final defaultLabel = defaultLimit == null
-        ? 'Default (${l10n.stationAllEpisodes})'
-        : 'Default (${_episodeLimitLabel(l10n, defaultLimit)})';
+        ? l10n.stationDefaultAll
+        : l10n.stationDefault(_episodeLimitLabel(l10n, defaultLimit));
 
     return Padding(
       padding: const EdgeInsets.only(left: Spacing.lg, bottom: Spacing.sm),

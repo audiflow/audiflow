@@ -14,6 +14,9 @@ abstract class StationPodcastRepository {
     int? episodeLimit,
   });
 
+  /// Updates sortOrder and episodeLimit on an existing station-podcast link.
+  Future<void> update(StationPodcast stationPodcast);
+
   Future<void> remove(int stationId, int podcastId);
   Future<void> removeAllForStation(int stationId);
 }

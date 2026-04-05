@@ -913,8 +913,8 @@ class AppLocalizationsJa extends AppLocalizations {
   String get stationPickerSortRecentlyUpdated => '最近更新された順';
 
   @override
-  String stationDefault(int count) {
-    return 'デフォルト（$count）';
+  String stationDefault(String label) {
+    return 'デフォルト（$label）';
   }
 
   @override

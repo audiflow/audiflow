@@ -1754,11 +1754,11 @@ abstract class AppLocalizations {
   /// **'Recently updated'**
   String get stationPickerSortRecentlyUpdated;
 
-  /// Default station with episode count
+  /// Default station with episode limit label
   ///
   /// In en, this message translates to:
-  /// **'Default ({count})'**
-  String stationDefault(int count);
+  /// **'Default ({label})'**
+  String stationDefault(String label);
 
   /// Default station showing all episodes
   ///
