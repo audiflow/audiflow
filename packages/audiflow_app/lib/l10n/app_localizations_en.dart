@@ -856,6 +856,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get stationEpisodes => 'Episodes';
 
   @override
+  String get stationLatestOnly => 'Latest only';
+
+  @override
   String stationLatestN(int count) {
     return 'Latest $count';
   }

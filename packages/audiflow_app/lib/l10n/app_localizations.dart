@@ -1622,7 +1622,13 @@ abstract class AppLocalizations {
   /// **'Episodes'**
   String get stationEpisodes;
 
-  /// Show latest N episodes
+  /// Show only the latest episode
+  ///
+  /// In en, this message translates to:
+  /// **'Latest only'**
+  String get stationLatestOnly;
+
+  /// Show latest N episodes (2+)
   ///
   /// In en, this message translates to:
   /// **'Latest {count}'**

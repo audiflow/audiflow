@@ -166,6 +166,9 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
     );
   }
 
+  String _episodeLimitLabel(AppLocalizations l10n, int count) =>
+      count == 1 ? l10n.stationLatestOnly : _episodeLimitLabel(l10n, count);
+
   Future<void> _onSave(StationEditController controller) async {
     controller.setName(_nameController.text);
     final saved = await controller.save();
@@ -211,7 +214,7 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
     final limit = state.defaultEpisodeLimit;
     final label = limit == null
         ? l10n.stationAllEpisodes
-        : l10n.stationLatestN(limit);
+        : _episodeLimitLabel(l10n, limit);
 
     return ListTile(
       contentPadding: EdgeInsets.zero,
@@ -246,7 +249,7 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
           children: options.map((opt) {
             final label = opt == null
                 ? l10n.stationAllEpisodes
-                : l10n.stationLatestN(opt);
+                : _episodeLimitLabel(l10n, opt);
             final isSelected = state.defaultEpisodeLimit == opt;
             return ListTile(
               title: Text(label),
@@ -721,7 +724,7 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
         : (perPodcastLimit ?? state.defaultEpisodeLimit);
     final limitLabel = effectiveLimit == null
         ? l10n.stationAllEpisodes
-        : l10n.stationLatestN(effectiveLimit);
+        : _episodeLimitLabel(l10n, effectiveLimit);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -764,7 +767,7 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
     final defaultLimit = state.defaultEpisodeLimit;
     final defaultLabel = defaultLimit == null
         ? 'Default (${l10n.stationAllEpisodes})'
-        : 'Default (${l10n.stationLatestN(defaultLimit)})';
+        : 'Default (${_episodeLimitLabel(l10n, defaultLimit)})';
 
     return Padding(
       padding: const EdgeInsets.only(left: Spacing.lg, bottom: Spacing.sm),
@@ -783,7 +786,7 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
           ...options.map((opt) {
             final label = opt == null
                 ? l10n.stationAllEpisodes
-                : l10n.stationLatestN(opt);
+                : _episodeLimitLabel(l10n, opt);
             // For "All" chip (opt == null), selected when sentinel is stored.
             // For numeric chips, selected when map contains exact value.
             final isSelected = opt == null

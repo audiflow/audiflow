@@ -839,8 +839,11 @@ class AppLocalizationsJa extends AppLocalizations {
   String get stationEpisodes => 'エピソード';
 
   @override
+  String get stationLatestOnly => '最新のみ';
+
+  @override
   String stationLatestN(int count) {
-    return '最新$count話';
+    return '最新$count件';
   }
 
   @override
