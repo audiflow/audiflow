@@ -192,6 +192,7 @@ export 'src/features/station/models/station_duration_filter.dart';
 export 'src/features/station/models/station_episode.dart';
 export 'src/features/station/models/station_episode_sort.dart';
 export 'src/features/station/models/station_podcast.dart';
+export 'src/features/station/models/station_podcast_sort.dart';
 
 // Station feature - datasources
 export 'src/features/station/datasources/local/station_local_datasource.dart';

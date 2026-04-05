@@ -20,49 +20,54 @@ class StationReconciler {
   /// Full reconciliation: recalculate all episodes for a station.
   ///
   /// Called when station config changes (filters, podcasts added/removed).
-  /// When a [publishedWithinDays] filter is set, only queries episodes
-  /// newer than the cutoff date from the DB, avoiding evaluation of
-  /// the entire episode history.
+  /// For each podcast, queries the newest N episodes (per [Station.defaultEpisodeLimit]
+  /// or [StationPodcast.episodeLimit]), then evaluates attribute conditions
+  /// (hideCompleted, filterDownloaded, filterFavorited, durationFilter).
   Future<void> reconcileFull(int stationId) async {
     final station = await _isar.stations.get(stationId);
     if (station == null) return;
+
+    final now = DateTime.now();
 
     final stationPodcasts = await _isar.stationPodcasts
         .filter()
         .stationIdEqualTo(stationId)
         .findAll();
-    final podcastIds = stationPodcasts.map((sp) => sp.podcastId).toList();
 
-    final now = DateTime.now();
-    final cutoff = station.publishedWithinDays != null
-        ? now.subtract(Duration(days: station.publishedWithinDays!))
-        : null;
-
+    // episodePodcastSortKeys maps episodeId -> sortOrder from its StationPodcast
+    final episodePodcastSortKeys = <int, int>{};
     final episodes = <Episode>[];
-    for (final podcastId in podcastIds) {
-      var query = _isar.episodes.filter().podcastIdEqualTo(podcastId);
-      if (cutoff != null) {
-        query = query.and().publishedAtGreaterThan(cutoff, include: true);
+
+    for (final sp in stationPodcasts) {
+      // episodeLimit 0 means "explicitly all episodes" (per-podcast override).
+      final rawLimit = sp.episodeLimit ?? station.defaultEpisodeLimit;
+      final limit = (rawLimit == null || rawLimit == 0) ? null : rawLimit;
+
+      // Apply count limit purely by date (ties broken by guid desc) — attribute
+      // filters (favorited, duration, completed, downloaded) are evaluated in
+      // _matchesConditions so the limit always selects the N most-recent
+      // episodes regardless of filter match.
+      final sorted = _isar.episodes
+          .filter()
+          .podcastIdEqualTo(sp.podcastId)
+          .sortByPublishedAtDesc()
+          .thenByGuidDesc();
+      final podcastEpisodes = limit != null
+          ? await sorted.limit(limit).findAll()
+          : await sorted.findAll();
+
+      for (final ep in podcastEpisodes) {
+        episodePodcastSortKeys[ep.id] = sp.sortOrder;
       }
-      if (station.filterFavorited) {
-        query = query.and().isFavoritedEqualTo(true);
-      }
-      if (station.durationFilter case final df?) {
-        final thresholdMs = df.durationMinutes * 60 * 1000;
-        query = switch (df.durationOperator) {
-          'shorterThan' => query.and().durationMsLessThan(thresholdMs),
-          'longerThan' => query.and().durationMsGreaterThan(thresholdMs),
-          _ => query,
-        };
-      }
-      episodes.addAll(await query.findAll());
+      episodes.addAll(podcastEpisodes);
     }
+
+    final podcastIds = stationPodcasts.map((sp) => sp.podcastId).toList();
 
     debugPrint(
       '[Reconciler] reconcileFull: station=$stationId '
       'podcasts=${podcastIds.length} '
-      'candidates=${episodes.length} '
-      'cutoff=$cutoff',
+      'candidates=${episodes.length}',
     );
 
     final matchingIds = <int>{};
@@ -109,21 +114,26 @@ class StationReconciler {
           StationEpisode()
             ..stationId = stationId
             ..episodeId = episodeId
-            ..sortKey = episodeMap[episodeId]?.publishedAt,
+            ..sortKey = episodeMap[episodeId]?.publishedAt
+            ..podcastSortKey = episodePodcastSortKeys[episodeId] ?? 0,
         );
       }
 
-      // Update sortKey for existing entries whose publishedAt changed.
+      // Update sortKey/podcastSortKey for existing entries whose values changed.
       for (final episodeId in toKeep) {
         final existing = currentMap[episodeId];
         final newSortKey = episodeMap[episodeId]?.publishedAt;
-        if (existing != null && existing.sortKey != newSortKey) {
+        final newPodcastSortKey = episodePodcastSortKeys[episodeId] ?? 0;
+        if (existing != null &&
+            (existing.sortKey != newSortKey ||
+                existing.podcastSortKey != newPodcastSortKey)) {
           upsertEntries.add(
             StationEpisode()
               ..id = existing.id
               ..stationId = stationId
               ..episodeId = episodeId
-              ..sortKey = newSortKey,
+              ..sortKey = newSortKey
+              ..podcastSortKey = newPodcastSortKey,
           );
         }
       }
@@ -140,6 +150,8 @@ class StationReconciler {
     final episode = await _isar.episodes.get(episodeId);
     if (episode == null) return;
 
+    final now = DateTime.now();
+
     final stationPodcasts = await _isar.stationPodcasts
         .filter()
         .podcastIdEqualTo(episode.podcastId)
@@ -151,7 +163,16 @@ class StationReconciler {
       final station = await _isar.stations.get(sp.stationId);
       if (station == null) continue;
 
-      final matches = await _matchesConditions(episode, station);
+      final rawLimit = sp.episodeLimit ?? station.defaultEpisodeLimit;
+      final limit = (rawLimit == null || rawLimit == 0) ? null : rawLimit;
+      final withinLimit = await _isWithinCountLimit(
+        episode,
+        episode.podcastId,
+        limit,
+      );
+
+      final matches =
+          withinLimit && await _matchesConditions(episode, station, now: now);
       final existing = await _isar.stationEpisodes
           .filter()
           .stationIdEqualTo(sp.stationId)
@@ -165,28 +186,141 @@ class StationReconciler {
             StationEpisode()
               ..stationId = sp.stationId
               ..episodeId = episodeId
-              ..sortKey = episode.publishedAt,
+              ..sortKey = episode.publishedAt
+              ..podcastSortKey = sp.sortOrder,
           );
         } else if (matches && existing != null) {
-          if (existing.sortKey != episode.publishedAt) {
-            existing.sortKey = episode.publishedAt;
+          if (existing.sortKey != episode.publishedAt ||
+              existing.podcastSortKey != sp.sortOrder) {
+            existing
+              ..sortKey = episode.publishedAt
+              ..podcastSortKey = sp.sortOrder;
             await _isar.stationEpisodes.put(existing);
           }
         } else if (!matches && existing != null) {
           await _isar.stationEpisodes.delete(existing.id);
         }
       });
+
+      // Sync siblings: when a count limit is active, ensure exactly the
+      // top N episodes for this podcast are in the station (evict excess
+      // and backfill replacements when an episode drops out).
+      if (limit != null) {
+        await _syncPodcastTopN(sp.stationId, station, sp, limit, now: now);
+      }
     }
   }
 
-  /// Evaluates whether an episode matches all station filter conditions.
+  /// Returns true if the episode is within the top [limit] newest episodes
+  /// for its podcast. If [limit] is null, always returns true.
   ///
-  /// [now] anchors the time-based filters so that the DB pre-filter
-  /// and in-memory predicate use the same reference instant.
+  /// Uses the same ordering as [reconcileFull] (publishedAt desc, guid desc)
+  /// to ensure consistent top-N selection between full and incremental paths.
+  Future<bool> _isWithinCountLimit(
+    Episode episode,
+    int podcastId,
+    int? limit,
+  ) async {
+    if (limit == null) return true;
+
+    // Fetch only IDs for the top N episodes to avoid deserializing full
+    // Episode objects on the incremental reconcile path.
+    final topNIds = await _isar.episodes
+        .filter()
+        .podcastIdEqualTo(podcastId)
+        .sortByPublishedAtDesc()
+        .thenByGuidDesc()
+        .limit(limit)
+        .idProperty()
+        .findAll();
+
+    return topNIds.contains(episode.id);
+  }
+
+  /// Ensures the station contains exactly the correct top-N episodes for a
+  /// single podcast. Evicts episodes that fell outside the top N and
+  /// backfills replacements that should now be included.
+  Future<void> _syncPodcastTopN(
+    int stationId,
+    Station station,
+    StationPodcast sp,
+    int limit, {
+    DateTime? now,
+  }) async {
+    // Determine the top N episodes (same ordering as reconcileFull).
+    final topN = await _isar.episodes
+        .filter()
+        .podcastIdEqualTo(sp.podcastId)
+        .sortByPublishedAtDesc()
+        .thenByGuidDesc()
+        .limit(limit)
+        .findAll();
+    final topNIds = topN.map((e) => e.id).toSet();
+
+    // Load all station entries for this station, then filter to this podcast.
+    // We load episode IDs (not full objects) to build the podcast ID set.
+    // TODO(perf): denormalize podcastId onto StationEpisode to query directly.
+    final stationEntries = await _isar.stationEpisodes
+        .filter()
+        .stationIdEqualTo(stationId)
+        .findAll();
+    // Build a set of episode IDs belonging to this podcast via a lightweight
+    // ID-only query, then filter station entries by membership.
+    final podcastEpisodeIds = await _isar.episodes
+        .filter()
+        .podcastIdEqualTo(sp.podcastId)
+        .idProperty()
+        .findAll();
+    final podcastIdSet = podcastEpisodeIds.toSet();
+    final podcastEntries = stationEntries
+        .where((e) => podcastIdSet.contains(e.episodeId))
+        .toList();
+    final currentEpisodeIds = podcastEntries.map((e) => e.episodeId).toSet();
+
+    // Evict entries no longer in the top N.
+    final toEvict = podcastEntries
+        .where((e) => !topNIds.contains(e.episodeId))
+        .map((e) => e.id)
+        .toList();
+
+    // Backfill episodes in top N that are not yet in the station.
+    final effectiveNow = now ?? DateTime.now();
+    final toBackfill = <StationEpisode>[];
+    for (final ep in topN) {
+      if (currentEpisodeIds.contains(ep.id)) continue;
+      if (!await _matchesConditions(ep, station, now: effectiveNow)) continue;
+      toBackfill.add(
+        StationEpisode()
+          ..stationId = stationId
+          ..episodeId = ep.id
+          ..sortKey = ep.publishedAt
+          ..podcastSortKey = sp.sortOrder,
+      );
+    }
+
+    if (toEvict.isEmpty && toBackfill.isEmpty) return;
+
+    await _isar.writeTxn(() async {
+      if (toEvict.isNotEmpty) {
+        await _isar.stationEpisodes.deleteAll(toEvict);
+      }
+      if (toBackfill.isNotEmpty) {
+        await _isar.stationEpisodes.putAll(toBackfill);
+      }
+    });
+  }
+
+  /// Evaluates whether an episode matches all station attribute filter
+  /// conditions (hideCompleted, filterDownloaded, filterFavorited,
+  /// durationFilter, publishedWithinDays). Count-based limiting is handled
+  /// separately.
+  ///
+  /// [now] should be captured once per reconciliation pass to ensure
+  /// consistent filtering across all episodes within the same pass.
   Future<bool> _matchesConditions(
     Episode episode,
     Station station, {
-    DateTime? now,
+    required DateTime now,
   }) async {
     if (station.hideCompleted && await _isCompleted(episode.id)) {
       return false;
@@ -200,14 +334,12 @@ class StationReconciler {
     if (station.durationFilter != null) {
       if (!_matchesDuration(episode, station.durationFilter!)) return false;
     }
+    // Backward compatibility: honor legacy publishedWithinDays for stations
+    // created before the v2 count-based limiting migration.
     if (station.publishedWithinDays != null) {
-      if (!_matchesPublishedWithin(
-        episode,
-        station.publishedWithinDays!,
-        now: now,
-      )) {
-        return false;
-      }
+      final cutoff = now.subtract(Duration(days: station.publishedWithinDays!));
+      final publishedAt = episode.publishedAt;
+      if (publishedAt == null || publishedAt.isBefore(cutoff)) return false;
     }
     return true;
   }
@@ -238,12 +370,5 @@ class StationReconciler {
       'longerThan' => thresholdMs < durationMs,
       _ => false,
     };
-  }
-
-  bool _matchesPublishedWithin(Episode episode, int days, {DateTime? now}) {
-    final publishedAt = episode.publishedAt;
-    if (publishedAt == null) return false;
-    final cutoff = (now ?? DateTime.now()).subtract(Duration(days: days));
-    return !publishedAt.isBefore(cutoff);
   }
 }

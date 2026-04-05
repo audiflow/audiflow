@@ -11,30 +11,53 @@ class StationEpisodeLocalDatasource {
   /// Watches episodes for [stationId] sorted by [sortKey].
   ///
   /// When [ascending] is false (default), sorts newest first.
+  /// When [grouped] is true, sorts by [podcastSortKey] first, then [sortKey].
   /// Optional [limit] and [offset] support pagination.
   Stream<List<StationEpisode>> watchByStation(
     int stationId, {
     int? limit,
     int? offset,
     bool ascending = false,
+    bool grouped = false,
   }) {
     // Isar's QueryBuilder type advances on each offset/limit call, so all
     // four combinations are built explicitly to keep the type system happy.
     final filtered = _isar.stationEpisodes.filter().stationIdEqualTo(stationId);
-    final sorted = ascending
-        ? filtered.sortBySortKey()
-        : filtered.sortBySortKeyDesc();
 
-    if (offset != null && limit != null) {
-      return sorted.offset(offset).limit(limit).watch(fireImmediately: true);
+    if (grouped) {
+      final sorted = ascending
+          ? filtered.sortByPodcastSortKey().thenBySortKey().thenByEpisodeId()
+          : filtered
+                .sortByPodcastSortKey()
+                .thenBySortKeyDesc()
+                .thenByEpisodeIdDesc();
+
+      if (offset != null && limit != null) {
+        return sorted.offset(offset).limit(limit).watch(fireImmediately: true);
+      }
+      if (offset != null) {
+        return sorted.offset(offset).watch(fireImmediately: true);
+      }
+      if (limit != null) {
+        return sorted.limit(limit).watch(fireImmediately: true);
+      }
+      return sorted.watch(fireImmediately: true);
+    } else {
+      final sorted = ascending
+          ? filtered.sortBySortKey().thenByEpisodeId()
+          : filtered.sortBySortKeyDesc().thenByEpisodeIdDesc();
+
+      if (offset != null && limit != null) {
+        return sorted.offset(offset).limit(limit).watch(fireImmediately: true);
+      }
+      if (offset != null) {
+        return sorted.offset(offset).watch(fireImmediately: true);
+      }
+      if (limit != null) {
+        return sorted.limit(limit).watch(fireImmediately: true);
+      }
+      return sorted.watch(fireImmediately: true);
     }
-    if (offset != null) {
-      return sorted.offset(offset).watch(fireImmediately: true);
-    }
-    if (limit != null) {
-      return sorted.limit(limit).watch(fireImmediately: true);
-    }
-    return sorted.watch(fireImmediately: true);
   }
 
   /// Returns the number of episodes for [stationId].

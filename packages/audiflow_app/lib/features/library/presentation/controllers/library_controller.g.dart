@@ -92,7 +92,7 @@ final class PodcastSortOrderControllerProvider
 }
 
 String _$podcastSortOrderControllerHash() =>
-    r'2137365fc2bdcae12afdf5abbaf3cbfdff1839bb';
+    r'2f79f12e8dadaceac6c5a1b8f59743f1d4578b5c';
 
 /// Manages the persisted podcast sort order preference.
 
@@ -127,11 +127,19 @@ final newestEpisodeDateProvider = NewestEpisodeDateFamily._();
 
 /// Watches the newest episode for a given podcast, emitting its
 /// [Episode.publishedAt] whenever the episode list changes.
+///
+/// Used by [sortedSubscriptionsProvider] to keep the latest-episode
+/// sort order reactive to background feed refreshes.
 
 final class NewestEpisodeDateProvider
     extends
         $FunctionalProvider<AsyncValue<DateTime?>, DateTime?, Stream<DateTime?>>
     with $FutureModifier<DateTime?>, $StreamProvider<DateTime?> {
+  /// Watches the newest episode for a given podcast, emitting its
+  /// [Episode.publishedAt] whenever the episode list changes.
+  ///
+  /// Used by [sortedSubscriptionsProvider] to keep the latest-episode
+  /// sort order reactive to background feed refreshes.
   NewestEpisodeDateProvider._({
     required NewestEpisodeDateFamily super.from,
     required int super.argument,
@@ -175,7 +183,13 @@ final class NewestEpisodeDateProvider
   }
 }
 
-String _$newestEpisodeDateHash() => r'd7d79d38e49bb505405e55034d5a71d5f14ef3dc';
+String _$newestEpisodeDateHash() => r'c53f3d7431cc9acdef0fb79c2fe741d0bfee6bbb';
+
+/// Watches the newest episode for a given podcast, emitting its
+/// [Episode.publishedAt] whenever the episode list changes.
+///
+/// Used by [sortedSubscriptionsProvider] to keep the latest-episode
+/// sort order reactive to background feed refreshes.
 
 final class NewestEpisodeDateFamily extends $Family
     with $FunctionalFamilyOverride<Stream<DateTime?>, int> {
@@ -187,6 +201,12 @@ final class NewestEpisodeDateFamily extends $Family
         $allTransitiveDependencies: null,
         isAutoDispose: true,
       );
+
+  /// Watches the newest episode for a given podcast, emitting its
+  /// [Episode.publishedAt] whenever the episode list changes.
+  ///
+  /// Used by [sortedSubscriptionsProvider] to keep the latest-episode
+  /// sort order reactive to background feed refreshes.
 
   NewestEpisodeDateProvider call(int podcastId) =>
       NewestEpisodeDateProvider._(argument: podcastId, from: this);
@@ -200,11 +220,23 @@ final class NewestEpisodeDateFamily extends $Family
 /// Combines [librarySubscriptionsProvider] with
 /// [podcastSortOrderControllerProvider] and episode data
 /// (for latestEpisode sort).
+///
+/// When [PodcastSortOrder.latestEpisode] is active, watches
+/// per-podcast episode streams so the sort order updates reactively
+/// when new episodes arrive (e.g. after a background feed refresh).
 
 @ProviderFor(sortedSubscriptions)
 final sortedSubscriptionsProvider = SortedSubscriptionsProvider._();
 
 /// Provides subscriptions sorted by the user's selected sort order.
+///
+/// Combines [librarySubscriptionsProvider] with
+/// [podcastSortOrderControllerProvider] and episode data
+/// (for latestEpisode sort).
+///
+/// When [PodcastSortOrder.latestEpisode] is active, watches
+/// per-podcast episode streams so the sort order updates reactively
+/// when new episodes arrive (e.g. after a background feed refresh).
 
 final class SortedSubscriptionsProvider
     extends
@@ -217,6 +249,14 @@ final class SortedSubscriptionsProvider
         $FutureModifier<List<Subscription>>,
         $FutureProvider<List<Subscription>> {
   /// Provides subscriptions sorted by the user's selected sort order.
+  ///
+  /// Combines [librarySubscriptionsProvider] with
+  /// [podcastSortOrderControllerProvider] and episode data
+  /// (for latestEpisode sort).
+  ///
+  /// When [PodcastSortOrder.latestEpisode] is active, watches
+  /// per-podcast episode streams so the sort order updates reactively
+  /// when new episodes arrive (e.g. after a background feed refresh).
   SortedSubscriptionsProvider._()
     : super(
         from: null,
@@ -244,4 +284,4 @@ final class SortedSubscriptionsProvider
 }
 
 String _$sortedSubscriptionsHash() =>
-    r'9ff991e92a76a8931c6692c8edb8f864fd682ebe';
+    r'dd645b180f732916e87693040722da85097a6c56';

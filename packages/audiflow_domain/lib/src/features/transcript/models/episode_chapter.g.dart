@@ -69,7 +69,7 @@ const EpisodeChapterSchema = CollectionSchema(
   getId: _episodeChapterGetId,
   getLinks: _episodeChapterGetLinks,
   attach: _episodeChapterAttach,
-  version: '3.3.0',
+  version: '3.3.2',
 );
 
 int _episodeChapterEstimateSize(

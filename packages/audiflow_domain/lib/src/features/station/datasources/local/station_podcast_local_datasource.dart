@@ -25,6 +25,11 @@ class StationPodcastLocalDatasource {
     });
   }
 
+  /// Updates an existing station-podcast link (sortOrder, episodeLimit).
+  Future<void> update(StationPodcast sp) async {
+    await _isar.writeTxn(() => _isar.stationPodcasts.put(sp));
+  }
+
   /// Returns all links for [stationId].
   Future<List<StationPodcast>> getByStation(int stationId) =>
       _isar.stationPodcasts.filter().stationIdEqualTo(stationId).findAll();

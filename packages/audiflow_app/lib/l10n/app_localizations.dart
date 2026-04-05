@@ -140,6 +140,12 @@ abstract class AppLocalizations {
   /// **'Coming soon'**
   String get commonComingSoon;
 
+  /// Common done action
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get commonDone;
+
   /// Settings screen title
   ///
   /// In en, this message translates to:
@@ -1562,23 +1568,11 @@ abstract class AppLocalizations {
   /// **'Longer than'**
   String get stationLongerThan;
 
-  /// Section title for published-within filter
+  /// Suffix label for duration minutes input
   ///
   /// In en, this message translates to:
-  /// **'Published Within'**
-  String get stationPublishedWithin;
-
-  /// Option for no published-within limit
-  ///
-  /// In en, this message translates to:
-  /// **'No limit'**
-  String get stationNoLimit;
-
-  /// Published within N days option
-  ///
-  /// In en, this message translates to:
-  /// **'Last {days} days'**
-  String stationLastDays(int days);
+  /// **'min'**
+  String get stationDurationMinutesSuffix;
 
   /// Section title for sort order
   ///
@@ -1627,6 +1621,156 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Select at least one podcast'**
   String get stationPodcastRequired;
+
+  /// Label for episodes in station
+  ///
+  /// In en, this message translates to:
+  /// **'Episodes'**
+  String get stationEpisodes;
+
+  /// Show only the latest episode
+  ///
+  /// In en, this message translates to:
+  /// **'Latest only'**
+  String get stationLatestOnly;
+
+  /// Show latest N episodes (2+)
+  ///
+  /// In en, this message translates to:
+  /// **'Latest {count}'**
+  String stationLatestN(int count);
+
+  /// Option to show all episodes
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get stationAllEpisodes;
+
+  /// Option to group episodes by podcast
+  ///
+  /// In en, this message translates to:
+  /// **'Group by podcast'**
+  String get stationGroupByPodcast;
+
+  /// Label for podcast ordering selector when grouping is enabled
+  ///
+  /// In en, this message translates to:
+  /// **'Podcast order'**
+  String get stationPodcastOrder;
+
+  /// Sort podcasts by subscription date, oldest first
+  ///
+  /// In en, this message translates to:
+  /// **'Subscribe (old)'**
+  String get stationPodcastSortSubscribeOld;
+
+  /// Sort podcasts by subscription date, newest first
+  ///
+  /// In en, this message translates to:
+  /// **'Subscribe (new)'**
+  String get stationPodcastSortSubscribeNew;
+
+  /// Sort podcasts by name ascending
+  ///
+  /// In en, this message translates to:
+  /// **'Name A-Z'**
+  String get stationPodcastSortNameAz;
+
+  /// Sort podcasts by name descending
+  ///
+  /// In en, this message translates to:
+  /// **'Name Z-A'**
+  String get stationPodcastSortNameZa;
+
+  /// Manual podcast ordering
+  ///
+  /// In en, this message translates to:
+  /// **'Manual'**
+  String get stationPodcastSortManual;
+
+  /// Button to enter reorder mode
+  ///
+  /// In en, this message translates to:
+  /// **'Reorder'**
+  String get stationReorder;
+
+  /// Button to finish reordering
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get stationReorderDone;
+
+  /// Prompt to select podcasts
+  ///
+  /// In en, this message translates to:
+  /// **'Select podcasts...'**
+  String get stationSelectPodcasts;
+
+  /// Show selected/total podcasts count
+  ///
+  /// In en, this message translates to:
+  /// **'{selected} / {total}'**
+  String stationSelectPodcastsCount(int selected, int total);
+
+  /// Title for podcast picker dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Select Podcasts'**
+  String get stationPickerTitle;
+
+  /// Placeholder for podcast search input
+  ///
+  /// In en, this message translates to:
+  /// **'Search podcasts...'**
+  String get stationPickerSearch;
+
+  /// Show count of subscribed podcasts
+  ///
+  /// In en, this message translates to:
+  /// **'{count} subscribed'**
+  String stationPickerSubscribed(int count);
+
+  /// Show count of search results
+  ///
+  /// In en, this message translates to:
+  /// **'{count} results'**
+  String stationPickerResults(int count);
+
+  /// Sort search results by name ascending
+  ///
+  /// In en, this message translates to:
+  /// **'Name A-Z'**
+  String get stationPickerSortNameAz;
+
+  /// Sort search results by name descending
+  ///
+  /// In en, this message translates to:
+  /// **'Name Z-A'**
+  String get stationPickerSortNameZa;
+
+  /// Sort by subscription date, newest first
+  ///
+  /// In en, this message translates to:
+  /// **'Recently subscribed'**
+  String get stationPickerSortRecentlySubscribed;
+
+  /// Sort by update date, newest first
+  ///
+  /// In en, this message translates to:
+  /// **'Recently updated'**
+  String get stationPickerSortRecentlyUpdated;
+
+  /// Default station with episode limit label
+  ///
+  /// In en, this message translates to:
+  /// **'Default ({label})'**
+  String stationDefault(String label);
+
+  /// Default station showing all episodes
+  ///
+  /// In en, this message translates to:
+  /// **'Default (All)'**
+  String get stationDefaultAll;
 
   /// Go back button label
   ///

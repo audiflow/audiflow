@@ -22,13 +22,18 @@ const StationEpisodeSchema = CollectionSchema(
       name: r'episodeId',
       type: IsarType.long,
     ),
-    r'sortKey': PropertySchema(
+    r'podcastSortKey': PropertySchema(
       id: 1,
+      name: r'podcastSortKey',
+      type: IsarType.long,
+    ),
+    r'sortKey': PropertySchema(
+      id: 2,
       name: r'sortKey',
       type: IsarType.dateTime,
     ),
     r'stationId': PropertySchema(
-      id: 2,
+      id: 3,
       name: r'stationId',
       type: IsarType.long,
     ),
@@ -65,7 +70,7 @@ const StationEpisodeSchema = CollectionSchema(
   getId: _stationEpisodeGetId,
   getLinks: _stationEpisodeGetLinks,
   attach: _stationEpisodeAttach,
-  version: '3.3.0',
+  version: '3.3.2',
 );
 
 int _stationEpisodeEstimateSize(
@@ -84,8 +89,9 @@ void _stationEpisodeSerialize(
   Map<Type, List<int>> allOffsets,
 ) {
   writer.writeLong(offsets[0], object.episodeId);
-  writer.writeDateTime(offsets[1], object.sortKey);
-  writer.writeLong(offsets[2], object.stationId);
+  writer.writeLong(offsets[1], object.podcastSortKey);
+  writer.writeDateTime(offsets[2], object.sortKey);
+  writer.writeLong(offsets[3], object.stationId);
 }
 
 StationEpisode _stationEpisodeDeserialize(
@@ -97,8 +103,9 @@ StationEpisode _stationEpisodeDeserialize(
   final object = StationEpisode();
   object.episodeId = reader.readLong(offsets[0]);
   object.id = id;
-  object.sortKey = reader.readDateTimeOrNull(offsets[1]);
-  object.stationId = reader.readLong(offsets[2]);
+  object.podcastSortKey = reader.readLong(offsets[1]);
+  object.sortKey = reader.readDateTimeOrNull(offsets[2]);
+  object.stationId = reader.readLong(offsets[3]);
   return object;
 }
 
@@ -112,8 +119,10 @@ P _stationEpisodeDeserializeProp<P>(
     case 0:
       return (reader.readLong(offset)) as P;
     case 1:
-      return (reader.readDateTimeOrNull(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 2:
+      return (reader.readDateTimeOrNull(offset)) as P;
+    case 3:
       return (reader.readLong(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -672,6 +681,61 @@ extension StationEpisodeQueryFilter
   }
 
   QueryBuilder<StationEpisode, StationEpisode, QAfterFilterCondition>
+  podcastSortKeyEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'podcastSortKey', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<StationEpisode, StationEpisode, QAfterFilterCondition>
+  podcastSortKeyGreaterThan(int value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'podcastSortKey',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<StationEpisode, StationEpisode, QAfterFilterCondition>
+  podcastSortKeyLessThan(int value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'podcastSortKey',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<StationEpisode, StationEpisode, QAfterFilterCondition>
+  podcastSortKeyBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'podcastSortKey',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<StationEpisode, StationEpisode, QAfterFilterCondition>
   sortKeyIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
@@ -821,6 +885,20 @@ extension StationEpisodeQuerySortBy
     });
   }
 
+  QueryBuilder<StationEpisode, StationEpisode, QAfterSortBy>
+  sortByPodcastSortKey() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'podcastSortKey', Sort.asc);
+    });
+  }
+
+  QueryBuilder<StationEpisode, StationEpisode, QAfterSortBy>
+  sortByPodcastSortKeyDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'podcastSortKey', Sort.desc);
+    });
+  }
+
   QueryBuilder<StationEpisode, StationEpisode, QAfterSortBy> sortBySortKey() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'sortKey', Sort.asc);
@@ -875,6 +953,20 @@ extension StationEpisodeQuerySortThenBy
     });
   }
 
+  QueryBuilder<StationEpisode, StationEpisode, QAfterSortBy>
+  thenByPodcastSortKey() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'podcastSortKey', Sort.asc);
+    });
+  }
+
+  QueryBuilder<StationEpisode, StationEpisode, QAfterSortBy>
+  thenByPodcastSortKeyDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'podcastSortKey', Sort.desc);
+    });
+  }
+
   QueryBuilder<StationEpisode, StationEpisode, QAfterSortBy> thenBySortKey() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'sortKey', Sort.asc);
@@ -911,6 +1003,13 @@ extension StationEpisodeQueryWhereDistinct
     });
   }
 
+  QueryBuilder<StationEpisode, StationEpisode, QDistinct>
+  distinctByPodcastSortKey() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'podcastSortKey');
+    });
+  }
+
   QueryBuilder<StationEpisode, StationEpisode, QDistinct> distinctBySortKey() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'sortKey');
@@ -936,6 +1035,12 @@ extension StationEpisodeQueryProperty
   QueryBuilder<StationEpisode, int, QQueryOperations> episodeIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'episodeId');
+    });
+  }
+
+  QueryBuilder<StationEpisode, int, QQueryOperations> podcastSortKeyProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'podcastSortKey');
     });
   }
 

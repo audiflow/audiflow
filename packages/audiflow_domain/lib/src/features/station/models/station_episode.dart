@@ -13,4 +13,7 @@ class StationEpisode {
 
   /// Copy of Episode.publishedAt for Isar-native sort + pagination.
   DateTime? sortKey;
+
+  /// Sort key for grouped-by-podcast ordering.
+  int podcastSortKey = 0;
 }

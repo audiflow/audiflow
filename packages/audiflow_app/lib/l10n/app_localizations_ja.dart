@@ -30,6 +30,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get commonComingSoon => '近日公開';
 
   @override
+  String get commonDone => '完了';
+
+  @override
   String get settingsTitle => '設定';
 
   @override
@@ -809,15 +812,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get stationLongerThan => 'より長い';
 
   @override
-  String get stationPublishedWithin => '公開期間';
-
-  @override
-  String get stationNoLimit => '制限なし';
-
-  @override
-  String stationLastDays(int days) {
-    return '過去$days日';
-  }
+  String get stationDurationMinutesSuffix => '分';
 
   @override
   String get stationEpisodeOrder => 'エピソードの順序';
@@ -842,6 +837,91 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get stationPodcastRequired => 'ポッドキャストを1つ以上選択してください';
+
+  @override
+  String get stationEpisodes => 'エピソード';
+
+  @override
+  String get stationLatestOnly => '最新のみ';
+
+  @override
+  String stationLatestN(int count) {
+    return '最新$count話';
+  }
+
+  @override
+  String get stationAllEpisodes => 'すべて';
+
+  @override
+  String get stationGroupByPodcast => '番組ごとにまとめる';
+
+  @override
+  String get stationPodcastOrder => '番組の並び順';
+
+  @override
+  String get stationPodcastSortSubscribeOld => '購読順（古い順）';
+
+  @override
+  String get stationPodcastSortSubscribeNew => '購読順（新しい順）';
+
+  @override
+  String get stationPodcastSortNameAz => '名前順（A-Z）';
+
+  @override
+  String get stationPodcastSortNameZa => '名前順（Z-A）';
+
+  @override
+  String get stationPodcastSortManual => '手動';
+
+  @override
+  String get stationReorder => '並べ替え';
+
+  @override
+  String get stationReorderDone => '完了';
+
+  @override
+  String get stationSelectPodcasts => 'ポッドキャストを選択...';
+
+  @override
+  String stationSelectPodcastsCount(int selected, int total) {
+    return '$selected / $total';
+  }
+
+  @override
+  String get stationPickerTitle => 'ポッドキャストを選択';
+
+  @override
+  String get stationPickerSearch => 'ポッドキャストを検索...';
+
+  @override
+  String stationPickerSubscribed(int count) {
+    return '$count件購読中';
+  }
+
+  @override
+  String stationPickerResults(int count) {
+    return '$count件の結果';
+  }
+
+  @override
+  String get stationPickerSortNameAz => '名前順（A-Z）';
+
+  @override
+  String get stationPickerSortNameZa => '名前順（Z-A）';
+
+  @override
+  String get stationPickerSortRecentlySubscribed => '最近購読した順';
+
+  @override
+  String get stationPickerSortRecentlyUpdated => '最近更新された順';
+
+  @override
+  String stationDefault(String label) {
+    return 'デフォルト（$label）';
+  }
+
+  @override
+  String get stationDefaultAll => 'デフォルト（すべて）';
 
   @override
   String get commonGoBack => '戻る';

@@ -11,4 +11,6 @@ class StationPodcast {
 
   late int podcastId;
   late DateTime addedAt;
+  int? episodeLimit;
+  int sortOrder = 0;
 }

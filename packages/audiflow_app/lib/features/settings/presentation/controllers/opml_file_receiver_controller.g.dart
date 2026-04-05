@@ -50,7 +50,7 @@ final class OpmlFileReceiverControllerProvider
 }
 
 String _$opmlFileReceiverControllerHash() =>
-    r'8d119e4ac3eaee982cb000bf6dde05b09345ebb2';
+    r'e2b6f04808ebf09763d8aac6069a851ae5e4e0ce';
 
 /// Listens for incoming .opml file URIs from external apps
 /// via the system share sheet or "Open With" handler.

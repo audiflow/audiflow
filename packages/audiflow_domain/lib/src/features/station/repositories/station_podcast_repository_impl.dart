@@ -32,13 +32,24 @@ class StationPodcastRepositoryImpl implements StationPodcastRepository {
       _datasource.watchByStation(stationId);
 
   @override
-  Future<void> add(int stationId, int podcastId) {
+  Future<void> add(
+    int stationId,
+    int podcastId, {
+    int sortOrder = 0,
+    int? episodeLimit,
+  }) {
     final link = StationPodcast()
       ..stationId = stationId
       ..podcastId = podcastId
-      ..addedAt = DateTime.now();
+      ..addedAt = DateTime.now()
+      ..sortOrder = sortOrder
+      ..episodeLimit = episodeLimit;
     return _datasource.insert(link);
   }
+
+  @override
+  Future<void> update(StationPodcast stationPodcast) =>
+      _datasource.update(stationPodcast);
 
   @override
   Future<void> remove(int stationId, int podcastId) =>

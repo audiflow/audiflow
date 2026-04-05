@@ -66,4 +66,52 @@ void main() {
     check(loaded.durationFilter!.durationMinutes).equals(15);
     check(loaded.publishedWithinDays).equals(7);
   });
+
+  test('Station persists v2 fields with defaults', () async {
+    final now = DateTime(2026, 3, 20);
+    final station = Station()
+      ..name = 'V2 Station'
+      ..createdAt = now
+      ..updatedAt = now;
+
+    await isar.writeTxn(() => isar.stations.put(station));
+    final loaded = await isar.stations.get(station.id);
+    check(loaded).isNotNull();
+    check(loaded!.defaultEpisodeLimit).equals(3);
+    check(loaded.groupByPodcast).isFalse();
+    check(loaded.podcastSortType).equals('manual');
+    check(loaded.podcastSort).equals(StationPodcastSort.manual);
+  });
+
+  test('Station persists v2 fields configured', () async {
+    final now = DateTime(2026, 3, 20);
+    final station = Station()
+      ..name = 'Configured'
+      ..defaultEpisodeLimit = 10
+      ..groupByPodcast = true
+      ..podcastSort = StationPodcastSort.nameAsc
+      ..createdAt = now
+      ..updatedAt = now;
+
+    await isar.writeTxn(() => isar.stations.put(station));
+    final loaded = await isar.stations.get(station.id);
+    check(loaded).isNotNull();
+    check(loaded!.defaultEpisodeLimit).equals(10);
+    check(loaded.groupByPodcast).isTrue();
+    check(loaded.podcastSort).equals(StationPodcastSort.nameAsc);
+  });
+
+  test('Station persists null defaultEpisodeLimit for all', () async {
+    final now = DateTime(2026, 3, 20);
+    final station = Station()
+      ..name = 'All Eps'
+      ..defaultEpisodeLimit = null
+      ..createdAt = now
+      ..updatedAt = now;
+
+    await isar.writeTxn(() => isar.stations.put(station));
+    final loaded = await isar.stations.get(station.id);
+    check(loaded).isNotNull();
+    check(loaded!.defaultEpisodeLimit).isNull();
+  });
 }

@@ -2,6 +2,7 @@ import 'package:isar_community/isar.dart';
 
 import 'station_duration_filter.dart';
 import 'station_episode_sort.dart';
+import 'station_podcast_sort.dart';
 
 part 'station.g.dart';
 
@@ -26,6 +27,17 @@ class Station {
   /// Null means no publishedWithin filter.
   int? publishedWithinDays;
 
+  // -- Podcast list fields --
+
+  /// Default episode count per podcast; null means all episodes.
+  int? defaultEpisodeLimit = 3;
+
+  /// Whether to group episodes by podcast in the station feed.
+  bool groupByPodcast = false;
+
+  /// Stored as string, use [podcastSort] getter.
+  String podcastSortType = 'manual';
+
   late DateTime createdAt;
   late DateTime updatedAt;
 
@@ -36,4 +48,11 @@ class Station {
       StationEpisodeSort.fromString(episodeSortType);
 
   set episodeSort(StationEpisodeSort value) => episodeSortType = value.name;
+
+  @ignore
+  StationPodcastSort get podcastSort =>
+      StationPodcastSort.fromString(podcastSortType);
+
+  set podcastSort(StationPodcastSort value) =>
+      podcastSortType = value.storedValue;
 }

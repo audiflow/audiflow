@@ -3,6 +3,7 @@ import '../models/station.dart';
 abstract class StationRepository {
   Stream<List<Station>> watchAll();
   Future<Station?> findById(int id);
+  Stream<Station?> watchById(int id);
   Future<Station> create(Station station);
   Future<void> update(Station station);
   Future<void> delete(int id);

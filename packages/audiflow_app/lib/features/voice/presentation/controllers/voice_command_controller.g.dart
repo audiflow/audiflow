@@ -93,7 +93,7 @@ final class VoiceCommandControllerProvider
 }
 
 String _$voiceCommandControllerHash() =>
-    r'47eb46de34fb3c7c32002f86c6c2153fc80f8a6d';
+    r'78f03bd653d8a5a29c9f8e9a4d65bac76d05ecc7';
 
 /// Controller for voice command UI interactions.
 ///

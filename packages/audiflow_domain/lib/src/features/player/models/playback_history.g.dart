@@ -95,7 +95,7 @@ const PlaybackHistorySchema = CollectionSchema(
   getId: _playbackHistoryGetId,
   getLinks: _playbackHistoryGetLinks,
   attach: _playbackHistoryAttach,
-  version: '3.3.0',
+  version: '3.3.2',
 );
 
 int _playbackHistoryEstimateSize(
@@ -154,25 +154,25 @@ P _playbackHistoryDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readDateTimeOrNull(offset)) as P; // completedAt
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 1:
-      return (reader.readLong(offset)) as P; // completedCount
+      return (reader.readLong(offset)) as P;
     case 2:
-      return (reader.readLongOrNull(offset)) as P; // durationMs
+      return (reader.readLongOrNull(offset)) as P;
     case 3:
-      return (reader.readLong(offset)) as P; // episodeId
+      return (reader.readLong(offset)) as P;
     case 4:
-      return (reader.readDateTimeOrNull(offset)) as P; // firstPlayedAt
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 5:
-      return (reader.readDateTimeOrNull(offset)) as P; // lastPlayedAt
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 6:
-      return (reader.readLong(offset)) as P; // playCount
+      return (reader.readLong(offset)) as P;
     case 7:
-      return (reader.readLong(offset)) as P; // positionMs
+      return (reader.readLong(offset)) as P;
     case 8:
-      return (reader.readLong(offset)) as P; // totalListenedMs
+      return (reader.readLong(offset)) as P;
     case 9:
-      return (reader.readLong(offset)) as P; // totalRealtimeMs
+      return (reader.readLong(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
@@ -506,6 +506,61 @@ extension PlaybackHistoryQueryFilter
       return query.addFilterCondition(
         FilterCondition.between(
           property: r'completedAt',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<PlaybackHistory, PlaybackHistory, QAfterFilterCondition>
+  completedCountEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'completedCount', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<PlaybackHistory, PlaybackHistory, QAfterFilterCondition>
+  completedCountGreaterThan(int value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'completedCount',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<PlaybackHistory, PlaybackHistory, QAfterFilterCondition>
+  completedCountLessThan(int value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'completedCount',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<PlaybackHistory, PlaybackHistory, QAfterFilterCondition>
+  completedCountBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'completedCount',
           lower: lower,
           includeLower: includeLower,
           upper: upper,
@@ -955,61 +1010,6 @@ extension PlaybackHistoryQueryFilter
   }
 
   QueryBuilder<PlaybackHistory, PlaybackHistory, QAfterFilterCondition>
-  completedCountEqualTo(int value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'completedCount', value: value),
-      );
-    });
-  }
-
-  QueryBuilder<PlaybackHistory, PlaybackHistory, QAfterFilterCondition>
-  completedCountGreaterThan(int value, {bool include = false}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'completedCount',
-          value: value,
-        ),
-      );
-    });
-  }
-
-  QueryBuilder<PlaybackHistory, PlaybackHistory, QAfterFilterCondition>
-  completedCountLessThan(int value, {bool include = false}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'completedCount',
-          value: value,
-        ),
-      );
-    });
-  }
-
-  QueryBuilder<PlaybackHistory, PlaybackHistory, QAfterFilterCondition>
-  completedCountBetween(
-    int lower,
-    int upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'completedCount',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
-    });
-  }
-
-  QueryBuilder<PlaybackHistory, PlaybackHistory, QAfterFilterCondition>
   totalListenedMsEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
@@ -1143,6 +1143,20 @@ extension PlaybackHistoryQuerySortBy
   }
 
   QueryBuilder<PlaybackHistory, PlaybackHistory, QAfterSortBy>
+  sortByCompletedCount() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'completedCount', Sort.asc);
+    });
+  }
+
+  QueryBuilder<PlaybackHistory, PlaybackHistory, QAfterSortBy>
+  sortByCompletedCountDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'completedCount', Sort.desc);
+    });
+  }
+
+  QueryBuilder<PlaybackHistory, PlaybackHistory, QAfterSortBy>
   sortByDurationMs() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'durationMs', Sort.asc);
@@ -1227,20 +1241,6 @@ extension PlaybackHistoryQuerySortBy
   }
 
   QueryBuilder<PlaybackHistory, PlaybackHistory, QAfterSortBy>
-  sortByCompletedCount() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'completedCount', Sort.asc);
-    });
-  }
-
-  QueryBuilder<PlaybackHistory, PlaybackHistory, QAfterSortBy>
-  sortByCompletedCountDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'completedCount', Sort.desc);
-    });
-  }
-
-  QueryBuilder<PlaybackHistory, PlaybackHistory, QAfterSortBy>
   sortByTotalListenedMs() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'totalListenedMs', Sort.asc);
@@ -1282,6 +1282,20 @@ extension PlaybackHistoryQuerySortThenBy
   thenByCompletedAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'completedAt', Sort.desc);
+    });
+  }
+
+  QueryBuilder<PlaybackHistory, PlaybackHistory, QAfterSortBy>
+  thenByCompletedCount() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'completedCount', Sort.asc);
+    });
+  }
+
+  QueryBuilder<PlaybackHistory, PlaybackHistory, QAfterSortBy>
+  thenByCompletedCountDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'completedCount', Sort.desc);
     });
   }
 
@@ -1382,20 +1396,6 @@ extension PlaybackHistoryQuerySortThenBy
   }
 
   QueryBuilder<PlaybackHistory, PlaybackHistory, QAfterSortBy>
-  thenByCompletedCount() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'completedCount', Sort.asc);
-    });
-  }
-
-  QueryBuilder<PlaybackHistory, PlaybackHistory, QAfterSortBy>
-  thenByCompletedCountDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'completedCount', Sort.desc);
-    });
-  }
-
-  QueryBuilder<PlaybackHistory, PlaybackHistory, QAfterSortBy>
   thenByTotalListenedMs() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'totalListenedMs', Sort.asc);
@@ -1430,6 +1430,13 @@ extension PlaybackHistoryQueryWhereDistinct
   distinctByCompletedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'completedAt');
+    });
+  }
+
+  QueryBuilder<PlaybackHistory, PlaybackHistory, QDistinct>
+  distinctByCompletedCount() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'completedCount');
     });
   }
 
@@ -1476,13 +1483,6 @@ extension PlaybackHistoryQueryWhereDistinct
   }
 
   QueryBuilder<PlaybackHistory, PlaybackHistory, QDistinct>
-  distinctByCompletedCount() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'completedCount');
-    });
-  }
-
-  QueryBuilder<PlaybackHistory, PlaybackHistory, QDistinct>
   distinctByTotalListenedMs() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'totalListenedMs');
@@ -1509,6 +1509,13 @@ extension PlaybackHistoryQueryProperty
   completedAtProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'completedAt');
+    });
+  }
+
+  QueryBuilder<PlaybackHistory, int, QQueryOperations>
+  completedCountProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'completedCount');
     });
   }
 
@@ -1547,13 +1554,6 @@ extension PlaybackHistoryQueryProperty
   QueryBuilder<PlaybackHistory, int, QQueryOperations> positionMsProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'positionMs');
-    });
-  }
-
-  QueryBuilder<PlaybackHistory, int, QQueryOperations>
-  completedCountProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'completedCount');
     });
   }
 
