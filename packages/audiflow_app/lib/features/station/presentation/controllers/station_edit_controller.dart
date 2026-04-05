@@ -30,8 +30,20 @@ sealed class StationEditState with _$StationEditState {
     @Default(false) bool filterDownloaded,
     @Default(false) bool filterFavorited,
     StationDurationFilter? durationFilter,
-    int? publishedWithinDays,
+    @Default(3) int? defaultEpisodeLimit,
     @Default(StationEpisodeSort.newest) StationEpisodeSort episodeSort,
+    @Default(false) bool groupByPodcast,
+    @Default(StationPodcastSort.manual) StationPodcastSort podcastSort,
+
+    /// Per-podcast episode limit overrides. Key = podcastId, value = limit
+    /// (null removed from map = use default).
+    @Default({}) Map<int, int?> podcastEpisodeLimits,
+
+    /// Ordered list of selected podcast IDs for manual sort.
+    @Default([]) List<int> podcastSortOrder,
+
+    /// Original sort orders from DB, used to preserve order during edits.
+    @Default({}) Map<int, int> originalSortOrders,
     @Default(false) bool isSaving,
     String? error,
   }) = _StationEditState;
@@ -53,18 +65,38 @@ class StationEditController extends _$StationEditController {
 
     final podcasts = await ref
         .read(stationPodcastRepositoryProvider)
-        .watchByStation(id)
-        .first;
+        .getByStation(id);
+
+    final podcastIds = podcasts.map((p) => p.podcastId).toSet();
+    final limits = <int, int?>{};
+    final sortOrders = <int, int>{};
+    final orderedIds = <int>[];
+
+    // Sort by sortOrder to reconstruct the correct display order.
+    final sorted = List<StationPodcast>.from(podcasts)
+      ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+    for (final p in sorted) {
+      orderedIds.add(p.podcastId);
+      sortOrders[p.podcastId] = p.sortOrder;
+      if (p.episodeLimit != null) {
+        limits[p.podcastId] = p.episodeLimit;
+      }
+    }
 
     state = state.copyWith(
       name: station.name,
-      selectedPodcastIds: podcasts.map((p) => p.podcastId).toSet(),
+      selectedPodcastIds: podcastIds,
       hideCompleted: station.hideCompleted,
       filterDownloaded: station.filterDownloaded,
       filterFavorited: station.filterFavorited,
       durationFilter: station.durationFilter,
-      publishedWithinDays: station.publishedWithinDays,
+      defaultEpisodeLimit: station.defaultEpisodeLimit,
       episodeSort: station.episodeSort,
+      groupByPodcast: station.groupByPodcast,
+      podcastSort: station.podcastSort,
+      podcastEpisodeLimits: limits,
+      podcastSortOrder: orderedIds,
+      originalSortOrders: sortOrders,
     );
   }
 
@@ -82,23 +114,64 @@ class StationEditController extends _$StationEditController {
   void setDurationFilter(StationDurationFilter? value) =>
       state = state.copyWith(durationFilter: value);
 
-  void setPublishedWithinDays(int? value) =>
-      state = state.copyWith(publishedWithinDays: value);
-
   void setEpisodeSort(StationEpisodeSort value) =>
       state = state.copyWith(episodeSort: value);
 
-  void togglePodcast(int podcastId) {
-    final ids = Set<int>.from(state.selectedPodcastIds);
-    if (ids.contains(podcastId)) {
-      ids.remove(podcastId);
+  void setDefaultEpisodeLimit(int? value) =>
+      state = state.copyWith(defaultEpisodeLimit: value);
+
+  void setGroupByPodcast(bool value) =>
+      state = state.copyWith(groupByPodcast: value);
+
+  void setPodcastSort(StationPodcastSort value) =>
+      state = state.copyWith(podcastSort: value);
+
+  void setPodcastEpisodeLimit(int podcastId, int? limit) {
+    final limits = Map<int, int?>.from(state.podcastEpisodeLimits);
+    if (limit == null) {
+      limits.remove(podcastId);
     } else {
-      ids.add(podcastId);
+      limits[podcastId] = limit;
     }
-    state = state.copyWith(selectedPodcastIds: ids);
+    state = state.copyWith(podcastEpisodeLimits: limits);
   }
 
-  /// Persists the station and reconciles episode membership.
+  void reorderPodcasts(List<int> newOrder) =>
+      state = state.copyWith(podcastSortOrder: newOrder);
+
+  /// Replaces [selectedPodcastIds] from a multi-selection picker.
+  ///
+  /// Newly added podcasts are prepended to [podcastSortOrder] so they appear
+  /// at the top of the list. Removed podcasts are dropped from the order.
+  void updateSelectedPodcasts(Set<int> newSelection) {
+    final currentOrder = List<int>.from(state.podcastSortOrder);
+    final originalOrders = Map<int, int>.from(state.originalSortOrders);
+
+    final added = newSelection.difference(state.selectedPodcastIds);
+    final removed = state.selectedPodcastIds.difference(newSelection);
+
+    // Remove de-selected podcasts from sort order.
+    currentOrder.removeWhere(removed.contains);
+
+    // Prepend newly selected podcasts (top of list).
+    final newlyAdded = added.toList();
+    currentOrder.insertAll(0, newlyAdded);
+
+    // Safety: ensure every selected podcast appears in the order list.
+    for (final id in newSelection) {
+      if (!currentOrder.contains(id)) {
+        currentOrder.add(id);
+      }
+    }
+
+    state = state.copyWith(
+      selectedPodcastIds: newSelection,
+      podcastSortOrder: currentOrder,
+      originalSortOrders: originalOrders,
+    );
+  }
+
+  /// Persists the station and reconciles podcast membership.
   ///
   /// Returns the saved [Station] on success, null on failure.
   Future<Station?> save() async {
@@ -130,8 +203,10 @@ class StationEditController extends _$StationEditController {
           ..filterDownloaded = state.filterDownloaded
           ..filterFavorited = state.filterFavorited
           ..durationFilter = state.durationFilter
-          ..publishedWithinDays = state.publishedWithinDays
+          ..defaultEpisodeLimit = state.defaultEpisodeLimit
           ..episodeSort = state.episodeSort
+          ..groupByPodcast = state.groupByPodcast
+          ..podcastSort = state.podcastSort
           ..createdAt = now
           ..updatedAt = now;
         saved = await stationRepo.create(station);
@@ -150,17 +225,26 @@ class StationEditController extends _$StationEditController {
           ..filterDownloaded = state.filterDownloaded
           ..filterFavorited = state.filterFavorited
           ..durationFilter = state.durationFilter
-          ..publishedWithinDays = state.publishedWithinDays
+          ..defaultEpisodeLimit = state.defaultEpisodeLimit
           ..episodeSort = state.episodeSort
+          ..groupByPodcast = state.groupByPodcast
+          ..podcastSort = state.podcastSort
           ..updatedAt = now;
         await stationRepo.update(existing);
         saved = existing;
       }
 
-      // Sync podcast membership.
+      // Sync podcast membership with sort order and per-podcast limits.
       await podcastRepo.removeAllForStation(saved.id);
-      for (final podcastId in state.selectedPodcastIds) {
-        await podcastRepo.add(saved.id, podcastId);
+      for (var i = 0; i < state.podcastSortOrder.length; i++) {
+        final podcastId = state.podcastSortOrder[i];
+        if (!state.selectedPodcastIds.contains(podcastId)) continue;
+        await podcastRepo.add(
+          saved.id,
+          podcastId,
+          sortOrder: i,
+          episodeLimit: state.podcastEpisodeLimits[podcastId],
+        );
       }
 
       await reconciler.onStationConfigChanged(saved.id);

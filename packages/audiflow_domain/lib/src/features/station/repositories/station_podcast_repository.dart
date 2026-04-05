@@ -5,7 +5,15 @@ abstract class StationPodcastRepository {
   Future<List<StationPodcast>> getByStation(int stationId);
 
   Stream<List<StationPodcast>> watchByStation(int stationId);
-  Future<void> add(int stationId, int podcastId);
+
+  /// Adds a station–podcast link with optional [sortOrder] and [episodeLimit].
+  Future<void> add(
+    int stationId,
+    int podcastId, {
+    int sortOrder = 0,
+    int? episodeLimit,
+  });
+
   Future<void> remove(int stationId, int podcastId);
   Future<void> removeAllForStation(int stationId);
 }

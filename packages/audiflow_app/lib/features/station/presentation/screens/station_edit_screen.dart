@@ -190,7 +190,15 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
                       (sub) => CheckboxListTile(
                         key: ValueKey(sub.id),
                         value: state.selectedPodcastIds.contains(sub.id),
-                        onChanged: (_) => controller.togglePodcast(sub.id),
+                        onChanged: (_) {
+                          final ids = Set<int>.from(state.selectedPodcastIds);
+                          if (ids.contains(sub.id)) {
+                            ids.remove(sub.id);
+                          } else {
+                            ids.add(sub.id);
+                          }
+                          controller.updateSelectedPodcasts(ids);
+                        },
                         title: Text(
                           sub.title,
                           maxLines: 1,
@@ -335,41 +343,13 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
     );
   }
 
+  // TODO(Task10): remove once StationEditScreen is fully rewritten.
   Widget _buildPublishedWithin(
     BuildContext context,
     StationEditState state,
     StationEditController controller,
   ) {
-    const options = [null, 7, 14, 30, 90];
-    final theme = Theme.of(context);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          AppLocalizations.of(context).stationPublishedWithin,
-          style: theme.textTheme.titleSmall,
-        ),
-        const SizedBox(height: Spacing.xs),
-        DropdownButtonFormField<int?>(
-          initialValue: state.publishedWithinDays,
-          decoration: const InputDecoration(border: OutlineInputBorder()),
-          items: options
-              .map(
-                (days) => DropdownMenuItem<int?>(
-                  value: days,
-                  child: Text(
-                    days == null
-                        ? AppLocalizations.of(context).stationNoLimit
-                        : AppLocalizations.of(context).stationLastDays(days),
-                  ),
-                ),
-              )
-              .toList(),
-          onChanged: controller.setPublishedWithinDays,
-        ),
-      ],
-    );
+    return const SizedBox.shrink();
   }
 
   Widget _buildSortOrder(

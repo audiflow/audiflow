@@ -1008,9 +1008,18 @@ class MockStationPodcastRepository extends _i1.Mock
           as _i11.Stream<List<_i27.StationPodcast>>);
 
   @override
-  _i11.Future<void> add(int? stationId, int? podcastId) =>
+  _i11.Future<void> add(
+    int? stationId,
+    int? podcastId, {
+    int sortOrder = 0,
+    int? episodeLimit,
+  }) =>
       (super.noSuchMethod(
-            Invocation.method(#add, [stationId, podcastId]),
+            Invocation.method(
+              #add,
+              [stationId, podcastId],
+              {#sortOrder: sortOrder, #episodeLimit: episodeLimit},
+            ),
             returnValue: _i11.Future<void>.value(),
             returnValueForMissingStub: _i11.Future<void>.value(),
           )
