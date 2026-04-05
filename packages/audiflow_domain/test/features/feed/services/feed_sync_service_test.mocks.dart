@@ -1011,7 +1011,7 @@ class MockStationPodcastRepository extends _i1.Mock
   _i11.Future<void> add(
     int? stationId,
     int? podcastId, {
-    int sortOrder = 0,
+    int? sortOrder = 0,
     int? episodeLimit,
   }) =>
       (super.noSuchMethod(
@@ -1020,6 +1020,15 @@ class MockStationPodcastRepository extends _i1.Mock
               [stationId, podcastId],
               {#sortOrder: sortOrder, #episodeLimit: episodeLimit},
             ),
+            returnValue: _i11.Future<void>.value(),
+            returnValueForMissingStub: _i11.Future<void>.value(),
+          )
+          as _i11.Future<void>);
+
+  @override
+  _i11.Future<void> update(_i27.StationPodcast? stationPodcast) =>
+      (super.noSuchMethod(
+            Invocation.method(#update, [stationPodcast]),
             returnValue: _i11.Future<void>.value(),
             returnValueForMissingStub: _i11.Future<void>.value(),
           )

@@ -529,17 +529,14 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
         ),
         if (isManual)
           TextButton(
-            onPressed: () => _onPodcastSortButtonTap(state, controller),
+            onPressed: _onPodcastSortButtonTap,
             child: Text(sortLabel),
           ),
       ],
     );
   }
 
-  void _onPodcastSortButtonTap(
-    StationEditState state,
-    StationEditController controller,
-  ) {
+  void _onPodcastSortButtonTap() {
     if (_isReorderMode) {
       // "Done" exits reorder mode without opening the sort picker.
       setState(() => _isReorderMode = false);
@@ -621,7 +618,7 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
             ),
           ),
         );
-        if (result != null) controller.updateSelectedPodcasts(result);
+        if (result != null) await controller.updateSelectedPodcasts(result);
       },
     );
   }

@@ -182,7 +182,10 @@ class StationEditController extends _$StationEditController {
   ///
   /// Newly added podcasts are prepended to [podcastSortOrder] so they appear
   /// at the top of the list. Removed podcasts are dropped from the order.
-  void updateSelectedPodcasts(Set<int> newSelection) {
+  ///
+  /// When an automatic sort mode is active, the order is recomputed so the
+  /// editor list immediately reflects the selected sort.
+  Future<void> updateSelectedPodcasts(Set<int> newSelection) async {
     final currentOrder = List<int>.from(state.podcastSortOrder);
 
     final added = newSelection.difference(state.selectedPodcastIds);
@@ -207,6 +210,13 @@ class StationEditController extends _$StationEditController {
       selectedPodcastIds: newSelection,
       podcastSortOrder: currentOrder,
     );
+
+    // Recompute order for automatic sort modes so the editor list matches
+    // the selected sort immediately.
+    if (state.podcastSort != StationPodcastSort.manual) {
+      final resolved = await _resolvedPodcastOrder();
+      state = state.copyWith(podcastSortOrder: resolved);
+    }
   }
 
   /// Computes the podcast order based on [state.podcastSort].
