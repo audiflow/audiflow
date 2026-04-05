@@ -40,7 +40,7 @@ void main() {
     bool filterDownloaded = false,
     bool filterFavorited = false,
     StationDurationFilter? durationFilter,
-    int? defaultEpisodeLimit,
+    int? defaultEpisodeLimit = 3,
     int? publishedWithinDays,
   }) async {
     final station = Station()
