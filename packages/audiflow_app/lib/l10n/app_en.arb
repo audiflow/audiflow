@@ -15,6 +15,8 @@
   "@commonLoading": { "description": "Common loading text" },
   "commonComingSoon": "Coming soon",
   "@commonComingSoon": { "description": "Feature not yet available" },
+  "commonDone": "Done",
+  "@commonDone": { "description": "Common done action" },
 
   "settingsTitle": "Settings",
   "@settingsTitle": { "description": "Settings screen title" },

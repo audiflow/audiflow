@@ -30,6 +30,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get commonComingSoon => '近日公開';
 
   @override
+  String get commonDone => '完了';
+
+  @override
   String get settingsTitle => '設定';
 
   @override

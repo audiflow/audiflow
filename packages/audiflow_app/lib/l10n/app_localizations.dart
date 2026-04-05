@@ -140,6 +140,12 @@ abstract class AppLocalizations {
   /// **'Coming soon'**
   String get commonComingSoon;
 
+  /// Common done action
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get commonDone;
+
   /// Settings screen title
   ///
   /// In en, this message translates to:
