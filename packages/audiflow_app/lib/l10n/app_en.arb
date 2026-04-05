@@ -535,6 +535,8 @@
   "@stationAllEpisodes": { "description": "Option to show all episodes" },
   "stationGroupByPodcast": "Group by podcast",
   "@stationGroupByPodcast": { "description": "Option to group episodes by podcast" },
+  "stationPodcastOrder": "Podcast order",
+  "@stationPodcastOrder": { "description": "Label for podcast ordering selector when grouping is enabled" },
   "stationPodcastSortSubscribeOld": "Subscribe (old)",
   "@stationPodcastSortSubscribeOld": { "description": "Sort podcasts by subscription date, oldest first" },
   "stationPodcastSortSubscribeNew": "Subscribe (new)",

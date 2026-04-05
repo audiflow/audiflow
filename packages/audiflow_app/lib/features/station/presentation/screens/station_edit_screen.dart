@@ -396,11 +396,49 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
     StationEditState state,
     StationEditController controller,
   ) {
-    return SwitchListTile(
-      value: state.groupByPodcast,
-      onChanged: controller.setGroupByPodcast,
-      title: Text(AppLocalizations.of(context).stationGroupByPodcast),
-      contentPadding: EdgeInsets.zero,
+    final l10n = AppLocalizations.of(context);
+    return Column(
+      children: [
+        SwitchListTile(
+          value: state.groupByPodcast,
+          onChanged: controller.setGroupByPodcast,
+          title: Text(l10n.stationGroupByPodcast),
+          contentPadding: EdgeInsets.zero,
+        ),
+        if (state.groupByPodcast) _buildPodcastOrderSelector(state, controller),
+      ],
+    );
+  }
+
+  Widget _buildPodcastOrderSelector(
+    StationEditState state,
+    StationEditController controller,
+  ) {
+    final l10n = AppLocalizations.of(context);
+    final sortLabel = switch (state.podcastSort) {
+      StationPodcastSort.subscribeAsc => l10n.stationPodcastSortSubscribeOld,
+      StationPodcastSort.subscribeDesc => l10n.stationPodcastSortSubscribeNew,
+      StationPodcastSort.nameAsc => l10n.stationPodcastSortNameAz,
+      StationPodcastSort.nameDesc => l10n.stationPodcastSortNameZa,
+      StationPodcastSort.manual => l10n.stationPodcastSortManual,
+    };
+
+    return ListTile(
+      contentPadding: const EdgeInsets.only(left: Spacing.lg),
+      title: Text(l10n.stationPodcastOrder),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            sortLabel,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const Icon(Icons.chevron_right),
+        ],
+      ),
+      onTap: () => _showPodcastSortSheet(state, controller),
     );
   }
 

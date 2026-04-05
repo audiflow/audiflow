@@ -850,6 +850,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get stationGroupByPodcast => '番組ごとにまとめる';
 
   @override
+  String get stationPodcastOrder => '番組の並び順';
+
+  @override
   String get stationPodcastSortSubscribeOld => '購読順（古い順）';
 
   @override

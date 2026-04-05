@@ -1640,6 +1640,12 @@ abstract class AppLocalizations {
   /// **'Group by podcast'**
   String get stationGroupByPodcast;
 
+  /// Label for podcast ordering selector when grouping is enabled
+  ///
+  /// In en, this message translates to:
+  /// **'Podcast order'**
+  String get stationPodcastOrder;
+
   /// Sort podcasts by subscription date, oldest first
   ///
   /// In en, this message translates to:

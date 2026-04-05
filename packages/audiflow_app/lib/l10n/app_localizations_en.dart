@@ -867,6 +867,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get stationGroupByPodcast => 'Group by podcast';
 
   @override
+  String get stationPodcastOrder => 'Podcast order';
+
+  @override
   String get stationPodcastSortSubscribeOld => 'Subscribe (old)';
 
   @override
