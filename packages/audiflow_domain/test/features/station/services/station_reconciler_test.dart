@@ -41,6 +41,7 @@ void main() {
     bool filterFavorited = false,
     StationDurationFilter? durationFilter,
     int? defaultEpisodeLimit,
+    int? publishedWithinDays,
   }) async {
     final station = Station()
       ..name = 'Test Station'
@@ -49,6 +50,7 @@ void main() {
       ..filterFavorited = filterFavorited
       ..durationFilter = durationFilter
       ..defaultEpisodeLimit = defaultEpisodeLimit
+      ..publishedWithinDays = publishedWithinDays
       ..createdAt = DateTime(2026, 1, 1)
       ..updatedAt = DateTime(2026, 1, 1);
     await isar.writeTxn(() => isar.stations.put(station));
@@ -495,6 +497,35 @@ void main() {
       check(results.length).equals(2);
       check(results[0].podcastSortKey).equals(0);
       check(results[1].podcastSortKey).equals(1);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // Backward compatibility
+  // ---------------------------------------------------------------------------
+
+  group('legacy publishedWithinDays', () {
+    test('filters out episodes older than the cutoff', () async {
+      final now = DateTime.now();
+      final stationId = await putStation(publishedWithinDays: 7);
+      await linkPodcast(stationId, 1);
+
+      // Recent episode (within 7 days of now).
+      await putEpisode(
+        podcastId: 1,
+        guid: 'recent',
+        publishedAt: now.subtract(const Duration(days: 2)),
+      );
+      // Old episode (outside 7 days of now).
+      await putEpisode(
+        podcastId: 1,
+        guid: 'old',
+        publishedAt: now.subtract(const Duration(days: 30)),
+      );
+
+      await reconciler.reconcileFull(stationId);
+      final ids = await stationEpisodeIds(stationId);
+      check(ids.length).equals(1);
     });
   });
 }
