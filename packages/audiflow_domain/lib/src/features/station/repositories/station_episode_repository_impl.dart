@@ -43,11 +43,13 @@ class StationEpisodeRepositoryImpl implements StationEpisodeRepository {
     int? limit,
     int? offset,
     bool ascending = false,
+    bool grouped = false,
   }) => _episodeDatasource.watchByStation(
     stationId,
     limit: limit,
     offset: offset,
     ascending: ascending,
+    grouped: grouped,
   );
 
   @override
