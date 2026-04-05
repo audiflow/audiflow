@@ -545,12 +545,8 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
       setState(() => _isReorderMode = false);
       return;
     }
-    if (state.podcastSort == StationPodcastSort.manual) {
-      // In manual mode (not reordering): enter reorder mode.
-      setState(() => _isReorderMode = true);
-      return;
-    }
-    _showPodcastSortSheet(state, controller);
+    // Button is only rendered in manual mode — enter reorder mode.
+    setState(() => _isReorderMode = true);
   }
 
   void _showPodcastSortSheet(

@@ -47,8 +47,6 @@ sealed class StationEditState with _$StationEditState {
     /// Ordered list of selected podcast IDs for manual sort.
     @Default([]) List<int> podcastSortOrder,
 
-    /// Original sort orders from DB, used to preserve order during edits.
-    @Default({}) Map<int, int> originalSortOrders,
     @Default(false) bool isSaving,
     String? error,
   }) = _StationEditState;
@@ -78,7 +76,6 @@ class StationEditController extends _$StationEditController {
 
     final podcastIds = podcasts.map((p) => p.podcastId).toSet();
     final limits = <int, int?>{};
-    final sortOrders = <int, int>{};
     final orderedIds = <int>[];
 
     // Sort by sortOrder to reconstruct the correct display order.
@@ -86,7 +83,6 @@ class StationEditController extends _$StationEditController {
       ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
     for (final p in sorted) {
       orderedIds.add(p.podcastId);
-      sortOrders[p.podcastId] = p.sortOrder;
       if (p.episodeLimit != null) {
         // episodeLimit == 0 in the DB means "explicitly all episodes"
         // (distinct from null which means "use station default").
@@ -107,7 +103,6 @@ class StationEditController extends _$StationEditController {
       podcastSort: station.podcastSort,
       podcastEpisodeLimits: limits,
       podcastSortOrder: orderedIds,
-      originalSortOrders: sortOrders,
     );
   }
 
@@ -149,7 +144,15 @@ class StationEditController extends _$StationEditController {
     state = state.copyWith(podcastSort: value);
     if (value == StationPodcastSort.manual) {
       if (_savedManualOrder != null) {
-        state = state.copyWith(podcastSortOrder: _savedManualOrder!);
+        // Merge any podcasts added while in automatic mode that are
+        // missing from the saved snapshot.
+        final restored = List<int>.from(_savedManualOrder!);
+        for (final id in state.selectedPodcastIds) {
+          if (!restored.contains(id)) {
+            restored.add(id);
+          }
+        }
+        state = state.copyWith(podcastSortOrder: restored);
         _savedManualOrder = null;
       }
       return;
@@ -181,7 +184,6 @@ class StationEditController extends _$StationEditController {
   /// at the top of the list. Removed podcasts are dropped from the order.
   void updateSelectedPodcasts(Set<int> newSelection) {
     final currentOrder = List<int>.from(state.podcastSortOrder);
-    final originalOrders = Map<int, int>.from(state.originalSortOrders);
 
     final added = newSelection.difference(state.selectedPodcastIds);
     final removed = state.selectedPodcastIds.difference(newSelection);
@@ -204,7 +206,6 @@ class StationEditController extends _$StationEditController {
     state = state.copyWith(
       selectedPodcastIds: newSelection,
       podcastSortOrder: currentOrder,
-      originalSortOrders: originalOrders,
     );
   }
 
