@@ -86,50 +86,52 @@ class _StationPodcastPickerScreenState
   Future<void> _showSortSheet(AppLocalizations l10n) async {
     await showModalBottomSheet<void>(
       context: context,
-      builder: (ctx) => ListView(
-        shrinkWrap: true,
-        children: [
-          ListTile(
-            title: Text(l10n.stationPickerSortNameAz),
-            trailing: _sort == _PickerSort.nameAz
-                ? const Icon(Icons.check)
-                : null,
-            onTap: () {
-              setState(() => _sort = _PickerSort.nameAz);
-              Navigator.of(ctx).pop();
-            },
-          ),
-          ListTile(
-            title: Text(l10n.stationPickerSortNameZa),
-            trailing: _sort == _PickerSort.nameZa
-                ? const Icon(Icons.check)
-                : null,
-            onTap: () {
-              setState(() => _sort = _PickerSort.nameZa);
-              Navigator.of(ctx).pop();
-            },
-          ),
-          ListTile(
-            title: Text(l10n.stationPickerSortRecentlySubscribed),
-            trailing: _sort == _PickerSort.recentlySubscribed
-                ? const Icon(Icons.check)
-                : null,
-            onTap: () {
-              setState(() => _sort = _PickerSort.recentlySubscribed);
-              Navigator.of(ctx).pop();
-            },
-          ),
-          ListTile(
-            title: Text(l10n.stationPickerSortRecentlyUpdated),
-            trailing: _sort == _PickerSort.recentlyUpdated
-                ? const Icon(Icons.check)
-                : null,
-            onTap: () {
-              setState(() => _sort = _PickerSort.recentlyUpdated);
-              Navigator.of(ctx).pop();
-            },
-          ),
-        ],
+      builder: (ctx) => SafeArea(
+        child: ListView(
+          shrinkWrap: true,
+          children: [
+            ListTile(
+              title: Text(l10n.stationPickerSortNameAz),
+              trailing: _sort == _PickerSort.nameAz
+                  ? const Icon(Icons.check)
+                  : null,
+              onTap: () {
+                setState(() => _sort = _PickerSort.nameAz);
+                Navigator.of(ctx).pop();
+              },
+            ),
+            ListTile(
+              title: Text(l10n.stationPickerSortNameZa),
+              trailing: _sort == _PickerSort.nameZa
+                  ? const Icon(Icons.check)
+                  : null,
+              onTap: () {
+                setState(() => _sort = _PickerSort.nameZa);
+                Navigator.of(ctx).pop();
+              },
+            ),
+            ListTile(
+              title: Text(l10n.stationPickerSortRecentlySubscribed),
+              trailing: _sort == _PickerSort.recentlySubscribed
+                  ? const Icon(Icons.check)
+                  : null,
+              onTap: () {
+                setState(() => _sort = _PickerSort.recentlySubscribed);
+                Navigator.of(ctx).pop();
+              },
+            ),
+            ListTile(
+              title: Text(l10n.stationPickerSortRecentlyUpdated),
+              trailing: _sort == _PickerSort.recentlyUpdated
+                  ? const Icon(Icons.check)
+                  : null,
+              onTap: () {
+                setState(() => _sort = _PickerSort.recentlyUpdated);
+                Navigator.of(ctx).pop();
+              },
+            ),
+          ],
+        ),
       ),
     );
   }

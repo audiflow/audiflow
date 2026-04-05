@@ -511,7 +511,7 @@ void main() {
       await linkPodcast(stationId, 1);
 
       // Recent episode (within 7 days of now).
-      await putEpisode(
+      final recentEpId = await putEpisode(
         podcastId: 1,
         guid: 'recent',
         publishedAt: now.subtract(const Duration(days: 2)),
@@ -525,7 +525,7 @@ void main() {
 
       await reconciler.reconcileFull(stationId);
       final ids = await stationEpisodeIds(stationId);
-      check(ids.length).equals(1);
+      check(ids).deepEquals([recentEpId]);
     });
   });
 }

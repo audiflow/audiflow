@@ -277,6 +277,7 @@
   "stationDurationFilter": "再生時間フィルタ",
   "stationShorterThan": "より短い",
   "stationLongerThan": "より長い",
+  "stationDurationMinutesSuffix": "分",
   "stationEpisodeOrder": "エピソードの順序",
   "stationNewestFirst": "新しい順",
   "stationOldestFirst": "古い順",

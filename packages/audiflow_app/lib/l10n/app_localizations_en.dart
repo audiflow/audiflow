@@ -829,6 +829,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get stationLongerThan => 'Longer than';
 
   @override
+  String get stationDurationMinutesSuffix => 'min';
+
+  @override
   String get stationEpisodeOrder => 'Episode Order';
 
   @override

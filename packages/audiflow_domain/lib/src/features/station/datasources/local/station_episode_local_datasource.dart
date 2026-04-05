@@ -26,8 +26,11 @@ class StationEpisodeLocalDatasource {
 
     if (grouped) {
       final sorted = ascending
-          ? filtered.sortByPodcastSortKey().thenBySortKey()
-          : filtered.sortByPodcastSortKey().thenBySortKeyDesc();
+          ? filtered.sortByPodcastSortKey().thenBySortKey().thenByEpisodeId()
+          : filtered
+                .sortByPodcastSortKey()
+                .thenBySortKeyDesc()
+                .thenByEpisodeIdDesc();
 
       if (offset != null && limit != null) {
         return sorted.offset(offset).limit(limit).watch(fireImmediately: true);
@@ -41,8 +44,8 @@ class StationEpisodeLocalDatasource {
       return sorted.watch(fireImmediately: true);
     } else {
       final sorted = ascending
-          ? filtered.sortBySortKey()
-          : filtered.sortBySortKeyDesc();
+          ? filtered.sortBySortKey().thenByEpisodeId()
+          : filtered.sortBySortKeyDesc().thenByEpisodeIdDesc();
 
       if (offset != null && limit != null) {
         return sorted.offset(offset).limit(limit).watch(fireImmediately: true);

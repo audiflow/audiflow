@@ -369,9 +369,11 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
                   controller: _minutesController,
                   keyboardType: TextInputType.number,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  decoration: const InputDecoration(
-                    suffixText: 'min',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    suffixText: AppLocalizations.of(
+                      context,
+                    ).stationDurationMinutesSuffix,
+                    border: const OutlineInputBorder(),
                     isDense: true,
                   ),
                   onTap: () => _minutesController.selection = TextSelection(

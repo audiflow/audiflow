@@ -511,6 +511,8 @@
   "@stationShorterThan": { "description": "Duration filter operator label" },
   "stationLongerThan": "Longer than",
   "@stationLongerThan": { "description": "Duration filter operator label" },
+  "stationDurationMinutesSuffix": "min",
+  "@stationDurationMinutesSuffix": { "description": "Suffix label for duration minutes input" },
   "stationEpisodeOrder": "Episode Order",
   "@stationEpisodeOrder": { "description": "Section title for sort order" },
   "stationNewestFirst": "Newest first",

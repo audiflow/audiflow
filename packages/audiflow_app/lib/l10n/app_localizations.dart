@@ -1568,6 +1568,12 @@ abstract class AppLocalizations {
   /// **'Longer than'**
   String get stationLongerThan;
 
+  /// Suffix label for duration minutes input
+  ///
+  /// In en, this message translates to:
+  /// **'min'**
+  String get stationDurationMinutesSuffix;
+
   /// Section title for sort order
   ///
   /// In en, this message translates to:

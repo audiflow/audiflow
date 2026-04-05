@@ -812,6 +812,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get stationLongerThan => 'より長い';
 
   @override
+  String get stationDurationMinutesSuffix => '分';
+
+  @override
   String get stationEpisodeOrder => 'エピソードの順序';
 
   @override
