@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
@@ -49,19 +51,48 @@ class _SubscriptionsListScreenState
 
   @override
   Widget build(BuildContext context) {
-    final subscriptionsAsync = ref.watch(librarySubscriptionsProvider);
+    final subscriptionsAsync = ref.watch(sortedSubscriptionsProvider);
+    final sortOrderAsync = ref.watch(podcastSortOrderControllerProvider);
     final l10n = AppLocalizations.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.libraryYourPodcasts)),
+      appBar: AppBar(
+        title: Text(l10n.libraryYourPodcasts),
+        actions: [
+          sortOrderAsync.when(
+            data: (currentOrder) => _SortMenuButton(
+              currentOrder: currentOrder,
+              onSelected: (order) {
+                unawaited(
+                  ref
+                      .read(podcastSortOrderControllerProvider.notifier)
+                      .setSortOrder(order),
+                );
+              },
+            ),
+            loading: () => const SizedBox.shrink(),
+            // On error, fall back to default sort order so the sort
+            // menu remains accessible instead of disappearing.
+            error: (_, _) => _SortMenuButton(
+              currentOrder: PodcastSortOrder.latestEpisode,
+              onSelected: (order) {
+                unawaited(
+                  ref
+                      .read(podcastSortOrderControllerProvider.notifier)
+                      .setSortOrder(order),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
       body: subscriptionsAsync.when(
         data: (subscriptions) => _buildContent(context, subscriptions),
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => _buildErrorState(
-          context,
-          error.toString(),
-          () => ref.invalidate(librarySubscriptionsProvider),
-        ),
+        error: (error, _) => _buildErrorState(context, error.toString(), () {
+          ref.invalidate(librarySubscriptionsProvider);
+          ref.invalidate(sortedSubscriptionsProvider);
+        }),
       ),
     );
   }
@@ -207,6 +238,58 @@ class _SubscriptionsListScreenState
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _SortMenuButton extends StatelessWidget {
+  const _SortMenuButton({required this.currentOrder, required this.onSelected});
+
+  final PodcastSortOrder currentOrder;
+  final ValueChanged<PodcastSortOrder> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
+    return PopupMenuButton<PodcastSortOrder>(
+      icon: const Icon(Icons.sort),
+      onSelected: onSelected,
+      itemBuilder: (context) => [
+        _buildItem(
+          PodcastSortOrder.latestEpisode,
+          l10n.librarySortByLatestEpisode,
+        ),
+        _buildItem(
+          PodcastSortOrder.subscribedAt,
+          l10n.librarySortBySubscribedAt,
+        ),
+        _buildItem(
+          PodcastSortOrder.alphabetical,
+          l10n.librarySortByAlphabetical,
+        ),
+      ],
+    );
+  }
+
+  PopupMenuItem<PodcastSortOrder> _buildItem(
+    PodcastSortOrder order,
+    String label,
+  ) {
+    return PopupMenuItem<PodcastSortOrder>(
+      value: order,
+      child: Row(
+        children: [
+          if (order == currentOrder)
+            const Padding(
+              padding: EdgeInsets.only(right: 8),
+              child: Icon(Icons.check, size: 20),
+            )
+          else
+            const SizedBox(width: 28),
+          Flexible(child: Text(label, overflow: TextOverflow.ellipsis)),
+        ],
       ),
     );
   }

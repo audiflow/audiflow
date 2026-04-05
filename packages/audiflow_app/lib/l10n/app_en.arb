@@ -230,6 +230,12 @@
   "@libraryEmptySubtitle": { "description": "Empty library subtitle" },
   "libraryLoadError": "Failed to load subscriptions",
   "@libraryLoadError": { "description": "Library load error message" },
+  "librarySortByLatestEpisode": "Latest episode",
+  "@librarySortByLatestEpisode": { "description": "Sort podcasts by latest episode date" },
+  "librarySortBySubscribedAt": "Subscription date",
+  "@librarySortBySubscribedAt": { "description": "Sort podcasts by subscription date" },
+  "librarySortByAlphabetical": "Alphabetical",
+  "@librarySortByAlphabetical": { "description": "Sort podcasts alphabetically" },
 
   "searchTitle": "Search Podcasts",
   "@searchTitle": { "description": "Search screen title" },

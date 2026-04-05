@@ -36,6 +36,7 @@ export 'src/features/feed/models/pattern_meta.dart';
 export 'src/features/feed/models/pattern_summary.dart';
 export 'src/features/feed/models/root_meta.dart';
 export 'src/features/feed/models/podcast_view_mode.dart';
+export 'src/features/feed/models/podcast_sort_order.dart';
 export 'src/features/feed/models/smart_playlist.dart';
 export 'src/features/feed/models/episode_filter_entry.dart';
 export 'src/features/feed/models/episode_filters.dart';

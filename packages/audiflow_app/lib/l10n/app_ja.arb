@@ -120,6 +120,9 @@
   "libraryEmpty": "購読がありません",
   "libraryEmptySubtitle": "ポッドキャストを検索して購読しましょう",
   "libraryLoadError": "購読の読み込みに失敗しました",
+  "librarySortByLatestEpisode": "最新エピソード順",
+  "librarySortBySubscribedAt": "登録日順",
+  "librarySortByAlphabetical": "名前順",
 
   "searchTitle": "ポッドキャストを検索",
   "searchHint": "ポッドキャストを検索...",

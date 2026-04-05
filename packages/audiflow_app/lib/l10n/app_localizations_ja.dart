@@ -357,6 +357,15 @@ class AppLocalizationsJa extends AppLocalizations {
   String get libraryLoadError => '購読の読み込みに失敗しました';
 
   @override
+  String get librarySortByLatestEpisode => '最新エピソード順';
+
+  @override
+  String get librarySortBySubscribedAt => '登録日順';
+
+  @override
+  String get librarySortByAlphabetical => '名前順';
+
+  @override
   String get searchTitle => 'ポッドキャストを検索';
 
   @override
