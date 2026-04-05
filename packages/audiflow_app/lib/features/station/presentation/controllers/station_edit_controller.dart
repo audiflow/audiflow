@@ -148,7 +148,6 @@ class StationEditController extends _$StationEditController {
     }
     state = state.copyWith(podcastSort: value);
     if (value == StationPodcastSort.manual) {
-      // Restore previously saved manual order if available.
       if (_savedManualOrder != null) {
         state = state.copyWith(podcastSortOrder: _savedManualOrder!);
         _savedManualOrder = null;

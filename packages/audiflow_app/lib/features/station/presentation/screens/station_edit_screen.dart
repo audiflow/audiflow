@@ -32,20 +32,50 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
   bool _isReorderMode = false;
   int? _expandedPodcastId;
 
+  /// Whether the initial auto-focus has been consumed.
+  /// After this, only user taps may focus the name field.
+  bool _autoFocusConsumed = false;
+
+  /// Set to true by TextField.onTap before the focus listener fires.
+  bool _nameTappedByUser = false;
+
   @override
   void initState() {
     super.initState();
     _nameController = TextEditingController();
     _minutesController = TextEditingController();
+    _nameFocusNode.addListener(_guardNameFocus);
     if (widget.stationId == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _nameFocusNode.requestFocus();
       });
+    } else {
+      _autoFocusConsumed = true;
     }
+  }
+
+  void _guardNameFocus() {
+    if (!_nameFocusNode.hasFocus) {
+      if (!_autoFocusConsumed) _autoFocusConsumed = true;
+      return;
+    }
+    // Focus gained — check if it's allowed.
+    if (!_autoFocusConsumed) return; // initial auto-focus, allow
+    if (_nameTappedByUser) {
+      _nameTappedByUser = false;
+      return; // user tapped, allow
+    }
+    // Unwanted focus restoration (e.g., modal dismiss) — reject.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _nameFocusNode.hasFocus) {
+        _nameFocusNode.unfocus();
+      }
+    });
   }
 
   @override
   void dispose() {
+    _nameFocusNode.removeListener(_guardNameFocus);
     _nameController.dispose();
     _minutesController.dispose();
     _nameFocusNode.dispose();
@@ -106,7 +136,6 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
         ],
       ),
       body: SingleChildScrollView(
-        key: const PageStorageKey<String>('station_edit'),
         padding: const EdgeInsets.all(Spacing.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -158,6 +187,7 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
         TextField(
           controller: _nameController,
           focusNode: _nameFocusNode,
+          onTap: () => _nameTappedByUser = true,
           maxLength: 50,
           maxLengthEnforcement: MaxLengthEnforcement.enforced,
           textCapitalization: TextCapitalization.none,
