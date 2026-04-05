@@ -234,8 +234,11 @@ class StationEditController extends _$StationEditController {
     ids.sort((a, b) {
       final subA = subMap[a];
       final subB = subMap[b];
-      if (subA == null || subB == null) return 0;
-      return switch (state.podcastSort) {
+      // Deterministic fallback: nulls sort last, tie-break by ID.
+      if (subA == null && subB == null) return a.compareTo(b);
+      if (subA == null) return 1;
+      if (subB == null) return -1;
+      final result = switch (state.podcastSort) {
         StationPodcastSort.nameAsc => subA.title.toLowerCase().compareTo(
           subB.title.toLowerCase(),
         ),
@@ -250,6 +253,8 @@ class StationEditController extends _$StationEditController {
         ),
         StationPodcastSort.manual => 0,
       };
+      // Stable tie-break by ID when primary sort is equal.
+      return result != 0 ? result : a.compareTo(b);
     });
     return ids;
   }

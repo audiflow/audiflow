@@ -256,18 +256,15 @@ class StationReconciler {
         .findAll();
     final topNIds = topN.map((e) => e.id).toSet();
 
-    // Narrow query: load only station entries whose episodeIds belong to this
-    // podcast by checking membership against topNIds plus current station
-    // entries. We avoid loading ALL episodes for the podcast just to build an
-    // ID set -- instead, load station entries and filter against topNIds.
+    // Load all station entries for this station, then filter to this podcast.
+    // We load episode IDs (not full objects) to build the podcast ID set.
+    // TODO(perf): denormalize podcastId onto StationEpisode to query directly.
     final stationEntries = await _isar.stationEpisodes
         .filter()
         .stationIdEqualTo(stationId)
         .findAll();
-    // Filter to entries that belong to this podcast by checking if their
-    // episodeId is in topNIds OR was previously a top-N candidate (any episode
-    // from this podcast that's in the station). We use the topN list plus a
-    // lightweight ID query to build the podcast's episode ID set.
+    // Build a set of episode IDs belonging to this podcast via a lightweight
+    // ID-only query, then filter station entries by membership.
     final podcastEpisodeIds = await _isar.episodes
         .filter()
         .podcastIdEqualTo(sp.podcastId)
