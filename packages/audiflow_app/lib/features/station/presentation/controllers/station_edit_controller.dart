@@ -317,6 +317,7 @@ class StationEditController extends _$StationEditController {
           ..episodeSort = state.episodeSort
           ..groupByPodcast = state.groupByPodcast
           ..podcastSort = state.podcastSort
+          ..publishedWithinDays = null
           ..updatedAt = now;
         await stationRepo.update(existing);
         saved = existing;

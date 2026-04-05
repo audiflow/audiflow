@@ -20,8 +20,8 @@ Builds on the existing Station v1 design (`2026-03-20-station-design.md`).
 
 ### Station collection
 
-Remove:
-- `publishedWithinDays: int?`
+Deprecated (kept for backward compatibility):
+- `publishedWithinDays: int?` -- legacy v1 field; cleared to `null` when a station is re-saved in the v2 editor, migrating it to pure count-based filtering
 
 Add:
 - `defaultEpisodeLimit: int?` -- default episode count per podcast. Values: 1, 2, 3, 4, 5, 10, `null` (all). Default: 3
