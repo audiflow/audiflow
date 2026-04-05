@@ -558,7 +558,7 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
     StationEditController controller,
     AsyncValue<List<Subscription>> subscriptionsAsync,
   ) {
-    final subscriptions = subscriptionsAsync.valueOrNull;
+    final subscriptions = subscriptionsAsync.value;
     if (subscriptions == null) return [];
 
     final subMap = {for (final s in subscriptions) s.id: s};
@@ -661,10 +661,6 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
   ) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    // null entry in map means "use default"; absence also means default.
-    final currentOverride = state.podcastEpisodeLimits.containsKey(podcastId)
-        ? state.podcastEpisodeLimits[podcastId]
-        : _kUseDefaultSentinel;
     const options = <int?>[1, 2, 3, 4, 5, 10, null]; // null = All
     final defaultLimit = state.defaultEpisodeLimit;
     final defaultLabel = defaultLimit == null
@@ -716,7 +712,6 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
 
   // Sentinel to distinguish "not in map" from "in map with null" in local
   // comparison logic. Only used for chip selection logic in this widget.
-  static const _kUseDefaultSentinel = Object();
 
   void _setAllEpisodesOverride(
     StationEditController controller,
