@@ -106,6 +106,7 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
         ],
       ),
       body: SingleChildScrollView(
+        key: const PageStorageKey<String>('station_edit'),
         padding: const EdgeInsets.all(Spacing.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
