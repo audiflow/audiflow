@@ -843,7 +843,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String stationLatestN(int count) {
-    return '最新$count件';
+    return '最新$count話';
   }
 
   @override
