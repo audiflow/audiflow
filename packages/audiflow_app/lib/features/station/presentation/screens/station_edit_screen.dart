@@ -27,6 +27,7 @@ class StationEditScreen extends ConsumerStatefulWidget {
 class _StationEditScreenState extends ConsumerState<StationEditScreen> {
   late TextEditingController _nameController;
   late TextEditingController _minutesController;
+  final FocusNode _nameFocusNode = FocusNode();
   bool _nameInitialized = false;
   bool _isReorderMode = false;
   int? _expandedPodcastId;
@@ -36,12 +37,18 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
     super.initState();
     _nameController = TextEditingController();
     _minutesController = TextEditingController();
+    if (widget.stationId == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _nameFocusNode.requestFocus();
+      });
+    }
   }
 
   @override
   void dispose() {
     _nameController.dispose();
     _minutesController.dispose();
+    _nameFocusNode.dispose();
     super.dispose();
   }
 
@@ -149,6 +156,7 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
         const SizedBox(height: Spacing.xs),
         TextField(
           controller: _nameController,
+          focusNode: _nameFocusNode,
           maxLength: 50,
           maxLengthEnforcement: MaxLengthEnforcement.enforced,
           textCapitalization: TextCapitalization.none,
