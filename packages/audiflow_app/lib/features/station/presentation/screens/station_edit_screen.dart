@@ -515,16 +515,10 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
 
-    final sortLabel = switch (state.podcastSort) {
-      StationPodcastSort.subscribeAsc =>
-        '${l10n.stationPodcastSortSubscribeOld} ▼',
-      StationPodcastSort.subscribeDesc =>
-        '${l10n.stationPodcastSortSubscribeNew} ▼',
-      StationPodcastSort.nameAsc => '${l10n.stationPodcastSortNameAz} ▼',
-      StationPodcastSort.nameDesc => '${l10n.stationPodcastSortNameZa} ▼',
-      StationPodcastSort.manual =>
-        _isReorderMode ? l10n.stationReorderDone : l10n.stationReorder,
-    };
+    final isManual = state.podcastSort == StationPodcastSort.manual;
+    final sortLabel = _isReorderMode
+        ? l10n.stationReorderDone
+        : l10n.stationReorder;
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -536,13 +530,11 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
             letterSpacing: 1.2,
           ),
         ),
-        GestureDetector(
-          onLongPress: () => _onPodcastSortButtonLongPress(state, controller),
-          child: TextButton(
+        if (isManual)
+          TextButton(
             onPressed: () => _onPodcastSortButtonTap(state, controller),
             child: Text(sortLabel),
           ),
-        ),
       ],
     );
   }
@@ -560,17 +552,6 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
       // In manual mode (not reordering): enter reorder mode.
       setState(() => _isReorderMode = true);
       return;
-    }
-    _showPodcastSortSheet(state, controller);
-  }
-
-  void _onPodcastSortButtonLongPress(
-    StationEditState state,
-    StationEditController controller,
-  ) {
-    // Long press always opens the sort picker regardless of mode.
-    if (_isReorderMode) {
-      setState(() => _isReorderMode = false);
     }
     _showPodcastSortSheet(state, controller);
   }
