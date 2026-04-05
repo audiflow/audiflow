@@ -165,7 +165,7 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
   }
 
   String _episodeLimitLabel(AppLocalizations l10n, int count) =>
-      count == 1 ? l10n.stationLatestOnly : _episodeLimitLabel(l10n, count);
+      count == 1 ? l10n.stationLatestOnly : l10n.stationLatestN(count);
 
   Future<void> _onSave(StationEditController controller) async {
     controller.setName(_nameController.text);
