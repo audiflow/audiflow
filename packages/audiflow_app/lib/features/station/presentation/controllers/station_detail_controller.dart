@@ -16,9 +16,14 @@ Stream<List<StationEpisode>> stationEpisodes(Ref ref, int stationId) {
     loading: () => false,
     error: (_, _) => false,
   );
+  final grouped = station.when(
+    data: (s) => s?.groupByPodcast ?? false,
+    loading: () => false,
+    error: (_, _) => false,
+  );
   return ref
       .watch(stationEpisodeRepositoryProvider)
-      .watchByStation(stationId, ascending: ascending);
+      .watchByStation(stationId, ascending: ascending, grouped: grouped);
 }
 
 @riverpod
