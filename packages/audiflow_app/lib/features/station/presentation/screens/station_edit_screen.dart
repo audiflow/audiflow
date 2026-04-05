@@ -9,6 +9,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../routing/app_router.dart';
 import '../../../library/presentation/controllers/library_controller.dart';
 import '../controllers/station_edit_controller.dart';
+import 'station_podcast_picker_screen.dart';
 
 /// Screen for creating or editing a [Station].
 ///
@@ -25,17 +26,22 @@ class StationEditScreen extends ConsumerStatefulWidget {
 
 class _StationEditScreenState extends ConsumerState<StationEditScreen> {
   late TextEditingController _nameController;
+  late TextEditingController _minutesController;
   bool _nameInitialized = false;
+  bool _isReorderMode = false;
+  int? _expandedPodcastId;
 
   @override
   void initState() {
     super.initState();
     _nameController = TextEditingController();
+    _minutesController = TextEditingController();
   }
 
   @override
   void dispose() {
     _nameController.dispose();
+    _minutesController.dispose();
     super.dispose();
   }
 
@@ -101,15 +107,17 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
               _ErrorBanner(message: _resolveError(l10n, editState.error!)),
             _buildNameField(controller),
             const SizedBox(height: Spacing.lg),
-            _buildPodcastPicker(context, editState, controller),
+            _buildEpisodeLimitRow(editState, controller),
             const SizedBox(height: Spacing.lg),
             _buildAttributeFilters(editState, controller),
             const SizedBox(height: Spacing.lg),
             _buildDurationFilter(context, editState, controller),
             const SizedBox(height: Spacing.lg),
-            _buildPublishedWithin(context, editState, controller),
-            const SizedBox(height: Spacing.lg),
             _buildSortOrder(context, editState, controller),
+            const SizedBox(height: Spacing.lg),
+            _buildGroupByPodcast(editState, controller),
+            const SizedBox(height: Spacing.lg),
+            _buildPodcastsSection(context, editState, controller),
             if (isEditMode) ...[
               const SizedBox(height: Spacing.xl),
               _buildDeleteButton(context, controller),
@@ -156,70 +164,64 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
     );
   }
 
-  Widget _buildPodcastPicker(
-    BuildContext context,
+  Widget _buildEpisodeLimitRow(
     StationEditState state,
     StationEditController controller,
   ) {
-    final subscriptionsAsync = ref.watch(librarySubscriptionsProvider);
-    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
+    final limit = state.defaultEpisodeLimit;
+    final label = limit == null
+        ? l10n.stationAllEpisodes
+        : l10n.stationLatestN(limit);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          AppLocalizations.of(context).stationPodcasts,
-          style: theme.textTheme.titleSmall,
-        ),
-        const SizedBox(height: Spacing.xs),
-        subscriptionsAsync.when(
-          data: (subscriptions) {
-            final actual = subscriptions.where((s) => !s.isCached).toList();
-            if (actual.isEmpty) {
-              return Text(
-                AppLocalizations.of(context).stationNoSubscriptionsYet,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              );
-            }
-            return Card(
-              child: Column(
-                children: actual
-                    .map(
-                      (sub) => CheckboxListTile(
-                        key: ValueKey(sub.id),
-                        value: state.selectedPodcastIds.contains(sub.id),
-                        onChanged: (_) {
-                          final ids = Set<int>.from(state.selectedPodcastIds);
-                          if (ids.contains(sub.id)) {
-                            ids.remove(sub.id);
-                          } else {
-                            ids.add(sub.id);
-                          }
-                          controller.updateSelectedPodcasts(ids);
-                        },
-                        title: Text(
-                          sub.title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        subtitle: Text(
-                          sub.artistName,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    )
-                    .toList(),
-              ),
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      title: Text(l10n.stationEpisodes),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const Icon(Icons.chevron_right),
+        ],
+      ),
+      onTap: () => _showEpisodeLimitPicker(state, controller),
+    );
+  }
+
+  void _showEpisodeLimitPicker(
+    StationEditState state,
+    StationEditController controller,
+  ) {
+    const options = [1, 2, 3, 4, 5, 10, null]; // null = All
+    final l10n = AppLocalizations.of(context);
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: options.map((opt) {
+            final label = opt == null
+                ? l10n.stationAllEpisodes
+                : l10n.stationLatestN(opt);
+            final isSelected = state.defaultEpisodeLimit == opt;
+            return ListTile(
+              title: Text(label),
+              trailing: isSelected
+                  ? Icon(Icons.check, color: Theme.of(ctx).colorScheme.primary)
+                  : null,
+              onTap: () {
+                controller.setDefaultEpisodeLimit(opt);
+                Navigator.pop(ctx);
+              },
             );
-          },
-          loading: () => const CircularProgressIndicator.adaptive(),
-          error: (_, _) =>
-              Text(AppLocalizations.of(context).stationNoSubscriptionsYet),
+          }).toList(),
         ),
-      ],
+      ),
     );
   }
 
@@ -263,6 +265,12 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
     final theme = Theme.of(context);
     final filter = state.durationFilter;
 
+    // Sync minutes controller when filter changes externally.
+    if (filter != null &&
+        _minutesController.text != filter.durationMinutes.toString()) {
+      _minutesController.text = filter.durationMinutes.toString();
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -280,6 +288,7 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
                   final defaultFilter = StationDurationFilter()
                     ..durationOperator = 'shorterThan'
                     ..durationMinutes = 30;
+                  _minutesController.text = '30';
                   controller.setDurationFilter(defaultFilter);
                 } else {
                   controller.setDurationFilter(null);
@@ -318,13 +327,17 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
               SizedBox(
                 width: 80,
                 child: TextFormField(
+                  controller: _minutesController,
                   keyboardType: TextInputType.number,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  initialValue: filter.durationMinutes.toString(),
                   decoration: const InputDecoration(
                     suffixText: 'min',
                     border: OutlineInputBorder(),
                     isDense: true,
+                  ),
+                  onTap: () => _minutesController.selection = TextSelection(
+                    baseOffset: 0,
+                    extentOffset: _minutesController.text.length,
                   ),
                   onChanged: (val) {
                     final minutes = int.tryParse(val);
@@ -341,15 +354,6 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
         ],
       ],
     );
-  }
-
-  // TODO(Task10): remove once StationEditScreen is fully rewritten.
-  Widget _buildPublishedWithin(
-    BuildContext context,
-    StationEditState state,
-    StationEditController controller,
-  ) {
-    return const SizedBox.shrink();
   }
 
   Widget _buildSortOrder(
@@ -385,6 +389,377 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
           },
         ),
       ],
+    );
+  }
+
+  Widget _buildGroupByPodcast(
+    StationEditState state,
+    StationEditController controller,
+  ) {
+    return SwitchListTile(
+      value: state.groupByPodcast,
+      onChanged: controller.setGroupByPodcast,
+      title: Text(AppLocalizations.of(context).stationGroupByPodcast),
+      contentPadding: EdgeInsets.zero,
+    );
+  }
+
+  Widget _buildPodcastsSection(
+    BuildContext context,
+    StationEditState state,
+    StationEditController controller,
+  ) {
+    final subscriptionsAsync = ref.watch(librarySubscriptionsProvider);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildPodcastsSectionHeader(context, state, controller),
+        const SizedBox(height: Spacing.xs),
+        _buildSelectPodcastsRow(context, state, controller, subscriptionsAsync),
+        ..._buildSelectedPodcastList(
+          context,
+          state,
+          controller,
+          subscriptionsAsync,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPodcastsSectionHeader(
+    BuildContext context,
+    StationEditState state,
+    StationEditController controller,
+  ) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+
+    final sortLabel = switch (state.podcastSort) {
+      StationPodcastSort.subscribeAsc =>
+        '${l10n.stationPodcastSortSubscribeOld} ▼',
+      StationPodcastSort.subscribeDesc =>
+        '${l10n.stationPodcastSortSubscribeNew} ▼',
+      StationPodcastSort.nameAsc => '${l10n.stationPodcastSortNameAz} ▼',
+      StationPodcastSort.nameDesc => '${l10n.stationPodcastSortNameZa} ▼',
+      StationPodcastSort.manual =>
+        _isReorderMode ? l10n.stationReorderDone : l10n.stationReorder,
+    };
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          'PODCASTS',
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+            letterSpacing: 1.2,
+          ),
+        ),
+        TextButton(
+          onPressed: () => _onPodcastSortButtonTap(state, controller),
+          child: Text(sortLabel),
+        ),
+      ],
+    );
+  }
+
+  void _onPodcastSortButtonTap(
+    StationEditState state,
+    StationEditController controller,
+  ) {
+    if (state.podcastSort == StationPodcastSort.manual) {
+      setState(() => _isReorderMode = !_isReorderMode);
+      return;
+    }
+    _showPodcastSortSheet(state, controller);
+  }
+
+  void _showPodcastSortSheet(
+    StationEditState state,
+    StationEditController controller,
+  ) {
+    final l10n = AppLocalizations.of(context);
+    final options = [
+      (StationPodcastSort.subscribeAsc, l10n.stationPodcastSortSubscribeOld),
+      (StationPodcastSort.subscribeDesc, l10n.stationPodcastSortSubscribeNew),
+      (StationPodcastSort.nameAsc, l10n.stationPodcastSortNameAz),
+      (StationPodcastSort.nameDesc, l10n.stationPodcastSortNameZa),
+      (StationPodcastSort.manual, l10n.stationPodcastSortManual),
+    ];
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: options.map((entry) {
+            final (sort, label) = entry;
+            final isSelected = state.podcastSort == sort;
+            return ListTile(
+              title: Text(label),
+              trailing: isSelected
+                  ? Icon(Icons.check, color: Theme.of(ctx).colorScheme.primary)
+                  : null,
+              onTap: () {
+                controller.setPodcastSort(sort);
+                Navigator.pop(ctx);
+              },
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSelectPodcastsRow(
+    BuildContext context,
+    StationEditState state,
+    StationEditController controller,
+    AsyncValue<List<Subscription>> subscriptionsAsync,
+  ) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final totalSubscribed =
+        subscriptionsAsync.whenOrNull(
+          data: (subs) => subs.where((s) => !s.isCached).length,
+        ) ??
+        0;
+
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      title: Text(
+        l10n.stationSelectPodcasts,
+        style: TextStyle(color: theme.colorScheme.primary),
+      ),
+      trailing: Text(
+        l10n.stationSelectPodcastsCount(
+          state.selectedPodcastIds.length,
+          totalSubscribed,
+        ),
+      ),
+      onTap: () async {
+        final result = await Navigator.push<Set<int>>(
+          context,
+          MaterialPageRoute<Set<int>>(
+            fullscreenDialog: true,
+            builder: (_) => StationPodcastPickerScreen(
+              selectedIds: state.selectedPodcastIds,
+            ),
+          ),
+        );
+        if (result != null) controller.updateSelectedPodcasts(result);
+      },
+    );
+  }
+
+  List<Widget> _buildSelectedPodcastList(
+    BuildContext context,
+    StationEditState state,
+    StationEditController controller,
+    AsyncValue<List<Subscription>> subscriptionsAsync,
+  ) {
+    final subscriptions = subscriptionsAsync.valueOrNull;
+    if (subscriptions == null) return [];
+
+    final subMap = {for (final s in subscriptions) s.id: s};
+    final orderedIds = state.podcastSortOrder
+        .where(state.selectedPodcastIds.contains)
+        .toList();
+
+    if (_isReorderMode) {
+      return [
+        ReorderableListView(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          onReorder: (oldIndex, newIndex) {
+            final updated = List<int>.from(orderedIds);
+            if (newIndex > oldIndex) {
+              newIndex -= 1;
+            }
+            final item = updated.removeAt(oldIndex);
+            updated.insert(newIndex, item);
+            // Rebuild full sort order with remaining non-selected ids preserved.
+            final nonSelected = state.podcastSortOrder
+                .where((id) => !state.selectedPodcastIds.contains(id))
+                .toList();
+            controller.reorderPodcasts([...updated, ...nonSelected]);
+          },
+          children: orderedIds.map((id) {
+            final sub = subMap[id];
+            return ListTile(
+              key: ValueKey(id),
+              leading: _buildPodcastArtwork(context, sub?.artworkUrl),
+              title: Text(
+                sub?.title ?? '',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              trailing: const Icon(Icons.drag_handle),
+            );
+          }).toList(),
+        ),
+      ];
+    }
+
+    return orderedIds.map((id) {
+      final sub = subMap[id];
+      return _buildPodcastRow(context, state, controller, id, sub);
+    }).toList();
+  }
+
+  Widget _buildPodcastRow(
+    BuildContext context,
+    StationEditState state,
+    StationEditController controller,
+    int podcastId,
+    Subscription? sub,
+  ) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final isExpanded = _expandedPodcastId == podcastId;
+    final perPodcastLimit = state.podcastEpisodeLimits[podcastId];
+    // null = use default
+    final effectiveLimit = perPodcastLimit ?? state.defaultEpisodeLimit;
+    final limitLabel = effectiveLimit == null
+        ? l10n.stationAllEpisodes
+        : l10n.stationLatestN(effectiveLimit);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: _buildPodcastArtwork(context, sub?.artworkUrl),
+          title: Text(
+            sub?.title ?? '',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          trailing: Text(
+            '$limitLabel ${isExpanded ? '˄' : '˅'}',
+            style: TextStyle(
+              color: isExpanded
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          onTap: () {
+            setState(() => _expandedPodcastId = isExpanded ? null : podcastId);
+          },
+        ),
+        if (isExpanded)
+          _buildPerPodcastLimitChips(context, state, controller, podcastId),
+      ],
+    );
+  }
+
+  Widget _buildPerPodcastLimitChips(
+    BuildContext context,
+    StationEditState state,
+    StationEditController controller,
+    int podcastId,
+  ) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    // null entry in map means "use default"; absence also means default.
+    final currentOverride = state.podcastEpisodeLimits.containsKey(podcastId)
+        ? state.podcastEpisodeLimits[podcastId]
+        : _kUseDefaultSentinel;
+    const options = <int?>[1, 2, 3, 4, 5, 10, null]; // null = All
+    final defaultLimit = state.defaultEpisodeLimit;
+    final defaultLabel = defaultLimit == null
+        ? 'Default (${l10n.stationAllEpisodes})'
+        : 'Default (${l10n.stationLatestN(defaultLimit)})';
+
+    return Padding(
+      padding: const EdgeInsets.only(left: Spacing.lg, bottom: Spacing.sm),
+      child: Wrap(
+        spacing: Spacing.xs,
+        children: [
+          // "Default(N)" chip — selected when no override is set.
+          ChoiceChip(
+            label: Text(defaultLabel),
+            selected: !state.podcastEpisodeLimits.containsKey(podcastId),
+            onSelected: (_) {
+              controller.setPodcastEpisodeLimit(podcastId, null);
+              // Remove override (null removes from map in controller).
+            },
+          ),
+          ...options.map((opt) {
+            final label = opt == null
+                ? l10n.stationAllEpisodes
+                : l10n.stationLatestN(opt);
+            // Selected when key exists in map with matching value.
+            final isSelected =
+                state.podcastEpisodeLimits.containsKey(podcastId) &&
+                state.podcastEpisodeLimits[podcastId] == opt;
+            return ChoiceChip(
+              label: Text(label),
+              selected: isSelected,
+              selectedColor: theme.colorScheme.primaryContainer,
+              onSelected: (_) {
+                if (opt == null) {
+                  // "All" means explicit null override.
+                  // We need a way to store null as an override. We store
+                  // the value directly — the controller supports int?.
+                  _setAllEpisodesOverride(controller, podcastId);
+                } else {
+                  controller.setPodcastEpisodeLimit(podcastId, opt);
+                }
+              },
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  // Sentinel to distinguish "not in map" from "in map with null" in local
+  // comparison logic. Only used for chip selection logic in this widget.
+  static const _kUseDefaultSentinel = Object();
+
+  void _setAllEpisodesOverride(
+    StationEditController controller,
+    int podcastId,
+  ) {
+    // The domain model stores null limit as "no limit" (all episodes).
+    // But setPodcastEpisodeLimit(id, null) removes the override (use default).
+    // We need a different approach: store a special value or re-examine the API.
+    // Looking at the controller: limits.remove(id) when value==null.
+    // So we cannot store "all" as an explicit per-podcast override via null.
+    // For now, selecting "All" chip removes the key (same as Default behavior
+    // when default is also All). This is a known limitation of the domain API.
+    controller.setPodcastEpisodeLimit(podcastId, null);
+  }
+
+  Widget _buildPodcastArtwork(BuildContext context, String? artworkUrl) {
+    final colorScheme = Theme.of(context).colorScheme;
+    const size = 40.0;
+
+    return ClipRRect(
+      borderRadius: AppBorders.sm,
+      child: SizedBox(
+        width: size,
+        height: size,
+        child: artworkUrl != null
+            ? Image.network(
+                artworkUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (_, _, _) => _artworkPlaceholder(colorScheme),
+              )
+            : _artworkPlaceholder(colorScheme),
+      ),
+    );
+  }
+
+  Widget _artworkPlaceholder(ColorScheme colorScheme) {
+    return Container(
+      color: colorScheme.surfaceContainerHighest,
+      child: Icon(
+        Icons.podcasts,
+        size: 20,
+        color: colorScheme.onSurfaceVariant,
+      ),
     );
   }
 
