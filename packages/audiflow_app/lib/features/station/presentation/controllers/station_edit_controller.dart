@@ -130,8 +130,15 @@ class StationEditController extends _$StationEditController {
   void setGroupByPodcast(bool value) =>
       state = state.copyWith(groupByPodcast: value);
 
-  void setPodcastSort(StationPodcastSort value) =>
-      state = state.copyWith(podcastSort: value);
+  /// Updates the podcast sort mode and recomputes [podcastSortOrder] to
+  /// reflect the new mode immediately, so the edit screen shows the correct
+  /// ordering before save.
+  Future<void> setPodcastSort(StationPodcastSort value) async {
+    state = state.copyWith(podcastSort: value);
+    if (value == StationPodcastSort.manual) return;
+    final resolved = await _resolvedPodcastOrder();
+    state = state.copyWith(podcastSortOrder: resolved);
+  }
 
   /// Sets a per-podcast episode limit override.
   ///
@@ -164,8 +171,9 @@ class StationEditController extends _$StationEditController {
     // Remove de-selected podcasts from sort order.
     currentOrder.removeWhere(removed.contains);
 
-    // Prepend newly selected podcasts (top of list).
-    final newlyAdded = added.toList();
+    // Prepend newly selected podcasts sorted by id (subscription order)
+    // to avoid arbitrary Set iteration order.
+    final newlyAdded = added.toList()..sort();
     currentOrder.insertAll(0, newlyAdded);
 
     // Safety: ensure every selected podcast appears in the order list.
