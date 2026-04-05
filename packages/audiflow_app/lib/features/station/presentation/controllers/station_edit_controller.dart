@@ -56,6 +56,10 @@ sealed class StationEditState with _$StationEditState {
 
 @riverpod
 class StationEditController extends _$StationEditController {
+  /// Saved manual podcast order, preserved when switching to automatic
+  /// sort modes so it can be restored when switching back to manual.
+  List<int>? _savedManualOrder;
+
   @override
   StationEditState build(int? stationId) {
     if (stationId != null) {
@@ -133,9 +137,24 @@ class StationEditController extends _$StationEditController {
   /// Updates the podcast sort mode and recomputes [podcastSortOrder] to
   /// reflect the new mode immediately, so the edit screen shows the correct
   /// ordering before save.
+  ///
+  /// When leaving manual mode, the current manual order is preserved so it
+  /// can be restored if the user switches back to manual.
   Future<void> setPodcastSort(StationPodcastSort value) async {
+    // Save manual order before switching away from it.
+    if (state.podcastSort == StationPodcastSort.manual &&
+        value != StationPodcastSort.manual) {
+      _savedManualOrder = List<int>.from(state.podcastSortOrder);
+    }
     state = state.copyWith(podcastSort: value);
-    if (value == StationPodcastSort.manual) return;
+    if (value == StationPodcastSort.manual) {
+      // Restore previously saved manual order if available.
+      if (_savedManualOrder != null) {
+        state = state.copyWith(podcastSortOrder: _savedManualOrder!);
+        _savedManualOrder = null;
+      }
+      return;
+    }
     final resolved = await _resolvedPodcastOrder();
     state = state.copyWith(podcastSortOrder: resolved);
   }

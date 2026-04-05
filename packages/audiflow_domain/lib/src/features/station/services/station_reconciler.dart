@@ -297,7 +297,8 @@ class StationReconciler {
 
   /// Evaluates whether an episode matches all station attribute filter
   /// conditions (hideCompleted, filterDownloaded, filterFavorited,
-  /// durationFilter). Count-based limiting is handled separately.
+  /// durationFilter, publishedWithinDays). Count-based limiting is handled
+  /// separately.
   Future<bool> _matchesConditions(Episode episode, Station station) async {
     if (station.hideCompleted && await _isCompleted(episode.id)) {
       return false;
@@ -310,6 +311,15 @@ class StationReconciler {
     }
     if (station.durationFilter != null) {
       if (!_matchesDuration(episode, station.durationFilter!)) return false;
+    }
+    // Backward compatibility: honor legacy publishedWithinDays for stations
+    // created before the v2 count-based limiting migration.
+    if (station.publishedWithinDays != null) {
+      final cutoff = DateTime.now().subtract(
+        Duration(days: station.publishedWithinDays!),
+      );
+      final publishedAt = episode.publishedAt;
+      if (publishedAt == null || publishedAt.isBefore(cutoff)) return false;
     }
     return true;
   }
