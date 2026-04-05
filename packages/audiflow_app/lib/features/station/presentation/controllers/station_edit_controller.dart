@@ -191,8 +191,8 @@ class StationEditController extends _$StationEditController {
     // Remove de-selected podcasts from sort order.
     currentOrder.removeWhere(removed.contains);
 
-    // Prepend newly selected podcasts sorted by id (subscription order)
-    // to avoid arbitrary Set iteration order.
+    // Prepend newly selected podcasts in ascending id order to keep the
+    // result deterministic and avoid arbitrary Set iteration order.
     final newlyAdded = added.toList()..sort();
     currentOrder.insertAll(0, newlyAdded);
 

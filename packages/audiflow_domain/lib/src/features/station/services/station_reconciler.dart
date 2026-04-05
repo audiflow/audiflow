@@ -223,15 +223,16 @@ class StationReconciler {
   ) async {
     if (limit == null) return true;
 
-    // Fetch the top N episode IDs using the same sort as reconcileFull.
-    final topN = await _isar.episodes
+    // Fetch only IDs for the top N episodes to avoid deserializing full
+    // Episode objects on the incremental reconcile path.
+    final topNIds = await _isar.episodes
         .filter()
         .podcastIdEqualTo(podcastId)
         .sortByPublishedAtDesc()
         .thenByGuidDesc()
         .limit(limit)
+        .idProperty()
         .findAll();
-    final topNIds = topN.map((e) => e.id).toSet();
 
     return topNIds.contains(episode.id);
   }
