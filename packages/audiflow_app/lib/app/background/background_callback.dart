@@ -1,19 +1,42 @@
+import 'dart:developer' as developer;
+
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:isar_community/isar.dart';
 import 'package:logger/logger.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workmanager/workmanager.dart';
 
+import 'background_settings_repository.dart';
 import 'background_task_registrar.dart';
+
+// Temporary diagnostic helper for background refresh Sentry investigation.
+// Remove once the issue is resolved.
+void _bgDebug(String message) {
+  if (!kDebugMode) return;
+  final stamped = '[BG-DEBUG ${DateTime.now().toIso8601String()}] $message';
+  debugPrint(stamped);
+  developer.log(stamped, name: 'BackgroundRefresh');
+}
 
 @pragma('vm:entry-point')
 void backgroundCallback() {
   Workmanager().executeTask((taskName, inputData) async {
-    if (taskName != BackgroundTaskRegistrar.taskName) return true;
+    // Ensure platform channels are available in the background isolate.
+    // Without this, plugins that use platform channels (Isar, connectivity_plus,
+    // path_provider, etc.) fail with "Unable to establish connection on channel"
+    // errors.
+    WidgetsFlutterBinding.ensureInitialized();
+
+    _bgDebug('executeTask called — taskName=$taskName');
+    if (taskName != BackgroundTaskRegistrar.taskName) {
+      _bgDebug('taskName mismatch, returning true');
+      return true;
+    }
 
     final logger = Logger(
       printer: PrefixPrinter(PrettyPrinter(methodCount: 0)),
@@ -29,15 +52,24 @@ void backgroundCallback() {
         'SENTRY_ENVIRONMENT',
         defaultValue: 'unknown',
       );
+      _bgDebug(
+        'SENTRY_DSN isEmpty=${sentryDsn.isEmpty}, '
+        'env=$sentryEnvironment',
+      );
       if (sentryDsn.isNotEmpty) {
         await Sentry.init((options) {
           options.dsn = sentryDsn;
           options.tracesSampleRate = 0;
           options.environment = sentryEnvironment;
+          options.debug = kDebugMode;
         });
         sentryInitialized = true;
+        _bgDebug('Sentry.init succeeded');
+      } else {
+        _bgDebug('SENTRY_DSN is empty — Sentry will NOT initialize');
       }
     } catch (e, stack) {
+      _bgDebug('Sentry.init FAILED: $e');
       logger.w(
         'Sentry init failed, continuing without telemetry',
         error: e,
@@ -67,9 +99,7 @@ void backgroundCallback() {
         );
       }
 
-      final prefs = await SharedPreferences.getInstance();
-      final ds = SharedPreferencesDataSource(prefs);
-      final settingsRepo = AppSettingsRepositoryImpl(ds);
+      final settingsRepo = BackgroundSettingsRepository(inputData);
 
       if (settingsRepo.getWifiOnlySync()) {
         final connectivityResult = await Connectivity().checkConnectivity();
@@ -185,7 +215,9 @@ void backgroundCallback() {
         logger: logger,
       );
 
+      _bgDebug('calling refreshService.execute()');
       await refreshService.execute();
+      _bgDebug('refreshService.execute() completed');
 
       if (sentryInitialized) {
         Sentry.addBreadcrumb(
@@ -196,6 +228,7 @@ void backgroundCallback() {
         );
       }
     } catch (e, stack) {
+      _bgDebug('background refresh FAILED: $e');
       logger.e('Background refresh failed', error: e, stackTrace: stack);
       if (sentryInitialized) {
         await Sentry.captureException(e, stackTrace: stack);
@@ -206,8 +239,11 @@ void backgroundCallback() {
         await isar.close();
       }
       if (sentryInitialized) {
+        _bgDebug('calling Sentry.close()');
         await Sentry.close();
+        _bgDebug('Sentry.close() done');
       }
+      _bgDebug('background callback finished');
     }
 
     return true;

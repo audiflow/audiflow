@@ -28,9 +28,9 @@ class _FeedSyncSettingsScreenState
     await _updateBackgroundRegistration(repo, replaceExisting: replaceExisting);
   }
 
-  // Use [replaceExisting] true only when the scheduling parameters change
-  // (interval, wifi-only). Passing true resets the periodic task timer,
-  // which would perpetually delay execution if called on every settings change.
+  // Use [replaceExisting] true when the scheduling parameters or background
+  // behavior settings change (interval, wifi-only, notifications). Passing
+  // true resets the periodic task timer, so avoid it for cosmetic changes.
   Future<void> _updateBackgroundRegistration(
     AppSettingsRepository repo, {
     bool replaceExisting = false,
@@ -39,6 +39,7 @@ class _FeedSyncSettingsScreenState
       await BackgroundTaskRegistrar.register(
         intervalMinutes: repo.getSyncIntervalMinutes(),
         wifiOnly: repo.getWifiOnlySync(),
+        inputData: BackgroundTaskRegistrar.buildInputData(repo),
         replaceExisting: replaceExisting,
       );
     } else {
@@ -51,13 +52,21 @@ class _FeedSyncSettingsScreenState
     bool enabled,
   ) async {
     if (!enabled) {
-      await _update(repo, () => repo.setNotifyNewEpisodes(false));
+      await _update(
+        repo,
+        () => repo.setNotifyNewEpisodes(false),
+        replaceExisting: true,
+      );
       return;
     }
 
     final status = await Permission.notification.status;
     if (status.isGranted) {
-      await _update(repo, () => repo.setNotifyNewEpisodes(true));
+      await _update(
+        repo,
+        () => repo.setNotifyNewEpisodes(true),
+        replaceExisting: true,
+      );
       return;
     }
 
@@ -89,7 +98,11 @@ class _FeedSyncSettingsScreenState
 
     final result = await Permission.notification.request();
     if (result.isGranted) {
-      await _update(repo, () => repo.setNotifyNewEpisodes(true));
+      await _update(
+        repo,
+        () => repo.setNotifyNewEpisodes(true),
+        replaceExisting: true,
+      );
     }
   }
 

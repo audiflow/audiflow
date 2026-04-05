@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -48,14 +49,27 @@ Future<void> appMain({
   const sentryEnvironment = String.fromEnvironment('SENTRY_ENVIRONMENT');
 
   if (flavorConfig.enableCrashReporting && sentryDsn.isNotEmpty) {
-    await SentryFlutter.init((options) {
-      options.dsn = sentryDsn;
-      options.environment = sentryEnvironment.isNotEmpty
-          ? sentryEnvironment
-          : flavor.name;
-      options.tracesSampleRate = 0;
-    }, appRunner: () => _startApp(smartPlaylistConfigBaseUrl));
+    await SentryFlutter.init(
+      (options) {
+        options.dsn = sentryDsn;
+        options.environment = sentryEnvironment.isNotEmpty
+            ? sentryEnvironment
+            : flavor.name;
+        options.tracesSampleRate = 0;
+        options.debug = kDebugMode;
+      },
+      appRunner: () async {
+        await _startApp(smartPlaylistConfigBaseUrl);
+      },
+    );
   } else {
+    if (kDebugMode) {
+      debugPrint(
+        '[SENTRY-DIAG] Sentry SKIPPED — '
+        'enableCrashReporting=${flavorConfig.enableCrashReporting}, '
+        'dsnEmpty=${sentryDsn.isEmpty}',
+      );
+    }
     await _startApp(smartPlaylistConfigBaseUrl);
   }
 }
@@ -142,6 +156,7 @@ Future<void> _startApp(String smartPlaylistConfigBaseUrl) async {
       await BackgroundTaskRegistrar.register(
         intervalMinutes: settingsRepo.getSyncIntervalMinutes(),
         wifiOnly: settingsRepo.getWifiOnlySync(),
+        inputData: BackgroundTaskRegistrar.buildInputData(settingsRepo),
       );
     }
   } catch (e, stack) {
