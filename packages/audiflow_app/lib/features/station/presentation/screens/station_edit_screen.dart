@@ -32,9 +32,12 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
   bool _isReorderMode = false;
   int? _expandedPodcastId;
 
+  /// Whether the initial auto-focus has been consumed.
+  /// After this, only user taps may focus the name field.
   bool _autoFocusConsumed = false;
+
+  /// Set to true by TextField.onTap before the focus listener fires.
   bool _nameTappedByUser = false;
-  bool _rejectingFocus = false;
 
   @override
   void initState() {
@@ -52,22 +55,21 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
   }
 
   void _guardNameFocus() {
-    if (_rejectingFocus) return;
     if (!_nameFocusNode.hasFocus) {
       if (!_autoFocusConsumed) _autoFocusConsumed = true;
       return;
     }
-    if (!_autoFocusConsumed) return;
+    // Focus gained — check if it's allowed.
+    if (!_autoFocusConsumed) return; // initial auto-focus, allow
     if (_nameTappedByUser) {
       _nameTappedByUser = false;
-      return;
+      return; // user tapped, allow
     }
-    _rejectingFocus = true;
+    // Unwanted focus restoration (e.g., modal dismiss) — reject.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted && _nameFocusNode.hasFocus) {
         _nameFocusNode.unfocus();
       }
-      _rejectingFocus = false;
     });
   }
 
