@@ -40,7 +40,7 @@ void main() {
     bool filterDownloaded = false,
     bool filterFavorited = false,
     StationDurationFilter? durationFilter,
-    int? publishedWithinDays,
+    int? defaultEpisodeLimit,
   }) async {
     final station = Station()
       ..name = 'Test Station'
@@ -48,20 +48,27 @@ void main() {
       ..filterDownloaded = filterDownloaded
       ..filterFavorited = filterFavorited
       ..durationFilter = durationFilter
-      ..publishedWithinDays = publishedWithinDays
+      ..defaultEpisodeLimit = defaultEpisodeLimit
       ..createdAt = DateTime(2026, 1, 1)
       ..updatedAt = DateTime(2026, 1, 1);
     await isar.writeTxn(() => isar.stations.put(station));
     return station.id;
   }
 
-  Future<void> linkPodcast(int stationId, int podcastId) async {
+  Future<void> linkPodcast(
+    int stationId,
+    int podcastId, {
+    int? episodeLimit,
+    int sortOrder = 0,
+  }) async {
     await isar.writeTxn(
       () => isar.stationPodcasts.put(
         StationPodcast()
           ..stationId = stationId
           ..podcastId = podcastId
-          ..addedAt = DateTime(2026, 1, 1),
+          ..addedAt = DateTime(2026, 1, 1)
+          ..episodeLimit = episodeLimit
+          ..sortOrder = sortOrder,
       ),
     );
   }
@@ -97,6 +104,14 @@ void main() {
           ..positionMs = positionMs
           ..completedAt = completedAt,
       ),
+    );
+  }
+
+  Future<void> markCompleted(int episodeId) async {
+    await putPlaybackHistory(
+      episodeId: episodeId,
+      positionMs: 5000,
+      completedAt: DateTime(2026, 3, 1),
     );
   }
 
@@ -206,78 +221,6 @@ void main() {
       check(ids).deepEquals([epShort]);
     });
 
-    test('publishedWithin filter keeps only recent episodes', () async {
-      final stationId = await putStation(publishedWithinDays: 7);
-      await linkPodcast(stationId, 1);
-
-      final epRecent = await putEpisode(
-        podcastId: 1,
-        guid: 'recent',
-        publishedAt: DateTime.now().subtract(const Duration(days: 3)),
-      );
-      await putEpisode(
-        podcastId: 1,
-        guid: 'old',
-        publishedAt: DateTime.now().subtract(const Duration(days: 30)),
-      );
-      await putEpisode(podcastId: 1, guid: 'null-date');
-
-      await reconciler.reconcileFull(stationId);
-
-      final ids = await stationEpisodeIds(stationId);
-      check(ids).deepEquals([epRecent]);
-    });
-
-    test('combined filters require ALL conditions to match', () async {
-      final stationId = await putStation(
-        hideCompleted: true,
-        filterDownloaded: true,
-        publishedWithinDays: 30,
-      );
-      await linkPodcast(stationId, 1);
-
-      // Matches all: unplayed, downloaded, recent
-      final epMatch = await putEpisode(
-        podcastId: 1,
-        guid: 'match',
-        publishedAt: DateTime.now().subtract(const Duration(days: 5)),
-      );
-      await putDownloadTask(episodeId: epMatch);
-
-      // Downloaded + recent, but played
-      final epPlayed = await putEpisode(
-        podcastId: 1,
-        guid: 'played',
-        publishedAt: DateTime.now().subtract(const Duration(days: 2)),
-      );
-      await putDownloadTask(episodeId: epPlayed);
-      await putPlaybackHistory(
-        episodeId: epPlayed,
-        positionMs: 1000,
-        completedAt: DateTime(2026, 3, 1),
-      );
-
-      // Unplayed + recent, but not downloaded
-      await putEpisode(
-        podcastId: 1,
-        guid: 'not-downloaded',
-        publishedAt: DateTime.now().subtract(const Duration(days: 1)),
-      );
-
-      // Unplayed + downloaded, but too old
-      final epOld = await putEpisode(
-        podcastId: 1,
-        guid: 'old',
-        publishedAt: DateTime.now().subtract(const Duration(days: 60)),
-      );
-      await putDownloadTask(episodeId: epOld);
-
-      await reconciler.reconcileFull(stationId);
-
-      final ids = await stationEpisodeIds(stationId);
-      check(ids).deepEquals([epMatch]);
-    });
-
     test('empty station with no podcasts produces no entries', () async {
       final stationId = await putStation();
 
@@ -370,76 +313,9 @@ void main() {
       check(secondEntries.first.id).equals(firstRowId);
       check(secondEntries.first.episodeId).equals(epId);
     });
-
-    test('aged-out episodes are removed on re-reconcile', () async {
-      final stationId = await putStation(publishedWithinDays: 7);
-      await linkPodcast(stationId, 1);
-
-      // Episode within window
-      final epRecent = await putEpisode(
-        podcastId: 1,
-        guid: 'recent',
-        publishedAt: DateTime.now().subtract(const Duration(days: 3)),
-      );
-      // Episode at border — 6 days ago should be within window
-      final epBorder = await putEpisode(
-        podcastId: 1,
-        guid: 'border',
-        publishedAt: DateTime.now().subtract(const Duration(days: 6)),
-      );
-      // Episode just outside — 8 days ago
-      await putEpisode(
-        podcastId: 1,
-        guid: 'old',
-        publishedAt: DateTime.now().subtract(const Duration(days: 8)),
-      );
-
-      await reconciler.reconcileFull(stationId);
-      check(
-        await stationEpisodeIds(stationId),
-      ).unorderedEquals([epRecent, epBorder]);
-
-      // Simulate time passing: manually insert the border episode
-      // as if it aged out by re-creating with older publishedAt.
-      await isar.writeTxn(() async {
-        final ep = (await isar.episodes.get(epBorder))!;
-        ep.publishedAt = DateTime.now().subtract(const Duration(days: 10));
-        await isar.episodes.put(ep);
-      });
-
-      await reconciler.reconcileFull(stationId);
-
-      // Only the recent episode should remain
-      check(await stationEpisodeIds(stationId)).deepEquals([epRecent]);
-    });
   });
 
   group('DB-level pre-filtering', () {
-    test('publishedWithinDays skips old episodes at query level', () async {
-      final stationId = await putStation(publishedWithinDays: 7);
-      await linkPodcast(stationId, 1);
-
-      // Old episodes that should be skipped by DB pre-filter
-      for (var i = 0; i < 10; i++) {
-        await putEpisode(
-          podcastId: 1,
-          guid: 'old-$i',
-          publishedAt: DateTime.now().subtract(Duration(days: 30 + i)),
-        );
-      }
-
-      // One recent episode
-      final epRecent = await putEpisode(
-        podcastId: 1,
-        guid: 'recent',
-        publishedAt: DateTime.now().subtract(const Duration(days: 1)),
-      );
-
-      await reconciler.reconcileFull(stationId);
-
-      check(await stationEpisodeIds(stationId)).deepEquals([epRecent]);
-    });
-
     test('filterFavorited skips non-favorited at query level', () async {
       final stationId = await putStation(filterFavorited: true);
       await linkPodcast(stationId, 1);
@@ -476,75 +352,149 @@ void main() {
 
       check(await stationEpisodeIds(stationId)).deepEquals([epLong]);
     });
+  });
 
-    test('combined pre-filters narrow candidates correctly', () async {
-      final durationFilter = StationDurationFilter()
-        ..durationOperator = 'shorterThan'
-        ..durationMinutes = 30;
-      final stationId = await putStation(
-        filterFavorited: true,
-        durationFilter: durationFilter,
-        publishedWithinDays: 7,
-      );
+  group('count-based episode limiting', () {
+    test('limits episodes per podcast using station default', () async {
+      final stationId = await putStation(defaultEpisodeLimit: 2);
       await linkPodcast(stationId, 1);
-
-      // Matches all: favorited, short, recent
-      final epMatch = await putEpisode(
-        podcastId: 1,
-        guid: 'match',
-        isFavorited: true,
-        durationMs: 10 * 60 * 1000,
-        publishedAt: DateTime.now().subtract(const Duration(days: 1)),
-      );
-
-      // Favorited + short but old
-      await putEpisode(
-        podcastId: 1,
-        guid: 'old-fav',
-        isFavorited: true,
-        durationMs: 10 * 60 * 1000,
-        publishedAt: DateTime.now().subtract(const Duration(days: 30)),
-      );
-
-      // Favorited + recent but long
-      await putEpisode(
-        podcastId: 1,
-        guid: 'long-fav',
-        isFavorited: true,
-        durationMs: 60 * 60 * 1000,
-        publishedAt: DateTime.now().subtract(const Duration(days: 1)),
-      );
-
-      // Short + recent but not favorited
-      await putEpisode(
-        podcastId: 1,
-        guid: 'short-not-fav',
-        durationMs: 10 * 60 * 1000,
-        publishedAt: DateTime.now().subtract(const Duration(days: 1)),
-      );
-
+      for (var i = 0; i < 4; i++) {
+        await putEpisode(
+          podcastId: 1,
+          guid: 'ep-$i',
+          publishedAt: DateTime(2026, 4, 1).add(Duration(days: i)),
+        );
+      }
       await reconciler.reconcileFull(stationId);
-
-      check(await stationEpisodeIds(stationId)).deepEquals([epMatch]);
+      final results = await isar.stationEpisodes
+          .filter()
+          .stationIdEqualTo(stationId)
+          .findAll();
+      check(results.length).equals(2);
     });
 
-    test('null publishedAt excluded when publishedWithinDays set', () async {
-      final stationId = await putStation(publishedWithinDays: 7);
+    test('per-podcast episodeLimit overrides station default', () async {
+      final stationId = await putStation(defaultEpisodeLimit: 1);
+      await linkPodcast(stationId, 1, episodeLimit: 3);
+      for (var i = 0; i < 5; i++) {
+        await putEpisode(
+          podcastId: 1,
+          guid: 'ep-$i',
+          publishedAt: DateTime(2026, 4, 1).add(Duration(days: i)),
+        );
+      }
+      await reconciler.reconcileFull(stationId);
+      final results = await isar.stationEpisodes
+          .filter()
+          .stationIdEqualTo(stationId)
+          .findAll();
+      check(results.length).equals(3);
+    });
+
+    test('null limit includes all episodes', () async {
+      final stationId = await putStation(defaultEpisodeLimit: null);
       await linkPodcast(stationId, 1);
+      for (var i = 0; i < 10; i++) {
+        await putEpisode(
+          podcastId: 1,
+          guid: 'ep-$i',
+          publishedAt: DateTime(2026, 4, 1).add(Duration(days: i)),
+        );
+      }
+      await reconciler.reconcileFull(stationId);
+      final results = await isar.stationEpisodes
+          .filter()
+          .stationIdEqualTo(stationId)
+          .findAll();
+      check(results.length).equals(10);
+    });
 
-      // Episode without publishedAt
-      await putEpisode(podcastId: 1, guid: 'no-date');
-
-      // Episode with recent date
-      final epRecent = await putEpisode(
+    test('count limit applied before attribute filters', () async {
+      final stationId = await putStation(
+        defaultEpisodeLimit: 3,
+        hideCompleted: true,
+      );
+      await linkPodcast(stationId, 1);
+      await putEpisode(
         podcastId: 1,
-        guid: 'recent',
-        publishedAt: DateTime.now().subtract(const Duration(days: 1)),
+        guid: 'old',
+        publishedAt: DateTime(2026, 4, 1),
+      );
+      await putEpisode(
+        podcastId: 1,
+        guid: 'mid',
+        publishedAt: DateTime(2026, 4, 2),
+      );
+      final epCompleted = await putEpisode(
+        podcastId: 1,
+        guid: 'new-completed',
+        publishedAt: DateTime(2026, 4, 3),
+      );
+      await putEpisode(
+        podcastId: 1,
+        guid: 'newest',
+        publishedAt: DateTime(2026, 4, 4),
+      );
+      await markCompleted(epCompleted);
+
+      await reconciler.reconcileFull(stationId);
+      final results = await isar.stationEpisodes
+          .filter()
+          .stationIdEqualTo(stationId)
+          .findAll();
+      // Latest 3 = newest, new-completed, mid. new-completed filtered by
+      // hideCompleted. 2 remain.
+      check(results.length).equals(2);
+    });
+
+    test('multiple podcasts with different limits', () async {
+      final stationId = await putStation(defaultEpisodeLimit: 2);
+      await linkPodcast(stationId, 1);
+      await linkPodcast(stationId, 2, episodeLimit: 1);
+      for (var i = 0; i < 3; i++) {
+        await putEpisode(
+          podcastId: 1,
+          guid: 'p1-$i',
+          publishedAt: DateTime(2026, 4, 1).add(Duration(days: i)),
+        );
+        await putEpisode(
+          podcastId: 2,
+          guid: 'p2-$i',
+          publishedAt: DateTime(2026, 4, 1).add(Duration(days: i)),
+        );
+      }
+      await reconciler.reconcileFull(stationId);
+      final results = await isar.stationEpisodes
+          .filter()
+          .stationIdEqualTo(stationId)
+          .findAll();
+      check(results.length).equals(3); // 2 from p1, 1 from p2
+    });
+
+    test('podcastSortKey populated from StationPodcast.sortOrder', () async {
+      final stationId = await putStation(defaultEpisodeLimit: 1);
+      await linkPodcast(stationId, 1, sortOrder: 0);
+      await linkPodcast(stationId, 2, sortOrder: 1);
+      await putEpisode(
+        podcastId: 1,
+        guid: 'p1',
+        publishedAt: DateTime(2026, 4, 5),
+      );
+      await putEpisode(
+        podcastId: 2,
+        guid: 'p2',
+        publishedAt: DateTime(2026, 4, 5),
       );
 
       await reconciler.reconcileFull(stationId);
-
-      check(await stationEpisodeIds(stationId)).deepEquals([epRecent]);
+      final results = await isar.stationEpisodes
+          .filter()
+          .stationIdEqualTo(stationId)
+          .sortByPodcastSortKey()
+          .findAll();
+      check(results.length).equals(2);
+      check(results[0].podcastSortKey).equals(0);
+      check(results[1].podcastSortKey).equals(1);
     });
   });
 }

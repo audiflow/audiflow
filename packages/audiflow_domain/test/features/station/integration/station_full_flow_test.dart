@@ -30,11 +30,11 @@ void main() {
   });
 
   test('full station lifecycle: create, filter, reconcile, delete', () async {
-    // 1. Create a Station with hideCompleted + publishedWithin 30 days filters
+    // 1. Create a Station with hideCompleted and a count limit of 1 per podcast
     final station = Station()
       ..name = 'Test Station'
       ..hideCompleted = true
-      ..publishedWithinDays = 30
+      ..defaultEpisodeLimit = 1
       ..createdAt = DateTime.now()
       ..updatedAt = DateTime.now();
     await isar.writeTxn(() => isar.stations.put(station));
@@ -51,7 +51,7 @@ void main() {
       );
     }
 
-    // 3. Insert episodes: mix of old, new, played, unplayed
+    // 3. Insert episodes: 2 per podcast (newest + older)
     final now = DateTime.now();
     final episodes = [
       Episode()
@@ -62,8 +62,8 @@ void main() {
         ..publishedAt = now.subtract(const Duration(days: 3)),
       Episode()
         ..podcastId = 1
-        ..guid = 'new-played'
-        ..title = 'New Played'
+        ..guid = 'older-played'
+        ..title = 'Older Played'
         ..audioUrl = 'u2'
         ..publishedAt = now.subtract(const Duration(days: 5)),
       Episode()
@@ -81,7 +81,7 @@ void main() {
     ];
     await isar.writeTxn(() => isar.episodes.putAll(episodes));
 
-    // Mark 'new-played' as completed
+    // Mark 'older-played' as completed (it won't be in the limit anyway)
     await isar.writeTxn(
       () => isar.playbackHistorys.put(
         PlaybackHistory()
@@ -95,9 +95,9 @@ void main() {
     final reconciler = StationReconciler(isar: isar);
     await reconciler.reconcileFull(station.id);
 
-    // 5. Verify: only new+unplayed episodes are in StationEpisode
-    // Should have: 'new-unplayed' (podcast1, 3 days ago) and 'new-unplayed-2' (podcast2, 1 day ago)
-    // NOT: 'new-played' (completed) or 'old-unplayed' (60 days ago, outside 30 day window)
+    // 5. Verify: only the newest unplayed episode per podcast is included.
+    // defaultEpisodeLimit=1 picks: 'new-unplayed' (podcast1) and
+    // 'new-unplayed-2' (podcast2), excluding the older episodes.
     var stationEpisodes = await isar.stationEpisodes
         .filter()
         .stationIdEqualTo(station.id)
