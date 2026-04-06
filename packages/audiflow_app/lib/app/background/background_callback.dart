@@ -430,6 +430,12 @@ void backgroundCallback() {
         await isar.close();
       }
       if (sentryInitialized) {
+        // Allow time for the Sentry transport to send queued events.
+        // Sentry.close() calls flush internally but the HTTP transport
+        // may not await the response, so events are lost if the isolate
+        // exits immediately.
+        _bgDebug('waiting for Sentry transport to drain');
+        await Future<void>.delayed(const Duration(seconds: 3));
         _bgDebug('calling Sentry.close()');
         await Sentry.close();
         _bgDebug('Sentry.close() done');
