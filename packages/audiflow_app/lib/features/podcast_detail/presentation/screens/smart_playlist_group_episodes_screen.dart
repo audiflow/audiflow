@@ -1,5 +1,6 @@
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
+import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -109,7 +110,6 @@ class _SmartPlaylistGroupEpisodesScreenState
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
 
     return Scaffold(
       appBar: SearchableAppBar(
@@ -118,25 +118,47 @@ class _SmartPlaylistGroupEpisodesScreenState
       ),
       body: CustomScrollView(
         controller: _scrollController,
-        slivers: [
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: Spacing.md,
-                vertical: Spacing.sm,
-              ),
-              child: Text(
-                widget.podcastTitle,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ),
-          ),
-          ..._buildEpisodeList(theme),
-        ],
+        slivers: _buildBody(theme),
       ),
     );
+  }
+
+  List<Widget> _buildBody(ThemeData theme) {
+    final episodesAsync = ref.watch(smartPlaylistEpisodesProvider(_episodeIds));
+
+    // Resolve shared thumbnail from episodes. Only non-null when
+    // first and second episodes share the same image, meaning ALL
+    // episodes likely use the same thumbnail.
+    final sharedThumbnailUrl = episodesAsync
+        .whenData(_resolveSharedThumbnail)
+        .value;
+
+    // Header shows group.thumbnailUrl or the shared thumbnail.
+    final headerThumbnailUrl = widget.group.thumbnailUrl ?? sharedThumbnailUrl;
+
+    // Dedup only uses the shared thumbnail (never group.thumbnailUrl,
+    // which may match only one episode and hide just that one).
+    return [
+      SliverToBoxAdapter(
+        child: _GroupHeader(
+          title: _formatGroupTitle(),
+          podcastTitle: widget.podcastTitle,
+          thumbnailUrl: headerThumbnailUrl,
+        ),
+      ),
+      ..._buildEpisodeList(theme, headerThumbnailUrl: sharedThumbnailUrl),
+    ];
+  }
+
+  /// Returns the first episode's imageUrl when it matches the second
+  /// episode's (indicating a shared series thumbnail). Returns null
+  /// when images differ to avoid hiding only the first episode's thumbnail.
+  String? _resolveSharedThumbnail(List<SmartPlaylistEpisodeData> episodes) {
+    if (episodes.isEmpty) return null;
+    final firstUrl = episodes.first.episode.imageUrl;
+    if (firstUrl == null) return null;
+    if (episodes.length < 2) return firstUrl;
+    return firstUrl == episodes[1].episode.imageUrl ? firstUrl : null;
   }
 
   Widget _buildSortHeader(
@@ -192,8 +214,13 @@ class _SmartPlaylistGroupEpisodesScreenState
     );
   }
 
-  List<Widget> _buildEpisodeList(ThemeData theme) {
+  List<Widget> _buildEpisodeList(
+    ThemeData theme, {
+    String? headerThumbnailUrl,
+  }) {
     final episodesAsync = ref.watch(smartPlaylistEpisodesProvider(_episodeIds));
+
+    final effectiveFeedImageUrl = headerThumbnailUrl ?? widget.feedImageUrl;
 
     return episodesAsync.when(
       data: (episodes) {
@@ -235,7 +262,11 @@ class _SmartPlaylistGroupEpisodesScreenState
         if (_showYearHeaders) {
           return [
             sortHeaderSliver,
-            ..._buildYearGroupedSlivers(displayEpisodes, theme),
+            ..._buildYearGroupedSlivers(
+              displayEpisodes,
+              theme,
+              feedImageUrl: effectiveFeedImageUrl,
+            ),
           ];
         }
 
@@ -259,7 +290,7 @@ class _SmartPlaylistGroupEpisodesScreenState
                 episode: data.episode,
                 podcastTitle: widget.podcastTitle,
                 artworkUrl: widget.podcastArtworkUrl,
-                feedImageUrl: widget.feedImageUrl,
+                feedImageUrl: effectiveFeedImageUrl,
                 lastRefreshedAt: widget.lastRefreshedAt,
                 progress: data.progress,
                 siblingEpisodeIds: _episodeIds,
@@ -296,8 +327,9 @@ class _SmartPlaylistGroupEpisodesScreenState
 
   List<Widget> _buildYearGroupedSlivers(
     List<SmartPlaylistEpisodeData> episodes,
-    ThemeData theme,
-  ) {
+    ThemeData theme, {
+    String? feedImageUrl,
+  }) {
     final byYear = <int, List<SmartPlaylistEpisodeData>>{};
     for (final data in episodes) {
       final year = data.episode.publishedAt?.year ?? 0;
@@ -325,7 +357,7 @@ class _SmartPlaylistGroupEpisodesScreenState
         episode: data.episode,
         podcastTitle: widget.podcastTitle,
         artworkUrl: widget.podcastArtworkUrl,
-        feedImageUrl: widget.feedImageUrl,
+        feedImageUrl: feedImageUrl,
         progress: data.progress,
         siblingEpisodeIds: _episodeIds,
         itunesId: widget.itunesId,
@@ -358,6 +390,105 @@ class _SmartPlaylistGroupEpisodesScreenState
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Header with artwork + title, mirroring podcast detail layout.
+class _GroupHeader extends StatelessWidget {
+  const _GroupHeader({
+    required this.title,
+    required this.podcastTitle,
+    this.thumbnailUrl,
+  });
+
+  final String title;
+  final String podcastTitle;
+  final String? thumbnailUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.all(Spacing.md),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: _buildArtwork(colorScheme),
+          ),
+          const SizedBox(width: Spacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: Spacing.xs),
+                Text(
+                  podcastTitle,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static const _size = 100.0;
+
+  Widget _buildArtwork(ColorScheme colorScheme) {
+    if (thumbnailUrl == null) {
+      return Container(
+        width: _size,
+        height: _size,
+        alignment: Alignment.center,
+        color: colorScheme.surfaceContainerHighest,
+        child: Icon(
+          Icons.folder_outlined,
+          size: 48,
+          color: colorScheme.onSurfaceVariant,
+        ),
+      );
+    }
+
+    return ExtendedImage.network(
+      thumbnailUrl!,
+      width: _size,
+      height: _size,
+      fit: BoxFit.cover,
+      cache: true,
+      loadStateChanged: (state) {
+        if (state.extendedImageLoadState == LoadState.failed) {
+          return Container(
+            width: _size,
+            height: _size,
+            alignment: Alignment.center,
+            color: colorScheme.surfaceContainerHighest,
+            child: Icon(
+              Icons.broken_image,
+              size: 48,
+              color: colorScheme.onSurfaceVariant,
+            ),
+          );
+        }
+        return null;
+      },
     );
   }
 }

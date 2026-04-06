@@ -103,7 +103,7 @@ class InlineGroupCard extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.symmetric(
               horizontal: Spacing.md,
-              vertical: Spacing.sm,
+              vertical: Spacing.md,
             ),
             child: Row(
               crossAxisAlignment: hasThumbnail
