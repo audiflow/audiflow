@@ -77,7 +77,9 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
     }
 
     final episodeId = nowPlaying.episode?.id;
-    final hasTranscriptTab = episodeId != null;
+    final hasTranscriptTab =
+        episodeId != null &&
+        (ref.watch(episodeHasTranscriptProvider(episodeId)).value ?? false);
 
     // Ensure tab controller exists (short-circuits if tab count unchanged)
     _ensureTabController(hasTranscript: hasTranscriptTab);
