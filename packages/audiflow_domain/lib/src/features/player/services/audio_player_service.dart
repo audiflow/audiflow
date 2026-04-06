@@ -365,10 +365,6 @@ class AudioPlayerController extends _$AudioPlayerController
     // persisting stale data from the previous episode.
     if (_currentEpisodeId != null && !_isLoadingSource) {
       final progress = ref.read(playbackProgressProvider);
-      _log.i(
-        '[Pause] episodeId=$_currentEpisodeId, '
-        'progress=${progress != null ? "${progress.position.inMilliseconds}ms" : "null"}',
-      );
       if (progress != null) {
         final historyService = ref.read(playbackHistoryServiceProvider);
         await historyService.onPlaybackPaused(
@@ -376,13 +372,7 @@ class AudioPlayerController extends _$AudioPlayerController
           progress,
           speed: _player.speed,
         );
-        _log.i('[Pause] Progress saved for episode $_currentEpisodeId');
       }
-    } else {
-      _log.w(
-        '[Pause] Skipped save: '
-        'episodeId=$_currentEpisodeId, isLoading=$_isLoadingSource',
-      );
     }
     await _player.pause();
   }

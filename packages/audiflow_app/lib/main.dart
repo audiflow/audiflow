@@ -232,11 +232,6 @@ Future<void> _restoreLastPlayed(ProviderContainer container) async {
   try {
     final historyRepo = container.read(playbackHistoryRepositoryProvider);
     final lastPlayed = await historyRepo.getLastPlayed();
-    debugPrint(
-      '[Restore] lastPlayed: episodeId=${lastPlayed?.episodeId}, '
-      'lastPlayedAt=${lastPlayed?.lastPlayedAt}, '
-      'positionMs=${lastPlayed?.positionMs}',
-    );
     if (lastPlayed == null) return;
 
     final episodeRepo = container.read(episodeRepositoryProvider);

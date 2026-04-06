@@ -62,7 +62,20 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
     final l10n = AppLocalizations.of(context);
     final nowPlaying = ref.watch(nowPlayingControllerProvider);
     final playbackState = ref.watch(audioPlayerControllerProvider);
-    final progress = ref.watch(playbackProgressProvider);
+    final liveProgress = ref.watch(playbackProgressProvider);
+    // Fall back to saved position/duration when no audio is loaded (post-restore).
+    // The stream emits 0/0 when idle, so check duration > 0 for real data.
+    final hasLiveData =
+        liveProgress != null && 0 < liveProgress.duration.inMilliseconds;
+    final progress = hasLiveData
+        ? liveProgress
+        : (nowPlaying?.savedPosition != null
+              ? PlaybackProgress(
+                  position: nowPlaying!.savedPosition!,
+                  duration: nowPlaying.totalDuration ?? Duration.zero,
+                  bufferedPosition: Duration.zero,
+                )
+              : null);
     final appSettingsRepo = ref.watch(appSettingsRepositoryProvider);
 
     final isPlaying = playbackState is PlaybackPlaying;
@@ -656,8 +669,14 @@ class _PlayerPlayPauseButton extends ConsumerWidget {
           final controller = ref.read(audioPlayerControllerProvider.notifier);
           if (isPlaying) {
             controller.pause();
-          } else {
+          } else if (controller.currentUrl != null) {
             controller.resume();
+          } else {
+            // After restore: no audio loaded yet, start full playback.
+            final nowPlaying = ref.read(nowPlayingControllerProvider);
+            if (nowPlaying != null) {
+              controller.play(nowPlaying.episodeUrl, metadata: nowPlaying);
+            }
           }
         },
       ),
