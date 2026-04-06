@@ -89,15 +89,22 @@ class EpisodeCard extends StatelessWidget {
   /// Action buttons (queue, download, share) shown in the bottom row.
   final List<Widget> actionButtons;
 
-  String? get _displayThumbnailUrl => thumbnailUrl ?? fallbackThumbnailUrl;
-
-  bool get _showThumbnail {
+  /// Resolved thumbnail URL, accounting for deduplication against podcast
+  /// artwork. Falls back to [fallbackThumbnailUrl] when the primary
+  /// thumbnail is null or duplicates the podcast/feed image.
+  String? get _displayThumbnailUrl {
     if (thumbnailUrl != null) {
-      return !_urlPathEquals(thumbnailUrl, podcastArtworkUrl) &&
-          !_urlPathEquals(thumbnailUrl, feedImageUrl);
+      final deduped =
+          _urlPathEquals(thumbnailUrl, podcastArtworkUrl) ||
+          _urlPathEquals(thumbnailUrl, feedImageUrl);
+      if (!deduped) return thumbnailUrl;
+      // Primary thumbnail duplicates podcast artwork -- use fallback.
+      return fallbackThumbnailUrl;
     }
-    return fallbackThumbnailUrl != null;
+    return fallbackThumbnailUrl;
   }
+
+  bool get _showThumbnail => _displayThumbnailUrl != null;
 
   @override
   Widget build(BuildContext context) {

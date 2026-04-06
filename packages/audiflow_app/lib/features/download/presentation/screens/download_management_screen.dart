@@ -206,23 +206,20 @@ class _Section extends StatelessWidget {
             ),
           ),
         ),
-        ...tasks.map(
-          (task) => _DownloadTaskTileWithTitle(task: task, ref: ref),
-        ),
+        ...tasks.map((task) => _DownloadTaskTileWithTitle(task: task)),
       ],
     );
   }
 }
 
 /// Resolves episode title from DB before rendering the tile.
-class _DownloadTaskTileWithTitle extends StatelessWidget {
-  const _DownloadTaskTileWithTitle({required this.task, required this.ref});
+class _DownloadTaskTileWithTitle extends ConsumerWidget {
+  const _DownloadTaskTileWithTitle({required this.task});
 
   final DownloadTask task;
-  final WidgetRef ref;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final episodeAsync = ref.watch(
       episodeByIdForDownloadProvider(task.episodeId),
     );
