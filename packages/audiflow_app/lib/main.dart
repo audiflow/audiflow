@@ -59,6 +59,28 @@ Future<void> appMain({
         options.debug = kDebugMode;
       },
       appRunner: () async {
+        // Diagnostic: verify foreground Sentry pipeline on boot.
+        // Remove once investigation is resolved.
+        unawaited(
+          Sentry.captureMessage(
+                'app-boot: Sentry initialized',
+                level: SentryLevel.info,
+              )
+              .then((sentryId) {
+                if (kDebugMode) {
+                  debugPrint(
+                    '[SENTRY-DIAG] boot captureMessage sentryId=$sentryId',
+                  );
+                }
+              })
+              .catchError((Object error, StackTrace stackTrace) {
+                if (kDebugMode) {
+                  debugPrint(
+                    '[SENTRY-DIAG] boot captureMessage failed: $error',
+                  );
+                }
+              }),
+        );
         await _startApp(smartPlaylistConfigBaseUrl);
       },
     );
