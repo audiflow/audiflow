@@ -103,7 +103,7 @@ class InlineGroupCard extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.symmetric(
               horizontal: Spacing.md,
-              vertical: Spacing.sm,
+              vertical: Spacing.md,
             ),
             child: Row(
               crossAxisAlignment: hasThumbnail
@@ -124,7 +124,7 @@ class InlineGroupCard extends StatelessWidget {
                           prependSeasonNumber: prependSeasonNumber,
                         ),
                         style: theme.textTheme.titleSmall,
-                        maxLines: 1,
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 2),

@@ -580,6 +580,47 @@ class AppLocalizationsJa extends AppLocalizations {
   String get downloadDeleted => 'ダウンロードを削除しました';
 
   @override
+  String get downloadManageTitle => 'ダウンロード管理';
+
+  @override
+  String get downloadScreenTitle => 'ダウンロード';
+
+  @override
+  String get downloadLoadError => 'ダウンロードの読み込みに失敗しました';
+
+  @override
+  String get downloadDeleteAllCompleted => '完了済みをすべて削除';
+
+  @override
+  String get downloadCompletedDeleted => '完了済みのダウンロードを削除しました';
+
+  @override
+  String get downloadStatusDownloading => 'ダウンロード中';
+
+  @override
+  String get downloadStatusPending => '待機中';
+
+  @override
+  String get downloadStatusPaused => '一時停止';
+
+  @override
+  String get downloadStatusCompleted => '完了';
+
+  @override
+  String get downloadStatusFailed => '失敗';
+
+  @override
+  String get downloadStatusCancelled => 'キャンセル';
+
+  @override
+  String get downloadEmptyTitle => 'ダウンロードはありません';
+
+  @override
+  String downloadSectionCount(String status, int count) {
+    return '$status（$count）';
+  }
+
+  @override
   String get opmlImportTitle => 'ポッドキャストをインポート';
 
   @override

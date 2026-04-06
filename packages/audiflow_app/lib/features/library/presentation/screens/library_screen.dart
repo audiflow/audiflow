@@ -8,7 +8,6 @@ import 'package:material_symbols_icons/symbols.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../routing/app_router.dart';
 import '../controllers/library_controller.dart';
-import '../widgets/continue_listening_section.dart';
 import '../../../station/presentation/controllers/station_list_controller.dart';
 import '../../../station/presentation/widgets/station_list_tile.dart';
 
@@ -89,12 +88,6 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
       onRefresh: _onRefresh,
       child: CustomScrollView(
         slivers: [
-          SliverToBoxAdapter(
-            child: ContinueListeningSection(
-              onEpisodeTap: (episode) =>
-                  _onContinueListeningTap(context, episode),
-            ),
-          ),
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(
@@ -197,37 +190,6 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
         ],
       ),
     );
-  }
-
-  Future<void> _onContinueListeningTap(
-    BuildContext context,
-    EpisodeWithProgress episode,
-  ) async {
-    final controller = ref.read(audioPlayerControllerProvider.notifier);
-    final audioUrl = episode.episode.audioUrl;
-    final position = Duration(milliseconds: episode.history?.positionMs ?? 0);
-
-    final subscription = await ref
-        .read(subscriptionRepositoryProvider)
-        .getById(episode.episode.podcastId);
-
-    controller.play(
-      audioUrl,
-      metadata: NowPlayingInfo(
-        episodeUrl: audioUrl,
-        episodeTitle: episode.episode.title,
-        podcastTitle: subscription?.title ?? '',
-        artworkUrl: episode.episode.imageUrl ?? subscription?.artworkUrl,
-        totalDuration: episode.episode.durationMs != null
-            ? Duration(milliseconds: episode.episode.durationMs!)
-            : null,
-      ),
-    );
-
-    // Seek to saved position after playback starts
-    Future.delayed(const Duration(milliseconds: 500), () {
-      controller.seek(position);
-    });
   }
 
   Widget _buildEmptyState(BuildContext context) {

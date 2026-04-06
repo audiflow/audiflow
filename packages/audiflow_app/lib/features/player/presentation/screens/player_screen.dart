@@ -62,7 +62,20 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
     final l10n = AppLocalizations.of(context);
     final nowPlaying = ref.watch(nowPlayingControllerProvider);
     final playbackState = ref.watch(audioPlayerControllerProvider);
-    final progress = ref.watch(playbackProgressProvider);
+    final liveProgress = ref.watch(playbackProgressProvider);
+    // Fall back to saved position/duration when no audio is loaded (post-restore).
+    // The stream emits 0/0 when idle, so check duration > 0 for real data.
+    final hasLiveData =
+        liveProgress != null && 0 < liveProgress.duration.inMilliseconds;
+    final progress = hasLiveData
+        ? liveProgress
+        : (nowPlaying?.savedPosition != null
+              ? PlaybackProgress(
+                  position: nowPlaying!.savedPosition!,
+                  duration: nowPlaying.totalDuration ?? Duration.zero,
+                  bufferedPosition: Duration.zero,
+                )
+              : null);
     final appSettingsRepo = ref.watch(appSettingsRepositoryProvider);
 
     final isPlaying = playbackState is PlaybackPlaying;
@@ -77,7 +90,9 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
     }
 
     final episodeId = nowPlaying.episode?.id;
-    final hasTranscriptTab = episodeId != null;
+    final hasTranscriptTab =
+        episodeId != null &&
+        (ref.watch(episodeHasTranscriptProvider(episodeId)).value ?? false);
 
     // Ensure tab controller exists (short-circuits if tab count unchanged)
     _ensureTabController(hasTranscript: hasTranscriptTab);
@@ -499,12 +514,43 @@ class _PlayerProgressBarState extends ConsumerState<_PlayerProgressBar> {
               },
               onChangeEnd: (value) async {
                 final duration = progress?.duration ?? Duration.zero;
+                if (duration == Duration.zero) {
+                  // Duration unknown -- cannot compute a meaningful position.
+                  await widget.onSeekEnd?.call();
+                  if (!mounted) return;
+                  setState(() => _isDragging = false);
+                  return;
+                }
                 final seekPosition = Duration(
                   milliseconds: (duration.inMilliseconds * value).round(),
                 );
-                await ref
-                    .read(audioPlayerControllerProvider.notifier)
-                    .seek(seekPosition);
+                final controller = ref.read(
+                  audioPlayerControllerProvider.notifier,
+                );
+                if (controller.currentUrl != null) {
+                  await controller.seek(seekPosition);
+                } else {
+                  // No audio loaded (post-restore): update saved position
+                  // so the display reflects the drag and play() starts here.
+                  final nowPlaying = ref.read(nowPlayingControllerProvider);
+                  if (nowPlaying != null) {
+                    ref
+                        .read(nowPlayingControllerProvider.notifier)
+                        .setNowPlaying(
+                          nowPlaying.copyWith(savedPosition: seekPosition),
+                        );
+                    // Persist so play() seeks to this position.
+                    final episode = nowPlaying.episode;
+                    if (episode != null) {
+                      await ref
+                          .read(playbackHistoryRepositoryProvider)
+                          .saveProgress(
+                            episodeId: episode.id,
+                            positionMs: seekPosition.inMilliseconds,
+                          );
+                    }
+                  }
+                }
                 await widget.onSeekEnd?.call();
                 if (!mounted) return;
                 setState(() => _isDragging = false);
@@ -654,8 +700,14 @@ class _PlayerPlayPauseButton extends ConsumerWidget {
           final controller = ref.read(audioPlayerControllerProvider.notifier);
           if (isPlaying) {
             controller.pause();
-          } else {
+          } else if (controller.currentUrl != null) {
             controller.resume();
+          } else {
+            // After restore: no audio loaded yet, start full playback.
+            final nowPlaying = ref.read(nowPlayingControllerProvider);
+            if (nowPlaying != null) {
+              controller.play(nowPlaying.episodeUrl, metadata: nowPlaying);
+            }
           }
         },
       ),

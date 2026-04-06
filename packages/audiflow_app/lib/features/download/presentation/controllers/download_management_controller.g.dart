@@ -8,6 +8,87 @@ part of 'download_management_controller.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Looks up an episode by ID for download tile display.
+
+@ProviderFor(episodeByIdForDownload)
+final episodeByIdForDownloadProvider = EpisodeByIdForDownloadFamily._();
+
+/// Looks up an episode by ID for download tile display.
+
+final class EpisodeByIdForDownloadProvider
+    extends
+        $FunctionalProvider<AsyncValue<Episode?>, Episode?, FutureOr<Episode?>>
+    with $FutureModifier<Episode?>, $FutureProvider<Episode?> {
+  /// Looks up an episode by ID for download tile display.
+  EpisodeByIdForDownloadProvider._({
+    required EpisodeByIdForDownloadFamily super.from,
+    required int super.argument,
+  }) : super(
+         retry: null,
+         name: r'episodeByIdForDownloadProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$episodeByIdForDownloadHash();
+
+  @override
+  String toString() {
+    return r'episodeByIdForDownloadProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<Episode?> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<Episode?> create(Ref ref) {
+    final argument = this.argument as int;
+    return episodeByIdForDownload(ref, argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is EpisodeByIdForDownloadProvider &&
+        other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$episodeByIdForDownloadHash() =>
+    r'dc8da52e6ba9c04c0a43940acf693fcbcee7f9e1';
+
+/// Looks up an episode by ID for download tile display.
+
+final class EpisodeByIdForDownloadFamily extends $Family
+    with $FunctionalFamilyOverride<FutureOr<Episode?>, int> {
+  EpisodeByIdForDownloadFamily._()
+    : super(
+        retry: null,
+        name: r'episodeByIdForDownloadProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  /// Looks up an episode by ID for download tile display.
+
+  EpisodeByIdForDownloadProvider call(int episodeId) =>
+      EpisodeByIdForDownloadProvider._(argument: episodeId, from: this);
+
+  @override
+  String toString() => r'episodeByIdForDownloadProvider';
+}
+
 /// Controller for download management actions.
 
 @ProviderFor(DownloadManagementController)

@@ -25,7 +25,7 @@ class DownloadsSettingsScreen extends ConsumerWidget {
         children: [
           ListTile(
             leading: const Icon(Icons.download),
-            title: const Text('Manage Downloads'),
+            title: Text(AppLocalizations.of(context).downloadManageTitle),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => context.go(AppRoutes.settingsDownloadManagement),
           ),

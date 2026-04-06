@@ -3,6 +3,12 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'download_management_controller.g.dart';
 
+/// Looks up an episode by ID for download tile display.
+@riverpod
+Future<Episode?> episodeByIdForDownload(Ref ref, int episodeId) {
+  return ref.watch(episodeRepositoryProvider).getById(episodeId);
+}
+
 /// Controller for download management actions.
 @riverpod
 class DownloadManagementController extends _$DownloadManagementController {
