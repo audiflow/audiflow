@@ -286,12 +286,13 @@ class _StationEditScreenState extends ConsumerState<StationEditScreen> {
           ),
           contentPadding: EdgeInsets.zero,
         ),
-        SwitchListTile(
-          value: state.filterFavorited,
-          onChanged: controller.setFilterFavorited,
-          title: Text(AppLocalizations.of(context).stationFilterFavoritedLabel),
-          contentPadding: EdgeInsets.zero,
-        ),
+        // TODO(ui): restore when favorite filtering is available on other pages
+        // SwitchListTile(
+        //   value: state.filterFavorited,
+        //   onChanged: controller.setFilterFavorited,
+        //   title: Text(AppLocalizations.of(context).stationFilterFavoritedLabel),
+        //   contentPadding: EdgeInsets.zero,
+        // ),
       ],
     );
   }
