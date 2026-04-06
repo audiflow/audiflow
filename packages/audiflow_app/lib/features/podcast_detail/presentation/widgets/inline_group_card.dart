@@ -124,7 +124,7 @@ class InlineGroupCard extends StatelessWidget {
                           prependSeasonNumber: prependSeasonNumber,
                         ),
                         style: theme.textTheme.titleSmall,
-                        maxLines: 1,
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 2),

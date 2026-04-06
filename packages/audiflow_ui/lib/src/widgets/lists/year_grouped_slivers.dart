@@ -36,21 +36,22 @@ List<Widget> buildYearGroupedSlivers<T>({
   required Widget Function(BuildContext, T) itemBuilder,
   required ScrollController scrollController,
   required bool yearGroupingEnabled,
-  required double itemExtent,
+  double? itemExtent,
 }) {
   if (!yearGroupingEnabled || sortedYears.length < 2) {
     final allItems = <T>[];
     for (final year in sortedYears) {
       allItems.addAll(itemsByYear[year] ?? []);
     }
+    final delegate = SliverChildBuilderDelegate(
+      (context, index) => itemBuilder(context, allItems[index]),
+      childCount: allItems.length,
+    );
     return [
-      SliverFixedExtentList(
-        itemExtent: itemExtent,
-        delegate: SliverChildBuilderDelegate(
-          (context, index) => itemBuilder(context, allItems[index]),
-          childCount: allItems.length,
-        ),
-      ),
+      if (itemExtent != null)
+        SliverFixedExtentList(itemExtent: itemExtent, delegate: delegate)
+      else
+        SliverList(delegate: delegate),
     ];
   }
 
@@ -60,7 +61,7 @@ List<Widget> buildYearGroupedSlivers<T>({
   for (final year in sortedYears) {
     yearOffsets[year] = runningOffset;
     runningOffset += yearHeaderHeight;
-    runningOffset += (itemsByYear[year]?.length ?? 0) * itemExtent;
+    runningOffset += (itemsByYear[year]?.length ?? 0) * (itemExtent ?? 88.0);
   }
 
   final firstYear = sortedYears.first;
@@ -147,14 +148,14 @@ List<Widget> buildYearGroupedSlivers<T>({
       );
     }
 
+    final delegate = SliverChildBuilderDelegate(
+      (context, index) => itemBuilder(context, items[index]),
+      childCount: items.length,
+    );
     slivers.add(
-      SliverFixedExtentList(
-        itemExtent: itemExtent,
-        delegate: SliverChildBuilderDelegate(
-          (context, index) => itemBuilder(context, items[index]),
-          childCount: items.length,
-        ),
-      ),
+      itemExtent != null
+          ? SliverFixedExtentList(itemExtent: itemExtent, delegate: delegate)
+          : SliverList(delegate: delegate),
     );
   }
 

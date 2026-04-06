@@ -374,7 +374,7 @@ List<Widget> _buildPerEpisodeInlineGroups({
       ),
       scrollController: scrollController,
       yearGroupingEnabled: true,
-      itemExtent: 88,
+      itemExtent: null,
     ),
   ];
 }
@@ -544,7 +544,7 @@ List<Widget> _buildMixedYearInlineGroups({
       ),
       scrollController: scrollController,
       yearGroupingEnabled: true,
-      itemExtent: 88,
+      itemExtent: null,
     ),
   ];
 }
