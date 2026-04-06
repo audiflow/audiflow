@@ -59,11 +59,18 @@ class PlaybackHistoryService {
 
   /// Called when playback starts for an episode.
   ///
-  /// Increments play count if starting from the beginning.
+  /// Clears completion status so the episode appears in "last played"
+  /// queries, and increments play count if starting from the beginning.
   Future<void> onPlaybackStarted(int episodeId, int positionMs) async {
     _lastSavedPositionMs = positionMs;
     _lastSaveTime = _clock();
     _notifiedInProgressThisSession = false;
+
+    // Clear completed status so getLastPlayed() can find this episode.
+    final isCompleted = await _repository.isCompleted(episodeId);
+    if (isCompleted) {
+      await _repository.markIncomplete(episodeId);
+    }
 
     // Increment play count if starting from beginning
     if (positionMs < fromBeginningThresholdMs) {
