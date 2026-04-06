@@ -59,6 +59,15 @@ Future<void> appMain({
         options.debug = kDebugMode;
       },
       appRunner: () async {
+        // Diagnostic: verify foreground Sentry pipeline on boot.
+        // Remove once investigation is resolved.
+        final sentryId = await Sentry.captureMessage(
+          'app-boot: Sentry initialized',
+          level: SentryLevel.info,
+        );
+        if (kDebugMode) {
+          debugPrint('[SENTRY-DIAG] boot captureMessage sentryId=$sentryId');
+        }
         await _startApp(smartPlaylistConfigBaseUrl);
       },
     );
