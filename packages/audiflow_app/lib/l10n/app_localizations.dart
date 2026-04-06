@@ -1166,6 +1166,84 @@ abstract class AppLocalizations {
   /// **'Download deleted'**
   String get downloadDeleted;
 
+  /// Navigate to download management
+  ///
+  /// In en, this message translates to:
+  /// **'Manage Downloads'**
+  String get downloadManageTitle;
+
+  /// Download management screen title
+  ///
+  /// In en, this message translates to:
+  /// **'Downloads'**
+  String get downloadScreenTitle;
+
+  /// Error loading downloads
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load downloads'**
+  String get downloadLoadError;
+
+  /// Tooltip for delete all completed button
+  ///
+  /// In en, this message translates to:
+  /// **'Delete all completed'**
+  String get downloadDeleteAllCompleted;
+
+  /// Snackbar after deleting all completed
+  ///
+  /// In en, this message translates to:
+  /// **'Completed downloads deleted'**
+  String get downloadCompletedDeleted;
+
+  /// Download status group header
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading'**
+  String get downloadStatusDownloading;
+
+  /// Download status group header
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get downloadStatusPending;
+
+  /// Download status group header
+  ///
+  /// In en, this message translates to:
+  /// **'Paused'**
+  String get downloadStatusPaused;
+
+  /// Download status group header
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get downloadStatusCompleted;
+
+  /// Download status group header
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get downloadStatusFailed;
+
+  /// Download status group header
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get downloadStatusCancelled;
+
+  /// Empty state for download management
+  ///
+  /// In en, this message translates to:
+  /// **'No downloads'**
+  String get downloadEmptyTitle;
+
+  /// Section header with count
+  ///
+  /// In en, this message translates to:
+  /// **'{status} ({count})'**
+  String downloadSectionCount(String status, int count);
+
   /// OPML import screen title
   ///
   /// In en, this message translates to:

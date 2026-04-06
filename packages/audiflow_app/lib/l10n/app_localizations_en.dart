@@ -592,6 +592,47 @@ class AppLocalizationsEn extends AppLocalizations {
   String get downloadDeleted => 'Download deleted';
 
   @override
+  String get downloadManageTitle => 'Manage Downloads';
+
+  @override
+  String get downloadScreenTitle => 'Downloads';
+
+  @override
+  String get downloadLoadError => 'Failed to load downloads';
+
+  @override
+  String get downloadDeleteAllCompleted => 'Delete all completed';
+
+  @override
+  String get downloadCompletedDeleted => 'Completed downloads deleted';
+
+  @override
+  String get downloadStatusDownloading => 'Downloading';
+
+  @override
+  String get downloadStatusPending => 'Pending';
+
+  @override
+  String get downloadStatusPaused => 'Paused';
+
+  @override
+  String get downloadStatusCompleted => 'Completed';
+
+  @override
+  String get downloadStatusFailed => 'Failed';
+
+  @override
+  String get downloadStatusCancelled => 'Cancelled';
+
+  @override
+  String get downloadEmptyTitle => 'No downloads';
+
+  @override
+  String downloadSectionCount(String status, int count) {
+    return '$status ($count)';
+  }
+
+  @override
   String get opmlImportTitle => 'Import Podcasts';
 
   @override

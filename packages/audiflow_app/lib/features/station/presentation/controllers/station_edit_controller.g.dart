@@ -59,7 +59,7 @@ final class StationEditControllerProvider
 }
 
 String _$stationEditControllerHash() =>
-    r'c707541001fd0e18c835e56efc7e7626c260aa9d';
+    r'e8f964eb2cdbaf2d5f47ee9b5f53db31cebe00fb';
 
 final class StationEditControllerFamily extends $Family
     with
