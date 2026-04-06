@@ -1,4 +1,5 @@
 import 'dart:developer' as developer;
+import 'dart:io';
 
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -15,13 +16,32 @@ import 'package:workmanager/workmanager.dart';
 import 'background_settings_repository.dart';
 import 'background_task_registrar.dart';
 
-// Temporary diagnostic helper for background refresh Sentry investigation.
-// Remove once the issue is resolved.
+// Temporary diagnostic file logger for background refresh investigation.
+// Writes to <appDocDir>/bg_refresh_diag.log so it can be pulled from
+// device even on release builds where debugPrint is silent.
+// Remove once investigation is resolved.
+File? _diagLogFile;
+
+Future<void> _initDiagLog() async {
+  try {
+    final dir = await getApplicationDocumentsDirectory();
+    _diagLogFile = File('${dir.path}/bg_refresh_diag.log');
+  } catch (_) {
+    // path_provider not ready — fall back to console only
+  }
+}
+
 void _bgDebug(String message) {
-  if (!kDebugMode) return;
-  final stamped = '[BG-DEBUG ${DateTime.now().toIso8601String()}] $message';
-  debugPrint(stamped);
-  developer.log(stamped, name: 'BackgroundRefresh');
+  final stamped = '[BG ${DateTime.now().toIso8601String()}] $message';
+  if (kDebugMode) {
+    debugPrint(stamped);
+    developer.log(stamped, name: 'BackgroundRefresh');
+  }
+  try {
+    _diagLogFile?.writeAsStringSync('$stamped\n', mode: FileMode.append);
+  } catch (_) {
+    // Best-effort — never crash the background task for logging
+  }
 }
 
 // Temporary diagnostic wrapper for auto-download investigation.
@@ -142,6 +162,7 @@ void backgroundCallback() {
     // path_provider, etc.) fail with "Unable to establish connection on channel"
     // errors.
     WidgetsFlutterBinding.ensureInitialized();
+    await _initDiagLog();
 
     _bgDebug('executeTask called — taskName=$taskName');
     if (taskName != BackgroundTaskRegistrar.taskName) {

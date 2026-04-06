@@ -63,21 +63,23 @@ Future<void> appMain({
         // Remove once investigation is resolved.
         unawaited(
           Sentry.captureMessage(
-            'app-boot: Sentry initialized',
-            level: SentryLevel.info,
-          ).then((sentryId) {
-            if (kDebugMode) {
-              debugPrint(
-                '[SENTRY-DIAG] boot captureMessage sentryId=$sentryId',
-              );
-            }
-          }).catchError((Object error, StackTrace stackTrace) {
-            if (kDebugMode) {
-              debugPrint(
-                '[SENTRY-DIAG] boot captureMessage failed: $error',
-              );
-            }
-          }),
+                'app-boot: Sentry initialized',
+                level: SentryLevel.info,
+              )
+              .then((sentryId) {
+                if (kDebugMode) {
+                  debugPrint(
+                    '[SENTRY-DIAG] boot captureMessage sentryId=$sentryId',
+                  );
+                }
+              })
+              .catchError((Object error, StackTrace stackTrace) {
+                if (kDebugMode) {
+                  debugPrint(
+                    '[SENTRY-DIAG] boot captureMessage failed: $error',
+                  );
+                }
+              }),
         );
         await _startApp(smartPlaylistConfigBaseUrl);
       },
