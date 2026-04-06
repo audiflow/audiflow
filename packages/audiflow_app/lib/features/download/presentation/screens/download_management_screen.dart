@@ -231,7 +231,7 @@ class _DownloadTaskTileWithTitle extends StatelessWidget {
 
     return DownloadTaskTile(
       task: task,
-      episodeTitle: episode?.title ?? '...',
+      episodeTitle: episode?.title ?? '',
       onPause: () => controller.pause(task.id),
       onResume: () => controller.resume(task.id),
       onCancel: () => controller.cancel(task.id),
