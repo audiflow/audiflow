@@ -517,9 +517,33 @@ class _PlayerProgressBarState extends ConsumerState<_PlayerProgressBar> {
                 final seekPosition = Duration(
                   milliseconds: (duration.inMilliseconds * value).round(),
                 );
-                await ref
-                    .read(audioPlayerControllerProvider.notifier)
-                    .seek(seekPosition);
+                final controller = ref.read(
+                  audioPlayerControllerProvider.notifier,
+                );
+                if (controller.currentUrl != null) {
+                  await controller.seek(seekPosition);
+                } else {
+                  // No audio loaded (post-restore): update saved position
+                  // so the display reflects the drag and play() starts here.
+                  final nowPlaying = ref.read(nowPlayingControllerProvider);
+                  if (nowPlaying != null) {
+                    ref
+                        .read(nowPlayingControllerProvider.notifier)
+                        .setNowPlaying(
+                          nowPlaying.copyWith(savedPosition: seekPosition),
+                        );
+                    // Persist so play() seeks to this position.
+                    final episode = nowPlaying.episode;
+                    if (episode != null) {
+                      await ref
+                          .read(playbackHistoryRepositoryProvider)
+                          .saveProgress(
+                            episodeId: episode.id,
+                            positionMs: seekPosition.inMilliseconds,
+                          );
+                    }
+                  }
+                }
                 await widget.onSeekEnd?.call();
                 if (!mounted) return;
                 setState(() => _isDragging = false);
