@@ -28,6 +28,7 @@ class EpisodeCard extends StatelessWidget {
     required this.subtitle,
     this.description,
     this.thumbnailUrl,
+    this.fallbackThumbnailUrl,
     this.podcastArtworkUrl,
     this.feedImageUrl,
     this.isPlaying = false,
@@ -54,6 +55,10 @@ class EpisodeCard extends StatelessWidget {
 
   /// Episode-specific thumbnail URL.
   final String? thumbnailUrl;
+
+  /// Shown when [thumbnailUrl] is null. Unlike [podcastArtworkUrl] this
+  /// is never used for deduplication.
+  final String? fallbackThumbnailUrl;
 
   /// Podcast-level artwork URL (iTunes API). Thumbnail is hidden when it
   /// matches this or [feedImageUrl].
@@ -84,10 +89,15 @@ class EpisodeCard extends StatelessWidget {
   /// Action buttons (queue, download, share) shown in the bottom row.
   final List<Widget> actionButtons;
 
-  bool get _showThumbnail =>
-      thumbnailUrl != null &&
-      !_urlPathEquals(thumbnailUrl, podcastArtworkUrl) &&
-      !_urlPathEquals(thumbnailUrl, feedImageUrl);
+  String? get _displayThumbnailUrl => thumbnailUrl ?? fallbackThumbnailUrl;
+
+  bool get _showThumbnail {
+    if (thumbnailUrl != null) {
+      return !_urlPathEquals(thumbnailUrl, podcastArtworkUrl) &&
+          !_urlPathEquals(thumbnailUrl, feedImageUrl);
+    }
+    return fallbackThumbnailUrl != null;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -144,7 +154,7 @@ class EpisodeCard extends StatelessWidget {
         Expanded(child: _buildCenter(theme, colorScheme)),
         if (_showThumbnail) ...[
           const SizedBox(width: Spacing.sm),
-          _Thumbnail(url: thumbnailUrl!),
+          _Thumbnail(url: _displayThumbnailUrl!),
         ],
       ],
     );
