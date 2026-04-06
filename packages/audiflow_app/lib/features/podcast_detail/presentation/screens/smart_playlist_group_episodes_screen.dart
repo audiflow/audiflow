@@ -126,9 +126,9 @@ class _SmartPlaylistGroupEpisodesScreenState
   List<Widget> _buildBody(ThemeData theme) {
     final episodesAsync = ref.watch(smartPlaylistEpisodesProvider(_episodeIds));
 
-    // Resolve shared thumbnail from episodes. Only non-null when
-    // first and second episodes share the same image, meaning ALL
-    // episodes likely use the same thumbnail.
+    // Resolve shared thumbnail from episodes. Non-null when the group
+    // has a single episode, or when the first two episodes share the
+    // same image (indicating ALL episodes likely use the same thumbnail).
     final sharedThumbnailUrl = episodesAsync
         .whenData(_resolveSharedThumbnail)
         .value;
@@ -150,9 +150,10 @@ class _SmartPlaylistGroupEpisodesScreenState
     ];
   }
 
-  /// Returns the first episode's imageUrl when it matches the second
-  /// episode's (indicating a shared series thumbnail). Returns null
-  /// when images differ to avoid hiding only the first episode's thumbnail.
+  /// Returns the first episode's imageUrl when the group has a single
+  /// episode or when it matches the second episode's (indicating a shared
+  /// series thumbnail). Returns null when images differ to avoid hiding
+  /// only the first episode's thumbnail.
   String? _resolveSharedThumbnail(List<SmartPlaylistEpisodeData> episodes) {
     if (episodes.isEmpty) return null;
     final firstUrl = episodes.first.episode.imageUrl;

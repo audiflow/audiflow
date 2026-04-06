@@ -514,6 +514,13 @@ class _PlayerProgressBarState extends ConsumerState<_PlayerProgressBar> {
               },
               onChangeEnd: (value) async {
                 final duration = progress?.duration ?? Duration.zero;
+                if (duration == Duration.zero) {
+                  // Duration unknown -- cannot compute a meaningful position.
+                  await widget.onSeekEnd?.call();
+                  if (!mounted) return;
+                  setState(() => _isDragging = false);
+                  return;
+                }
                 final seekPosition = Duration(
                   milliseconds: (duration.inMilliseconds * value).round(),
                 );
