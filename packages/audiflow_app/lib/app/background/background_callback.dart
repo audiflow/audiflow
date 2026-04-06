@@ -5,6 +5,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:isar_community/isar.dart';
 import 'package:logger/logger.dart';
 import 'package:path_provider/path_provider.dart';
@@ -21,6 +22,116 @@ void _bgDebug(String message) {
   final stamped = '[BG-DEBUG ${DateTime.now().toIso8601String()}] $message';
   debugPrint(stamped);
   developer.log(stamped, name: 'BackgroundRefresh');
+}
+
+// Temporary diagnostic wrapper for auto-download investigation.
+// Delegates all calls to the real repo, adding Sentry breadcrumbs for
+// createDownload. Remove once investigation is resolved.
+class _DiagDownloadRepo implements DownloadRepository {
+  _DiagDownloadRepo(this._inner, {required bool sentryEnabled})
+    : _sentry = sentryEnabled;
+
+  final DownloadRepository _inner;
+  final bool _sentry;
+
+  @override
+  Future<DownloadTask?> createDownload({
+    required int episodeId,
+    required String audioUrl,
+    required bool wifiOnly,
+  }) async {
+    _bgDebug(
+      'auto-download: createDownload '
+      'episodeId=$episodeId wifiOnly=$wifiOnly',
+    );
+    if (_sentry) {
+      Sentry.addBreadcrumb(
+        Breadcrumb(
+          message: 'auto-download: createDownload episodeId=$episodeId',
+          category: 'background.download',
+          data: {'audioUrl': audioUrl, 'wifiOnly': wifiOnly},
+        ),
+      );
+    }
+    final task = await _inner.createDownload(
+      episodeId: episodeId,
+      audioUrl: audioUrl,
+      wifiOnly: wifiOnly,
+    );
+    _bgDebug(
+      'auto-download: createDownload result=${task != null ? "created" : "skipped (duplicate)"}',
+    );
+    if (_sentry) {
+      Sentry.addBreadcrumb(
+        Breadcrumb(
+          message:
+              'auto-download: ${task != null ? "created" : "skipped"} '
+              'episodeId=$episodeId',
+          category: 'background.download',
+        ),
+      );
+    }
+    return task;
+  }
+
+  // --- pass-through ---
+
+  @override
+  Future<void> delete(int id) => _inner.delete(id);
+  @override
+  Future<int> deleteAllCompleted() => _inner.deleteAllCompleted();
+  @override
+  Future<int> getActiveCount() => _inner.getActiveCount();
+  @override
+  Future<List<DownloadTask>> getAll() => _inner.getAll();
+  @override
+  Future<DownloadTask?> getById(int id) => _inner.getById(id);
+  @override
+  Future<DownloadTask?> getByEpisodeId(int episodeId) =>
+      _inner.getByEpisodeId(episodeId);
+  @override
+  Future<List<DownloadTask>> getByStatus(DownloadStatus status) =>
+      _inner.getByStatus(status);
+  @override
+  Future<DownloadTask?> getCompletedForEpisode(int episodeId) =>
+      _inner.getCompletedForEpisode(episodeId);
+  @override
+  Future<DownloadTask?> getNextPending({required bool isOnWifi}) =>
+      _inner.getNextPending(isOnWifi: isOnWifi);
+  @override
+  Future<int> getTotalStorageUsed() => _inner.getTotalStorageUsed();
+  @override
+  Future<void> incrementRetryCount(int id) => _inner.incrementRetryCount(id);
+  @override
+  Future<void> updateProgress({
+    required int id,
+    required int downloadedBytes,
+    int? totalBytes,
+  }) => _inner.updateProgress(
+    id: id,
+    downloadedBytes: downloadedBytes,
+    totalBytes: totalBytes,
+  );
+  @override
+  Future<void> updateStatus({
+    required int id,
+    required DownloadStatus status,
+    String? localPath,
+    String? lastError,
+  }) => _inner.updateStatus(
+    id: id,
+    status: status,
+    localPath: localPath,
+    lastError: lastError,
+  );
+  @override
+  Stream<List<DownloadTask>> watchAll() => _inner.watchAll();
+  @override
+  Stream<DownloadTask?> watchByEpisodeId(int episodeId) =>
+      _inner.watchByEpisodeId(episodeId);
+  @override
+  Stream<List<DownloadTask>> watchByStatus(DownloadStatus status) =>
+      _inner.watchByStatus(status);
 }
 
 @pragma('vm:entry-point')
@@ -84,6 +195,13 @@ void backgroundCallback() {
           category: 'background',
         ),
       );
+      // Diagnostic: verify background Sentry pipeline works.
+      // Remove once investigation is resolved.
+      final startId = await Sentry.captureMessage(
+        'bg-refresh: started',
+        level: SentryLevel.info,
+      );
+      _bgDebug('captureMessage sentryId=$startId');
     }
 
     Isar? isar;
@@ -134,8 +252,12 @@ void backgroundCallback() {
       final episodeRepo = EpisodeRepositoryImpl(datasource: episodeDatasource);
 
       final downloadDatasource = DownloadLocalDatasource(isar);
-      final downloadRepo = DownloadRepositoryImpl(
+      final downloadRepoImpl = DownloadRepositoryImpl(
         datasource: downloadDatasource,
+      );
+      final downloadRepo = _DiagDownloadRepo(
+        downloadRepoImpl,
+        sentryEnabled: sentryInitialized,
       );
 
       final feedParser = FeedParserService(logger: logger);
@@ -187,12 +309,52 @@ void backgroundCallback() {
               ),
             );
           }
+          _bgDebug('showNotification called — count=${notifications.length}');
           try {
+            _bgDebug('initializing notification plugin');
             final plugin = await notificationService.initialize();
+            _bgDebug('notification plugin initialized');
+
+            // Diagnostic: check if notification permissions are granted.
+            final resolved = plugin
+                .resolvePlatformSpecificImplementation<
+                  IOSFlutterLocalNotificationsPlugin
+                >();
+            if (resolved != null) {
+              final pending = await plugin.pendingNotificationRequests();
+              _bgDebug(
+                'iOS notification impl resolved, '
+                'pending=${pending.length}',
+              );
+            } else {
+              _bgDebug(
+                'iOS notification impl NOT resolved '
+                '(may indicate plugin init issue)',
+              );
+            }
+
+            if (sentryInitialized) {
+              await Sentry.captureMessage(
+                'bg-notification: dispatching '
+                '${notifications.length} notification(s)',
+                level: SentryLevel.info,
+                withScope: (scope) {
+                  scope.setContexts('notification_diag', {
+                    'notification_count': notifications.length,
+                    'ios_impl_resolved': resolved != null,
+                    'episodes': notifications
+                        .map((n) => '${n.podcastTitle}: ${n.episodeTitle}')
+                        .toList(),
+                  });
+                },
+              );
+            }
+
             await notificationService.showPerEpisodeNotifications(
               plugin,
               notifications,
             );
+            _bgDebug('notifications dispatched successfully');
             if (sentryInitialized) {
               Sentry.addBreadcrumb(
                 Breadcrumb(
@@ -202,6 +364,7 @@ void backgroundCallback() {
               );
             }
           } catch (e, stack) {
+            _bgDebug('notification FAILED: $e');
             logger.e(
               'Failed to show notifications',
               error: e,
@@ -226,6 +389,13 @@ void backgroundCallback() {
             category: 'background',
           ),
         );
+        // Diagnostic: send completion event with breadcrumb trail attached.
+        // Remove once investigation is resolved.
+        final doneId = await Sentry.captureMessage(
+          'bg-refresh: completed',
+          level: SentryLevel.info,
+        );
+        _bgDebug('completion captureMessage sentryId=$doneId');
       }
     } catch (e, stack) {
       _bgDebug('background refresh FAILED: $e');
