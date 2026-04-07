@@ -25,14 +25,15 @@ Three selection patterns, each applied where it fits best:
 
 ```dart
 CopyableText(
-  text: '42',           // value to display and copy
-  label: 'Episode',     // optional leading label (not copied)
+  text: '42',                          // value to display and copy
+  snackBarMessage: l10n.commonCopied,  // required localized message
+  label: 'Episode',                    // optional leading label (not copied)
   style: TextStyle(...),
 )
 ```
 
 - On tap: copies `text` to clipboard via `Clipboard.setData(ClipboardData(text: value))`
-- Shows snackbar "Copied to clipboard" (auto-dismiss ~2s)
+- Shows snackbar with localized message (auto-dismiss ~1 second)
 - Displays a small copy icon alongside the text
 
 ### SelectionArea wrappers (in audiflow_app screens)
@@ -51,7 +52,7 @@ Replace `Text()` with `SelectableText()` for titles and transcript segment bodie
 |---------|---------|
 | Title | `SelectableText` |
 | Description / show notes (HTML) | `SelectionArea` wrapping `Html()` |
-| Podcast name | `SelectableText` |
+| Podcast name | `Text` (tappable link, navigates to podcast) |
 | Episode number | `CopyableText` |
 | Duration | `CopyableText` |
 | Publish date | `CopyableText` |

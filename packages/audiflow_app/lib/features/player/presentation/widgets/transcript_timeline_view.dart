@@ -262,13 +262,16 @@ class _ChapterHeader extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 4),
-      child: SelectableText(
-        chapter.title,
-        style: theme.textTheme.labelLarge?.copyWith(
-          color: colorScheme.primary,
-          fontWeight: FontWeight.bold,
+      child: SelectionArea(
+        child: Text(
+          chapter.title,
+          style: theme.textTheme.labelLarge?.copyWith(
+            color: colorScheme.primary,
+            fontWeight: FontWeight.bold,
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
-        maxLines: 1,
       ),
     );
   }

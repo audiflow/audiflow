@@ -234,10 +234,10 @@ import 'package:flutter/services.dart';
 class CopyableText extends StatelessWidget {
   const CopyableText({
     required this.text,
+    required this.snackBarMessage,
     this.label,
     this.style,
     this.labelStyle,
-    this.snackBarMessage,
     super.key,
   });
 
@@ -253,8 +253,8 @@ class CopyableText extends StatelessWidget {
   /// Style for the label text. Defaults to a dimmed variant of [style].
   final TextStyle? labelStyle;
 
-  /// Custom snackbar message. Defaults to a generic "Copied to clipboard".
-  final String? snackBarMessage;
+  /// Localized snackbar message shown after copying.
+  final String snackBarMessage;
 
   @override
   Widget build(BuildContext context) {
@@ -290,11 +290,12 @@ class CopyableText extends StatelessWidget {
     );
   }
 
-  void _copyToClipboard(BuildContext context) {
-    Clipboard.setData(ClipboardData(text: text));
+  Future<void> _copyToClipboard(BuildContext context) async {
+    await Clipboard.setData(ClipboardData(text: text));
+    if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(snackBarMessage ?? 'Copied to clipboard'),
+        content: Text(snackBarMessage),
         duration: const Duration(seconds: 1),
       ),
     );
