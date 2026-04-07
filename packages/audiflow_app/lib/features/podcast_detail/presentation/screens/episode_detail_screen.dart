@@ -896,8 +896,7 @@ class _EpisodeStatsSection extends StatelessWidget {
         const SizedBox(height: Spacing.sm),
         Table(
           columnWidths: const {0: IntrinsicColumnWidth(), 1: FlexColumnWidth()},
-          defaultVerticalAlignment: TableCellVerticalAlignment.baseline,
-          textBaseline: TextBaseline.alphabetic,
+          defaultVerticalAlignment: TableCellVerticalAlignment.top,
           children: rows
               .map(
                 (row) => TableRow(

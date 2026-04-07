@@ -96,7 +96,7 @@ Transcript segments have tap-to-seek on the parent `GestureDetector`/`InkWell`. 
 
 ### Snackbar Feedback
 
-`CopyableText` shows a `SnackBar` with "Copied to clipboard" on tap, auto-dismiss after ~2 seconds. Uses the app's existing snackbar pattern if available.
+`CopyableText` shows a `SnackBar` with "Copied to clipboard" on tap, auto-dismiss after ~1 second. Uses the app's existing snackbar pattern if available.
 
 ### Clipboard API
 
