@@ -69,11 +69,24 @@ class BackgroundDownloadService {
       final task = await _downloadRepo.getNextPending(isOnWifi: _isOnWifi);
       if (task == null) break;
 
+      // Re-check budget after the potentially slow getNextPending() call.
+      // A negative Duration would cause ArgumentError in Timer().
+      final remaining = _timeBudget - stopwatch.elapsed;
+      if (remaining <= Duration.zero) {
+        _logger?.w(
+          'BackgroundDownloadService: time budget exhausted after '
+          '${stopwatch.elapsed.inSeconds}s',
+        );
+        break;
+      }
+
       try {
-        final remaining = _timeBudget - stopwatch.elapsed;
-        await _processDownload(task, remainingBudget: remaining);
-        completedCount++;
-      } on DioException catch (e) {
+        final didComplete = await _processDownload(
+          task,
+          remainingBudget: remaining,
+        );
+        if (didComplete) completedCount++;
+      } on DioException catch (e, stack) {
         if (e.type == DioExceptionType.cancel) {
           // Time budget exhausted mid-download. The task was already reset
           // to pending inside _processDownload, so just break the loop
@@ -88,8 +101,9 @@ class BackgroundDownloadService {
           'BackgroundDownloadService: download failed for '
           'episodeId=${task.episodeId}',
           error: e,
+          stackTrace: stack,
         );
-        errors.add(('episodeId=${task.episodeId}', e, StackTrace.current));
+        errors.add(('episodeId=${task.episodeId}', e, stack));
         break;
       } catch (e, stack) {
         _logger?.e(
@@ -114,7 +128,9 @@ class BackgroundDownloadService {
     return completedCount;
   }
 
-  Future<void> _processDownload(
+  /// Returns `true` when the download completes successfully, `false` when
+  /// the task was reset to pending (e.g. server ignored Range header).
+  Future<bool> _processDownload(
     DownloadTask task, {
     required Duration remainingBudget,
   }) async {
@@ -239,7 +255,7 @@ class BackgroundDownloadService {
           id: task.id,
           status: const DownloadStatus.pending(),
         );
-        return;
+        return false;
       }
 
       // Final progress write to ensure downloadedBytes is up to date even
@@ -264,6 +280,8 @@ class BackgroundDownloadService {
       _logger?.i(
         'BackgroundDownloadService: completed episodeId=${task.episodeId}',
       );
+
+      return true;
     } on DioException catch (e) {
       if (e.type == DioExceptionType.cancel) {
         // Download cancelled by the time budget timer. This is not a
