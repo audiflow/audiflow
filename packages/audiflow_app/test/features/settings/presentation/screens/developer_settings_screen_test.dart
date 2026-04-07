@@ -1,6 +1,5 @@
 import 'package:audiflow_app/features/settings/presentation/screens/developer_settings_screen.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
-import 'package:audiflow_core/audiflow_core.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:checks/checks.dart';
 import 'package:flutter/material.dart';

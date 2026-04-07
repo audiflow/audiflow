@@ -17,6 +17,7 @@ import '../../../player/helpers/podcast_lookup.dart';
 import '../../../queue/presentation/controllers/queue_controller.dart';
 import '../../../share/presentation/helpers/share_helper.dart';
 import '../controllers/podcast_detail_controller.dart';
+import '../widgets/episode_dev_info_widget.dart';
 
 /// Displays full episode details with playback, download,
 /// and queue actions.
@@ -314,6 +315,7 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
                       podcastTitle: widget.podcastTitle,
                       progress: effectiveProgress,
                     ),
+                    EpisodeDevInfoWidget(feedUrl: widget.episode.sourceUrl),
                   ],
                 ),
               ),
