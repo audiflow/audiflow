@@ -126,6 +126,12 @@ class _SmartPlaylistGroupEpisodesScreenState
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
+    final allTasksAsync = ref.watch(allDownloadsProvider);
+
+    final dlState = computeBatchDownloadState(
+      episodeIds: _episodeIds,
+      allTasks: allTasksAsync.value ?? [],
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -133,17 +139,32 @@ class _SmartPlaylistGroupEpisodesScreenState
         actions: [
           PopupMenuButton<String>(
             onSelected: (value) {
-              if (value == 'download_all') {
-                handleBatchDownload(
-                  context: context,
-                  ref: ref,
-                  episodeIds: _episodeIds,
-                );
+              switch (value) {
+                case 'download_all':
+                  if (dlState.hasDownloadable) {
+                    handleBatchDownload(
+                      context: context,
+                      ref: ref,
+                      episodeIds: _episodeIds,
+                    );
+                  }
+                case 'cancel_all':
+                  handleBatchCancel(
+                    context: context,
+                    ref: ref,
+                    taskIds: dlState.activeTaskIds,
+                  );
+                case 'resume_all':
+                  handleBatchResume(
+                    context: context,
+                    ref: ref,
+                    taskIds: dlState.pausedTaskIds,
+                  );
               }
             },
             itemBuilder: (context) => [
               PopupMenuItem(
-                enabled: _episodeIds.isNotEmpty,
+                enabled: dlState.hasDownloadable,
                 value: 'download_all',
                 child: ListTile(
                   leading: const Icon(Icons.download),
@@ -152,6 +173,26 @@ class _SmartPlaylistGroupEpisodesScreenState
                   contentPadding: EdgeInsets.zero,
                 ),
               ),
+              if (dlState.hasActive)
+                PopupMenuItem(
+                  value: 'cancel_all',
+                  child: ListTile(
+                    leading: const Icon(Icons.cancel_outlined),
+                    title: Text(l10n.downloadCancelAll),
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+              if (dlState.hasPaused)
+                PopupMenuItem(
+                  value: 'resume_all',
+                  child: ListTile(
+                    leading: const Icon(Icons.play_arrow),
+                    title: Text(l10n.downloadResumeAll),
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
             ],
           ),
         ],

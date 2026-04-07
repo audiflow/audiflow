@@ -654,6 +654,22 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get downloadCancelAll => 'Cancel downloads';
+
+  @override
+  String downloadCancelAllDone(int count) {
+    return 'Cancelled $count downloads';
+  }
+
+  @override
+  String get downloadResumeAll => 'Resume downloads';
+
+  @override
+  String downloadResumeAllDone(int count) {
+    return 'Resumed $count downloads';
+  }
+
+  @override
   String get downloadsBatchLimitTitle => 'Max Batch Download';
 
   @override

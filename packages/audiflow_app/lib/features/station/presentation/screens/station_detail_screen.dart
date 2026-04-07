@@ -128,6 +128,7 @@ class _StationDetailContentState extends ConsumerState<_StationDetailContent> {
   @override
   Widget build(BuildContext context) {
     final episodesAsync = ref.watch(stationEpisodesProvider(widget.station.id));
+    final allTasksAsync = ref.watch(allDownloadsProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -135,27 +136,51 @@ class _StationDetailContentState extends ConsumerState<_StationDetailContent> {
         actions: [
           PopupMenuButton<String>(
             onSelected: (value) {
+              final ids = episodesAsync.value
+                  ?.map((se) => se.episodeId)
+                  .toList();
+              if (ids == null || ids.isEmpty) return;
+
+              final dlState = computeBatchDownloadState(
+                episodeIds: ids,
+                allTasks: allTasksAsync.value ?? [],
+              );
+
               switch (value) {
                 case 'edit':
                   context.push(
                     '${AppRoutes.library}/station/${widget.station.id}/edit',
                   );
                 case 'download_all':
-                  final ids = episodesAsync.value
-                      ?.map((se) => se.episodeId)
-                      .toList();
-                  if (ids != null && ids.isNotEmpty) {
+                  if (dlState.hasDownloadable) {
                     handleBatchDownload(
                       context: context,
                       ref: ref,
                       episodeIds: ids,
                     );
                   }
+                case 'cancel_all':
+                  handleBatchCancel(
+                    context: context,
+                    ref: ref,
+                    taskIds: dlState.activeTaskIds,
+                  );
+                case 'resume_all':
+                  handleBatchResume(
+                    context: context,
+                    ref: ref,
+                    taskIds: dlState.pausedTaskIds,
+                  );
               }
             },
             itemBuilder: (context) {
               final l10n = AppLocalizations.of(context);
-              final episodeCount = episodesAsync.value?.length ?? 0;
+              final ids =
+                  episodesAsync.value?.map((se) => se.episodeId).toList() ?? [];
+              final dlState = computeBatchDownloadState(
+                episodeIds: ids,
+                allTasks: allTasksAsync.value ?? [],
+              );
               return [
                 PopupMenuItem(
                   value: 'edit',
@@ -167,7 +192,7 @@ class _StationDetailContentState extends ConsumerState<_StationDetailContent> {
                   ),
                 ),
                 PopupMenuItem(
-                  enabled: 0 < episodeCount,
+                  enabled: dlState.hasDownloadable,
                   value: 'download_all',
                   child: ListTile(
                     leading: const Icon(Icons.download),
@@ -176,6 +201,26 @@ class _StationDetailContentState extends ConsumerState<_StationDetailContent> {
                     contentPadding: EdgeInsets.zero,
                   ),
                 ),
+                if (dlState.hasActive)
+                  PopupMenuItem(
+                    value: 'cancel_all',
+                    child: ListTile(
+                      leading: const Icon(Icons.cancel_outlined),
+                      title: Text(l10n.downloadCancelAll),
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+                if (dlState.hasPaused)
+                  PopupMenuItem(
+                    value: 'resume_all',
+                    child: ListTile(
+                      leading: const Icon(Icons.play_arrow),
+                      title: Text(l10n.downloadResumeAll),
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
               ];
             },
           ),

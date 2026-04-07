@@ -231,6 +231,20 @@
     "description": "一括ダウンロード後のスナックバー",
     "placeholders": { "count": { "type": "int" } }
   },
+  "downloadCancelAll": "ダウンロードをキャンセル",
+  "@downloadCancelAll": { "description": "アクティブなダウンロードをキャンセルするメニュー項目" },
+  "downloadCancelAllDone": "{count}件のダウンロードをキャンセルしました",
+  "@downloadCancelAllDone": {
+    "description": "一括キャンセル後のスナックバー",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "downloadResumeAll": "ダウンロードを再開",
+  "@downloadResumeAll": { "description": "一時停止中のダウンロードを再開するメニュー項目" },
+  "downloadResumeAllDone": "{count}件のダウンロードを再開しました",
+  "@downloadResumeAllDone": {
+    "description": "一括再開後のスナックバー",
+    "placeholders": { "count": { "type": "int" } }
+  },
   "downloadsBatchLimitTitle": "一括ダウンロード上限",
   "@downloadsBatchLimitTitle": { "description": "一括ダウンロード制限の設定ラベル" },
   "downloadsBatchLimitSubtitle": "一度にダウンロードするエピソードの最大数",

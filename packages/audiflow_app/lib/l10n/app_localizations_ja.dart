@@ -642,6 +642,22 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String get downloadCancelAll => 'ダウンロードをキャンセル';
+
+  @override
+  String downloadCancelAllDone(int count) {
+    return '$count件のダウンロードをキャンセルしました';
+  }
+
+  @override
+  String get downloadResumeAll => 'ダウンロードを再開';
+
+  @override
+  String downloadResumeAllDone(int count) {
+    return '$count件のダウンロードを再開しました';
+  }
+
+  @override
   String get downloadsBatchLimitTitle => '一括ダウンロード上限';
 
   @override

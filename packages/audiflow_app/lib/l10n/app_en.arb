@@ -423,6 +423,20 @@
     "description": "Snackbar after batch download",
     "placeholders": { "count": { "type": "int" } }
   },
+  "downloadCancelAll": "Cancel downloads",
+  "@downloadCancelAll": { "description": "Menu item to cancel active downloads" },
+  "downloadCancelAllDone": "Cancelled {count} downloads",
+  "@downloadCancelAllDone": {
+    "description": "Snackbar after cancelling batch downloads",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "downloadResumeAll": "Resume downloads",
+  "@downloadResumeAll": { "description": "Menu item to resume paused downloads" },
+  "downloadResumeAllDone": "Resumed {count} downloads",
+  "@downloadResumeAllDone": {
+    "description": "Snackbar after resuming batch downloads",
+    "placeholders": { "count": { "type": "int" } }
+  },
   "downloadsBatchLimitTitle": "Max Batch Download",
   "@downloadsBatchLimitTitle": { "description": "Settings label for batch download limit" },
   "downloadsBatchLimitSubtitle": "Maximum number of episodes to download at once",

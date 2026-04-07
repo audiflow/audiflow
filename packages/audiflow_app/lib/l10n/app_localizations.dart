@@ -1274,6 +1274,30 @@ abstract class AppLocalizations {
   /// **'Queued {count} downloads'**
   String downloadAllQueued(int count);
 
+  /// Menu item to cancel active downloads
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel downloads'**
+  String get downloadCancelAll;
+
+  /// Snackbar after cancelling batch downloads
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled {count} downloads'**
+  String downloadCancelAllDone(int count);
+
+  /// Menu item to resume paused downloads
+  ///
+  /// In en, this message translates to:
+  /// **'Resume downloads'**
+  String get downloadResumeAll;
+
+  /// Snackbar after resuming batch downloads
+  ///
+  /// In en, this message translates to:
+  /// **'Resumed {count} downloads'**
+  String downloadResumeAllDone(int count);
+
   /// Settings label for batch download limit
   ///
   /// In en, this message translates to:
