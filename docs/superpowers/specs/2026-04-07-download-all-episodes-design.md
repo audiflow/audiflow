@@ -23,7 +23,7 @@ New user preference in the download section of Settings:
 | Label | "Max batch download" |
 | Input | Free text number field |
 | Default | 25 |
-| Storage | New field in `AppSettings` Isar collection |
+| Storage | `SharedPreferences` via `SettingsKeys.batchDownloadLimit` |
 | Provider | `batchDownloadLimitProvider` in settings providers |
 
 Validation: positive integer, clamped to a reasonable range (1-500).

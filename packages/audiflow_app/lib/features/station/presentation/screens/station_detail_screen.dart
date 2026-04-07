@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
 import 'package:flutter/material.dart';
@@ -156,23 +158,29 @@ class _StationDetailContentState extends ConsumerState<_StationDetailContent> {
               switch (value) {
                 case 'download_all':
                   if (dlState.hasDownloadable) {
-                    handleBatchDownload(
-                      context: context,
-                      ref: ref,
-                      episodeIds: ids,
+                    unawaited(
+                      handleBatchDownload(
+                        context: context,
+                        ref: ref,
+                        episodeIds: ids,
+                      ),
                     );
                   }
                 case 'cancel_all':
-                  handleBatchCancel(
-                    context: context,
-                    ref: ref,
-                    episodeIds: ids,
+                  unawaited(
+                    handleBatchCancel(
+                      context: context,
+                      ref: ref,
+                      episodeIds: ids,
+                    ),
                   );
                 case 'resume_all':
-                  handleBatchResume(
-                    context: context,
-                    ref: ref,
-                    episodeIds: ids,
+                  unawaited(
+                    handleBatchResume(
+                      context: context,
+                      ref: ref,
+                      episodeIds: ids,
+                    ),
                   );
               }
             },

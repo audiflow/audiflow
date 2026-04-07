@@ -142,23 +142,29 @@ class _SmartPlaylistGroupEpisodesScreenState
               switch (value) {
                 case 'download_all':
                   if (dlState.hasDownloadable) {
-                    handleBatchDownload(
-                      context: context,
-                      ref: ref,
-                      episodeIds: _episodeIds,
+                    unawaited(
+                      handleBatchDownload(
+                        context: context,
+                        ref: ref,
+                        episodeIds: _episodeIds,
+                      ),
                     );
                   }
                 case 'cancel_all':
-                  handleBatchCancel(
-                    context: context,
-                    ref: ref,
-                    episodeIds: _episodeIds,
+                  unawaited(
+                    handleBatchCancel(
+                      context: context,
+                      ref: ref,
+                      episodeIds: _episodeIds,
+                    ),
                   );
                 case 'resume_all':
-                  handleBatchResume(
-                    context: context,
-                    ref: ref,
-                    episodeIds: _episodeIds,
+                  unawaited(
+                    handleBatchResume(
+                      context: context,
+                      ref: ref,
+                      episodeIds: _episodeIds,
+                    ),
                   );
               }
             },
