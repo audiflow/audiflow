@@ -218,7 +218,7 @@ void main() {
       check(errorUpdates).isNotEmpty();
     });
 
-    test('retries on error and increments retry count', () async {
+    test('increments retry count on error and breaks', () async {
       downloadRepo.pending.add(_task(id: 1, episodeId: 10, retryCount: 0));
       episodeRepo.episodes[10] = _episode(id: 10);
 
@@ -239,12 +239,12 @@ void main() {
 
       check(count).equals(0);
       check(downloadRepo.incrementedRetryIds).contains(1);
-      // The service loops until retries are exhausted (same task keeps
-      // failing), so the final status is failed after 5 retries.
+      // Service breaks after first failure to avoid tight retry loop.
+      // Task stays pending for the next background run.
+      check(downloadRepo.incrementedRetryIds.length).equals(1);
       final lastStatus = downloadRepo.statusUpdates.last;
-      check(lastStatus.status).isA<DownloadStatusFailed>();
+      check(lastStatus.status).isA<DownloadStatusPending>();
       check(lastStatus.lastError).isNotNull();
-      check(downloadRepo.incrementedRetryIds.length).equals(5);
     });
 
     test('marks failed after max retries exhausted', () async {

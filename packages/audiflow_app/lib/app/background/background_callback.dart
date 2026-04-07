@@ -501,6 +501,7 @@ Future<bool> _executeDownloadTask(Map<String, dynamic>? inputData) async {
 
   Isar? isar;
   Dio? dio;
+  var success = false;
 
   try {
     final dir = await getApplicationDocumentsDirectory();
@@ -536,10 +537,19 @@ Future<bool> _executeDownloadTask(Map<String, dynamic>? inputData) async {
     final count = await service.execute();
     _bgDebug('download service completed — $count downloaded');
 
+    // Check if pending downloads remain (failures or time budget exhaustion).
+    final remaining = await downloadRepo.getByStatus(
+      const DownloadStatus.pending(),
+    );
+    // Return false so workmanager retries with backoff when tasks remain.
+    success = remaining.isEmpty;
+
     if (sentryInitialized) {
       Sentry.addBreadcrumb(
         Breadcrumb(
-          message: 'Background download completed: $count files',
+          message:
+              'Background download completed: $count files, '
+              '${remaining.length} remaining',
           category: 'background.download',
         ),
       );
@@ -560,8 +570,8 @@ Future<bool> _executeDownloadTask(Map<String, dynamic>? inputData) async {
       await Future<void>.delayed(const Duration(seconds: 3));
       await Sentry.close();
     }
-    _bgDebug('download task finished');
+    _bgDebug('download task finished (success=$success)');
   }
 
-  return true;
+  return success;
 }

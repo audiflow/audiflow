@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:audiflow_core/audiflow_core.dart';
@@ -79,6 +80,10 @@ class BackgroundDownloadService {
           stackTrace: stack,
         );
         errors.add(('episodeId=${task.episodeId}', e, stack));
+        // Stop after first failure to avoid immediate retry of the same
+        // pending task in a tight loop. The task stays pending for the next
+        // scheduled background run or foreground pickup.
+        break;
       }
     }
 
@@ -139,10 +144,17 @@ class BackgroundDownloadService {
             final totalBytes = total == -1
                 ? null
                 : total + task.downloadedBytes;
-            _downloadRepo.updateProgress(
-              id: task.id,
-              downloadedBytes: downloadedBytes,
-              totalBytes: totalBytes,
+            unawaited(
+              _downloadRepo
+                  .updateProgress(
+                    id: task.id,
+                    downloadedBytes: downloadedBytes,
+                    totalBytes: totalBytes,
+                  )
+                  .catchError((_) {
+                    // Best-effort progress tracking; never abort the download
+                    // because a progress write failed.
+                  }),
             );
           }
         },
@@ -199,6 +211,15 @@ class BackgroundDownloadService {
     } on DownloadException catch (e) {
       await _handleError(task, e);
       rethrow;
+    } catch (e, stackTrace) {
+      // Catch-all for unexpected errors (FormatException, Isar errors, etc.)
+      // to prevent tasks from being stuck in 'downloading' state.
+      final error = DownloadException(
+        DownloadErrorType.unknown,
+        'Unexpected download error: $e',
+      );
+      await _handleError(task, error);
+      Error.throwWithStackTrace(error, stackTrace);
     }
   }
 
@@ -234,8 +255,8 @@ class BackgroundDownloadService {
     final maxLength = sanitized.length < 50 ? sanitized.length : 50;
     final name = sanitized.substring(0, maxLength);
 
-    final uri = Uri.parse(url);
-    final ext = p.extension(uri.path);
+    final uri = Uri.tryParse(url);
+    final ext = uri != null ? p.extension(uri.path) : '';
     final extension = ext.isNotEmpty ? ext : '.mp3';
 
     return p.join(_downloadsDir, '${episodeId}_$name$extension');
