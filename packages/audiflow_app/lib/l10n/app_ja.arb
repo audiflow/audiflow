@@ -415,7 +415,6 @@
   "developerSectionLabel": "開発者",
   "developerRssFeedUrl": "RSSフィードURL",
   "developerCopyLabel": "コピー",
-  "developerCopied": "クリップボードにコピーしました",
   "developerPatternLabel": "スマートプレイリストパターン",
   "developerPatternNotDefined": "未定義 — 追加しませんか？"
 }

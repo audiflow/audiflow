@@ -73,9 +73,9 @@ class EpisodeDevInfoWidget extends ConsumerWidget {
               onPressed: () async {
                 await Clipboard.setData(ClipboardData(text: feedUrl));
                 if (!context.mounted) return;
-                ScaffoldMessenger.of(
-                  context,
-                ).showSnackBar(SnackBar(content: Text(l10n.developerCopied)));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(l10n.commonCopiedToClipboard)),
+                );
               },
             ),
           ],

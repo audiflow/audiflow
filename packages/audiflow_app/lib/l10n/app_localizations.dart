@@ -2330,12 +2330,6 @@ abstract class AppLocalizations {
   /// **'Copy'**
   String get developerCopyLabel;
 
-  /// Snackbar message after copying RSS URL
-  ///
-  /// In en, this message translates to:
-  /// **'Copied to clipboard'**
-  String get developerCopied;
-
   /// Label for the pattern link field
   ///
   /// In en, this message translates to:

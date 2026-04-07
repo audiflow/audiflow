@@ -60,7 +60,7 @@ class SmartPlaylistSchemaVersion extends _$SmartPlaylistSchemaVersion {
   int build() => 0;
 
   /// Updates the schema version.
-  void set(int version) {
+  void setSchemaVersion(int version) {
     state = version;
   }
 }

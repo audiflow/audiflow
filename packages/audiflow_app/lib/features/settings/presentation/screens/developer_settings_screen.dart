@@ -38,7 +38,7 @@ class DeveloperSettingsScreen extends ConsumerWidget {
               .setSummaries(rootMeta.patterns);
           ref
               .read(smartPlaylistSchemaVersionProvider.notifier)
-              .set(rootMeta.schemaVersion);
+              .setSchemaVersion(rootMeta.schemaVersion);
         },
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
@@ -95,16 +95,19 @@ class DeveloperSettingsScreen extends ConsumerWidget {
             ),
 
             // Pattern items
-            ...summaries.map(
-              (summary) => ListTile(
+            ...summaries.map((summary) {
+              final enabled = 0 < schemaVersion;
+              return ListTile(
                 title: Text(summary.displayName),
                 dense: true,
-                trailing: Icon(
-                  Symbols.chevron_right,
-                  size: 18,
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-                onTap: 0 < schemaVersion
+                trailing: enabled
+                    ? Icon(
+                        Symbols.chevron_right,
+                        size: 18,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      )
+                    : null,
+                onTap: enabled
                     ? () async {
                         try {
                           final ok = await launchUrl(
@@ -126,8 +129,8 @@ class DeveloperSettingsScreen extends ConsumerWidget {
                         }
                       }
                     : null,
-              ),
-            ),
+              );
+            }),
           ],
         ),
       ),

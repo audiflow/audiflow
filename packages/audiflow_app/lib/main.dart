@@ -168,7 +168,7 @@ Future<void> _startApp(String smartPlaylistConfigBaseUrl) async {
       .setSummaries(rootMeta.patterns);
   container
       .read(smartPlaylistSchemaVersionProvider.notifier)
-      .set(rootMeta.schemaVersion);
+      .setSchemaVersion(rootMeta.schemaVersion);
 
   // Run cache eviction non-blocking after startup
   _runCacheEviction(container, isar);

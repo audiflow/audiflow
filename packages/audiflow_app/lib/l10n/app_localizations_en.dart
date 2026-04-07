@@ -1229,9 +1229,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get developerCopyLabel => 'Copy';
 
   @override
-  String get developerCopied => 'Copied to clipboard';
-
-  @override
   String get developerPatternLabel => 'Smart Playlist Pattern';
 
   @override

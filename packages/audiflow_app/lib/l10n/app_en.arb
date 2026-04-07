@@ -777,8 +777,6 @@
   "@developerRssFeedUrl": {"description": "Label for the RSS feed URL field"},
   "developerCopyLabel": "Copy",
   "@developerCopyLabel": {"description": "Copy button label"},
-  "developerCopied": "Copied to clipboard",
-  "@developerCopied": {"description": "Snackbar message after copying RSS URL"},
   "developerPatternLabel": "Smart Playlist Pattern",
   "@developerPatternLabel": {"description": "Label for the pattern link field"},
   "developerPatternNotDefined": "Not defined — add one?",

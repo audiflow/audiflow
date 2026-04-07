@@ -1210,9 +1210,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get developerCopyLabel => 'コピー';
 
   @override
-  String get developerCopied => 'クリップボードにコピーしました';
-
-  @override
   String get developerPatternLabel => 'スマートプレイリストパターン';
 
   @override
