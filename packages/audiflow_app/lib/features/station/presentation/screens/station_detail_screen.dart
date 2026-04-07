@@ -186,15 +186,6 @@ class _StationDetailContentState extends ConsumerState<_StationDetailContent> {
               );
               return [
                 PopupMenuItem(
-                  value: 'edit',
-                  child: ListTile(
-                    leading: const Icon(Symbols.edit),
-                    title: Text(l10n.stationEditTooltip),
-                    dense: true,
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                ),
-                PopupMenuItem(
                   enabled: dlState.hasDownloadable,
                   value: 'download_all',
                   child: ListTile(
@@ -224,6 +215,15 @@ class _StationDetailContentState extends ConsumerState<_StationDetailContent> {
                       contentPadding: EdgeInsets.zero,
                     ),
                   ),
+                PopupMenuItem(
+                  value: 'edit',
+                  child: ListTile(
+                    leading: const Icon(Symbols.edit),
+                    title: Text(l10n.stationEditTooltip),
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
               ];
             },
           ),
