@@ -54,7 +54,7 @@ void main() {
 
       check(find.text('Developer').evaluate()).isNotEmpty();
       check(find.text('https://example.com/feed.xml').evaluate()).isNotEmpty();
-      check(find.text('Copy').evaluate()).isNotEmpty();
+      check(find.byType(IconButton).evaluate()).isNotEmpty();
     });
 
     testWidgets('shows "Not defined" when no pattern matches', (tester) async {

@@ -30,10 +30,14 @@ class EpisodeDevInfoWidget extends ConsumerWidget {
     final summaries = ref.watch(patternSummariesProvider);
     final schemaVersion = ref.watch(smartPlaylistSchemaVersionProvider);
 
-    // Find first pattern whose feedUrlHint is contained in the feed URL.
     final match = summaries
         .where((s) => feedUrl.contains(s.feedUrlHint))
         .firstOrNull;
+
+    final labelStyle = theme.textTheme.bodySmall?.copyWith(
+      color: theme.colorScheme.onSurfaceVariant,
+    );
+    final valueStyle = theme.textTheme.bodySmall;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -42,109 +46,96 @@ class EpisodeDevInfoWidget extends ConsumerWidget {
         const SizedBox(height: Spacing.sm),
         Text(
           l10n.developerSectionLabel,
-          style: theme.textTheme.labelSmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-            letterSpacing: 0.5,
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
           ),
         ),
         const SizedBox(height: Spacing.sm),
-        _InfoCard(
-          label: l10n.developerRssFeedUrl,
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  feedUrl,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    fontFamily: 'monospace',
-                  ),
-                ),
-              ),
-              const SizedBox(width: Spacing.sm),
-              ActionChip(
-                label: Text(l10n.developerCopyLabel),
-                onPressed: () {
-                  Clipboard.setData(ClipboardData(text: feedUrl));
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(SnackBar(content: Text(l10n.developerCopied)));
-                },
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: Spacing.xs),
-        _InfoCard(
-          label: l10n.developerPatternLabel,
-          child: InkWell(
-            onTap: () => launchUrl(
-              Uri.parse(
-                match != null
-                    ? SmartPlaylistUrls.patternDir(
-                        match.id,
-                        schemaVersion: schemaVersion,
-                      )
-                    : SmartPlaylistUrls.repoBranch(
-                        schemaVersion: schemaVersion,
-                      ),
-              ),
-              mode: LaunchMode.externalApplication,
-            ),
-            child: Row(
+        Table(
+          columnWidths: const {0: IntrinsicColumnWidth(), 1: FlexColumnWidth()},
+          defaultVerticalAlignment: TableCellVerticalAlignment.baseline,
+          textBaseline: TextBaseline.alphabetic,
+          children: [
+            TableRow(
               children: [
-                Expanded(
-                  child: Text(
-                    match?.displayName ?? l10n.developerPatternNotDefined,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: match != null
-                          ? theme.colorScheme.primary
-                          : theme.colorScheme.onSurfaceVariant,
-                    ),
+                Padding(
+                  padding: const EdgeInsets.only(
+                    right: Spacing.md,
+                    bottom: Spacing.xs,
                   ),
+                  child: Text(l10n.developerRssFeedUrl, style: labelStyle),
                 ),
-                Icon(
-                  Symbols.open_in_new,
-                  size: 16,
-                  color: theme.colorScheme.primary,
+                Padding(
+                  padding: const EdgeInsets.only(bottom: Spacing.xs),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          feedUrl,
+                          style: valueStyle?.copyWith(fontFamily: 'monospace'),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: IconButton(
+                          padding: EdgeInsets.zero,
+                          iconSize: 16,
+                          icon: Icon(
+                            Symbols.content_copy,
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                          onPressed: () {
+                            Clipboard.setData(ClipboardData(text: feedUrl));
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(l10n.developerCopied)),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
-          ),
+            TableRow(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(
+                    right: Spacing.md,
+                    bottom: Spacing.xs,
+                  ),
+                  child: Text(l10n.developerPatternLabel, style: labelStyle),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: Spacing.xs),
+                  child: GestureDetector(
+                    onTap: () => launchUrl(
+                      Uri.parse(
+                        match != null
+                            ? SmartPlaylistUrls.patternDir(
+                                match.id,
+                                schemaVersion: schemaVersion,
+                              )
+                            : SmartPlaylistUrls.repoBranch(
+                                schemaVersion: schemaVersion,
+                              ),
+                      ),
+                      mode: LaunchMode.externalApplication,
+                    ),
+                    child: Text(
+                      match?.displayName ?? l10n.developerPatternNotDefined,
+                      style: valueStyle?.copyWith(
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ],
-    );
-  }
-}
-
-class _InfoCard extends StatelessWidget {
-  const _InfoCard({required this.label, required this.child});
-
-  final String label;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(Spacing.sm),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: Spacing.xs),
-          child,
-        ],
-      ),
     );
   }
 }
