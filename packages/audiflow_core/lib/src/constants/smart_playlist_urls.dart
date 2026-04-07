@@ -7,5 +7,13 @@ class SmartPlaylistUrls {
       'https://github.com/audiflow/audiflow-smartplaylist';
 
   /// Returns the URL to a specific pattern's directory in the repo.
-  static String patternDir(String patternId) => '$repo/tree/main/$patternId/';
+  ///
+  /// Points to the `dev/v{schemaVersion}` branch where pattern
+  /// data lives.
+  static String patternDir(String patternId, {required int schemaVersion}) =>
+      '$repo/tree/dev/v$schemaVersion/$patternId/';
+
+  /// Returns the repo URL for the `dev/v{schemaVersion}` branch root.
+  static String repoBranch({required int schemaVersion}) =>
+      '$repo/tree/dev/v$schemaVersion';
 }

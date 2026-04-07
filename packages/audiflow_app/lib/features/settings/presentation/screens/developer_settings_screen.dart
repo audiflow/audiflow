@@ -21,6 +21,7 @@ class DeveloperSettingsScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     final devInfoEnabled = ref.watch(devShowDeveloperInfoProvider);
     final summaries = ref.watch(patternSummariesProvider);
+    final schemaVersion = ref.watch(smartPlaylistSchemaVersionProvider);
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settingsDeveloperTitle)),
@@ -31,6 +32,9 @@ class DeveloperSettingsScreen extends ConsumerWidget {
           ref
               .read(patternSummariesProvider.notifier)
               .setSummaries(rootMeta.patterns);
+          ref
+              .read(smartPlaylistSchemaVersionProvider.notifier)
+              .set(rootMeta.schemaVersion);
         },
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
@@ -89,7 +93,12 @@ class DeveloperSettingsScreen extends ConsumerWidget {
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
                 onTap: () => launchUrl(
-                  Uri.parse(SmartPlaylistUrls.patternDir(summary.id)),
+                  Uri.parse(
+                    SmartPlaylistUrls.patternDir(
+                      summary.id,
+                      schemaVersion: schemaVersion,
+                    ),
+                  ),
                   mode: LaunchMode.externalApplication,
                 ),
               ),

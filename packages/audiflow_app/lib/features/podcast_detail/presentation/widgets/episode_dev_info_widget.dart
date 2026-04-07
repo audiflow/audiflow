@@ -28,6 +28,7 @@ class EpisodeDevInfoWidget extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final summaries = ref.watch(patternSummariesProvider);
+    final schemaVersion = ref.watch(smartPlaylistSchemaVersionProvider);
 
     // Find first pattern whose feedUrlHint is contained in the feed URL.
     final match = summaries
@@ -79,8 +80,13 @@ class EpisodeDevInfoWidget extends ConsumerWidget {
             onTap: () => launchUrl(
               Uri.parse(
                 match != null
-                    ? SmartPlaylistUrls.patternDir(match.id)
-                    : SmartPlaylistUrls.repo,
+                    ? SmartPlaylistUrls.patternDir(
+                        match.id,
+                        schemaVersion: schemaVersion,
+                      )
+                    : SmartPlaylistUrls.repoBranch(
+                        schemaVersion: schemaVersion,
+                      ),
               ),
               mode: LaunchMode.externalApplication,
             ),
