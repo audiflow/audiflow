@@ -128,6 +128,7 @@ export 'src/features/download/repositories/download_repository.dart';
 export 'src/features/download/repositories/download_repository_impl.dart';
 export 'src/features/download/services/download_file_service.dart';
 export 'src/features/download/services/download_queue_service.dart';
+export 'src/features/download/services/background_download_service.dart';
 export 'src/features/download/services/download_service.dart';
 
 // Isar collection models (schemas for Isar.open)

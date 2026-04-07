@@ -16,6 +16,7 @@ class BackgroundTaskRegistrar {
   BackgroundTaskRegistrar._();
 
   static const taskName = 'com.audiflow.backgroundRefresh';
+  static const downloadTaskName = 'com.audiflow.backgroundDownload';
 
   /// Snapshots the current settings into a map for the background isolate.
   static Map<String, dynamic> buildInputData(AppSettingsRepository repo) => {
@@ -54,6 +55,27 @@ class BackgroundTaskRegistrar {
         existingWorkPolicy: replaceExisting
             ? ExistingPeriodicWorkPolicy.replace
             : ExistingPeriodicWorkPolicy.keep,
+      );
+    } on Exception {
+      // Platform channel or runtime error.
+    } on Error {
+      // UnimplementedError in test / unsupported platform.
+    }
+  }
+
+  /// Schedules a one-off background download task to process pending
+  /// downloads enqueued by the feed sync.
+  static Future<void> registerDownloadTask({bool wifiOnly = false}) async {
+    try {
+      await Workmanager().registerOneOffTask(
+        downloadTaskName,
+        downloadTaskName,
+        constraints: Constraints(
+          networkType: wifiOnly ? NetworkType.unmetered : NetworkType.connected,
+        ),
+        existingWorkPolicy: ExistingWorkPolicy.keep,
+        backoffPolicy: BackoffPolicy.exponential,
+        backoffPolicyDelay: const Duration(minutes: 1),
       );
     } on Exception {
       // Platform channel or runtime error.

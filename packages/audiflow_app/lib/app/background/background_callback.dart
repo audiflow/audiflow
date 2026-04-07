@@ -165,6 +165,9 @@ void backgroundCallback() {
     await _initDiagLog();
 
     _bgDebug('executeTask called — taskName=$taskName');
+    if (taskName == BackgroundTaskRegistrar.downloadTaskName) {
+      return _executeDownloadTask(inputData);
+    }
     if (taskName != BackgroundTaskRegistrar.taskName) {
       _bgDebug('taskName mismatch, returning true');
       return true;
@@ -403,6 +406,20 @@ void backgroundCallback() {
       await refreshService.execute();
       _bgDebug('refreshService.execute() completed');
 
+      // Schedule background download task if any downloads were enqueued.
+      final pendingDownloads = await downloadRepo.getByStatus(
+        const DownloadStatus.pending(),
+      );
+      if (pendingDownloads.isNotEmpty) {
+        _bgDebug(
+          'scheduling download task for '
+          '${pendingDownloads.length} pending download(s)',
+        );
+        await BackgroundTaskRegistrar.registerDownloadTask(
+          wifiOnly: settingsRepo.getWifiOnlyDownload(),
+        );
+      }
+
       if (sentryInitialized) {
         Sentry.addBreadcrumb(
           Breadcrumb(
@@ -445,4 +462,106 @@ void backgroundCallback() {
 
     return true;
   });
+}
+
+/// Handles the background download processing task.
+///
+/// Initializes Isar, Dio, and Sentry, then processes pending download
+/// tasks within a 5-minute time budget. Uses [BackgroundDownloadService]
+/// which mirrors the download logic from [DownloadFileService] but runs
+/// independently of the Riverpod container.
+Future<bool> _executeDownloadTask(Map<String, dynamic>? inputData) async {
+  _bgDebug('download task started');
+
+  final logger = Logger(printer: PrefixPrinter(PrettyPrinter(methodCount: 0)));
+
+  var sentryInitialized = false;
+  try {
+    const sentryDsn = String.fromEnvironment('SENTRY_DSN');
+    const sentryEnvironment = String.fromEnvironment(
+      'SENTRY_ENVIRONMENT',
+      defaultValue: 'unknown',
+    );
+    if (sentryDsn.isNotEmpty) {
+      await Sentry.init((options) {
+        options.dsn = sentryDsn;
+        options.tracesSampleRate = 0;
+        options.environment = sentryEnvironment;
+        options.debug = kDebugMode;
+      });
+      sentryInitialized = true;
+    }
+  } catch (e, stack) {
+    logger.w(
+      'Sentry init failed in download task',
+      error: e,
+      stackTrace: stack,
+    );
+  }
+
+  Isar? isar;
+  Dio? dio;
+
+  try {
+    final dir = await getApplicationDocumentsDirectory();
+    isar = await openIsarWithRecovery(directory: dir.path, logger: logger);
+    dio = Dio(
+      BaseOptions(
+        connectTimeout: const Duration(seconds: 30),
+        receiveTimeout: const Duration(minutes: 10),
+      ),
+    );
+
+    final settingsRepo = BackgroundSettingsRepository(inputData);
+    final wifiOnly = settingsRepo.getWifiOnlyDownload();
+
+    final episodeDatasource = EpisodeLocalDatasource(isar);
+    final episodeRepo = EpisodeRepositoryImpl(datasource: episodeDatasource);
+
+    final downloadDatasource = DownloadLocalDatasource(isar);
+    final downloadRepo = DownloadRepositoryImpl(datasource: downloadDatasource);
+
+    final downloadsDir = '${dir.path}/downloads';
+
+    final service = BackgroundDownloadService(
+      downloadRepo: downloadRepo,
+      episodeRepo: episodeRepo,
+      dio: dio,
+      downloadsDir: downloadsDir,
+      logger: logger,
+      wifiOnly: wifiOnly,
+    );
+
+    _bgDebug('calling download service execute()');
+    final count = await service.execute();
+    _bgDebug('download service completed — $count downloaded');
+
+    if (sentryInitialized) {
+      Sentry.addBreadcrumb(
+        Breadcrumb(
+          message: 'Background download completed: $count files',
+          category: 'background.download',
+        ),
+      );
+    }
+  } catch (e, stack) {
+    _bgDebug('download task FAILED: $e');
+    logger.e('Background download failed', error: e, stackTrace: stack);
+    if (sentryInitialized) {
+      await Sentry.captureException(e, stackTrace: stack);
+    }
+  } finally {
+    dio?.close();
+    if (isar != null && isar.isOpen) {
+      await isar.close();
+    }
+    if (sentryInitialized) {
+      _bgDebug('waiting for Sentry transport to drain');
+      await Future<void>.delayed(const Duration(seconds: 3));
+      await Sentry.close();
+    }
+    _bgDebug('download task finished');
+  }
+
+  return true;
 }
