@@ -128,7 +128,7 @@ class BackgroundDownloadService {
         headers['Range'] = 'bytes=${task.downloadedBytes}-';
       }
 
-      var lastUpdateBytes = 0;
+      var lastUpdateBytes = task.downloadedBytes;
       const minBytesDelta = 256 * 1024; // 256 KB
 
       final response = await _dio.download(

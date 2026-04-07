@@ -406,7 +406,8 @@ void backgroundCallback() {
       await refreshService.execute();
       _bgDebug('refreshService.execute() completed');
 
-      // Schedule background download task if any downloads were enqueued.
+      // Schedule background download task if any pending downloads exist
+      // (newly enqueued by this feed sync or left over from prior runs).
       final pendingDownloads = await downloadRepo.getByStatus(
         const DownloadStatus.pending(),
       );

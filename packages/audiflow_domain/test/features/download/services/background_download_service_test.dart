@@ -22,7 +22,9 @@ class _FakeDownloadRepository implements DownloadRepository {
   @override
   Future<DownloadTask?> getNextPending({required bool isOnWifi}) async {
     final idx = pending.indexWhere(
-      (t) => t.downloadStatus is DownloadStatusPending,
+      (t) =>
+          t.downloadStatus is DownloadStatusPending &&
+          (isOnWifi || !t.wifiOnly),
     );
     if (0 <= idx) return pending[idx];
     return null;
