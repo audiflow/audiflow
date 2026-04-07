@@ -412,12 +412,20 @@ void backgroundCallback() {
         const DownloadStatus.pending(),
       );
       if (pendingDownloads.isNotEmpty) {
+        // Derive wifi constraint from actual pending tasks instead of the
+        // global setting. If all pending tasks are wifi-only, require
+        // unmetered; otherwise allow connected so cellular-eligible tasks
+        // are not blocked.
+        final requireWifiOnly = pendingDownloads.every(
+          (download) => download.wifiOnly,
+        );
         _bgDebug(
           'scheduling download task for '
-          '${pendingDownloads.length} pending download(s)',
+          '${pendingDownloads.length} pending download(s) '
+          '(wifiOnly=$requireWifiOnly)',
         );
         await BackgroundTaskRegistrar.registerDownloadTask(
-          wifiOnly: settingsRepo.getWifiOnlyDownload(),
+          wifiOnly: requireWifiOnly,
         );
       }
 

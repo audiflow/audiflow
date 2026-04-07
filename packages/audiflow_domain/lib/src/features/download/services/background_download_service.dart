@@ -73,6 +73,24 @@ class BackgroundDownloadService {
         final remaining = _timeBudget - stopwatch.elapsed;
         await _processDownload(task, remainingBudget: remaining);
         completedCount++;
+      } on DioException catch (e) {
+        if (e.type == DioExceptionType.cancel) {
+          // Time budget exhausted mid-download. The task was already reset
+          // to pending inside _processDownload, so just break the loop
+          // without counting it as an error.
+          _logger?.i(
+            'BackgroundDownloadService: stopping — time budget exhausted '
+            'during episodeId=${task.episodeId}',
+          );
+          break;
+        }
+        _logger?.e(
+          'BackgroundDownloadService: download failed for '
+          'episodeId=${task.episodeId}',
+          error: e,
+        );
+        errors.add(('episodeId=${task.episodeId}', e, StackTrace.current));
+        break;
       } catch (e, stack) {
         _logger?.e(
           'BackgroundDownloadService: download failed for '
