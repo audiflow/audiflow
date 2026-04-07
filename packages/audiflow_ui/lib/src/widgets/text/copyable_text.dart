@@ -37,9 +37,7 @@ class CopyableText extends StatelessWidget {
     final effectiveStyle = style ?? theme.textTheme.bodySmall;
     final effectiveLabelStyle =
         labelStyle ??
-        theme.textTheme.bodySmall?.copyWith(
-          color: theme.colorScheme.onSurfaceVariant,
-        );
+        effectiveStyle?.copyWith(color: theme.colorScheme.onSurfaceVariant);
 
     return InkWell(
       borderRadius: BorderRadius.circular(4),

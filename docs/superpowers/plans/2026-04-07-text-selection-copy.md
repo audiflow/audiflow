@@ -19,10 +19,10 @@
 | Modify | `packages/audiflow_ui/lib/audiflow_ui.dart` | Export new widget |
 | Modify | `packages/audiflow_app/lib/l10n/app_en.arb` | Add `commonCopiedToClipboard` key |
 | Modify | `packages/audiflow_app/lib/l10n/app_ja.arb` | Add Japanese translation |
-| Modify | `packages/audiflow_app/lib/features/podcast_detail/presentation/screens/episode_detail_screen.dart` | SelectableText for title/podcast name, SelectionArea for description, CopyableText for metadata/stats |
-| Modify | `packages/audiflow_app/lib/features/podcast_detail/presentation/widgets/podcast_detail_header.dart` | SelectableText for podcast title, artist, genres |
-| Modify | `packages/audiflow_app/lib/features/player/presentation/widgets/transcript_timeline_view.dart` | SelectableText for segment body, chapter title, speaker name |
-| Modify | `packages/audiflow_app/lib/features/player/presentation/screens/player_screen.dart` | SelectableText for episode/podcast titles |
+| Modify | `packages/audiflow_app/lib/features/podcast_detail/presentation/screens/episode_detail_screen.dart` | SelectableText for title, Text for podcast name (tappable link), SelectionArea for description, CopyableText for metadata/stats |
+| Modify | `packages/audiflow_app/lib/features/podcast_detail/presentation/widgets/podcast_detail_header.dart` | SelectionArea + Text for podcast title, artist, genres |
+| Modify | `packages/audiflow_app/lib/features/player/presentation/widgets/transcript_timeline_view.dart` | SelectionArea + Text for segment body, chapter title, speaker name |
+| Modify | `packages/audiflow_app/lib/features/player/presentation/screens/player_screen.dart` | SelectionArea + Text for episode/podcast titles |
 | Modify | `packages/audiflow_app/test/features/podcast_detail/presentation/screens/episode_detail_screen_test.dart` | Add tests for selectable/copyable elements |
 | Modify | `packages/audiflow_app/test/features/podcast_detail/presentation/widgets/podcast_detail_header_test.dart` | Add tests for selectable elements |
 
@@ -567,77 +567,11 @@ Add to the test file's `PodcastDetailHeader` group:
 Run: `cd packages/audiflow_app && flutter test test/features/podcast_detail/presentation/widgets/podcast_detail_header_test.dart --name "podcast title is selectable"`
 Expected: FAIL.
 
-- [ ] **Step 3: Replace Text with SelectableText in _PodcastMetadata**
+- [ ] **Step 3: Wrap Column in SelectionArea and keep Text with overflow in _PodcastMetadata**
 
-In `podcast_detail_header.dart`, replace the three `Text` widgets in `_PodcastMetadata`:
+In `podcast_detail_header.dart`, wrap the `Column` in `_PodcastMetadata` with `SelectionArea`. Keep `Text` widgets with `overflow: TextOverflow.ellipsis` (do NOT use `SelectableText`, which drops ellipsis and causes gesture conflicts).
 
-**Podcast title (lines 94-101):**
-```dart
-// Before:
-Text(
-  podcast.name,
-  style: theme.textTheme.titleLarge?.copyWith(
-    fontWeight: FontWeight.bold,
-  ),
-  maxLines: 2,
-  overflow: TextOverflow.ellipsis,
-),
-
-// After:
-SelectableText(
-  podcast.name,
-  style: theme.textTheme.titleLarge?.copyWith(
-    fontWeight: FontWeight.bold,
-  ),
-  maxLines: 2,
-),
-```
-
-**Artist name (lines 103-110):**
-```dart
-// Before:
-Text(
-  podcast.artistName,
-  style: theme.textTheme.bodyMedium?.copyWith(
-    color: colorScheme.onSurfaceVariant,
-  ),
-  maxLines: 1,
-  overflow: TextOverflow.ellipsis,
-),
-
-// After:
-SelectableText(
-  podcast.artistName,
-  style: theme.textTheme.bodyMedium?.copyWith(
-    color: colorScheme.onSurfaceVariant,
-  ),
-  maxLines: 1,
-),
-```
-
-**Genres (lines 113-120):**
-```dart
-// Before:
-Text(
-  podcast.genres.join(', '),
-  style: theme.textTheme.bodySmall?.copyWith(
-    color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-  ),
-  maxLines: 1,
-  overflow: TextOverflow.ellipsis,
-),
-
-// After:
-SelectableText(
-  podcast.genres.join(', '),
-  style: theme.textTheme.bodySmall?.copyWith(
-    color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-  ),
-  maxLines: 1,
-),
-```
-
-Note: `SelectableText` does not have `overflow` parameter — remove it. `maxLines` is supported.
+Note: `SelectionArea` + `Text` preserves both ellipsis truncation and long-press selection. This avoids the gesture arena conflict that `SelectableText` causes inside tappable parents.
 
 - [ ] **Step 4: Run test to verify it passes**
 
@@ -663,94 +597,23 @@ git commit -m "feat(podcast-detail): make header text selectable"
 **Files:**
 - Modify: `packages/audiflow_app/lib/features/player/presentation/widgets/transcript_timeline_view.dart:265-322`
 
-- [ ] **Step 1: Replace segment body Text with SelectableText**
+- [ ] **Step 1: Wrap segment tile content in SelectionArea and keep Text**
 
-In `_SegmentTile`, replace the segment body `Text` (lines 315-322):
+In `_SegmentTile`, wrap the `Column` inside the `InkWell`'s `Container` with `SelectionArea`. Keep `Text` widgets (do NOT use `SelectableText` -- it causes gesture arena conflicts with the parent `InkWell.onTap` for tap-to-seek).
 
-```dart
-// Before:
-Text(
-  segment.body,
-  style: theme.textTheme.bodyMedium?.copyWith(
-    color: isActive
-        ? colorScheme.onPrimaryContainer
-        : colorScheme.onSurface,
-  ),
-),
+- [ ] **Step 2: Wrap chapter title in SelectionArea and keep Text with overflow**
 
-// After:
-SelectableText(
-  segment.body,
-  style: theme.textTheme.bodyMedium?.copyWith(
-    color: isActive
-        ? colorScheme.onPrimaryContainer
-        : colorScheme.onSurface,
-  ),
-),
-```
+In `_ChapterHeader`, wrap the chapter title `Text` with `SelectionArea`. Keep `overflow: TextOverflow.ellipsis` (which `SelectableText` does not support).
 
-- [ ] **Step 2: Replace chapter title Text with SelectableText**
-
-In `_ChapterHeader`, replace the chapter title `Text` (lines 265-273):
-
-```dart
-// Before:
-Text(
-  chapter.title,
-  style: theme.textTheme.labelLarge?.copyWith(
-    color: colorScheme.primary,
-    fontWeight: FontWeight.bold,
-  ),
-  maxLines: 1,
-  overflow: TextOverflow.ellipsis,
-),
-
-// After:
-SelectableText(
-  chapter.title,
-  style: theme.textTheme.labelLarge?.copyWith(
-    color: colorScheme.primary,
-    fontWeight: FontWeight.bold,
-  ),
-  maxLines: 1,
-),
-```
-
-- [ ] **Step 3: Replace speaker name Text with SelectableText**
-
-In `_SegmentTile`, replace the speaker name `Text` (lines 310-313):
-
-```dart
-// Before:
-Text(
-  segment.speaker!,
-  style: theme.textTheme.labelSmall?.copyWith(
-    color: colorScheme.onSurfaceVariant,
-    fontWeight: FontWeight.w600,
-  ),
-),
-
-// After:
-SelectableText(
-  segment.speaker!,
-  style: theme.textTheme.labelSmall?.copyWith(
-    color: colorScheme.onSurfaceVariant,
-    fontWeight: FontWeight.w600,
-  ),
-),
-```
-
-Note: The speaker name null check `if (segment.speaker != null)` remains on the enclosing `Padding`. The `!` assertion is safe because of the null guard.
-
-- [ ] **Step 4: Run analyze**
+- [ ] **Step 3: Run analyze**
 
 Run: `cd packages/audiflow_app && flutter analyze`
 Expected: Zero issues.
 
-- [ ] **Step 5: Run all tests**
+- [ ] **Step 4: Run all tests**
 
 Run: `cd packages/audiflow_app && flutter test`
-Expected: All tests PASS. Tap-to-seek on `InkWell` (parent of `_SegmentTile`) remains functional — `SelectableText` only activates on long-press, leaving single-tap available for the parent gesture.
+Expected: All tests PASS. Tap-to-seek on `InkWell` (parent of `_SegmentTile`) remains functional -- `SelectionArea` enables long-press selection while leaving single-tap free for the parent gesture.
 
 - [ ] **Step 6: Commit**
 
@@ -766,59 +629,11 @@ git commit -m "feat(transcript): make segment text, chapters, and speakers selec
 **Files:**
 - Modify: `packages/audiflow_app/lib/features/player/presentation/screens/player_screen.dart:435-457` (in `_PlayerInfo`)
 
-- [ ] **Step 1: Replace episode title Text with SelectableText**
+- [ ] **Step 1: Wrap _PlayerInfo Column in SelectionArea and keep Text with overflow**
 
-In `_PlayerInfo`, the episode title (lines 435-443) is inside a `GestureDetector`. Replace `Text` with `SelectableText`:
+In `_PlayerInfo`, wrap the `Column` with `SelectionArea`. Keep `Text` widgets with `overflow: TextOverflow.ellipsis` inside the `GestureDetector` children (do NOT use `SelectableText` -- it captures taps and prevents `GestureDetector.onTap` from firing).
 
-```dart
-// Before:
-Text(
-  episodeTitle,
-  style: theme.textTheme.titleLarge?.copyWith(
-    fontWeight: FontWeight.bold,
-  ),
-  maxLines: 2,
-  overflow: TextOverflow.ellipsis,
-  textAlign: TextAlign.center,
-),
-
-// After:
-SelectableText(
-  episodeTitle,
-  style: theme.textTheme.titleLarge?.copyWith(
-    fontWeight: FontWeight.bold,
-  ),
-  maxLines: 2,
-  textAlign: TextAlign.center,
-),
-```
-
-Note: The parent `GestureDetector` has `onTap: onEpisodeTitleTap`. `SelectableText` long-press activates selection; single-tap passes through to the parent, so the tap-to-navigate behavior is preserved.
-
-- [ ] **Step 2: Replace podcast title Text with SelectableText**
-
-In `_PlayerInfo`, the podcast title (lines 450-457) is also inside a `GestureDetector`. Replace `Text` with `SelectableText`:
-
-```dart
-// Before:
-Text(
-  podcastTitle,
-  style: theme.textTheme.bodyLarge?.copyWith(
-    color: colorScheme.onSurfaceVariant,
-  ),
-  maxLines: 1,
-  overflow: TextOverflow.ellipsis,
-),
-
-// After:
-SelectableText(
-  podcastTitle,
-  style: theme.textTheme.bodyLarge?.copyWith(
-    color: colorScheme.onSurfaceVariant,
-  ),
-  maxLines: 1,
-),
-```
+Note: `SelectionArea` + `Text` preserves both ellipsis truncation and tap-to-navigate while enabling long-press selection.
 
 - [ ] **Step 3: Run analyze**
 

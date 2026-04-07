@@ -26,7 +26,7 @@ Three selection patterns, each applied where it fits best:
 ```dart
 CopyableText(
   text: '42',                          // value to display and copy
-  snackBarMessage: l10n.commonCopied,  // required localized message
+  snackBarMessage: l10n.commonCopiedToClipboard, // required localized message
   label: 'Episode',                    // optional leading label (not copied)
   style: TextStyle(...),
 )
@@ -62,24 +62,24 @@ Replace `Text()` with `SelectableText()` for titles and transcript segment bodie
 
 | Element | Pattern |
 |---------|---------|
-| Podcast title | `SelectableText` |
-| Artist name | `SelectableText` |
+| Podcast title | `SelectionArea` + `Text` |
+| Artist name | `SelectionArea` + `Text` |
 | Description | `SelectionArea` |
 
 ### Transcript Screen
 
 | Element | Pattern |
 |---------|---------|
-| Segment body text | `SelectableText` (per-segment, isolated) |
-| Chapter titles | `SelectableText` |
-| Speaker names | `SelectableText` |
+| Segment body text | `SelectionArea` + `Text` (per-segment tile) |
+| Chapter titles | `SelectionArea` + `Text` |
+| Speaker names | `SelectionArea` + `Text` |
 
 ### Player Screen
 
 | Element | Pattern |
 |---------|---------|
-| Episode title | `SelectableText` |
-| Podcast title | `SelectableText` |
+| Episode title | `SelectionArea` + `Text` |
+| Podcast title | `SelectionArea` + `Text` |
 
 ### Out of Scope
 
@@ -93,7 +93,7 @@ The `Html()` widget from `flutter_html` supports `SelectionArea` wrapping. Flutt
 
 ### Gesture Conflict Handling (Transcript)
 
-Transcript segments have tap-to-seek on the parent `GestureDetector`/`InkWell`. `SelectableText` responds to long-press for selection, leaving single-tap free for the seek gesture. No conflict.
+Transcript segments use `InkWell(onTap)` for tap-to-seek. Text inside the tile is wrapped in `SelectionArea` + `Text` (not `SelectableText`), which avoids gesture arena conflicts. `SelectionArea` enables long-press selection while leaving single-tap free for the parent `InkWell` seek gesture.
 
 ### Snackbar Feedback
 

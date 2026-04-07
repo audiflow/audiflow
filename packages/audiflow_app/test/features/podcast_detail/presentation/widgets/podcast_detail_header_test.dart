@@ -4,7 +4,6 @@ import 'package:audiflow_app/features/podcast_detail/presentation/widgets/podcas
 import 'package:audiflow_app/features/subscription/presentation/controllers/subscription_controller.dart';
 import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_search/audiflow_search.dart';
-import 'package:checks/checks.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -223,13 +222,12 @@ void main() {
       await tester.pumpWidget(buildTestWidget(container, testPodcast));
       await tester.pumpAndSettle();
 
-      final selectableTexts = tester.widgetList<SelectableText>(
-        find.byType(SelectableText),
-      );
-      final titleWidget = selectableTexts.where(
-        (w) => w.data == 'Test Podcast',
-      );
-      check(titleWidget.length).equals(1);
+      // Verify SelectionArea wraps the header content
+      expect(find.byType(SelectionArea), findsOneWidget);
+
+      // Verify the podcast title text is present within the SelectionArea
+      final titleFinder = find.text('Test Podcast');
+      expect(titleFinder, findsOneWidget);
     });
   });
 }
