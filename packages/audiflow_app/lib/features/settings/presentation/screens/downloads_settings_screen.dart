@@ -18,6 +18,7 @@ class DownloadsSettingsScreen extends ConsumerWidget {
     final wifiOnly = repo.getWifiOnlyDownload();
     final autoDelete = repo.getAutoDeletePlayed();
     final maxConcurrent = repo.getMaxConcurrentDownloads();
+    final batchLimit = repo.getBatchDownloadLimit();
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settingsDownloadsTitle)),
@@ -68,6 +69,32 @@ class DownloadsSettingsScreen extends ConsumerWidget {
                   ),
                 ),
               ],
+            ),
+          ),
+          ListTile(
+            title: Text(l10n.downloadsBatchLimitTitle),
+            subtitle: Text(l10n.downloadsBatchLimitSubtitle),
+            trailing: SizedBox(
+              width: 72,
+              child: TextFormField(
+                initialValue: batchLimit.toString(),
+                keyboardType: TextInputType.number,
+                textAlign: TextAlign.center,
+                decoration: const InputDecoration(
+                  isDense: true,
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 8,
+                  ),
+                  border: OutlineInputBorder(),
+                ),
+                onFieldSubmitted: (value) {
+                  final parsed = int.tryParse(value);
+                  if (parsed != null && 1 <= parsed && parsed <= 500) {
+                    _update(ref, () => repo.setBatchDownloadLimit(parsed));
+                  }
+                },
+              ),
             ),
           ),
         ],
