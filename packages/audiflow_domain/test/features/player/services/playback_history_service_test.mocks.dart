@@ -5,6 +5,10 @@
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'dart:async' as _i3;
 
+import 'package:audiflow_domain/src/features/download/models/download_task.dart'
+    as _i6;
+import 'package:audiflow_domain/src/features/download/services/download_service.dart'
+    as _i5;
 import 'package:audiflow_domain/src/features/player/models/playback_history.dart'
     as _i4;
 import 'package:audiflow_domain/src/features/player/repositories/playback_history_repository.dart'
@@ -132,4 +136,146 @@ class MockPlaybackHistoryRepository extends _i1.Mock
             ),
           )
           as _i3.Future<Map<int, _i4.PlaybackHistory>>);
+}
+
+/// A class which mocks [DownloadService].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockDownloadService extends _i1.Mock implements _i5.DownloadService {
+  MockDownloadService() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  _i3.Stream<_i6.DownloadTask?> get activeDownloadStream =>
+      (super.noSuchMethod(
+            Invocation.getter(#activeDownloadStream),
+            returnValue: _i3.Stream<_i6.DownloadTask?>.empty(),
+          )
+          as _i3.Stream<_i6.DownloadTask?>);
+
+  @override
+  _i3.Future<_i6.DownloadTask?> downloadEpisode(
+    int? episodeId, {
+    bool? wifiOnly,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(
+              #downloadEpisode,
+              [episodeId],
+              {#wifiOnly: wifiOnly},
+            ),
+            returnValue: _i3.Future<_i6.DownloadTask?>.value(),
+          )
+          as _i3.Future<_i6.DownloadTask?>);
+
+  @override
+  _i3.Future<int> downloadSeason(
+    int? podcastId,
+    int? seasonNumber, {
+    bool? wifiOnly,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(
+              #downloadSeason,
+              [podcastId, seasonNumber],
+              {#wifiOnly: wifiOnly},
+            ),
+            returnValue: _i3.Future<int>.value(0),
+          )
+          as _i3.Future<int>);
+
+  @override
+  _i3.Future<void> pause(int? taskId) =>
+      (super.noSuchMethod(
+            Invocation.method(#pause, [taskId]),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
+
+  @override
+  _i3.Future<void> resume(int? taskId) =>
+      (super.noSuchMethod(
+            Invocation.method(#resume, [taskId]),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
+
+  @override
+  _i3.Future<void> cancel(int? taskId) =>
+      (super.noSuchMethod(
+            Invocation.method(#cancel, [taskId]),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
+
+  @override
+  _i3.Future<void> retry(int? taskId) =>
+      (super.noSuchMethod(
+            Invocation.method(#retry, [taskId]),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
+
+  @override
+  _i3.Future<void> delete(int? taskId) =>
+      (super.noSuchMethod(
+            Invocation.method(#delete, [taskId]),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
+
+  @override
+  _i3.Future<void> deleteAllCompleted() =>
+      (super.noSuchMethod(
+            Invocation.method(#deleteAllCompleted, []),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
+
+  @override
+  _i3.Future<String?> getLocalPath(int? episodeId) =>
+      (super.noSuchMethod(
+            Invocation.method(#getLocalPath, [episodeId]),
+            returnValue: _i3.Future<String?>.value(),
+          )
+          as _i3.Future<String?>);
+
+  @override
+  _i3.Future<void> validateDownloads() =>
+      (super.noSuchMethod(
+            Invocation.method(#validateDownloads, []),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
+
+  @override
+  _i3.Future<void> onEpisodeCompleted(int? episodeId) =>
+      (super.noSuchMethod(
+            Invocation.method(#onEpisodeCompleted, [episodeId]),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
+
+  @override
+  _i3.Future<int> getTotalStorageUsed() =>
+      (super.noSuchMethod(
+            Invocation.method(#getTotalStorageUsed, []),
+            returnValue: _i3.Future<int>.value(0),
+          )
+          as _i3.Future<int>);
+
+  @override
+  void dispose() => super.noSuchMethod(
+    Invocation.method(#dispose, []),
+    returnValueForMissingStub: null,
+  );
 }

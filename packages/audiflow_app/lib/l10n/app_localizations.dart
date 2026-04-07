@@ -2264,6 +2264,12 @@ abstract class AppLocalizations {
   /// **'Statistics'**
   String get statsSection;
 
+  /// Snackbar shown after copying text to clipboard
+  ///
+  /// In en, this message translates to:
+  /// **'Copied to clipboard'**
+  String get commonCopiedToClipboard;
+
   /// Settings grid card title for developer preferences
   ///
   /// In en, this message translates to:

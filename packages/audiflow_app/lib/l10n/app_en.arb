@@ -754,6 +754,8 @@
   "@statsNever": { "description": "Shown when episode has never been played" },
   "statsSection": "Statistics",
   "@statsSection": { "description": "Section header for episode statistics" },
+  "commonCopiedToClipboard": "Copied to clipboard",
+  "@commonCopiedToClipboard": { "description": "Snackbar shown after copying text to clipboard" },
 
   "settingsDeveloperTitle": "Developer",
   "@settingsDeveloperTitle": {"description": "Settings grid card title for developer preferences"},

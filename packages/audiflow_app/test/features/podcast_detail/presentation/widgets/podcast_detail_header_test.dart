@@ -208,6 +208,27 @@ void main() {
       expect(find.text('Retry'), findsOneWidget);
       expect(find.byIcon(Icons.refresh), findsOneWidget);
     });
+
+    testWidgets('podcast title is selectable', (tester) async {
+      final container = ProviderContainer(
+        overrides: [
+          subscriptionControllerProvider(
+            'test-id',
+          ).overrideWith(() => _FakeSubscriptionController(false)),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(buildTestWidget(container, testPodcast));
+      await tester.pumpAndSettle();
+
+      // Verify SelectionArea wraps the header content
+      expect(find.byType(SelectionArea), findsOneWidget);
+
+      // Verify the podcast title text is present within the SelectionArea
+      final titleFinder = find.text('Test Podcast');
+      expect(titleFinder, findsOneWidget);
+    });
   });
 }
 

@@ -224,7 +224,7 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Title
-                    Text(
+                    SelectableText(
                       widget.episode.title,
                       style: theme.textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.bold,
@@ -799,23 +799,25 @@ class _DescriptionSection extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    return Html(
-      data: content.plainTextToHtml.linkifyUrls,
-      onLinkTap: (url, attributes, element) async {
-        if (url == null || url.isEmpty) return;
-        final uri = Uri.tryParse(url);
-        if (uri == null) return;
+    return SelectionArea(
+      child: Html(
+        data: content.plainTextToHtml.linkifyUrls,
+        onLinkTap: (url, attributes, element) async {
+          if (url == null || url.isEmpty) return;
+          final uri = Uri.tryParse(url);
+          if (uri == null) return;
 
-        // Prefer in-app browser; fall back to external if unavailable
-        // (e.g. iOS simulator doesn't support SFSafariViewController).
-        final launched = await launchUrl(
-          uri,
-          mode: LaunchMode.inAppBrowserView,
-        );
-        if (!launched) {
-          await launchUrl(uri, mode: LaunchMode.externalApplication);
-        }
-      },
+          // Prefer in-app browser; fall back to external if unavailable
+          // (e.g. iOS simulator doesn't support SFSafariViewController).
+          final launched = await launchUrl(
+            uri,
+            mode: LaunchMode.inAppBrowserView,
+          );
+          if (!launched) {
+            await launchUrl(uri, mode: LaunchMode.externalApplication);
+          }
+        },
+      ),
     );
   }
 }
@@ -896,8 +898,7 @@ class _EpisodeStatsSection extends StatelessWidget {
         const SizedBox(height: Spacing.sm),
         Table(
           columnWidths: const {0: IntrinsicColumnWidth(), 1: FlexColumnWidth()},
-          defaultVerticalAlignment: TableCellVerticalAlignment.baseline,
-          textBaseline: TextBaseline.alphabetic,
+          defaultVerticalAlignment: TableCellVerticalAlignment.top,
           children: rows
               .map(
                 (row) => TableRow(
@@ -911,7 +912,11 @@ class _EpisodeStatsSection extends StatelessWidget {
                     ),
                     Padding(
                       padding: const EdgeInsets.only(bottom: Spacing.xs),
-                      child: Text(row.value, style: valueStyle),
+                      child: CopyableText(
+                        text: row.value,
+                        style: valueStyle,
+                        snackBarMessage: l10n.commonCopiedToClipboard,
+                      ),
                     ),
                   ],
                 ),

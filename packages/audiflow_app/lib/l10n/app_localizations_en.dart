@@ -1194,6 +1194,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statsSection => 'Statistics';
 
   @override
+  String get commonCopiedToClipboard => 'Copied to clipboard';
+
+  @override
   String get settingsDeveloperTitle => 'Developer';
 
   @override

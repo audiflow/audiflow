@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -42,6 +44,7 @@ class _AppLifecycleObserverState extends ConsumerState<AppLifecycleObserver> {
   void _onResume() {
     _syncFeeds(forceRefresh: false);
     _updateBackgroundRegistration();
+    _processPendingDownloads();
   }
 
   Future<void> _updateBackgroundRegistration() async {
@@ -67,6 +70,13 @@ class _AppLifecycleObserverState extends ConsumerState<AppLifecycleObserver> {
     if (0 < result.successCount) {
       ref.invalidate(librarySubscriptionsProvider);
     }
+  }
+
+  /// Picks up any pending downloads that were enqueued by background
+  /// refresh but not yet processed (e.g. download task was deferred
+  /// or killed by the OS).
+  void _processPendingDownloads() {
+    unawaited(ref.read(downloadQueueServiceProvider).startQueue());
   }
 
   @override

@@ -403,6 +403,7 @@
   "statsLastPlayed": "最終再生",
   "statsNever": "未再生",
   "statsSection": "統計",
+  "commonCopiedToClipboard": "クリップボードにコピーしました",
 
   "settingsDeveloperTitle": "開発",
   "settingsDeveloperSubtitle": "スマートプレイリストパターンとデバッグ情報",

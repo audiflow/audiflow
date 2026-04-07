@@ -4,6 +4,7 @@ import 'package:audiflow_app/l10n/app_localizations.dart';
 import 'package:audiflow_app/l10n/app_localizations_en.dart';
 import 'package:audiflow_domain/audiflow_domain.dart';
 import 'package:audiflow_ui/audiflow_ui.dart';
+import 'package:checks/checks.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -145,6 +146,19 @@ void main() {
         ),
         findsNothing,
       );
+    });
+
+    testWidgets('episode title is selectable', (tester) async {
+      await tester.pumpWidget(buildTestWidget());
+      await tester.pumpAndSettle();
+
+      final selectableTexts = tester.widgetList<SelectableText>(
+        find.byType(SelectableText),
+      );
+      final titleWidget = selectableTexts.where(
+        (w) => w.data == 'Test Episode Title',
+      );
+      check(titleWidget.length).equals(1);
     });
   });
 

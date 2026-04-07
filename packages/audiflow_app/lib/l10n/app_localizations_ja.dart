@@ -1177,6 +1177,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get statsSection => '統計';
 
   @override
+  String get commonCopiedToClipboard => 'クリップボードにコピーしました';
+
+  @override
   String get settingsDeveloperTitle => '開発';
 
   @override
