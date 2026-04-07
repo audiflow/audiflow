@@ -15,6 +15,14 @@ import workmanager_apple
       withIdentifier: "com.audiflow.backgroundRefresh",
       frequency: nil
     )
+
+    // Register all plugins with the Workmanager background Flutter engine.
+    // Without this, plugins like flutter_local_notifications are not
+    // available in the background isolate (MissingPluginException).
+    WorkmanagerPlugin.setPluginRegistrantCallback { registry in
+      GeneratedPluginRegistrant.register(with: registry)
+    }
+
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 
